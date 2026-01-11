@@ -1,0 +1,8 @@
+{
+  "name": "MaestroTutor-GeminiEdition",
+  "description": "A fully client-side React application for language learning powered by Google Gemini API. Features real-time voice conversation, image-based context, and personalized tutoring without external backend dependencies.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
