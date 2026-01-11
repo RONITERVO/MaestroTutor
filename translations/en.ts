@@ -1,3 +1,4 @@
+
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -23,8 +24,6 @@ export const enTranslations: Record<string, string> = {
   "header.collapseAriaLabel": "Collapse settings panel",
   "header.expandAriaLabel": "Expand settings panel",
   "header.targetLanguageTitle": "Current Target Language: {language}",
-  "header.mediaOptimization.label": "Optimize Media Uploads",
-  "header.mediaOptimization.description": "Downscale images and videos before sending to save bandwidth and tokens.",
   "startPage.title": "Maestro Language Tutor",
   "startPage.subtitle": "Select your languages to begin",
   "startPage.nativePrompt": "I speak:",

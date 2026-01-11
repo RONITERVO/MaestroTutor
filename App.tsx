@@ -1,3 +1,4 @@
+
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -64,7 +65,6 @@ const initialSettings: AppSettings = {
   isSuggestionMode: false,
   historyBookmarkMessageId: null,
   maxVisibleMessages: undefined,
-  mediaOptimizationEnabled: true,
 };
 
 const MAX_VISIBLE_MESSAGES_DEFAULT = 50;
@@ -97,9 +97,6 @@ const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
                 }
                 if (typeof mergedSettings.maxVisibleMessages === 'undefined' || mergedSettings.maxVisibleMessages === null) {
                   mergedSettings.maxVisibleMessages = MAX_VISIBLE_MESSAGES_DEFAULT;
-                }
-                if (typeof mergedSettings.mediaOptimizationEnabled === 'undefined') {
-                  mergedSettings.mediaOptimizationEnabled = initialSettings.mediaOptimizationEnabled;
                 }
             });
       ['tts', 'stt', 'smartReengagement'].forEach(nestedKey => {
@@ -1344,7 +1341,8 @@ const App: React.FC = () => {
         if (llmUrl && llmMime) {
           dataForUpload = { dataUrl: llmUrl, mimeType: llmMime };
         } else if (uiUrl && uiMime) {
-          const optimized = await processMediaForUpload(uiUrl, uiMime, settingsRef.current.mediaOptimizationEnabled);
+          // Always optimize if needed for upload preparation
+          const optimized = await processMediaForUpload(uiUrl, uiMime, { t });
           dataForUpload = { dataUrl: optimized.dataUrl, mimeType: optimized.mimeType };
           updateMessage(m.id, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
         }
@@ -1627,12 +1625,11 @@ const App: React.FC = () => {
       if (snapshotResult) {
         userImageToProcessBase64 = snapshotResult.base64;
         userImageToProcessMimeType = snapshotResult.mimeType;
+        // Also set LLM variant immediately from snapshot (which is already resized/compressed usually)
         userImageToProcessLlmBase64 = snapshotResult.llmBase64;
         userImageToProcessLlmMimeType = snapshotResult.llmMimeType;
       }
     }
-
-
 
   if (messageType === 'user') {
       const keyframeSrcBase64 = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : attachedImageBase64;
@@ -1662,7 +1659,8 @@ const App: React.FC = () => {
           if (!sendWithFileUploadInProgressRef.current) {
             sendWithFileUploadInProgressRef.current = true;
           }
-          const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, currentSettingsVal.mediaOptimizationEnabled, { t });
+          // Always generate low res for persistence
+          const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, { t });
           userImageToProcessLlmBase64 = optimized.dataUrl;
           userImageToProcessLlmMimeType = optimized.mimeType;
           
@@ -1670,14 +1668,20 @@ const App: React.FC = () => {
         } catch {}
       }
 
+      // Logic for selecting display vs persistence image
+      let displayUrl = userImageToProcessBase64;
+      let displayMime = userImageToProcessMimeType;
+      let persistenceUrl = userImageToProcessLlmBase64;
+      let persistenceMime = userImageToProcessLlmMimeType;
+
       userMessageId = addMessage({
         role: 'user',
         text: userMessageText,
         recordedUtterance: recordedSpeechForMessage || undefined,
-        imageUrl: userImageToProcessBase64,
-        imageMimeType: userImageToProcessMimeType,
-        llmImageUrl: userImageToProcessLlmBase64,
-  llmImageMimeType: userImageToProcessLlmMimeType,
+        imageUrl: displayUrl,
+        imageMimeType: displayMime,
+        llmImageUrl: persistenceUrl,
+        llmImageMimeType: persistenceMime,
       });
     }
 
@@ -1704,7 +1708,8 @@ const App: React.FC = () => {
       }
       try {
         setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media…' });
-        const optimized = await processMediaForUpload(userImageToProcessBase64, userImageToProcessMimeType, currentSettingsVal.mediaOptimizationEnabled, { 
+        // Always optimize for persistence version
+        const optimized = await processMediaForUpload(userImageToProcessBase64, userImageToProcessMimeType, { 
             t, 
             onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs }) 
         });
@@ -1714,15 +1719,29 @@ const App: React.FC = () => {
         if (messageType === 'user' && userMessageId) {
             updateMessage(userMessageId, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
         }
-      } catch (e) { console.warn('Failed to derive low-res for current user media, will omit media', e); }
+      } catch (e) { console.warn('Failed to derive low-res for current user media, will omit persistence media', e); }
   finally { setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media…' } : prev)); }
     }
-  let imageForGeminiContextBase64: string | undefined = (messageType === 'user')
-      ? (userImageToProcessLlmBase64)
-      : (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : undefined;
-    let imageForGeminiContextMimeType: string | undefined = (messageType === 'user')
-      ? (userImageToProcessLlmMimeType)
-      : (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : undefined;
+  
+  // Decide which image to upload to Gemini
+  let imageForGeminiContextBase64: string | undefined;
+  let imageForGeminiContextMimeType: string | undefined;
+
+  if (messageType === 'user') {
+      if (userImageToProcessBase64) {
+          // Use High Res if available
+          imageForGeminiContextBase64 = userImageToProcessBase64;
+          imageForGeminiContextMimeType = userImageToProcessMimeType;
+      } else {
+          // Fallback to Low Res
+          imageForGeminiContextBase64 = userImageToProcessLlmBase64;
+          imageForGeminiContextMimeType = userImageToProcessLlmMimeType;
+      }
+  } else {
+      imageForGeminiContextBase64 = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : undefined;
+      imageForGeminiContextMimeType = (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : undefined;
+  }
+
   let imageForGeminiContextFileUri: string | undefined = undefined;
 
   switch (messageType) {
@@ -1746,10 +1765,11 @@ const App: React.FC = () => {
           if (!sendWithFileUploadInProgressRef.current) {
             sendWithFileUploadInProgressRef.current = true;
           }
-          const optimized = await processMediaForUpload(passedImageBase64, passedImageMimeType, currentSettingsVal.mediaOptimizationEnabled, { 
+          const optimized = await processMediaForUpload(passedImageBase64, passedImageMimeType, { 
             t, 
             onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs }) 
           });
+          // For re-engagement, optimize strictly
           imageForGeminiContextBase64 = optimized.dataUrl; 
           imageForGeminiContextMimeType = optimized.mimeType;
         } catch (e) { console.warn('Failed to derive low-res for re-engagement media, omitting media', e); }
@@ -1875,7 +1895,7 @@ const App: React.FC = () => {
           const duration = Date.now() - userImageGenStartTime;
           setImageLoadDurations(prev => [...prev, duration]);
           try {
-            const optimized = await processMediaForUpload((finalResult as any).base64Image as string, (finalResult as any).mimeType as string, currentSettingsVal.mediaOptimizationEnabled, { t });
+            const optimized = await processMediaForUpload((finalResult as any).base64Image as string, (finalResult as any).mimeType as string, { t });
             const lowResDataUrl = optimized.dataUrl;
             const lowResMime = optimized.mimeType;
 
@@ -2035,7 +2055,7 @@ const App: React.FC = () => {
                 const duration = Date.now() - assistantStartTime;
                 setImageLoadDurations(prev => [...prev, duration]);
                 try {
-                  const optimized = await processMediaForUpload(assistantImgGenResult.base64Image as string, assistantImgGenResult.mimeType as string, currentSettingsVal.mediaOptimizationEnabled, { t });
+                  const optimized = await processMediaForUpload(assistantImgGenResult.base64Image as string, assistantImgGenResult.mimeType as string, { t });
                   const lowResDataUrl = optimized.dataUrl;
                   const lowResMime = optimized.mimeType;
 
@@ -2150,7 +2170,7 @@ const App: React.FC = () => {
     addMessage, t, clearTranscript, transcript, captureSnapshot,
     currentSystemPromptText, fetchAndSetReplySuggestions, parseGeminiResponse, 
     isSpeechSynthesisSupported, speakMessage, scheduleReengagement,
-    hasPendingQueueItems // Added dependency
+    hasPendingQueueItems
   ]); 
   
   useEffect(() => {
@@ -2847,10 +2867,6 @@ const App: React.FC = () => {
     handleSettingsChange('tts', { ...settings.tts, provider: next });
   };
 
-  const toggleMediaOptimization = () => {
-    handleSettingsChange('mediaOptimizationEnabled', !settings.mediaOptimizationEnabled);
-  };
-
   const [targetCode, nativeCode] = useMemo(() => (selectedLanguagePair ? selectedLanguagePair.id.split('-') : [DEFAULT_TARGET_LANG_CODE, DEFAULT_NATIVE_LANG_CODE]), [selectedLanguagePair]);
   const targetLanguageDef = useMemo(() => ALL_LANGUAGES.find(lang => lang.langCode === targetCode)!, [targetCode]);
   const nativeLanguageDef = useMemo(() => ALL_LANGUAGES.find(lang => lang.langCode === nativeCode)!, [nativeCode]);
@@ -2884,15 +2900,13 @@ const App: React.FC = () => {
         onToggleSttProvider={toggleSttProvider}
         onToggleTtsProvider={toggleTtsProvider}
         isSpeechRecognitionSupported={!!window.SpeechRecognition || !!window.webkitSpeechRecognition}
-        mediaOptimizationEnabled={settings.mediaOptimizationEnabled}
-        onToggleMediaOptimization={toggleMediaOptimization}
       />
   <video ref={visualContextVideoRef} playsInline muted className="hidden w-px h-px" aria-hidden="true" />
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 flex flex-col bg-slate-50">
             <ChatInterface
               messages={messages}
-              onSendMessage={_handleSendMessageInternal}
+              onSendMessage={_handleSendMessageInternalRef.current}
               onDeleteMessage={handleDeleteMessage}
               updateMessage={updateMessage}
               onBookmarkAt={(id) => {

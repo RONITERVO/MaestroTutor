@@ -40,9 +40,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
   ttsProvider,
   onToggleSttProvider,
   onToggleTtsProvider,
-  isSpeechRecognitionSupported,
-  mediaOptimizationEnabled,
-  onToggleMediaOptimization
+  isSpeechRecognitionSupported
 }, ref) => {
   const [showSettings, setShowSettings] = useState(false);
 
@@ -141,21 +139,6 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
                   </div>
                   <div className="text-xs text-slate-500">
                       {ttsProvider === 'gemini' ? 'Natural neural voice, online only.' : 'Robotic, works offline.'}
-                  </div>
-
-                  <div className="h-px bg-slate-100 my-1"></div>
-
-                  <div className="flex items-center justify-between">
-                      <span className="font-medium text-slate-700">{t('header.mediaOptimization.label')}</span>
-                      <button 
-                          onClick={onToggleMediaOptimization} 
-                          className={`px-2 py-1 rounded text-xs border min-w-[80px] ${mediaOptimizationEnabled ? 'bg-green-100 hover:bg-green-200 text-green-800 border-green-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'}`}
-                      >
-                          {mediaOptimizationEnabled ? t('header.imageGenMode.stateOn') : t('header.imageGenMode.stateOff')}
-                      </button>
-                  </div>
-                  <div className="text-xs text-slate-500">
-                      {t('header.mediaOptimization.description')}
                   </div>
               </div>
           </div>

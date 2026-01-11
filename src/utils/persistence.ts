@@ -64,23 +64,30 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
     return next;
   };
 
+  // Optimization: If an optimized LLM image/media exists, promote it to the main display slot for storage.
+  // This discards the full-resolution 'imageUrl' to save significant space in IndexedDB,
+  // while ensuring the message history remains visually complete (albeit at lower quality) upon reload.
+  if (typeof (out as any).llmImageUrl === 'string' && (out as any).llmImageUrl) {
+    out.imageUrl = (out as any).llmImageUrl;
+    out.imageMimeType = (out as any).llmImageMimeType || out.imageMimeType;
+    // Remove the specific LLM fields since we've promoted them to the main fields for persistence
+    delete (out as any).llmImageUrl;
+    delete (out as any).llmImageMimeType;
+  }
+
+  // Cap the size of the image (whether original or promoted optimized version)
   if (typeof out.imageUrl === 'string') {
     const effMime = out.imageMimeType || inferMimeFromDataUrl(out.imageUrl) || 'image/*';
     const cap = capForMime(effMime);
     if (out.imageUrl.length > cap) {
       out.imageUrl = undefined;
+      out.imageMimeType = undefined;
     }
   }
 
-  if (typeof (out as any).llmImageUrl === 'string') {
-    const inline: string = (out as any).llmImageUrl;
-    const mime = ((out as any).llmImageMimeType as string | undefined) || inferMimeFromDataUrl(inline);
-    const cap = capForMime(mime);
-    if ((out as any).llmImageUrl.length > cap) {
-      delete (out as any).llmImageUrl;
-      if ((out as any).llmImageMimeType) delete (out as any).llmImageMimeType;
-    }
-  }
+  // Ensure any lingering LLM-specific media fields are removed from the persisted object
+  if ('llmImageUrl' in out) delete (out as any).llmImageUrl;
+  if ('llmImageMimeType' in out) delete (out as any).llmImageMimeType;
 
   if (typeof out.rawAssistantResponse === 'string' && out.rawAssistantResponse.length > 200_000) {
     out.rawAssistantResponse = out.rawAssistantResponse.slice(0, 200_000);

@@ -659,7 +659,6 @@ const InputArea: React.FC<InputAreaProps> = ({
          video.preload = 'metadata';
          video.onloadedmetadata = () => {
            window.URL.revokeObjectURL(video.src);
-           if (file.size > 100 * 1024 * 1024) { alert(t('chat.error.fileSizeExceedsLimit', { maxSize: '100MB' })); if (fileInputRef.current) fileInputRef.current.value = ''; return; }
            const reader = new FileReader();
            reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
            reader.readAsDataURL(file);
@@ -667,7 +666,6 @@ const InputArea: React.FC<InputAreaProps> = ({
          video.onerror = () => { window.URL.revokeObjectURL(video.src); alert(t('chat.error.videoMetadataError')); if (fileInputRef.current) fileInputRef.current.value = ''; };
          video.src = URL.createObjectURL(file);
        } else {
-         if (file.size > 100 * 1024 * 1024) { alert(t('chat.error.fileSizeExceedsLimit', { maxSize: '100MB' })); if (fileInputRef.current) fileInputRef.current.value = ''; return; }
          const reader = new FileReader();
          reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
          reader.readAsDataURL(file);

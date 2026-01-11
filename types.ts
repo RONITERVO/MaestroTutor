@@ -97,7 +97,6 @@ export interface AppSettings {
   historyBookmarkMessageId?: string | null;
   maxVisibleMessages?: number;
   loadingGifs?: string[] | null;
-  mediaOptimizationEnabled: boolean;
 }
 
 export interface GroundingChunk {

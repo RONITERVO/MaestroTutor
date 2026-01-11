@@ -4,16 +4,11 @@ import { createLowResImageFromDataUrl, createLowFpsVideoFromDataUrl } from '../u
 export async function processMediaForUpload(
     dataUrl: string,
     mimeType: string,
-    shouldOptimize: boolean,
     callbacks?: {
         onProgress?: (label: string, done?: number, total?: number, etaMs?: number) => void;
         t?: (key: string) => string; 
     }
 ): Promise<{ dataUrl: string; mimeType: string; isOptimized: boolean }> {
-    if (!shouldOptimize) {
-        return { dataUrl, mimeType, isOptimized: false };
-    }
-
     const txtOptimizingImage = callbacks?.t ? callbacks.t('chat.sendPrep.optimizingImage') : 'Optimizing image…';
     const txtOptimizingVideo = callbacks?.t ? callbacks.t('chat.sendPrep.optimizingVideo') : 'Optimizing video…';
 
