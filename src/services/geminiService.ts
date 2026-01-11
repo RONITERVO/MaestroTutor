@@ -232,14 +232,54 @@ export async function generateImage(params: {
   
   const contents: any[] = [];
   
-  if (history && history.length > 0) {
-      history.forEach(h => {
+  // Create a working copy of history to safely modify/filter
+  let processedHistory = history ? history.map(h => ({...h})) : [];
+
+  // Filter out non-image media and enforce limits
+  let imageCount = 0;
+  // Iterate backwards to keep most recent images and drop others
+  for (let i = processedHistory.length - 1; i >= 0; i--) {
+      const h = processedHistory[i];
+      const mime = (h.imageMimeType || "").toLowerCase();
+      const isImage = mime.startsWith('image/');
+      
+      // Note: The history objects coming from deriveHistoryForApi use 'imageFileUri' 
+      // for all file types (images, video, audio). We must filter based on mime type.
+      if (h.imageFileUri) {
+          if (!isImage) {
+             // Drop non-image media (audio, video, pdf) as image generation model does not support them
+             h.imageFileUri = undefined;
+             // Add note to context so model knows media was there
+             const type = mime.split('/')[0] || "File";
+             const note = ` [${type} context omitted]`;
+             if (h.rawAssistantResponse) h.rawAssistantResponse += note;
+             else h.text = (h.text || "") + note;
+          } else {
+             // It is an image, check count limit (max 3 usually for image models)
+             if (imageCount >= 3) {
+                 h.imageFileUri = undefined;
+                 const note = ` [Previous image context omitted]`;
+                 if (h.rawAssistantResponse) h.rawAssistantResponse += note;
+                 else h.text = (h.text || "") + note;
+             } else {
+                 imageCount++;
+             }
+          }
+      }
+  }
+
+  if (processedHistory.length > 0) {
+      processedHistory.forEach(h => {
         const parts: any[] = [];
         const textContent = h.rawAssistantResponse || h.text;
         if (textContent) parts.push({ text: textContent });
         
         if (h.imageFileUri) {
-            parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
+            // Final failsafe: only include image types in the payload for image generation model
+            const m = (h.imageMimeType || "").toLowerCase();
+            if (m.startsWith('image/')) {
+                parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
+            }
         }
         if (parts.length) contents.push({ role: h.role === 'assistant' ? 'model' : 'user', parts });
       });
@@ -253,12 +293,23 @@ export async function generateImage(params: {
   }
   
   if (maestroAvatarUri) {
-      currentParts.push({ fileData: { fileUri: maestroAvatarUri, mimeType: maestroAvatarMimeType || 'image/png' } });
+      const m = (maestroAvatarMimeType || "").toLowerCase();
+      // Ensure avatar is also an image
+      if (!m || m.startsWith('image/')) {
+          currentParts.push({ fileData: { fileUri: maestroAvatarUri, mimeType: maestroAvatarMimeType || 'image/png' } });
+      }
   }
   
   if (currentParts.length) {
       contents.push({ role: 'user', parts: currentParts });
   }
+
+  // Debug payload for troubleshooting image gen errors
+  console.debug("[generateImage] contents:", JSON.stringify(contents, (key, value) => {
+      // Avoid spamming logs with huge base64 strings if any exist inline
+      if (key === 'data' && typeof value === 'string' && value.length > 100) return value.substring(0, 20) + '...';
+      return value;
+  }, 2));
 
   try {
       const result = await ai.models.generateContent({
