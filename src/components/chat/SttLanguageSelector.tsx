@@ -18,8 +18,8 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
   const targetCode = getPrimaryCode(targetLang.code);
   const nativeCode = getPrimaryCode(nativeLang.code);
 
-  const isTargetSelected = currentSttLangCode === targetCode;
-  const isNativeSelected = currentSttLangCode === nativeCode;
+  const isTargetSelected = currentSttLangCode === targetCode || targetLang.code.includes(currentSttLangCode);
+  const isNativeSelected = currentSttLangCode === nativeCode || nativeLang.code.includes(currentSttLangCode);
   
   const wrapperClass = isCollapsed ? (isInSuggestionMode ? 'p-0.5 bg-gray-300/60 rounded-full' : 'p-0.5 bg-blue-400/60 rounded-full') : 'p-0.5 bg-gray-200 rounded-full';
   const buttonBase = isCollapsed ? 'p-1.5 rounded-full' : 'p-2 rounded-full';

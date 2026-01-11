@@ -45,7 +45,7 @@ const initialSettings: AppSettings = {
   selectedCameraId: null,
   sendWithSnapshotEnabled: false,
   tts: {
-    provider: 'gemini',
+    provider: 'browser', // Default to browser TTS for stability/cost
     speakNative: true,
   },
   stt: {
@@ -107,7 +107,7 @@ const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
                 }
             });
       if (!mergedSettings.tts || !mergedSettings.tts.provider) {
-        mergedSettings.tts = { ...(mergedSettings.tts || {}), provider: 'gemini' };
+        mergedSettings.tts = { ...(mergedSettings.tts || {}), provider: 'browser' };
       }
       if (!mergedSettings.stt || !mergedSettings.stt.provider) {
         mergedSettings.stt = { ...(mergedSettings.stt || {}), provider: 'browser' };
@@ -749,6 +749,7 @@ const App: React.FC = () => {
     isListening, transcript, startListening, stopListening, sttError, isSpeechRecognitionSupported, clearTranscript,
     speakingUtteranceText,
     claimRecordedUtterance,
+    hasPendingQueueItems,
   } = useBrowserSpeech({
       onEngineCycleEnd: (errorOccurred: boolean) => {
         if (
@@ -785,7 +786,7 @@ const App: React.FC = () => {
         }
       }, [])
       ,
-        getTtsProvider: useCallback(() => settingsRef.current.tts?.provider || 'gemini', []),
+        getTtsProvider: useCallback(() => settingsRef.current.tts?.provider || 'browser', []),
         getSttProvider: useCallback(() => settingsRef.current.stt?.provider || 'browser', []),
         onRecordedUtteranceReady: useCallback((utterance: RecordedUtterance) => {
           if (!utterance || typeof utterance.dataUrl !== 'string' || utterance.dataUrl.length === 0 || utterance.dataUrl.length > INLINE_CAP_AUDIO) {
@@ -894,7 +895,7 @@ const App: React.FC = () => {
   }, [setReplySuggestions]);
 
   const prepareSpeechPartsWithCache = useCallback((parts: SpeechPart[], defaultLang: string): SpeechPart[] => {
-    const provider = settingsRef.current.tts?.provider || 'gemini';
+    const provider = settingsRef.current.tts?.provider || 'browser';
     return parts.map((part) => {
       const cleanedText = (part.text || '').replace(/\*/g, '').trim();
       const lang = part.langCode || defaultLang;
@@ -986,6 +987,53 @@ const App: React.FC = () => {
     if (!summary || !summary.trim()) return null;
     return summary.trim();
   }, []);
+
+  const fetchAvailableCameras = useCallback(async () => {
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            // Requesting stream triggers permission prompt if not granted
+            const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            tempStream.getTracks().forEach(track => track.stop());
+        } catch (permError) {
+            console.warn("Could not get temporary video stream for robust device enumeration:", permError);
+        }
+      }
+
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        const cameraList: CameraDevice[] = videoDevices.map((device, index) => ({
+            deviceId: device.deviceId,
+            label: device.label || `Camera ${index + 1}`,
+            facingMode: getFacingModeFromLabel(device.label)
+        }));
+        setAvailableCameras(cameraList);
+      }
+    } catch (error) {
+      console.error("Error enumerating video devices:", error);
+      setAvailableCameras([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAvailableCameras();
+    if (navigator.mediaDevices) {
+        navigator.mediaDevices.addEventListener('devicechange', fetchAvailableCameras);
+    }
+    return () => {
+        if (navigator.mediaDevices) {
+            navigator.mediaDevices.removeEventListener('devicechange', fetchAvailableCameras);
+        }
+    };
+  }, [fetchAvailableCameras]);
+  
+  // Re-fetch cameras when enabling features that use the camera to ensure list is fresh and permitted
+  useEffect(() => {
+    if (settings.sendWithSnapshotEnabled || settings.smartReengagement.useVisualContext) {
+        fetchAvailableCameras();
+    }
+  }, [settings.sendWithSnapshotEnabled, settings.smartReengagement.useVisualContext, fetchAvailableCameras]);
 
   const captureSnapshot = useCallback(async (isForReengagement = false): Promise<{ base64: string; mimeType: string; llmBase64: string; llmMimeType: string } | null> => {
     const errorSetter = isForReengagement ? setVisualContextCameraError : setSnapshotUserError;
@@ -2113,7 +2161,10 @@ const App: React.FC = () => {
   setSendPrep(null);
   scheduleReengagement('send-complete');
 
-      if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !speechIsSpeakingRef.current) {
+      // Manual STT resume check after send + TTS queue completion check
+      const isSpeechActive = speechIsSpeakingRef.current || (typeof (hasPendingQueueItems as any) === 'function' && (hasPendingQueueItems as any)());
+      
+      if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !isSpeechActive) {
         try {
           startListening(settingsRef.current.stt.language);
         } finally {
@@ -2153,6 +2204,7 @@ const App: React.FC = () => {
   setSendPrep(null);
   sendWithFileUploadInProgressRef.current = false;
 
+      // On error, also try to resume STT if it was paused for send
       if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !speechIsSpeakingRef.current) {
         try {
           startListening(settingsRef.current.stt.language);
@@ -2175,7 +2227,8 @@ const App: React.FC = () => {
   }, [
     addMessage, t, clearTranscript, transcript, captureSnapshot,
     currentSystemPromptText, fetchAndSetReplySuggestions, parseGeminiResponse, 
-    isSpeechSynthesisSupported, speakMessage, scheduleReengagement
+    isSpeechSynthesisSupported, speakMessage, scheduleReengagement,
+    hasPendingQueueItems // Added dependency
   ]); 
   
   useEffect(() => {
@@ -2434,6 +2487,7 @@ const App: React.FC = () => {
       setMaestroActivityStage('idle');
     }
   }, [isSpeaking, isSending, isListening, isUserActive, reengagementPhase]);
+
   useEffect(() => {
     const startVisualContextStream = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -2900,7 +2954,7 @@ const App: React.FC = () => {
         messages={messages}
         onLanguageSelectorClick={(e) => { e.stopPropagation(); handleShowLanguageSelector(); }}
         sttProvider={settings.stt.provider || 'browser'}
-        ttsProvider={settings.tts.provider || 'gemini'}
+        ttsProvider={settings.tts.provider || 'browser'}
         onToggleSttProvider={toggleSttProvider}
         onToggleTtsProvider={toggleTtsProvider}
         isSpeechRecognitionSupported={!!window.SpeechRecognition || !!window.webkitSpeechRecognition}

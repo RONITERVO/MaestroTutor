@@ -30,6 +30,7 @@ interface UseBrowserSpeechReturn {
   clearTranscript: () => void;
   speakingUtteranceText: string | null;
   claimRecordedUtterance: () => RecordedUtterance | null;
+  hasPendingQueueItems: () => boolean;
 }
 
 const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn => {
@@ -69,8 +70,6 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
 
   const pauseSttForPlayback = useCallback(() => {
     const provider = getSttProvider ? getSttProvider() : 'browser';
-    // Critical Fix: Check if STT *should* be running (globally enabled), not just if it *is* currently listening.
-    // This ensures we set the interruption flag even if STT was momentarily restarting or connecting.
     const shouldBeListening = props?.isGlobalSttEnabled?.() ?? false;
 
     if (isListening || shouldBeListening) {
@@ -99,6 +98,9 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
                       }
                   }, 100);
               }
+          } else {
+             // If not globally enabled anymore, clear interruption flag
+             sttInterruptedByTTS.current = false;
           }
       }
   });
@@ -212,7 +214,8 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
   return {
       isSpeaking, speak, stopSpeaking, isSpeechSynthesisSupported,
       isListening, transcript, startListening, stopListening, sttError,
-      isSpeechRecognitionSupported, clearTranscript, speakingUtteranceText, claimRecordedUtterance
+      isSpeechRecognitionSupported, clearTranscript, speakingUtteranceText, claimRecordedUtterance,
+      hasPendingQueueItems
   };
 };
 
