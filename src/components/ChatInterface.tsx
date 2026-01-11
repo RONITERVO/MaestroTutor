@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, GroundingChunk, ReplySuggestion, MaestroActivityStage, SpeechPart, CameraDevice } from '../../types';
 import { LiveSessionState } from '../../hooks/speech/useGeminiLiveConversation';
@@ -23,7 +22,6 @@ interface ChatInterfaceProps {
   maxVisibleMessages: number;
   onChangeMaxVisibleMessages: (n: number) => void;
   isSending: boolean;
-  subscriptionActive: boolean;
 
   onUiTaskStart?: (token?: string) => string | void;
   onUiTaskEnd?: (token?: string) => void;
@@ -103,10 +101,6 @@ interface ChatInterfaceProps {
   onCreateSuggestion: (text: string) => Promise<void>;
   isCreatingSuggestion: boolean;
   sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
-  // Props for compatibility with old interface
-  onSaveAllChatsToCloud?: () => Promise<void>;
-  onLoadAllChatsFromCloud?: () => Promise<void>;
-  isAuthenticated?: boolean;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {

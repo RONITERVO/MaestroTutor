@@ -32,6 +32,7 @@ import { INLINE_CAP_AUDIO, upsertTtsCacheEntries, getCachedAudioForKey, computeT
 import { getChatHistoryDB, safeSaveChatHistoryDB, readBackupForPair, getChatMetaDB, setChatMetaDB, getAllChatHistoriesDB, clearAndSaveAllHistoriesDB, getAllChatMetasDB, deriveHistoryForApi } from './src/services/historyService';
 import { generateAllLanguagePairs, getPrimaryCode, getShortLangCodeForPrompt } from './src/utils/languageUtils';
 import { createLowResImageFromDataUrl, createLowFpsVideoFromDataUrl, createKeyframeFromVideoDataUrl } from './src/utils/mediaUtils';
+import { processMediaForUpload } from './src/services/mediaOptimizationService';
 import Header from './src/components/Header';
 import { useSmartReengagement } from './src/hooks/useSmartReengagement';
 
@@ -63,6 +64,7 @@ const initialSettings: AppSettings = {
   isSuggestionMode: false,
   historyBookmarkMessageId: null,
   maxVisibleMessages: undefined,
+  mediaOptimizationEnabled: true,
 };
 
 const MAX_VISIBLE_MESSAGES_DEFAULT = 50;
@@ -93,9 +95,12 @@ const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
                 if (typeof mergedSettings.imageFocusedModeEnabled === 'undefined') {
                     mergedSettings.imageFocusedModeEnabled = initialSettings.imageFocusedModeEnabled;
                 }
-        if (typeof mergedSettings.maxVisibleMessages === 'undefined' || mergedSettings.maxVisibleMessages === null) {
-          mergedSettings.maxVisibleMessages = MAX_VISIBLE_MESSAGES_DEFAULT;
-        }
+                if (typeof mergedSettings.maxVisibleMessages === 'undefined' || mergedSettings.maxVisibleMessages === null) {
+                  mergedSettings.maxVisibleMessages = MAX_VISIBLE_MESSAGES_DEFAULT;
+                }
+                if (typeof mergedSettings.mediaOptimizationEnabled === 'undefined') {
+                  mergedSettings.mediaOptimizationEnabled = initialSettings.mediaOptimizationEnabled;
+                }
             });
       ['tts', 'stt', 'smartReengagement'].forEach(nestedKey => {
                 if (mergedSettings[nestedKey] && (initialSettings as any)[nestedKey]) {
@@ -1339,17 +1344,9 @@ const App: React.FC = () => {
         if (llmUrl && llmMime) {
           dataForUpload = { dataUrl: llmUrl, mimeType: llmMime };
         } else if (uiUrl && uiMime) {
-          if (uiMime.startsWith('image/')) {
-            const r = await createLowResImageFromDataUrl(uiUrl, { maxDim: 768, quality: 0.6, outputMime: 'image/jpeg' });
-            dataForUpload = { dataUrl: r.dataUrl, mimeType: r.mimeType };
-            updateMessage(m.id, { llmImageUrl: r.dataUrl, llmImageMimeType: r.mimeType });
-          } else if (uiMime.startsWith('video/')) {
-            const r = await createLowFpsVideoFromDataUrl(uiUrl, { fps: 1, maxWidth: 1920, mimeType: 'video/webm' });
-            dataForUpload = { dataUrl: r.dataUrl, mimeType: r.mimeType };
-            updateMessage(m.id, { llmImageUrl: r.dataUrl, llmImageMimeType: r.mimeType });
-          } else {
-            dataForUpload = { dataUrl: uiUrl, mimeType: uiMime };
-          }
+          const optimized = await processMediaForUpload(uiUrl, uiMime, settingsRef.current.mediaOptimizationEnabled);
+          dataForUpload = { dataUrl: optimized.dataUrl, mimeType: optimized.mimeType };
+          updateMessage(m.id, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
         }
         if (dataForUpload) {
           const up = await uploadMediaToFiles(dataForUpload.dataUrl, dataForUpload.mimeType, 'send-history');
@@ -1365,7 +1362,7 @@ const App: React.FC = () => {
       await new Promise(r => setTimeout(r, 0));
     }
     return updatedUriMap;
-  }, [computeHistorySubsetForMedia, createLowResImageFromDataUrl, createLowFpsVideoFromDataUrl, updateMessage, getHistoryRespectingBookmark]);
+  }, [computeHistorySubsetForMedia, updateMessage, getHistoryRespectingBookmark]);
 
 
   const [sendPrep, setSendPrep] = useState<{ active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null>(null);
@@ -1665,26 +1662,11 @@ const App: React.FC = () => {
           if (!sendWithFileUploadInProgressRef.current) {
             sendWithFileUploadInProgressRef.current = true;
           }
-          if (attachedImageMimeType.startsWith('image/')) {
-            const r = await createLowResImageFromDataUrl(attachedImageBase64, { maxDim: 768, quality: 0.6, outputMime: 'image/jpeg' });
-            userImageToProcessLlmBase64 = r.dataUrl;
-            userImageToProcessLlmMimeType = r.mimeType;
-            if (userMessageId) updateMessage(userMessageId, { llmImageUrl: r.dataUrl, llmImageMimeType: r.mimeType });
-          } else if (attachedImageMimeType.startsWith('video/')) {
-            const r = await createLowFpsVideoFromDataUrl(attachedImageBase64, {
-              fps: 1,
-              maxWidth: 1920,
-              mimeType: 'video/webm',
-              onProgress: (elapsedMs, durationMs, etaMs) => {
-                const elapsedSec = Math.floor(elapsedMs / 1000);
-                const totalSec = Math.max(elapsedSec, Math.floor((durationMs || 0) / 1000));
-                setSendPrep({ active: true, label: t('chat.sendPrep.optimizingVideo') || 'Optimizing video…', done: elapsedSec, total: totalSec, etaMs });
-              }
-            });
-            userImageToProcessLlmBase64 = r.dataUrl;
-            userImageToProcessLlmMimeType = r.mimeType;
-            if (userMessageId) updateMessage(userMessageId, { llmImageUrl: r.dataUrl, llmImageMimeType: r.mimeType });
-          }
+          const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, currentSettingsVal.mediaOptimizationEnabled, { t });
+          userImageToProcessLlmBase64 = optimized.dataUrl;
+          userImageToProcessLlmMimeType = optimized.mimeType;
+          
+          if (userMessageId) updateMessage(userMessageId, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
         } catch {}
       }
 
@@ -1721,32 +1703,16 @@ const App: React.FC = () => {
         sendWithFileUploadInProgressRef.current = true;
       }
       try {
-  setSendPrep({ active: true, label: t('chat.sendPrep.optimizingImage') || 'Optimizing image…' });
-        if (userImageToProcessMimeType.startsWith('image/')) {
-          const r = await createLowResImageFromDataUrl(userImageToProcessBase64, { maxDim: 768, quality: 0.6, outputMime: 'image/jpeg' });
-          userImageToProcessLlmBase64 = r.dataUrl; userImageToProcessLlmMimeType = r.mimeType;
-          if (messageType === 'user' && userMessageId) {
-            updateMessage(userMessageId, { llmImageUrl: r.dataUrl, llmImageMimeType: r.mimeType });
-          }
-        } else if (userImageToProcessMimeType.startsWith('video/')) {
-  setSendPrep({ active: true, label: t('chat.sendPrep.optimizingVideo') || 'Optimizing video…' });
-          const r = await createLowFpsVideoFromDataUrl(userImageToProcessBase64, {
-            fps: 1,
-            maxWidth: 1920,
-            mimeType: 'video/webm',
-            onProgress: (elapsedMs, durationMs, etaMs) => {
-              const elapsedSec = Math.floor(elapsedMs / 1000);
-              const totalSec = Math.max(elapsedSec, Math.floor((durationMs || 0) / 1000));
-              setSendPrep({ active: true, label: t('chat.sendPrep.optimizingVideo') || 'Optimizing video…', done: elapsedSec, total: totalSec, etaMs });
-            }
-          });
-          userImageToProcessLlmBase64 = r.dataUrl; userImageToProcessLlmMimeType = r.mimeType;
-          if (messageType === 'user' && userMessageId) {
-            updateMessage(userMessageId, { llmImageUrl: r.dataUrl, llmImageMimeType: r.mimeType });
-          }
-        } else {
-          userImageToProcessLlmBase64 = userImageToProcessBase64;
-          userImageToProcessLlmMimeType = userImageToProcessMimeType;
+        setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media…' });
+        const optimized = await processMediaForUpload(userImageToProcessBase64, userImageToProcessMimeType, currentSettingsVal.mediaOptimizationEnabled, { 
+            t, 
+            onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs }) 
+        });
+        userImageToProcessLlmBase64 = optimized.dataUrl;
+        userImageToProcessLlmMimeType = optimized.mimeType;
+
+        if (messageType === 'user' && userMessageId) {
+            updateMessage(userMessageId, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
         }
       } catch (e) { console.warn('Failed to derive low-res for current user media, will omit media', e); }
   finally { setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media…' } : prev)); }
@@ -1780,22 +1746,12 @@ const App: React.FC = () => {
           if (!sendWithFileUploadInProgressRef.current) {
             sendWithFileUploadInProgressRef.current = true;
           }
-          if (passedImageMimeType.startsWith('image/')) {
-            const r = await createLowResImageFromDataUrl(passedImageBase64, { maxDim: 768, quality: 0.6, outputMime: 'image/jpeg' });
-            imageForGeminiContextBase64 = r.dataUrl; imageForGeminiContextMimeType = r.mimeType;
-          } else if (passedImageMimeType.startsWith('video/')) {
-            const r = await createLowFpsVideoFromDataUrl(passedImageBase64, {
-              fps: 1,
-              maxWidth: 1920,
-              mimeType: 'video/webm',
-              onProgress: (elapsedMs, durationMs, etaMs) => {
-                const elapsedSec = Math.floor(elapsedMs / 1000);
-                const totalSec = Math.max(elapsedSec, Math.floor((durationMs || 0) / 1000));
-                setSendPrep({ active: true, label: t('chat.sendPrep.optimizingVideo') || 'Optimizing video…', done: elapsedSec, total: totalSec, etaMs });
-              }
-            });
-            imageForGeminiContextBase64 = r.dataUrl; imageForGeminiContextMimeType = r.mimeType;
-          }
+          const optimized = await processMediaForUpload(passedImageBase64, passedImageMimeType, currentSettingsVal.mediaOptimizationEnabled, { 
+            t, 
+            onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs }) 
+          });
+          imageForGeminiContextBase64 = optimized.dataUrl; 
+          imageForGeminiContextMimeType = optimized.mimeType;
         } catch (e) { console.warn('Failed to derive low-res for re-engagement media, omitting media', e); }
       }
     }
@@ -1919,26 +1875,9 @@ const App: React.FC = () => {
           const duration = Date.now() - userImageGenStartTime;
           setImageLoadDurations(prev => [...prev, duration]);
           try {
-            let lowResDataUrl = (finalResult as any).base64Image as string;
-            let lowResMime = (finalResult as any).mimeType as string;
-            try {
-              if (typeof lowResMime === 'string' && lowResMime.startsWith('image/')) {
-                const r = await createLowResImageFromDataUrl(lowResDataUrl, { maxDim: 768, quality: 0.6, outputMime: 'image/jpeg' });
-                lowResDataUrl = r.dataUrl; lowResMime = r.mimeType;
-              } else if (typeof lowResMime === 'string' && lowResMime.startsWith('video/')) {
-                const r = await createLowFpsVideoFromDataUrl(lowResDataUrl, {
-                  fps: 1,
-                  maxWidth: 1920,
-                  mimeType: 'video/webm',
-                  onProgress: (elapsedMs, durationMs, etaMs) => {
-                    const elapsedSec = Math.floor(elapsedMs / 1000);
-                    const totalSec = Math.max(elapsedSec, Math.floor((durationMs || 0) / 1000));
-                    setSendPrep({ active: true, label: t('chat.sendPrep.optimizingVideo') || 'Optimizing video…', done: elapsedSec, total: totalSec, etaMs });
-                  }
-                });
-                lowResDataUrl = r.dataUrl; lowResMime = r.mimeType;
-              }
-            } catch { }
+            const optimized = await processMediaForUpload((finalResult as any).base64Image as string, (finalResult as any).mimeType as string, currentSettingsVal.mediaOptimizationEnabled, { t });
+            const lowResDataUrl = optimized.dataUrl;
+            const lowResMime = optimized.mimeType;
 
             sendWithFileUploadInProgressRef.current = true;
             setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media…' } : { active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media…' }));
@@ -2096,26 +2035,9 @@ const App: React.FC = () => {
                 const duration = Date.now() - assistantStartTime;
                 setImageLoadDurations(prev => [...prev, duration]);
                 try {
-                  let lowResDataUrl = assistantImgGenResult.base64Image as string;
-                  let lowResMime = assistantImgGenResult.mimeType as string;
-                  try {
-                    if (typeof lowResMime === 'string' && lowResMime.startsWith('image/')) {
-                      const r = await createLowResImageFromDataUrl(lowResDataUrl, { maxDim: 768, quality: 0.6, outputMime: 'image/jpeg' });
-                      lowResDataUrl = r.dataUrl; lowResMime = r.mimeType;
-                    } else if (typeof lowResMime === 'string' && lowResMime.startsWith('video/')) {
-                      const r = await createLowFpsVideoFromDataUrl(lowResDataUrl, {
-                        fps: 1,
-                        maxWidth: 1920,
-                        mimeType: 'video/webm',
-                        onProgress: (elapsedMs, durationMs, etaMs) => {
-                          const elapsedSec = Math.floor(elapsedMs / 1000);
-                          const totalSec = Math.max(elapsedSec, Math.floor((durationMs || 0) / 1000));
-                          setSendPrep({ active: true, label: t('chat.sendPrep.optimizingVideo') || 'Optimizing video…', done: elapsedSec, total: totalSec, etaMs });
-                        }
-                      });
-                      lowResDataUrl = r.dataUrl; lowResMime = r.mimeType;
-                    }
-                  } catch (e) { }
+                  const optimized = await processMediaForUpload(assistantImgGenResult.base64Image as string, assistantImgGenResult.mimeType as string, currentSettingsVal.mediaOptimizationEnabled, { t });
+                  const lowResDataUrl = optimized.dataUrl;
+                  const lowResMime = optimized.mimeType;
 
                   sendWithFileUploadInProgressRef.current = true;
                   const up = await uploadMediaToFiles(assistantImgGenResult.base64Image as string, assistantImgGenResult.mimeType as string, 'assistant-generated');
@@ -2915,6 +2837,20 @@ const App: React.FC = () => {
       }
   }, [languagePairs, handleSettingsChange]);
 
+  const toggleSttProvider = () => {
+    const next = settings.stt.provider === 'browser' ? 'gemini' : 'browser';
+    handleSettingsChange('stt', { ...settings.stt, provider: next });
+  };
+
+  const toggleTtsProvider = () => {
+    const next = settings.tts.provider === 'browser' ? 'gemini' : 'browser';
+    handleSettingsChange('tts', { ...settings.tts, provider: next });
+  };
+
+  const toggleMediaOptimization = () => {
+    handleSettingsChange('mediaOptimizationEnabled', !settings.mediaOptimizationEnabled);
+  };
+
   const [targetCode, nativeCode] = useMemo(() => (selectedLanguagePair ? selectedLanguagePair.id.split('-') : [DEFAULT_TARGET_LANG_CODE, DEFAULT_NATIVE_LANG_CODE]), [selectedLanguagePair]);
   const targetLanguageDef = useMemo(() => ALL_LANGUAGES.find(lang => lang.langCode === targetCode)!, [targetCode]);
   const nativeLanguageDef = useMemo(() => ALL_LANGUAGES.find(lang => lang.langCode === nativeCode)!, [nativeCode]);
@@ -2929,16 +2865,6 @@ const App: React.FC = () => {
         </div>
     );
   }
-
-  const toggleSttProvider = () => {
-    const next = settings.stt.provider === 'browser' ? 'gemini' : 'browser';
-    handleSettingsChange('stt', { ...settings.stt, provider: next });
-  };
-
-  const toggleTtsProvider = () => {
-    const next = settings.tts.provider === 'browser' ? 'gemini' : 'browser';
-    handleSettingsChange('tts', { ...settings.tts, provider: next });
-  };
 
   return (
     <div className="flex flex-col min-h-screen antialiased text-gray-800 bg-gray-100" style={{ paddingTop: headerOffset }}>
@@ -2958,6 +2884,8 @@ const App: React.FC = () => {
         onToggleSttProvider={toggleSttProvider}
         onToggleTtsProvider={toggleTtsProvider}
         isSpeechRecognitionSupported={!!window.SpeechRecognition || !!window.webkitSpeechRecognition}
+        mediaOptimizationEnabled={settings.mediaOptimizationEnabled}
+        onToggleMediaOptimization={toggleMediaOptimization}
       />
   <video ref={visualContextVideoRef} playsInline muted className="hidden w-px h-px" aria-hidden="true" />
       <div className="flex flex-1 overflow-hidden">
@@ -2986,7 +2914,6 @@ const App: React.FC = () => {
                 setSettings(prev => { const next = { ...prev, maxVisibleMessages: clamped } as typeof prev; settingsRef.current = next; setAppSettingsDB(next).catch(() => {}); return next; });
               }}
               isSending={isSending}
-              subscriptionActive={true}
               bubbleWrapperRefs={bubbleWrapperRefs}
               onTempLanguageSelect={handleTempLanguageSelect}
               onConfirmLanguageSelection={handleConfirmLanguageSelection}

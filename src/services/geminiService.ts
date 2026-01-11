@@ -14,48 +14,61 @@ export class ApiError extends Error {
 
 const getAi = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// Helper to write ASCII strings to DataView
+function writeAscii(view: DataView, offset: number, string: string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+// Helper to convert Uint8Array to Base64 string efficiently
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const len = bytes.byteLength;
+  const chunkSize = 0x8000; // 32KB chunks
+  for (let i = 0; i < len; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  return btoa(binary);
+}
+
 // Helper to wrap raw PCM16 samples in a WAV container so browsers can play it
 function pcm16ToWavBase64(base64Pcm: string, sampleRate = 24000, numChannels = 1): string {
   const binaryString = atob(base64Pcm);
   const len = binaryString.length;
-  const buffer = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    buffer[i] = binaryString.charCodeAt(i);
-  }
+  
+  // WAV Header is 44 bytes
+  const buffer = new ArrayBuffer(44 + len);
+  const view = new DataView(buffer);
 
-  const wavHeader = new ArrayBuffer(44);
-  const view = new DataView(wavHeader);
+  // RIFF chunk descriptor
+  writeAscii(view, 0, 'RIFF');
+  view.setUint32(4, 36 + len, true); // ChunkSize
+  writeAscii(view, 8, 'WAVE');
 
-  const writeString = (offset: number, str: string) => {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(offset + i, str.charCodeAt(i));
-    }
-  };
+  // fmt sub-chunk
+  writeAscii(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true); // AudioFormat (1 for PCM)
+  view.setUint16(22, numChannels, true); // NumChannels
+  view.setUint32(24, sampleRate, true); // SampleRate
+  view.setUint32(28, sampleRate * numChannels * 2, true); // ByteRate
+  view.setUint16(32, numChannels * 2, true); // BlockAlign
+  view.setUint16(34, 16, true); // BitsPerSample
 
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + len, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true); // PCM chunk size
-  view.setUint16(20, 1, true); // Linear PCM
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * 2, true); // Byte rate
-  view.setUint16(32, numChannels * 2, true); // Block align
-  view.setUint16(34, 16, true); // Bits per sample
-  writeString(36, 'data');
+  // data sub-chunk
+  writeAscii(view, 36, 'data');
   view.setUint32(40, len, true);
 
-  const headerBytes = new Uint8Array(wavHeader);
-  const wavBytes = new Uint8Array(headerBytes.length + buffer.length);
-  wavBytes.set(headerBytes, 0);
-  wavBytes.set(buffer, headerBytes.length);
-
-  let binary = '';
-  for (let i = 0; i < wavBytes.length; i++) {
-    binary += String.fromCharCode(wavBytes[i]);
+  // Write PCM data
+  const bytes = new Uint8Array(buffer);
+  // Skip header (44 bytes) and write PCM data
+  for (let i = 0; i < len; i++) {
+    bytes[44 + i] = binaryString.charCodeAt(i);
   }
-  return btoa(binary);
+
+  return bytesToBase64(bytes);
 }
 
 export async function checkFileStatuses(uris: string[]): Promise<Record<string, { deleted: boolean }>> {
@@ -304,6 +317,3 @@ export async function generateSpeech(params: { text: string, voiceName?: string 
     }
     return { audioBase64: "", mimeType: "" };
 }
-
-export async function sendSessionHeartbeat() {}
-export async function markSessionClosed() {}
