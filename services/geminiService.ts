@@ -14,6 +14,63 @@ export class ApiError extends Error {
 
 const getAi = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// Helper to write ASCII strings to DataView
+function writeAscii(view: DataView, offset: number, string: string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+// Helper to convert Uint8Array to Base64 string efficiently
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const len = bytes.byteLength;
+  const chunkSize = 0x8000; // 32KB chunks
+  for (let i = 0; i < len; i += chunkSize) {
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  return btoa(binary);
+}
+
+// Helper to wrap raw PCM16 samples in a WAV container so browsers can play it
+function pcm16ToWavBase64(base64Pcm: string, sampleRate = 24000, numChannels = 1): string {
+  const binaryString = atob(base64Pcm);
+  const len = binaryString.length;
+  
+  // WAV Header is 44 bytes
+  const buffer = new ArrayBuffer(44 + len);
+  const view = new DataView(buffer);
+
+  // RIFF chunk descriptor
+  writeAscii(view, 0, 'RIFF');
+  view.setUint32(4, 36 + len, true); // ChunkSize
+  writeAscii(view, 8, 'WAVE');
+
+  // fmt sub-chunk
+  writeAscii(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+  view.setUint16(20, 1, true); // AudioFormat (1 for PCM)
+  view.setUint16(22, numChannels, true); // NumChannels
+  view.setUint32(24, sampleRate, true); // SampleRate
+  view.setUint32(28, sampleRate * numChannels * 2, true); // ByteRate
+  view.setUint16(32, numChannels * 2, true); // BlockAlign
+  view.setUint16(34, 16, true); // BitsPerSample
+
+  // data sub-chunk
+  writeAscii(view, 36, 'data');
+  view.setUint32(40, len, true);
+
+  // Write PCM data
+  const bytes = new Uint8Array(buffer);
+  // Skip header (44 bytes) and write PCM data
+  for (let i = 0; i < len; i++) {
+    bytes[44 + i] = binaryString.charCodeAt(i);
+  }
+
+  return bytesToBase64(bytes);
+}
+
 export async function checkFileStatuses(uris: string[]): Promise<Record<string, { deleted: boolean }>> {
   if (!uris || !uris.length) return {};
   const ai = getAi();
@@ -175,14 +232,54 @@ export async function generateImage(params: {
   
   const contents: any[] = [];
   
-  if (history && history.length > 0) {
-      history.forEach(h => {
+  // Create a working copy of history to safely modify/filter
+  let processedHistory = history ? history.map(h => ({...h})) : [];
+
+  // Filter out non-image media and enforce limits
+  let imageCount = 0;
+  // Iterate backwards to keep most recent images and drop others
+  for (let i = processedHistory.length - 1; i >= 0; i--) {
+      const h = processedHistory[i];
+      const mime = (h.imageMimeType || "").toLowerCase();
+      const isImage = mime.startsWith('image/');
+      
+      // Note: The history objects coming from deriveHistoryForApi use 'imageFileUri' 
+      // for all file types (images, video, audio). We must filter based on mime type.
+      if (h.imageFileUri) {
+          if (!isImage) {
+             // Drop non-image media (audio, video, pdf) as image generation model does not support them
+             h.imageFileUri = undefined;
+             // Add note to context so model knows media was there
+             const type = mime.split('/')[0] || "File";
+             const note = ` [${type} context omitted]`;
+             if (h.rawAssistantResponse) h.rawAssistantResponse += note;
+             else h.text = (h.text || "") + note;
+          } else {
+             // It is an image, check count limit (max 3 usually for image models)
+             if (imageCount >= 3) {
+                 h.imageFileUri = undefined;
+                 const note = ` [Previous image context omitted]`;
+                 if (h.rawAssistantResponse) h.rawAssistantResponse += note;
+                 else h.text = (h.text || "") + note;
+             } else {
+                 imageCount++;
+             }
+          }
+      }
+  }
+
+  if (processedHistory.length > 0) {
+      processedHistory.forEach(h => {
         const parts: any[] = [];
         const textContent = h.rawAssistantResponse || h.text;
         if (textContent) parts.push({ text: textContent });
         
         if (h.imageFileUri) {
-            parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
+            // Final failsafe: only include image types in the payload for image generation model
+            const m = (h.imageMimeType || "").toLowerCase();
+            if (m.startsWith('image/')) {
+                parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
+            }
         }
         if (parts.length) contents.push({ role: h.role === 'assistant' ? 'model' : 'user', parts });
       });
@@ -196,7 +293,11 @@ export async function generateImage(params: {
   }
   
   if (maestroAvatarUri) {
-      currentParts.push({ fileData: { fileUri: maestroAvatarUri, mimeType: maestroAvatarMimeType || 'image/png' } });
+      const m = (maestroAvatarMimeType || "").toLowerCase();
+      // Ensure avatar is also an image
+      if (!m || m.startsWith('image/')) {
+          currentParts.push({ fileData: { fileUri: maestroAvatarUri, mimeType: maestroAvatarMimeType || 'image/png' } });
+      }
   }
   
   if (currentParts.length) {
@@ -251,11 +352,12 @@ export async function generateSpeech(params: { text: string, voiceName?: string 
         const c = result.candidates?.[0];
         const part = c?.content?.parts?.[0];
         if (part?.inlineData) {
-            return { audioBase64: part.inlineData.data, mimeType: 'audio/wav' }; 
+            // Gemini TTS returns raw PCM in most cases for this model, wrap it in a WAV container to ensure playback
+            const wavBase64 = pcm16ToWavBase64(part.inlineData.data);
+            return { audioBase64: wavBase64, mimeType: 'audio/wav' }; 
         }
-    } catch {}
+    } catch (e) {
+      console.error("Gemini TTS Error:", e);
+    }
     return { audioBase64: "", mimeType: "" };
 }
-
-export async function sendSessionHeartbeat() {}
-export async function markSessionClosed() {}
