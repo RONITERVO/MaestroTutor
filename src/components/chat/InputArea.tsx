@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { TranslationReplacements } from '../../../translations/index';
 import { CameraDevice } from '../../../types';
@@ -846,11 +847,11 @@ const InputArea: React.FC<InputAreaProps> = ({
         </div>
       ) : (
       <>
-      <div className="flex items-end space-x-2 relative">
+      <div className="relative w-full">
           <textarea
               ref={bubbleTextAreaRef}
               rows={1}
-              className={`flex-grow p-2.5 rounded-lg focus:ring-2 focus:border-transparent resize-none overflow-hidden ${textAreaStyle}`}
+              className={`w-full py-3 pl-4 pr-14 rounded-2xl focus:ring-2 focus:border-transparent resize-none overflow-hidden ${textAreaStyle}`}
               style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}
               placeholder={getPlaceholderText()}
               value={inputText}
@@ -861,7 +862,7 @@ const InputArea: React.FC<InputAreaProps> = ({
           />
           <button
               onClick={handleSend}
-              className={`p-3 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 ${sendButtonStyle}`}
+              className={`absolute right-1.5 bottom-1.5 p-1 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 z-10 shadow-sm ${sendButtonStyle}`}
               disabled={isSending || (!inputText.trim() && !attachedImageBase64) || isSpeaking || (isSuggestionMode && isCreatingSuggestion) } 
               aria-label={isSuggestionMode ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction')) : t('chat.sendMessage')}
           >
