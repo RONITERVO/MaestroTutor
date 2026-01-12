@@ -1,10 +1,9 @@
-
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ChatInterface from './src/components/ChatInterface';
-import { AppSettings, ChatMessage, GroundingChunk, CameraDevice, ReplySuggestion, MaestroActivityStage, LanguagePair, STTSettings, TTSSettings, SmartReengagementSettings, SpeechPart, ChatMeta, UserProfile, TtsAudioCacheEntry, TtsProvider, RecordedUtterance } from './types';
+import { AppSettings, ChatMessage, GroundingChunk, CameraDevice, ReplySuggestion, MaestroActivityStage, LanguagePair, RecordedUtterance, TtsAudioCacheEntry, SpeechPart, ChatMeta } from './types';
 import { generateGeminiResponse, generateImage, translateText, ApiError, sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from './services/geminiService';
 import { getLoadingGifsDB, setLoadingGifsDB, getMaestroProfileImageDB, setMaestroProfileImageDB } from './src/services/assets';
 import { getAppSettingsDB, setAppSettingsDB } from './src/services/settings';
@@ -32,7 +31,7 @@ import { uniq, isRealChatMessage, fetchDefaultAvatarBlob } from './src/utils/com
 import { INLINE_CAP_AUDIO, upsertTtsCacheEntries, getCachedAudioForKey, computeTtsCacheKey } from './src/utils/persistence';
 import { getChatHistoryDB, safeSaveChatHistoryDB, readBackupForPair, getChatMetaDB, setChatMetaDB, getAllChatHistoriesDB, clearAndSaveAllHistoriesDB, getAllChatMetasDB, deriveHistoryForApi } from './src/services/historyService';
 import { generateAllLanguagePairs, getPrimaryCode, getShortLangCodeForPrompt } from './src/utils/languageUtils';
-import { createLowResImageFromDataUrl, createLowFpsVideoFromDataUrl, createKeyframeFromVideoDataUrl } from './src/utils/mediaUtils';
+import { createKeyframeFromVideoDataUrl } from './src/utils/mediaUtils';
 import { processMediaForUpload } from './src/services/mediaOptimizationService';
 import Header from './src/components/Header';
 import { useSmartReengagement } from './src/hooks/useSmartReengagement';
@@ -169,7 +168,6 @@ const App: React.FC = () => {
   const settingsRef = useRef(initialSettings);
   const messagesRef = useRef<ChatMessage[]>([]);
   const isSendingRef = useRef(false);
-  const isSummarizingProfileRef = useRef<boolean>(false);
   const sendWithFileUploadInProgressRef = useRef(false);
   const availableCamerasRef = useRef<CameraDevice[]>([]);
   const selectedLanguagePairRef = useRef<LanguagePair | undefined>(undefined);
@@ -198,6 +196,10 @@ const App: React.FC = () => {
   const [languagePairs] = useState<LanguagePair[]>(allGeneratedLanguagePairs);
   const [settings, setSettings] = useState<AppSettings>(initialSettings);
   
+  const [isLanguageSelectionOpen, setIsLanguageSelectionOpen] = useState(false);
+  const [tempNativeLangCode, setTempNativeLangCode] = useState<string | null>(null);
+  const [tempTargetLangCode, setTempTargetLangCode] = useState<string | null>(null);
+
   const microphoneApiAvailable = useMemo(() => {
       if (typeof window === 'undefined') return false;
       try {
@@ -487,12 +489,11 @@ const App: React.FC = () => {
           effective = { ...effective, selectedLanguagePairId: null };
           const browserLangCode = (typeof navigator !== 'undefined' && navigator.language || 'en').substring(0, 2);
           const defaultNative = ALL_LANGUAGES.find(l => l.langCode === browserLangCode) || ALL_LANGUAGES.find(l => l.langCode === DEFAULT_NATIVE_LANG_CODE)!;
-          setMessages([{
-            id: crypto.randomUUID(),
-            role: 'system_selection',
-            timestamp: Date.now(),
-            tempSelectedNativeLangCode: defaultNative.langCode,
-          }]);
+          
+          setTempNativeLangCode(defaultNative.langCode);
+          setTempTargetLangCode(null);
+          setIsLanguageSelectionOpen(true);
+          
           setIsLoadingHistory(false);
         }
   setSettings(effective);
@@ -2752,12 +2753,9 @@ const App: React.FC = () => {
             } else {
                  const browserLangCode = (typeof navigator !== 'undefined' && navigator.language || 'en').substring(0, 2);
                  const defaultNative = ALL_LANGUAGES.find(l => l.langCode === browserLangCode) || ALL_LANGUAGES.find(l => l.langCode === DEFAULT_NATIVE_LANG_CODE)!;
-                 setMessages([{
-                     id: crypto.randomUUID(),
-                     role: 'system_selection',
-                     timestamp: Date.now(),
-                     tempSelectedNativeLangCode: defaultNative.langCode,
-                 }]);
+                 setTempNativeLangCode(defaultNative.langCode);
+                 setTempTargetLangCode(null);
+                 setIsLanguageSelectionOpen(true);
             }
         } catch (e) {
             console.error("Failed to load chats:", e);
@@ -2768,94 +2766,61 @@ const App: React.FC = () => {
   }, [handleSaveAllChats, t]);
 
   const handleShowLanguageSelector = useCallback(() => {
-    if (isSendingRef.current) {
-      return;
+    if (isSendingRef.current) return;
+    setIsLanguageSelectionOpen(true);
+    // Initialize temporary selection with current settings if available
+    const currentPairId = settingsRef.current.selectedLanguagePairId;
+    if (currentPairId) {
+        const [target, native] = currentPairId.split('-');
+        setTempNativeLangCode(native);
+        setTempTargetLangCode(target);
     }
-    const selectorExists = messagesRef.current.some(m => m.role === 'system_selection');
-
-    if (selectorExists) {
-      setMessages(prev => prev.filter(m => m.role !== 'system_selection'));
-    } else {
-      const currentPairId = settingsRef.current.selectedLanguagePairId;
-      let nativeCode: string | undefined;
-      let targetCode: string | undefined;
-
-      if (currentPairId) {
-        [targetCode, nativeCode] = currentPairId.split('-');
-      } else {
-        const browserLangCode = (typeof navigator !== 'undefined' && navigator.language || 'en').substring(0, 2);
-        const defaultNative = ALL_LANGUAGES.find(l => l.langCode === browserLangCode) || ALL_LANGUAGES.find(l => l.langCode === DEFAULT_NATIVE_LANG_CODE)!;
-        nativeCode = defaultNative.langCode;
-        targetCode = undefined;
-      }
-      
-      addMessage({
-          role: 'system_selection',
-          tempSelectedNativeLangCode: nativeCode,
-          tempSelectedTargetLangCode: targetCode,
-      });
-    }
-  }, [addMessage]);
-
-  const handleTempLanguageSelect = useCallback((messageId: string, langType: 'native' | 'target', langCode: string | null) => {
-      setMessages(prev => prev.map(m => {
-          if (m.id === messageId && m.role === 'system_selection') {
-              const updatedMessage = { ...m };
-              if (langType === 'native') {
-                  updatedMessage.tempSelectedNativeLangCode = langCode || undefined;
-                  if (langCode === updatedMessage.tempSelectedTargetLangCode) {
-                      updatedMessage.tempSelectedTargetLangCode = undefined;
-                  }
-              } else {
-                  updatedMessage.tempSelectedTargetLangCode = langCode || undefined;
-              }
-              return updatedMessage;
-          }
-          return m;
-      }));
   }, []);
 
-  const handleConfirmLanguageSelection = useCallback((messageId: string, nativeLangCode?: string, targetLangCode?: string) => {
-      if (!nativeLangCode || !targetLangCode) return;
-      const newPairId = `${targetLangCode}-${nativeLangCode}`;
+  const lastInteractionRef = useRef<number>(Date.now());
+  const handleTempNativeSelect = useCallback((code: string | null) => {
+      lastInteractionRef.current = Date.now();
+      setTempNativeLangCode(code);
+      if (code && code === tempTargetLangCode) {
+          setTempTargetLangCode(null);
+      }
+  }, [tempTargetLangCode]);
+
+  const handleTempTargetSelect = useCallback((code: string | null) => {
+      lastInteractionRef.current = Date.now();
+      setTempTargetLangCode(code);
+  }, []);
+
+  const handleConfirmLanguageSelection = useCallback(() => {
+      if (!tempNativeLangCode || !tempTargetLangCode) return;
+      const newPairId = `${tempTargetLangCode}-${tempNativeLangCode}`;
       const oldPairId = settingsRef.current.selectedLanguagePairId;
       const isSamePair = newPairId === oldPairId;
 
-    const completeAction = async () => {
-          if (!isSamePair && oldPairId) {
-              const cleanedMessagesForOldPair = messagesRef.current.filter(m => m.id !== messageId);
-              await safeSaveChatHistoryDB(oldPairId, cleanedMessagesForOldPair);
-              if (languagePairs.some(p => p.id === newPairId)) {
-                  handleSettingsChange('selectedLanguagePairId', newPairId);
-              }
-          } else {
-              if (!isSamePair && !oldPairId) {
-                  if (languagePairs.some(p => p.id === newPairId)) {
-                      handleSettingsChange('selectedLanguagePairId', newPairId);
-                  }
-              }
-              setMessages(prev => prev.filter(m => m.id !== messageId));
-          }
-      };
-
-      const bubbleElement = bubbleWrapperRefs.current.get(messageId);
-      if (bubbleElement) {
-          bubbleElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out, max-height 0.5s ease-in-out, margin 0.5s ease-in-out, padding 0.5s ease-in-out';
-          bubbleElement.style.transform = 'scale(0.8)';
-          bubbleElement.style.opacity = '0';
-          bubbleElement.style.maxHeight = '0px';
-          bubbleElement.style.margin = '0';
-          bubbleElement.style.padding = '0';
-
-          const onTransitionEnd = () => {
-              completeAction();
-              bubbleElement.removeEventListener('transitionend', onTransitionEnd);
-          };
-          bubbleElement.addEventListener('transitionend', onTransitionEnd);
-      } else {
-          completeAction();
+      if (!isSamePair && oldPairId) {
+          // Save current history before switching
+          safeSaveChatHistoryDB(oldPairId, messagesRef.current);
       }
-  }, [languagePairs, handleSettingsChange]);
+      
+      if (languagePairs.some(p => p.id === newPairId)) {
+          handleSettingsChange('selectedLanguagePairId', newPairId);
+      }
+      setIsLanguageSelectionOpen(false);
+  }, [tempNativeLangCode, tempTargetLangCode, languagePairs, handleSettingsChange]);
+
+  // Restore auto-confirm functionality for language selection
+  useEffect(() => {
+    let timeout: number;
+    if (isLanguageSelectionOpen && tempNativeLangCode && tempTargetLangCode) {
+        timeout = window.setTimeout(() => {
+            const idleTime = Date.now() - lastInteractionRef.current;
+            if (idleTime >= 4500) { 
+                handleConfirmLanguageSelection();
+            }
+        }, 5000);
+    }
+    return () => clearTimeout(timeout);
+  }, [isLanguageSelectionOpen, tempNativeLangCode, tempTargetLangCode, handleConfirmLanguageSelection]);
 
   const toggleSttProvider = () => {
     const next = settings.stt.provider === 'browser' ? 'gemini' : 'browser';
@@ -2929,8 +2894,14 @@ const App: React.FC = () => {
               }}
               isSending={isSending}
               bubbleWrapperRefs={bubbleWrapperRefs}
-              onTempLanguageSelect={handleTempLanguageSelect}
+              
+              isLanguageSelectionOpen={isLanguageSelectionOpen}
+              tempNativeLangCode={tempNativeLangCode}
+              tempTargetLangCode={tempTargetLangCode}
+              onTempNativeSelect={handleTempNativeSelect}
+              onTempTargetSelect={handleTempTargetSelect}
               onConfirmLanguageSelection={handleConfirmLanguageSelection}
+
               onSaveAllChats={handleSaveAllChats}
               onLoadAllChats={handleLoadAllChats}
               loadingGifs={loadingGifs}

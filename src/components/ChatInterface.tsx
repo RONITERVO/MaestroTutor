@@ -4,7 +4,6 @@ import { LiveSessionState } from '../../hooks/speech/useGeminiLiveConversation';
 import { TranslationReplacements } from '../../translations/index';
 import { IconEyeOpen, IconBookmark, IconTrash } from '../../constants';
 import BookmarkActions from './chat/BookmarkActions';
-import LanguageSelectionBubble from './chat/LanguageSelectionBubble';
 import ChatMessageBubble from './chat/ChatMessageBubble';
 import SuggestionsList from './chat/SuggestionsList';
 import InputArea from './chat/InputArea';
@@ -27,8 +26,15 @@ interface ChatInterfaceProps {
   onUiTaskEnd?: (token?: string) => void;
 
   bubbleWrapperRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  onTempLanguageSelect: (messageId: string, langType: 'native' | 'target', langCode: string | null) => void;
-  onConfirmLanguageSelection: (messageId: string, nativeLangCode?: string, targetLangCode?: string) => void;
+  
+  // New Language Selection Props
+  isLanguageSelectionOpen: boolean;
+  tempNativeLangCode: string | null;
+  tempTargetLangCode: string | null;
+  onTempNativeSelect: (code: string | null) => void;
+  onTempTargetSelect: (code: string | null) => void;
+  onConfirmLanguageSelection: () => void;
+
   onSaveAllChats: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
   onLoadAllChats: (file: File) => Promise<void>;
   loadingGifs?: string[] | null;
@@ -110,8 +116,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     isSending,
 
     bubbleWrapperRefs,
-    onTempLanguageSelect,
+    
+    isLanguageSelectionOpen,
+    tempNativeLangCode,
+    tempTargetLangCode,
+    onTempNativeSelect,
+    onTempTargetSelect,
     onConfirmLanguageSelection,
+
     onSaveAllChats,
     onLoadAllChats,
     loadingGifs,
@@ -645,22 +657,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
        )}
         {messagesToRender.map((msg, idx) => {
           if (msg.role === 'system_selection') {
-            return (
-                <div key={msg.id} ref={(el) => { if(el) bubbleWrapperRefs.current.set(msg.id, el); else bubbleWrapperRefs.current.delete(msg.id); }}>
-                    <LanguageSelectionBubble
-                        message={msg}
-                        onTempLanguageSelect={onTempLanguageSelect}
-                        onConfirmLanguageSelection={onConfirmLanguageSelection}
-                        onSaveAllChats={onSaveAllChats}
-                        onLoadAllChats={onLoadAllChats}
-                        loadingGifs={loadingGifs}
-                        t={t}
-                       onUiTaskStart={onUiTaskStart}
-           onUiTaskEnd={onUiTaskEnd}
-           isFocusedMode={imageFocusedModeEnabled}
-                    />
-                </div>
-            )
+            return null;
           }
           const isStatus = msg.role === 'status';
           const isUser = msg.role === 'user';
@@ -865,77 +862,86 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
          </div>
        )}
 
-        {!messages.some(m => m.role === 'system_selection') && (
-            <div className="flex flex-col items-end mt-2">
-                <div
-                  className={`transition-colors duration-300 rounded-xl p-3 shadow-lg w-full max-w-2xl ${isSuggestionMode ? 'bg-gray-200 text-gray-700' : 'bg-blue-500 text-white'} relative`}
-                  style={{
-                    // @ts-ignore
-                    containerType: 'inline-size'
-                  }}
-                >
-                    <InputArea
-                      t={t}
-                      isSending={isSending}
-                      isSpeaking={isSpeaking}
-                      isListening={isListening}
-                      isSttGloballyEnabled={isSttGloballyEnabled}
-                      isSttSupported={isSttSupported}
-                      transcript={transcript}
-                      sttLanguageCode={sttLanguageCode}
-                      targetLanguageDef={targetLanguageDef}
-                      nativeLanguageDef={nativeLanguageDef}
-                      onSttToggle={onSttToggle}
-                      onSttLanguageChange={onSttLanguageChange}
-                      attachedImageBase64={attachedImageBase64}
-                      attachedImageMimeType={attachedImageMimeType}
-                      onSetAttachedImage={onSetAttachedImage}
-                      onSendMessage={onSendMessage}
-                      onUserInputActivity={onUserInputActivity}
-                      liveVideoStream={liveVideoStream}
-                      liveSessionState={liveSessionState}
-                      liveSessionError={liveSessionError}
-                      onStartLiveSession={onStartLiveSession}
-                      onStopLiveSession={onStopLiveSession}
-                      isSuggestionMode={isSuggestionMode}
-                      onToggleSuggestionMode={onToggleSuggestionMode}
-                      onCreateSuggestion={onCreateSuggestion}
-                      isCreatingSuggestion={isCreatingSuggestion}
-                      sendPrep={sendPrep}
-                      availableCameras={availableCameras}
-                      selectedCameraId={selectedCameraId}
-                      currentCameraFacingMode={currentCameraFacingMode}
-                      isImageGenCameraSelected={isImageGenCameraSelected}
-                      onSelectCamera={onSelectCamera}
-                      onToggleSendWithSnapshot={onToggleSendWithSnapshot}
-                      onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
-                      sendWithSnapshotEnabled={sendWithSnapshotEnabled}
-                      useVisualContextForReengagementEnabled={useVisualContextForReengagementEnabled}
-                      imageGenerationModeEnabled={imageGenerationModeEnabled}
-                      onToggleImageGenerationMode={onToggleImageGenerationMode}
-                      sttError={sttError}
-                      autoCaptureError={autoCaptureError}
-                      snapshotUserError={snapshotUserError}
-                      onUiTaskStart={onUiTaskStart}
-                      onUiTaskEnd={onUiTaskEnd}
-                    />
-                </div>
-                {(isLoadingSuggestions || replySuggestions.length > 0) && (
-                    <SuggestionsList
-                      isLoadingSuggestions={isLoadingSuggestions}
-                      replySuggestions={replySuggestions}
-                      t={t}
-                      isSttSupported={isSttSupported}
-                      isSuggestionMode={isSuggestionMode}
-                      onToggleSuggestionMode={() => onToggleSuggestionMode()}
-                      isCreatingSuggestion={isCreatingSuggestion}
-                      onSuggestionClick={onSuggestionClick}
-                      isSpeaking={isSpeaking}
-                      stopSpeaking={stopSpeaking}
-                    />
-                )}
+        {/* Note: Input area is always rendered now, but modes switch inside */}
+        <div className="flex flex-col items-end mt-2">
+            <div
+                className={`transition-colors duration-300 rounded-xl p-3 shadow-lg w-full max-w-2xl ${isSuggestionMode ? 'bg-gray-200 text-gray-700' : 'bg-blue-500 text-white'} relative`}
+                style={{
+                // @ts-ignore
+                containerType: 'inline-size'
+                }}
+            >
+                <InputArea
+                    t={t}
+                    isSending={isSending}
+                    isSpeaking={isSpeaking}
+                    isListening={isListening}
+                    isSttGloballyEnabled={isSttGloballyEnabled}
+                    isSttSupported={isSttSupported}
+                    transcript={transcript}
+                    sttLanguageCode={sttLanguageCode}
+                    targetLanguageDef={targetLanguageDef}
+                    nativeLanguageDef={nativeLanguageDef}
+                    onSttToggle={onSttToggle}
+                    onSttLanguageChange={onSttLanguageChange}
+                    attachedImageBase64={attachedImageBase64}
+                    attachedImageMimeType={attachedImageMimeType}
+                    onSetAttachedImage={onSetAttachedImage}
+                    onSendMessage={onSendMessage}
+                    onUserInputActivity={onUserInputActivity}
+                    liveVideoStream={liveVideoStream}
+                    liveSessionState={liveSessionState}
+                    liveSessionError={liveSessionError}
+                    onStartLiveSession={onStartLiveSession}
+                    onStopLiveSession={onStopLiveSession}
+                    isSuggestionMode={isSuggestionMode}
+                    onToggleSuggestionMode={onToggleSuggestionMode}
+                    onCreateSuggestion={onCreateSuggestion}
+                    isCreatingSuggestion={isCreatingSuggestion}
+                    sendPrep={sendPrep}
+                    availableCameras={availableCameras}
+                    selectedCameraId={selectedCameraId}
+                    currentCameraFacingMode={currentCameraFacingMode}
+                    isImageGenCameraSelected={isImageGenCameraSelected}
+                    onSelectCamera={onSelectCamera}
+                    onToggleSendWithSnapshot={onToggleSendWithSnapshot}
+                    onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
+                    sendWithSnapshotEnabled={sendWithSnapshotEnabled}
+                    useVisualContextForReengagementEnabled={useVisualContextForReengagementEnabled}
+                    imageGenerationModeEnabled={imageGenerationModeEnabled}
+                    onToggleImageGenerationMode={onToggleImageGenerationMode}
+                    sttError={sttError}
+                    autoCaptureError={autoCaptureError}
+                    snapshotUserError={snapshotUserError}
+                    onUiTaskStart={onUiTaskStart}
+                    onUiTaskEnd={onUiTaskEnd}
+                    
+                    // Language Selection Props
+                    isLanguageSelectionOpen={isLanguageSelectionOpen}
+                    tempNativeLangCode={tempNativeLangCode}
+                    tempTargetLangCode={tempTargetLangCode}
+                    onTempNativeSelect={onTempNativeSelect}
+                    onTempTargetSelect={onTempTargetSelect}
+                    onConfirmLanguageSelection={onConfirmLanguageSelection}
+                    onSaveAllChats={onSaveAllChats}
+                    onLoadAllChats={onLoadAllChats}
+                />
             </div>
-        )}
+            {(isLoadingSuggestions || replySuggestions.length > 0) && (
+                <SuggestionsList
+                    isLoadingSuggestions={isLoadingSuggestions}
+                    replySuggestions={replySuggestions}
+                    t={t}
+                    isSttSupported={isSttSupported}
+                    isSuggestionMode={isSuggestionMode}
+                    onToggleSuggestionMode={() => onToggleSuggestionMode()}
+                    isCreatingSuggestion={isCreatingSuggestion}
+                    onSuggestionClick={onSuggestionClick}
+                    isSpeaking={isSpeaking}
+                    stopSpeaking={stopSpeaking}
+                />
+            )}
+        </div>
         <div ref={messagesEndRef} />
       </div>
 

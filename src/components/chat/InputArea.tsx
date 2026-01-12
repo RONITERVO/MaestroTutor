@@ -2,15 +2,20 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { TranslationReplacements } from '../../../translations/index';
 import { CameraDevice } from '../../../types';
-import { LanguageDefinition } from '../../../constants';
+import { LanguageDefinition, LOCAL_STORAGE_SETTINGS_KEY } from '../../../constants';
 import { LiveSessionState } from '../../../hooks/speech/useGeminiLiveConversation';
 import { 
   IconSend, IconPaperclip, IconMicrophone, IconXMark, IconCamera, 
   IconCameraFront, IconBookOpen, IconPencil, IconPlus, IconSparkles, 
-  IMAGE_GEN_CAMERA_ID, IconUndo, IconCheck
+  IMAGE_GEN_CAMERA_ID, IconUndo, IconCheck, IconSave, IconFolderOpen
 } from '../../../constants';
 import { SmallSpinner } from '../ui/SmallSpinner';
 import SttLanguageSelector from './SttLanguageSelector';
+import LanguageSelectorGlobe from './LanguageSelectorGlobe';
+import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../services/assets';
+import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../../services/geminiService';
+import { DB_NAME } from '../../storage/db';
+import { uniq } from '../../utils/common';
 
 interface InputAreaProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
@@ -64,6 +69,16 @@ interface InputAreaProps {
   
   onUiTaskStart?: (token?: string) => string | void;
   onUiTaskEnd?: (token?: string) => void;
+
+  // Language Selection
+  isLanguageSelectionOpen?: boolean;
+  tempNativeLangCode?: string | null;
+  tempTargetLangCode?: string | null;
+  onTempNativeSelect?: (code: string | null) => void;
+  onTempTargetSelect?: (code: string | null) => void;
+  onConfirmLanguageSelection?: () => void;
+  onSaveAllChats?: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
+  onLoadAllChats?: (file: File) => Promise<void>;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
@@ -78,7 +93,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   onToggleSendWithSnapshot, onToggleUseVisualContextForReengagement, sendWithSnapshotEnabled, useVisualContextForReengagementEnabled,
   imageGenerationModeEnabled, onToggleImageGenerationMode,
   sttError, autoCaptureError, snapshotUserError,
-  onUiTaskStart, onUiTaskEnd
+  onUiTaskStart, onUiTaskEnd,
+  isLanguageSelectionOpen, tempNativeLangCode, tempTargetLangCode, onTempNativeSelect, onTempTargetSelect, onConfirmLanguageSelection, onSaveAllChats, onLoadAllChats
 }) => {
   const [inputText, setInputText] = useState('');
   const [backgroundHint, setBackgroundHint] = useState('');
@@ -128,11 +144,32 @@ const InputArea: React.FC<InputAreaProps> = ({
   const composerLastPinchDistanceRef = useRef<number>(0);
   const composerIsNewStrokeRef = useRef(true);
 
+  // --- Language Selection Popups State ---
+  const [maestroAsset, setMaestroAsset] = useState<MaestroProfileAsset | null>(null);
+  const [isUploadingMaestro, setIsUploadingMaestro] = useState(false);
+  const [isSavePopupOpen, setIsSavePopupOpen] = useState(false);
+  const [isLoadPopupOpen, setIsLoadPopupOpen] = useState(false);
+  const [isSavingInProgress, setIsSavingInProgress] = useState(false);
+  const [isLoadingInProgress, setIsLoadingInProgress] = useState(false);
+  const [isResetPopupOpen, setIsResetPopupOpen] = useState(false);
+  const [resetName, setResetName] = useState<string>('');
+  const [resetConfirm, setResetConfirm] = useState<string>('');
+  const [isResetting, setIsResetting] = useState(false);
+
+  const savePopupTokenRef = useRef<string | null>(null);
+  const loadPopupTokenRef = useRef<string | null>(null);
+  const maestroUploadTokenRef = useRef<string | null>(null);
+  const maestroAvatarOpenTokenRef = useRef<string | null>(null);
+  const resetPopupTokenRef = useRef<string | null>(null);
+  
+  const loadFileInputRef = useRef<HTMLInputElement>(null);
+  const maestroFileInputRef = useRef<HTMLInputElement>(null);
+
   const isCameraActive = sendWithSnapshotEnabled || useVisualContextForReengagementEnabled;
   const liveSessionActive = liveSessionState === 'active';
   const liveSessionConnecting = liveSessionState === 'connecting';
   const liveSessionErrored = liveSessionState === 'error';
-  const showLiveFeed = liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected;
+  const showLiveFeed = liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !isLanguageSelectionOpen;
   const isTwoUp = Boolean(attachedImageBase64 && showLiveFeed);
 
   const genUiToken = useCallback((tag: string) => `${tag}:${Date.now()}:${Math.random().toString(36).slice(2,8)}`, []);
@@ -163,6 +200,38 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
   }, [inputText]);
 
+  // Maestro Avatar Init
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const a = await getMaestroProfileImageDB();
+        if (mounted) setMaestroAsset(a);
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      try {
+        const d = e?.detail || {};
+        if (d && (typeof d.dataUrl === 'string' || typeof d.uri === 'string')) {
+          setMaestroAsset({
+            dataUrl: typeof d.dataUrl === 'string' ? d.dataUrl : maestroAsset?.dataUrl,
+            mimeType: typeof d.mimeType === 'string' ? d.mimeType : maestroAsset?.mimeType,
+            uri: typeof d.uri === 'string' ? d.uri : maestroAsset?.uri,
+            updatedAt: Date.now(),
+          });
+        } else {
+          getMaestroProfileImageDB().then(a => setMaestroAsset(a)).catch(() => {});
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('maestro-avatar-updated', handler as any);
+    return () => window.removeEventListener('maestro-avatar-updated', handler as any);
+  }, [maestroAsset]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setInputText(newText);
@@ -172,6 +241,10 @@ const InputArea: React.FC<InputAreaProps> = ({
   };
 
   const handleSend = async () => {
+    if (isLanguageSelectionOpen && onConfirmLanguageSelection) {
+        onConfirmLanguageSelection();
+        return;
+    }
     if (isSuggestionMode) {
       if (!inputText.trim() || isCreatingSuggestion) {
          if (!inputText.trim()) onToggleSuggestionMode(); 
@@ -710,6 +783,7 @@ const InputArea: React.FC<InputAreaProps> = ({
    }, [sttLanguageCode, targetLanguageDef, nativeLanguageDef]);
 
   const getPlaceholderText = () => {
+    if (isLanguageSelectionOpen) return "Select languages above...";
     if (prepDisplay) return prepDisplay;
      if (isSuggestionMode) {
          if (isCreatingSuggestion) return t('chat.suggestion.creating');
@@ -740,6 +814,168 @@ const InputArea: React.FC<InputAreaProps> = ({
   const handleLiveSessionToggle = () => {
     if (liveSessionActive) onStopLiveSession();
     else { try { onStartLiveSession(); } catch {} }
+  };
+
+  // --- Handlers for Language Selection Popups ---
+  const wipeLocalMemoryAndDb = useCallback(async () => {
+    try {
+        await new Promise<void>((resolve) => {
+            let settled = false;
+            try {
+                const req = indexedDB.deleteDatabase(DB_NAME);
+                req.onsuccess = () => { settled = true; resolve(); };
+                req.onerror = () => { resolve(); };
+                req.onblocked = () => { resolve(); };
+            } catch { resolve(); }
+            setTimeout(() => { if (!settled) resolve(); }, 1500);
+        });
+    } catch {}
+    try {
+        const keys: string[] = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+            const k = window.localStorage.key(i);
+            if (k) keys.push(k);
+        }
+        keys.forEach(k => {
+            if (k.startsWith('chatBackup:') || k === LOCAL_STORAGE_SETTINGS_KEY) {
+                try { window.localStorage.removeItem(k); } catch {}
+            }
+        });
+    } catch {}
+  }, []);
+
+  const handleMaestroAvatarClick = () => {
+    try {
+      if (!maestroAvatarOpenTokenRef.current && onUiTaskStart) {
+        const tok = genUiToken('maestro-avatar-open');
+        const ret = onUiTaskStart(tok);
+        maestroAvatarOpenTokenRef.current = typeof ret === 'string' ? ret : tok;
+      }
+    } catch {}
+    maestroFileInputRef.current?.click();
+  };
+
+  const handleClearMaestroAvatar = async (e?: React.MouseEvent) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    try { 
+      setIsUploadingMaestro(true); 
+      if (!maestroUploadTokenRef.current && onUiTaskStart) {
+        const tok = genUiToken('maestro-avatar');
+        const ret = onUiTaskStart(tok);
+        maestroUploadTokenRef.current = typeof ret === 'string' ? ret : tok;
+      }
+    } catch {}
+    try {
+      const prevUri = maestroAsset?.uri;
+      if (prevUri) {
+        await deleteFileByNameOrUri(prevUri);
+      }
+    } catch { }
+    try { await clearMaestroProfileImageDB(); } catch { }
+    
+    // Attempt default avatar
+    try {
+      const man = await fetch('/maestro-avatars/manifest.json', { cache: 'force-cache' });
+      let defaultFound = false;
+      if (man.ok) {
+        const list: string[] = await man.json();
+        if (Array.isArray(list)) {
+          for (const name of list) {
+            try {
+              const r = await fetch(`/maestro-avatars/${name}`, { cache: 'force-cache' });
+              if (r.ok) {
+                const blob = await r.blob();
+                const mime = blob.type || 'image/png';
+                const dataUrl: string = await new Promise((resolve, reject) => {
+                  const fr = new FileReader();
+                  fr.onloadend = () => resolve(fr.result as string);
+                  fr.onerror = () => reject(fr.error || new Error('DataURL conversion failed'));
+                  fr.readAsDataURL(blob);
+                });
+                let uploadedUri: string | undefined;
+                try {
+                  const up = await uploadMediaToFiles(dataUrl, mime, 'maestro-avatar');
+                  uploadedUri = up.uri; 
+                } catch { }
+                const asset: MaestroProfileAsset = { dataUrl, mimeType: mime, uri: uploadedUri, updatedAt: Date.now() };
+                try { await setMaestroProfileImageDB(asset); } catch {}
+                setMaestroAsset(asset);
+                try { window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: asset })); } catch {}
+                defaultFound = true;
+                break;
+              }
+            } catch { }
+          }
+        }
+      }
+      if (!defaultFound) {
+        setMaestroAsset(null);
+        try { window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: {} })); } catch {}
+      }
+    } catch {
+      setMaestroAsset(null);
+    } finally {
+      try { setIsUploadingMaestro(false); } catch {}
+      if (maestroUploadTokenRef.current && onUiTaskEnd) { onUiTaskEnd(maestroUploadTokenRef.current); maestroUploadTokenRef.current = null; }
+    }
+  };
+
+  const handleMaestroFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (maestroAvatarOpenTokenRef.current && onUiTaskEnd) { onUiTaskEnd(maestroAvatarOpenTokenRef.current); maestroAvatarOpenTokenRef.current = null; }
+    const file = event.target.files?.[0];
+    if (!file) { event.target.value = ''; return; }
+    if (!file.type.startsWith('image/')) { event.target.value = ''; return; }
+    try {
+      setIsUploadingMaestro(true);
+      if (!maestroUploadTokenRef.current && onUiTaskStart) {
+        const tok = genUiToken('maestro-avatar');
+        const ret = onUiTaskStart(tok);
+        maestroUploadTokenRef.current = typeof ret === 'string' ? ret : tok;
+      }
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = (e) => reject(e);
+        reader.readAsDataURL(file);
+      });
+      let uploadedUri: string | undefined;
+      try {
+        const up = await uploadMediaToFiles(dataUrl, file.type, 'maestro-avatar');
+        uploadedUri = up.uri; 
+      } catch {}
+      const asset: MaestroProfileAsset = { dataUrl, mimeType: file.type, uri: uploadedUri, updatedAt: Date.now() };
+      await setMaestroProfileImageDB(asset);
+      setMaestroAsset(asset);
+      try {
+        window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: { uri: uploadedUri, mimeType: file.type, dataUrl } }));
+      } catch {}
+    } catch {
+    } finally {
+      setIsUploadingMaestro(false);
+      event.target.value = '';
+      if (maestroUploadTokenRef.current && onUiTaskEnd) { onUiTaskEnd(maestroUploadTokenRef.current); maestroUploadTokenRef.current = null; }
+    }
+  };
+
+  const handleLoadFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && onLoadAllChats) {
+        try {
+          if (!loadPopupTokenRef.current && onUiTaskStart) {
+             const tok = genUiToken('load-popup');
+             const ret = onUiTaskStart(tok);
+             loadPopupTokenRef.current = typeof ret === 'string' ? ret : tok;
+          }
+          setIsLoadingInProgress(true);
+          await onLoadAllChats(file);
+          setIsLoadPopupOpen(false);
+        } finally {
+          setIsLoadingInProgress(false);
+          if (loadPopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(loadPopupTokenRef.current); loadPopupTokenRef.current = null; }
+        }
+    }
+    event.target.value = '';
   };
 
   return (
@@ -849,7 +1085,18 @@ const InputArea: React.FC<InputAreaProps> = ({
       ) : (
       <>
       {/* Previews */}
-      {(attachedImageBase64 || showLiveFeed) && (
+      {isLanguageSelectionOpen && onTempNativeSelect && onTempTargetSelect && onConfirmLanguageSelection ? (
+          <LanguageSelectorGlobe 
+            nativeLangCode={tempNativeLangCode || null}
+            targetLangCode={tempTargetLangCode || null}
+            onSelectNative={onTempNativeSelect}
+            onSelectTarget={onTempTargetSelect}
+            onConfirm={onConfirmLanguageSelection}
+            t={t}
+            onInteract={onUserInputActivity}
+          />
+      ) : (
+        (attachedImageBase64 || showLiveFeed) && (
          <div className="flex flex-wrap justify-center items-start gap-2 mb-2 order-first w-full">
            {attachedImageBase64 && (
              <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-gray-300' : 'bg-blue-400'} p-1 rounded-md`}>
@@ -973,7 +1220,7 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           )}
          </div>
-       )}
+       ))}
 
       <div className={`relative w-full flex flex-col rounded-3xl overflow-hidden transition-colors ${containerClass}`}>
         <div className="relative w-full">
@@ -986,7 +1233,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 value={inputText}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}                            
-                disabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
+                disabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion) || isLanguageSelectionOpen}
                 aria-label={t('chat.messageInputAriaLabel')}
             />
             {prepDisplay && <span className="sr-only" role="status" aria-live="polite">{prepDisplay}</span>}
@@ -1033,6 +1280,71 @@ const InputArea: React.FC<InputAreaProps> = ({
               <button onClick={onToggleImageGenerationMode} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.bookIcon.toggleImageGen')}>
                   <IconBookOpen className="w-5 h-5" />
               </button>
+              
+              {isLanguageSelectionOpen && (
+                <>
+                  <div className="w-px h-6 bg-white/20 mx-1"></div>
+                  <div className="relative inline-block">
+                    <div
+                        onClick={!isUploadingMaestro ? handleMaestroAvatarClick : undefined}
+                        className={`relative w-8 h-8 rounded-full overflow-hidden border-2 ${maestroAsset?.dataUrl ? 'border-white/50' : 'border-white/30 border-dashed'} bg-white/10 flex items-center justify-center hover:bg-white/20 transition cursor-pointer`}
+                        title={maestroAsset?.dataUrl ? t('startPage.maestroAvatar') : t('startPage.addMaestroAvatar')}
+                    >
+                        {maestroAsset?.dataUrl ? (
+                            <img src={maestroAsset.dataUrl} alt="Maestro" className="w-full h-full object-cover" />
+                        ) : (
+                            <IconPlus className="w-4 h-4 text-white/70" />
+                        )}
+                        {isUploadingMaestro && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <SmallSpinner className="w-4 h-4 text-white" />
+                            </div>
+                        )}
+                    </div>
+                    <input type="file" ref={maestroFileInputRef} onChange={handleMaestroFileChange} accept="image/*" className="hidden" />
+                    {maestroAsset?.dataUrl && !isUploadingMaestro && (
+                        <button
+                            onClick={handleClearMaestroAvatar}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600"
+                            title={t('general.clear')}
+                        >
+                            <IconXMark className="w-3 h-3" />
+                        </button>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={() => { 
+                      if (!savePopupTokenRef.current && onUiTaskStart) {
+                         const tok = genUiToken('save-popup');
+                         const ret = onUiTaskStart(tok);
+                         savePopupTokenRef.current = typeof ret === 'string' ? ret : tok;
+                      }
+                      setIsSavePopupOpen(true); 
+                    }}
+                    className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
+                    title={t('startPage.saveChats')}
+                  >
+                    <IconSave className="w-5 h-5" />
+                  </button>
+                  
+                  <button
+                    onClick={() => { 
+                      if (!loadPopupTokenRef.current && onUiTaskStart) {
+                         const tok = genUiToken('load-popup');
+                         const ret = onUiTaskStart(tok);
+                         loadPopupTokenRef.current = typeof ret === 'string' ? ret : tok;
+                      }
+                      setIsLoadPopupOpen(true); 
+                    }}
+                    className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
+                    title={t('startPage.loadChats')}
+                  >
+                    <IconFolderOpen className="w-5 h-5" />
+                  </button>
+                  <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".json" className="hidden" />
+                </>
+              )}
             </div>
             <div className="flex items-center space-x-1">
                 {isSttSupported && (
@@ -1059,7 +1371,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                       isRecordingAudioNote ? 'bg-red-500 text-white ring-2 ring-red-300' : isListening ? 'bg-red-500/80 text-white' : iconButtonStyle
                     } disabled:opacity-50`}
                     title={getMicButtonTitle()}
-                    disabled={isSending || isSpeaking}
+                    disabled={isSending || isSpeaking || isLanguageSelectionOpen}
                     aria-pressed={isListening}
                   >
                     {isRecordingAudioNote && (
@@ -1074,7 +1386,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 <button
                     onClick={handleSend}
                     className={`p-2 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 shadow-sm ${sendButtonStyle}`}
-                    disabled={isSending || (!inputText.trim() && !attachedImageBase64) || isSpeaking || (isSuggestionMode && isCreatingSuggestion) } 
+                    disabled={isSending || ((!inputText.trim() && !attachedImageBase64) && !isLanguageSelectionOpen) || isSpeaking || (isSuggestionMode && isCreatingSuggestion) } 
                     aria-label={isSuggestionMode ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction')) : t('chat.sendMessage')}
                 >
                     {isSuggestionMode ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />) : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
@@ -1082,6 +1394,135 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
         </div>
       </div>
+
+      {/* Popups */}
+      {(isSavePopupOpen || isLoadPopupOpen || isResetPopupOpen) && (
+        <div className="absolute bottom-full left-0 w-full z-50 mb-2 px-2 flex justify-center">
+            {isSavePopupOpen && (
+              <div className="bg-white text-slate-900 rounded-lg shadow-xl w-full max-w-sm p-4 border border-gray-200">
+                  <h3 className="text-lg font-semibold mb-3">{t('startPage.saveChats')}</h3>
+                  <div className="space-y-2">
+                    <button
+                      className="w-full text-left px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-60"
+                      disabled={isSavingInProgress}
+                      onClick={async () => {
+                        try {
+                          setIsSavingInProgress(true);
+                          if (onSaveAllChats) await onSaveAllChats();
+                          setIsSavePopupOpen(false);
+                        } finally {
+                          setIsSavingInProgress(false);
+                          if (savePopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(savePopupTokenRef.current); savePopupTokenRef.current = null; }
+                        }
+                      }}
+                    >
+                      {t('startPage.saveToDevice')}
+                    </button>
+                    <div className="pt-1 border-t border-slate-200" />
+                    <button
+                      className="w-full text-left px-3 py-2 rounded bg-red-100 hover:bg-red-200 text-red-800 disabled:opacity-60"
+                      disabled={isSavingInProgress}
+                      onClick={() => {
+                        if (!resetPopupTokenRef.current && onUiTaskStart) {
+                            const tok = genUiToken('reset-popup');
+                            const ret = onUiTaskStart(tok);
+                            resetPopupTokenRef.current = typeof ret === 'string' ? ret : tok;
+                        }
+                        setIsResetPopupOpen(true);
+                        setIsSavePopupOpen(false); 
+                      }}
+                    >
+                      Backup & Reset (wipe local data)
+                    </button>
+                  </div>
+                  <div className="mt-4 text-right">
+                    <button
+                      className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 disabled:opacity-60"
+                      disabled={isSavingInProgress}
+                      onClick={() => { setIsSavePopupOpen(false); if (savePopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(savePopupTokenRef.current); savePopupTokenRef.current = null; } }}
+                    >
+                      {t('chat.imageGenModal.close')}
+                    </button>
+                  </div>
+              </div>
+            )}
+
+            {isLoadPopupOpen && (
+                <div className="bg-white text-slate-900 rounded-lg shadow-xl w-full max-w-sm p-4 border border-gray-200">
+                  <h3 className="text-lg font-semibold mb-3">{t('startPage.loadChats')}</h3>
+                  <button
+                      className="w-full text-left px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-60 mb-4"
+                      disabled={isLoadingInProgress}
+                      onClick={() => loadFileInputRef.current?.click()}
+                  >
+                      {t('startPage.loadFromDevice')}
+                  </button>
+                  <div className="text-right">
+                    <button
+                      className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 disabled:opacity-60"
+                      disabled={isLoadingInProgress}
+                      onClick={() => { setIsLoadPopupOpen(false); if (loadPopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(loadPopupTokenRef.current); loadPopupTokenRef.current = null; } }}
+                    >
+                      {t('chat.imageGenModal.close')}
+                    </button>
+                  </div>
+                </div>
+            )}
+
+            {isResetPopupOpen && (
+                <div className="bg-white text-slate-900 rounded-lg shadow-xl w-full max-w-sm p-4 border border-gray-200">
+                  <h3 className="text-lg font-semibold mb-2">Backup & Reset</h3>
+                  <p className="text-sm text-slate-700 mb-3">This will create a backup file and then ERASE all local data.</p>
+                  <input
+                    type="text"
+                    className="w-full px-2 py-1 border rounded text-sm mb-3"
+                    value={resetName}
+                    onChange={(e) => setResetName(e.target.value)}
+                    placeholder="Backup filename"
+                    disabled={isResetting}
+                  />
+                  <input
+                    type="text"
+                    className="w-full px-2 py-1 border rounded text-sm mb-3 border-red-300"
+                    value={resetConfirm}
+                    onChange={(e) => setResetConfirm(e.target.value)}
+                    placeholder="Type DELETE to confirm"
+                    disabled={isResetting}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300"
+                      onClick={() => { setIsResetPopupOpen(false); if (resetPopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(resetPopupTokenRef.current); resetPopupTokenRef.current = null; } }}
+                      disabled={isResetting}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-500"
+                      disabled={isResetting || resetConfirm !== 'DELETE'}
+                      onClick={async () => {
+                        if (resetConfirm !== 'DELETE') return;
+                        const safe = resetName.trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '_');
+                        const filename = safe.length > 0 ? `${safe}.json` : undefined;
+                        try {
+                          setIsResetting(true);
+                          if (onSaveAllChats) await onSaveAllChats({ filename });
+                          await new Promise(r => setTimeout(r, 1500));
+                          await wipeLocalMemoryAndDb();
+                          window.location.reload();
+                        } catch (e) {
+                          alert('Reset failed.');
+                          setIsResetting(false);
+                        }
+                      }}
+                    >
+                      {isResetting ? 'Processing...' : 'Reset'}
+                    </button>
+                  </div>
+                </div>
+            )}
+        </div>
+      )}
 
       {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
       {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
