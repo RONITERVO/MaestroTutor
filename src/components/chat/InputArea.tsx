@@ -1,5 +1,4 @@
 
-
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { TranslationReplacements } from '../../../translations/index';
 import { CameraDevice } from '../../../types';
@@ -731,10 +730,12 @@ const InputArea: React.FC<InputAreaProps> = ({
   const liveSessionButtonLabel = liveSessionActive ? t('chat.liveSession.stop') : (liveSessionErrored ? t('chat.liveSession.retry') : t('chat.liveSession.start'));
   const liveSessionButtonClasses = liveSessionActive ? 'bg-red-600/80 hover:bg-red-500 text-white' : (liveSessionErrored ? 'bg-yellow-500/80 hover:bg-yellow-500 text-slate-900' : (isSuggestionMode ? 'bg-gray-700/80 hover:bg-gray-800 text-white' : 'bg-black/60 hover:bg-black/80 text-white'));
   
-  const textAreaStyle = isSuggestionMode ? 'bg-white text-gray-800 placeholder-gray-500 ring-gray-300 focus:ring-gray-400' : 'bg-blue-400 text-white placeholder-blue-200 ring-blue-300 focus:ring-white/80';
+  const containerClass = isSuggestionMode 
+    ? 'bg-white text-gray-800 shadow-sm ring-1 ring-gray-300 focus-within:ring-2 focus-within:ring-gray-400' 
+    : 'bg-blue-400 text-white shadow-sm ring-1 ring-blue-300 focus-within:ring-2 focus-within:ring-white/80';
+
   const sendButtonStyle = isSuggestionMode ? 'bg-gray-700 text-white hover:bg-gray-600 focus:ring-gray-400' : 'bg-white text-blue-600 hover:bg-blue-100 focus:ring-blue-200';
-  const iconButtonStyle = isSuggestionMode ? 'text-gray-600 hover:text-black hover:bg-black/10' : 'text-blue-100 hover:text-white hover:bg-blue-400/80';
-  const borderStyle = isSuggestionMode ? 'border-gray-300' : 'border-blue-400/50';
+  const iconButtonStyle = isSuggestionMode ? 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' : 'text-blue-100 hover:text-white hover:bg-white/20';
 
   const handleLiveSessionToggle = () => {
     if (liveSessionActive) onStopLiveSession();
@@ -847,119 +848,9 @@ const InputArea: React.FC<InputAreaProps> = ({
         </div>
       ) : (
       <>
-      <div className="relative w-full">
-          <textarea
-              ref={bubbleTextAreaRef}
-              rows={1}
-              className={`w-full py-3 pl-4 pr-14 rounded-2xl focus:ring-2 focus:border-transparent resize-none overflow-hidden ${textAreaStyle}`}
-              style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}
-              placeholder={getPlaceholderText()}
-              value={inputText}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}                            
-              disabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
-              aria-label={t('chat.messageInputAriaLabel')}
-          />
-          <button
-              onClick={handleSend}
-              className={`absolute right-1.5 bottom-1.5 p-1 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 z-10 shadow-sm ${sendButtonStyle}`}
-              disabled={isSending || (!inputText.trim() && !attachedImageBase64) || isSpeaking || (isSuggestionMode && isCreatingSuggestion) } 
-              aria-label={isSuggestionMode ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction')) : t('chat.sendMessage')}
-          >
-              {isSuggestionMode ? (isCreatingSuggestion ? <SmallSpinner className="w-6 h-6" /> : <IconPlus className="w-6 h-6" />) : (sendPrep && sendPrep.active ? <SmallSpinner className="w-6 h-6" /> : <IconSend className="w-6 h-6" />)}
-          </button>
-          {prepDisplay && <span className="sr-only" role="status" aria-live="polite">{prepDisplay}</span>}
-      </div>
-
-      <div className={`flex items-center justify-between mt-2 pt-2 border-t ${borderStyle}`}>
-          <div className="flex items-center space-x-1">
-            <input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,text/csv,text/markdown" ref={fileInputRef} onChange={handleImageAttach} className="hidden" id="imageUpload" />
-            <label
-              htmlFor="imageUpload"
-              className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
-              title={t('chat.attachImageFromFile')}
-              role="button"
-              tabIndex={0}
-              onClick={() => { if (!paperclipOpenTokenRef.current && onUiTaskStart) { const tok = genUiToken('case-file-open'); const ret = onUiTaskStart(tok); paperclipOpenTokenRef.current = typeof ret === 'string' ? ret : tok; } }}
-            >
-                <IconPaperclip className="w-5 h-5" />
-            </label>
-            {isCameraActive && allCameraOptions.length > 0 ? (
-               <div className={`flex items-center p-0.5 ${isSuggestionMode ? 'bg-gray-300/50' : 'bg-blue-600/50'} rounded-full`}>
-                   <button onClick={handleCameraDeactivationClick} className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600" title={t('chat.camera.turnOff')}>
-                       <IconXMark className="w-4 h-4" />
-                   </button>
-                   <div className="flex items-center space-x-0.5 ml-1">
-                       {allCameraOptions.map(cam => {
-                           const isSelected = cam.deviceId === selectedCameraId;
-                           let Icon;
-                           if (cam.deviceId === IMAGE_GEN_CAMERA_ID) Icon = IconSparkles;
-                           else if (cam.facingMode === 'user') Icon = IconCameraFront;
-                           else Icon = IconCamera;
-                           return (
-                               <button key={cam.deviceId} onClick={() => onSelectCamera(cam.deviceId)} className={`p-1.5 rounded-full transition-colors ${isSelected ? `bg-white ${isSuggestionMode ? 'text-gray-800' : 'text-blue-600'}` : `${isSuggestionMode ? 'text-gray-600 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80'}`}`} title={cam.label}>
-                                   <Icon className="w-4 h-4" />
-                               </button>
-                           );
-                       })}
-                   </div>
-               </div>
-           ) : (
-               <button onClick={handleCameraActivationClick} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${isSuggestionMode ? 'text-gray-600 hover:text-black hover:bg-black/10' : 'hover:text-white hover:bg-blue-400/80'} ${isImageGenCameraSelected ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.camera.turnOn')}>
-                   {isImageGenCameraSelected ? <IconSparkles className="w-5 h-5" /> : (currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />)}
-               </button>
-           )}
-            <button onClick={onToggleImageGenerationMode} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.bookIcon.toggleImageGen')}>
-                <IconBookOpen className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex items-center space-x-1">
-              {isSttSupported && (
-                  <SttLanguageSelector
-                      targetLang={targetLanguageDef}
-                      nativeLang={nativeLanguageDef}
-                      currentSttLangCode={sttLanguageCode}
-                      onSelectLang={onSttLanguageChange}
-                      t={t}
-                      isCollapsed={true}
-                      isInSuggestionMode={isSuggestionMode}
-                  />
-              )}
-              {isSttSupported && (
-                <button
-                  onClick={handleMicClick}
-                  onPointerDown={handleMicPointerDown}
-                  onPointerUp={handleMicPointerUp}
-                  onPointerCancel={handleMicPointerCancel}
-                  onPointerLeave={handleMicPointerCancel}
-                  onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
-                  className={`relative overflow-visible p-2 rounded-full transition-colors touch-manipulation select-none ${
-                    isRecordingAudioNote ? 'bg-red-500 text-white ring-2 ring-red-300' : isListening ? 'bg-red-500/80 text-white' : iconButtonStyle
-                  } disabled:opacity-50`}
-                  title={getMicButtonTitle()}
-                  disabled={isSending || isSpeaking}
-                  aria-pressed={isListening}
-                >
-                  {isRecordingAudioNote && (
-                    <>
-                      <span className="pointer-events-none absolute -inset-4 rounded-full bg-red-400/30 animate-ping" />
-                      <span className="pointer-events-none absolute -inset-6 rounded-full bg-red-400/15 animate-ping" style={{ animationDuration: '2s' }} />
-                    </>
-                  )}
-                  <IconMicrophone className={`relative z-10 w-5 h-5 ${isRecordingAudioNote ? 'drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]' : ''}`} />
-                </button>
-              )}
-          </div>
-      </div>
-
-      {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
-      {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
-      {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-orange-800 bg-orange-200/50' : 'text-orange-200 bg-orange-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
-
       {/* Previews */}
       {(attachedImageBase64 || showLiveFeed) && (
-         <div className="flex flex-wrap justify-center items-start gap-2 mb-2 order-first">
+         <div className="flex flex-wrap justify-center items-start gap-2 mb-2 order-first w-full">
            {attachedImageBase64 && (
              <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-gray-300' : 'bg-blue-400'} p-1 rounded-md`}>
                {attachedImageMimeType?.startsWith('image/') ? (
@@ -1083,6 +974,118 @@ const InputArea: React.FC<InputAreaProps> = ({
           )}
          </div>
        )}
+
+      <div className={`relative w-full flex flex-col rounded-3xl overflow-hidden transition-colors ${containerClass}`}>
+        <div className="relative w-full">
+            <textarea
+                ref={bubbleTextAreaRef}
+                rows={1}
+                className={`w-full py-3 px-4 bg-transparent border-none focus:ring-0 resize-none overflow-hidden placeholder-inherit min-h-[50px]`}
+                style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}
+                placeholder={getPlaceholderText()}
+                value={inputText}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}                            
+                disabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
+                aria-label={t('chat.messageInputAriaLabel')}
+            />
+            {prepDisplay && <span className="sr-only" role="status" aria-live="polite">{prepDisplay}</span>}
+        </div>
+
+        <div className="flex items-center justify-between px-2 pb-2">
+            <div className="flex items-center space-x-1">
+              <input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,text/csv,text/markdown" ref={fileInputRef} onChange={handleImageAttach} className="hidden" id="imageUpload" />
+              <label
+                htmlFor="imageUpload"
+                className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
+                title={t('chat.attachImageFromFile')}
+                role="button"
+                tabIndex={0}
+                onClick={() => { if (!paperclipOpenTokenRef.current && onUiTaskStart) { const tok = genUiToken('case-file-open'); const ret = onUiTaskStart(tok); paperclipOpenTokenRef.current = typeof ret === 'string' ? ret : tok; } }}
+              >
+                  <IconPaperclip className="w-5 h-5" />
+              </label>
+              {isCameraActive && allCameraOptions.length > 0 ? (
+                 <div className={`flex items-center p-0.5 ${isSuggestionMode ? 'bg-gray-300/50' : 'bg-blue-600/50'} rounded-full`}>
+                     <button onClick={handleCameraDeactivationClick} className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600" title={t('chat.camera.turnOff')}>
+                         <IconXMark className="w-4 h-4" />
+                     </button>
+                     <div className="flex items-center space-x-0.5 ml-1">
+                         {allCameraOptions.map(cam => {
+                             const isSelected = cam.deviceId === selectedCameraId;
+                             let Icon;
+                             if (cam.deviceId === IMAGE_GEN_CAMERA_ID) Icon = IconSparkles;
+                             else if (cam.facingMode === 'user') Icon = IconCameraFront;
+                             else Icon = IconCamera;
+                             return (
+                                 <button key={cam.deviceId} onClick={() => onSelectCamera(cam.deviceId)} className={`p-1.5 rounded-full transition-colors ${isSelected ? `bg-white ${isSuggestionMode ? 'text-gray-800' : 'text-blue-600'}` : `${isSuggestionMode ? 'text-gray-600 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80'}`}`} title={cam.label}>
+                                     <Icon className="w-4 h-4" />
+                                 </button>
+                             );
+                         })}
+                     </div>
+                 </div>
+             ) : (
+                 <button onClick={handleCameraActivationClick} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${isSuggestionMode ? 'text-gray-600 hover:text-black hover:bg-black/10' : 'hover:text-white hover:bg-blue-400/80'} ${isImageGenCameraSelected ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.camera.turnOn')}>
+                     {isImageGenCameraSelected ? <IconSparkles className="w-5 h-5" /> : (currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />)}
+                 </button>
+             )}
+              <button onClick={onToggleImageGenerationMode} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.bookIcon.toggleImageGen')}>
+                  <IconBookOpen className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex items-center space-x-1">
+                {isSttSupported && (
+                    <SttLanguageSelector
+                        targetLang={targetLanguageDef}
+                        nativeLang={nativeLanguageDef}
+                        currentSttLangCode={sttLanguageCode}
+                        onSelectLang={onSttLanguageChange}
+                        t={t}
+                        isCollapsed={true}
+                        isInSuggestionMode={isSuggestionMode}
+                    />
+                )}
+                {isSttSupported && (
+                  <button
+                    onClick={handleMicClick}
+                    onPointerDown={handleMicPointerDown}
+                    onPointerUp={handleMicPointerUp}
+                    onPointerCancel={handleMicPointerCancel}
+                    onPointerLeave={handleMicPointerCancel}
+                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
+                    className={`relative overflow-visible p-2 rounded-full transition-colors touch-manipulation select-none ${
+                      isRecordingAudioNote ? 'bg-red-500 text-white ring-2 ring-red-300' : isListening ? 'bg-red-500/80 text-white' : iconButtonStyle
+                    } disabled:opacity-50`}
+                    title={getMicButtonTitle()}
+                    disabled={isSending || isSpeaking}
+                    aria-pressed={isListening}
+                  >
+                    {isRecordingAudioNote && (
+                      <>
+                        <span className="pointer-events-none absolute -inset-4 rounded-full bg-red-400/30 animate-ping" />
+                        <span className="pointer-events-none absolute -inset-6 rounded-full bg-red-400/15 animate-ping" style={{ animationDuration: '2s' }} />
+                      </>
+                    )}
+                    <IconMicrophone className={`relative z-10 w-5 h-5 ${isRecordingAudioNote ? 'drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]' : ''}`} />
+                  </button>
+                )}
+                <button
+                    onClick={handleSend}
+                    className={`p-2 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 shadow-sm ${sendButtonStyle}`}
+                    disabled={isSending || (!inputText.trim() && !attachedImageBase64) || isSpeaking || (isSuggestionMode && isCreatingSuggestion) } 
+                    aria-label={isSuggestionMode ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction')) : t('chat.sendMessage')}
+                >
+                    {isSuggestionMode ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />) : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
+                </button>
+            </div>
+        </div>
+      </div>
+
+      {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
+      {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
+      {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-orange-800 bg-orange-200/50' : 'text-orange-200 bg-orange-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
       </>
       )}
     </>
