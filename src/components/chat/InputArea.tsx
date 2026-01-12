@@ -7,7 +7,7 @@ import { LiveSessionState } from '../../../hooks/speech/useGeminiLiveConversatio
 import { 
   IconSend, IconPaperclip, IconMicrophone, IconXMark, IconCamera, 
   IconCameraFront, IconBookOpen, IconPencil, IconPlus, IconSparkles, 
-  IMAGE_GEN_CAMERA_ID, IconUndo, IconCheck, IconSave, IconFolderOpen
+  IMAGE_GEN_CAMERA_ID, IconUndo, IconCheck, IconSave, IconFolderOpen, IconTrash
 } from '../../../constants';
 import { SmallSpinner } from '../ui/SmallSpinner';
 import SttLanguageSelector from './SttLanguageSelector';
@@ -144,23 +144,19 @@ const InputArea: React.FC<InputAreaProps> = ({
   const composerLastPinchDistanceRef = useRef<number>(0);
   const composerIsNewStrokeRef = useRef(true);
 
-  // --- Language Selection Popups State ---
+  // --- Language Selection Actions State ---
   const [maestroAsset, setMaestroAsset] = useState<MaestroProfileAsset | null>(null);
   const [isUploadingMaestro, setIsUploadingMaestro] = useState(false);
-  const [isSavePopupOpen, setIsSavePopupOpen] = useState(false);
-  const [isLoadPopupOpen, setIsLoadPopupOpen] = useState(false);
-  const [isSavingInProgress, setIsSavingInProgress] = useState(false);
-  const [isLoadingInProgress, setIsLoadingInProgress] = useState(false);
-  const [isResetPopupOpen, setIsResetPopupOpen] = useState(false);
-  const [resetName, setResetName] = useState<string>('');
+  
+  // Reset confirmation inside input area
+  const [resetMode, setResetMode] = useState(false);
   const [resetConfirm, setResetConfirm] = useState<string>('');
   const [isResetting, setIsResetting] = useState(false);
 
-  const savePopupTokenRef = useRef<string | null>(null);
-  const loadPopupTokenRef = useRef<string | null>(null);
+  const saveTokenRef = useRef<string | null>(null);
+  const loadTokenRef = useRef<string | null>(null);
   const maestroUploadTokenRef = useRef<string | null>(null);
   const maestroAvatarOpenTokenRef = useRef<string | null>(null);
-  const resetPopupTokenRef = useRef<string | null>(null);
   
   const loadFileInputRef = useRef<HTMLInputElement>(null);
   const maestroFileInputRef = useRef<HTMLInputElement>(null);
@@ -962,20 +958,48 @@ const InputArea: React.FC<InputAreaProps> = ({
     const file = event.target.files?.[0];
     if (file && onLoadAllChats) {
         try {
-          if (!loadPopupTokenRef.current && onUiTaskStart) {
-             const tok = genUiToken('load-popup');
+          if (!loadTokenRef.current && onUiTaskStart) {
+             const tok = genUiToken('load-chats');
              const ret = onUiTaskStart(tok);
-             loadPopupTokenRef.current = typeof ret === 'string' ? ret : tok;
+             loadTokenRef.current = typeof ret === 'string' ? ret : tok;
           }
-          setIsLoadingInProgress(true);
           await onLoadAllChats(file);
-          setIsLoadPopupOpen(false);
         } finally {
-          setIsLoadingInProgress(false);
-          if (loadPopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(loadPopupTokenRef.current); loadPopupTokenRef.current = null; }
+          if (loadTokenRef.current && onUiTaskEnd) { onUiTaskEnd(loadTokenRef.current); loadTokenRef.current = null; }
         }
     }
     event.target.value = '';
+  };
+
+  const handleSave = async () => {
+    if (onSaveAllChats) {
+        if (!saveTokenRef.current && onUiTaskStart) {
+            const tok = genUiToken('save-chats');
+            const ret = onUiTaskStart(tok);
+            saveTokenRef.current = typeof ret === 'string' ? ret : tok;
+        }
+        try {
+            await onSaveAllChats();
+        } finally {
+            if (saveTokenRef.current && onUiTaskEnd) { onUiTaskEnd(saveTokenRef.current); saveTokenRef.current = null; }
+        }
+    }
+  };
+
+  const handleResetConfirm = async () => {
+    if (resetConfirm !== 'DELETE') return;
+    try {
+        setIsResetting(true);
+        // Backup first
+        const safe = `backup-before-reset-${new Date().toISOString().slice(0,10)}`;
+        if (onSaveAllChats) await onSaveAllChats({ filename: `${safe}.json`, auto: true });
+        
+        await new Promise(r => setTimeout(r, 500));
+        await wipeLocalMemoryAndDb();
+        window.location.reload();
+    } catch(e) {
+        setIsResetting(false);
+    }
   };
 
   return (
@@ -1223,67 +1247,109 @@ const InputArea: React.FC<InputAreaProps> = ({
        ))}
 
       <div className={`relative w-full flex flex-col rounded-3xl overflow-hidden transition-colors ${containerClass}`}>
-        <div className="relative w-full">
-            <textarea
-                ref={bubbleTextAreaRef}
-                rows={1}
-                className={`w-full py-3 px-4 bg-transparent border-none focus:ring-0 resize-none overflow-hidden placeholder-inherit min-h-[50px]`}
-                style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}
-                placeholder={getPlaceholderText()}
-                value={inputText}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}                            
-                disabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion) || isLanguageSelectionOpen}
-                aria-label={t('chat.messageInputAriaLabel')}
-            />
-            {prepDisplay && <span className="sr-only" role="status" aria-live="polite">{prepDisplay}</span>}
-        </div>
+        {isLanguageSelectionOpen ? (
+          <div className="w-full py-3 px-4 min-h-[50px] flex items-center gap-3">
+            {resetMode ? (
+               <>
+                 <span className="text-xs font-semibold text-white uppercase whitespace-nowrap">Reset:</span>
+                 <input 
+                    className="flex-1 min-w-0 bg-white/20 border border-white/30 rounded px-2 py-1 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white"
+                    placeholder="Type DELETE"
+                    value={resetConfirm}
+                    onChange={(e) => setResetConfirm(e.target.value)}
+                 />
+                 <button onClick={handleResetConfirm} disabled={resetConfirm !== 'DELETE'} className="p-1.5 bg-red-500 rounded-full text-white disabled:opacity-50 hover:bg-red-600">
+                    <IconCheck className="w-4 h-4" />
+                 </button>
+                 <button onClick={() => { setResetMode(false); setResetConfirm(''); }} className="p-1.5 bg-white/20 rounded-full text-white hover:bg-white/30">
+                    <IconUndo className="w-4 h-4" />
+                 </button>
+               </>
+            ) : (
+               <>
+                 <span className="text-sm text-blue-100 flex-1 truncate">Select languages above...</span>
+                 <div className="flex items-center bg-blue-500/30 rounded-full p-0.5 border border-white/10">
+                    <button onClick={handleSave} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title={t('startPage.saveChats')}>
+                        <IconSave className="w-4 h-4" />
+                    </button>
+                    <div className="w-px h-4 bg-white/20 mx-0.5"></div>
+                    <button onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title={t('startPage.loadChats')}>
+                        <IconFolderOpen className="w-4 h-4" />
+                    </button>
+                    <div className="w-px h-4 bg-white/20 mx-0.5"></div>
+                    <button onClick={() => setResetMode(true)} className="p-2 hover:bg-red-500/50 rounded-full text-white transition-colors" title="Backup & Reset">
+                        <IconTrash className="w-4 h-4" />
+                    </button>
+                 </div>
+                 <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".json" className="hidden" />
+               </>
+            )}
+          </div>
+        ) : (
+          <div className="relative w-full">
+              <textarea
+                  ref={bubbleTextAreaRef}
+                  rows={1}
+                  className={`w-full py-3 px-4 bg-transparent border-none focus:ring-0 resize-none overflow-hidden placeholder-inherit min-h-[50px]`}
+                  style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}
+                  placeholder={getPlaceholderText()}
+                  value={inputText}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}                            
+                  disabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
+                  aria-label={t('chat.messageInputAriaLabel')}
+              />
+              {prepDisplay && <span className="sr-only" role="status" aria-live="polite">{prepDisplay}</span>}
+          </div>
+        )}
 
         <div className="flex items-center justify-between px-2 pb-2">
             <div className="flex items-center space-x-1">
-              <input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,text/csv,text/markdown" ref={fileInputRef} onChange={handleImageAttach} className="hidden" id="imageUpload" />
-              <label
-                htmlFor="imageUpload"
-                className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
-                title={t('chat.attachImageFromFile')}
-                role="button"
-                tabIndex={0}
-                onClick={() => { if (!paperclipOpenTokenRef.current && onUiTaskStart) { const tok = genUiToken('case-file-open'); const ret = onUiTaskStart(tok); paperclipOpenTokenRef.current = typeof ret === 'string' ? ret : tok; } }}
-              >
-                  <IconPaperclip className="w-5 h-5" />
-              </label>
-              {isCameraActive && allCameraOptions.length > 0 ? (
-                 <div className={`flex items-center p-0.5 ${isSuggestionMode ? 'bg-gray-300/50' : 'bg-blue-600/50'} rounded-full`}>
-                     <button onClick={handleCameraDeactivationClick} className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600" title={t('chat.camera.turnOff')}>
-                         <IconXMark className="w-4 h-4" />
-                     </button>
-                     <div className="flex items-center space-x-0.5 ml-1">
-                         {allCameraOptions.map(cam => {
-                             const isSelected = cam.deviceId === selectedCameraId;
-                             let Icon;
-                             if (cam.deviceId === IMAGE_GEN_CAMERA_ID) Icon = IconSparkles;
-                             else if (cam.facingMode === 'user') Icon = IconCameraFront;
-                             else Icon = IconCamera;
-                             return (
-                                 <button key={cam.deviceId} onClick={() => onSelectCamera(cam.deviceId)} className={`p-1.5 rounded-full transition-colors ${isSelected ? `bg-white ${isSuggestionMode ? 'text-gray-800' : 'text-blue-600'}` : `${isSuggestionMode ? 'text-gray-600 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80'}`}`} title={cam.label}>
-                                     <Icon className="w-4 h-4" />
-                                 </button>
-                             );
-                         })}
+              {!isLanguageSelectionOpen && (
+                <>
+                  <input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,text/csv,text/markdown" ref={fileInputRef} onChange={handleImageAttach} className="hidden" id="imageUpload" />
+                  <label
+                    htmlFor="imageUpload"
+                    className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
+                    title={t('chat.attachImageFromFile')}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { if (!paperclipOpenTokenRef.current && onUiTaskStart) { const tok = genUiToken('case-file-open'); const ret = onUiTaskStart(tok); paperclipOpenTokenRef.current = typeof ret === 'string' ? ret : tok; } }}
+                  >
+                      <IconPaperclip className="w-5 h-5" />
+                  </label>
+                  {isCameraActive && allCameraOptions.length > 0 ? (
+                     <div className={`flex items-center p-0.5 ${isSuggestionMode ? 'bg-gray-300/50' : 'bg-blue-600/50'} rounded-full`}>
+                         <button onClick={handleCameraDeactivationClick} className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600" title={t('chat.camera.turnOff')}>
+                             <IconXMark className="w-4 h-4" />
+                         </button>
+                         <div className="flex items-center space-x-0.5 ml-1">
+                             {allCameraOptions.map(cam => {
+                                 const isSelected = cam.deviceId === selectedCameraId;
+                                 let Icon;
+                                 if (cam.deviceId === IMAGE_GEN_CAMERA_ID) Icon = IconSparkles;
+                                 else if (cam.facingMode === 'user') Icon = IconCameraFront;
+                                 else Icon = IconCamera;
+                                 return (
+                                     <button key={cam.deviceId} onClick={() => onSelectCamera(cam.deviceId)} className={`p-1.5 rounded-full transition-colors ${isSelected ? `bg-white ${isSuggestionMode ? 'text-gray-800' : 'text-blue-600'}` : `${isSuggestionMode ? 'text-gray-600 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80'}`}`} title={cam.label}>
+                                         <Icon className="w-4 h-4" />
+                                     </button>
+                                 );
+                             })}
+                         </div>
                      </div>
-                 </div>
-             ) : (
-                 <button onClick={handleCameraActivationClick} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${isSuggestionMode ? 'text-gray-600 hover:text-black hover:bg-black/10' : 'hover:text-white hover:bg-blue-400/80'} ${isImageGenCameraSelected ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.camera.turnOn')}>
-                     {isImageGenCameraSelected ? <IconSparkles className="w-5 h-5" /> : (currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />)}
-                 </button>
-             )}
-              <button onClick={onToggleImageGenerationMode} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.bookIcon.toggleImageGen')}>
-                  <IconBookOpen className="w-5 h-5" />
-              </button>
+                 ) : (
+                     <button onClick={handleCameraActivationClick} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${isSuggestionMode ? 'text-gray-600 hover:text-black hover:bg-black/10' : 'hover:text-white hover:bg-blue-400/80'} ${isImageGenCameraSelected ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.camera.turnOn')}>
+                         {isImageGenCameraSelected ? <IconSparkles className="w-5 h-5" /> : (currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />)}
+                     </button>
+                 )}
+                  <button onClick={onToggleImageGenerationMode} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.bookIcon.toggleImageGen')}>
+                      <IconBookOpen className="w-5 h-5" />
+                  </button>
+                </>
+              )}
               
               {isLanguageSelectionOpen && (
-                <>
-                  <div className="w-px h-6 bg-white/20 mx-1"></div>
                   <div className="relative inline-block">
                     <div
                         onClick={!isUploadingMaestro ? handleMaestroAvatarClick : undefined}
@@ -1312,42 +1378,10 @@ const InputArea: React.FC<InputAreaProps> = ({
                         </button>
                     )}
                   </div>
-                  
-                  <button
-                    onClick={() => { 
-                      if (!savePopupTokenRef.current && onUiTaskStart) {
-                         const tok = genUiToken('save-popup');
-                         const ret = onUiTaskStart(tok);
-                         savePopupTokenRef.current = typeof ret === 'string' ? ret : tok;
-                      }
-                      setIsSavePopupOpen(true); 
-                    }}
-                    className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
-                    title={t('startPage.saveChats')}
-                  >
-                    <IconSave className="w-5 h-5" />
-                  </button>
-                  
-                  <button
-                    onClick={() => { 
-                      if (!loadPopupTokenRef.current && onUiTaskStart) {
-                         const tok = genUiToken('load-popup');
-                         const ret = onUiTaskStart(tok);
-                         loadPopupTokenRef.current = typeof ret === 'string' ? ret : tok;
-                      }
-                      setIsLoadPopupOpen(true); 
-                    }}
-                    className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
-                    title={t('startPage.loadChats')}
-                  >
-                    <IconFolderOpen className="w-5 h-5" />
-                  </button>
-                  <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".json" className="hidden" />
-                </>
               )}
             </div>
             <div className="flex items-center space-x-1">
-                {isSttSupported && (
+                {!isLanguageSelectionOpen && isSttSupported && (
                     <SttLanguageSelector
                         targetLang={targetLanguageDef}
                         nativeLang={nativeLanguageDef}
@@ -1358,7 +1392,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                         isInSuggestionMode={isSuggestionMode}
                     />
                 )}
-                {isSttSupported && (
+                {!isLanguageSelectionOpen && isSttSupported && (
                   <button
                     onClick={handleMicClick}
                     onPointerDown={handleMicPointerDown}
@@ -1394,135 +1428,6 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
         </div>
       </div>
-
-      {/* Popups */}
-      {(isSavePopupOpen || isLoadPopupOpen || isResetPopupOpen) && (
-        <div className="absolute bottom-full left-0 w-full z-50 mb-2 px-2 flex justify-center">
-            {isSavePopupOpen && (
-              <div className="bg-white text-slate-900 rounded-lg shadow-xl w-full max-w-sm p-4 border border-gray-200">
-                  <h3 className="text-lg font-semibold mb-3">{t('startPage.saveChats')}</h3>
-                  <div className="space-y-2">
-                    <button
-                      className="w-full text-left px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-60"
-                      disabled={isSavingInProgress}
-                      onClick={async () => {
-                        try {
-                          setIsSavingInProgress(true);
-                          if (onSaveAllChats) await onSaveAllChats();
-                          setIsSavePopupOpen(false);
-                        } finally {
-                          setIsSavingInProgress(false);
-                          if (savePopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(savePopupTokenRef.current); savePopupTokenRef.current = null; }
-                        }
-                      }}
-                    >
-                      {t('startPage.saveToDevice')}
-                    </button>
-                    <div className="pt-1 border-t border-slate-200" />
-                    <button
-                      className="w-full text-left px-3 py-2 rounded bg-red-100 hover:bg-red-200 text-red-800 disabled:opacity-60"
-                      disabled={isSavingInProgress}
-                      onClick={() => {
-                        if (!resetPopupTokenRef.current && onUiTaskStart) {
-                            const tok = genUiToken('reset-popup');
-                            const ret = onUiTaskStart(tok);
-                            resetPopupTokenRef.current = typeof ret === 'string' ? ret : tok;
-                        }
-                        setIsResetPopupOpen(true);
-                        setIsSavePopupOpen(false); 
-                      }}
-                    >
-                      Backup & Reset (wipe local data)
-                    </button>
-                  </div>
-                  <div className="mt-4 text-right">
-                    <button
-                      className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 disabled:opacity-60"
-                      disabled={isSavingInProgress}
-                      onClick={() => { setIsSavePopupOpen(false); if (savePopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(savePopupTokenRef.current); savePopupTokenRef.current = null; } }}
-                    >
-                      {t('chat.imageGenModal.close')}
-                    </button>
-                  </div>
-              </div>
-            )}
-
-            {isLoadPopupOpen && (
-                <div className="bg-white text-slate-900 rounded-lg shadow-xl w-full max-w-sm p-4 border border-gray-200">
-                  <h3 className="text-lg font-semibold mb-3">{t('startPage.loadChats')}</h3>
-                  <button
-                      className="w-full text-left px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-60 mb-4"
-                      disabled={isLoadingInProgress}
-                      onClick={() => loadFileInputRef.current?.click()}
-                  >
-                      {t('startPage.loadFromDevice')}
-                  </button>
-                  <div className="text-right">
-                    <button
-                      className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300 disabled:opacity-60"
-                      disabled={isLoadingInProgress}
-                      onClick={() => { setIsLoadPopupOpen(false); if (loadPopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(loadPopupTokenRef.current); loadPopupTokenRef.current = null; } }}
-                    >
-                      {t('chat.imageGenModal.close')}
-                    </button>
-                  </div>
-                </div>
-            )}
-
-            {isResetPopupOpen && (
-                <div className="bg-white text-slate-900 rounded-lg shadow-xl w-full max-w-sm p-4 border border-gray-200">
-                  <h3 className="text-lg font-semibold mb-2">Backup & Reset</h3>
-                  <p className="text-sm text-slate-700 mb-3">This will create a backup file and then ERASE all local data.</p>
-                  <input
-                    type="text"
-                    className="w-full px-2 py-1 border rounded text-sm mb-3"
-                    value={resetName}
-                    onChange={(e) => setResetName(e.target.value)}
-                    placeholder="Backup filename"
-                    disabled={isResetting}
-                  />
-                  <input
-                    type="text"
-                    className="w-full px-2 py-1 border rounded text-sm mb-3 border-red-300"
-                    value={resetConfirm}
-                    onChange={(e) => setResetConfirm(e.target.value)}
-                    placeholder="Type DELETE to confirm"
-                    disabled={isResetting}
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      className="px-3 py-1 rounded bg-slate-200 hover:bg-slate-300"
-                      onClick={() => { setIsResetPopupOpen(false); if (resetPopupTokenRef.current && onUiTaskEnd) { onUiTaskEnd(resetPopupTokenRef.current); resetPopupTokenRef.current = null; } }}
-                      disabled={isResetting}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-500"
-                      disabled={isResetting || resetConfirm !== 'DELETE'}
-                      onClick={async () => {
-                        if (resetConfirm !== 'DELETE') return;
-                        const safe = resetName.trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '_');
-                        const filename = safe.length > 0 ? `${safe}.json` : undefined;
-                        try {
-                          setIsResetting(true);
-                          if (onSaveAllChats) await onSaveAllChats({ filename });
-                          await new Promise(r => setTimeout(r, 1500));
-                          await wipeLocalMemoryAndDb();
-                          window.location.reload();
-                        } catch (e) {
-                          alert('Reset failed.');
-                          setIsResetting(false);
-                        }
-                      }}
-                    >
-                      {isResetting ? 'Processing...' : 'Reset'}
-                    </button>
-                  </div>
-                </div>
-            )}
-        </div>
-      )}
 
       {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
       {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
