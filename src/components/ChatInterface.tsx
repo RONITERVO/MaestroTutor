@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, GroundingChunk, ReplySuggestion, MaestroActivityStage, SpeechPart, CameraDevice } from '../../types';
 import { LiveSessionState } from '../../hooks/speech/useGeminiLiveConversation';
@@ -107,6 +108,13 @@ interface ChatInterfaceProps {
   onCreateSuggestion: (text: string) => Promise<void>;
   isCreatingSuggestion: boolean;
   sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
+
+  // Settings passed down
+  sttProvider: string;
+  ttsProvider: string;
+  onToggleSttProvider: () => void;
+  onToggleTtsProvider: () => void;
+  isSpeechRecognitionSupported: boolean;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
@@ -187,7 +195,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     sendPrep,
     onUiTaskStart,
     onUiTaskEnd,
-    onSendMessage
+    onSendMessage,
+    sttProvider,
+    ttsProvider,
+    onToggleSttProvider,
+    onToggleTtsProvider,
+    isSpeechRecognitionSupported
   } = props;
 
   const maxVisibleBookmarkBudget = useMemo(() => {
@@ -925,6 +938,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     onConfirmLanguageSelection={onConfirmLanguageSelection}
                     onSaveAllChats={onSaveAllChats}
                     onLoadAllChats={onLoadAllChats}
+
+                    // Settings
+                    sttProvider={sttProvider}
+                    ttsProvider={ttsProvider}
+                    onToggleSttProvider={onToggleSttProvider}
+                    onToggleTtsProvider={onToggleTtsProvider}
+                    isSpeechRecognitionSupported={isSpeechRecognitionSupported}
                 />
             </div>
             {(isLoadingSuggestions || replySuggestions.length > 0) && (
