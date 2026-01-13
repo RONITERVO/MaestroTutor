@@ -2377,6 +2377,12 @@ const App: React.FC = () => {
   }, [selectedLanguagePair, isSpeaking, isSending, isListening, isUserActive, reengagementPhase, settings.smartReengagement.thresholdSeconds, cancelReengagement, scheduleReengagement]);
 
   useEffect(() => {
+    // If there are blocking UI tasks (popups, annotations, recording), Maestro yields visual status to them.
+    if (externalUiTaskCount > 0) {
+      setMaestroActivityStage('idle');
+      return;
+    }
+
     if (isSpeaking) {
       setMaestroActivityStage('speaking');
     } else if (isSending) {
@@ -2385,12 +2391,14 @@ const App: React.FC = () => {
       setMaestroActivityStage('listening');
     } else if (reengagementPhase === 'countdown' || reengagementPhase === 'engaging') {
       setMaestroActivityStage('observing_high');
+    } else if (reengagementPhase === 'watching') {
+      setMaestroActivityStage('observing_medium');
     } else if (reengagementPhase === 'waiting') {
       setMaestroActivityStage('observing_low');
     } else {
       setMaestroActivityStage('idle');
     }
-  }, [isSpeaking, isSending, isListening, isUserActive, reengagementPhase]);
+  }, [isSpeaking, isSending, isListening, isUserActive, reengagementPhase, externalUiTaskCount]);
 
   useEffect(() => {
     const startVisualContextStream = async () => {

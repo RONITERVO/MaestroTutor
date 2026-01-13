@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TranslationReplacements } from '../../translations/index';
 import { MaestroActivityStage } from '../../types';
@@ -127,8 +128,37 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({ stage, 
             {activeTags.map((tag, i) => tagToIcon(tag, i))}
           </div>
         );
-        textKey = 'chat.maestro.idle';
-        titleKey = 'chat.maestro.title.idle';
+        
+        // Determine text based on the *first* recognized tag priority
+        const primaryTag = activeTags[0]; 
+        if (primaryTag === 'bubble-annotate' || primaryTag === 'composer-annotate') {
+           textKey = 'chat.header.annotating';
+           titleKey = 'chat.header.annotating';
+        } else if (primaryTag === 'video-record') {
+           textKey = 'chat.header.recordingVideo';
+           titleKey = 'chat.header.recordingVideo';
+        } else if (primaryTag === 'audio-note') {
+           textKey = 'chat.header.recordingAudio';
+           titleKey = 'chat.header.recordingAudio';
+        } else if (primaryTag === 'save-popup') {
+           textKey = 'chat.header.savePopup';
+           titleKey = 'chat.header.savePopup';
+        } else if (primaryTag === 'load-popup') {
+           textKey = 'chat.header.loadPopup';
+           titleKey = 'chat.header.loadPopup';
+        } else if (primaryTag === 'maestro-avatar') {
+           textKey = 'chat.header.maestroAvatar';
+           titleKey = 'chat.header.maestroAvatar';
+        } else if (primaryTag === 'video-play') {
+           textKey = 'chat.header.watchingVideo';
+           titleKey = 'chat.header.watchingVideo';
+        } else if (primaryTag === 'viewing-above') {
+           textKey = 'chat.header.viewingAbove';
+           titleKey = 'chat.header.viewingAbove';
+        } else {
+           textKey = 'chat.maestro.idle';
+           titleKey = 'chat.maestro.title.idle';
+        }
       } else {
         iconElement = <IconSparkles className="w-4 h-4" />;
         textKey = "chat.maestro.idle";

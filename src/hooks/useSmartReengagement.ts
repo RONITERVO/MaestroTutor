@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { AppSettings } from '../../types';
 
@@ -14,7 +15,7 @@ interface UseSmartReengagementProps {
   removeUiBusyToken: (token?: string | null) => void;
 }
 
-type ReengagementPhase = 'idle' | 'waiting' | 'countdown' | 'engaging';
+type ReengagementPhase = 'idle' | 'waiting' | 'watching' | 'countdown' | 'engaging';
 
 export const useSmartReengagement = ({
   settings,
@@ -102,12 +103,36 @@ export const useSmartReengagement = ({
     const clampedDelay = Math.max(0, Math.floor(Number.isFinite(delayMs) ? delayMs : 0));
     const token = addUiBusyToken(`reengage-wait:${reason}:${Date.now()}`);
     tokens.waitToken = token;
-    reengagementDeadlineRef.current = Date.now() + clampedDelay;
-    setReengagementPhase('waiting');
-    timers.waitTimer = window.setTimeout(() => {
-      timers.waitTimer = null;
-      beginCountdownRef.current('timer-elapsed');
-    }, clampedDelay);
+    
+    // Split the wait time into 'waiting' (Resting) and 'watching' (Observing) if long enough
+    const splitThreshold = 10000; // 10 seconds
+    
+    if (clampedDelay > splitThreshold) {
+        const firstPhase = Math.floor(clampedDelay * 0.6);
+        const secondPhase = clampedDelay - firstPhase;
+        
+        reengagementDeadlineRef.current = Date.now() + clampedDelay;
+        setReengagementPhase('waiting'); // Low attention / Resting
+        
+        timers.waitTimer = window.setTimeout(() => {
+            setReengagementPhase('watching'); // Medium attention / Observing
+            
+            timers.waitTimer = window.setTimeout(() => {
+                timers.waitTimer = null;
+                beginCountdownRef.current('timer-elapsed');
+            }, secondPhase);
+            
+        }, firstPhase);
+        
+    } else {
+        reengagementDeadlineRef.current = Date.now() + clampedDelay;
+        setReengagementPhase('watching'); // Short delay directly to observing
+        timers.waitTimer = window.setTimeout(() => {
+            timers.waitTimer = null;
+            beginCountdownRef.current('timer-elapsed');
+        }, clampedDelay);
+    }
+
   }, [canScheduleReengagement, removeUiBusyToken, addUiBusyToken, cancelReengagement]);
 
   const scheduleReengagement = useCallback((reason: string, delayOverrideMs?: number) => {
