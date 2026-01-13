@@ -24,7 +24,8 @@ interface CollapsedMaestroStatusProps {
   uiBusyTaskTags?: string[];
   targetLanguageFlag?: string;
   targetLanguageTitle?: string;
-  className?: string; // Allow passing text color class override
+  className?: string;
+  isExpanded?: boolean;
 }
 
 // Helper to get configuration for the parent container (The Flag)
@@ -53,7 +54,15 @@ export const getStatusConfig = (stage: MaestroActivityStage, uiBusyTaskTags: str
   }
 };
 
-const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({ stage, t, uiBusyTaskTags, targetLanguageFlag, targetLanguageTitle, className }) => {
+const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({ 
+  stage, 
+  t, 
+  uiBusyTaskTags, 
+  targetLanguageFlag, 
+  targetLanguageTitle, 
+  className,
+  isExpanded = true 
+}) => {
   let iconElement: React.ReactNode = null;
   let textKey: string = "";
   let titleKey: string = "";
@@ -123,14 +132,16 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({ stage, 
               return <span key={key} className={`${base} rounded-full bg-current opacity-50 inline-block`} title={tag} />;
           }
         };
+        // Show first icon always, others if expanded
+        const primaryTag = activeTags[0];
         iconElement = (
           <div className="flex items-center gap-1">
-            {activeTags.map((tag, i) => tagToIcon(tag, i))}
+             {tagToIcon(primaryTag, 0)}
+             {isExpanded && activeTags.slice(1).map((tag, i) => tagToIcon(tag, i + 1))}
           </div>
         );
         
         // Determine text based on the *first* recognized tag priority
-        const primaryTag = activeTags[0]; 
         if (primaryTag === 'bubble-annotate' || primaryTag === 'composer-annotate') {
            textKey = 'chat.header.annotating';
            titleKey = 'chat.header.annotating';
@@ -169,10 +180,15 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({ stage, 
   }
 
   return (
-    <div className={`flex items-center space-x-2 ${className || baseTextColor}`} title={t(titleKey)}>
+    <div className={`flex items-center ${className || baseTextColor}`} title={t(titleKey)}>
       {iconElement}
-      {targetLanguageFlag && <span className="text-base" title={targetLanguageTitle}>{targetLanguageFlag}</span>}
-      <span className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap">{t(textKey)}</span>
+      
+      <div 
+        className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-w-xs opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'}`}
+      >
+        {targetLanguageFlag && <span className="text-base mr-2" title={targetLanguageTitle}>{targetLanguageFlag}</span>}
+        <span className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap">{t(textKey)}</span>
+      </div>
     </div>
   );
 };
