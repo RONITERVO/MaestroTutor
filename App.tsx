@@ -192,6 +192,7 @@ const App: React.FC = () => {
   const prevIsListeningRef = useRef<boolean>(false);
   const userActivityTimerRef = useRef<number | null>(null);
   const isUserActiveRef = useRef<boolean>(false);
+  const holdUiTokenRef = useRef<string | null>(null);
 
   // --- State ---
   const [languagePairs] = useState<LanguagePair[]>(allGeneratedLanguagePairs);
@@ -297,6 +298,16 @@ const App: React.FC = () => {
     uiBusyTokensRef.current.clear();
     recomputeUiBusyState();
   }, [recomputeUiBusyState]);
+
+  const handleToggleHold = useCallback(() => {
+    if (holdUiTokenRef.current) {
+      removeUiBusyToken(holdUiTokenRef.current);
+      holdUiTokenRef.current = null;
+    } else {
+      const token = addUiBusyToken('user-hold');
+      holdUiTokenRef.current = token;
+    }
+  }, [addUiBusyToken, removeUiBusyToken]);
 
   // Sync refs with state
   useEffect(() => { settingsRef.current = settings; }, [settings]);
@@ -2832,6 +2843,7 @@ const App: React.FC = () => {
         messages={messages}
         onLanguageSelectorClick={(e) => { e.stopPropagation(); handleShowLanguageSelector(); }}
         onToggleDebugLogs={() => setShowDebugLogs(prev => !prev)}
+        onToggleHold={handleToggleHold}
       />
       {showDebugLogs && <DebugLogPanel onClose={() => setShowDebugLogs(false)} />}
   <video ref={visualContextVideoRef} playsInline muted className="hidden w-px h-px" aria-hidden="true" />

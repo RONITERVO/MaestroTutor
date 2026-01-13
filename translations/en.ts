@@ -121,6 +121,8 @@ export const enTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro is waiting for your input or speech.",
   "chat.maestro.engageAfter": "Engage after:",
   "chat.maestro.reengageThresholdTitle": "Re-engage after {seconds}s of inactivity",
+  "chat.maestro.holding": "Maestro is holding",
+  "chat.maestro.title.holding": "Maestro is holding (re-engagement paused)",
   "chat.retrievedFromWeb": "Retrieved from the web:",
   "chat.imagePreview.alt": "Preview",
   "chat.imagePreview.defaultName": "Attached file",

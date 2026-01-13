@@ -15,7 +15,8 @@ import {
   IconPencil,
   IconSave,
   IconFolderOpen,
-  IconSend
+  IconSend,
+  IconHandRaised
 } from '../../constants';
 
 interface CollapsedMaestroStatusProps {
@@ -32,6 +33,11 @@ interface CollapsedMaestroStatusProps {
 export const getStatusConfig = (stage: MaestroActivityStage, uiBusyTaskTags: string[] = []) => {
   const hasBusyTasks = uiBusyTaskTags.filter(Boolean).length > 0;
   
+  // Check specifically for hold tag to override generic busy color
+  if (uiBusyTaskTags.includes('user-hold')) {
+      return { color: 'bg-fuchsia-500', borderColor: 'border-fuchsia-600', textColor: 'text-white' };
+  }
+
   switch (stage) {
     case 'speaking':
       return { color: 'bg-blue-500', borderColor: 'border-blue-600', textColor: 'text-white' };
@@ -108,6 +114,8 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
           const key = `${tag}-${idx}`;
           const base = 'w-4 h-4';
           switch (tag) {
+            case 'user-hold':
+              return <IconHandRaised key={key} className={`${base} animate-pulse`} title={t('chat.maestro.title.holding')} />;
             case 'live-session':
               return <IconCamera key={key} className={`${base}`} title={'Live session active'} />;
             case 'video-play':
@@ -133,16 +141,27 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
           }
         };
         // Show first icon always, others if expanded
-        const primaryTag = activeTags[0];
+        const primaryTag = activeTags.includes('user-hold') ? 'user-hold' : activeTags[0];
+        
+        // Ensure user-hold icon is prioritized if active
+        let iconsToRender = [tagToIcon(primaryTag, 0)];
+        if (isExpanded) {
+            activeTags.forEach((tag, i) => {
+                if (tag !== primaryTag) iconsToRender.push(tagToIcon(tag, i + 1));
+            });
+        }
+
         iconElement = (
           <div className="flex items-center gap-1">
-             {tagToIcon(primaryTag, 0)}
-             {isExpanded && activeTags.slice(1).map((tag, i) => tagToIcon(tag, i + 1))}
+             {iconsToRender}
           </div>
         );
         
         // Determine text based on the *first* recognized tag priority
-        if (primaryTag === 'bubble-annotate' || primaryTag === 'composer-annotate') {
+        if (primaryTag === 'user-hold') {
+           textKey = 'chat.maestro.holding';
+           titleKey = 'chat.maestro.title.holding';
+        } else if (primaryTag === 'bubble-annotate' || primaryTag === 'composer-annotate') {
            textKey = 'chat.header.annotating';
            titleKey = 'chat.header.annotating';
         } else if (primaryTag === 'video-record') {

@@ -16,6 +16,7 @@ interface HeaderProps {
   messages: ChatMessage[];
   onLanguageSelectorClick: (e: React.MouseEvent) => void;
   onToggleDebugLogs: () => void;
+  onToggleHold: () => void;
 }
 
 const Header = forwardRef<HTMLDivElement, HeaderProps>(({
@@ -26,10 +27,13 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
   selectedLanguagePair,
   onLanguageSelectorClick,
   onToggleDebugLogs,
+  onToggleHold,
 }, ref) => {
   // Explicit open state managed by user interaction
   const [isOpen, setIsOpen] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const isLongPressRef = useRef(false);
 
   // Auto-close after 5 seconds when opened
   useEffect(() => {
@@ -45,6 +49,12 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
   }, [isOpen]);
 
   const handleClick = (e: React.MouseEvent) => {
+    if (isLongPressRef.current) {
+        e.stopPropagation();
+        e.preventDefault();
+        return;
+    }
+    
     if (!isOpen) {
       // First click: Open the flag to show text
       e.stopPropagation();
@@ -53,6 +63,31 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
       // Second click (while open): Trigger the actual action (Language Selector)
       onLanguageSelectorClick(e);
     }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+      isLongPressRef.current = false;
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = window.setTimeout(() => {
+          isLongPressRef.current = true;
+          onToggleHold();
+          // Optional: vibrate to indicate success
+          if (navigator.vibrate) navigator.vibrate(50);
+      }, 800);
+  };
+
+  const handlePointerUp = () => {
+      if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+      }
+  };
+
+  const handlePointerLeave = () => {
+      if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+      }
   };
 
   const statusConfig = getStatusConfig(maestroActivityStage, uiBusyTaskTags);
@@ -66,14 +101,18 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
       */}
       <div 
         ref={ref}
-        className={`fixed top-4 left-0 z-50 transition-all duration-500 ease-out shadow-md border-y border-r rounded-r-full flex items-center cursor-pointer
+        className={`fixed top-4 left-0 z-50 transition-all duration-500 ease-out shadow-md border-y border-r rounded-r-full flex items-center cursor-pointer select-none touch-none
           ${statusConfig.color} ${statusConfig.borderColor}
           ${isOpen ? 'pr-4 pl-3 py-1.5 translate-x-0' : 'pl-3 pr-1 py-1.5 -translate-x-1 hover:translate-x-0'}
         `}
         onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+        onContextMenu={(e) => e.preventDefault()}
         role="status"
         aria-live="polite"
-        title={!isOpen ? "Click to view status" : undefined}
+        title={!isOpen ? "Click to view status, Long press to Hold" : undefined}
       >
         <div className={`transition-opacity duration-300`}>
           <CollapsedMaestroStatus
