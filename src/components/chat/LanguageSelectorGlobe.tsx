@@ -107,7 +107,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 >
                     <div
-                        className="pointer-events-auto w-[85%] max-w-[18rem] bg-slate-900/40 backdrop-blur-sm rounded-lg p-2 transition-opacity duration-200 opacity-30 hover:opacity-100 focus-within:opacity-100 active:opacity-100"
+                        className="pointer-events-auto w-[85%] max-w-[14rem] bg-slate-900/40 backdrop-blur-sm rounded-lg p-2 transition-opacity duration-200 opacity-30 hover:opacity-100 focus-within:opacity-100 active:opacity-100"
                     >
                         <div className="flex justify-around items-start gap-2">
                             <LanguageScrollWheel
@@ -115,16 +115,16 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                 selectedValue={nativeLang}
                                 onSelect={(l) => onSelectNative(l.langCode)}
                                 onInteract={onInteract}
-                                title={t('nativeLang.label')}
+                                title=""
                             />
-                            <div className="w-px h-24 bg-white/20 mx-1"></div>
+                            <div className="w-px h-20 bg-white/20 mx-1"></div>
                             <LanguageScrollWheel
                                 languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
                                 selectedValue={targetLang}
                                 onSelect={(l) => onSelectTarget(l.langCode)}
                                 disabled={!nativeLang}
                                 onInteract={onInteract}
-                                title={t('targetLang.label')}
+                                title=""
                             />
                         </div>
                     </div>

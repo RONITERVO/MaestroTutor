@@ -84,10 +84,10 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
 
     return (
         <div className={`flex-1 text-center relative ${disabled ? 'opacity-50' : ''}`}>
-            <p className="text-sm text-slate-400 mb-1 h-5">{title}</p>
+            {title && <p className="text-xs text-slate-400 mb-1 h-4">{title}</p>}
             <div 
                 ref={scrollContainerRef}
-                className={`h-40 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}
+                className={`h-28 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}
                 style={{
                     scrollSnapType: 'y mandatory',
                     WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 25%, black 75%, transparent)',
@@ -95,24 +95,24 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                 }}
                 onPointerDown={() => onInteract?.()}
             >
-                <div className="h-[calc(50%-2rem)]"></div>
+                <div className="h-[calc(50%-1.5rem)]"></div>
                 {languages.map(lang => {
                     const isSelected = lang.langCode === selectedValue?.langCode;
                     return (
                         <div
                             key={lang.langCode}
                             ref={el => { if (el) itemRefs.current.set(lang.langCode, el) }}
-                            className={`flex items-center justify-center h-16 transition-all duration-200 ease-out`}
+                            className={`flex items-center justify-center h-12 transition-all duration-200 ease-out`}
                             style={{ scrollSnapAlign: 'center' }}
                             onClick={() => { if (!disabled) { onInteract?.(); onSelect(lang); } }}
                         >
-                            <span className={`text-xl font-semibold flex items-center gap-2 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-110' : 'opacity-60 scale-90'}`}>
+                            <span className={`text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-110' : 'opacity-60 scale-90'}`}>
                                 {lang.flag} {lang.displayName}
                             </span>
                         </div>
                     );
                 })}
-                <div className="h-[calc(50%-2rem)]"></div>
+                <div className="h-[calc(50%-1.5rem)]"></div>
             </div>
         </div>
     );
