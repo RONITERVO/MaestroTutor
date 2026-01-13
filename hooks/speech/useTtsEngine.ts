@@ -1,6 +1,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { generateSpeech } from '../../services/geminiService';
+import { generateSpeech } from '../../src/services/geminiService';
 import type { SpeechPart, TtsProvider, SpeechCacheDetails } from '../../types';
 
 export interface UseTtsEngineOptions {

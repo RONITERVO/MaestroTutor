@@ -1,10 +1,11 @@
+
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ChatInterface from './src/components/ChatInterface';
 import { AppSettings, ChatMessage, GroundingChunk, CameraDevice, ReplySuggestion, MaestroActivityStage, LanguagePair, RecordedUtterance, TtsAudioCacheEntry, SpeechPart, ChatMeta } from './types';
-import { generateGeminiResponse, generateImage, translateText, ApiError, sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from './services/geminiService';
+import { generateGeminiResponse, generateImage, translateText, ApiError, sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from './src/services/geminiService';
 import { getLoadingGifsDB, setLoadingGifsDB, getMaestroProfileImageDB, setMaestroProfileImageDB } from './src/services/assets';
 import { getAppSettingsDB, setAppSettingsDB } from './src/services/settings';
 import { getGlobalProfileDB, setGlobalProfileDB } from './src/services/globalProfile';
@@ -35,6 +36,7 @@ import { createKeyframeFromVideoDataUrl } from './src/utils/mediaUtils';
 import { processMediaForUpload } from './src/services/mediaOptimizationService';
 import Header from './src/components/Header';
 import { useSmartReengagement } from './src/hooks/useSmartReengagement';
+import DebugLogPanel from './src/components/DebugLogPanel';
 
 const AUX_TEXT_MODEL_ID = 'gemini-3-flash-preview';
 
@@ -220,6 +222,7 @@ const App: React.FC = () => {
   const [transitioningImageId, setTransitioningImageId] = useState<string | null>(null);
 
   const [isTopbarOpen, setIsTopbarOpen] = useState(false);
+  const [showDebugLogs, setShowDebugLogs] = useState(false);
   
   const selectedLanguagePair = languagePairs.find(p => p.id === settings.selectedLanguagePairId);
   
@@ -2828,7 +2831,9 @@ const App: React.FC = () => {
         selectedLanguagePair={selectedLanguagePair}
         messages={messages}
         onLanguageSelectorClick={(e) => { e.stopPropagation(); handleShowLanguageSelector(); }}
+        onToggleDebugLogs={() => setShowDebugLogs(prev => !prev)}
       />
+      {showDebugLogs && <DebugLogPanel onClose={() => setShowDebugLogs(false)} />}
   <video ref={visualContextVideoRef} playsInline muted className="hidden w-px h-px" aria-hidden="true" />
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 flex flex-col bg-slate-50">

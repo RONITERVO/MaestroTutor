@@ -1,7 +1,7 @@
 
 import React, { forwardRef, useState, useEffect, useRef } from 'react';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
-import { LanguageDefinition } from '../../constants';
+import { LanguageDefinition, IconTerminal } from '../../constants';
 import { ChatMessage, MaestroActivityStage, LanguagePair } from '../../types';
 import { TranslationReplacements } from '../../translations/index';
 
@@ -15,6 +15,7 @@ interface HeaderProps {
   selectedLanguagePair: LanguagePair | undefined;
   messages: ChatMessage[];
   onLanguageSelectorClick: (e: React.MouseEvent) => void;
+  onToggleDebugLogs: () => void;
 }
 
 const Header = forwardRef<HTMLDivElement, HeaderProps>(({
@@ -24,6 +25,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
   targetLanguageDef,
   selectedLanguagePair,
   onLanguageSelectorClick,
+  onToggleDebugLogs,
 }, ref) => {
   // Explicit open state managed by user interaction
   const [isOpen, setIsOpen] = useState(false);
@@ -85,6 +87,15 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
           />
         </div>
       </div>
+
+      {/* Debug Log Toggle (Top Right) */}
+      <button
+        onClick={onToggleDebugLogs}
+        className="fixed top-4 right-4 z-40 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full shadow-sm backdrop-blur-sm transition-all"
+        title="View Traffic Logs"
+      >
+        <IconTerminal className="w-4 h-4" />
+      </button>
     </>
   );
 });
