@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChatMessage } from '../../../types';
-import { IconPencil } from '../../../constants';
+import { IconPencil, IconCheck, IconXMark } from '../../../constants';
 
 interface BookmarkActionsProps {
   t: (k: string, vars?: any) => string;
@@ -11,32 +11,94 @@ interface BookmarkActionsProps {
 }
 
 const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibleMessages, onChangeMaxVisibleMessages, updateMessage }) => {
-  const onEditSummary = React.useCallback(async () => {
-    if (!updateMessage) return;
-    try {
-      const current = (message.chatSummary || '').trim();
-      const next = window.prompt('Edit bookmark summary', current);
-      if (next !== null) {
-        const trimmed = next.trim();
-        updateMessage(message.id, { chatSummary: trimmed || undefined });
-      }
-    } catch {}
-  }, [message.id, message.chatSummary, updateMessage]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [summaryText, setSummaryText] = useState('');
 
-  const dec = () => {
+  const startEditing = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setSummaryText(message.chatSummary || '');
+    setIsEditing(true);
+  };
+
+  const save = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    if (updateMessage) {
+      updateMessage(message.id, { chatSummary: summaryText.trim() || undefined });
+    }
+    setIsEditing(false);
+  };
+
+  const cancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      save();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsEditing(false);
+    }
+  };
+
+  const dec = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const n = Math.max(2, Math.min(100, (maxVisibleMessages || 2) - 2));
     if (n !== maxVisibleMessages) onChangeMaxVisibleMessages(n);
   };
-  const inc = () => {
+  const inc = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const n = Math.max(2, Math.min(100, (maxVisibleMessages || 2) + 2));
     if (n !== maxVisibleMessages) onChangeMaxVisibleMessages(n);
   };
 
+  const containerClasses = "flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/90 text-white border border-amber-400 rounded-full shadow-md";
+
+  if (isEditing) {
+    return (
+      <div className={containerClasses} role="region" aria-label="Edit bookmark summary" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+        <input
+          type="text"
+          value={summaryText}
+          onChange={(e) => setSummaryText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="bg-black/10 border border-white/30 rounded px-2 py-0.5 text-xs text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-black/20 w-48 transition-colors"
+          placeholder="Summary..."
+          autoFocus
+        />
+        <button
+          type="button"
+          onClick={save}
+          className="p-1 rounded-full hover:bg-amber-400/50 text-white transition-colors"
+          title="Save"
+        >
+          <IconCheck className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={cancel}
+          className="p-1 rounded-full hover:bg-amber-400/50 text-white transition-colors"
+          title="Cancel"
+        >
+          <IconXMark className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/90 text-white border border-amber-400 rounded-full shadow-md"
+      className={containerClasses}
       role="region"
       aria-label={t('chat.bookmark.actionsRegionAria') || 'Bookmark actions'}
+      onPointerDown={e => e.stopPropagation()}
+      onClick={e => e.stopPropagation()}
     >
       <button
         type="button"
@@ -68,7 +130,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
       <div className="w-px h-4 bg-white/40 mx-1" aria-hidden />
       <button
         type="button"
-        onClick={onEditSummary}
+        onClick={startEditing}
         className="px-1.5 py-0.5 rounded-full hover:bg-amber-400/30"
         title="Edit bookmark summary"
         aria-label="Edit bookmark summary"
