@@ -161,7 +161,6 @@ const App: React.FC = () => {
   // --- Refs (Hoisted) ---
   const isLoadingHistoryRef = useRef<boolean>(true);
   const bubbleWrapperRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const topbarRef = useRef<HTMLDivElement | null>(null);
   const uiBusyTokensRef = useRef<Set<string>>(new Set());
   const externalUiTaskCountRef = useRef<number>(0);
   const liveUiTokenRef = useRef<string | null>(null);
@@ -222,44 +221,6 @@ const App: React.FC = () => {
 
   const [isTopbarOpen, setIsTopbarOpen] = useState(false);
   
-  const [headerOffset, setHeaderOffset] = useState<number>(0);
-  useEffect(() => {
-    const el = topbarRef.current;
-    if (!el) return;
-    try { setHeaderOffset(el.offsetHeight); } catch {}
-    if (typeof ResizeObserver !== 'undefined') {
-      const ro = new ResizeObserver(() => {
-        try { setHeaderOffset(el.offsetHeight); } catch {}
-      });
-      ro.observe(el);
-      return () => { try { ro.disconnect(); } catch {} };
-    } else {
-      let frame = 0; let raf: number;
-      const tick = () => {
-        if (!topbarRef.current) return;
-        setHeaderOffset(topbarRef.current.offsetHeight);
-        frame++;
-        if (frame < 10) { raf = requestAnimationFrame(tick); }
-      };
-      raf = requestAnimationFrame(tick);
-      return () => { if (raf) cancelAnimationFrame(raf); };
-    }
-  }, [isTopbarOpen]);
-
-  useEffect(() => {
-    if (!isTopbarOpen) return;
-    const handlePointerDown = (ev: PointerEvent) => {
-      const el = topbarRef.current;
-      if (el && ev.target instanceof Node && !el.contains(ev.target)) {
-        setIsTopbarOpen(false);
-      }
-    };
-    document.addEventListener('pointerdown', handlePointerDown, { capture: true });
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown, { capture: true } as any);
-    };
-  }, [isTopbarOpen]);
-
   const selectedLanguagePair = languagePairs.find(p => p.id === settings.selectedLanguagePairId);
   
   const nativeLangForTranslations = useMemo(() => {
@@ -2557,6 +2518,16 @@ const App: React.FC = () => {
     }
   };
 
+  const toggleSttProvider = () => {
+    const next = settings.stt.provider === 'browser' ? 'gemini' : 'browser';
+    handleSettingsChange('stt', { ...settings.stt, provider: next });
+  };
+
+  const toggleTtsProvider = () => {
+    const next = settings.tts.provider === 'browser' ? 'gemini' : 'browser';
+    handleSettingsChange('tts', { ...settings.tts, provider: next });
+  };
+
   const handleToggleSendWithSnapshot = useCallback(() => {
     handleSettingsChange('sendWithSnapshotEnabled', !settingsRef.current.sendWithSnapshotEnabled);
   }, [handleSettingsChange]);
@@ -2822,16 +2793,6 @@ const App: React.FC = () => {
     return () => clearTimeout(timeout);
   }, [isLanguageSelectionOpen, tempNativeLangCode, tempTargetLangCode, handleConfirmLanguageSelection]);
 
-  const toggleSttProvider = () => {
-    const next = settings.stt.provider === 'browser' ? 'gemini' : 'browser';
-    handleSettingsChange('stt', { ...settings.stt, provider: next });
-  };
-
-  const toggleTtsProvider = () => {
-    const next = settings.tts.provider === 'browser' ? 'gemini' : 'browser';
-    handleSettingsChange('tts', { ...settings.tts, provider: next });
-  };
-
   const [targetCode, nativeCode] = useMemo(() => (selectedLanguagePair ? selectedLanguagePair.id.split('-') : [DEFAULT_TARGET_LANG_CODE, DEFAULT_NATIVE_LANG_CODE]), [selectedLanguagePair]);
   const targetLanguageDef = useMemo(() => ALL_LANGUAGES.find(lang => lang.langCode === targetCode)!, [targetCode]);
   const nativeLanguageDef = useMemo(() => ALL_LANGUAGES.find(lang => lang.langCode === nativeCode)!, [nativeCode]);
@@ -2848,9 +2809,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen antialiased text-gray-800 bg-gray-100" style={{ paddingTop: headerOffset }}>
+    <div className="flex flex-col min-h-screen antialiased text-gray-800 bg-gray-100">
       <Header
-        ref={topbarRef}
         isTopbarOpen={isTopbarOpen}
         setIsTopbarOpen={setIsTopbarOpen}
         maestroActivityStage={maestroActivityStage}
@@ -2860,11 +2820,6 @@ const App: React.FC = () => {
         selectedLanguagePair={selectedLanguagePair}
         messages={messages}
         onLanguageSelectorClick={(e) => { e.stopPropagation(); handleShowLanguageSelector(); }}
-        sttProvider={settings.stt.provider || 'browser'}
-        ttsProvider={settings.tts.provider || 'browser'}
-        onToggleSttProvider={toggleSttProvider}
-        onToggleTtsProvider={toggleTtsProvider}
-        isSpeechRecognitionSupported={!!window.SpeechRecognition || !!window.webkitSpeechRecognition}
       />
   <video ref={visualContextVideoRef} playsInline muted className="hidden w-px h-px" aria-hidden="true" />
       <div className="flex flex-1 overflow-hidden">
@@ -2974,6 +2929,12 @@ const App: React.FC = () => {
               sendPrep={sendPrep}
               onUiTaskStart={onUiTaskStart}
               onUiTaskEnd={onUiTaskEnd}
+
+              sttProvider={settings.stt.provider || 'browser'}
+              ttsProvider={settings.tts.provider || 'browser'}
+              onToggleSttProvider={toggleSttProvider}
+              onToggleTtsProvider={toggleTtsProvider}
+              isSpeechRecognitionSupported={!!window.SpeechRecognition || !!window.webkitSpeechRecognition}
             />
         </main>
       </div>

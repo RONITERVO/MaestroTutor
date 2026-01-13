@@ -7,12 +7,13 @@ import { LiveSessionState } from '../../../hooks/speech/useGeminiLiveConversatio
 import { 
   IconSend, IconPaperclip, IconMicrophone, IconXMark, IconCamera, 
   IconCameraFront, IconBookOpen, IconPencil, IconPlus, IconSparkles, 
-  IMAGE_GEN_CAMERA_ID, IconUndo, IconCheck, IconSave, IconFolderOpen, IconTrash
+  IMAGE_GEN_CAMERA_ID, IconUndo, IconCheck, IconSave, IconFolderOpen, IconTrash, IconCog
 } from '../../../constants';
 import { SmallSpinner } from '../ui/SmallSpinner';
 import SttLanguageSelector from './SttLanguageSelector';
 import LanguageSelectorGlobe from './LanguageSelectorGlobe';
 import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../services/assets';
+import { getGlobalProfileDB, setGlobalProfileDB } from '../../services/globalProfile';
 import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../../services/geminiService';
 import { DB_NAME } from '../../storage/db';
 import { uniq } from '../../utils/common';
@@ -79,6 +80,13 @@ interface InputAreaProps {
   onConfirmLanguageSelection?: () => void;
   onSaveAllChats?: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
   onLoadAllChats?: (file: File) => Promise<void>;
+
+  // Settings
+  sttProvider: string;
+  ttsProvider: string;
+  onToggleSttProvider: () => void;
+  onToggleTtsProvider: () => void;
+  isSpeechRecognitionSupported: boolean;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
@@ -94,7 +102,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   imageGenerationModeEnabled, onToggleImageGenerationMode,
   sttError, autoCaptureError, snapshotUserError,
   onUiTaskStart, onUiTaskEnd,
-  isLanguageSelectionOpen, tempNativeLangCode, tempTargetLangCode, onTempNativeSelect, onTempTargetSelect, onConfirmLanguageSelection, onSaveAllChats, onLoadAllChats
+  isLanguageSelectionOpen, tempNativeLangCode, tempTargetLangCode, onTempNativeSelect, onTempTargetSelect, onConfirmLanguageSelection, onSaveAllChats, onLoadAllChats,
+  sttProvider, ttsProvider, onToggleSttProvider, onToggleTtsProvider, isSpeechRecognitionSupported
 }) => {
   const [inputText, setInputText] = useState('');
   const [backgroundHint, setBackgroundHint] = useState('');
@@ -152,6 +161,9 @@ const InputArea: React.FC<InputAreaProps> = ({
   const [resetMode, setResetMode] = useState(false);
   const [resetConfirm, setResetConfirm] = useState<string>('');
   const [isResetting, setIsResetting] = useState(false);
+
+  // Settings
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
   const saveTokenRef = useRef<string | null>(null);
   const loadTokenRef = useRef<string | null>(null);
@@ -265,6 +277,26 @@ const InputArea: React.FC<InputAreaProps> = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend(); 
+    }
+  };
+
+  const handleEditGlobalProfile = async () => {
+    try {
+      // 1. Fetch current profile
+      const current = (await getGlobalProfileDB())?.text ?? '';
+      
+      // 2. Prompt user (Native prompt is fine for now, or use a custom modal)
+      const next = window.prompt('Edit global profile', current);
+      
+      // 3. Save if changed
+      if (next !== null) {
+        const trimmed = next.trim();
+        await setGlobalProfileDB(trimmed);
+        // 4. Notify app to refresh context
+        try { window.dispatchEvent(new CustomEvent('globalProfileUpdated')); } catch {}
+      }
+    } catch (e) {
+      console.error("Failed to update profile", e);
     }
   };
 
@@ -1346,6 +1378,51 @@ const InputArea: React.FC<InputAreaProps> = ({
                   <button onClick={onToggleImageGenerationMode} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.bookIcon.toggleImageGen')}>
                       <IconBookOpen className="w-5 h-5" />
                   </button>
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                      className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle}`}
+                      title="Settings"
+                    >
+                      <IconCog className="w-5 h-5" />
+                    </button>
+                    {showSettingsMenu && (
+                      <div className="absolute bottom-full left-0 mb-2 w-64 bg-white text-gray-800 rounded-lg shadow-xl border border-gray-200 p-3 z-50 text-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <span>Speech Recognition</span>
+                          <button 
+                            onClick={onToggleSttProvider}
+                            className="px-2 py-1 bg-gray-100 rounded border border-gray-300 text-xs"
+                            disabled={!isSpeechRecognitionSupported && sttProvider === 'gemini'}
+                          >
+                            {sttProvider === 'gemini' ? 'Gemini Live' : 'Browser'}
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span>Text-to-Speech</span>
+                          <button 
+                            onClick={onToggleTtsProvider}
+                            className="px-2 py-1 bg-gray-100 rounded border border-gray-300 text-xs"
+                          >
+                            {ttsProvider === 'gemini' ? 'Gemini' : 'Browser'}
+                          </button>
+                        </div>
+                        <hr className="my-2" />
+                        <button 
+                          onClick={() => {
+                            handleEditGlobalProfile();
+                            setShowSettingsMenu(false);
+                          }}
+                          className="w-full text-left px-2 py-1 hover:bg-gray-100 rounded"
+                        >
+                          Edit User Profile
+                        </button>
+                      </div>
+                    )}
+                    {showSettingsMenu && (
+                      <div className="fixed inset-0 z-40" onClick={() => setShowSettingsMenu(false)}></div>
+                    )}
+                  </div>
                 </>
               )}
               
