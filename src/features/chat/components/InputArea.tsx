@@ -1,23 +1,23 @@
 
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { TranslationReplacements } from '../../i18n/index';
-import { CameraDevice } from '../../types';
-import { LanguageDefinition } from '../../config/languages';
-import { LOCAL_STORAGE_SETTINGS_KEY, IMAGE_GEN_CAMERA_ID } from '../../config/app';
-import { LiveSessionState } from '../../hooks/speech/useGeminiLiveConversation';
+import { TranslationReplacements } from '../../../core/i18n/index';
+import { CameraDevice } from '../../../core/types';
+import { LanguageDefinition } from '../../../core/config/languages';
+import { LOCAL_STORAGE_SETTINGS_KEY, IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
+import { LiveSessionState } from '../../speech/hooks/useGeminiLiveConversation';
 import { 
   IconSend, IconPaperclip, IconMicrophone, IconXMark, IconCamera, 
   IconCameraFront, IconBookOpen, IconPencil, IconPlus, IconSparkles, 
   IconUndo, IconCheck, IconSave, IconFolderOpen, IconTrash, IconRobot, IconSpeaker
-} from '../icons/Icons';
-import { SmallSpinner } from '../ui/SmallSpinner';
-import SttLanguageSelector from './SttLanguageSelector';
-import LanguageSelectorGlobe from './LanguageSelectorGlobe';
-import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../services/assets';
-import { getGlobalProfileDB, setGlobalProfileDB } from '../../services/globalProfile';
-import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../services/geminiService';
-import { DB_NAME } from '../../storage/db';
-import { uniq } from '../../utils/common';
+} from '../../../shared/ui/Icons';
+import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
+import SttLanguageSelector from '../../speech/components/SttLanguageSelector'; 
+import LanguageSelectorGlobe from '../../session/components/LanguageSelectorGlobe'; 
+import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../../core/db/assets';
+import { getGlobalProfileDB, setGlobalProfileDB } from '../../session/services/globalProfile';
+import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../../api/gemini';
+import { DB_NAME } from '../../../core/db/index';
+import { uniq } from '../../../shared/utils/common';
 
 interface InputAreaProps {
   t: (key: string, replacements?: TranslationReplacements) => string;

@@ -8,7 +8,7 @@ export interface GlobalUserProfile {
   fingerprint: string;
 }
 
-import { openDB, GLOBAL_PROFILE_STORE } from '../storage/db';
+import { openDB, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
 
 export async function getGlobalProfileDB(): Promise<GlobalUserProfile | null> {
   const db = await openDB();

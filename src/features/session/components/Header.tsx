@@ -1,10 +1,10 @@
 
 import React, { forwardRef, useState, useEffect, useRef } from 'react';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
-import { IconTerminal } from './icons/Icons';
-import { LanguageDefinition } from '../config/languages';
-import { ChatMessage, MaestroActivityStage, LanguagePair } from '../types';
-import { TranslationReplacements } from '../i18n/index';
+import { IconTerminal } from '../../../shared/ui/Icons';
+import { LanguageDefinition } from '../../../core/config/languages';
+import { ChatMessage, MaestroActivityStage, LanguagePair } from '../../../core/types';
+import { TranslationReplacements } from '../../../core/i18n/index';
 
 interface HeaderProps {
   isTopbarOpen: boolean; // Kept for prop compatibility

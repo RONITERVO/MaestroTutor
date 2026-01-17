@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { debugLogService } from "./debugLogService";
+import { debugLogService } from "../features/diagnostics/services/debugLogService";
 
 export class ApiError extends Error {
   status?: number;

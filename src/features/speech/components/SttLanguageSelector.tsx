@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { LanguageDefinition } from '../../config/languages';
-import { TranslationReplacements } from '../../i18n/index';
+import { LanguageDefinition } from '../../../core/config/languages';
+import { TranslationReplacements } from '../../../core/i18n/index';
 
 const getPrimaryCode = (codes: string): string => (codes || "").split(',')[0].trim();
 

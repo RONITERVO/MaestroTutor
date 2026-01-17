@@ -1,13 +1,13 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { ChatMessage, GroundingChunk, ReplySuggestion, MaestroActivityStage, SpeechPart, CameraDevice } from '../types';
-import { LiveSessionState } from '../hooks/speech/useGeminiLiveConversation';
-import { TranslationReplacements } from '../i18n/index';
-import { IconEyeOpen, IconBookmark, IconTrash } from './icons/Icons';
-import BookmarkActions from './chat/BookmarkActions';
-import ChatMessageBubble from './chat/ChatMessageBubble';
-import SuggestionsList from './chat/SuggestionsList';
-import InputArea from './chat/InputArea';
+import { ChatMessage, GroundingChunk, ReplySuggestion, MaestroActivityStage, SpeechPart, CameraDevice } from '../../../core/types';
+import { LiveSessionState } from '../../speech/hooks/useGeminiLiveConversation';
+import { TranslationReplacements } from '../../../core/i18n/index';
+import { IconEyeOpen, IconBookmark, IconTrash } from '../../../shared/ui/Icons';
+import BookmarkActions from './BookmarkActions';
+import ChatMessageBubble from './ChatMessageBubble';
+import SuggestionsList from './SuggestionsList';
+import InputArea from './InputArea';
 
 const BOOKMARK_SHOW_ABOVE_CHUNK_SIZE = 100;
 const isRealChatMessage = (m: ChatMessage) => (m.role === 'user' || m.role === 'assistant') && !m.thinking;

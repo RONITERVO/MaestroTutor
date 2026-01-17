@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { ReplySuggestion } from '../../types';
-import { TranslationReplacements } from '../../i18n/index';
-import { IconTranslate } from '../icons/Icons';
-import { SmallSpinner } from '../ui/SmallSpinner';
+import { ReplySuggestion } from '../../../core/types';
+import { TranslationReplacements } from '../../../core/i18n/index';
+import { IconTranslate } from '../../../shared/ui/Icons';
+import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 
 interface SuggestionsListProps {
   isLoadingSuggestions: boolean;

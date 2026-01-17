@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { AppSettings } from '../types';
+import { AppSettings } from '../../../core/types';
 
 interface UseSmartReengagementProps {
   settings: AppSettings;

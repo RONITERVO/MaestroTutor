@@ -1,7 +1,7 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob } from '@google/genai';
-import { mergeInt16Arrays, trimSilence } from '../../utils/audioProcessing';
+import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 
 export interface UseGeminiLiveSttReturn {
   start: (language?: string) => Promise<void>;

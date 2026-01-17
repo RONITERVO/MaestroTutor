@@ -1,7 +1,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob } from '@google/genai';
-import { mergeInt16Arrays, trimSilence } from '../../utils/audioProcessing';
+import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 

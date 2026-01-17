@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { ChatMessage } from '../../types';
-import { IconPencil, IconCheck, IconXMark } from '../icons/Icons';
+import { ChatMessage } from '../../../core/types';
+import { IconPencil, IconCheck, IconXMark } from '../../../shared/ui/Icons';
 
 interface BookmarkActionsProps {
   t: (k: string, vars?: any) => string;

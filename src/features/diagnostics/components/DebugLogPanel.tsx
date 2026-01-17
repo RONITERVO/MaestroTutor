@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { debugLogService, LogEntry } from '../../services/debugLogService';
-import { IconXMark, IconTrash, IconCheck } from '../../components/icons/Icons';
+import { debugLogService, LogEntry } from '../services/debugLogService';
+import { IconXMark, IconTrash, IconCheck } from '../../../shared/ui/Icons';
 
 interface DebugLogPanelProps {
   onClose: () => void;

@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import { openDB, ASSETS_STORE } from '../storage/db';
+import { openDB, ASSETS_STORE } from './index';
 
 const LOADING_GIFS_KEY = 'loadingGifs';
 const MAESTRO_PROFILE_KEY = 'maestroProfileImage';

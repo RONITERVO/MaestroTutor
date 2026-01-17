@@ -1,8 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import { openDB, SETTINGS_STORE } from '../storage/db';
-import type { AppSettings } from '../types';
+import { openDB, SETTINGS_STORE } from '../../../core/db/index';
+import type { AppSettings } from '../../../core/types';
 
 const SETTINGS_KEY = 'singleton';
 

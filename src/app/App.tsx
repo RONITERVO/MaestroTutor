@@ -2,45 +2,42 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import ChatInterface from '../components/ChatInterface';
-import { AppSettings, ChatMessage, GroundingChunk, CameraDevice, ReplySuggestion, MaestroActivityStage, LanguagePair, RecordedUtterance, TtsAudioCacheEntry, SpeechPart, ChatMeta } from '../types';
-import { generateGeminiResponse, generateImage, translateText, ApiError, sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from '../services/geminiService';
-import { getLoadingGifsDB, setLoadingGifsDB, getMaestroProfileImageDB, setMaestroProfileImageDB } from '../services/assets';
-import { getAppSettingsDB, setAppSettingsDB } from '../services/settings';
-import { getGlobalProfileDB, setGlobalProfileDB } from '../services/globalProfile';
-import useBrowserSpeech from '../hooks/useBrowserSpeech';
-import { useGeminiLiveConversation, LiveSessionState } from '../hooks/speech/useGeminiLiveConversation';
-import { translations, TranslationReplacements } from '../i18n/index';
-import {
-  APP_TITLE_KEY,
-  LOCAL_STORAGE_SETTINGS_KEY,
-  DEFAULT_TEXT_MODEL_ID,
-  IMAGE_GEN_CAMERA_ID,
-  MAX_MEDIA_TO_KEEP
-} from '../config/app';
-import {
-  ALL_LANGUAGES,
-  STT_LANGUAGES,
-  DEFAULT_NATIVE_LANG_CODE,
-  DEFAULT_TARGET_LANG_CODE
-} from '../config/languages';
-import {
-  DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
-  IMAGE_GEN_SYSTEM_INSTRUCTION,
-  IMAGE_GEN_USER_PROMPT_TEMPLATE,
-  composeMaestroSystemInstruction
-} from '../config/prompts';
 
-import { uniq, isRealChatMessage, fetchDefaultAvatarBlob } from '../utils/common';
-import { INLINE_CAP_AUDIO, upsertTtsCacheEntries, getCachedAudioForKey, computeTtsCacheKey } from '../utils/persistence';
-import { getChatHistoryDB, safeSaveChatHistoryDB, readBackupForPair, getChatMetaDB, setChatMetaDB, getAllChatHistoriesDB, clearAndSaveAllHistoriesDB, getAllChatMetasDB, deriveHistoryForApi } from '../services/historyService';
-import { generateAllLanguagePairs, getPrimaryCode, getShortLangCodeForPrompt } from '../utils/languageUtils';
-import { createKeyframeFromVideoDataUrl } from '../utils/mediaUtils';
-import { processMediaForUpload } from '../services/mediaOptimizationService';
-import Header from '../components/Header';
-import { useSmartReengagement } from '../hooks/useSmartReengagement';
-import DebugLogPanel from '../features/debug/DebugLogPanel';
-import { pcmToWav, splitPcmBySilence } from '../utils/audioProcessing';
+// --- Features Components ---
+import ChatInterface from '../features/chat/components/ChatInterface';
+import Header from '../features/session/components/Header';
+import DebugLogPanel from '../features/diagnostics/components/DebugLogPanel';
+
+// --- Types ---
+import { AppSettings, ChatMessage, GroundingChunk, CameraDevice, ReplySuggestion, MaestroActivityStage, LanguagePair, RecordedUtterance, TtsAudioCacheEntry, SpeechPart, ChatMeta } from '../core/types';
+
+// --- API ---
+import { generateGeminiResponse, generateImage, translateText, ApiError, sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from '../api/gemini';
+
+// --- Core Services/DB ---
+import { getLoadingGifsDB, setLoadingGifsDB, getMaestroProfileImageDB, setMaestroProfileImageDB } from '../core/db/assets';
+import { getAppSettingsDB, setAppSettingsDB } from '../features/session/services/settings';
+import { getGlobalProfileDB, setGlobalProfileDB } from '../features/session/services/globalProfile';
+
+// --- Feature Hooks & Services ---
+import useBrowserSpeech from '../features/speech/hooks/useBrowserSpeech';
+import { useGeminiLiveConversation, LiveSessionState } from '../features/speech/hooks/useGeminiLiveConversation';
+import { useSmartReengagement } from '../features/session/hooks/useSmartReengagement';
+import { getChatHistoryDB, safeSaveChatHistoryDB, readBackupForPair, getChatMetaDB, setChatMetaDB, getAllChatHistoriesDB, clearAndSaveAllHistoriesDB, getAllChatMetasDB, deriveHistoryForApi } from '../features/chat/services/chatHistory';
+import { processMediaForUpload } from '../features/vision/services/mediaOptimizationService';
+
+// --- Config & I18n ---
+import { translations, TranslationReplacements } from '../core/i18n/index';
+import { APP_TITLE_KEY, LOCAL_STORAGE_SETTINGS_KEY, DEFAULT_TEXT_MODEL_ID, IMAGE_GEN_CAMERA_ID, MAX_MEDIA_TO_KEEP } from '../core/config/app';
+import { ALL_LANGUAGES, STT_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE } from '../core/config/languages';
+import { DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, IMAGE_GEN_SYSTEM_INSTRUCTION, IMAGE_GEN_USER_PROMPT_TEMPLATE, composeMaestroSystemInstruction } from '../core/config/prompts';
+
+// --- Shared Utils ---
+import { uniq, isRealChatMessage, fetchDefaultAvatarBlob } from '../shared/utils/common';
+import { INLINE_CAP_AUDIO, upsertTtsCacheEntries, getCachedAudioForKey, computeTtsCacheKey } from '../features/chat/utils/persistence';
+import { generateAllLanguagePairs, getPrimaryCode, getShortLangCodeForPrompt } from '../shared/utils/languageUtils';
+import { createKeyframeFromVideoDataUrl } from '../features/vision/utils/mediaUtils';
+import { pcmToWav, splitPcmBySilence } from '../features/speech/utils/audioProcessing';
 
 const AUX_TEXT_MODEL_ID = 'gemini-3-flash-preview';
 

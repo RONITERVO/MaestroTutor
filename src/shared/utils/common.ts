@@ -1,4 +1,4 @@
-import { ChatMessage } from '../types';
+import { ChatMessage } from '../../core/types';
 
 export const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));
 

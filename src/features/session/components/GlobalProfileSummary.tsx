@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ChatMessage } from '../types';
+import { ChatMessage } from '../../../core/types';
 import { getGlobalProfileDB } from '../services/globalProfile';
 
 interface GlobalProfileSummaryProps {

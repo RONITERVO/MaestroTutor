@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { ChatMessage, SpeechPart } from '../../types';
-import { TranslationReplacements } from '../../i18n/index';
-import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck } from '../icons/Icons';
+import { ChatMessage, SpeechPart } from '../../../core/types';
+import { TranslationReplacements } from '../../../core/i18n/index';
+import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck } from '../../../shared/ui/Icons';
 import TextScrollwheel from './TextScrollwheel';
 
 interface ChatMessageBubbleProps { 

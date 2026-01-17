@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useMemo, useState } from 'react';
-import { TranslationReplacements } from '../../i18n/index';
-import { SpeechPart } from '../../types';
+import { TranslationReplacements } from '../../../core/i18n/index';
+import { SpeechPart } from '../../../core/types';
 
 interface TextScrollwheelProps {
   translations: Array<{ spanish: string; english: string; }>;

@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
-import { LanguageDefinition } from '../../config/languages';
+import { LanguageDefinition } from '../../../core/config/languages';
 
 interface LanguageScrollWheelProps {
   languages: LanguageDefinition[];

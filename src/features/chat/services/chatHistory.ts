@@ -1,8 +1,8 @@
 
-import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../storage/db';
-import { ChatMessage, ChatMeta, UserProfile } from '../types';
+import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
+import { ChatMessage, ChatMeta, UserProfile } from '../../../core/types';
 import { sanitizeForPersistence } from '../utils/persistence';
-import { MAX_MEDIA_TO_KEEP } from '../config/app';
+import { MAX_MEDIA_TO_KEEP } from '../../../core/config/app';
 
 export const getChatHistoryDB = async (pairId: string): Promise<ChatMessage[]> => {
   const db = await openDB();

@@ -1,4 +1,4 @@
-import { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, TtsProvider, SttProvider } from '../types';
+import { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, TtsProvider, SttProvider } from '../../../core/types';
 
 export const INLINE_CAP_IMAGE = 1_000_000; // ~1MB
 export const INLINE_CAP_VIDEO = 4_000_000; // ~4MB

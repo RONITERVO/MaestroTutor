@@ -3,9 +3,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { SpeechPart, TtsProvider, SttProvider, RecordedUtterance } from '../types';
-import { useTtsEngine } from './speech/useTtsEngine';
-import { useGeminiLiveStt } from './speech/useGeminiLiveStt';
+import type { SpeechPart, TtsProvider, SttProvider, RecordedUtterance } from '../../../core/types';
+import { useTtsEngine } from './useTtsEngine';
+import { useGeminiLiveStt } from './useGeminiLiveStt';
 import { pcmToWav } from '../utils/audioProcessing';
 
 interface UseBrowserSpeechProps {

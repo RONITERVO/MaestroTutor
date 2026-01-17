@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { TranslationReplacements } from '../i18n/index';
-import { MaestroActivityStage } from '../types';
+import { TranslationReplacements } from '../../../core/i18n/index';
+import { MaestroActivityStage } from '../../../core/types';
 import {
   IconSpeaker,
   IconKeyboard,
@@ -17,7 +17,7 @@ import {
   IconFolderOpen,
   IconSend,
   IconHandRaised
-} from './icons/Icons';
+} from '../../../shared/ui/Icons';
 
 interface CollapsedMaestroStatusProps {
   stage: MaestroActivityStage;

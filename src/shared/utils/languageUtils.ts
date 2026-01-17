@@ -1,7 +1,7 @@
 
-import { LanguageDefinition, DEFAULT_TARGET_LANG_CODE, DEFAULT_NATIVE_LANG_CODE, ALL_LANGUAGES } from '../config/languages';
-import { DEFAULT_SYSTEM_PROMPT_CONTENT, DEFAULT_REPLY_SUGGESTIONS_PROMPT_CONTENT } from '../config/prompts';
-import { LanguagePair } from '../types';
+import { LanguageDefinition, DEFAULT_TARGET_LANG_CODE, DEFAULT_NATIVE_LANG_CODE, ALL_LANGUAGES } from '../../core/config/languages';
+import { DEFAULT_SYSTEM_PROMPT_CONTENT, DEFAULT_REPLY_SUGGESTIONS_PROMPT_CONTENT } from '../../core/config/prompts';
+import { LanguagePair } from '../../core/types';
 
 export const getPrimaryCode = (codes: string): string => (codes || "").split(',')[0].trim();
 

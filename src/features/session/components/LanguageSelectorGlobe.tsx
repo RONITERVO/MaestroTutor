@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useMemo } from 'react';
-import { LanguageDefinition, ALL_LANGUAGES } from '../../config/languages';
-import { TranslationReplacements } from '../../i18n/index';
+import { LanguageDefinition, ALL_LANGUAGES } from '../../../core/config/languages';
+import { TranslationReplacements } from '../../../core/i18n/index';
 import LanguageScrollWheel from './LanguageScrollWheel';
 
 interface LanguageSelectorGlobeProps {
