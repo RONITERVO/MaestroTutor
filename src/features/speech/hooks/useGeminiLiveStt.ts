@@ -1,4 +1,3 @@
-
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob as _GenAIBlob } from '@google/genai';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
@@ -24,6 +23,13 @@ function toBase64(bytes: Uint8Array) {
   return btoa(binary);
 }
 
+/**
+ * Provides a React hook that manages a live Gemini-based speech-to-text session with real-time audio capture, streaming, and transcription state.
+ *
+ * The hook handles microphone permission, AudioContext and AudioWorklet setup (including float→Int16 conversion on the worklet), streaming PCM audio to a Gemini Live session, and assembling interim and committed transcript text from both input ASR and the model's "parrot" output. It also buffers recorded audio chunks and exposes a helper to retrieve the trimmed merged audio.
+ *
+ * @returns An object exposing control methods and state for the live STT session: `start` to begin listening, `stop` to end the session, `transcript` containing the current combined transcript, `isListening` indicating active listening, `error` containing any error message, and `getRecordedAudio` which returns the merged recorded audio `Int16Array` or `null`.
+ */
 export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
