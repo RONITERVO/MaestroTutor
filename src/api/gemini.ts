@@ -135,7 +135,7 @@ export async function uploadMediaToFiles(dataUrl: string, mimeType: string, disp
         config: { displayName, mimeType },
     });
     log.complete(uploadResult);
-    return { uri: uploadResult.uri, mimeType: uploadResult.mimeType };
+    return { uri: uploadResult.uri || '', mimeType: uploadResult.mimeType || '' };
   } catch (e) {
     log.error(e);
     throw e;
@@ -321,9 +321,9 @@ export async function generateImage(params: {
 
       const candidates = result.candidates || [];
       for (const c of candidates) {
-          for (const part of c.content.parts) {
-              if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
-                  return { base64Image: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`, mimeType: part.inlineData.mimeType };
+          for (const part of c.content?.parts || []) {
+              if (part.inlineData && part.inlineData.mimeType?.startsWith('image/')) {
+                  return { base64Image: `data:${part.inlineData.mimeType};base64,${part.inlineData.data || ''}`, mimeType: part.inlineData.mimeType };
               }
           }
       }
@@ -370,7 +370,7 @@ export async function generateSpeech(params: { text: string, voiceName?: string 
         });
         const c = result.candidates?.[0];
         const part = c?.content?.parts?.[0];
-        if (part?.inlineData) {
+        if (part?.inlineData && part.inlineData.data) {
             log.complete({ audioBytes: part.inlineData.data.length });
             // Gemini TTS returns raw PCM in most cases for this model, wrap it in a WAV container to ensure playback
             const wavBase64 = pcm16ToWavBase64(part.inlineData.data);

@@ -107,7 +107,7 @@ export const getAllChatHistoriesDB = async (): Promise<Record<string, ChatMessag
 export const clearAndSaveAllHistoriesDB = async (
   allChats: Record<string, ChatMessage[]>,
   allMetas?: Record<string, ChatMeta> | null,
-  userProfile?: UserProfile | null,
+  _userProfile?: UserProfile | null,
   globalProfileText?: string | null
 ): Promise<void> => {
     const db = await openDB();

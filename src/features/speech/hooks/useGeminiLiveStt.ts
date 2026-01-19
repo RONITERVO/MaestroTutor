@@ -1,6 +1,6 @@
 
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality, Blob as _GenAIBlob } from '@google/genai';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 
 export interface UseGeminiLiveSttReturn {
@@ -122,7 +122,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     }
   }, []);
 
-  const start = useCallback(async (language?: string) => {
+  const start = useCallback(async (_language?: string) => {
     await cleanup();
     setError(null);
     setTranscript('');

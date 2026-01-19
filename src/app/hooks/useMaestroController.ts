@@ -1,0 +1,1374 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * useMaestroController - The main orchestration hook for the Maestro tutor.
+ * 
+ * This hook coordinates the core message sending logic including:
+ * - User message processing with optional media
+ * - Gemini API calls for text/image generation
+ * - Reply suggestion generation
+ * - Re-engagement triggers
+ * - Translation and parsing of responses
+ */
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { 
+  ChatMessage, 
+  ReplySuggestion, 
+  GroundingChunk,
+  MaestroActivityStage,
+  LanguagePair,
+  AppSettings,
+  RecordedUtterance 
+} from '../../core/types';
+import { 
+  generateGeminiResponse, 
+  generateImage, 
+  translateText,
+  ApiError, 
+  sanitizeHistoryWithVerifiedUris, 
+  uploadMediaToFiles, 
+  checkFileStatuses 
+} from '../../api/gemini';
+import { getGlobalProfileDB, setGlobalProfileDB } from '../../features/session/services/globalProfile';
+import { safeSaveChatHistoryDB, deriveHistoryForApi } from '../../features/chat/services/chatHistory';
+import { setAppSettingsDB } from '../../features/session/services/settings';
+import { processMediaForUpload } from '../../features/vision/services/mediaOptimizationService';
+import { 
+  DEFAULT_TEXT_MODEL_ID, 
+  IMAGE_GEN_CAMERA_ID,
+  MAX_MEDIA_TO_KEEP 
+} from '../../core/config/app';
+import { 
+  DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
+  IMAGE_GEN_SYSTEM_INSTRUCTION, 
+  IMAGE_GEN_USER_PROMPT_TEMPLATE,
+  composeMaestroSystemInstruction 
+} from '../../core/config/prompts';
+import { isRealChatMessage } from '../../shared/utils/common';
+import { INLINE_CAP_AUDIO } from '../../features/chat/utils/persistence';
+import { getPrimaryCode, getShortLangCodeForPrompt } from '../../shared/utils/languageUtils';
+import { createKeyframeFromVideoDataUrl } from '../../features/vision/utils/mediaUtils';
+import type { TranslationFunction } from './useTranslations';
+
+const AUX_TEXT_MODEL_ID = 'gemini-3-flash-preview';
+
+export interface UseMaestroControllerConfig {
+  // Translation function
+  t: TranslationFunction;
+  
+  // Settings
+  settingsRef: React.MutableRefObject<AppSettings>;
+  setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
+  selectedLanguagePairRef: React.MutableRefObject<LanguagePair | undefined>;
+  
+  // Chat store
+  messagesRef: React.MutableRefObject<ChatMessage[]>;
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => string;
+  updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  isLoadingHistoryRef: React.MutableRefObject<boolean>;
+  getHistoryRespectingBookmark: (arr: ChatMessage[]) => ChatMessage[];
+  computeMaxMessagesForArray: (arr: ChatMessage[]) => number | undefined;
+  lastFetchedSuggestionsForRef: React.MutableRefObject<string | null>;
+  
+  // Hardware
+  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; llmBase64: string; llmMimeType: string } | null>;
+  
+  // Speech
+  speechIsSpeakingRef: React.MutableRefObject<boolean>;
+  speakMessage: (message: ChatMessage) => void;
+  isSpeechSynthesisSupported: boolean;
+  isListening: boolean;
+  stopListening: () => void;
+  startListening: (lang: string) => void;
+  clearTranscript: () => void;
+  hasPendingQueueItems: () => boolean;
+  claimRecordedUtterance: () => RecordedUtterance | null;
+  sttInterruptedBySendRef: React.MutableRefObject<boolean>;
+  recordedUtterancePendingRef: React.MutableRefObject<RecordedUtterance | null>;
+  pendingRecordedAudioMessageRef: React.MutableRefObject<string | null>;
+  
+  // Re-engagement - using refs to allow late binding
+  scheduleReengagementRef: React.MutableRefObject<(reason: string, delayOverrideMs?: number) => void>;
+  cancelReengagementRef: React.MutableRefObject<() => void>;
+  
+  // UI State
+  setAttachedImageBase64: React.Dispatch<React.SetStateAction<string | null>>;
+  setAttachedImageMimeType: React.Dispatch<React.SetStateAction<string | null>>;
+  attachedImageBase64: string | null;
+  attachedImageMimeType: string | null;
+  transcript: string;
+  
+  // Prompts
+  currentSystemPromptText: string;
+  currentReplySuggestionsPromptText: string;
+  
+  // Reply suggestions (managed by useChatStore, passed through)
+  replySuggestions: ReplySuggestion[];
+  setReplySuggestions: React.Dispatch<React.SetStateAction<ReplySuggestion[]>>;
+  isLoadingSuggestions: boolean;
+  setIsLoadingSuggestions: React.Dispatch<React.SetStateAction<boolean>>;
+  isLoadingSuggestionsRef: React.MutableRefObject<boolean>;
+  
+  // Toggle suggestion mode callback - using ref to allow late binding
+  handleToggleSuggestionModeRef?: React.MutableRefObject<((forceState?: boolean) => void) | undefined>;
+  
+  // Maestro avatar refs - passed from App.tsx where the avatar is loaded
+  maestroAvatarUriRef: React.MutableRefObject<string | null>;
+  maestroAvatarMimeTypeRef: React.MutableRefObject<string | null>;
+  
+  // Hardware errors
+  setSnapshotUserError?: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+export interface UseMaestroControllerReturn {
+  // State
+  isSending: boolean;
+  isSendingRef: React.MutableRefObject<boolean>;
+  sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
+  latestGroundingChunks: GroundingChunk[] | undefined;
+  maestroActivityStage: MaestroActivityStage;
+  isCreatingSuggestion: boolean;
+  imageLoadDurations: number[];
+  
+  // Main handlers
+  handleSendMessageInternal: (
+    text: string,
+    passedImageBase64?: string,
+    passedImageMimeType?: string,
+    messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement'
+  ) => Promise<boolean>;
+  handleSendMessageInternalRef: React.MutableRefObject<any>;
+  
+  // Suggestion handlers
+  fetchAndSetReplySuggestions: (assistantMessageId: string, lastTutorMessage: string, history: ChatMessage[]) => Promise<void>;
+  handleCreateSuggestion: (textToTranslate: string) => Promise<void>;
+  handleSuggestionInteraction: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
+  
+  // Activity stage
+  setMaestroActivityStage: React.Dispatch<React.SetStateAction<MaestroActivityStage>>;
+  
+  // Parsing
+  parseGeminiResponse: (responseText: string | undefined) => Array<{ spanish: string; english: string }>;
+  
+  // Utilities
+  stripBracketedContent: (input: string | undefined | null) => string;
+  resolveBookmarkContextSummary: () => string | null;
+  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, { oldUri?: string; newUri: string }>>;
+  computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
+  handleReengagementThresholdChange: (newThreshold: number) => void;
+  calculateEstimatedImageLoadTime: () => number;
+}
+
+/**
+ * Main orchestration hook for the Maestro Language Tutor.
+ * Manages message sending, AI interactions, and conversation flow.
+ */
+export const useMaestroController = (config: UseMaestroControllerConfig): UseMaestroControllerReturn => {
+  const {
+    t,
+    settingsRef,
+    setSettings,
+    selectedLanguagePairRef,
+    messagesRef,
+    addMessage,
+    updateMessage,
+    setMessages,
+    isLoadingHistoryRef,
+    getHistoryRespectingBookmark,
+    computeMaxMessagesForArray,
+    lastFetchedSuggestionsForRef,
+    captureSnapshot,
+    speechIsSpeakingRef,
+    speakMessage,
+    isSpeechSynthesisSupported,
+    isListening,
+    stopListening,
+    startListening,
+    clearTranscript,
+    hasPendingQueueItems,
+    claimRecordedUtterance,
+    sttInterruptedBySendRef,
+    recordedUtterancePendingRef,
+    pendingRecordedAudioMessageRef,
+    scheduleReengagementRef,
+    cancelReengagementRef,
+    setAttachedImageBase64,
+    setAttachedImageMimeType,
+    attachedImageBase64,
+    attachedImageMimeType,
+    transcript,
+    currentSystemPromptText,
+    currentReplySuggestionsPromptText,
+    // Reply suggestions (managed by useChatStore, passed through)
+    // Note: replySuggestions and isLoadingSuggestions are accessed via their setters/refs
+    replySuggestions: _replySuggestions,
+    setReplySuggestions,
+    isLoadingSuggestions: _isLoadingSuggestions,
+    setIsLoadingSuggestions,
+    isLoadingSuggestionsRef,
+    handleToggleSuggestionModeRef,
+    maestroAvatarUriRef,
+    maestroAvatarMimeTypeRef,
+    setSnapshotUserError,
+  } = config;
+  
+  // Suppress unused warnings - these are used via their refs and setters
+  void _replySuggestions;
+  void _isLoadingSuggestions;
+
+  // Refs
+  const isSendingRef = useRef(false);
+  const sendWithFileUploadInProgressRef = useRef(false);
+  // maestroAvatarUriRef and maestroAvatarMimeTypeRef are now passed via config
+  const handleSendMessageInternalRef = useRef<any>(null);
+  const sendPrepRef = useRef<{ active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null>(null);
+
+  // State
+  const [isSending, setIsSending] = useState(false);
+  const [sendPrep, setSendPrep] = useState<{ active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null>(null);
+  const [latestGroundingChunks, setLatestGroundingChunks] = useState<GroundingChunk[] | undefined>(undefined);
+  const [maestroActivityStage, setMaestroActivityStage] = useState<MaestroActivityStage>('idle');
+  const [isCreatingSuggestion, setIsCreatingSuggestion] = useState(false);
+  const [imageLoadDurations, setImageLoadDurations] = useState<number[]>([]);
+
+  // Sync refs with state
+  useEffect(() => { isSendingRef.current = isSending; }, [isSending]);
+  useEffect(() => { sendPrepRef.current = sendPrep; }, [sendPrep]);
+
+  // Utility functions
+  const stripBracketedContent = useCallback((input: string | undefined | null): string => {
+    if (typeof input !== 'string') return '';
+    const without = input.replace(/\[[^\]]*\]/g, ' ');
+    return without.replace(/\s+/g, ' ').trim();
+  }, []);
+
+  const parseGeminiResponse = useCallback((responseText: string | undefined): Array<{ spanish: string; english: string }> => {
+    if (typeof responseText !== 'string' || !responseText.trim() || !selectedLanguagePairRef.current) {
+      return [];
+    }
+    const lines = responseText.split('\n').map(line => line.trim()).filter(line => line);
+    const translations: Array<{ spanish: string; english: string }> = [];
+    const nativeLangPrefix = `[${getShortLangCodeForPrompt(selectedLanguagePairRef.current.nativeLanguageCode)}]`;
+
+    for (let i = 0; i < lines.length; i++) {
+      const currentLine = lines[i];
+      if (!currentLine.startsWith(nativeLangPrefix)) {
+        let targetContent = currentLine;
+        let nativeContent = "";
+        if (i + 1 < lines.length && lines[i + 1].startsWith(nativeLangPrefix)) {
+          nativeContent = lines[i + 1].substring(nativeLangPrefix.length).trim();
+          i++;
+        }
+        translations.push({ spanish: targetContent, english: nativeContent });
+      } else {
+        translations.push({ spanish: "", english: currentLine.substring(nativeLangPrefix.length).trim() });
+      }
+    }
+
+    if (translations.length === 0 && responseText.trim()) {
+      translations.push({ spanish: responseText.trim(), english: "" });
+    }
+    return translations;
+  }, [selectedLanguagePairRef]);
+
+  const resolveBookmarkContextSummary = useCallback((): string | null => {
+    const bm = settingsRef.current.historyBookmarkMessageId;
+    if (!bm) return null;
+    const full = messagesRef.current;
+    const bmIndex = full.findIndex(m => m.id === bm);
+    if (bmIndex === -1) return null;
+    let summary: string | undefined = (full[bmIndex] && typeof full[bmIndex].chatSummary === 'string')
+      ? full[bmIndex].chatSummary!.trim()
+      : undefined;
+    if (!summary) {
+      for (let i = bmIndex; i >= 0; i--) {
+        const m = full[i];
+        if (m.role === 'assistant' && typeof m.chatSummary === 'string' && m.chatSummary.trim()) { 
+          summary = m.chatSummary.trim(); 
+          break; 
+        }
+      }
+    }
+    if (!summary || !summary.trim()) return null;
+    return summary.trim();
+  }, [settingsRef, messagesRef]);
+
+  const computeHistorySubsetForMedia = useCallback((arr: ChatMessage[]): ChatMessage[] => {
+    let base = getHistoryRespectingBookmark(arr).filter(isRealChatMessage);
+    const max = computeMaxMessagesForArray(base);
+    if (typeof max === 'number') {
+      base = base.slice(-Math.max(0, max));
+    }
+    return base;
+  }, [getHistoryRespectingBookmark, computeMaxMessagesForArray]);
+
+  const ensureUrisForHistoryForSend = useCallback(async (
+    arr: ChatMessage[], 
+    onProgress?: (done: number, total: number, etaMs?: number) => void
+  ): Promise<Record<string, { oldUri?: string; newUri: string }>> => {
+    const keepK = Number.POSITIVE_INFINITY;
+
+    let candidates = computeHistorySubsetForMedia(arr);
+    if (Number.isFinite(keepK)) {
+      const start = Math.max(0, candidates.length - (keepK as number));
+      candidates = candidates.slice(start);
+    }
+
+    const mediaIndices: number[] = [];
+    for (let i = 0; i < candidates.length; i++) {
+      const m = candidates[i];
+      const hasMedia = !!((m as any).llmImageUrl && (m as any).llmImageMimeType) || 
+                       !!(m.imageUrl && m.imageMimeType) || 
+                       !!((m as any).llmFileUri && (m as any).llmFileMimeType);
+      if (hasMedia) mediaIndices.push(i);
+    }
+    const maxMedia = MAX_MEDIA_TO_KEEP;
+    const keepMediaIdx = new Set<number>(mediaIndices.slice(-maxMedia));
+
+    const cachedUrisToCheck: string[] = [];
+    for (let i = 0; i < candidates.length; i++) {
+      if (!keepMediaIdx.has(i)) continue;
+      const m0 = candidates[i];
+      const cachedUri0 = (m0 as any).llmFileUri as string | undefined;
+      const cachedMime0 = (m0 as any).llmFileMimeType as string | undefined;
+      if (cachedUri0 && cachedMime0) cachedUrisToCheck.push(cachedUri0);
+    }
+    let cachedStatuses: Record<string, { deleted: boolean }> = {};
+    try {
+      const uniqUris = Array.from(new Set(cachedUrisToCheck));
+      if (uniqUris.length) cachedStatuses = await checkFileStatuses(uniqUris);
+    } catch { cachedStatuses = {}; }
+
+    let totalToEnsure = 0;
+    for (let i = 0; i < candidates.length; i++) {
+      if (!keepMediaIdx.has(i)) continue;
+      const m0 = candidates[i];
+      const llmUrl0 = (m0 as any).llmImageUrl as string | undefined;
+      const llmMime0 = (m0 as any).llmImageMimeType as string | undefined;
+      const uiUrl0 = m0.imageUrl as string | undefined;
+      const uiMime0 = m0.imageMimeType as string | undefined;
+      const cachedUri0 = (m0 as any).llmFileUri as string | undefined;
+      const cachedMime0 = (m0 as any).llmFileMimeType as string | undefined;
+      const hasAnyMedia0 = !!((llmUrl0 && llmMime0) || (uiUrl0 && uiMime0));
+      const missing = !(cachedUri0 && cachedMime0);
+      const deleted = !!(cachedUri0 && cachedStatuses[cachedUri0]?.deleted);
+      if ((missing || deleted) && hasAnyMedia0) totalToEnsure++;
+    }
+
+    let doneCount = 0;
+    const startTs = Date.now();
+    const tick = () => {
+      if (!onProgress) return;
+      const elapsed = Date.now() - startTs;
+      const avg = doneCount > 0 ? elapsed / doneCount : undefined;
+      const remaining = Math.max(0, totalToEnsure - doneCount);
+      const eta = avg !== undefined ? Math.round(avg * remaining) : undefined;
+      onProgress(doneCount, totalToEnsure, eta);
+    };
+
+    const updatedUriMap: Record<string, { oldUri?: string; newUri: string }> = {};
+    for (let idx = 0; idx < candidates.length; idx++) {
+      if (!keepMediaIdx.has(idx)) continue;
+      const m = candidates[idx];
+      const llmUrl = (m as any).llmImageUrl as string | undefined;
+      const llmMime = (m as any).llmImageMimeType as string | undefined;
+      const uiUrl = m.imageUrl as string | undefined;
+      const uiMime = m.imageMimeType as string | undefined;
+      if (!(llmUrl && llmMime) && !(uiUrl && uiMime)) continue;
+
+      const cachedUri = (m as any).llmFileUri as string | undefined;
+      const cachedMime = (m as any).llmFileMimeType as string | undefined;
+      let cachedDeleted = false;
+      if (cachedUri && cachedMime) {
+        try {
+          const st = cachedStatuses && cachedStatuses[cachedUri];
+          cachedDeleted = !!(st && st.deleted);
+        } catch { cachedDeleted = false; }
+        if (!cachedDeleted) continue;
+      }
+
+      let dataForUpload: { dataUrl: string; mimeType: string } | null = null;
+      try {
+        if (llmUrl && llmMime) {
+          dataForUpload = { dataUrl: llmUrl, mimeType: llmMime };
+        } else if (uiUrl && uiMime) {
+          const optimized = await processMediaForUpload(uiUrl, uiMime, { t });
+          dataForUpload = { dataUrl: optimized.dataUrl, mimeType: optimized.mimeType };
+          updateMessage(m.id, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
+        }
+        if (dataForUpload) {
+          const up = await uploadMediaToFiles(dataForUpload.dataUrl, dataForUpload.mimeType, 'send-history');
+          updateMessage(m.id, { llmFileUri: up.uri, llmFileMimeType: up.mimeType });
+          (m as any).llmFileUri = up.uri;
+          (m as any).llmFileMimeType = up.mimeType;
+          updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri };
+        }
+      } catch (e) {
+        console.warn('Pre-send URI ensure failed for message', m.id, e);
+      }
+      try { doneCount++; tick(); } catch {}
+      await new Promise(r => setTimeout(r, 0));
+    }
+    return updatedUriMap;
+  }, [computeHistorySubsetForMedia, updateMessage, t]);
+
+  const handleReengagementThresholdChange = useCallback((newThreshold: number) => {
+    setSettings(prev => {
+      const next = {
+        ...prev,
+        smartReengagement: {
+          ...prev.smartReengagement,
+          thresholdSeconds: newThreshold,
+        }
+      };
+      settingsRef.current = next;
+      setAppSettingsDB(next).catch(() => {});
+      return next;
+    });
+  }, [setSettings, settingsRef]);
+
+  const calculateEstimatedImageLoadTime = useCallback((): number => {
+    if (imageLoadDurations.length > 0) {
+      const sum = imageLoadDurations.reduce((a, b) => a + b, 0);
+      return sum / imageLoadDurations.length / 1000;
+    }
+    return 15;
+  }, [imageLoadDurations]);
+
+  // Reply suggestions
+  const fetchAndSetReplySuggestions = useCallback(async (
+    assistantMessageId: string, 
+    lastTutorMessage: string, 
+    history: ChatMessage[]
+  ) => {
+    if (isLoadingSuggestionsRef.current) {
+      setReplySuggestions([]);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+    if (!lastTutorMessage.trim() || !selectedLanguagePairRef.current) {
+      setReplySuggestions([]);
+      return;
+    }
+
+    // Check if suggestions already exist on message
+    {
+      const allMsgs = messagesRef.current;
+      const targetIdx = allMsgs.findIndex(m => m.id === assistantMessageId);
+      if (targetIdx !== -1) {
+        const target = allMsgs[targetIdx];
+        if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
+          setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
+          setIsLoadingSuggestions(false);
+          return;
+        }
+      }
+    }
+
+    setIsLoadingSuggestions(true);
+    setReplySuggestions([]);
+
+    const historyForPrompt = getHistoryRespectingBookmark(history)
+      .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+      .slice(-6)
+      .map(msg => {
+        if (msg.role === 'user') {
+          return `User: ${msg.text || '(sent an image)'}`;
+        }
+        return `Tutor: ${msg.translations?.[0]?.spanish || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
+      })
+      .join('\n');
+
+    const allMsgs = messagesRef.current;
+    let previousChatSummary = '';
+    {
+      const idx = allMsgs.findIndex(m => m.id === assistantMessageId);
+      const searchEnd = idx === -1 ? allMsgs.length - 1 : idx - 1;
+      for (let i = searchEnd; i >= 0; i--) {
+        const m = allMsgs[i];
+        if (m.role === 'assistant' && typeof m.chatSummary === 'string' && m.chatSummary.trim()) {
+          previousChatSummary = m.chatSummary.trim();
+          break;
+        }
+      }
+    }
+
+    let suggestionPrompt = currentReplySuggestionsPromptText
+      .replace("{tutor_message_placeholder}", lastTutorMessage)
+      .replace("{conversation_history_placeholder}", historyForPrompt || "No history yet.")
+      .replace("{previous_chat_summary_placeholder}", previousChatSummary || "");
+
+    const MAX_RETRIES = 2;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await generateGeminiResponse(
+          AUX_TEXT_MODEL_ID,
+          suggestionPrompt,
+          [],
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          false,
+          { responseMimeType: "application/json" }
+        );
+
+        let jsonStr = (response.text || '').trim();
+        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+        const fenceMatch = jsonStr.match(fenceRegex);
+
+        if (fenceMatch && fenceMatch[2]) {
+          jsonStr = fenceMatch[2].trim();
+        } else {
+          const firstBrace = jsonStr.indexOf('{');
+          const lastBrace = jsonStr.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1) {
+            jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+          }
+        }
+
+        const parsedResponse = JSON.parse(jsonStr);
+
+        if (Array.isArray(parsedResponse.suggestions) &&
+          parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
+          const suggestions = parsedResponse.suggestions as ReplySuggestion[];
+          setReplySuggestions(suggestions);
+          updateMessage(assistantMessageId, { replySuggestions: suggestions });
+          try { 
+            const pid = settingsRef.current.selectedLanguagePairId; 
+            if (pid) { await safeSaveChatHistoryDB(pid, messagesRef.current); } 
+          } catch {}
+        } else {
+          console.warn("Parsed suggestions not in expected format:", parsedResponse.suggestions);
+          setReplySuggestions([]);
+        }
+
+        if (typeof parsedResponse.reengagementSeconds === 'number' && parsedResponse.reengagementSeconds >= 5) {
+          handleReengagementThresholdChange(parsedResponse.reengagementSeconds);
+        }
+
+        // Update global profile from chat summary
+        try {
+          const newChatSummary = typeof (parsedResponse as any).chatSummary === 'string' ? (parsedResponse as any).chatSummary.trim() : '';
+          if (newChatSummary) {
+            updateMessage(assistantMessageId, { chatSummary: newChatSummary });
+            const existing = (await getGlobalProfileDB())?.text || '';
+            const mergePrompt = `You are consolidating a language learner's global profile for tutoring. Merge the existing profile and the new input into one concise profile. Deduplicate, keep what's durable, prefer newer details, avoid PII. No headings or categories. Output only the merged profile text, max 1200 characters.\n\nExisting Profile:\n${existing || '(none)'}\n\nNew Input (chat summary):\n${newChatSummary}`;
+            const mergeRes = await generateGeminiResponse(
+              AUX_TEXT_MODEL_ID,
+              mergePrompt,
+              [],
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              false,
+              { responseMimeType: 'text/plain', temperature: 0.1 }
+            );
+            const merged = (mergeRes.text || '').trim().slice(0, 10000);
+            if (merged) await setGlobalProfileDB(merged);
+          }
+        } catch (e) {
+          console.warn('Failed to update global profile from chat summary:', e);
+        }
+
+        break;
+
+      } catch (error) {
+        console.error(`Error fetching reply suggestions (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
+        if (attempt < MAX_RETRIES) {
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+        } else {
+          setReplySuggestions([]);
+        }
+      }
+    }
+
+    setIsLoadingSuggestions(false);
+  }, [
+    currentReplySuggestionsPromptText, 
+    handleReengagementThresholdChange, 
+    getHistoryRespectingBookmark,
+    messagesRef,
+    selectedLanguagePairRef,
+    settingsRef,
+    updateMessage
+  ]);
+
+  const handleCreateSuggestion = useCallback(async (textToTranslate: string) => {
+    const sanitized = stripBracketedContent(textToTranslate);
+    if (!sanitized || !selectedLanguagePairRef.current) return;
+
+    setIsCreatingSuggestion(true);
+
+    const sttLang = settingsRef.current.stt.language;
+    const sttLangCode = sttLang.substring(0, 2);
+    const targetLangCode = selectedLanguagePairRef.current.targetLanguageCode.substring(0, 2);
+
+    let fromLangName: string;
+    let toLangName: string;
+    let originalTextIsTarget: boolean;
+
+    if (sttLangCode === targetLangCode) {
+      fromLangName = selectedLanguagePairRef.current.targetLanguageName;
+      toLangName = selectedLanguagePairRef.current.nativeLanguageName;
+      originalTextIsTarget = true;
+    } else {
+      fromLangName = selectedLanguagePairRef.current.nativeLanguageName;
+      toLangName = selectedLanguagePairRef.current.targetLanguageName;
+      originalTextIsTarget = false;
+    }
+
+    try {
+      const { translatedText } = await translateText(sanitized, fromLangName, toLangName);
+      const newSuggestion: ReplySuggestion = {
+        target: originalTextIsTarget ? sanitized : translatedText,
+        native: originalTextIsTarget ? translatedText : sanitized,
+      };
+
+      const isDuplicate = (s: ReplySuggestion) => s.target === newSuggestion.target && s.native === newSuggestion.native;
+
+      setReplySuggestions(prev => {
+        if (prev.some(isDuplicate)) return prev;
+        return [newSuggestion, ...prev];
+      });
+
+      const targetMsgId = lastFetchedSuggestionsForRef.current ||
+        messagesRef.current.slice().reverse().find(m => m.role === 'assistant' && !m.thinking)?.id;
+
+      if (targetMsgId) {
+        if (!lastFetchedSuggestionsForRef.current) {
+          lastFetchedSuggestionsForRef.current = targetMsgId;
+        }
+        setMessages(prev => prev.map(m => {
+          if (m.id === targetMsgId) {
+            const existing = m.replySuggestions || [];
+            if (existing.some(isDuplicate)) return m;
+            return { ...m, replySuggestions: [newSuggestion, ...existing] };
+          }
+          return m;
+        }));
+      }
+
+    } catch (error) {
+      console.error("Failed to create suggestion via translation:", error);
+      addMessage({ role: 'error', text: t('error.translationFailed') });
+    } finally {
+      setIsCreatingSuggestion(false);
+      // Exit suggestion mode after creating suggestion (matches original behavior)
+      if (handleToggleSuggestionModeRef?.current) {
+        handleToggleSuggestionModeRef.current(false);
+      }
+    }
+  }, [addMessage, t, stripBracketedContent, selectedLanguagePairRef, settingsRef, lastFetchedSuggestionsForRef, messagesRef, setMessages, setReplySuggestions, handleToggleSuggestionModeRef]);
+
+  const handleSuggestionInteraction = useCallback((suggestion: ReplySuggestion, langType: 'target' | 'native') => {
+    if (!selectedLanguagePairRef.current) return;
+
+    if (!speechIsSpeakingRef.current) {
+      const textToSpeak = langType === 'target' ? suggestion.target : suggestion.native;
+      const langCodeToUse = langType === 'target'
+        ? getPrimaryCode(selectedLanguagePairRef.current.targetLanguageCode)
+        : getPrimaryCode(selectedLanguagePairRef.current.nativeLanguageCode);
+
+      if (textToSpeak && langCodeToUse) {
+        // Speech handled by App-level speakWrapper.
+      }
+    }
+  }, [selectedLanguagePairRef, speechIsSpeakingRef]);
+
+
+  // Main send message handler
+  const handleSendMessageInternal = useCallback(async (
+    text: string,
+    passedImageBase64?: string,
+    passedImageMimeType?: string,
+    messageType: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user'
+  ): Promise<boolean> => {
+    if (isLoadingHistoryRef.current) return false;
+    const sanitizedText = stripBracketedContent(text);
+    if (!sanitizedText && !passedImageBase64 && messageType === 'user') return false;
+    if (!selectedLanguagePairRef.current) {
+      console.error("No language pair selected, cannot send message.");
+      addMessage({ role: 'error', text: t('error.noLanguagePair') });
+      return false;
+    }
+
+    if (isSendingRef.current || speechIsSpeakingRef.current) {
+      console.log("SendMessage blocked: AI is currently sending or speaking.");
+      return false;
+    }
+
+    setIsSending(true);
+    if (settingsRef.current.stt.enabled && isListening) {
+      try { stopListening(); } catch { /* ignore */ }
+      sttInterruptedBySendRef.current = true;
+      clearTranscript();
+    } else {
+      sttInterruptedBySendRef.current = false;
+    }
+    sendWithFileUploadInProgressRef.current = true;
+    setReplySuggestions([]);
+    setIsLoadingSuggestions(false);
+    lastFetchedSuggestionsForRef.current = null;
+
+    if (messageType === 'user') {
+      // Clear any previous snapshot errors
+      if (setSnapshotUserError) setSnapshotUserError(null);
+    }
+    pendingRecordedAudioMessageRef.current = null;
+
+    let userMessageId: string | null = null;
+    let userMessageText = sanitizedText;
+    let recordedSpeechForMessage: RecordedUtterance | null = null;
+    let userImageToProcessBase64: string | undefined = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : undefined;
+    let userImageToProcessMimeType: string | undefined = (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : undefined;
+    let userImageToProcessLlmBase64: string | undefined = undefined;
+    let userImageToProcessLlmMimeType: string | undefined = undefined;
+    const currentSettingsVal = settingsRef.current;
+
+    const shouldGenerateUserImage = currentSettingsVal.selectedCameraId === IMAGE_GEN_CAMERA_ID;
+
+    if (messageType === 'user') {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const claimed = typeof claimRecordedUtterance === 'function' ? claimRecordedUtterance() : null;
+        if (claimed && typeof claimed.dataUrl === 'string' && claimed.dataUrl.length > 0) {
+          recordedSpeechForMessage = claimed;
+          recordedUtterancePendingRef.current = null;
+          break;
+        }
+        if (recordedUtterancePendingRef.current && typeof recordedUtterancePendingRef.current.dataUrl === 'string' && recordedUtterancePendingRef.current.dataUrl.length > 0) {
+          recordedSpeechForMessage = recordedUtterancePendingRef.current;
+          recordedUtterancePendingRef.current = null;
+          break;
+        }
+        if (attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 60));
+        }
+      }
+      if (recordedSpeechForMessage && recordedSpeechForMessage.dataUrl.length > INLINE_CAP_AUDIO) {
+        recordedSpeechForMessage = null;
+      }
+    }
+
+    if (currentSettingsVal.sendWithSnapshotEnabled && !userImageToProcessBase64 && messageType === 'user' && !shouldGenerateUserImage) {
+      const snapshotResult = await captureSnapshot(false);
+      if (snapshotResult) {
+        userImageToProcessBase64 = snapshotResult.base64;
+        userImageToProcessMimeType = snapshotResult.mimeType;
+        userImageToProcessLlmBase64 = snapshotResult.llmBase64;
+        userImageToProcessLlmMimeType = snapshotResult.llmMimeType;
+      }
+    }
+
+    if (messageType === 'user') {
+      // Handle video keyframe extraction
+      const keyframeSrcBase64 = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : attachedImageBase64;
+      const keyframeSrcMime = (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : attachedImageMimeType;
+      if (keyframeSrcBase64 && keyframeSrcMime && keyframeSrcMime.startsWith('video/')) {
+        try {
+          const kf = await createKeyframeFromVideoDataUrl(keyframeSrcBase64, { at: 'start', maxDim: 768, quality: 0.75, outputMime: 'image/jpeg' });
+          const kfId = addMessage({ role: 'user', text: userMessageText, imageUrl: kf.dataUrl, imageMimeType: kf.mimeType });
+          try {
+            if (!sendWithFileUploadInProgressRef.current) {
+              sendWithFileUploadInProgressRef.current = true;
+            }
+            updateMessage(kfId, { llmImageUrl: kf.dataUrl, llmImageMimeType: kf.mimeType });
+            const up = await uploadMediaToFiles(kf.dataUrl, kf.mimeType, 'keyframe-image');
+            updateMessage(kfId, { llmFileUri: up.uri, llmFileMimeType: up.mimeType });
+          } catch (e) {
+            // Ignore upload errors for keyframe
+          }
+          userMessageText = '';
+          userImageToProcessBase64 = keyframeSrcBase64;
+          userImageToProcessMimeType = keyframeSrcMime;
+        } catch (e) {
+          console.warn('Failed to create keyframe from video; proceeding without keyframe image message', e);
+        }
+      }
+
+      if (!userImageToProcessLlmBase64 && attachedImageBase64 && attachedImageMimeType) {
+        try {
+          if (!sendWithFileUploadInProgressRef.current) {
+            sendWithFileUploadInProgressRef.current = true;
+          }
+           const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, { t });
+           userImageToProcessLlmBase64 = optimized.dataUrl;
+           userImageToProcessLlmMimeType = optimized.mimeType;
+
+           if (userMessageId) {
+             updateMessage(userMessageId, {
+               llmImageUrl: optimized.dataUrl,
+               llmImageMimeType: optimized.mimeType,
+             });
+           }
+         } catch {}
+
+      }
+
+      userMessageId = addMessage({
+        role: 'user',
+        text: userMessageText,
+        recordedUtterance: recordedSpeechForMessage || undefined,
+        imageUrl: userImageToProcessBase64,
+        imageMimeType: userImageToProcessMimeType,
+        llmImageUrl: userImageToProcessLlmBase64,
+        llmImageMimeType: userImageToProcessLlmMimeType,
+      });
+    }
+
+    const thinkingMessageId = addMessage({ role: 'assistant', thinking: true });
+
+    cancelReengagementRef.current();
+
+    let historyForGemini = messagesRef.current.filter(m => m.id !== thinkingMessageId);
+    if (messageType === 'user' && userMessageId) {
+      historyForGemini = historyForGemini.filter(m => m.id !== userMessageId);
+    }
+
+    let geminiPromptText: string;
+    let systemInstructionForGemini: string = currentSystemPromptText;
+    try {
+      await getGlobalProfileDB();
+    } finally {
+      systemInstructionForGemini = composeMaestroSystemInstruction(systemInstructionForGemini);
+    }
+
+    // Optimize user image if needed
+    if (messageType === 'user' && userImageToProcessBase64 && !userImageToProcessLlmBase64 && userImageToProcessMimeType) {
+      if (!sendWithFileUploadInProgressRef.current) {
+        sendWithFileUploadInProgressRef.current = true;
+      }
+      try {
+        setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' });
+        const optimized = await processMediaForUpload(userImageToProcessBase64, userImageToProcessMimeType, {
+          t,
+          onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs })
+        });
+        userImageToProcessLlmBase64 = optimized.dataUrl;
+        userImageToProcessLlmMimeType = optimized.mimeType;
+
+        if (messageType === 'user' && userMessageId) {
+          updateMessage(userMessageId, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
+        }
+      } catch (e) { 
+        console.warn('Failed to derive low-res for current user media, will omit persistence media', e); 
+      } finally { 
+        setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev)); 
+      }
+    }
+
+    // Decide which image to upload to Gemini
+    let imageForGeminiContextBase64: string | undefined;
+    let imageForGeminiContextMimeType: string | undefined;
+
+    if (messageType === 'user') {
+      if (userImageToProcessBase64) {
+        imageForGeminiContextBase64 = userImageToProcessBase64;
+        imageForGeminiContextMimeType = userImageToProcessMimeType;
+      } else {
+        imageForGeminiContextBase64 = userImageToProcessLlmBase64;
+        imageForGeminiContextMimeType = userImageToProcessLlmMimeType;
+      }
+    } else {
+      imageForGeminiContextBase64 = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : undefined;
+      imageForGeminiContextMimeType = (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : undefined;
+    }
+
+    let imageForGeminiContextFileUri: string | undefined = undefined;
+
+    switch (messageType) {
+      case 'image-reengagement':
+        geminiPromptText = "...";
+        break;
+      case 'conversational-reengagement':
+        geminiPromptText = "...";
+        imageForGeminiContextBase64 = undefined;
+        imageForGeminiContextMimeType = undefined;
+        break;
+      case 'user':
+      default:
+        geminiPromptText = userMessageText;
+        break;
+    }
+
+    // For image-reengagement, optimize the image before uploading
+    if (messageType === 'image-reengagement') {
+      if (typeof passedImageBase64 === 'string' && passedImageBase64 && typeof passedImageMimeType === 'string' && passedImageMimeType) {
+        try {
+          if (!sendWithFileUploadInProgressRef.current) {
+            sendWithFileUploadInProgressRef.current = true;
+          }
+          const optimized = await processMediaForUpload(passedImageBase64, passedImageMimeType, { 
+            t, 
+            onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs }) 
+          });
+          // For re-engagement, optimize strictly
+          imageForGeminiContextBase64 = optimized.dataUrl; 
+          imageForGeminiContextMimeType = optimized.mimeType;
+        } catch (e) { console.warn('Failed to derive low-res for re-engagement media, omitting media', e); }
+      }
+    }
+
+    // Upload current image to Files API
+    if (imageForGeminiContextBase64 && imageForGeminiContextMimeType) {
+      try {
+        if (!sendWithFileUploadInProgressRef.current) {
+          sendWithFileUploadInProgressRef.current = true;
+        }
+        setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
+        const up = await uploadMediaToFiles(imageForGeminiContextBase64, imageForGeminiContextMimeType, 'current-user-media');
+        if (messageType === 'user' && userMessageId) {
+          const existing = (messagesRef.current || []).find(m => m.id === userMessageId);
+          const hasExisting = !!(existing && typeof (existing as any).llmFileUri === 'string' && (existing as any).llmFileUri);
+          if (!hasExisting) {
+            updateMessage(userMessageId, {
+              llmFileUri: up.uri,
+              llmFileMimeType: up.mimeType,
+            });
+            imageForGeminiContextFileUri = up.uri;
+          } else {
+            imageForGeminiContextFileUri = (existing as any).llmFileUri as string;
+          }
+        } else {
+          imageForGeminiContextFileUri = up.uri;
+        }
+      } catch (e) {
+        console.warn('Failed to upload current media to Files API; will send without media');
+        imageForGeminiContextFileUri = undefined;
+      } finally {
+        setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
+      }
+    }
+
+    setLatestGroundingChunks(undefined);
+
+    try {
+      const historySubsetForSend: ChatMessage[] = getHistoryRespectingBookmark(historyForGemini);
+      setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done: 0, total: 0 });
+      
+      let ensuredUpdates: Record<string, { oldUri?: string; newUri: string }> = {};
+      try {
+        ensuredUpdates = await ensureUrisForHistoryForSend(historySubsetForSend, (done, total, etaMs) => {
+          setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
+        });
+      } finally {
+        setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.finalizing') || 'Finalizing...' } : prev));
+      }
+
+      let historyForGeminiPostEnsure = messagesRef.current.filter(m => m.id !== thinkingMessageId);
+      if (messageType === 'user' && userMessageId) {
+        historyForGeminiPostEnsure = historyForGeminiPostEnsure.filter(m => m.id !== userMessageId);
+      }
+      const historySubsetForSendFinal: ChatMessage[] = getHistoryRespectingBookmark(historyForGeminiPostEnsure)
+        .map((m: ChatMessage) => {
+          if (ensuredUpdates[m.id]?.newUri) {
+            const nu = ensuredUpdates[m.id].newUri;
+            if ((m as any).llmFileUri !== nu) {
+              return { ...m, llmFileUri: nu } as ChatMessage;
+            }
+          }
+          return m;
+        });
+
+      try {
+        for (const m of historySubsetForSendFinal) {
+          const upd = ensuredUpdates[m.id];
+          if (upd && upd.newUri && (m as any).llmFileUri !== upd.newUri) {
+            (m as any).llmFileUri = upd.newUri;
+          }
+        }
+      } catch {}
+
+      let globalProfileText: string | undefined = undefined;
+      try {
+        const gp2 = await getGlobalProfileDB();
+        globalProfileText = gp2?.text || undefined;
+      } catch {}
+
+      const derivedHistory = deriveHistoryForApi(historySubsetForSendFinal, {
+        maxMessages: computeMaxMessagesForArray(historySubsetForSendFinal.filter((m: ChatMessage) => m.role === 'user' || m.role === 'assistant')),
+        maxMediaToKeep: MAX_MEDIA_TO_KEEP,
+        contextSummary: resolveBookmarkContextSummary() || undefined,
+        globalProfileText,
+      });
+      const sanitizedDerivedHistory = await sanitizeHistoryWithVerifiedUris(derivedHistory as any);
+
+      // User image generation for AI Camera mode
+      if (shouldGenerateUserImage && currentSettingsVal.sendWithSnapshotEnabled && messageType === 'user' && userMessageText.trim() && userMessageId && !userImageToProcessBase64) {
+        const userImageGenStartTime = Date.now();
+        updateMessage(userMessageId, {
+          isGeneratingImage: true,
+          imageGenerationStartTime: userImageGenStartTime,
+          imageUrl: undefined,
+          imageMimeType: undefined,
+        });
+
+        const systemInstructionForUserImage = IMAGE_GEN_SYSTEM_INSTRUCTION;
+        const sanitizedUserHistoryForImage = sanitizedDerivedHistory as any;
+        let finalResult: any = null;
+        
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", userMessageText);
+          const userImgGenResult = await generateImage({
+            history: sanitizedUserHistoryForImage,
+            latestMessageText: prompt,
+            latestMessageRole: 'user',
+            systemInstruction: systemInstructionForUserImage,
+            maestroAvatarUri: maestroAvatarUriRef.current || undefined,
+            maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
+          });
+          finalResult = userImgGenResult;
+          if ('base64Image' in userImgGenResult) break;
+          if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+        }
+
+        if (finalResult && 'base64Image' in finalResult) {
+          const duration = Date.now() - userImageGenStartTime;
+          setImageLoadDurations(prev => [...prev, duration]);
+          try {
+            const optimized = await processMediaForUpload(finalResult.base64Image as string, finalResult.mimeType as string, { t });
+            const lowResDataUrl = optimized.dataUrl;
+            const lowResMime = optimized.mimeType;
+
+            sendWithFileUploadInProgressRef.current = true;
+            setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' } : { active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' }));
+            const up = await uploadMediaToFiles(finalResult.base64Image as string, finalResult.mimeType as string, 'user-generated');
+
+            updateMessage(userMessageId, {
+              imageUrl: finalResult.base64Image,
+              imageMimeType: finalResult.mimeType,
+              llmImageUrl: lowResDataUrl,
+              llmImageMimeType: lowResMime,
+              llmFileUri: up.uri,
+              llmFileMimeType: up.mimeType,
+              isGeneratingImage: false,
+              imageGenError: null,
+              imageGenerationStartTime: undefined
+            });
+            imageForGeminiContextFileUri = up.uri;
+            imageForGeminiContextMimeType = up.mimeType;
+          } catch (e) {
+            updateMessage(userMessageId, {
+              imageUrl: finalResult.base64Image,
+              imageMimeType: finalResult.mimeType,
+              isGeneratingImage: false,
+              imageGenError: null,
+              imageGenerationStartTime: undefined
+            });
+          } finally {
+            setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
+          }
+        } else if (finalResult) {
+          updateMessage(userMessageId, {
+            imageGenError: (finalResult as any).error,
+            isGeneratingImage: false,
+            imageGenerationStartTime: undefined
+          });
+        }
+      }
+
+      const response = await generateGeminiResponse(
+        DEFAULT_TEXT_MODEL_ID,
+        geminiPromptText,
+        sanitizedDerivedHistory,
+        systemInstructionForGemini,
+        undefined,
+        imageForGeminiContextMimeType,
+        imageForGeminiContextFileUri,
+        currentSettingsVal.enableGoogleSearch,
+        undefined
+      );
+
+      const accumulatedFullText = response.text || "";
+      const parsedTranslationsOnComplete = parseGeminiResponse(accumulatedFullText);
+      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
+      if (groundingChunks?.length) {
+        setLatestGroundingChunks(groundingChunks);
+      }
+
+      const finalMessageUpdates = {
+        thinking: false,
+        translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
+        rawAssistantResponse: accumulatedFullText,
+        text: parsedTranslationsOnComplete.length === 0 ? accumulatedFullText : undefined,
+      };
+      updateMessage(thinkingMessageId, finalMessageUpdates);
+
+      // Early suggestion fetch
+      try {
+        const textForSuggestionsEarly = finalMessageUpdates.rawAssistantResponse || (finalMessageUpdates.translations?.find(t => t.spanish)?.spanish) || "";
+        if (!isLoadingSuggestionsRef.current && textForSuggestionsEarly.trim()) {
+          const historyWithFinalAssistant = messagesRef.current.map(m =>
+            m.id === thinkingMessageId ? ({ ...m, ...finalMessageUpdates }) : m
+          );
+          fetchAndSetReplySuggestions(thinkingMessageId, textForSuggestionsEarly, getHistoryRespectingBookmark(historyWithFinalAssistant));
+          lastFetchedSuggestionsForRef.current = thinkingMessageId;
+        }
+      } catch (e) {
+        console.warn('Failed to prefetch suggestions before TTS:', e);
+      }
+
+      // Speak the response
+      const originalMessage = messagesRef.current.find(m => m.id === thinkingMessageId);
+      if (originalMessage) {
+        const finalMessageForSpeech = { ...originalMessage, ...finalMessageUpdates };
+        speakMessage(finalMessageForSpeech);
+      }
+
+      if (messageType === 'user') {
+        setAttachedImageBase64(null);
+        setAttachedImageMimeType(null);
+        if (sanitizedText === stripBracketedContent(transcript || '') && (transcript || '').length > 0) {
+          clearTranscript();
+        }
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      // Image generation for assistant response
+      if (currentSettingsVal.imageGenerationModeEnabled && accumulatedFullText.trim()) {
+        const assistantStartTime = Date.now();
+        updateMessage(thinkingMessageId, {
+          isGeneratingImage: true,
+          imageGenerationStartTime: assistantStartTime
+        });
+
+        let historyForAssistantImageGen: ChatMessage[] | undefined = undefined;
+        try {
+          sendWithFileUploadInProgressRef.current = true;
+          const baseForEnsure: ChatMessage[] = getHistoryRespectingBookmark(messagesRef.current);
+          setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done: 0, total: 0 });
+          const ensuredUpdates = await ensureUrisForHistoryForSend(baseForEnsure, (done, total, etaMs) => {
+            setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
+          });
+          historyForAssistantImageGen = baseForEnsure.map(m => {
+            const upd = ensuredUpdates[m.id];
+            if (upd && upd.newUri && (m as any).llmFileUri !== upd.newUri) {
+              return { ...m, llmFileUri: upd.newUri } as ChatMessage;
+            }
+            return m;
+          });
+          await new Promise(r => setTimeout(r, 0));
+        } catch { /* ignore */ }
+
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const histForAssistantImgBase = historyForAssistantImageGen || getHistoryRespectingBookmark(messagesRef.current);
+          let gpTextForAssistant: string | undefined = undefined;
+          try {
+            const gp3 = await getGlobalProfileDB();
+            gpTextForAssistant = gp3?.text || undefined;
+          } catch {}
+
+          const assistantHistory = deriveHistoryForApi(histForAssistantImgBase, {
+            maxMessages: computeMaxMessagesForArray(getHistoryRespectingBookmark(messagesRef.current).filter((m: ChatMessage) => m.role === 'user' || m.role === 'assistant')),
+            maxMediaToKeep: MAX_MEDIA_TO_KEEP,
+            contextSummary: resolveBookmarkContextSummary() || undefined,
+            globalProfileText: gpTextForAssistant,
+            placeholderLatestUserMessage: DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
+          });
+          const sanitizedAssistantHistoryForImage = await sanitizeHistoryWithVerifiedUris(assistantHistory as any);
+
+          const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", accumulatedFullText);
+          const assistantImgGenResult = await generateImage({
+            history: sanitizedAssistantHistoryForImage,
+            latestMessageText: prompt,
+            latestMessageRole: 'user',
+            systemInstruction: IMAGE_GEN_SYSTEM_INSTRUCTION,
+            maestroAvatarUri: maestroAvatarUriRef.current || undefined,
+            maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
+          });
+
+          if ('base64Image' in assistantImgGenResult) {
+            const duration = Date.now() - assistantStartTime;
+            setImageLoadDurations(prev => [...prev, duration]);
+            try {
+              const optimized = await processMediaForUpload(assistantImgGenResult.base64Image as string, assistantImgGenResult.mimeType as string, { t });
+              const up = await uploadMediaToFiles(assistantImgGenResult.base64Image as string, assistantImgGenResult.mimeType as string, 'assistant-generated');
+
+              updateMessage(thinkingMessageId, {
+                imageUrl: assistantImgGenResult.base64Image,
+                imageMimeType: assistantImgGenResult.mimeType,
+                llmImageUrl: optimized.dataUrl,
+                llmImageMimeType: optimized.mimeType,
+                llmFileUri: up.uri,
+                llmFileMimeType: up.mimeType,
+                isGeneratingImage: false,
+                imageGenError: null,
+                imageGenerationStartTime: undefined
+              });
+            } catch (e) {
+              updateMessage(thinkingMessageId, {
+                imageUrl: assistantImgGenResult.base64Image,
+                imageMimeType: assistantImgGenResult.mimeType,
+                isGeneratingImage: false,
+                imageGenError: null,
+                imageGenerationStartTime: undefined
+              });
+            }
+            break;
+          } else if (attempt < 2) {
+            await new Promise(r => setTimeout(r, 1500));
+          } else {
+            updateMessage(thinkingMessageId, {
+              imageGenError: (assistantImgGenResult as any).error,
+              isGeneratingImage: false,
+              imageGenerationStartTime: undefined
+            });
+          }
+        }
+      }
+
+      try {
+        sendWithFileUploadInProgressRef.current = false;
+      } catch { /* ignore */ }
+      setIsSending(false);
+      setSendPrep(null);
+      scheduleReengagementRef.current('send-complete');
+
+      // Resume STT if needed
+      const isSpeechActive = speechIsSpeakingRef.current || (typeof hasPendingQueueItems === 'function' && hasPendingQueueItems());
+      if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !isSpeechActive) {
+        try {
+          startListening(settingsRef.current.stt.language);
+        } finally {
+          sttInterruptedBySendRef.current = false;
+        }
+      }
+
+      // Fetch suggestions if TTS not supported
+      if (!isSpeechSynthesisSupported) {
+        const finalAssistantMessage = messagesRef.current.find(m => m.id === thinkingMessageId);
+        if (finalAssistantMessage && finalAssistantMessage.role === 'assistant' &&
+          (finalAssistantMessage.rawAssistantResponse || (finalAssistantMessage.translations && finalAssistantMessage.translations.length > 0)) &&
+          !isLoadingSuggestionsRef.current &&
+          finalAssistantMessage.id !== lastFetchedSuggestionsForRef.current) {
+          const textForSuggestions = finalAssistantMessage.rawAssistantResponse ||
+            (finalAssistantMessage.translations?.find(t => t.spanish)?.spanish) || "";
+          if (textForSuggestions.trim()) {
+            fetchAndSetReplySuggestions(finalAssistantMessage.id, textForSuggestions, getHistoryRespectingBookmark(messagesRef.current));
+            lastFetchedSuggestionsForRef.current = finalAssistantMessage.id;
+          }
+        }
+      }
+
+      return true;
+
+    } catch (error) {
+      console.error("Error sending message (stream consumer):", error);
+      let errorMessage = t('general.error');
+      if (error instanceof ApiError) {
+        errorMessage = error.message || error.code || `HTTP ${error.status}`;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      updateMessage(thinkingMessageId, {
+        thinking: false, 
+        role: 'error', 
+        text: errorMessage, 
+        rawAssistantResponse: undefined, 
+        translations: undefined,
+      });
+      setIsSending(false);
+      setSendPrep(null);
+      try {
+        sendWithFileUploadInProgressRef.current = false;
+      } catch { /* ignore */ }
+
+      // Resume STT on error
+      if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !speechIsSpeakingRef.current) {
+        try {
+          startListening(settingsRef.current.stt.language);
+        } finally {
+          sttInterruptedBySendRef.current = false;
+        }
+      }
+
+      scheduleReengagementRef.current('send-error');
+
+      if (messageType === 'user') {
+        setAttachedImageBase64(null);
+        setAttachedImageMimeType(null);
+      }
+      setReplySuggestions([]);
+      setIsLoadingSuggestions(false);
+      speechIsSpeakingRef.current = false;
+      return false;
+    }
+  }, [
+    t,
+    addMessage,
+    updateMessage,
+    settingsRef,
+    selectedLanguagePairRef,
+    messagesRef,
+    isLoadingHistoryRef,
+    captureSnapshot,
+    cancelReengagementRef,
+    scheduleReengagementRef,
+    getHistoryRespectingBookmark,
+    computeMaxMessagesForArray,
+    ensureUrisForHistoryForSend,
+    resolveBookmarkContextSummary,
+    fetchAndSetReplySuggestions,
+    parseGeminiResponse,
+    stripBracketedContent,
+    speakMessage,
+    isSpeechSynthesisSupported,
+    isListening,
+    stopListening,
+    startListening,
+    clearTranscript,
+    hasPendingQueueItems,
+    claimRecordedUtterance,
+    sttInterruptedBySendRef,
+    recordedUtterancePendingRef,
+    pendingRecordedAudioMessageRef,
+    speechIsSpeakingRef,
+    currentSystemPromptText,
+    attachedImageBase64,
+    attachedImageMimeType,
+    setAttachedImageBase64,
+    setAttachedImageMimeType,
+    transcript,
+    lastFetchedSuggestionsForRef,
+  ]);
+
+  // Keep ref updated
+  useEffect(() => {
+    handleSendMessageInternalRef.current = handleSendMessageInternal;
+  }, [handleSendMessageInternal]);
+
+  return {
+    isSending,
+    isSendingRef,
+    sendPrep,
+    latestGroundingChunks,
+    maestroActivityStage,
+    isCreatingSuggestion,
+    imageLoadDurations,
+    
+    handleSendMessageInternal,
+    handleSendMessageInternalRef,
+    
+    fetchAndSetReplySuggestions,
+    handleCreateSuggestion,
+    handleSuggestionInteraction,
+    
+    setMaestroActivityStage,
+    
+    parseGeminiResponse,
+    stripBracketedContent,
+    resolveBookmarkContextSummary,
+    ensureUrisForHistoryForSend,
+    computeHistorySubsetForMedia,
+    handleReengagementThresholdChange,
+    calculateEstimatedImageLoadTime,
+  };
+};
+
+export default useMaestroController;

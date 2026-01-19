@@ -668,7 +668,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
            </div>
          </div>
        )}
-        {messagesToRender.map((msg, idx) => {
+         {messagesToRender.map((msg, _idx) => {
           if (msg.role === 'system_selection') {
             return null;
           }
@@ -924,8 +924,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     imageGenerationModeEnabled={imageGenerationModeEnabled}
                     onToggleImageGenerationMode={onToggleImageGenerationMode}
                     sttError={sttError}
-                    autoCaptureError={autoCaptureError}
-                    snapshotUserError={snapshotUserError}
+                     autoCaptureError={autoCaptureError ?? null}
+                     snapshotUserError={snapshotUserError ?? null}
                     onUiTaskStart={onUiTaskStart}
                     onUiTaskEnd={onUiTaskEnd}
                     

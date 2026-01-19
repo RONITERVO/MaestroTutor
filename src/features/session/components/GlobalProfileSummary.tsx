@@ -7,7 +7,7 @@ interface GlobalProfileSummaryProps {
   messages: ChatMessage[];
 }
 
-const GlobalProfileSummary: React.FC<GlobalProfileSummaryProps> = ({ t, messages }) => {
+const GlobalProfileSummary: React.FC<GlobalProfileSummaryProps> = ({ t: _t, messages }) => {
   const [summary, setSummary] = React.useState<string>('Loading profile...');
   useEffect(() => {
     const fetchAndSummarize = async () => {

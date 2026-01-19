@@ -8,6 +8,9 @@ interface UseSmartReengagementProps {
   selectedLanguagePairId: string | null;
   isSending: boolean;
   isSpeaking: boolean;
+  // Optional refs for real-time state checking (used when values might be stale)
+  isSendingRef?: React.MutableRefObject<boolean>;
+  isSpeakingRef?: React.MutableRefObject<boolean>;
   isVisualContextActive: boolean;
   externalUiTaskCount: number;
   triggerReengagementSequence: () => Promise<void>;
@@ -23,6 +26,8 @@ export const useSmartReengagement = ({
   selectedLanguagePairId,
   isSending,
   isSpeaking,
+  isSendingRef,
+  isSpeakingRef,
   isVisualContextActive,
   externalUiTaskCount,
   triggerReengagementSequence,
@@ -44,15 +49,25 @@ export const useSmartReengagement = ({
     return token.startsWith('reengage-');
   };
 
+  // Helper to get current sending state - use ref if available, fallback to prop
+  const getCurrentIsSending = useCallback((): boolean => {
+    return isSendingRef?.current ?? isSending;
+  }, [isSending, isSendingRef]);
+
+  // Helper to get current speaking state - use ref if available, fallback to prop
+  const getCurrentIsSpeaking = useCallback((): boolean => {
+    return isSpeakingRef?.current ?? isSpeaking;
+  }, [isSpeaking, isSpeakingRef]);
+
   const canScheduleReengagement = useCallback((): boolean => {
     if (isLoadingHistory) return false;
     if (!selectedLanguagePairId) return false;
-    if (isSending) return false;
-    if (isSpeaking) return false;
+    if (getCurrentIsSending()) return false;
+    if (getCurrentIsSpeaking()) return false;
     if (isVisualContextActive) return false;
     if (externalUiTaskCount > 0) return false;
     return true;
-  }, [isLoadingHistory, selectedLanguagePairId, isSending, isSpeaking, isVisualContextActive, externalUiTaskCount]);
+  }, [isLoadingHistory, selectedLanguagePairId, getCurrentIsSending, getCurrentIsSpeaking, isVisualContextActive, externalUiTaskCount]);
 
   const cancelReengagement = useCallback(() => {
     const timers = reengagementTimersRef.current;

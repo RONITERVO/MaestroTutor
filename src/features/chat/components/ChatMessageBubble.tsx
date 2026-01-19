@@ -36,7 +36,7 @@ interface ChatMessageBubbleProps {
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({ 
   message, isFocusedMode, speakingUtteranceText, estimatedLoadTime, isSending, loadingGifs,
   currentTargetLangCode, currentNativeLangCode, t,
-  isSpeaking, speakNativeLang, onToggleSpeakNativeLang, handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking, isTtsSupported,
+  isSpeaking, speakNativeLang, onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking, isTtsSupported: _isTtsSupported,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
   registerBubbleEl,
   onUiTaskStart,
@@ -389,7 +389,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           const canvas = editCanvasRef.current;
           const ctx = canvas?.getContext('2d');
           if (ctx && currentPos) {
-              if (isNewStrokeRef.current) {
+              if (isNewStrokeRef.current && canvas) {
                   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                   setUndoStack(prev => [...prev, imageData]);
                   isNewStrokeRef.current = false;

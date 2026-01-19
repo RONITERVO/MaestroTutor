@@ -17,7 +17,7 @@ import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfile
 import { getGlobalProfileDB, setGlobalProfileDB } from '../../session/services/globalProfile';
 import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../../api/gemini';
 import { DB_NAME } from '../../../core/db/index';
-import { uniq } from '../../../shared/utils/common';
+import { uniq as _uniq } from '../../../shared/utils/common';
 
 interface InputAreaProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
@@ -161,7 +161,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   // Reset confirmation inside input area
   const [resetMode, setResetMode] = useState(false);
   const [resetConfirm, setResetConfirm] = useState<string>('');
-  const [isResetting, setIsResetting] = useState(false);
+  const [_isResetting, setIsResetting] = useState(false);
 
   // Profile editing inside input area
   const [isEditingProfile, setIsEditingProfile] = useState(false);

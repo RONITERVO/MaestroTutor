@@ -66,7 +66,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
     }
   };
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = (_e: React.PointerEvent) => {
       isLongPressRef.current = false;
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = window.setTimeout(() => {

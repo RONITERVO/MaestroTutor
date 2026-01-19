@@ -80,7 +80,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reje
 export function useGeminiLiveConversation(
   callbacks: UseGeminiLiveConversationCallbacks = {}
 ) {
-  const [state, setState] = useState<LiveSessionState>('idle');
+  const [_state, setState] = useState<LiveSessionState>('idle');
   
   const sessionRef = useRef<any>(null);
   const frameIntervalRef = useRef<number | null>(null);
@@ -247,7 +247,7 @@ export function useGeminiLiveConversation(
       if (!stream || !stream.active) throw new Error('No active stream provided');
 
       // Video Setup
-      const video = await ensureVideoElementReady(stream, videoElement);
+      await ensureVideoElementReady(stream, videoElement);
       const canvas = document.createElement('canvas');
       canvasRef.current = canvas;
 
