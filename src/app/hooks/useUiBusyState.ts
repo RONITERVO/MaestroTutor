@@ -59,7 +59,7 @@ export const useUiBusyState = (): UseUiBusyStateReturn => {
 
   // Convert Set to array of unique tags for backward compatibility
   const uiBusyTaskTags = Array.from(uiBusyTaskTagsSet).map(tok => {
-    const tag = tok.split(':')[0];
+    const tag = (tok as string).split(':')[0];
     return tag;
   }).filter((tag, idx, arr) => arr.indexOf(tag) === idx);
 

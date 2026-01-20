@@ -38,40 +38,56 @@ export const useSmartReengagement = ({
   const setReengagementPhase = useMaestroStore(state => state.setReengagementPhase);
   const setReengagementDeadline = useMaestroStore(state => state.setReengagementDeadline);
   const setIsUserActive = useMaestroStore(state => state.setIsUserActive);
+  
+  // Timer and token refs
   const reengagementTimersRef = useRef<{ waitTimer: number | null; countdownTimer: number | null }>({ waitTimer: null, countdownTimer: null });
   const reengagementTokensRef = useRef<{ waitToken: string | null; countdownToken: string | null }>({ waitToken: null, countdownToken: null });
   const reengagementDeadlineRef = useRef<number | null>(null);
   const isUserActiveRef = useRef<boolean>(false);
+  
+  // Refs to store the latest versions of interdependent functions
+  // This breaks the circular dependency chain by allowing functions to call
+  // each other through refs without being in each other's dependency arrays
+  const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
+  const cancelReengagementRef = useRef<() => void>(() => {});
   const beginCountdownRef = useRef<(reason: string) => void>(() => {});
+  const canScheduleReengagementRef = useRef<() => boolean>(() => false);
   const triggerReengagementSequenceRef = useRef(triggerReengagementSequence);
+  
+  // Refs for stable access to props
+  const settingsRef = useRef(settings);
+  const addUiBusyTokenRef = useRef(addUiBusyToken);
+  const removeUiBusyTokenRef = useRef(removeUiBusyToken);
 
+  // Keep refs updated
   useEffect(() => { triggerReengagementSequenceRef.current = triggerReengagementSequence; }, [triggerReengagementSequence]);
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
+  useEffect(() => { addUiBusyTokenRef.current = addUiBusyToken; }, [addUiBusyToken]);
+  useEffect(() => { removeUiBusyTokenRef.current = removeUiBusyToken; }, [removeUiBusyToken]);
 
   const isReengagementToken = (token: string | null | undefined): boolean => {
     if (!token || typeof token !== 'string') return false;
     return token.startsWith('reengage-');
   };
 
-  // Helper to get current sending state - use ref if available, fallback to prop
-  const getCurrentIsSending = useCallback((): boolean => {
-    return isSendingRef?.current ?? isSending;
-  }, [isSending, isSendingRef]);
-
-  // Helper to get current speaking state - use ref if available, fallback to prop
-  const getCurrentIsSpeaking = useCallback((): boolean => {
-    return isSpeakingRef?.current ?? isSpeaking;
-  }, [isSpeaking, isSpeakingRef]);
-
+  // canScheduleReengagement - checks if reengagement can be scheduled
+  // Uses refs for state values that might be stale
   const canScheduleReengagement = useCallback((): boolean => {
     if (isLoadingHistory) return false;
     if (!selectedLanguagePairId) return false;
-    if (getCurrentIsSending()) return false;
-    if (getCurrentIsSpeaking()) return false;
+    // Use refs if available for real-time values
+    if (isSendingRef?.current ?? isSending) return false;
+    if (isSpeakingRef?.current ?? isSpeaking) return false;
     if (isVisualContextActive) return false;
     if (externalUiTaskCount > 0) return false;
     return true;
-  }, [isLoadingHistory, selectedLanguagePairId, getCurrentIsSending, getCurrentIsSpeaking, isVisualContextActive, externalUiTaskCount]);
+  }, [isLoadingHistory, selectedLanguagePairId, isSending, isSending, isSpeaking, isSendingRef, isSpeakingRef, isVisualContextActive, externalUiTaskCount]);
 
+  // Keep canScheduleReengagement ref updated
+  useEffect(() => { canScheduleReengagementRef.current = canScheduleReengagement; }, [canScheduleReengagement]);
+
+  // cancelReengagement - cancels any pending reengagement
+  // Uses refs for callbacks to avoid circular dependencies
   const cancelReengagement = useCallback(() => {
     const timers = reengagementTimersRef.current;
     if (timers.waitTimer) {
@@ -84,21 +100,26 @@ export const useSmartReengagement = ({
     }
     const tokens = reengagementTokensRef.current;
     if (tokens.waitToken) {
-      removeUiBusyToken(tokens.waitToken);
+      removeUiBusyTokenRef.current(tokens.waitToken);
       tokens.waitToken = null;
     }
     if (tokens.countdownToken) {
-      removeUiBusyToken(tokens.countdownToken);
+      removeUiBusyTokenRef.current(tokens.countdownToken);
       tokens.countdownToken = null;
     }
     reengagementDeadlineRef.current = null;
     setReengagementDeadline(null);
     setReengagementPhase('idle');
-  }, [removeUiBusyToken, setReengagementDeadline, setReengagementPhase]);
+  }, [setReengagementDeadline, setReengagementPhase]);
 
+  // Keep cancelReengagement ref updated
+  useEffect(() => { cancelReengagementRef.current = cancelReengagement; }, [cancelReengagement]);
+
+  // startWaitTimer - starts the wait timer before countdown
+  // Uses refs for interdependent callbacks to avoid circular dependencies
   const startWaitTimer = useCallback((delayMs: number, reason: string) => {
-    if (!canScheduleReengagement()) {
-      cancelReengagement();
+    if (!canScheduleReengagementRef.current()) {
+      cancelReengagementRef.current();
       return;
     }
     const timers = reengagementTimersRef.current;
@@ -112,15 +133,15 @@ export const useSmartReengagement = ({
     }
     const tokens = reengagementTokensRef.current;
     if (tokens.countdownToken) {
-      removeUiBusyToken(tokens.countdownToken);
+      removeUiBusyTokenRef.current(tokens.countdownToken);
       tokens.countdownToken = null;
     }
     if (tokens.waitToken) {
-      removeUiBusyToken(tokens.waitToken);
+      removeUiBusyTokenRef.current(tokens.waitToken);
       tokens.waitToken = null;
     }
     const clampedDelay = Math.max(0, Math.floor(Number.isFinite(delayMs) ? delayMs : 0));
-    const token = addUiBusyToken(`reengage-wait:${reason}:${Date.now()}`);
+    const token = addUiBusyTokenRef.current(`reengage-wait:${reason}:${Date.now()}`);
     tokens.waitToken = token;
     
     // Split the wait time into 'waiting' (Resting) and 'watching' (Observing) if long enough
@@ -154,27 +175,34 @@ export const useSmartReengagement = ({
         }, clampedDelay);
     }
 
-  }, [canScheduleReengagement, removeUiBusyToken, addUiBusyToken, cancelReengagement]);
+  }, [setReengagementDeadline, setReengagementPhase]);
 
+  // scheduleReengagement - main entry point to schedule reengagement
+  // Uses refs for interdependent callbacks
   const scheduleReengagement = useCallback((reason: string, delayOverrideMs?: number) => {
-    const defaultDelay = settings.smartReengagement.thresholdSeconds * 1000;
+    const defaultDelay = settingsRef.current.smartReengagement.thresholdSeconds * 1000;
     const delay = typeof delayOverrideMs === 'number' && Number.isFinite(delayOverrideMs)
       ? delayOverrideMs
       : defaultDelay;
-    if (!canScheduleReengagement()) {
-      cancelReengagement();
+    if (!canScheduleReengagementRef.current()) {
+      cancelReengagementRef.current();
       return;
     }
     startWaitTimer(delay, reason);
-  }, [canScheduleReengagement, cancelReengagement, startWaitTimer, settings.smartReengagement.thresholdSeconds]);
+  }, [startWaitTimer]);
 
+  // Keep scheduleReengagement ref updated
+  useEffect(() => { scheduleReengagementRef.current = scheduleReengagement; }, [scheduleReengagement]);
+
+  // beginCountdown - starts the final countdown before triggering reengagement
+  // Uses refs for circular dependencies with scheduleReengagement
   const beginCountdown = useCallback((reason: string) => {
     if (isUserActiveRef.current) {
-      scheduleReengagement('user-active-during-countdown');
+      scheduleReengagementRef.current('user-active-during-countdown');
       return;
     }
-    if (!canScheduleReengagement()) {
-      scheduleReengagement('countdown-blocked');
+    if (!canScheduleReengagementRef.current()) {
+      scheduleReengagementRef.current('countdown-blocked');
       return;
     }
     const timers = reengagementTimersRef.current;
@@ -184,18 +212,18 @@ export const useSmartReengagement = ({
     }
     const tokens = reengagementTokensRef.current;
     if (tokens.waitToken) {
-      removeUiBusyToken(tokens.waitToken);
+      removeUiBusyTokenRef.current(tokens.waitToken);
       tokens.waitToken = null;
     }
     if (tokens.countdownToken) {
-      removeUiBusyToken(tokens.countdownToken);
+      removeUiBusyTokenRef.current(tokens.countdownToken);
       tokens.countdownToken = null;
     }
     if (timers.countdownTimer) {
       clearTimeout(timers.countdownTimer);
       timers.countdownTimer = null;
     }
-    const token = addUiBusyToken(`reengage-countdown:${reason}:${Date.now()}`);
+    const token = addUiBusyTokenRef.current(`reengage-countdown:${reason}:${Date.now()}`);
     tokens.countdownToken = token;
     reengagementDeadlineRef.current = null;
     setReengagementDeadline(null);
@@ -203,31 +231,31 @@ export const useSmartReengagement = ({
     timers.countdownTimer = window.setTimeout(async () => {
       timers.countdownTimer = null;
       if (isUserActiveRef.current) {
-        scheduleReengagement('user-active-during-countdown');
+        scheduleReengagementRef.current('user-active-during-countdown');
         return;
       }
-      if (!canScheduleReengagement()) {
-        scheduleReengagement('countdown-blocked');
+      if (!canScheduleReengagementRef.current()) {
+        scheduleReengagementRef.current('countdown-blocked');
         return;
       }
-      cancelReengagement();
+      cancelReengagementRef.current();
       await triggerReengagementSequenceRef.current();
     }, 5000);
-  }, [canScheduleReengagement, scheduleReengagement, removeUiBusyToken, addUiBusyToken, cancelReengagement, setReengagementDeadline, setReengagementPhase]);
+  }, [setReengagementDeadline, setReengagementPhase]);
 
-  useEffect(() => {
-    beginCountdownRef.current = beginCountdown;
-  }, [beginCountdown]);
+  // Keep beginCountdown ref updated
+  useEffect(() => { beginCountdownRef.current = beginCountdown; }, [beginCountdown]);
 
+  // handleUserActivity - called when user interacts, cancels reengagement
   const handleUserActivity = useCallback(() => {
     isUserActiveRef.current = true;
     setIsUserActive(true);
-    cancelReengagement();
+    cancelReengagementRef.current();
     setTimeout(() => { 
       isUserActiveRef.current = false; 
       setIsUserActive(false);
     }, 3000);
-  }, [cancelReengagement, setIsUserActive]);
+  }, [setIsUserActive]);
 
   return {
     reengagementPhase,

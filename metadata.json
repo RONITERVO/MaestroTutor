@@ -1,5 +1,5 @@
 {
-  "name": "MaestroTutor-GeminiEdition_61",
+  "name": "MaestroTutor-GeminiEdition_66",
   "description": "Maestro is an immersive AI language tutor powered by Google Gemini that combines real-time voice, vision, and deep memory. It understands your physical surroundings via your camera to spark natural conversations, providing audio, text, and visual responses tailored to your specific context.",
   "requestFramePermissions": [
     "camera",

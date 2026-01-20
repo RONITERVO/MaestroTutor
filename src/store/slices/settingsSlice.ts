@@ -117,10 +117,15 @@ export interface SettingsSlice {
   isSettingsLoaded: boolean;
   needsLanguageSelection: boolean;
   
-  // Derived (computed on access)
+  // Derived (computed via selector functions)
   selectedLanguagePair: LanguagePair | undefined;
   currentSystemPromptText: string;
   currentReplySuggestionsPromptText: string;
+  
+  // Selector functions for derived state
+  getSelectedLanguagePair: () => LanguagePair | undefined;
+  getCurrentSystemPromptText: () => string;
+  getCurrentReplySuggestionsPromptText: () => string;
   
   // Actions
   initSettings: () => Promise<void>;
@@ -142,19 +147,25 @@ export const createSettingsSlice: StateCreator<
   isSettingsLoaded: false,
   needsLanguageSelection: false,
   
-  // Computed getters (derived state)
-  get selectedLanguagePair() {
+  // Computed properties - these are initialized as undefined/empty
+  // and will be computed via selectors when accessed
+  selectedLanguagePair: undefined,
+  currentSystemPromptText: '',
+  currentReplySuggestionsPromptText: '',
+  
+  // Selector functions for derived state (call these to compute derived values)
+  getSelectedLanguagePair: () => {
     const state = get();
     return state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
   },
   
-  get currentSystemPromptText() {
-    const pair = get().selectedLanguagePair;
+  getCurrentSystemPromptText: () => {
+    const pair = get().getSelectedLanguagePair();
     return pair?.baseSystemPrompt || '';
   },
   
-  get currentReplySuggestionsPromptText() {
-    const pair = get().selectedLanguagePair;
+  getCurrentReplySuggestionsPromptText: () => {
+    const pair = get().getSelectedLanguagePair();
     return pair?.baseReplySuggestionsPrompt || '';
   },
   

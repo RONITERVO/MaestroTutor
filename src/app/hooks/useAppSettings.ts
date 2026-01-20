@@ -12,13 +12,14 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useMaestroStore, getStoreState } from '../../store';
 import type { AppSettings, LanguagePair } from '../../core/types';
+import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../core/config/languages';
 
 // Re-export constants from the slice for backward compatibility
-export { 
-  initialSettings, 
-  MAX_VISIBLE_MESSAGES_DEFAULT, 
-  allGeneratedLanguagePairs, 
-  DEFAULT_LANGUAGE_PAIR_ID 
+export {
+  initialSettings,
+  MAX_VISIBLE_MESSAGES_DEFAULT,
+  allGeneratedLanguagePairs,
+  DEFAULT_LANGUAGE_PAIR_ID
 } from '../../store/slices/settingsSlice';
 
 export interface UseAppSettingsReturn {
@@ -46,10 +47,11 @@ export interface UseAppSettingsConfig {
  */
 export const useAppSettings = (config?: UseAppSettingsConfig): UseAppSettingsReturn => {
   // Select state from store with shallow comparison for objects
-  const { 
-    settings, 
-    languagePairs, 
-    isSettingsLoaded, 
+  // Compute selectedLanguagePair in the selector to avoid Zustand getter issues
+  const {
+    settings,
+    languagePairs,
+    isSettingsLoaded,
     needsLanguageSelection,
     selectedLanguagePair,
   } = useMaestroStore(useShallow(state => ({
@@ -57,7 +59,8 @@ export const useAppSettings = (config?: UseAppSettingsConfig): UseAppSettingsRet
     languagePairs: state.languagePairs,
     isSettingsLoaded: state.isSettingsLoaded,
     needsLanguageSelection: state.needsLanguageSelection,
-    selectedLanguagePair: state.selectedLanguagePair,
+    // Compute the derived value directly in the selector
+    selectedLanguagePair: state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId),
   })));
 
   // Get actions from store (stable references, no need for shallow)
@@ -89,15 +92,14 @@ export const useAppSettings = (config?: UseAppSettingsConfig): UseAppSettingsRet
   useEffect(() => {
     if (isSettingsLoaded && !callbacksFiredRef.current) {
       callbacksFiredRef.current = true;
-      
+
       // Call onSettingsLoaded callback
       config?.onSettingsLoaded?.(settings);
-      
+
       // Call onLanguageSelectionRequired if needed
       if (needsLanguageSelection) {
         const browserLangCode = (typeof navigator !== 'undefined' && navigator.language || 'en').substring(0, 2);
-        const { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } = require('../../core/config/languages');
-        const defaultNative = ALL_LANGUAGES.find((l: any) => l.langCode === browserLangCode) 
+        const defaultNative = ALL_LANGUAGES.find((l: any) => l.langCode === browserLangCode)
           || ALL_LANGUAGES.find((l: any) => l.langCode === DEFAULT_NATIVE_LANG_CODE);
         config?.onLanguageSelectionRequired?.(defaultNative?.langCode || 'en');
       }

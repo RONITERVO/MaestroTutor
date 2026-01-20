@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * useIdleReengagement - schedules reengagement when idle.
+ * 
+ * Uses refs for callback functions to avoid infinite loops caused by
+ * callback recreation triggering effect re-runs.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { ReengagementPhase } from '../../store';
 import type { LanguagePair } from '../../core/types';
 
@@ -29,19 +32,34 @@ export const useIdleReengagement = ({
   scheduleReengagement,
   cancelReengagement,
 }: UseIdleReengagementConfig) => {
+  // Store callbacks in refs to avoid them triggering effect re-runs
+  // when they are recreated (which happens due to their dependencies)
+  const scheduleReengagementRef = useRef(scheduleReengagement);
+  const cancelReengagementRef = useRef(cancelReengagement);
+  
+  // Keep refs updated with latest callbacks
+  useEffect(() => {
+    scheduleReengagementRef.current = scheduleReengagement;
+  }, [scheduleReengagement]);
+  
+  useEffect(() => {
+    cancelReengagementRef.current = cancelReengagement;
+  }, [cancelReengagement]);
+
+  // Main effect - only depends on state values, not callbacks
   useEffect(() => {
     if (!selectedLanguagePair) {
-      cancelReengagement();
+      cancelReengagementRef.current();
       return;
     }
     if (isSpeaking || isSending || isListening || isUserActive) {
-      cancelReengagement();
+      cancelReengagementRef.current();
       return;
     }
     if (reengagementPhase === 'idle') {
-      scheduleReengagement('became-idle');
+      scheduleReengagementRef.current('became-idle');
     }
-  }, [selectedLanguagePair, isSpeaking, isSending, isListening, isUserActive, reengagementPhase, cancelReengagement, scheduleReengagement]);
+  }, [selectedLanguagePair, isSpeaking, isSending, isListening, isUserActive, reengagementPhase]);
 };
 
 export default useIdleReengagement;

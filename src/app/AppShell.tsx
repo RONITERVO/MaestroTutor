@@ -170,8 +170,16 @@ const AppShell: React.FC = () => {
   const attachedImageBase64 = useMaestroStore(state => state.attachedImageBase64);
   const attachedImageMimeType = useMaestroStore(state => state.attachedImageMimeType);
   const isUserActive = useMaestroStore(state => state.isUserActive);
-  const currentSystemPromptText = useMaestroStore(state => state.currentSystemPromptText);
-  const currentReplySuggestionsPromptText = useMaestroStore(state => state.currentReplySuggestionsPromptText);
+  
+  // Compute derived values in the selector to avoid Zustand getter issues
+  const currentSystemPromptText = useMaestroStore(state => {
+    const pair = state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
+    return pair?.baseSystemPrompt || '';
+  });
+  const currentReplySuggestionsPromptText = useMaestroStore(state => {
+    const pair = state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
+    return pair?.baseReplySuggestionsPrompt || '';
+  });
 
   const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
   const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);

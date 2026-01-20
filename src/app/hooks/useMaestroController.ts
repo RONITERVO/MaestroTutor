@@ -692,7 +692,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         ? { ...prev, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' }
         : { active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' }));
     }
-    const upload = await uploadMediaToFiles(params.dataUrl, params.mimeType, params.displayName);
+    // CRITICAL: Upload the OPTIMIZED data, not the original, to save bandwidth and avoid MIME type mismatches
+    const upload = await uploadMediaToFiles(optimized.dataUrl, optimized.mimeType, params.displayName);
     return { optimized, upload };
   }, [t, setSendPrep]);
 
@@ -1238,6 +1239,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         }
         setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
         const up = await uploadMediaToFiles(imageForGeminiContextBase64, imageForGeminiContextMimeType, 'current-user-media');
+        // CRITICAL: Use the normalized MIME type returned from upload to avoid mismatch errors
+        // The upload normalizes audio/webm;codecs=opus -> audio/webm, so we must use up.mimeType
+        imageForGeminiContextMimeType = up.mimeType;
         if (messageType === 'user' && userMessageId) {
           const existing = (messagesRef.current || []).find(m => m.id === userMessageId);
           const hasExisting = !!(existing && typeof (existing as any).llmFileUri === 'string' && (existing as any).llmFileUri);
@@ -1249,6 +1253,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
             imageForGeminiContextFileUri = up.uri;
           } else {
             imageForGeminiContextFileUri = (existing as any).llmFileUri as string;
+            // Also use the existing mime type if we're reusing an existing URI
+            imageForGeminiContextMimeType = (existing as any).llmFileMimeType as string || imageForGeminiContextMimeType;
           }
         } else {
           imageForGeminiContextFileUri = up.uri;

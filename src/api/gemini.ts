@@ -73,23 +73,27 @@ function pcm16ToWavBase64(base64Pcm: string, sampleRate = 24000, numChannels = 1
   return bytesToBase64(bytes);
 }
 
-export async function checkFileStatuses(uris: string[]): Promise<Record<string, { deleted: boolean }>> {
+export async function checkFileStatuses(uris: string[]): Promise<Record<string, { deleted: boolean; active: boolean }>> {
   if (!uris || !uris.length) return {};
   const ai = getAi();
-  const out: Record<string, { deleted: boolean }> = {};
+  const out: Record<string, { deleted: boolean; active: boolean }> = {};
   await Promise.all(uris.map(async (uri) => {
     try {
       let name = uri;
       const m = /\/files\/([^?\s]+)/.exec(uri || "");
       if (m) name = `files/${m[1]}`;
       const f = await ai.files.get({ name });
-      out[uri] = { deleted: f.state === 'FAILED' }; 
+      // Check for both FAILED state (file is unusable) and non-ACTIVE state (file cannot be used yet)
+      out[uri] = { 
+        deleted: f.state === 'FAILED',
+        active: f.state === 'ACTIVE'
+      }; 
     } catch (e: any) {
       // Only mark as deleted if strictly 404 or specific error, otherwise keep to be safe against transient network errors
       if (e.message?.includes('404') || e.message?.includes('not found') || e.status === 404) {
-        out[uri] = { deleted: true };
+        out[uri] = { deleted: true, active: false };
       } else {
-        out[uri] = { deleted: false };
+        out[uri] = { deleted: false, active: false };
       }
     }
   }));
@@ -103,8 +107,9 @@ export async function sanitizeHistoryWithVerifiedUris(history: any[]) {
   const statuses = await checkFileStatuses(uris);
   return history.map(h => {
     if (h.imageFileUri) {
-        const isDeleted = statuses[h.imageFileUri]?.deleted;
-        if (isDeleted) {
+        const status = statuses[h.imageFileUri];
+        // Remove file reference if deleted OR if not in ACTIVE state (cannot be used for inference)
+        if (status?.deleted || !status?.active) {
             const { imageFileUri, imageMimeType, ...rest } = h;
             return rest;
         }
@@ -113,8 +118,85 @@ export async function sanitizeHistoryWithVerifiedUris(history: any[]) {
   });
 }
 
+/**
+ * Normalizes a MIME type to avoid encoding issues with parameters.
+ * For audio/webm;codecs=opus, the = sign can get escaped as \u003d in JSON
+ * which causes the Gemini API to reject the file with a MIME type mismatch.
+ * This function strips codec parameters for audio types to avoid this issue.
+ */
+function normalizeMimeTypeForUpload(mimeType: string): string {
+  if (!mimeType) return mimeType;
+  
+  // For audio types with codec parameters, strip the parameters
+  // The API will auto-detect the codec from the file content
+  if (mimeType.startsWith('audio/') && mimeType.includes(';')) {
+    return mimeType.split(';')[0];
+  }
+  
+  return mimeType;
+}
+
+/**
+ * Waits for an uploaded file to become ACTIVE before it can be used.
+ * Files go through PROCESSING -> ACTIVE (or FAILED) state transitions.
+ * We must wait for ACTIVE state before using the file in generateContent calls.
+ * 
+ * @param fileNameOrUri - The file name (e.g., "files/abc-123") or URI
+ * @param maxWaitMs - Maximum time to wait in milliseconds (default: 60 seconds)
+ * @param pollIntervalMs - How often to check the file state (default: 1 second)
+ * @returns The file object once it's ACTIVE
+ * @throws Error if the file fails processing or times out
+ */
+async function waitForFileActive(
+  fileNameOrUri: string,
+  maxWaitMs: number = 60000,
+  pollIntervalMs: number = 1000
+): Promise<any> {
+  const ai = getAi();
+  
+  // Extract file name from URI if needed
+  let name = fileNameOrUri;
+  const m = /\/files\/([^?\s]+)/.exec(fileNameOrUri || "");
+  if (m) name = `files/${m[1]}`;
+  
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < maxWaitMs) {
+    try {
+      const file = await ai.files.get({ name });
+      
+      if (file.state === 'ACTIVE') {
+        debugLogService.logRequest('files.waitForActive', 'Files API', { name, state: 'ACTIVE', waitMs: Date.now() - startTime }).complete({ state: 'ACTIVE' });
+        return file;
+      }
+      
+      if (file.state === 'FAILED') {
+        const error = file.error ? JSON.stringify(file.error) : 'Unknown error';
+        throw new Error(`File processing failed: ${error}`);
+      }
+      
+      // File is still PROCESSING, wait and poll again
+      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    } catch (e: any) {
+      // If it's a file state error we threw, re-throw it
+      if (e.message?.includes('File processing failed')) {
+        throw e;
+      }
+      // For other errors (network issues), log and continue polling
+      console.warn('Error polling file state, retrying...', e.message);
+      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    }
+  }
+  
+  throw new Error(`Timeout waiting for file ${name} to become ACTIVE after ${maxWaitMs}ms`);
+}
+
 export async function uploadMediaToFiles(dataUrl: string, mimeType: string, displayName?: string): Promise<{ uri: string; mimeType: string }> {
   const ai = getAi();
+  
+  // Normalize MIME type to avoid encoding issues with codec parameters
+  const normalizedMimeType = normalizeMimeTypeForUpload(mimeType);
+  
   const base64Data = dataUrl.split(',')[1];
   const byteCharacters = atob(base64Data);
   const byteNumbers = new Array(byteCharacters.length);
@@ -122,17 +204,17 @@ export async function uploadMediaToFiles(dataUrl: string, mimeType: string, disp
     byteNumbers[i] = byteCharacters.charCodeAt(i);
   }
   const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: mimeType });
+  const blob = new Blob([byteArray], { type: normalizedMimeType });
   // Create a proper File object for the SDK
-  const file = new File([blob], displayName || "upload", { type: mimeType });
+  const file = new File([blob], displayName || "upload", { type: normalizedMimeType });
 
   // Log upload attempt
-  const log = debugLogService.logRequest('files.upload', 'Files API', { mimeType, displayName, size: blob.size });
+  const log = debugLogService.logRequest('files.upload', 'Files API', { mimeType: normalizedMimeType, displayName, size: blob.size });
 
   try {
     const uploadResult = await ai.files.upload({
         file,
-        config: { displayName, mimeType },
+        config: { displayName, mimeType: normalizedMimeType },
     });
     if (!uploadResult) {
       throw new Error('Upload failed: missing result');
@@ -143,6 +225,14 @@ export async function uploadMediaToFiles(dataUrl: string, mimeType: string, disp
     if (!uploadResult.mimeType || !uploadResult.mimeType.trim()) {
       throw new Error('Upload failed: missing mimeType');
     }
+    
+    // CRITICAL: Wait for the file to become ACTIVE before returning
+    // Files go through PROCESSING -> ACTIVE state transition and cannot be used until ACTIVE
+    // This prevents "File is not in an ACTIVE state and usage is not allowed" errors
+    if (uploadResult.state !== 'ACTIVE') {
+      await waitForFileActive(uploadResult.name || uploadResult.uri);
+    }
+    
     log.complete(uploadResult);
     return { uri: uploadResult.uri, mimeType: uploadResult.mimeType };
   } catch (e) {

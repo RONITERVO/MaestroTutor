@@ -1,6 +1,18 @@
-Here is a task for you. Implement the full release version and then notify me when done.
+Here is a task for you. All 100% of the intended functionality from the original (~5000 lines added and removed: git diff baseline_repo/main) should work in the new, providing users the same experience while improving maintainability and code collaboration accross several files at the same time and making the future work of the devs easier. These goals are not met as users complain things dont work as before ( Build
+ Render Start 
+Build
+ Render End 
+Error
+ "Uncaught Error: Minified React error #185; visit https://react.dev/errors/185 for the full message or use the non-minified dev environment for full errors and additional helpful warnings." Minified React error #185
+In the minified production build of React, we avoid sending down full error messages in order to reduce the number of bytes sent over the wire.
 
-"C:\Users\ronit\maestrolanguagetutor_gemini_edition\maestrotutor-geminiedition_61_vscode\PlanZustand.md"
+We highly recommend using the development build locally when debugging your app since it tracks additional debug info and provides helpful warnings about potential problems in your apps, but if you encounter an exception while using the production build, this page will reassemble the original error message.
+
+The full text of the error you just encountered is:
+
+Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.) (testing not with tests but in real life by user test group). Implement the full release version and then notify me when done. You can use git to check diff against  baseline_repo/main. The app should have 100% of the intended previous functionality of main when this zustand change is Done.
+
+"C:\Users\ronit\maestrolanguagetutor_gemini_edition\maestrotutor-geminiedition_66_vs\PlanZustand.md"
 
 Plan: Zustand + feature boundaries + orchestration cleanup (full app)
  Goals
@@ -181,33 +193,13 @@ Work items:
 Acceptance:
 - `src/app/App.tsx` <= 300 lines.
 - No business logic left in the component.
-# Documentation + tests
-Scope:
-- `src/features/**/README.md`
-- Add/adjust integration tests
-- Update any architecture docs
-Work items:
-- Add README per feature: responsibilities, public API, owned store slice.
-- Add tests for:
-  - auto-send behavior
-  - reply suggestions fetch
-  - reengagement scheduling
-  - live session state transitions
-Acceptance:
-- Docs tell new devs where to work without hunting.
- Feature coverage checklist
-- Chat: `src/features/chat/*` + `chatSlice`
-- Session: `src/features/session/*` + `reengagementSlice`
-- Speech: `src/features/speech/*` + `speechSlice`
-- Vision: `src/features/vision/*` + `hardwareSlice`
-- Diagnostics: `src/features/diagnostics/*` + `diagnosticsSlice`
-- Core/API/shared: keep logic, remove state; accessed via store actions.
+
  Definition of Done
 - Zustand is the single source of shared state.
 - `src/app/App.tsx` is a pure composition root.
 - No cross-feature imports of internals.
 - All persistence is triggered by store actions.
-- Tests and README exist per feature.
+
  Risks and mitigations
 - Risk: state migration causes regressions.
   - Mitigation: migrate slice-by-slice and keep behavior‑parity tests.

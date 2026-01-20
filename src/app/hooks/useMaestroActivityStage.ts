@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * useMaestroActivityStage - syncs activity stage based on state.
+ * 
+ * Uses ref for setMaestroActivityStage to avoid infinite loops.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { MaestroActivityStage } from '../../core/types';
 import type { ReengagementPhase } from '../../store';
 
@@ -27,28 +29,35 @@ export const useMaestroActivityStage = ({
   reengagementPhase,
   setMaestroActivityStage,
 }: UseMaestroActivityStageConfig) => {
+  // Store setter in ref to avoid it triggering effect re-runs
+  const setMaestroActivityStageRef = useRef(setMaestroActivityStage);
+  
+  useEffect(() => {
+    setMaestroActivityStageRef.current = setMaestroActivityStage;
+  }, [setMaestroActivityStage]);
+
   useEffect(() => {
     if (externalUiTaskCount > 0) {
-      setMaestroActivityStage('idle');
+      setMaestroActivityStageRef.current('idle');
       return;
     }
 
     if (isSpeaking) {
-      setMaestroActivityStage('speaking');
+      setMaestroActivityStageRef.current('speaking');
     } else if (isSending) {
-      setMaestroActivityStage('typing');
+      setMaestroActivityStageRef.current('typing');
     } else if (isListening || isUserActive) {
-      setMaestroActivityStage('listening');
+      setMaestroActivityStageRef.current('listening');
     } else if (reengagementPhase === 'countdown' || reengagementPhase === 'engaging') {
-      setMaestroActivityStage('observing_high');
+      setMaestroActivityStageRef.current('observing_high');
     } else if (reengagementPhase === 'watching') {
-      setMaestroActivityStage('observing_medium');
+      setMaestroActivityStageRef.current('observing_medium');
     } else if (reengagementPhase === 'waiting') {
-      setMaestroActivityStage('observing_low');
+      setMaestroActivityStageRef.current('observing_low');
     } else {
-      setMaestroActivityStage('idle');
+      setMaestroActivityStageRef.current('idle');
     }
-  }, [externalUiTaskCount, isSpeaking, isSending, isListening, isUserActive, reengagementPhase, setMaestroActivityStage]);
+  }, [externalUiTaskCount, isSpeaking, isSending, isListening, isUserActive, reengagementPhase]);
 };
 
 export default useMaestroActivityStage;

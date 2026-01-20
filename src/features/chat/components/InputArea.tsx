@@ -922,11 +922,13 @@ const InputArea: React.FC<InputAreaProps> = ({
                   fr.readAsDataURL(blob);
                 });
                 let uploadedUri: string | undefined;
+                let uploadedMimeType: string = mime; // Default to detected mime, but use normalized from upload if available
                 try {
                   const up = await uploadMediaToFiles(dataUrl, mime, 'maestro-avatar');
-                  uploadedUri = up.uri; 
+                  uploadedUri = up.uri;
+                  uploadedMimeType = up.mimeType; // Use the normalized MIME type from the upload
                 } catch { }
-                const asset: MaestroProfileAsset = { dataUrl, mimeType: mime, uri: uploadedUri, updatedAt: Date.now() };
+                const asset: MaestroProfileAsset = { dataUrl, mimeType: uploadedMimeType, uri: uploadedUri, updatedAt: Date.now() };
                 try { await setMaestroProfileImageDB(asset); } catch {}
                 setMaestroAsset(asset);
                 try { window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: asset })); } catch {}
@@ -968,15 +970,17 @@ const InputArea: React.FC<InputAreaProps> = ({
         reader.readAsDataURL(file);
       });
       let uploadedUri: string | undefined;
+      let uploadedMimeType: string = file.type; // Default to file.type, but use normalized from upload if available
       try {
         const up = await uploadMediaToFiles(dataUrl, file.type, 'maestro-avatar');
-        uploadedUri = up.uri; 
+        uploadedUri = up.uri;
+        uploadedMimeType = up.mimeType; // Use the normalized MIME type from the upload
       } catch {}
-      const asset: MaestroProfileAsset = { dataUrl, mimeType: file.type, uri: uploadedUri, updatedAt: Date.now() };
+      const asset: MaestroProfileAsset = { dataUrl, mimeType: uploadedMimeType, uri: uploadedUri, updatedAt: Date.now() };
       await setMaestroProfileImageDB(asset);
       setMaestroAsset(asset);
       try {
-        window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: { uri: uploadedUri, mimeType: file.type, dataUrl } }));
+        window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: { uri: uploadedUri, mimeType: uploadedMimeType, dataUrl } }));
       } catch {}
     } catch {
     } finally {

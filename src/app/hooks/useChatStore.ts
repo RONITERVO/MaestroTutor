@@ -12,7 +12,12 @@ import { useCallback, useRef, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useMaestroStore } from '../../store';
 import { ChatMessage, TtsAudioCacheEntry, ReplySuggestion } from '../../core/types';
+import { safeSaveChatHistoryDB, setChatMetaDB } from '../../features/chat';
+import { setAppSettingsDB } from '../../features/session';
+import { isRealChatMessage } from '../../shared/utils/common';
 import type { TranslationFunction } from './useTranslations';
+
+const MAX_VISIBLE_MESSAGES_DEFAULT = 50;
 
 export interface UseChatStoreConfig {
   t: TranslationFunction;
@@ -118,6 +123,83 @@ export const useChatStore = (config: UseChatStoreConfig): UseChatStoreReturn => 
       loadHistoryForPair(selectedLanguagePairId, t);
     }
   }, [selectedLanguagePairId, t, loadHistoryForPair]);
+
+  // Get settings from store for auto-bookmark functionality
+  // Select only the specific values we need, not the whole settings object
+  const historyBookmarkMessageId = useMaestroStore(state => state.settings.historyBookmarkMessageId);
+  const maxVisibleMessages = useMaestroStore(state => state.settings.maxVisibleMessages);
+  const storeSetSettings = useMaestroStore(state => state.setSettings);
+  
+  // Store refs for stable access in effects
+  const storeSetSettingsRef = useRef(storeSetSettings);
+  useEffect(() => { storeSetSettingsRef.current = storeSetSettings; }, [storeSetSettings]);
+
+  // CRITICAL: Auto-save messages when they change (parity with baseline)
+  useEffect(() => {
+    if (!isLoadingHistory && selectedLanguagePairId) {
+      safeSaveChatHistoryDB(selectedLanguagePairId, messages);
+    }
+  }, [messages, selectedLanguagePairId, isLoadingHistory]);
+
+  // CRITICAL: Auto-update bookmark when messages exceed max visible (parity with baseline)
+  // Use refs for settings to avoid effect re-runs when settings change
+  const historyBookmarkMessageIdRef = useRef(historyBookmarkMessageId);
+  const maxVisibleMessagesRef = useRef(maxVisibleMessages);
+  useEffect(() => { historyBookmarkMessageIdRef.current = historyBookmarkMessageId; }, [historyBookmarkMessageId]);
+  useEffect(() => { maxVisibleMessagesRef.current = maxVisibleMessages; }, [maxVisibleMessages]);
+  
+  useEffect(() => {
+    if (isLoadingHistoryRef.current) return;
+    const pairId = selectedLanguagePairId;
+    if (!pairId) return;
+
+    const arr = messagesRef.current;
+    if (!arr || arr.length === 0) return;
+
+    const isEligible = (m: ChatMessage) => isRealChatMessage(m);
+    const eligibleIndices: number[] = [];
+    for (let i = 0; i < arr.length; i++) {
+      if (isEligible(arr[i])) eligibleIndices.push(i);
+    }
+    const maxVisible = (maxVisibleMessagesRef.current ?? MAX_VISIBLE_MESSAGES_DEFAULT) + 2;
+    if (eligibleIndices.length <= maxVisible) return;
+
+    const bmId = historyBookmarkMessageIdRef.current;
+    let bmIndex = -1;
+    if (bmId) {
+      bmIndex = arr.findIndex(m => m.id === bmId);
+    }
+
+    const startForCount = bmIndex >= 0 ? bmIndex : 0;
+    let currentVisibleIgnoringCtx = 0;
+    for (let i = startForCount; i < arr.length; i++) {
+      if (isEligible(arr[i])) currentVisibleIgnoringCtx++;
+    }
+    if (currentVisibleIgnoringCtx <= maxVisible) return;
+
+    const cutoffPosInEligible = Math.max(0, eligibleIndices.length - maxVisible);
+    const firstEligibleIdx = eligibleIndices[cutoffPosInEligible];
+
+    let desiredBookmarkIdx = -1;
+    for (let i = firstEligibleIdx; i < arr.length; i++) {
+      if (arr[i].role === 'assistant' && !arr[i].thinking) {
+        desiredBookmarkIdx = i;
+        break;
+      }
+    }
+    if (desiredBookmarkIdx === -1) return;
+
+    const desiredBookmarkId = arr[desiredBookmarkIdx].id;
+    if ((historyBookmarkMessageIdRef.current || null) === (desiredBookmarkId || null)) return;
+
+    // Update settings in store using an updater function
+    storeSetSettingsRef.current(prev => ({ ...prev, historyBookmarkMessageId: desiredBookmarkId }));
+    // Persist full updated settings to DB
+    const fullSettings = useMaestroStore.getState().settings;
+    const updatedSettings = { ...fullSettings, historyBookmarkMessageId: desiredBookmarkId };
+    setAppSettingsDB(updatedSettings).catch(() => {});
+    setChatMetaDB(pairId, { bookmarkMessageId: desiredBookmarkId }).catch(() => {});
+  }, [messages, selectedLanguagePairId]);
 
   // Wrapped addMessage to maintain interface compatibility
   const addMessageWrapper = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>): string => {
