@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { debugLogService } from "../features/diagnostics";
 
@@ -329,6 +328,22 @@ export async function generateGeminiResponse(
   }
 }
 
+/**
+ * Generates an image from a prompt and optional conversation history using the Gemini image model.
+ *
+ * Builds a content payload from historical messages, recent user input, and an optional maestro avatar,
+ * sends it to the Gemini image generation model, and returns the first generated image found as a data URL.
+ *
+ * @param params - Parameters for image generation
+ * @param params.prompt - Primary prompt text to generate the image from. If omitted, `latestMessageText` may be used.
+ * @param params.history - Conversation history entries that may include text and image references to provide context.
+ * @param params.latestMessageText - Fallback text to use as the current user input when `prompt` is not provided.
+ * @param params.latestMessageRole - Role of the latest message (`'user'` or `'assistant'`), used when interpreting history entries.
+ * @param params.systemInstruction - Optional system instruction passed to the model as part of the request config.
+ * @param params.maestroAvatarUri - Optional URI of an avatar to include as image context for the current user input.
+ * @param params.maestroAvatarMimeType - MIME type for `maestroAvatarUri`; used to validate that the avatar is an image.
+ * @returns On success, an object with `base64Image` (a data URL like `data:<mime>;base64,<data>`) and `mimeType`. On failure, an object with `error` containing the error message.
+ */
 export async function generateImage(params: {
   prompt?: string;
   history?: any[];
@@ -455,6 +470,16 @@ export async function translateText(text: string, from: string, to: string) {
   }
 }
 
+/**
+ * Generates spoken audio from input text using the Gemini TTS model and returns the audio as a WAV-formatted Base64 string.
+ *
+ * The function requests an AUDIO response from the model (default voice "Kore"), converts returned PCM16 inline data into a WAV container, and returns the resulting Base64 audio along with its MIME type. If no audio is produced or an error occurs, both return fields are empty strings.
+ *
+ * @param params - The generation parameters
+ * @param params.text - The text to synthesize into speech
+ * @param params.voiceName - Optional prebuilt voice name to use (defaults to `"Kore"`)
+ * @returns An object with `audioBase64` containing the WAV audio as a Base64 string and `mimeType` set to `"audio/wav"`, or empty strings when no audio is available
+ */
 export async function generateSpeech(params: { text: string, voiceName?: string }) {
     const ai = getAi();
     const model = 'gemini-2.5-flash-preview-tts';

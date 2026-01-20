@@ -80,9 +80,10 @@ Upon launch, you are greeted by an interactive 3D globe.
 *   **Any settings are located here** Come back by clicking the Maestro status flag.
 
 ### 2. Modes of Interaction
-*   **Standard Chat:** Type or use the microphone, and choose between using your camera or imaginary visual world (both sides image gen). Optionally attach any files, or edit the ones in chat. The AI receives your drawing layered over the image as context.
-*   **Gemini Live (Red Button over camera view):** Activates the full-duplex audio stream. Speak naturally. You can interrupt Maestro while he speaks.
+*   **Chat:** Type or use the microphone, and choose between using your camera or imaginary visual world (both sides image gen). Optionally attach any files, or edit the ones in chat. The AI receives your drawing layered over the image as context.
+*   **Gemini Live (Red Button over camera view):** Additional layer on top of the chat experience. Activates the full-duplex audio stream and live camera feed. Speak naturally. You can interrupt Maestro while he speaks.
 *   **Suggestion Mode:** If you get stuck there is always suggestions tailored for you specifically in your current chat context. If you are not happy with the suggestions just ask for new one in either one of the languages.
+*   **Full context chat messages**: The chat messages always store at least the voice, the transcript and the media (usually image), so that you can review the full context behind previous conversations.
 
 ---
 
