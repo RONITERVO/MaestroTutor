@@ -4,13 +4,14 @@
  * Speech Slice - manages TTS and STT state
  * 
  * Responsibilities:
- * - STT state (isListening, transcript, errors)
- * - TTS state (isSpeaking, speakingUtteranceText)
+ * - STT state (transcript, errors)
+ * - TTS state (speakingUtteranceText)
  * - Speech capability detection
  * - Recorded utterance handling
  * 
- * Note: Actual TTS/STT engine operations remain in useBrowserSpeech hook.
- * This slice manages the state that needs to be shared across components.
+ * Note: Activity state (isSpeaking, isListening) is now managed via activity tokens
+ * in uiSlice. Use selectIsSpeaking/selectIsListening selectors from uiSlice.
+ * This slice manages the data that needs to be shared across components.
  */
 
 import type { StateCreator } from 'zustand';
@@ -18,8 +19,7 @@ import type { RecordedUtterance } from '../../core/types';
 import type { MaestroStore } from '../maestroStore';
 
 export interface SpeechSlice {
-  // STT State
-  isListening: boolean;
+  // STT State (data only - activity tracked via tokens)
   transcript: string;
   sttError: string | null;
   isSpeechRecognitionSupported: boolean;
@@ -27,13 +27,11 @@ export interface SpeechSlice {
   pendingRecordedAudioMessageId: string | null;
   sttInterruptedBySend: boolean;
   
-  // TTS State  
-  isSpeaking: boolean;
+  // TTS State (data only - activity tracked via tokens)
   speakingUtteranceText: string | null;
   isSpeechSynthesisSupported: boolean;
   
   // Actions
-  setIsListening: (value: boolean) => void;
   setTranscript: (transcript: string) => void;
   clearTranscript: () => void;
   setSttError: (error: string | null) => void;
@@ -42,7 +40,6 @@ export interface SpeechSlice {
   setPendingRecordedAudioMessageId: (messageId: string | null) => void;
   setSttInterruptedBySend: (value: boolean) => void;
   
-  setIsSpeaking: (value: boolean) => void;
   setSpeakingUtteranceText: (text: string | null) => void;
   setIsSpeechSynthesisSupported: (value: boolean) => void;
   
@@ -56,8 +53,7 @@ export const createSpeechSlice: StateCreator<
   [],
   SpeechSlice
 > = (set, get) => ({
-  // Initial STT State
-  isListening: false,
+  // Initial STT State (data only - activity tracked via tokens in uiSlice)
   transcript: '',
   sttError: null,
   isSpeechRecognitionSupported: typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition),
@@ -65,16 +61,11 @@ export const createSpeechSlice: StateCreator<
   pendingRecordedAudioMessageId: null,
   sttInterruptedBySend: false,
   
-  // Initial TTS State
-  isSpeaking: false,
+  // Initial TTS State (data only - activity tracked via tokens in uiSlice)
   speakingUtteranceText: null,
   isSpeechSynthesisSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
   
   // STT Actions
-  setIsListening: (value: boolean) => {
-    set({ isListening: value });
-  },
-  
   setTranscript: (transcript: string) => {
     set({ transcript });
   },
@@ -104,10 +95,6 @@ export const createSpeechSlice: StateCreator<
   },
   
   // TTS Actions
-  setIsSpeaking: (value: boolean) => {
-    set({ isSpeaking: value });
-  },
-  
   setSpeakingUtteranceText: (text: string | null) => {
     set({ speakingUtteranceText: text });
   },

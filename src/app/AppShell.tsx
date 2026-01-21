@@ -35,7 +35,6 @@ import {
   useHardware,
   useSpeechController,
   useMaestroController,
-  useUiBusyState,
   useLiveSession,
   useDataBackup,
   MAX_VISIBLE_MESSAGES_DEFAULT,
@@ -48,7 +47,9 @@ import { setChatMetaDB } from '../features/chat';
 
 // --- Config ---
 import { IMAGE_GEN_CAMERA_ID } from '../core/config/app';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../core/config/activityTokens';
 import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE } from '../core/config/languages';
+import { selectNonReengagementBusy } from '../store/slices/uiSlice';
 
 // --- Utils ---
 import { getPrimaryCode } from '../shared/utils/languageUtils';
@@ -60,20 +61,17 @@ const AppShell: React.FC = () => {
   
   // These refs are used for visual context capture state
   const isCurrentlyPerformingVisualContextCaptureRef = useRef(false);
+  const holdTokenRef = useRef<string | null>(null);
 
   // ============================================================
   // HOOK COMPOSITION - The Controller Layer
   // ============================================================
 
-  // --- UI Busy State ---
-  const {
-    uiBusyTaskTags,
-    externalUiTaskCount,
-    addUiBusyToken,
-    removeUiBusyToken,
-    clearUiBusyTokens,
-    handleToggleHold,
-  } = useUiBusyState();
+  // --- Activity Tokens ---
+  const activityTokens = useMaestroStore(state => state.activityTokens);
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
+  const isBlockingActivity = useMaestroStore(selectNonReengagementBusy);
 
   // --- Settings ---
   const {
@@ -119,7 +117,6 @@ const AppShell: React.FC = () => {
     setReplySuggestions,
     replySuggestionsRef,
     isLoadingSuggestions,
-    setIsLoadingSuggestions,
     isLoadingSuggestionsRef,
   } = useChatStore({
     t,
@@ -299,8 +296,6 @@ const AppShell: React.FC = () => {
     currentSystemPromptText,
     currentReplySuggestionsPromptText,
     setReplySuggestions,
-    setIsLoadingSuggestions,
-    isLoadingSuggestionsRef,
     handleToggleSuggestionModeRef, // Pass the ref - will be populated after handleToggleSuggestionMode is defined
     maestroAvatarUriRef, // Pass avatar refs loaded in App.tsx
     maestroAvatarMimeTypeRef,
@@ -369,7 +364,8 @@ const AppShell: React.FC = () => {
     }
 
     setReplySuggestions([]);
-    setIsLoadingSuggestions(false);
+    // Note: isLoadingSuggestions is now managed via tokens in useMaestroController
+    // Clearing suggestions above is sufficient; token will be removed when generation completes
     lastFetchedSuggestionsForRef.current = null;
 
     let visualReengagementShown = false;
@@ -411,22 +407,16 @@ const AppShell: React.FC = () => {
     settings,
     isLoadingHistory,
     selectedLanguagePairId: settings.selectedLanguagePairId,
-    isSending, // ACTUAL VALUE - not hardcoded false
-    isSpeaking, // ACTUAL VALUE - not hardcoded false
-    isSendingRef,
-    isSpeakingRef: speechIsSpeakingRef,
+    activityTokens, // Unified token set replaces isSending, isSpeaking, refs, etc.
     isVisualContextActive: isCurrentlyPerformingVisualContextCaptureRef.current,
-    externalUiTaskCount,
     triggerReengagementSequence,
-    addUiBusyToken,
-    removeUiBusyToken,
+    addActivityToken,
+    removeActivityToken,
   });
 
   useIdleReengagement({
     selectedLanguagePair,
-    isSpeaking,
-    isSending,
-    isListening,
+    isBlockingActivity,
     isUserActive,
     reengagementPhase,
     scheduleReengagement,
@@ -434,11 +424,9 @@ const AppShell: React.FC = () => {
   });
 
   useMaestroActivityStage({
-    externalUiTaskCount,
     isSpeaking,
     isSending,
     isListening,
-    isUserActive,
     reengagementPhase,
     setMaestroActivityStage,
   });
@@ -464,9 +452,17 @@ const AppShell: React.FC = () => {
 
   const handleUserInputActivity = useCallback(() => {
     clearAutoSend();
-    setMaestroActivityStage('listening');
     handleUserActivity();
-  }, [clearAutoSend, handleUserActivity, setMaestroActivityStage]);
+  }, [clearAutoSend, handleUserActivity]);
+
+  const handleToggleHold = useCallback(() => {
+    if (holdTokenRef.current) {
+      removeActivityToken(holdTokenRef.current);
+      holdTokenRef.current = null;
+    } else {
+      holdTokenRef.current = addActivityToken(TOKEN_CATEGORY.UI, TOKEN_SUBTYPE.HOLD);
+    }
+  }, [addActivityToken, removeActivityToken]);
 
   const handleSetAttachedImage = useCallback((base64: string | null, mimeType: string | null) => {
     setAttachedImage(base64, mimeType);
@@ -616,20 +612,6 @@ const AppShell: React.FC = () => {
     });
   }, [_toggleFocusedModeState]);
 
-  const onUiTaskStart = useCallback((token?: string) => {
-    const actualToken = token && typeof token === 'string' ? token : crypto.randomUUID();
-    addUiBusyToken(actualToken);
-    return actualToken;
-  }, [addUiBusyToken]);
-
-  const onUiTaskEnd = useCallback((token?: string) => {
-    if (token) {
-      removeUiBusyToken(token);
-    } else {
-      clearUiBusyTokens();
-    }
-  }, [removeUiBusyToken, clearUiBusyTokens]);
-
   // ============================================================
   // GEMINI LIVE SESSION HANDLING
   // ============================================================
@@ -661,8 +643,8 @@ const AppShell: React.FC = () => {
     stopListening,
     startListening,
     clearTranscript,
-    addUiBusyToken,
-    removeUiBusyToken,
+    addActivityToken,
+    removeActivityToken,
     scheduleReengagement,
     cancelReengagement,
     handleUserInputActivity: handleUserInputActivity,
@@ -726,7 +708,6 @@ const AppShell: React.FC = () => {
         setIsTopbarOpen={setIsTopbarOpen}
         maestroActivityStage={maestroActivityStage}
         t={t}
-        uiBusyTaskTags={uiBusyTaskTags}
         targetLanguageDef={targetLanguageDef}
         selectedLanguagePair={selectedLanguagePair}
         messages={messages}
@@ -784,7 +765,6 @@ const AppShell: React.FC = () => {
 
             isSttSupported={effectiveSttSupported}
             isSttGloballyEnabled={settings.stt.enabled}
-            isListening={isListening}
             sttError={sttError}
             transcript={transcript}
             onSttToggle={sttMasterToggle}
@@ -861,8 +841,6 @@ const AppShell: React.FC = () => {
             onCreateSuggestion={handleCreateSuggestion}
             isCreatingSuggestion={isCreatingSuggestion}
             sendPrep={sendPrep}
-            onUiTaskStart={onUiTaskStart}
-            onUiTaskEnd={onUiTaskEnd}
 
             sttProvider={settings.stt.provider || 'browser'}
             ttsProvider={settings.tts.provider || 'browser'}

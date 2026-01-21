@@ -11,21 +11,17 @@ import type { MaestroActivityStage } from '../../core/types';
 import type { ReengagementPhase } from '../../store';
 
 interface UseMaestroActivityStageConfig {
-  externalUiTaskCount: number;
   isSpeaking: boolean;
   isSending: boolean;
   isListening: boolean;
-  isUserActive: boolean;
   reengagementPhase: ReengagementPhase;
   setMaestroActivityStage: (stage: MaestroActivityStage) => void;
 }
 
 export const useMaestroActivityStage = ({
-  externalUiTaskCount,
   isSpeaking,
   isSending,
   isListening,
-  isUserActive,
   reengagementPhase,
   setMaestroActivityStage,
 }: UseMaestroActivityStageConfig) => {
@@ -37,16 +33,11 @@ export const useMaestroActivityStage = ({
   }, [setMaestroActivityStage]);
 
   useEffect(() => {
-    if (externalUiTaskCount > 0) {
-      setMaestroActivityStageRef.current('idle');
-      return;
-    }
-
     if (isSpeaking) {
       setMaestroActivityStageRef.current('speaking');
     } else if (isSending) {
       setMaestroActivityStageRef.current('typing');
-    } else if (isListening || isUserActive) {
+    } else if (isListening) {
       setMaestroActivityStageRef.current('listening');
     } else if (reengagementPhase === 'countdown' || reengagementPhase === 'engaging') {
       setMaestroActivityStageRef.current('observing_high');
@@ -57,7 +48,7 @@ export const useMaestroActivityStage = ({
     } else {
       setMaestroActivityStageRef.current('idle');
     }
-  }, [externalUiTaskCount, isSpeaking, isSending, isListening, isUserActive, reengagementPhase]);
+  }, [isSpeaking, isSending, isListening, reengagementPhase]);
 };
 
 export default useMaestroActivityStage;

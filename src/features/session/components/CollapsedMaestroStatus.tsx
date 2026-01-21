@@ -1,41 +1,89 @@
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { MaestroActivityStage } from '../../../core/types';
+import { useMaestroStore } from '../../../store';
 import {
-  IconSpeaker,
-  IconKeyboard,
-  IconMicrophone,
-  IconSleepingZzz,
-  IconEyeOpen,
-  IconSparkles,
-  IconCamera,
-  IconPlay,
-  IconBookOpen,
-  IconPencil,
-  IconSave,
-  IconFolderOpen,
-  IconSend,
-  IconHandRaised
-} from '../../../shared/ui/Icons';
+  TOKEN_CATEGORY,
+  TOKEN_SUBTYPE,
+  buildToken,
+  getTokenCategory,
+  getTokenSubtype,
+  LIVE_TOKEN_DISPLAY,
+  type TokenDisplayConfig,
+  UI_TOKEN_DISPLAY,
+} from '../../../core/config/activityTokens';
+import { useShallow } from 'zustand/react/shallow';
+import { selectActiveUiTokens, selectIsLive } from '../../../store/slices/uiSlice';
+import * as Icons from '../../../shared/ui/Icons';
 
 interface CollapsedMaestroStatusProps {
   stage: MaestroActivityStage;
   t: (key: string, replacements?: TranslationReplacements) => string;
-  uiBusyTaskTags?: string[];
   targetLanguageFlag?: string;
   targetLanguageTitle?: string;
   className?: string;
   isExpanded?: boolean;
 }
 
+const STAGE_DISPLAY: Record<MaestroActivityStage, { icon: keyof typeof Icons; textKey: string; titleKey: string; animate?: boolean }> = {
+  speaking: {
+    icon: 'IconSpeaker',
+    textKey: 'chat.maestro.speaking',
+    titleKey: 'chat.maestro.title.speaking',
+    animate: true,
+  },
+  typing: {
+    icon: 'IconKeyboard',
+    textKey: 'chat.maestro.typing',
+    titleKey: 'chat.maestro.title.typing',
+  },
+  listening: {
+    icon: 'IconMicrophone',
+    textKey: 'chat.maestro.listening',
+    titleKey: 'chat.maestro.title.listening',
+  },
+  observing_low: {
+    icon: 'IconSleepingZzz',
+    textKey: 'chat.maestro.resting',
+    titleKey: 'chat.maestro.title.resting',
+  },
+  observing_medium: {
+    icon: 'IconEyeOpen',
+    textKey: 'chat.maestro.observing',
+    titleKey: 'chat.maestro.title.observing',
+  },
+  observing_high: {
+    icon: 'IconKeyboard',
+    textKey: 'chat.maestro.aboutToEngage',
+    titleKey: 'chat.maestro.title.aboutToEngage',
+  },
+  idle: {
+    icon: 'IconSparkles',
+    textKey: 'chat.maestro.idle',
+    titleKey: 'chat.maestro.title.idle',
+  },
+};
+
+const getTokenDisplayConfig = (token: string): TokenDisplayConfig | null => {
+  const category = getTokenCategory(token);
+  if (category === TOKEN_CATEGORY.LIVE) return LIVE_TOKEN_DISPLAY;
+  if (category === TOKEN_CATEGORY.UI) return UI_TOKEN_DISPLAY[getTokenSubtype(token)] || null;
+  return null;
+};
+
 // Helper to get configuration for the parent container (The Flag)
-export const getStatusConfig = (stage: MaestroActivityStage, uiBusyTaskTags: string[] = []) => {
-  const hasBusyTasks = uiBusyTaskTags.filter(Boolean).length > 0;
-  
-  // Check specifically for hold tag to override generic busy color
-  if (uiBusyTaskTags.includes('user-hold')) {
-      return { color: 'bg-fuchsia-500', borderColor: 'border-fuchsia-600', textColor: 'text-white' };
+export const getStatusConfig = (
+  stage: MaestroActivityStage,
+  activeUiTokens: string[] = [],
+  isHolding = false,
+  isLive = false
+) => {
+  if (isHolding) {
+    const holdColor = UI_TOKEN_DISPLAY[TOKEN_SUBTYPE.HOLD]?.color;
+    if (holdColor) {
+      return { color: holdColor.bg, borderColor: holdColor.border, textColor: holdColor.text };
+    }
+    return { color: 'bg-fuchsia-500', borderColor: 'border-fuchsia-600', textColor: 'text-white' };
   }
 
   switch (stage) {
@@ -51,162 +99,131 @@ export const getStatusConfig = (stage: MaestroActivityStage, uiBusyTaskTags: str
     case 'observing_medium':
       return { color: 'bg-slate-200', borderColor: 'border-slate-300', textColor: 'text-slate-600' };
     case 'idle':
-    default:
+    default: {
+      const hasBusyTasks = activeUiTokens.length > 0 || isLive;
+      if (activeUiTokens.length > 0) {
+        const primaryConfig = UI_TOKEN_DISPLAY[getTokenSubtype(activeUiTokens[0])];
+        if (primaryConfig?.color) {
+          return {
+            color: primaryConfig.color.bg,
+            borderColor: primaryConfig.color.border,
+            textColor: primaryConfig.color.text,
+          };
+        }
+      }
       if (hasBusyTasks) {
-        // Generic busy state
         return { color: 'bg-indigo-100', borderColor: 'border-indigo-200', textColor: 'text-indigo-700' };
       }
       return { color: 'bg-slate-100', borderColor: 'border-slate-200', textColor: 'text-slate-500' };
+    }
   }
 };
 
-const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({ 
-  stage, 
-  t, 
-  uiBusyTaskTags, 
-  targetLanguageFlag, 
-  targetLanguageTitle, 
+const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
+  stage,
+  t,
+  targetLanguageFlag,
+  targetLanguageTitle,
   className,
-  isExpanded = true 
+  isExpanded = true,
 }) => {
-  let iconElement: React.ReactNode = null;
-  let textKey: string = "";
-  let titleKey: string = "";
-  // Default text color logic (can be overridden by parent via className or the config helper above)
-  let baseTextColor = "text-inherit"; 
+  const activeUiTokens = useMaestroStore(useShallow(selectActiveUiTokens));
+  const isLive = useMaestroStore(selectIsLive);
 
-  switch (stage) {
-    case 'speaking':
-      iconElement = <IconSpeaker className="w-4 h-4 animate-pulse" />;
-      textKey = "chat.maestro.speaking";
-      titleKey = "chat.maestro.title.speaking";
-      break;
-    case 'typing':
-      iconElement = <IconKeyboard className="w-4 h-4" />;
-      textKey = "chat.maestro.typing";
-      titleKey = "chat.maestro.title.typing";
-      break;
-    case 'listening':
-      iconElement = <IconMicrophone className="w-4 h-4" />;
-      textKey = "chat.maestro.listening";
-      titleKey = "chat.maestro.title.listening";
-      break;
-    case 'observing_low':
-      iconElement = <IconSleepingZzz className="w-4 h-4" />;
-      textKey = "chat.maestro.resting";
-      titleKey = "chat.maestro.title.resting";
-      break;
-    case 'observing_medium':
-      iconElement = <IconEyeOpen className="w-4 h-4" />;
-      textKey = "chat.maestro.observing";
-      titleKey = "chat.maestro.title.observing";
-      break;
-    case 'observing_high':
-      iconElement = <IconKeyboard className="w-4 h-4" />;
-      textKey = "chat.maestro.aboutToEngage";
-      titleKey = "chat.maestro.title.aboutToEngage";
-      break;
-    case 'idle':
-    default: {
-      const activeTags = (uiBusyTaskTags || []).filter(Boolean);
-      if (activeTags.length > 0) {
-        const tagToIcon = (tag: string, idx: number) => {
-          const key = `${tag}-${idx}`;
-          const base = 'w-4 h-4';
-          switch (tag) {
-            case 'user-hold':
-              return <IconHandRaised key={key} className={`${base} animate-pulse`} title={t('chat.maestro.title.holding')} />;
-            case 'live-session':
-              return <IconCamera key={key} className={`${base}`} title={'Live session active'} />;
-            case 'video-play':
-              return <IconPlay key={key} className={`${base}`} title={t('chat.header.watchingVideo')} />;
-            case 'viewing-above':
-              return <IconBookOpen key={key} className={`${base}`} title={t('chat.header.viewingAbove')} />;
-            case 'bubble-annotate':
-              return <IconPencil key={key} className={`${base}`} title={t('chat.header.annotating')} />;
-            case 'composer-annotate':
-              return <IconPencil key={key} className={`${base}`} title={t('chat.header.annotating')} />;
-            case 'video-record':
-              return <IconCamera key={key} className={`${base}`} title={t('chat.header.recordingVideo')} />;
-            case 'audio-note':
-              return <IconMicrophone key={key} className={`${base}`} title={t('chat.header.recordingAudio')} />;
-            case 'save-popup':
-              return <IconSave key={key} className={`${base}`} title={t('chat.header.savePopup')} />;
-            case 'load-popup':
-              return <IconFolderOpen key={key} className={`${base}`} title={t('chat.header.loadPopup')} />;
-            case 'maestro-avatar':
-              return <IconSend key={key} className={`${base}`} title={t('chat.header.maestroAvatar')} />;
-            default:
-              return <span key={key} className={`${base} rounded-full bg-current opacity-50 inline-block`} title={tag} />;
-          }
-        };
-        // Show first icon always, others if expanded
-        const primaryTag = activeTags.includes('user-hold') ? 'user-hold' : activeTags[0];
-        
-        // Ensure user-hold icon is prioritized if active
-        let iconsToRender = [tagToIcon(primaryTag, 0)];
-        if (isExpanded) {
-            activeTags.forEach((tag, i) => {
-                if (tag !== primaryTag) iconsToRender.push(tagToIcon(tag, i + 1));
-            });
-        }
-
-        iconElement = (
-          <div className="flex items-center gap-1">
-             {iconsToRender}
-          </div>
-        );
-        
-        // Determine text based on the *first* recognized tag priority
-        if (primaryTag === 'user-hold') {
-           textKey = 'chat.maestro.holding';
-           titleKey = 'chat.maestro.title.holding';
-        } else if (primaryTag === 'bubble-annotate' || primaryTag === 'composer-annotate') {
-           textKey = 'chat.header.annotating';
-           titleKey = 'chat.header.annotating';
-        } else if (primaryTag === 'video-record') {
-           textKey = 'chat.header.recordingVideo';
-           titleKey = 'chat.header.recordingVideo';
-        } else if (primaryTag === 'audio-note') {
-           textKey = 'chat.header.recordingAudio';
-           titleKey = 'chat.header.recordingAudio';
-        } else if (primaryTag === 'save-popup') {
-           textKey = 'chat.header.savePopup';
-           titleKey = 'chat.header.savePopup';
-        } else if (primaryTag === 'load-popup') {
-           textKey = 'chat.header.loadPopup';
-           titleKey = 'chat.header.loadPopup';
-        } else if (primaryTag === 'maestro-avatar') {
-           textKey = 'chat.header.maestroAvatar';
-           titleKey = 'chat.header.maestroAvatar';
-        } else if (primaryTag === 'video-play') {
-           textKey = 'chat.header.watchingVideo';
-           titleKey = 'chat.header.watchingVideo';
-        } else if (primaryTag === 'viewing-above') {
-           textKey = 'chat.header.viewingAbove';
-           titleKey = 'chat.header.viewingAbove';
-        } else {
-           textKey = 'chat.maestro.idle';
-           titleKey = 'chat.maestro.title.idle';
-        }
-      } else {
-        iconElement = <IconSparkles className="w-4 h-4" />;
-        textKey = "chat.maestro.idle";
-        titleKey = "chat.maestro.title.idle";
-      }
-      break;
+  const displayTokens = useMemo(() => {
+    const tokens: string[] = [...activeUiTokens];
+    if (isLive) {
+      tokens.push(buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.SESSION));
     }
+    return tokens
+      .map(token => ({ token, config: getTokenDisplayConfig(token) }))
+      .filter((entry): entry is { token: string; config: TokenDisplayConfig } => Boolean(entry.config))
+      .sort((a, b) => (a.config.priority ?? 100) - (b.config.priority ?? 100));
+  }, [activeUiTokens, isLive]);
+
+  const renderIcon = (token: string, config: TokenDisplayConfig, idx: number) => {
+    const IconComponent = Icons[config.icon as keyof typeof Icons];
+    if (!IconComponent) return null;
+    return (
+      <IconComponent
+        key={`${token}-${idx}`}
+        className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`}
+        title={t(config.titleKey)}
+      />
+    );
+  };
+
+  if (stage !== 'idle') {
+    const config = STAGE_DISPLAY[stage];
+    const IconComponent = Icons[config.icon as keyof typeof Icons];
+    return (
+      <div className={`flex items-center ${className || ''}`} title={t(config.titleKey)}>
+        {IconComponent && (
+          <IconComponent className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`} />
+        )}
+        <div
+          className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${
+            isExpanded ? 'max-w-xs opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'
+          }`}
+        >
+          {targetLanguageFlag && (
+            <span className="text-base mr-2" title={targetLanguageTitle}>
+              {targetLanguageFlag}
+            </span>
+          )}
+          <span className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap">
+            {t(config.textKey)}
+          </span>
+        </div>
+      </div>
+    );
   }
 
+  if (displayTokens.length > 0) {
+    const primary = displayTokens[0];
+    return (
+      <div className={`flex items-center ${className || ''}`} title={t(primary.config.titleKey)}>
+        <div className="flex items-center gap-1">
+          {renderIcon(primary.token, primary.config, 0)}
+          {isExpanded &&
+            displayTokens.slice(1).map((entry, idx) => renderIcon(entry.token, entry.config, idx + 1))}
+        </div>
+        <div
+          className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${
+            isExpanded ? 'max-w-xs opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'
+          }`}
+        >
+          {targetLanguageFlag && (
+            <span className="text-base mr-2" title={targetLanguageTitle}>
+              {targetLanguageFlag}
+            </span>
+          )}
+          <span className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap">
+            {t(primary.config.textKey)}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  const idleConfig = STAGE_DISPLAY.idle;
+  const IdleIcon = Icons[idleConfig.icon as keyof typeof Icons];
   return (
-    <div className={`flex items-center ${className || baseTextColor}`} title={t(titleKey)}>
-      {iconElement}
-      
-      <div 
-        className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-w-xs opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'}`}
+    <div className={`flex items-center ${className || ''}`} title={t(idleConfig.titleKey)}>
+      {IdleIcon && <IdleIcon className="w-4 h-4" />}
+      <div
+        className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${
+          isExpanded ? 'max-w-xs opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'
+        }`}
       >
-        {targetLanguageFlag && <span className="text-base mr-2" title={targetLanguageTitle}>{targetLanguageFlag}</span>}
-        <span className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap">{t(textKey)}</span>
+        {targetLanguageFlag && (
+          <span className="text-base mr-2" title={targetLanguageTitle}>
+            {targetLanguageFlag}
+          </span>
+        )}
+        <span className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap">
+          {t(idleConfig.textKey)}
+        </span>
       </div>
     </div>
   );

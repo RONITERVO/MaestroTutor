@@ -15,13 +15,12 @@ import { LanguageSelectorGlobe, getGlobalProfileDB, setGlobalProfileDB } from '.
 import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../../core/db/assets';
 import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../../api/gemini';
 import { DB_NAME } from '../../../core/db/index';
-import { uniq as _uniq } from '../../../shared/utils/common';
+import { useMaestroStore } from '../../../store';
+import { selectIsListening, selectIsSending, selectIsSpeaking } from '../../../store/slices/uiSlice';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 
 interface InputAreaProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
-  isSending: boolean;
-  isSpeaking: boolean;
-  isListening: boolean;
   isSttGloballyEnabled: boolean;
   isSttSupported: boolean;
   transcript: string;
@@ -67,9 +66,6 @@ interface InputAreaProps {
   autoCaptureError: string | null;
   snapshotUserError: string | null;
   
-  onUiTaskStart?: (token?: string) => string | void;
-  onUiTaskEnd?: (token?: string) => void;
-
   // Language Selection
   isLanguageSelectionOpen?: boolean;
   tempNativeLangCode?: string | null;
@@ -89,7 +85,7 @@ interface InputAreaProps {
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
-  t, isSending, isSpeaking, isListening, isSttGloballyEnabled, isSttSupported,
+  t, isSttGloballyEnabled, isSttSupported,
   transcript, sttLanguageCode, targetLanguageDef, nativeLanguageDef, onSttToggle, onSttLanguageChange,
   attachedImageBase64, attachedImageMimeType, onSetAttachedImage,
   onSendMessage, onUserInputActivity,
@@ -100,7 +96,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   onToggleSendWithSnapshot, onToggleUseVisualContextForReengagement, sendWithSnapshotEnabled, useVisualContextForReengagementEnabled,
   imageGenerationModeEnabled, onToggleImageGenerationMode,
   sttError, autoCaptureError, snapshotUserError,
-  onUiTaskStart, onUiTaskEnd,
   isLanguageSelectionOpen, tempNativeLangCode, tempTargetLangCode, onTempNativeSelect, onTempTargetSelect, onConfirmLanguageSelection, onSaveAllChats, onLoadAllChats,
   sttProvider, ttsProvider, onToggleSttProvider, onToggleTtsProvider, isSpeechRecognitionSupported
 }) => {
@@ -109,6 +104,28 @@ const InputArea: React.FC<InputAreaProps> = ({
   const bubbleTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTranscriptRef = useRef('');
+
+  const isSending = useMaestroStore(selectIsSending);
+  const isSpeaking = useMaestroStore(selectIsSpeaking);
+  const isListening = useMaestroStore(selectIsListening);
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
+
+  const createUiToken = useCallback(
+    (subtype: TokenSubtype) =>
+      addActivityToken(
+        TOKEN_CATEGORY.UI,
+        `${subtype}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`
+      ),
+    [addActivityToken]
+  );
+
+  const endUiTask = useCallback(
+    (token: string | null) => {
+      if (token) removeActivityToken(token);
+    },
+    [removeActivityToken]
+  );
   
   const livePreviewVideoRef = useRef<HTMLVideoElement>(null);
   const attachedPreviewVideoRef = useRef<HTMLVideoElement>(null);
@@ -180,7 +197,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   const showLiveFeed = liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !isLanguageSelectionOpen;
   const isTwoUp = Boolean(attachedImageBase64 && showLiveFeed);
 
-  const genUiToken = useCallback((tag: string) => `${tag}:${Date.now()}:${Math.random().toString(36).slice(2,8)}`, []);
 
   // Sync transcript to input
   useEffect(() => {
@@ -303,10 +319,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   // --- Composer Annotation Handlers ---
 
   const startComposerAnnotationFromImage = useCallback((dataUrl: string) => {
-    if (!composerAnnotateTokenRef.current && onUiTaskStart) {
-      const tok = genUiToken('composer-annotate');
-      const ret = onUiTaskStart(tok);
-      composerAnnotateTokenRef.current = typeof ret === 'string' ? ret : tok;
+    if (!composerAnnotateTokenRef.current) {
+      composerAnnotateTokenRef.current = createUiToken(TOKEN_SUBTYPE.COMPOSER_ANNOTATE);
     }
     setComposerAnnotationSourceUrl(dataUrl);
     
@@ -329,7 +343,7 @@ const InputArea: React.FC<InputAreaProps> = ({
       composerIsNewStrokeRef.current = true;
       setIsComposerAnnotating(true);
     }, 0);
-  }, [genUiToken, onUiTaskStart]);
+  }, [createUiToken]);
 
   const handleComposerAnnotateImage = useCallback(() => {
     if (!attachedImageBase64) return;
@@ -490,8 +504,11 @@ const InputArea: React.FC<InputAreaProps> = ({
     composerActivePointersRef.current = [];
     setComposerUndoStack([]);
     composerIsNewStrokeRef.current = true;
-    if (composerAnnotateTokenRef.current && onUiTaskEnd) { onUiTaskEnd(composerAnnotateTokenRef.current); composerAnnotateTokenRef.current = null; }
-  }, [onUiTaskEnd]);
+    if (composerAnnotateTokenRef.current) {
+      endUiTask(composerAnnotateTokenRef.current);
+      composerAnnotateTokenRef.current = null;
+    }
+  }, [endUiTask]);
 
   const handleComposerSave = useCallback(() => {
     if (!composerEditCanvasRef.current || !composerImageRef.current || !composerViewportRef.current) return;
@@ -562,16 +579,17 @@ const InputArea: React.FC<InputAreaProps> = ({
       recordingTimerRef.current = null;
     }
     setIsRecording(false);
-    if (videoRecordTokenRef.current && onUiTaskEnd) { onUiTaskEnd(videoRecordTokenRef.current); videoRecordTokenRef.current = null; }
-  }, [onUiTaskEnd]);
+    if (videoRecordTokenRef.current) {
+      endUiTask(videoRecordTokenRef.current);
+      videoRecordTokenRef.current = null;
+    }
+  }, [endUiTask]);
 
   const handleStartRecording = useCallback(() => {
     if (isRecording || !liveVideoStream) return;
     try {
-      if (!videoRecordTokenRef.current && onUiTaskStart) {
-        const tok = genUiToken('video-record');
-        const ret = onUiTaskStart(tok);
-        videoRecordTokenRef.current = typeof ret === 'string' ? ret : tok;
+      if (!videoRecordTokenRef.current) {
+        videoRecordTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIDEO_RECORD);
       }
       const mimeType = pickRecorderMimeType();
       const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
@@ -591,7 +609,10 @@ const InputArea: React.FC<InputAreaProps> = ({
           onUserInputActivity();
         };
         reader.readAsDataURL(videoBlob);
-        if (videoRecordTokenRef.current && onUiTaskEnd) { onUiTaskEnd(videoRecordTokenRef.current); videoRecordTokenRef.current = null; }
+        if (videoRecordTokenRef.current) {
+          endUiTask(videoRecordTokenRef.current);
+          videoRecordTokenRef.current = null;
+        }
       };
       rec.start(1000);
       setIsRecording(true);
@@ -603,9 +624,12 @@ const InputArea: React.FC<InputAreaProps> = ({
       }, 15 * 60 * 1000);
     } catch (e) {
       console.error('Failed to start media recorder:', e);
-      if (videoRecordTokenRef.current && onUiTaskEnd) { onUiTaskEnd(videoRecordTokenRef.current); videoRecordTokenRef.current = null; }
+      if (videoRecordTokenRef.current) {
+        endUiTask(videoRecordTokenRef.current);
+        videoRecordTokenRef.current = null;
+      }
     }
-  }, [isRecording, liveVideoStream, onSetAttachedImage, onUserInputActivity, t, handleStopRecording, onUiTaskStart, onUiTaskEnd, genUiToken]);
+  }, [isRecording, liveVideoStream, onSetAttachedImage, onUserInputActivity, t, handleStopRecording, createUiToken, endUiTask]);
 
   const handleCaptureImage = useCallback(() => {
      if (!livePreviewVideoRef.current || !liveVideoStream || !livePreviewVideoRef.current.srcObject) return;
@@ -666,7 +690,10 @@ const InputArea: React.FC<InputAreaProps> = ({
         const chunks = audioNoteChunksRef.current;
         audioNoteChunksRef.current = [];
         if (audioNoteStreamRef.current) { try { audioNoteStreamRef.current.getTracks().forEach(t => t.stop()); } catch {} audioNoteStreamRef.current = null; }
-        if (audioNoteTokenRef.current && onUiTaskEnd) { onUiTaskEnd(audioNoteTokenRef.current); audioNoteTokenRef.current = null; }
+        if (audioNoteTokenRef.current) {
+          endUiTask(audioNoteTokenRef.current);
+          audioNoteTokenRef.current = null;
+        }
         if (!chunks.length) return;
         const blob = new Blob(chunks, { type: chosenType });
         const reader = new FileReader();
@@ -677,26 +704,30 @@ const InputArea: React.FC<InputAreaProps> = ({
         try { audioNoteStreamRef.current?.getTracks()?.forEach(t => t.stop()); } catch {}
         audioNoteStreamRef.current = null;
         setIsRecordingAudioNote(false);
-        if (audioNoteTokenRef.current && onUiTaskEnd) { onUiTaskEnd(audioNoteTokenRef.current); audioNoteTokenRef.current = null; }
+        if (audioNoteTokenRef.current) {
+          endUiTask(audioNoteTokenRef.current);
+          audioNoteTokenRef.current = null;
+        }
       };
-      if (!audioNoteTokenRef.current && onUiTaskStart) {
-        const tok = genUiToken('audio-note');
-        const ret = onUiTaskStart(tok);
-        audioNoteTokenRef.current = typeof ret === 'string' ? ret : tok;
+      if (!audioNoteTokenRef.current) {
+        audioNoteTokenRef.current = createUiToken(TOKEN_SUBTYPE.AUDIO_NOTE);
       }
       rec.start(250); 
       setIsRecordingAudioNote(true);
     } catch (e) {
       console.error('Failed to start audio note recording:', e);
     }
-  }, [isRecordingAudioNote, isSttGloballyEnabled, onSetAttachedImage, onUserInputActivity, onUiTaskStart, onUiTaskEnd, genUiToken]);
+  }, [isRecordingAudioNote, isSttGloballyEnabled, onSetAttachedImage, onUserInputActivity, createUiToken, endUiTask]);
 
   const stopAudioNoteRecording = useCallback(() => {
     const rec = audioNoteRecorderRef.current;
     if (rec && rec.state === 'recording') { try { rec.requestData(); } catch {} rec.stop(); }
     setIsRecordingAudioNote(false);
-    if (audioNoteTokenRef.current && onUiTaskEnd) { onUiTaskEnd(audioNoteTokenRef.current); audioNoteTokenRef.current = null; }
-  }, [onUiTaskEnd]);
+    if (audioNoteTokenRef.current) {
+      endUiTask(audioNoteTokenRef.current);
+      audioNoteTokenRef.current = null;
+    }
+  }, [endUiTask]);
 
   const handleMicPointerDown = useCallback((e: React.PointerEvent) => {
     if (isSttGloballyEnabled || isSending || isSpeaking) return; 
@@ -752,7 +783,10 @@ const InputArea: React.FC<InputAreaProps> = ({
 
    // File Input
    const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (paperclipOpenTokenRef.current && onUiTaskEnd) { onUiTaskEnd(paperclipOpenTokenRef.current); paperclipOpenTokenRef.current = null; }
+    if (paperclipOpenTokenRef.current) {
+      endUiTask(paperclipOpenTokenRef.current);
+      paperclipOpenTokenRef.current = null;
+    }
      const file = e.target.files?.[0];
      if (file) {
        if (file.type.startsWith('video/')) {
@@ -776,10 +810,15 @@ const InputArea: React.FC<InputAreaProps> = ({
    const removeAttachedImage = () => { onSetAttachedImage(null, null); if (fileInputRef.current) fileInputRef.current.value = ''; };
 
    useEffect(() => {
-     const handleWindowFocus = () => { if (paperclipOpenTokenRef.current && onUiTaskEnd) { onUiTaskEnd(paperclipOpenTokenRef.current); paperclipOpenTokenRef.current = null; } };
-     window.addEventListener('focus', handleWindowFocus);
-     return () => window.removeEventListener('focus', handleWindowFocus);
-   }, [onUiTaskEnd]);
+     const handleWindowFocus = () => {
+       if (paperclipOpenTokenRef.current) {
+         endUiTask(paperclipOpenTokenRef.current);
+         paperclipOpenTokenRef.current = null;
+       }
+     };
+      window.addEventListener('focus', handleWindowFocus);
+      return () => window.removeEventListener('focus', handleWindowFocus);
+   }, [endUiTask]);
 
    // Live preview ref sync
    useEffect(() => {
@@ -862,10 +901,8 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const handleMaestroAvatarClick = () => {
     try {
-      if (!maestroAvatarOpenTokenRef.current && onUiTaskStart) {
-        const tok = genUiToken('maestro-avatar-open');
-        const ret = onUiTaskStart(tok);
-        maestroAvatarOpenTokenRef.current = typeof ret === 'string' ? ret : tok;
+      if (!maestroAvatarOpenTokenRef.current) {
+        maestroAvatarOpenTokenRef.current = createUiToken(TOKEN_SUBTYPE.MAESTRO_AVATAR);
       }
     } catch {}
     maestroFileInputRef.current?.click();
@@ -876,10 +913,8 @@ const InputArea: React.FC<InputAreaProps> = ({
     e?.stopPropagation?.();
     try { 
       setIsUploadingMaestro(true); 
-      if (!maestroUploadTokenRef.current && onUiTaskStart) {
-        const tok = genUiToken('maestro-avatar');
-        const ret = onUiTaskStart(tok);
-        maestroUploadTokenRef.current = typeof ret === 'string' ? ret : tok;
+      if (!maestroUploadTokenRef.current) {
+        maestroUploadTokenRef.current = createUiToken(TOKEN_SUBTYPE.MAESTRO_AVATAR);
       }
     } catch {}
     try {
@@ -935,21 +970,25 @@ const InputArea: React.FC<InputAreaProps> = ({
       setMaestroAsset(null);
     } finally {
       try { setIsUploadingMaestro(false); } catch {}
-      if (maestroUploadTokenRef.current && onUiTaskEnd) { onUiTaskEnd(maestroUploadTokenRef.current); maestroUploadTokenRef.current = null; }
+      if (maestroUploadTokenRef.current) {
+        endUiTask(maestroUploadTokenRef.current);
+        maestroUploadTokenRef.current = null;
+      }
     }
   };
 
   const handleMaestroFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (maestroAvatarOpenTokenRef.current && onUiTaskEnd) { onUiTaskEnd(maestroAvatarOpenTokenRef.current); maestroAvatarOpenTokenRef.current = null; }
+    if (maestroAvatarOpenTokenRef.current) {
+      endUiTask(maestroAvatarOpenTokenRef.current);
+      maestroAvatarOpenTokenRef.current = null;
+    }
     const file = event.target.files?.[0];
     if (!file) { event.target.value = ''; return; }
     if (!file.type.startsWith('image/')) { event.target.value = ''; return; }
     try {
       setIsUploadingMaestro(true);
-      if (!maestroUploadTokenRef.current && onUiTaskStart) {
-        const tok = genUiToken('maestro-avatar');
-        const ret = onUiTaskStart(tok);
-        maestroUploadTokenRef.current = typeof ret === 'string' ? ret : tok;
+      if (!maestroUploadTokenRef.current) {
+        maestroUploadTokenRef.current = createUiToken(TOKEN_SUBTYPE.MAESTRO_AVATAR);
       }
       const dataUrl: string = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -974,7 +1013,10 @@ const InputArea: React.FC<InputAreaProps> = ({
     } finally {
       setIsUploadingMaestro(false);
       event.target.value = '';
-      if (maestroUploadTokenRef.current && onUiTaskEnd) { onUiTaskEnd(maestroUploadTokenRef.current); maestroUploadTokenRef.current = null; }
+      if (maestroUploadTokenRef.current) {
+        endUiTask(maestroUploadTokenRef.current);
+        maestroUploadTokenRef.current = null;
+      }
     }
   };
 
@@ -982,14 +1024,15 @@ const InputArea: React.FC<InputAreaProps> = ({
     const file = event.target.files?.[0];
     if (file && onLoadAllChats) {
         try {
-          if (!loadTokenRef.current && onUiTaskStart) {
-             const tok = genUiToken('load-chats');
-             const ret = onUiTaskStart(tok);
-             loadTokenRef.current = typeof ret === 'string' ? ret : tok;
+          if (!loadTokenRef.current) {
+             loadTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
           }
           await onLoadAllChats(file);
         } finally {
-          if (loadTokenRef.current && onUiTaskEnd) { onUiTaskEnd(loadTokenRef.current); loadTokenRef.current = null; }
+          if (loadTokenRef.current) {
+            endUiTask(loadTokenRef.current);
+            loadTokenRef.current = null;
+          }
         }
     }
     event.target.value = '';
@@ -997,15 +1040,16 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const handleSave = async () => {
     if (onSaveAllChats) {
-        if (!saveTokenRef.current && onUiTaskStart) {
-            const tok = genUiToken('save-chats');
-            const ret = onUiTaskStart(tok);
-            saveTokenRef.current = typeof ret === 'string' ? ret : tok;
+        if (!saveTokenRef.current) {
+            saveTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
         }
         try {
             await onSaveAllChats();
         } finally {
-            if (saveTokenRef.current && onUiTaskEnd) { onUiTaskEnd(saveTokenRef.current); saveTokenRef.current = null; }
+            if (saveTokenRef.current) {
+              endUiTask(saveTokenRef.current);
+              saveTokenRef.current = null;
+            }
         }
     }
   };
@@ -1162,15 +1206,32 @@ const InputArea: React.FC<InputAreaProps> = ({
                  </div>
                ) : attachedImageMimeType?.startsWith('video/') ? (
                  <div className="relative">
-                   <video
-                     ref={attachedPreviewVideoRef}
-                     src={attachedImageBase64}
-                     controls
-                     className="h-24 w-full object-contain rounded bg-black"
-                    onPlay={() => { setAttachedVideoPlaying(true); if (!attachedVideoPlayTokenRef.current && onUiTaskStart) { const tok = genUiToken('video-play'); const ret = onUiTaskStart(tok); attachedVideoPlayTokenRef.current = typeof ret === 'string' ? ret : tok; } }}
-                    onPause={() => { setAttachedVideoPlaying(false); if (attachedVideoPlayTokenRef.current && onUiTaskEnd) { onUiTaskEnd(attachedVideoPlayTokenRef.current); attachedVideoPlayTokenRef.current = null; } }}
-                    onEnded={() => { setAttachedVideoPlaying(false); if (attachedVideoPlayTokenRef.current && onUiTaskEnd) { onUiTaskEnd(attachedVideoPlayTokenRef.current); attachedVideoPlayTokenRef.current = null; } }}
-                   />
+                    <video
+                      ref={attachedPreviewVideoRef}
+                      src={attachedImageBase64}
+                      controls
+                      className="h-24 w-full object-contain rounded bg-black"
+                      onPlay={() => {
+                        setAttachedVideoPlaying(true);
+                        if (!attachedVideoPlayTokenRef.current) {
+                          attachedVideoPlayTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIDEO_PLAY);
+                        }
+                      }}
+                      onPause={() => {
+                        setAttachedVideoPlaying(false);
+                        if (attachedVideoPlayTokenRef.current) {
+                          endUiTask(attachedVideoPlayTokenRef.current);
+                          attachedVideoPlayTokenRef.current = null;
+                        }
+                      }}
+                      onEnded={() => {
+                        setAttachedVideoPlaying(false);
+                        if (attachedVideoPlayTokenRef.current) {
+                          endUiTask(attachedVideoPlayTokenRef.current);
+                          attachedVideoPlayTokenRef.current = null;
+                        }
+                      }}
+                    />
                    {/* Annotate frame button */}
                    <button
                      onClick={handleComposerAnnotateVideo}
@@ -1388,7 +1449,11 @@ const InputArea: React.FC<InputAreaProps> = ({
                     title={t('chat.attachImageFromFile')}
                     role="button"
                     tabIndex={0}
-                    onClick={() => { if (!paperclipOpenTokenRef.current && onUiTaskStart) { const tok = genUiToken('case-file-open'); const ret = onUiTaskStart(tok); paperclipOpenTokenRef.current = typeof ret === 'string' ? ret : tok; } }}
+                    onClick={() => {
+                      if (!paperclipOpenTokenRef.current) {
+                        paperclipOpenTokenRef.current = createUiToken(TOKEN_SUBTYPE.ATTACH_FILE);
+                      }
+                    }}
                   >
                       <IconPaperclip className="w-5 h-5" />
                   </label>

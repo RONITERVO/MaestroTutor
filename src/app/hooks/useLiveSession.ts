@@ -27,6 +27,7 @@ import { getGlobalProfileDB } from '../../features/session';
 import { deriveHistoryForApi, computeTtsCacheKey } from '../../features/chat';
 import { processMediaForUpload } from '../../features/vision';
 import { MAX_MEDIA_TO_KEEP } from '../../core/config/app';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../core/config/activityTokens';
 import { 
   DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
   IMAGE_GEN_SYSTEM_INSTRUCTION, 
@@ -68,9 +69,9 @@ export interface UseLiveSessionConfig {
   startListening: (lang: string) => void;
   clearTranscript: () => void;
   
-  // UI Busy state
-  addUiBusyToken: (token: string) => string;
-  removeUiBusyToken: (token?: string | null) => void;
+  // Activity token state
+  addActivityToken: (category: TokenCategory, subtype?: string) => string;
+  removeActivityToken: (token: string) => void;
   
   // Re-engagement
   scheduleReengagement: (reason: string, delayOverrideMs?: number) => void;
@@ -127,8 +128,8 @@ export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionRetu
     stopListening,
     startListening,
     clearTranscript,
-    addUiBusyToken,
-    removeUiBusyToken,
+    addActivityToken,
+    removeActivityToken,
     scheduleReengagement,
     cancelReengagement,
     handleUserInputActivity,
@@ -460,12 +461,12 @@ export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionRetu
       }
       if (state === 'active') {
         if (!liveUiTokenRef.current) {
-          const token = addUiBusyToken(`live-session:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`);
+          const token = addActivityToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.SESSION);
           liveUiTokenRef.current = token;
         }
       } else {
         if (liveUiTokenRef.current) {
-          removeUiBusyToken(liveUiTokenRef.current);
+          removeActivityToken(liveUiTokenRef.current);
           liveUiTokenRef.current = null;
         }
       }

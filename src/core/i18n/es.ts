@@ -231,4 +231,6 @@ export const esTranslations: Record<string, string> = {
   "chat.header.loadPopup": "Cargando…",
   "chat.header.maestroAvatar": "Actualizando avatar de Maestro",
   "chat.header.watchingVideo": "Viendo video",
+  "chat.header.viewingAbove": "Viendo mensajes arriba",
+  "chat.header.liveSession": "Sesión en vivo",
 };
