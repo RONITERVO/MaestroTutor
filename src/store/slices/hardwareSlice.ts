@@ -86,10 +86,20 @@ export const createHardwareSlice: StateCreator<
   },
   
   setLiveVideoStream: (stream: MediaStream | null) => {
+    // Stop existing tracks before replacing to avoid leaks
+    const currentStream = get().liveVideoStream;
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+    }
     set({ liveVideoStream: stream });
   },
   
   setVisualContextStream: (stream: MediaStream | null) => {
+    // Stop existing tracks before replacing to avoid leaks
+    const currentStream = get().visualContextStream;
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+    }
     set({ visualContextStream: stream });
   },
   

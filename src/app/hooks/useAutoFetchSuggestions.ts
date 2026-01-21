@@ -39,8 +39,12 @@ export const useAutoFetchSuggestions = ({
       if (lastMessage && lastMessage.role === 'assistant' && !lastMessage.thinking && lastMessage.id !== lastFetchedSuggestionsForRef.current) {
         const textForSuggestions = lastMessage.rawAssistantResponse || (lastMessage.translations?.find(t => t.spanish)?.spanish) || "";
         if (textForSuggestions.trim()) {
-          fetchAndSetReplySuggestions(lastMessage.id, textForSuggestions, getHistoryRespectingBookmark(messagesRef.current));
+          // Set ref before fetch to prevent duplicate concurrent requests
+          // Note: If fetch fails, we intentionally don't retry automatically.
+          // The ref marks this message as "attempted" - the user can manually
+          // trigger suggestions again or the next TTS end will try the new message.
           lastFetchedSuggestionsForRef.current = lastMessage.id;
+          fetchAndSetReplySuggestions(lastMessage.id, textForSuggestions, getHistoryRespectingBookmark(messagesRef.current));
         }
       }
     }

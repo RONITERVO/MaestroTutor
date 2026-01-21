@@ -16,7 +16,6 @@ import type { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, GroundingChunk }
 import { 
   getChatHistoryDB, 
   safeSaveChatHistoryDB, 
-  readBackupForPair, 
   getChatMetaDB
 } from '../../features/chat';
 import { upsertTtsCacheEntries } from '../../features/chat';
@@ -90,14 +89,7 @@ export const createChatSlice: StateCreator<
     set({ isLoadingHistory: true, messages: [], replySuggestions: [] });
     
     try {
-      let history = await getChatHistoryDB(pairId);
-      if (!history || history.length === 0) {
-        const backup = readBackupForPair(pairId);
-        if (backup && backup.length > 0) {
-          history = backup;
-          safeSaveChatHistoryDB(pairId, backup);
-        }
-      }
+      const history = await getChatHistoryDB(pairId);
       
       // Clean up interrupted states
       const cleanedHistory = (history || []).map(msg => {
@@ -207,9 +199,16 @@ export const createChatSlice: StateCreator<
   },
   
   addImageLoadDuration: (duration: number) => {
-    set(state => ({
-      imageLoadDurations: [...state.imageLoadDurations, duration]
-    }));
+    const MAX_IMAGE_LOAD_DURATIONS = 100;
+    set(state => {
+      const newDurations = [...state.imageLoadDurations, duration];
+      // Keep only the most recent N entries to prevent unbounded growth
+      return {
+        imageLoadDurations: newDurations.length > MAX_IMAGE_LOAD_DURATIONS 
+          ? newDurations.slice(-MAX_IMAGE_LOAD_DURATIONS) 
+          : newDurations
+      };
+    });
   },
   
   setAttachedImage: (base64: string | null, mimeType: string | null) => {

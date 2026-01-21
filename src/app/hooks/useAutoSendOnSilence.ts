@@ -49,29 +49,23 @@ export const useAutoSendOnSilence = ({
       return;
     }
 
-    const stripBracketedContent = (input: string | undefined | null): string => {
-      if (typeof input !== 'string') return '';
-      const without = input.replace(/\[[^\]]*\]/g, ' ');
-      return without.replace(/\s+/g, ' ').trim();
-    };
-
-    const text = stripBracketedContent(transcript || '');
+    const text = (transcript || '').trim();
     clearAutoSend();
 
     if (text.length < 2) {
       return;
     }
 
-    autoSendSnapshotRef.current = stripBracketedContent(transcript || '');
+    autoSendSnapshotRef.current = text;
     autoSendTimerRef.current = window.setTimeout(() => {
       const snap = autoSendSnapshotRef.current;
-      const current = stripBracketedContent(transcript || '');
+      const current = (transcript || '').trim();
       if (
         settingsRef.current.stt.enabled &&
         !isSendingRef.current &&
         !speechIsSpeakingRef.current &&
         current.length >= 2 &&
-        stripBracketedContent(transcript || '') === snap
+        current === snap
       ) {
         clearTranscript();
         if (settingsRef.current.isSuggestionMode) {

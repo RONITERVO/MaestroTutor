@@ -34,30 +34,16 @@ export const saveChatHistoryDB = async (pairId: string, messages: ChatMessage[])
   });
 };
 
-export const backupKeyForPair = (pairId: string) => `chatBackup:${pairId}`;
-export const writeBackupForPair = (pairId: string, messages: ChatMessage[]) => {
-  try { window.localStorage.setItem(backupKeyForPair(pairId), JSON.stringify(messages)); } catch {}
-};
-export const readBackupForPair = (pairId: string): ChatMessage[] | null => {
-  try {
-    const raw = window.localStorage.getItem(backupKeyForPair(pairId));
-    return raw ? (JSON.parse(raw) as ChatMessage[]) : null;
-  } catch { return null; }
-};
-export const clearBackupForPair = (pairId: string) => { try { window.localStorage.removeItem(backupKeyForPair(pairId)); } catch {} };
-
 export const safeSaveChatHistoryDB = async (pairId: string, messages: ChatMessage[], retries = 1): Promise<boolean> => {
   try {
     await saveChatHistoryDB(pairId, messages);
-    clearBackupForPair(pairId);
     return true;
   } catch (e) {
     if (retries > 0) {
       await Promise.resolve();
       return safeSaveChatHistoryDB(pairId, messages, retries - 1);
     }
-    writeBackupForPair(pairId, messages);
-    console.warn('IndexedDB save failed; kept a temporary backup in localStorage for pair:', pairId, e);
+    console.warn('IndexedDB save failed for pair:', pairId, e);
     return false;
   }
 };
@@ -246,8 +232,8 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
 
     // 3. Map to simple API objects
     const history: DerivedHistoryItem[] = filtered.map(m => {
-      const uri = (m as any).llmFileUri || m.imageFileUri || undefined;
-      const mime = uri ? ((m as any).llmFileMimeType || m.imageMimeType || undefined) : undefined;
+      const uri = (m as any).uploadedFileUri || m.imageFileUri || undefined;
+      const mime = uri ? ((m as any).uploadedFileMimeType || m.imageMimeType || undefined) : undefined;
       return {
         role: (m.role === 'user' || m.role === 'assistant') ? m.role : 'user',
         text: m.text,

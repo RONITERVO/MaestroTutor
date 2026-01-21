@@ -67,12 +67,12 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   // Optimization: If an optimized LLM image/media exists, promote it to the main display slot for storage.
   // This discards the full-resolution 'imageUrl' to save significant space in IndexedDB,
   // while ensuring the message history remains visually complete (albeit at lower quality) upon reload.
-  if (typeof (out as any).llmImageUrl === 'string' && (out as any).llmImageUrl) {
-    out.imageUrl = (out as any).llmImageUrl;
-    out.imageMimeType = (out as any).llmImageMimeType || out.imageMimeType;
+  if (typeof (out as any).storageOptimizedImageUrl === 'string' && (out as any).storageOptimizedImageUrl) {
+    out.imageUrl = (out as any).storageOptimizedImageUrl;
+    out.imageMimeType = (out as any).storageOptimizedImageMimeType || out.imageMimeType;
     // Remove the specific LLM fields since we've promoted them to the main fields for persistence
-    delete (out as any).llmImageUrl;
-    delete (out as any).llmImageMimeType;
+    delete (out as any).storageOptimizedImageUrl;
+    delete (out as any).storageOptimizedImageMimeType;
   }
 
   // Cap the size of the image (whether original or promoted optimized version)
@@ -86,8 +86,12 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   }
 
   // Ensure any lingering LLM-specific media fields are removed from the persisted object
-  if ('llmImageUrl' in out) delete (out as any).llmImageUrl;
-  if ('llmImageMimeType' in out) delete (out as any).llmImageMimeType;
+  if ('storageOptimizedImageUrl' in out) delete (out as any).storageOptimizedImageUrl;
+  if ('storageOptimizedImageMimeType' in out) delete (out as any).storageOptimizedImageMimeType;
+  // Remove uploaded file URIs - they expire after 48 hours from Google's Files API
+  // so we can't persist them. On reload, we'll re-upload if needed.
+  if ('uploadedFileUri' in out) delete (out as any).uploadedFileUri;
+  if ('uploadedFileMimeType' in out) delete (out as any).uploadedFileMimeType;
 
   if (typeof out.rawAssistantResponse === 'string' && out.rawAssistantResponse.length > 200_000) {
     out.rawAssistantResponse = out.rawAssistantResponse.slice(0, 200_000);

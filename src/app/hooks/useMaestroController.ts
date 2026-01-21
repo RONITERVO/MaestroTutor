@@ -73,7 +73,7 @@ export interface UseMaestroControllerConfig {
   lastFetchedSuggestionsForRef: React.MutableRefObject<string | null>;
   
   // Hardware
-  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; llmBase64: string; llmMimeType: string } | null>;
+  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string } | null>;
   
   // Speech
   speechIsSpeakingRef: React.MutableRefObject<boolean>;
@@ -227,6 +227,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
   const addImageLoadDuration = useMaestroStore(state => state.addImageLoadDuration);
   const setAttachedImage = useMaestroStore(state => state.setAttachedImage);
   const setMaestroActivityStage = useMaestroStore(state => state.setMaestroActivityStage);
+  // Token-based activity tracking for unified busy state management
+  const addUiBusyToken = useMaestroStore(state => state.addUiBusyToken);
+  const removeUiBusyToken = useMaestroStore(state => state.removeUiBusyToken);
 
   // Refs
   const isSendingRef = useRef(false);
@@ -235,6 +238,7 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
   const handleSendMessageInternalRef = useRef<any>(null);
   const sendPrepRef = useRef<{ active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null>(null);
   const isMountedRef = useRef(true);
+  const sendingTokenRef = useRef<string | null>(null);
 
   // Sync refs with state
   useEffect(() => { isSendingRef.current = isSending; }, [isSending]);
@@ -317,9 +321,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     const mediaIndices: number[] = [];
     for (let i = 0; i < candidates.length; i++) {
       const m = candidates[i];
-      const hasMedia = !!((m as any).llmImageUrl && (m as any).llmImageMimeType) || 
+      const hasMedia = !!((m as any).storageOptimizedImageUrl && (m as any).storageOptimizedImageMimeType) || 
                        !!(m.imageUrl && m.imageMimeType) || 
-                       !!((m as any).llmFileUri && (m as any).llmFileMimeType);
+                       !!((m as any).uploadedFileUri && (m as any).uploadedFileMimeType);
       if (hasMedia) mediaIndices.push(i);
     }
     const maxMedia = MAX_MEDIA_TO_KEEP;
@@ -329,8 +333,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     for (let i = 0; i < candidates.length; i++) {
       if (!keepMediaIdx.has(i)) continue;
       const m0 = candidates[i];
-      const cachedUri0 = (m0 as any).llmFileUri as string | undefined;
-      const cachedMime0 = (m0 as any).llmFileMimeType as string | undefined;
+      const cachedUri0 = (m0 as any).uploadedFileUri as string | undefined;
+      const cachedMime0 = (m0 as any).uploadedFileMimeType as string | undefined;
       if (cachedUri0 && cachedMime0) cachedUrisToCheck.push(cachedUri0);
     }
     let cachedStatuses: Record<string, { deleted: boolean }> = {};
@@ -343,12 +347,12 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     for (let i = 0; i < candidates.length; i++) {
       if (!keepMediaIdx.has(i)) continue;
       const m0 = candidates[i];
-      const llmUrl0 = (m0 as any).llmImageUrl as string | undefined;
-      const llmMime0 = (m0 as any).llmImageMimeType as string | undefined;
+      const llmUrl0 = (m0 as any).storageOptimizedImageUrl as string | undefined;
+      const llmMime0 = (m0 as any).storageOptimizedImageMimeType as string | undefined;
       const uiUrl0 = m0.imageUrl as string | undefined;
       const uiMime0 = m0.imageMimeType as string | undefined;
-      const cachedUri0 = (m0 as any).llmFileUri as string | undefined;
-      const cachedMime0 = (m0 as any).llmFileMimeType as string | undefined;
+      const cachedUri0 = (m0 as any).uploadedFileUri as string | undefined;
+      const cachedMime0 = (m0 as any).uploadedFileMimeType as string | undefined;
       const hasAnyMedia0 = !!((llmUrl0 && llmMime0) || (uiUrl0 && uiMime0));
       const missing = !(cachedUri0 && cachedMime0);
       const deleted = !!(cachedUri0 && cachedStatuses[cachedUri0]?.deleted);
@@ -370,14 +374,14 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     for (let idx = 0; idx < candidates.length; idx++) {
       if (!keepMediaIdx.has(idx)) continue;
       const m = candidates[idx];
-      const llmUrl = (m as any).llmImageUrl as string | undefined;
-      const llmMime = (m as any).llmImageMimeType as string | undefined;
+      const llmUrl = (m as any).storageOptimizedImageUrl as string | undefined;
+      const llmMime = (m as any).storageOptimizedImageMimeType as string | undefined;
       const uiUrl = m.imageUrl as string | undefined;
       const uiMime = m.imageMimeType as string | undefined;
       if (!(llmUrl && llmMime) && !(uiUrl && uiMime)) continue;
 
-      const cachedUri = (m as any).llmFileUri as string | undefined;
-      const cachedMime = (m as any).llmFileMimeType as string | undefined;
+      const cachedUri = (m as any).uploadedFileUri as string | undefined;
+      const cachedMime = (m as any).uploadedFileMimeType as string | undefined;
       let cachedDeleted = false;
       if (cachedUri && cachedMime) {
         try {
@@ -394,13 +398,13 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         } else if (uiUrl && uiMime) {
           const optimized = await processMediaForUpload(uiUrl, uiMime, { t });
           dataForUpload = { dataUrl: optimized.dataUrl, mimeType: optimized.mimeType };
-          updateMessage(m.id, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
+          updateMessage(m.id, { storageOptimizedImageUrl: optimized.dataUrl, storageOptimizedImageMimeType: optimized.mimeType });
         }
         if (dataForUpload) {
           const up = await uploadMediaToFiles(dataForUpload.dataUrl, dataForUpload.mimeType, 'send-history');
-          updateMessage(m.id, { llmFileUri: up.uri, llmFileMimeType: up.mimeType });
-          (m as any).llmFileUri = up.uri;
-          (m as any).llmFileMimeType = up.mimeType;
+          updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
+          (m as any).uploadedFileUri = up.uri;
+          (m as any).uploadedFileMimeType = up.mimeType;
           updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri };
         }
       } catch (e) {
@@ -685,6 +689,7 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     onProgress?: (label: string, done?: number, total?: number, etaMs?: number) => void;
     setUploadPrepLabel?: boolean;
   }) => {
+    // Create optimized version for local storage (reduces DB size)
     const optimized = await processMediaForUpload(params.dataUrl, params.mimeType, { t, onProgress: params.onProgress });
     sendWithFileUploadInProgressRef.current = true;
     if (params.setUploadPrepLabel !== false) {
@@ -692,8 +697,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         ? { ...prev, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' }
         : { active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' }));
     }
-    // CRITICAL: Upload the OPTIMIZED data, not the original, to save bandwidth and avoid MIME type mismatches
-    const upload = await uploadMediaToFiles(optimized.dataUrl, optimized.mimeType, params.displayName);
+    // CRITICAL: Upload the ORIGINAL full-resolution data to the LLM for best quality
+    // The optimized version is only used for local storage to reduce DB backup/reload size
+    const upload = await uploadMediaToFiles(params.dataUrl, params.mimeType, params.displayName);
     return { optimized, upload };
   }, [t, setSendPrep]);
 
@@ -714,8 +720,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     let userImageToProcessMimeType: string | undefined = (typeof params.passedImageMimeType === 'string' && params.passedImageMimeType)
       ? params.passedImageMimeType
       : undefined;
-    let userImageToProcessLlmBase64: string | undefined = undefined;
-    let userImageToProcessLlmMimeType: string | undefined = undefined;
+    let userImageToProcessStorageOptimizedBase64: string | undefined = undefined;
+    let userImageToProcessStorageOptimizedMimeType: string | undefined = undefined;
 
     if (params.messageType !== 'user') {
       return {
@@ -724,8 +730,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         recordedSpeechForMessage,
         userImageToProcessBase64,
         userImageToProcessMimeType,
-        userImageToProcessLlmBase64,
-        userImageToProcessLlmMimeType,
+        userImageToProcessStorageOptimizedBase64,
+        userImageToProcessStorageOptimizedMimeType,
       };
     }
 
@@ -754,8 +760,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       if (snapshotResult) {
         userImageToProcessBase64 = snapshotResult.base64;
         userImageToProcessMimeType = snapshotResult.mimeType;
-        userImageToProcessLlmBase64 = snapshotResult.llmBase64;
-        userImageToProcessLlmMimeType = snapshotResult.llmMimeType;
+        userImageToProcessStorageOptimizedBase64 = snapshotResult.storageOptimizedBase64;
+        userImageToProcessStorageOptimizedMimeType = snapshotResult.storageOptimizedMimeType;
       }
     }
 
@@ -774,9 +780,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
           if (!sendWithFileUploadInProgressRef.current) {
             sendWithFileUploadInProgressRef.current = true;
           }
-          updateMessage(kfId, { llmImageUrl: kf.dataUrl, llmImageMimeType: kf.mimeType });
+          updateMessage(kfId, { storageOptimizedImageUrl: kf.dataUrl, storageOptimizedImageMimeType: kf.mimeType });
           const up = await uploadMediaToFiles(kf.dataUrl, kf.mimeType, 'keyframe-image');
-          updateMessage(kfId, { llmFileUri: up.uri, llmFileMimeType: up.mimeType });
+          updateMessage(kfId, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
         } catch (e) {
           // Ignore upload errors for keyframe
         }
@@ -788,14 +794,14 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       }
     }
 
-    if (!userImageToProcessLlmBase64 && attachedImageBase64 && attachedImageMimeType) {
+    if (!userImageToProcessStorageOptimizedBase64 && attachedImageBase64 && attachedImageMimeType) {
       try {
         if (!sendWithFileUploadInProgressRef.current) {
           sendWithFileUploadInProgressRef.current = true;
         }
         const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, { t });
-        userImageToProcessLlmBase64 = optimized.dataUrl;
-        userImageToProcessLlmMimeType = optimized.mimeType;
+        userImageToProcessStorageOptimizedBase64 = optimized.dataUrl;
+        userImageToProcessStorageOptimizedMimeType = optimized.mimeType;
       } catch {}
     }
 
@@ -805,8 +811,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       recordedUtterance: recordedSpeechForMessage || undefined,
       imageUrl: userImageToProcessBase64,
       imageMimeType: userImageToProcessMimeType,
-      llmImageUrl: userImageToProcessLlmBase64,
-      llmImageMimeType: userImageToProcessLlmMimeType,
+      storageOptimizedImageUrl: userImageToProcessStorageOptimizedBase64,
+      storageOptimizedImageMimeType: userImageToProcessStorageOptimizedMimeType,
     });
 
     return {
@@ -815,8 +821,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       recordedSpeechForMessage,
       userImageToProcessBase64,
       userImageToProcessMimeType,
-      userImageToProcessLlmBase64,
-      userImageToProcessLlmMimeType,
+      userImageToProcessStorageOptimizedBase64,
+      userImageToProcessStorageOptimizedMimeType,
     };
   }, [
     addMessage,
@@ -922,10 +928,10 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         updateMessage(params.userMessageId, {
           imageUrl: finalResult.base64Image,
           imageMimeType: finalResult.mimeType,
-          llmImageUrl: optimized.dataUrl,
-          llmImageMimeType: optimized.mimeType,
-          llmFileUri: upload.uri,
-          llmFileMimeType: upload.mimeType,
+          storageOptimizedImageUrl: optimized.dataUrl,
+          storageOptimizedImageMimeType: optimized.mimeType,
+          uploadedFileUri: upload.uri,
+          uploadedFileMimeType: upload.mimeType,
           isGeneratingImage: false,
           imageGenError: null,
           imageGenerationStartTime: undefined
@@ -985,8 +991,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       });
       historyForAssistantImageGen = baseForEnsure.map(m => {
         const upd = ensuredUpdates[m.id];
-        if (upd && upd.newUri && (m as any).llmFileUri !== upd.newUri) {
-          return { ...m, llmFileUri: upd.newUri } as ChatMessage;
+        if (upd && upd.newUri && (m as any).uploadedFileUri !== upd.newUri) {
+          return { ...m, uploadedFileUri: upd.newUri } as ChatMessage;
         }
         return m;
       });
@@ -1034,10 +1040,10 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
           updateMessage(params.thinkingMessageId, {
             imageUrl: assistantImgGenResult.base64Image,
             imageMimeType: assistantImgGenResult.mimeType,
-            llmImageUrl: optimized.dataUrl,
-            llmImageMimeType: optimized.mimeType,
-            llmFileUri: upload.uri,
-            llmFileMimeType: upload.mimeType,
+            storageOptimizedImageUrl: optimized.dataUrl,
+            storageOptimizedImageMimeType: optimized.mimeType,
+            uploadedFileUri: upload.uri,
+            uploadedFileMimeType: upload.mimeType,
             isGeneratingImage: false,
             imageGenError: null,
             imageGenerationStartTime: undefined
@@ -1101,6 +1107,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     }
 
     setIsSending(true);
+    // Add sending token for unified busy state tracking
+    sendingTokenRef.current = addUiBusyToken(`chat-sending:${Date.now()}`);
     if (settingsRef.current.stt.enabled && isListening) {
       try { stopListening(); } catch { /* ignore */ }
       sttInterruptedBySendRef.current = true;
@@ -1134,8 +1142,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       userMessageText,
       userImageToProcessBase64,
       userImageToProcessMimeType,
-      userImageToProcessLlmBase64,
-      userImageToProcessLlmMimeType,
+      userImageToProcessStorageOptimizedBase64,
+      userImageToProcessStorageOptimizedMimeType,
     } = userMessageContext;
 
     const thinkingMessageId = addMessage({ role: 'assistant', thinking: true });
@@ -1156,7 +1164,7 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     }
 
     // Optimize user image if needed
-    if (messageType === 'user' && userImageToProcessBase64 && !userImageToProcessLlmBase64 && userImageToProcessMimeType) {
+    if (messageType === 'user' && userImageToProcessBase64 && !userImageToProcessStorageOptimizedBase64 && userImageToProcessMimeType) {
       if (!sendWithFileUploadInProgressRef.current) {
         sendWithFileUploadInProgressRef.current = true;
       }
@@ -1166,11 +1174,11 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
           t,
           onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs })
         });
-        userImageToProcessLlmBase64 = optimized.dataUrl;
-        userImageToProcessLlmMimeType = optimized.mimeType;
+        userImageToProcessStorageOptimizedBase64 = optimized.dataUrl;
+        userImageToProcessStorageOptimizedMimeType = optimized.mimeType;
 
         if (messageType === 'user' && userMessageId) {
-          updateMessage(userMessageId, { llmImageUrl: optimized.dataUrl, llmImageMimeType: optimized.mimeType });
+          updateMessage(userMessageId, { storageOptimizedImageUrl: optimized.dataUrl, storageOptimizedImageMimeType: optimized.mimeType });
         }
       } catch (e) { 
         console.warn('Failed to derive low-res for current user media, will omit persistence media', e); 
@@ -1188,8 +1196,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         imageForGeminiContextBase64 = userImageToProcessBase64;
         imageForGeminiContextMimeType = userImageToProcessMimeType;
       } else {
-        imageForGeminiContextBase64 = userImageToProcessLlmBase64;
-        imageForGeminiContextMimeType = userImageToProcessLlmMimeType;
+        imageForGeminiContextBase64 = userImageToProcessStorageOptimizedBase64;
+        imageForGeminiContextMimeType = userImageToProcessStorageOptimizedMimeType;
       }
     } else {
       imageForGeminiContextBase64 = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : undefined;
@@ -1244,17 +1252,17 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         imageForGeminiContextMimeType = up.mimeType;
         if (messageType === 'user' && userMessageId) {
           const existing = (messagesRef.current || []).find(m => m.id === userMessageId);
-          const hasExisting = !!(existing && typeof (existing as any).llmFileUri === 'string' && (existing as any).llmFileUri);
+          const hasExisting = !!(existing && typeof (existing as any).uploadedFileUri === 'string' && (existing as any).uploadedFileUri);
           if (!hasExisting) {
             updateMessage(userMessageId, {
-              llmFileUri: up.uri,
-              llmFileMimeType: up.mimeType,
+              uploadedFileUri: up.uri,
+              uploadedFileMimeType: up.mimeType,
             });
             imageForGeminiContextFileUri = up.uri;
           } else {
-            imageForGeminiContextFileUri = (existing as any).llmFileUri as string;
+            imageForGeminiContextFileUri = (existing as any).uploadedFileUri as string;
             // Also use the existing mime type if we're reusing an existing URI
-            imageForGeminiContextMimeType = (existing as any).llmFileMimeType as string || imageForGeminiContextMimeType;
+            imageForGeminiContextMimeType = (existing as any).uploadedFileMimeType as string || imageForGeminiContextMimeType;
           }
         } else {
           imageForGeminiContextFileUri = up.uri;
@@ -1290,8 +1298,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         .map((m: ChatMessage) => {
           if (ensuredUpdates[m.id]?.newUri) {
             const nu = ensuredUpdates[m.id].newUri;
-            if ((m as any).llmFileUri !== nu) {
-              return { ...m, llmFileUri: nu } as ChatMessage;
+            if ((m as any).uploadedFileUri !== nu) {
+              return { ...m, uploadedFileUri: nu } as ChatMessage;
             }
           }
           return m;
@@ -1300,8 +1308,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       try {
         for (const m of historySubsetForSendFinal) {
           const upd = ensuredUpdates[m.id];
-          if (upd && upd.newUri && (m as any).llmFileUri !== upd.newUri) {
-            (m as any).llmFileUri = upd.newUri;
+          if (upd && upd.newUri && (m as any).uploadedFileUri !== upd.newUri) {
+            (m as any).uploadedFileUri = upd.newUri;
           }
         }
       } catch {}
@@ -1385,6 +1393,11 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         sendWithFileUploadInProgressRef.current = false;
       } catch { /* ignore */ }
       setIsSending(false);
+      // Remove sending token
+      if (sendingTokenRef.current) {
+        removeUiBusyToken(sendingTokenRef.current);
+        sendingTokenRef.current = null;
+      }
       setSendPrep(null);
       scheduleReengagementRef.current('send-complete');
 
@@ -1431,6 +1444,11 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         translations: undefined,
       });
       setIsSending(false);
+      // Remove sending token on error
+      if (sendingTokenRef.current) {
+        removeUiBusyToken(sendingTokenRef.current);
+        sendingTokenRef.current = null;
+      }
       setSendPrep(null);
       try {
         sendWithFileUploadInProgressRef.current = false;

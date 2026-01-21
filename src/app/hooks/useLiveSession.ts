@@ -60,7 +60,7 @@ export interface UseLiveSessionConfig {
   setLiveVideoStream: React.Dispatch<React.SetStateAction<MediaStream | null>>;
   visualContextVideoRef: React.RefObject<HTMLVideoElement | null>;
   visualContextStreamRef: React.MutableRefObject<MediaStream | null>;
-  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; llmBase64: string; llmMimeType: string } | null>;
+  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string } | null>;
   
   // Speech
   isListening: boolean;
@@ -250,16 +250,16 @@ export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionRetu
         text: userText,
         imageUrl: snapshotData?.base64,
         imageMimeType: snapshotData?.mimeType,
-        llmImageUrl: snapshotData?.llmBase64,
-        llmImageMimeType: snapshotData?.llmMimeType,
+        storageOptimizedImageUrl: snapshotData?.storageOptimizedBase64,
+        storageOptimizedImageMimeType: snapshotData?.storageOptimizedMimeType,
         recordedUtterance
       });
 
       // Background optimization and upload for live snapshots
       if (snapshotData && userMessageId) {
         (async () => {
-          let optimizedDataUrl = snapshotData.llmBase64;
-          let optimizedMime = snapshotData.llmMimeType;
+          let optimizedDataUrl = snapshotData.storageOptimizedBase64;
+          let optimizedMime = snapshotData.storageOptimizedMimeType;
           
           try {
             // 1. Optimize for local persistence (low-res)
@@ -276,17 +276,17 @@ export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionRetu
             
             // 3. Update message with both low-res (local) and URI (remote)
             updateMessage(userMessageId, {
-              llmImageUrl: optimizedDataUrl,
-              llmImageMimeType: optimizedMime,
-              llmFileUri: up.uri,
-              llmFileMimeType: up.mimeType
+              storageOptimizedImageUrl: optimizedDataUrl,
+              storageOptimizedImageMimeType: optimizedMime,
+              uploadedFileUri: up.uri,
+              uploadedFileMimeType: up.mimeType
             });
           } catch (e) {
             console.warn('Upload failed', e);
             // Still update persistence image
             updateMessage(userMessageId, {
-              llmImageUrl: optimizedDataUrl,
-              llmImageMimeType: optimizedMime
+              storageOptimizedImageUrl: optimizedDataUrl,
+              storageOptimizedImageMimeType: optimizedMime
             });
           }
         })();
@@ -416,10 +416,10 @@ export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionRetu
             updateMessage(assistantId, {
               imageUrl: res.base64Image,
               imageMimeType: res.mimeType,
-              llmImageUrl: optimized.dataUrl,
-              llmImageMimeType: optimized.mimeType,
-              llmFileUri: up.uri,
-              llmFileMimeType: up.mimeType,
+              storageOptimizedImageUrl: optimized.dataUrl,
+              storageOptimizedImageMimeType: optimized.mimeType,
+              uploadedFileUri: up.uri,
+              uploadedFileMimeType: up.mimeType,
               isGeneratingImage: false,
               imageGenerationStartTime: undefined
             });

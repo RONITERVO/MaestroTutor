@@ -12,7 +12,6 @@
 import type { StateCreator } from 'zustand';
 import type { AppSettings, LanguagePair } from '../../core/types';
 import { getAppSettingsDB, setAppSettingsDB } from '../../features/session';
-import { LOCAL_STORAGE_SETTINGS_KEY } from '../../core/config/app';
 import { ALL_LANGUAGES, STT_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE } from '../../core/config/languages';
 import { generateAllLanguagePairs, getPrimaryCode } from '../../shared/utils/languageUtils';
 import type { MaestroStore } from '../maestroStore';
@@ -46,68 +45,6 @@ export const initialSettings: AppSettings = {
   isSuggestionMode: false,
   historyBookmarkMessageId: null,
   maxVisibleMessages: undefined,
-};
-
-// Load and merge from localStorage
-const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
-  try {
-    const item = window.localStorage.getItem(key);
-    if (item) {
-      const parsed = JSON.parse(item);
-      if (key === LOCAL_STORAGE_SETTINGS_KEY && typeof defaultValue === 'object' && defaultValue !== null) {
-        const mergedSettings = { ...defaultValue } as any;
-        for (const k in parsed) {
-          if (parsed.hasOwnProperty(k)) {
-            if (typeof parsed[k] === 'object' && parsed[k] !== null && !Array.isArray(parsed[k]) && k in mergedSettings) {
-              mergedSettings[k] = { ...mergedSettings[k], ...parsed[k] };
-            } else {
-              mergedSettings[k] = parsed[k];
-            }
-          }
-        }
-        // Ensure all keys from initialSettings exist
-        Object.keys(initialSettings).forEach(initialKey => {
-          if (!(initialKey in mergedSettings)) {
-            mergedSettings[initialKey] = (initialSettings as any)[initialKey];
-          }
-        });
-        if (typeof mergedSettings.maxVisibleMessages === 'undefined' || mergedSettings.maxVisibleMessages === null) {
-          mergedSettings.maxVisibleMessages = MAX_VISIBLE_MESSAGES_DEFAULT;
-        }
-        // Ensure nested objects have all required keys
-        ['tts', 'stt', 'smartReengagement'].forEach(nestedKey => {
-          if (mergedSettings[nestedKey] && (initialSettings as any)[nestedKey]) {
-            Object.keys((initialSettings as any)[nestedKey]).forEach(subKey => {
-              if (!((mergedSettings as any)[nestedKey] as any).hasOwnProperty(subKey)) {
-                (mergedSettings as any)[nestedKey][subKey] = (initialSettings as any)[nestedKey][subKey];
-              }
-            });
-          }
-        });
-        if (!mergedSettings.tts || !mergedSettings.tts.provider) {
-          mergedSettings.tts = { ...(mergedSettings.tts || {}), provider: 'browser' };
-        }
-        if (!mergedSettings.stt || !mergedSettings.stt.provider) {
-          mergedSettings.stt = { ...(mergedSettings.stt || {}), provider: 'browser' };
-        }
-        // Validate language pair
-        if (mergedSettings.selectedLanguagePairId && !allGeneratedLanguagePairs.some(p => p.id === mergedSettings.selectedLanguagePairId)) {
-          mergedSettings.selectedLanguagePairId = null;
-        }
-        const activePairForStt = allGeneratedLanguagePairs.find(p => p.id === mergedSettings.selectedLanguagePairId) || allGeneratedLanguagePairs.find(p => p.id === DEFAULT_LANGUAGE_PAIR_ID)!;
-        mergedSettings.stt.language = mergedSettings.stt?.language || getPrimaryCode(activePairForStt.targetLanguageCode) || getPrimaryCode(activePairForStt.nativeLanguageCode) || STT_LANGUAGES[0].code;
-        if (typeof mergedSettings.enableGoogleSearch === 'undefined') {
-          mergedSettings.enableGoogleSearch = initialSettings.enableGoogleSearch;
-        }
-        return mergedSettings as T;
-      }
-      return parsed;
-    }
-    return defaultValue;
-  } catch (error) {
-    console.warn(`Error reading localStorage key "${key}":`, error);
-    return defaultValue;
-  }
 };
 
 export interface SettingsSlice {
@@ -173,7 +110,7 @@ export const createSettingsSlice: StateCreator<
   initSettings: async () => {
     try {
       const fromDb = await getAppSettingsDB();
-      let effective = fromDb || loadFromLocalStorage(LOCAL_STORAGE_SETTINGS_KEY, initialSettings);
+      let effective = fromDb || initialSettings;
       
       if (!effective.selectedLanguagePairId || !allGeneratedLanguagePairs.some(p => p.id === effective.selectedLanguagePairId)) {
         effective = { ...effective, selectedLanguagePairId: null };

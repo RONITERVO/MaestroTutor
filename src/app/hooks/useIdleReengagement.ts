@@ -37,14 +37,11 @@ export const useIdleReengagement = ({
   const scheduleReengagementRef = useRef(scheduleReengagement);
   const cancelReengagementRef = useRef(cancelReengagement);
   
-  // Keep refs updated with latest callbacks
+  // Keep refs updated with latest callbacks (combined into single effect)
   useEffect(() => {
     scheduleReengagementRef.current = scheduleReengagement;
-  }, [scheduleReengagement]);
-  
-  useEffect(() => {
     cancelReengagementRef.current = cancelReengagement;
-  }, [cancelReengagement]);
+  }, [scheduleReengagement, cancelReengagement]);
 
   // Main effect - only depends on state values, not callbacks
   useEffect(() => {

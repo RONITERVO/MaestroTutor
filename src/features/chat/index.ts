@@ -21,7 +21,6 @@ export { default as TextScrollwheel } from './components/TextScrollwheel';
 export { 
   getChatHistoryDB,
   safeSaveChatHistoryDB,
-  readBackupForPair,
   getChatMetaDB,
   setChatMetaDB,
   getAllChatHistoriesDB,

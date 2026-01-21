@@ -506,8 +506,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     };
   }, [isAnnotating, annotationSourceUrl]);
 
-  const displayUrl = (message.imageUrl || message.llmImageUrl);
-  const displayMime = (message.imageMimeType || message.llmImageMimeType);
+  const displayUrl = (message.imageUrl || message.storageOptimizedImageUrl);
+  const displayMime = (message.imageMimeType || message.storageOptimizedImageMimeType);
   const isAttachmentAnImage = !!displayMime?.startsWith('image/');
   const isAttachmentAVideo = !!displayMime?.startsWith('video/');
   const isAttachmentAAudio = !!displayMime?.startsWith('audio/');

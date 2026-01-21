@@ -19,20 +19,37 @@ export const useSuggestionModeAutoRestart = ({
   startListening,
 }: UseSuggestionModeAutoRestartConfig) => {
   const prevIsListeningRef = useRef<boolean>(false);
+  const restartTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const wasListening = prevIsListeningRef.current;
     prevIsListeningRef.current = isListening;
 
+    // Clear any pending restart timeout when effect re-runs
+    if (restartTimeoutRef.current !== null) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
+    }
+
     if (wasListening && !isListening) {
       if (settingsRef.current.isSuggestionMode && settingsRef.current.stt.enabled) {
-        setTimeout(() => {
-          if (settingsRef.current.stt.enabled && settingsRef.current.isSuggestionMode) {
+        restartTimeoutRef.current = window.setTimeout(() => {
+          restartTimeoutRef.current = null;
+          // Re-check conditions before starting - avoid re-entrancy
+          if (!isListening && settingsRef.current.stt.enabled && settingsRef.current.isSuggestionMode) {
             startListening(settingsRef.current.stt.language);
           }
         }, 100);
       }
     }
+
+    // Cleanup on unmount or re-run
+    return () => {
+      if (restartTimeoutRef.current !== null) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
+      }
+    };
   }, [isListening, settingsRef, startListening]);
 };
 

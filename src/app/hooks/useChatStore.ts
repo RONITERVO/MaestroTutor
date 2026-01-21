@@ -10,14 +10,12 @@
 
 import { useCallback, useRef, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
-import { useMaestroStore } from '../../store';
+import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT } from '../../store';
 import { ChatMessage, TtsAudioCacheEntry, ReplySuggestion } from '../../core/types';
 import { safeSaveChatHistoryDB, setChatMetaDB } from '../../features/chat';
 import { setAppSettingsDB } from '../../features/session';
 import { isRealChatMessage } from '../../shared/utils/common';
 import type { TranslationFunction } from './useTranslations';
-
-const MAX_VISIBLE_MESSAGES_DEFAULT = 50;
 
 export interface UseChatStoreConfig {
   t: TranslationFunction;

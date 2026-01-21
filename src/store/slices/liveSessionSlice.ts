@@ -37,10 +37,12 @@ export const createLiveSessionSlice: StateCreator<
   
   // Actions
   setLiveSessionState: (state: LiveSessionState) => {
-    set({ liveSessionState: state });
-    if (state === 'connecting') {
-      set({ liveSessionError: null });
-    }
+    // Single atomic update to avoid transient inconsistent state
+    set((prev) => ({
+      ...prev,
+      liveSessionState: state,
+      liveSessionError: state === 'connecting' ? null : prev.liveSessionError
+    }));
   },
   
   setLiveSessionError: (error: string | null) => {

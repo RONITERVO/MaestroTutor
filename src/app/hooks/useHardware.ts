@@ -53,8 +53,8 @@ export interface UseHardwareReturn {
   captureSnapshot: (isForReengagement?: boolean) => Promise<{
     base64: string;
     mimeType: string;
-    llmBase64: string;
-    llmMimeType: string;
+    storageOptimizedBase64: string;
+    storageOptimizedMimeType: string;
   } | null>;
   /** Fetch available cameras */
   fetchAvailableCameras: () => Promise<void>;
@@ -256,8 +256,8 @@ export const useHardware = (config: UseHardwareConfig): UseHardwareReturn => {
   const captureSnapshot = useCallback(async (isForReengagement = false): Promise<{
     base64: string;
     mimeType: string;
-    llmBase64: string;
-    llmMimeType: string;
+    storageOptimizedBase64: string;
+    storageOptimizedMimeType: string;
   } | null> => {
     const errorSetter = isForReengagement ? setVisualContextCameraError : setSnapshotUserError;
     errorSetter(null);
@@ -334,7 +334,7 @@ export const useHardware = (config: UseHardwareConfig): UseHardwareReturn => {
 
       context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
       const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
-      return { base64: imageBase64, mimeType: 'image/jpeg', llmBase64: imageBase64, llmMimeType: 'image/jpeg' };
+      return { base64: imageBase64, mimeType: 'image/jpeg', storageOptimizedBase64: imageBase64, storageOptimizedMimeType: 'image/jpeg' };
 
     } catch (err) {
       console.error(`Error capturing image (${isForReengagement ? 're-engagement' : 'snapshot'}):`, err);

@@ -15,10 +15,14 @@ export interface ChatMessage {
   imageUrl?: string;
   imageMimeType?: string;
   imageFileUri?: string;
-  llmImageUrl?: string;
-  llmImageMimeType?: string;
-  llmFileUri?: string;
-  llmFileMimeType?: string;
+  /** Optimized (lower res) image for local storage to reduce DB size */
+  storageOptimizedImageUrl?: string;
+  /** MIME type of the storage-optimized image */
+  storageOptimizedImageMimeType?: string;
+  /** Uploaded file URI (for sending to API after reload - note: expires after 48h) */
+  uploadedFileUri?: string;
+  /** MIME type of the uploaded file */
+  uploadedFileMimeType?: string;
   timestamp: number;
   thinking?: boolean;
   isGeneratingImage?: boolean;

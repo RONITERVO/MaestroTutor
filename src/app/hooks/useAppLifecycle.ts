@@ -15,15 +15,11 @@ export const useAppLifecycle = (t: TranslationFunction) => {
     document.title = t(APP_TITLE_KEY);
   }, [t]);
 
+  // Remove splash screen immediately - user sees chat as first thing
   useEffect(() => {
     const splashScreen = document.getElementById('splash-screen');
     if (splashScreen) {
-      setTimeout(() => {
-        splashScreen.classList.add('fade-out');
-        splashScreen.addEventListener('transitionend', () => {
-          splashScreen.remove();
-        });
-      }, 200);
+      splashScreen.remove();
     }
   }, []);
 };

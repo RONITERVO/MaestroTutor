@@ -404,8 +404,9 @@ const AppShell: React.FC = () => {
     scheduleReengagement,
     cancelReengagement,
     handleUserActivity,
-    isReengagementToken: _isReengagementToken,
-    setReengagementPhase: _setReengagementPhase,
+    // Intentionally unused - destructured to prevent "unused export" warnings in hook
+    isReengagementToken: _unusedIsReengagementToken,
+    setReengagementPhase: _unusedSetReengagementPhase,
   } = useSmartReengagement({
     settings,
     isLoadingHistory,
@@ -447,9 +448,6 @@ const AppShell: React.FC = () => {
     scheduleReengagementRef.current = scheduleReengagement;
     cancelReengagementRef.current = cancelReengagement;
   }, [scheduleReengagement, cancelReengagement]);
-
-  void _isReengagementToken;
-  void _setReengagementPhase;
 
   // ============================================================
   // EFFECTS - Side Effects and Synchronization
@@ -753,7 +751,7 @@ const AppShell: React.FC = () => {
               });
               const pairId = settingsRef.current.selectedLanguagePairId;
               if (pairId) {
-                (async () => { try { await setChatMetaDB(pairId, { bookmarkMessageId: id }); } catch {} })();
+                (async () => { try { await setChatMetaDB(pairId, { bookmarkMessageId: id }); } catch (e) { console.error(`[AppShell] Failed to persist bookmark for pairId=${pairId}, messageId=${id}:`, e); } })();
               }
             }}
             bookmarkedMessageId={settingsRef.current.historyBookmarkMessageId || null}

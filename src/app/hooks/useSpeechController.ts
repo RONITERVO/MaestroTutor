@@ -93,11 +93,16 @@ export const useSpeechController = (config: UseSpeechControllerConfig): UseSpeec
   const setStoreSttError = useMaestroStore(state => state.setSttError);
   const setStoreIsSpeaking = useMaestroStore(state => state.setIsSpeaking);
   const setStoreSpeakingUtteranceText = useMaestroStore(state => state.setSpeakingUtteranceText);
+  const addUiBusyToken = useMaestroStore(state => state.addUiBusyToken);
+  const removeUiBusyToken = useMaestroStore(state => state.removeUiBusyToken);
 
   const speechIsSpeakingRef = useRef<boolean>(false);
   const recordedUtterancePendingRef = useRef<RecordedUtterance | null>(null);
   const pendingRecordedAudioMessageRef = useRef<string | null>(null);
   const sttInterruptedBySendRef = useRef<boolean>(false);
+  // Track activity tokens for unified busy state management
+  const speakingTokenRef = useRef<string | null>(null);
+  const listeningTokenRef = useRef<string | null>(null);
 
   const {
     isSpeaking, 
@@ -169,15 +174,29 @@ export const useSpeechController = (config: UseSpeechControllerConfig): UseSpeec
     }, [setMessages])
   });
 
-  // Sync speech state to store
+  // Sync speech state to store and manage activity tokens
   useEffect(() => {
     speechIsSpeakingRef.current = isSpeaking;
     setStoreIsSpeaking(isSpeaking);
-  }, [isSpeaking, setStoreIsSpeaking]);
+    // Manage speaking token for unified busy state tracking
+    if (isSpeaking && !speakingTokenRef.current) {
+      speakingTokenRef.current = addUiBusyToken(`tts-speaking:${Date.now()}`);
+    } else if (!isSpeaking && speakingTokenRef.current) {
+      removeUiBusyToken(speakingTokenRef.current);
+      speakingTokenRef.current = null;
+    }
+  }, [isSpeaking, setStoreIsSpeaking, addUiBusyToken, removeUiBusyToken]);
 
   useEffect(() => {
     setStoreIsListening(isListening);
-  }, [isListening, setStoreIsListening]);
+    // Manage listening token for unified busy state tracking
+    if (isListening && !listeningTokenRef.current) {
+      listeningTokenRef.current = addUiBusyToken(`stt-listening:${Date.now()}`);
+    } else if (!isListening && listeningTokenRef.current) {
+      removeUiBusyToken(listeningTokenRef.current);
+      listeningTokenRef.current = null;
+    }
+  }, [isListening, setStoreIsListening, addUiBusyToken, removeUiBusyToken]);
 
   useEffect(() => {
     setStoreTranscript(transcript);

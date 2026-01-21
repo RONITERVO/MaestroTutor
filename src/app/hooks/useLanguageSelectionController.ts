@@ -65,21 +65,27 @@ export const useLanguageSelectionController = ({
     setTempTargetLangCode(code);
   }, [setTempTargetLangCode]);
 
-  const handleConfirmLanguageSelection = useCallback(() => {
+  const handleConfirmLanguageSelection = useCallback(async () => {
     if (!tempNativeLangCode || !tempTargetLangCode) return;
     const newPairId = `${tempTargetLangCode}-${tempNativeLangCode}`;
     const oldPairId = settingsRef.current.selectedLanguagePairId;
-    const isSamePair = newPairId === oldPairId;
+    const isDifferent = newPairId !== oldPairId;
 
-    if (!isSamePair && oldPairId) {
-      safeSaveChatHistoryDB(oldPairId, messagesRef.current);
+    // Save current chat history before switching if changing to a different pair
+    if (isDifferent && oldPairId) {
+      try {
+        await safeSaveChatHistoryDB(oldPairId, messagesRef.current);
+      } catch (e) {
+        console.error(`[useLanguageSelectionController] Failed to save chat history for pairId=${oldPairId}:`, e);
+        // Continue with language switch even if save fails - user experience priority
+      }
     }
 
     if (languagePairs.some(p => p.id === newPairId)) {
       handleSettingsChange('selectedLanguagePairId', newPairId);
     }
     setIsLanguageSelectionOpen(false);
-  }, [tempNativeLangCode, tempTargetLangCode, languagePairs, handleSettingsChange, settingsRef, messagesRef, setIsLanguageSelectionOpen]);
+  }, [tempNativeLangCode, tempTargetLangCode, languagePairs, handleSettingsChange, settingsRef, messagesRef, setIsLanguageSelectionOpen, safeSaveChatHistoryDB]);
 
   useEffect(() => {
     if (isSettingsLoaded && !settings.selectedLanguagePairId) {

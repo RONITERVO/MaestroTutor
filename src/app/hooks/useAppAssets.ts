@@ -31,9 +31,15 @@ export const useAppAssets = ({
       try {
         const a = await getMaestroProfileImageDB();
         if (a && (a.dataUrl || a.uri)) {
-          const nextMime = (a?.mimeType && typeof a.mimeType === 'string')
-            ? a.mimeType
-            : (a?.dataUrl?.startsWith('data:image/') ? 'image/svg+xml' : null);
+          // Parse MIME from mimeType field or extract from dataUrl
+          let nextMime: string | null = null;
+          if (a?.mimeType && typeof a.mimeType === 'string') {
+            nextMime = a.mimeType;
+          } else if (a?.dataUrl) {
+            // Extract MIME from data URL: data:<mime>;base64,... or data:<mime>,...
+            const mimeMatch = a.dataUrl.match(/^data:([^;,]+)[;,]/);
+            nextMime = mimeMatch ? mimeMatch[1] : null;
+          }
           maestroAvatarUriRef.current = a.uri || null;
           maestroAvatarMimeTypeRef.current = nextMime;
           setMaestroAvatar(a.dataUrl || a.uri || null, nextMime);
@@ -83,9 +89,8 @@ export const useAppAssets = ({
         const mimeType = event?.detail?.mimeType as string | undefined;
         const dataUrl = event?.detail?.dataUrl as string | undefined;
         maestroAvatarUriRef.current = uri || null;
-        if (mimeType && typeof mimeType === 'string') {
-          maestroAvatarMimeTypeRef.current = mimeType;
-        }
+        // Explicitly set to the provided mimeType or null to avoid stale values
+        maestroAvatarMimeTypeRef.current = (mimeType && typeof mimeType === 'string') ? mimeType : null;
         setMaestroAvatar(dataUrl || uri || null, mimeType || null);
       } catch { /* ignore */ }
     };

@@ -3,7 +3,7 @@ import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { CameraDevice } from '../../../core/types';
 import { LanguageDefinition } from '../../../core/config/languages';
-import { LOCAL_STORAGE_SETTINGS_KEY, IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
+import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
 import { LiveSessionState, SttLanguageSelector } from '../../speech';
 import { 
   IconSend, IconPaperclip, IconMicrophone, IconXMark, IconCamera, 
@@ -856,18 +856,6 @@ const InputArea: React.FC<InputAreaProps> = ({
                 req.onblocked = () => { resolve(); };
             } catch { resolve(); }
             setTimeout(() => { if (!settled) resolve(); }, 1500);
-        });
-    } catch {}
-    try {
-        const keys: string[] = [];
-        for (let i = 0; i < window.localStorage.length; i++) {
-            const k = window.localStorage.key(i);
-            if (k) keys.push(k);
-        }
-        keys.forEach(k => {
-            if (k.startsWith('chatBackup:') || k === LOCAL_STORAGE_SETTINGS_KEY) {
-                try { window.localStorage.removeItem(k); } catch {}
-            }
         });
     } catch {}
   }, []);
