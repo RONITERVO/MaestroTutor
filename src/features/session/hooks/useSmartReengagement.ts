@@ -1,6 +1,5 @@
 
 import { useRef, useEffect, useCallback } from 'react';
-import type { MutableRefObject } from 'react';
 import { AppSettings } from '../../../core/types';
 import { useMaestroStore } from '../../../store';
 
@@ -8,31 +7,22 @@ interface UseSmartReengagementProps {
   settings: AppSettings;
   isLoadingHistory: boolean;
   selectedLanguagePairId: string | null;
-  isSending: boolean;
-  isSpeaking: boolean;
-  // Optional refs for real-time state checking (used when values might be stale)
-  isSendingRef?: MutableRefObject<boolean>;
-  isSpeakingRef?: MutableRefObject<boolean>;
+  activityTokens: Set<string>; // Unified token set replaces multiple boolean props
   isVisualContextActive: boolean;
-  externalUiTaskCount: number;
   triggerReengagementSequence: () => Promise<void>;
-  addUiBusyToken: (token: string) => string;
-  removeUiBusyToken: (token?: string | null) => void;
+  addActivityToken: (category: 'tts' | 'stt' | 'gen' | 'live' | 'ui', subtype?: string) => string;
+  removeActivityToken: (token: string) => void;
 }
 
 export const useSmartReengagement = ({
   settings,
   isLoadingHistory,
   selectedLanguagePairId,
-  isSending,
-  isSpeaking,
-  isSendingRef,
-  isSpeakingRef,
+  activityTokens,
   isVisualContextActive,
-  externalUiTaskCount,
   triggerReengagementSequence,
-  addUiBusyToken,
-  removeUiBusyToken
+  addActivityToken,
+  removeActivityToken
 }: UseSmartReengagementProps) => {
   const reengagementPhase = useMaestroStore(state => state.reengagementPhase);
   const setReengagementPhase = useMaestroStore(state => state.setReengagementPhase);
@@ -56,32 +46,33 @@ export const useSmartReengagement = ({
   
   // Refs for stable access to props
   const settingsRef = useRef(settings);
-  const addUiBusyTokenRef = useRef(addUiBusyToken);
-  const removeUiBusyTokenRef = useRef(removeUiBusyToken);
+  const addActivityTokenRef = useRef(addActivityToken);
+  const removeActivityTokenRef = useRef(removeActivityToken);
 
   // Keep refs updated
   useEffect(() => { triggerReengagementSequenceRef.current = triggerReengagementSequence; }, [triggerReengagementSequence]);
   useEffect(() => { settingsRef.current = settings; }, [settings]);
-  useEffect(() => { addUiBusyTokenRef.current = addUiBusyToken; }, [addUiBusyToken]);
-  useEffect(() => { removeUiBusyTokenRef.current = removeUiBusyToken; }, [removeUiBusyToken]);
+  useEffect(() => { addActivityTokenRef.current = addActivityToken; }, [addActivityToken]);
+  useEffect(() => { removeActivityTokenRef.current = removeActivityToken; }, [removeActivityToken]);
 
   const isReengagementToken = (token: string | null | undefined): boolean => {
     if (!token || typeof token !== 'string') return false;
-    return token.startsWith('reengage-');
+    return token.startsWith('reengage-') || token.startsWith('ui:reengage');
   };
 
   // canScheduleReengagement - checks if reengagement can be scheduled
-  // Uses refs for state values that might be stale
+  // Uses unified activity tokens - any non-reengagement token blocks scheduling
   const canScheduleReengagement = useCallback((): boolean => {
     if (isLoadingHistory) return false;
     if (!selectedLanguagePairId) return false;
-    // Use refs if available for real-time values
-    if (isSendingRef?.current ?? isSending) return false;
-    if (isSpeakingRef?.current ?? isSpeaking) return false;
     if (isVisualContextActive) return false;
-    if (externalUiTaskCount > 0) return false;
-    return true;
-  }, [isLoadingHistory, selectedLanguagePairId, isSending, isSending, isSpeaking, isSendingRef, isSpeakingRef, isVisualContextActive, externalUiTaskCount]);
+    
+    // Simple check: any non-reengagement token blocks scheduling
+    const hasBlockingActivity = [...activityTokens].some(
+      t => !t.startsWith('ui:reengage') && !t.startsWith('reengage-')
+    );
+    return !hasBlockingActivity;
+  }, [isLoadingHistory, selectedLanguagePairId, isVisualContextActive, activityTokens]);
 
   // Keep canScheduleReengagement ref updated
   useEffect(() => { canScheduleReengagementRef.current = canScheduleReengagement; }, [canScheduleReengagement]);
@@ -100,11 +91,11 @@ export const useSmartReengagement = ({
     }
     const tokens = reengagementTokensRef.current;
     if (tokens.waitToken) {
-      removeUiBusyTokenRef.current(tokens.waitToken);
+      removeActivityTokenRef.current(tokens.waitToken);
       tokens.waitToken = null;
     }
     if (tokens.countdownToken) {
-      removeUiBusyTokenRef.current(tokens.countdownToken);
+      removeActivityTokenRef.current(tokens.countdownToken);
       tokens.countdownToken = null;
     }
     reengagementDeadlineRef.current = null;
@@ -133,15 +124,15 @@ export const useSmartReengagement = ({
     }
     const tokens = reengagementTokensRef.current;
     if (tokens.countdownToken) {
-      removeUiBusyTokenRef.current(tokens.countdownToken);
+      removeActivityTokenRef.current(tokens.countdownToken);
       tokens.countdownToken = null;
     }
     if (tokens.waitToken) {
-      removeUiBusyTokenRef.current(tokens.waitToken);
+      removeActivityTokenRef.current(tokens.waitToken);
       tokens.waitToken = null;
     }
     const clampedDelay = Math.max(0, Math.floor(Number.isFinite(delayMs) ? delayMs : 0));
-    const token = addUiBusyTokenRef.current(`reengage-wait:${reason}:${Date.now()}`);
+    const token = addActivityTokenRef.current('ui', `reengage-wait:${reason}`);
     tokens.waitToken = token;
     
     // Split the wait time into 'waiting' (Resting) and 'watching' (Observing) if long enough
@@ -212,18 +203,18 @@ export const useSmartReengagement = ({
     }
     const tokens = reengagementTokensRef.current;
     if (tokens.waitToken) {
-      removeUiBusyTokenRef.current(tokens.waitToken);
+      removeActivityTokenRef.current(tokens.waitToken);
       tokens.waitToken = null;
     }
     if (tokens.countdownToken) {
-      removeUiBusyTokenRef.current(tokens.countdownToken);
+      removeActivityTokenRef.current(tokens.countdownToken);
       tokens.countdownToken = null;
     }
     if (timers.countdownTimer) {
       clearTimeout(timers.countdownTimer);
       timers.countdownTimer = null;
     }
-    const token = addUiBusyTokenRef.current(`reengage-countdown:${reason}:${Date.now()}`);
+    const token = addActivityTokenRef.current('ui', `reengage-countdown:${reason}`);
     tokens.countdownToken = token;
     reengagementDeadlineRef.current = null;
     setReengagementDeadline(null);

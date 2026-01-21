@@ -4,22 +4,29 @@
 /**
  * useUiBusyState - Hook bridge to Zustand store for UI busy state
  * 
- * This hook provides backward-compatible access to UI busy state.
- * All state is now managed by the uiSlice in the Zustand store.
+ * This hook provides access to UI busy state via the unified activity token system.
+ * All state is managed by the uiSlice in the Zustand store.
  */
 
 import { useCallback, useRef, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useMaestroStore } from '../../store';
+import type { ActivityTokenCategory } from '../../store/slices/uiSlice';
 
 export interface UseUiBusyStateReturn {
-  /** Array of unique task tags currently active */
+  /** The raw Set of activity tokens (unified state) */
+  activityTokens: Set<string>;
+  /** Array of unique task tags currently active (legacy compatibility) */
   uiBusyTaskTags: string[];
   /** Count of non-reengagement UI tasks */
   externalUiTaskCount: number;
-  /** Add a busy token and return it for later removal */
+  /** Add an activity token with category and optional subtype. Returns the token for removal. */
+  addActivityToken: (category: ActivityTokenCategory, subtype?: string) => string;
+  /** Remove a specific activity token */
+  removeActivityToken: (token: string) => void;
+  /** Legacy: Add a busy token and return it for later removal */
   addUiBusyToken: (token: string) => string;
-  /** Remove a specific busy token */
+  /** Legacy: Remove a specific busy token */
   removeUiBusyToken: (token?: string | null) => void;
   /** Clear all busy tokens */
   clearUiBusyTokens: () => void;
@@ -36,15 +43,17 @@ export interface UseUiBusyStateReturn {
  * Now backed by Zustand store - this is a thin wrapper for backward compatibility.
  */
 export const useUiBusyState = (): UseUiBusyStateReturn => {
-  // Select state from store
-  const { uiBusyTaskTags: uiBusyTaskTagsSet, externalUiTaskCount } = useMaestroStore(
+  // Select state from store - use activityTokens (the new unified state)
+  const { activityTokens, externalUiTaskCount } = useMaestroStore(
     useShallow(state => ({
-      uiBusyTaskTags: state.uiBusyTaskTags,
+      activityTokens: state.activityTokens,
       externalUiTaskCount: state.externalUiTaskCount,
     }))
   );
 
   // Get actions from store (stable references)
+  const storeAddActivityToken = useMaestroStore(state => state.addActivityToken);
+  const storeRemoveActivityToken = useMaestroStore(state => state.removeActivityToken);
   const storeAddUiBusyToken = useMaestroStore(state => state.addUiBusyToken);
   const storeRemoveUiBusyToken = useMaestroStore(state => state.removeUiBusyToken);
 
@@ -58,12 +67,42 @@ export const useUiBusyState = (): UseUiBusyStateReturn => {
   }, [externalUiTaskCount]);
 
   // Convert Set to array of unique tags for backward compatibility
-  const uiBusyTaskTags = Array.from(uiBusyTaskTagsSet).map(tok => {
-    const tag = (tok as string).split(':')[0];
-    return tag;
+  // Maps new token format to legacy tag names for UI components
+  const uiBusyTaskTags = Array.from(activityTokens).map(tok => {
+    const token = tok as string;
+    // Map new token format to legacy tag names
+    if (token === 'ui:hold' || token.startsWith('user-hold')) {
+      return 'user-hold';
+    } else if (token.startsWith('live:')) {
+      return 'live-session';
+    } else if (token.startsWith('tts:')) {
+      return 'tts';
+    } else if (token.startsWith('stt:')) {
+      return 'stt';
+    } else if (token.startsWith('gen:')) {
+      return 'gen';
+    } else if (token.startsWith('ui:reengage') || token.startsWith('reengage-')) {
+      return 'reengage';
+    } else {
+      // For legacy tokens and ui:* tokens, use the subtype or full token
+      const parts = token.split(':');
+      if (parts[0] === 'ui' && parts[1]) {
+        return parts[1]; // e.g., 'ui:save-popup' → 'save-popup'
+      }
+      return parts[0]; // Legacy format: 'video-play:123' → 'video-play'
+    }
   }).filter((tag, idx, arr) => arr.indexOf(tag) === idx);
 
-  // Wrapper for addUiBusyToken that uses the tag directly as token prefix
+  // New unified activity token API
+  const addActivityToken = useCallback((category: ActivityTokenCategory, subtype?: string): string => {
+    return storeAddActivityToken(category, subtype);
+  }, [storeAddActivityToken]);
+
+  const removeActivityToken = useCallback((token: string) => {
+    storeRemoveActivityToken(token);
+  }, [storeRemoveActivityToken]);
+
+  // Legacy: Wrapper for addUiBusyToken that uses the tag directly as token prefix
   const addUiBusyToken = useCallback((tag: string): string => {
     // The store generates a unique token with timestamp
     return storeAddUiBusyToken(tag);
@@ -77,29 +116,32 @@ export const useUiBusyState = (): UseUiBusyStateReturn => {
   const clearUiBusyTokens = useCallback(() => {
     // Clear all tokens by getting current set and removing each
     const state = useMaestroStore.getState();
-    state.uiBusyTaskTags.forEach(token => {
-      storeRemoveUiBusyToken(token);
+    state.activityTokens.forEach(token => {
+      storeRemoveActivityToken(token);
     });
-  }, [storeRemoveUiBusyToken]);
+  }, [storeRemoveActivityToken]);
 
   const handleToggleHold = useCallback(() => {
     if (holdUiTokenRef.current) {
-      removeUiBusyToken(holdUiTokenRef.current);
+      removeActivityToken(holdUiTokenRef.current);
       holdUiTokenRef.current = null;
     } else {
-      const token = addUiBusyToken('user-hold');
+      const token = addActivityToken('ui', 'hold');
       holdUiTokenRef.current = token;
     }
-  }, [addUiBusyToken, removeUiBusyToken]);
+  }, [addActivityToken, removeActivityToken]);
 
   const isReengagementToken = useCallback((token: string | null | undefined): boolean => {
     if (!token || typeof token !== 'string') return false;
-    return token.startsWith('reengage-');
+    return token.startsWith('reengage-') || token.startsWith('ui:reengage');
   }, []);
 
   return {
+    activityTokens,
     uiBusyTaskTags,
     externalUiTaskCount,
+    addActivityToken,
+    removeActivityToken,
     addUiBusyToken,
     removeUiBusyToken,
     clearUiBusyTokens,

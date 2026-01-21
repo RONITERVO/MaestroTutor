@@ -50,6 +50,7 @@ import { getShortLangCodeForPrompt } from '../../shared/utils/languageUtils';
 import type { TranslationFunction } from './useTranslations';
 import { useMaestroStore } from '../../store';
 import { useShallow } from 'zustand/shallow';
+import { selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion } from '../../store/slices/uiSlice';
 
 const AUX_TEXT_MODEL_ID = 'gemini-3-flash-preview';
 
@@ -102,8 +103,6 @@ export interface UseMaestroControllerConfig {
   
   // Reply suggestions (managed by useChatStore, passed through)
   setReplySuggestions: (suggestions: ReplySuggestion[] | ((prev: ReplySuggestion[]) => ReplySuggestion[])) => void;
-  setIsLoadingSuggestions: (value: boolean | ((prev: boolean) => boolean)) => void;
-  isLoadingSuggestionsRef: React.MutableRefObject<boolean>;
   
   // Toggle suggestion mode callback - using ref to allow late binding
   handleToggleSuggestionModeRef?: React.MutableRefObject<((forceState?: boolean) => void) | undefined>;
@@ -192,8 +191,6 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     currentSystemPromptText,
     currentReplySuggestionsPromptText,
     setReplySuggestions,
-    setIsLoadingSuggestions,
-    isLoadingSuggestionsRef,
     handleToggleSuggestionModeRef,
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
@@ -201,35 +198,36 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
   } = config;
 
   const {
-    isSending,
     sendPrep,
     latestGroundingChunks,
     maestroActivityStage,
-    isCreatingSuggestion,
     imageLoadDurations,
     attachedImageBase64,
     attachedImageMimeType,
   } = useMaestroStore(useShallow(state => ({
-    isSending: state.isSending,
     sendPrep: state.sendPrep,
     latestGroundingChunks: state.latestGroundingChunks,
     maestroActivityStage: state.maestroActivityStage,
-    isCreatingSuggestion: state.isCreatingSuggestion,
     imageLoadDurations: state.imageLoadDurations,
     attachedImageBase64: state.attachedImageBase64,
     attachedImageMimeType: state.attachedImageMimeType,
   })));
 
-  const setIsSending = useMaestroStore(state => state.setIsSending);
+  // Derive activity states from tokens using selectors
+  const isSending = useMaestroStore(selectIsSending);
+  // Note: isSpeaking derived from tokens is available via speechIsSpeakingRef passed from props
+  const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
+  const isCreatingSuggestion = useMaestroStore(selectIsCreatingSuggestion);
+
   const setSendPrep = useMaestroStore(state => state.setSendPrep);
   const setLatestGroundingChunks = useMaestroStore(state => state.setLatestGroundingChunks);
-  const setIsCreatingSuggestion = useMaestroStore(state => state.setIsCreatingSuggestion);
   const addImageLoadDuration = useMaestroStore(state => state.addImageLoadDuration);
   const setAttachedImage = useMaestroStore(state => state.setAttachedImage);
   const setMaestroActivityStage = useMaestroStore(state => state.setMaestroActivityStage);
+  
   // Token-based activity tracking for unified busy state management
-  const addUiBusyToken = useMaestroStore(state => state.addUiBusyToken);
-  const removeUiBusyToken = useMaestroStore(state => state.removeUiBusyToken);
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
 
   // Refs
   const isSendingRef = useRef(false);
@@ -239,8 +237,10 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
   const sendPrepRef = useRef<{ active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null>(null);
   const isMountedRef = useRef(true);
   const sendingTokenRef = useRef<string | null>(null);
+  const suggestionsTokenRef = useRef<string | null>(null);
+  const createSuggestionTokenRef = useRef<string | null>(null);
 
-  // Sync refs with state
+  // Sync refs with state (derive isSending from tokens)
   useEffect(() => { isSendingRef.current = isSending; }, [isSending]);
   useEffect(() => { sendPrepRef.current = sendPrep; }, [sendPrep]);
   useEffect(() => () => { isMountedRef.current = false; }, []);
@@ -439,15 +439,19 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     return 15;
   }, [imageLoadDurations]);
 
-  // Reply suggestions
+  // Reply suggestions - token-based loading state management
   const fetchAndSetReplySuggestions = useCallback(async (
     assistantMessageId: string, 
     lastTutorMessage: string, 
     history: ChatMessage[]
   ) => {
-    if (isLoadingSuggestionsRef.current) {
+    // Check if already loading using token state
+    if (isLoadingSuggestions) {
       setReplySuggestions([]);
-      setIsLoadingSuggestions(false);
+      if (suggestionsTokenRef.current) {
+        removeActivityToken(suggestionsTokenRef.current);
+        suggestionsTokenRef.current = null;
+      }
       return;
     }
     if (!lastTutorMessage.trim() || !selectedLanguagePairRef.current) {
@@ -463,13 +467,17 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         const target = allMsgs[targetIdx];
         if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
           setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
-          setIsLoadingSuggestions(false);
+          if (suggestionsTokenRef.current) {
+            removeActivityToken(suggestionsTokenRef.current);
+            suggestionsTokenRef.current = null;
+          }
           return;
         }
       }
     }
 
-    setIsLoadingSuggestions(true);
+    // Add token for loading suggestions
+    suggestionsTokenRef.current = addActivityToken('gen', 'suggestions');
     setReplySuggestions([]);
 
     const historyForPrompt = getHistoryRespectingBookmark(history)
@@ -589,7 +597,11 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       }
     }
 
-    setIsLoadingSuggestions(false);
+    // Remove suggestions loading token
+    if (suggestionsTokenRef.current) {
+      removeActivityToken(suggestionsTokenRef.current);
+      suggestionsTokenRef.current = null;
+    }
   }, [
     currentReplySuggestionsPromptText, 
     handleReengagementThresholdChange, 
@@ -597,7 +609,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     messagesRef,
     selectedLanguagePairRef,
     settingsRef,
-    setIsLoadingSuggestions,
+    isLoadingSuggestions,
+    addActivityToken,
+    removeActivityToken,
     setReplySuggestions,
     updateMessage
   ]);
@@ -606,7 +620,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     const sanitized = stripBracketedContent(textToTranslate);
     if (!sanitized || !selectedLanguagePairRef.current) return;
 
-    setIsCreatingSuggestion(true);
+    // Add token for creating suggestion
+    createSuggestionTokenRef.current = addActivityToken('gen', 'create-suggestion');
 
     const sttLang = settingsRef.current.stt.language;
     const sttLangCode = sttLang.substring(0, 2);
@@ -661,13 +676,17 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       console.error("Failed to create suggestion via translation:", error);
       addMessage({ role: 'error', text: t('error.translationFailed') });
     } finally {
-      setIsCreatingSuggestion(false);
+      // Remove creating suggestion token
+      if (createSuggestionTokenRef.current) {
+        removeActivityToken(createSuggestionTokenRef.current);
+        createSuggestionTokenRef.current = null;
+      }
       // Exit suggestion mode after creating suggestion (matches original behavior)
       if (handleToggleSuggestionModeRef?.current) {
         handleToggleSuggestionModeRef.current(false);
       }
     }
-  }, [addMessage, t, stripBracketedContent, selectedLanguagePairRef, settingsRef, lastFetchedSuggestionsForRef, messagesRef, setMessages, setReplySuggestions, handleToggleSuggestionModeRef]);
+  }, [addMessage, t, stripBracketedContent, selectedLanguagePairRef, settingsRef, lastFetchedSuggestionsForRef, messagesRef, setMessages, setReplySuggestions, handleToggleSuggestionModeRef, addActivityToken, removeActivityToken]);
 
   const handleSuggestionInteraction = useCallback((suggestion: ReplySuggestion, langType: 'target' | 'native') => {
     if (!selectedLanguagePairRef.current) return;
@@ -1106,9 +1125,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       return false;
     }
 
-    setIsSending(true);
-    // Add sending token for unified busy state tracking
-    sendingTokenRef.current = addUiBusyToken(`chat-sending:${Date.now()}`);
+    // Add sending token for unified busy state tracking (replaces setIsSending(true))
+    sendingTokenRef.current = addActivityToken('gen', 'response');
     if (settingsRef.current.stt.enabled && isListening) {
       try { stopListening(); } catch { /* ignore */ }
       sttInterruptedBySendRef.current = true;
@@ -1118,7 +1136,11 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     }
     sendWithFileUploadInProgressRef.current = true;
     setReplySuggestions([]);
-    setIsLoadingSuggestions(false);
+    // Clear any lingering suggestions token
+    if (suggestionsTokenRef.current) {
+      removeActivityToken(suggestionsTokenRef.current);
+      suggestionsTokenRef.current = null;
+    }
     lastFetchedSuggestionsForRef.current = null;
 
     if (messageType === 'user') {
@@ -1356,7 +1378,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       // Early suggestion fetch
       try {
         const textForSuggestionsEarly = finalMessageUpdates.rawAssistantResponse || (finalMessageUpdates.translations?.find(tr => tr.spanish)?.spanish) || "";
-        if (!isLoadingSuggestionsRef.current && textForSuggestionsEarly.trim()) {
+        // Check if already loading suggestions via token
+        if (!suggestionsTokenRef.current && textForSuggestionsEarly.trim()) {
           const historyWithFinalAssistant = messagesRef.current.map(m =>
             m.id === thinkingMessageId ? ({ ...m, ...finalMessageUpdates }) : m
           );
@@ -1392,10 +1415,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
       try {
         sendWithFileUploadInProgressRef.current = false;
       } catch { /* ignore */ }
-      setIsSending(false);
-      // Remove sending token
+      // Remove sending token (replaces setIsSending(false))
       if (sendingTokenRef.current) {
-        removeUiBusyToken(sendingTokenRef.current);
+        removeActivityToken(sendingTokenRef.current);
         sendingTokenRef.current = null;
       }
       setSendPrep(null);
@@ -1416,7 +1438,7 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         const finalAssistantMessage = messagesRef.current.find(m => m.id === thinkingMessageId);
         if (finalAssistantMessage && finalAssistantMessage.role === 'assistant' &&
           (finalAssistantMessage.rawAssistantResponse || (finalAssistantMessage.translations && finalAssistantMessage.translations.length > 0)) &&
-          !isLoadingSuggestionsRef.current &&
+          !suggestionsTokenRef.current &&
           finalAssistantMessage.id !== lastFetchedSuggestionsForRef.current) {
           const textForSuggestions = finalAssistantMessage.rawAssistantResponse ||
             (finalAssistantMessage.translations?.find(tr => tr.spanish)?.spanish) || "";
@@ -1443,10 +1465,9 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         rawAssistantResponse: undefined, 
         translations: undefined,
       });
-      setIsSending(false);
-      // Remove sending token on error
+      // Remove sending token on error (replaces setIsSending(false))
       if (sendingTokenRef.current) {
-        removeUiBusyToken(sendingTokenRef.current);
+        removeActivityToken(sendingTokenRef.current);
         sendingTokenRef.current = null;
       }
       setSendPrep(null);
@@ -1469,7 +1490,11 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
         setAttachedImage(null, null);
       }
       setReplySuggestions([]);
-      setIsLoadingSuggestions(false);
+      // Clear any suggestions token on error
+      if (suggestionsTokenRef.current) {
+        removeActivityToken(suggestionsTokenRef.current);
+        suggestionsTokenRef.current = null;
+      }
       if (isMountedRef.current) {
         speechIsSpeakingRef.current = false;
       }
@@ -1509,8 +1534,8 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     attachedImageBase64,
     attachedImageMimeType,
     setAttachedImage,
-    setIsLoadingSuggestions,
-    setIsSending,
+    addActivityToken,
+    removeActivityToken,
     setLatestGroundingChunks,
     setReplySuggestions,
     setSendPrep,

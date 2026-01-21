@@ -15,6 +15,7 @@ import { ChatMessage, TtsAudioCacheEntry, ReplySuggestion } from '../../core/typ
 import { safeSaveChatHistoryDB, setChatMetaDB } from '../../features/chat';
 import { setAppSettingsDB } from '../../features/session';
 import { isRealChatMessage } from '../../shared/utils/common';
+import { selectIsLoadingSuggestions } from '../../store/slices/uiSlice';
 import type { TranslationFunction } from './useTranslations';
 
 export interface UseChatStoreConfig {
@@ -56,8 +57,8 @@ export interface UseChatStoreReturn {
   replySuggestions: ReplySuggestion[];
   setReplySuggestions: (suggestions: ReplySuggestion[] | ((prev: ReplySuggestion[]) => ReplySuggestion[])) => void;
   replySuggestionsRef: React.MutableRefObject<ReplySuggestion[]>;
+  /** Derived from activity tokens via selector */
   isLoadingSuggestions: boolean;
-  setIsLoadingSuggestions: (value: boolean | ((prev: boolean) => boolean)) => void;
   isLoadingSuggestionsRef: React.MutableRefObject<boolean>;
 }
 
@@ -73,15 +74,16 @@ export const useChatStore = (config: UseChatStoreConfig): UseChatStoreReturn => 
     messages,
     isLoadingHistory,
     replySuggestions,
-    isLoadingSuggestions,
     lastFetchedSuggestionsFor,
   } = useMaestroStore(useShallow(state => ({
     messages: state.messages,
     isLoadingHistory: state.isLoadingHistory,
     replySuggestions: state.replySuggestions,
-    isLoadingSuggestions: state.isLoadingSuggestions,
     lastFetchedSuggestionsFor: state.lastFetchedSuggestionsFor,
   })));
+
+  // Derive isLoadingSuggestions from activity tokens via selector
+  const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
 
   // Get actions from store (stable references)
   const loadHistoryForPair = useMaestroStore(state => state.loadHistoryForPair);
@@ -90,7 +92,6 @@ export const useChatStore = (config: UseChatStoreConfig): UseChatStoreReturn => 
   const deleteMessage = useMaestroStore(state => state.deleteMessage);
   const setMessages = useMaestroStore(state => state.setMessages);
   const setReplySuggestions = useMaestroStore(state => state.setReplySuggestions);
-  const setIsLoadingSuggestions = useMaestroStore(state => state.setIsLoadingSuggestions);
   const upsertMessageTtsCache = useMaestroStore(state => state.upsertMessageTtsCache);
   const upsertSuggestionTtsCache = useMaestroStore(state => state.upsertSuggestionTtsCache);
   const trimHistoryByBookmark = useMaestroStore(state => state.trimHistoryByBookmark);
@@ -223,7 +224,6 @@ export const useChatStore = (config: UseChatStoreConfig): UseChatStoreReturn => 
     setReplySuggestions,
     replySuggestionsRef,
     isLoadingSuggestions,
-    setIsLoadingSuggestions,
     isLoadingSuggestionsRef,
   };
 };

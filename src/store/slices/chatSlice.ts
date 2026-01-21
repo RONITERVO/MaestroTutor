@@ -6,9 +6,12 @@
  * Responsibilities:
  * - Messages array and CRUD operations
  * - Reply suggestions state
- * - Loading states for history and suggestions
+ * - Loading states for history (suggestions tracked via tokens)
  * - TTS cache management for messages
  * - History persistence via chatHistory services
+ * 
+ * Note: Activity state (isSending, isLoadingSuggestions, isCreatingSuggestion) is now
+ * managed via activity tokens in uiSlice. Use selectIsSending and related selectors.
  */
 
 import type { StateCreator } from 'zustand';
@@ -29,11 +32,8 @@ export interface ChatSlice {
   messages: ChatMessage[];
   isLoadingHistory: boolean;
   replySuggestions: ReplySuggestion[];
-  isLoadingSuggestions: boolean;
   lastFetchedSuggestionsFor: string | null;
-  isSending: boolean;
   sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
-  isCreatingSuggestion: boolean;
   latestGroundingChunks: GroundingChunk[] | undefined;
   imageLoadDurations: number[];
   attachedImageBase64: string | null;
@@ -46,11 +46,8 @@ export interface ChatSlice {
   deleteMessage: (messageId: string) => void;
   setMessages: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
   setReplySuggestions: (suggestions: ReplySuggestion[] | ((prev: ReplySuggestion[]) => ReplySuggestion[])) => void;
-  setIsLoadingSuggestions: (value: boolean | ((prev: boolean) => boolean)) => void;
   setLastFetchedSuggestionsFor: (messageId: string | null) => void;
-  setIsSending: (value: boolean) => void;
   setSendPrep: (prep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null | ((prev: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null) => { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null)) => void;
-  setIsCreatingSuggestion: (value: boolean) => void;
   setLatestGroundingChunks: (chunks: GroundingChunk[] | undefined) => void;
   addImageLoadDuration: (duration: number) => void;
   setAttachedImage: (base64: string | null, mimeType: string | null) => void;
@@ -74,11 +71,8 @@ export const createChatSlice: StateCreator<
   messages: [],
   isLoadingHistory: true,
   replySuggestions: [],
-  isLoadingSuggestions: false,
   lastFetchedSuggestionsFor: null,
-  isSending: false,
   sendPrep: null,
-  isCreatingSuggestion: false,
   latestGroundingChunks: undefined,
   imageLoadDurations: [],
   attachedImageBase64: null,
@@ -170,28 +164,14 @@ export const createChatSlice: StateCreator<
     }));
   },
   
-  setIsLoadingSuggestions: (value: boolean | ((prev: boolean) => boolean)) => {
-    set(state => ({
-      isLoadingSuggestions: typeof value === 'function' ? value(state.isLoadingSuggestions) : value
-    }));
-  },
-  
   setLastFetchedSuggestionsFor: (messageId: string | null) => {
     set({ lastFetchedSuggestionsFor: messageId });
-  },
-  
-  setIsSending: (value: boolean) => {
-    set({ isSending: value });
   },
   
   setSendPrep: (prep) => {
     set(state => ({
       sendPrep: typeof prep === 'function' ? prep(state.sendPrep) : prep
     }));
-  },
-  
-  setIsCreatingSuggestion: (value: boolean) => {
-    set({ isCreatingSuggestion: value });
   },
   
   setLatestGroundingChunks: (chunks) => {

@@ -6,15 +6,25 @@
  * Responsibilities:
  * - Language selector state (open, temp selections)
  * - Shell state (topbar open)
- * - Busy state tracking (UI task tokens)
+ * - Unified Activity Token State (replaces scattered boolean flags)
  * - Maestro activity stage
  * - Loading assets (gifs, avatar)
  * - Transition states
+ * 
+ * Activity Token System:
+ * Tokens use format `{category}:{uniqueId}` where categories are:
+ * - `tts` (speaking), `stt` (listening), `gen` (generation), `live` (live session), `ui` (user actions/popups)
+ * All busy-state checks derive from token presence, eliminating race conditions.
  */
 
 import type { StateCreator } from 'zustand';
 import type { MaestroActivityStage } from '../../core/types';
 import type { MaestroStore } from '../maestroStore';
+
+/**
+ * Activity token categories for the unified busy state system
+ */
+export type ActivityTokenCategory = 'tts' | 'stt' | 'gen' | 'live' | 'ui';
 
 export interface UiSlice {
   // Language Selector
@@ -26,8 +36,13 @@ export interface UiSlice {
   // Shell
   isTopbarOpen: boolean;
   
-  // Busy State
-  uiBusyTaskTags: Set<string>;
+  // Unified Activity Token State
+  // Replaces scattered boolean flags (isSpeaking, isListening, isSending) with a single Set
+  // Token format: `{category}:{uniqueId}` - e.g., 'tts:speak-1234567', 'stt:listen-9876543'
+  activityTokens: Set<string>;
+  
+  // Computed count: tokens that are NOT reengagement tokens (used to block reengagement)
+  // This is kept as a derived value for backwards compatibility
   externalUiTaskCount: number;
   
   // Activity
@@ -49,7 +64,24 @@ export interface UiSlice {
   setIsTopbarOpen: (value: boolean) => void;
   toggleTopbar: () => void;
   
-  // Actions - Busy State
+  // Actions - Unified Activity Tokens
+  /**
+   * Add an activity token. Returns the full token string for later removal.
+   * Token format: `{category}:{subtype}` or `{category}:{timestamp}` if no subtype provided
+   */
+  addActivityToken: (category: ActivityTokenCategory, subtype?: string) => string;
+  
+  /**
+   * Remove a specific activity token by its full string
+   */
+  removeActivityToken: (token: string) => void;
+  
+  /**
+   * Check if any token of a given category exists
+   */
+  hasTokenCategory: (category: string) => boolean;
+  
+  // Legacy compatibility - maps to addActivityToken/removeActivityToken internally
   addUiBusyToken: (tag: string) => string;
   removeUiBusyToken: (tag?: string | null) => void;
   setExternalUiTaskCount: (count: number) => void;
@@ -63,6 +95,78 @@ export interface UiSlice {
   setTransitioningImageId: (id: string | null) => void;
   setMaestroAvatar: (uri: string | null, mimeType: string | null) => void;
 }
+
+// ============================================================
+// DERIVED SELECTORS - Computed from activity tokens
+// These replace the old boolean flags in speechSlice and chatSlice
+// ============================================================
+
+/**
+ * Check if any TTS (speaking) activity is happening
+ */
+export const selectIsSpeaking = (state: { activityTokens: Set<string> }): boolean =>
+  [...state.activityTokens].some(t => t.startsWith('tts:'));
+
+/**
+ * Check if any STT (listening) activity is happening
+ */
+export const selectIsListening = (state: { activityTokens: Set<string> }): boolean =>
+  [...state.activityTokens].some(t => t.startsWith('stt:'));
+
+/**
+ * Check if any generation activity is happening (sending/generating)
+ */
+export const selectIsSending = (state: { activityTokens: Set<string> }): boolean =>
+  [...state.activityTokens].some(t => t.startsWith('gen:'));
+
+/**
+ * Check if loading suggestions specifically
+ */
+export const selectIsLoadingSuggestions = (state: { activityTokens: Set<string> }): boolean =>
+  state.activityTokens.has('gen:suggestions');
+
+/**
+ * Check if creating a suggestion specifically
+ */
+export const selectIsCreatingSuggestion = (state: { activityTokens: Set<string> }): boolean =>
+  state.activityTokens.has('gen:create-suggestion');
+
+/**
+ * Check if live session is active
+ */
+export const selectIsLive = (state: { activityTokens: Set<string> }): boolean =>
+  [...state.activityTokens].some(t => t.startsWith('live:'));
+
+/**
+ * Check if user has manually paused (hold)
+ */
+export const selectIsUserHold = (state: { activityTokens: Set<string> }): boolean =>
+  state.activityTokens.has('ui:hold') || state.activityTokens.has('user-hold');
+
+/**
+ * Check if any activity is happening at all
+ */
+export const selectIsBusy = (state: { activityTokens: Set<string> }): boolean =>
+  state.activityTokens.size > 0;
+
+/**
+ * Check if there's any non-reengagement activity (blocks scheduling reengagement)
+ */
+export const selectNonReengagementBusy = (state: { activityTokens: Set<string> }): boolean =>
+  [...state.activityTokens].some(t => !t.startsWith('ui:reengage') && !t.startsWith('reengage-'));
+
+/**
+ * Compute external UI task count (tokens that don't start with 'reengage-' or 'ui:reengage')
+ */
+const computeExternalUiTaskCount = (tokens: Set<string>): number => {
+  let count = 0;
+  tokens.forEach(t => {
+    if (!t.startsWith('reengage-') && !t.startsWith('ui:reengage')) {
+      count++;
+    }
+  });
+  return count;
+};
 
 export const createUiSlice: StateCreator<
   MaestroStore,
@@ -79,8 +183,8 @@ export const createUiSlice: StateCreator<
   // Initial Shell state
   isTopbarOpen: false,
   
-  // Initial Busy State
-  uiBusyTaskTags: new Set<string>(),
+  // Initial Activity Token State - unified busy state management
+  activityTokens: new Set<string>(),
   externalUiTaskCount: 0,
   
   // Initial Activity state
@@ -118,48 +222,102 @@ export const createUiSlice: StateCreator<
     set(state => ({ isTopbarOpen: !state.isTopbarOpen }));
   },
   
-  // Busy State Actions
-  // CRITICAL: This must accept the full token and store it as-is
-  // The token is generated by the caller (e.g. InputArea.tsx) and must be returned unchanged
-  // so that removeUiBusyToken can later find and remove the exact same token
-  // 
-  // externalUiTaskCount is the count of tokens that are NOT reengagement tokens
-  // (tokens NOT starting with 'reengage-'). This is used to block reengagement.
-  addUiBusyToken: (token: string): string => {
+  // ============================================================
+  // UNIFIED ACTIVITY TOKEN ACTIONS
+  // ============================================================
+  
+  /**
+   * Add an activity token. Returns the full token string for later removal.
+   * Token format: `{category}:{subtype}` or `{category}:{timestamp}` if no subtype provided
+   */
+  addActivityToken: (category: ActivityTokenCategory, subtype?: string): string => {
+    const token = subtype ? `${category}:${subtype}` : `${category}:${Date.now()}`;
     set(state => {
-      const newTags = new Set(state.uiBusyTaskTags);
-      newTags.add(token);
-      // Recompute externalUiTaskCount: count tokens that don't start with 'reengage-'
-      let nonReengagementCount = 0;
-      newTags.forEach(t => {
-        if (!t.startsWith('reengage-')) nonReengagementCount++;
-      });
-      return { uiBusyTaskTags: newTags, externalUiTaskCount: nonReengagementCount };
+      const newTokens = new Set(state.activityTokens);
+      newTokens.add(token);
+      return { 
+        activityTokens: newTokens, 
+        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
+      };
     });
     return token;
   },
   
-  removeUiBusyToken: (tag?: string | null) => {
-    if (!tag) return;
+  /**
+   * Remove a specific activity token by its full string
+   */
+  removeActivityToken: (token: string) => {
+    if (!token) return;
     set(state => {
-      const newTags = new Set(state.uiBusyTaskTags);
-      newTags.delete(tag);
-      // Recompute externalUiTaskCount: count tokens that don't start with 'reengage-'
-      let nonReengagementCount = 0;
-      newTags.forEach(t => {
-        if (!t.startsWith('reengage-')) nonReengagementCount++;
-      });
-      return { uiBusyTaskTags: newTags, externalUiTaskCount: nonReengagementCount };
+      const newTokens = new Set(state.activityTokens);
+      newTokens.delete(token);
+      return { 
+        activityTokens: newTokens, 
+        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
+      };
     });
   },
   
+  /**
+   * Check if any token of a given category exists
+   */
+  hasTokenCategory: (category: string): boolean => {
+    const tokens = get().activityTokens;
+    const prefix = category + ':';
+    return [...tokens].some(t => t.startsWith(prefix));
+  },
+  
+  // ============================================================
+  // LEGACY COMPATIBILITY ACTIONS
+  // These maintain backwards compatibility with existing code
+  // ============================================================
+  
+  /**
+   * Legacy: Add a UI busy token (maps to activityTokens internally)
+   * CRITICAL: This must accept the full token and store it as-is
+   * The token is generated by the caller (e.g. InputArea.tsx) and must be returned unchanged
+   * so that removeUiBusyToken can later find and remove the exact same token
+   */
+  addUiBusyToken: (token: string): string => {
+    set(state => {
+      const newTokens = new Set(state.activityTokens);
+      newTokens.add(token);
+      return { 
+        activityTokens: newTokens, 
+        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
+      };
+    });
+    return token;
+  },
+  
+  /**
+   * Legacy: Remove a UI busy token
+   */
+  removeUiBusyToken: (tag?: string | null) => {
+    if (!tag) return;
+    set(state => {
+      const newTokens = new Set(state.activityTokens);
+      newTokens.delete(tag);
+      return { 
+        activityTokens: newTokens, 
+        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
+      };
+    });
+  },
+  
+  /**
+   * Legacy: Set external UI task count directly (rarely used, prefer tokens)
+   */
   setExternalUiTaskCount: (count: number) => {
     set({ externalUiTaskCount: count });
   },
   
+  /**
+   * Legacy: Check if UI is busy
+   */
   isUiBusy: (): boolean => {
     const state = get();
-    return state.uiBusyTaskTags.size > 0 || state.externalUiTaskCount > 0;
+    return state.activityTokens.size > 0 || state.externalUiTaskCount > 0;
   },
   
   // Activity Actions

@@ -67,8 +67,11 @@ const AppShell: React.FC = () => {
 
   // --- UI Busy State ---
   const {
+    activityTokens,
     uiBusyTaskTags,
     externalUiTaskCount,
+    addActivityToken,
+    removeActivityToken,
     addUiBusyToken,
     removeUiBusyToken,
     clearUiBusyTokens,
@@ -119,7 +122,6 @@ const AppShell: React.FC = () => {
     setReplySuggestions,
     replySuggestionsRef,
     isLoadingSuggestions,
-    setIsLoadingSuggestions,
     isLoadingSuggestionsRef,
   } = useChatStore({
     t,
@@ -299,8 +301,6 @@ const AppShell: React.FC = () => {
     currentSystemPromptText,
     currentReplySuggestionsPromptText,
     setReplySuggestions,
-    setIsLoadingSuggestions,
-    isLoadingSuggestionsRef,
     handleToggleSuggestionModeRef, // Pass the ref - will be populated after handleToggleSuggestionMode is defined
     maestroAvatarUriRef, // Pass avatar refs loaded in App.tsx
     maestroAvatarMimeTypeRef,
@@ -369,7 +369,8 @@ const AppShell: React.FC = () => {
     }
 
     setReplySuggestions([]);
-    setIsLoadingSuggestions(false);
+    // Note: isLoadingSuggestions is now managed via tokens in useMaestroController
+    // Clearing suggestions above is sufficient; token will be removed when generation completes
     lastFetchedSuggestionsForRef.current = null;
 
     let visualReengagementShown = false;
@@ -411,15 +412,11 @@ const AppShell: React.FC = () => {
     settings,
     isLoadingHistory,
     selectedLanguagePairId: settings.selectedLanguagePairId,
-    isSending, // ACTUAL VALUE - not hardcoded false
-    isSpeaking, // ACTUAL VALUE - not hardcoded false
-    isSendingRef,
-    isSpeakingRef: speechIsSpeakingRef,
+    activityTokens, // Unified token set replaces isSending, isSpeaking, refs, etc.
     isVisualContextActive: isCurrentlyPerformingVisualContextCaptureRef.current,
-    externalUiTaskCount,
     triggerReengagementSequence,
-    addUiBusyToken,
-    removeUiBusyToken,
+    addActivityToken,
+    removeActivityToken,
   });
 
   useIdleReengagement({
