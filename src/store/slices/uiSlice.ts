@@ -19,12 +19,16 @@
 
 import type { StateCreator } from 'zustand';
 import type { MaestroActivityStage } from '../../core/types';
+import {
+  TOKEN_CATEGORY,
+  TOKEN_SUBTYPE,
+  type TokenCategory,
+  buildToken,
+  getTokenSubtype,
+  isReengagementToken,
+  UI_TOKEN_DISPLAY,
+} from '../../core/config/activityTokens';
 import type { MaestroStore } from '../maestroStore';
-
-/**
- * Activity token categories for the unified busy state system
- */
-export type ActivityTokenCategory = 'tts' | 'stt' | 'gen' | 'live' | 'ui';
 
 export interface UiSlice {
   // Language Selector
@@ -40,10 +44,6 @@ export interface UiSlice {
   // Replaces scattered boolean flags (isSpeaking, isListening, isSending) with a single Set
   // Token format: `{category}:{uniqueId}` - e.g., 'tts:speak-1234567', 'stt:listen-9876543'
   activityTokens: Set<string>;
-  
-  // Computed count: tokens that are NOT reengagement tokens (used to block reengagement)
-  // This is kept as a derived value for backwards compatibility
-  externalUiTaskCount: number;
   
   // Activity
   maestroActivityStage: MaestroActivityStage;
@@ -69,7 +69,7 @@ export interface UiSlice {
    * Add an activity token. Returns the full token string for later removal.
    * Token format: `{category}:{subtype}` or `{category}:{timestamp}` if no subtype provided
    */
-  addActivityToken: (category: ActivityTokenCategory, subtype?: string) => string;
+  addActivityToken: (category: TokenCategory, subtype?: string) => string;
   
   /**
    * Remove a specific activity token by its full string
@@ -79,13 +79,7 @@ export interface UiSlice {
   /**
    * Check if any token of a given category exists
    */
-  hasTokenCategory: (category: string) => boolean;
-  
-  // Legacy compatibility - maps to addActivityToken/removeActivityToken internally
-  addUiBusyToken: (tag: string) => string;
-  removeUiBusyToken: (tag?: string | null) => void;
-  setExternalUiTaskCount: (count: number) => void;
-  isUiBusy: () => boolean;
+  hasTokenCategory: (category: TokenCategory) => boolean;
   
   // Actions - Activity
   setMaestroActivityStage: (stage: MaestroActivityStage) => void;
@@ -105,43 +99,43 @@ export interface UiSlice {
  * Check if any TTS (speaking) activity is happening
  */
 export const selectIsSpeaking = (state: { activityTokens: Set<string> }): boolean =>
-  [...state.activityTokens].some(t => t.startsWith('tts:'));
+  [...state.activityTokens].some(t => t.startsWith(`${TOKEN_CATEGORY.TTS}:`));
 
 /**
  * Check if any STT (listening) activity is happening
  */
 export const selectIsListening = (state: { activityTokens: Set<string> }): boolean =>
-  [...state.activityTokens].some(t => t.startsWith('stt:'));
+  [...state.activityTokens].some(t => t.startsWith(`${TOKEN_CATEGORY.STT}:`));
 
 /**
  * Check if any generation activity is happening (sending/generating)
  */
 export const selectIsSending = (state: { activityTokens: Set<string> }): boolean =>
-  [...state.activityTokens].some(t => t.startsWith('gen:'));
+  [...state.activityTokens].some(t => t.startsWith(`${TOKEN_CATEGORY.GEN}:`));
 
 /**
  * Check if loading suggestions specifically
  */
 export const selectIsLoadingSuggestions = (state: { activityTokens: Set<string> }): boolean =>
-  state.activityTokens.has('gen:suggestions');
+  state.activityTokens.has(buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS));
 
 /**
  * Check if creating a suggestion specifically
  */
 export const selectIsCreatingSuggestion = (state: { activityTokens: Set<string> }): boolean =>
-  state.activityTokens.has('gen:create-suggestion');
+  state.activityTokens.has(buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.CREATE_SUGGESTION));
 
 /**
  * Check if live session is active
  */
 export const selectIsLive = (state: { activityTokens: Set<string> }): boolean =>
-  [...state.activityTokens].some(t => t.startsWith('live:'));
+  [...state.activityTokens].some(t => t.startsWith(`${TOKEN_CATEGORY.LIVE}:`));
 
 /**
  * Check if user has manually paused (hold)
  */
 export const selectIsUserHold = (state: { activityTokens: Set<string> }): boolean =>
-  state.activityTokens.has('ui:hold') || state.activityTokens.has('user-hold');
+  state.activityTokens.has(buildToken(TOKEN_CATEGORY.UI, TOKEN_SUBTYPE.HOLD));
 
 /**
  * Check if any activity is happening at all
@@ -153,20 +147,21 @@ export const selectIsBusy = (state: { activityTokens: Set<string> }): boolean =>
  * Check if there's any non-reengagement activity (blocks scheduling reengagement)
  */
 export const selectNonReengagementBusy = (state: { activityTokens: Set<string> }): boolean =>
-  [...state.activityTokens].some(t => !t.startsWith('ui:reengage') && !t.startsWith('reengage-'));
+  [...state.activityTokens].some(t => !isReengagementToken(t));
 
 /**
- * Compute external UI task count (tokens that don't start with 'reengage-' or 'ui:reengage')
+ * Get sorted list of active UI tokens for display.
  */
-const computeExternalUiTaskCount = (tokens: Set<string>): number => {
-  let count = 0;
-  tokens.forEach(t => {
-    if (!t.startsWith('reengage-') && !t.startsWith('ui:reengage')) {
-      count++;
-    }
-  });
-  return count;
-};
+export const selectActiveUiTokens = (state: { activityTokens: Set<string> }): string[] =>
+  [...state.activityTokens]
+    .filter(token => token.startsWith(`${TOKEN_CATEGORY.UI}:`) && !isReengagementToken(token))
+    .sort((a, b) => {
+      const subtypeA = getTokenSubtype(a);
+      const subtypeB = getTokenSubtype(b);
+      const priorityA = UI_TOKEN_DISPLAY[subtypeA]?.priority ?? 100;
+      const priorityB = UI_TOKEN_DISPLAY[subtypeB]?.priority ?? 100;
+      return priorityA - priorityB;
+    });
 
 export const createUiSlice: StateCreator<
   MaestroStore,
@@ -185,7 +180,6 @@ export const createUiSlice: StateCreator<
   
   // Initial Activity Token State - unified busy state management
   activityTokens: new Set<string>(),
-  externalUiTaskCount: 0,
   
   // Initial Activity state
   maestroActivityStage: 'idle',
@@ -230,15 +224,12 @@ export const createUiSlice: StateCreator<
    * Add an activity token. Returns the full token string for later removal.
    * Token format: `{category}:{subtype}` or `{category}:{timestamp}` if no subtype provided
    */
-  addActivityToken: (category: ActivityTokenCategory, subtype?: string): string => {
-    const token = subtype ? `${category}:${subtype}` : `${category}:${Date.now()}`;
+  addActivityToken: (category: TokenCategory, subtype?: string): string => {
+    const token = subtype ? buildToken(category, subtype) : `${category}:${Date.now()}`;
     set(state => {
       const newTokens = new Set(state.activityTokens);
       newTokens.add(token);
-      return { 
-        activityTokens: newTokens, 
-        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
-      };
+      return { activityTokens: newTokens };
     });
     return token;
   },
@@ -251,73 +242,17 @@ export const createUiSlice: StateCreator<
     set(state => {
       const newTokens = new Set(state.activityTokens);
       newTokens.delete(token);
-      return { 
-        activityTokens: newTokens, 
-        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
-      };
+      return { activityTokens: newTokens };
     });
   },
   
   /**
    * Check if any token of a given category exists
    */
-  hasTokenCategory: (category: string): boolean => {
+  hasTokenCategory: (category: TokenCategory): boolean => {
     const tokens = get().activityTokens;
     const prefix = category + ':';
     return [...tokens].some(t => t.startsWith(prefix));
-  },
-  
-  // ============================================================
-  // LEGACY COMPATIBILITY ACTIONS
-  // These maintain backwards compatibility with existing code
-  // ============================================================
-  
-  /**
-   * Legacy: Add a UI busy token (maps to activityTokens internally)
-   * CRITICAL: This must accept the full token and store it as-is
-   * The token is generated by the caller (e.g. InputArea.tsx) and must be returned unchanged
-   * so that removeUiBusyToken can later find and remove the exact same token
-   */
-  addUiBusyToken: (token: string): string => {
-    set(state => {
-      const newTokens = new Set(state.activityTokens);
-      newTokens.add(token);
-      return { 
-        activityTokens: newTokens, 
-        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
-      };
-    });
-    return token;
-  },
-  
-  /**
-   * Legacy: Remove a UI busy token
-   */
-  removeUiBusyToken: (tag?: string | null) => {
-    if (!tag) return;
-    set(state => {
-      const newTokens = new Set(state.activityTokens);
-      newTokens.delete(tag);
-      return { 
-        activityTokens: newTokens, 
-        externalUiTaskCount: computeExternalUiTaskCount(newTokens) 
-      };
-    });
-  },
-  
-  /**
-   * Legacy: Set external UI task count directly (rarely used, prefer tokens)
-   */
-  setExternalUiTaskCount: (count: number) => {
-    set({ externalUiTaskCount: count });
-  },
-  
-  /**
-   * Legacy: Check if UI is busy
-   */
-  isUiBusy: (): boolean => {
-    const state = get();
-    return state.activityTokens.size > 0 || state.externalUiTaskCount > 0;
   },
   
   // Activity Actions

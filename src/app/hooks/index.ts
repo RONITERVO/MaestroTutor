@@ -72,12 +72,6 @@ export {
   type UseMaestroControllerReturn 
 } from './useMaestroController';
 
-// UI State
-export { 
-  useUiBusyState,
-  type UseUiBusyStateReturn 
-} from './useUiBusyState';
-
 // Live Session (Gemini Live Conversation)
 export { 
   useLiveSession,

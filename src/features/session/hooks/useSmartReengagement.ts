@@ -1,6 +1,12 @@
 
 import { useRef, useEffect, useCallback } from 'react';
 import { AppSettings } from '../../../core/types';
+import {
+  TOKEN_CATEGORY,
+  TOKEN_SUBTYPE,
+  type TokenCategory,
+  isReengagementToken,
+} from '../../../core/config/activityTokens';
 import { useMaestroStore } from '../../../store';
 
 interface UseSmartReengagementProps {
@@ -10,7 +16,7 @@ interface UseSmartReengagementProps {
   activityTokens: Set<string>; // Unified token set replaces multiple boolean props
   isVisualContextActive: boolean;
   triggerReengagementSequence: () => Promise<void>;
-  addActivityToken: (category: 'tts' | 'stt' | 'gen' | 'live' | 'ui', subtype?: string) => string;
+  addActivityToken: (category: TokenCategory, subtype?: string) => string;
   removeActivityToken: (token: string) => void;
 }
 
@@ -55,11 +61,6 @@ export const useSmartReengagement = ({
   useEffect(() => { addActivityTokenRef.current = addActivityToken; }, [addActivityToken]);
   useEffect(() => { removeActivityTokenRef.current = removeActivityToken; }, [removeActivityToken]);
 
-  const isReengagementToken = (token: string | null | undefined): boolean => {
-    if (!token || typeof token !== 'string') return false;
-    return token.startsWith('reengage-') || token.startsWith('ui:reengage');
-  };
-
   // canScheduleReengagement - checks if reengagement can be scheduled
   // Uses unified activity tokens - any non-reengagement token blocks scheduling
   const canScheduleReengagement = useCallback((): boolean => {
@@ -69,7 +70,7 @@ export const useSmartReengagement = ({
     
     // Simple check: any non-reengagement token blocks scheduling
     const hasBlockingActivity = [...activityTokens].some(
-      t => !t.startsWith('ui:reengage') && !t.startsWith('reengage-')
+      token => !isReengagementToken(token)
     );
     return !hasBlockingActivity;
   }, [isLoadingHistory, selectedLanguagePairId, isVisualContextActive, activityTokens]);
@@ -132,7 +133,10 @@ export const useSmartReengagement = ({
       tokens.waitToken = null;
     }
     const clampedDelay = Math.max(0, Math.floor(Number.isFinite(delayMs) ? delayMs : 0));
-    const token = addActivityTokenRef.current('ui', `reengage-wait:${reason}`);
+    const token = addActivityTokenRef.current(
+      TOKEN_CATEGORY.UI,
+      `${TOKEN_SUBTYPE.REENGAGE_WAIT}:${reason}`
+    );
     tokens.waitToken = token;
     
     // Split the wait time into 'waiting' (Resting) and 'watching' (Observing) if long enough
@@ -214,7 +218,10 @@ export const useSmartReengagement = ({
       clearTimeout(timers.countdownTimer);
       timers.countdownTimer = null;
     }
-    const token = addActivityTokenRef.current('ui', `reengage-countdown:${reason}`);
+    const token = addActivityTokenRef.current(
+      TOKEN_CATEGORY.UI,
+      `${TOKEN_SUBTYPE.REENGAGE_COUNTDOWN}:${reason}`
+    );
     tokens.countdownToken = token;
     reengagementDeadlineRef.current = null;
     setReengagementDeadline(null);

@@ -8,6 +8,8 @@ import BookmarkActions from './BookmarkActions';
 import ChatMessageBubble from './ChatMessageBubble';
 import SuggestionsList from './SuggestionsList';
 import InputArea from './InputArea';
+import { useMaestroStore } from '../../../store';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 
 const BOOKMARK_SHOW_ABOVE_CHUNK_SIZE = 100;
 const isRealChatMessage = (m: ChatMessage) => (m.role === 'user' || m.role === 'assistant') && !m.thinking;
@@ -22,9 +24,6 @@ interface ChatInterfaceProps {
   maxVisibleMessages: number;
   onChangeMaxVisibleMessages: (n: number) => void;
   isSending: boolean;
-
-  onUiTaskStart?: (token?: string) => string | void;
-  onUiTaskEnd?: (token?: string) => void;
 
   bubbleWrapperRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   
@@ -46,7 +45,6 @@ interface ChatInterfaceProps {
 
   isSttSupported: boolean;
   isSttGloballyEnabled: boolean;
-  isListening: boolean;
   sttError: string | null;
   transcript: string;
   onSttToggle: () => void;
@@ -141,7 +139,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onSetAttachedImage,
     isSttSupported,
     isSttGloballyEnabled,
-    isListening,
     sttError,
     transcript,
     onSttToggle,
@@ -193,8 +190,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onBookmarkAt,
     bookmarkedMessageId,
     sendPrep,
-    onUiTaskStart,
-    onUiTaskEnd,
     onSendMessage,
     sttProvider,
     ttsProvider,
@@ -207,6 +202,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     const base = Math.max(1, props.maxVisibleMessages);
     return base + 2;
   }, [props.maxVisibleMessages]);
+
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
+  const createUiToken = useCallback(
+    (subtype: TokenSubtype) =>
+      addActivityToken(
+        TOKEN_CATEGORY.UI,
+        `${subtype}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`
+      ),
+    [addActivityToken]
+  );
 
   const bookmarkEligibleAssistantIds = useMemo(() => {
     const eligible = new Set<string>();
@@ -238,23 +244,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   useEffect(() => {
     if (bookmarkViewMode === 'above') {
       if (!viewingAboveTokenRef.current) {
-        const tok = `viewing-above:${Date.now()}:${Math.random().toString(36).slice(2,8)}`;
-        const ret = onUiTaskStart?.(tok);
-        viewingAboveTokenRef.current = typeof ret === 'string' ? ret : tok;
+        viewingAboveTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIEWING_ABOVE);
       }
     } else {
       if (viewingAboveTokenRef.current) {
-        onUiTaskEnd?.(viewingAboveTokenRef.current);
+        removeActivityToken(viewingAboveTokenRef.current);
         viewingAboveTokenRef.current = null;
       }
     }
     return () => {
       if (viewingAboveTokenRef.current) {
-        onUiTaskEnd?.(viewingAboveTokenRef.current);
+        removeActivityToken(viewingAboveTokenRef.current);
         viewingAboveTokenRef.current = null;
       }
     };
-  }, [bookmarkViewMode, onUiTaskStart, onUiTaskEnd]);
+  }, [bookmarkViewMode, createUiToken, removeActivityToken]);
 
   const swipeRef = useRef<{
     messageId: string | null;
@@ -782,8 +786,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 transitioningImageId={transitioningImageId}
                 onSetAttachedImage={onSetAttachedImage}
                 onUserInputActivity={onUserInputActivity}
-                onUiTaskStart={onUiTaskStart}
-                onUiTaskEnd={onUiTaskEnd}
                 registerBubbleEl={(el) => {
                   if (el) bubbleWrapperRefs.current.set(msg.id, el);
                   else bubbleWrapperRefs.current.delete(msg.id);
@@ -886,9 +888,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
             >
                 <InputArea
                     t={t}
-                    isSending={isSending}
-                    isSpeaking={isSpeaking}
-                    isListening={isListening}
                     isSttGloballyEnabled={isSttGloballyEnabled}
                     isSttSupported={isSttSupported}
                     transcript={transcript}
@@ -926,8 +925,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     sttError={sttError}
                      autoCaptureError={autoCaptureError ?? null}
                      snapshotUserError={snapshotUserError ?? null}
-                    onUiTaskStart={onUiTaskStart}
-                    onUiTaskEnd={onUiTaskEnd}
                     
                     // Language Selection Props
                     isLanguageSelectionOpen={isLanguageSelectionOpen}

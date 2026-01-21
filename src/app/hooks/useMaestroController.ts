@@ -48,6 +48,7 @@ import {
 import { isRealChatMessage } from '../../shared/utils/common';
 import { getShortLangCodeForPrompt } from '../../shared/utils/languageUtils';
 import type { TranslationFunction } from './useTranslations';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../core/config/activityTokens';
 import { useMaestroStore } from '../../store';
 import { useShallow } from 'zustand/shallow';
 import { selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion } from '../../store/slices/uiSlice';
@@ -477,7 +478,7 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     }
 
     // Add token for loading suggestions
-    suggestionsTokenRef.current = addActivityToken('gen', 'suggestions');
+    suggestionsTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS);
     setReplySuggestions([]);
 
     const historyForPrompt = getHistoryRespectingBookmark(history)
@@ -621,7 +622,7 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     if (!sanitized || !selectedLanguagePairRef.current) return;
 
     // Add token for creating suggestion
-    createSuggestionTokenRef.current = addActivityToken('gen', 'create-suggestion');
+    createSuggestionTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.CREATE_SUGGESTION);
 
     const sttLang = settingsRef.current.stt.language;
     const sttLangCode = sttLang.substring(0, 2);
@@ -1126,7 +1127,7 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     }
 
     // Add sending token for unified busy state tracking (replaces setIsSending(true))
-    sendingTokenRef.current = addActivityToken('gen', 'response');
+    sendingTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.RESPONSE);
     if (settingsRef.current.stt.enabled && isListening) {
       try { stopListening(); } catch { /* ignore */ }
       sttInterruptedBySendRef.current = true;

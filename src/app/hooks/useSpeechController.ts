@@ -24,6 +24,7 @@ import {
 import { useBrowserSpeech } from '../../features/speech';
 import { getPrimaryCode } from '../../shared/utils/languageUtils';
 import { INLINE_CAP_AUDIO, computeTtsCacheKey, getCachedAudioForKey } from '../../features/chat';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../core/config/activityTokens';
 import { useMaestroStore } from '../../store';
 
 export interface UseSpeechControllerConfig {
@@ -183,7 +184,7 @@ export const useSpeechController = (config: UseSpeechControllerConfig): UseSpeec
     speechIsSpeakingRef.current = isSpeaking;
     // Manage speaking token for unified busy state tracking
     if (isSpeaking && !speakingTokenRef.current) {
-      speakingTokenRef.current = addActivityToken('tts', 'speak');
+      speakingTokenRef.current = addActivityToken(TOKEN_CATEGORY.TTS, TOKEN_SUBTYPE.SPEAK);
     } else if (!isSpeaking && speakingTokenRef.current) {
       removeActivityToken(speakingTokenRef.current);
       speakingTokenRef.current = null;
@@ -193,7 +194,7 @@ export const useSpeechController = (config: UseSpeechControllerConfig): UseSpeec
   useEffect(() => {
     // Manage listening token for unified busy state tracking
     if (isListening && !listeningTokenRef.current) {
-      listeningTokenRef.current = addActivityToken('stt', 'listen');
+      listeningTokenRef.current = addActivityToken(TOKEN_CATEGORY.STT, TOKEN_SUBTYPE.LISTEN);
     } else if (!isListening && listeningTokenRef.current) {
       removeActivityToken(listeningTokenRef.current);
       listeningTokenRef.current = null;

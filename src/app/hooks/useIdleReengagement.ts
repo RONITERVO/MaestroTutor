@@ -13,9 +13,7 @@ import type { LanguagePair } from '../../core/types';
 
 interface UseIdleReengagementConfig {
   selectedLanguagePair: LanguagePair | undefined;
-  isSpeaking: boolean;
-  isSending: boolean;
-  isListening: boolean;
+  isBlockingActivity: boolean;
   isUserActive: boolean;
   reengagementPhase: ReengagementPhase;
   scheduleReengagement: (reason: string, delayOverrideMs?: number) => void;
@@ -24,9 +22,7 @@ interface UseIdleReengagementConfig {
 
 export const useIdleReengagement = ({
   selectedLanguagePair,
-  isSpeaking,
-  isSending,
-  isListening,
+  isBlockingActivity,
   isUserActive,
   reengagementPhase,
   scheduleReengagement,
@@ -49,14 +45,14 @@ export const useIdleReengagement = ({
       cancelReengagementRef.current();
       return;
     }
-    if (isSpeaking || isSending || isListening || isUserActive) {
+    if (isBlockingActivity || isUserActive) {
       cancelReengagementRef.current();
       return;
     }
     if (reengagementPhase === 'idle') {
       scheduleReengagementRef.current('became-idle');
     }
-  }, [selectedLanguagePair, isSpeaking, isSending, isListening, isUserActive, reengagementPhase]);
+  }, [selectedLanguagePair, isBlockingActivity, isUserActive, reengagementPhase]);
 };
 
 export default useIdleReengagement;

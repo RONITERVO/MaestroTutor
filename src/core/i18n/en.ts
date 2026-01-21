@@ -232,4 +232,5 @@ export const enTranslations: Record<string, string> = {
   "chat.header.maestroAvatar": "Updating Maestro avatar",
   "chat.header.watchingVideo": "Watching video",
   "chat.header.viewingAbove": "Viewing messages above",
+  "chat.header.liveSession": "Live session",
 };

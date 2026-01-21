@@ -1,17 +1,19 @@
 
-import React, { forwardRef, useState, useEffect, useRef } from 'react';
+import React, { forwardRef, useState, useEffect, useRef, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
 import { IconTerminal } from '../../../shared/ui/Icons';
 import { LanguageDefinition } from '../../../core/config/languages';
 import { ChatMessage, MaestroActivityStage, LanguagePair } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
+import { useMaestroStore } from '../../../store';
+import { selectActiveUiTokens, selectIsLive, selectIsUserHold } from '../../../store/slices/uiSlice';
 
 interface HeaderProps {
   isTopbarOpen: boolean; // Kept for prop compatibility
   setIsTopbarOpen: (open: boolean) => void;
   maestroActivityStage: MaestroActivityStage;
   t: (key: string, replacements?: TranslationReplacements) => string;
-  uiBusyTaskTags: string[];
   targetLanguageDef?: LanguageDefinition;
   selectedLanguagePair: LanguagePair | undefined;
   messages: ChatMessage[];
@@ -23,7 +25,6 @@ interface HeaderProps {
 const Header = forwardRef<HTMLDivElement, HeaderProps>(({
   maestroActivityStage,
   t,
-  uiBusyTaskTags,
   targetLanguageDef,
   selectedLanguagePair,
   onLanguageSelectorClick,
@@ -91,7 +92,14 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
       }
   };
 
-  const statusConfig = getStatusConfig(maestroActivityStage, uiBusyTaskTags);
+  const activeUiTokens = useMaestroStore(useShallow(selectActiveUiTokens));
+  const isHolding = useMaestroStore(selectIsUserHold);
+  const isLive = useMaestroStore(selectIsLive);
+
+  const statusConfig = useMemo(
+    () => getStatusConfig(maestroActivityStage, activeUiTokens, isHolding, isLive),
+    [maestroActivityStage, activeUiTokens, isHolding, isLive]
+  );
 
   return (
     <>
@@ -119,7 +127,6 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
           <CollapsedMaestroStatus
             stage={maestroActivityStage}
             t={t}
-            uiBusyTaskTags={uiBusyTaskTags}
             targetLanguageFlag={selectedLanguagePair ? targetLanguageDef?.flag : undefined}
             targetLanguageTitle={selectedLanguagePair ? t('header.targetLanguageTitle', { language: targetLanguageDef?.displayName || '' }) : undefined}
             className={statusConfig.textColor}

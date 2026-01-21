@@ -4,6 +4,8 @@ import { ChatMessage, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck } from '../../../shared/ui/Icons';
 import TextScrollwheel from './TextScrollwheel';
+import { useMaestroStore } from '../../../store';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 
 interface ChatMessageBubbleProps { 
   message: ChatMessage; 
@@ -29,8 +31,6 @@ interface ChatMessageBubbleProps {
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
   onUserInputActivity: () => void;
   registerBubbleEl?: (el: HTMLDivElement | null) => void;
-  onUiTaskStart?: (token?: string) => string | void;
-  onUiTaskEnd?: (token?: string) => void;
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({ 
@@ -38,9 +38,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   currentTargetLangCode, currentNativeLangCode, t,
   isSpeaking, speakNativeLang, onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking, isTtsSupported: _isTtsSupported,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
-  registerBubbleEl,
-  onUiTaskStart,
-  onUiTaskEnd
+  registerBubbleEl
 }) => {
   const isUser = message.role === 'user';
 
@@ -80,7 +78,16 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const annotationTokenRef = useRef<string | null>(null);
-  const genToken = useCallback((tag: string) => `${tag}:${Date.now()}:${Math.random().toString(36).slice(2,8)}`,[ ]);
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
+  const createUiToken = useCallback(
+    (subtype: TokenSubtype) =>
+      addActivityToken(
+        TOKEN_CATEGORY.UI,
+        `${subtype}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`
+      ),
+    [addActivityToken]
+  );
 
   
   const handleResizePointerDown = useCallback((e: React.PointerEvent) => {
@@ -144,9 +151,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const handleStartAnnotation = useCallback((imageUrl: string) => {
     if (!isFocusedMode || !imageUrl) return;
     if (!annotationTokenRef.current) {
-      const tok = genToken('bubble-annotate');
-      const ret = onUiTaskStart?.(tok);
-      annotationTokenRef.current = typeof ret === 'string' ? ret : tok;
+      annotationTokenRef.current = createUiToken(TOKEN_SUBTYPE.BUBBLE_ANNOTATE);
     }
   
     let initialScale = 1;
@@ -173,7 +178,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     isNewStrokeRef.current = true;
     onUserInputActivity();
     setIsAnnotating(true);
-  }, [isFocusedMode, onUserInputActivity, genToken, onUiTaskStart]);
+  }, [isFocusedMode, onUserInputActivity, createUiToken]);
 
   const handleAnnotateVideo = () => {
     const video = videoRef.current;
@@ -272,12 +277,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   useEffect(() => {
     return () => {
-      if (videoPlayTokenRef.current && onUiTaskEnd) {
-        onUiTaskEnd(videoPlayTokenRef.current);
+      if (videoPlayTokenRef.current) {
+        removeActivityToken(videoPlayTokenRef.current);
         videoPlayTokenRef.current = null;
       }
     };
-  }, [onUiTaskEnd]);
+  }, [removeActivityToken]);
 
   const handleCancelAnnotation = useCallback(() => {
     setAnnotationSourceUrl(null);
@@ -289,8 +294,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     activePointersRef.current = [];
     setUndoStack([]);
     isNewStrokeRef.current = true;
-    if (annotationTokenRef.current && onUiTaskEnd) { onUiTaskEnd(annotationTokenRef.current); annotationTokenRef.current = null; }
-  }, [onUiTaskEnd]);
+    if (annotationTokenRef.current) {
+      removeActivityToken(annotationTokenRef.current);
+      annotationTokenRef.current = null;
+    }
+  }, [removeActivityToken]);
 
   const handleSaveAnnotation = () => {
     if (!editCanvasRef.current || !imageForAnnotationRef.current || !annotationViewportRef.current) return;
@@ -319,7 +327,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     onSetAttachedImage(newDataUrl, 'image/jpeg');
     onUserInputActivity();
     handleCancelAnnotation();
-    if (annotationTokenRef.current && onUiTaskEnd) { onUiTaskEnd(annotationTokenRef.current); annotationTokenRef.current = null; }
+    if (annotationTokenRef.current) {
+      removeActivityToken(annotationTokenRef.current);
+      annotationTokenRef.current = null;
+    }
   };
 
   const handleUndo = useCallback(() => {
@@ -762,19 +773,23 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                               controls
                               onPlay={() => {
                                 setIsVideoPlaying(true);
-                                if (!videoPlayTokenRef.current && onUiTaskStart) {
-                                  const tok = genToken('video-play');
-                                  const ret = onUiTaskStart(tok);
-                                  videoPlayTokenRef.current = typeof ret === 'string' ? ret : tok;
+                                if (!videoPlayTokenRef.current) {
+                                  videoPlayTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIDEO_PLAY);
                                 }
                               }}
                               onPause={() => {
                                 setIsVideoPlaying(false);
-                                if (videoPlayTokenRef.current && onUiTaskEnd) { onUiTaskEnd(videoPlayTokenRef.current); videoPlayTokenRef.current = null; }
+                                if (videoPlayTokenRef.current) {
+                                  removeActivityToken(videoPlayTokenRef.current);
+                                  videoPlayTokenRef.current = null;
+                                }
                               }}
                               onEnded={() => {
                                 setIsVideoPlaying(false);
-                                if (videoPlayTokenRef.current && onUiTaskEnd) { onUiTaskEnd(videoPlayTokenRef.current); videoPlayTokenRef.current = null; }
+                                if (videoPlayTokenRef.current) {
+                                  removeActivityToken(videoPlayTokenRef.current);
+                                  videoPlayTokenRef.current = null;
+                                }
                               }}
                               className={`block w-full h-full object-contain rounded-lg bg-black`}
                           >
