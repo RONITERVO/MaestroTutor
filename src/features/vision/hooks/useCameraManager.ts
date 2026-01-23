@@ -2,20 +2,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 /**
- * useHardware - Hook for managing hardware access (camera, microphone).
+ * useCameraManager - Hook for managing hardware access (camera, microphone).
  * 
  * Handles device enumeration, stream management, and snapshot capture.
  * Syncs key state to Zustand store for cross-component access.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { CameraDevice } from '../../core/types';
-import type { TranslationFunction } from './useTranslations';
-import { IMAGE_GEN_CAMERA_ID } from '../../core/config/app';
-import { getFacingModeFromLabel } from '../../features/vision';
-import { useMaestroStore } from '../../store';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { CameraDevice } from '../../../core/types';
+import type { TranslationFunction } from '../../../app/hooks/useTranslations';
+import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
+import { getFacingModeFromLabel } from '../utils/mediaUtils';
+import { useMaestroStore } from '../../../store';
 
-export interface UseHardwareConfig {
+export interface UseCameraManagerConfig {
   t: TranslationFunction;
   /** Snapshot enabled - actual value for proper deps tracking */
   sendWithSnapshotEnabled: boolean;
@@ -30,7 +30,7 @@ export interface UseHardwareConfig {
   }>;
 }
 
-export interface UseHardwareReturn {
+export interface UseCameraManagerReturn {
   /** List of available cameras */
   availableCameras: CameraDevice[];
   availableCamerasRef: React.MutableRefObject<CameraDevice[]>;
@@ -66,8 +66,8 @@ export interface UseHardwareReturn {
  * Hook for managing hardware access (camera, microphone).
  * Handles device enumeration, stream management, and snapshot capture.
  */
-export const useHardware = (config: UseHardwareConfig): UseHardwareReturn => {
-  const { t, sendWithSnapshotEnabled, useVisualContext, selectedCameraId, settingsRef } = config;
+export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManagerReturn => {
+  const { t, sendWithSnapshotEnabled, useVisualContext, selectedCameraId } = config;
 
   // Get store actions for syncing state
   const setStoreAvailableCameras = useMaestroStore(state => state.setAvailableCameras);
@@ -79,6 +79,17 @@ export const useHardware = (config: UseHardwareConfig): UseHardwareReturn => {
   const visualContextVideoRef = useRef<HTMLVideoElement>(null);
   const visualContextStreamRef = useRef<MediaStream | null>(null);
   const availableCamerasRef = useRef<CameraDevice[]>([]);
+
+  const settingsRef = useMemo<React.MutableRefObject<{
+    selectedCameraId: string | null;
+    sendWithSnapshotEnabled: boolean;
+    smartReengagement: { useVisualContext: boolean };
+  }>>(() => ({
+    get current() {
+      return useMaestroStore.getState().settings;
+    },
+    set current(_value) {},
+  }), []);
 
   const [availableCameras, setAvailableCameras] = useState<CameraDevice[]>([]);
   const [currentCameraFacingMode, setCurrentCameraFacingMode] = useState<'user' | 'environment' | 'unknown'>('unknown');
@@ -119,7 +130,7 @@ export const useHardware = (config: UseHardwareConfig): UseHardwareReturn => {
     setCurrentCameraFacingMode(selected?.facingMode || 'unknown');
   }, [selectedCameraId]);
 
-  const microphoneApiAvailable = typeof window !== 'undefined' && 
+   const microphoneApiAvailable = typeof window !== 'undefined' && 
     !!(navigator && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
   const fetchAvailableCameras = useCallback(async () => {
@@ -382,4 +393,4 @@ export const useHardware = (config: UseHardwareConfig): UseHardwareReturn => {
   };
 };
 
-export default useHardware;
+export default useCameraManager;

@@ -17,6 +17,32 @@ export {
   DEFAULT_LANGUAGE_PAIR_ID
 } from './maestroStore';
 
+export {
+  selectSettings,
+  selectSelectedLanguagePair,
+  selectCurrentSystemPromptText,
+  selectCurrentReplySuggestionsPromptText,
+  selectTargetLanguageDef,
+  selectNativeLanguageDef,
+} from './slices/settingsSlice';
+
+export {
+  selectMessages,
+  selectReplySuggestions,
+  selectSendPrep,
+  selectLatestGroundingChunks,
+  selectAttachedImageBase64,
+  selectAttachedImageMimeType,
+  // DEPRECATED - causes infinite loops in React 18+ strict mode
+  // selectAttachedImage,
+} from './slices/chatSlice';
+
+export {
+  selectTranscript,
+  selectSttError,
+  selectSpeakingUtteranceText,
+} from './slices/speechSlice';
+
 export type {
   MaestroStore,
   SettingsSlice,

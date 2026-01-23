@@ -61,6 +61,31 @@ export interface ChatSlice {
   getMessages: () => ChatMessage[];
 }
 
+// ============================================================
+// DERIVED SELECTORS
+// ============================================================
+
+export const selectMessages = (state: Pick<ChatSlice, 'messages'>) => state.messages;
+
+export const selectReplySuggestions = (state: Pick<ChatSlice, 'replySuggestions'>) => state.replySuggestions;
+
+export const selectSendPrep = (state: Pick<ChatSlice, 'sendPrep'>) => state.sendPrep;
+
+export const selectLatestGroundingChunks = (state: Pick<ChatSlice, 'latestGroundingChunks'>) => state.latestGroundingChunks;
+
+// Individual selectors for attached image - avoid returning new objects to prevent infinite loops
+export const selectAttachedImageBase64 = (state: Pick<ChatSlice, 'attachedImageBase64'>) => state.attachedImageBase64;
+export const selectAttachedImageMimeType = (state: Pick<ChatSlice, 'attachedImageMimeType'>) => state.attachedImageMimeType;
+
+// DEPRECATED: This selector returns a new object on every call, causing infinite loops in React 18+ strict mode.
+// Use selectAttachedImageBase64 and selectAttachedImageMimeType instead.
+export const selectAttachedImage = (
+  state: Pick<ChatSlice, 'attachedImageBase64' | 'attachedImageMimeType'>
+) => ({
+  base64: state.attachedImageBase64,
+  mimeType: state.attachedImageMimeType,
+});
+
 export const createChatSlice: StateCreator<
   MaestroStore,
   [['zustand/subscribeWithSelector', never], ['zustand/devtools', never]],

@@ -8,32 +8,25 @@
  * coordinating between multiple services (chats, metas, global profile, assets).
  */
 import { useCallback } from 'react';
-import type { MutableRefObject } from 'react';
 
 // --- Types ---
-import type { ChatMessage, AppSettings } from '../../core/types';
-import type { TranslationFunction } from './useTranslations';
+import type { ChatMessage } from '../../../core/types';
+import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 
 // --- Services ---
-import { safeSaveChatHistoryDB, getAllChatHistoriesDB, getAllChatMetasDB, clearAndSaveAllHistoriesDB, getChatHistoryDB } from '../../features/chat';
-import { getGlobalProfileDB } from '../../features/session';
-import { getLoadingGifsDB as getAssetsLoadingGifs, setLoadingGifsDB as setAssetsLoadingGifs, getMaestroProfileImageDB, setMaestroProfileImageDB } from '../../core/db/assets';
+import { safeSaveChatHistoryDB, getAllChatHistoriesDB, getAllChatMetasDB, clearAndSaveAllHistoriesDB, getChatHistoryDB } from '../../chat';
+import { getGlobalProfileDB } from '..';
+import { getLoadingGifsDB as getAssetsLoadingGifs, setLoadingGifsDB as setAssetsLoadingGifs, getMaestroProfileImageDB, setMaestroProfileImageDB } from '../../../core/db/assets';
 
 // --- Config ---
-import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../core/config/languages';
+import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../../core/config/languages';
 
 // --- Utils ---
-import { uniq } from '../../shared/utils/common';
+import { uniq } from '../../../shared/utils/common';
+import { useMaestroStore } from '../../../store';
 
 export interface UseDataBackupConfig {
   t: TranslationFunction;
-  settingsRef: MutableRefObject<AppSettings>;
-  messagesRef: MutableRefObject<ChatMessage[]>;
-  setMessages: (messages: ChatMessage[]) => void;
-  setLoadingGifs: (gifs: string[]) => void;
-  setTempNativeLangCode: (code: string | null) => void;
-  setTempTargetLangCode: (code: string | null) => void;
-  setIsLanguageSelectionOpen: (open: boolean) => void;
 }
 
 export interface UseDataBackupReturn {
@@ -41,24 +34,20 @@ export interface UseDataBackupReturn {
   handleLoadAllChats: (file: File) => Promise<void>;
 }
 
-export const useDataBackup = ({
-  t,
-  settingsRef,
-  messagesRef,
-  setMessages,
-  setLoadingGifs,
-  setTempNativeLangCode,
-  setTempTargetLangCode,
-  setIsLanguageSelectionOpen,
-}: UseDataBackupConfig): UseDataBackupReturn => {
+export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn => {
+  const setMessages = useMaestroStore(state => state.setMessages);
+  const setLoadingGifs = useMaestroStore(state => state.setLoadingGifs);
+  const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
+  const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
+  const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
 
   const handleSaveAllChats = useCallback(async (options?: { filename?: string; auto?: boolean }) => {
     const isAuto = options?.auto === true;
     try {
-      const selectedPairId = settingsRef.current.selectedLanguagePairId;
+      const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
       if (selectedPairId) {
         try {
-          await safeSaveChatHistoryDB(selectedPairId, messagesRef.current);
+          await safeSaveChatHistoryDB(selectedPairId, useMaestroStore.getState().messages);
         } catch { /* ignore */ }
       }
       const allChats = await getAllChatHistoriesDB();
@@ -97,7 +86,7 @@ export const useDataBackup = ({
         alert(t('startPage.saveError'));
       }
     }
-  }, [t, settingsRef, messagesRef]);
+  }, [t]);
 
   const handleLoadAllChats = useCallback(async (file: File) => {
     await handleSaveAllChats({ auto: true });
@@ -157,7 +146,7 @@ export const useDataBackup = ({
         const loadedCount = Object.keys(chats).length;
         alert(t('startPage.loadSuccess', { count: loadedCount }));
 
-        const currentPairId = settingsRef.current.selectedLanguagePairId;
+        const currentPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
         if (currentPairId) {
           const newHistoryForCurrentPair = await getChatHistoryDB(currentPairId);
           setMessages(newHistoryForCurrentPair);
@@ -182,7 +171,7 @@ export const useDataBackup = ({
       alert(t('startPage.loadError'));
     };
     reader.readAsText(file);
-  }, [handleSaveAllChats, t, settingsRef, setMessages, setLoadingGifs, setTempNativeLangCode, setTempTargetLangCode, setIsLanguageSelectionOpen]);
+  }, [handleSaveAllChats, t, setMessages, setLoadingGifs, setTempNativeLangCode, setTempTargetLangCode, setIsLanguageSelectionOpen]);
 
   return {
     handleSaveAllChats,

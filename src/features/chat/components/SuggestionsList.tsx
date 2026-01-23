@@ -4,32 +4,35 @@ import { ReplySuggestion } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconTranslate } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
+import { useMaestroStore } from '../../../store';
+import { selectReplySuggestions } from '../../../store/slices/chatSlice';
+import { selectSettings } from '../../../store/slices/settingsSlice';
+import { selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
 
 interface SuggestionsListProps {
-  isLoadingSuggestions: boolean;
-  replySuggestions: ReplySuggestion[];
   t: (key: string, replacements?: TranslationReplacements) => string;
-  isSttSupported: boolean;
-  isSuggestionMode: boolean;
   onToggleSuggestionMode: () => void;
-  isCreatingSuggestion: boolean;
   onSuggestionClick: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
-  isSpeaking: boolean;
   stopSpeaking: () => void;
 }
 
 const SuggestionsList: React.FC<SuggestionsListProps> = ({
-  isLoadingSuggestions,
-  replySuggestions,
   t,
-  isSttSupported,
-  isSuggestionMode,
   onToggleSuggestionMode,
-  isCreatingSuggestion,
   onSuggestionClick,
-  isSpeaking,
   stopSpeaking
 }) => {
+  const replySuggestions = useMaestroStore(selectReplySuggestions);
+  const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
+  const isCreatingSuggestion = useMaestroStore(selectIsCreatingSuggestion);
+  const isSpeaking = useMaestroStore(selectIsSpeaking);
+  const settings = useMaestroStore(selectSettings);
+  const isSuggestionMode = settings.isSuggestionMode;
+  const isSpeechRecognitionSupported = useMaestroStore(state => state.isSpeechRecognitionSupported);
+  const microphoneApiAvailable = useMaestroStore(state => state.microphoneApiAvailable);
+  const sttProvider = settings.stt.provider || 'browser';
+  const isSttSupported = sttProvider === 'browser' ? isSpeechRecognitionSupported : microphoneApiAvailable;
+
   const [clickTimeoutId, setClickTimeoutId] = useState<number | null>(null);
   const [lastClickedSuggestionInfo, setLastClickedSuggestionInfo] = useState<{ suggestion: ReplySuggestion, timestamp: number } | null>(null);
   const [doubleClickedSuggestionTarget, setDoubleClickedSuggestionTarget] = useState<string | null>(null);

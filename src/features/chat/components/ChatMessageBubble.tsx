@@ -5,6 +5,9 @@ import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck } from '../../../shared/ui/Icons';
 import TextScrollwheel from './TextScrollwheel';
 import { useMaestroStore } from '../../../store';
+import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
+import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
+import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 
 interface ChatMessageBubbleProps { 
@@ -12,20 +15,14 @@ interface ChatMessageBubbleProps {
   isFocusedMode: boolean; 
   speakingUtteranceText: string | null; 
   estimatedLoadTime: number; 
-  isSending: boolean;
   loadingGifs?: string[] | null;
-  currentTargetLangCode: string;
-  currentNativeLangCode: string;
   t: (key: string, replacements?: TranslationReplacements) => string;
-  isSpeaking: boolean;
-  speakNativeLang: boolean;
   onToggleSpeakNativeLang: () => void;
   handleSpeakWholeMessage: (message: ChatMessage) => void;
   handleSpeakLine: (targetText: string, targetLangCode: string, nativeText?: string, nativeLangCode?: string, sourceMessageId?: string) => void;
   handlePlayUserMessage: (message: ChatMessage) => void;
   speakText: (textOrParts: SpeechPart[], defaultLang: string) => void;
   stopSpeaking: () => void;
-  isTtsSupported: boolean;
   onToggleImageFocusedMode: () => void;
   transitioningImageId: string | null;
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
@@ -34,13 +31,28 @@ interface ChatMessageBubbleProps {
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({ 
-  message, isFocusedMode, speakingUtteranceText, estimatedLoadTime, isSending, loadingGifs,
-  currentTargetLangCode, currentNativeLangCode, t,
-  isSpeaking, speakNativeLang, onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking, isTtsSupported: _isTtsSupported,
+  message, isFocusedMode, speakingUtteranceText, estimatedLoadTime, loadingGifs,
+  t,
+  onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
   registerBubbleEl
 }) => {
   const isUser = message.role === 'user';
+  const settings = useMaestroStore(selectSettings);
+  const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
+  const targetLanguageDef = useMaestroStore(selectTargetLanguageDef);
+  const nativeLanguageDef = useMaestroStore(selectNativeLanguageDef);
+  const isSpeaking = useMaestroStore(selectIsSpeaking);
+  const isSending = useMaestroStore(selectIsSending);
+  const speakNativeLang = settings.tts.speakNative;
+  const currentTargetLangCode = useMemo(
+    () => getPrimaryCode(selectedLanguagePair?.targetLanguageCode || targetLanguageDef?.code || 'es'),
+    [selectedLanguagePair, targetLanguageDef]
+  );
+  const currentNativeLangCode = useMemo(
+    () => getPrimaryCode(selectedLanguagePair?.nativeLanguageCode || nativeLanguageDef?.code || 'en'),
+    [selectedLanguagePair, nativeLanguageDef]
+  );
 
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [annotationSourceUrl, setAnnotationSourceUrl] = useState<string | null>(null);

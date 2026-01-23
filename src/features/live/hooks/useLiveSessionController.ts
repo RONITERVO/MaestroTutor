@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 /**
- * useLiveSession - Hook for managing Gemini Live conversation sessions.
+ * useLiveSessionController - Hook for managing Gemini Live conversation sessions.
  * 
  * This hook extracts all Gemini Live conversation logic from App.tsx, including:
  * - Session lifecycle (start, stop, cleanup)
@@ -13,31 +13,33 @@
  * - Reply suggestion generation
  */
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useMemo } from 'react';
 import { 
   ChatMessage, 
   AppSettings,
   LanguagePair,
   RecordedUtterance,
   TtsAudioCacheEntry 
-} from '../../core/types';
-import { useGeminiLiveConversation, LiveSessionState, pcmToWav, splitPcmBySilence } from '../../features/speech';
-import { generateImage, sanitizeHistoryWithVerifiedUris, uploadMediaToFiles } from '../../api/gemini';
-import { getGlobalProfileDB } from '../../features/session';
-import { deriveHistoryForApi, computeTtsCacheKey } from '../../features/chat';
-import { processMediaForUpload } from '../../features/vision';
-import { MAX_MEDIA_TO_KEEP } from '../../core/config/app';
-import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../core/config/activityTokens';
+} from '../../../core/types';
+import { useGeminiLiveConversation, LiveSessionState, pcmToWav, splitPcmBySilence } from '../../speech';
+import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles } from '../../../api/gemini/files';
+import { generateImage } from '../../../api/gemini/vision';
+import { getGlobalProfileDB } from '../../session';
+import { deriveHistoryForApi, computeTtsCacheKey } from '../../chat';
+import { processMediaForUpload } from '../../vision';
+import { MAX_MEDIA_TO_KEEP } from '../../../core/config/app';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../../core/config/activityTokens';
 import { 
   DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
   IMAGE_GEN_SYSTEM_INSTRUCTION, 
   IMAGE_GEN_USER_PROMPT_TEMPLATE 
-} from '../../core/config/prompts';
-import { getPrimaryCode } from '../../shared/utils/languageUtils';
-import type { TranslationFunction } from './useTranslations';
-import { useMaestroStore } from '../../store';
+} from '../../../core/config/prompts';
+import { getPrimaryCode } from '../../../shared/utils/languageUtils';
+import type { TranslationFunction } from '../../../app/hooks/useTranslations';
+import { useMaestroStore } from '../../../store';
+import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 
-export interface UseLiveSessionConfig {
+export interface UseLiveSessionControllerConfig {
   // Translation function
   t: TranslationFunction;
   
@@ -91,7 +93,7 @@ export interface UseLiveSessionConfig {
   maestroAvatarMimeTypeRef: React.MutableRefObject<string | null>;
 }
 
-export interface UseLiveSessionReturn {
+export interface UseLiveSessionControllerReturn {
   // State
   liveSessionState: LiveSessionState;
   liveSessionError: string | null;
@@ -105,18 +107,14 @@ export interface UseLiveSessionReturn {
  * Hook for managing Gemini Live conversation sessions.
  * Encapsulates all live session lifecycle and turn handling logic.
  */
-export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionReturn => {
+export const useLiveSessionController = (config: UseLiveSessionControllerConfig): UseLiveSessionControllerReturn => {
   const {
     t,
-    settingsRef,
     setSettings,
-    selectedLanguagePairRef,
-    messagesRef,
     addMessage,
     updateMessage,
     getHistoryRespectingBookmark,
     computeMaxMessagesForArray,
-    lastFetchedSuggestionsForRef,
     fetchAndSetReplySuggestions,
     upsertMessageTtsCache,
     liveVideoStream,
@@ -140,6 +138,38 @@ export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionRetu
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
   } = config;
+
+  const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
+
+  const settingsRef = useMemo<React.MutableRefObject<AppSettings>>(() => ({
+    get current() {
+      return useMaestroStore.getState().settings;
+    },
+    set current(_value) {},
+  }), []);
+
+  const selectedLanguagePairRef = useMemo<React.MutableRefObject<LanguagePair | undefined>>(() => ({
+    get current() {
+      return selectSelectedLanguagePair(useMaestroStore.getState());
+    },
+    set current(_value) {},
+  }), []);
+
+  const messagesRef = useMemo<React.MutableRefObject<ChatMessage[]>>(() => ({
+    get current() {
+      return useMaestroStore.getState().messages;
+    },
+    set current(_value) {},
+  }), []);
+
+  const lastFetchedSuggestionsForRef = useMemo<React.MutableRefObject<string | null>>(() => ({
+    get current() {
+      return useMaestroStore.getState().lastFetchedSuggestionsFor;
+    },
+    set current(value) {
+      setLastFetchedSuggestionsFor(value);
+    },
+  }), [setLastFetchedSuggestionsFor]);
 
   // --- State (Zustand) ---
   const liveSessionState = useMaestroStore(state => state.liveSessionState);
@@ -596,3 +626,5 @@ export const useLiveSession = (config: UseLiveSessionConfig): UseLiveSessionRetu
     handleStopLiveSession,
   };
 };
+
+export default useLiveSessionController;

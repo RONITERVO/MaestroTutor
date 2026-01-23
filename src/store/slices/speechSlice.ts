@@ -47,6 +47,16 @@ export interface SpeechSlice {
   claimRecordedUtterance: () => RecordedUtterance | null;
 }
 
+// ============================================================
+// DERIVED SELECTORS
+// ============================================================
+
+export const selectTranscript = (state: Pick<SpeechSlice, 'transcript'>) => state.transcript;
+
+export const selectSttError = (state: Pick<SpeechSlice, 'sttError'>) => state.sttError;
+
+export const selectSpeakingUtteranceText = (state: Pick<SpeechSlice, 'speakingUtteranceText'>) => state.speakingUtteranceText;
+
 export const createSpeechSlice: StateCreator<
   MaestroStore,
   [['zustand/subscribeWithSelector', never], ['zustand/devtools', never]],

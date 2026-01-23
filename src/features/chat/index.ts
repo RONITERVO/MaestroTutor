@@ -36,3 +36,8 @@ export {
   upsertTtsCacheEntries,
   INLINE_CAP_AUDIO,
 } from './utils/persistence';
+
+// Hooks
+export { useTutorConversation } from './hooks/useTutorConversation';
+export { useSuggestions } from './hooks/useSuggestions';
+export { useChatPersistence } from './hooks/useChatPersistence';

@@ -1,109 +1,144 @@
-
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { TranslationReplacements } from '../../../core/i18n/index';
-import { CameraDevice } from '../../../core/types';
-import { LanguageDefinition } from '../../../core/config/languages';
-import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
-import { LiveSessionState, SttLanguageSelector } from '../../speech';
-import { 
-  IconSend, IconPaperclip, IconMicrophone, IconXMark, IconCamera, 
-  IconCameraFront, IconBookOpen, IconPencil, IconPlus, IconSparkles, 
-  IconUndo, IconCheck, IconSave, IconFolderOpen, IconTrash, IconRobot, IconSpeaker
-} from '../../../shared/ui/Icons';
+import { ALL_LANGUAGES } from '../../../core/config/languages';
+import { IconXMark, IconUndo, IconCheck, IconSend, IconPlus } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
-import { LanguageSelectorGlobe, getGlobalProfileDB, setGlobalProfileDB } from '../../session';
-import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../../core/db/assets';
-import { uploadMediaToFiles, deleteFileByNameOrUri } from '../../../api/gemini';
-import { DB_NAME } from '../../../core/db/index';
+import { LanguageSelectorGlobe } from '../../session';
 import { useMaestroStore } from '../../../store';
-import { selectIsListening, selectIsSending, selectIsSpeaking } from '../../../store/slices/uiSlice';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
+import { useLanguageSelection } from '../../session';
+import { selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
+import { selectIsListening, selectIsSending, selectIsSpeaking, selectIsCreatingSuggestion } from '../../../store/slices/uiSlice';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
+import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
+import MediaAttachments from './input/MediaAttachments';
+import Composer from './input/Composer';
+import AudioControls from './input/AudioControls';
+import CameraControls from './input/CameraControls';
+import SessionControls from '../../session/components/SessionControls';
 
 interface InputAreaProps {
-  t: (key: string, replacements?: TranslationReplacements) => string;
-  isSttGloballyEnabled: boolean;
-  isSttSupported: boolean;
-  transcript: string;
-  sttLanguageCode: string;
-  targetLanguageDef: LanguageDefinition;
-  nativeLanguageDef: LanguageDefinition;
   onSttToggle: () => void;
   onSttLanguageChange: (code: string) => void;
-  
-  attachedImageBase64: string | null;
-  attachedImageMimeType: string | null;
-  onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
-  
   onSendMessage: (text: string, imageBase64?: string, imageMimeType?: string) => Promise<boolean>;
   onUserInputActivity: () => void;
-  
-  liveVideoStream: MediaStream | null;
-  liveSessionState: LiveSessionState;
-  liveSessionError: string | null;
   onStartLiveSession: () => Promise<void> | void;
   onStopLiveSession: () => void;
-  
-  isSuggestionMode: boolean;
   onToggleSuggestionMode: (force?: boolean) => void;
   onCreateSuggestion: (text: string) => Promise<void>;
-  isCreatingSuggestion: boolean;
-  
-  sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
-  
-  availableCameras: CameraDevice[];
-  selectedCameraId: string | null;
-  currentCameraFacingMode: 'user' | 'environment' | 'unknown';
-  isImageGenCameraSelected: boolean;
-  onSelectCamera: (deviceId: string) => void;
   onToggleSendWithSnapshot: () => void;
   onToggleUseVisualContextForReengagement: () => void;
-  sendWithSnapshotEnabled: boolean;
-  useVisualContextForReengagementEnabled: boolean;
-  imageGenerationModeEnabled: boolean;
   onToggleImageGenerationMode: () => void;
-  
-  sttError: string | null;
-  autoCaptureError: string | null;
-  snapshotUserError: string | null;
-  
-  // Language Selection
-  isLanguageSelectionOpen?: boolean;
-  tempNativeLangCode?: string | null;
-  tempTargetLangCode?: string | null;
-  onTempNativeSelect?: (code: string | null) => void;
-  onTempTargetSelect?: (code: string | null) => void;
-  onConfirmLanguageSelection?: () => void;
-  onSaveAllChats?: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
-  onLoadAllChats?: (file: File) => Promise<void>;
-
-  // Settings
-  sttProvider: string;
-  ttsProvider: string;
-  onToggleSttProvider: () => void;
-  onToggleTtsProvider: () => void;
-  isSpeechRecognitionSupported: boolean;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
-  t, isSttGloballyEnabled, isSttSupported,
-  transcript, sttLanguageCode, targetLanguageDef, nativeLanguageDef, onSttToggle, onSttLanguageChange,
-  attachedImageBase64, attachedImageMimeType, onSetAttachedImage,
-  onSendMessage, onUserInputActivity,
-  liveVideoStream, liveSessionState, liveSessionError, onStartLiveSession, onStopLiveSession,
-  isSuggestionMode, onToggleSuggestionMode, onCreateSuggestion, isCreatingSuggestion,
-  sendPrep,
-  availableCameras, selectedCameraId, currentCameraFacingMode, isImageGenCameraSelected, onSelectCamera,
-  onToggleSendWithSnapshot, onToggleUseVisualContextForReengagement, sendWithSnapshotEnabled, useVisualContextForReengagementEnabled,
-  imageGenerationModeEnabled, onToggleImageGenerationMode,
-  sttError, autoCaptureError, snapshotUserError,
-  isLanguageSelectionOpen, tempNativeLangCode, tempTargetLangCode, onTempNativeSelect, onTempTargetSelect, onConfirmLanguageSelection, onSaveAllChats, onLoadAllChats,
-  sttProvider, ttsProvider, onToggleSttProvider, onToggleTtsProvider, isSpeechRecognitionSupported
+  onSttToggle,
+  onSttLanguageChange,
+  onSendMessage,
+  onUserInputActivity,
+  onStartLiveSession,
+  onStopLiveSession,
+  onToggleSuggestionMode,
+  onCreateSuggestion,
+  onToggleSendWithSnapshot,
+  onToggleUseVisualContextForReengagement,
+  onToggleImageGenerationMode,
 }) => {
+  const { t } = useAppTranslations();
+  const settings = useMaestroStore(state => state.settings);
+  const targetLanguageDef = useMaestroStore(selectTargetLanguageDef) || ALL_LANGUAGES[0];
+  const nativeLanguageDef = useMaestroStore(selectNativeLanguageDef) || ALL_LANGUAGES[0];
+  const attachedImageBase64 = useMaestroStore(state => state.attachedImageBase64);
+  const attachedImageMimeType = useMaestroStore(state => state.attachedImageMimeType);
+  const sendPrep = useMaestroStore(state => state.sendPrep);
+  const transcript = useMaestroStore(state => state.transcript);
+  const sttError = useMaestroStore(state => state.sttError);
+  const liveVideoStream = useMaestroStore(state => state.liveVideoStream);
+  const liveSessionState = useMaestroStore(state => state.liveSessionState);
+  const liveSessionError = useMaestroStore(state => state.liveSessionError);
+  const availableCameras = useMaestroStore(state => state.availableCameras);
+  const currentCameraFacingMode = useMaestroStore(state => state.currentCameraFacingMode);
+  const autoCaptureError = useMaestroStore(state => state.visualContextCameraError);
+  const snapshotUserError = useMaestroStore(state => state.snapshotUserError);
+  const isSettingsLoaded = useMaestroStore(state => state.isSettingsLoaded);
+  const languagePairs = useMaestroStore(state => state.languagePairs);
+  const isLanguageSelectionOpen = useMaestroStore(state => state.isLanguageSelectionOpen);
+  const tempNativeLangCode = useMaestroStore(state => state.tempNativeLangCode);
+  const tempTargetLangCode = useMaestroStore(state => state.tempTargetLangCode);
+  const languageSelectorLastInteraction = useMaestroStore(state => state.languageSelectorLastInteraction);
+  const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
+  const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
+  const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
+  const updateLanguageSelectorInteraction = useMaestroStore(state => state.updateLanguageSelectorInteraction);
+  const updateSetting = useMaestroStore(state => state.updateSetting);
+  const setAttachedImage = useMaestroStore(state => state.setAttachedImage);
+  const isSpeechRecognitionSupported = useMaestroStore(state => state.isSpeechRecognitionSupported);
+  const microphoneApiAvailable = useMaestroStore(state => state.microphoneApiAvailable);
+  const isCreatingSuggestion = useMaestroStore(selectIsCreatingSuggestion);
+
+  const settingsRef = useMemo<React.MutableRefObject<typeof settings>>(() => ({
+    get current() {
+      return useMaestroStore.getState().settings;
+    },
+    set current(_value) {},
+  }), []);
+
+  const messagesRef = useMemo<React.MutableRefObject<any[]>>(() => ({
+    get current() {
+      return useMaestroStore.getState().messages;
+    },
+    set current(_value) {},
+  }), []);
+
+  const isSendingRef = useMemo<React.MutableRefObject<boolean>>(() => ({
+    get current() {
+      return selectIsSending(useMaestroStore.getState());
+    },
+    set current(_value) {},
+  }), []);
+
+  const isSuggestionMode = settings.isSuggestionMode;
+  const isSttGloballyEnabled = settings.stt.enabled;
+  const sttLanguageCode = settings.stt.language;
+  const sttProvider = settings.stt.provider || 'browser';
+  const isSttSupported = sttProvider === 'browser' ? isSpeechRecognitionSupported : microphoneApiAvailable;
+  const sendWithSnapshotEnabled = settings.sendWithSnapshotEnabled;
+  const useVisualContextForReengagementEnabled = settings.smartReengagement.useVisualContext;
+  const imageGenerationModeEnabled = settings.imageGenerationModeEnabled;
+  const selectedCameraId = settings.selectedCameraId;
+  const isImageGenCameraSelected = selectedCameraId === IMAGE_GEN_CAMERA_ID;
+
+  const onSetAttachedImage = useCallback((base64: string | null, mimeType: string | null) => {
+    setAttachedImage(base64, mimeType);
+  }, [setAttachedImage]);
+
+  const handleSelectCamera = useCallback((deviceId: string) => {
+    updateSetting('selectedCameraId', deviceId);
+  }, [updateSetting]);
+
+  const { handleTempNativeSelect, handleTempTargetSelect, handleConfirmLanguageSelection } = useLanguageSelection({
+    isSettingsLoaded,
+    settings,
+    settingsRef,
+    isSendingRef,
+    languagePairs,
+    handleSettingsChange: updateSetting,
+    messagesRef,
+    isLanguageSelectionOpen,
+    tempNativeLangCode,
+    tempTargetLangCode,
+    languageSelectorLastInteraction,
+    setIsLanguageSelectionOpen,
+    setTempNativeLangCode,
+    setTempTargetLangCode,
+  });
   const [inputText, setInputText] = useState('');
   const [backgroundHint, setBackgroundHint] = useState('');
   const bubbleTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTranscriptRef = useRef('');
+  const attachedPreviewVideoRef = useRef<HTMLVideoElement>(null);
+  const paperclipOpenTokenRef = useRef<string | null>(null);
+  const languageSelectionOpen = Boolean(isLanguageSelectionOpen);
 
   const isSending = useMaestroStore(selectIsSending);
   const isSpeaking = useMaestroStore(selectIsSpeaking);
@@ -120,34 +155,9 @@ const InputArea: React.FC<InputAreaProps> = ({
     [addActivityToken]
   );
 
-  const endUiTask = useCallback(
-    (token: string | null) => {
-      if (token) removeActivityToken(token);
-    },
-    [removeActivityToken]
-  );
-  
-  const livePreviewVideoRef = useRef<HTMLVideoElement>(null);
-  const attachedPreviewVideoRef = useRef<HTMLVideoElement>(null);
-  const [attachedVideoPlaying, setAttachedVideoPlaying] = useState(false);
-  const attachedVideoPlayTokenRef = useRef<string | null>(null);
-  const paperclipOpenTokenRef = useRef<string | null>(null);
-  
-  // Recording states
-  const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
-  const recordingTimerRef = useRef<number | null>(null);
-  const videoRecordTokenRef = useRef<string | null>(null);
-  const capturePressTimerRef = useRef<number | null>(null);
-  
-  const [isRecordingAudioNote, setIsRecordingAudioNote] = useState(false);
-  const audioNoteRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioNoteChunksRef = useRef<BlobPart[]>([]);
-  const audioNoteStreamRef = useRef<MediaStream | null>(null);
-  const audioNoteTokenRef = useRef<string | null>(null);
-  const micHoldTimerRef = useRef<number | null>(null);
-  const micHoldActiveRef = useRef<boolean>(false);
+  const endUiTask = useCallback((token: string | null) => {
+    if (token) removeActivityToken(token);
+  }, [removeActivityToken]);
 
   // --- Composer Annotation State ---
   const [isComposerAnnotating, setIsComposerAnnotating] = useState(false);
@@ -169,36 +179,9 @@ const InputArea: React.FC<InputAreaProps> = ({
   const composerLastPinchDistanceRef = useRef<number>(0);
   const composerIsNewStrokeRef = useRef(true);
 
-  // --- Language Selection Actions State ---
-  const [maestroAsset, setMaestroAsset] = useState<MaestroProfileAsset | null>(null);
-  const [isUploadingMaestro, setIsUploadingMaestro] = useState(false);
-  
-  // Reset confirmation inside input area
-  const [resetMode, setResetMode] = useState(false);
-  const [resetConfirm, setResetConfirm] = useState<string>('');
-  const [_isResetting, setIsResetting] = useState(false);
-
-  // Profile editing inside input area
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileText, setProfileText] = useState('');
-
-  const saveTokenRef = useRef<string | null>(null);
-  const loadTokenRef = useRef<string | null>(null);
-  const maestroUploadTokenRef = useRef<string | null>(null);
-  const maestroAvatarOpenTokenRef = useRef<string | null>(null);
-  
-  const loadFileInputRef = useRef<HTMLInputElement>(null);
-  const maestroFileInputRef = useRef<HTMLInputElement>(null);
-
-  const isCameraActive = sendWithSnapshotEnabled || useVisualContextForReengagementEnabled;
-  const liveSessionActive = liveSessionState === 'active';
-  const liveSessionConnecting = liveSessionState === 'connecting';
-  const liveSessionErrored = liveSessionState === 'error';
-  const showLiveFeed = liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !isLanguageSelectionOpen;
+  const showLiveFeed = Boolean(liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !languageSelectionOpen);
   const isTwoUp = Boolean(attachedImageBase64 && showLiveFeed);
 
-
-  // Sync transcript to input
   useEffect(() => {
     if (transcript === prevTranscriptRef.current) return;
     const shouldApply = isSttGloballyEnabled || isListening;
@@ -216,45 +199,12 @@ const InputArea: React.FC<InputAreaProps> = ({
     prevTranscriptRef.current = transcript;
   }, [transcript, isSttGloballyEnabled, isListening, onUserInputActivity]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (bubbleTextAreaRef.current) {
       bubbleTextAreaRef.current.style.height = 'auto';
       bubbleTextAreaRef.current.style.height = `${bubbleTextAreaRef.current.scrollHeight}px`;
     }
   }, [inputText]);
-
-  // Maestro Avatar Init
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const a = await getMaestroProfileImageDB();
-        if (mounted) setMaestroAsset(a);
-      } catch {}
-    })();
-    return () => { mounted = false; };
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: any) => {
-      try {
-        const d = e?.detail || {};
-        if (d && (typeof d.dataUrl === 'string' || typeof d.uri === 'string')) {
-          setMaestroAsset({
-            dataUrl: typeof d.dataUrl === 'string' ? d.dataUrl : maestroAsset?.dataUrl,
-            mimeType: typeof d.mimeType === 'string' ? d.mimeType : maestroAsset?.mimeType,
-            uri: typeof d.uri === 'string' ? d.uri : maestroAsset?.uri,
-            updatedAt: Date.now(),
-          });
-        } else {
-          getMaestroProfileImageDB().then(a => setMaestroAsset(a)).catch(() => {});
-        }
-      } catch { /* ignore */ }
-    };
-    window.addEventListener('maestro-avatar-updated', handler as any);
-    return () => window.removeEventListener('maestro-avatar-updated', handler as any);
-  }, [maestroAsset]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
@@ -265,66 +215,43 @@ const InputArea: React.FC<InputAreaProps> = ({
   };
 
   const handleSend = async () => {
-    if (isLanguageSelectionOpen && onConfirmLanguageSelection) {
-        onConfirmLanguageSelection();
-        return;
+    if (languageSelectionOpen) {
+      handleConfirmLanguageSelection();
+      return;
     }
     if (isSuggestionMode) {
       if (!inputText.trim() || isCreatingSuggestion) {
-         if (!inputText.trim()) onToggleSuggestionMode(); 
-         return;
-       }
+        if (!inputText.trim()) onToggleSuggestionMode();
+        return;
+      }
       const textToSend = inputText.trim();
-      setInputText(''); 
+      setInputText('');
       await onCreateSuggestion(textToSend);
-       return;
+      return;
     }
     if (isSending || isSpeaking || (!inputText.trim() && !attachedImageBase64)) return;
     const textToSend = inputText.trim();
     setInputText('');
     const success = await onSendMessage(textToSend, attachedImageBase64 || undefined, attachedImageMimeType || undefined);
     if (success) {
-      onSetAttachedImage(null, null); 
-      if (fileInputRef.current) fileInputRef.current.value = ''; 
+      onSetAttachedImage(null, null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend(); 
+      handleSend();
     }
   };
-
-  const startProfileEdit = async () => {
-    try {
-      const current = (await getGlobalProfileDB())?.text ?? '';
-      setProfileText(current);
-      setIsEditingProfile(true);
-    } catch {
-      setProfileText('');
-      setIsEditingProfile(true);
-    }
-  };
-
-  const handleProfileSave = async () => {
-    try {
-      await setGlobalProfileDB(profileText.trim());
-      try { window.dispatchEvent(new CustomEvent('globalProfileUpdated')); } catch {}
-    } finally {
-      setIsEditingProfile(false);
-    }
-  };
-
-  // --- Composer Annotation Handlers ---
 
   const startComposerAnnotationFromImage = useCallback((dataUrl: string) => {
     if (!composerAnnotateTokenRef.current) {
       composerAnnotateTokenRef.current = createUiToken(TOKEN_SUBTYPE.COMPOSER_ANNOTATE);
     }
     setComposerAnnotationSourceUrl(dataUrl);
-    
-    // Defer scale calculation until image renders
+
     setTimeout(() => {
       if (composerImageRef.current) {
         const img = composerImageRef.current;
@@ -537,7 +464,6 @@ const InputArea: React.FC<InputAreaProps> = ({
     handleComposerCancel();
   }, [composerPan.x, composerPan.y, composerScale, onSetAttachedImage, onUserInputActivity, handleComposerCancel]);
 
-  // Setup canvas for composer
   useEffect(() => {
     if (!isComposerAnnotating || !composerAnnotationSourceUrl) return;
     const canvas = composerEditCanvasRef.current;
@@ -549,7 +475,7 @@ const InputArea: React.FC<InputAreaProps> = ({
       if (img.naturalWidth > 0) {
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
-        ctx.strokeStyle = '#EF4444'; // red-500
+        ctx.strokeStyle = '#EF4444';
         ctx.lineWidth = Math.max(5, img.naturalWidth * 0.01);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -560,513 +486,84 @@ const InputArea: React.FC<InputAreaProps> = ({
     return () => img.removeEventListener('load', setup);
   }, [isComposerAnnotating, composerAnnotationSourceUrl]);
 
-
-  // Video recording logic
-  const pickRecorderMimeType = () => {
-    const candidates = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
-    for (const m of candidates) if ((window as any).MediaRecorder?.isTypeSupported?.(m)) return m;
-    return '';
-  };
-
-  const handleStopRecording = useCallback(() => {
-    const rec = mediaRecorderRef.current;
-    if (rec && rec.state === 'recording') {
-      try { rec.requestData(); } catch {}
-      rec.stop();
-    }
-    if (recordingTimerRef.current) {
-      clearTimeout(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
-    setIsRecording(false);
-    if (videoRecordTokenRef.current) {
-      endUiTask(videoRecordTokenRef.current);
-      videoRecordTokenRef.current = null;
-    }
-  }, [endUiTask]);
-
-  const handleStartRecording = useCallback(() => {
-    if (isRecording || !liveVideoStream) return;
-    try {
-      if (!videoRecordTokenRef.current) {
-        videoRecordTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIDEO_RECORD);
-      }
-      const mimeType = pickRecorderMimeType();
-      const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
-      const rec = new MediaRecorder(liveVideoStream, options);
-      mediaRecorderRef.current = rec;
-      recordedChunksRef.current = [];
-      rec.ondataavailable = (event) => { if (event.data && event.data.size > 0) recordedChunksRef.current.push(event.data); };
-      rec.onstop = () => {
-        const chosenType = rec.mimeType || mimeType || 'video/webm';
-        const chunks = recordedChunksRef.current;
-        recordedChunksRef.current = [];
-        if (!chunks.length) return;
-        const videoBlob = new Blob(chunks, { type: chosenType });
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          onSetAttachedImage(reader.result as string, chosenType);
-          onUserInputActivity();
-        };
-        reader.readAsDataURL(videoBlob);
-        if (videoRecordTokenRef.current) {
-          endUiTask(videoRecordTokenRef.current);
-          videoRecordTokenRef.current = null;
-        }
-      };
-      rec.start(1000);
-      setIsRecording(true);
-      recordingTimerRef.current = window.setTimeout(() => {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          handleStopRecording();
-          alert(t('chat.error.recordingTimeExceeded', { maxMinutes: 15 }));
-        }
-      }, 15 * 60 * 1000);
-    } catch (e) {
-      console.error('Failed to start media recorder:', e);
-      if (videoRecordTokenRef.current) {
-        endUiTask(videoRecordTokenRef.current);
-        videoRecordTokenRef.current = null;
-      }
-    }
-  }, [isRecording, liveVideoStream, onSetAttachedImage, onUserInputActivity, t, handleStopRecording, createUiToken, endUiTask]);
-
-  const handleCaptureImage = useCallback(() => {
-     if (!livePreviewVideoRef.current || !liveVideoStream || !livePreviewVideoRef.current.srcObject) return;
-     if (livePreviewVideoRef.current.videoWidth === 0 || livePreviewVideoRef.current.videoHeight === 0) return;
-     const videoElement = livePreviewVideoRef.current;
-     const canvas = document.createElement('canvas');
-     canvas.width = videoElement.videoWidth;
-     canvas.height = videoElement.videoHeight;
-     const context = canvas.getContext('2d');
-     if (context) {
-       context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-       const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-       onSetAttachedImage(dataUrl, 'image/jpeg');
-       onUserInputActivity();
-     }
-   }, [liveVideoStream, onSetAttachedImage, onUserInputActivity]);
-
-   const handleCaptureButtonPointerDown = () => {
-       if (capturePressTimerRef.current) clearTimeout(capturePressTimerRef.current);
-       capturePressTimerRef.current = window.setTimeout(() => {
-           handleStartRecording();
-           capturePressTimerRef.current = null;
-       }, 500);
-   };
-   const handleCaptureButtonPointerUp = () => {
-       if (capturePressTimerRef.current) {
-           clearTimeout(capturePressTimerRef.current);
-           capturePressTimerRef.current = null;
-           handleCaptureImage();
-       }
-   };
-   const handleCaptureButtonPointerLeave = () => {
-       if (capturePressTimerRef.current) {
-           clearTimeout(capturePressTimerRef.current);
-           capturePressTimerRef.current = null;
-       }
-   };
-
-  // Audio Note Logic
-  const pickAudioMimeType = () => {
-    const candidates = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'];
-    for (const m of candidates) if ((window as any).MediaRecorder?.isTypeSupported?.(m)) return m;
-    return '';
-  };
-  const startAudioNoteRecording = useCallback(async () => {
-    if (isRecordingAudioNote || isSttGloballyEnabled) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioNoteStreamRef.current = stream;
-      const mimeType = pickAudioMimeType();
-      const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
-      const rec = new MediaRecorder(stream, options);
-      audioNoteRecorderRef.current = rec;
-      audioNoteChunksRef.current = [];
-      rec.ondataavailable = (e) => { if (e.data && e.data.size) audioNoteChunksRef.current.push(e.data); };
-      rec.onstop = () => {
-        const chosenType = rec.mimeType || mimeType || 'audio/webm';
-        const chunks = audioNoteChunksRef.current;
-        audioNoteChunksRef.current = [];
-        if (audioNoteStreamRef.current) { try { audioNoteStreamRef.current.getTracks().forEach(t => t.stop()); } catch {} audioNoteStreamRef.current = null; }
-        if (audioNoteTokenRef.current) {
-          endUiTask(audioNoteTokenRef.current);
-          audioNoteTokenRef.current = null;
-        }
-        if (!chunks.length) return;
-        const blob = new Blob(chunks, { type: chosenType });
-        const reader = new FileReader();
-        reader.onloadend = () => { onSetAttachedImage(reader.result as string, chosenType); onUserInputActivity(); };
-        reader.readAsDataURL(blob);
-      };
-      rec.onerror = () => {
-        try { audioNoteStreamRef.current?.getTracks()?.forEach(t => t.stop()); } catch {}
-        audioNoteStreamRef.current = null;
-        setIsRecordingAudioNote(false);
-        if (audioNoteTokenRef.current) {
-          endUiTask(audioNoteTokenRef.current);
-          audioNoteTokenRef.current = null;
-        }
-      };
-      if (!audioNoteTokenRef.current) {
-        audioNoteTokenRef.current = createUiToken(TOKEN_SUBTYPE.AUDIO_NOTE);
-      }
-      rec.start(250); 
-      setIsRecordingAudioNote(true);
-    } catch (e) {
-      console.error('Failed to start audio note recording:', e);
-    }
-  }, [isRecordingAudioNote, isSttGloballyEnabled, onSetAttachedImage, onUserInputActivity, createUiToken, endUiTask]);
-
-  const stopAudioNoteRecording = useCallback(() => {
-    const rec = audioNoteRecorderRef.current;
-    if (rec && rec.state === 'recording') { try { rec.requestData(); } catch {} rec.stop(); }
-    setIsRecordingAudioNote(false);
-    if (audioNoteTokenRef.current) {
-      endUiTask(audioNoteTokenRef.current);
-      audioNoteTokenRef.current = null;
-    }
-  }, [endUiTask]);
-
-  const handleMicPointerDown = useCallback((e: React.PointerEvent) => {
-    if (isSttGloballyEnabled || isSending || isSpeaking) return; 
-    e.preventDefault(); e.stopPropagation();
-    micHoldActiveRef.current = false;
-    if (micHoldTimerRef.current) { clearTimeout(micHoldTimerRef.current); micHoldTimerRef.current = null; }
-    micHoldTimerRef.current = window.setTimeout(async () => {
-      micHoldTimerRef.current = null;
-      try {
-        if ('permissions' in navigator && (navigator as any).permissions?.query) {
-          const status = await (navigator as any).permissions.query({ name: 'microphone' as PermissionName });
-          if ((status as any).state !== 'granted') { micHoldActiveRef.current = false; return; }
-        } else { micHoldActiveRef.current = false; return; }
-      } catch { micHoldActiveRef.current = false; return; }
-      micHoldActiveRef.current = true;
-      await startAudioNoteRecording();
-    }, 450);
-  }, [isSttGloballyEnabled, isSending, isSpeaking, startAudioNoteRecording]);
-
-  const handleMicPointerUp = useCallback((e: React.PointerEvent) => {
-    if (micHoldTimerRef.current) { clearTimeout(micHoldTimerRef.current); micHoldTimerRef.current = null; }
-    if (!isSttGloballyEnabled && micHoldActiveRef.current) {
-      stopAudioNoteRecording();
-      e.preventDefault(); e.stopPropagation();
-      window.setTimeout(() => { micHoldActiveRef.current = false; }, 200);
-    }
-  }, [isSttGloballyEnabled, stopAudioNoteRecording]);
-
-  const handleMicPointerCancel = useCallback(() => {
-    if (micHoldTimerRef.current) { clearTimeout(micHoldTimerRef.current); micHoldTimerRef.current = null; }
-    if (!isSttGloballyEnabled && micHoldActiveRef.current) { stopAudioNoteRecording(); micHoldActiveRef.current = false; }
-  }, [isSttGloballyEnabled, stopAudioNoteRecording]);
-
-  const handleMicClick = useCallback((e: React.MouseEvent) => {
-    if (micHoldActiveRef.current) { micHoldActiveRef.current = false; e.preventDefault(); e.stopPropagation(); return; }
-    if (micHoldTimerRef.current) { clearTimeout(micHoldTimerRef.current); micHoldTimerRef.current = null; }
-    onSttToggle();
-  }, [onSttToggle]);
-
-  useEffect(() => () => { if (micHoldTimerRef.current) clearTimeout(micHoldTimerRef.current); }, []);
-
-  // Camera Logic
-  const allCameraOptions = useMemo(() => {
-       const cameraOptions: CameraDevice[] = [...availableCameras];
-       if (imageGenerationModeEnabled) {
-           cameraOptions.push({ deviceId: IMAGE_GEN_CAMERA_ID, label: t('chat.camera.imageGenCameraLabel'), facingMode: 'unknown' });
-       }
-       return cameraOptions;
-   }, [availableCameras, imageGenerationModeEnabled, t]);
-
-   const handleCameraActivationClick = () => { onToggleSendWithSnapshot(); onToggleUseVisualContextForReengagement(); };
-   const handleCameraDeactivationClick = () => { if (sendWithSnapshotEnabled) onToggleSendWithSnapshot(); if (useVisualContextForReengagementEnabled) onToggleUseVisualContextForReengagement(); };
-
-   // File Input
-   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (paperclipOpenTokenRef.current) {
       endUiTask(paperclipOpenTokenRef.current);
       paperclipOpenTokenRef.current = null;
     }
-     const file = e.target.files?.[0];
-     if (file) {
-       if (file.type.startsWith('video/')) {
-         const video = document.createElement('video');
-         video.preload = 'metadata';
-         video.onloadedmetadata = () => {
-           window.URL.revokeObjectURL(video.src);
-           const reader = new FileReader();
-           reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
-           reader.readAsDataURL(file);
-         };
-         video.onerror = () => { window.URL.revokeObjectURL(video.src); alert(t('chat.error.videoMetadataError')); if (fileInputRef.current) fileInputRef.current.value = ''; };
-         video.src = URL.createObjectURL(file);
-       } else {
-         const reader = new FileReader();
-         reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
-         reader.readAsDataURL(file);
-       }
-     }
-   };
-   const removeAttachedImage = () => { onSetAttachedImage(null, null); if (fileInputRef.current) fileInputRef.current.value = ''; };
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith('video/')) {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+          window.URL.revokeObjectURL(video.src);
+          const reader = new FileReader();
+          reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
+          reader.readAsDataURL(file);
+        };
+        video.onerror = () => { window.URL.revokeObjectURL(video.src); alert(t('chat.error.videoMetadataError')); if (fileInputRef.current) fileInputRef.current.value = ''; };
+        video.src = URL.createObjectURL(file);
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
 
-   useEffect(() => {
-     const handleWindowFocus = () => {
-       if (paperclipOpenTokenRef.current) {
-         endUiTask(paperclipOpenTokenRef.current);
-         paperclipOpenTokenRef.current = null;
-       }
-     };
-      window.addEventListener('focus', handleWindowFocus);
-      return () => window.removeEventListener('focus', handleWindowFocus);
-   }, [endUiTask]);
+  const removeAttachedImage = () => { onSetAttachedImage(null, null); if (fileInputRef.current) fileInputRef.current.value = ''; };
 
-   // Live preview ref sync
-   useEffect(() => {
-     if (livePreviewVideoRef.current && liveVideoStream) {
-         if (livePreviewVideoRef.current.srcObject !== liveVideoStream) {
-             livePreviewVideoRef.current.srcObject = liveVideoStream;
-             livePreviewVideoRef.current.play().catch(e => console.error("Error playing live preview:", e));
-         } else if (livePreviewVideoRef.current.paused) {
-             livePreviewVideoRef.current.play().catch(e => console.error("Error playing live preview:", e));
-         }
-     } else if (livePreviewVideoRef.current && !liveVideoStream) {
-         livePreviewVideoRef.current.srcObject = null;
-     }
-   }, [liveVideoStream, attachedImageBase64]);
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      if (paperclipOpenTokenRef.current) {
+        endUiTask(paperclipOpenTokenRef.current);
+        paperclipOpenTokenRef.current = null;
+      }
+    };
+    window.addEventListener('focus', handleWindowFocus);
+    return () => window.removeEventListener('focus', handleWindowFocus);
+  }, [endUiTask]);
 
-   const prepDisplay = useMemo(() => {
+  const prepDisplay = useMemo(() => {
     if (!sendPrep || !sendPrep.active) return null;
     const parts: string[] = [];
-    parts.push(sendPrep.label || 'Preparing…');
+    parts.push(sendPrep.label || 'Preparing...');
     if (typeof sendPrep.done === 'number' && typeof sendPrep.total === 'number' && sendPrep.total > 0) parts.push(`${sendPrep.done}/${sendPrep.total}`);
     if (typeof sendPrep.etaMs === 'number') { const sec = Math.ceil(sendPrep.etaMs / 1000); if (isFinite(sec)) parts.push(`~${sec}s`); }
     return parts.join(' · ');
   }, [sendPrep]);
 
   const sttLangFlag = useMemo(() => {
-     if (sttLanguageCode === targetLanguageDef?.langCode) return targetLanguageDef.flag;
-     if (sttLanguageCode === nativeLanguageDef?.langCode) return nativeLanguageDef.flag;
-     return targetLanguageDef?.flag;
-   }, [sttLanguageCode, targetLanguageDef, nativeLanguageDef]);
+    if (sttLanguageCode === targetLanguageDef?.langCode) return targetLanguageDef.flag;
+    if (sttLanguageCode === nativeLanguageDef?.langCode) return nativeLanguageDef.flag;
+    return targetLanguageDef?.flag;
+  }, [sttLanguageCode, targetLanguageDef, nativeLanguageDef]);
 
   const getPlaceholderText = () => {
-    if (isLanguageSelectionOpen) return "";
+    if (languageSelectionOpen) return '';
     if (prepDisplay) return prepDisplay;
-     if (isSuggestionMode) {
-         if (isCreatingSuggestion) return t('chat.suggestion.creating');
-         if (isListening) return backgroundHint ? `${t('chat.placeholder.suggestion.listening', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.suggestion.listening', { language: sttLangFlag });
-         if (isSttGloballyEnabled) return backgroundHint ? `${t('chat.placeholder.suggestion.sttActive', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.suggestion.sttActive', { language: sttLangFlag });
-         return t('chat.placeholder.suggestion.sttInactive', { language: sttLangFlag });
-     }
+    if (isSuggestionMode) {
+      if (isCreatingSuggestion) return t('chat.suggestion.creating');
+      if (isListening) return backgroundHint ? `${t('chat.placeholder.suggestion.listening', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.suggestion.listening', { language: sttLangFlag });
+      if (isSttGloballyEnabled) return backgroundHint ? `${t('chat.placeholder.suggestion.sttActive', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.suggestion.sttActive', { language: sttLangFlag });
+      return t('chat.placeholder.suggestion.sttInactive', { language: sttLangFlag });
+    }
     if (isListening) return backgroundHint ? `${t('chat.placeholder.normal.listening', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.normal.listening', { language: sttLangFlag });
     if (isSttGloballyEnabled) return backgroundHint ? `${t('chat.placeholder.normal.sttActive', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.normal.sttActive', { language: sttLangFlag });
     return t('chat.placeholder.normal.sttInactive', { language: sttLangFlag });
-   };
+  };
 
-  const getMicButtonTitle = () => {
-    if (isRecordingAudioNote) { try { const k = t('chat.mic.recordingAudioNote'); if (k !== 'chat.mic.recordingAudioNote') return k; } catch {} return 'Recording audio… release to attach'; }
-    return isListening ? t("chat.mic.listening") : (isSttGloballyEnabled ? t("chat.mic.disableStt") : t("chat.mic.enableStt"));
-  }
-
-  const liveSessionButtonLabel = liveSessionActive ? t('chat.liveSession.stop') : (liveSessionErrored ? t('chat.liveSession.retry') : t('chat.liveSession.start'));
-  const liveSessionButtonClasses = liveSessionActive ? 'bg-red-600/80 hover:bg-red-500 text-white' : (liveSessionErrored ? 'bg-yellow-500/80 hover:bg-yellow-500 text-slate-900' : (isSuggestionMode ? 'bg-gray-700/80 hover:bg-gray-800 text-white' : 'bg-black/60 hover:bg-black/80 text-white'));
-  
-  const containerClass = isSuggestionMode 
-    ? 'bg-white text-gray-800 shadow-sm ring-1 ring-gray-300 focus-within:ring-2 focus-within:ring-gray-400' 
+  const containerClass = isSuggestionMode
+    ? 'bg-white text-gray-800 shadow-sm ring-1 ring-gray-300 focus-within:ring-2 focus-within:ring-gray-400'
     : 'bg-blue-400 text-white shadow-sm ring-1 ring-blue-300 focus-within:ring-2 focus-within:ring-white/80';
 
   const sendButtonStyle = isSuggestionMode ? 'bg-gray-700 text-white hover:bg-gray-600 focus:ring-gray-400' : 'bg-white text-blue-600 hover:bg-blue-100 focus:ring-blue-200';
   const iconButtonStyle = isSuggestionMode ? 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' : 'text-blue-100 hover:text-white hover:bg-white/20';
 
-  const handleLiveSessionToggle = () => {
-    if (liveSessionActive) onStopLiveSession();
-    else { try { onStartLiveSession(); } catch {} }
-  };
-
-  // --- Handlers for Language Selection Popups ---
-  const wipeLocalMemoryAndDb = useCallback(async () => {
-    try {
-        await new Promise<void>((resolve) => {
-            let settled = false;
-            try {
-                const req = indexedDB.deleteDatabase(DB_NAME);
-                req.onsuccess = () => { settled = true; resolve(); };
-                req.onerror = () => { resolve(); };
-                req.onblocked = () => { resolve(); };
-            } catch { resolve(); }
-            setTimeout(() => { if (!settled) resolve(); }, 1500);
-        });
-    } catch {}
-  }, []);
-
-  const handleMaestroAvatarClick = () => {
-    try {
-      if (!maestroAvatarOpenTokenRef.current) {
-        maestroAvatarOpenTokenRef.current = createUiToken(TOKEN_SUBTYPE.MAESTRO_AVATAR);
-      }
-    } catch {}
-    maestroFileInputRef.current?.click();
-  };
-
-  const handleClearMaestroAvatar = async (e?: React.MouseEvent) => {
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    try { 
-      setIsUploadingMaestro(true); 
-      if (!maestroUploadTokenRef.current) {
-        maestroUploadTokenRef.current = createUiToken(TOKEN_SUBTYPE.MAESTRO_AVATAR);
-      }
-    } catch {}
-    try {
-      const prevUri = maestroAsset?.uri;
-      if (prevUri) {
-        await deleteFileByNameOrUri(prevUri);
-      }
-    } catch { }
-    try { await clearMaestroProfileImageDB(); } catch { }
-    
-    // Attempt default avatar
-    try {
-      const man = await fetch('/maestro-avatars/manifest.json', { cache: 'force-cache' });
-      let defaultFound = false;
-      if (man.ok) {
-        const list: string[] = await man.json();
-        if (Array.isArray(list)) {
-          for (const name of list) {
-            try {
-              const r = await fetch(`/maestro-avatars/${name}`, { cache: 'force-cache' });
-              if (r.ok) {
-                const blob = await r.blob();
-                const mime = blob.type || 'image/png';
-                const dataUrl: string = await new Promise((resolve, reject) => {
-                  const fr = new FileReader();
-                  fr.onloadend = () => resolve(fr.result as string);
-                  fr.onerror = () => reject(fr.error || new Error('DataURL conversion failed'));
-                  fr.readAsDataURL(blob);
-                });
-                let uploadedUri: string | undefined;
-                let uploadedMimeType: string = mime; // Default to detected mime, but use normalized from upload if available
-                try {
-                  const up = await uploadMediaToFiles(dataUrl, mime, 'maestro-avatar');
-                  uploadedUri = up.uri;
-                  uploadedMimeType = up.mimeType; // Use the normalized MIME type from the upload
-                } catch { }
-                const asset: MaestroProfileAsset = { dataUrl, mimeType: uploadedMimeType, uri: uploadedUri, updatedAt: Date.now() };
-                try { await setMaestroProfileImageDB(asset); } catch {}
-                setMaestroAsset(asset);
-                try { window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: asset })); } catch {}
-                defaultFound = true;
-                break;
-              }
-            } catch { }
-          }
-        }
-      }
-      if (!defaultFound) {
-        setMaestroAsset(null);
-        try { window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: {} })); } catch {}
-      }
-    } catch {
-      setMaestroAsset(null);
-    } finally {
-      try { setIsUploadingMaestro(false); } catch {}
-      if (maestroUploadTokenRef.current) {
-        endUiTask(maestroUploadTokenRef.current);
-        maestroUploadTokenRef.current = null;
-      }
-    }
-  };
-
-  const handleMaestroFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (maestroAvatarOpenTokenRef.current) {
-      endUiTask(maestroAvatarOpenTokenRef.current);
-      maestroAvatarOpenTokenRef.current = null;
-    }
-    const file = event.target.files?.[0];
-    if (!file) { event.target.value = ''; return; }
-    if (!file.type.startsWith('image/')) { event.target.value = ''; return; }
-    try {
-      setIsUploadingMaestro(true);
-      if (!maestroUploadTokenRef.current) {
-        maestroUploadTokenRef.current = createUiToken(TOKEN_SUBTYPE.MAESTRO_AVATAR);
-      }
-      const dataUrl: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = (e) => reject(e);
-        reader.readAsDataURL(file);
-      });
-      let uploadedUri: string | undefined;
-      let uploadedMimeType: string = file.type; // Default to file.type, but use normalized from upload if available
-      try {
-        const up = await uploadMediaToFiles(dataUrl, file.type, 'maestro-avatar');
-        uploadedUri = up.uri;
-        uploadedMimeType = up.mimeType; // Use the normalized MIME type from the upload
-      } catch {}
-      const asset: MaestroProfileAsset = { dataUrl, mimeType: uploadedMimeType, uri: uploadedUri, updatedAt: Date.now() };
-      await setMaestroProfileImageDB(asset);
-      setMaestroAsset(asset);
-      try {
-        window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: { uri: uploadedUri, mimeType: uploadedMimeType, dataUrl } }));
-      } catch {}
-    } catch {
-    } finally {
-      setIsUploadingMaestro(false);
-      event.target.value = '';
-      if (maestroUploadTokenRef.current) {
-        endUiTask(maestroUploadTokenRef.current);
-        maestroUploadTokenRef.current = null;
-      }
-    }
-  };
-
-  const handleLoadFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && onLoadAllChats) {
-        try {
-          if (!loadTokenRef.current) {
-             loadTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
-          }
-          await onLoadAllChats(file);
-        } finally {
-          if (loadTokenRef.current) {
-            endUiTask(loadTokenRef.current);
-            loadTokenRef.current = null;
-          }
-        }
-    }
-    event.target.value = '';
-  };
-
-  const handleSave = async () => {
-    if (onSaveAllChats) {
-        if (!saveTokenRef.current) {
-            saveTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
-        }
-        try {
-            await onSaveAllChats();
-        } finally {
-            if (saveTokenRef.current) {
-              endUiTask(saveTokenRef.current);
-              saveTokenRef.current = null;
-            }
-        }
-    }
-  };
-
-  const handleResetConfirm = async () => {
-    if (resetConfirm !== 'DELETE') return;
-    try {
-        setIsResetting(true);
-        // Backup first
-        const safe = `backup-before-reset-${new Date().toISOString().slice(0,10)}`;
-        if (onSaveAllChats) await onSaveAllChats({ filename: `${safe}.json`, auto: true });
-        
-        await new Promise(r => setTimeout(r, 500));
-        await wipeLocalMemoryAndDb();
-        window.location.reload();
-    } catch(e) {
-        setIsResetting(false);
+  const handlePaperclipClick = () => {
+    if (!paperclipOpenTokenRef.current) {
+      paperclipOpenTokenRef.current = createUiToken(TOKEN_SUBTYPE.ATTACH_FILE);
     }
   };
 
@@ -1175,407 +672,117 @@ const InputArea: React.FC<InputAreaProps> = ({
           </div>
         </div>
       ) : (
-      <>
-      {/* Previews */}
-      {isLanguageSelectionOpen && onTempNativeSelect && onTempTargetSelect && onConfirmLanguageSelection ? (
-          <LanguageSelectorGlobe 
-            nativeLangCode={tempNativeLangCode || null}
-            targetLangCode={tempTargetLangCode || null}
-            onSelectNative={onTempNativeSelect}
-            onSelectTarget={onTempTargetSelect}
-            onConfirm={onConfirmLanguageSelection}
-            t={t}
-            onInteract={onUserInputActivity}
-          />
-      ) : (
-        (attachedImageBase64 || showLiveFeed) && (
-         <div className="flex flex-wrap justify-center items-start gap-2 mb-2 order-first w-full">
-           {attachedImageBase64 && (
-             <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-gray-300' : 'bg-blue-400'} p-1 rounded-md`}>
-               {attachedImageMimeType?.startsWith('image/') ? (
-                 <div className="relative">
-                   <img src={attachedImageBase64} alt={t('chat.imagePreview.alt')} className="h-24 w-full object-cover rounded" />
-                   {/* Annotate image button */}
-                   <button
-                     onClick={handleComposerAnnotateImage}
-                     className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-black"
-                     title={t('chat.annotateImage')}
-                   >
-                     <IconPencil className="w-4 h-4" />
-                   </button>
-                 </div>
-               ) : attachedImageMimeType?.startsWith('video/') ? (
-                 <div className="relative">
-                    <video
-                      ref={attachedPreviewVideoRef}
-                      src={attachedImageBase64}
-                      controls
-                      className="h-24 w-full object-contain rounded bg-black"
-                      onPlay={() => {
-                        setAttachedVideoPlaying(true);
-                        if (!attachedVideoPlayTokenRef.current) {
-                          attachedVideoPlayTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIDEO_PLAY);
-                        }
-                      }}
-                      onPause={() => {
-                        setAttachedVideoPlaying(false);
-                        if (attachedVideoPlayTokenRef.current) {
-                          endUiTask(attachedVideoPlayTokenRef.current);
-                          attachedVideoPlayTokenRef.current = null;
-                        }
-                      }}
-                      onEnded={() => {
-                        setAttachedVideoPlaying(false);
-                        if (attachedVideoPlayTokenRef.current) {
-                          endUiTask(attachedVideoPlayTokenRef.current);
-                          attachedVideoPlayTokenRef.current = null;
-                        }
-                      }}
-                    />
-                   {/* Annotate frame button */}
-                   <button
-                     onClick={handleComposerAnnotateVideo}
-                     disabled={attachedVideoPlaying}
-                     className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-black disabled:opacity-50"
-                     title={attachedVideoPlaying ? t('chat.error.pauseVideoToAnnotate') : t('chat.annotateVideoFrame')}
-                   >
-                     <IconPencil className="w-4 h-4" />
-                   </button>
-                 </div>
-               ) : attachedImageMimeType?.startsWith('audio/') ? (
-                 <div className="relative">
-                   <audio src={attachedImageBase64} controls className="h-24 w-full object-contain rounded bg-black/5" />
-                   <span className={`text-xs mt-1 truncate max-w-full px-1 block ${isSuggestionMode ? 'text-gray-600' : 'text-white'}`}>{attachedImageMimeType}</span>
-                 </div>
-               ) : (
-                 <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-gray-100' : 'bg-blue-300'} rounded`}>
-                   <IconPaperclip className={`w-8 h-8 ${isSuggestionMode ? 'text-gray-500' : 'text-blue-100'}`} />
-                   <span className={`text-xs mt-1 truncate max-w-full px-1 ${isSuggestionMode ? 'text-gray-600' : 'text-white'}`}>{attachedImageMimeType}</span>
-                 </div>
-               )}
-               <div className="absolute -top-2 -right-2 flex items-center space-x-1">
-                 <button onClick={removeAttachedImage} className="p-1 bg-red-500/80 text-white rounded-full hover:bg-red-500" aria-label={t('chat.removeAttachedImage')}>
-                   <IconXMark className="w-4 h-4" />
-                 </button>
-               </div>
-             </div>
-           )}
-
-          {showLiveFeed && (
-            <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-gray-300' : 'bg-blue-400'} p-1 rounded-md`}>
-              <div className="relative group">
-                <video
-                  ref={livePreviewVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="h-24 w-full object-cover rounded pointer-events-none"
-                />
-                <div className="absolute top-1 right-1 flex items-center gap-2 z-30">
-                  {liveSessionConnecting && <SmallSpinner className="w-5 h-5 text-white drop-shadow" />}
-                  <button
-                    type="button"
-                    onClick={handleLiveSessionToggle}
-                    disabled={liveSessionConnecting}
-                    className={`px-2 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 ${liveSessionButtonClasses} ${liveSessionConnecting ? 'opacity-70 cursor-wait' : ''}`}
-                  >
-                    {liveSessionButtonLabel}
-                  </button>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                  {liveSessionActive ? (
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/80 text-white uppercase text-xs font-semibold tracking-wide">
-                      <span className="inline-flex h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden />
-                      {t('chat.liveSession.liveBadge') || 'Live'}
-                    </div>
-                  ) : liveSessionConnecting ? (
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 text-white text-xs">
-                      <SmallSpinner className="w-4 h-4 text-white" />
-                      <span>{t('chat.liveSession.connecting') || 'Connecting'}</span>
-                    </div>
-                  ) : isRecording ? (
-                    <button
-                      onClick={handleStopRecording}
-                      className="p-2 rounded-full bg-red-500/80 text-white group-hover:bg-red-500 transition-colors"
-                      aria-label={t('chat.camera.stopRecording')}
-                    >
-                      <div className="w-4 h-4 bg-white rounded-sm" />
-                    </button>
-                  ) : (
-                    <button
-                      onPointerDown={handleCaptureButtonPointerDown}
-                      onPointerUp={handleCaptureButtonPointerUp}
-                      onPointerLeave={handleCaptureButtonPointerLeave}
-                      onContextMenu={(e) => e.preventDefault()}
-                      className="p-2 rounded-full bg-white/30 text-white group-hover:bg-white/50 transition-colors"
-                      aria-label={t('chat.camera.captureOrRecord')}
-                    >
-                      <IconCamera className="w-6 h-6" />
-                    </button>
-                  )}
-                </div>
-                {isRecording && !liveSessionActive && !liveSessionConnecting && (
-                  <div className="absolute top-1 left-1 flex items-center space-x-1 p-1 bg-black/50 rounded-lg z-20">
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-white text-xs font-mono">REC</span>
-                  </div>
-                )}
-              </div>
-              {liveSessionError && (
-                <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-red-100 text-red-700' : 'bg-red-600/20 text-red-100'}`}>
-                  {liveSessionError}
-                </div>
-              )}
-            </div>
+        <>
+          {languageSelectionOpen ? (
+            <LanguageSelectorGlobe
+              nativeLangCode={tempNativeLangCode || null}
+              targetLangCode={tempTargetLangCode || null}
+              onSelectNative={handleTempNativeSelect}
+              onSelectTarget={handleTempTargetSelect}
+              onConfirm={handleConfirmLanguageSelection}
+              t={t}
+              onInteract={updateLanguageSelectorInteraction}
+            />
+          ) : (
+            <MediaAttachments
+              t={t}
+              isSuggestionMode={isSuggestionMode}
+              attachedImageBase64={attachedImageBase64}
+              attachedImageMimeType={attachedImageMimeType}
+              showLiveFeed={showLiveFeed}
+              isTwoUp={isTwoUp}
+              liveVideoStream={liveVideoStream}
+              liveSessionState={liveSessionState}
+              liveSessionError={liveSessionError}
+              onStartLiveSession={onStartLiveSession}
+              onStopLiveSession={onStopLiveSession}
+              onRemoveAttachment={removeAttachedImage}
+              onAnnotateImage={handleComposerAnnotateImage}
+              onAnnotateVideo={handleComposerAnnotateVideo}
+              onSetAttachedImage={onSetAttachedImage}
+              onUserInputActivity={onUserInputActivity}
+              attachedPreviewVideoRef={attachedPreviewVideoRef}
+            />
           )}
-         </div>
-       ))}
 
-      <div className={`relative w-full flex flex-col rounded-3xl overflow-hidden transition-colors ${containerClass}`}>
-        {isLanguageSelectionOpen ? (
-          <div className="w-full py-3 px-4 min-h-[50px] flex items-center justify-between gap-3">
-            {resetMode ? (
-               <>
-                 <div className="flex items-center gap-2 flex-1">
-                   <span className="text-xs font-semibold text-white uppercase whitespace-nowrap">Reset:</span>
-                   <input 
-                      className="flex-1 min-w-0 bg-white/20 border border-white/30 rounded px-2 py-1 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white"
-                      placeholder="Type DELETE"
-                      value={resetConfirm}
-                      onChange={(e) => setResetConfirm(e.target.value)}
-                   />
-                 </div>
-                 <div className="flex items-center gap-2">
-                   <button onClick={handleResetConfirm} disabled={resetConfirm !== 'DELETE'} className="p-1.5 bg-red-500 rounded-full text-white disabled:opacity-50 hover:bg-red-600">
-                      <IconCheck className="w-4 h-4" />
-                   </button>
-                   <button onClick={() => { setResetMode(false); setResetConfirm(''); }} className="p-1.5 bg-white/20 rounded-full text-white hover:bg-white/30">
-                      <IconUndo className="w-4 h-4" />
-                   </button>
-                 </div>
-               </>
-            ) : isEditingProfile ? (
-               <>
-                 <div className="flex items-center gap-2 flex-1">
-                   <span className="text-xs font-semibold text-white uppercase whitespace-nowrap">Profile:</span>
-                   <input 
-                      className="flex-1 min-w-0 bg-white/20 border border-white/30 rounded px-2 py-1 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white"
-                      placeholder="User profile details..."
-                      value={profileText}
-                      onChange={(e) => setProfileText(e.target.value)}
-                   />
-                 </div>
-                 <div className="flex items-center gap-2">
-                   <button onClick={handleProfileSave} className="p-1.5 bg-green-500 rounded-full text-white hover:bg-green-600">
-                      <IconCheck className="w-4 h-4" />
-                   </button>
-                   <button onClick={() => setIsEditingProfile(false)} className="p-1.5 bg-white/20 rounded-full text-white hover:bg-white/30">
-                      <IconUndo className="w-4 h-4" />
-                   </button>
-                 </div>
-               </>
+          <div className={`relative w-full flex flex-col rounded-3xl overflow-hidden transition-colors ${containerClass}`}>
+            {languageSelectionOpen ? (
+              <SessionControls />
             ) : (
-               <>
-                 <div className="flex items-center gap-3">
-                    <button onClick={startProfileEdit} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title="Edit Profile">
-                        <IconPencil className="w-4 h-4" />
-                    </button>
-                    <button 
-                        onClick={onToggleTtsProvider} 
-                        className="p-2 hover:bg-white/20 rounded-full text-white transition-colors relative" 
-                        title={`TTS Provider: ${ttsProvider === 'gemini' ? 'Gemini' : 'Browser'}`}
-                    >
-                        <IconSpeaker className="w-5 h-5" />
-                        <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-0.5 border border-white">
-                            {ttsProvider === 'gemini' ? <IconSparkles className="w-2.5 h-2.5 text-white" /> : <IconRobot className="w-2.5 h-2.5 text-white" />}
-                        </div>
-                    </button>
-                    <button 
-                        onClick={onToggleSttProvider} 
-                        className="p-2 hover:bg-white/20 rounded-full text-white transition-colors relative" 
-                        disabled={!isSpeechRecognitionSupported && sttProvider === 'gemini'}
-                        title={`STT Provider: ${sttProvider === 'gemini' ? 'Gemini' : 'Browser'}`}
-                    >
-                        <IconMicrophone className="w-5 h-5" />
-                        <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-0.5 border border-white">
-                            {sttProvider === 'gemini' ? <IconSparkles className="w-2.5 h-2.5 text-white" /> : <IconRobot className="w-2.5 h-2.5 text-white" />}
-                        </div>
-                    </button>
-                 </div>
-                 
-                 <div className="flex items-center bg-blue-500/30 rounded-full p-0.5 border border-white/10">
-                    <button onClick={handleSave} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title={t('startPage.saveChats')}>
-                        <IconSave className="w-4 h-4" />
-                    </button>
-                    <div className="w-px h-4 bg-white/20 mx-0.5"></div>
-                    <button onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title={t('startPage.loadChats')}>
-                        <IconFolderOpen className="w-4 h-4" />
-                    </button>
-                    <div className="w-px h-4 bg-white/20 mx-0.5"></div>
-                    <button onClick={() => setResetMode(true)} className="p-2 hover:bg-red-500/50 rounded-full text-white transition-colors" title="Backup & Reset">
-                        <IconTrash className="w-4 h-4" />
-                    </button>
-                 </div>
-                 <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".json" className="hidden" />
-               </>
-            )}
-          </div>
-        ) : (
-          <div className="relative w-full">
-              <textarea
-                  ref={bubbleTextAreaRef}
-                  rows={1}
-                  className={`w-full py-3 px-4 bg-transparent border-none focus:ring-0 resize-none overflow-hidden placeholder-inherit min-h-[50px]`}
-                  style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}
-                  placeholder={getPlaceholderText()}
-                  value={inputText}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}                            
-                  disabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
-                  aria-label={t('chat.messageInputAriaLabel')}
+              <Composer
+                t={t}
+                inputText={inputText}
+                placeholder={getPlaceholderText()}
+                isDisabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                bubbleTextAreaRef={bubbleTextAreaRef}
+                prepDisplay={prepDisplay}
               />
-              {prepDisplay && <span className="sr-only" role="status" aria-live="polite">{prepDisplay}</span>}
-          </div>
-        )}
+            )}
 
-        <div className="flex items-center justify-between px-2 pb-2">
-            <div className="flex items-center space-x-1">
-              {!isLanguageSelectionOpen && (
-                <>
-                  <input type="file" accept="image/*,video/*,audio/*,application/pdf,text/plain,text/csv,text/markdown" ref={fileInputRef} onChange={handleImageAttach} className="hidden" id="imageUpload" />
-                  <label
-                    htmlFor="imageUpload"
-                    className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
-                    title={t('chat.attachImageFromFile')}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      if (!paperclipOpenTokenRef.current) {
-                        paperclipOpenTokenRef.current = createUiToken(TOKEN_SUBTYPE.ATTACH_FILE);
-                      }
-                    }}
-                  >
-                      <IconPaperclip className="w-5 h-5" />
-                  </label>
-                  {isCameraActive && allCameraOptions.length > 0 ? (
-                     <div className={`flex items-center p-0.5 ${isSuggestionMode ? 'bg-gray-300/50' : 'bg-blue-600/50'} rounded-full`}>
-                         <button onClick={handleCameraDeactivationClick} className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600" title={t('chat.camera.turnOff')}>
-                             <IconXMark className="w-4 h-4" />
-                         </button>
-                         <div className="flex items-center space-x-0.5 ml-1">
-                             {allCameraOptions.map(cam => {
-                                 const isSelected = cam.deviceId === selectedCameraId;
-                                 let Icon;
-                                 if (cam.deviceId === IMAGE_GEN_CAMERA_ID) Icon = IconSparkles;
-                                 else if (cam.facingMode === 'user') Icon = IconCameraFront;
-                                 else Icon = IconCamera;
-                                 return (
-                                     <button key={cam.deviceId} onClick={() => onSelectCamera(cam.deviceId)} className={`p-1.5 rounded-full transition-colors ${isSelected ? `bg-white ${isSuggestionMode ? 'text-gray-800' : 'text-blue-600'}` : `${isSuggestionMode ? 'text-gray-600 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80'}`}`} title={cam.label}>
-                                         <Icon className="w-4 h-4" />
-                                     </button>
-                                 );
-                             })}
-                         </div>
-                     </div>
-                 ) : (
-                     <button onClick={handleCameraActivationClick} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${isSuggestionMode ? 'text-gray-600 hover:text-black hover:bg-black/10' : 'hover:text-white hover:bg-blue-400/80'} ${isImageGenCameraSelected ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.camera.turnOn')}>
-                         {isImageGenCameraSelected ? <IconSparkles className="w-5 h-5" /> : (currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />)}
-                     </button>
-                 )}
-                  <button onClick={onToggleImageGenerationMode} className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`} title={t('chat.bookIcon.toggleImageGen')}>
-                      <IconBookOpen className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-              
-              {isLanguageSelectionOpen && (
-                  <div className="relative inline-block">
-                    <div
-                        onClick={!isUploadingMaestro ? handleMaestroAvatarClick : undefined}
-                        className={`relative w-8 h-8 rounded-full overflow-hidden border-2 ${maestroAsset?.dataUrl ? 'border-white/50' : 'border-white/30 border-dashed'} bg-white/10 flex items-center justify-center hover:bg-white/20 transition cursor-pointer`}
-                        title={maestroAsset?.dataUrl ? t('startPage.maestroAvatar') : t('startPage.addMaestroAvatar')}
-                    >
-                        {maestroAsset?.dataUrl ? (
-                            <img src={maestroAsset.dataUrl} alt="Maestro" className="w-full h-full object-cover" />
-                        ) : (
-                            <IconPlus className="w-4 h-4 text-white/70" />
-                        )}
-                        {isUploadingMaestro && (
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <SmallSpinner className="w-4 h-4 text-white" />
-                            </div>
-                        )}
-                    </div>
-                    <input type="file" ref={maestroFileInputRef} onChange={handleMaestroFileChange} accept="image/*" className="hidden" />
-                    {maestroAsset?.dataUrl && !isUploadingMaestro && (
-                        <button
-                            onClick={handleClearMaestroAvatar}
-                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600"
-                            title={t('general.clear')}
-                        >
-                            <IconXMark className="w-3 h-3" />
-                        </button>
-                    )}
-                  </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-1">
-                {!isLanguageSelectionOpen && isSttSupported && (
-                    <SttLanguageSelector
-                        targetLang={targetLanguageDef}
-                        nativeLang={nativeLanguageDef}
-                        currentSttLangCode={sttLanguageCode}
-                        onSelectLang={onSttLanguageChange}
-                        t={t}
-                        isCollapsed={true}
-                        isInSuggestionMode={isSuggestionMode}
-                    />
-                )}
-                {!isLanguageSelectionOpen && isSttSupported && (
-                  <button
-                    onClick={handleMicClick}
-                    onPointerDown={handleMicPointerDown}
-                    onPointerUp={handleMicPointerUp}
-                    onPointerCancel={handleMicPointerCancel}
-                    onPointerLeave={handleMicPointerCancel}
-                    onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                    style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
-                    className={`relative overflow-visible p-2 rounded-full transition-colors touch-manipulation select-none ${
-                      isRecordingAudioNote ? 'bg-red-500 text-white ring-2 ring-red-300' : isListening ? 'bg-red-500/80 text-white' : iconButtonStyle
-                    } disabled:opacity-50`}
-                    title={getMicButtonTitle()}
-                    disabled={isSending || isSpeaking || isLanguageSelectionOpen}
-                    aria-pressed={isListening}
-                  >
-                    {isRecordingAudioNote && (
-                      <>
-                        <span className="pointer-events-none absolute -inset-4 rounded-full bg-red-400/30 animate-ping" />
-                        <span className="pointer-events-none absolute -inset-6 rounded-full bg-red-400/15 animate-ping" style={{ animationDuration: '2s' }} />
-                      </>
-                    )}
-                    <IconMicrophone className={`relative z-10 w-5 h-5 ${isRecordingAudioNote ? 'drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]' : ''}`} />
-                  </button>
-                )}
+            <div className="flex items-center justify-between px-2 pb-2">
+              <CameraControls
+                t={t}
+                isLanguageSelectionOpen={languageSelectionOpen}
+                isSuggestionMode={isSuggestionMode}
+                fileInputRef={fileInputRef}
+                onImageAttach={handleImageAttach}
+                onPaperclipClick={handlePaperclipClick}
+                availableCameras={availableCameras}
+                selectedCameraId={selectedCameraId}
+                currentCameraFacingMode={currentCameraFacingMode}
+                isImageGenCameraSelected={isImageGenCameraSelected}
+                sendWithSnapshotEnabled={sendWithSnapshotEnabled}
+                useVisualContextForReengagementEnabled={useVisualContextForReengagementEnabled}
+                imageGenerationModeEnabled={imageGenerationModeEnabled}
+                onSelectCamera={handleSelectCamera}
+                onToggleSendWithSnapshot={onToggleSendWithSnapshot}
+                onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
+                onToggleImageGenerationMode={onToggleImageGenerationMode}
+                iconButtonStyle={iconButtonStyle}
+              />
+
+              <div className="flex items-center space-x-1">
+                <AudioControls
+                  t={t}
+                  isLanguageSelectionOpen={languageSelectionOpen}
+                  isSttSupported={isSttSupported}
+                  isSttGloballyEnabled={isSttGloballyEnabled}
+                  isListening={isListening}
+                  isSending={isSending}
+                  isSpeaking={isSpeaking}
+                  sttLanguageCode={sttLanguageCode}
+                  targetLanguageDef={targetLanguageDef}
+                  nativeLanguageDef={nativeLanguageDef}
+                  isSuggestionMode={isSuggestionMode}
+                  onSttToggle={onSttToggle}
+                  onSttLanguageChange={onSttLanguageChange}
+                  onSetAttachedImage={onSetAttachedImage}
+                  onUserInputActivity={onUserInputActivity}
+                />
                 <button
-                    onClick={handleSend}
-                    className={`p-2 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 shadow-sm ${sendButtonStyle}`}
-                    disabled={isSending || ((!inputText.trim() && !attachedImageBase64) && !isLanguageSelectionOpen) || isSpeaking || (isSuggestionMode && isCreatingSuggestion) } 
-                    aria-label={
-                        isSuggestionMode 
-                            ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction')) 
-                            : (sendPrep && sendPrep.active ? (sendPrep.label || t('chat.sendPrep.finalizing')) : t('chat.sendMessage'))
-                    }
+                  onClick={handleSend}
+                  className={`p-2 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 shadow-sm ${sendButtonStyle}`}
+                  disabled={isSending || ((!inputText.trim() && !attachedImageBase64) && !languageSelectionOpen) || isSpeaking || (isSuggestionMode && isCreatingSuggestion)}
+                  aria-label={
+                    isSuggestionMode
+                      ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction'))
+                      : (sendPrep && sendPrep.active ? (sendPrep.label || t('chat.sendPrep.finalizing')) : t('chat.sendMessage'))
+                  }
                 >
-                    {isSuggestionMode ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />) : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
+                  {isSuggestionMode
+                    ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />)
+                    : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
                 </button>
+              </div>
             </div>
-        </div>
-      </div>
+          </div>
 
-      {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
-      {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
-      {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-orange-800 bg-orange-200/50' : 'text-orange-200 bg-orange-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
-      </>
+          {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
+          {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
+          {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-orange-800 bg-orange-200/50' : 'text-orange-200 bg-orange-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
+        </>
       )}
     </>
   );

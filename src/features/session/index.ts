@@ -15,9 +15,12 @@ export { default as LanguageSelectorGlobe } from './components/LanguageSelectorG
 export { default as LanguageScrollWheel } from './components/LanguageScrollWheel';
 export { default as GlobalProfileSummary } from './components/GlobalProfileSummary';
 export { default as CollapsedMaestroStatus } from './components/CollapsedMaestroStatus';
+export { default as SessionControls } from './components/SessionControls';
 
 // Hooks
 export { useSmartReengagement } from './hooks/useSmartReengagement';
+export { useLanguageSelectionController as useLanguageSelection } from './hooks/useLanguageSelection';
+export { useDataBackup } from './hooks/useDataBackup';
 
 // Services
 export {

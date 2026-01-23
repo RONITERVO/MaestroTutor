@@ -98,6 +98,11 @@ Contributions are welcome! Please follow these steps:
 
 **Note:** Specifically when working on audio hooks (`hooks/speech, but also good practice in general`), please ensure you **test on both Desktop and Mobile browsers**, as AudioContext and many other behavior varies across devices.
 
+**Risk Assessment**
+**Ref Synchronization:** The new hooks rely on a pattern of syncing Store state to local refs (e.g., messagesRef.current = useMaestroStore.getState().messages). This effectively mimics the previous architecture to prevent closure staleness in async callbacks, but requires careful maintenance to ensure refs don't desynchronize.
+
+**Transient State:** MediaStream objects are stored in hardwareSlice. Since these are non-serializable, they correctly remain transient, but any future addition of "persist-to-localstorage" middleware for the store must explicitly exclude the hardware slice to prevent crashes.
+
 ---
 
 ## 📄 License

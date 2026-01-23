@@ -17,3 +17,9 @@ export {
   getFacingModeFromLabel,
   createKeyframeFromVideoDataUrl,
 } from './utils/mediaUtils';
+
+// Hooks
+export { useCameraManager } from './hooks/useCameraManager';
+
+// Components
+export { default as VisualContextVideo } from './components/VisualContextVideo';

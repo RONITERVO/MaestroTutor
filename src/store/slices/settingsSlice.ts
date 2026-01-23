@@ -12,7 +12,7 @@
 import type { StateCreator } from 'zustand';
 import type { AppSettings, LanguagePair } from '../../core/types';
 import { getAppSettingsDB, setAppSettingsDB } from '../../features/session';
-import { ALL_LANGUAGES, STT_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE } from '../../core/config/languages';
+import { ALL_LANGUAGES, STT_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE, type LanguageDefinition } from '../../core/config/languages';
 import { generateAllLanguagePairs, getPrimaryCode } from '../../shared/utils/languageUtils';
 import type { MaestroStore } from '../maestroStore';
 
@@ -71,6 +71,55 @@ export interface SettingsSlice {
   setNeedsLanguageSelection: (value: boolean) => void;
   setIsSettingsLoaded: (value: boolean) => void;
 }
+
+// ============================================================
+// DERIVED SELECTORS
+// ============================================================
+
+export const selectSettings = (state: Pick<SettingsSlice, 'settings'>) => state.settings;
+
+export const selectSelectedLanguagePair = (
+  state: Pick<SettingsSlice, 'languagePairs' | 'settings'>
+): LanguagePair | undefined =>
+  state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
+
+export const selectCurrentSystemPromptText = (
+  state: Pick<SettingsSlice, 'languagePairs' | 'settings'>
+): string => selectSelectedLanguagePair(state)?.baseSystemPrompt || '';
+
+export const selectCurrentReplySuggestionsPromptText = (
+  state: Pick<SettingsSlice, 'languagePairs' | 'settings'>
+): string => selectSelectedLanguagePair(state)?.baseReplySuggestionsPrompt || '';
+
+const resolveLanguageCodes = (state: Pick<SettingsSlice, 'settings'>) => {
+  const pairId = state.settings.selectedLanguagePairId;
+  if (pairId) {
+    const [targetCode, nativeCode] = pairId.split('-');
+    if (targetCode && nativeCode) {
+      return { targetCode, nativeCode };
+    }
+  }
+  return { targetCode: DEFAULT_TARGET_LANG_CODE, nativeCode: DEFAULT_NATIVE_LANG_CODE };
+};
+
+const findLanguageDef = (langCode: string, fallbackCode: string): LanguageDefinition | undefined =>
+  ALL_LANGUAGES.find(lang => lang.langCode === langCode)
+  || ALL_LANGUAGES.find(lang => lang.langCode === fallbackCode)
+  || ALL_LANGUAGES[0];
+
+export const selectTargetLanguageDef = (
+  state: Pick<SettingsSlice, 'settings'>
+): LanguageDefinition | undefined => {
+  const { targetCode } = resolveLanguageCodes(state);
+  return findLanguageDef(targetCode, DEFAULT_TARGET_LANG_CODE);
+};
+
+export const selectNativeLanguageDef = (
+  state: Pick<SettingsSlice, 'settings'>
+): LanguageDefinition | undefined => {
+  const { nativeCode } = resolveLanguageCodes(state);
+  return findLanguageDef(nativeCode, DEFAULT_NATIVE_LANG_CODE);
+};
 
 export const createSettingsSlice: StateCreator<
   MaestroStore,

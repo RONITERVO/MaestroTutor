@@ -6,11 +6,13 @@
 
 import { useCallback, useEffect } from 'react';
 import type { MutableRefObject } from 'react';
-import type { AppSettings, ChatMessage, LanguagePair } from '../../core/types';
-import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../core/config/languages';
-import { safeSaveChatHistoryDB } from '../../features/chat';
+import type { AppSettings, ChatMessage, LanguagePair } from '../../../core/types';
+import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../../core/config/languages';
+import { safeSaveChatHistoryDB } from '../../chat';
+import { useMaestroStore } from '../../../store';
+import { selectIsSending } from '../../../store/slices/uiSlice';
 
-interface UseLanguageSelectionControllerConfig {
+export interface UseLanguageSelectionControllerConfig {
   isSettingsLoaded: boolean;
   settings: AppSettings;
   settingsRef: MutableRefObject<AppSettings>;
@@ -30,11 +32,8 @@ interface UseLanguageSelectionControllerConfig {
 export const useLanguageSelectionController = ({
   isSettingsLoaded,
   settings,
-  settingsRef,
-  isSendingRef,
   languagePairs,
   handleSettingsChange,
-  messagesRef,
   isLanguageSelectionOpen,
   tempNativeLangCode,
   tempTargetLangCode,
@@ -44,15 +43,16 @@ export const useLanguageSelectionController = ({
   setTempTargetLangCode,
 }: UseLanguageSelectionControllerConfig) => {
   const handleShowLanguageSelector = useCallback(() => {
-    if (isSendingRef.current) return;
+    const state = useMaestroStore.getState();
+    if (selectIsSending(state)) return;
     setIsLanguageSelectionOpen(true);
-    const currentPairId = settingsRef.current.selectedLanguagePairId;
+    const currentPairId = state.settings.selectedLanguagePairId;
     if (currentPairId) {
       const [target, native] = currentPairId.split('-');
       setTempNativeLangCode(native);
       setTempTargetLangCode(target);
     }
-  }, [isSendingRef, settingsRef, setIsLanguageSelectionOpen, setTempNativeLangCode, setTempTargetLangCode]);
+  }, [setIsLanguageSelectionOpen, setTempNativeLangCode, setTempTargetLangCode]);
 
   const handleTempNativeSelect = useCallback((code: string | null) => {
     setTempNativeLangCode(code);
@@ -68,13 +68,14 @@ export const useLanguageSelectionController = ({
   const handleConfirmLanguageSelection = useCallback(async () => {
     if (!tempNativeLangCode || !tempTargetLangCode) return;
     const newPairId = `${tempTargetLangCode}-${tempNativeLangCode}`;
-    const oldPairId = settingsRef.current.selectedLanguagePairId;
+    const state = useMaestroStore.getState();
+    const oldPairId = state.settings.selectedLanguagePairId;
     const isDifferent = newPairId !== oldPairId;
 
     // Save current chat history before switching if changing to a different pair
     if (isDifferent && oldPairId) {
       try {
-        await safeSaveChatHistoryDB(oldPairId, messagesRef.current);
+        await safeSaveChatHistoryDB(oldPairId, state.messages);
       } catch (e) {
         console.error(`[useLanguageSelectionController] Failed to save chat history for pairId=${oldPairId}:`, e);
         // Continue with language switch even if save fails - user experience priority
@@ -85,7 +86,7 @@ export const useLanguageSelectionController = ({
       handleSettingsChange('selectedLanguagePairId', newPairId);
     }
     setIsLanguageSelectionOpen(false);
-  }, [tempNativeLangCode, tempTargetLangCode, languagePairs, handleSettingsChange, settingsRef, messagesRef, setIsLanguageSelectionOpen, safeSaveChatHistoryDB]);
+  }, [tempNativeLangCode, tempTargetLangCode, languagePairs, handleSettingsChange, setIsLanguageSelectionOpen]);
 
   useEffect(() => {
     if (isSettingsLoaded && !settings.selectedLanguagePairId) {

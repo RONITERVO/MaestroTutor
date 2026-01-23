@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 /**
- * useMaestroController - The main orchestration hook for the Maestro tutor.
+ * useTutorConversation - The main orchestration hook for the Maestro tutor.
  * 
  * This hook coordinates the core message sending logic including:
  * - User message processing with optional media
@@ -12,7 +12,7 @@
  * - Translation and parsing of responses
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { 
   ChatMessage, 
   ReplySuggestion, 
@@ -21,41 +21,37 @@ import {
   LanguagePair,
   AppSettings,
   RecordedUtterance 
-} from '../../core/types';
-import { 
-  generateGeminiResponse, 
-  generateImage, 
-  translateText,
-  ApiError, 
-  sanitizeHistoryWithVerifiedUris, 
-  uploadMediaToFiles, 
-  checkFileStatuses 
-} from '../../api/gemini';
-import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../features/session';
-import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '../../features/chat';
-import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../features/vision';
+} from '../../../core/types';
+import { ApiError } from '../../../api/gemini/client';
+import { generateGeminiResponse, translateText } from '../../../api/gemini/generative';
+import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from '../../../api/gemini/files';
+import { generateImage } from '../../../api/gemini/vision';
+import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../session';
+import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
+import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
 import { 
   DEFAULT_TEXT_MODEL_ID, 
   IMAGE_GEN_CAMERA_ID,
   MAX_MEDIA_TO_KEEP 
-} from '../../core/config/app';
+} from '../../../core/config/app';
 import { 
   DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
   IMAGE_GEN_SYSTEM_INSTRUCTION, 
   IMAGE_GEN_USER_PROMPT_TEMPLATE,
   composeMaestroSystemInstruction 
-} from '../../core/config/prompts';
-import { isRealChatMessage } from '../../shared/utils/common';
-import { getShortLangCodeForPrompt } from '../../shared/utils/languageUtils';
-import type { TranslationFunction } from './useTranslations';
-import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../core/config/activityTokens';
-import { useMaestroStore } from '../../store';
+} from '../../../core/config/prompts';
+import { isRealChatMessage } from '../../../shared/utils/common';
+import { getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
+import type { TranslationFunction } from '../../../app/hooks/useTranslations';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
+import { useMaestroStore } from '../../../store';
 import { useShallow } from 'zustand/shallow';
-import { selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion } from '../../store/slices/uiSlice';
+import { selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
+import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 
 const AUX_TEXT_MODEL_ID = 'gemini-3-flash-preview';
 
-export interface UseMaestroControllerConfig {
+export interface UseTutorConversationConfig {
   // Translation function
   t: TranslationFunction;
   
@@ -116,7 +112,7 @@ export interface UseMaestroControllerConfig {
   setSnapshotUserError?: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-export interface UseMaestroControllerReturn {
+export interface UseTutorConversationReturn {
   // State
   isSending: boolean;
   isSendingRef: React.MutableRefObject<boolean>;
@@ -159,22 +155,16 @@ export interface UseMaestroControllerReturn {
  * Main orchestration hook for the Maestro Language Tutor.
  * Manages message sending, AI interactions, and conversation flow.
  */
-export const useMaestroController = (config: UseMaestroControllerConfig): UseMaestroControllerReturn => {
+export const useTutorConversation = (config: UseTutorConversationConfig): UseTutorConversationReturn => {
   const {
     t,
-    settingsRef,
     setSettings,
-    selectedLanguagePairRef,
-    messagesRef,
     addMessage,
     updateMessage,
     setMessages,
-    isLoadingHistoryRef,
     getHistoryRespectingBookmark,
     computeMaxMessagesForArray,
-    lastFetchedSuggestionsForRef,
     captureSnapshot,
-    speechIsSpeakingRef,
     speakMessage,
     isSpeechSynthesisSupported,
     isListening,
@@ -183,9 +173,6 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     clearTranscript,
     hasPendingQueueItems,
     claimRecordedUtterance,
-    sttInterruptedBySendRef,
-    recordedUtterancePendingRef,
-    pendingRecordedAudioMessageRef,
     scheduleReengagementRef,
     cancelReengagementRef,
     transcript,
@@ -197,6 +184,82 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
     maestroAvatarMimeTypeRef,
     setSnapshotUserError,
   } = config;
+
+  const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
+  const setRecordedUtterancePending = useMaestroStore(state => state.setRecordedUtterancePending);
+  const setPendingRecordedAudioMessageId = useMaestroStore(state => state.setPendingRecordedAudioMessageId);
+  const setSttInterruptedBySend = useMaestroStore(state => state.setSttInterruptedBySend);
+
+  const settingsRef = useMemo<React.MutableRefObject<AppSettings>>(() => ({
+    get current() {
+      return useMaestroStore.getState().settings;
+    },
+    set current(_value) {},
+  }), []);
+
+  const selectedLanguagePairRef = useMemo<React.MutableRefObject<LanguagePair | undefined>>(() => ({
+    get current() {
+      return selectSelectedLanguagePair(useMaestroStore.getState());
+    },
+    set current(_value) {},
+  }), []);
+
+  const messagesRef = useMemo<React.MutableRefObject<ChatMessage[]>>(() => ({
+    get current() {
+      return useMaestroStore.getState().messages;
+    },
+    set current(_value) {},
+  }), []);
+
+  const isLoadingHistoryRef = useMemo<React.MutableRefObject<boolean>>(() => ({
+    get current() {
+      return useMaestroStore.getState().isLoadingHistory;
+    },
+    set current(_value) {},
+  }), []);
+
+  const lastFetchedSuggestionsForRef = useMemo<React.MutableRefObject<string | null>>(() => ({
+    get current() {
+      return useMaestroStore.getState().lastFetchedSuggestionsFor;
+    },
+    set current(value) {
+      setLastFetchedSuggestionsFor(value);
+    },
+  }), [setLastFetchedSuggestionsFor]);
+
+  const speechIsSpeakingRef = useMemo<React.MutableRefObject<boolean>>(() => ({
+    get current() {
+      return selectIsSpeaking(useMaestroStore.getState());
+    },
+    set current(_value) {},
+  }), []);
+
+  const recordedUtterancePendingRef = useMemo<React.MutableRefObject<RecordedUtterance | null>>(() => ({
+    get current() {
+      return useMaestroStore.getState().recordedUtterancePending;
+    },
+    set current(value) {
+      setRecordedUtterancePending(value);
+    },
+  }), [setRecordedUtterancePending]);
+
+  const pendingRecordedAudioMessageRef = useMemo<React.MutableRefObject<string | null>>(() => ({
+    get current() {
+      return useMaestroStore.getState().pendingRecordedAudioMessageId;
+    },
+    set current(value) {
+      setPendingRecordedAudioMessageId(value);
+    },
+  }), [setPendingRecordedAudioMessageId]);
+
+  const sttInterruptedBySendRef = useMemo<React.MutableRefObject<boolean>>(() => ({
+    get current() {
+      return useMaestroStore.getState().sttInterruptedBySend;
+    },
+    set current(value) {
+      setSttInterruptedBySend(value);
+    },
+  }), [setSttInterruptedBySend]);
 
   const {
     sendPrep,
@@ -1578,4 +1641,4 @@ export const useMaestroController = (config: UseMaestroControllerConfig): UseMae
   };
 };
 
-export default useMaestroController;
+export default useTutorConversation;

@@ -1,36 +1,25 @@
 
-import React, { forwardRef, useState, useEffect, useRef, useMemo } from 'react';
+import React, { forwardRef, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
 import { IconTerminal } from '../../../shared/ui/Icons';
-import { LanguageDefinition } from '../../../core/config/languages';
-import { ChatMessage, MaestroActivityStage, LanguagePair } from '../../../core/types';
-import { TranslationReplacements } from '../../../core/i18n/index';
 import { useMaestroStore } from '../../../store';
-import { selectActiveUiTokens, selectIsLive, selectIsUserHold } from '../../../store/slices/uiSlice';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
+import { selectActiveUiTokens, selectIsLive, selectIsUserHold, selectIsSending } from '../../../store/slices/uiSlice';
+import { selectSelectedLanguagePair, selectTargetLanguageDef } from '../../../store/slices/settingsSlice';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 
-interface HeaderProps {
-  isTopbarOpen: boolean; // Kept for prop compatibility
-  setIsTopbarOpen: (open: boolean) => void;
-  maestroActivityStage: MaestroActivityStage;
-  t: (key: string, replacements?: TranslationReplacements) => string;
-  targetLanguageDef?: LanguageDefinition;
-  selectedLanguagePair: LanguagePair | undefined;
-  messages: ChatMessage[];
-  onLanguageSelectorClick: (e: React.MouseEvent) => void;
-  onToggleDebugLogs: () => void;
-  onToggleHold: () => void;
-}
-
-const Header = forwardRef<HTMLDivElement, HeaderProps>(({
-  maestroActivityStage,
-  t,
-  targetLanguageDef,
-  selectedLanguagePair,
-  onLanguageSelectorClick,
-  onToggleDebugLogs,
-  onToggleHold,
-}, ref) => {
+const Header = forwardRef<HTMLDivElement>((_, ref) => {
+  const { t } = useAppTranslations();
+  const maestroActivityStage = useMaestroStore(state => state.maestroActivityStage);
+  const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
+  const targetLanguageDef = useMaestroStore(selectTargetLanguageDef);
+  const toggleDebugLogs = useMaestroStore(state => state.toggleDebugLogs);
+  const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
+  const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
+  const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   // Explicit open state managed by user interaction
   const [isOpen, setIsOpen] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -50,6 +39,18 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
     };
   }, [isOpen]);
 
+  const handleLanguageSelectorClick = useCallback((_e: React.MouseEvent) => {
+    const state = useMaestroStore.getState();
+    if (selectIsSending(state)) return;
+    setIsLanguageSelectionOpen(true);
+    const currentPairId = state.settings.selectedLanguagePairId;
+    if (currentPairId) {
+      const [target, native] = currentPairId.split('-');
+      setTempNativeLangCode(native || null);
+      setTempTargetLangCode(target || null);
+    }
+  }, [setIsLanguageSelectionOpen, setTempNativeLangCode, setTempTargetLangCode]);
+
   const handleClick = (e: React.MouseEvent) => {
     if (isLongPressRef.current) {
         e.stopPropagation();
@@ -63,16 +64,26 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
       setIsOpen(true);
     } else {
       // Second click (while open): Trigger the actual action (Language Selector)
-      onLanguageSelectorClick(e);
+      handleLanguageSelectorClick(e);
     }
   };
+
+  const holdTokenRef = useRef<string | null>(null);
+  const handleToggleHold = useCallback(() => {
+    if (holdTokenRef.current) {
+      removeActivityToken(holdTokenRef.current);
+      holdTokenRef.current = null;
+    } else {
+      holdTokenRef.current = addActivityToken(TOKEN_CATEGORY.UI, TOKEN_SUBTYPE.HOLD);
+    }
+  }, [addActivityToken, removeActivityToken]);
 
   const handlePointerDown = (_e: React.PointerEvent) => {
       isLongPressRef.current = false;
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = window.setTimeout(() => {
           isLongPressRef.current = true;
-          onToggleHold();
+            handleToggleHold();
           // Optional: vibrate to indicate success
           if (navigator.vibrate) navigator.vibrate(50);
       }, 800);
@@ -137,7 +148,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({
 
       {/* Debug Log Toggle (Top Right) */}
       <button
-        onClick={onToggleDebugLogs}
+        onClick={toggleDebugLogs}
         className="fixed top-4 right-4 z-40 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full shadow-sm backdrop-blur-sm transition-all"
         title="View Traffic Logs"
       >

@@ -1,208 +1,120 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { ChatMessage, GroundingChunk, ReplySuggestion, MaestroActivityStage, SpeechPart, CameraDevice } from '../../../core/types';
-import { LiveSessionState } from '../../speech';
+import { ChatMessage, ReplySuggestion, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconEyeOpen, IconBookmark, IconTrash } from '../../../shared/ui/Icons';
 import BookmarkActions from './BookmarkActions';
 import ChatMessageBubble from './ChatMessageBubble';
 import SuggestionsList from './SuggestionsList';
 import InputArea from './InputArea';
-import { useMaestroStore } from '../../../store';
+import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT } from '../../../store';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
+import { selectMessages, selectReplySuggestions, selectLatestGroundingChunks } from '../../../store/slices/chatSlice';
+import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
+import { selectSpeakingUtteranceText } from '../../../store/slices/speechSlice';
+import { selectIsLoadingSuggestions, selectIsSpeaking } from '../../../store/slices/uiSlice';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
+import { ALL_LANGUAGES } from '../../../core/config/languages';
+import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 
 const BOOKMARK_SHOW_ABOVE_CHUNK_SIZE = 100;
 const isRealChatMessage = (m: ChatMessage) => (m.role === 'user' || m.role === 'assistant') && !m.thinking;
 
 interface ChatInterfaceProps {
-  messages: ChatMessage[];
   onSendMessage: (text: string, imageBase64?: string, imageMimeType?: string) => Promise<boolean>;
   onDeleteMessage: (messageId: string) => void;
   onBookmarkAt: (messageId: string | null) => void;
-  bookmarkedMessageId: string | null;
   updateMessage?: (messageId: string, updates: Partial<ChatMessage>) => void;
-  maxVisibleMessages: number;
   onChangeMaxVisibleMessages: (n: number) => void;
-  isSending: boolean;
 
   bubbleWrapperRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   
-  // New Language Selection Props
-  isLanguageSelectionOpen: boolean;
-  tempNativeLangCode: string | null;
-  tempTargetLangCode: string | null;
-  onTempNativeSelect: (code: string | null) => void;
-  onTempTargetSelect: (code: string | null) => void;
-  onConfirmLanguageSelection: () => void;
-
-  onSaveAllChats: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
-  onLoadAllChats: (file: File) => Promise<void>;
-  loadingGifs?: string[] | null;
-
-  attachedImageBase64: string | null;
-  attachedImageMimeType: string | null;
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
 
-  isSttSupported: boolean;
-  isSttGloballyEnabled: boolean;
-  sttError: string | null;
-  transcript: string;
   onSttToggle: () => void;
-  clearTranscript: () => void;
-  sttLanguageCode: string;
   onSttLanguageChange: (langCode: string) => void;
-  targetLanguageDef: any;
-  nativeLanguageDef: any;
-
-  isTtsSupported: boolean;
-  isSpeaking: boolean; 
   speakText: (textOrParts: string | SpeechPart[], defaultLang: string) => void;
   stopSpeaking: () => void; 
-  speakingUtteranceText: string | null; 
 
-  speakNativeLang: boolean;
   onToggleSpeakNativeLang: () => void;
-
-  currentTargetLangCode: string;
-  currentNativeLangCode: string;
-  currentNativeLangForTranslations: string;
-
-  latestGroundingChunks?: GroundingChunk[];
   onUserInputActivity: () => void;
-  autoCaptureError?: string | null;
-  selectedCameraId: string | null;
-  currentCameraFacingMode: 'user' | 'environment' | 'unknown';
-  snapshotUserError?: string | null;
   onToggleSendWithSnapshot: () => void;
-  sendWithSnapshotEnabled: boolean;
   onToggleUseVisualContextForReengagement: () => void;
-  useVisualContextForReengagementEnabled: boolean;
-  availableCameras: CameraDevice[];
-  onSelectCamera: (deviceId: string) => void;
-
-  replySuggestions: ReplySuggestion[];
-  isLoadingSuggestions: boolean;
   onSuggestionClick: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
-
-  maestroActivityStage: MaestroActivityStage;
-  t: (key: string, replacements?: TranslationReplacements) => string;
-
-  imageGenerationModeEnabled: boolean;
-  imageFocusedModeEnabled: boolean;
   onToggleImageGenerationMode: () => void;
   onToggleImageFocusedMode: (messageId: string) => void;
-  transitioningImageId: string | null;
-
-  estimatedImageLoadTime: number; 
-  isImageGenCameraSelected: boolean;
-  liveVideoStream: MediaStream | null;
-  liveSessionState: LiveSessionState;
-  liveSessionError: string | null;
   onStartLiveSession: () => Promise<void> | void;
   onStopLiveSession: () => void;
   
-  isSuggestionMode: boolean;
   onToggleSuggestionMode: (forceState?: boolean) => void;
   onCreateSuggestion: (text: string) => Promise<void>;
-  isCreatingSuggestion: boolean;
-  sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
-
-  // Settings passed down
-  sttProvider: string;
-  ttsProvider: string;
-  onToggleSttProvider: () => void;
-  onToggleTtsProvider: () => void;
-  isSpeechRecognitionSupported: boolean;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const {
-    messages,
     onDeleteMessage,
-    isSending,
-
     bubbleWrapperRefs,
-    
-    isLanguageSelectionOpen,
-    tempNativeLangCode,
-    tempTargetLangCode,
-    onTempNativeSelect,
-    onTempTargetSelect,
-    onConfirmLanguageSelection,
-
-    onSaveAllChats,
-    onLoadAllChats,
-    loadingGifs,
-
-    attachedImageBase64,
-    attachedImageMimeType,
+    onChangeMaxVisibleMessages,
     onSetAttachedImage,
-    isSttSupported,
-    isSttGloballyEnabled,
-    sttError,
-    transcript,
     onSttToggle,
-    sttLanguageCode,
     onSttLanguageChange,
-    targetLanguageDef,
-    nativeLanguageDef,
-    isTtsSupported,
-    isSpeaking, 
     speakText,
     stopSpeaking,
-    speakingUtteranceText,
-    speakNativeLang,
     onToggleSpeakNativeLang,
-    currentTargetLangCode,
-    currentNativeLangCode,
-    latestGroundingChunks,
     onUserInputActivity,
-    autoCaptureError,
-    selectedCameraId,
-    currentCameraFacingMode,
-    snapshotUserError,
     onToggleSendWithSnapshot,
-    sendWithSnapshotEnabled,
     onToggleUseVisualContextForReengagement,
-    useVisualContextForReengagementEnabled,
-    availableCameras,
-    onSelectCamera,
-    replySuggestions,
-    isLoadingSuggestions,
     onSuggestionClick,
-    t,
-    imageGenerationModeEnabled,
-    imageFocusedModeEnabled,
     onToggleImageGenerationMode,
     onToggleImageFocusedMode,
-    transitioningImageId,
-    estimatedImageLoadTime,
-    isImageGenCameraSelected,
-    liveVideoStream,
-    liveSessionState,
-    liveSessionError,
     onStartLiveSession,
     onStopLiveSession,
-    isSuggestionMode,
     onToggleSuggestionMode,
     onCreateSuggestion,
-    isCreatingSuggestion,
     onBookmarkAt,
-    bookmarkedMessageId,
-    sendPrep,
-    onSendMessage,
-    sttProvider,
-    ttsProvider,
-    onToggleSttProvider,
-    onToggleTtsProvider,
-    isSpeechRecognitionSupported
+    onSendMessage
   } = props;
 
-  const maxVisibleBookmarkBudget = useMemo(() => {
-    const base = Math.max(1, props.maxVisibleMessages);
-    return base + 2;
-  }, [props.maxVisibleMessages]);
+  const { t } = useAppTranslations();
+  const messages = useMaestroStore(selectMessages);
+  const replySuggestions = useMaestroStore(selectReplySuggestions);
+  const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
+  const isSpeaking = useMaestroStore(selectIsSpeaking);
+  const latestGroundingChunks = useMaestroStore(selectLatestGroundingChunks);
+  const settings = useMaestroStore(selectSettings);
+  const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
+  const targetLanguageDef = useMaestroStore(selectTargetLanguageDef) || ALL_LANGUAGES[0];
+  const nativeLanguageDef = useMaestroStore(selectNativeLanguageDef) || ALL_LANGUAGES[0];
+  const loadingGifs = useMaestroStore(state => state.loadingGifs);
+  const transitioningImageId = useMaestroStore(state => state.transitioningImageId);
+  const speakingUtteranceText = useMaestroStore(selectSpeakingUtteranceText);
+  const imageLoadDurations = useMaestroStore(state => state.imageLoadDurations);
 
+  const isSuggestionMode = settings.isSuggestionMode;
+  const speakNativeLang = settings.tts.speakNative;
+  const imageFocusedModeEnabled = settings.imageFocusedModeEnabled;
+  const bookmarkedMessageId = settings.historyBookmarkMessageId ?? null;
+  const maxVisibleMessages = settings.maxVisibleMessages ?? MAX_VISIBLE_MESSAGES_DEFAULT;
+  const currentTargetLangCode = useMemo(
+    () => getPrimaryCode(selectedLanguagePair?.targetLanguageCode || targetLanguageDef?.code || 'es'),
+    [selectedLanguagePair, targetLanguageDef]
+  );
+  const currentNativeLangCode = useMemo(
+    () => getPrimaryCode(selectedLanguagePair?.nativeLanguageCode || nativeLanguageDef?.code || 'en'),
+    [selectedLanguagePair, nativeLanguageDef]
+  );
+  const estimatedImageLoadTime = useMemo(() => {
+    if (imageLoadDurations.length > 0) {
+      const sum = imageLoadDurations.reduce((a, b) => a + b, 0);
+      return sum / imageLoadDurations.length / 1000;
+    }
+    return 15;
+  }, [imageLoadDurations]);
+
+  const maxVisibleBookmarkBudget = useMemo(() => {
+    const base = Math.max(1, maxVisibleMessages);
+    return base + 2;
+  }, [maxVisibleMessages]);
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const createUiToken = useCallback(
@@ -698,8 +610,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                      <BookmarkActions
                        t={t}
                        message={msg}
-                       maxVisibleMessages={props.maxVisibleMessages}
-                       onChangeMaxVisibleMessages={props.onChangeMaxVisibleMessages}
+                       maxVisibleMessages={maxVisibleMessages}
+                       onChangeMaxVisibleMessages={onChangeMaxVisibleMessages}
                        updateMessage={props.updateMessage}
                      />
                    </div>
@@ -717,8 +629,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                      <BookmarkActions
                        t={t}
                        message={msg}
-                       maxVisibleMessages={props.maxVisibleMessages}
-                       onChangeMaxVisibleMessages={props.onChangeMaxVisibleMessages}
+                       maxVisibleMessages={maxVisibleMessages}
+                       onChangeMaxVisibleMessages={onChangeMaxVisibleMessages}
                        updateMessage={props.updateMessage}
                      />
                    </div>
@@ -768,20 +680,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 isFocusedMode={imageFocusedModeEnabled} 
                 speakingUtteranceText={speakingUtteranceText} 
                 estimatedLoadTime={estimatedImageLoadTime} 
-                isSending={isSending} 
                 loadingGifs={loadingGifs}
-                currentTargetLangCode={currentTargetLangCode} 
-                currentNativeLangCode={currentNativeLangCode} 
                 t={t}
-                isSpeaking={isSpeaking}
-                speakNativeLang={speakNativeLang}
                 onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                 handleSpeakWholeMessage={handleSpeakWholeMessage}
                 handleSpeakLine={handleSpeakLine}
                 handlePlayUserMessage={handlePlayUserMessage}
                 speakText={speakText}
                 stopSpeaking={stopSpeaking}
-                isTtsSupported={isTtsSupported}
                 onToggleImageFocusedMode={() => onToggleImageFocusedMode(msg.id)}
                 transitioningImageId={transitioningImageId}
                 onSetAttachedImage={onSetAttachedImage}
@@ -887,74 +793,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 }}
             >
                 <InputArea
-                    t={t}
-                    isSttGloballyEnabled={isSttGloballyEnabled}
-                    isSttSupported={isSttSupported}
-                    transcript={transcript}
-                    sttLanguageCode={sttLanguageCode}
-                    targetLanguageDef={targetLanguageDef}
-                    nativeLanguageDef={nativeLanguageDef}
                     onSttToggle={onSttToggle}
                     onSttLanguageChange={onSttLanguageChange}
-                    attachedImageBase64={attachedImageBase64}
-                    attachedImageMimeType={attachedImageMimeType}
-                    onSetAttachedImage={onSetAttachedImage}
                     onSendMessage={onSendMessage}
                     onUserInputActivity={onUserInputActivity}
-                    liveVideoStream={liveVideoStream}
-                    liveSessionState={liveSessionState}
-                    liveSessionError={liveSessionError}
                     onStartLiveSession={onStartLiveSession}
                     onStopLiveSession={onStopLiveSession}
-                    isSuggestionMode={isSuggestionMode}
                     onToggleSuggestionMode={onToggleSuggestionMode}
                     onCreateSuggestion={onCreateSuggestion}
-                    isCreatingSuggestion={isCreatingSuggestion}
-                    sendPrep={sendPrep}
-                    availableCameras={availableCameras}
-                    selectedCameraId={selectedCameraId}
-                    currentCameraFacingMode={currentCameraFacingMode}
-                    isImageGenCameraSelected={isImageGenCameraSelected}
-                    onSelectCamera={onSelectCamera}
                     onToggleSendWithSnapshot={onToggleSendWithSnapshot}
                     onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
-                    sendWithSnapshotEnabled={sendWithSnapshotEnabled}
-                    useVisualContextForReengagementEnabled={useVisualContextForReengagementEnabled}
-                    imageGenerationModeEnabled={imageGenerationModeEnabled}
                     onToggleImageGenerationMode={onToggleImageGenerationMode}
-                    sttError={sttError}
-                     autoCaptureError={autoCaptureError ?? null}
-                     snapshotUserError={snapshotUserError ?? null}
-                    
-                    // Language Selection Props
-                    isLanguageSelectionOpen={isLanguageSelectionOpen}
-                    tempNativeLangCode={tempNativeLangCode}
-                    tempTargetLangCode={tempTargetLangCode}
-                    onTempNativeSelect={onTempNativeSelect}
-                    onTempTargetSelect={onTempTargetSelect}
-                    onConfirmLanguageSelection={onConfirmLanguageSelection}
-                    onSaveAllChats={onSaveAllChats}
-                    onLoadAllChats={onLoadAllChats}
-
-                    // Settings
-                    sttProvider={sttProvider}
-                    ttsProvider={ttsProvider}
-                    onToggleSttProvider={onToggleSttProvider}
-                    onToggleTtsProvider={onToggleTtsProvider}
-                    isSpeechRecognitionSupported={isSpeechRecognitionSupported}
                 />
             </div>
             {(isLoadingSuggestions || replySuggestions.length > 0) && (
                 <SuggestionsList
-                    isLoadingSuggestions={isLoadingSuggestions}
-                    replySuggestions={replySuggestions}
                     t={t}
-                    isSttSupported={isSttSupported}
-                    isSuggestionMode={isSuggestionMode}
                     onToggleSuggestionMode={() => onToggleSuggestionMode()}
-                    isCreatingSuggestion={isCreatingSuggestion}
                     onSuggestionClick={onSuggestionClick}
-                    isSpeaking={isSpeaking}
                     stopSpeaking={stopSpeaking}
                 />
             )}
