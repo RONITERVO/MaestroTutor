@@ -385,17 +385,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
        if (message.translations && message.translations.length > 0) {
          if (speakNativeLang) { 
            message.translations.forEach(pair => {
-             if (pair.spanish && pair.spanish.trim()) {
-              partsForTTS.push({ text: pair.spanish, langCode: currentTargetLangCode, context: { source: 'message', messageId: message.id } });
+             if (pair.target && pair.target.trim()) {
+              partsForTTS.push({ text: pair.target, langCode: currentTargetLangCode, context: { source: 'message', messageId: message.id } });
              }
-             if (pair.english && pair.english.trim()) {
-              partsForTTS.push({ text: pair.english, langCode: currentNativeLangCode, context: { source: 'message', messageId: message.id } });
+             if (pair.native && pair.native.trim()) {
+              partsForTTS.push({ text: pair.native, langCode: currentNativeLangCode, context: { source: 'message', messageId: message.id } });
              }
            });
          } else { 
            message.translations.forEach(pair => {
-             if (pair.spanish && pair.spanish.trim()) {
-              partsForTTS.push({ text: pair.spanish, langCode: currentTargetLangCode, context: { source: 'message', messageId: message.id } });
+             if (pair.target && pair.target.trim()) {
+              partsForTTS.push({ text: pair.target, langCode: currentTargetLangCode, context: { source: 'message', messageId: message.id } });
              }
            });
          }

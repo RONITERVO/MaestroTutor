@@ -35,7 +35,7 @@ export const useSuggestions = ({
       const messages = state.messages;
       const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
       if (lastMessage && lastMessage.role === 'assistant' && !lastMessage.thinking && lastMessage.id !== state.lastFetchedSuggestionsFor) {
-        const textForSuggestions = lastMessage.rawAssistantResponse || (lastMessage.translations?.find(t => t.spanish)?.spanish) || "";
+        const textForSuggestions = lastMessage.rawAssistantResponse || (lastMessage.translations?.find(t => t.target)?.target) || "";
         if (textForSuggestions.trim()) {
           // Set marker immediately to prevent duplicate fetches while request is in flight
           setLastFetchedSuggestionsFor(lastMessage.id);

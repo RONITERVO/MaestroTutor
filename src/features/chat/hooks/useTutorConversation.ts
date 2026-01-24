@@ -149,7 +149,7 @@ export interface UseTutorConversationReturn {
   setMaestroActivityStage: (stage: MaestroActivityStage) => void;
   
   // Parsing
-  parseGeminiResponse: (responseText: string | undefined) => Array<{ spanish: string; english: string }>;
+  parseGeminiResponse: (responseText: string | undefined) => Array<{ target: string; native: string }>;
   
   // Utilities
   stripBracketedContent: (input: string | undefined | null) => string;
@@ -325,12 +325,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     return without.replace(/\s+/g, ' ').trim();
   }, []);
 
-  const parseGeminiResponse = useCallback((responseText: string | undefined): Array<{ spanish: string; english: string }> => {
+  const parseGeminiResponse = useCallback((responseText: string | undefined): Array<{ target: string; native: string }> => {
     if (typeof responseText !== 'string' || !responseText.trim() || !selectedLanguagePairRef.current) {
       return [];
     }
     const lines = responseText.split('\n').map(line => line.trim()).filter(line => line);
-    const translations: Array<{ spanish: string; english: string }> = [];
+    const translations: Array<{ target: string; native: string }> = [];
     const nativeLangPrefix = `[${getShortLangCodeForPrompt(selectedLanguagePairRef.current.nativeLanguageCode)}]`;
 
     for (let i = 0; i < lines.length; i++) {
@@ -342,14 +342,14 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           nativeContent = lines[i + 1].substring(nativeLangPrefix.length).trim();
           i++;
         }
-        translations.push({ spanish: targetContent, english: nativeContent });
+        translations.push({ target: targetContent, native: nativeContent });
       } else {
-        translations.push({ spanish: "", english: currentLine.substring(nativeLangPrefix.length).trim() });
+        translations.push({ target: "", native: currentLine.substring(nativeLangPrefix.length).trim() });
       }
     }
 
     if (translations.length === 0 && responseText.trim()) {
-      translations.push({ spanish: responseText.trim(), english: "" });
+      translations.push({ target: responseText.trim(), native: "" });
     }
     return translations;
   }, [selectedLanguagePairRef]);
@@ -563,7 +563,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         if (msg.role === 'user') {
           return `User: ${msg.text || '(sent an image)'}`;
         }
-        return `Tutor: ${msg.translations?.[0]?.spanish || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
+        return `Tutor: ${msg.translations?.[0]?.target || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
       })
       .join('\n');
 
@@ -1444,7 +1444,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
       // Early suggestion fetch
       try {
-        const textForSuggestionsEarly = finalMessageUpdates.rawAssistantResponse || (finalMessageUpdates.translations?.find(tr => tr.spanish)?.spanish) || "";
+        const textForSuggestionsEarly = finalMessageUpdates.rawAssistantResponse || (finalMessageUpdates.translations?.find(tr => tr.target)?.target) || "";
         // Check if already loading suggestions via token
         if (!suggestionsTokenRef.current && textForSuggestionsEarly.trim()) {
           const historyWithFinalAssistant = messagesRef.current.map(m =>
@@ -1508,7 +1508,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           !suggestionsTokenRef.current &&
           finalAssistantMessage.id !== lastFetchedSuggestionsForRef.current) {
           const textForSuggestions = finalAssistantMessage.rawAssistantResponse ||
-            (finalAssistantMessage.translations?.find(tr => tr.spanish)?.spanish) || "";
+            (finalAssistantMessage.translations?.find(tr => tr.target)?.target) || "";
           if (textForSuggestions.trim()) {
             requestReplySuggestions(finalAssistantMessage.id, textForSuggestions, getHistoryRespectingBookmark(messagesRef.current));
           }

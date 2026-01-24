@@ -220,6 +220,9 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         console.warn("STT cycle ended with error. STT will not automatically restart unless manually toggled.");
       }
     },
+    // Note: Empty dependency arrays are intentional and safe here because these refs
+    // are store-backed proxies where .current always reads fresh state from useMaestroStore.getState().
+    // This pattern ensures callbacks remain stable while always accessing current state.
     isGlobalSttEnabled: useCallback(() => settingsRef.current.stt.enabled, []),
     getGlobalSttLanguage: useCallback(() => settingsRef.current.stt.language, []),
     onSpeechQueueCompleted: useCallback(() => {
@@ -380,17 +383,17 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
       if (message.translations && message.translations.length > 0) {
         if (settingsRef.current.tts.speakNative) {
           message.translations.forEach(pair => {
-            if (pair.spanish && pair.spanish.trim()) {
-              partsForTTS.push({ text: pair.spanish, langCode: targetLang, context: { source: 'message', messageId: message.id } });
+            if (pair.target && pair.target.trim()) {
+              partsForTTS.push({ text: pair.target, langCode: targetLang, context: { source: 'message', messageId: message.id } });
             }
-            if (pair.english && pair.english.trim()) {
-              partsForTTS.push({ text: pair.english, langCode: nativeLang, context: { source: 'message', messageId: message.id } });
+            if (pair.native && pair.native.trim()) {
+              partsForTTS.push({ text: pair.native, langCode: nativeLang, context: { source: 'message', messageId: message.id } });
             }
           });
         } else {
           message.translations.forEach(pair => {
-            if (pair.spanish && pair.spanish.trim()) {
-              partsForTTS.push({ text: pair.spanish, langCode: targetLang, context: { source: 'message', messageId: message.id } });
+            if (pair.target && pair.target.trim()) {
+              partsForTTS.push({ text: pair.target, langCode: targetLang, context: { source: 'message', messageId: message.id } });
             }
           });
         }

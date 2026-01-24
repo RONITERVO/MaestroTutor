@@ -4,7 +4,7 @@ import { TranslationReplacements } from '../../../core/i18n/index';
 import { SpeechPart } from '../../../core/types';
 
 interface TextScrollwheelProps {
-  translations: Array<{ spanish: string; english: string; }>;
+  translations: Array<{ target: string; native: string; }>;
   speakingUtteranceText: string | null;
   currentTargetLangCode: string;
   currentNativeLangCode: string;
@@ -30,8 +30,8 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
 
   const { allLinePairs, pairIndexByFlatIndex } = useMemo(() => {
     const pairs = translations.map(pair => ({
-      target: { type: 'target' as const, text: pair.spanish, lang: currentTargetLangCode },
-      native: { type: 'native' as const, text: pair.english, lang: currentNativeLangCode },
+      target: { type: 'target' as const, text: pair.target, lang: currentTargetLangCode },
+      native: { type: 'native' as const, text: pair.native, lang: currentNativeLangCode },
     }));
     const flat: Array<{ type: 'target'|'native'; text: string; lang: string; counterpart: { text: string; lang: string } | null }> = [];
     const pairIdxByFlat: number[] = [];
@@ -105,8 +105,8 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
             const baseContext = messageId ? { source: 'message' as const, messageId } : { source: 'adHoc' as const };
             for (let i = startPairIdx; i < translations.length; i++) {
               const pair = translations[i];
-              const t = pair.spanish?.trim();
-              const n = pair.english?.trim();
+              const t = pair.target?.trim();
+              const n = pair.native?.trim();
               if (t) parts.push({ text: t, langCode: currentTargetLangCode, context: baseContext });
               if (speakNativeLang && n) parts.push({ text: n, langCode: currentNativeLangCode, context: baseContext });
             }

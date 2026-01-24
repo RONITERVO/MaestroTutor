@@ -88,7 +88,7 @@ export interface UseLiveSessionControllerConfig {
   currentSystemPromptText: string;
   
   // Parsing/utilities (from useMaestroController)
-  parseGeminiResponse: (responseText: string | undefined) => Array<{ spanish: string; english: string }>;
+  parseGeminiResponse: (responseText: string | undefined) => Array<{ target: string; native: string }>;
   resolveBookmarkContextSummary: () => string | null;
   computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
   
@@ -369,8 +369,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             let flatIndex = 0;
             translations.forEach((pair) => {
               // Target Line
-              if (pair.spanish && flatIndex < chunks.length) {
-                const key = computeTtsCacheKey(pair.spanish, targetLang, 'gemini');
+              if (pair.target && flatIndex < chunks.length) {
+                const key = computeTtsCacheKey(pair.target, targetLang, 'gemini');
                 upsertMessageTtsCache(assistantId, {
                   key,
                   langCode: targetLang,
@@ -381,8 +381,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
                 flatIndex++;
               }
               // Native Line
-              if (pair.english && flatIndex < chunks.length) {
-                const key = computeTtsCacheKey(pair.english, nativeLang, 'gemini');
+              if (pair.native && flatIndex < chunks.length) {
+                const key = computeTtsCacheKey(pair.native, nativeLang, 'gemini');
                 upsertMessageTtsCache(assistantId, {
                   key,
                   langCode: nativeLang,

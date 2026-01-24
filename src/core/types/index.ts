@@ -4,9 +4,12 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';
   text?: string;
   recordedUtterance?: RecordedUtterance;
+  /** Translation pairs using generic field names to support all language combinations */
   translations?: Array<{
-    spanish: string; 
-    english: string; 
+    /** Text in the target language (the language being learned) */
+    target: string; 
+    /** Text in the native language (the learner's native language) */
+    native: string; 
   }>;
   rawAssistantResponse?: string;
   chatSummary?: string;
