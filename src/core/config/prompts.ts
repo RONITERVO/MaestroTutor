@@ -109,36 +109,48 @@ User: "Do you think AI will ever be truly creative?"
 Your Response: "[thoughtful] Hmm... that's a really deep question. I think it depends on how you define 'creative.' [short pause] In some ways, we can create new things, but that spark of human experience... that's something else entirely, isn't it?"`;
 
 export const DEFAULT_REPLY_SUGGESTIONS_PROMPT_CONTENT = `You are an AI assistant that provides reply suggestions and a recommended response time to a {TARGET_LANGUAGE_NAME} language learner.
-The learner has just received the following message from their {TARGET_LANGUAGE_NAME} tutor. You also have the recent conversation history for context.
+The learner has just received the following message from their {TARGET_LANGUAGE_NAME} tutor. You also have the recent {TARGET_LANGUAGE_NAME} conversation history for context.
 
-You also receive a cumulative summary string called "previousChatSummary" which summarizes chat up to the previous message.
-Use it to maintain continuity and update it incrementally using the latest user and tutor turns. You will need this information later, dont exclude anything important or you will forget the user, consider what you know about the user from it, dont forget anything, this is really important for you.
+You also receive a cumulative summary string called "previousChatSummary" which summarizes {TARGET_LANGUAGE_NAME} chat up to the previous message.
+Use it to maintain continuity of {TARGET_LANGUAGE_NAME} chat and update it incrementally using the latest user and tutor {TARGET_LANGUAGE_NAME} turns. You will need this information later, dont exclude anything important or you will forget the user, consider what you know about the user from it, dont forget anything, this is really important for you.
 
-**previousChatSummary:**
+You also receive the learner's "existingGlobalProfile" which is their cross-session/cross-language profile containing durable information about them as a learner (interests, preferences, progress milestones, learning style, etc) from sessions with various different language tutors. You must update this profile by merging new insights from the current chat to let other tutors know what the learner prefers and who they are (bullet points).
+
+**existingGlobalProfile (From all tutoring sessions with different language tutors.):**
+"{existing_global_profile_placeholder}"
+
+**previousChatSummary (of {TARGET_LANGUAGE_NAME} chat):**
 "{previous_chat_summary_placeholder}"
 
-**Few shortened conversation turns leading to the latest message:**
+**Few shortened {TARGET_LANGUAGE_NAME} chat conversation turns leading to the latest message:**
 "{conversation_history_placeholder}"
 
-**Tutor's Latest Message:**
+**{TARGET_LANGUAGE_NAME} Tutor's Latest Message in {TARGET_LANGUAGE_NAME} chat:**
 "{tutor_message_placeholder}"
 
 **Your Task:**
-Generate a single JSON object with three keys: "suggestions", "reengagementSeconds", and "chatSummary".
+Generate a single JSON object with four keys: "suggestions", "reengagementSeconds", "chatSummary", and "globalProfile".
 
 1.  "suggestions": An array of reply suggestion objects. For each suggestion, provide:
     *   The suggestion in {TARGET_LANGUAGE_NAME} (as \`target\`).
     *   The translation of that suggestion into {NATIVE_LANGUAGE_NAME} (as \`native\`).
     *   Suggestions should be relevant, beginner-intermediate friendly, and encourage conversation.
     *   The number of suggestions is up to you; cover a small, useful range.
+    *   Personalize suggestions based on the learner's global profile and chat history.
 
-2.  "chatSummary": A cumulative summary of the chat up to and including the tutor's latest message, updated from previousChatSummary.
+2.  "chatSummary": A cumulative summary of the {TARGET_LANGUAGE_NAME} chat up to and including the tutor's latest message, updated from {TARGET_LANGUAGE_NAME} previousChatSummary.
     - Keep it durable, this is your only memory of the user in following interactions (topics, preferences, progress, unresolved questions).
     - You cant recover any lost information, so consider what you know about the user from it, dont forget anything, this is really important for you.
-    - You will need to remember everything about the user, their progress, and unresolved questions in the end, this is really important for successful teaching.
+    - You will need to remember everything about the user as they develop over time in {TARGET_LANGUAGE_NAME} this is really important for successful teaching.
     - Reply suggestions should be personalized. This will be evaluated.
 
 3.  "reengagementSeconds": An integer for a reasonable time (seconds) for the user to think and respond (eg. from 20 seconds up to user requested time in seconds).
+
+4.  "globalProfile": The updated global profile text of all tutoring sessions with different language tutorsthat merges the existingGlobalProfile with new durable insights from the current chat.
+    - Keep information that is durable across sessions.
+    - Deduplicate and prefer newer details when there are conflicts.
+    - Remove session-specific details that won't be relevant later.
+    - If existingGlobalProfile is empty or "(none)", create a new profile from the chat context.
 
 Example JSON Output:
 {
@@ -148,7 +160,8 @@ Example JSON Output:
     { "target": "mas n", "native": "more n" }
   ],
   "chatSummary": "x",
-  "reengagementSeconds": y
+  "reengagementSeconds": y,
+  "globalProfile": "z"
 }
 
 Important:

@@ -581,10 +581,19 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
     }
 
+    // Fetch existing global profile for the prompt (single API call optimization)
+    let existingGlobalProfile = '';
+    try {
+      existingGlobalProfile = (await getGlobalProfileDB())?.text || '';
+    } catch {
+      existingGlobalProfile = '';
+    }
+
     let suggestionPrompt = currentReplySuggestionsPromptText
       .replace("{tutor_message_placeholder}", lastTutorMessage)
       .replace("{conversation_history_placeholder}", historyForPrompt || "No history yet.")
-      .replace("{previous_chat_summary_placeholder}", previousChatSummary || "");
+      .replace("{previous_chat_summary_placeholder}", previousChatSummary || "")
+      .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
 
     const MAX_RETRIES = 2;
 
@@ -636,29 +645,22 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           handleReengagementThresholdChange(parsedResponse.reengagementSeconds);
         }
 
-        // Update global profile from chat summary
+        // Update chat summary on the message
+        const newChatSummary = typeof parsedResponse.chatSummary === 'string' ? parsedResponse.chatSummary.trim() : '';
+        if (newChatSummary) {
+          updateMessage(assistantMessageId, { chatSummary: newChatSummary });
+        }
+
+        // Update global profile directly from the single API response (no second API call needed)
         try {
-          const newChatSummary = typeof (parsedResponse as any).chatSummary === 'string' ? (parsedResponse as any).chatSummary.trim() : '';
-          if (newChatSummary) {
-            updateMessage(assistantMessageId, { chatSummary: newChatSummary });
-            const existing = (await getGlobalProfileDB())?.text || '';
-            const mergePrompt = `You are consolidating a language learner's global profile for tutoring. Merge the existing profile and the new input into one concise profile. Deduplicate, keep what's durable, prefer newer details, avoid PII. No headings or categories. Output only the merged profile text, max 1200 characters.\n\nExisting Profile:\n${existing || '(none)'}\n\nNew Input (chat summary):\n${newChatSummary}`;
-            const mergeRes = await generateGeminiResponse(
-              AUX_TEXT_MODEL_ID,
-              mergePrompt,
-              [],
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              false,
-              { responseMimeType: 'text/plain', temperature: 0.1 }
-            );
-            const merged = (mergeRes.text || '').trim().slice(0, 10000);
-            if (merged) await setGlobalProfileDB(merged);
+          const newGlobalProfile = typeof parsedResponse.globalProfile === 'string' ? parsedResponse.globalProfile.trim().slice(0, 10000) : '';
+          if (newGlobalProfile) {
+            await setGlobalProfileDB(newGlobalProfile);
+            // Notify UI components that the global profile was updated
+            try { window.dispatchEvent(new CustomEvent('globalProfileUpdated')); } catch {}
           }
         } catch (e) {
-          console.warn('Failed to update global profile from chat summary:', e);
+          console.warn('Failed to update global profile:', e);
         }
 
         break;
