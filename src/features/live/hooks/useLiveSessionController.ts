@@ -210,11 +210,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   const restoreSttAfterLiveSession = useCallback(() => {
     if (liveSessionShouldRestoreSttRef.current) {
       const lang = settingsRef.current.stt.language;
-      setSettings(prev => {
-        const next = { ...prev, stt: { ...prev.stt, enabled: true } };
-        settingsRef.current = next;
-        return next;
-      });
+      setSettings(prev => ({ ...prev, stt: { ...prev.stt, enabled: true } }));
       liveSessionShouldRestoreSttRef.current = false;
       setTimeout(() => {
         if (settingsRef.current.stt.enabled) {
@@ -559,11 +555,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
       if (settingsRef.current.stt.enabled) {
         liveSessionShouldRestoreSttRef.current = true;
-        setSettings(prev => {
-          const next = { ...prev, stt: { ...prev.stt, enabled: false } };
-          settingsRef.current = next;
-          return next;
-        });
+        setSettings(prev => ({ ...prev, stt: { ...prev.stt, enabled: false } }));
         if (isListening) {
           stopListening();
         }
