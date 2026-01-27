@@ -1199,7 +1199,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     if (isSendingRef.current || speechIsSpeakingRef.current) {
-      console.log("SendMessage blocked: AI is currently sending or speaking.");
       return false;
     }
 

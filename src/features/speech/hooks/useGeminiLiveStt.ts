@@ -139,10 +139,8 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
 
   const start = useCallback(async (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
     // If cleanup is in progress, wait for it to complete
-    if (isCleaningUpRef.current) {
-      // Schedule retry after a short delay
-      setTimeout(() => start(languageOrOptions), 50);
-      return;
+    while (isCleaningUpRef.current) {
+      await new Promise(resolve => setTimeout(resolve, 10));
     }
     
     await cleanup();
@@ -254,7 +252,6 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
       
       // Check if session was invalidated during async connect
       if (currentSessionIdRef.current !== sessionId) {
-        console.log('[STT] Session invalidated during connect, closing');
         try { session.close(); } catch { /* ignore */ }
         return;
       }

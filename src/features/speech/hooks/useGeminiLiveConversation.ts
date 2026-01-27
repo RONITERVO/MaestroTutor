@@ -283,11 +283,23 @@ export function useGeminiLiveConversation(
     const sessionId = ++liveConversationSessionCounter;
     currentSessionIdRef.current = sessionId;
 
+    const abortIfInvalidated = async () => {
+      if (currentSessionIdRef.current !== sessionId) {
+        while (isCleaningUpRef.current) {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+        await cleanup();
+        return true;
+      }
+      return false;
+    };
+
     try {
       if (!stream || !stream.active) throw new Error('No active stream provided');
 
       // Video Setup
       await ensureVideoElementReady(stream, videoElement);
+      if (await abortIfInvalidated()) return;
       const canvas = document.createElement('canvas');
       canvasRef.current = canvas;
 
@@ -300,9 +312,11 @@ export function useGeminiLiveConversation(
       // Use a new dedicated stream for audio to avoid conflicts
       const micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
       microphoneStreamRef.current = micStream;
+      if (await abortIfInvalidated()) return;
       
       const source = inputCtx.createMediaStreamSource(micStream);
       await ensureCaptureWorklet(inputCtx);
+      if (await abortIfInvalidated()) return;
       const workletNode = new AudioWorkletNode(inputCtx, FLOAT_TO_INT16_PROCESSOR_NAME, { numberOfInputs: 1, numberOfOutputs: 0 });
       workletNodeRef.current = workletNode;
 

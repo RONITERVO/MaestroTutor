@@ -35,8 +35,8 @@ declare function registerProcessor(
  */
 class FloatToInt16Processor extends AudioWorkletProcessor {
   process(inputs: Float32Array[][]): boolean {
-    const input = inputs[0];
-    const channel = input[0];
+    const input = inputs?.[0];
+    const channel = input?.[0];
     
     if (channel && channel.length > 0) {
       const len = channel.length;
@@ -54,7 +54,7 @@ class FloatToInt16Processor extends AudioWorkletProcessor {
       // Transfer the buffer (zero-copy) to avoid memory overhead
       this.port.postMessage(int16, [int16.buffer]);
     }
-    
+
     // Return true to keep the processor alive
     return true;
   }
