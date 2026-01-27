@@ -1,6 +1,6 @@
 
-import React, { useRef, useState, useMemo } from 'react';
-import { LanguageDefinition, ALL_LANGUAGES } from '../../../core/config/languages';
+import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
+import { LanguageDefinition, ALL_LANGUAGES, hasSharedFlag } from '../../../core/config/languages';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import LanguageScrollWheel from './LanguageScrollWheel';
 
@@ -13,6 +13,9 @@ interface LanguageSelectorGlobeProps {
     t: (key: string, replacements?: TranslationReplacements) => string;
     onInteract: () => void;
 }
+
+// Number of flags visible at once on the spiral ring
+const VISIBLE_FLAGS = 12;
 
 const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     nativeLangCode,
@@ -28,18 +31,75 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     const [hoveredLang, setHoveredLang] = useState<LanguageDefinition | null>(null);
     const globeRef = useRef<HTMLDivElement>(null);
     const flagRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+    
+    // Spiral rotation offset (0 to 1 represents one full cycle through all languages)
+    const [spiralOffset, setSpiralOffset] = useState(0);
+    const isDraggingRef = useRef(false);
+    const lastPointerYRef = useRef(0);
+    const velocityRef = useRef(0);
+    const animationFrameRef = useRef<number | null>(null);
 
-    const getPosition = (index: number, total: number) => {
-        const angle = (index / total) * 2 * Math.PI;
-        const adjustedAngle = angle - Math.PI / 2;
+    // Calculate which flags are currently visible in the spiral window
+    const visibleFlags = useMemo(() => {
+        const total = ALL_LANGUAGES.length;
+        const centerIndex = Math.floor(spiralOffset * total) % total;
+        const halfVisible = Math.floor(VISIBLE_FLAGS / 2);
+        
+        const flags: { lang: LanguageDefinition; index: number; position: number }[] = [];
+        
+        for (let i = -halfVisible; i <= halfVisible; i++) {
+            let idx = (centerIndex + i + total) % total;
+            flags.push({
+                lang: ALL_LANGUAGES[idx],
+                index: idx,
+                position: i // -6 to +6 for 12 visible flags
+            });
+        }
+        
+        return flags;
+    }, [spiralOffset]);
+
+    // Get position on the circular edge based on relative position in the visible window
+    const getPosition = useCallback((position: number) => {
+        // Map position (-halfVisible to +halfVisible) to angle on circle
+        const normalizedPos = position / (VISIBLE_FLAGS / 2); // -1 to 1
+        const angle = normalizedPos * Math.PI; // -PI to PI (half circle, top portion)
+        const adjustedAngle = angle - Math.PI / 2; // Start from top
         const radius = 45;
         const x = 50 + radius * Math.cos(adjustedAngle);
         const y = 50 + radius * Math.sin(adjustedAngle);
-        return { x, y };
-    };
+        
+        // Calculate depth for 3D spiral effect (flags at edges are "further away")
+        const depth = Math.cos(normalizedPos * Math.PI * 0.5); // 1 at center, 0 at edges
+        
+        return { x, y, depth };
+    }, []);
 
-    const nativePos = nativeLang ? getPosition(ALL_LANGUAGES.findIndex(l => l.langCode === nativeLang.langCode), ALL_LANGUAGES.length) : null;
-    const targetPos = targetLang ? getPosition(ALL_LANGUAGES.findIndex(l => l.langCode === targetLang.langCode), ALL_LANGUAGES.length) : null;
+    // Get the actual position of a language (for drawing connection lines)
+    const getLanguagePosition = useCallback((langCode: string) => {
+        const visibleFlag = visibleFlags.find(f => f.lang.langCode === langCode);
+        if (visibleFlag) {
+            return getPosition(visibleFlag.position);
+        }
+        // If not visible, calculate where it would be if we scrolled to it
+        const idx = ALL_LANGUAGES.findIndex(l => l.langCode === langCode);
+        const total = ALL_LANGUAGES.length;
+        const centerIndex = Math.floor(spiralOffset * total) % total;
+        const distance = ((idx - centerIndex + total) % total);
+        const adjustedDistance = distance > total / 2 ? distance - total : distance;
+        
+        // Return position outside visible area
+        const angle = (adjustedDistance / (VISIBLE_FLAGS / 2)) * Math.PI - Math.PI / 2;
+        const radius = 45;
+        return {
+            x: 50 + radius * Math.cos(angle),
+            y: 50 + radius * Math.sin(angle),
+            depth: 0
+        };
+    }, [visibleFlags, spiralOffset, getPosition]);
+
+    const nativePos = nativeLang ? getLanguagePosition(nativeLang.langCode) : null;
+    const targetPos = targetLang ? getLanguagePosition(targetLang.langCode) : null;
 
     const pathD = useMemo(() => {
         if (!nativePos || !targetPos) return "";
@@ -47,6 +107,98 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         const controlY = 50;
         return `M ${nativePos.x} ${nativePos.y} Q ${controlX} ${controlY} ${targetPos.x} ${targetPos.y}`;
     }, [nativePos, targetPos]);
+
+    // Sync spiral offset when scroll wheel selection changes
+    useEffect(() => {
+        const selectedLang = targetLang || nativeLang;
+        if (selectedLang) {
+            const idx = ALL_LANGUAGES.findIndex(l => l.langCode === selectedLang.langCode);
+            if (idx !== -1) {
+                const targetOffset = idx / ALL_LANGUAGES.length;
+                setSpiralOffset(targetOffset);
+            }
+        }
+    }, [nativeLang, targetLang]);
+
+    // Handle wheel scroll on the globe to rotate spiral
+    const handleWheel = useCallback((e: React.WheelEvent) => {
+        e.preventDefault();
+        onInteract();
+        const delta = e.deltaY > 0 ? 0.02 : -0.02;
+        setSpiralOffset(prev => {
+            let next = prev + delta;
+            // Wrap around
+            if (next < 0) next += 1;
+            if (next >= 1) next -= 1;
+            return next;
+        });
+    }, [onInteract]);
+
+    // Handle drag to rotate spiral
+    const handlePointerDown = useCallback((e: React.PointerEvent) => {
+        isDraggingRef.current = true;
+        lastPointerYRef.current = e.clientY;
+        velocityRef.current = 0;
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
+        }
+        onInteract();
+        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    }, [onInteract]);
+
+    const handlePointerMove = useCallback((e: React.PointerEvent) => {
+        if (!isDraggingRef.current) return;
+        const deltaY = e.clientY - lastPointerYRef.current;
+        lastPointerYRef.current = e.clientY;
+        
+        // Convert pixel movement to spiral rotation
+        const sensitivity = 0.002;
+        velocityRef.current = deltaY * sensitivity;
+        
+        setSpiralOffset(prev => {
+            let next = prev + velocityRef.current;
+            if (next < 0) next += 1;
+            if (next >= 1) next -= 1;
+            return next;
+        });
+    }, []);
+
+    const handlePointerUp = useCallback((e: React.PointerEvent) => {
+        isDraggingRef.current = false;
+        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+        
+        // Apply momentum/inertia
+        const applyMomentum = () => {
+            if (Math.abs(velocityRef.current) < 0.0005) {
+                velocityRef.current = 0;
+                return;
+            }
+            
+            velocityRef.current *= 0.95; // Friction
+            setSpiralOffset(prev => {
+                let next = prev + velocityRef.current;
+                if (next < 0) next += 1;
+                if (next >= 1) next -= 1;
+                return next;
+            });
+            
+            animationFrameRef.current = requestAnimationFrame(applyMomentum);
+        };
+        
+        if (Math.abs(velocityRef.current) > 0.001) {
+            animationFrameRef.current = requestAnimationFrame(applyMomentum);
+        }
+    }, []);
+
+    // Cleanup animation frame on unmount
+    useEffect(() => {
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, []);
 
     const handleFlagClick = (lang: LanguageDefinition) => {
         onInteract();
@@ -63,6 +215,19 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         }
     };
 
+    // When scroll wheel selects a language, scroll spiral to show it
+    const handleScrollWheelSelect = useCallback((lang: LanguageDefinition, isNative: boolean) => {
+        const idx = ALL_LANGUAGES.findIndex(l => l.langCode === lang.langCode);
+        if (idx !== -1) {
+            setSpiralOffset(idx / ALL_LANGUAGES.length);
+        }
+        if (isNative) {
+            onSelectNative(lang.langCode);
+        } else {
+            onSelectTarget(lang.langCode);
+        }
+    }, [onSelectNative, onSelectTarget]);
+
     return (
         <div className="w-full flex justify-center py-2">
             <style>{`
@@ -74,14 +239,26 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     animation: fly-in-bubble 2.5s ease-in-out forwards;
                     offset-path: path(var(--flight-path));
                 }
+                .spiral-flag {
+                    transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+                }
             `}</style>
 
             <div
                 ref={globeRef}
-                className="globe-bg relative w-full max-w-[20rem] aspect-square border-2 rounded-full flex items-center justify-center bg-slate-800 text-white overflow-hidden shadow-inner"
-                onPointerDown={onInteract}
-                onWheel={onInteract}
+                className="globe-bg relative w-full max-w-[20rem] aspect-square border-2 rounded-full flex items-center justify-center bg-slate-800 text-white overflow-hidden shadow-inner touch-none"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+                onPointerLeave={() => { if (isDraggingRef.current) handlePointerUp({} as React.PointerEvent); }}
+                onWheel={handleWheel}
             >
+                {/* Spiral indicator - shows current position in the full language list */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-slate-400 opacity-60 pointer-events-none">
+                    {Math.floor(spiralOffset * ALL_LANGUAGES.length) + 1} / {ALL_LANGUAGES.length}
+                </div>
+
                 {pathD && (
                     <svg key={pathD} viewBox="0 0 100 100" className="absolute w-full h-full top-0 left-0 overflow-visible pointer-events-none">
                         <path d={pathD} stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none" strokeDasharray="5,5" />
@@ -113,7 +290,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                             <LanguageScrollWheel
                                 languages={ALL_LANGUAGES}
                                 selectedValue={nativeLang}
-                                onSelect={(l) => onSelectNative(l.langCode)}
+                                onSelect={(l) => handleScrollWheelSelect(l, true)}
                                 onInteract={onInteract}
                                 title=""
                             />
@@ -121,7 +298,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                             <LanguageScrollWheel
                                 languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
                                 selectedValue={targetLang}
-                                onSelect={(l) => onSelectTarget(l.langCode)}
+                                onSelect={(l) => handleScrollWheelSelect(l, false)}
                                 disabled={!nativeLang}
                                 onInteract={onInteract}
                                 title=""
@@ -130,22 +307,38 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     </div>
                 </div>
                 
-                {ALL_LANGUAGES.map((lang, index) => {
-                    const pos = getPosition(index, ALL_LANGUAGES.length);
+                {/* Spiral flags - only render visible ones */}
+                {visibleFlags.map(({ lang, position }) => {
+                    const pos = getPosition(position);
                     const isNative = nativeLang?.langCode === lang.langCode;
                     const isTarget = targetLang?.langCode === lang.langCode;
+                    const showShortCode = hasSharedFlag(lang);
+                    
+                    // Scale and opacity based on depth (center flags are larger/more visible)
+                    const scale = 0.6 + pos.depth * 0.6; // 0.6 to 1.2
+                    const opacity = 0.4 + pos.depth * 0.6; // 0.4 to 1.0
+                    
                     return (
                         <button
                             key={lang.langCode}
                             ref={el => { if (el) flagRefs.current.set(lang.langCode, el); else flagRefs.current.delete(lang.langCode); }}
-                            className="absolute transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-full transition-all duration-300 ease-out z-10"
-                            style={{ top: `${pos.y}%`, left: `${pos.x}%` }}
+                            className="spiral-flag absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center p-1 rounded-full z-10"
+                            style={{ 
+                                top: `${pos.y}%`, 
+                                left: `${pos.x}%`,
+                                transform: `translate(-50%, -50%) scale(${scale})`,
+                                opacity: opacity,
+                                zIndex: Math.floor(pos.depth * 10) + 10
+                            }}
                             onClick={() => handleFlagClick(lang)}
                             onMouseEnter={() => setHoveredLang(lang)}
                             onMouseLeave={() => setHoveredLang(null)}
                             title={lang.displayName}
                         >
-                            <span className={`text-xl transition-transform duration-200 ${hoveredLang?.langCode === lang.langCode || isNative || isTarget ? 'scale-150' : 'scale-100'}`}>{lang.flag}</span>
+                            <span className={`text-lg leading-none transition-transform duration-200 ${hoveredLang?.langCode === lang.langCode || isNative || isTarget ? 'scale-125' : 'scale-100'}`}>{lang.flag}</span>
+                            {showShortCode && (
+                                <span className="text-[8px] font-bold text-white/90 leading-none mt-0.5 drop-shadow-sm">{lang.shortCode}</span>
+                            )}
                             <div className={`absolute -inset-1 rounded-full border-2 transition-all duration-300 pointer-events-none ${
                                 isNative ? 'border-sky-400 shadow-sky-400/50 shadow-lg' :
                                 isTarget ? 'border-green-400 shadow-green-400/50 shadow-lg' :
@@ -154,6 +347,10 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         </button>
                     );
                 })}
+
+                {/* Scroll hint arrows */}
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none text-lg">◀</div>
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none text-lg">▶</div>
             </div>
         </div>
     );

@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TranslationReplacements } from '../../../../core/i18n/index';
-import { LanguageDefinition } from '../../../../core/config/languages';
+import { LanguageDefinition, hasSharedFlag } from '../../../../core/config/languages';
 import { IconMicrophone } from '../../../../shared/ui/Icons';
-import { SttLanguageSelector } from '../../../speech';
 import { useMaestroStore } from '../../../../store';
+import { selectIsSending } from '../../../../store/slices/uiSlice';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityTokens';
+import { parseLanguagePairId } from '../../../../shared/utils/languageUtils';
 
 interface AudioControlsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
@@ -14,12 +15,10 @@ interface AudioControlsProps {
   isListening: boolean;
   isSending: boolean;
   isSpeaking: boolean;
-  sttLanguageCode: string;
   targetLanguageDef: LanguageDefinition;
   nativeLanguageDef: LanguageDefinition;
   isSuggestionMode: boolean;
   onSttToggle: () => void;
-  onSttLanguageChange: (langCode: string) => void;
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
   onUserInputActivity: () => void;
 }
@@ -32,12 +31,10 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   isListening,
   isSending,
   isSpeaking,
-  sttLanguageCode,
   targetLanguageDef,
   nativeLanguageDef,
   isSuggestionMode,
   onSttToggle,
-  onSttLanguageChange,
   onSetAttachedImage,
   onUserInputActivity,
 }) => {
@@ -199,18 +196,54 @@ const AudioControls: React.FC<AudioControlsProps> = ({
     return isListening ? t('chat.mic.listening') : (isSttGloballyEnabled ? t('chat.mic.disableStt') : t('chat.mic.enableStt'));
   };
 
+  const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
+  const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
+  const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
+  const selectedLanguagePairId = useMaestroStore(state => state.settings.selectedLanguagePairId);
+
+  const handleOpenLanguageSelector = useCallback(() => {
+    const state = useMaestroStore.getState();
+    if (selectIsSending(state)) return;
+    setIsLanguageSelectionOpen(true);
+    const currentPairId = selectedLanguagePairId;
+    if (currentPairId && typeof currentPairId === 'string') {
+      const parsed = parseLanguagePairId(currentPairId);
+      if (parsed) {
+        setTempTargetLangCode(parsed.targetCode);
+        setTempNativeLangCode(parsed.nativeCode);
+      } else {
+        setTempNativeLangCode(null);
+        setTempTargetLangCode(null);
+      }
+    } else {
+      setTempNativeLangCode(null);
+      setTempTargetLangCode(null);
+    }
+  }, [setIsLanguageSelectionOpen, setTempNativeLangCode, setTempTargetLangCode, selectedLanguagePairId]);
+
   return (
     <div className="flex items-center space-x-1">
-      {!isLanguageSelectionOpen && isSttSupported && (
-        <SttLanguageSelector
-          targetLang={targetLanguageDef}
-          nativeLang={nativeLanguageDef}
-          currentSttLangCode={sttLanguageCode}
-          onSelectLang={onSttLanguageChange}
-          t={t}
-          isCollapsed={true}
-          isInSuggestionMode={isSuggestionMode}
-        />
+      {!isLanguageSelectionOpen && (
+        <button
+          type="button"
+          onClick={handleOpenLanguageSelector}
+          className={`flex flex-col items-center justify-center p-1 rounded-full transition-colors ${
+            isSuggestionMode
+              ? 'hover:bg-gray-100'
+              : 'hover:bg-white/20'
+          }`}
+          title={t('chat.languageSelector.openGlobe')}
+          disabled={isSending || isSpeaking}
+        >
+          <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '10px' }}>
+            {nativeLanguageDef.flag}
+            {hasSharedFlag(nativeLanguageDef) && <span className={`text-[7px] font-bold ${isSuggestionMode ? 'text-gray-500' : 'text-blue-100'}`}>{nativeLanguageDef.shortCode}</span>}
+          </span>
+          <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '14px' }}>
+            {targetLanguageDef.flag}
+            {hasSharedFlag(targetLanguageDef) && <span className={`text-[9px] font-bold ${isSuggestionMode ? 'text-gray-500' : 'text-blue-100'}`}>{targetLanguageDef.shortCode}</span>}
+          </span>
+        </button>
       )}
       {!isLanguageSelectionOpen && isSttSupported && (
         <button

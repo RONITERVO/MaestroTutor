@@ -146,7 +146,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
           outputAudioTranscription: {}, // Enable Output Transcription (The Parrot)
-          systemInstruction: "You are a precise phonetic transcriber. Your task is to repeat exactly what the user says, word for word. Do not reply, do not answer questions, do not summarize. Just repeat the user's speech.",
+          systemInstruction: "You are a precise phonetic transcriber. Your task is to repeat exactly what the user says, word for word. Do not reply, do not answer questions, do not summarize. Just repeat the user's speech twice, first exacly and then a short pause and corrected with proper an clear articulation.",
         },
         callbacks: {
           onopen: () => {

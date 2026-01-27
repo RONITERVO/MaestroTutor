@@ -419,27 +419,6 @@ const App: React.FC = () => {
     }
   }, [clearAutoSend, clearTranscript, startListening, stopListening, settingsRef, setSettings]);
 
-  const handleSttLanguageChange = useCallback((langCode: string) => {
-    const currentSttSettings = settingsRef.current.stt;
-    const sttShouldBeActive = currentSttSettings.enabled;
-
-    if (sttShouldBeActive && isListening) {
-      stopListening();
-    }
-    setSettings(prev => ({ ...prev, stt: { ...prev.stt, language: langCode } }));
-
-    if (sttShouldBeActive) {
-      setTimeout(() => {
-        if (settingsRef.current.stt.enabled) {
-          clearTranscript();
-          startListening(langCode);
-        }
-      }, STT_RESTART_DELAY_MS);
-    } else {
-      clearTranscript();
-    }
-  }, [isListening, stopListening, clearTranscript, startListening, settingsRef, setSettings]);
-
   const handleToggleSendWithSnapshot = useCallback(() => {
     handleSettingsChange('sendWithSnapshotEnabled', !settingsRef.current.sendWithSnapshotEnabled);
   }, [handleSettingsChange, settingsRef]);
@@ -581,7 +560,6 @@ const App: React.FC = () => {
             bubbleWrapperRefs={bubbleWrapperRefs}
             onSetAttachedImage={handleSetAttachedImage}
             onSttToggle={sttMasterToggle}
-            onSttLanguageChange={handleSttLanguageChange}
             speakText={speakWrapper}
             stopSpeaking={stopSpeaking}
             onToggleSpeakNativeLang={handleToggleSpeakNativeLang}

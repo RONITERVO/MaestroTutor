@@ -12,14 +12,16 @@ const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\
  * Hook providing internationalization support.
  * Returns a translation function `t` based on the current language.
  * 
- * @param nativeLangCode - The user's native language code (e.g., 'en', 'es')
+ * @param nativeLangCode - The user's native language code (BCP-47 format e.g., 'en-US', 'es-ES')
  * @returns Object containing the translation function
  */
 export const useTranslations = (nativeLangCode: string) => {
-  const lang = useMemo(() => nativeLangCode.substring(0, 2).toLowerCase(), [nativeLangCode]);
+  // Use full BCP-47 code for lookup (e.g., "en-US")
+  const fullCode = useMemo(() => nativeLangCode || 'en-US', [nativeLangCode]);
 
   const t = useCallback((key: string, replacements?: TranslationReplacements): string => {
-    let translation = translations[lang]?.[key] || translations.en[key] || key;
+    // Try full BCP-47 code first, then fall back to en-US
+    let translation = translations[fullCode]?.[key] || translations["en-US"]?.[key] || key;
     if (replacements) {
       Object.keys(replacements).forEach(rKey => {
         const escapedRKey = escapeRegExp(rKey);
@@ -27,9 +29,9 @@ export const useTranslations = (nativeLangCode: string) => {
       });
     }
     return translation;
-  }, [lang]);
+  }, [fullCode]);
 
-  return { t, currentLanguage: lang };
+  return { t, currentLanguage: fullCode };
 };
 
 export default useTranslations;

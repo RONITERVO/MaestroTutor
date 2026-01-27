@@ -32,7 +32,6 @@ interface ChatInterfaceProps {
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
 
   onSttToggle: () => void;
-  onSttLanguageChange: (langCode: string) => void;
   speakText: (textOrParts: string | SpeechPart[], defaultLang: string) => void;
   stopSpeaking: () => void; 
 
@@ -57,7 +56,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onChangeMaxVisibleMessages,
     onSetAttachedImage,
     onSttToggle,
-    onSttLanguageChange,
     speakText,
     stopSpeaking,
     onToggleSpeakNativeLang,
@@ -794,7 +792,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
             >
                 <InputArea
                     onSttToggle={onSttToggle}
-                    onSttLanguageChange={onSttLanguageChange}
                     onSendMessage={onSendMessage}
                     onUserInputActivity={onUserInputActivity}
                     onStartLiveSession={onStartLiveSession}

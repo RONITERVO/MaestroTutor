@@ -2,9 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import {
   IconPencil,
-  IconSparkles,
-  IconSpeaker,
-  IconMicrophone,
   IconSave,
   IconFolderOpen,
   IconTrash,
@@ -12,7 +9,6 @@ import {
   IconUndo,
   IconPlus,
   IconXMark,
-  IconWaveform,
 } from '../../../shared/ui/Icons';
 import { getGlobalProfileDB, setGlobalProfileDB } from '../services/globalProfile';
 import { getMaestroProfileImageDB, setMaestroProfileImageDB, clearMaestroProfileImageDB, MaestroProfileAsset } from '../../../core/db/assets';
@@ -341,24 +337,6 @@ const SessionControls: React.FC = () => {
             <button type="button" onClick={startProfileEdit} className="p-2 hover:bg-white/20 rounded-full text-white transition-colors" title="Edit Profile">
               <IconPencil className="w-4 h-4" />
             </button>
-            <div
-              className="p-2 rounded-full text-white/80 relative"
-              title="TTS Provider: Gemini Live"
-            >
-              <IconSpeaker className="w-5 h-5" />
-              <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-0.5 border border-white">
-                <IconWaveform className="w-2.5 h-2.5 text-white" />
-              </div>
-            </div>
-            <div
-              className="p-2 rounded-full text-white/80 relative"
-              title="STT Provider: Gemini"
-            >
-              <IconMicrophone className="w-5 h-5" />
-              <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-0.5 border border-white">
-                <IconSparkles className="w-2.5 h-2.5 text-white" />
-              </div>
-            </div>
           </div>
 
           <div className="flex items-center bg-blue-500/30 rounded-full p-0.5 border border-white/10">

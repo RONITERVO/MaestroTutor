@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
 import { IconTerminal } from '../../../shared/ui/Icons';
 import { useMaestroStore } from '../../../store';
+import { parseLanguagePairId } from '../../../shared/utils/languageUtils';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { selectActiveUiTokens, selectIsLive, selectIsUserHold, selectIsSending } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair, selectTargetLanguageDef } from '../../../store/slices/settingsSlice';
@@ -46,14 +47,11 @@ const Header = forwardRef<HTMLDivElement>((_, ref) => {
     const currentPairId = state.settings.selectedLanguagePairId;
     if (currentPairId && typeof currentPairId === 'string') {
       // Parse language pair ID (format: "target-native")
-      const trimmed = currentPairId.trim();
-      const parts = trimmed.split('-');
-      // Validate: must have exactly 2 non-empty parts
-      if (parts.length === 2 && parts[0] && parts[1]) {
-        setTempTargetLangCode(parts[0]);
-        setTempNativeLangCode(parts[1]);
+      const parsed = parseLanguagePairId(currentPairId);
+      if (parsed) {
+        setTempTargetLangCode(parsed.targetCode);
+        setTempNativeLangCode(parsed.nativeCode);
       } else {
-        // Invalid format, clear temp values
         setTempNativeLangCode(null);
         setTempTargetLangCode(null);
       }

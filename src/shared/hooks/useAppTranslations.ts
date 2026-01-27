@@ -12,10 +12,12 @@ export const useAppTranslations = () => {
 
   const nativeLangForTranslations = useMemo(() => {
     if (selectedLanguagePair?.nativeLanguageCode) {
+      // Use full BCP-47 code (e.g., "en-US") for translations
       return getPrimaryCode(selectedLanguagePair.nativeLanguageCode);
     }
-    const browserLang = (typeof navigator !== 'undefined' ? navigator.language : 'en').substring(0, 2);
-    return browserLang || 'en';
+    // Fall back to browser language or default to en-US
+    const browserLang = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
+    return browserLang || 'en-US';
   }, [selectedLanguagePair]);
 
   return useTranslations(nativeLangForTranslations);
