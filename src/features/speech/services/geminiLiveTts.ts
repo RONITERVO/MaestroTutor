@@ -143,7 +143,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
 
   // Build the text block for the system instruction
   // Each line on a new line for proper transcript splitting
-  const textBlock = lines.map(l => `[${(l.langCode.substring(0, 2) || '').toUpperCase()}] ${l.text}`).join('\n');
+  const textBlock = lines.map(l => `[${(l.langCode || '')}] ${l.text}`).join('\n\n');
   
   const systemInstructionText = `You are a professional Text-to-Speech engine. Your ONLY task is to read the following text aloud, exactly as written, when the user says "Play". 
 IMPORTANT RULES:

@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
-import { LanguageDefinition } from '../../../core/config/languages';
+import { LanguageDefinition, hasSharedFlag } from '../../../core/config/languages';
 
 interface LanguageScrollWheelProps {
   languages: LanguageDefinition[];
@@ -99,6 +99,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                 <div className="h-[calc(50%-1.5rem)]"></div>
                 {languages.map(lang => {
                     const isSelected = lang.langCode === selectedValue?.langCode;
+                    const showShortCode = hasSharedFlag(lang);
                     return (
                         <div
                             key={lang.langCode}
@@ -107,8 +108,12 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                             style={{ scrollSnapAlign: 'center' }}
                             onClick={() => { if (!disabled) { onInteract?.(); onSelect(lang); } }}
                         >
-                            <span className={`text-sm font-semibold flex items-center gap-2 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-110' : 'opacity-60 scale-90'}`}>
-                                {lang.flag} {lang.displayName}
+                            <span className={`text-sm font-semibold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-110' : 'opacity-60 scale-90'}`}>
+                                <span className="flex items-center gap-0.5">
+                                    {lang.flag}
+                                    {showShortCode && <span className="text-[10px] text-slate-300 font-medium">{lang.shortCode}</span>}
+                                </span>
+                                <span className="truncate max-w-[5rem]">{lang.displayName}</span>
                             </span>
                         </div>
                     );

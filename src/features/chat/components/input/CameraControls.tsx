@@ -91,6 +91,15 @@ const CameraControls: React.FC<CameraControlsProps> = ({
               <button type="button" onClick={handleCameraDeactivationClick} className="p-1.5 rounded-full bg-red-500 text-white hover:bg-red-600" title={t('chat.camera.turnOff')}>
                 <IconXMark className="w-4 h-4" />
               </button>
+              {/* Assistant Image Gen toggle (Book) inside camera selector, visually separated */}
+              <button
+                type="button"
+                onClick={onToggleImageGenerationMode}
+                className={`p-1.5 ml-1 rounded-full transition-colors ${imageGenerationModeEnabled ? (isSuggestionMode ? 'bg-white text-purple-700' : 'bg-white text-purple-700') : (isSuggestionMode ? 'text-gray-700 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80')}`}
+                title={t('chat.bookIcon.toggleImageGen')}
+              >
+                <IconBookOpen className="w-4 h-4" />
+              </button>
               <div className="flex items-center space-x-0.5 ml-1">
                 {allCameraOptions.map(cam => {
                   const isSelected = cam.deviceId === selectedCameraId;
@@ -103,7 +112,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
                       type="button"
                       key={cam.deviceId}
                       onClick={() => onSelectCamera(cam.deviceId)}
-                      className={`p-1.5 rounded-full transition-colors ${isSelected ? `bg-white ${isSuggestionMode ? 'text-gray-800' : 'text-blue-600'}` : `${isSuggestionMode ? 'text-gray-600 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80'}`}`}
+                      className={`p-1.5 rounded-full transition-colors ${isSelected ? `${isSuggestionMode ? 'bg-white text-gray-800' : 'bg-white text-blue-600'}` : `${isSuggestionMode ? 'text-gray-600 hover:bg-black/10' : 'text-blue-100 hover:bg-blue-400/80'}`}`}
                       title={cam.label}
                     >
                       <Icon className="w-4 h-4" />
@@ -122,14 +131,6 @@ const CameraControls: React.FC<CameraControlsProps> = ({
               {isImageGenCameraSelected ? <IconSparkles className="w-5 h-5" /> : (currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />)}
             </button>
           )}
-          <button
-            type="button"
-            onClick={onToggleImageGenerationMode}
-            className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${iconButtonStyle} ${imageGenerationModeEnabled ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`}
-            title={t('chat.bookIcon.toggleImageGen')}
-          >
-            <IconBookOpen className="w-5 h-5" />
-          </button>
         </>
       )}
     </div>

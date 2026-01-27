@@ -11,6 +11,7 @@ import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../../core/config/la
 import { safeSaveChatHistoryDB } from '../../chat';
 import { useMaestroStore } from '../../../store';
 import { selectIsSending } from '../../../store/slices/uiSlice';
+import { findLanguageByExactCode, findLanguageByPrimarySubtag, parseLanguagePairId } from '../../../shared/utils/languageUtils';
 
 export interface UseLanguageSelectionControllerConfig {
   isSettingsLoaded: boolean;
@@ -48,9 +49,14 @@ export const useLanguageSelectionController = ({
     setIsLanguageSelectionOpen(true);
     const currentPairId = state.settings.selectedLanguagePairId;
     if (currentPairId) {
-      const [target, native] = currentPairId.split('-');
-      setTempNativeLangCode(native);
-      setTempTargetLangCode(target);
+      const parsed = parseLanguagePairId(currentPairId);
+      if (parsed) {
+        setTempNativeLangCode(parsed.nativeCode);
+        setTempTargetLangCode(parsed.targetCode);
+      } else {
+        setTempNativeLangCode(null);
+        setTempTargetLangCode(null);
+      }
     }
   }, [setIsLanguageSelectionOpen, setTempNativeLangCode, setTempTargetLangCode]);
 
@@ -90,9 +96,10 @@ export const useLanguageSelectionController = ({
 
   useEffect(() => {
     if (isSettingsLoaded && !settings.selectedLanguagePairId) {
-      const browserLangCode = (typeof navigator !== 'undefined' && navigator.language || 'en').substring(0, 2);
-      const defaultNative = ALL_LANGUAGES.find(l => l.langCode === browserLangCode) || 
-                           ALL_LANGUAGES.find(l => l.langCode === DEFAULT_NATIVE_LANG_CODE)!;
+      const browserLangCode = (typeof navigator !== 'undefined' && navigator.language) || DEFAULT_NATIVE_LANG_CODE;
+      const defaultNative = findLanguageByExactCode(browserLangCode)
+        || findLanguageByPrimarySubtag(browserLangCode)
+        || ALL_LANGUAGES.find(l => l.langCode === DEFAULT_NATIVE_LANG_CODE)!;
       setTempNativeLangCode(defaultNative.langCode);
       setTempTargetLangCode(null);
       setIsLanguageSelectionOpen(true);

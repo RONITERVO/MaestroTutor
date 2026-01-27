@@ -23,6 +23,7 @@ import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../../core/config/la
 
 // --- Utils ---
 import { uniq } from '../../../shared/utils/common';
+import { findLanguageByExactCode, findLanguageByPrimarySubtag } from '../../../shared/utils/languageUtils';
 import { useMaestroStore } from '../../../store';
 
 export interface UseDataBackupConfig {
@@ -151,8 +152,10 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
           const newHistoryForCurrentPair = await getChatHistoryDB(currentPairId);
           setMessages(newHistoryForCurrentPair);
         } else {
-          const browserLangCode = (typeof navigator !== 'undefined' && navigator.language || 'en').substring(0, 2);
-          const defaultNative = ALL_LANGUAGES.find(l => l.langCode === browserLangCode) || ALL_LANGUAGES.find(l => l.langCode === DEFAULT_NATIVE_LANG_CODE)!;
+          const browserLangCode = (typeof navigator !== 'undefined' && navigator.language) || DEFAULT_NATIVE_LANG_CODE;
+          const defaultNative = findLanguageByExactCode(browserLangCode)
+            || findLanguageByPrimarySubtag(browserLangCode)
+            || ALL_LANGUAGES.find(l => l.langCode === DEFAULT_NATIVE_LANG_CODE)!;
           setTempNativeLangCode(defaultNative.langCode);
           setTempTargetLangCode(null);
           setIsLanguageSelectionOpen(true);

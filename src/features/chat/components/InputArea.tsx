@@ -18,7 +18,6 @@ import SessionControls from '../../session/components/SessionControls';
 
 interface InputAreaProps {
   onSttToggle: () => void;
-  onSttLanguageChange: (code: string) => void;
   onSendMessage: (text: string, imageBase64?: string, imageMimeType?: string) => Promise<boolean>;
   onUserInputActivity: () => void;
   onStartLiveSession: () => Promise<void> | void;
@@ -32,7 +31,6 @@ interface InputAreaProps {
 
 const InputArea: React.FC<InputAreaProps> = ({
   onSttToggle,
-  onSttLanguageChange,
   onSendMessage,
   onUserInputActivity,
   onStartLiveSession,
@@ -572,141 +570,17 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   return (
     <>
-      {isComposerAnnotating ? (
-        <div className="w-full">
-          <div
-            ref={composerViewportRef}
-            className="relative w-full max-h-[75vh] bg-black rounded-md overflow-hidden transition-all duration-300"
-            style={{ aspectRatio: composerImageAspectRatio || undefined, touchAction: 'none' }}
-            onPointerDown={handleComposerPointerDown}
-            onPointerMove={handleComposerPointerMove}
-            onPointerUp={handleComposerPointerUp}
-            onPointerCancel={handleComposerPointerUp}
-            onWheel={handleComposerWheel}
-          >
-            <div
-              style={{
-                width: composerImageRef.current?.naturalWidth,
-                height: composerImageRef.current?.naturalHeight,
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: `translate(-50%,-50%) translate(${composerPan.x}px, ${composerPan.y}px) scale(${composerScale})`,
-                transition: composerActivePointersRef.current.length > 0 ? 'none' : 'transform 0.1s ease-out',
-              }}
-            >
-              <img
-                ref={composerImageRef}
-                src={composerAnnotationSourceUrl!}
-                alt={t('chat.annotateModal.editingPreviewAlt')}
-                className="block w-full h-full object-contain pointer-events-none"
-                style={{ opacity: 0.7 }}
-                onLoad={(e) => {
-                  const img = e.currentTarget;
-                  if (img.naturalWidth > 0) {
-                    setComposerImageAspectRatio(img.naturalWidth / img.naturalHeight);
-                    if (composerViewportRef.current) {
-                      const vw = composerViewportRef.current.clientWidth;
-                      setComposerScale(vw / img.naturalWidth);
-                      setComposerPan({ x: 0, y: 0 });
-                    }
-                  }
-                }}
-              />
-              <canvas ref={composerEditCanvasRef} className="absolute top-0 left-0 w-full h-full cursor-crosshair" />
-            </div>
-            <div className="absolute inset-0 pointer-events-none">
-              <div
-                className="absolute top-2 right-2 pointer-events-auto"
-                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-              >
-                <button
-                  type="button"
-                  onClick={handleComposerCancel}
-                  className="p-2 rounded-full bg-black/60 text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-white/40"
-                  title={t('chat.annotateModal.cancel')}
-                  aria-label={t('chat.annotateModal.cancel')}
-                >
-                  <IconXMark className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div
-                className="absolute bottom-2 left-2 pointer-events-auto"
-                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-              >
-                <button
-                  type="button"
-                  onClick={handleComposerUndo}
-                  disabled={composerUndoStack.length === 0}
-                  className="p-2 rounded-full bg-black/60 text-white hover:bg-black disabled:opacity-50 disabled:cursor-default focus:outline-none focus:ring-2 focus:ring-white/40"
-                  title={t('chat.annotateModal.undo')}
-                  aria-label={t('chat.annotateModal.undo')}
-                  aria-disabled={composerUndoStack.length === 0}
-                >
-                  <IconUndo className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div
-                className="absolute bottom-2 right-2 pointer-events-auto"
-                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-              >
-                <button
-                  type="button"
-                  onClick={handleComposerSave}
-                  className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
-                  title={t('chat.annotateModal.saveAndAttach')}
-                  aria-label={t('chat.annotateModal.saveAndAttach')}
-                >
-                  <IconCheck className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
+      <style>{`
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+          animation: fade-in-up 220ms ease-out both;
+        }
+      `}</style>
         <>
-          {languageSelectionOpen ? (
-            <LanguageSelectorGlobe
-              nativeLangCode={tempNativeLangCode || null}
-              targetLangCode={tempTargetLangCode || null}
-              onSelectNative={handleTempNativeSelect}
-              onSelectTarget={handleTempTargetSelect}
-              onConfirm={handleConfirmLanguageSelection}
-              t={t}
-              onInteract={updateLanguageSelectorInteraction}
-            />
-          ) : (
-            <MediaAttachments
-              t={t}
-              isSuggestionMode={isSuggestionMode}
-              attachedImageBase64={attachedImageBase64}
-              attachedImageMimeType={attachedImageMimeType}
-              showLiveFeed={showLiveFeed}
-              isTwoUp={isTwoUp}
-              liveVideoStream={liveVideoStream}
-              liveSessionState={liveSessionState}
-              liveSessionError={liveSessionError}
-              onStartLiveSession={onStartLiveSession}
-              onStopLiveSession={onStopLiveSession}
-              onRemoveAttachment={removeAttachedImage}
-              onAnnotateImage={handleComposerAnnotateImage}
-              onAnnotateVideo={handleComposerAnnotateVideo}
-              onSetAttachedImage={onSetAttachedImage}
-              onUserInputActivity={onUserInputActivity}
-              attachedPreviewVideoRef={attachedPreviewVideoRef}
-            />
-          )}
+          {/* attachments moved below input */}
 
           <div className={`relative w-full flex flex-col rounded-3xl overflow-hidden transition-colors ${containerClass}`}>
             {languageSelectionOpen ? (
@@ -755,12 +629,10 @@ const InputArea: React.FC<InputAreaProps> = ({
                   isListening={isListening}
                   isSending={isSending}
                   isSpeaking={isSpeaking}
-                  sttLanguageCode={sttLanguageCode}
                   targetLanguageDef={targetLanguageDef}
                   nativeLanguageDef={nativeLanguageDef}
                   isSuggestionMode={isSuggestionMode}
                   onSttToggle={onSttToggle}
-                  onSttLanguageChange={onSttLanguageChange}
                   onSetAttachedImage={onSetAttachedImage}
                   onUserInputActivity={onUserInputActivity}
                 />
@@ -783,11 +655,151 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           </div>
 
+          {!languageSelectionOpen && (
+            <div className="animate-fade-in-up">
+              <MediaAttachments
+                t={t}
+                isSuggestionMode={isSuggestionMode}
+                attachedImageBase64={attachedImageBase64}
+                attachedImageMimeType={attachedImageMimeType}
+                showLiveFeed={showLiveFeed}
+                isTwoUp={isTwoUp}
+                liveVideoStream={liveVideoStream}
+                liveSessionState={liveSessionState}
+                liveSessionError={liveSessionError}
+                onStartLiveSession={onStartLiveSession}
+                onStopLiveSession={onStopLiveSession}
+                onRemoveAttachment={removeAttachedImage}
+                onAnnotateImage={handleComposerAnnotateImage}
+                onAnnotateVideo={handleComposerAnnotateVideo}
+                onSetAttachedImage={onSetAttachedImage}
+                onUserInputActivity={onUserInputActivity}
+                attachedPreviewVideoRef={attachedPreviewVideoRef}
+              />
+            </div>
+          )}
+
+          {isComposerAnnotating && (
+            <div className="mt-2 w-full animate-fade-in-up">
+              <div
+                ref={composerViewportRef}
+                className="relative w-full max-h-[75vh] bg-black rounded-md overflow-hidden transition-all duration-300"
+                style={{ aspectRatio: composerImageAspectRatio || undefined, touchAction: 'none' }}
+                onPointerDown={handleComposerPointerDown}
+                onPointerMove={handleComposerPointerMove}
+                onPointerUp={handleComposerPointerUp}
+                onPointerCancel={handleComposerPointerUp}
+                onWheel={handleComposerWheel}
+              >
+                <div
+                  style={{
+                    width: composerImageRef.current?.naturalWidth,
+                    height: composerImageRef.current?.naturalHeight,
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: `translate(-50%,-50%) translate(${composerPan.x}px, ${composerPan.y}px) scale(${composerScale})`,
+                    transition: composerActivePointersRef.current.length > 0 ? 'none' : 'transform 0.1s ease-out',
+                  }}
+                >
+                  <img
+                    ref={composerImageRef}
+                    src={composerAnnotationSourceUrl!}
+                    alt={t('chat.annotateModal.editingPreviewAlt')}
+                    className="block w-full h-full object-contain pointer-events-none"
+                    style={{ opacity: 0.7 }}
+                    onLoad={(e) => {
+                      const img = e.currentTarget;
+                      if (img.naturalWidth > 0) {
+                        setComposerImageAspectRatio(img.naturalWidth / img.naturalHeight);
+                        if (composerViewportRef.current) {
+                          const vw = composerViewportRef.current.clientWidth;
+                          setComposerScale(vw / img.naturalWidth);
+                          setComposerPan({ x: 0, y: 0 });
+                        }
+                      }
+                    }}
+                  />
+                  <canvas ref={composerEditCanvasRef} className="absolute top-0 left-0 w-full h-full cursor-crosshair" />
+                </div>
+                <div className="absolute inset-0 pointer-events-none">
+                  <div
+                    className="absolute top-2 right-2 pointer-events-auto"
+                    onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                  >
+                    <button
+                      type="button"
+                      onClick={handleComposerCancel}
+                      className="p-2 rounded-full bg-black/60 text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-white/40"
+                      title={t('chat.annotateModal.cancel')}
+                      aria-label={t('chat.annotateModal.cancel')}
+                    >
+                      <IconXMark className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div
+                    className="absolute bottom-2 left-2 pointer-events-auto"
+                    onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                  >
+                    <button
+                      type="button"
+                      onClick={handleComposerUndo}
+                      disabled={composerUndoStack.length === 0}
+                      className="p-2 rounded-full bg-black/60 text-white hover:bg-black disabled:opacity-50 disabled:cursor-default focus:outline-none focus:ring-2 focus:ring-white/40"
+                      title={t('chat.annotateModal.undo')}
+                      aria-label={t('chat.annotateModal.undo')}
+                      aria-disabled={composerUndoStack.length === 0}
+                    >
+                      <IconUndo className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div
+                    className="absolute bottom-2 right-2 pointer-events-auto"
+                    onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                  >
+                    <button
+                      type="button"
+                      onClick={handleComposerSave}
+                      className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                      title={t('chat.annotateModal.saveAndAttach')}
+                      aria-label={t('chat.annotateModal.saveAndAttach')}
+                    >
+                      <IconCheck className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {languageSelectionOpen && (
+            <div className="mt-2 animate-fade-in-up">
+              <LanguageSelectorGlobe
+                nativeLangCode={tempNativeLangCode || null}
+                targetLangCode={tempTargetLangCode || null}
+                onSelectNative={handleTempNativeSelect}
+                onSelectTarget={handleTempTargetSelect}
+                onConfirm={handleConfirmLanguageSelection}
+                t={t}
+                onInteract={updateLanguageSelectorInteraction}
+              />
+            </div>
+          )}
+
           {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
           {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-red-800 bg-red-200/50' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
           {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-orange-800 bg-orange-200/50' : 'text-orange-200 bg-orange-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
         </>
-      )}
     </>
   );
 };

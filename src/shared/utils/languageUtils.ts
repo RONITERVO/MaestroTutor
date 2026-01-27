@@ -5,15 +5,48 @@ import { LanguagePair } from '../../core/types';
 
 export const getPrimaryCode = (codes: string): string => (codes || "").split(',')[0].trim();
 
+export const getPrimarySubtag = (langCode: string): string =>
+  getPrimaryCode(langCode).split('-')[0].toLowerCase();
+
 export const getShortLangCodeForPrompt = (commaSeparatedCodes: string): string => {
-    return getPrimaryCode(commaSeparatedCodes).substring(0,2).toUpperCase();
+    return getPrimarySubtag(commaSeparatedCodes).toUpperCase();
 }
+
+export const findLanguageByExactCode = (langCode: string): LanguageDefinition | undefined => {
+  if (!langCode) return undefined;
+  const normalized = langCode.toLowerCase();
+  return ALL_LANGUAGES.find(lang => lang.langCode.toLowerCase() === normalized);
+};
+
+export const findLanguageByPrimarySubtag = (langCode: string): LanguageDefinition | undefined => {
+  if (!langCode) return undefined;
+  const primary = getPrimarySubtag(langCode);
+  return ALL_LANGUAGES.find(lang => getPrimarySubtag(lang.langCode) === primary);
+};
 
 interface PromptTemplateFillData {
   targetLanguageName: string;
   nativeLanguageName: string;
   nativeLanguageCode: string;
 }
+
+const LANGUAGE_CODE_SET = new Set(ALL_LANGUAGES.map(lang => lang.langCode));
+
+export const parseLanguagePairId = (pairId: string): { targetCode: string; nativeCode: string } | null => {
+  if (!pairId) return null;
+  const trimmed = pairId.trim();
+  if (!trimmed) return null;
+  const tokens = trimmed.split('-');
+  if (tokens.length < 2) return null;
+  for (let i = 1; i < tokens.length; i += 1) {
+    const targetCode = tokens.slice(0, i).join('-');
+    const nativeCode = tokens.slice(i).join('-');
+    if (LANGUAGE_CODE_SET.has(targetCode) && LANGUAGE_CODE_SET.has(nativeCode)) {
+      return { targetCode, nativeCode };
+    }
+  }
+  return null;
+};
 
 export const fillPromptTemplateForPair = (template: string, pairData: PromptTemplateFillData): string => {
     if (!pairData) return template;

@@ -41,7 +41,7 @@ import {
   composeMaestroSystemInstruction 
 } from '../../../core/config/prompts';
 import { isRealChatMessage } from '../../../shared/utils/common';
-import { getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
+import { getPrimarySubtag, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 import { useMaestroStore } from '../../../store';
@@ -702,8 +702,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     createSuggestionTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.CREATE_SUGGESTION);
 
     const sttLang = settingsRef.current.stt.language;
-    const sttLangCode = sttLang.substring(0, 2);
-    const targetLangCode = selectedLanguagePairRef.current.targetLanguageCode.substring(0, 2);
+    const sttLangCode = getPrimarySubtag(sttLang);
+    const targetLangCode = getPrimarySubtag(selectedLanguagePairRef.current.targetLanguageCode);
 
     let fromLangName: string;
     let toLangName: string;
