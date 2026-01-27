@@ -23,7 +23,7 @@ interface UseBrowserSpeechReturn {
   isSpeechSynthesisSupported: boolean;
   isListening: boolean;
   transcript: string;
-  startListening: (lang: string) => void;
+    startListening: (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => void;
   stopListening: () => void;
   sttError: string | null;
   isSpeechRecognitionSupported: boolean;
@@ -104,14 +104,14 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
         wasListeningRef.current = geminiStt.isListening;
     }, [geminiStt.isListening, geminiStt.error]);
 
-  const startListening = useCallback((lang: string) => {
+  const startListening = useCallback((languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
       // If TTS is speaking, we don't start immediately but ensure the interrupt flag is set 
       // so it resumes after TTS finishes.
       if (isSpeaking || hasPendingQueueItems()) {
           sttInterruptedByTTS.current = true;
           return;
       }
-      geminiStt.start(lang);
+      geminiStt.start(languageOrOptions);
   }, [isSpeaking, hasPendingQueueItems, geminiStt]);
 
   const stopListening = useCallback(() => {

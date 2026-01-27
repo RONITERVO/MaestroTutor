@@ -60,7 +60,7 @@ export interface UseSpeechOrchestratorReturn {
   // STT State
   isListening: boolean;
   transcript: string;
-  startListening: (lang: string) => void;
+  startListening: (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => void;
   stopListening: () => void;
   sttError: string | null;
   isSpeechRecognitionSupported: boolean;
@@ -206,7 +206,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
       ) {
         setTimeout(() => {
           if (settingsRef.current.stt.enabled) {
-            startListening(settingsRef.current.stt.language);
+            startListeningWithContext(settingsRef.current.stt.language);
           }
         }, 100);
       } else if (errorOccurred) {
@@ -227,7 +227,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
       ) {
         setTimeout(() => {
           if (settingsRef.current.stt.enabled && !isSendingRef.current) {
-            startListening(settingsRef.current.stt.language);
+            startListeningWithContext(settingsRef.current.stt.language);
             sttInterruptedBySendRef.current = false;
           }
         }, 100);
@@ -250,6 +250,33 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
       }
     }, [applySetMessages])
   });
+
+  const getSttContext = useCallback(() => {
+    const messages = messagesRef.current || [];
+    let lastAssistantMessage: string | undefined;
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i]?.role === 'assistant') {
+        lastAssistantMessage = messages[i]?.text || messages[i]?.rawAssistantResponse || '';
+        break;
+      }
+    }
+    const replySuggestions = (replySuggestionsRef.current || [])
+      .map(s => s?.target || s?.native)
+      .filter(Boolean) as string[];
+    return { lastAssistantMessage, replySuggestions };
+  }, [messagesRef, replySuggestionsRef]);
+
+  const startListeningWithContext = useCallback(
+    (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
+      const context = getSttContext();
+      if (typeof languageOrOptions === 'string' || languageOrOptions === undefined) {
+        startListening({ language: languageOrOptions, ...context });
+        return;
+      }
+      startListening({ ...context, ...languageOrOptions });
+    },
+    [getSttContext, startListening]
+  );
 
   // Sync speech state to refs and manage activity tokens
   useEffect(() => {
@@ -452,7 +479,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
     // STT
     isListening,
     transcript,
-    startListening,
+    startListening: startListeningWithContext,
     stopListening,
     sttError,
     isSpeechRecognitionSupported,

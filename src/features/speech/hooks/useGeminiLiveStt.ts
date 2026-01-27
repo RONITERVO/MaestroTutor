@@ -2,6 +2,7 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
+import { debugLogService } from '../../diagnostics';
 
 export interface UseGeminiLiveSttReturn {
   start: (
@@ -50,6 +51,10 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
   const streamRef = useRef<MediaStream | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const audioChunksRef = useRef<Int16Array[]>([]);
+  const totalAudioSamplesRef = useRef(0);
+  const turnAudioSamplesRef = useRef(0);
+  const logRef = useRef<ReturnType<typeof debugLogService.logRequest> | null>(null);
+  const logFinalizedRef = useRef(false);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -151,10 +156,13 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     // Generate a new session ID for this start call
     const sessionId = ++sttSessionCounter;
     currentSessionIdRef.current = sessionId;
+    logFinalizedRef.current = false;
     
     committedTranscriptRef.current = '';
     interimInputRef.current = '';
     interimParrotRef.current = '';
+    totalAudioSamplesRef.current = 0;
+    turnAudioSamplesRef.current = 0;
     // audioChunksRef is already cleared in cleanup(), but ensure it's empty
     audioChunksRef.current = [];
 
@@ -181,9 +189,21 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
         augmentedSystemInstruction = `${baseSystemInstruction}\n\nContext:\n${parts.join('\n')}`;
       }
 
+      const model = 'gemini-2.5-flash-native-audio-preview-12-2025';
+      logRef.current = debugLogService.logRequest('useGeminiLiveStt', model, {
+        responseModalities: [Modality.AUDIO],
+        inputAudioTranscription: {},
+        outputAudioTranscription: {},
+        thinkingConfig: { thinkingBudget: 0 },
+        systemInstruction: augmentedSystemInstruction,
+        language: opts?.language,
+        replySuggestionsCount: suggestionList.length,
+        hasLastAssistantMessage: !!lastAssistantMessage,
+      });
+
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const session = await ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+        model,
         config: {
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
@@ -227,6 +247,25 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
                    const sep = committedTranscriptRef.current ? ' ' : '';
                    committedTranscriptRef.current += sep + finalSegment;
                }
+
+               const inputTranscript = interimInputRef.current.trim();
+               const outputTranscript = interimParrotRef.current.trim();
+               const turnSamples = turnAudioSamplesRef.current;
+               if (inputTranscript || outputTranscript || turnSamples > 0) {
+                 const turnLog = debugLogService.logRequest('useGeminiLiveStt.turn', model, {
+                   inputTranscript,
+                   outputTranscript,
+                   audioSamples: turnSamples,
+                 });
+                 turnLog.complete({
+                   status: 'turn-complete',
+                   inputTranscript,
+                   outputTranscript,
+                   audioSamples: turnSamples,
+                   committedTranscript: committedTranscriptRef.current,
+                 });
+               }
+               turnAudioSamplesRef.current = 0;
                
                // Reset interim buffers for next turn
                interimInputRef.current = '';
@@ -237,12 +276,28 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
           onclose: () => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
+            if (logRef.current && !logFinalizedRef.current) {
+              logFinalizedRef.current = true;
+              logRef.current.complete({
+                status: 'closed',
+                committedTranscript: committedTranscriptRef.current,
+                audioSamples: totalAudioSamplesRef.current,
+              });
+            }
             setIsListening(false);
           },
           onerror: (err) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
             console.error("Gemini Live STT error:", err);
+            if (logRef.current && !logFinalizedRef.current) {
+              logFinalizedRef.current = true;
+              logRef.current.error({
+                message: err?.message || 'Connection error',
+                committedTranscript: committedTranscriptRef.current,
+                audioSamples: totalAudioSamplesRef.current,
+              });
+            }
             setError(err.message || "Connection error");
             stop();
           }
@@ -301,6 +356,8 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
         const pcm = event.data;
         if (pcm && pcm.length > 0) {
            audioChunksRef.current.push(pcm);
+           totalAudioSamplesRef.current += pcm.length;
+           turnAudioSamplesRef.current += pcm.length;
 
            if (sessionRef.current) {
                const bytes = new Uint8Array(pcm.buffer);
@@ -323,6 +380,14 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
 
     } catch (e: any) {
       console.error("STT Start Error", e);
+      if (logRef.current && !logFinalizedRef.current) {
+        logFinalizedRef.current = true;
+        logRef.current.error({
+          message: e?.message || 'Failed to start Gemini Live STT',
+          committedTranscript: committedTranscriptRef.current,
+          audioSamples: totalAudioSamplesRef.current,
+        });
+      }
       setError(e.message || "Failed to start Gemini Live STT");
       setIsListening(false);
       cleanup();
