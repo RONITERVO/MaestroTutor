@@ -345,7 +345,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         onAudioCached,
       };
     });
-  }, [settingsRef, messagesRef, replySuggestionsRef, upsertMessageTtsCache, upsertSuggestionTtsCache, lastFetchedSuggestionsForRef]);
+  }, [messagesRef, replySuggestionsRef, upsertMessageTtsCache, upsertSuggestionTtsCache, lastFetchedSuggestionsForRef]);
 
   const speakMessage = useCallback((message: ChatMessage) => {
     const selectedLanguagePair = selectedLanguagePairRef.current;

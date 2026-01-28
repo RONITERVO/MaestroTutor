@@ -1,10 +1,14 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { MutableRefObject } from 'react';
+
 /**
  * Smart Ref utility for avoiding stale closure issues.
  * 
  * This is in a separate file to avoid circular dependencies with the store.
  */
+
+let hasWarnedOnWrite = false;
 
 /**
  * Creates a "smart ref" that reads directly from the Zustand store.
@@ -24,11 +28,14 @@
 export const createSmartRef = <TStore, T>(
   getState: () => TStore,
   selector: (state: TStore) => T
-): React.MutableRefObject<T> => ({
+): MutableRefObject<T> => ({
   get current() {
     return selector(getState());
   },
   set current(_value: T) {
-    // no-op: use store actions to update state
+    if (!hasWarnedOnWrite && typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
+      hasWarnedOnWrite = true;
+      console.warn('[createSmartRef] Writes to .current are ignored. Use store actions to update state.');
+    }
   },
 });

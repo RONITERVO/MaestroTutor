@@ -1,6 +1,5 @@
 
 import { useRef, useEffect, useCallback, useMemo } from 'react';
-import { AppSettings } from '../../../core/types';
 import {
   TOKEN_CATEGORY,
   TOKEN_SUBTYPE,
@@ -11,7 +10,6 @@ import { useMaestroStore } from '../../../store';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 
 interface UseSmartReengagementProps {
-  settings: AppSettings;
   isLoadingHistory: boolean;
   selectedLanguagePairId: string | null;
   activityTokens: Set<string>; // Unified token set replaces multiple boolean props

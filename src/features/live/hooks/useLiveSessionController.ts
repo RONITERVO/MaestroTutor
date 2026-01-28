@@ -516,10 +516,6 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     upsertMessageTtsCache, 
     computeMaxMessagesForArray, 
     updateMessage, 
-    settingsRef, 
-    selectedLanguagePairRef, 
-    messagesRef, 
-    lastFetchedSuggestionsForRef,
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef
   ]);

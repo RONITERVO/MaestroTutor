@@ -456,11 +456,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           thresholdSeconds: newThreshold,
         }
       };
-      settingsRef.current = next;
       setAppSettingsDB(next).catch(() => {});
       return next;
     });
-  }, [setSettings, settingsRef]);
+  }, [setSettings]);
 
   const calculateEstimatedImageLoadTime = useCallback((): number => {
     if (imageLoadDurations.length > 0) {
@@ -1518,9 +1517,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         removeActivityToken(suggestionsTokenRef.current);
         suggestionsTokenRef.current = null;
       }
-      if (isMountedRef.current) {
-        speechIsSpeakingRef.current = false;
-      }
       return false;
     }
   }, [
@@ -1550,9 +1546,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     startListening,
     clearTranscript,
     hasPendingQueueItems,
-    sttInterruptedBySendRef,
-    pendingRecordedAudioMessageRef,
-    speechIsSpeakingRef,
     currentSystemPromptText,
     attachedImageBase64,
     attachedImageMimeType,
@@ -1564,7 +1557,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     setSendPrep,
     setSnapshotUserError,
     transcript,
-    lastFetchedSuggestionsForRef,
   ]);
 
   // Keep ref updated

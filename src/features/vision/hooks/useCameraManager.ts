@@ -9,12 +9,12 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { createSmartRef } from '../../../shared/utils/smartRef';
 import { CameraDevice } from '../../../core/types';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
 import { getFacingModeFromLabel } from '../utils/mediaUtils';
 import { useMaestroStore } from '../../../store';
-import { createSmartRef } from '../../../shared/utils/smartRef';
 
 export interface UseCameraManagerConfig {
   t: TranslationFunction;
@@ -109,7 +109,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
   // Update facing mode when camera selection changes
   useEffect(() => {
-    const selectedId = settingsRef.current.selectedCameraId;
+    const selectedId = selectedCameraId;
     if (!selectedId) {
       setCurrentCameraFacingMode('unknown');
       return;
@@ -144,7 +144,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         setAvailableCameras(cameraList);
         
         // Update facing mode if we have a selected camera
-        const selectedId = settingsRef.current.selectedCameraId;
+        const selectedId = selectedCameraId;
         if (selectedId) {
           const selected = cameraList.find(c => c.deviceId === selectedId);
           if (selected?.facingMode) {
@@ -156,7 +156,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
       console.error("Error enumerating video devices:", error);
       setAvailableCameras([]);
     }
-  }, [settingsRef]);
+  }, [selectedCameraId]);
 
   // Fetch cameras on mount and device changes
   useEffect(() => {
@@ -190,8 +190,8 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           visualContextStreamRef.current.getTracks().forEach(track => track.stop());
         }
 
-        const videoConstraints: MediaStreamConstraints['video'] = settingsRef.current.selectedCameraId
-          ? { deviceId: { exact: settingsRef.current.selectedCameraId } }
+        const videoConstraints: MediaStreamConstraints['video'] = selectedCameraId
+          ? { deviceId: { exact: selectedCameraId } }
           : true;
         const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
         visualContextStreamRef.current = stream;
@@ -267,7 +267,6 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
       return null;
     }
 
-    const currentSettings = settingsRef.current;
     let streamForCapture: MediaStream | null = null;
     let streamWasTemporarilyStarted = false;
 
@@ -287,8 +286,8 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           errorSetter(isForReengagement ? t('error.visualContextCameraAccessNotSupported') : t('error.snapshotCameraAccessNotSupported'));
           return null;
         }
-        const videoConstraints: MediaStreamConstraints['video'] = currentSettings.selectedCameraId
-          ? { deviceId: { exact: currentSettings.selectedCameraId } }
+        const videoConstraints: MediaStreamConstraints['video'] = selectedCameraId
+          ? { deviceId: { exact: selectedCameraId } }
           : true;
 
         streamForCapture = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
@@ -361,7 +360,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         }
       }
     }
-  }, [t, liveVideoStream, settingsRef]);
+  }, [t, liveVideoStream, selectedCameraId]);
 
   return {
     availableCameras,

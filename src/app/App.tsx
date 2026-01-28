@@ -13,7 +13,7 @@
  * and src/features/ /hooks.
  */
  
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useMemo } from 'react';
 
 // --- Features Components ---
 import { ChatInterface } from '../features/chat';
@@ -37,9 +37,11 @@ import { setChatMetaDB } from '../features/chat';
 // --- Config ---
 import { IMAGE_GEN_CAMERA_ID } from '../core/config/app';
 import { selectNonReengagementBusy } from '../store/slices/uiSlice';
+import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 
 // --- Utils ---
 import { getPrimaryCode } from '../shared/utils/languageUtils';
+import { createSmartRef } from '../shared/utils/smartRef';
 
 /** Delay in ms before restarting STT after language change */
 const STT_RESTART_DELAY_MS = 250;
@@ -69,13 +71,10 @@ const App: React.FC = () => {
   const {
     t,
     settings,
-    settingsRef,
     handleSettingsChange,
     setSettings,
     selectedLanguagePair,
-    selectedLanguagePairRef,
     isLoadingHistory,
-    isLoadingHistoryRef,
     addMessage,
     updateMessage,
     deleteMessage,
@@ -84,13 +83,17 @@ const App: React.FC = () => {
     computeMaxMessagesForArray,
     upsertMessageTtsCache,
     upsertSuggestionTtsCache,
-    lastFetchedSuggestionsForRef,
     replySuggestions,
     setReplySuggestions,
   } = useAppInitialization({
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
   });
+
+  const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
+  const selectedLanguagePairRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectSelectedLanguagePair), []);
+  const isLoadingHistoryRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.isLoadingHistory), []);
+  const lastFetchedSuggestionsForRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.lastFetchedSuggestionsFor), []);
 
   useChatPersistence();
 
@@ -275,7 +278,6 @@ const App: React.FC = () => {
     isReengagementToken: _unusedIsReengagementToken,
     setReengagementPhase: _unusedSetReengagementPhase,
   } = useSmartReengagement({
-    settings,
     isLoadingHistory,
     selectedLanguagePairId: settings.selectedLanguagePairId,
     activityTokens, // Unified token set replaces isSending, isSpeaking, refs, etc.
@@ -502,7 +504,6 @@ const App: React.FC = () => {
             onBookmarkAt={(id) => {
               setSettings(prev => {
                 const next = { ...prev, historyBookmarkMessageId: id };
-                settingsRef.current = next;
                 return next;
               });
               const pairId = settingsRef.current.selectedLanguagePairId;
@@ -514,7 +515,6 @@ const App: React.FC = () => {
               const clamped = Math.max(1, Math.min(100, Math.floor(n || MAX_VISIBLE_MESSAGES_DEFAULT)));
               setSettings(prev => { 
                 const next = { ...prev, maxVisibleMessages: clamped }; 
-                settingsRef.current = next; 
                 return next; 
               });
             }}
