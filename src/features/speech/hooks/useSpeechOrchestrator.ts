@@ -26,7 +26,7 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityToke
 import { useMaestroStore } from '../../../store';
 import { selectIsSending } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
-import { createSmartRef } from '../../../shared/utils/smartRef';
+import { createSmartRef, createWritableSmartRef } from '../../../shared/utils/smartRef';
 
 export interface UseSpeechOrchestratorConfig {
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
@@ -98,42 +98,42 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
   const isSendingRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectIsSending), []);
   const replySuggestionsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.replySuggestions), []);
 
-  // Smart refs with setters - need custom implementation for write support
-  const lastFetchedSuggestionsForRef = useMemo<React.MutableRefObject<string | null>>(() => ({
-    get current() {
-      return useMaestroStore.getState().lastFetchedSuggestionsFor;
-    },
-    set current(value) {
-      useMaestroStore.getState().setLastFetchedSuggestionsFor(value);
-    },
-  }), []);
+  // Smart refs with setters - store-backed read/write access
+  const lastFetchedSuggestionsForRef = useMemo(
+    () => createWritableSmartRef(
+      useMaestroStore.getState,
+      state => state.lastFetchedSuggestionsFor,
+      value => useMaestroStore.getState().setLastFetchedSuggestionsFor(value)
+    ),
+    []
+  );
 
-  const recordedUtterancePendingRef = useMemo<React.MutableRefObject<RecordedUtterance | null>>(() => ({
-    get current() {
-      return useMaestroStore.getState().recordedUtterancePending;
-    },
-    set current(value) {
-      setRecordedUtterancePending(value);
-    },
-  }), [setRecordedUtterancePending]);
+  const recordedUtterancePendingRef = useMemo(
+    () => createWritableSmartRef(
+      useMaestroStore.getState,
+      state => state.recordedUtterancePending,
+      setRecordedUtterancePending
+    ),
+    [setRecordedUtterancePending]
+  );
 
-  const pendingRecordedAudioMessageRef = useMemo<React.MutableRefObject<string | null>>(() => ({
-    get current() {
-      return useMaestroStore.getState().pendingRecordedAudioMessageId;
-    },
-    set current(value) {
-      setPendingRecordedAudioMessageId(value);
-    },
-  }), [setPendingRecordedAudioMessageId]);
+  const pendingRecordedAudioMessageRef = useMemo(
+    () => createWritableSmartRef(
+      useMaestroStore.getState,
+      state => state.pendingRecordedAudioMessageId,
+      setPendingRecordedAudioMessageId
+    ),
+    [setPendingRecordedAudioMessageId]
+  );
 
-  const sttInterruptedBySendRef = useMemo<React.MutableRefObject<boolean>>(() => ({
-    get current() {
-      return useMaestroStore.getState().sttInterruptedBySend;
-    },
-    set current(value) {
-      setSttInterruptedBySend(value);
-    },
-  }), [setSttInterruptedBySend]);
+  const sttInterruptedBySendRef = useMemo(
+    () => createWritableSmartRef(
+      useMaestroStore.getState,
+      state => state.sttInterruptedBySend,
+      setSttInterruptedBySend
+    ),
+    [setSttInterruptedBySend]
+  );
   
   // Track activity tokens for unified busy state management
   const speakingTokenRef = useRef<string | null>(null);

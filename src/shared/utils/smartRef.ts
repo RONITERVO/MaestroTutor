@@ -39,3 +39,20 @@ export const createSmartRef = <TStore, T>(
     }
   },
 });
+
+/**
+ * Creates a "smart ref" that reads from the store and writes via the provided setter.
+ * Useful when hook logic wants ref-like semantics with proper store updates.
+ */
+export const createWritableSmartRef = <TStore, T>(
+  getState: () => TStore,
+  selector: (state: TStore) => T,
+  setValue: (value: T) => void
+): MutableRefObject<T> => ({
+  get current() {
+    return selector(getState());
+  },
+  set current(value: T) {
+    setValue(value);
+  },
+});
