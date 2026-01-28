@@ -17,10 +17,7 @@ import {
   ChatMessage, 
   SpeechPart, 
   TtsAudioCacheEntry, 
-  RecordedUtterance, 
-  ReplySuggestion,
-  LanguagePair,
-  AppSettings
+  RecordedUtterance 
 } from '../../../core/types';
 import useBrowserSpeech from './useBrowserSpeech';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
@@ -29,20 +26,9 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityToke
 import { useMaestroStore } from '../../../store';
 import { selectIsSending } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
+import { createSmartRef } from '../../../shared/utils/smartRef';
 
 export interface UseSpeechOrchestratorConfig {
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  settingsRef?: React.MutableRefObject<AppSettings>;
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  messagesRef?: React.MutableRefObject<ChatMessage[]>;
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  selectedLanguagePairRef?: React.MutableRefObject<LanguagePair | undefined>;
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  isSendingRef?: React.MutableRefObject<boolean>;
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  lastFetchedSuggestionsForRef?: React.MutableRefObject<string | null>;
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  replySuggestionsRef?: React.MutableRefObject<ReplySuggestion[]>;
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
   upsertSuggestionTtsCache: (messageId: string, suggestionIndex: number, entry: TtsAudioCacheEntry) => void;
   setMessages?: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
@@ -105,34 +91,14 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
   const setSttInterruptedBySend = useMaestroStore(state => state.setSttInterruptedBySend);
   const applySetMessages = setMessages || storeSetMessages;
 
-  const settingsRef = useMemo<React.MutableRefObject<AppSettings>>(() => ({
-    get current() {
-      return useMaestroStore.getState().settings;
-    },
-    set current(_value) {},
-  }), []);
+  // Smart refs - always return fresh state from store (no stale closures)
+  const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
+  const messagesRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.messages), []);
+  const selectedLanguagePairRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectSelectedLanguagePair), []);
+  const isSendingRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectIsSending), []);
+  const replySuggestionsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.replySuggestions), []);
 
-  const messagesRef = useMemo<React.MutableRefObject<ChatMessage[]>>(() => ({
-    get current() {
-      return useMaestroStore.getState().messages;
-    },
-    set current(_value) {},
-  }), []);
-
-  const selectedLanguagePairRef = useMemo<React.MutableRefObject<LanguagePair | undefined>>(() => ({
-    get current() {
-      return selectSelectedLanguagePair(useMaestroStore.getState());
-    },
-    set current(_value) {},
-  }), []);
-
-  const isSendingRef = useMemo<React.MutableRefObject<boolean>>(() => ({
-    get current() {
-      return selectIsSending(useMaestroStore.getState());
-    },
-    set current(_value) {},
-  }), []);
-
+  // Smart refs with setters - need custom implementation for write support
   const lastFetchedSuggestionsForRef = useMemo<React.MutableRefObject<string | null>>(() => ({
     get current() {
       return useMaestroStore.getState().lastFetchedSuggestionsFor;
@@ -140,13 +106,6 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
     set current(value) {
       useMaestroStore.getState().setLastFetchedSuggestionsFor(value);
     },
-  }), []);
-
-  const replySuggestionsRef = useMemo<React.MutableRefObject<ReplySuggestion[]>>(() => ({
-    get current() {
-      return useMaestroStore.getState().replySuggestions;
-    },
-    set current(_value) {},
   }), []);
 
   const recordedUtterancePendingRef = useMemo<React.MutableRefObject<RecordedUtterance | null>>(() => ({

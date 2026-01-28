@@ -14,6 +14,7 @@ import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
 import { getFacingModeFromLabel } from '../utils/mediaUtils';
 import { useMaestroStore } from '../../../store';
+import { createSmartRef } from '../../../shared/utils/smartRef';
 
 export interface UseCameraManagerConfig {
   t: TranslationFunction;
@@ -75,16 +76,8 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
   const visualContextStreamRef = useRef<MediaStream | null>(null);
   const availableCamerasRef = useRef<CameraDevice[]>([]);
 
-  const settingsRef = useMemo<React.MutableRefObject<{
-    selectedCameraId: string | null;
-    sendWithSnapshotEnabled: boolean;
-    smartReengagement: { useVisualContext: boolean };
-  }>>(() => ({
-    get current() {
-      return useMaestroStore.getState().settings;
-    },
-    set current(_value) {},
-  }), []);
+  // Smart ref - always returns fresh state from store
+  const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
 
   const [availableCameras, setAvailableCameras] = useState<CameraDevice[]>([]);
   const [currentCameraFacingMode, setCurrentCameraFacingMode] = useState<'user' | 'environment' | 'unknown'>('unknown');

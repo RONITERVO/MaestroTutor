@@ -8,15 +8,19 @@
  * - App lifecycle (title + splash removal)
  * - Asset hydration (avatar/loading gifs)
  * - Settings init + history load via store-backed hooks
+ * 
+ * Note: This hook no longer syncs refs manually - feature hooks now use
+ * createSmartRef internally to access fresh state from the Zustand store.
  */
 
-import { useEffect, useRef, type MutableRefObject } from 'react';
+import { useEffect, useRef, useMemo, type MutableRefObject } from 'react';
 import { useMaestroStore } from '../../store';
 import { useAppLifecycle } from './useAppLifecycle';
 import { useAppAssets } from './useAppAssets';
 import { useAppTranslations } from '../../shared/hooks/useAppTranslations';
 import { selectSelectedLanguagePair } from '../../store/slices/settingsSlice';
 import { selectIsLoadingSuggestions } from '../../store/slices/uiSlice';
+import { createSmartRef } from '../../shared/utils/smartRef';
 
 export interface UseAppInitializationConfig {
   maestroAvatarUriRef: MutableRefObject<string | null>;
@@ -43,11 +47,8 @@ export const useAppInitialization = ({
 
   const settings = useMaestroStore(state => state.settings);
   const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
-  const messages = useMaestroStore(state => state.messages);
   const isLoadingHistory = useMaestroStore(state => state.isLoadingHistory);
   const replySuggestions = useMaestroStore(state => state.replySuggestions);
-  const lastFetchedSuggestionsFor = useMaestroStore(state => state.lastFetchedSuggestionsFor);
-  const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
 
   const initSettings = useMaestroStore(state => state.initSettings);
   const updateSetting = useMaestroStore(state => state.updateSetting);
@@ -63,24 +64,17 @@ export const useAppInitialization = ({
   const upsertSuggestionTtsCache = useMaestroStore(state => state.upsertSuggestionTtsCache);
   const setReplySuggestions = useMaestroStore(state => state.setReplySuggestions);
 
-  const settingsRef = useRef(settings);
-  const selectedLanguagePairRef = useRef(selectedLanguagePair);
-  const messagesRef = useRef(messages);
-  const isLoadingHistoryRef = useRef(isLoadingHistory);
-  const replySuggestionsRef = useRef(replySuggestions);
-  const lastFetchedSuggestionsForRef = useRef(lastFetchedSuggestionsFor);
-  const isLoadingSuggestionsRef = useRef(isLoadingSuggestions);
-
-  // Consolidate all ref syncs into a single effect for efficiency
-  useEffect(() => {
-    settingsRef.current = settings;
-    selectedLanguagePairRef.current = selectedLanguagePair;
-    messagesRef.current = messages;
-    isLoadingHistoryRef.current = isLoadingHistory;
-    replySuggestionsRef.current = replySuggestions;
-    lastFetchedSuggestionsForRef.current = lastFetchedSuggestionsFor;
-    isLoadingSuggestionsRef.current = isLoadingSuggestions;
-  }, [settings, selectedLanguagePair, messages, isLoadingHistory, replySuggestions, lastFetchedSuggestionsFor, isLoadingSuggestions]);
+  // Smart refs - always return fresh state from store (no manual syncing needed)
+  // Feature hooks (useTutorConversation, useLiveSessionController, etc.) now create
+  // their own smart refs internally, so these are only for backward compatibility
+  // with any remaining consumers in App.tsx
+  const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
+  const selectedLanguagePairRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectSelectedLanguagePair), []);
+  const messagesRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.messages), []);
+  const isLoadingHistoryRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.isLoadingHistory), []);
+  const replySuggestionsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.replySuggestions), []);
+  const lastFetchedSuggestionsForRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.lastFetchedSuggestionsFor), []);
+  const isLoadingSuggestionsRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectIsLoadingSuggestions), []);
 
   const prevPairIdRef = useRef<string | null>(null);
 

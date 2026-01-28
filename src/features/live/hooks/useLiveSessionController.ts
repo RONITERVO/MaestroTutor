@@ -17,7 +17,6 @@ import { useCallback, useRef, useMemo } from 'react';
 import { 
   ChatMessage, 
   AppSettings,
-  LanguagePair,
   RecordedUtterance,
   TtsAudioCacheEntry 
 } from '../../../core/types';
@@ -38,27 +37,20 @@ import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { useMaestroStore } from '../../../store';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
+import { createSmartRef } from '../../../shared/utils/smartRef';
 
 export interface UseLiveSessionControllerConfig {
   // Translation function
   t: TranslationFunction;
   
   // Settings
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  settingsRef?: React.MutableRefObject<AppSettings>;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  selectedLanguagePairRef?: React.MutableRefObject<LanguagePair | undefined>;
   
   // Chat store
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  messagesRef?: React.MutableRefObject<ChatMessage[]>;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => string;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   getHistoryRespectingBookmark: (arr: ChatMessage[]) => ChatMessage[];
   computeMaxMessagesForArray: (arr: ChatMessage[]) => number | undefined;
-  /** @deprecated Store-backed ref is used internally - this field is ignored */
-  lastFetchedSuggestionsForRef?: React.MutableRefObject<string | null>;
   fetchAndSetReplySuggestions: (assistantMessageId: string, lastTutorMessage: string, history: ChatMessage[]) => Promise<void>;
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
   
@@ -145,29 +137,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
   const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
 
-  /** Store-backed ref for settings - reads directly from store, setter is no-op (use setSettings instead) */
-  const settingsRef = useMemo<React.MutableRefObject<AppSettings>>(() => ({
-    get current() {
-      return useMaestroStore.getState().settings;
-    },
-    set current(_value) { /* no-op: use setSettings to update */ },
-  }), []);
+  // Smart refs - always return fresh state from store (no stale closures)
+  const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
+  const selectedLanguagePairRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectSelectedLanguagePair), []);
+  const messagesRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.messages), []);
 
-  /** Store-backed ref for selectedLanguagePair - reads directly from store, setter is no-op */
-  const selectedLanguagePairRef = useMemo<React.MutableRefObject<LanguagePair | undefined>>(() => ({
-    get current() {
-      return selectSelectedLanguagePair(useMaestroStore.getState());
-    },
-    set current(_value) { /* no-op: use store actions to update */ },
-  }), []);
-
-  const messagesRef = useMemo<React.MutableRefObject<ChatMessage[]>>(() => ({
-    get current() {
-      return useMaestroStore.getState().messages;
-    },
-    set current(_value) {},
-  }), []);
-
+  // Smart ref with setter - needs custom implementation for write support
   const lastFetchedSuggestionsForRef = useMemo<React.MutableRefObject<string | null>>(() => ({
     get current() {
       return useMaestroStore.getState().lastFetchedSuggestionsFor;
