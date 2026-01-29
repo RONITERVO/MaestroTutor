@@ -391,18 +391,23 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             }
             
             // Map audio segments to text lines, applying offset if enabled
+            // Use voiceName from settings to match the key used during playback lookup
+            const voiceName = settingsRef.current.tts.voiceName || 'Kore';
             for (let i = 0; i < modelAudioLines.length && (i + offset) < textLines.length; i++) {
               const audioPcm = modelAudioLines[i];
               const textEntry = textLines[i + offset];
               
               if (audioPcm && audioPcm.length > 0 && textEntry) {
-                const key = computeTtsCacheKey(textEntry.text, textEntry.lang, 'gemini-live');
+                const cleanedText = textEntry.text.trim();
+                const key = computeTtsCacheKey(cleanedText, textEntry.lang, 'gemini-live', voiceName);
+                console.debug(`[TTS Cache] STORE key=${key.substring(0, 20)}... text="${cleanedText.substring(0, 30)}..." voice=${voiceName}`);
                 upsertMessageTtsCache(assistantId, {
                   key,
                   langCode: textEntry.lang,
                   provider: 'gemini-live',
                   audioDataUrl: pcmToWav(audioPcm, 24000),
-                  updatedAt: Date.now()
+                  updatedAt: Date.now(),
+                  voiceName,
                 });
               }
             }
@@ -604,11 +609,13 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       cancelReengagement();
 
       const liveSystemInstruction = await generateLiveSystemInstruction();
+      const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
       await startLiveConversation({
         stream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
+        voiceName,
       });
     } catch (error) {
       releaseLiveSessionCapture();

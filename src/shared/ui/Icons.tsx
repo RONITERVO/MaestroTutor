@@ -32,3 +32,46 @@ export const IconRobot = (props: any) => <svg {...props} fill="none" viewBox="0 
 export const IconTerminal = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 export const IconHandRaised = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.05 4.575a1.575 1.575 0 1 0-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 0 1 3.15 0v1.5m-3.15 0 .075 5.951a.983.983 0 0 1-.825 1.002l-.005.001a1 1 0 0 1-1.03-.997L8.165 4.656a1.575 1.575 0 0 0-3.15 0v3.333c0 .526.17 1.033.486 1.442l3.45 4.6 2.25 7.5a2.25 2.25 0 0 0 4.306 0l2.25-7.5a6.002 6.002 0 0 0-4.05-7.658V4.575a1.575 1.575 0 0 0-3.15 0v1.5" /></svg>;
 export const IconWaveform = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>;
+
+// New evocative icons for voice identities
+export const IconWind = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7.5c3 0 6 0 9 0 2 0 3-1.5 3-3s-1.5-3-3-3" />
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h12c1.5 0 2.5-1 2.5-2.5S16.5 7 15 7" />
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5h6c1.5 0 2.5 1 2.5 2.5S10.5 21 9 21" />
+	</svg>
+);
+
+export const IconShield = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l7 3v6c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V6l7-3z" />
+	</svg>
+);
+
+export const IconBolt = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 2L4 14h7l-2 8 9-12h-7l2-8z" />
+	</svg>
+);
+
+// Not used elsewhere: clear metaphors for Puck (playful) and Charon (guiding)
+export const IconMask = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5.5c2.7-1.2 5.3-1.2 8 0 2.7-1.2 5.3-1.2 8 0v4c0 4-3 7.5-8 8-5-.5-8-4-8-8v-4z" />
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.5 10.5h.01M12 11.5h.01M9 14c1.2.8 2.8.8 4 0" />
+	</svg>
+);
+
+export const IconCompass = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<circle cx="12" cy="12" r="9" strokeWidth={2} />
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.5 8.5l-2.2 5.4-5.4 2.2 2.2-5.4 5.4-2.2z" />
+	</svg>
+);
+
+export const IconSwap = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7l-3 3 3 3M4 10h9a4 4 0 0 0 4-4V5" />
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17l3-3-3-3M20 14H11a4 4 0 0 1-4 4v1" />
+	</svg>
+);

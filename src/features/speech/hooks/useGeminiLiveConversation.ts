@@ -266,8 +266,8 @@ export function useGeminiLiveConversation(
     return video;
   }, []);
 
-  const start = useCallback(async (opts: { systemInstruction?: string, stream?: MediaStream, videoElement?: HTMLVideoElement | null }) => {
-    const { stream, videoElement, systemInstruction } = opts;
+  const start = useCallback(async (opts: { systemInstruction?: string, stream?: MediaStream, videoElement?: HTMLVideoElement | null, voiceName?: string }) => {
+    const { stream, videoElement, systemInstruction, voiceName } = opts;
     
     // Wait for any in-progress cleanup to finish
     while (isCleaningUpRef.current) {
@@ -342,6 +342,8 @@ export function useGeminiLiveConversation(
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          // Voice configuration for the live conversation
+          speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
         },
         callbacks: {
           onopen: () => {

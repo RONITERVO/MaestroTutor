@@ -76,6 +76,7 @@ export type SttProvider = 'browser' | 'gemini';
 export interface TTSSettings {
   provider?: TtsProvider;
   speakNative: boolean;
+  voiceName?: string;
 }
 
 export interface STTSettings {
