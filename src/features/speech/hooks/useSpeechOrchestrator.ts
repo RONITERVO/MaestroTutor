@@ -273,14 +273,17 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
 
   const prepareSpeechPartsWithCache = useCallback((parts: SpeechPart[], defaultLang: string): SpeechPart[] => {
     const provider = 'gemini-live';
+    // Always use voiceName from settings as the canonical source for cache key consistency
+    const settingsVoiceName = settingsRef.current.tts.voiceName || 'Kore';
     return parts.map((part) => {
-      const cleanedText = (part.text || '').replace(/\*/g, '').trim();
+      const cleanedText = (part.text || '').trim();
       const lang = part.langCode || defaultLang;
       const context = part.context;
       let cacheKey = part.cacheKey;
       let cachedAudio = part.cachedAudio;
       let onAudioCached = part.onAudioCached;
-      const voiceName = part.voiceName;
+      // Use part.voiceName if provided, but always fall back to settings for consistency
+      const voiceName = part.voiceName || settingsVoiceName;
 
       if (!cleanedText) {
         return {
@@ -294,6 +297,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         cacheKey = computeTtsCacheKey(cleanedText, lang, provider, voiceName);
         const message = messagesRef.current.find(m => m.id === context.messageId);
         cachedAudio = cachedAudio || getCachedAudioForKey(message?.ttsAudioCache, cacheKey);
+        console.debug(`[TTS Cache] LOOKUP key=${cacheKey.substring(0, 20)}... text="${cleanedText.substring(0, 30)}..." voice=${voiceName} hit=${!!cachedAudio} cacheSize=${message?.ttsAudioCache?.length || 0}`);
         if (!onAudioCached) {
           const messageId = context.messageId;
           onAudioCached = (audioDataUrl) => {
@@ -319,6 +323,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
             const localSuggestion = replySuggestionsRef?.current?.[suggestionIndex];
             cachedAudio = cachedAudio || getCachedAudioForKey(localSuggestion?.ttsAudioCache, cacheKey);
           }
+          console.debug(`[TTS Cache] LOOKUP suggestion key=${cacheKey.substring(0, 20)}... text="${cleanedText.substring(0, 30)}..." voice=${voiceName} hit=${!!cachedAudio}`);
           if (!onAudioCached) {
             const messageId = context.messageId;
             onAudioCached = (audioDataUrl) => {
@@ -343,6 +348,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         cacheKey,
         cachedAudio,
         onAudioCached,
+        voiceName,
       };
     });
   }, [upsertMessageTtsCache, upsertSuggestionTtsCache, lastFetchedSuggestionsForRef]);
@@ -350,6 +356,9 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
   const speakMessage = useCallback((message: ChatMessage) => {
     const selectedLanguagePair = selectedLanguagePairRef.current;
     if (!selectedLanguagePair) return;
+
+    // Get voiceName from settings for consistent cache key generation
+    const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
     if (message.role === 'assistant') {
       const partsForTTS: SpeechPart[] = [];
@@ -361,16 +370,16 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         if (settingsRef.current.tts.speakNative) {
           message.translations.forEach(pair => {
             if (pair.target && pair.target.trim()) {
-              partsForTTS.push({ text: pair.target, langCode: targetLang, context: { source: 'message', messageId: message.id } });
+              partsForTTS.push({ text: pair.target, langCode: targetLang, context: { source: 'message', messageId: message.id }, voiceName });
             }
             if (pair.native && pair.native.trim()) {
-              partsForTTS.push({ text: pair.native, langCode: nativeLang, context: { source: 'message', messageId: message.id } });
+              partsForTTS.push({ text: pair.native, langCode: nativeLang, context: { source: 'message', messageId: message.id }, voiceName });
             }
           });
         } else {
           message.translations.forEach(pair => {
             if (pair.target && pair.target.trim()) {
-              partsForTTS.push({ text: pair.target, langCode: targetLang, context: { source: 'message', messageId: message.id } });
+              partsForTTS.push({ text: pair.target, langCode: targetLang, context: { source: 'message', messageId: message.id }, voiceName });
             }
           });
         }
@@ -382,7 +391,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
           langToUse = nativeLang;
         }
         if (textToSay.trim()) {
-          partsForTTS.push({ text: textToSay.trim(), langCode: langToUse, context: { source: 'message', messageId: message.id } });
+          partsForTTS.push({ text: textToSay.trim(), langCode: langToUse, context: { source: 'message', messageId: message.id }, voiceName });
           defaultLangForSpeakText = langToUse;
         }
       } else if (message.text) {
@@ -393,7 +402,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
           langToUse = nativeLang;
         }
         if (textToSay.trim()) {
-          partsForTTS.push({ text: textToSay.trim(), langCode: langToUse, context: { source: 'message', messageId: message.id } });
+          partsForTTS.push({ text: textToSay.trim(), langCode: langToUse, context: { source: 'message', messageId: message.id }, voiceName });
           defaultLangForSpeakText = langToUse;
         }
       }

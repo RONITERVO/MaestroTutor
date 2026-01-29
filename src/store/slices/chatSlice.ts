@@ -25,7 +25,7 @@ import { upsertTtsCacheEntries } from '../../features/chat';
 import { isRealChatMessage } from '../../shared/utils/common';
 import type { MaestroStore } from '../maestroStore';
 
-const INLINE_CAP_AUDIO = 512 * 1024; // 512KB cap for inline audio
+import { INLINE_CAP_AUDIO } from '../../features/chat/utils/persistence';
 
 export interface ChatSlice {
   // State

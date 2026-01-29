@@ -29,6 +29,7 @@ export const initialSettings: AppSettings = {
   tts: {
     provider: 'gemini-live',
     speakNative: true,
+    voiceName: 'Kore',
   },
   stt: {
     enabled: false,
@@ -164,6 +165,11 @@ export const createSettingsSlice: StateCreator<
 
       if (!effective.tts || effective.tts.provider !== 'gemini-live') {
         effective = { ...effective, tts: { ...effective.tts, provider: 'gemini-live' } };
+      }
+
+      // Ensure voiceName is set (migration for existing users without this field)
+      if (!effective.tts?.voiceName) {
+        effective = { ...effective, tts: { ...effective.tts, voiceName: 'Kore' } };
       }
 
       if (!effective.stt || effective.stt.provider !== 'gemini') {
