@@ -13,13 +13,14 @@
  * and src/features/ /hooks.
  */
  
-import React, { useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useCallback, useRef, useMemo, useState } from 'react';
 
 // --- Features Components ---
 import { ChatInterface } from '../features/chat';
 import { Header, useSmartReengagement } from '../features/session';
 import { DebugLogPanel } from '../features/diagnostics';
 import { VisualContextVideo } from '../features/vision';
+import ApiKeyGate from '../features/session/components/ApiKeyGate';
 
 // --- Hooks ---
 import { useAppInitialization, useMaestroActivityStage, useIdleReengagement } from './hooks';
@@ -42,6 +43,7 @@ import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 // --- Utils ---
 import { getPrimaryCode } from '../shared/utils/languageUtils';
 import { createSmartRef } from '../shared/utils/smartRef';
+import { useApiKey } from '../shared/hooks/useApiKey';
 
 /** Delay in ms before restarting STT after language change */
 const STT_RESTART_DELAY_MS = 250;
@@ -89,6 +91,19 @@ const App: React.FC = () => {
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
   });
+
+  const {
+    hasKey: hasApiKey,
+    maskedKey: maskedApiKey,
+    isLoading: isApiKeyLoading,
+    error: apiKeyError,
+    setError: setApiKeyError,
+    saveApiKey,
+    clearApiKey,
+  } = useApiKey();
+
+  const [isApiKeyGateOpen, setIsApiKeyGateOpen] = useState(false);
+  const showApiKeyGate = !hasApiKey || isApiKeyGateOpen;
 
   const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
   const selectedLanguagePairRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectSelectedLanguagePair), []);
@@ -372,18 +387,29 @@ const App: React.FC = () => {
   }, [handleToggleSuggestionMode]);
 
   const sttMasterToggle = useCallback(() => {
-    const currentSttSettings = settingsRef.current.stt;
-    const newSttEnabledState = !currentSttSettings.enabled;
-    const nextSettings = { ...settingsRef.current, stt: { ...currentSttSettings, enabled: newSttEnabledState } };
-    setSettings(nextSettings);
+    // If enabled, turn it OFF (regardless of error state). This allows clearing stuck states.
+    if (settingsRef.current.stt.enabled) {
+      const nextSettings = { ...settingsRef.current, stt: { ...settingsRef.current.stt, enabled: false } };
+      setSettings(nextSettings);
 
-    if (newSttEnabledState) {
-      clearTranscript();
-      startListening(currentSttSettings.language);
-    } else {
+      // Also clear any STT Error when manually turning off
+      useMaestroStore.getState().setSttError(null);
+
       clearAutoSend();
       stopListening();
+      return;
     }
+
+    // If disabled, turn it ON.
+    const currentSttSettings = settingsRef.current.stt;
+    const nextSettings = { ...settingsRef.current, stt: { ...currentSttSettings, enabled: true } };
+    setSettings(nextSettings);
+
+    // Clear old error messages before starting fresh
+    useMaestroStore.getState().setSttError(null);
+    clearTranscript();
+    startListening(currentSttSettings.language);
+
   }, [clearAutoSend, clearTranscript, startListening, stopListening, settingsRef, setSettings]);
 
   const handleToggleSendWithSnapshot = useCallback(() => {
@@ -479,6 +505,17 @@ const App: React.FC = () => {
   // RENDER
   // ============================================================
 
+  if (isApiKeyLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="image-placeholder-spinner mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading app...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoadingHistory && settings.selectedLanguagePairId) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
@@ -492,9 +529,29 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen antialiased text-gray-800 bg-gray-100">
-      <Header />
+      <Header
+        onOpenApiKey={() => {
+          setApiKeyError(null);
+          setIsApiKeyGateOpen(true);
+        }}
+        hasApiKey={hasApiKey}
+      />
       {showDebugLogs && <DebugLogPanel onClose={() => setShowDebugLogs(false)} />}
       <VisualContextVideo videoRef={visualContextVideoRef} />
+      <ApiKeyGate
+        isOpen={showApiKeyGate}
+        isBlocking={!hasApiKey}
+        hasKey={hasApiKey}
+        maskedKey={maskedApiKey}
+        error={apiKeyError}
+        onSave={saveApiKey}
+        onClear={clearApiKey}
+        onValueChange={() => setApiKeyError(null)}
+        onClose={() => {
+          setApiKeyError(null);
+          setIsApiKeyGateOpen(false);
+        }}
+      />
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 flex flex-col bg-slate-50">
           <ChatInterface

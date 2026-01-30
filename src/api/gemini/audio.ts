@@ -59,7 +59,7 @@ export interface GenerateSpeechResult {
 }
 
 export const generateSpeech = async (params: { text: string; voiceName?: string }): Promise<GenerateSpeechResult> => {
-  const ai = getAi();
+  const ai = await getAi();
   const model = 'gemini-2.5-flash-preview-tts';
   const config = {
     responseModalities: ['AUDIO'],

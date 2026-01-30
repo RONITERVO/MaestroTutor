@@ -71,8 +71,14 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   const startAudioNoteRecording = useCallback(async () => {
     if (isRecordingAudioNote || isSttGloballyEnabled) return;
     try {
+      // EXPLICIT PERMISSION REQUEST:
+      // We request the stream and await it. If the user sees a prompt,
+      // this await will pause execution until they Allow or Deny.
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // If we got here, permission is granted!
       audioNoteStreamRef.current = stream;
+
       const mimeType = pickAudioMimeType();
       const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
       const rec = new MediaRecorder(stream, options);
@@ -110,6 +116,9 @@ const AudioControls: React.FC<AudioControlsProps> = ({
       setIsRecordingAudioNote(true);
     } catch (e) {
       console.error('Failed to start audio note recording:', e);
+      // User denied permission or system error
+      setIsRecordingAudioNote(false);
+      micHoldActiveRef.current = false;
     }
   }, [isRecordingAudioNote, isSttGloballyEnabled, onSetAttachedImage, onUserInputActivity, createUiToken, endUiTask]);
 
@@ -128,15 +137,14 @@ const AudioControls: React.FC<AudioControlsProps> = ({
     e.preventDefault(); e.stopPropagation();
     micHoldActiveRef.current = false;
     if (micHoldTimerRef.current) { clearTimeout(micHoldTimerRef.current); micHoldTimerRef.current = null; }
+
+    // Wait for the "hold" duration before starting recording logic
     micHoldTimerRef.current = window.setTimeout(async () => {
       micHoldTimerRef.current = null;
-      try {
-        if ('permissions' in navigator && (navigator as any).permissions?.query) {
-          const status = await (navigator as any).permissions.query({ name: 'microphone' as PermissionName });
-          if ((status as any).state !== 'granted') { micHoldActiveRef.current = false; return; }
-        } else { micHoldActiveRef.current = false; return; }
-      } catch { micHoldActiveRef.current = false; return; }
       micHoldActiveRef.current = true;
+
+      // We removed the flaky 'navigator.permissions.query' check here.
+      // Instead, we just call startAudioNoteRecording(), which now safely waits for getUserMedia.
       await startAudioNoteRecording();
     }, 450);
   }, [isSttGloballyEnabled, isSending, isSpeaking, startAudioNoteRecording]);

@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { GoogleGenAI } from '@google/genai';
+import { getApiKeyOrThrow } from '../../core/security/apiKeyStorage';
 
 export class ApiError extends Error {
   status?: number;
@@ -15,13 +16,12 @@ export class ApiError extends Error {
   }
 }
 
-export const getAi = () => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey.trim() === '') {
-    throw new ApiError(
-      'Missing API key: process.env.API_KEY (mapped from VITE_API_KEY) is not set or empty',
-      { code: 'MISSING_API_KEY' }
-    );
+export const getAi = async () => {
+  try {
+    const apiKey = await getApiKeyOrThrow();
+    return new GoogleGenAI({ apiKey });
+  } catch (e: any) {
+    const message = e?.message || 'Missing API key';
+    throw new ApiError(message, { code: 'MISSING_API_KEY' });
   }
-  return new GoogleGenAI({ apiKey });
 };

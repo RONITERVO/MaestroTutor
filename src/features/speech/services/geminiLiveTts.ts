@@ -24,6 +24,7 @@
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { debugLogService } from '../../diagnostics';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
+import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 
 // ============================================================================
 // TYPES
@@ -135,8 +136,11 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
   }
 
   // Validate API key is available
-  if (!process.env.API_KEY) {
-    const errorMsg = 'API_KEY not configured';
+  let apiKey: string;
+  try {
+    apiKey = await getApiKeyOrThrow();
+  } catch (e: any) {
+    const errorMsg = e?.message || 'Missing API key';
     onError?.(errorMsg);
     return { isComplete: false, error: errorMsg, audioSegments: [] };
   }
@@ -277,7 +281,7 @@ ${textBlock}`;
     };
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey });
       
       session = await ai.live.connect({
         model,

@@ -2,7 +2,7 @@
 import React, { forwardRef, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
-import { IconTerminal } from '../../../shared/ui/Icons';
+import { IconShield, IconTerminal } from '../../../shared/ui/Icons';
 import { useMaestroStore } from '../../../store';
 import { parseLanguagePairId } from '../../../shared/utils/languageUtils';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
@@ -10,7 +10,12 @@ import { selectActiveUiTokens, selectIsLive, selectIsUserHold, selectIsSending }
 import { selectSelectedLanguagePair, selectTargetLanguageDef } from '../../../store/slices/settingsSlice';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 
-const Header = forwardRef<HTMLDivElement>((_, ref) => {
+interface HeaderProps {
+  onOpenApiKey?: () => void;
+  hasApiKey?: boolean;
+}
+
+const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKey }, ref) => {
   const { t } = useAppTranslations();
   const maestroActivityStage = useMaestroStore(state => state.maestroActivityStage);
   const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
@@ -156,14 +161,28 @@ const Header = forwardRef<HTMLDivElement>((_, ref) => {
         </div>
       </div>
 
-      {/* Debug Log Toggle (Top Right) */}
-      <button
-        onClick={toggleDebugLogs}
-        className="fixed top-4 right-4 z-40 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full shadow-sm backdrop-blur-sm transition-all"
-        title="View Traffic Logs"
-      >
-        <IconTerminal className="w-4 h-4" />
-      </button>
+      <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
+        {onOpenApiKey && (
+          <button
+            onClick={onOpenApiKey}
+            className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm
+              ${hasApiKey ? 'bg-emerald-600/85 text-white hover:bg-emerald-600' : 'bg-rose-600/90 text-white hover:bg-rose-600'}
+            `}
+            title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
+          >
+            <IconShield className="w-4 h-4" />
+            <span className="hidden sm:inline">{hasApiKey ? 'API Key' : 'API Key Required'}</span>
+          </button>
+        )}
+
+        <button
+          onClick={toggleDebugLogs}
+          className="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full shadow-sm backdrop-blur-sm transition-all"
+          title="View Traffic Logs"
+        >
+          <IconTerminal className="w-4 h-4" />
+        </button>
+      </div>
     </>
   );
 });

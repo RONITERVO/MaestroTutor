@@ -3,6 +3,7 @@ import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
+import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 
 export interface UseGeminiLiveSttReturn {
   start: (
@@ -167,6 +168,40 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     audioChunksRef.current = [];
 
     try {
+      // --- 1. Request Microphone Permission FIRST ---
+      // This ensures we have access before opening the expensive WebSocket connection.
+      // It also fixes the UX issue where the app asks for permission "late".
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+        }
+      });
+
+      // Check if session was stopped while waiting for permission
+      if (currentSessionIdRef.current !== sessionId) {
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
+
+      streamRef.current = stream;
+
+      // --- 2. Initialize Audio Context & Worklet ---
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtx({ sampleRate: 16000 });
+      audioContextRef.current = ctx;
+
+      await ensureSttWorklet(ctx);
+
+      if (currentSessionIdRef.current !== sessionId) {
+        stream.getTracks().forEach(t => t.stop());
+        try { ctx.close(); } catch { /* ignore */ }
+        return;
+      }
+
+      // --- 3. Connect to Gemini Live API ---
       const opts = (typeof languageOrOptions === 'string' || languageOrOptions === undefined)
         ? { language: languageOrOptions as string | undefined }
         : (languageOrOptions as { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] });
@@ -201,7 +236,8 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
         hasLastAssistantMessage: !!lastAssistantMessage,
       });
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = await getApiKeyOrThrow();
+      const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
         model,
         config: {
@@ -273,9 +309,15 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
                updateTranscriptState();
             }
           },
-          onclose: () => {
+          onclose: (event: any) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
+
+            // Treat unexpected server closure as an error to prevent infinite restart loops
+            // in useSpeechOrchestrator. If it was user-initiated, sessionId would have changed.
+            const closeMsg = (event && event.reason) ? event.reason : "Connection closed by server";
+            setError(closeMsg);
+
             if (logRef.current && !logFinalizedRef.current) {
               logFinalizedRef.current = true;
               logRef.current.complete({
@@ -311,39 +353,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
         return;
       }
 
-      // --- Audio Setup ---
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        }
-      });
-      
-      // Check if session was invalidated during getUserMedia
-      if (currentSessionIdRef.current !== sessionId) {
-        stream.getTracks().forEach(t => t.stop());
-        try { session.close(); } catch { /* ignore */ }
-        return;
-      }
-      
-      streamRef.current = stream;
-
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtx({ sampleRate: 16000 });
-      audioContextRef.current = ctx;
-
-      await ensureSttWorklet(ctx);
-      
-      // Check if session was invalidated during worklet setup
-      if (currentSessionIdRef.current !== sessionId) {
-        stream.getTracks().forEach(t => t.stop());
-        try { ctx.close(); } catch { /* ignore */ }
-        try { session.close(); } catch { /* ignore */ }
-        return;
-      }
-
+      // --- 4. Connect Audio Graph ---
       const source = ctx.createMediaStreamSource(stream);
       const workletNode = new AudioWorkletNode(ctx, FLOAT_TO_INT16_PROCESSOR_NAME);
       workletNodeRef.current = workletNode;
