@@ -3,6 +3,7 @@ import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob } from '@go
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { debugLogService } from '../../diagnostics';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
+import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -333,7 +334,8 @@ export function useGeminiLiveConversation(
         outputAudioTranscription: {},
       });
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = await getApiKeyOrThrow();
+      const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
         model,
         config: {

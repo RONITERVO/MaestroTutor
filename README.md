@@ -54,12 +54,14 @@ Maestro remembers who you are.
     npm install
     ```
 
-3.  **Configure Environment**
-    Create a `.env` file in the root directory:
+3.  **Configure Environment (Optional for local dev)**
+    You can run with a dev-only API key using `.env`:
     ```env
-    # Required: Your Google Gemini API Key
+    # Optional: Dev-only key (do NOT ship this in production builds)
     VITE_API_KEY=your_api_key_here
     ```
+    In production and Play Store builds, users will enter their own API key
+    inside the app on first launch (BYOK model).
 
 4.  **Run Development Server**
     ```bash
@@ -70,6 +72,11 @@ Maestro remembers who you are.
 ---
 
 ## 🎮 Usage Guide
+
+### API Key Setup (First Launch)
+On first launch, Maestro will prompt you to paste your personal Gemini API key.
+Tap **Open Google AI Studio**, generate a key, and paste it into the app.
+The key is stored locally on your device and never sent to any backend.
 
 ### 1. The Globe Selector
 Upon launch, you are greeted by an interactive 3D globe.

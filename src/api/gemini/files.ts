@@ -31,7 +31,7 @@ const waitForFileActive = async (
   maxWaitMs: number = 60000,
   pollIntervalMs: number = 1000
 ): Promise<any> => {
-  const ai = getAi();
+  const ai = await getAi();
 
   let name = fileNameOrUri;
   const m = /\/files\/([^?\s]+)/.exec(fileNameOrUri || '');
@@ -75,7 +75,7 @@ const waitForFileActive = async (
 
 export const checkFileStatuses = async (uris: string[]): Promise<Record<string, { deleted: boolean; active: boolean }>> => {
   if (!uris || !uris.length) return {};
-  const ai = getAi();
+  const ai = await getAi();
   const out: Record<string, { deleted: boolean; active: boolean }> = {};
   await Promise.all(
     uris.map(async (uri) => {
@@ -128,7 +128,7 @@ export const uploadMediaToFiles = async (
   mimeType: string,
   displayName?: string
 ): Promise<{ uri: string; mimeType: string }> => {
-  const ai = getAi();
+  const ai = await getAi();
 
   const normalizedMimeType = normalizeMimeTypeForUpload(mimeType);
 
@@ -176,7 +176,7 @@ export const uploadMediaToFiles = async (
 };
 
 export const deleteFileByNameOrUri = async (nameOrUri: string) => {
-  const ai = getAi();
+  const ai = await getAi();
   let name = nameOrUri;
   const m = /\/files\/([^?\s]+)/.exec(nameOrUri || '');
   if (m) name = `files/${m[1]}`;

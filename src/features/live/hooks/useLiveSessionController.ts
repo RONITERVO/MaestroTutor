@@ -583,7 +583,19 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         const videoConstraints: MediaStreamConstraints['video'] = settingsRef.current.selectedCameraId
           ? { deviceId: { exact: settingsRef.current.selectedCameraId } }
           : true;
-        stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+
+        // Request BOTH permissions upfront to avoid double prompts or late mic requests
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: videoConstraints,
+          audio: true
+        });
+
+        // We only use this stream for Video in the session.
+        // The audio handling (Worklet) creates its own dedicated audio stream.
+        // To prevent hardware conflicts or echo, we stop the audio tracks on this "permission-priming" stream.
+        // The permission grant itself persists for the page context.
+        stream.getAudioTracks().forEach(track => track.stop());
+
         createdStream = true;
         setLiveVideoStream(stream);
       }

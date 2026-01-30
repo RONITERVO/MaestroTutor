@@ -15,7 +15,7 @@ export const generateGeminiResponse = async (
   useGoogleSearch?: boolean,
   configOverrides?: any
 ) => {
-  const ai = getAi();
+  const ai = await getAi();
   const contents: any[] = [];
 
   history.forEach(h => {
@@ -91,7 +91,7 @@ export const generateGeminiResponse = async (
 };
 
 export const translateText = async (text: string, from: string, to: string) => {
-  const ai = getAi();
+  const ai = await getAi();
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
   const model = 'gemini-3-flash-preview';
   const log = debugLogService.logRequest('translateText', model, { prompt });

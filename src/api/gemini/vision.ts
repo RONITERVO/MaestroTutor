@@ -13,7 +13,7 @@ export const generateImage = async (params: {
   maestroAvatarUri?: string;
   maestroAvatarMimeType?: string;
 }) => {
-  const ai = getAi();
+  const ai = await getAi();
   const { prompt, latestMessageText, history, systemInstruction, maestroAvatarUri, maestroAvatarMimeType } = params;
 
   const contents: any[] = [];
