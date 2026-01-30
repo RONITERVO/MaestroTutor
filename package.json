@@ -13,6 +13,7 @@
     "cap:open:android": "npx cap open android"
   },
   "dependencies": {
+    "@aparajita/capacitor-secure-storage": "^7.1.6",
     "@capacitor/android": "^8.0.2",
     "@capacitor/browser": "^8.0.0",
     "@capacitor/core": "^8.0.2",

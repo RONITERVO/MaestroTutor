@@ -126,6 +126,10 @@ dist
 # Mac
 .DS_Store
 
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
 # Vite
 dist-ssr
 *.local

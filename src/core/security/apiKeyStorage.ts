@@ -4,18 +4,21 @@
  * API Key Storage
  *
  * Stores the user's Gemini API key locally.
- * - Native (Capacitor): Preferences (SharedPreferences on Android)
+ * - Native (Capacitor): Secure Storage (Keychain/Keystore)
  * - Web: localStorage fallback
  *
  * NOTE: This does NOT send the key to any backend.
  */
 
+import { Capacitor } from '@capacitor/core';
+import { SecureStorage } from '@aparajita/capacitor-secure-storage';
 import { Preferences } from '@capacitor/preferences';
 
 const API_KEY_STORAGE_KEY = 'maestro.geminiApiKey.v1';
 
 let cachedKey: string | null | undefined = undefined;
 
+const isNative = Capacitor.isNativePlatform();
 const safeWindow = () => (typeof window !== 'undefined' ? window : undefined);
 
 const readLocalStorage = (): string | null => {
@@ -57,21 +60,13 @@ export const isLikelyApiKey = (value: string) => {
   return true;
 };
 
+// Legacy migration: previously stored in Preferences (unencrypted).
 const loadFromPreferences = async (): Promise<string | null> => {
   try {
     const { value } = await Preferences.get({ key: API_KEY_STORAGE_KEY });
     return value ? value : null;
   } catch {
     return null;
-  }
-};
-
-const saveToPreferences = async (value: string): Promise<boolean> => {
-  try {
-    await Preferences.set({ key: API_KEY_STORAGE_KEY, value });
-    return true;
-  } catch {
-    return false;
   }
 };
 
@@ -84,11 +79,53 @@ const removeFromPreferences = async (): Promise<boolean> => {
   }
 };
 
+const loadFromSecureStorage = async (): Promise<string | null> => {
+  try {
+    const value = await SecureStorage.getItem(API_KEY_STORAGE_KEY);
+    return value ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const saveToSecureStorage = async (value: string): Promise<boolean> => {
+  try {
+    await SecureStorage.setItem(API_KEY_STORAGE_KEY, value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const removeFromSecureStorage = async (): Promise<boolean> => {
+  try {
+    await SecureStorage.removeItem(API_KEY_STORAGE_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const loadApiKey = async (): Promise<string | null> => {
   if (cachedKey !== undefined) return cachedKey;
 
-  let value = await loadFromPreferences();
-  if (!value) value = readLocalStorage();
+  let value: string | null = null;
+
+  if (isNative) {
+    value = await loadFromSecureStorage();
+    if (!value) {
+      const legacy = await loadFromPreferences();
+      if (legacy) {
+        const migrated = await saveToSecureStorage(legacy);
+        if (migrated) {
+          await removeFromPreferences();
+          value = legacy;
+        }
+      }
+    }
+  } else {
+    value = readLocalStorage();
+  }
 
   if (!value && typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
     const devKey = (import.meta as any).env?.VITE_API_KEY;
@@ -104,18 +141,31 @@ export const setApiKey = async (rawValue: string): Promise<void> => {
   cachedKey = value || null;
 
   if (!value) {
-    await removeFromPreferences();
+    if (isNative) {
+      await removeFromSecureStorage();
+      await removeFromPreferences();
+    }
     removeLocalStorage();
     return;
   }
 
-  const saved = await saveToPreferences(value);
-  if (!saved) writeLocalStorage(value);
+  if (isNative) {
+    const saved = await saveToSecureStorage(value);
+    if (!saved) {
+      throw new Error('Secure storage unavailable');
+    }
+    await removeFromPreferences();
+  } else {
+    writeLocalStorage(value);
+  }
 };
 
 export const clearApiKey = async (): Promise<void> => {
   cachedKey = null;
-  await removeFromPreferences();
+  if (isNative) {
+    await removeFromSecureStorage();
+    await removeFromPreferences();
+  }
   removeLocalStorage();
 };
 

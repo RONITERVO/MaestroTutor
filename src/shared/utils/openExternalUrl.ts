@@ -8,6 +8,16 @@ export const openExternalUrl = async (url: string) => {
   if (typeof url !== 'string' || !url.trim()) return;
   const safeUrl = url.trim();
 
+  let parsed: URL;
+  try {
+    parsed = new URL(safeUrl);
+  } catch {
+    return;
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return;
+  }
+
   if (Capacitor.isNativePlatform()) {
     try {
       await Browser.open({ url: safeUrl });

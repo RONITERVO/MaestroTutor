@@ -19,6 +19,7 @@ export const useApiKey = () => {
       .catch(() => {
         if (!mounted) return;
         setApiKeyState(null);
+        setError('Failed to load saved API key. Please paste it again.');
         setIsLoading(false);
       });
     return () => {
@@ -36,10 +37,15 @@ export const useApiKey = () => {
       setError('That key looks too short. Please paste the full Gemini API key.');
       return false;
     }
-    await setApiKey(value);
-    setApiKeyState(value);
-    setError(null);
-    return true;
+    try {
+      await setApiKey(value);
+      setApiKeyState(value);
+      setError(null);
+      return true;
+    } catch {
+      setError('Failed to save API key securely. Please try again.');
+      return false;
+    }
   }, []);
 
   const clear = useCallback(async () => {
