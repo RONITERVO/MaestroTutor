@@ -29,7 +29,7 @@ export const guTranslations: Record<string, string> = {
   "apiKeyGate.closeInstructions": "સૂચનાઓ બંધ કરો",
   "apiKeyGate.previousInstruction": "અગાઉની સૂચના",
   "apiKeyGate.nextInstruction": "આગામી સૂચના",
-  "apiKeyGate.instructionStep": "સૂચના {step} of {total}",
+  "apiKeyGate.instructionStep": "સૂચના {step} / {total}",
   "apiKeyGate.keyLabel": "Gemini API કી",
   "apiKeyGate.placeholder": "તમારી API કી અહીં પેસ્ટ કરો",
   "apiKeyGate.show": "બતાવો",

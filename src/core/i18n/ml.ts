@@ -143,7 +143,7 @@ export const mlTranslations: Record<string, string> = {
   "chat.error.thinkingInterrupted": "AI പ്രതികരണം തടസ്സപ്പെട്ടു.",
   "error.noLanguagePair": "ഗുരുതരമായ പിശക്: ഭാഷാ ജോഡി തിരഞ്ഞെടുത്തിട്ടില്ല.",
   "error.translationFailed": "തർജ്ജമ പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
-  "error.imageLimitReached": "സെഷൻ ചിത്രം ജനിപ്പിക്കുന്നതിനുള്ള പരിധി എത്തി. ദയവായി പുതിയ സേഷന്റെ ആരംഭിക്കുക.",
+  "error.imageLimitReached": "സെഷൻ ചിത്രം ജനിപ്പിക്കുന്നതിനുള്ള പരിധി എത്തി. ദയവായി പുതിയ സെഷൻ ആരംഭിക്കുക.",,
   "error.tokenLimitReached": "സെഷൻ ടോക്കൺ പരിധി എത്തി. ദയവായി പുതിയ സെഷൻ ആരംഭിക്കുക.",
   "error.apiKeyMissing": "നിങ്ങളുടെ Gemini API കീ കാണാനില്ല. API കീ സ്ക്രീൻ തുറന്ന് കീ ഒട്ടിക്കുക.",
   "error.apiKeyInvalid": "നിങ്ങളുടെ Gemini API കീ അസാധുവാണ്. അക്ഷരത്തെറ്റുകൾ ഉണ്ടോ എന്ന് പരിശോധിക്കുക.",

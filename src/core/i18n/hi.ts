@@ -29,7 +29,7 @@ export const hiTranslations: Record<string, string> = {
   "apiKeyGate.closeInstructions": "निर्देश बंद करें",
   "apiKeyGate.previousInstruction": "पिछला निर्देश",
   "apiKeyGate.nextInstruction": "अगला निर्देश",
-  "apiKeyGate.instructionStep": "निर्देश {step} का {total}",
+  "apiKeyGate.instructionStep": "निर्देश {total} में से {step}",
   "apiKeyGate.keyLabel": "Gemini API कुंजी",
   "apiKeyGate.placeholder": "अपनी API कुंजी यहाँ पेस्ट करें",
   "apiKeyGate.show": "दिखाएं",

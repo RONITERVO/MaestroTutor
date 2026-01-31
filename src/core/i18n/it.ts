@@ -134,7 +134,7 @@ export const itTranslations: Record<string, string> = {
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Connessione",
   "chat.error.sttError": "Errore STT: {error}. Prova a cambiare il microfono.",
-  "chat.error.autoCaptureCameraError": "Errore cattura automatica fotamera: {error}",
+  "chat.error.autoCaptureCameraError": "Errore cattura automatica fotocamera: {error}",
   "chat.error.snapshotUserError": "{error}",
   "chat.error.recordingTimeExceeded": "Registrazione fermata automaticamente dopo {maxMinutes} minuti.",
   "chat.error.videoMetadataError": "Impossibile leggere i metadati del video. Il file potrebbe essere corrotto o in un formato non supportato.",

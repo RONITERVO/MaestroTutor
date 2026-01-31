@@ -141,7 +141,7 @@ export const teTranslations: Record<string, string> = {
   "chat.error.imageGenInterrupted": "చిత్ర తయారీకి అంతరాయం కలిగింది.",
   "chat.error.thinkingInterrupted": "AI ప్రతిస్పందనకు అంతరాయం కలిగింది.",
   "error.noLanguagePair": "కీలక లోపం: ఏ భాషా జంట ఎంచుకోబడలేదు.",
-  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్ండిండి.",
+  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
   "error.imageLimitReached": "సెషన్ చిత్ర పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.tokenLimitReached": "సెషన్ టోకెన్ పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.apiKeyMissing": "మీ Gemini API కీ లేదు. API కీ స్క్రీన్‌ను తెరిచి మీ కీని అతికించండి.",

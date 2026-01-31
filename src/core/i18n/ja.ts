@@ -154,7 +154,7 @@ export const jaTranslations: Record<string, string> = {
   "error.cameraUnknown": "カメラへのアクセス中に不明なエラーが発生しました。",
   "error.cameraStreamNotAvailable": "キャプチャ用のカメラストリームが利用できません。",
   "error.imageCaptureGeneric": "画像キャプチャ中に不明なエラーが発生しました。",
-  "error.visualContextVideoElementNotReady": "ビジュアルコンテキスト의ビデオ要素の準備ができていません。",
+  "error.visualContextVideoElementNotReady": "ビジュアルコンテキストのビデオ要素の準備ができていません。",
   "error.snapshotVideoElementNotReady": "スナップショット用のビデオ要素の準備ができていません。",
   "error.visualContextCameraAccessNotSupported": "ビジュアルコンテキストのカメラアクセスがサポートされていません。",
   "error.snapshotCameraAccessNotSupported": "スナップショットのカメラアクセスがサポートされていません。",

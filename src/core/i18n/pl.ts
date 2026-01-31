@@ -36,7 +36,7 @@ export const plTranslations: Record<string, string> = {
   "apiKeyGate.hide": "Ukryj",
   "apiKeyGate.currentKeySaved": "Bieżący klucz zapisany {maskedKey}",
   "apiKeyGate.clearSavedKey": "Wyczyść zapisany klucz",
-  "apiKeyGate.cancel": "Anulluj",
+  "apiKeyGate.cancel": "Anuluj",
   "apiKeyGate.saving": "Zapisywanie...",
   "apiKeyGate.saveKey": "Zapisz klucz",
   "apiKeyGate.close": "Zamknij",
