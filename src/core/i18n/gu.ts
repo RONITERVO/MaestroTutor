@@ -1,4 +1,3 @@
-
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -19,12 +18,18 @@ export const guTranslations: Record<string, string> = {
 
   // API key gate
   "apiKeyGate.title": "તમારી Gemini API કી જોડો",
+  "apiKeyGate.billingTitle": "ઉચ્ચ ક્વોટા માટે બિલિંગ સેટ કરો",
   "apiKeyGate.subtitle": "આ એપ્લિકેશન સંપૂર્ણપણે તમારા ઉપકરણ પર ચાલે છે. તમારી કી ક્યારેય અમારા સર્વરને સ્પર્શતી નથી.",
   "apiKeyGate.privacyPolicy": "ગોપનીયતા નીતિ",
   "apiKeyGate.stepsTitle": "બે ઝડપી પગલાં:",
   "apiKeyGate.stepOne": "Google AI Studio ખોલો અને API કી બનાવો.",
   "apiKeyGate.stepTwo": "નીચે કી પેસ્ટ કરો અને સાચવો પર ટેપ કરો.",
   "apiKeyGate.openAiStudio": "Google AI Studio ખોલો",
+  "apiKeyGate.viewInstructions": "સૂચનાઓ જુઓ",
+  "apiKeyGate.closeInstructions": "સૂચનાઓ બંધ કરો",
+  "apiKeyGate.previousInstruction": "અગાઉની સૂચના",
+  "apiKeyGate.nextInstruction": "આગામી સૂચના",
+  "apiKeyGate.instructionStep": "સૂચના {step} / {total}",
   "apiKeyGate.keyLabel": "Gemini API કી",
   "apiKeyGate.placeholder": "તમારી API કી અહીં પેસ્ટ કરો",
   "apiKeyGate.show": "બતાવો",
@@ -140,6 +145,9 @@ export const guTranslations: Record<string, string> = {
   "error.translationFailed": "અનુવાદ નિષ્ફળ. ફરી પ્રયાસ કરો.",
   "error.imageLimitReached": "સત્ર છબી મર્યાદા પૂરી થઈ. કૃપા કરીને નવું સત્ર શરૂ કરો.",
   "error.tokenLimitReached": "સત્ર ટોકન મર્યાદા પૂરી થઈ. કૃપા કરીને નવું સત્ર શરૂ કરો.",
+  "error.apiKeyMissing": "તમારી Gemini API કી ખૂટે છે. API કી સ્ક્રીન ખોલો અને તમારી કી પેસ્ટ કરો.",
+  "error.apiKeyInvalid": "તમારી Gemini API કી અમાન્ય છે. કૃપા કરીને ટાઈપો માટે તપાસો અને માન્ય કી પેસ્ટ કરો.",
+  "error.apiQuotaExceeded": "ચેટ માટે તમારો Gemini API ફ્રી ક્વોટા સમાપ્ત થઈ ગયો છે. મેં બિલિંગ સ્ટેપ્સ સાથે API કી સ્ક્રીન ખોલી છે. તમે તે દરમિયાન હજુ પણ લાઈવ વાતચીતનો ઉપયોગ કરી શકો છો.",
   "error.cameraPermissionDenied": "કેમેરા પરવાનગી નકારી. બ્રાઉઝર સેટિંગ્સમાં કેમેરા ઍક્સેસ સક્ષમ કરો.",
   "error.cameraNotFound": "પસંદ કરેલ કેમેરા મળ્યો નથી. ખાતરી કરો કે તે કનેક્ટ થયેલ છે અથવા અન્ય કેમેરા પસંદ કરો.",
   "error.cameraAccessNotSupported": "તમારા બ્રાઉઝર દ્વારા કેમેરા ઍક્સેસ સમર્થિત નથી.",

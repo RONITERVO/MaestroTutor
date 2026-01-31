@@ -51,6 +51,41 @@ import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice'
 
 const AUX_TEXT_MODEL_ID = 'gemini-3-flash-preview';
 
+const parseApiErrorMessage = (message?: string): string => {
+  if (!message) return '';
+  const trimmed = message.trim();
+  if (!trimmed) return '';
+  try {
+    const parsed = JSON.parse(trimmed);
+    const nestedMessage = parsed?.error?.message;
+    if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+      return nestedMessage.trim();
+    }
+  } catch {
+    // Ignore JSON parse errors
+  }
+  return trimmed;
+};
+
+const isQuotaError = (error: ApiError): boolean => {
+  if (error.status === 429) return true;
+  const code = (error.code ?? '').toString().toLowerCase();
+  if (code === '429' || code.includes('resource_exhausted') || code.includes('quota')) return true;
+  const msg = parseApiErrorMessage(error.message).toLowerCase();
+  return (
+    msg.includes('resource_exhausted') ||
+    msg.includes('exceeded your current quota') ||
+    msg.includes('rate limit') ||
+    msg.includes('quota')
+  );
+};
+
+const isInvalidApiKeyError = (error: ApiError): boolean => {
+  const msg = (error.message || '').toLowerCase();
+  // Check for both the RPC reason and the message content
+  return msg.includes('api_key_invalid') || msg.includes('api key not valid');
+};
+
 export interface UseTutorConversationConfig {
   // Translation function
   t: TranslationFunction;
@@ -101,6 +136,9 @@ export interface UseTutorConversationConfig {
   
   // Hardware errors
   setSnapshotUserError?: React.Dispatch<React.SetStateAction<string | null>>;
+
+  // Api key gate
+  onApiKeyGateOpen?: (options?: { reason?: 'missing' | 'quota'; instructionIndex?: number }) => void;
 }
 
 export interface UseTutorConversationReturn {
@@ -174,6 +212,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
     setSnapshotUserError,
+    onApiKeyGateOpen,
   } = config;
 
   const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
@@ -1476,7 +1515,19 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       console.error("Error sending message (stream consumer):", error);
       let errorMessage = t('general.error');
       if (error instanceof ApiError) {
-        errorMessage = error.message || error.code || `HTTP ${error.status}`;
+        if (error.code === 'MISSING_API_KEY') {
+          errorMessage = t('error.apiKeyMissing');
+          onApiKeyGateOpen?.({ reason: 'missing', instructionIndex: 0 });
+        } else if (isInvalidApiKeyError(error)) {
+          errorMessage = t('error.apiKeyInvalid');
+          onApiKeyGateOpen?.({ reason: 'missing', instructionIndex: 0 });
+        } else if (isQuotaError(error)) {
+          errorMessage = t('error.apiQuotaExceeded');
+          onApiKeyGateOpen?.({ reason: 'quota', instructionIndex: 9 });
+        } else {
+          const parsedMessage = parseApiErrorMessage(error.message);
+          errorMessage = parsedMessage || error.code || `HTTP ${error.status}`;
+        }
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
@@ -1552,6 +1603,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     setReplySuggestions,
     setSendPrep,
     setSnapshotUserError,
+    onApiKeyGateOpen,
     transcript,
   ]);
 

@@ -26,6 +26,7 @@ export const enTranslations: Record<string, string> = {
 
   // API key gate
   "apiKeyGate.title": "Connect your Gemini API key",
+  "apiKeyGate.billingTitle": "Set up billing for higher quota",
   "apiKeyGate.subtitle": "This app runs fully on your device. Your key never touches our servers.",
   "apiKeyGate.privacyPolicy": "Privacy Policy",
   "apiKeyGate.stepsTitle": "Two quick steps:",
@@ -180,6 +181,9 @@ export const enTranslations: Record<string, string> = {
   "error.translationFailed": "Translation failed. Please try again.",
   "error.imageLimitReached": "Session image generation limit reached. Please start a new session.",
   "error.tokenLimitReached": "Session token limit reached. Please start a new session.",
+  "error.apiKeyMissing": "Your Gemini API key is missing. Open the API Key screen and paste your key.",
+  "error.apiKeyInvalid": "Your Gemini API key is invalid. Please check for typos and paste a valid key.",
+  "error.apiQuotaExceeded": "Your Gemini API free quota for chat is exhausted. I opened the API Key screen with billing steps. You can still use Live conversation in the meantime.",
   
   // Errors - camera
   "error.cameraPermissionDenied": "Camera permission denied. Please enable camera access in your browser settings.",

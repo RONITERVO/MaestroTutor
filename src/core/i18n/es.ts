@@ -26,12 +26,18 @@ export const esTranslations: Record<string, string> = {
 
   // API key gate
   "apiKeyGate.title": "Conecta tu clave API de Gemini",
+  "apiKeyGate.billingTitle": "Configurar facturación para mayor cuota",
   "apiKeyGate.subtitle": "Esta aplicación se ejecuta totalmente en tu dispositivo. Tu clave nunca toca nuestros servidores.",
   "apiKeyGate.privacyPolicy": "Política de privacidad",
   "apiKeyGate.stepsTitle": "Dos pasos rápidos:",
   "apiKeyGate.stepOne": "Abre Google AI Studio y crea una clave API.",
   "apiKeyGate.stepTwo": "Pega la clave abajo y toca Guardar.",
   "apiKeyGate.openAiStudio": "Abrir Google AI Studio",
+  "apiKeyGate.viewInstructions": "Ver instrucciones",
+  "apiKeyGate.closeInstructions": "Cerrar instrucciones",
+  "apiKeyGate.previousInstruction": "Instrucción anterior",
+  "apiKeyGate.nextInstruction": "Siguiente instrucción",
+  "apiKeyGate.instructionStep": "Instrucción {step} de {total}",
   "apiKeyGate.keyLabel": "Clave API de Gemini",
   "apiKeyGate.placeholder": "Pega tu clave API aquí",
   "apiKeyGate.show": "Mostrar",
@@ -175,7 +181,10 @@ export const esTranslations: Record<string, string> = {
   "error.translationFailed": "Traducción fallida. Por favor intenta de nuevo.",
   "error.imageLimitReached": "Límite de generación de imágenes de la sesión alcanzado. Por favor inicia una nueva sesión.",
   "error.tokenLimitReached": "Límite de tokens de la sesión alcanzado. Por favor inicia una nueva sesión.",
-  
+  "error.apiKeyMissing": "Falta tu clave API de Gemini. Abre la pantalla de clave API y pega tu clave.",
+  "error.apiKeyInvalid": "Tu clave API de Gemini no es válida. Por favor, comprueba si hay errores tipográficos y pega una clave válida.",
+  "error.apiQuotaExceeded": "Tu cuota gratuita de la API de Gemini para el chat se ha agotado. He abierto la pantalla de clave API con los pasos de facturación. Mientras tanto, aún puedes usar la conversación en vivo.",
+
   // Errors - camera
   "error.cameraPermissionDenied": "Permiso de cámara denegado. Por favor habilita el acceso a la cámara en la configuración de tu navegador.",
   "error.cameraNotFound": "Cámara seleccionada no encontrada. Por favor asegúrate de que está conectada o selecciona una cámara diferente.",

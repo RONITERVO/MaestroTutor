@@ -1,4 +1,3 @@
-
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -19,12 +18,18 @@ export const mlTranslations: Record<string, string> = {
 
   // API key gate
   "apiKeyGate.title": "നിങ്ങളുടെ Gemini API കീ ബന്ധിപ്പിക്കുക",
+  "apiKeyGate.billingTitle": "കൂടുതൽ ക്വോട്ടയ്ക്കായി ബില്ലിംഗ് സജ്ജമാക്കുക",
   "apiKeyGate.subtitle": "ഈ ആപ്പ് പൂർണ്ണമായും നിങ്ങളുടെ ഉപകരണത്തിൽ പ്രവർത്തിക്കുന്നു. നിങ്ങളുടെ കീ ഒരിക്കലും ഞങ്ങളുടെ സെർവറുകളിൽ എത്തുന്നില്ല.",
   "apiKeyGate.privacyPolicy": "സ്വകാര്യതാ നയം",
   "apiKeyGate.stepsTitle": "രണ്ട് ദ്രുത ഘട്ടങ്ങൾ:",
   "apiKeyGate.stepOne": "Google AI Studio തുറന്ന് ഒരു API കീ സൃഷ്ടിക്കുക.",
   "apiKeyGate.stepTwo": "താഴെ കീ ഒട്ടിച്ച് സേവ് (Save) ടാപ്പ് ചെയ്യുക.",
   "apiKeyGate.openAiStudio": "Google AI Studio തുറക്കുക",
+  "apiKeyGate.viewInstructions": "നിർദ്ദേശങ്ങൾ കാണുക",
+  "apiKeyGate.closeInstructions": "നിർദ്ദേശങ്ങൾ അടയ്ക്കുക",
+  "apiKeyGate.previousInstruction": "മുമ്പത്തെ നിർദ്ദേശം",
+  "apiKeyGate.nextInstruction": "അടുത്ത നിർദ്ദേശം",
+  "apiKeyGate.instructionStep": "നിർദ്ദേശം {step} / {total}",
   "apiKeyGate.keyLabel": "Gemini API കീ",
   "apiKeyGate.placeholder": "നിങ്ങളുടെ API കീ ഇവിടെ ഒട്ടിക്കുക",
   "apiKeyGate.show": "കാണിക്കുക",
@@ -140,6 +145,9 @@ export const mlTranslations: Record<string, string> = {
   "error.translationFailed": "തർജ്ജമ പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
   "error.imageLimitReached": "സെഷൻ ചിത്രം ജനിപ്പിക്കുന്നതിനുള്ള പരിധി എത്തി. ദയവായി പുതിയ സെഷൻ ആരംഭിക്കുക.",
   "error.tokenLimitReached": "സെഷൻ ടോക്കൺ പരിധി എത്തി. ദയവായി പുതിയ സെഷൻ ആരംഭിക്കുക.",
+  "error.apiKeyMissing": "നിങ്ങളുടെ Gemini API കീ കാണാനില്ല. API കീ സ്ക്രീൻ തുറന്ന് കീ ഒട്ടിക്കുക.",
+  "error.apiKeyInvalid": "നിങ്ങളുടെ Gemini API കീ അസാധുവാണ്. അക്ഷരത്തെറ്റുകൾ ഉണ്ടോ എന്ന് പരിശോധിക്കുക.",
+  "error.apiQuotaExceeded": "ചാറ്റിനായുള്ള നിങ്ങളുടെ Gemini API സൗജന്യ ക്വോട്ട തീർന്നു. ബില്ലിംഗ് ഘട്ടങ്ങളുള്ള API കീ സ്ക്രീൻ ഞാൻ തുറന്നു. അതിനിടയിൽ നിങ്ങൾക്ക് ലൈവ് സംഭാഷണം ഉപയോഗിക്കാം.",
   "error.cameraPermissionDenied": "ക്യാമറ അനുമതി നിരസിച്ചു. ബ്രൗസർ ക്രമീകരണങ്ങളിൽ ക്യാമറ ആക്സസ് പ്രവർത്തനക്ഷമമാക്കുക.",
   "error.cameraNotFound": "തിരഞ്ഞെടുത്ത ക്യാമറ കണ്ടെത്തിയില്ല. അത് കണക്റ്റുചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാക്കുക അല്ലെങ്കിൽ മറ്റൊരു ക്യാമറ തിരഞ്ഞെടുക്കുക.",
   "error.cameraAccessNotSupported": "നിങ്ങളുടെ ബ്രൗസർ ക്യാമറ ആക്സസ് പിന്തുണയ്ക്കുന്നില്ല.",
