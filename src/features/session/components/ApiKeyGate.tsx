@@ -16,6 +16,7 @@ interface ApiKeyGateProps {
 }
 
 const AI_STUDIO_URL = 'https://aistudio.google.com/app/apikey';
+const PRIVACY_POLICY_URL = 'https://ronitervo.github.io/MaestroTutor/public/privacy.html';
 
 const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   isOpen,
@@ -50,7 +51,13 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Connect your Gemini API key</h2>
               <p className="text-sm text-slate-600">
-                This app runs fully on your device. Your key never touches our servers.
+                This app runs fully on your device. Your key never touches our servers.{' '}
+                <button
+                  onClick={() => openExternalUrl(PRIVACY_POLICY_URL)}
+                  className="text-blue-600 hover:underline inline-flex items-center"
+                >
+                  Privacy Policy
+                </button>
               </p>
             </div>
           </div>

@@ -45,8 +45,8 @@ Maestro remembers who you are.
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/RONITERVO/MaestroTutor-GeminiEdition.git
-    cd MaestroTutor-GeminiEdition
+    git clone https://github.com/RONITERVO/MaestroTutor.git
+    cd MaestroTutor
     ```
 
 2.  **Install dependencies**
