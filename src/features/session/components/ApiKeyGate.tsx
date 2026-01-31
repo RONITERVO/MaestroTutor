@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { IconCheck, IconShield, IconXMark } from '../../../shared/ui/Icons';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 
 interface ApiKeyGateProps {
@@ -30,6 +31,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   onClose,
   onValueChange,
 }) => {
+  const { t } = useAppTranslations();
   const [value, setValue] = useState('');
   const [showKey, setShowKey] = useState(false);
   const canClose = !isBlocking;
@@ -49,14 +51,14 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               <IconShield className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Connect your Gemini API key</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{t('apiKeyGate.title')}</h2>
               <p className="text-sm text-slate-600">
-                This app runs fully on your device. Your key never touches our servers.{' '}
+                {t('apiKeyGate.subtitle')}{' '}
                 <button
                   onClick={() => openExternalUrl(PRIVACY_POLICY_URL)}
                   className="text-blue-600 hover:underline inline-flex items-center"
                 >
-                  Privacy Policy
+                  {t('apiKeyGate.privacyPolicy')}
                 </button>
               </p>
             </div>
@@ -65,7 +67,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             <button
               onClick={onClose}
               className="text-slate-400 hover:text-slate-700"
-              aria-label="Close"
+              aria-label={t('apiKeyGate.close')}
             >
               <IconXMark className="h-5 w-5" />
             </button>
@@ -74,20 +76,20 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
         <div className="px-6 py-4 space-y-4">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 space-y-2">
-            <div className="font-medium text-slate-800">Two quick steps:</div>
+            <div className="font-medium text-slate-800">{t('apiKeyGate.stepsTitle')}</div>
             <ol className="list-decimal pl-5 space-y-1">
-              <li>Open Google AI Studio and create an API key.</li>
-              <li>Paste the key below and tap Save.</li>
+              <li>{t('apiKeyGate.stepOne')}</li>
+              <li>{t('apiKeyGate.stepTwo')}</li>
             </ol>
             <button
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-white hover:bg-blue-700"
               onClick={() => openExternalUrl(AI_STUDIO_URL)}
             >
-              Open Google AI Studio
+              {t('apiKeyGate.openAiStudio')}
             </button>
           </div>
 
-          <label className="block text-sm font-medium text-slate-800">Gemini API key</label>
+          <label className="block text-sm font-medium text-slate-800">{t('apiKeyGate.keyLabel')}</label>
           <div className="flex items-center gap-2">
             <input
               type={showKey ? 'text' : 'password'}
@@ -97,7 +99,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 setValue(next);
                 onValueChange?.(next);
               }}
-              placeholder="Paste your API key here"
+              placeholder={t('apiKeyGate.placeholder')}
               className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
@@ -106,7 +108,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               onClick={() => setShowKey(!showKey)}
               type="button"
             >
-              {showKey ? 'Hide' : 'Show'}
+              {showKey ? t('apiKeyGate.hide') : t('apiKeyGate.show')}
             </button>
           </div>
 
@@ -115,7 +117,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
           {hasKey && (
             <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800 flex items-center gap-2">
               <IconCheck className="h-4 w-4" />
-              Current key saved {maskedKey ? `(${maskedKey})` : ''}
+              {t('apiKeyGate.currentKeySaved', { maskedKey: maskedKey ? `(${maskedKey})` : '' }).trim()}
             </div>
           )}
         </div>
@@ -126,7 +128,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             onClick={onClear}
             disabled={!hasKey}
           >
-            Clear saved key
+            {t('apiKeyGate.clearSavedKey')}
           </button>
           <div className="flex items-center gap-2">
             {canClose && (
@@ -134,7 +136,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 onClick={onClose}
                 className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
               >
-                Cancel
+                {t('apiKeyGate.cancel')}
               </button>
             )}
             <button
@@ -148,7 +150,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               disabled={!canSave}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {isSaving ? 'Saving...' : 'Save key'}
+              {isSaving ? t('apiKeyGate.saving') : t('apiKeyGate.saveKey')}
             </button>
           </div>
         </div>

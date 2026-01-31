@@ -22,6 +22,25 @@ export const frTranslations: Record<string, string> = {
   // General
   "general.clear": "Effacer",
   "general.error": "Désolé, j'ai rencontré une erreur.",
+
+  // API key gate
+  "apiKeyGate.title": "Connectez votre clé API Gemini",
+  "apiKeyGate.subtitle": "Cette application fonctionne entièrement sur votre appareil. Votre clé ne touche jamais nos serveurs.",
+  "apiKeyGate.privacyPolicy": "Politique de confidentialité",
+  "apiKeyGate.stepsTitle": "Deux étapes rapides :",
+  "apiKeyGate.stepOne": "Ouvrez Google AI Studio et créez une clé API.",
+  "apiKeyGate.stepTwo": "Collez la clé ci-dessous et appuyez sur Enregistrer.",
+  "apiKeyGate.openAiStudio": "Ouvrir Google AI Studio",
+  "apiKeyGate.keyLabel": "Clé API Gemini",
+  "apiKeyGate.placeholder": "Collez votre clé API ici",
+  "apiKeyGate.show": "Afficher",
+  "apiKeyGate.hide": "Masquer",
+  "apiKeyGate.currentKeySaved": "Clé actuelle enregistrée {maskedKey}",
+  "apiKeyGate.clearSavedKey": "Effacer la clé enregistrée",
+  "apiKeyGate.cancel": "Annuler",
+  "apiKeyGate.saving": "Enregistrement...",
+  "apiKeyGate.saveKey": "Enregistrer la clé",
+  "apiKeyGate.close": "Fermer",
   
   // Chat - general
   "chat.thinking": "Réflexion en cours...",
