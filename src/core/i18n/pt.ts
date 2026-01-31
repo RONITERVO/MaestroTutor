@@ -36,7 +36,7 @@ export const ptTranslations: Record<string, string> = {
   "apiKeyGate.close": "Fechar",
   "chat.thinking": "Pensando...",
   "chat.loadingHistory": "Carregando histórico do chat...",
-  "chat.loadingSuggestions": "Carregando sugerências...",
+  "chat.loadingSuggestions": "Carregando sugestões...",
   "chat.suggestionsAriaLabel": "Sugestões de resposta",
   "chat.attachImageFromFile": "Anexar arquivo",
   "chat.removeAttachedImage": "Remover arquivo anexado",

@@ -123,7 +123,7 @@ export const zhTranslations: Record<string, string> = {
   "chat.header.viewingAbove": "查看上方消息",
   "chat.header.liveSession": "实时会话",
   "chat.liveSession.stop": "停止直播",
-  "liveSession.retry": "重试直播",
+  "chat.liveSession.retry": "重试直播",
   "chat.liveSession.start": "开始直播",
   "chat.liveSession.liveBadge": "直播",
   "chat.liveSession.connecting": "连接中",

@@ -98,7 +98,7 @@ export const mrTranslations: Record<string, string> = {
   "chat.maestro.listening": "ऐकत आहे...",
   "chat.maestro.title.listening": "मायस्ट्रो तुमच्या इनपुट किंवा आवाजाची वाट पाहत आहे.",
   "chat.maestro.holding": "मायस्ट्रो वाट पाहत आहे",
-  "chat.maestro.title.holding": "मायस्ट्रो वाट पाहत आहे ( पुन्हा सक्रिय होणे थांबवले आहे)",
+  "chat.maestro.title.holding": "मायस्ट्रो वाट पाहत आहे (पुन्हा सक्रिय होणे थांबवले आहे)",
   "chat.bookmark.hiddenHeaderAria": "वर लपलेले संदेश",
   "chat.bookmark.isHere": "बुकमार्क येथे आहे",
   "chat.bookmark.setHere": "येथे बुकमार्क सेट करा",

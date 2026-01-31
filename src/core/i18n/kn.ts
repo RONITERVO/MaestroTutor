@@ -23,7 +23,7 @@ export const knTranslations: Record<string, string> = {
   "apiKeyGate.privacyPolicy": "ಗೌಪ್ಯತಾ ನೀತಿ",
   "apiKeyGate.stepsTitle": "ಎರಡು ತ್ವರಿತ ಹಂತಗಳು:",
   "apiKeyGate.stepOne": "Google AI Studio ಅನ್ನು ತೆರೆಯಿರಿ ಮತ್ತು API ಕೀಯನ್ನು ರಚಿಸಿ.",
-  "apiKeyGate.stepTwo": "ಕೆಳಗೆ ಕೀಯನ್ನು ಅಂಟಿಸಿ och ಉಳಿಸಿ (Save) ಟ್ಯಾಪ್ ಮಾಡಿ.",
+  "apiKeyGate.stepTwo": "ಕೆಳಗೆ ಕೀಯನ್ನು ಅಂಟಿಸಿ ಮತ್ತು ಉಳಿಸಿ (Save) ಟ್ಯಾಪ್ ಮಾಡಿ.",
   "apiKeyGate.openAiStudio": "Google AI Studio ತೆರೆಯಿರಿ",
   "apiKeyGate.keyLabel": "Gemini API ಕೀ",
   "apiKeyGate.placeholder": "ನಿಮ್ಮ API ಕೀಯನ್ನು ಇಲ್ಲಿ ಅಂಟಿಸಿ",

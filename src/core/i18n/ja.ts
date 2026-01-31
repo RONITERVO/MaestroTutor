@@ -139,7 +139,7 @@ export const jaTranslations: Record<string, string> = {
   "error.translationFailed": "翻訳に失敗しました。もう一度お試しください。",
   "error.imageLimitReached": "セッションの画像生成制限に達しました。新しいセッションを開始してください。",
   "error.tokenLimitReached": "セッションのトークン制限に達しました。新しいセッションを開始してください。",
-  "error.cameraPermissionDenied": "カメラの許可が拒致されました。ブラウザの設定でカメラへのアクセスを有効にしてください。",
+  "error.cameraPermissionDenied": "カメラの許可が拒否されました。ブラウザの設定でカメラへのアクセスを有効にしてください。",
   "error.cameraNotFound": "選択されたカメラが見つかりません。接続されていることを確認するか、別のカメラを選択してください。",
   "error.cameraAccessNotSupported": "お使いのブラウザはカメラへのアクセスをサポートしていません。",
   "error.cameraUnknown": "カメラへのアクセス中に不明なエラーが発生しました。",
