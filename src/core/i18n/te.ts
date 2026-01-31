@@ -1,4 +1,3 @@
-
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -19,12 +18,18 @@ export const teTranslations: Record<string, string> = {
 
   // API key gate
   "apiKeyGate.title": "మీ Gemini API కీని కనెక్ట్ చేయండి",
+  "apiKeyGate.billingTitle": "అధిక కోటా కోసం బిల్లింగ్‌ను సెటప్ చేయండి",
   "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పుడూ తాకదు.",
   "apiKeyGate.privacyPolicy": "గోప్యతా విధానం",
   "apiKeyGate.stepsTitle": "రెండు శీఘ్ర దశలు:",
   "apiKeyGate.stepOne": "Google AI Studioని తెరిచి API కీని సృష్టించండి.",
   "apiKeyGate.stepTwo": "క్రింద కీని అతికించి, సేవ్ (Save) చేయండి.",
   "apiKeyGate.openAiStudio": "Google AI Studioని తెరవండి",
+  "apiKeyGate.viewInstructions": "సూచనలను చూడండి",
+  "apiKeyGate.closeInstructions": "సూచనలను ముగించండి",
+  "apiKeyGate.previousInstruction": "మునుపటి సూచన",
+  "apiKeyGate.nextInstruction": "తర్వాతి సూచన",
+  "apiKeyGate.instructionStep": "సూచన {total}లో {step}",
   "apiKeyGate.keyLabel": "Gemini API కీ",
   "apiKeyGate.placeholder": "మీ API కీని ఇక్కడ అతికించండి",
   "apiKeyGate.show": "చూపించు",
@@ -136,9 +141,12 @@ export const teTranslations: Record<string, string> = {
   "chat.error.imageGenInterrupted": "చిత్ర తయారీకి అంతరాయం కలిగింది.",
   "chat.error.thinkingInterrupted": "AI ప్రతిస్పందనకు అంతరాయం కలిగింది.",
   "error.noLanguagePair": "కీలక లోపం: ఏ భాషా జంట ఎంచుకోబడలేదు.",
-  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్ండిండి.",
   "error.imageLimitReached": "సెషన్ చిత్ర పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.tokenLimitReached": "సెషన్ టోకెన్ పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
+  "error.apiKeyMissing": "మీ Gemini API కీ లేదు. API కీ స్క్రీన్‌ను తెరిచి మీ కీని అతికించండి.",
+  "error.apiKeyInvalid": "మీ Gemini API కీ చెల్లదు. దయచేసి టైపోల కోసం తనిఖీ చేసి, చెల్లుబాటు అయ్యే కీని అతికించండి.",
+  "error.apiQuotaExceeded": "చాట్ కోసం మీ Gemini API ఉచిత కోటా ముగిసింది. నేను బిల్లింగ్ దశలతో API కీ స్క్రీన్‌ను తెరిచాను. ఈలోపు మీరు లైవ్ సంభాషణను ఉపయోగించవచ్చు.",
   "error.cameraPermissionDenied": "కెమెరా అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్‌లలో కెమెరా యాక్సెస్‌ని ఎనేబుల్ చేయండి.",
   "error.cameraNotFound": "ఎంచుకున్న కెమెరా కనుగొనబడలేదు. ఇది కనెక్ట్ అయిందని నిర్ధారించుకోండి లేదా వేరే కెమెరాను ఎంచుకోండి.",
   "error.cameraAccessNotSupported": "మీ బ్రౌజర్ ద్వారా కెమెరా యాక్సెస్ మద్దతు లేదు.",

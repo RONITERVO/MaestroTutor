@@ -25,12 +25,18 @@ export const frTranslations: Record<string, string> = {
 
   // API key gate
   "apiKeyGate.title": "Connectez votre clé API Gemini",
+  "apiKeyGate.billingTitle": "Configurer la facturation pour un quota plus élevé",
   "apiKeyGate.subtitle": "Cette application fonctionne entièrement sur votre appareil. Votre clé ne touche jamais nos serveurs.",
   "apiKeyGate.privacyPolicy": "Politique de confidentialité",
   "apiKeyGate.stepsTitle": "Deux étapes rapides :",
   "apiKeyGate.stepOne": "Ouvrez Google AI Studio et créez une clé API.",
   "apiKeyGate.stepTwo": "Collez la clé ci-dessous et appuyez sur Enregistrer.",
   "apiKeyGate.openAiStudio": "Ouvrir Google AI Studio",
+  "apiKeyGate.viewInstructions": "Voir les instructions",
+  "apiKeyGate.closeInstructions": "Fermer les instructions",
+  "apiKeyGate.previousInstruction": "Instruction précédente",
+  "apiKeyGate.nextInstruction": "Instruction suivante",
+  "apiKeyGate.instructionStep": "Instruction {step} sur {total}",
   "apiKeyGate.keyLabel": "Clé API Gemini",
   "apiKeyGate.placeholder": "Collez votre clé API ici",
   "apiKeyGate.show": "Afficher",
@@ -174,7 +180,10 @@ export const frTranslations: Record<string, string> = {
   "error.translationFailed": "Échec de la traduction. Veuillez réessayer.",
   "error.imageLimitReached": "Limite de génération d'images de la session atteinte. Veuillez démarrer une nouvelle session.",
   "error.tokenLimitReached": "Limite de tokens de la session atteinte. Veuillez démarrer une nouvelle session.",
-  
+  "error.apiKeyMissing": "Votre clé API Gemini est manquante. Ouvrez l'écran de la clé API et collez votre clé.",
+  "error.apiKeyInvalid": "Votre clé API Gemini est invalide. Veuillez vérifier les fautes de frappe et coller une clé valide.",
+  "error.apiQuotaExceeded": "Votre quota gratuit Gemini API pour le chat est épuisé. J'ai ouvert l'écran de la clé API avec les étapes de facturation. Vous pouvez toujours utiliser la conversation en direct en attendant.",
+
   // Errors - camera
   "error.cameraPermissionDenied": "Permission caméra refusée. Veuillez activer l'accès caméra dans les paramètres de votre navigateur.",
   "error.cameraNotFound": "Caméra sélectionnée introuvable. Assurez-vous qu'elle est connectée ou sélectionnez une autre caméra.",

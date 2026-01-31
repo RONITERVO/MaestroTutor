@@ -104,7 +104,18 @@ const App: React.FC = () => {
   } = useApiKey();
 
   const [isApiKeyGateOpen, setIsApiKeyGateOpen] = useState(false);
+  const [apiKeyGateInstructionIndex, setApiKeyGateInstructionIndex] = useState<number | null>(null);
   const showApiKeyGate = !hasApiKey || isApiKeyGateOpen;
+
+  const handleApiKeyGateOpen = useCallback((options?: { reason?: 'missing' | 'quota'; instructionIndex?: number }) => {
+    setApiKeyError(null);
+    setIsApiKeyGateOpen(true);
+    if (typeof options?.instructionIndex === 'number') {
+      setApiKeyGateInstructionIndex(options.instructionIndex);
+    } else {
+      setApiKeyGateInstructionIndex(null);
+    }
+  }, [setApiKeyError]);
 
   const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
   const selectedLanguagePairRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectSelectedLanguagePair), []);
@@ -221,6 +232,7 @@ const App: React.FC = () => {
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
     setSnapshotUserError,
+    onApiKeyGateOpen: handleApiKeyGateOpen,
   });
 
 
@@ -533,6 +545,7 @@ const App: React.FC = () => {
       <Header
         onOpenApiKey={() => {
           setApiKeyError(null);
+          setApiKeyGateInstructionIndex(null);
           setIsApiKeyGateOpen(true);
         }}
         hasApiKey={hasApiKey}
@@ -545,11 +558,13 @@ const App: React.FC = () => {
         hasKey={hasApiKey}
         maskedKey={maskedApiKey}
         error={apiKeyError}
+        instructionFocusIndex={apiKeyGateInstructionIndex}
         onSave={saveApiKey}
         onClear={clearApiKey}
         onValueChange={() => setApiKeyError(null)}
         onClose={() => {
           setApiKeyError(null);
+          setApiKeyGateInstructionIndex(null);
           setIsApiKeyGateOpen(false);
         }}
       />

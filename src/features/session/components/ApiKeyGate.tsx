@@ -13,6 +13,7 @@ interface ApiKeyGateProps {
   maskedKey?: string | null;
   isSaving?: boolean;
   error?: string | null;
+  instructionFocusIndex?: number | null;
   onSave: (value: string) => Promise<boolean>;
   onClear: () => Promise<void>;
   onClose: () => void;
@@ -21,8 +22,9 @@ interface ApiKeyGateProps {
 
 const AI_STUDIO_URL = 'https://aistudio.google.com/app/apikey';
 const PRIVACY_POLICY_URL = 'https://ronitervo.github.io/MaestroTutor/public/privacy.html';
-const INSTRUCTION_IMAGES = Array.from({ length: 9 }, (_, index) => `/api-key-instructions/step-${index + 1}.jpg`);
+const INSTRUCTION_IMAGES = Array.from({ length: 12 }, (_, index) => `/api-key-instructions/step-${index + 1}.jpg`);
 const INSTRUCTION_AUTO_ADVANCE_MS = 3200;
+const REGULAR_INSTRUCTIONS_COUNT = 9;
 
 const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   isOpen,
@@ -31,6 +33,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   maskedKey,
   isSaving = false,
   error,
+  instructionFocusIndex,
   onSave,
   onClear,
   onClose,
@@ -44,6 +47,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
+  const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
 
   const canSave = useMemo(() => {
     return value.trim().length >= 20 && !isSaving;
@@ -58,18 +62,25 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!showInstructions) return;
-    setInstructionIndex(0);
-    setIsAutoPlaying(true);
-  }, [showInstructions]);
+    if (!isOpen || typeof instructionFocusIndex !== 'number' || totalInstructions <= 0) return;
+
+    const clamped = Math.max(0, Math.min(totalInstructions - 1, instructionFocusIndex));
+    setInstructionIndex(clamped);
+    setShowInstructions(true);
+    setIsAutoPlaying(false);
+  }, [instructionFocusIndex, isOpen, totalInstructions]);
 
   useEffect(() => {
-    if (!showInstructions || !isAutoPlaying || totalInstructions <= 1) return;
+    if (!showInstructions || !isAutoPlaying || totalInstructions <= 1 || isBillingHelp) return;
     const intervalId = window.setInterval(() => {
-      setInstructionIndex((prev) => (prev + 1) % totalInstructions);
+      setInstructionIndex((prev) => {
+        // Prevent advancing into billing instructions on any edge case
+        if (prev >= REGULAR_INSTRUCTIONS_COUNT - 1) return 0;
+        return prev + 1;
+      });
     }, INSTRUCTION_AUTO_ADVANCE_MS);
     return () => window.clearInterval(intervalId);
-  }, [showInstructions, isAutoPlaying, totalInstructions]);
+  }, [showInstructions, isAutoPlaying, totalInstructions, isBillingHelp]);
 
   const currentInstruction = INSTRUCTION_IMAGES[instructionIndex] || '';
   const showHeaderClose = showInstructions || canClose;
@@ -78,7 +89,20 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   const handleInstructionStep = (direction: number) => {
     if (totalInstructions === 0) return;
-    setInstructionIndex((prev) => (prev + direction + totalInstructions) % totalInstructions);
+
+    if (isBillingHelp) {
+       // Loop within the billing set [REGULAR_INSTRUCTIONS_COUNT, totalInstructions - 1]
+       const start = REGULAR_INSTRUCTIONS_COUNT;
+       const count = totalInstructions - start;
+       if (count <= 0) return;
+       const relativeIndex = instructionIndex - start;
+       const nextRelative = (relativeIndex + direction + count) % count;
+       setInstructionIndex(start + nextRelative);
+    } else {
+       // Loop within regular set [0, REGULAR_INSTRUCTIONS_COUNT - 1]
+       const count = REGULAR_INSTRUCTIONS_COUNT;
+       setInstructionIndex((prev) => (prev + direction + count) % count);
+    }
     setIsAutoPlaying(false);
   };
 
@@ -122,7 +146,9 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               <IconShield className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">{t('apiKeyGate.title')}</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                {isBillingHelp ? t('apiKeyGate.billingTitle') : t('apiKeyGate.title')}
+              </h2>
               <p className="text-sm text-slate-600">
                 {t('apiKeyGate.subtitle')}{' '}
                 <button
@@ -177,22 +203,26 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         <IconChevronRight className="h-5 w-5" />
                       </button>
                     </div>
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 shadow-sm">
-                      <div className="flex items-center gap-1.5">
-                        {INSTRUCTION_IMAGES.map((_, index) => (
-                          <button
-                            key={`instruction-dot-${index}`}
-                            type="button"
-                            aria-label={t('apiKeyGate.instructionStep', { step: index + 1, total: totalInstructions })}
-                            onClick={() => handleInstructionJump(index)}
-                            className={`h-2 w-2 rounded-full ${index === instructionIndex ? 'bg-blue-600' : 'bg-slate-300'}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="absolute right-3 top-3 rounded-full bg-white/90 px-2 py-1 text-xs text-slate-600 shadow-sm">
-                      {instructionIndex + 1} / {totalInstructions}
-                    </div>
+                    {!isBillingHelp && (
+                      <>
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 shadow-sm">
+                          <div className="flex items-center gap-1.5">
+                            {INSTRUCTION_IMAGES.slice(0, REGULAR_INSTRUCTIONS_COUNT).map((_, index) => (
+                              <button
+                                key={`instruction-dot-${index}`}
+                                type="button"
+                                aria-label={t('apiKeyGate.instructionStep', { step: index + 1, total: REGULAR_INSTRUCTIONS_COUNT })}
+                                onClick={() => handleInstructionJump(index)}
+                                className={`h-2 w-2 rounded-full ${index === instructionIndex ? 'bg-blue-600' : 'bg-slate-300'}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="absolute right-3 top-3 rounded-full bg-white/90 px-2 py-1 text-xs text-slate-600 shadow-sm">
+                          {instructionIndex + 1} / {REGULAR_INSTRUCTIONS_COUNT}
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -214,7 +244,11 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowInstructions(true)}
+                    onClick={() => {
+                      setInstructionIndex(0);
+                      setShowInstructions(true);
+                      setIsAutoPlaying(true);
+                    }}
                     aria-label={t('apiKeyGate.viewInstructions')}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
                   >
