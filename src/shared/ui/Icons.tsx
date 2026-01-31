@@ -16,6 +16,21 @@ export const IconSend = (props: any) => <svg {...props} fill="none" viewBox="0 0
 export const IconSpeaker = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" /></svg>;
 export const IconPlay = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.97 12.64L10.25 16.5V7.5L15.97 12.64Z" /></svg>;
 export const IconXMark = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18 18 6M6 6l12 12" /></svg>;
+export const IconQuestionMarkCircle = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.09 9a3 3 0 0 1 5.82 1c0 1.657-1.79 2.25-2.5 2.75-.5.35-.5.75-.5 1.25m.01 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+	</svg>
+);
+export const IconChevronLeft = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+	</svg>
+);
+export const IconChevronRight = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+	</svg>
+);
 export const IconPlus = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" /></svg>;
 export const IconTranslate = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 21L10.5 15.75M10.5 15.75C10.5 14.925 10.185 14.1375 9.645 13.5975L4.8 9M10.5 15.75L15.3 9M19.5 9L15.3 9M15.3 9C14.475 9 13.6875 8.685 13.1475 8.145L10.5 5.25M4.5 9H7.5M4.5 9L2.25 6.75M4.5 9L2.25 11.25M19.5 9L21.75 6.75M19.5 9L21.75 11.25" /></svg>;
 export const IconVolumeOff = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-7.5-3-4.72-4.72a.75.75 0 0 0-1.28.53v15.88a.75.75 0 0 0 1.28.53l4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" /></svg>;
