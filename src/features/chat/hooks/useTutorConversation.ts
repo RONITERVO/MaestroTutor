@@ -1071,10 +1071,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       imageGenerationStartTime: assistantStartTime
     });
 
+    // Exclude the latest assistant message since it's injected into the image-gen prompt as a user turn.
+    const baseForEnsure: ChatMessage[] = getHistoryRespectingBookmark(messagesRef.current)
+      .filter(m => m.id !== params.thinkingMessageId);
+
     let historyForAssistantImageGen: ChatMessage[] | undefined = undefined;
     try {
       sendWithFileUploadInProgressRef.current = true;
-      const baseForEnsure: ChatMessage[] = getHistoryRespectingBookmark(messagesRef.current);
       setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done: 0, total: 0 });
       const ensuredUpdates = await ensureUrisForHistoryForSend(baseForEnsure, (done, total, etaMs) => {
         setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
@@ -1090,7 +1093,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     } catch { /* ignore */ }
 
     for (let attempt = 0; attempt < 3; attempt++) {
-      const histForAssistantImgBase = historyForAssistantImageGen || getHistoryRespectingBookmark(messagesRef.current);
+      const histForAssistantImgBase = historyForAssistantImageGen || baseForEnsure;
       let gpTextForAssistant: string | undefined = undefined;
       try {
         const gp3 = await getGlobalProfileDB();
@@ -1098,7 +1101,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       } catch {}
 
       const assistantHistory = deriveHistoryForApi(histForAssistantImgBase, {
-        maxMessages: computeMaxMessagesForArray(getHistoryRespectingBookmark(messagesRef.current).filter((m: ChatMessage) => m.role === 'user' || m.role === 'assistant')),
+        maxMessages: computeMaxMessagesForArray(baseForEnsure.filter((m: ChatMessage) => m.role === 'user' || m.role === 'assistant')),
         maxMediaToKeep: MAX_MEDIA_TO_KEEP,
         contextSummary: resolveBookmarkContextSummary() || undefined,
         globalProfileText: gpTextForAssistant,
