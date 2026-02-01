@@ -142,10 +142,10 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
         <div
-          className={`shadow-md border-y border-r rounded-r-md flex items-center cursor-pointer select-none touch-none transition-all duration-300
+          className={`flex items-center cursor-pointer select-none touch-none transition-all duration-300
             ${statusConfig.color} ${statusConfig.borderColor}
             ${statusConfig.textColor}
-            ${isOpen ? 'pr-4 pl-3 py-1.5' : 'pl-3 pr-3 py-1.5 animate-flag-wave'}
+            ${isOpen ? 'shadow-md border-y border-r rounded-r-xl pr-4 pl-3 py-1.5' : 'drop-shadow-md pl-3 pr-3 py-2 animate-flag-wave'}
           `}
           onClick={handleClick}
           onPointerDown={handlePointerDown}
