@@ -25,21 +25,45 @@ body {
   }
 
   /* Flag waving animation for collapsed status */
-  @keyframes flag-wave {
-    0% { transform: perspective(600px) rotateY(0deg) skewY(0deg) translateY(0); }
-    25% { transform: perspective(600px) rotateY(5deg) skewY(2deg) translateY(1px); }
-    50% { transform: perspective(600px) rotateY(0deg) skewY(0deg) translateY(0); }
-    75% { transform: perspective(600px) rotateY(-5deg) skewY(-1deg) translateY(-1px); }
-    100% { transform: perspective(600px) rotateY(0deg) skewY(0deg) translateY(0); }
+  @keyframes flag-wave-transform {
+    0% { transform: rotateY(0deg) translateY(0px); }
+    25% { transform: rotateY(12deg) translateY(2px); }
+    50% { transform: rotateY(0deg) translateY(0px); }
+    75% { transform: rotateY(-8deg) translateY(-2px); }
+    100% { transform: rotateY(0deg) translateY(0px); }
+  }
+
+  @keyframes flag-wave-clip {
+    0% {
+      clip-path: polygon(
+        0% 0%, 33% 4%, 66% 0%, 100% 6%,
+        100% 94%, 66% 100%, 33% 96%, 0% 100%
+      );
+    }
+    50% {
+      clip-path: polygon(
+        0% 4%, 33% 0%, 66% 4%, 96% 0%,
+        96% 100%, 66% 96%, 33% 100%, 0% 96%
+      );
+    }
+    100% {
+      clip-path: polygon(
+        0% 0%, 33% 4%, 66% 0%, 100% 6%,
+        100% 94%, 66% 100%, 33% 96%, 0% 100%
+      );
+    }
   }
 
   .animate-voice-swap { animation: voice-swap 180ms ease-out; }
   .animate-voice-ripple { animation: voice-ripple 450ms ease-out; }
 
-  /* Use transform-origin left to simulate attachment to the screen edge */
   .animate-flag-wave {
     transform-origin: left center;
-    animation: flag-wave 2.5s ease-in-out infinite;
+    perspective: 600px;
+    animation:
+      flag-wave-transform 3s ease-in-out infinite,
+      flag-wave-clip 1.5s linear infinite;
+    /* Ensure shadows work with clip-path via filter on parent or handling carefully */
   }
 
   /* Half-moon overlays matching avatar size */
