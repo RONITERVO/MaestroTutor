@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect } from 'react';
 import { ReplySuggestion } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';

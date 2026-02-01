@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';

@@ -1,3 +1,6 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import React from 'react';
 
 export const SmallSpinner: React.FC<{className?: string}> = ({ className }) => (

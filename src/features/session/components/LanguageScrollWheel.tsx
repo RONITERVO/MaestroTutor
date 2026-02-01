@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import React, { useRef, useEffect, useCallback } from 'react';
 import { LanguageDefinition, hasSharedFlag } from '../../../core/config/languages';
 

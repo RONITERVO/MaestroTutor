@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';

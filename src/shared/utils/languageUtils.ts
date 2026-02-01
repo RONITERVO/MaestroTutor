@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import { LanguageDefinition, DEFAULT_TARGET_LANG_CODE, DEFAULT_NATIVE_LANG_CODE, ALL_LANGUAGES } from '../../core/config/languages';
 import { DEFAULT_SYSTEM_PROMPT_CONTENT, DEFAULT_REPLY_SUGGESTIONS_PROMPT_CONTENT } from '../../core/config/prompts';
 import { LanguagePair } from '../../core/types';

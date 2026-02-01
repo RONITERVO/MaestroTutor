@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import React, { useState } from 'react';
 import { ChatMessage } from '../../../core/types';
 import { IconPencil, IconCheck, IconXMark } from '../../../shared/ui/Icons';

@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 // Utilities for processing raw PCM audio
 
 export function mergeInt16Arrays(arrays: Int16Array[]): Int16Array {

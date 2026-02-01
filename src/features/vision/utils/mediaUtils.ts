@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 export const getFacingModeFromLabel = (label: string): 'user' | 'environment' | 'unknown' => {
     const lowerLabel = label.toLowerCase();
     if (lowerLabel.includes('front') || lowerLabel.includes('user')) return 'user';
