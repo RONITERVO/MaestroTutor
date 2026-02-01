@@ -33,10 +33,18 @@ allprojects {
                 }
             }
         }
-        // Fallback for non-android java modules if any
-        tasks.withType(JavaCompile).configureEach {
+        
+        // Force Java compatibility
+        project.tasks.withType(JavaCompile).configureEach {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
+        }
+
+        // Force Kotlin compatibility dynamically to avoid classpath issues
+        project.tasks.matching { it.name.startsWith("compile") && it.name.endsWith("Kotlin") }.configureEach {
+             if (it.hasProperty("kotlinOptions")) {
+                 it.kotlinOptions.jvmTarget = "17"
+             }
         }
     }
 }
