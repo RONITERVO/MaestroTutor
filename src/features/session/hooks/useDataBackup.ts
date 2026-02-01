@@ -8,6 +8,9 @@
  * coordinating between multiple services (chats, metas, global profile, assets).
  */
 import { useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 // --- Types ---
 import type { ChatMessage } from '../../../core/types';
@@ -65,26 +68,81 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       }
       let maestroProfile: any = null;
       try { maestroProfile = await getMaestroProfileImageDB(); } catch {}
+      const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+      const prefix = isAuto ? 'maestro-backup-' : 'maestro-all-chats-';
+      const rawFilename = options?.filename && options.filename.trim().length > 0
+        ? options.filename.trim()
+        : `${prefix}${timestamp}.json`;
+
       const backup = { version: 7, chats: allChats, metas: allMetas, globalProfile: gp?.text || null, assets: { loadingGifs: assetsLoadingGifs, maestroProfile } };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const json = JSON.stringify(backup, null, 2);
+
+      if (Capacitor.isNativePlatform()) {
+        const safeFilename = (() => {
+          const cleaned = rawFilename.replace(/[\\/:*?"<>|]/g, '-').trim();
+          const base = cleaned.length > 0 ? cleaned : `${prefix}${timestamp}.json`;
+          return base.toLowerCase().endsWith('.json') ? base : `${base}.json`;
+        })();
+        try {
+          let uri: string | undefined;
+          try {
+            const result = await Filesystem.writeFile({
+              path: safeFilename,
+              data: json,
+              directory: Directory.Documents,
+              encoding: Encoding.UTF8,
+            });
+            uri = result?.uri;
+          } catch {
+            const result = await Filesystem.writeFile({
+              path: safeFilename,
+              data: json,
+              directory: Directory.Cache,
+              encoding: Encoding.UTF8,
+            });
+            uri = result?.uri;
+          }
+          if (!uri) {
+            throw new Error('Missing file URI for backup');
+          }
+          await Share.share({
+            title: t('startPage.saveChats'),
+            url: uri,
+            dialogTitle: t('startPage.saveChats'),
+          });
+        } catch (err) {
+           const errorMsg = err instanceof Error ? err.message : String(err);
+           // Ignore 'Share canceled' or similar errors as the file is already saved locally
+           if (errorMsg.toLowerCase().includes('canceled')) {
+              return;
+           }
+          console.error('Failed to save/share backup:', err);
+          if (!isAuto) {
+            alert(`${t('startPage.saveError')}\n${errorMsg}`);
+          }
+        }
+        return;
+      }
+
+      const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-
-      const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
-      const prefix = isAuto ? 'maestro-backup-' : 'maestro-all-chats-';
-      a.download = options?.filename && options.filename.trim().length > 0
-        ? options.filename.trim()
-        : `${prefix}${timestamp}.json`;
+      a.download = rawFilename;
 
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
+       const errorMsg = error instanceof Error ? error.message : String(error);
+       // Ignore 'Share canceled' or similar errors as the file is already saved locally
+       if (errorMsg.toLowerCase().includes('canceled')) {
+          return;
+       }
       console.error("Failed to save all chats:", error);
       if (!isAuto) {
-        alert(t('startPage.saveError'));
+        alert(`${t('startPage.saveError')}\n${errorMsg}`);
       }
     }
   }, [t]);
