@@ -28,7 +28,10 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-slate-900 shadow-2xl z-[100] flex flex-col border-l border-slate-700 font-mono text-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+      <div
+        className="flex items-center justify-between px-4 pb-3 bg-slate-800 border-b border-slate-700"
+        style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
+      >
         <h2 className="text-slate-200 font-semibold flex items-center gap-2">
           <span className="text-green-400">➜</span> Traffic Log
         </h2>
