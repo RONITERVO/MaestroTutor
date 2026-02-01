@@ -7,30 +7,32 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?logo=tailwindcss&style=flat-square)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)](./LICENSE)
 
-**Maestro** is a next-generation, client-side language learning interface powered by Google's **Gemini**.
+**Maestro** is a personal AI language tutor designed for full two-way communication. It integrates real-time dual-language **voice**, **vision**, and **text** so that you can communicate however best suits you.
 
-Unlike traditional flashcard apps, Maestro listens, watches, and remembers. It creates a seamless, real-time conversational environment where you can practice speaking a new language with an AI tutor that understands context, tone, and visual cues from your environment. Maestro does not only understand your environment and reply with **audio** and **text**, but can also reply with **image** representation of any context within the conversation.
+Unlike traditional apps, Maestro allows you to communicate using any combination of inputs—simultaneously.
 
 ---
 
-## ✨ The Experience
+## ✨ Features
 
-Maestro is designed to feel less like a chatbot and more like a human tutor sitting across the table, configurable as you desire. Fluent in many languages.
+### 🎨 Complete Multimodal Freedom
+Communication is not restricted to a single format. You have full control over how you interact:
+*   **Flexible Input and Output:** Two-way real-time communication with audio, text, images, PDF files, video, or all of them at the same time.
+*   **Nonverbal Communication:** If you don't know the words, simply draw on an image or freeze a video frame to highlight an object. Maestro understands these visual annotations and guides you without requiring any spoken communication.
 
-### 🗣️ Real-Time Voice Conversation
-Maestro speech (TTS) and hearing (STT) powered by **Gemini (Live)**, Low-latency.
-*   **Hybrid STT/TTS:** Gemini's server-side audio processing for the best balance of latency and accuracy. 
-*   **Persona Engine:** Maestro is programmed to be patient, encouraging, and uses audio tags (laughter, sighs, thoughtful pauses) to sound human.
+### ⚡ Real-Time Comprehension
+Maestro ensures you understand the context through multiple sensory channels:
+*   **Visual Cues:** Maestro explains concepts visually, generating images in real-time to help you understand vocabulary or scenarios instantly.
+*   **Dual Subtitles:** Chat interactions are accompanied by real-time subtitles in both your native and target languages, so you can always follow the conversation.
+*   **Full Context Persistence:** The chat preserves everything in a single message: voice recordings, generated or captured visuals, user drawings, and subtitles per voice, subject, and language. You are not just reading old text; you are re-experiencing the full conversation.
 
-### 👁️ Visual Context & Visual reply & "Smart Re-engagement"
-Maestro isn't blind. It uses your camera to understand your world. Maestro chat reply can paint a picture (image) of how maestro sees your world.
-*   **Active Observation:** If you go silent, Maestro analyzes your camera feed to find a conversation starter (Example message from maestro "*I see you're drinking coffee, how do you say 'mug' in Spanish?*" [Image of your table or imaginary scene with text overlay pointing at your cup in the table]). Maestro has visual persona in the image responses (eg. Avatar of your choise, or ask Maestro to describe one or give specific description of desired persona).
-*   **Image Annotation:** Snap a photo or select one in chat, or freeze a video frame, draw on it, and ask specific questions about objects in the scene.
+### 🧠 Adaptive Assistance
+*   **Smart Suggestions:** Never get stuck. Maestro provides tailored response suggestions based on the current visual and conversational context in both text and audio format.
+*   **Quick Translation:** Get instant translations for any sentence you have in mind without adding it as a turn in the chat history.
+*   **Zero Latency:** Interactions happen in real-time. You can speak naturally, interrupt, and converse without awkward delays.
 
-### 🧠 Deep Memory (Global Profile)
-Maestro remembers who you are.
-*   **Session Continuity:** Using IndexedDB, chat history is persisted locally.
-*   **Learner Profiling:** Maestro maintains a background "Global Profile" that evolves as you chat, tracking your interests, proficiency level, and correction preferences across different sessions (languages).
+### 🔒 Privacy & Control
+Maestro operates on a **"Bring Your Own Key"** model. You use your own Google Gemini API key, ensuring your data usage and privacy are under your control.
 
 ---
 
@@ -73,24 +75,21 @@ Maestro remembers who you are.
 
 ## 🎮 Usage Guide
 
-### API Key Setup (First Launch)
-On first launch, Maestro will prompt you to paste your personal Gemini API key.
-Tap **Open Google AI Studio**, generate a key, and paste it into the app.
-The key is stored locally on your device and never sent to any backend.
+### API Key Setup
+On first launch, Maestro will prompt you to paste your personal Gemini API key. The key is stored locally on your device and never sent to any backend.
 
 ### 1. The Globe Selector
 Upon launch, you are greeted by an interactive 3D globe.
-*   **Optional: Avatar:** Bring Maestro alive visually (avatar, image)
 *   **Left Wheel:** Select your native language (e.g., English).
 *   **Right Wheel:** Select the target language (e.g., Spanish).
-*   **Click the Plane or wait a second:** Launches the session.
-*   **Any settings are located here** Come back by clicking the Maestro status flag.
+*   **Launch:** Click the Plane to start your session.
+*   **Avatar:** Customize Maestro's visual persona.
 
-### 2. Modes of Interaction
-*   **Chat:** Type or use the microphone, and choose between using your camera or imaginary visual world (both sides image gen). Optionally attach any files, or edit the ones in chat. The AI receives your drawing layered over the image as context.
-*   **Gemini Live (Red Button over camera view):** Additional layer on top of the chat experience. Activates the full-duplex audio stream and live camera feed. Speak naturally. You can interrupt Maestro while he speaks.
-*   **Suggestion Mode:** If you get stuck there is always suggestions tailored for you specifically in your current chat context. If you are not happy with the suggestions just ask for new one in either one of the languages.
-*   **Full context chat messages**: The chat messages always store at least the voice, the transcript and the media (usually image), so that you can review the full context behind previous conversations.
+### 2. Interaction Modes
+*   **Chat:** Type or use the microphone. Toggle the camera to let Maestro see your world. Attach files or draw on images for context.
+*   **Gemini Live:** Activate the red button for a full-duplex audio stream and live camera feed. Speak naturally and interrupt at any time.
+*   **Suggestion Mode:** Stuck? Tap for suggestions tailored to your current conversation.
+*   **Review:** Scroll back to see full context—audio, transcripts, and images are all preserved.
 
 ---
 
@@ -104,12 +103,11 @@ Contributions are welcome! Please follow these steps:
 4.  Push to the branch (`git push origin feature/AmazingFeature`).
 5.  Open a Pull Request.
 
-**Note:** Specifically when working on audio hooks (`hooks/speech, but also good practice in general`), please ensure you **test on both Desktop and Mobile browsers**, as AudioContext and many other behavior varies across devices.
+**Note:** When working on audio hooks, please ensure you **test on both Desktop and Mobile browsers**, as AudioContext behavior varies across devices.
 
-**Risk Assessment**
-**Ref Synchronization:** The new hooks rely on a pattern of syncing Store state to local refs (e.g., messagesRef.current = useMaestroStore.getState().messages). This effectively mimics the previous architecture to prevent closure staleness in async callbacks, but requires careful maintenance to ensure refs don't desynchronize.
-
-**Transient State:** MediaStream objects are stored in hardwareSlice. Since these are non-serializable, they correctly remain transient, but any future addition of "persist-to-localstorage" middleware for the store must explicitly exclude the hardware slice to prevent crashes.
+**Risk Assessment & State Management**
+*   **Ref Synchronization:** We use a pattern of syncing Store state to local refs to prevent closure staleness in async callbacks.
+*   **Transient State:** MediaStream objects are stored in `hardwareSlice` and are excluded from persistence to prevent crashes.
 
 ---
 
