@@ -23,8 +23,24 @@ body {
     80% { transform: scale(1.5); opacity: 0.08; }
     100% { transform: scale(1.6); opacity: 0; }
   }
+
+  /* Flag waving animation for collapsed status */
+  @keyframes flag-wave {
+    0% { transform: perspective(600px) rotateY(0deg) skewY(0deg) translateY(0); }
+    25% { transform: perspective(600px) rotateY(5deg) skewY(2deg) translateY(1px); }
+    50% { transform: perspective(600px) rotateY(0deg) skewY(0deg) translateY(0); }
+    75% { transform: perspective(600px) rotateY(-5deg) skewY(-1deg) translateY(-1px); }
+    100% { transform: perspective(600px) rotateY(0deg) skewY(0deg) translateY(0); }
+  }
+
   .animate-voice-swap { animation: voice-swap 180ms ease-out; }
   .animate-voice-ripple { animation: voice-ripple 450ms ease-out; }
+
+  /* Use transform-origin left to simulate attachment to the screen edge */
+  .animate-flag-wave {
+    transform-origin: left center;
+    animation: flag-wave 2.5s ease-in-out infinite;
+  }
 
   /* Half-moon overlays matching avatar size */
   .moon-left { clip-path: inset(0 50% 0 0 round 9999px); }

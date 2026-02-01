@@ -132,33 +132,40 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
       {/* 
         Maestro Status Flag 
         Positioned fixed top-left. 
-        Defaults to a small icon-only view. Expands on click.
+        Wrapped in a positioning div to allow separate transform animations (positioning vs waving).
       */}
       <div 
         ref={ref}
-        className={`fixed top-4 left-0 z-50 transition-all duration-500 ease-out shadow-md border-y border-r rounded-r-full flex items-center cursor-pointer select-none touch-none
-          ${statusConfig.color} ${statusConfig.borderColor}
-          ${isOpen ? 'pr-4 pl-3 py-1.5 translate-x-0' : 'pl-3 pr-1 py-1.5 -translate-x-1 hover:translate-x-0'}
-          `}
+        className={`fixed top-4 left-0 z-50 transition-transform duration-500 ease-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-1 hover:translate-x-0'}
+        `}
         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
-        onClick={handleClick}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
-        onContextMenu={(e) => e.preventDefault()}
-        role="status"
-        aria-live="polite"
-        title={!isOpen ? "Click to view status, Long press to Hold" : undefined}
       >
-        <div className={`transition-opacity duration-300`}>
-          <CollapsedMaestroStatus
-            stage={maestroActivityStage}
-            t={t}
-            targetLanguageFlag={selectedLanguagePair ? targetLanguageDef?.flag : undefined}
-            targetLanguageTitle={selectedLanguagePair ? t('header.targetLanguageTitle', { language: targetLanguageDef?.displayName || '' }) : undefined}
-            className={statusConfig.textColor}
-            isExpanded={isOpen}
-          />
+        <div
+          className={`shadow-md border-y border-r rounded-r-md flex items-center cursor-pointer select-none touch-none transition-all duration-300
+            ${statusConfig.color} ${statusConfig.borderColor}
+            ${statusConfig.textColor}
+            ${isOpen ? 'pr-4 pl-3 py-1.5' : 'pl-3 pr-3 py-1.5 animate-flag-wave'}
+          `}
+          onClick={handleClick}
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerLeave}
+          onContextMenu={(e) => e.preventDefault()}
+          role="status"
+          aria-live="polite"
+          title={!isOpen ? "Click to view status, Long press to Hold" : undefined}
+        >
+          <div className={`transition-opacity duration-300`}>
+            <CollapsedMaestroStatus
+              stage={maestroActivityStage}
+              t={t}
+              targetLanguageFlag={selectedLanguagePair ? targetLanguageDef?.flag : undefined}
+              targetLanguageTitle={selectedLanguagePair ? t('header.targetLanguageTitle', { language: targetLanguageDef?.displayName || '' }) : undefined}
+              className={statusConfig.textColor}
+              isExpanded={isOpen}
+            />
+          </div>
         </div>
        </div>
 
