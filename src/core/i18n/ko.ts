@@ -133,6 +133,12 @@ export const koTranslations: Record<string, string> = {
   "chat.liveSession.start": "라이브 시작",
   "chat.liveSession.liveBadge": "라이브",
   "chat.liveSession.connecting": "연결 중",
+  "chat.liveSession.defaultLastMessage": "안녕하세요! 오늘 무엇을 도와드릴까요?",
+  "chat.liveSession.defaultSuggestion1": "안녕하세요",
+  "chat.liveSession.defaultSuggestion2": "좋은 아침입니다",
+  "chat.liveSession.defaultSuggestion3": "어떻게 지내세요?",
+
+  // Chat - errors
   "chat.error.sttError": "STT 오류: {error}. 마이크를 전환해 보세요.",
   "chat.error.autoCaptureCameraError": "자동 캡처 카메라 오류: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const koTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "현재 프레임에 주석을 달려면 동영상을 일시 중지하세요",
   "chat.error.imageGenInterrupted": "이미지 생성이 중단되었습니다.",
   "chat.error.thinkingInterrupted": "AI 응답이 중단되었습니다.",
+
+  // Errors - general
   "error.noLanguagePair": "심각한 오류: 언어 쌍이 선택되지 않았습니다.",
   "error.translationFailed": "번역 실패. 다시 시도해 주세요.",
   "error.imageLimitReached": "세션 이미지 생성 한도에 도달했습니다. 새 세션을 시작해 주세요.",
@@ -154,6 +162,8 @@ export const koTranslations: Record<string, string> = {
   "error.cameraUnknown": "카메라 액세스 중 알 수 없는 오류가 발생했습니다.",
   "error.cameraStreamNotAvailable": "캡처용 카메라 스트림을 사용할 수 없습니다.",
   "error.imageCaptureGeneric": "이미지 캡처 중 알 수 없는 오류가 발생했습니다.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "시각적 컨텍스트 비디오 요소가 준비되지 않았습니다.",
   "error.snapshotVideoElementNotReady": "스냅샷용 비디오 요소가 준비되지 않았습니다.",
   "error.visualContextCameraAccessNotSupported": "시각적 컨텍스트에 대한 카메라 액세스가 지원되지 않습니다.",

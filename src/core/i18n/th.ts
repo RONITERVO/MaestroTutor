@@ -66,7 +66,7 @@ export const thTranslations: Record<string, string> = {
   "chat.placeholder.normal.sttActive": "พูดใน {language} หรือพิมพ์...",
   "chat.placeholder.normal.sttInactive": "พิมพ์หรือแตะไมค์เพื่อพูดใน {language}...",
   "chat.placeholder.suggestion.listening": "พูด {language} เพื่อแปล...",
-  "chat.placeholder.suggestion.sttActive": "พูดหรือพิมพ์ใน {language} เพื่อแปล...",
+  "chat.placeholder.suggestion.sttActive": "พูดหรือพิมพ์ in {language} เพื่อแปล...",
   "chat.placeholder.suggestion.sttInactive": "พิมพ์ใน {language} เพื่อแปล...",
   "chat.camera.turnOn": "เปิดการแสดงตัวอย่างกล้อง",
   "chat.camera.turnOff": "ปิดการแสดงตัวอย่างกล้อง",
@@ -133,6 +133,12 @@ export const thTranslations: Record<string, string> = {
   "chat.liveSession.start": "เริ่มสด",
   "chat.liveSession.liveBadge": "สด",
   "chat.liveSession.connecting": "กำลังเชื่อมต่อ",
+  "chat.liveSession.defaultLastMessage": "สวัสดีครับ! วันนี้มีอะไรให้ผมช่วยไหมครับ?",
+  "chat.liveSession.defaultSuggestion1": "สวัสดี",
+  "chat.liveSession.defaultSuggestion2": "อรุณสวัสดิ์",
+  "chat.liveSession.defaultSuggestion3": "สบายดีไหม?",
+
+  // Chat - errors
   "chat.error.sttError": "ข้อผิดพลาด STT: {error} ลองสลับไมค์",
   "chat.error.autoCaptureCameraError": "ข้อผิดพลาดการจับภาพอัตโนมัติของกล้อง: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const thTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "หยุดวิดีโอชั่วคราวเพื่อใส่คำอธิบายเฟรมปัจจุบัน",
   "chat.error.imageGenInterrupted": "การสร้างรูปภาพถูกขัดจังหวะ",
   "chat.error.thinkingInterrupted": "การตอบกลับของ AI ถูกขัดจังหวะ",
+
+  // Errors - general
   "error.noLanguagePair": "ข้อผิดพลาดร้ายแรง: ไม่ได้เลือกคู่ภาษา",
   "error.translationFailed": "การแปลล้มเหลว กรุณาลองอีกครั้ง",
   "error.imageLimitReached": "ถึงขีดจำกัดการสร้างรูปภาพของเซสชันแล้ว กรุณาเริ่มเซสชันใหม่",

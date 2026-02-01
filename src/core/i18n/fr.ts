@@ -164,7 +164,11 @@ export const frTranslations: Record<string, string> = {
   "chat.liveSession.start": "Démarrer le direct",
   "chat.liveSession.liveBadge": "Direct",
   "chat.liveSession.connecting": "Connexion",
-  
+  "chat.liveSession.defaultLastMessage": "Bonjour ! Comment puis-je vous aider aujourd'hui ?",
+  "chat.liveSession.defaultSuggestion1": "Bonjour",
+  "chat.liveSession.defaultSuggestion2": "Bon matin",
+  "chat.liveSession.defaultSuggestion3": "Comment allez-vous ?",
+
   // Chat - errors
   "chat.error.sttError": "Erreur STT : {error}. Essayez de basculer le micro.",
   "chat.error.autoCaptureCameraError": "Erreur de capture automatique caméra : {error}",

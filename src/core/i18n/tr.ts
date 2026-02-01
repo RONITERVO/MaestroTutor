@@ -133,6 +133,12 @@ export const trTranslations: Record<string, string> = {
   "chat.liveSession.start": "Canlıyı başlat",
   "chat.liveSession.liveBadge": "Canlı",
   "chat.liveSession.connecting": "Bağlanıyor",
+  "chat.liveSession.defaultLastMessage": "Merhaba! Bugün size nasıl yardımcı olabilirim?",
+  "chat.liveSession.defaultSuggestion1": "Merhaba",
+  "chat.liveSession.defaultSuggestion2": "Günaydın",
+  "chat.liveSession.defaultSuggestion3": "Nasılsın?",
+
+  // Chat - errors
   "chat.error.sttError": "STT hatası: {error}. Mikrofonu değiştirmeyi deneyin.",
   "chat.error.autoCaptureCameraError": "Otomatik yakalama kamera hatası: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const trTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Mevcut kareye not eklemek için videoyu duraklatın",
   "chat.error.imageGenInterrupted": "Görsel oluşturma kesintiye uğradı.",
   "chat.error.thinkingInterrupted": "AI yanıtı kesintiye uğradı.",
+
+  // Errors - general
   "error.noLanguagePair": "Kritik hata: Dil çifti seçilmedi.",
   "error.translationFailed": "Çeviri başarısız oldu. Lütfen tekrar deneyin.",
   "error.imageLimitReached": "Oturum görsel oluşturma sınırına ulaşıldı. Lütfen yeni bir oturum başlatın.",
@@ -148,12 +156,16 @@ export const trTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Gemini API anahtarınız eksik. API Anahtarı ekranını açın ve anahtarınızı yapıştırın.",
   "error.apiKeyInvalid": "Gemini API anahtarınız geçersiz. Lütfen yazım hatalarını kontrol edin ve geçerli bir anahtar yapıştırın.",
   "error.apiQuotaExceeded": "Sohbet için Gemini API ücretsiz kotanız doldu. Faturalandırma adımlarını içeren API Anahtarı ekranını açtım. Bu sırada hala Canlı sohbeti kullanabilirsiniz.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Kamera izni reddedildi. Lütfen tarayıcı ayarlarından kamera erişimini etkinleştirin.",
   "error.cameraNotFound": "Seçilen kamera bulunamadı. Bağlı olduğundan emin olun veya farklı bir kamera seçin.",
   "error.cameraAccessNotSupported": "Tarayıcınız kamera erişimini desteklemiyor.",
   "error.cameraUnknown": "Kameraya erişirken bilinmeyen bir hata oluştu.",
   "error.cameraStreamNotAvailable": "Yakalama için kamera akışı mevcut değil.",
   "error.imageCaptureGeneric": "Görsel yakalanırken bilinmeyen hata.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "Görsel bağlam video öğesi hazır değil.",
   "error.snapshotVideoElementNotReady": "Anlık görüntü video öğesi hazır değil.",
   "error.visualContextCameraAccessNotSupported": "Görsel bağlam için kamera erişimi desteklenmiyor.",

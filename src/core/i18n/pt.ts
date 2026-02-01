@@ -133,6 +133,12 @@ export const ptTranslations: Record<string, string> = {
   "chat.liveSession.start": "Iniciar ao vivo",
   "chat.liveSession.liveBadge": "Ao vivo",
   "chat.liveSession.connecting": "Conectando",
+  "chat.liveSession.defaultLastMessage": "Olá! Como posso ajudar você hoje?",
+  "chat.liveSession.defaultSuggestion1": "Olá",
+  "chat.liveSession.defaultSuggestion2": "Bom dia",
+  "chat.liveSession.defaultSuggestion3": "Como você está?",
+
+  // Chat - errors
   "chat.error.sttError": "Erro STT: {error}. Tente alternar o microfone.",
   "chat.error.autoCaptureCameraError": "Erro de captura automática da câmera: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const ptTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Pause o vídeo para anotar o quadro atual",
   "chat.error.imageGenInterrupted": "A geração de imagem foi interrompida.",
   "chat.error.thinkingInterrupted": "A resposta da IA foi interrompida.",
+
+  // Errors - general
   "error.noLanguagePair": "Erro crítico: Nenhum par de idiomas selecionado.",
   "error.translationFailed": "Tradução falhou. Por favor, tente novamente.",
   "error.imageLimitReached": "Limite de geração de imagens da sessão atingido. Por favor, inicie uma nova sessão.",
@@ -148,12 +156,16 @@ export const ptTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Sua chave API do Gemini está faltando. Abra a tela de chave API e cole sua chave.",
   "error.apiKeyInvalid": "Sua chave API do Gemini é inválida. Verifique se há erros de digitação e cole uma chave válida.",
   "error.apiQuotaExceeded": "Sua cota gratuita da API Gemini para chat esgotou. Abra a tela de chave API com passos de faturamento. Enquanto isso, você ainda pode usar a conversa ao vivo.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Permissão da câmera negada. Por favor, habilite o acesso à câmera nas configurações do navegador.",
   "error.cameraNotFound": "Câmera selecionada não encontrada. Certifique-se de que está conectada ou selecione uma câmera diferente.",
   "error.cameraAccessNotSupported": "O acesso à câmera não é suportado pelo seu navegador.",
   "error.cameraUnknown": "Ocorreu um erro desconhecido ao acessar a câmera.",
   "error.cameraStreamNotAvailable": "Stream da câmera não disponível para captura.",
   "error.imageCaptureGeneric": "Erro desconhecido durante a captura de imagem.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "Elemento de vídeo do contexto visual não está pronto.",
   "error.snapshotVideoElementNotReady": "Elemento de vídeo para captura não está pronto.",
   "error.visualContextCameraAccessNotSupported": "Acesso à câmera não suportado para contexto visual.",

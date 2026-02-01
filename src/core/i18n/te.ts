@@ -19,7 +19,7 @@ export const teTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "మీ Gemini API కీని కనెక్ట్ చేయండి",
   "apiKeyGate.billingTitle": "అధిక కోటా కోసం బిల్లింగ్‌ను సెటప్ చేయండి",
-  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పుడూ తాకదు.",
+  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పుూ తాకదు.",
   "apiKeyGate.privacyPolicy": "గోప్యతా విధానం",
   "apiKeyGate.stepsTitle": "రెండు శీఘ్ర దశలు:",
   "apiKeyGate.stepOne": "Google AI Studioని తెరిచి API కీని సృష్టించండి.",
@@ -132,6 +132,12 @@ export const teTranslations: Record<string, string> = {
   "chat.liveSession.start": "లైవ్‌ని ప్రారంభించండి",
   "chat.liveSession.liveBadge": "లైవ్",
   "chat.liveSession.connecting": "కనెక్ట్ అవుతోంది",
+  "chat.liveSession.defaultLastMessage": "నమస్కారం! ఈరోజు నేను మీకు ఎలా సహాయపడగలను?",
+  "chat.liveSession.defaultSuggestion1": "నమస్కారం",
+  "chat.liveSession.defaultSuggestion2": "శుభోదయం",
+  "chat.liveSession.defaultSuggestion3": "మీరు ఎలా ఉన్నారు?",
+
+  // Chat - errors
   "chat.error.sttError": "STT లోపం: {error}. మైక్‌ని మార్చడానికి ప్రయత్నించండి.",
   "chat.error.autoCaptureCameraError": "ఆటో క్యాప్చర్ కెమెరా లోపం: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -140,19 +146,25 @@ export const teTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "ప్రస్తుత ఫ్రేమ్‌పై వ్యాఖ్యానించడానికి వీడియోను పాజ్ చేయండి",
   "chat.error.imageGenInterrupted": "చిత్ర తయారీకి అంతరాయం కలిగింది.",
   "chat.error.thinkingInterrupted": "AI ప్రతిస్పందనకు అంతరాయం కలిగింది.",
+
+  // Errors - general
   "error.noLanguagePair": "కీలక లోపం: ఏ భాషా జంట ఎంచుకోబడలేదు.",
-  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్ండి.",
   "error.imageLimitReached": "సెషన్ చిత్ర పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.tokenLimitReached": "సెషన్ టోకెన్ పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.apiKeyMissing": "మీ Gemini API కీ లేదు. API కీ స్క్రీన్‌ను తెరిచి మీ కీని అతికించండి.",
   "error.apiKeyInvalid": "మీ Gemini API కీ చెల్లదు. దయచేసి టైపోల కోసం తనిఖీ చేసి, చెల్లుబాటు అయ్యే కీని అతికించండి.",
   "error.apiQuotaExceeded": "చాట్ కోసం మీ Gemini API ఉచిత కోటా ముగిసింది. నేను బిల్లింగ్ దశలతో API కీ స్క్రీన్‌ను తెరిచాను. ఈలోపు మీరు లైవ్ సంభాషణను ఉపయోగించవచ్చు.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "కెమెరా అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్‌లలో కెమెరా యాక్సెస్‌ని ఎనేబుల్ చేయండి.",
   "error.cameraNotFound": "ఎంచుకున్న కెమెరా కనుగొనబడలేదు. ఇది కనెక్ట్ అయిందని నిర్ధారించుకోండి లేదా వేరే కెమెరాను ఎంచుకోండి.",
   "error.cameraAccessNotSupported": "మీ బ్రౌజర్ ద్వారా కెమెరా యాక్సెస్ మద్దతు లేదు.",
   "error.cameraUnknown": "కెమెరాను యాక్సెస్ చేస్తున్నప్పుడు తెలియని లోపం సంభవించింది.",
   "error.cameraStreamNotAvailable": "క్యాప్చర్ కోసం కెమెరా స్ట్రీమ్ అందుబాటులో లేదు.",
   "error.imageCaptureGeneric": "చిత్రాన్ని క్యాప్చర్ చేస్తున్నప్పుడు తెలియని లోపం.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "విజువల్ కాంటెక్స్ట్ వీడియో ఎలిమెంట్ సిద్ధంగా లేదు.",
   "error.snapshotVideoElementNotReady": "స్నాప్‌షాట్ వీడియో ఎలిమెంట్ సిద్ధంగా లేదు.",
   "error.visualContextCameraAccessNotSupported": "విజువల్ కాంటెక్స్ట్ కోసం కెమెరా యాక్సెస్ మద్దతు లేదు.",

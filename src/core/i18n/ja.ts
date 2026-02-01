@@ -133,6 +133,12 @@ export const jaTranslations: Record<string, string> = {
   "chat.liveSession.start": "ライブを開始",
   "chat.liveSession.liveBadge": "ライブ",
   "chat.liveSession.connecting": "接続中",
+  "chat.liveSession.defaultLastMessage": "こんにちは！今日は何かお手伝いできることはありますか？",
+  "chat.liveSession.defaultSuggestion1": "こんにちは",
+  "chat.liveSession.defaultSuggestion2": "おはようございます",
+  "chat.liveSession.defaultSuggestion3": "お元気ですか？",
+
+  // Chat - errors
   "chat.error.sttError": "STTエラー：{error}。マイクを切り替えてみてください。",
   "chat.error.autoCaptureCameraError": "自動キャプチャカメラエラー：{error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const jaTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "現在のフレームに注釈を付けるには動画を一時停止してください",
   "chat.error.imageGenInterrupted": "画像生成が中断されました。",
   "chat.error.thinkingInterrupted": "AIの応答が中断されました。",
+
+  // Errors - general
   "error.noLanguagePair": "重大なエラー：言語ペアが選択されていません。",
   "error.translationFailed": "翻訳に失敗しました。もう一度お試しください。",
   "error.imageLimitReached": "セッションの画像生成制限に達しました。新しいセッションを開始してください。",
@@ -154,8 +162,10 @@ export const jaTranslations: Record<string, string> = {
   "error.cameraUnknown": "カメラへのアクセス中に不明なエラーが発生しました。",
   "error.cameraStreamNotAvailable": "キャプチャ用のカメラストリームが利用できません。",
   "error.imageCaptureGeneric": "画像キャプチャ中に不明なエラーが発生しました。",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "ビジュアルコンテキストのビデオ要素の準備ができていません。",
-  "error.snapshotVideoElementNotReady": "スナップショット用のビデオ要素の準備ができていません。",
+  "error.snapshotVideoElementNotReady": "スナップショット用のビデオ要素의 준비가 되어 있지 않습니다.",
   "error.visualContextCameraAccessNotSupported": "ビジュアルコンテキストのカメラアクセスがサポートされていません。",
   "error.snapshotCameraAccessNotSupported": "スナップショットのカメラアクセスがサポートされていません。",
   "error.visualContext2DContext": "ビジュアルコンテキストの2Dコンテキストを取得できませんでした。",

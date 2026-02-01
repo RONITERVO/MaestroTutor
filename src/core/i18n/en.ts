@@ -165,7 +165,11 @@ export const enTranslations: Record<string, string> = {
   "chat.liveSession.start": "Start Live",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Connecting",
-  
+  "chat.liveSession.defaultLastMessage": "Hello! How can I help you today?",
+  "chat.liveSession.defaultSuggestion1": "Hello",
+  "chat.liveSession.defaultSuggestion2": "Good morning",
+  "chat.liveSession.defaultSuggestion3": "How are you?",
+
   // Chat - errors
   "chat.error.sttError": "STT Error: {error}. Try toggling mic.",
   "chat.error.autoCaptureCameraError": "Auto-Capture Camera Error: {error}",
