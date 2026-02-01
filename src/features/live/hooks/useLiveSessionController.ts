@@ -433,7 +433,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         });
 
         // Use FULL history context logic
-        const historySubsetForImg = computeHistorySubsetForMedia(messagesRef.current);
+        // Exclude the latest assistant turn since it's injected into the image-gen prompt as a user turn.
+        const historySubsetForImg = computeHistorySubsetForMedia(messagesRef.current)
+          .filter(m => m.id !== assistantId);
         let gpText: string | undefined = undefined;
         try { gpText = (await getGlobalProfileDB())?.text || undefined; } catch {}
 
