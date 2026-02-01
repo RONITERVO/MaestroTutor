@@ -1,3 +1,6 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import React, { useEffect } from 'react';
 import { ChatMessage } from '../../../core/types';
 import { getGlobalProfileDB } from '../services/globalProfile';

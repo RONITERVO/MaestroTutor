@@ -1,3 +1,6 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import { ChatMessage } from '../../core/types';
 
 export const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));

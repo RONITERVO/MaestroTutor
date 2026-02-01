@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect } from 'react';
 import { debugLogService, LogEntry } from '../services/debugLogService';
 import { IconXMark, IconTrash } from '../../../shared/ui/Icons';

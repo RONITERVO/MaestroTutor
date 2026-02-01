@@ -1,3 +1,6 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';

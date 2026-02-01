@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { streamGeminiLiveTts } from '../services/geminiLiveTts';
 import { pcmToWav } from '../utils/audioProcessing';

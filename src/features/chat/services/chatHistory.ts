@@ -1,4 +1,6 @@
-
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
 import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
 import { ChatMessage, ChatMeta, UserProfile } from '../../../core/types';
 import { sanitizeForPersistence } from '../utils/persistence';
