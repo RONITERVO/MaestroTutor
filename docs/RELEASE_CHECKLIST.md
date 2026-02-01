@@ -1,11 +1,11 @@
 # Maestro Tutor – Release Checklist (Play Store)
 
 ## 1) Pre‑Flight
-- [ ] App ID is correct: `com.ronitervo.maestrotutor`
-- [ ] API key gate works (blocks first launch)
-- [ ] No `.env` key in production build
-- [ ] Privacy policy is hosted (URL to provide Play Console)
-- [ ] App description mentions BYOK + open source
+- [X] App ID is correct: `com.ronitervo.maestrotutor`
+- [X] API key gate works (blocks first launch)
+- [X] No `.env` key in production build
+- [X] Privacy policy is hosted (URL to provide Play Console)
+- [X] App description mentions BYOK + open source
 
 - The "Default Icon" Flag
 If you upload an app with the default Capacitor/React/Vue logo as the app icon or splash screen, Google (and users) immediately perceive it as "low quality" or "spam."
@@ -19,8 +19,8 @@ Check: Verify android/app/src/main/res/mipmap-* contains your logo, not the defa
 
 ## 2) Versioning (Required for every upload)
 Edit `android/app/build.gradle`:
-- [ ] Increment `versionCode`
-- [ ] Update `versionName`
+- [2] Increment `versionCode`
+- ["1.0.0"] Update `versionName`
 
 ## 3) Build Web Assets
 ```bash
@@ -33,9 +33,9 @@ npx cap sync android
 keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias maestro
 ```
 Then:
-- [ ] Move `release.jks` to `android/keystore/`
-- [ ] Create `android/keystore.properties` from `android/keystore.properties.example`
-- [ ] Keep keystore + passwords in a safe place (you’ll need them forever)
+- [X] Move `release.jks` to `android/keystore/`
+- [X] Create `android/keystore.properties` from `android/keystore.properties.example`
+- [X] Keep keystore + passwords in a safe place (you’ll need them forever)
 
 ## 5) Build Release AAB
 ```bash
@@ -48,7 +48,7 @@ android/app/build/outputs/bundle/release/app-release.aab
 ```
 
 ## 6) Play Console – Internal Testing
-- [ ] Upload the `.aab`
+- [X] Upload the `.aab`
 - [ ] Add testers
 - [ ] Provide “App Access” instructions:
   - The app requires a Gemini API key
@@ -64,7 +64,7 @@ Select: "All or some functionality is restricted" -> Add instructions.
 
 Write: "This app requires a user-generated Google Gemini API Key. For testing purposes, please use this valid key: [PASTE_YOUR_KEY_HERE]. You can revoke this key after testing."
 
-- [ ] Add privacy policy URL
+- [X] Add privacy policy URL: `https://ronitervo.github.io/MaestroTutor/public/privacy.html`
 
 ## 7) Data Safety Form
 Recommended answers:

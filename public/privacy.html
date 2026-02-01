@@ -10,24 +10,34 @@
       h2 { font-size: 16px; margin-top: 20px; }
       p { margin: 8px 0; }
       ul { margin: 8px 0 8px 20px; }
-      code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; }
+      a { color: #2563eb; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .note { background: #fff1f2; border-left: 4px solid #e11d48; padding: 12px; margin: 16px 0; font-size: 0.9em; }
     </style>
   </head>
   <body>
     <h1>Privacy Policy</h1>
+    <p><strong>Effective Date:</strong> January 24, 2025</p>
     <p>Maestro Tutor operates as a client-side interface for the Google Gemini API.</p>
 
     <h2>Data Collection and Usage</h2>
     <ul>
       <li><strong>API Key:</strong> If you choose to enter a Google AI Studio API key, it is stored locally on your device. We do not collect or transmit your key to our servers.</li>
       <li><strong>Chat Content:</strong> Prompts and media you send are transmitted directly from your device to Google’s servers using the official Google GenAI SDK.</li>
-      <li><strong>No Backend:</strong> The app does not use a developer-hosted backend. Chat history is stored locally on your device. Uninstalling the app removes local data.</li>
+      <li><strong>Local Storage:</strong> The app does not use a developer-hosted backend. Chat history is stored locally on your device. <strong>Uninstalling the app permanently removes this local data.</strong></li>
     </ul>
 
+    <div class="note">
+      <strong>Important Note on Google's Data Retention:</strong><br/>
+      While uninstalling the app deletes your local history, data sent to the Google Gemini API is subject to Google's data retention policies.
+      If you use a free API key, Google may retain prompts and responses to improve their products.
+      Please do not share sensitive personal information (PII), passwords, or confidential data in your chats.
+    </div>
+
     <h2>Third-Party Services</h2>
-    <p>This app uses the Google Gemini API. Your interactions are governed by Google’s terms and privacy policy.</p>
+    <p>This app uses the Google Gemini API. Your interactions are governed by <a href="https://policies.google.com/privacy" target="_blank">Google’s Privacy Policy</a> and <a href="https://ai.google.dev/gemini-api/terms" target="_blank">Terms of Service</a>.</p>
 
     <h2>Contact</h2>
-    <p>If you have questions, please contact the developer via the GitHub repository.</p>
+    <p>If you have questions, please contact the developer via the <a href="https://github.com/ronitervo/maestrotutor/issues" target="_blank">GitHub repository</a>.</p>
   </body>
 </html>
