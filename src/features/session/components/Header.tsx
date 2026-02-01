@@ -139,7 +139,8 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
         className={`fixed top-4 left-0 z-50 transition-all duration-500 ease-out shadow-md border-y border-r rounded-r-full flex items-center cursor-pointer select-none touch-none
           ${statusConfig.color} ${statusConfig.borderColor}
           ${isOpen ? 'pr-4 pl-3 py-1.5 translate-x-0' : 'pl-3 pr-1 py-1.5 -translate-x-1 hover:translate-x-0'}
-        `}
+          `}
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
         onClick={handleClick}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
@@ -159,29 +160,34 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
             isExpanded={isOpen}
           />
         </div>
-      </div>
+       </div>
 
-      <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
-        {onOpenApiKey && (
-          <button
-            onClick={onOpenApiKey}
-            className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm
-              ${hasApiKey ? 'bg-emerald-600/85 text-white hover:bg-emerald-600' : 'bg-rose-600/90 text-white hover:bg-rose-600'}
-            `}
-            title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
-          >
-            <IconShield className="w-4 h-4" />
-            <span className="hidden sm:inline">{hasApiKey ? 'API Key' : 'API Key Required'}</span>
-          </button>
-        )}
+       <div
+         className={`fixed top-4 right-4 z-40 flex items-center gap-2 transition-all duration-300 ease-in-out ${
+           isOpen ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 translate-x-4 pointer-events-none'
+         }`}
+         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+       >
+         {onOpenApiKey && (
+           <button
+             onClick={onOpenApiKey}
+             className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm
+               ${hasApiKey ? 'bg-emerald-600/85 text-white hover:bg-emerald-600' : 'bg-rose-600/90 text-white hover:bg-rose-600'}
+             `}
+             title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
+           >
+             <IconShield className="w-4 h-4" />
+             <span className="hidden sm:inline">{hasApiKey ? 'API Key' : 'API Key Required'}</span>
+           </button>
+         )}
 
-        <button
-          onClick={toggleDebugLogs}
-          className="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full shadow-sm backdrop-blur-sm transition-all"
-          title="View Traffic Logs"
-        >
-          <IconTerminal className="w-4 h-4" />
-        </button>
+         <button
+           onClick={toggleDebugLogs}
+           className="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full shadow-sm backdrop-blur-sm transition-all"
+           title="View Traffic Logs"
+         >
+           <IconTerminal className="w-4 h-4" />
+         </button>
       </div>
     </>
   );
