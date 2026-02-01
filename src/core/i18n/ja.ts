@@ -165,7 +165,7 @@ export const jaTranslations: Record<string, string> = {
 
   // Errors - visual context
   "error.visualContextVideoElementNotReady": "ビジュアルコンテキストのビデオ要素の準備ができていません。",
-  "error.snapshotVideoElementNotReady": "スナップショット用のビデオ要素의 준비가 되어 있지 않습니다.",
+  "error.snapshotVideoElementNotReady": "スナップショット用のビデオ要素の準備ができていません。",
   "error.visualContextCameraAccessNotSupported": "ビジュアルコンテキストのカメラアクセスがサポートされていません。",
   "error.snapshotCameraAccessNotSupported": "スナップショットのカメラアクセスがサポートされていません。",
   "error.visualContext2DContext": "ビジュアルコンテキストの2Dコンテキストを取得できませんでした。",

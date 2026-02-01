@@ -19,7 +19,7 @@ export const teTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "మీ Gemini API కీని కనెక్ట్ చేయండి",
   "apiKeyGate.billingTitle": "అధిక కోటా కోసం బిల్లింగ్‌ను సెటప్ చేయండి",
-  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పుూ తాకదు.",
+  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పుడూ తాకదు.",
   "apiKeyGate.privacyPolicy": "గోప్యతా విధానం",
   "apiKeyGate.stepsTitle": "రెండు శీఘ్ర దశలు:",
   "apiKeyGate.stepOne": "Google AI Studioని తెరిచి API కీని సృష్టించండి.",
@@ -149,7 +149,7 @@ export const teTranslations: Record<string, string> = {
 
   // Errors - general
   "error.noLanguagePair": "కీలక లోపం: ఏ భాషా జంట ఎంచుకోబడలేదు.",
-  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్ండి.",
+  "error.translationFailed": "అనువాదం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
   "error.imageLimitReached": "సెషన్ చిత్ర పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.tokenLimitReached": "సెషన్ టోకెన్ పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.apiKeyMissing": "మీ Gemini API కీ లేదు. API కీ స్క్రీన్‌ను తెరిచి మీ కీని అతికించండి.",

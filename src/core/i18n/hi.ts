@@ -127,7 +127,7 @@ export const hiTranslations: Record<string, string> = {
   "chat.header.maestroAvatar": "मेस्ट्रो अवतार अपडेट हो रहा है",
   "chat.header.watchingVideo": "वीडियो देख रहे हैं",
   "chat.header.viewingAbove": "पिछले संदेश देख रहे हैं",
-  "chat.header.liveSession": "लाइવ સત્ર",
+  "chat.header.liveSession": "लाइव सत्र",
   "chat.liveSession.stop": "लाइव बंद करें",
   "chat.liveSession.retry": "लाइव पुनः प्रयास करें",
   "chat.liveSession.start": "लाइव शुरू करें",

@@ -66,7 +66,7 @@ export const thTranslations: Record<string, string> = {
   "chat.placeholder.normal.sttActive": "พูดใน {language} หรือพิมพ์...",
   "chat.placeholder.normal.sttInactive": "พิมพ์หรือแตะไมค์เพื่อพูดใน {language}...",
   "chat.placeholder.suggestion.listening": "พูด {language} เพื่อแปล...",
-  "chat.placeholder.suggestion.sttActive": "พูดหรือพิมพ์ in {language} เพื่อแปล...",
+  "chat.placeholder.suggestion.sttActive": "พูดหรือพิมพ์ใน {language} เพื่อแปล...",
   "chat.placeholder.suggestion.sttInactive": "พิมพ์ใน {language} เพื่อแปล...",
   "chat.camera.turnOn": "เปิดการแสดงตัวอย่างกล้อง",
   "chat.camera.turnOff": "ปิดการแสดงตัวอย่างกล้อง",

@@ -169,7 +169,7 @@ export const viTranslations: Record<string, string> = {
   "error.visualContextCaptureFailedNotFound": "Ngữ cảnh trực quan thất bại: Không tìm thấy camera.",
   "error.snapshotCaptureFailedNotFound": "Chụp ảnh thất bại: Không tìm thấy camera.",
   "error.visualContextCaptureFailedNotReady": "Ngữ cảnh trực quan thất bại: Camera chưa sẵn sàng hoặc có vấn đề với luồng. {details}",
-  "error.snapshotCaptureFailedNotReady": "Chụp ảnh thất bại: Camera chưa sẵn sàng hoặc có vấn đề with luồng. {details}",
+  "error.snapshotCaptureFailedNotReady": "Chụp ảnh thất bại: Camera chưa sẵn sàng hoặc có vấn đề với luồng. {details}",
   "error.visualContextCaptureFailedGeneric": "Ngữ cảnh trực quan thất bại: {details}",
   "error.snapshotCaptureFailedGeneric": "Chụp ảnh thất bại: {details}",
 };
