@@ -133,6 +133,12 @@ export const nlTranslations: Record<string, string> = {
   "chat.liveSession.start": "Live starten",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Verbinden",
+  "chat.liveSession.defaultLastMessage": "Hallo! Hoe kan ik je vandaag helpen?",
+  "chat.liveSession.defaultSuggestion1": "Hallo",
+  "chat.liveSession.defaultSuggestion2": "Goedemorgen",
+  "chat.liveSession.defaultSuggestion3": "Hoe gaat het?",
+
+  // Chat - errors
   "chat.error.sttError": "STT-fout: {error}. Probeer de microfoon te wisselen.",
   "chat.error.autoCaptureCameraError": "Automatische camera-opname fout: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const nlTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Pauzeer de video om het huidige frame te annoteren",
   "chat.error.imageGenInterrupted": "Het genereren van de afbeelding werd onderbroken.",
   "chat.error.thinkingInterrupted": "Het AI-antwoord werd onderbroken.",
+
+  // Errors - general
   "error.noLanguagePair": "Kritieke fout: Geen taalpaar geselecteerd.",
   "error.translationFailed": "Vertaling mislukt. Probeer het opnieuw.",
   "error.imageLimitReached": "Sessielimiet voor afbeelding genereren bereikt. Start een nieuwe sessie.",
@@ -154,6 +162,8 @@ export const nlTranslations: Record<string, string> = {
   "error.cameraUnknown": "Er is een onbekende fout opgetreden bij het openen van de camera.",
   "error.cameraStreamNotAvailable": "Camerastream niet beschikbaar voor opname.",
   "error.imageCaptureGeneric": "Onbekende fout bij het vastleggen van afbeelding.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "Visuele context video-element niet gereed.",
   "error.snapshotVideoElementNotReady": "Snapshot video-element niet gereed.",
   "error.visualContextCameraAccessNotSupported": "Cameratoegang niet ondersteund voor visuele context.",

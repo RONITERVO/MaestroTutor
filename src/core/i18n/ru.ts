@@ -133,6 +133,12 @@ export const ruTranslations: Record<string, string> = {
   "chat.liveSession.start": "Начать трансляцию",
   "chat.liveSession.liveBadge": "Прямой эфир",
   "chat.liveSession.connecting": "Подключение",
+  "chat.liveSession.defaultLastMessage": "Привет! Чем я могу тебе сегодня помочь?",
+  "chat.liveSession.defaultSuggestion1": "Привет",
+  "chat.liveSession.defaultSuggestion2": "Доброе утро",
+  "chat.liveSession.defaultSuggestion3": "Как дела?",
+
+  // Chat - errors
   "chat.error.sttError": "Ошибка STT: {error}. Попробуйте переключить микрофон.",
   "chat.error.autoCaptureCameraError": "Ошибка автозахвата камеры: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const ruTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Поставьте видео на паузу, чтобы аннотировать текущий кадр",
   "chat.error.imageGenInterrupted": "Генерация изображения была прервана.",
   "chat.error.thinkingInterrupted": "Ответ ИИ был прерван.",
+
+  // Errors - general
   "error.noLanguagePair": "Критическая ошибка: Языковая пара не выбрана.",
   "error.translationFailed": "Перевод не удался. Пожалуйста, попробуйте снова.",
   "error.imageLimitReached": "Достигнут лимит генерации изображений сессии. Пожалуйста, начните новую сессию.",
@@ -154,6 +162,8 @@ export const ruTranslations: Record<string, string> = {
   "error.cameraUnknown": "Произошла неизвестная ошибка при доступе к камере.",
   "error.cameraStreamNotAvailable": "Поток камеры недоступен для захвата.",
   "error.imageCaptureGeneric": "Неизвестная ошибка при захвате изображения.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "Видеоэлемент визуального контекста не готов.",
   "error.snapshotVideoElementNotReady": "Видеоэлемент для снимка не готов.",
   "error.visualContextCameraAccessNotSupported": "Доступ к камере не поддерживается для визуального контекста.",

@@ -9,7 +9,7 @@ export const plTranslations: Record<string, string> = {
   "startPage.loadChats": "Wczytaj czaty",
   "startPage.maestroAvatar": "Awatar Maestro",
   "startPage.addMaestroAvatar": "Dodaj awatar Maestro",
-  "startPage.loadSuccess": "Pomyślnie wczytano i zastąpiono {count} sesji czatu!",
+  "startPage.loadSuccess": "{count} sesji czatu pomyślnie wczytano i zastąpiono!",
   "startPage.loadError": "Błąd wczytywania czatów. Plik może być uszkodzony lub w nieprawidłowym formacie.",
   "startPage.noChatsToSave": "Brak historii czatów do zapisania.",
   "startPage.saveError": "Błąd zapisywania czatów. Sprawdź konsolę, aby uzyskać więcej szczegółów.",
@@ -58,36 +58,50 @@ export const plTranslations: Record<string, string> = {
   "chat.speakThisLine": "Wypowiedz tę linię",
   "chat.languageSelector.openGlobe": "Zmień języki",
   "chat.maestroTranscriptScrollwheel": "Widok przewijania transkrypcji Maestro",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT aktywne: Słucham...",
   "chat.mic.enableStt": "Włącz STT",
   "chat.mic.disableStt": "Zatrzymaj STT",
   "chat.mic.recordingAudioNote": "Nagrywanie dźwięku...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "Słucham w {language}...",
   "chat.placeholder.normal.sttActive": "Mów po {language} lub pisz...",
   "chat.placeholder.normal.sttInactive": "Pisz lub dotknij mikrofonu, aby mówić po {language}...",
   "chat.placeholder.suggestion.listening": "Mów po {language}, aby przetłumaczyć...",
   "chat.placeholder.suggestion.sttActive": "Mów lub pisz po {language}, aby przetłumaczyć...",
   "chat.placeholder.suggestion.sttInactive": "Pisz po {language}, aby przetłumaczyć...",
+
+  // Chat - camera
   "chat.camera.turnOn": "Włącz podgląd kamery",
   "chat.camera.turnOff": "Wyłącz podgląd kamery",
   "chat.camera.imageGenCameraLabel": "Generowanie obrazu",
   "chat.camera.captureOrRecord": "Dotknij, aby zrobić zdjęcie, przytrzymaj, aby nagrać wideo",
   "chat.camera.stopRecording": "Zatrzymaj nagrywanie",
   "chat.bookIcon.toggleImageGen": "Przełącz tryb generowania obrazu",
+
+  // Chat - image
   "chat.imagePreview.alt": "Podgląd",
   "chat.image.dragToEnlarge": "Przeciągnij róg, aby powiększyć",
   "chat.image.dragToShrink": "Przeciągnij róg, aby zmniejszyć",
   "chat.annotateImage": "Dodaj adnotację do obrazu",
   "chat.annotateVideoFrame": "Dodaj adnotację do bieżącej klatki",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Obraz do adnotacji",
   "chat.annotateModal.cancel": "Anuluj",
   "chat.annotateModal.saveAndAttach": "Zapisz i załącz",
   "chat.annotateModal.undo": "Cofnij",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "Powiedz: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Wypowiedz sugestię: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Przełącz tryb tworzenia sugestii",
   "chat.suggestion.createAction": "Utwórz sugestię",
   "chat.suggestion.creating": "Tworzenie sugestii...",
+
+  // Chat - maestro status
   "chat.maestro.idle": "Maestro jest bezczynny",
   "chat.maestro.title.idle": "Maestro jest obecnie bezczynny.",
   "chat.maestro.resting": "Maestro odpoczywa...",
@@ -104,6 +118,8 @@ export const plTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro czeka na twój wpis lub głos.",
   "chat.maestro.holding": "Maestro czeka",
   "chat.maestro.title.holding": "Maestro czeka (ponowne włączenie wstrzymane)",
+
+  // Chat - bookmark
   "chat.bookmark.hiddenHeaderAria": "Ukryte wiadomości powyżej",
   "chat.bookmark.isHere": "Zakładka jest tutaj",
   "chat.bookmark.setHere": "Ustaw zakładkę tutaj",
@@ -114,11 +130,15 @@ export const plTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Pokaż o jeden więcej",
   "chat.bookmark.incrementTitle": "Więcej",
   "chat.bookmark.hiddenBelowHeaderAria": "Ukryte wiadomości poniżej",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Optymalizacja wideo...",
   "chat.sendPrep.optimizingImage": "Optymalizacja obrazu...",
   "chat.sendPrep.preparingMedia": "Przygotowywanie mediów...",
   "chat.sendPrep.uploadingMedia": "Przesyłanie mediów...",
   "chat.sendPrep.finalizing": "Finalizowanie...",
+
+  // Chat - header activity tokens
   "chat.header.annotating": "Dodawanie adnotacji",
   "chat.header.recordingAudio": "Nagrywanie dźwięku",
   "chat.header.recordingVideo": "Nagrywanie wideo",
@@ -128,11 +148,19 @@ export const plTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Oglądanie wideo",
   "chat.header.viewingAbove": "Przeglądanie poprzednich wiadomości",
   "chat.header.liveSession": "Sesja na żywo",
+
+  // Chat - live session
   "chat.liveSession.stop": "Zatrzymaj na żywo",
   "chat.liveSession.retry": "Ponów na żywo",
   "chat.liveSession.start": "Rozpocznij na żywo",
   "chat.liveSession.liveBadge": "Na żywo",
   "chat.liveSession.connecting": "Łączenie",
+  "chat.liveSession.defaultLastMessage": "Cześć! Jak mogę Ci dzisiaj pomóc?",
+  "chat.liveSession.defaultSuggestion1": "Cześć",
+  "chat.liveSession.defaultSuggestion2": "Dzień dobry",
+  "chat.liveSession.defaultSuggestion3": "Jak się masz?",
+
+  // Chat - errors
   "chat.error.sttError": "Błąd STT: {error}. Spróbuj przełączyć mikrofon.",
   "chat.error.autoCaptureCameraError": "Błąd automatycznego przechwytywania kamery: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +169,8 @@ export const plTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Wstrzymaj wideo, aby dodać adnotację do bieżącej klatki",
   "chat.error.imageGenInterrupted": "Generowanie obrazu zostało przerwane.",
   "chat.error.thinkingInterrupted": "Odpowiedź AI została przerwana.",
+
+  // Errors - general
   "error.noLanguagePair": "Błąd krytyczny: Nie wybrano pary języków.",
   "error.translationFailed": "Tłumaczenie nie powiodło się. Spróbuj ponownie.",
   "error.imageLimitReached": "Osiągnięto limit generowania obrazów sesji. Rozpocznij nową sesję.",
@@ -148,12 +178,16 @@ export const plTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Brak klucza API Gemini. Otwórz ekran klucza API i wklej swój klucz.",
   "error.apiKeyInvalid": "Klucz API Gemini jest nieprawidłowy. Sprawdź, czy nie ma literówek i wklej prawidłowy klucz.",
   "error.apiQuotaExceeded": "Twój bezpłatny limit Gemini API na czat został wyczerpany. Otworzyłem ekran klucza API z krokami rozliczeniowymi. W międzyczasie nadal możesz korzystać z rozmowy na żywo.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Odmówiono dostępu do kamery. Włącz dostęp do kamery w ustawieniach przeglądarki.",
   "error.cameraNotFound": "Nie znaleziono wybranej kamery. Upewnij się, że jest podłączona lub wybierz inną kamerę.",
   "error.cameraAccessNotSupported": "Dostęp do kamery nie jest obsługiwany przez twoją przeglądarkę.",
   "error.cameraUnknown": "Wystąpił nieznany błąd podczas dostępu do kamery.",
   "error.cameraStreamNotAvailable": "Strumień kamery niedostępny do przechwycenia.",
   "error.imageCaptureGeneric": "Nieznany błąd podczas przechwytywania obrazu.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "Element wideo kontekstu wizualnego nie jest gotowy.",
   "error.snapshotVideoElementNotReady": "Element wideo zrzutu ekranu nie jest gotowy.",
   "error.visualContextCameraAccessNotSupported": "Dostęp do kamery nieobsługiwany dla kontekstu wizualnego.",

@@ -133,6 +133,12 @@ export const taTranslations: Record<string, string> = {
   "chat.liveSession.start": "நேரடியைத் தொடங்கவும்",
   "chat.liveSession.liveBadge": "நேரடி",
   "chat.liveSession.connecting": "இணைக்கிறது",
+  "chat.liveSession.defaultLastMessage": "வணக்கம்! இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?",
+  "chat.liveSession.defaultSuggestion1": "வணக்கம்",
+  "chat.liveSession.defaultSuggestion2": "காலை வணக்கம்",
+  "chat.liveSession.defaultSuggestion3": "நீங்கள் எப்படி இருக்கிறீர்கள்?",
+
+  // Chat - errors
   "chat.error.sttError": "STT பிழை: {error}. மைக்கை மாற்றி முயற்சிக்கவும்.",
   "chat.error.autoCaptureCameraError": "தானியங்கி கேமரா பிடிப்பு பிழை: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const taTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "தற்போதைய ஃப்ரேமில் குறிப்பு சேர்க்க வீடியோவை இடைநிறுத்தவும்",
   "chat.error.imageGenInterrupted": "படம் உருவாக்கம் தடைப்பட்டது.",
   "chat.error.thinkingInterrupted": "AI பதில் தடைப்பட்டது.",
+
+  // Errors - general
   "error.noLanguagePair": "முக்கியமான பிழை: மொழி ஜோடி எதுவும் தேர்ந்தெடுக்கப்படவில்லை.",
   "error.translationFailed": "மொழிபெயர்ப்பு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.",
   "error.imageLimitReached": "அமர்வு படம் உருவாக்கும் வரம்பை அடைந்தது. புதிய அமர்வைத் தொடங்கவும்.",
@@ -148,12 +156,16 @@ export const taTranslations: Record<string, string> = {
   "error.apiKeyMissing": "உங்கள் Gemini API சாவி இல்லை. API சாவி திரையைத் திறந்து உங்கள் சாவியை ஒட்டவும்.",
   "error.apiKeyInvalid": "உங்கள் Gemini API சாவி தவறானது. எழுத்துப் பிழைகளைச் சரிபார்த்து சரியான சாவியை ஒட்டவும்.",
   "error.apiQuotaExceeded": "அரட்டைக்கான உங்கள் Gemini API இலவச ஒதுக்கீடு முடிந்தது. பில்லிங் படிகளுடன் API சாவி திரையைத் திறந்தேன். இதற்கிடையில் நீங்கள் நேரடி உரையாடலைப் பயன்படுத்தலாம்.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "கேமரா அனுமதி மறுக்கப்பட்டது. உலாவி அமைப்புகளில் கேமரா அணுகலை இயக்கவும்.",
   "error.cameraNotFound": "தேர்ந்தெடுக்கப்பட்ட கேமரா கண்டறியப்படவில்லை. இணைக்கப்பட்டுள்ளதா என்பதை உறுதிசெய்யவும் அல்லது வேறு கேமராவைத் தேர்ந்தெடுக்கவும்.",
   "error.cameraAccessNotSupported": "உங்கள் உலாவியால் கேமரா அணுகல் ஆதரிக்கப்படவில்லை.",
   "error.cameraUnknown": "கேமராவை அணுகும்போது தெரியாத பிழை ஏற்பட்டது.",
   "error.cameraStreamNotAvailable": "பிடிப்புக்கு கேமரா ஸ்ட்ரீம் கிடைக்கவில்லை.",
   "error.imageCaptureGeneric": "படம் பிடிக்கும்போது தெரியாத பிழை.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "விஷுவல் கான்டெக்ஸ்ட் வீடியோ எலிமென்ட் தயாராக இல்லை.",
   "error.snapshotVideoElementNotReady": "ஸ்னாப்ஷாட் வீடியோ எலிமென்ட் தயாராக இல்லை.",
   "error.visualContextCameraAccessNotSupported": "விஷுவல் கான்டெக்ஸ்டிற்கு கேமரா அணுகல் ஆதரிக்கப்படவில்லை.",

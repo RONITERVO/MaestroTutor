@@ -11,7 +11,7 @@ import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../../core/config/la
 import { safeSaveChatHistoryDB } from '../../chat';
 import { useMaestroStore } from '../../../store';
 import { selectIsSending } from '../../../store/slices/uiSlice';
-import { findLanguageByExactCode, findLanguageByPrimarySubtag, parseLanguagePairId } from '../../../shared/utils/languageUtils';
+import { findLanguageByExactCode, findLanguageByPrimarySubtag, parseLanguagePairId, getPrimaryCode } from '../../../shared/utils/languageUtils';
 
 export interface UseLanguageSelectionControllerConfig {
   isSettingsLoaded: boolean;
@@ -89,6 +89,16 @@ export const useLanguageSelectionController = ({
     }
 
     if (languagePairs.some(p => p.id === newPairId)) {
+      // Determine correct STT language based on current mode
+      const isSuggestionMode = state.settings.isSuggestionMode;
+      const newSttLang = getPrimaryCode(isSuggestionMode ? tempNativeLangCode : tempTargetLangCode);
+
+      // Update STT language along with pair selection to ensure they stay in sync
+      handleSettingsChange('stt', {
+        ...state.settings.stt,
+        language: newSttLang
+      });
+
       handleSettingsChange('selectedLanguagePairId', newPairId);
     }
     setIsLanguageSelectionOpen(false);

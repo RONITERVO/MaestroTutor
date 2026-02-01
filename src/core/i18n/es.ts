@@ -165,7 +165,11 @@ export const esTranslations: Record<string, string> = {
   "chat.liveSession.start": "Iniciar en vivo",
   "chat.liveSession.liveBadge": "En vivo",
   "chat.liveSession.connecting": "Conectando",
-  
+  "chat.liveSession.defaultLastMessage": "¡Hola! ¿Cómo puedo ayudarte hoy?",
+  "chat.liveSession.defaultSuggestion1": "Hola",
+  "chat.liveSession.defaultSuggestion2": "Buenos días",
+  "chat.liveSession.defaultSuggestion3": "¿Cómo estás?",
+
   // Chat - errors
   "chat.error.sttError": "Error de STT: {error}. Intenta alternar el micrófono.",
   "chat.error.autoCaptureCameraError": "Error de captura automática de cámara: {error}",

@@ -128,11 +128,17 @@ export const zhTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "观看视频中",
   "chat.header.viewingAbove": "查看上方消息",
   "chat.header.liveSession": "实时会话",
-  "chat.liveSession.stop": "停止直播",
-  "chat.liveSession.retry": "重试直播",
-  "chat.liveSession.start": "开始直播",
-  "chat.liveSession.liveBadge": "直播",
+  "chat.liveSession.stop": "停止实时",
+  "chat.liveSession.retry": "重试实时",
+  "chat.liveSession.start": "开始实时",
+  "chat.liveSession.liveBadge": "实时",
   "chat.liveSession.connecting": "连接中",
+  "chat.liveSession.defaultLastMessage": "你好！今天我能为你做些什么？",
+  "chat.liveSession.defaultSuggestion1": "你好",
+  "chat.liveSession.defaultSuggestion2": "早上好",
+  "chat.liveSession.defaultSuggestion3": "你好吗？",
+
+  // Chat - errors
   "chat.error.sttError": "STT错误：{error}。请尝试切换麦克风。",
   "chat.error.autoCaptureCameraError": "自动捕获相机错误：{error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const zhTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "暂停视频以标注当前帧",
   "chat.error.imageGenInterrupted": "图像生成已中断。",
   "chat.error.thinkingInterrupted": "AI响应已中断。",
+
+  // Errors - general
   "error.noLanguagePair": "严重错误：未选择语言对。",
   "error.translationFailed": "翻译失败。请重试。",
   "error.imageLimitReached": "已达到会话图像生成限制。请开始新会话。",
@@ -154,6 +162,8 @@ export const zhTranslations: Record<string, string> = {
   "error.cameraUnknown": "访问相机时发生未知错误。",
   "error.cameraStreamNotAvailable": "相机流不可用于捕获。",
   "error.imageCaptureGeneric": "捕获图像时发生未知错误。",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "视觉上下文视频元素未就绪。",
   "error.snapshotVideoElementNotReady": "快照视频元素未就绪。",
   "error.visualContextCameraAccessNotSupported": "视觉上下文不支持相机访问。",

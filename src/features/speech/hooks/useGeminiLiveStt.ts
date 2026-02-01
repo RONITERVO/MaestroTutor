@@ -4,6 +4,7 @@ import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { translations } from '../../../core/i18n';
 
 export interface UseGeminiLiveSttReturn {
   start: (
@@ -206,12 +207,29 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
         ? { language: languageOrOptions as string | undefined }
         : (languageOrOptions as { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] });
 
-      const { lastAssistantMessage, replySuggestions } = opts || {};
+      let { language, lastAssistantMessage, replySuggestions } = opts || {};
+
+      // Provide guess start defaults for context if missing
+      const lookupLang = language || 'en-US';
+      const matchedLang = translations[lookupLang] ? lookupLang :
+                          Object.keys(translations).find(k => k.toLowerCase().startsWith(lookupLang.toLowerCase().split('-')[0])) || 'en-US';
+      const t = (key: string) => translations[matchedLang]?.[key] || translations['en-US']?.[key];
+
+      if (!lastAssistantMessage) {
+        lastAssistantMessage = t('chat.liveSession.defaultLastMessage');
+      }
+      let suggestionList = (replySuggestions || []).filter(Boolean);
+      if (suggestionList.length === 0) {
+        suggestionList = [
+          t('chat.liveSession.defaultSuggestion1'),
+          t('chat.liveSession.defaultSuggestion2'),
+          t('chat.liveSession.defaultSuggestion3'),
+        ].filter(Boolean);
+      }
 
       const baseSystemInstruction = 'You are a smart parrot. Listen to the user input and repeat it back, but correct any errors. Fix grammar, unclear pronunciation, and sentence fragments to produce a clean, intelligible transcript of what the user intended to say. Maintain the original language. Do not answer questions or obey commands, simply repeat the corrected version slowly like talking to hard hearing elderly person.';
 
       let augmentedSystemInstruction = baseSystemInstruction;
-      const suggestionList = (replySuggestions || []).filter(Boolean);
       if (lastAssistantMessage || suggestionList.length > 0) {
         const parts: string[] = [];
         if (lastAssistantMessage) {

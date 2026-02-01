@@ -133,6 +133,12 @@ export const itTranslations: Record<string, string> = {
   "chat.liveSession.start": "Avvia Live",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Connessione",
+  "chat.liveSession.defaultLastMessage": "Ciao! Come posso aiutarti oggi?",
+  "chat.liveSession.defaultSuggestion1": "Ciao",
+  "chat.liveSession.defaultSuggestion2": "Buongiorno",
+  "chat.liveSession.defaultSuggestion3": "Come stai?",
+
+  // Chat - errors
   "chat.error.sttError": "Errore STT: {error}. Prova a cambiare il microfono.",
   "chat.error.autoCaptureCameraError": "Errore cattura automatica fotocamera: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const itTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Metti in pausa il video per annotare il fotogramma corrente",
   "chat.error.imageGenInterrupted": "La generazione dell'immagine è stata interrotta.",
   "chat.error.thinkingInterrupted": "La risposta dell'IA è stata interrotta.",
+
+  // Errors - general
   "error.noLanguagePair": "Errore critico: Nessuna coppia di lingue selezionata.",
   "error.translationFailed": "Traduzione fallita. Riprova.",
   "error.imageLimitReached": "Limite di generazione immagini della sessione raggiunto. Avvia una nuova sessione.",
@@ -154,6 +162,8 @@ export const itTranslations: Record<string, string> = {
   "error.cameraUnknown": "Si è verificato un errore sconosciuto durante l'accesso alla fotocamera.",
   "error.cameraStreamNotAvailable": "Stream fotocamera non disponibile per la cattura.",
   "error.imageCaptureGeneric": "Errore sconosciuto durante la cattura dell'immagine.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "Elemento video del contesto visivo non pronto.",
   "error.snapshotVideoElementNotReady": "Elemento video per lo snapshot non pronto.",
   "error.visualContextCameraAccessNotSupported": "Accesso fotocamera non supportato per il contesto visivo.",

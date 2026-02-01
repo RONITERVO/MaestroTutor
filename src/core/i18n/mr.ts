@@ -133,6 +133,12 @@ export const mrTranslations: Record<string, string> = {
   "chat.liveSession.start": "लाइव्ह सुरू करा",
   "chat.liveSession.liveBadge": "लाइव्ह",
   "chat.liveSession.connecting": "कनेक्ट करत आहे",
+  "chat.liveSession.defaultLastMessage": "नमस्कार! आज मी तुम्हाला कशी मदत करू शकतो?",
+  "chat.liveSession.defaultSuggestion1": "नमस्कार",
+  "chat.liveSession.defaultSuggestion2": "शुभ प्रभात",
+  "chat.liveSession.defaultSuggestion3": "तुम्ही कसे आहात?",
+
+  // Chat - errors
   "chat.error.sttError": "STT त्रुटी: {error}. माइक बदलून पहा.",
   "chat.error.autoCaptureCameraError": "ऑटो कॅप्चर कॅमेरा त्रुटी: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -141,6 +147,8 @@ export const mrTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "वर्तमान फ्रेमवर टिपणी करण्यासाठी व्हिडिओ थांबवा",
   "chat.error.imageGenInterrupted": "प्रतिमा निर्मितीमध्ये व्यत्यय आला.",
   "chat.error.thinkingInterrupted": "AI प्रतिसादामध्ये व्यत्यय आला.",
+
+  // Errors - general
   "error.noLanguagePair": "गंभीर त्रुटी: कोणतीही भाषा जोडी निवडलेली नाही.",
   "error.translationFailed": "अनुवाद अयशस्वी झाला. कृपया पुन्हा प्रयत्न करा.",
   "error.imageLimitReached": "सत्र प्रतिमा निर्मिती मर्यादा गाठली. कृपया नवीन सत्र सुरू करा.",
@@ -154,6 +162,8 @@ export const mrTranslations: Record<string, string> = {
   "error.cameraUnknown": "कॅमेऱ्यात प्रवेश करताना अज्ञात त्रुटी आली.",
   "error.cameraStreamNotAvailable": "कॅप्चरसाठी कॅमेरा स्ट्रीम उपलब्ध नाही.",
   "error.imageCaptureGeneric": "प्रतिमा कॅप्चर करताना अज्ञात त्रुटी.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "दृश्य संदर्भ व्हिडिओ घटक तयार नाही.",
   "error.snapshotVideoElementNotReady": "स्नॅपशॉट व्हिडिओ घटक तयार नाही.",
   "error.visualContextCameraAccessNotSupported": "दृश्य संदर्भासाठी कॅमेरा प्रवेश समर्थित नाही.",
