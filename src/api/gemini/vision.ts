@@ -5,6 +5,13 @@ import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { getAi } from './client';
 
+// Add invisible noise to text without changing its meaning
+const addNoise = (text: string): string => {
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2, 8);
+  return `${text} <!-- ${timestamp}_${randomId} -->`;
+};
+
 export const generateImage = async (params: {
   prompt?: string;
   history?: any[];
@@ -65,9 +72,9 @@ export const generateImage = async (params: {
 
   const currentParts: any[] = [];
   if (prompt) {
-    currentParts.push({ text: prompt });
+    currentParts.push({ text: addNoise(prompt) });
   } else if (latestMessageText) {
-    currentParts.push({ text: latestMessageText });
+    currentParts.push({ text: addNoise(latestMessageText) });
   }
 
   if (maestroAvatarUri) {
