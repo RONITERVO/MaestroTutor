@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Gemini Language Tutor</title> 
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar for webkit browsers */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
+
+      /* Splash screen styles */
+      #splash-screen {
+        position: fixed;
+        z-index: 9999;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #f8fafc; /* slate-50 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease-in-out;
+        opacity: 1;
+      }
+      #splash-screen.fade-out { opacity: 0; pointer-events: none; }
+      .splash-content { text-align: center; animation: pulseFade 2.5s infinite ease-in-out; }
+      @keyframes pulseFade {
+          0%, 100% { opacity: 0.8; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.02); }
+      }
+
+      /* Utilities */
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+      /* Image placeholder spinner */
+      .image-placeholder-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border-left-color: #09f;
+        animation: spin 1s ease infinite;
+      }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+      .globe-bg {
+        background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Flag_map_of_the_world_%282009_version%29.svg/2000px-Flag_map_of_the_world_%282009_version%29.svg.png');
+        background-size: 200% auto;
+        background-position: 0% center;
+        animation: rotate-globe 120s linear infinite;
+        box-shadow: inset 0 0 30px 10px rgba(0,0,0,0.5), 0 0 25px -8px rgba(70, 130, 180, 0.6);
+        border-color: rgba(113, 168, 212, 0.4);
+      }
+      @keyframes rotate-globe { from { background-position: 0% center; } to { background-position: 200% center; } }
+
+      /* Base styles */
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+    </style>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+      }
+    }
+    </script>
+  <script type="module" crossorigin src="/MaestroTutor/assets/index-j-uwASqN.js"></script>
+  <link rel="stylesheet" crossorigin href="/MaestroTutor/assets/index-DGnEAwOM.css">
+</head>
+<body class="antialiased">
+    <div id="splash-screen">
+      <div class="splash-content">
+        <div style="font-size: 5rem; line-height: 1; margin-bottom: 1rem;">📚</div>
+        <h1 style="font-size: 1.5rem; font-weight: bold; color: #334155;">Gemini Language Tutor</h1>
+      </div>
+    </div>
+    <div id="root"></div>
+</body>
+</html>

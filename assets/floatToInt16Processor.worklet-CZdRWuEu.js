@@ -1,0 +1,1 @@
+(function(){"use strict";class n extends AudioWorkletProcessor{process(c){const s=c?.[0]?.[0];if(s&&s.length>0){const r=s.length,o=new Int16Array(r);for(let e=0;e<r;e++){let t=s[e];t=t<-1?-1:t>1?1:t,o[e]=t<0?t*32768:t*32767}this.port.postMessage(o,[o.buffer])}return!0}}registerProcessor("float-to-int16-processor",n)})();
