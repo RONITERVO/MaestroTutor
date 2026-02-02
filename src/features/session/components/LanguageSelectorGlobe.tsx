@@ -275,6 +275,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                 onSelect={(l) => handleScrollWheelSelect(l, true)}
                                 onInteract={onInteract}
                                 title=""
+                                variant="native"
                             />
                             <div className="w-px h-24 bg-white/30 self-center rounded-full"></div>
                             <LanguageScrollWheel
@@ -284,6 +285,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                 disabled={!nativeLang}
                                 onInteract={onInteract}
                                 title=""
+                                variant="target"
                             />
                         </div>
                     </div>

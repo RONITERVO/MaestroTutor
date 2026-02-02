@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { LanguageDefinition, hasSharedFlag } from '../../../core/config/languages';
 
 interface LanguageScrollWheelProps {
@@ -11,14 +11,17 @@ interface LanguageScrollWheelProps {
   title: string;
   disabled?: boolean;
   onInteract?: () => void;
+  variant?: 'native' | 'target';
 }
 
-const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, selectedValue, onSelect, title, disabled, onInteract }) => {
+const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, selectedValue, onSelect, title, disabled, onInteract, variant }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
     const scrollTimeoutRef = useRef<number | null>(null);
     const isScrollingProgrammatically = useRef(false);
     const isTouchingRef = useRef(false);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const scrollingTimeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
         if (selectedValue && scrollContainerRef.current) {
@@ -72,6 +75,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
 
     const handleScrollEnd = useCallback(() => {
         if (isScrollingProgrammatically.current || isTouchingRef.current) return;
+        setIsScrolling(false);
         onInteract?.();
         selectClosestItem();
     }, [onInteract, selectClosestItem]);
@@ -102,6 +106,12 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
         const supportsScrollEnd = 'onscrollend' in window;
         
         const onScroll = () => {
+            if (!isScrollingProgrammatically.current) {
+                setIsScrolling(true);
+                // Clear any existing scrolling timeout
+                if (scrollingTimeoutRef.current) clearTimeout(scrollingTimeoutRef.current);
+                scrollingTimeoutRef.current = window.setTimeout(() => setIsScrolling(false), 300);
+            }
             if (!supportsScrollEnd) {
                 scheduleScrollEnd();
             }
@@ -130,22 +140,30 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
             container.removeEventListener('touchend', handleTouchEnd);
             container.removeEventListener('touchcancel', handleTouchEnd);
             if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+            if (scrollingTimeoutRef.current) clearTimeout(scrollingTimeoutRef.current);
         };
     }, [scheduleScrollEnd, handleScrollEnd, handleTouchStart, handleTouchEnd]);
+
+    const scrollingBorderClass = isScrolling && variant
+        ? variant === 'native'
+            ? 'ring-2 ring-sky-400 shadow-sky-400/30 shadow-md'
+            : 'ring-2 ring-green-400 shadow-green-400/30 shadow-md'
+        : '';
 
     return (
         <div className={`flex-1 text-center relative min-w-[3rem] ${disabled ? 'opacity-50' : ''}`}>
             {title && <p className="text-xs text-slate-400 mb-1 h-4">{title}</p>}
-            <div 
-                ref={scrollContainerRef}
-                className={`h-32 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}
-                style={{
-                    scrollSnapType: 'y mandatory',
-                    WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
-                    maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
-                }}
-                onPointerDown={() => onInteract?.()}
-            >
+            <div className={`rounded-lg transition-all duration-150 ${scrollingBorderClass}`}>
+                <div 
+                    ref={scrollContainerRef}
+                    className={`h-32 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}
+                    style={{
+                        scrollSnapType: 'y mandatory',
+                        WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+                        maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+                    }}
+                    onPointerDown={() => onInteract?.()}
+                >
                 <div className="h-[calc(50%-1.25rem)]"></div>
                 {languages.map(lang => {
                     const isSelected = lang.langCode === selectedValue?.langCode;
@@ -166,6 +184,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                     );
                 })}
                 <div className="h-[calc(50%-1.25rem)]"></div>
+                </div>
             </div>
         </div>
     );
