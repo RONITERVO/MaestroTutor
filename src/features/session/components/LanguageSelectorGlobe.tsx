@@ -246,49 +246,29 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 }
             `}</style>
 
-            <div
-                ref={globeRef}
-                className="globe-bg relative w-full max-w-[20rem] aspect-square border-2 rounded-full flex items-center justify-center bg-slate-800 text-white overflow-hidden shadow-inner touch-none"
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                onPointerLeave={() => { if (isDraggingRef.current) handlePointerUp({} as React.PointerEvent); }}
-                onWheel={handleWheel}
-            >
+            <div className="relative w-full max-w-[20rem] aspect-square">
+                <div
+                    ref={globeRef}
+                    className="globe-bg absolute inset-0 border-2 rounded-full flex items-center justify-center bg-slate-800 text-white overflow-hidden shadow-inner touch-none"
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                    onPointerLeave={() => { if (isDraggingRef.current) handlePointerUp({} as React.PointerEvent); }}
+                    onWheel={handleWheel}
+                >
                 {/* Spiral indicator - shows current position in the full language list */}
                 <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-slate-400 opacity-60 pointer-events-none">
                     {Math.floor(spiralOffset * ALL_LANGUAGES.length) + 1} / {ALL_LANGUAGES.length}
                 </div>
 
-                {pathD && (
-                    <svg key={pathD} viewBox="0 0 100 100" className="absolute w-full h-full top-0 left-0 overflow-visible pointer-events-none">
-                        <path d={pathD} stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none" strokeDasharray="5,5" />
-                        <g 
-                            style={{'--flight-path': `"${pathD}"`} as React.CSSProperties} 
-                            className="animate-fly-in-bubble cursor-pointer pointer-events-auto"
-                            onClick={() => onConfirm()}
-                        >
-                            <title>{t('startPage.clickToStart')}</title>
-                            <text
-                                className={nativeLang && targetLang ? 'animate-pulse' : ''}
-                                fontSize="24"
-                                dominantBaseline="middle"
-                                textAnchor="middle"
-                            >
-                                ✈️
-                            </text>
-                        </g>
-                    </svg>
-                )}
-                
                 <div
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 >
                     <div
-                        className="pointer-events-auto w-[85%] max-w-[14rem] bg-slate-900/40 backdrop-blur-sm rounded-lg p-2 transition-opacity duration-200 opacity-30 hover:opacity-100 focus-within:opacity-100 active:opacity-100"
+                        className="pointer-events-auto w-[70%] max-w-[10rem] bg-slate-900/60 backdrop-blur-md rounded-2xl px-3 py-2 transition-opacity duration-200 opacity-40 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10"
                     >
-                        <div className="flex justify-around items-start gap-2">
+                        <div className="flex justify-center items-start gap-3">
                             <LanguageScrollWheel
                                 languages={ALL_LANGUAGES}
                                 selectedValue={nativeLang}
@@ -296,7 +276,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                 onInteract={onInteract}
                                 title=""
                             />
-                            <div className="w-px h-20 bg-white/20 mx-1"></div>
+                            <div className="w-px h-24 bg-white/30 self-center rounded-full"></div>
                             <LanguageScrollWheel
                                 languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
                                 selectedValue={targetLang}
@@ -353,6 +333,29 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 {/* Scroll hint arrows */}
                 <div className="absolute left-2 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none text-lg">◀</div>
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none text-lg">▶</div>
+                </div>
+
+                {/* Flight path and plane - rendered outside globe to always be on top */}
+                {pathD && (
+                    <svg key={pathD} viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible pointer-events-none z-50">
+                        <path d={pathD} stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none" strokeDasharray="5,5" />
+                        <g 
+                            style={{'--flight-path': `"${pathD}"`} as React.CSSProperties} 
+                            className="animate-fly-in-bubble cursor-pointer pointer-events-auto"
+                            onClick={() => onConfirm()}
+                        >
+                            <title>{t('startPage.clickToStart')}</title>
+                            <text
+                                className={nativeLang && targetLang ? 'animate-pulse' : ''}
+                                fontSize="24"
+                                dominantBaseline="middle"
+                                textAnchor="middle"
+                            >
+                                ✈️
+                            </text>
+                        </g>
+                    </svg>
+                )}
             </div>
         </div>
     );
