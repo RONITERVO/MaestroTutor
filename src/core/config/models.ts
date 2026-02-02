@@ -18,20 +18,21 @@ export interface GeminiModelRegistry {
 }
 
 export const MODEL_REGISTRY_STORAGE_KEY = 'maestro_gemini_models_v1';
-export const MODEL_REGISTRY_URL_STORAGE_KEY = 'https://ronitervo.github.io/MaestroTutor/gemini-models.json';
+export const MODEL_REGISTRY_URL_STORAGE_KEY = 'maestro_gemini_models_url';
+export const DEFAULT_MODEL_REGISTRY_URL = 'https://ronitervo.github.io/MaestroTutor/gemini-models.json';
 
 const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   text: {
-    default: 'gemini-3-flash-preview',
-    aux: 'gemini-3-flash-preview',
-    translation: 'gemini-3-flash-preview',
+    default: 'gemini-3-flash-preview-test',
+    aux: 'gemini-3-flash-preview-test',
+    translation: 'gemini-3-flash-preview-test',
   },
   image: {
-    generation: 'gemini-2.5-flash-image',
+    generation: 'gemini-2.5-flash-image-test',
   },
   audio: {
-    tts: 'gemini-2.5-flash-preview-tts',
-    live: 'gemini-2.5-flash-native-audio-preview-12-2025',
+    tts: 'gemini-2.5-flash-preview-tts-test',
+    live: 'gemini-2.5-flash-native-audio-preview-12-2025-test',
   },
 };
 
@@ -58,16 +59,16 @@ const isValidRegistry = (value: any): value is GeminiModelRegistry => {
 
 const mergeWithDefaults = (value: Partial<GeminiModelRegistry>): GeminiModelRegistry => ({
   text: {
-    default: value?.text?.default || DEFAULT_GEMINI_MODELS.text.default,
-    aux: value?.text?.aux || DEFAULT_GEMINI_MODELS.text.aux,
-    translation: value?.text?.translation || DEFAULT_GEMINI_MODELS.text.translation,
+    default: value?.text?.default ?? DEFAULT_GEMINI_MODELS.text.default,
+    aux: value?.text?.aux ?? DEFAULT_GEMINI_MODELS.text.aux,
+    translation: value?.text?.translation ?? DEFAULT_GEMINI_MODELS.text.translation,
   },
   image: {
-    generation: value?.image?.generation || DEFAULT_GEMINI_MODELS.image.generation,
+    generation: value?.image?.generation ?? DEFAULT_GEMINI_MODELS.image.generation,
   },
   audio: {
-    tts: value?.audio?.tts || DEFAULT_GEMINI_MODELS.audio.tts,
-    live: value?.audio?.live || DEFAULT_GEMINI_MODELS.audio.live,
+    tts: value?.audio?.tts ?? DEFAULT_GEMINI_MODELS.audio.tts,
+    live: value?.audio?.live ?? DEFAULT_GEMINI_MODELS.audio.live,
   },
 });
 
@@ -99,7 +100,7 @@ export const setModelRegistryUrl = (url: string) => {
   safeWriteLocalStorage(MODEL_REGISTRY_URL_STORAGE_KEY, url);
 };
 
-export const resolveModelRegistryUrl = (): string | null => getEnvModelRegistryUrl() || getModelRegistryUrl();
+export const resolveModelRegistryUrl = (): string => getEnvModelRegistryUrl() || getModelRegistryUrl() || DEFAULT_MODEL_REGISTRY_URL;
 
 export const loadCachedGeminiModels = (): boolean => {
   const raw = safeReadLocalStorage(MODEL_REGISTRY_STORAGE_KEY);

@@ -72,12 +72,14 @@ export const useAppInitialization = ({
 
   useEffect(() => {
     const resolvedUrl = resolveModelRegistryUrl();
-    if (resolvedUrl) {
-      setModelRegistryUrl(resolvedUrl);
-    }
-    refreshGeminiModelsFromRemote({ url: resolvedUrl || undefined }).catch((error) => {
-      console.warn('Gemini model registry refresh failed', error);
-    });
+    setModelRegistryUrl(resolvedUrl);
+    refreshGeminiModelsFromRemote({ url: resolvedUrl })
+      .then((result) => {
+        console.log(`[GeminiModels] Loaded from ${result.source}`, { url: resolvedUrl, updated: result.updated });
+      })
+      .catch((error) => {
+        console.warn('[GeminiModels] Refresh failed', { url: resolvedUrl, error });
+      });
   }, []);
 
   useEffect(() => {
