@@ -131,7 +131,14 @@ const CameraControls: React.FC<CameraControlsProps> = ({
               className={`p-2 cursor-pointer rounded-full transition-colors touch-manipulation ${isSuggestionMode ? 'text-gray-600 hover:text-black hover:bg-black/10' : 'hover:text-white hover:bg-blue-400/80'} ${isImageGenCameraSelected ? (isSuggestionMode ? 'text-purple-600' : 'text-purple-300 hover:text-purple-200') : ''}`}
               title={t('chat.camera.turnOn')}
             >
-              {isImageGenCameraSelected ? <IconSparkles className="w-5 h-5" /> : (currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />)}
+              {isImageGenCameraSelected ? (
+                <span className="relative inline-flex items-center justify-center w-5 h-5">
+                  {currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />}
+                  <IconSparkles className="w-3 h-3 absolute -top-1 -right-1" />
+                </span>
+              ) : (
+                currentCameraFacingMode === 'user' ? <IconCameraFront className="w-5 h-5" /> : <IconCamera className="w-5 h-5" />
+              )}
             </button>
           )}
         </>

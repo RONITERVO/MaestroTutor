@@ -23,16 +23,16 @@ export const DEFAULT_MODEL_REGISTRY_URL = 'https://ronitervo.github.io/MaestroTu
 
 const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   text: {
-    default: 'gemini-3-flash-preview-test',
-    aux: 'gemini-3-flash-preview-test',
-    translation: 'gemini-3-flash-preview-test',
+    default: 'gemini-3-flash-preview',
+    aux: 'gemini-3-flash-preview',
+    translation: 'gemini-3-flash-preview',
   },
   image: {
-    generation: 'gemini-2.5-flash-image-test',
+    generation: 'gemini-2.5-flash-image',
   },
   audio: {
-    tts: 'gemini-2.5-flash-preview-tts-test',
-    live: 'gemini-2.5-flash-native-audio-preview-12-2025-test',
+    tts: 'gemini-2.5-flash-preview-tts',
+    live: 'gemini-2.5-flash-native-audio-preview-12-2025',
   },
 };
 
