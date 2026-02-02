@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
+import { getGeminiModels } from '../../core/config/models';
 import { getAi } from './client';
 
 export const generateImage = async (params: {
@@ -82,7 +83,7 @@ export const generateImage = async (params: {
     contents.push({ role, parts: currentParts });
   }
 
-  const model = 'gemini-2.5-flash-image';
+  const model = getGeminiModels().image.generation;
   const config = { responseModalities: ['IMAGE'], systemInstruction };
   const log = debugLogService.logRequest('generateImage', model, { contents, config });
 

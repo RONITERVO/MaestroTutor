@@ -6,6 +6,7 @@ import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
+import { getGeminiModels } from '../../../core/config/models';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 
@@ -245,7 +246,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
         augmentedSystemInstruction = `${baseSystemInstruction}\n\nContext:\n${parts.join('\n')}`;
       }
 
-      const model = 'gemini-2.5-flash-native-audio-preview-12-2025';
+      const model = getGeminiModels().audio.live;
       logRef.current = debugLogService.logRequest('useGeminiLiveStt', model, {
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},

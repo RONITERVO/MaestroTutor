@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob } from '@google/genai';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { debugLogService } from '../../diagnostics';
+import { getGeminiModels } from '../../../core/config/models';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 
@@ -327,7 +328,7 @@ export function useGeminiLiveConversation(
       const outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
       outputAudioContextRef.current = outputCtx;
 
-      const model = 'gemini-2.5-flash-native-audio-preview-12-2025';
+      const model = getGeminiModels().audio.live;
       modelRef.current = model;
       logFinalizedRef.current = false;
       logRef.current = debugLogService.logRequest('useGeminiLiveConversation', model, {

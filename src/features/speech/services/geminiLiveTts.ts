@@ -23,6 +23,7 @@
 
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { debugLogService } from '../../diagnostics';
+import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 
@@ -159,7 +160,7 @@ IMPORTANT RULES:
 TEXT TO READ:
 ${textBlock}`;
 
-  const model = 'gemini-2.5-flash-native-audio-preview-12-2025';
+  const model = getGeminiModels().audio.live;
   const config = {
     responseModalities: [Modality.AUDIO],
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },

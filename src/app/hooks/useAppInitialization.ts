@@ -18,6 +18,7 @@ import { useAppLifecycle } from './useAppLifecycle';
 import { useAppAssets } from './useAppAssets';
 import { useAppTranslations } from '../../shared/hooks/useAppTranslations';
 import { selectSelectedLanguagePair } from '../../store/slices/settingsSlice';
+import { refreshGeminiModelsFromRemote, resolveModelRegistryUrl, setModelRegistryUrl } from '../../core/config/models';
 
 export interface UseAppInitializationConfig {
   maestroAvatarUriRef: MutableRefObject<string | null>;
@@ -68,6 +69,18 @@ export const useAppInitialization = ({
       initSettings();
     }
   }, [initSettings]);
+
+  useEffect(() => {
+    const resolvedUrl = resolveModelRegistryUrl();
+    setModelRegistryUrl(resolvedUrl);
+    refreshGeminiModelsFromRemote({ url: resolvedUrl })
+      .then((result) => {
+        console.log(`[GeminiModels] Loaded from ${result.source}`, { url: resolvedUrl, updated: result.updated });
+      })
+      .catch((error) => {
+        console.warn('[GeminiModels] Refresh failed', { url: resolvedUrl, error });
+      });
+  }, []);
 
   useEffect(() => {
     const pairId = settings.selectedLanguagePairId;

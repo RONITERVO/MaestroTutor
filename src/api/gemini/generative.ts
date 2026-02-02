@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
+import { getGeminiModels } from '../../core/config/models';
 import { ApiError, getAi } from './client';
 
 export const generateGeminiResponse = async (
@@ -93,7 +94,7 @@ export const generateGeminiResponse = async (
 export const translateText = async (text: string, from: string, to: string) => {
   const ai = await getAi();
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
-  const model = 'gemini-3-flash-preview';
+  const model = getGeminiModels().text.translation;
   const log = debugLogService.logRequest('translateText', model, { prompt });
 
   try {
