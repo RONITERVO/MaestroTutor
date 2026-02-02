@@ -988,7 +988,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const sanitizedUserHistoryForImage = params.sanitizedDerivedHistory as any;
     let finalResult: any = null;
 
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 7; attempt++) {
       const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", params.userMessageText);
       const userImgGenResult = await generateImage({
         history: sanitizedUserHistoryForImage,
@@ -1000,7 +1000,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       });
       finalResult = userImgGenResult;
       if ('base64Image' in userImgGenResult) break;
-      if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+      if (attempt < 6) await new Promise(r => setTimeout(r, 1500));
     }
 
     if (finalResult && 'base64Image' in finalResult) {
@@ -1036,9 +1036,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       } finally {
         setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
       }
-    } else if (finalResult) {
+    } else {
       updateMessage(params.userMessageId, {
-        imageGenError: (finalResult as any).error,
         isGeneratingImage: false,
         imageGenerationStartTime: undefined
       });
@@ -1090,7 +1089,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       await new Promise(r => setTimeout(r, 0));
     } catch { /* ignore */ }
 
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 7; attempt++) {
       const histForAssistantImgBase = historyForAssistantImageGen || baseForEnsure;
       let gpTextForAssistant: string | undefined = undefined;
       try {
@@ -1149,11 +1148,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           });
         }
         break;
-      } else if (attempt < 2) {
+      } else if (attempt < 6) {
         await new Promise(r => setTimeout(r, 1500));
       } else {
         updateMessage(params.thinkingMessageId, {
-          imageGenError: (assistantImgGenResult as any).error,
           isGeneratingImage: false,
           imageGenerationStartTime: undefined
         });

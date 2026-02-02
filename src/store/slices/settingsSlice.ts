@@ -14,6 +14,7 @@ import type { AppSettings, LanguagePair } from '../../core/types';
 import { getAppSettingsDB, setAppSettingsDB } from '../../features/session';
 import { ALL_LANGUAGES, STT_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE, type LanguageDefinition } from '../../core/config/languages';
 import { generateAllLanguagePairs, getPrimaryCode, parseLanguagePairId } from '../../shared/utils/languageUtils';
+import { IMAGE_GEN_CAMERA_ID } from '../../core/config/app';
 import type { MaestroStore } from '../maestroStore';
 
 // Generate language pairs once
@@ -24,8 +25,8 @@ const MAX_VISIBLE_MESSAGES_DEFAULT = 50;
 // Initial settings values
 export const initialSettings: AppSettings = {
   selectedLanguagePairId: null,
-  selectedCameraId: null,
-  sendWithSnapshotEnabled: false,
+  selectedCameraId: IMAGE_GEN_CAMERA_ID,
+  sendWithSnapshotEnabled: true,
   tts: {
     provider: 'gemini-live',
     speakNative: true,
@@ -38,7 +39,7 @@ export const initialSettings: AppSettings = {
   },
   smartReengagement: {
     thresholdSeconds: 45,
-    useVisualContext: false,
+    useVisualContext: true,
   },
   enableGoogleSearch: true,
   imageGenerationModeEnabled: true,
