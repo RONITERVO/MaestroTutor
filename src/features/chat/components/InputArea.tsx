@@ -117,7 +117,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     updateSetting('selectedCameraId', deviceId);
   }, [updateSetting]);
 
-  const { handleTempNativeSelect, handleTempTargetSelect, handleConfirmLanguageSelection } = useLanguageSelection({
+  const { handleShowLanguageSelector, handleTempNativeSelect, handleTempTargetSelect, handleConfirmLanguageSelection } = useLanguageSelection({
     isSettingsLoaded,
     settings,
     settingsRef,
@@ -218,7 +218,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const handleSend = async () => {
     if (languageSelectionOpen) {
-      handleConfirmLanguageSelection();
+      handleShowLanguageSelector();
       return;
     }
     if (isSuggestionMode) {
@@ -645,14 +645,18 @@ const InputArea: React.FC<InputAreaProps> = ({
                   className={`p-2 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 shadow-sm ${sendButtonStyle}`}
                   disabled={isSending || ((!inputText.trim() && !attachedImageBase64) && !languageSelectionOpen) || isSpeaking || (isSuggestionMode && isCreatingSuggestion)}
                   aria-label={
-                    isSuggestionMode
-                      ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction'))
-                      : (sendPrep && sendPrep.active ? (sendPrep.label || t('chat.sendPrep.finalizing')) : t('chat.sendMessage'))
+                    languageSelectionOpen
+                      ? 'Confirm language selection'
+                      : isSuggestionMode
+                        ? (isCreatingSuggestion ? t('chat.suggestion.creating') : t('chat.suggestion.createAction'))
+                        : (sendPrep && sendPrep.active ? (sendPrep.label || t('chat.sendPrep.finalizing')) : t('chat.sendMessage'))
                   }
                 >
-                  {isSuggestionMode
-                    ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />)
-                    : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
+                  {languageSelectionOpen
+                    ? <IconUndo className="w-5 h-5" />
+                    : isSuggestionMode
+                      ? (isCreatingSuggestion ? <SmallSpinner className="w-5 h-5" /> : <IconPlus className="w-5 h-5" />)
+                      : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
                 </button>
               </div>
             </div>

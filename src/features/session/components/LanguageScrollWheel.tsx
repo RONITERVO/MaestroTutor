@@ -18,6 +18,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
     const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
     const scrollTimeoutRef = useRef<number | null>(null);
     const isScrollingProgrammatically = useRef(false);
+    const isTouchingRef = useRef(false);
 
     useEffect(() => {
         if (selectedValue && scrollContainerRef.current) {
@@ -34,11 +35,10 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
         }
     }, [selectedValue]);
 
-  const handleScrollEnd = useCallback(() => {
+    const selectClosestItem = useCallback(() => {
         if (isScrollingProgrammatically.current) return;
         const container = scrollContainerRef.current;
         if (!container) return;
-        onInteract?.();
         
         const scrollTop = container.scrollTop;
         const containerHeight = container.offsetHeight;
@@ -65,40 +65,88 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
         if (closestIndex > -1) {
             const newSelectedLang = languages[closestIndex];
             if (newSelectedLang.langCode !== selectedValue?.langCode) {
-                 onSelect(newSelectedLang);
+                onSelect(newSelectedLang);
             }
         }
-    }, [languages, onSelect, selectedValue, onInteract]);
+    }, [languages, onSelect, selectedValue]);
 
-  const debouncedScrollHandler = useCallback(() => {
-    if (isScrollingProgrammatically.current) return;
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    scrollTimeoutRef.current = window.setTimeout(handleScrollEnd, 150);
-  }, [handleScrollEnd]);
+    const handleScrollEnd = useCallback(() => {
+        if (isScrollingProgrammatically.current || isTouchingRef.current) return;
+        onInteract?.();
+        selectClosestItem();
+    }, [onInteract, selectClosestItem]);
+
+    const scheduleScrollEnd = useCallback(() => {
+        if (isScrollingProgrammatically.current) return;
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        // Use longer timeout for better mobile scroll momentum handling
+        scrollTimeoutRef.current = window.setTimeout(handleScrollEnd, 250);
+    }, [handleScrollEnd]);
+
+    const handleTouchStart = useCallback(() => {
+        isTouchingRef.current = true;
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
+        isTouchingRef.current = false;
+        // Schedule selection after touch ends and scroll momentum settles
+        scheduleScrollEnd();
+    }, [scheduleScrollEnd]);
     
     useEffect(() => {
         const container = scrollContainerRef.current;
-        container?.addEventListener('scroll', debouncedScrollHandler);
-        return () => {
-            container?.removeEventListener('scroll', debouncedScrollHandler);
-            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        if (!container) return;
+
+        // Use scrollend event if supported (modern browsers)
+        const supportsScrollEnd = 'onscrollend' in window;
+        
+        const onScroll = () => {
+            if (!supportsScrollEnd) {
+                scheduleScrollEnd();
+            }
+        };
+        
+        const onScrollEnd = () => {
+            if (!isTouchingRef.current) {
+                handleScrollEnd();
+            }
+        };
+
+        container.addEventListener('scroll', onScroll, { passive: true });
+        if (supportsScrollEnd) {
+            container.addEventListener('scrollend', onScrollEnd);
         }
-    }, [debouncedScrollHandler]);
+        container.addEventListener('touchstart', handleTouchStart, { passive: true });
+        container.addEventListener('touchend', handleTouchEnd, { passive: true });
+        container.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+        return () => {
+            container.removeEventListener('scroll', onScroll);
+            if (supportsScrollEnd) {
+                container.removeEventListener('scrollend', onScrollEnd);
+            }
+            container.removeEventListener('touchstart', handleTouchStart);
+            container.removeEventListener('touchend', handleTouchEnd);
+            container.removeEventListener('touchcancel', handleTouchEnd);
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        };
+    }, [scheduleScrollEnd, handleScrollEnd, handleTouchStart, handleTouchEnd]);
 
     return (
-        <div className={`flex-1 text-center relative ${disabled ? 'opacity-50' : ''}`}>
+        <div className={`flex-1 text-center relative min-w-[3rem] ${disabled ? 'opacity-50' : ''}`}>
             {title && <p className="text-xs text-slate-400 mb-1 h-4">{title}</p>}
             <div 
                 ref={scrollContainerRef}
-                className={`h-28 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}
+                className={`h-32 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}
                 style={{
                     scrollSnapType: 'y mandatory',
-                    WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 25%, black 75%, transparent)',
-                    maskImage: 'linear-gradient(to bottom, transparent, black 25%, black 75%, transparent)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+                    maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
                 }}
                 onPointerDown={() => onInteract?.()}
             >
-                <div className="h-[calc(50%-1.5rem)]"></div>
+                <div className="h-[calc(50%-1.25rem)]"></div>
                 {languages.map(lang => {
                     const isSelected = lang.langCode === selectedValue?.langCode;
                     const showShortCode = hasSharedFlag(lang);
@@ -106,21 +154,18 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                         <div
                             key={lang.langCode}
                             ref={el => { if (el) itemRefs.current.set(lang.langCode, el) }}
-                            className={`flex items-center justify-center h-12 transition-all duration-200 ease-out`}
+                            className={`flex items-center justify-center h-10 transition-all duration-200 ease-out`}
                             style={{ scrollSnapAlign: 'center' }}
                             onClick={() => { if (!disabled) { onInteract?.(); onSelect(lang); } }}
                         >
-                            <span className={`text-sm font-semibold flex items-center gap-1.5 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-110' : 'opacity-60 scale-90'}`}>
-                                <span className="flex items-center gap-0.5">
-                                    {lang.flag}
-                                    {showShortCode && <span className="text-[10px] text-slate-300 font-medium">{lang.shortCode}</span>}
-                                </span>
-                                <span className="truncate max-w-[5rem]">{lang.displayName}</span>
+                            <span className={`text-2xl font-semibold flex items-center gap-0.5 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-125' : 'opacity-50 scale-100'}`}>
+                                {lang.flag}
+                                {showShortCode && <span className="text-[9px] text-slate-300 font-bold ml-0.5">{lang.shortCode}</span>}
                             </span>
                         </div>
                     );
                 })}
-                <div className="h-[calc(50%-1.5rem)]"></div>
+                <div className="h-[calc(50%-1.25rem)]"></div>
             </div>
         </div>
     );
