@@ -1,0 +1,14 @@
+{
+  "text": {
+    "default": "gemini-3-flash-preview",
+    "aux": "gemini-3-flash-preview",
+    "translation": "gemini-3-flash-preview"
+  },
+  "image": {
+    "generation": "gemini-2.5-flash-image"
+  },
+  "audio": {
+    "tts": "gemini-2.5-flash-preview-tts",
+    "live": "gemini-2.5-flash-native-audio-preview-12-2025"
+  }
+}

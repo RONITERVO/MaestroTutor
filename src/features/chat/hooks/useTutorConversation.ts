@@ -29,10 +29,10 @@ import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
 import { 
-  DEFAULT_TEXT_MODEL_ID, 
   IMAGE_GEN_CAMERA_ID,
   MAX_MEDIA_TO_KEEP 
 } from '../../../core/config/app';
+import { getGeminiModels } from '../../../core/config/models';
 import { 
   DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
   IMAGE_GEN_SYSTEM_INSTRUCTION, 
@@ -48,8 +48,6 @@ import { useMaestroStore } from '../../../store';
 import { useShallow } from 'zustand/shallow';
 import { selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
-
-const AUX_TEXT_MODEL_ID = 'gemini-3-flash-preview';
 
 const parseApiErrorMessage = (message?: string): string => {
   if (!message) return '';
@@ -593,7 +591,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         const response = await generateGeminiResponse(
-          AUX_TEXT_MODEL_ID,
+          getGeminiModels().text.aux,
           suggestionPrompt,
           [],
           undefined,
@@ -936,7 +934,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     currentSettingsVal: AppSettings;
   }) => {
     const response = await generateGeminiResponse(
-      DEFAULT_TEXT_MODEL_ID,
+      getGeminiModels().text.default,
       params.geminiPromptText,
       params.sanitizedDerivedHistory,
       params.systemInstructionForGemini,

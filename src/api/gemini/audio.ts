@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
+import { getGeminiModels } from '../../core/config/models';
 import { getAi } from './client';
 
 const writeAscii = (view: DataView, offset: number, value: string) => {
@@ -60,7 +61,7 @@ export interface GenerateSpeechResult {
 
 export const generateSpeech = async (params: { text: string; voiceName?: string }): Promise<GenerateSpeechResult> => {
   const ai = await getAi();
-  const model = 'gemini-2.5-flash-preview-tts';
+  const model = getGeminiModels().audio.tts;
   const config = {
     responseModalities: ['AUDIO'],
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: params.voiceName || 'Kore' } } },
