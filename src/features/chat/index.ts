@@ -20,11 +20,14 @@ export { default as TextScrollwheel } from './components/TextScrollwheel';
 // Services
 export { 
   getChatHistoryDB,
+  saveChatHistoryDB,
   safeSaveChatHistoryDB,
   getChatMetaDB,
   setChatMetaDB,
   getAllChatHistoriesDB,
   getAllChatMetasDB,
+  hasAnyChatHistoriesDB,
+  iterateChatHistoriesDB,
   clearAndSaveAllHistoriesDB,
   deriveHistoryForApi,
 } from './services/chatHistory';

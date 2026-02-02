@@ -299,7 +299,7 @@ const SessionControls: React.FC = () => {
     if (resetConfirm !== 'DELETE') return;
     try {
       const safe = `backup-before-reset-${new Date().toISOString().slice(0, 10)}`;
-      if (handleSaveAllChats) await handleSaveAllChats({ filename: `${safe}.json`, auto: true });
+      if (handleSaveAllChats) await handleSaveAllChats({ filename: `${safe}.ndjson`, auto: true });
       await new Promise(r => setTimeout(r, 500));
       await wipeLocalMemoryAndDb();
       window.location.reload();
@@ -446,7 +446,7 @@ const SessionControls: React.FC = () => {
               <IconTrash className="w-4 h-4" />
             </button>
           </div>
-          <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".json" className="hidden" />
+          <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".json,.ndjson,.jsonl" className="hidden" />
 
           {/* Right: Maestro Avatar Cluster */}
           <div

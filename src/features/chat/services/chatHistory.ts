@@ -92,6 +92,56 @@ export const getAllChatHistoriesDB = async (): Promise<Record<string, ChatMessag
   }
 };
 
+export const hasAnyChatHistoriesDB = async (): Promise<boolean> => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const cursorReq = store.openCursor();
+    cursorReq.onerror = () => reject(new Error("Error checking for chat histories"));
+    cursorReq.onsuccess = (ev) => {
+      const cursor = (ev.target as IDBRequest<IDBCursorWithValue>).result;
+      resolve(!!cursor);
+    };
+  });
+};
+
+export const iterateChatHistoriesDB = async (
+  onRow: (pairId: string, messages: ChatMessage[]) => Promise<void> | void
+): Promise<void> => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const cursorReq = store.openCursor();
+    let chain: Promise<void> = Promise.resolve();
+    let settled = false;
+    cursorReq.onerror = () => reject(new Error("Error iterating chat histories"));
+    cursorReq.onsuccess = (ev) => {
+      const cursor = (ev.target as IDBRequest<IDBCursorWithValue>).result;
+      if (!cursor) {
+        chain.then(() => {
+          if (!settled) {
+            settled = true;
+            resolve();
+          }
+        }).catch((err) => {
+          if (!settled) {
+            settled = true;
+            reject(err instanceof Error ? err : new Error(String(err)));
+          }
+        });
+        return;
+      }
+      const val: any = cursor.value || {};
+      const pairId = typeof val.pairId === 'string' ? val.pairId : '';
+      const messages = Array.isArray(val.messages) ? val.messages : [];
+      chain = chain.then(() => onRow(pairId, messages));
+      cursor.continue();
+    };
+  });
+};
+
 export const clearAndSaveAllHistoriesDB = async (
   allChats: Record<string, ChatMessage[]>,
   allMetas?: Record<string, ChatMeta> | null,

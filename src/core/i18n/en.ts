@@ -17,9 +17,10 @@ export const enTranslations: Record<string, string> = {
   "startPage.addMaestroAvatar": "Add Maestro avatar",
   "startPage.loadSuccess": "Successfully loaded and replaced {count} chat sessions!",
   "startPage.loadError": "Error loading chats. The file might be corrupted or in the wrong format.",
+  "startPage.loadLegacyTooLarge": "This legacy JSON backup is too large to load safely. Please export a new backup (NDJSON) from the latest app/web and try again.",
   "startPage.noChatsToSave": "There are no chat histories to save.",
   "startPage.saveError": "Error saving chats. Check the console for more details.",
-  
+
   // General
   "general.clear": "Clear",
   "general.error": "Sorry, I encountered an error.",
