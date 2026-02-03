@@ -21,6 +21,7 @@ import {
   safeSaveChatHistoryDB,
   saveChatHistoryDB,
   getAllChatMetasDB,
+  getChatMetaDB,
   clearAndSaveAllHistoriesDB,
   getChatHistoryDB,
   iterateChatHistoriesDB,
@@ -46,6 +47,9 @@ export interface UseDataBackupConfig {
 export interface UseDataBackupReturn {
   handleSaveAllChats: (options?: { filename?: string; auto?: boolean }) => Promise<void>;
   handleLoadAllChats: (file: File) => Promise<void>;
+  handleSaveCurrentChat: () => Promise<void>;
+  handleAppendToCurrentChat: (file: File) => Promise<void>;
+  handleTrimBeforeBookmark: () => Promise<boolean>;
 }
 
 const BACKUP_FORMAT = 'ndjson-v1';
@@ -517,8 +521,259 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
     }
   }, [handleSaveAllChats, t, loadNdjsonBackup]);
 
+  // --- Save only the current language chat ---
+  const handleSaveCurrentChat = useCallback(async () => {
+    try {
+      const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
+      if (!selectedPairId) {
+        alert(t('startPage.noChatsToSave') || 'No chat selected to save.');
+        return;
+      }
+      // Save in-memory messages to DB first
+      try {
+        await safeSaveChatHistoryDB(selectedPairId, useMaestroStore.getState().messages);
+      } catch { /* ignore */ }
+
+      const messages = await getChatHistoryDB(selectedPairId);
+      if (!messages || messages.length === 0) {
+        alert(t('startPage.noChatsToSave') || 'No messages in this chat to save.');
+        return;
+      }
+
+      const meta = await getChatMetaDB(selectedPairId);
+      const timestamp = new Date().toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+      const safeFilename = normalizeBackupFilename(`maestro-${selectedPairId}-${timestamp}`, `maestro-chat-${timestamp}`);
+
+      const writeBackupLines = async (writer: BackupLineWriter) => {
+        await writer.write(buildHeaderLine());
+        await writer.write(buildJsonLine({ type: 'globalProfile', text: null }));
+        await writer.write(buildJsonLine({ type: 'assets', loadingGifs: [], maestroProfile: null }));
+
+        let chunkIndex = 0;
+        let parts: string[] = [];
+        let size = 0;
+        const flush = async (isLast: boolean) => {
+          if (!parts.length) return;
+          await writer.write(buildChatChunkLine(selectedPairId, chunkIndex, isLast, parts));
+          chunkIndex += 1;
+          parts = [];
+          size = 0;
+        };
+
+        for (let i = 0; i < messages.length; i++) {
+          const msgJson = JSON.stringify(messages[i]);
+          const extra = parts.length ? 1 + msgJson.length : msgJson.length;
+          if (parts.length && (size + extra > MAX_CHUNK_CHARS || parts.length >= MAX_CHUNK_MESSAGES)) {
+            await flush(false);
+          }
+          parts.push(msgJson);
+          size += extra;
+          if (i === messages.length - 1) {
+            await flush(true);
+          }
+        }
+
+        if (meta) {
+          await writer.write(buildJsonLine({ type: 'meta', pairId: selectedPairId, meta }));
+        }
+        await writer.close();
+      };
+
+      if (Capacitor.isNativePlatform()) {
+        const attemptWrite = async (directory: Directory) => {
+          const writer = createNativeLineWriter(safeFilename, directory);
+          await writeBackupLines(writer);
+          const uri = writer.getUri();
+          if (!uri) throw new Error('Missing file URI for backup');
+          return uri;
+        };
+
+        try {
+          let uri: string | undefined;
+          try {
+            uri = await attemptWrite(Directory.Documents);
+          } catch {
+            uri = await attemptWrite(Directory.Cache);
+          }
+          await Share.share({
+            title: t('startPage.saveThisChat') || 'Save This Chat',
+            url: uri,
+            dialogTitle: t('startPage.saveThisChat') || 'Save This Chat',
+          });
+        } catch (err) {
+          if (isCancelError(err)) return;
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          console.error('Failed to save/share single chat:', err);
+          alert(`${t('startPage.saveError')}\n${errorMsg}`);
+        }
+        return;
+      }
+
+      try {
+        const writer = await createWebLineWriter(safeFilename);
+        await writeBackupLines(writer);
+      } catch (err) {
+        if (isCancelError(err)) return;
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg === 'BROWSER_NOT_SUPPORTED') {
+          alert(t('startPage.browserNotSupported') || 'Your browser does not support file saving. Please use Chrome or Edge.');
+          return;
+        }
+        throw err;
+      }
+    } catch (error) {
+      if (isCancelError(error)) return;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg === 'BROWSER_NOT_SUPPORTED') {
+        alert(t('startPage.browserNotSupported') || 'Your browser does not support file saving. Please use Chrome or Edge.');
+        return;
+      }
+      console.error("Failed to save current chat:", error);
+      alert(`${t('startPage.saveError')}\n${errorMsg}`);
+    }
+  }, [t]);
+
+  // --- Append messages from a backup file to the current chat ---
+  const handleAppendToCurrentChat = useCallback(async (file: File) => {
+    try {
+      const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
+      if (!selectedPairId) {
+        alert(t('startPage.noChatSelected') || 'Please select a language pair first.');
+        return;
+      }
+
+      const name = (file.name || '').toLowerCase();
+      if (!name.endsWith('.ndjson') && !name.endsWith('.jsonl')) {
+        throw new Error('UNSUPPORTED_FORMAT');
+      }
+
+      // Validation pass
+      let hasValidHeader = false;
+      let validLineCount = 0;
+      await streamNdjsonLines(file, async (line) => {
+        let parsed: any;
+        try { parsed = JSON.parse(line); } catch { return; }
+        if (parsed && typeof parsed === 'object') {
+          validLineCount += 1;
+          if (parsed.type === 'header' && parsed.format === BACKUP_FORMAT) {
+            hasValidHeader = true;
+          }
+        }
+      });
+      if (!hasValidHeader || validLineCount < 2) {
+        throw new Error('INVALID_BACKUP_FORMAT');
+      }
+
+      // Collect messages from the file ONLY for exact pairId match (prevent language mixing)
+      let importedMessages: ChatMessage[] = [];
+
+      await streamNdjsonLines(file, async (line) => {
+        let parsed: any;
+        try { parsed = JSON.parse(line); } catch { return; }
+        if (!parsed || typeof parsed !== 'object') return;
+
+        if (parsed.type === 'chatChunk') {
+          const pid = typeof parsed.pairId === 'string' ? parsed.pairId : '';
+          // Only accept messages from the exact same pairId - never mix languages
+          if (pid === selectedPairId && Array.isArray(parsed.messages)) {
+            importedMessages.push(...(parsed.messages as ChatMessage[]));
+          }
+        }
+      });
+
+      if (importedMessages.length === 0) {
+        alert(t('startPage.noPairInBackup') || `The backup file does not contain messages for your current language pair (${selectedPairId}). Please select a backup that matches your current chat.`);
+        return;
+      }
+
+      // Append to existing messages
+      const currentMessages = useMaestroStore.getState().messages;
+      const combined = [...currentMessages, ...importedMessages];
+      setMessages(combined);
+      await safeSaveChatHistoryDB(selectedPairId, combined);
+
+      alert(t('startPage.appendSuccess', { count: importedMessages.length }) || `Successfully appended ${importedMessages.length} messages to the current chat.`);
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      console.error("Failed to append to chat:", e);
+      if (errMsg === 'INVALID_BACKUP_FORMAT' || errMsg === 'UNSUPPORTED_FORMAT') {
+        alert(t('startPage.invalidBackupFormat') || 'Invalid backup file. Please select a valid Maestro backup (.ndjson) file.');
+      } else {
+        alert(t('startPage.loadError'));
+      }
+    }
+  }, [t, setMessages]);
+
+  // --- Trim all messages before bookmark (keeping summaries) ---
+  const handleTrimBeforeBookmark = useCallback(async (): Promise<boolean> => {
+    try {
+      const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
+      const bookmarkMessageId = useMaestroStore.getState().settings.historyBookmarkMessageId;
+
+      if (!selectedPairId) {
+        alert(t('startPage.noChatSelected') || 'No chat selected.');
+        return false;
+      }
+
+      if (!bookmarkMessageId) {
+        alert(t('startPage.noBookmarkSet') || 'No bookmark set. Set a bookmark first to trim messages before it.');
+        return false;
+      }
+
+      const messages = useMaestroStore.getState().messages;
+      const bookmarkIndex = messages.findIndex(m => m.id === bookmarkMessageId);
+
+      if (bookmarkIndex <= 0) {
+        alert(t('startPage.noMessagesToTrim') || 'No messages before the bookmark to remove.');
+        return false;
+      }
+
+      // Find the most recent chatSummary before or at the bookmark
+      let latestSummary: string | undefined;
+      for (let i = bookmarkIndex; i >= 0; i--) {
+        const m = messages[i];
+        if (m.role === 'assistant' && typeof m.chatSummary === 'string' && m.chatSummary.trim()) {
+          latestSummary = m.chatSummary.trim();
+          break;
+        }
+      }
+
+      // Keep only messages from bookmark onwards
+      const remainingMessages = messages.slice(bookmarkIndex);
+
+      // If we found a summary, inject it into the first remaining assistant message
+      if (latestSummary && remainingMessages.length > 0) {
+        const firstAssistantIdx = remainingMessages.findIndex(m => m.role === 'assistant');
+        if (firstAssistantIdx >= 0 && !remainingMessages[firstAssistantIdx].chatSummary) {
+          remainingMessages[firstAssistantIdx] = {
+            ...remainingMessages[firstAssistantIdx],
+            chatSummary: latestSummary,
+          };
+        }
+      }
+
+      // Update store and persist
+      setMessages(remainingMessages);
+      await safeSaveChatHistoryDB(selectedPairId, remainingMessages);
+
+      // Clear bookmark since we're now at the start
+      useMaestroStore.getState().updateSetting('historyBookmarkMessageId', null);
+
+      const removedCount = bookmarkIndex;
+      alert(t('startPage.trimSuccess', { count: removedCount }) || `Removed ${removedCount} messages before the bookmark.`);
+      return true;
+    } catch (error) {
+      console.error("Failed to trim before bookmark:", error);
+      alert(t('startPage.trimError') || 'Failed to trim messages. Please try again.');
+      return false;
+    }
+  }, [t, setMessages]);
+
   return {
     handleSaveAllChats,
     handleLoadAllChats,
+    handleSaveCurrentChat,
+    handleAppendToCurrentChat,
+    handleTrimBeforeBookmark,
   };
 };

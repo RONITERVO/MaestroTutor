@@ -18,6 +18,8 @@ import {
   IconShield,
   IconBolt,
   IconSwap,
+  IconBookmark,
+  IconScissors,
 } from '../../../shared/ui/Icons';
 
 import { getGlobalProfileDB, setGlobalProfileDB } from '../services/globalProfile';
@@ -33,7 +35,7 @@ import { selectSettings } from '../../../store/slices/settingsSlice';
 
 const SessionControls: React.FC = () => {
   const { t } = useAppTranslations();
-  const { handleSaveAllChats, handleLoadAllChats } = useDataBackup({ t });
+  const { handleSaveAllChats, handleLoadAllChats, handleSaveCurrentChat, handleAppendToCurrentChat, handleTrimBeforeBookmark } = useDataBackup({ t });
 
   const settings = useMaestroStore(selectSettings);
   const updateSetting = useMaestroStore(state => state.updateSetting);
@@ -57,6 +59,9 @@ const SessionControls: React.FC = () => {
   const [isUploadingMaestro, setIsUploadingMaestro] = useState(false);
   const [resetMode, setResetMode] = useState(false);
   const [resetConfirm, setResetConfirm] = useState('');
+  const [trimMode, setTrimMode] = useState(false);
+  const [trimConfirm, setTrimConfirm] = useState('');
+  const [controlMode, setControlMode] = useState<'none' | 'all' | 'this'>('none');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileText, setProfileText] = useState('');
 
@@ -68,9 +73,13 @@ const SessionControls: React.FC = () => {
 
   const saveTokenRef = useRef<string | null>(null);
   const loadTokenRef = useRef<string | null>(null);
+  const saveCurrentTokenRef = useRef<string | null>(null);
+  const appendTokenRef = useRef<string | null>(null);
+  const trimTokenRef = useRef<string | null>(null);
   const maestroUploadTokenRef = useRef<string | null>(null);
   const maestroAvatarOpenTokenRef = useRef<string | null>(null);
   const loadFileInputRef = useRef<HTMLInputElement>(null);
+  const appendFileInputRef = useRef<HTMLInputElement>(null);
   const maestroFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -308,6 +317,57 @@ const SessionControls: React.FC = () => {
     }
   };
 
+  const handleTrimConfirm = async () => {
+    if (trimConfirm !== 'DELETE') return;
+    try {
+      if (!trimTokenRef.current) {
+        trimTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
+      }
+      await handleTrimBeforeBookmark();
+      setTrimMode(false);
+      setTrimConfirm('');
+    } catch {
+      setTrimConfirm('');
+    } finally {
+      if (trimTokenRef.current) {
+        endUiTask(trimTokenRef.current);
+        trimTokenRef.current = null;
+      }
+    }
+  };
+
+  const handleSaveCurrentChatClick = async () => {
+    if (!saveCurrentTokenRef.current) {
+      saveCurrentTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
+    }
+    try {
+      await handleSaveCurrentChat();
+    } finally {
+      if (saveCurrentTokenRef.current) {
+        endUiTask(saveCurrentTokenRef.current);
+        saveCurrentTokenRef.current = null;
+      }
+    }
+  };
+
+  const handleAppendFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && handleAppendToCurrentChat) {
+      try {
+        if (!appendTokenRef.current) {
+          appendTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
+        }
+        await handleAppendToCurrentChat(file);
+      } finally {
+        if (appendTokenRef.current) {
+          endUiTask(appendTokenRef.current);
+          appendTokenRef.current = null;
+        }
+      }
+    }
+    event.target.value = '';
+  };
+
   // Click handlers that ignore emulated clicks after touch gestures
   const handleLeftButtonClick = useCallback(() => {
     if (recentTouch.current) {
@@ -418,6 +478,37 @@ const SessionControls: React.FC = () => {
           </div>
         </div>
 
+      ) : trimMode ? (
+        <div className="flex-1 flex items-center justify-between animate-fade-in gap-3">
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-xs font-bold text-orange-300 uppercase tracking-wider whitespace-nowrap">Trim:</span>
+            <input
+              className="flex-1 min-w-[100px] bg-orange-950/30 border border-orange-500/30 rounded px-2 py-1.5 text-sm text-orange-100 placeholder-orange-400/30 focus:outline-none focus:border-orange-400 focus:bg-orange-950/50 transition-colors"
+              placeholder='Type "DELETE" to trim before bookmark'
+              value={trimConfirm}
+              onChange={(e) => setTrimConfirm(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleTrimConfirm}
+              disabled={trimConfirm !== 'DELETE'}
+              className="p-2 bg-orange-500/80 hover:bg-orange-500 rounded-full text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-orange-900/20"
+            >
+              <IconCheck className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTrimMode(false); setTrimConfirm(''); }}
+              className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-full text-slate-300 transition-colors"
+            >
+              <IconUndo className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
       ) : (
         <>
           {/* Left: Edit Profile */}
@@ -432,21 +523,61 @@ const SessionControls: React.FC = () => {
             </button>
           </div>
 
-          {/* Center: Action Pill */}
+          {/* Center: Action Pill - Grouped Controls */}
           <div className="flex items-center bg-slate-800/60 backdrop-blur-sm rounded-full p-1 border border-white/5 shadow-inner">
-            <button type="button" onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveChats')}>
-              <IconSave className="w-4 h-4" />
-            </button>
-            <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-            <button type="button" onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.loadChats')}>
-              <IconFolderOpen className="w-4 h-4" />
-            </button>
-            <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-            <button type="button" onClick={() => setResetMode(true)} className="p-2 hover:bg-red-500/20 rounded-full text-slate-300 hover:text-red-200 transition-colors" title="Backup & Reset">
-              <IconTrash className="w-4 h-4" />
-            </button>
+            {controlMode === 'none' ? (
+              /* Default: Show two group selectors */
+              <>
+                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title="All Chats Controls">
+                  All
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title="This Chat Controls">
+                  This
+                </button>
+              </>
+            ) : controlMode === 'all' ? (
+              /* All Chats: Save All, Load All, Reset, Back */
+              <>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title="Back">
+                  <IconUndo className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveChats') || 'Save All Chats'}>
+                  <IconSave className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.loadChats') || 'Load All Chats'}>
+                  <IconFolderOpen className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={() => setResetMode(true)} className="p-2 hover:bg-red-500/20 rounded-full text-slate-300 hover:text-red-200 transition-colors" title="Backup & Reset">
+                  <IconTrash className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              /* This Chat: Save This, Append, Trim, Back */
+              <>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title="Back">
+                  <IconUndo className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={handleSaveCurrentChatClick} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveThisChat') || 'Save This Chat'}>
+                  <IconBookmark className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={() => appendFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.appendToChat') || 'Append to Chat'}>
+                  <IconPlus className="w-4 h-4" />
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={() => setTrimMode(true)} className="p-2 hover:bg-orange-500/20 rounded-full text-slate-300 hover:text-orange-200 transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
+                  <IconScissors className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
           <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".ndjson,.jsonl" className="hidden" />
+          <input type="file" ref={appendFileInputRef} onChange={handleAppendFileChange} accept=".ndjson,.jsonl" className="hidden" />
 
           {/* Right: Maestro Avatar Cluster */}
           <div
