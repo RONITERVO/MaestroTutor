@@ -146,6 +146,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
   const [bookmarkViewMode, setBookmarkViewMode] = useState<'below' | 'above'>('below');
   const [bookmarkAboveChunkIndex, setBookmarkAboveChunkIndex] = useState(0);
+
   useEffect(() => {
     setBookmarkViewMode('below');
     setBookmarkAboveChunkIndex(0);
@@ -504,11 +505,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     <div className="flex flex-col h-full bg-slate-100">
       <div 
         ref={scrollContainerRef}
-        className="flex-grow overflow-y-auto p-4 space-y-2"
+        className="flex-grow overflow-y-auto p-4"
         onPointerMove={handleSwipePointerMove}
         onPointerUp={handleSwipePointerUp}
         onPointerCancel={handleSwipePointerCancel}
       >
+        {/* Inner flex container: min-h-full ensures it's at least as tall as scroll area.
+            The flex-grow spacer pushes messages to bottom when content is short,
+            and shrinks to 0 when messages overflow, enabling natural scroll behavior.
+            This allows users to scroll content down even with few messages. */}
+        <div className="flex flex-col min-h-full space-y-2">
+          {/* Flexible spacer - grows to fill available space, pushing content down */}
+          <div className="flex-grow" aria-hidden />
        {bookmarkInfo.hasBookmark && hiddenCount > 0 && (
          <div
            className="my-1 px-2 py-1 bg-slate-200 border border-slate-300 rounded flex items-center gap-2"
@@ -815,6 +823,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
             )}
         </div>
         <div ref={messagesEndRef} />
+        </div>{/* End inner flex container */}
       </div>
 
     </div>
