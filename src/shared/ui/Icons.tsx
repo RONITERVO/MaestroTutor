@@ -92,3 +92,9 @@ export const IconSwap = (props: any) => (
 		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17l3-3-3-3M20 14H11a4 4 0 0 1-4 4v1" />
 	</svg>
 );
+
+export const IconScissors = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 8.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5Zm9 0a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5ZM10.5 10l3 3m0 0 3-3m-3 3V3" />
+	</svg>
+);
