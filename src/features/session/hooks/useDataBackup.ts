@@ -633,7 +633,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
     }
   }, [t]);
 
-  // --- Append messages from a backup file to the current chat ---
+  // --- Combine messages from a backup file with current chat (timestamped + deduped) ---
   const handleAppendToCurrentChat = useCallback(async (file: File) => {
     try {
       const selectedPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
@@ -686,16 +686,74 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
         return;
       }
 
-      // Append to existing messages
+      // TIMESTAMPED DEDUPED MERGE:
+      // 1. Combine current + imported messages
+      // 2. Deduplicate by message id (prefer message WITH timestamp, then later timestamp)
+      // 3. Stable sort by timestamp ascending (use id as tiebreaker for stability)
       const currentMessages = useMaestroStore.getState().messages;
-      const combined = [...currentMessages, ...importedMessages];
+      const allMessages = [...currentMessages, ...importedMessages];
+      
+      // Deduplicate: Map by id, with smart preference logic
+      const messageMap = new Map<string, ChatMessage>();
+      for (const msg of allMessages) {
+        const existing = messageMap.get(msg.id);
+        if (!existing) {
+          // First occurrence - always keep
+          messageMap.set(msg.id, msg);
+        } else {
+          // Conflict resolution:
+          // 1. Prefer message WITH timestamp over one without
+          // 2. If both have timestamps, prefer later one
+          // 3. If neither has timestamp, keep existing (first seen)
+          const existingHasTs = typeof existing.timestamp === 'number' && existing.timestamp > 0;
+          const msgHasTs = typeof msg.timestamp === 'number' && msg.timestamp > 0;
+          
+          if (!existingHasTs && msgHasTs) {
+            // Incoming has timestamp, existing doesn't - prefer incoming
+            messageMap.set(msg.id, msg);
+          } else if (existingHasTs && msgHasTs && msg.timestamp > existing.timestamp) {
+            // Both have timestamps, incoming is newer
+            messageMap.set(msg.id, msg);
+          }
+          // Otherwise keep existing
+        }
+      }
+      
+      // Stable sort by timestamp ascending, using id as tiebreaker for stability
+      const combined = Array.from(messageMap.values()).sort((a, b) => {
+        const tsA = typeof a.timestamp === 'number' ? a.timestamp : Number.MAX_SAFE_INTEGER;
+        const tsB = typeof b.timestamp === 'number' ? b.timestamp : Number.MAX_SAFE_INTEGER;
+        if (tsA !== tsB) return tsA - tsB;
+        // Tiebreaker: sort by id for deterministic ordering
+        return a.id.localeCompare(b.id);
+      });
+
+      // Calculate stats - ensure non-negative for UX
+      const newUniqueCount = Math.max(0, combined.length - currentMessages.length);
+      const duplicatesRemoved = allMessages.length - combined.length;
+
       setMessages(combined);
       await safeSaveChatHistoryDB(selectedPairId, combined);
 
-      alert(t('startPage.appendSuccess', { count: importedMessages.length }) || `Successfully appended ${importedMessages.length} messages to the current chat.`);
+      // Build informative message
+      let resultMsg: string;
+      if (newUniqueCount > 0) {
+        resultMsg = t('startPage.combineSuccess', { added: newUniqueCount, total: combined.length }) 
+          || `Combined chats: ${newUniqueCount} new messages added, ${combined.length} total messages.`;
+      } else if (duplicatesRemoved > 0) {
+        resultMsg = t('startPage.combineNoDuplicates', { total: combined.length }) 
+          || `All ${duplicatesRemoved} messages were already in your chat. No changes made.`;
+      } else {
+        resultMsg = t('startPage.combineNoChanges') 
+          || `No new messages to add. Your chat is unchanged.`;
+      }
+      if (newUniqueCount > 0 && duplicatesRemoved > 0) {
+        resultMsg += ` (${duplicatesRemoved} duplicates skipped)`;
+      }
+      alert(resultMsg);
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
-      console.error("Failed to append to chat:", e);
+      console.error("Failed to combine chats:", e);
       if (errMsg === 'INVALID_BACKUP_FORMAT' || errMsg === 'UNSUPPORTED_FORMAT') {
         alert(t('startPage.invalidBackupFormat') || 'Invalid backup file. Please select a valid Maestro backup (.ndjson) file.');
       } else {
