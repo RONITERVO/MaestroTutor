@@ -510,13 +510,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
         onPointerUp={handleSwipePointerUp}
         onPointerCancel={handleSwipePointerCancel}
       >
-        {/* Inner flex container: min-h-full ensures it's at least as tall as scroll area.
-            The flex-grow spacer pushes messages to bottom when content is short,
-            and shrinks to 0 when messages overflow, enabling natural scroll behavior.
-            This allows users to scroll content down even with few messages. */}
-        <div className="flex flex-col min-h-full space-y-2">
-          {/* Flexible spacer - grows to fill available space, pushing content down */}
-          <div className="flex-grow" aria-hidden />
+        {/* Fixed-height top spacer: allows users to scroll the topmost message
+            down to the bottom of the viewport, keeping it clear of top controls
+            (bookmark bar, header, etc.). Uses 100vh minus some buffer for the
+            input area. This spacer always exists regardless of message count. */}
+        <div 
+          className="shrink-0" 
+          style={{ height: 'calc(100vh - 200px)' }} 
+          aria-hidden 
+        />
+        <div className="space-y-2">
        {bookmarkInfo.hasBookmark && hiddenCount > 0 && (
          <div
            className="my-1 px-2 py-1 bg-slate-200 border border-slate-300 rounded flex items-center gap-2"
@@ -823,7 +826,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
             )}
         </div>
         <div ref={messagesEndRef} />
-        </div>{/* End inner flex container */}
+        </div>{/* End content container */}
       </div>
 
     </div>
