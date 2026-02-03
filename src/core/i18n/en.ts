@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const enTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
   // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Set speech recognition to {language}",
   
@@ -35,6 +37,33 @@ export const enTranslations: Record<string, string> = {
   "startPage.combineNoChanges": "No new messages to add. Your chat is unchanged.",
   "startPage.invalidBackupFormat": "Invalid backup file. Please select a valid Maestro backup (.ndjson) file.",
   "startPage.browserNotSupported": "Your browser does not support file saving. Please use Chrome or Edge.",
+  
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Save All",
+  "sessionControls.saveAll.description": "Export all chats to backup file",
+  "sessionControls.loadAll.label": "Load All",
+  "sessionControls.loadAll.description": "Replace all chats with backup file",
+  "sessionControls.reset.label": "Reset",
+  "sessionControls.reset.description": "Backup & delete all data",
+  "sessionControls.saveThis.label": "Save Chat",
+  "sessionControls.saveThis.description": "Export this chat only",
+  "sessionControls.combine.label": "Combine",
+  "sessionControls.combine.description": "Merge backup into this chat",
+  "sessionControls.trim.label": "Trim",
+  "sessionControls.trim.description": "Remove messages before bookmark",
+  
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profile:",
+  "sessionControls.profilePlaceholder": "Your name or details...",
+  "sessionControls.editProfile": "Edit User Profile",
+  "sessionControls.allChatsControls": "All Chats Controls",
+  "sessionControls.thisChatsControls": "This Chat Controls",
+  "sessionControls.all": "All",
+  "sessionControls.this": "This",
+  "sessionControls.back": "Back",
+  "sessionControls.backupAndReset": "Backup & Reset",
+  "sessionControls.typeToConfirm": "Type \"{keyword}\" to confirm",
+  "sessionControls.changeAvatar": "Change Avatar",
 
   // General
   "general.clear": "Clear",

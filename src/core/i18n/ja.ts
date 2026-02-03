@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const jaTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "音声認識を{language}に設定",
+
+  // Header
   "header.targetLanguageTitle": "現在の目標言語：{language}",
+
+  // Start page (used)
   "startPage.clickToStart": "飛行機をクリック",
   "startPage.saveChats": "すべてのチャットを保存",
   "startPage.loadChats": "チャットを読み込む",
+  "startPage.saveThisChat": "このチャットを保存",
+  "startPage.appendToChat": "チャットに追加",
+  "startPage.trimBeforeBookmark": "ブックマーク以前を削除",
   "startPage.maestroAvatar": "マエストロのアバター",
   "startPage.addMaestroAvatar": "マエストロのアバターを追加",
   "startPage.loadSuccess": "{count}件のチャットセッションを正常に読み込み・置換しました！",
   "startPage.loadError": "チャットの読み込みエラー。ファイルが破損しているか、形式が正しくない可能性があります。",
   "startPage.noChatsToSave": "保存するチャット履歴がありません。",
   "startPage.saveError": "チャットの保存エラー。詳細はコンソールを確認してください。",
+  "startPage.noChatSelected": "まずは言語ペアを選択してください。",
+  "startPage.noBookmarkSet": "ブックマークが設定されていません。ブックマークを設定してから、その前のメッセージを削除してください。",
+  "startPage.noMessagesToTrim": "ブックマークの前に削除するメッセージがありません。",
+  "startPage.trimSuccess": "ブックマークより前のメッセージを{count}件削除しました。",
+  "startPage.trimError": "メッセージの削除に失敗しました。もう一度お試しください。",
+  "startPage.noMessagesToAppend": "結合するメッセージがバックアップファイルに見つかりません。",
+  "startPage.noPairInBackup": "バックアップファイルには、現在の言語ペアのメッセージが含まれていません。現在のチャットと一致するバックアップを選択してください。",
+  "startPage.appendSuccess": "現在のチャットに{count}件のメッセージを追加しました。",
+  "startPage.combineSuccess": "チャットを結合しました：新しく{added}件追加、合計{total}件。",
+  "startPage.combineNoDuplicates": "すべてのメッセージはすでにチャットに含まれています。変更はありません。",
+  "startPage.combineNoChanges": "追加する新しいメッセージはありません。チャットは変更されていません。",
+  "startPage.invalidBackupFormat": "無効なバックアップファイルです。有効なMaestroバックアップ（.ndjson）ファイルを選択してください。",
+  "startPage.browserNotSupported": "お使いのブラウザはファイルの保存をサポートしていません。ChromeまたはEdgeを使用してください。",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "すべて保存",
+  "sessionControls.saveAll.description": "全チャットをバックアップにエクスポート",
+  "sessionControls.loadAll.label": "すべて読み込む",
+  "sessionControls.loadAll.description": "全チャットをバックアップで置換",
+  "sessionControls.reset.label": "リセット",
+  "sessionControls.reset.description": "バックアップして全データを削除",
+  "sessionControls.saveThis.label": "チャット保存",
+  "sessionControls.saveThis.description": "このチャットのみエクスポート",
+  "sessionControls.combine.label": "結合",
+  "sessionControls.combine.description": "バックアップをこのチャットに統合",
+  "sessionControls.trim.label": "トリミング",
+  "sessionControls.trim.description": "ブックマーク以前のメッセージを削除",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "プロフィール：",
+  "sessionControls.profilePlaceholder": "名前や詳細...",
+  "sessionControls.editProfile": "ユーザープロフィールを編集",
+  "sessionControls.allChatsControls": "全チャット操作",
+  "sessionControls.thisChatsControls": "現在のチャット操作",
+  "sessionControls.all": "すべて",
+  "sessionControls.this": "このチャット",
+  "sessionControls.back": "戻る",
+  "sessionControls.backupAndReset": "バックアップとリセット",
+  "sessionControls.typeToConfirm": "確認のため「{keyword}」と入力してください",
+  "sessionControls.changeAvatar": "アバターを変更",
+
+  // General
   "general.clear": "クリア",
   "general.error": "申し訳ありません、エラーが発生しました。",
 
@@ -40,6 +92,8 @@ export const jaTranslations: Record<string, string> = {
   "apiKeyGate.saving": "保存中...",
   "apiKeyGate.saveKey": "キーを保存",
   "apiKeyGate.close": "閉じる",
+
+  // Chat - general
   "chat.thinking": "考え中...",
   "chat.loadingHistory": "チャット履歴を読み込み中...",
   "chat.loadingSuggestions": "提案を読み込み中...",
@@ -58,36 +112,50 @@ export const jaTranslations: Record<string, string> = {
   "chat.speakThisLine": "この行を読み上げる",
   "chat.languageSelector.openGlobe": "言語を変更",
   "chat.maestroTranscriptScrollwheel": "マエストロのトランスクリプトスクロールビュー",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STTアクティブ：聞き取り中...",
   "chat.mic.enableStt": "STTを有効にする",
   "chat.mic.disableStt": "STTを停止",
   "chat.mic.recordingAudioNote": "音声を録音中...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language}で聞き取り中...",
   "chat.placeholder.normal.sttActive": "{language}で話すか入力してください...",
   "chat.placeholder.normal.sttInactive": "入力するか、マイクをタップして{language}で話してください...",
   "chat.placeholder.suggestion.listening": "翻訳するには{language}で話してください...",
   "chat.placeholder.suggestion.sttActive": "翻訳するには{language}で話すか入力してください...",
   "chat.placeholder.suggestion.sttInactive": "翻訳するには{language}で入力してください...",
+
+  // Chat - camera
   "chat.camera.turnOn": "カメラプレビューを有効にする",
   "chat.camera.turnOff": "カメラプレビューを無効にする",
   "chat.camera.imageGenCameraLabel": "画像生成",
   "chat.camera.captureOrRecord": "タップで写真、長押しで動画",
   "chat.camera.stopRecording": "録画を停止",
   "chat.bookIcon.toggleImageGen": "画像生成モードを切り替え",
+
+  // Chat - image
   "chat.imagePreview.alt": "プレビュー",
   "chat.image.dragToEnlarge": "角をドラッグして拡大",
   "chat.image.dragToShrink": "角をドラッグして縮小",
   "chat.annotateImage": "画像に注釈を付ける",
   "chat.annotateVideoFrame": "現在のフレームに注釈を付ける",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "注釈を付ける画像",
   "chat.annotateModal.cancel": "キャンセル",
   "chat.annotateModal.saveAndAttach": "保存して添付",
   "chat.annotateModal.undo": "元に戻す",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "読み上げ：\"{suggestion}\"",
   "chat.suggestion.ariaLabel": "提案を読み上げる：{suggestion}",
   "chat.suggestion.toggleCreateMode": "提案作成モードを切り替え",
   "chat.suggestion.createAction": "提案を作成",
   "chat.suggestion.creating": "提案を作成中...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "マエストロは待機中",
   "chat.maestro.title.idle": "マエストロは現在待機中です。",
   "chat.maestro.resting": "マエストロは休息中...",
@@ -104,6 +172,8 @@ export const jaTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "マエストロはあなたの入力または声を待っています。",
   "chat.maestro.holding": "マエストロは保留中",
   "chat.maestro.title.holding": "マエストロは保留中（再開は一時停止）",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "上に隠されたメッセージ",
   "chat.bookmark.isHere": "ブックマークはここにあります",
   "chat.bookmark.setHere": "ここにブックマークを設定",
@@ -114,11 +184,15 @@ export const jaTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "1つ多く表示",
   "chat.bookmark.incrementTitle": "多く",
   "chat.bookmark.hiddenBelowHeaderAria": "下に隠されたメッセージ",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "動画を最適化中...",
   "chat.sendPrep.optimizingImage": "画像を最適化中...",
   "chat.sendPrep.preparingMedia": "メディアを準備中...",
   "chat.sendPrep.uploadingMedia": "メディアをアップロード中...",
   "chat.sendPrep.finalizing": "完了中...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "注釈中",
   "chat.header.recordingAudio": "音声録音中",
   "chat.header.recordingVideo": "動画録画中",
@@ -128,6 +202,8 @@ export const jaTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "動画を視聴中",
   "chat.header.viewingAbove": "上のメッセージを表示中",
   "chat.header.liveSession": "ライブセッション",
+
+  // Chat - live session
   "chat.liveSession.stop": "ライブを停止",
   "chat.liveSession.retry": "ライブを再試行",
   "chat.liveSession.start": "ライブを開始",
@@ -156,6 +232,8 @@ export const jaTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Gemini APIキーが見つかりません。APIキー画面を開いてキーを貼り付けてください。",
   "error.apiKeyInvalid": "Gemini APIキーが無効です。誤字脱字を確認し、有効なキーを貼り付けてください。",
   "error.apiQuotaExceeded": "チャット用のGemini API無料枠を使い果たしました。課金手順を含むAPIキー画面を開きました。その間もライブ会話は引き続きご利用いただけます。",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "カメラの許可が拒否されました。ブラウザの設定でカメラへのアクセスを有効にしてください。",
   "error.cameraNotFound": "選択されたカメラが見つかりません。接続されていることを確認するか、別のカメラを選択してください。",
   "error.cameraAccessNotSupported": "お使いのブラウザはカメラへのアクセスをサポートしていません。",
@@ -163,7 +241,7 @@ export const jaTranslations: Record<string, string> = {
   "error.cameraStreamNotAvailable": "キャプチャ用のカメラストリームが利用できません。",
   "error.imageCaptureGeneric": "画像キャプチャ中に不明なエラーが発生しました。",
 
-  // Errors - visual context
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "ビジュアルコンテキストのビデオ要素の準備ができていません。",
   "error.snapshotVideoElementNotReady": "スナップショット用のビデオ要素の準備ができていません。",
   "error.visualContextCameraAccessNotSupported": "ビジュアルコンテキストのカメラアクセスがサポートされていません。",

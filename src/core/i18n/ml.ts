@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const mlTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "സംഭാഷണം തിരിച്ചറിയൽ {language}-ലേക്ക് സജ്ജമാക്കുക",
+
+  // Header
   "header.targetLanguageTitle": "നിലവിലെ ടാർഗെറ്റ് ഭാഷ: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "വിമാനത്തിൽ ക്ലിക്ക് ചെയ്യുക",
   "startPage.saveChats": "എല്ലാ ചാറ്റുകളും സംരക്ഷിക്കുക",
   "startPage.loadChats": "ചാറ്റുകൾ ലോഡുചെയ്യുക",
+  "startPage.saveThisChat": "ഈ ചാറ്റ് സംരക്ഷിക്കുക",
+  "startPage.appendToChat": "ചാറ്റിലേക്ക് ചേർക്കുക",
+  "startPage.trimBeforeBookmark": "ബുക്ക്മാർക്കിന് മുമ്പുള്ളവ ഒഴിവാക്കുക",
   "startPage.maestroAvatar": "മാസ്ട്രോ അവതാരം",
   "startPage.addMaestroAvatar": "മാസ്ട്രോ അവതാരം ചേർക്കുക",
   "startPage.loadSuccess": "{count} ചാറ്റ് സെഷനുകൾ വിജയകരമായി ലോഡുചെയ്ത് മാറ്റിസ്ഥാപിച്ചു!",
   "startPage.loadError": "ചാറ്റുകൾ ലോഡുചെയ്യുന്നതിൽ പിശക്. ഫയൽ കേടുവന്നതോ തെറ്റായ ഫോർമാറ്റിലോ ആകാം.",
   "startPage.noChatsToSave": "സംരക്ഷിക്കാൻ ചാറ്റ് ചരിത്രമില്ല.",
   "startPage.saveError": "ചാറ്റുകൾ സംരക്ഷിക്കുന്നതിൽ പിശക്. കൂടുതൽ വിവരങ്ങൾക്ക് കൺസോൾ കാണുക.",
+  "startPage.noChatSelected": "ദയവായി ആദ്യം ഒരു ഭാഷാ ജോഡി തിരഞ്ഞെടുക്കുക.",
+  "startPage.noBookmarkSet": "ബുക്ക്മാർക്ക് സജ്ജീകരിച്ചിട്ടില്ല. മുമ്പുള്ള സന്ദേശങ്ങൾ നീക്കം ചെയ്യുന്നതിനായി ആദ്യം ഒരു ബുക്ക്മാർക്ക് സജ്ജമാക്കുക.",
+  "startPage.noMessagesToTrim": "നീക്കം ചെയ്യാൻ ബുക്ക്മാർക്കിന് മുമ്പ് സന്ദേശങ്ങളൊന്നുമില്ല.",
+  "startPage.trimSuccess": "ബുക്ക്മാർക്കിന് മുമ്പുള്ള {count} സന്ദേശങ്ങൾ നീക്കം ചെയ്തു.",
+  "startPage.trimError": "സന്ദേശങ്ങൾ നീക്കം ചെയ്യുന്നതിൽ പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+  "startPage.noMessagesToAppend": "ബാക്കപ്പ് ഫയലിൽ കൂട്ടിച്ചേർക്കാൻ സന്ദേശങ്ങളൊന്നും കണ്ടെത്തിയില്ല.",
+  "startPage.noPairInBackup": "ബാക്കപ്പ് ഫയലിൽ നിലവിലെ ഭാഷാ ജോഡിക്കായുള്ള സന്ദേശങ്ങളില്ല. നിലവിലെ ചാറ്റുമായി പൊരുത്തപ്പെടുന്ന ഒരു ബാക്കപ്പ് തിരഞ്ഞെടുക്കുക.",
+  "startPage.appendSuccess": "{count} സന്ദേശങ്ങൾ നിലവിലെ ചാറ്റിലേക്ക് വിജയകരമായി ചേർത്തു.",
+  "startPage.combineSuccess": "ചാറ്റുകൾ സംയോജിപ്പിച്ചു: {added} പുതിയ സന്ദേശങ്ങൾ ചേർത്തു, ആകെ {total} സന്ദേശങ്ങൾ.",
+  "startPage.combineNoDuplicates": "എല്ലാ സന്ദേശങ്ങളും ഇതിനകം നിങ്ങളുടെ ചാറ്റിലുണ്ട്. മാറ്റങ്ങളൊന്നും വരുത്തിയിട്ടില്ല.",
+  "startPage.combineNoChanges": "പുതിയ സന്ദേശങ്ങളൊന്നും ചേർക്കാനില്ല. നിങ്ങളുടെ ചാറ്റിൽ മാറ്റമില്ല.",
+  "startPage.invalidBackupFormat": "അസാധുവായ ബാക്കപ്പ് ഫയൽ. ദയവായി സാധുവായ ഒരു മാസ്ട്രോ ബാക്കപ്പ് (.ndjson) ഫയൽ തിരഞ്ഞെടുക്കുക.",
+  "startPage.browserNotSupported": "നിങ്ങളുടെ ബ്രൗസർ ഫയൽ സംരക്ഷിക്കുന്നതിനെ പിന്തുണയ്ക്കുന്നില്ല. ദയവായി Chrome അല്ലെങ്കിൽ Edge ഉപയോഗിക്കുക.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "എല്ലാം സംരക്ഷിക്കുക",
+  "sessionControls.saveAll.description": "എല്ലാ ചാറ്റുകളും ബാക്കപ്പ് ഫയലിലേക്ക് എക്‌സ്‌പോർട്ട് ചെയ്യുക",
+  "sessionControls.loadAll.label": "എല്ലാം ലോഡ് ചെയ്യുക",
+  "sessionControls.loadAll.description": "എല്ലാ ചാറ്റുകളും ബാക്കപ്പ് ഫയൽ ഉപയോഗിച്ച് മാറ്റുക",
+  "sessionControls.reset.label": "റീസെറ്റ്",
+  "sessionControls.reset.description": "എല്ലാ ഡാറ്റയും ബാക്കപ്പ് ചെയ്ത് ഡിലീറ്റ് ചെയ്യുക",
+  "sessionControls.saveThis.label": "ചാറ്റ് സംരക്ഷിക്കുക",
+  "sessionControls.saveThis.description": "ഈ ചാറ്റ് മാത്രം എക്‌സ്‌പോർട്ട് ചെയ്യുക",
+  "sessionControls.combine.label": "സംയോജിപ്പിക്കുക",
+  "sessionControls.combine.description": "ബാക്കപ്പ് ഈ ചാറ്റിലേക്ക് ലയിപ്പിക്കുക",
+  "sessionControls.trim.label": "ട്രിം",
+  "sessionControls.trim.description": "ബുക്ക്മാർക്കിന് മുമ്പുള്ള സന്ദേശങ്ങൾ നീക്കം ചെയ്യുക",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "പ്രൊഫൈൽ:",
+  "sessionControls.profilePlaceholder": "നിങ്ങളുടെ പേര് അല്ലെങ്കിൽ വിവരങ്ങൾ...",
+  "sessionControls.editProfile": "ഉപയോക്തൃ പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുക",
+  "sessionControls.allChatsControls": "എല്ലാ ചാറ്റുകളുടെയും നിയന്ത്രണങ്ങൾ",
+  "sessionControls.thisChatsControls": "ഈ ചാറ്റിന്റെ നിയന്ത്രണങ്ങൾ",
+  "sessionControls.all": "എല്ലാം",
+  "sessionControls.this": "ഇത്",
+  "sessionControls.back": "പിന്നിലേക്ക്",
+  "sessionControls.backupAndReset": "ബാക്കപ്പും റീസെറ്റും",
+  "sessionControls.typeToConfirm": "സ്ഥിരീകരിക്കുന്നതിന് \"{keyword}\" എന്ന് ടൈപ്പ് ചെയ്യുക",
+  "sessionControls.changeAvatar": "അവതാരം മാറ്റുക",
+
+  // General
   "general.clear": "മായ്‌ക്കുക",
   "general.error": "ക്ഷമിക്കണം, ഒരു പിശക് സംഭവിച്ചു.",
 
@@ -40,6 +92,8 @@ export const mlTranslations: Record<string, string> = {
   "apiKeyGate.saving": "സേവ് ചെയ്യുന്നു...",
   "apiKeyGate.saveKey": "കീ സേവ് ചെയ്യുക",
   "apiKeyGate.close": "അടയ്ക്കുക",
+
+  // Chat - general
   "chat.thinking": "ചിന്തിക്കുന്നു...",
   "chat.loadingHistory": "ചാറ്റ് ചരിത്രം ലോഡുചെയ്യുന്നു...",
   "chat.loadingSuggestions": "നിർദ്ദേശങ്ങൾ ലോഡുചെയ്യുന്നു...",
@@ -58,36 +112,50 @@ export const mlTranslations: Record<string, string> = {
   "chat.speakThisLine": "ഈ വരി സംസാരിക്കുക",
   "chat.languageSelector.openGlobe": "ഭാഷകൾ മാറ്റുക",
   "chat.maestroTranscriptScrollwheel": "മാസ്ട്രോ ട്രാൻസ്‌ക്രിപ്റ്റ് സ്ക്രോൾ വ്യൂ",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT സജീവം: കേൾക്കുന്നു...",
   "chat.mic.enableStt": "STT പ്രവർത്തനക്ഷമമാക്കുക",
   "chat.mic.disableStt": "STT നിർത്തുക",
   "chat.mic.recordingAudioNote": "ഓഡിയോ റെക്കോർഡുചെയ്യുന്നു...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language}-ൽ കേൾക്കുന്നു...",
   "chat.placeholder.normal.sttActive": "{language}-ൽ സംസാരിക്കുക അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യുക...",
   "chat.placeholder.normal.sttInactive": "ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ {language}-ൽ സംസാരിക്കാൻ മൈക്ക് ക്ലിക്ക് ചെയ്യുക...",
   "chat.placeholder.suggestion.listening": "തർജ്ജമ ചെയ്യാൻ {language} സംസാരിക്കുക...",
   "chat.placeholder.suggestion.sttActive": "തർജ്ജമ ചെയ്യാൻ {language}-ൽ സംസാരിക്കുക അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യുക...",
   "chat.placeholder.suggestion.sttInactive": "തർജ്ജമ ചെയ്യാൻ {language}-ൽ ടൈപ്പ് ചെയ്യുക...",
+
+  // Chat - camera
   "chat.camera.turnOn": "ക്യാമറ പ്രിവ്യൂ ഓണാക്കുക",
   "chat.camera.turnOff": "ക്യാമറ പ്രിവ്യൂ ഓഫാക്കുക",
   "chat.camera.imageGenCameraLabel": "ചിത്രം ജനിപ്പിക്കൽ",
   "chat.camera.captureOrRecord": "ഫോട്ടോയ്ക്ക് ടാപ്പ് ചെയ്യുക, വീഡിയോയ്ക്ക് പിടിക്കുക",
   "chat.camera.stopRecording": "റെക്കോർഡിംഗ് നിർത്തുക",
   "chat.bookIcon.toggleImageGen": "ചിത്രം ജനിപ്പിക്കൽ മോഡ് മാറ്റുക",
+
+  // Chat - image
   "chat.imagePreview.alt": "പ്രിവ്യൂ",
   "chat.image.dragToEnlarge": "വലുതാക്കാൻ കോണിൽ വലിക്കുക",
   "chat.image.dragToShrink": "ചെറുതാക്കാൻ കോണിൽ വലിക്കുക",
   "chat.annotateImage": "ചിത്രത്തിൽ കുറിപ്പെഴുതുക",
   "chat.annotateVideoFrame": "നിലവിലെ ഫ്രെയിമിൽ കുറിപ്പെഴുതുക",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "കുറിപ്പെഴുതാനുള്ള ചിത്രം",
   "chat.annotateModal.cancel": "റദ്ദാക്കുക",
   "chat.annotateModal.saveAndAttach": "സംരക്ഷിച്ച് അറ്റാച്ചുചെയ്യുക",
   "chat.annotateModal.undo": "തിരിച്ചാക്കുക",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "പറയുക: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "നിർദ്ദേശം സംസാരിക്കുക: {suggestion}",
   "chat.suggestion.toggleCreateMode": "നിർദ്ദേശം ഉണ്ടാക്കുന്ന മോഡ് മാറ്റുക",
   "chat.suggestion.createAction": "നിർദ്ദേശം ഉണ്ടാക്കുക",
   "chat.suggestion.creating": "നിർദ്ദേശം ഉണ്ടാക്കുന്നു...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "മാസ്ട്രോ നിഷ്‌ക്രിയമാണ്",
   "chat.maestro.title.idle": "മാസ്ട്രോ നിലവിൽ നിഷ്‌ക്രിയമാണ്.",
   "chat.maestro.resting": "മാസ്ട്രോ വിശ്രമിക്കുന്നു...",
@@ -104,6 +172,8 @@ export const mlTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "മാസ്ട്രോ നിങ്ങളുടെ ഇൻപുട്ടിനോ ശബ്ദത്തിനോ കാത്തിരിക്കുന്നു.",
   "chat.maestro.holding": "മാസ്ട്രോ കാത്തിരിക്കുന്നു",
   "chat.maestro.title.holding": "മാസ്ട്രോ കാത്തിരിക്കുന്നു (വീണ്ടും സജീവമാകുന്നത് താൽക്കാലികമായി നിർത്തി)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "മുകളിൽ മറഞ്ഞിരിക്കുന്ന സന്ദേശങ്ങൾ",
   "chat.bookmark.isHere": "ബുക്ക്മാർക്ക് ഇവിടെയുണ്ട്",
   "chat.bookmark.setHere": "ഇവിടെ ബുക്ക്മാർക്ക് സജ്ജമാക്കുക",
@@ -114,11 +184,15 @@ export const mlTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "ഒന്ന് കൂടുതൽ കാണിക്കുക",
   "chat.bookmark.incrementTitle": "കൂടുതൽ",
   "chat.bookmark.hiddenBelowHeaderAria": "താഴെ മറഞ്ഞിരിക്കുന്ന സന്ദേശങ്ങൾ",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "വീഡിയോ ഒപ്റ്റിമൈസ് ചെയ്യുന്നു...",
   "chat.sendPrep.optimizingImage": "ചിത്രം ഒപ്റ്റിമൈസ് ചെയ്യുന്നു...",
   "chat.sendPrep.preparingMedia": "മാധ്യമം തയ്യാറാക്കുന്നു...",
   "chat.sendPrep.uploadingMedia": "മാധ്യമം അപ്‌ലോഡ് ചെയ്യുന്നു...",
   "chat.sendPrep.finalizing": "പൂർത്തിയാക്കുന്നു...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "കുറിപ്പെഴുതുന്നു",
   "chat.header.recordingAudio": "ഓഡിയോ റെക്കോർഡുചെയ്യുന്നു",
   "chat.header.recordingVideo": "വീഡിയോ റെക്കോർഡുചെയ്യുന്നു",
@@ -128,6 +202,8 @@ export const mlTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "വീഡിയോ കാണുന്നു",
   "chat.header.viewingAbove": "മുമ്പത്തെ സന്ദേശങ്ങൾ കാണുന്നു",
   "chat.header.liveSession": "തൽസമയ സെഷൻ",
+
+  // Chat - live session
   "chat.liveSession.stop": "തൽസമയം നിർത്തുക",
   "chat.liveSession.retry": "തൽസമയം വീണ്ടും ശ്രമിക്കുക",
   "chat.liveSession.start": "തൽസമയം ആരംഭിക്കുക",
@@ -137,6 +213,8 @@ export const mlTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "നമസ്‌കാരം",
   "chat.liveSession.defaultSuggestion2": "സുപ്രഭാതം",
   "chat.liveSession.defaultSuggestion3": "എങ്ങനെയുണ്ട്?",
+
+  // Chat - errors
   "chat.error.sttError": "STT പിശക്: {error}. മൈക്ക് മാറ്റാൻ ശ്രമിക്കുക.",
   "chat.error.autoCaptureCameraError": "ഓട്ടോ ക്യാപ്‌ചർ ക്യാമറ പിശക്: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,31 +223,37 @@ export const mlTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "നിലവിലെ ഫ്രെയിമിൽ കുറിപ്പെഴുതാൻ വീഡിയോ താൽക്കാലികമായി നിർത്തുക",
   "chat.error.imageGenInterrupted": "ചിത്രം ജനിപ്പിക്കൽ തടസ്സപ്പെട്ടു.",
   "chat.error.thinkingInterrupted": "AI പ്രതികരണം തടസ്സപ്പെട്ടു.",
+
+  // Errors - general
   "error.noLanguagePair": "ഗുരുതരമായ പിശക്: ഭാഷാ ജോഡി തിരഞ്ഞെടുത്തിട്ടില്ല.",
   "error.translationFailed": "തർജ്ജമ പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
   "error.imageLimitReached": "സെഷൻ ചിത്രം ജനിപ്പിക്കുന്നതിനുള്ള പരിധി എത്തി. ദയവായി പുതിയ സെഷൻ ആരംഭിക്കുക.",
   "error.tokenLimitReached": "സെഷൻ ടോക്കൺ പരിധി എത്തി. ദയവായി പുതിയ സെഷൻ ആരംഭിക്കുക.",
   "error.apiKeyMissing": "നിങ്ങളുടെ Gemini API കീ കാണാനില്ല. API കീ സ്ക്രീൻ തുറന്ന് കീ ഒട്ടിക്കുക.",
   "error.apiKeyInvalid": "നിങ്ങളുടെ Gemini API കീ അസാധുവാണ്. അക്ഷരത്തെറ്റുകൾ ഉണ്ടോ എന്ന് പരിശോധിക്കുക.",
-  "error.apiQuotaExceeded": "ചാറ്റിനായുള്ള നിങ്ങളുടെ Gemini API സൗജന്യ ക്വോട്ട തീർന്നു. ബില്ലിംഗ് ഘട്ടങ്ങളുള്ള API കീ സ്ക്രീൻ ഞാൻ തുറന്നു. അതിനിടയിൽ നിങ്ങൾക്ക് ലൈവ് സംഭാഷണം ഉപയോഗിക്കാം.",
+  "error.apiQuotaExceeded": "ചാറ്ററ്റിനായുള്ള നിങ്ങളുടെ Gemini API സൗജന്യ ക്വോട്ട തീർന്നു. ബില്ലിംഗ് ഘട്ടങ്ങളുള്ള API കീ സ്ക്രീൻ ഞാൻ തുറന്നു. അതിനിടയിൽ നിങ്ങൾക്ക് ലൈവ് സംഭാഷണം ഉപയോഗിക്കാം.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "ക്യാമറ അനുമതി നിരസിച്ചു. ബ്രൗസർ ക്രമീകരണങ്ങളിൽ ക്യാമറ ആക്സസ് പ്രവർത്തനക്ഷമമാക്കുക.",
   "error.cameraNotFound": "തിരഞ്ഞെടുത്ത ക്യാമറ കണ്ടെത്തിയില്ല. അത് കണക്റ്റുചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാക്കുക അല്ലെങ്കിൽ മറ്റൊരു ക്യാമറ തിരഞ്ഞെടുക്കുക.",
   "error.cameraAccessNotSupported": "നിങ്ങളുടെ ബ്രൗസർ ക്യാമറ ആക്സസ് പിന്തുണയ്ക്കുന്നില്ല.",
   "error.cameraUnknown": "ക്യാമറ ആക്സസ് ചെയ്യുമ്പോൾ അറിയാത്ത പിശക് സംഭവിച്ചു.",
   "error.cameraStreamNotAvailable": "ക്യാപ്‌ചർ ചെയ്യാൻ ക്യാമറ സ്ട്രീം ലഭ്യമല്ല.",
   "error.imageCaptureGeneric": "ചിത്രം ക്യാപ്‌ചർ ചെയ്യുമ്പോൾ അറിയാത്ത പിശക്.",
-  "error.visualContextVideoElementNotReady": "വിഷ്വൽ സന്ദർഭ വീഡിയോ എലമെന്റ് തയ്യാറല്ല.",
+
+  // Errors - visual context (dynamically constructed with prefix)
+  "error.visualContextVideoElementNotReady": "വിഷ്വൽ കോൺടെക്സ്റ്റ് വീഡിയോ എലമെന്റ് തയ്യാറല്ല.",
   "error.snapshotVideoElementNotReady": "സ്നാപ്പ്ഷോട്ട് വീഡിയോ എലമെന്റ് തയ്യാറല്ല.",
-  "error.visualContextCameraAccessNotSupported": "വിഷ്വൽ സന്ദർഭത്തിന് ക്യാമറ ആക്സസ് പിന്തുണയ്ക്കുന്നില്ല.",
+  "error.visualContextCameraAccessNotSupported": "വിഷ്വൽ കോൺടെക്സ്റ്റിന് ക്യാമറ ആക്സസ് പിന്തുണയ്ക്കുന്നില്ല.",
   "error.snapshotCameraAccessNotSupported": "സ്നാപ്പ്ഷോട്ടിന് ക്യാമറ ആക്സസ് പിന്തുണയ്ക്കുന്നില്ല.",
-  "error.visualContext2DContext": "വിഷ്വൽ സന്ദർഭത്തിന് 2D സന്ദർഭം ലഭിക്കാൻ കഴിഞ്ഞില്ല.",
-  "error.snapshot2DContext": "സ്നാപ്പ്ഷോട്ടിന് 2D സന്ദർഭം ലഭിക്കാൻ കഴിഞ്ഞില്ല.",
-  "error.visualContextCaptureFailedPermission": "വിഷ്വൽ സന്ദർഭം പരാജയപ്പെട്ടു: ക്യാമറ അനുമതി നിരസിച്ചു.",
+  "error.visualContext2DContext": "വിഷ്വൽ കോൺടെക്സ്റ്റിനായി 2D കോൺടെക്സ്റ്റ് ലഭിച്ചില്ല.",
+  "error.snapshot2DContext": "സ്നാപ്പ്ഷോട്ടിനായി 2D കോൺടെക്സ്റ്റ് ലഭിച്ചില്ല.",
+  "error.visualContextCaptureFailedPermission": "വിഷ്വൽ കോൺടെക്സ്റ്റ് പരാജയപ്പെട്ടു: ക്യാമറ അനുമതി നിരസിച്ചു.",
   "error.snapshotCaptureFailedPermission": "സ്നാപ്പ്ഷോട്ട് പരാജയപ്പെട്ടു: ക്യാമറ അനുമതി നിരസിച്ചു.",
-  "error.visualContextCaptureFailedNotFound": "വിഷ്വൽ സന്ദർഭം പരാജയപ്പെട്ടു: ക്യാമറ കണ്ടെത്തിയില്ല.",
+  "error.visualContextCaptureFailedNotFound": "വിഷ്വൽ കോൺടെക്സ്റ്റ് പരാജയപ്പെട്ടു: ക്യാമറ കണ്ടെത്തിയില്ല.",
   "error.snapshotCaptureFailedNotFound": "സ്നാപ്പ്ഷോട്ട് പരാജയപ്പെട്ടു: ക്യാമറ കണ്ടെത്തിയില്ല.",
-  "error.visualContextCaptureFailedNotReady": "വിഷ്വൽ സന്ദർഭം പരാജയപ്പെട്ടു: ക്യാമറ തയ്യാറല്ല അല്ലെങ്കിൽ ഫീഡിൽ പ്രശ്നം. {details}",
+  "error.visualContextCaptureFailedNotReady": "വിഷ്വൽ കോൺടെക്സ്റ്റ് പരാജയപ്പെട്ടു: ക്യാമറ തയ്യാറല്ല അല്ലെങ്കിൽ ഫീഡിൽ പ്രശ്നം. {details}",
   "error.snapshotCaptureFailedNotReady": "സ്നാപ്പ്ഷോട്ട് പരാജയപ്പെട്ടു: ക്യാമറ തയ്യാറല്ല അല്ലെങ്കിൽ ഫീഡിൽ പ്രശ്നം. {details}",
-  "error.visualContextCaptureFailedGeneric": "വിഷ്വൽ സന്ദർഭം പരാജയപ്പെട്ടു: {details}",
+  "error.visualContextCaptureFailedGeneric": "വിഷ്വൽ കോൺടെക്സ്റ്റ് പരാജയപ്പെട്ടു: {details}",
   "error.snapshotCaptureFailedGeneric": "സ്നാപ്പ്ഷോട്ട് പരാജയപ്പെട്ടു: {details}",
 };

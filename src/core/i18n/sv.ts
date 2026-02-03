@@ -2,21 +2,73 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const svTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Ställ in taligenkänning till {language}",
+
+  // Header
   "header.targetLanguageTitle": "Nuvarande målspråk: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "Klicka på flygplanet",
   "startPage.saveChats": "Spara alla chattar",
   "startPage.loadChats": "Ladda chattar",
+  "startPage.saveThisChat": "Spara denna chatt",
+  "startPage.appendToChat": "Lägg till i chatt",
+  "startPage.trimBeforeBookmark": "Trimma före bokmärke",
   "startPage.maestroAvatar": "Maestro-avatar",
   "startPage.addMaestroAvatar": "Lägg till Maestro-avatar",
   "startPage.loadSuccess": "{count} chattsessioner laddades och ersattes framgångsrikt!",
   "startPage.loadError": "Fel vid laddning av chattar. Filen kan vara skadad eller i fel format.",
   "startPage.noChatsToSave": "Ingen chatthistorik att spara.",
   "startPage.saveError": "Fel vid sparning av chattar. Se konsolen för mer detaljer.",
+  "startPage.noChatSelected": "Välj ett språkpar först.",
+  "startPage.noBookmarkSet": "Inget bokmärke angett. Sätt ett bokmärke först för att trimma meddelanden före det.",
+  "startPage.noMessagesToTrim": "Inga meddelanden före bokmärket att ta bort.",
+  "startPage.trimSuccess": "Tog bort {count} meddelanden före bokmärket.",
+  "startPage.trimError": "Misslyckades med att trimma meddelanden. Försök igen.",
+  "startPage.noMessagesToAppend": "Inga meddelanden hittades i säkerhetskopian att kombinera.",
+  "startPage.noPairInBackup": "Säkerhetskopian innehåller inte meddelanden för ditt aktuella språkpar. Välj en säkerhetskopia som matchar din aktuella chatt.",
+  "startPage.appendSuccess": "Lade till {count} meddelanden i den aktuella chatten.",
+  "startPage.combineSuccess": "Kombinerade chattar: {added} nya meddelanden tillagda, totalt {total} meddelanden.",
+  "startPage.combineNoDuplicates": "Alla meddelanden fanns redan i din chatt. Inga ändringar gjordes.",
+  "startPage.combineNoChanges": "Inga nya meddelanden att lägga till. Din chatt är oförändrad.",
+  "startPage.invalidBackupFormat": "Ogiltig säkerhetskopia. Välj en giltig Maestro-backupfil (.ndjson).",
+  "startPage.browserNotSupported": "Din webbläsare stöder inte sparande av filer. Använd Chrome eller Edge.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Spara alla",
+  "sessionControls.saveAll.description": "Exportera alla chattar till backupfil",
+  "sessionControls.loadAll.label": "Ladda alla",
+  "sessionControls.loadAll.description": "Ersätt alla chattar med backupfil",
+  "sessionControls.reset.label": "Återställ",
+  "sessionControls.reset.description": "Säkerhetskopiera & radera all data",
+  "sessionControls.saveThis.label": "Spara chatt",
+  "sessionControls.saveThis.description": "Exportera endast denna chatt",
+  "sessionControls.combine.label": "Kombinera",
+  "sessionControls.combine.description": "Slå ihop backup med denna chatt",
+  "sessionControls.trim.label": "Trimma",
+  "sessionControls.trim.description": "Ta bort meddelanden före bokmärke",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profil:",
+  "sessionControls.profilePlaceholder": "Ditt namn eller detaljer...",
+  "sessionControls.editProfile": "Redigera användarprofil",
+  "sessionControls.allChatsControls": "Kontroller för alla chattar",
+  "sessionControls.thisChatsControls": "Kontroller för denna chatt",
+  "sessionControls.all": "Alla",
+  "sessionControls.this": "Denna",
+  "sessionControls.back": "Bakåt",
+  "sessionControls.backupAndReset": "Säkerhetskopiera & Återställ",
+  "sessionControls.typeToConfirm": "Skriv \"{keyword}\" för att bekräfta",
+  "sessionControls.changeAvatar": "Ändra avatar",
+
+  // General
   "general.clear": "Rensa",
   "general.error": "Tyvärr, ett fel uppstod.",
 
-// API key gate
+  // API key gate
   "apiKeyGate.title": "Anslut din Gemini API-nyckel",
   "apiKeyGate.billingTitle": "Ställ in fakturering för högre kvot",
   "apiKeyGate.subtitle": "Den här appen körs helt på din enhet. Din nyckel når aldrig våra servrar.",
@@ -40,6 +92,8 @@ export const svTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Sparar...",
   "apiKeyGate.saveKey": "Spara nyckel",
   "apiKeyGate.close": "Stäng",
+
+  // Chat - general
   "chat.thinking": "Tänker...",
   "chat.loadingHistory": "Laddar chatthistorik...",
   "chat.loadingSuggestions": "Laddar förslag...",
@@ -58,36 +112,50 @@ export const svTranslations: Record<string, string> = {
   "chat.speakThisLine": "Läs upp denna rad",
   "chat.languageSelector.openGlobe": "Byt språk",
   "chat.maestroTranscriptScrollwheel": "Maestro-transkription rullningsvy",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT aktiv: Lyssnar...",
   "chat.mic.enableStt": "Aktivera STT",
   "chat.mic.disableStt": "Stoppa STT",
   "chat.mic.recordingAudioNote": "Spelar in ljud...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "Lyssnar på {language}...",
   "chat.placeholder.normal.sttActive": "Tala på {language} eller skriv...",
   "chat.placeholder.normal.sttInactive": "Skriv eller tryck på mikrofonen för att tala på {language}...",
   "chat.placeholder.suggestion.listening": "Tala {language} för att översätta...",
   "chat.placeholder.suggestion.sttActive": "Tala eller skriv på {language} för att översätta...",
   "chat.placeholder.suggestion.sttInactive": "Skriv på {language} för att översätta...",
+
+  // Chat - camera
   "chat.camera.turnOn": "Aktivera kameraförhandsgranskning",
   "chat.camera.turnOff": "Inaktivera kameraförhandsgranskning",
   "chat.camera.imageGenCameraLabel": "Bildgenerering",
   "chat.camera.captureOrRecord": "Tryck för foto, håll för video",
   "chat.camera.stopRecording": "Stoppa inspelning",
   "chat.bookIcon.toggleImageGen": "Växla bildgenereringsläge",
+
+  // Chat - image
   "chat.imagePreview.alt": "Förhandsgranskning",
   "chat.image.dragToEnlarge": "Dra i hörnet för att förstora",
   "chat.image.dragToShrink": "Dra i hörnet för att förminska",
   "chat.annotateImage": "Annotera bild",
   "chat.annotateVideoFrame": "Annotera aktuell bildruta",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Bild att annotera",
   "chat.annotateModal.cancel": "Avbryt",
   "chat.annotateModal.saveAndAttach": "Spara och bifoga",
   "chat.annotateModal.undo": "Ångra",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "Säg: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Läs upp förslag: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Växla förslagsskapningsläge",
   "chat.suggestion.createAction": "Skapa förslag",
   "chat.suggestion.creating": "Skapar förslag...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro är inaktiv",
   "chat.maestro.title.idle": "Maestro är för närvarande inaktiv.",
   "chat.maestro.resting": "Maestro vilar...",
@@ -104,6 +172,8 @@ export const svTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro väntar på din inmatning eller röst.",
   "chat.maestro.holding": "Maestro väntar",
   "chat.maestro.title.holding": "Maestro väntar (återaktivering pausad)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "Dolda meddelanden ovanför",
   "chat.bookmark.isHere": "Bokmärket är här",
   "chat.bookmark.setHere": "Sätt bokmärke här",
@@ -114,11 +184,15 @@ export const svTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Visa en mer",
   "chat.bookmark.incrementTitle": "Fler",
   "chat.bookmark.hiddenBelowHeaderAria": "Dolda meddelanden nedanför",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Optimerar video...",
   "chat.sendPrep.optimizingImage": "Optimerar bild...",
   "chat.sendPrep.preparingMedia": "Förbereder media...",
   "chat.sendPrep.uploadingMedia": "Laddar upp media...",
   "chat.sendPrep.finalizing": "Slutför...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "Annoterar",
   "chat.header.recordingAudio": "Spelar in ljud",
   "chat.header.recordingVideo": "Spelar in video",
@@ -128,6 +202,8 @@ export const svTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Tittar på video",
   "chat.header.viewingAbove": "Visar tidigare meddelanden",
   "chat.header.liveSession": "Livesession",
+
+  // Chat - live session
   "chat.liveSession.stop": "Stoppa live",
   "chat.liveSession.retry": "Försök live igen",
   "chat.liveSession.start": "Starta live",
@@ -137,6 +213,8 @@ export const svTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hej",
   "chat.liveSession.defaultSuggestion2": "God morgon",
   "chat.liveSession.defaultSuggestion3": "Hur mår du?",
+
+  // Chat - errors
   "chat.error.sttError": "STT-fel: {error}. Prova att byta mikrofon.",
   "chat.error.autoCaptureCameraError": "Automatisk kameratagningsfel: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,6 +223,8 @@ export const svTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Pausa videon för att annotera den aktuella bildrutan",
   "chat.error.imageGenInterrupted": "Bildgenereringen avbröts.",
   "chat.error.thinkingInterrupted": "AI-svaret avbröts.",
+
+  // Errors - general
   "error.noLanguagePair": "Kritiskt fel: Inget språkpar valt.",
   "error.translationFailed": "Översättningen misslyckades. Försök igen.",
   "error.imageLimitReached": "Sessionens bildgenereringsgräns nådd. Starta en ny session.",
@@ -152,12 +232,16 @@ export const svTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Din Gemini API-nyckel saknas. Öppna API-nyckelskärmen och klistra in din nyckel.",
   "error.apiKeyInvalid": "Din Gemini API-nyckel är ogiltig. Kontrollera om det finns stavfel och klistra in en giltig nyckel.",
   "error.apiQuotaExceeded": "Din Gemini API-gratiskvot för chatt är förbrukad. Jag öppnade API-nyckelskärmen med faktureringssteg. Du kan fortfarande använda Live-konversation under tiden.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Kamerabehörighet nekad. Aktivera kameraåtkomst i webbläsarens inställningar.",
   "error.cameraNotFound": "Vald kamera hittades inte. Se till att den är ansluten eller välj en annan kamera.",
   "error.cameraAccessNotSupported": "Kameraåtkomst stöds inte av din webbläsare.",
   "error.cameraUnknown": "Ett okänt fel uppstod vid åtkomst till kameran.",
   "error.cameraStreamNotAvailable": "Kameraström inte tillgänglig för tagning.",
   "error.imageCaptureGeneric": "Okänt fel vid bildtagning.",
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "Visuellt kontext videoelement inte redo.",
   "error.snapshotVideoElementNotReady": "Snapshot videoelement inte redo.",
   "error.visualContextCameraAccessNotSupported": "Kameraåtkomst stöds inte för visuellt kontext.",

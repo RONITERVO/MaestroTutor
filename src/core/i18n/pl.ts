@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const plTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Ustaw rozpoznawanie mowy na {language}",
+
+  // Header
   "header.targetLanguageTitle": "Aktualny język docelowy: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "Kliknij samolot",
   "startPage.saveChats": "Zapisz wszystkie czaty",
   "startPage.loadChats": "Wczytaj czaty",
+  "startPage.saveThisChat": "Zapisz ten czat",
+  "startPage.appendToChat": "Dołącz do czatu",
+  "startPage.trimBeforeBookmark": "Przytnij przed zakładką",
   "startPage.maestroAvatar": "Awatar Maestro",
   "startPage.addMaestroAvatar": "Dodaj awatar Maestro",
-  "startPage.loadSuccess": "{count} sesji czatu pomyślnie wczytano i zastąpiono!",
+  "startPage.loadSuccess": "Pomyślnie wczytano i zastąpiono {count} sesji czatu!",
   "startPage.loadError": "Błąd wczytywania czatów. Plik może być uszkodzony lub w nieprawidłowym formacie.",
   "startPage.noChatsToSave": "Brak historii czatów do zapisania.",
   "startPage.saveError": "Błąd zapisywania czatów. Sprawdź konsolę, aby uzyskać więcej szczegółów.",
+  "startPage.noChatSelected": "Proszę najpierw wybrać parę językową.",
+  "startPage.noBookmarkSet": "Nie ustawiono zakładki. Ustaw najpierw zakładkę, aby usunąć wiadomości przed nią.",
+  "startPage.noMessagesToTrim": "Brak wiadomości przed zakładką do usunięcia.",
+  "startPage.trimSuccess": "Usunięto {count} wiadomości przed zakładką.",
+  "startPage.trimError": "Nie udało się przyciąć wiadomości. Spróbuj ponownie.",
+  "startPage.noMessagesToAppend": "W pliku kopii zapasowej nie znaleziono żadnych wiadomości do połączenia.",
+  "startPage.noPairInBackup": "Plik kopii zapasowej nie zawiera wiadomości dla aktualnej pary językowej. Wybierz kopię zapasową pasującą do bieżącego czatu.",
+  "startPage.appendSuccess": "Pomyślnie dołączono {count} wiadomości do bieżącego czatu.",
+  "startPage.combineSuccess": "Połączono czaty: dodano {added} nowych wiadomości, łącznie {total} wiadomości.",
+  "startPage.combineNoDuplicates": "Wszystkie wiadomości znajdowały się już w Twoim czacie. Nie wprowadzono żadnych zmian.",
+  "startPage.combineNoChanges": "Brak nowych wiadomości do dodania. Twój czat pozostał bez zmian.",
+  "startPage.invalidBackupFormat": "Nieprawidłowy plik kopii zapasowej. Proszę wybrać prawidłowy plik kopii zapasowej Maestro (.ndjson).",
+  "startPage.browserNotSupported": "Twoja przeglądarka nie obsługuje zapisywania plików. Użyj Chrome lub Edge.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Zapisz wszystko",
+  "sessionControls.saveAll.description": "Eksportuj wszystkie czaty do pliku kopii zapasowej",
+  "sessionControls.loadAll.label": "Wczytaj wszystko",
+  "sessionControls.loadAll.description": "Zastąp wszystkie czaty plikiem kopii zapasowej",
+  "sessionControls.reset.label": "Resetuj",
+  "sessionControls.reset.description": "Utwórz kopię i usuń wszystkie dane",
+  "sessionControls.saveThis.label": "Zapisz czat",
+  "sessionControls.saveThis.description": "Eksportuj tylko ten czat",
+  "sessionControls.combine.label": "Połącz",
+  "sessionControls.combine.description": "Scal kopię zapasową z tym czatem",
+  "sessionControls.trim.label": "Przytnij",
+  "sessionControls.trim.description": "Usuń wiadomości przed zakładką",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profil:",
+  "sessionControls.profilePlaceholder": "Twoje imię lub dane...",
+  "sessionControls.editProfile": "Edytuj profil użytkownika",
+  "sessionControls.allChatsControls": "Sterowanie wszystkimi czatami",
+  "sessionControls.thisChatsControls": "Sterowanie tym czatem",
+  "sessionControls.all": "Wszystkie",
+  "sessionControls.this": "Ten",
+  "sessionControls.back": "Wstecz",
+  "sessionControls.backupAndReset": "Kopia zapasowa i reset",
+  "sessionControls.typeToConfirm": "Wpisz „{keyword}”, aby potwierdzić",
+  "sessionControls.changeAvatar": "Zmień awatar",
+
+  // General
   "general.clear": "Wyczyść",
   "general.error": "Przepraszam, wystąpił błąd.",
 
@@ -40,6 +92,8 @@ export const plTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Zapisywanie...",
   "apiKeyGate.saveKey": "Zapisz klucz",
   "apiKeyGate.close": "Zamknij",
+
+  // Chat - general
   "chat.thinking": "Myślę...",
   "chat.loadingHistory": "Wczytywanie historii czatu...",
   "chat.loadingSuggestions": "Wczytywanie sugestii...",
@@ -95,13 +149,13 @@ export const plTranslations: Record<string, string> = {
   "chat.annotateModal.undo": "Cofnij",
 
   // Chat - suggestions
-  "chat.suggestion.speak": "Powiedz: \"{suggestion}\"",
+  "chat.suggestion.speak": "Powiedz: „{suggestion}”",
   "chat.suggestion.ariaLabel": "Wypowiedz sugestię: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Przełącz tryb tworzenia sugestii",
   "chat.suggestion.createAction": "Utwórz sugestię",
   "chat.suggestion.creating": "Tworzenie sugestii...",
 
-  // Chat - maestro status
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro jest bezczynny",
   "chat.maestro.title.idle": "Maestro jest obecnie bezczynny.",
   "chat.maestro.resting": "Maestro odpoczywa...",
@@ -115,11 +169,11 @@ export const plTranslations: Record<string, string> = {
   "chat.maestro.speaking": "Maestro mówi",
   "chat.maestro.title.speaking": "Maestro obecnie mówi.",
   "chat.maestro.listening": "Słucham...",
-  "chat.maestro.title.listening": "Maestro czeka na twój wpis lub głos.",
+  "chat.maestro.title.listening": "Maestro czeka na Twój wpis lub głos.",
   "chat.maestro.holding": "Maestro czeka",
   "chat.maestro.title.holding": "Maestro czeka (ponowne włączenie wstrzymane)",
 
-  // Chat - bookmark
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "Ukryte wiadomości powyżej",
   "chat.bookmark.isHere": "Zakładka jest tutaj",
   "chat.bookmark.setHere": "Ustaw zakładkę tutaj",
@@ -138,7 +192,7 @@ export const plTranslations: Record<string, string> = {
   "chat.sendPrep.uploadingMedia": "Przesyłanie mediów...",
   "chat.sendPrep.finalizing": "Finalizowanie...",
 
-  // Chat - header activity tokens
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "Dodawanie adnotacji",
   "chat.header.recordingAudio": "Nagrywanie dźwięku",
   "chat.header.recordingVideo": "Nagrywanie wideo",
@@ -146,7 +200,7 @@ export const plTranslations: Record<string, string> = {
   "chat.header.loadPopup": "Wczytywanie...",
   "chat.header.maestroAvatar": "Aktualizowanie awatara Maestro",
   "chat.header.watchingVideo": "Oglądanie wideo",
-  "chat.header.viewingAbove": "Przeglądanie poprzednich wiadomości",
+  "chat.header.viewingAbove": "Przeglądanie wiadomości powyżej",
   "chat.header.liveSession": "Sesja na żywo",
 
   // Chat - live session
@@ -181,17 +235,17 @@ export const plTranslations: Record<string, string> = {
 
   // Errors - camera
   "error.cameraPermissionDenied": "Odmówiono dostępu do kamery. Włącz dostęp do kamery w ustawieniach przeglądarki.",
-  "error.cameraNotFound": "Nie znaleziono wybranej kamery. Upewnij się, że jest podłączona lub wybierz inną kamerę.",
-  "error.cameraAccessNotSupported": "Dostęp do kamery nie jest obsługiwany przez twoją przeglądarkę.",
+  "error.cameraNotFound": "Nie znaleziono wybranej kamery. Upewnij się, że jest podłączona lub wybierz inną kamerę w ustawieniach.",
+  "error.cameraAccessNotSupported": "Dostęp do kamery nie jest obsługiwany przez Twoją przeglądarkę.",
   "error.cameraUnknown": "Wystąpił nieznany błąd podczas dostępu do kamery.",
   "error.cameraStreamNotAvailable": "Strumień kamery niedostępny do przechwycenia.",
   "error.imageCaptureGeneric": "Nieznany błąd podczas przechwytywania obrazu.",
 
-  // Errors - visual context
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "Element wideo kontekstu wizualnego nie jest gotowy.",
-  "error.snapshotVideoElementNotReady": "Element wideo zrzutu ekranu nie jest gotowy.",
-  "error.visualContextCameraAccessNotSupported": "Dostęp do kamery nieobsługiwany dla kontekstu wizualnego.",
-  "error.snapshotCameraAccessNotSupported": "Dostęp do kamery nieobsługiwany dla zrzutu ekranu.",
+  "error.snapshotVideoElementNotReady": "Element wideo dla zrzutu ekranu nie jest gotowy.",
+  "error.visualContextCameraAccessNotSupported": "Dostęp do kamery nie jest obsługiwany dla kontekstu wizualnego.",
+  "error.snapshotCameraAccessNotSupported": "Dostęp do kamery nie jest obsługiwany dla zrzutu ekranu.",
   "error.visualContext2DContext": "Nie można uzyskać kontekstu 2D dla kontekstu wizualnego.",
   "error.snapshot2DContext": "Nie można uzyskać kontekstu 2D dla zrzutu ekranu.",
   "error.visualContextCaptureFailedPermission": "Kontekst wizualny nie powiódł się: Odmówiono dostępu do kamery.",

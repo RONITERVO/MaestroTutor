@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const koTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "음성 인식을 {language}로 설정",
+
+  // Header
   "header.targetLanguageTitle": "현재 목표 언어: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "비행기를 클릭하세요",
   "startPage.saveChats": "모든 채팅 저장",
   "startPage.loadChats": "채팅 불러오기",
+  "startPage.saveThisChat": "이 채팅 저장",
+  "startPage.appendToChat": "채팅에 추가",
+  "startPage.trimBeforeBookmark": "북마크 이전 내용 다듬기",
   "startPage.maestroAvatar": "마에스트로 아바타",
   "startPage.addMaestroAvatar": "마에스트로 아바타 추가",
   "startPage.loadSuccess": "{count}개의 채팅 세션이 성공적으로 로드 및 교체되었습니다!",
   "startPage.loadError": "채팅 로드 오류. 파일이 손상되었거나 형식이 잘못되었을 수 있습니다.",
   "startPage.noChatsToSave": "저장할 채팅 기록이 없습니다.",
   "startPage.saveError": "채팅 저장 오류. 자세한 내용은 콘솔을 확인하세요.",
+  "startPage.noChatSelected": "먼저 언어 쌍을 선택해 주세요.",
+  "startPage.noBookmarkSet": "북마크가 설정되지 않았습니다. 이전 메시지를 삭제하려면 먼저 북마크를 설정하세요.",
+  "startPage.noMessagesToTrim": "삭제할 북마크 이전 메시지가 없습니다.",
+  "startPage.trimSuccess": "북마크 이전의 메시지 {count}개를 삭제했습니다.",
+  "startPage.trimError": "메시지 다듬기에 실패했습니다. 다시 시도해 주세요.",
+  "startPage.noMessagesToAppend": "백업 파일에서 통합할 메시지를 찾을 수 없습니다.",
+  "startPage.noPairInBackup": "백업 파일에 현재 언어 쌍에 대한 메시지가 포함되어 있지 않습니다. 현재 채팅과 일치하는 백업을 선택하세요.",
+  "startPage.appendSuccess": "현재 채팅에 {count}개의 메시지를 성공적으로 추가했습니다.",
+  "startPage.combineSuccess": "채팅 통합 완료: {added}개의 새 메시지 추가됨, 총 {total}개.",
+  "startPage.combineNoDuplicates": "모든 메시지가 이미 채팅에 존재합니다. 변경 사항이 없습니다.",
+  "startPage.combineNoChanges": "추가할 새 메시지가 없습니다. 채팅이 변경되지 않았습니다.",
+  "startPage.invalidBackupFormat": "유효하지 않은 백업 파일입니다. 올바른 Maestro 백업(.ndjson) 파일을 선택하세요.",
+  "startPage.browserNotSupported": "브라우저가 파일 저장을 지원하지 않습니다. Chrome 또는 Edge를 사용해 주세요.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "모두 저장",
+  "sessionControls.saveAll.description": "모든 채팅을 백업 파일로 내보내기",
+  "sessionControls.loadAll.label": "모두 불러오기",
+  "sessionControls.loadAll.description": "모든 채팅을 백업 파일로 교체",
+  "sessionControls.reset.label": "초기화",
+  "sessionControls.reset.description": "모든 데이터 백업 및 삭제",
+  "sessionControls.saveThis.label": "채팅 저장",
+  "sessionControls.saveThis.description": "이 채팅만 내보내기",
+  "sessionControls.combine.label": "통합",
+  "sessionControls.combine.description": "백업을 이 채팅에 병합",
+  "sessionControls.trim.label": "다듬기",
+  "sessionControls.trim.description": "북마크 이전 메시지 삭제",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "프로필:",
+  "sessionControls.profilePlaceholder": "이름 또는 상세 정보...",
+  "sessionControls.editProfile": "사용자 프로필 수정",
+  "sessionControls.allChatsControls": "모든 채팅 제어",
+  "sessionControls.thisChatsControls": "이 채팅 제어",
+  "sessionControls.all": "전체",
+  "sessionControls.this": "현재",
+  "sessionControls.back": "뒤로",
+  "sessionControls.backupAndReset": "백업 및 초기화",
+  "sessionControls.typeToConfirm": "확인을 위해 \"{keyword}\"를 입력하세요",
+  "sessionControls.changeAvatar": "아바타 변경",
+
+  // General
   "general.clear": "지우기",
   "general.error": "죄송합니다, 오류가 발생했습니다.",
 
@@ -40,6 +92,8 @@ export const koTranslations: Record<string, string> = {
   "apiKeyGate.saving": "저장 중...",
   "apiKeyGate.saveKey": "키 저장",
   "apiKeyGate.close": "닫기",
+
+  // Chat - general
   "chat.thinking": "생각 중...",
   "chat.loadingHistory": "채팅 기록 로드 중...",
   "chat.loadingSuggestions": "제안 로드 중...",
@@ -58,36 +112,50 @@ export const koTranslations: Record<string, string> = {
   "chat.speakThisLine": "이 줄 읽기",
   "chat.languageSelector.openGlobe": "언어 변경",
   "chat.maestroTranscriptScrollwheel": "마에스트로 트랜스크립트 스크롤 뷰",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT 활성: 듣는 중...",
   "chat.mic.enableStt": "STT 활성화",
   "chat.mic.disableStt": "STT 중지",
   "chat.mic.recordingAudioNote": "오디오 녹음 중...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language}로 듣는 중...",
   "chat.placeholder.normal.sttActive": "{language}로 말하거나 입력하세요...",
   "chat.placeholder.normal.sttInactive": "입력하거나 마이크를 탭하여 {language}로 말하세요...",
   "chat.placeholder.suggestion.listening": "번역하려면 {language}로 말하세요...",
   "chat.placeholder.suggestion.sttActive": "번역하려면 {language}로 말하거나 입력하세요...",
   "chat.placeholder.suggestion.sttInactive": "번역하려면 {language}로 입력하세요...",
+
+  // Chat - camera
   "chat.camera.turnOn": "카메라 미리보기 켜기",
   "chat.camera.turnOff": "카메라 미리보기 끄기",
   "chat.camera.imageGenCameraLabel": "이미지 생성",
   "chat.camera.captureOrRecord": "탭하여 사진, 길게 눌러 동영상",
   "chat.camera.stopRecording": "녹화 중지",
   "chat.bookIcon.toggleImageGen": "이미지 생성 모드 전환",
+
+  // Chat - image
   "chat.imagePreview.alt": "미리보기",
   "chat.image.dragToEnlarge": "모서리를 드래그하여 확대",
   "chat.image.dragToShrink": "모서리를 드래그하여 축소",
   "chat.annotateImage": "이미지에 주석 달기",
   "chat.annotateVideoFrame": "현재 프레임에 주석 달기",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "주석을 달 이미지",
   "chat.annotateModal.cancel": "취소",
   "chat.annotateModal.saveAndAttach": "저장 및 첨부",
   "chat.annotateModal.undo": "실행 취소",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "말하기: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "제안 말하기: {suggestion}",
   "chat.suggestion.toggleCreateMode": "제안 생성 모드 전환",
   "chat.suggestion.createAction": "제안 생성",
   "chat.suggestion.creating": "제안 생성 중...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "마에스트로 대기 중",
   "chat.maestro.title.idle": "마에스트로가 현재 대기 중입니다.",
   "chat.maestro.resting": "마에스트로 휴식 중...",
@@ -104,6 +172,8 @@ export const koTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "마에스트로가 입력 또는 음성을 기다리고 있습니다.",
   "chat.maestro.holding": "마에스트로 대기 중",
   "chat.maestro.title.holding": "마에스트로 대기 중 (재참여 일시 중지)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "위에 숨겨진 메시지",
   "chat.bookmark.isHere": "북마크가 여기 있습니다",
   "chat.bookmark.setHere": "여기에 북마크 설정",
@@ -114,11 +184,15 @@ export const koTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "하나 더 표시",
   "chat.bookmark.incrementTitle": "더",
   "chat.bookmark.hiddenBelowHeaderAria": "아래에 숨겨진 메시지",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "동영상 최적화 중...",
   "chat.sendPrep.optimizingImage": "이미지 최적화 중...",
   "chat.sendPrep.preparingMedia": "미디어 준비 중...",
   "chat.sendPrep.uploadingMedia": "미디어 업로드 중...",
   "chat.sendPrep.finalizing": "마무리 중...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "주석 달기",
   "chat.header.recordingAudio": "오디오 녹음 중",
   "chat.header.recordingVideo": "동영상 녹화 중",
@@ -128,6 +202,8 @@ export const koTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "동영상 시청 중",
   "chat.header.viewingAbove": "이전 메시지 보기",
   "chat.header.liveSession": "라이브 세션",
+
+  // Chat - live session
   "chat.liveSession.stop": "라이브 중지",
   "chat.liveSession.retry": "라이브 재시도",
   "chat.liveSession.start": "라이브 시작",
@@ -156,6 +232,8 @@ export const koTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Gemini API 키가 누락되었습니다. API 키 화면을 열고 키를 붙여넣으세요.",
   "error.apiKeyInvalid": "Gemini API 키가 유효하지 않습니다. 오타가 있는지 확인하고 유효한 키를 붙여넣으세요.",
   "error.apiQuotaExceeded": "Gemini API의 무료 채팅 할당량이 소진되었습니다. 결제 단계가 포함된 API 키 화면을 열었습니다. 그동안 라이브 대화를 계속 사용할 수 있습니다.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 액세스를 활성화하세요.",
   "error.cameraNotFound": "선택한 카메라를 찾을 수 없습니다. 연결되어 있는지 확인하거나 다른 카메라를 선택하세요.",
   "error.cameraAccessNotSupported": "브라우저에서 카메라 액세스를 지원하지 않습니다.",

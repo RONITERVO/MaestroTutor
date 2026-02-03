@@ -2,24 +2,76 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const teTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "వాయిస్ రికగ్నిషన్‌ను {language}కి సెట్ చేయండి",
+
+  // Header
   "header.targetLanguageTitle": "ప్రస్తుత లక్ష్య భాష: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "విమానాన్ని క్లిక్ చేయండి",
   "startPage.saveChats": "అన్ని చాట్‌లను సేవ్ చేయండి",
   "startPage.loadChats": "చాట్‌లను లోడ్ చేయండి",
+  "startPage.saveThisChat": "ఈ చాట్‌ను సేవ్ చేయండి",
+  "startPage.appendToChat": "చాట్‌కు జోడించండి",
+  "startPage.trimBeforeBookmark": "బుక్‌మార్క్‌కు ముందు ఉన్నవి తొలగించండి",
   "startPage.maestroAvatar": "మ్యాస్ట్రో అవతార్",
   "startPage.addMaestroAvatar": "మ్యాస్ట్రో అవతార్‌ను జోడించండి",
   "startPage.loadSuccess": "{count} చాట్ సెషన్‌లు విజయవంతంగా లోడ్ చేయబడ్డాయి మరియు భర్తీ చేయబడ్డాయి!",
   "startPage.loadError": "చాట్‌లను లోడ్ చేయడంలో లోపం. ఫైల్ పాడై ఉండవచ్చు లేదా తప్పు ఫార్మాట్‌లో ఉండవచ్చు.",
   "startPage.noChatsToSave": "సేవ్ చేయడానికి చాట్ చరిత్ర లేదు.",
   "startPage.saveError": "చాట్‌లను సేవ్ చేయడంలో లోపం. మరిన్ని వివరాల కోసం కన్సోల్‌ను చూడండి.",
+  "startPage.noChatSelected": "దయచేసి ముందుగా భాషా జంటను ఎంచుకోండి.",
+  "startPage.noBookmarkSet": "బుక్‌మార్క్ సెట్ చేయలేదు. సందేశాలను తొలగించడానికి ముందుగా బుక్‌మార్క్‌ను సెట్ చేయండి.",
+  "startPage.noMessagesToTrim": "తొలగించడానికి బుక్‌మార్క్ కంటే ముందు సందేశాలు ఏవీ లేవు.",
+  "startPage.trimSuccess": "బుక్‌మార్క్ కంటే ముందు ఉన్న {count} సందేశాలు విజయవంతంగా తొలగించబడ్డాయి.",
+  "startPage.trimError": "సందేశాలను తొలగించడం విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+  "startPage.noMessagesToAppend": "బ్యాకప్ ఫైల్‌లో కలపడానికి సందేశాలు ఏవీ లేవు.",
+  "startPage.noPairInBackup": "ఈ బ్యాకప్ ఫైల్‌లో మీ ప్రస్తుత భాషా జంటకు సంబంధించిన సందేశాలు లేవు. దయచేసి సరిపోయే బ్యాకప్‌ను ఎంచుకోండి.",
+  "startPage.appendSuccess": "ప్రస్తుత చాట్‌కు {count} సందేశాలు విజయవంతంగా జోడించబడ్డాయి.",
+  "startPage.combineSuccess": "చాట్‌లు కలిపబడ్డాయి: {added} కొత్త సందేశాలు జోడించబడ్డాయి, మొత్తం {total} సందేశాలు.",
+  "startPage.combineNoDuplicates": "అన్ని సందేశాలు ఇప్పటికే మీ చాట్‌లో ఉన్నాయి. ఎటువంటి మార్పులు చేయలేదు.",
+  "startPage.combineNoChanges": "జోడించడానికి కొత్త సందేశాలు ఏవీ లేవు. మీ చాట్ మారలేదు.",
+  "startPage.invalidBackupFormat": "చెల్లని బ్యాకప్ ఫైల్. దయచేసి సరైన Maestro బ్యాకప్ (.ndjson) ఫైల్‌ను ఎంచుకోండి.",
+  "startPage.browserNotSupported": "మీ బ్రౌజర్ ఫైల్ సేవింగ్‌కు మద్దతు ఇవ్వదు. దయచేసి Chrome లేదా Edge ఉపయోగించండి.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "అన్నీ సేవ్ చేయండి",
+  "sessionControls.saveAll.description": "అన్ని చాట్‌లను బ్యాకప్ ఫైల్‌గా ఎగుమతి చేయండి",
+  "sessionControls.loadAll.label": "అన్నీ లోడ్ చేయండి",
+  "sessionControls.loadAll.description": "అన్ని చాట్‌లను బ్యాకప్ ఫైల్‌తో భర్తీ చేయండి",
+  "sessionControls.reset.label": "రీసెట్ (Reset)",
+  "sessionControls.reset.description": "డేటా అంతా బ్యాకప్ చేసి తొలగించండి",
+  "sessionControls.saveThis.label": "చాట్‌ను సేవ్ చేయండి",
+  "sessionControls.saveThis.description": "ఈ చాట్‌ను మాత్రమే ఎగుమతి చేయండి",
+  "sessionControls.combine.label": "కలపండి",
+  "sessionControls.combine.description": "బ్యాకప్‌ను ఈ చాట్‌లోకి విలీనం చేయండి",
+  "sessionControls.trim.label": "తొలగించండి (Trim)",
+  "sessionControls.trim.description": "బుక్‌మార్క్ కంటే ముందు సందేశాలను తొలగించండి",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "ప్రొఫైల్:",
+  "sessionControls.profilePlaceholder": "మీ పేరు లేదా వివరాలు...",
+  "sessionControls.editProfile": "యూజర్ ప్రొఫైల్‌ను సవరించండి",
+  "sessionControls.allChatsControls": "అన్ని చాట్‌ల నియంత్రణలు",
+  "sessionControls.thisChatsControls": "ఈ చాట్ నియంత్రణలు",
+  "sessionControls.all": "అన్నీ",
+  "sessionControls.this": "ఇది",
+  "sessionControls.back": "వెనుకకు",
+  "sessionControls.backupAndReset": "బ్యాకప్ మరియు రీసెట్",
+  "sessionControls.typeToConfirm": "ధృవీకరించడానికి \"{keyword}\" అని టైప్ చేయండి",
+  "sessionControls.changeAvatar": "అవతార్ మార్చండి",
+
+  // General
   "general.clear": "క్లియర్ చేయండి",
   "general.error": "క్షమించండి, ఒక లోపం సంభవించింది.",
 
   // API key gate
   "apiKeyGate.title": "మీ Gemini API కీని కనెక్ట్ చేయండి",
   "apiKeyGate.billingTitle": "అధిక కోటా కోసం బిల్లింగ్‌ను సెటప్ చేయండి",
-  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పుడూ తాకదు.",
+  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పువు తాకదు.",
   "apiKeyGate.privacyPolicy": "గోప్యతా విధానం",
   "apiKeyGate.stepsTitle": "రెండు శీఘ్ర దశలు:",
   "apiKeyGate.stepOne": "Google AI Studioని తెరిచి API కీని సృష్టించండి.",
@@ -40,13 +92,15 @@ export const teTranslations: Record<string, string> = {
   "apiKeyGate.saving": "సేవ్ అవుతోంది...",
   "apiKeyGate.saveKey": "కీని సేవ్ చేయండి",
   "apiKeyGate.close": "ముగించు",
+
+  // Chat - general
   "chat.thinking": "ఆలోచిస్తోంది...",
   "chat.loadingHistory": "చాట్ చరిత్రను లోడ్ చేస్తోంది...",
   "chat.loadingSuggestions": "సూచనలను లోడ్ చేస్తోంది...",
   "chat.suggestionsAriaLabel": "సమాధాన సూచనలు",
   "chat.attachImageFromFile": "ఫైల్‌ను జోడించండి",
   "chat.removeAttachedImage": "జోడించిన ఫైల్‌ను తొలగించండి",
-  "chat.sendMessage": "సందేహాన్ని పంపండి",
+  "chat.sendMessage": "సందేశాన్ని పంపండి",
   "chat.messageInputAriaLabel": "సందేశ ఇన్‌పుట్",
   "chat.retrievedFromWeb": "వెబ్ నుండి పొందబడింది:",
   "chat.videoNotSupported": "మీ బ్రౌజర్ వీడియో ట్యాగ్‌కు మద్దతు ఇవ్వదు.",
@@ -58,36 +112,50 @@ export const teTranslations: Record<string, string> = {
   "chat.speakThisLine": "ఈ లైన్‌ను మాట్లాడండి",
   "chat.languageSelector.openGlobe": "భాషలను మార్చండి",
   "chat.maestroTranscriptScrollwheel": "మ్యాస్ట్రో ట్రాన్స్‌క్రిప్ట్ స్క్రోల్ వీక్షణ",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT యాక్టివ్: వింటోంది...",
   "chat.mic.enableStt": "STTని ఆన్ చేయండి",
   "chat.mic.disableStt": "STTని ఆపండి",
   "chat.mic.recordingAudioNote": "ఆడియో రికార్డ్ అవుతోంది...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language}లో వింటోంది...",
   "chat.placeholder.normal.sttActive": "{language}లో మాట్లాడండి లేదా టైప్ చేయండి...",
   "chat.placeholder.normal.sttInactive": "టైప్ చేయండి లేదా {language}లో మాట్లాడటానికి మైక్‌ను నొక్కండి...",
   "chat.placeholder.suggestion.listening": "అనువదించడానికి {language} మాట్లాడండి...",
   "chat.placeholder.suggestion.sttActive": "అనువదించడానికి {language}లో మాట్లాడండి లేదా టైప్ చేయండి...",
   "chat.placeholder.suggestion.sttInactive": "అనువదించడానికి {language}లో టైప్ చేయండి...",
+
+  // Chat - camera
   "chat.camera.turnOn": "కెమెరా ప్రివ్యూని ఆన్ చేయండి",
   "chat.camera.turnOff": "కెమెరా ప్రివ్యూని ఆఫ్ చేయండి",
   "chat.camera.imageGenCameraLabel": "చిత్రం తయారీ",
   "chat.camera.captureOrRecord": "ఫోటో కోసం నొక్కండి, వీడియో కోసం హోల్డ్ చేయండి",
   "chat.camera.stopRecording": "రికార్డింగ్‌ను ఆపండి",
   "chat.bookIcon.toggleImageGen": "చిత్ర తయారీ మోడ్‌ను మార్చండి",
+
+  // Chat - image
   "chat.imagePreview.alt": "ప్రివ్యూ",
   "chat.image.dragToEnlarge": "పెద్దది చేయడానికి మూలని లాగండి",
   "chat.image.dragToShrink": "చిన్నది చేయడానికి మూలని లాగండి",
   "chat.annotateImage": "చిత్రంపై వ్యాఖ్యానించండి",
   "chat.annotateVideoFrame": "ప్రస్తుత ఫ్రేమ్‌పై వ్యాఖ్యానించండి",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "వ్యాఖ్యానించాల్సిన చిత్రం",
   "chat.annotateModal.cancel": "రద్దు చేయండి",
   "chat.annotateModal.saveAndAttach": "సేవ్ చేయండి మరియు జోడించండి",
   "chat.annotateModal.undo": "అన్డు",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "చెప్పండి: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "సూచనను మాట్లాడండి: {suggestion}",
   "chat.suggestion.toggleCreateMode": "సూచన తయారీ మోడ్‌ను మార్చండి",
   "chat.suggestion.createAction": "సూచనను సృష్టించండి",
   "chat.suggestion.creating": "సూచనను సృష్టిస్తోంది...",
+
+  // Chat - maestro status
   "chat.maestro.idle": "మ్యాస్ట్రో పనిలేకుండా ఉంది",
   "chat.maestro.title.idle": "మ్యాస్ట్రో ప్రస్తుతం పనిలేకుండా ఉంది.",
   "chat.maestro.resting": "మ్యాస్ట్రో విశ్రాంతి తీసుకుంటోంది...",
@@ -104,6 +172,8 @@ export const teTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "మ్యాస్ట్రో మీ ఇన్‌పుట్ లేదా వాయిస్ కోసం వేచి ఉంది.",
   "chat.maestro.holding": "మ్యాస్ట్రో వేచి ఉంది",
   "chat.maestro.title.holding": "మ్యాస్ట్రో వేచి ఉంది (తిరిగి యాక్టివ్ అవ్వడం పాజ్ చేయబడింది)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "పైన దాచిన సందేశాలు",
   "chat.bookmark.isHere": "బుక్‌మార్క్ ఇక్కడ ఉంది",
   "chat.bookmark.setHere": "ఇక్కడ బుక్‌మార్క్ సెట్ చేయండి",
@@ -114,19 +184,26 @@ export const teTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "ఒకటి ఎక్కువ చూపించు",
   "chat.bookmark.incrementTitle": "ఎక్కువ",
   "chat.bookmark.hiddenBelowHeaderAria": "క్రింద దాచిన సందేశాలు",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "వీడియోను ఆప్టిమైజ్ చేస్తోంది...",
   "chat.sendPrep.optimizingImage": "చిత్రాన్ని ఆప్టిమైజ్ చేస్తోంది...",
   "chat.sendPrep.preparingMedia": "మీడియాను సిద్ధం చేస్తోంది...",
   "chat.sendPrep.uploadingMedia": "మీడియాను అప్‌లోడ్ చేస్తోంది...",
   "chat.sendPrep.finalizing": "పూర్తి చేస్తోంది...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "వ్యాఖ్యానిస్తోంది",
   "chat.header.recordingAudio": "ఆడియో రికార్డ్ అవుతోంది",
   "chat.header.recordingVideo": "వీడియో రికార్డ్ అవుతోంది",
   "chat.header.savePopup": "సేవ్ అవుతోంది...",
+  "chat.header.loadPopup": "లోడ్ అవుతోంది...",
   "chat.header.maestroAvatar": "మ్యాస్ట్రో అవతార్‌ను అప్‌డేట్ చేస్తోంది",
   "chat.header.watchingVideo": "వీడియో చూస్తోంది",
   "chat.header.viewingAbove": "మునుపటి సందేశాలను చూస్తోంది",
   "chat.header.liveSession": "లైవ్ సెషన్",
+
+  // Chat - live session
   "chat.liveSession.stop": "లైవ్‌ని ఆపండి",
   "chat.liveSession.retry": "లైవ్‌ని మళ్ళీ ప్రయత్నించండి",
   "chat.liveSession.start": "లైవ్‌ని ప్రారంభించండి",
