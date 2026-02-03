@@ -2,19 +2,71 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const taTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro (மேஸ்ட்ரோ)",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "பேச்சு அங்கீகாரத்தை {language} க்கு அமைக்கவும்",
+
+  // Header
   "header.targetLanguageTitle": "தற்போதைய இலக்கு மொழி: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "விமானத்தைக் கிளிக் செய்யவும்",
   "startPage.saveChats": "அனைத்து அரட்டைகளையும் சேமிக்கவும்",
   "startPage.loadChats": "அரட்டைகளை ஏற்றவும்",
+  "startPage.saveThisChat": "இந்த அரட்டையைச் சேமிக்கவும்",
+  "startPage.appendToChat": "அரட்டையில் சேர்க்கவும்",
+  "startPage.trimBeforeBookmark": "புக்மார்க்கிற்கு முன் உள்ளவற்றை நீக்கவும்",
   "startPage.maestroAvatar": "மேஸ்ட்ரோ அவதாரம்",
   "startPage.addMaestroAvatar": "மேஸ்ட்ரோ அவதாரம் சேர்க்கவும்",
   "startPage.loadSuccess": "{count} அரட்டை அமர்வுகள் வெற்றிகரமாக ஏற்றப்பட்டு மாற்றப்பட்டன!",
   "startPage.loadError": "அரட்டைகளை ஏற்றுவதில் பிழை. கோப்பு சிதைந்திருக்கலாம் அல்லது தவறான வடிவத்தில் இருக்கலாம்.",
   "startPage.noChatsToSave": "சேமிக்க அரட்டை வரலாறு இல்லை.",
   "startPage.saveError": "அரட்டைகளைச் சேமிப்பதில் பிழை. மேலும் விவரங்களுக்கு கன்சோலைப் பார்க்கவும்.",
+  "startPage.noChatSelected": "தயவுசெய்து முதலில் மொழி ஜோடியைத் தேர்ந்தெடுக்கவும்.",
+  "startPage.noBookmarkSet": "புக்மார்க் அமைக்கப்படவில்லை. செய்திகளை நீக்க முதலில் புக்மார்க்கை அமைக்கவும்.",
+  "startPage.noMessagesToTrim": "நீக்குவதற்கு புக்மார்க்கிற்கு முன் செய்திகள் எதுவுமில்லை.",
+  "startPage.trimSuccess": "புக்மார்க்கிற்கு முன் இருந்த {count} செய்திகள் நீக்கப்பட்டன.",
+  "startPage.trimError": "செய்திகளை நீக்குவதில் தோல்வி. மீண்டும் முயற்சிக்கவும்.",
+  "startPage.noMessagesToAppend": "காப்புப்பிரதி கோப்பில் சேர்ப்பதற்கான செய்திகள் எதுவும் இல்லை.",
+  "startPage.noPairInBackup": "காப்புப்பிரதி கோப்பில் உங்களின் தற்போதைய மொழி ஜோடிக்கான செய்திகள் இல்லை. உங்கள் தற்போதைய அரட்டைக்கு பொருந்தும் காப்புப்பிரதியைத் தேர்ந்தெடுக்கவும்.",
+  "startPage.appendSuccess": "தற்போதைய அரட்டையில் {count} செய்திகள் வெற்றிகரமாகச் சேர்க்கப்பட்டன.",
+  "startPage.combineSuccess": "அரட்டைகள் இணைக்கப்பட்டன: {added} புதிய செய்திகள் சேர்க்கப்பட்டன, மொத்தம் {total} செய்திகள்.",
+  "startPage.combineNoDuplicates": "அனைத்து செய்திகளும் ஏற்கனவே உங்கள் அரட்டையில் உள்ளன. மாற்றங்கள் எதுவும் செய்யப்படவில்லை.",
+  "startPage.combineNoChanges": "சேர்ப்பதற்குப் புதிய செய்திகள் எதுவும் இல்லை. உங்கள் அரட்டையில் மாற்றமில்லை.",
+  "startPage.invalidBackupFormat": "தவறான காப்புப்பிரதி கோப்பு. சரியான மேஸ்ட்ரோ காப்புப்பிரதி (.ndjson) கோப்பைத் தேர்ந்தெடுக்கவும்.",
+  "startPage.browserNotSupported": "உங்கள் உலாவி கோப்புச் சேமிப்பை ஆதரிக்கவில்லை. தயவுசெய்து Chrome அல்லது Edge ஐப் பயன்படுத்தவும்.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "அனைத்தையும் சேமி",
+  "sessionControls.saveAll.description": "அனைத்து அரட்டைகளையும் காப்புப்பிரதி கோப்பிற்கு ஏற்றுமதி செய்யவும்",
+  "sessionControls.loadAll.label": "அனைத்தையும் ஏற்றவும்",
+  "sessionControls.loadAll.description": "அனைத்து அரட்டைகளையும் காப்புப்பிரதி கோப்பைக் கொண்டு மாற்றவும்",
+  "sessionControls.reset.label": "மீட்டமை",
+  "sessionControls.reset.description": "அனைத்துத் தரவையும் காப்புப் பிரதி எடுத்து நீக்கவும்",
+  "sessionControls.saveThis.label": "அரட்டையைச் சேமி",
+  "sessionControls.saveThis.description": "இந்த அரட்டையை மட்டும் ஏற்றுமதி செய்யவும்",
+  "sessionControls.combine.label": "இணைக்கவும்",
+  "sessionControls.combine.description": "காப்புப்பிரதியை இந்த அரட்டையுடன் இணைக்கவும்",
+  "sessionControls.trim.label": "கத்தரிக்கவும்",
+  "sessionControls.trim.description": "புக்மார்க்கிற்கு முன் உள்ள செய்திகளை நீக்கவும்",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "சுயவிவரம்:",
+  "sessionControls.profilePlaceholder": "உங்கள் பெயர் அல்லது விவரங்கள்...",
+  "sessionControls.editProfile": "பயனர் சுயவிவரத்தைத் திருத்தவும்",
+  "sessionControls.allChatsControls": "அனைத்து அரட்டை கட்டுப்பாடுகள்",
+  "sessionControls.thisChatsControls": "இந்த அரட்டை கட்டுப்பாடுகள்",
+  "sessionControls.all": "அனைத்தும்",
+  "sessionControls.this": "இது",
+  "sessionControls.back": "பின்செல்",
+  "sessionControls.backupAndReset": "காப்புப்பிரதி மற்றும் மீட்டமைப்பு",
+  "sessionControls.typeToConfirm": "உறுதிப்படுத்த \"{keyword}\" என தட்டச்சு செய்யவும்",
+  "sessionControls.changeAvatar": "அவதாரத்தை மாற்றவும்",
+
+  // General
   "general.clear": "அழி",
-  "general.error": "மன்னிக்கவும், பிழை ஏற்பட்டது.",
+  "general.error": "மன்னிக்கவும், நான் ஒரு பிழையை எதிர்கொண்டேன்.",
 
   // API key gate
   "apiKeyGate.title": "உங்கள் Gemini API சாவியை இணைக்கவும்",
@@ -29,7 +81,7 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.closeInstructions": "வழிமுறைகளை மூடவும்",
   "apiKeyGate.previousInstruction": "முந்தைய வழிமுறை",
   "apiKeyGate.nextInstruction": "அடுத்த வழிமுறை",
-  "apiKeyGate.instructionStep": "வழிமுறை {total}-இல் {step}",
+  "apiKeyGate.instructionStep": "வழிமுறை {step} / {total}",
   "apiKeyGate.keyLabel": "Gemini API சாவி",
   "apiKeyGate.placeholder": "உங்கள் API சாவியை இங்கே ஒட்டவும்",
   "apiKeyGate.show": "காண்பி",
@@ -40,6 +92,8 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.saving": "சேமிக்கிறது...",
   "apiKeyGate.saveKey": "சாவியைச் சேமி",
   "apiKeyGate.close": "மூடு",
+
+  // Chat - general
   "chat.thinking": "யோசிக்கிறேன்...",
   "chat.loadingHistory": "அரட்டை வரலாற்றை ஏற்றுகிறது...",
   "chat.loadingSuggestions": "பரிந்துரைகளை ஏற்றுகிறது...",
@@ -57,37 +111,51 @@ export const taTranslations: Record<string, string> = {
   "chat.stopSpeaking": "பேசுவதை நிறுத்தவும்",
   "chat.speakThisLine": "இந்த வரியைப் பேசவும்",
   "chat.languageSelector.openGlobe": "மொழிகளை மாற்றவும்",
-  "chat.maestroTranscriptScrollwheel": "மேஸ்ட்ரோ டிரான்ஸ்கிரிப்ட் ஸ்க்ரோல்வீல் காட்சி",
+  "chat.maestroTranscriptScrollwheel": "மேஸ்ட்ரோ டிரான்ஸ்கிரிப்ட் ஸ்க்ரோல் பார்வை",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT செயலில்: கேட்கிறேன்...",
   "chat.mic.enableStt": "STT ஐ இயக்கவும்",
   "chat.mic.disableStt": "STT ஐ நிறுத்தவும்",
   "chat.mic.recordingAudioNote": "ஆடியோ பதிவு செய்கிறது...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language} இல் கேட்கிறேன்...",
   "chat.placeholder.normal.sttActive": "{language} இல் பேசவும் அல்லது தட்டச்சு செய்யவும்...",
   "chat.placeholder.normal.sttInactive": "தட்டச்சு செய்யவும் அல்லது {language} இல் பேச மைக்கைத் தொடவும்...",
   "chat.placeholder.suggestion.listening": "மொழிபெயர்க்க {language} பேசவும்...",
   "chat.placeholder.suggestion.sttActive": "மொழிபெயர்க்க {language} இல் பேசவும் அல்லது தட்டச்சு செய்யவும்...",
   "chat.placeholder.suggestion.sttInactive": "மொழிபெயர்க்க {language} இல் தட்டச்சு செய்யவும்...",
+
+  // Chat - camera
   "chat.camera.turnOn": "கேமரா முன்னோட்டத்தை இயக்கவும்",
   "chat.camera.turnOff": "கேமரா முன்னோட்டத்தை முடக்கவும்",
   "chat.camera.imageGenCameraLabel": "படம் உருவாக்கம்",
   "chat.camera.captureOrRecord": "படத்திற்கு தொடவும், வீடியோவிற்கு அழுத்திப் பிடிக்கவும்",
   "chat.camera.stopRecording": "பதிவை நிறுத்தவும்",
   "chat.bookIcon.toggleImageGen": "படம் உருவாக்கும் பயன்முறையை மாற்றவும்",
+
+  // Chat - image
   "chat.imagePreview.alt": "முன்னோட்டம்",
   "chat.image.dragToEnlarge": "பெரிதாக்க மூலையை இழுக்கவும்",
   "chat.image.dragToShrink": "சிறிதாக்க மூலையை இழுக்கவும்",
   "chat.annotateImage": "படத்தில் குறிப்பு சேர்க்கவும்",
   "chat.annotateVideoFrame": "தற்போதைய ஃப்ரேமில் குறிப்பு சேர்க்கவும்",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "குறிப்பு சேர்க்க வேண்டிய படம்",
-  "chat.annotateModal.cancel": "ரத்து செய்",
+  "chat.annotateModal.cancel": "ரத்துசெய்",
   "chat.annotateModal.saveAndAttach": "சேமித்து இணைக்கவும்",
   "chat.annotateModal.undo": "செயல்தவிர்",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "சொல்லவும்: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "பரிந்துரையைப் பேசவும்: {suggestion}",
   "chat.suggestion.toggleCreateMode": "பரிந்துரை உருவாக்கும் பயன்முறையை மாற்றவும்",
   "chat.suggestion.createAction": "பரிந்துரை உருவாக்கவும்",
   "chat.suggestion.creating": "பரிந்துரை உருவாகிறது...",
+
+  // Chat - maestro status
   "chat.maestro.idle": "மேஸ்ட்ரோ செயலற்றது",
   "chat.maestro.title.idle": "மேஸ்ட்ரோ தற்போது செயலற்றது.",
   "chat.maestro.resting": "மேஸ்ட்ரோ ஓய்வெடுக்கிறது...",
@@ -104,6 +172,8 @@ export const taTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "மேஸ்ட்ரோ உங்கள் உள்ளீடு அல்லது குரலுக்காக காத்திருக்கிறது.",
   "chat.maestro.holding": "மேஸ்ட்ரோ காத்திருக்கிறது",
   "chat.maestro.title.holding": "மேஸ்ட்ரோ காத்திருக்கிறது (மீண்டும் இணைவது இடைநிறுத்தப்பட்டது)",
+
+  // Chat - bookmark
   "chat.bookmark.hiddenHeaderAria": "மேலே மறைக்கப்பட்ட செய்திகள்",
   "chat.bookmark.isHere": "புக்மார்க் இங்கே உள்ளது",
   "chat.bookmark.setHere": "இங்கே புக்மார்க் அமைக்கவும்",
@@ -114,11 +184,15 @@ export const taTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "ஒன்று அதிகமாகக் காட்டவும்",
   "chat.bookmark.incrementTitle": "அதிகம்",
   "chat.bookmark.hiddenBelowHeaderAria": "கீழே மறைக்கப்பட்ட செய்திகள்",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "வீடியோவை மேம்படுத்துகிறது...",
   "chat.sendPrep.optimizingImage": "படத்தை மேம்படுத்துகிறது...",
   "chat.sendPrep.preparingMedia": "மீடியாவைத் தயாரிக்கிறது...",
   "chat.sendPrep.uploadingMedia": "மீடியாவை பதிவேற்றுகிறது...",
   "chat.sendPrep.finalizing": "இறுதிப்படுத்துகிறது...",
+
+  // Chat - header activity tokens
   "chat.header.annotating": "குறிப்பு சேர்க்கிறது",
   "chat.header.recordingAudio": "ஆடியோ பதிவு செய்கிறது",
   "chat.header.recordingVideo": "வீடியோ பதிவு செய்கிறது",
@@ -128,6 +202,8 @@ export const taTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "வீடியோ பார்க்கிறது",
   "chat.header.viewingAbove": "முந்தைய செய்திகளைப் பார்க்கிறது",
   "chat.header.liveSession": "நேரடி அமர்வு",
+
+  // Chat - live session
   "chat.liveSession.stop": "நேரடியை நிறுத்தவும்",
   "chat.liveSession.retry": "நேரடியை மீண்டும் முயற்சிக்கவும்",
   "chat.liveSession.start": "நேரடியைத் தொடங்கவும்",
@@ -146,7 +222,7 @@ export const taTranslations: Record<string, string> = {
   "chat.error.videoMetadataError": "வீடியோ மெட்டாடேட்டாவைப் படிக்க முடியவில்லை. கோப்பு சிதைந்திருக்கலாம் அல்லது ஆதரிக்கப்படாத வடிவத்தில் இருக்கலாம்.",
   "chat.error.pauseVideoToAnnotate": "தற்போதைய ஃப்ரேமில் குறிப்பு சேர்க்க வீடியோவை இடைநிறுத்தவும்",
   "chat.error.imageGenInterrupted": "படம் உருவாக்கம் தடைப்பட்டது.",
-  "chat.error.thinkingInterrupted": "AI பதில் தடைப்பட்டது.",
+  "chat.error.thinkingInterrupted": "AI-இன் பதில் தடைப்பட்டது.",
 
   // Errors - general
   "error.noLanguagePair": "முக்கியமான பிழை: மொழி ஜோடி எதுவும் தேர்ந்தெடுக்கப்படவில்லை.",

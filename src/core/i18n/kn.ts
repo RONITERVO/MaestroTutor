@@ -1,19 +1,70 @@
-
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
 export const knTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "ದನಿ ಗುರುತಿಸುವಿಕೆಯನ್ನು {language} ಗೆ ಹೊಂದಿಸಿ",
+
+  // Header
   "header.targetLanguageTitle": "ಪ್ರಸ್ತುತ ಗುರಿ ಭಾಷೆ: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "ವಿಮಾನದ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ",
   "startPage.saveChats": "ಎಲ್ಲಾ ಚಾಟ್‌ಗಳನ್ನು ಉಳಿಸಿ",
   "startPage.loadChats": "ಚಾಟ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡಿ",
+  "startPage.saveThisChat": "ಈ ಚಾಟ್ ಉಳಿಸಿ",
+  "startPage.appendToChat": "ಚಾಟ್‌ಗೆ ಸೇರಿಸಿ",
+  "startPage.trimBeforeBookmark": "ಬುಕ್‌ಮಾರ್ಕ್‌ಗಿಂತ ಮೊದಲಿನದನ್ನು ಅಳಿಸಿ",
   "startPage.maestroAvatar": "ಮೈಸ್ಟ್ರೋ ಅವತಾರ",
   "startPage.addMaestroAvatar": "ಮೈಸ್ಟ್ರೋ ಅವತಾರವನ್ನು ಸೇರಿಸಿ",
   "startPage.loadSuccess": "{count} ಚಾಟ್ ಸೆಷನ್‌ಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಲೋಡ್ ಮಾಡಿ ಬದಲಾಯಿಸಲಾಗಿದೆ!",
   "startPage.loadError": "ಚಾಟ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ. ಫೈಲ್ ದೋಷಪೂರಿತ ಅಥವಾ ತಪ್ಪು ಫಾರ್ಮ್ಯಾಟ್ ಆಗಿರಬಹುದು.",
   "startPage.noChatsToSave": "ಉಳಿಸಲು ಯಾವುದೇ ಚಾಟ್ ಇತಿಹಾಸವಿಲ್ಲ.",
   "startPage.saveError": "ಚಾಟ್‌ಗಳನ್ನು ಉಳಿಸುವಲ್ಲಿ ದೋಷ. ಹೆಚ್ಚಿನ ವಿವರಗಳಿಗಾಗಿ ಕನ್ಸೋಲ್ ನೋಡಿ.",
+  "startPage.noChatSelected": "ದಯವಿಟ್ಟು ಮೊದಲು ಭಾಷಾ ಜೋಡಿಯನ್ನು ಆರಿಸಿ.",
+  "startPage.noBookmarkSet": "ಯಾವುದೇ ಬುಕ್‌ಮಾರ್ಕ್ ಹೊಂದಿಸಲಾಗಿಲ್ಲ. ಸಂದೇಶಗಳನ್ನು ಅಳಿಸಲು ಮೊದಲು ಬುಕ್‌ಮಾರ್ಕ್ ಹೊಂದಿಸಿ.",
+  "startPage.noMessagesToTrim": "ತೆಗೆದುಹಾಕಲು ಬುಕ್‌ಮಾರ್ಕ್‌ಗಿಂತ ಮೊದಲು ಯಾವುದೇ ಸಂದೇಶಗಳಿಲ್ಲ.",
+  "startPage.trimSuccess": "ಬುಕ್‌ಮಾರ್ಕ್‌ಗಿಂತ ಮೊದಲಿನ {count} ಸಂದೇಶಗಳನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿದೆ.",
+  "startPage.trimError": "ಸಂದೇಶಗಳನ್ನು ಅಳಿಸಲು ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "startPage.noMessagesToAppend": "ಬ್ಯಾಕಪ್ ಫೈಲ್‌ನಲ್ಲಿ ಸಂಯೋಜಿಸಲು ಯಾವುದೇ ಸಂದೇಶಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+  "startPage.noPairInBackup": "ಬ್ಯಾಕಪ್ ಫೈಲ್ ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಭಾಷಾ ಜೋಡಿಯ ಸಂದೇಶಗಳನ್ನು ಹೊಂದಿಲ್ಲ. ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಚಾಟ್‌ಗೆ ಹೊಂದುವ ಬ್ಯಾಕಪ್ ಅನ್ನು ಆರಿಸಿ.",
+  "startPage.appendSuccess": "ಪ್ರಸ್ತುತ ಚಾಟ್‌ಗೆ {count} ಸಂದೇಶಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸೇರಿಸಲಾಗಿದೆ.",
+  "startPage.combineSuccess": "ಚಾಟ್‌ಗಳನ್ನು ಸಂಯೋಜಿಸಲಾಗಿದೆ: {added} ಹೊಸ ಸಂದೇಶಗಳನ್ನು ಸೇರಿಸಲಾಗಿದೆ, ಒಟ್ಟು {total} ಸಂದೇಶಗಳು.",
+  "startPage.combineNoDuplicates": "ಎಲ್ಲಾ ಸಂದೇಶಗಳು ಈಗಾಗಲೇ ನಿಮ್ಮ ಚಾಟ್‌ನಲ್ಲಿವೆ. ಯಾವುದೇ ಬದಲಾವಣೆ ಮಾಡಲಾಗಿಲ್ಲ.",
+  "startPage.combineNoChanges": "ಸೇರಿಸಲು ಯಾವುದೇ ಹೊಸ ಸಂದೇಶಗಳಿಲ್ಲ. ನಿಮ್ಮ ಚಾಟ್‌ನಲ್ಲಿ ಬದಲಾವಣೆಯಿಲ್ಲ.",
+  "startPage.invalidBackupFormat": "ಅಮಾನ್ಯ ಬ್ಯಾಕಪ್ ಫೈಲ್. ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ Maestro ಬ್ಯಾಕಪ್ (.ndjson) ಫೈಲ್ ಅನ್ನು ಆರಿಸಿ.",
+  "startPage.browserNotSupported": "ನಿಮ್ಮ ಬ್ರೌಸರ್ ಫೈಲ್ ಉಳಿಸುವುದನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು Chrome ಅಥವಾ Edge ಬಳಸಿ.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "ಎಲ್ಲವನ್ನೂ ಉಳಿಸಿ",
+  "sessionControls.saveAll.description": "ಎಲ್ಲಾ ಚಾಟ್‌ಗಳನ್ನು ಬ್ಯಾಕಪ್ ಫೈಲ್‌ಗೆ ಎಕ್ಸ್‌ಪೋರ್ಟ್ ಮಾಡಿ",
+  "sessionControls.loadAll.label": "ಎಲ್ಲವನ್ನೂ ಲೋಡ್ ಮಾಡಿ",
+  "sessionControls.loadAll.description": "ಎಲ್ಲಾ ಚಾಟ್‌ಗಳನ್ನು ಬ್ಯಾಕಪ್ ಫೈಲ್‌ನಿಂದ ಬದಲಾಯಿಸಿ",
+  "sessionControls.reset.label": "ಮರುಹೊಂದಿಸಿ (Reset)",
+  "sessionControls.reset.description": "ಎಲ್ಲಾ ಡೇಟಾವನ್ನು ಬ್ಯಾಕಪ್ ಮಾಡಿ ಮತ್ತು ಅಳಿಸಿ",
+  "sessionControls.saveThis.label": "ಚಾಟ್ ಉಳಿಸಿ",
+  "sessionControls.saveThis.description": "ಈ ಚಾಟ್ ಅನ್ನು ಮಾತ್ರ ಎಕ್ಸ್‌ಪೋರ್ಟ್ ಮಾಡಿ",
+  "sessionControls.combine.label": "ಸಂಯೋಜಿಸಿ",
+  "sessionControls.combine.description": "ಬ್ಯಾಕಪ್ ಅನ್ನು ಈ ಚಾಟ್‌ಗೆ ವಿಲೀನಗೊಳಿಸಿ",
+  "sessionControls.trim.label": "ಅಳಿಸಿ (Trim)",
+  "sessionControls.trim.description": "ಬುಕ್‌ಮಾರ್ಕ್‌ಗಿಂತ ಮೊದಲಿನ ಸಂದೇಶಗಳನ್ನು ತೆಗೆದುಹಾಕಿ",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "ಪ್ರೊಫೈಲ್:",
+  "sessionControls.profilePlaceholder": "ನಿಮ್ಮ ಹೆಸರು ಅಥವಾ ವಿವರಗಳು...",
+  "sessionControls.editProfile": "ಬಳಕೆದಾರರ ಪ್ರೊಫೈಲ್ ಎಡಿಟ್ ಮಾಡಿ",
+  "sessionControls.allChatsControls": "ಎಲ್ಲಾ ಚಾಟ್ ನಿಯಂತ್ರಣಗಳು",
+  "sessionControls.thisChatsControls": "ಈ ಚಾಟ್‌ನ ನಿಯಂತ್ರಣಗಳು",
+  "sessionControls.all": "ಎಲ್ಲಾ",
+  "sessionControls.this": "ಈ",
+  "sessionControls.back": "ಹಿಂದಕ್ಕೆ",
+  "sessionControls.backupAndReset": "ಬ್ಯಾಕಪ್ ಮತ್ತು ಮರುಹೊಂದಿಸಿ",
+  "sessionControls.typeToConfirm": "ಖಚಿತಪಡಿಸಲು \"{keyword}\" ಎಂದು ಟೈಪ್ ಮಾಡಿ",
+  "sessionControls.changeAvatar": "ಅವತಾರ ಬದಲಾಯಿಸಿ",
+
+  // General
   "general.clear": "ಅಳಿಸಿ",
   "general.error": "ಕ್ಷಮಿಸಿ, ದೋಷ ಸಂಭವಿಸಿದೆ.",
 
@@ -41,6 +92,8 @@ export const knTranslations: Record<string, string> = {
   "apiKeyGate.saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
   "apiKeyGate.saveKey": "ಕೀಯನ್ನು ಉಳಿಸಿ",
   "apiKeyGate.close": "ಮುಚ್ಚಿ",
+
+  // Chat - general
   "chat.thinking": "ಯೋಚಿಸುತ್ತಿದ್ದೇನೆ...",
   "chat.loadingHistory": "ಚಾಟ್ ಇತಿಹಾಸ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
   "chat.loadingSuggestions": "ಸಲಹೆಗಳು ಲೋಡ್ ಆಗುತ್ತಿವೆ...",
@@ -59,36 +112,50 @@ export const knTranslations: Record<string, string> = {
   "chat.speakThisLine": "ಈ ಸಾಲನ್ನು ಮಾತನಾಡಿ",
   "chat.languageSelector.openGlobe": "ಭಾಷೆಗಳನ್ನು ಬದಲಾಯಿಸಿ",
   "chat.maestroTranscriptScrollwheel": "ಮೈಸ್ಟ್ರೋ ಟ್ರಾನ್ಸ್‌ಕ್ರಿಪ್ಟ್ ಸ್ಕ್ರೋಲ್ ವೀಕ್ಷಣೆ",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT ಸಕ್ರಿಯ: ಕೇಳುತ್ತಿದ್ದೇನೆ...",
   "chat.mic.enableStt": "STT ಸಕ್ರಿಯಗೊಳಿಸಿ",
   "chat.mic.disableStt": "STT ನಿಲ್ಲಿಸಿ",
   "chat.mic.recordingAudioNote": "ಆಡಿಯೊ ರೆಕಾರ್ಡ್ ಆಗುತ್ತಿದೆ...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language} ನಲ್ಲಿ ಕೇಳುತ್ತಿದ್ದೇನೆ...",
   "chat.placeholder.normal.sttActive": "{language} ನಲ್ಲಿ ಮಾತನಾಡಿ ಅಥವಾ ಟೈಪ್ ಮಾಡಿ...",
   "chat.placeholder.normal.sttInactive": "ಟೈಪ್ ಮಾಡಿ ಅಥವಾ {language} ನಲ್ಲಿ ಮಾತನಾಡಲು ಮೈಕ್ ಟ್ಯಾಪ್ ಮಾಡಿ...",
   "chat.placeholder.suggestion.listening": "ಅನುವಾದಿಸಲು {language} ಮಾತನಾಡಿ...",
   "chat.placeholder.suggestion.sttActive": "ಅನುವಾದಿಸಲು {language} ನಲ್ಲಿ ಮಾತನಾಡಿ ಅಥವಾ ಟೈಪ್ ಮಾಡಿ...",
   "chat.placeholder.suggestion.sttInactive": "ಅನುವಾದಿಸಲು {language} ನಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...",
+
+  // Chat - camera
   "chat.camera.turnOn": "ಕ್ಯಾಮರಾ ಮುನ್ನೋಟ ಆನ್ ಮಾಡಿ",
   "chat.camera.turnOff": "ಕ್ಯಾಮರಾ ಮುನ್ನೋಟ ಆಫ್ ಮಾಡಿ",
   "chat.camera.imageGenCameraLabel": "ಚಿತ್ರ ರಚನೆ",
   "chat.camera.captureOrRecord": "ಫೋಟೋಗೆ ಟ್ಯಾಪ್ ಮಾಡಿ, ವೀಡಿಯೊಗೆ ಹಿಡಿದುಕೊಳ್ಳಿ",
   "chat.camera.stopRecording": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
   "chat.bookIcon.toggleImageGen": "ಚಿತ್ರ ರಚನೆ ಮೋಡ್ ಬದಲಾಯಿಸಿ",
+
+  // Chat - image
   "chat.imagePreview.alt": "ಮುನ್ನೋಟ",
   "chat.image.dragToEnlarge": "ದೊಡ್ಡದಾಗಿಸಲು ಮೂಲೆಯನ್ನು ಎಳೆಯಿರಿ",
   "chat.image.dragToShrink": "ಚಿಕ್ಕದಾಗಿಸಲು ಮೂಲೆಯನ್ನು ಎಳೆಯಿರಿ",
   "chat.annotateImage": "ಚಿತ್ರವನ್ನು ಟಿಪ್ಪಣಿ ಮಾಡಿ",
   "chat.annotateVideoFrame": "ಪ್ರಸ್ತುತ ಫ್ರೇಮ್ ಅನ್ನು ಟಿಪ್ಪಣಿ ಮಾಡಿ",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "ಟಿಪ್ಪಣಿ ಮಾಡಬೇಕಾದ ಚಿತ್ರ",
   "chat.annotateModal.cancel": "ರದ್ದುಮಾಡಿ",
   "chat.annotateModal.saveAndAttach": "ಉಳಿಸಿ ಮತ್ತು ಲಗತ್ತಿಸಿ",
   "chat.annotateModal.undo": "ರದ್ದುಗೊಳಿಸಿ",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "ಹೇಳಿ: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "ಸಲಹೆ ಮಾತನಾಡಿ: {suggestion}",
   "chat.suggestion.toggleCreateMode": "ಸಲಹೆ ರಚನೆ ಮೋಡ್ ಬದಲಾಯಿಸಿ",
   "chat.suggestion.createAction": "ಸಲಹೆ ರಚಿಸಿ",
   "chat.suggestion.creating": "ಸಲಹೆ ರಚಿಸಲಾಗುತ್ತಿದೆ...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "ಮೈಸ್ಟ್ರೋ ನಿಷ್ಕ್ರಿಯವಾಗಿದೆ",
   "chat.maestro.title.idle": "ಮೈಸ್ಟ್ರೋ ಪ್ರಸ್ತುತ ನಿಷ್ಕ್ರಿಯವಾಗಿದೆ.",
   "chat.maestro.resting": "ಮೈಸ್ಟ್ರೋ ವಿಶ್ರಮಿಸುತ್ತಿದೆ...",
@@ -105,6 +172,8 @@ export const knTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "ಮೈಸ್ಟ್ರೋ ನಿಮ್ಮ ಇನ್ಪುಟ್ ಅಥವಾ ಧ್ವನಿಗಾಗಿ ಕಾಯುತ್ತಿದೆ.",
   "chat.maestro.holding": "ಮೈಸ್ಟ್ರೋ ಕಾಯುತ್ತಿದೆ",
   "chat.maestro.title.holding": "ಮೈಸ್ಟ್ರೋ ಕಾಯುತ್ತಿದೆ (ಮರು-ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ತಾತ್ಕಾಲಿಕವಾಗಿ ನಿಲ್ಲಿಸಲಾಗಿದೆ)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "ಮೇಲೆ ಅಡಗಿಸಲಾದ ಸಂದೇಶಗಳು",
   "chat.bookmark.isHere": "ಬುಕ್‌ಮಾರ್ಕ್ ಇಲ್ಲಿದೆ",
   "chat.bookmark.setHere": "ಇಲ್ಲಿ ಬುಕ್‌ಮಾರ್ಕ್ ಹೊಂದಿಸಿ",
@@ -115,11 +184,15 @@ export const knTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "ಒಂದು ಹೆಚ್ಚು ತೋರಿಸಿ",
   "chat.bookmark.incrementTitle": "ಹೆಚ್ಚು",
   "chat.bookmark.hiddenBelowHeaderAria": "ಕೆಳಗೆ ಅಡಗಿಸಲಾದ ಸಂದೇಶಗಳು",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "ವೀಡಿಯೊ ಅತ್ಯುತ್ತಮಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
   "chat.sendPrep.optimizingImage": "ಚಿತ್ರ ಅತ್ಯುತ್ತಮಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
   "chat.sendPrep.preparingMedia": "ಮಾಧ್ಯಮ ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ...",
   "chat.sendPrep.uploadingMedia": "ಮಾಧ್ಯಮ ಅಪ್‌ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
   "chat.sendPrep.finalizing": "ಪೂರ್ಣಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "ಟಿಪ್ಪಣಿ ಮಾಡಲಾಗುತ್ತಿದೆ",
   "chat.header.recordingAudio": "ಆಡಿಯೊ ರೆಕಾರ್ಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
   "chat.header.recordingVideo": "ವೀಡಿಯೊ ರೆಕಾರ್ಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ",
@@ -129,6 +202,8 @@ export const knTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "ವೀಡಿಯೊ ವೀಕ್ಷಿಸಲಾಗುತ್ತಿದೆ",
   "chat.header.viewingAbove": "ಹಿಂದಿನ ಸಂದೇಶಗಳನ್ನು ವೀಕ್ಷಿಸಲಾಗುತ್ತಿದೆ",
   "chat.header.liveSession": "ಲೈವ್ ಸೆಷನ್",
+
+  // Chat - live session
   "chat.liveSession.stop": "ಲೈವ್ ನಿಲ್ಲಿಸಿ",
   "chat.liveSession.retry": "ಲೈವ್ ಮರುಪ್ರಯತ್ನಿಸಿ",
   "chat.liveSession.start": "ಲೈವ್ ಪ್ರಾರಂಭಿಸಿ",
@@ -138,6 +213,8 @@ export const knTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "ನಮಸ್ಕಾರ",
   "chat.liveSession.defaultSuggestion2": "ಶುಭೋದಯ",
   "chat.liveSession.defaultSuggestion3": "ನೀವು ಹೇಗಿದ್ದೀರಿ?",
+
+  // Chat - errors
   "chat.error.sttError": "STT ದೋಷ: {error}. ಮೈಕ್ ಬದಲಾಯಿಸಲು ಪ್ರಯತ್ನಿಸಿ.",
   "chat.error.autoCaptureCameraError": "ಸ್ವಯಂ ಸೆರೆಹಿಡಿಯುವ ಕ್ಯಾಮೆರಾ ದೋಷ: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -146,6 +223,8 @@ export const knTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "ಪ್ರಸ್ತುತ ಫ್ರೇಮ್ ಅನ್ನು ಟಿಪ್ಪಣಿ ಮಾಡಲು ವೀಡಿಯೊ ವಿರಾಮಗೊಳಿಸಿ",
   "chat.error.imageGenInterrupted": "ಚಿತ್ರ ರಚನೆ ಅಡಚಣೆಯಾಗಿದೆ.",
   "chat.error.thinkingInterrupted": "AI ಪ್ರತಿಕ್ರಿಯೆ ಅಡಚಣೆಯಾಗಿದೆ.",
+
+  // Errors - general
   "error.noLanguagePair": "ಗಂಭೀರ ದೋಷ: ಯಾವುದೇ ಭಾಷಾ ಜೋಡಿ ಆಯ್ಕೆ ಮಾಡಲಾಗಿಲ್ಲ.",
   "error.translationFailed": "ಅನುವಾದ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   "error.imageLimitReached": "ಸೆಷನ್ ಚಿತ್ರ ಮಿತಿ ತಲುಪಿದೆ. ದಯವಿಟ್ಟು ಹೊಸ ಸೆಷನ್ ಪ್ರಾರಂಭಿಸಿ.",
@@ -153,12 +232,16 @@ export const knTranslations: Record<string, string> = {
   "error.apiKeyMissing": "ನಿಮ್ಮ Gemini API ಕೀ ಕಾಣೆಯಾಗಿದೆ. API ಕೀ ಪರದೆಯನ್ನು ತೆರೆಯಿರಿ ಮತ್ತು ನಿಮ್ಮ ಕೀಯನ್ನು ಅಂಟಿಸಿ.",
   "error.apiKeyInvalid": "ನಿಮ್ಮ Gemini API ಕೀ ಅಮಾನ್ಯವಾಗಿದೆ. ದಯವಿಟ್ಟು ಕಾಗುಣಿತ ತಪ್ಪುಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮಾನ್ಯವಾದ ಕೀಯನ್ನು ಅಂಟಿಸಿ.",
   "error.apiQuotaExceeded": "ಚಾಟ್‌ಗಾಗಿ ನಿಮ್ಮ Gemini API ಉಚಿತ ಮಿತಿ ಮುಗಿದಿದೆ. ಬಿಲ್ಲಿಂಗ್ ಹಂತಗಳೊಂದಿಗೆ ನಾನು API ಕೀ ಪರದೆಯನ್ನು ತೆರೆದಿದ್ದೇನೆ. ಈ ಮಧ್ಯೆ ನೀವು ಇನ್ನೂ ಲೈವ್ ಸಂಭಾಷಣೆಯನ್ನು ಬಳಸಬಹುದು.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "ಕ್ಯಾಮರಾ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಬ್ರೌಸರ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಕ್ಯಾಮರಾ ಪ್ರವೇಶವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.",
   "error.cameraNotFound": "ಆಯ್ಕೆ ಮಾಡಿದ ಕ್ಯಾಮರಾ ಕಂಡುಬಂದಿಲ್ಲ. ಅದು ಸಂಪರ್ಕಗೊಂಡಿದೆಯೇ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ ಅಥವಾ ಬೇರೆ ಕ್ಯಾಮರಾ ಆಯ್ಕೆ ಮಾಡಿ.",
   "error.cameraAccessNotSupported": "ನಿಮ್ಮ ಬ್ರೌಸರ್‌ನಿಂದ ಕ್ಯಾಮರಾ ಪ್ರವೇಶ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ.",
   "error.cameraUnknown": "ಕ್ಯಾಮರಾ ಪ್ರವೇಶಿಸುವಾಗ ಅಪರಿಚಿತ ದೋಷ ಸಂಭವಿಸಿದೆ.",
   "error.cameraStreamNotAvailable": "ಸೆರೆಹಿಡಿಯಲು ಕ್ಯಾಮರಾ ಸ್ಟ್ರೀಮ್ ಲಭ್ಯವಿಲ್ಲ.",
   "error.imageCaptureGeneric": "ಚಿತ್ರ ಸೆರೆಹಿಡಿಯುವಾಗ ಅಪರಿಚಿತ ದೋಷ.",
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "ದೃಶ್ಯ ಸಂದರ್ಭ ವೀಡಿಯೊ ಎಲಿಮೆಂಟ್ ಸಿದ್ಧವಾಗಿಲ್ಲ.",
   "error.snapshotVideoElementNotReady": "ಸ್ನ್ಯಾಪ್‌ಶಾಟ್ ವೀಡಿಯೊ ಎಲಿಮೆಂಟ್ ಸಿದ್ಧವಾಗಿಲ್ಲ.",
   "error.visualContextCameraAccessNotSupported": "ದೃಶ್ಯ ಸಂದರ್ಭಕ್ಕಾಗಿ ಕ್ಯಾಮರಾ ಪ್ರವೇಶ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ.",

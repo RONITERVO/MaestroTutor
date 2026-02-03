@@ -2,17 +2,67 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const deTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector
   "sttLang.selectLanguage": "Spracherkennung auf {language} einstellen",
+
+  // Header
   "header.targetLanguageTitle": "Aktuelle Zielsprache: {language}",
+
+  // Start page
   "startPage.clickToStart": "Klicken Sie auf das Flugzeug",
   "startPage.saveChats": "Alle Chats speichern",
   "startPage.loadChats": "Chats laden",
+  "startPage.saveThisChat": "Diesen Chat speichern",
+  "startPage.appendToChat": "An Chat anhängen",
+  "startPage.trimBeforeBookmark": "Vor Lesezeichen kürzen",
   "startPage.maestroAvatar": "Maestro-Avatar",
   "startPage.addMaestroAvatar": "Maestro-Avatar hinzufügen",
   "startPage.loadSuccess": "{count} Chat-Sitzungen erfolgreich geladen und ersetzt!",
   "startPage.loadError": "Fehler beim Laden der Chats. Die Datei könnte beschädigt oder im falschen Format sein.",
   "startPage.noChatsToSave": "Keine Chat-Verläufe zum Speichern vorhanden.",
   "startPage.saveError": "Fehler beim Speichern der Chats. Weitere Details in der Konsole.",
+  "startPage.noChatSelected": "Bitte wählen Sie zuerst ein Sprachpaar aus.",
+  "startPage.noBookmarkSet": "Kein Lesezeichen gesetzt. Setzen Sie zuerst ein Lesezeichen, um Nachrichten davor zu entfernen.",
+  "startPage.noMessagesToTrim": "Keine Nachrichten vor dem Lesezeichen zum Entfernen.",
+  "startPage.trimSuccess": "{count} Nachrichten vor dem Lesezeichen entfernt.",
+  "startPage.trimError": "Fehler beim Kürzen der Nachrichten. Bitte versuchen Sie es erneut.",
+  "startPage.noMessagesToAppend": "Keine Nachrichten in der Sicherungsdatei zum Kombinieren gefunden.",
+  "startPage.noPairInBackup": "Die Sicherungsdatei enthält keine Nachrichten für Ihr aktuelles Sprachpaar. Bitte wählen Sie eine Sicherung, die zu Ihrem aktuellen Chat passt.",
+  "startPage.appendSuccess": "{count} Nachrichten erfolgreich an den aktuellen Chat angehängt.",
+  "startPage.combineSuccess": "Chats kombiniert: {added} neue Nachrichten hinzugefügt, insgesamt {total} Nachrichten.",
+  "startPage.combineNoDuplicates": "Alle Nachrichten waren bereits in Ihrem Chat vorhanden. Keine Änderungen vorgenommen.",
+  "startPage.combineNoChanges": "Keine neuen Nachrichten zum Hinzufügen. Ihr Chat ist unverändert.",
+  "startPage.invalidBackupFormat": "Ungültige Sicherungsdatei. Bitte wählen Sie eine gültige Maestro-Sicherungsdatei (.ndjson) aus.",
+  "startPage.browserNotSupported": "Ihr Browser unterstützt das Speichern von Dateien nicht. Bitte verwenden Sie Chrome oder Edge.",
+
+  // Session Controls
+  "sessionControls.saveAll.label": "Alle speichern",
+  "sessionControls.saveAll.description": "Alle Chats in Sicherungsdatei exportieren",
+  "sessionControls.loadAll.label": "Alle laden",
+  "sessionControls.loadAll.description": "Alle Chats durch Sicherungsdatei ersetzen",
+  "sessionControls.reset.label": "Zurücksetzen",
+  "sessionControls.reset.description": "Sichern & alle Daten löschen",
+  "sessionControls.saveThis.label": "Chat speichern",
+  "sessionControls.saveThis.description": "Nur diesen Chat exportieren",
+  "sessionControls.combine.label": "Kombinieren",
+  "sessionControls.combine.description": "Sicherung in diesen Chat zusammenführen",
+  "sessionControls.trim.label": "Kürzen",
+  "sessionControls.trim.description": "Nachrichten vor Lesezeichen entfernen",
+  "sessionControls.profile": "Profil:",
+  "sessionControls.profilePlaceholder": "Ihr Name oder Details...",
+  "sessionControls.editProfile": "Benutzerprofil bearbeiten",
+  "sessionControls.allChatsControls": "Steuerung für alle Chats",
+  "sessionControls.thisChatsControls": "Steuerung für diesen Chat",
+  "sessionControls.all": "Alle",
+  "sessionControls.this": "Dieser",
+  "sessionControls.back": "Zurück",
+  "sessionControls.backupAndReset": "Sichern & Zurücksetzen",
+  "sessionControls.typeToConfirm": "Geben Sie \"{keyword}\" ein, um zu bestätigen",
+  "sessionControls.changeAvatar": "Avatar ändern",
+
+  // General
   "general.clear": "Löschen",
   "general.error": "Entschuldigung, ein Fehler ist aufgetreten.",
 
@@ -40,6 +90,8 @@ export const deTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Speichern...",
   "apiKeyGate.saveKey": "Schlüssel speichern",
   "apiKeyGate.close": "Schließen",
+
+  // Chat - general
   "chat.thinking": "Denke nach...",
   "chat.loadingHistory": "Lade Chatverlauf...",
   "chat.loadingSuggestions": "Lade Vorschläge...",
@@ -58,36 +110,50 @@ export const deTranslations: Record<string, string> = {
   "chat.speakThisLine": "Diese Zeile sprechen",
   "chat.languageSelector.openGlobe": "Sprachen ändern",
   "chat.maestroTranscriptScrollwheel": "Maestro-Transkript-Scrollansicht",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT aktiv: Höre zu...",
   "chat.mic.enableStt": "STT aktivieren",
   "chat.mic.disableStt": "STT stoppen",
   "chat.mic.recordingAudioNote": "Audioaufnahme...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "Höre in {language}...",
   "chat.placeholder.normal.sttActive": "Sprechen Sie auf {language} oder tippen Sie...",
   "chat.placeholder.normal.sttInactive": "Tippen oder auf Mikrofon tippen, um auf {language} zu sprechen...",
   "chat.placeholder.suggestion.listening": "Sprechen Sie {language} zum Übersetzen...",
   "chat.placeholder.suggestion.sttActive": "Sprechen oder tippen Sie auf {language} zum Übersetzen...",
   "chat.placeholder.suggestion.sttInactive": "Tippen Sie auf {language} zum Übersetzen...",
+
+  // Chat - camera
   "chat.camera.turnOn": "Kameravorschau aktivieren",
   "chat.camera.turnOff": "Kameravorschau deaktivieren",
   "chat.camera.imageGenCameraLabel": "Bildgenerierung",
   "chat.camera.captureOrRecord": "Tippen für Foto, halten für Video",
   "chat.camera.stopRecording": "Aufnahme stoppen",
   "chat.bookIcon.toggleImageGen": "Bildgenerierungsmodus umschalten",
+
+  // Chat - image
   "chat.imagePreview.alt": "Vorschau",
   "chat.image.dragToEnlarge": "Ecke ziehen zum Vergrößern",
   "chat.image.dragToShrink": "Ecke ziehen zum Verkleinern",
   "chat.annotateImage": "Bild annotieren",
   "chat.annotateVideoFrame": "Aktuelles Bild annotieren",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Zu annotierendes Bild",
   "chat.annotateModal.cancel": "Abbrechen",
   "chat.annotateModal.saveAndAttach": "Speichern und anhängen",
   "chat.annotateModal.undo": "Rückgängig",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "Sagen: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Vorschlag sprechen: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Vorschlagserstellungsmodus umschalten",
   "chat.suggestion.createAction": "Vorschlag erstellen",
   "chat.suggestion.creating": "Vorschlag wird erstellt...",
+
+  // Chat - maestro status
   "chat.maestro.idle": "Maestro ist inaktiv",
   "chat.maestro.title.idle": "Maestro ist derzeit inaktiv.",
   "chat.maestro.resting": "Maestro ruht...",
@@ -104,6 +170,8 @@ export const deTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro wartet auf Ihre Eingabe oder Stimme.",
   "chat.maestro.holding": "Maestro hält an",
   "chat.maestro.title.holding": "Maestro hält an (Reaktivierung pausiert)",
+
+  // Chat - bookmark
   "chat.bookmark.hiddenHeaderAria": "Versteckte Nachrichten oben",
   "chat.bookmark.isHere": "Lesezeichen ist hier",
   "chat.bookmark.setHere": "Lesezeichen hier setzen",
@@ -114,11 +182,15 @@ export const deTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Eins mehr anzeigen",
   "chat.bookmark.incrementTitle": "Mehr",
   "chat.bookmark.hiddenBelowHeaderAria": "Versteckte Nachrichten unten",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Video wird optimiert...",
   "chat.sendPrep.optimizingImage": "Bild wird optimiert...",
   "chat.sendPrep.preparingMedia": "Medien werden vorbereitet...",
   "chat.sendPrep.uploadingMedia": "Medien werden hochgeladen...",
   "chat.sendPrep.finalizing": "Wird abgeschlossen...",
+
+  // Chat - header activity tokens
   "chat.header.annotating": "Annotieren",
   "chat.header.recordingAudio": "Audioaufnahme",
   "chat.header.recordingVideo": "Videoaufnahme",
@@ -128,15 +200,19 @@ export const deTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Video ansehen",
   "chat.header.viewingAbove": "Vorherige Nachrichten ansehen",
   "chat.header.liveSession": "Live-Sitzung",
+
+  // Chat - live session
   "chat.liveSession.stop": "Live stoppen",
   "chat.liveSession.retry": "Live erneut versuchen",
   "chat.liveSession.start": "Live starten",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Verbinden",
-  "chat.liveSession.defaultLastMessage": "Hallo! Wie kann ich dir heute helfen?",
+  "chat.liveSession.defaultLastMessage": "Hallo! Wie kann ich Ihnen heute helfen?",
   "chat.liveSession.defaultSuggestion1": "Hallo",
   "chat.liveSession.defaultSuggestion2": "Guten Morgen",
-  "chat.liveSession.defaultSuggestion3": "Wie geht es dir?",
+  "chat.liveSession.defaultSuggestion3": "Wie geht es Ihnen?",
+
+  // Chat - errors
   "chat.error.sttError": "STT-Fehler: {error}. Versuchen Sie, das Mikrofon umzuschalten.",
   "chat.error.autoCaptureCameraError": "Automatischer Kameraaufnahmefehler: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,6 +221,8 @@ export const deTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Video pausieren, um das aktuelle Bild zu annotieren",
   "chat.error.imageGenInterrupted": "Die Bildgenerierung wurde unterbrochen.",
   "chat.error.thinkingInterrupted": "Die KI-Antwort wurde unterbrochen.",
+
+  // Errors - general
   "error.noLanguagePair": "Kritischer Fehler: Kein Sprachpaar ausgewählt.",
   "error.translationFailed": "Übersetzung fehlgeschlagen. Bitte erneut versuchen.",
   "error.imageLimitReached": "Sitzungslimit für Bildgenerierung erreicht. Bitte neue Sitzung starten.",
@@ -152,12 +230,16 @@ export const deTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Ihr Gemini-API-Schlüssel fehlt. Öffnen Sie den API-Schlüssel-Bildschirm und fügen Sie Ihren Schlüssel ein.",
   "error.apiKeyInvalid": "Ihr Gemini-API-Schlüssel ist ungültig. Bitte prüfen Sie auf Tippfehler und fügen Sie einen gültigen Schlüssel ein.",
   "error.apiQuotaExceeded": "Ihr kostenloses Gemini-API-Kontingent für den Chat ist erschöpft. Ich habe den API-Schlüssel-Bildschirm mit den Abrechnungsschritten geöffnet. In der Zwischenzeit können Sie weiterhin die Live-Unterhaltung nutzen.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Kameraberechtigung verweigert. Bitte aktivieren Sie den Kamerazugriff in Ihren Browsereinstellungen.",
   "error.cameraNotFound": "Ausgewählte Kamera nicht gefunden. Stellen Sie sicher, dass sie angeschlossen ist, oder wählen Sie eine andere Kamera.",
   "error.cameraAccessNotSupported": "Kamerazugriff wird von Ihrem Browser nicht unterstützt.",
   "error.cameraUnknown": "Ein unbekannter Fehler beim Zugriff auf die Kamera ist aufgetreten.",
   "error.cameraStreamNotAvailable": "Kamerastream für Aufnahme nicht verfügbar.",
   "error.imageCaptureGeneric": "Unbekannter Fehler bei der Bildaufnahme.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "Visuelles Kontext-Videoelement nicht bereit.",
   "error.snapshotVideoElementNotReady": "Videoelement für Schnappschuss nicht bereit.",
   "error.visualContextCameraAccessNotSupported": "Kamerazugriff für visuellen Kontext nicht unterstützt.",

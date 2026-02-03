@@ -70,12 +70,12 @@ const SessionControls: React.FC = () => {
   // Action configuration: keyword, color scheme, description
   const ACTION_CONFIG: Record<PendingActionType, { keyword: string; label: string; description: string; colorClass: string; bgClass: string; borderClass: string; textClass: string; placeholderClass: string; btnClass: string; shadowClass: string }> = {
     none: { keyword: '', label: '', description: '', colorClass: '', bgClass: '', borderClass: '', textClass: '', placeholderClass: '', btnClass: '', shadowClass: '' },
-    saveAll: { keyword: 'SAVE', label: 'Save All', description: 'Export all chats to backup file', colorClass: 'text-emerald-300', bgClass: 'bg-emerald-950/30', borderClass: 'border-emerald-500/30', textClass: 'text-emerald-100', placeholderClass: 'placeholder-emerald-400/30', btnClass: 'bg-emerald-500/80 hover:bg-emerald-500', shadowClass: 'shadow-emerald-900/20' },
-    loadAll: { keyword: 'LOAD', label: 'Load All', description: 'Replace all chats with backup file', colorClass: 'text-blue-300', bgClass: 'bg-blue-950/30', borderClass: 'border-blue-500/30', textClass: 'text-blue-100', placeholderClass: 'placeholder-blue-400/30', btnClass: 'bg-blue-500/80 hover:bg-blue-500', shadowClass: 'shadow-blue-900/20' },
-    reset: { keyword: 'DELETE', label: 'Reset', description: 'Backup & delete all data', colorClass: 'text-red-300', bgClass: 'bg-red-950/30', borderClass: 'border-red-500/30', textClass: 'text-red-100', placeholderClass: 'placeholder-red-400/30', btnClass: 'bg-red-500/80 hover:bg-red-500', shadowClass: 'shadow-red-900/20' },
-    saveThis: { keyword: 'SAVE', label: 'Save Chat', description: 'Export this chat only', colorClass: 'text-cyan-300', bgClass: 'bg-cyan-950/30', borderClass: 'border-cyan-500/30', textClass: 'text-cyan-100', placeholderClass: 'placeholder-cyan-400/30', btnClass: 'bg-cyan-500/80 hover:bg-cyan-500', shadowClass: 'shadow-cyan-900/20' },
-    combine: { keyword: 'COMBINE', label: 'Combine', description: 'Merge backup into this chat', colorClass: 'text-violet-300', bgClass: 'bg-violet-950/30', borderClass: 'border-violet-500/30', textClass: 'text-violet-100', placeholderClass: 'placeholder-violet-400/30', btnClass: 'bg-violet-500/80 hover:bg-violet-500', shadowClass: 'shadow-violet-900/20' },
-    trim: { keyword: 'TRIM', label: 'Trim', description: 'Remove messages before bookmark', colorClass: 'text-orange-300', bgClass: 'bg-orange-950/30', borderClass: 'border-orange-500/30', textClass: 'text-orange-100', placeholderClass: 'placeholder-orange-400/30', btnClass: 'bg-orange-500/80 hover:bg-orange-500', shadowClass: 'shadow-orange-900/20' },
+    saveAll: { keyword: 'SAVE', label: t('sessionControls.saveAll.label') || 'Save All', description: t('sessionControls.saveAll.description') || 'Export all chats to backup file', colorClass: 'text-emerald-300', bgClass: 'bg-emerald-950/30', borderClass: 'border-emerald-500/30', textClass: 'text-emerald-100', placeholderClass: 'placeholder-emerald-400/30', btnClass: 'bg-emerald-500/80 hover:bg-emerald-500', shadowClass: 'shadow-emerald-900/20' },
+    loadAll: { keyword: 'LOAD', label: t('sessionControls.loadAll.label') || 'Load All', description: t('sessionControls.loadAll.description') || 'Replace all chats with backup file', colorClass: 'text-blue-300', bgClass: 'bg-blue-950/30', borderClass: 'border-blue-500/30', textClass: 'text-blue-100', placeholderClass: 'placeholder-blue-400/30', btnClass: 'bg-blue-500/80 hover:bg-blue-500', shadowClass: 'shadow-blue-900/20' },
+    reset: { keyword: 'DELETE', label: t('sessionControls.reset.label') || 'Reset', description: t('sessionControls.reset.description') || 'Backup & delete all data', colorClass: 'text-red-300', bgClass: 'bg-red-950/30', borderClass: 'border-red-500/30', textClass: 'text-red-100', placeholderClass: 'placeholder-red-400/30', btnClass: 'bg-red-500/80 hover:bg-red-500', shadowClass: 'shadow-red-900/20' },
+    saveThis: { keyword: 'SAVE', label: t('sessionControls.saveThis.label') || 'Save Chat', description: t('sessionControls.saveThis.description') || 'Export this chat only', colorClass: 'text-cyan-300', bgClass: 'bg-cyan-950/30', borderClass: 'border-cyan-500/30', textClass: 'text-cyan-100', placeholderClass: 'placeholder-cyan-400/30', btnClass: 'bg-cyan-500/80 hover:bg-cyan-500', shadowClass: 'shadow-cyan-900/20' },
+    combine: { keyword: 'COMBINE', label: t('sessionControls.combine.label') || 'Combine', description: t('sessionControls.combine.description') || 'Merge backup into this chat', colorClass: 'text-violet-300', bgClass: 'bg-violet-950/30', borderClass: 'border-violet-500/30', textClass: 'text-violet-100', placeholderClass: 'placeholder-violet-400/30', btnClass: 'bg-violet-500/80 hover:bg-violet-500', shadowClass: 'shadow-violet-900/20' },
+    trim: { keyword: 'TRIM', label: t('sessionControls.trim.label') || 'Trim', description: t('sessionControls.trim.description') || 'Remove messages before bookmark', colorClass: 'text-orange-300', bgClass: 'bg-orange-950/30', borderClass: 'border-orange-500/30', textClass: 'text-orange-100', placeholderClass: 'placeholder-orange-400/30', btnClass: 'bg-orange-500/80 hover:bg-orange-500', shadowClass: 'shadow-orange-900/20' },
   };
 
   // Touch support for avatar cluster
@@ -347,13 +347,14 @@ const SessionControls: React.FC = () => {
           }
           break;
           
-        case 'reset':
+        case 'reset': {
           const safe = `backup-before-reset-${new Date().toISOString().slice(0, 10)}`;
           if (handleSaveAllChats) await handleSaveAllChats({ filename: `${safe}.ndjson`, auto: true });
           await new Promise(r => setTimeout(r, 500));
           await wipeLocalMemoryAndDb();
           window.location.reload();
           return; // Don't clear state - page reloads
+        }
           
         case 'saveThis':
           if (!saveCurrentTokenRef.current) {
@@ -467,7 +468,7 @@ const SessionControls: React.FC = () => {
             </div>
             <input
               className={`w-full ${ACTION_CONFIG[pendingAction].bgClass} border ${ACTION_CONFIG[pendingAction].borderClass} rounded px-2 py-1 text-sm ${ACTION_CONFIG[pendingAction].textClass} ${ACTION_CONFIG[pendingAction].placeholderClass} focus:outline-none focus:border-opacity-60 transition-colors`}
-              placeholder={`Type "${ACTION_CONFIG[pendingAction].keyword}" to confirm`}
+              placeholder={(t('sessionControls.typeToConfirm') || 'Type "{keyword}" to confirm').replace('{keyword}', ACTION_CONFIG[pendingAction].keyword)}
               value={confirmInput}
               onChange={(e) => setConfirmInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && executePendingAction()}
@@ -496,10 +497,10 @@ const SessionControls: React.FC = () => {
       ) : isEditingProfile ? (
         <div className="flex-1 flex items-center justify-between animate-fade-in gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-xs font-bold text-blue-300 uppercase tracking-wider whitespace-nowrap">Profile:</span>
+            <span className="text-xs font-bold text-blue-300 uppercase tracking-wider whitespace-nowrap">{t('sessionControls.profile') || 'Profile:'}</span>
             <input
               className="flex-1 min-w-0 bg-blue-950/30 border border-blue-500/30 rounded px-2 py-1.5 text-sm text-blue-100 placeholder-blue-400/30 focus:outline-none focus:border-blue-400 focus:bg-blue-950/50 transition-colors"
-              placeholder="Your name or details..."
+              placeholder={t('sessionControls.profilePlaceholder') || 'Your name or details...'}
               value={profileText}
               onChange={(e) => setProfileText(e.target.value)}
               autoFocus
@@ -532,7 +533,7 @@ const SessionControls: React.FC = () => {
               type="button"
               onClick={startProfileEdit}
               className="group p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-all"
-              title="Edit User Profile"
+              title={t('sessionControls.editProfile') || 'Edit User Profile'}
             >
               <IconPencil className="w-4 h-4 opacity-70 group-hover:opacity-100" />
             </button>
@@ -543,18 +544,18 @@ const SessionControls: React.FC = () => {
             {controlMode === 'none' ? (
               /* Default: Show two group selectors */
               <>
-                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title="All Chats Controls">
-                  All
+                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
+                  {t('sessionControls.all') || 'All'}
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title="This Chat Controls">
-                  This
+                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
+                  {t('sessionControls.this') || 'This'}
                 </button>
               </>
             ) : controlMode === 'all' ? (
               /* All Chats: Save All, Load All, Reset, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title="Back">
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
@@ -566,14 +567,14 @@ const SessionControls: React.FC = () => {
                   <IconFolderOpen className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-red-500/20 rounded-full text-slate-300 hover:text-red-200 transition-colors" title="Backup & Reset">
+                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-red-500/20 rounded-full text-slate-300 hover:text-red-200 transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
                   <IconTrash className="w-4 h-4" />
                 </button>
               </>
             ) : (
               /* This Chat: Save This, Combine, Trim, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title="Back">
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
@@ -638,7 +639,7 @@ const SessionControls: React.FC = () => {
               type="button"
               onClick={isUploadingMaestro ? undefined : handleLeftButtonClick}
               className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-500 hover:z-20 hover:scale-110 transition-all duration-300 shadow-lg z-0 group-hover:-translate-x-[36px] ${isTouchActive ? '-translate-x-[36px] text-white bg-slate-700 border-slate-500 z-20 scale-110' : ''} ${touchSide === 'left' ? 'text-white bg-slate-700 border-slate-500 z-20 scale-110' : ''}`}
-              title={t('general.clear') + " / Change Avatar"}
+              title={t('general.clear') + " / " + (t('sessionControls.changeAvatar') || 'Change Avatar')}
             >
               <IconSwap className="w-3.5 h-3.5" />
 
@@ -680,7 +681,7 @@ const SessionControls: React.FC = () => {
                     : 'border-slate-600 border-dashed opacity-80'}`}
               >
                 {maestroAsset?.dataUrl ? (
-                  <img src={maestroAsset.dataUrl} alt="Maestro" className="w-full h-full object-cover" />
+                  <img src={maestroAsset.dataUrl} alt={t('startPage.maestroAvatar') || 'Maestro avatar'} className="w-full h-full object-cover" />
                 ) : (
                   <IconPlus className="w-4 h-4 text-slate-500" />
                 )}

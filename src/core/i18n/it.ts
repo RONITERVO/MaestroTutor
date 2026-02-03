@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const itTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Imposta il riconoscimento vocale su {language}",
+
+  // Header
   "header.targetLanguageTitle": "Lingua di destinazione attuale: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "Clicca sull'aereo",
   "startPage.saveChats": "Salva tutte le chat",
   "startPage.loadChats": "Carica chat",
+  "startPage.saveThisChat": "Salva questa chat",
+  "startPage.appendToChat": "Aggiungi alla chat",
+  "startPage.trimBeforeBookmark": "Taglia prima del segnalibro",
   "startPage.maestroAvatar": "Avatar di Maestro",
   "startPage.addMaestroAvatar": "Aggiungi avatar Maestro",
   "startPage.loadSuccess": "{count} sessioni di chat caricate e sostituite con successo!",
   "startPage.loadError": "Errore nel caricamento delle chat. Il file potrebbe essere corrotto o in un formato errato.",
   "startPage.noChatsToSave": "Nessuna cronologia chat da salvare.",
   "startPage.saveError": "Errore nel salvataggio delle chat. Controlla la console per maggiori dettagli.",
+  "startPage.noChatSelected": "Seleziona prima una coppia di lingue.",
+  "startPage.noBookmarkSet": "Nessun segnalibro impostato. Imposta prima un segnalibro per tagliare i messaggi precedenti.",
+  "startPage.noMessagesToTrim": "Nessun messaggio prima del segnalibro da rimuovere.",
+  "startPage.trimSuccess": "Rimossi {count} messaggi prima del segnalibro.",
+  "startPage.trimError": "Impossibile tagliare i messaggi. Riprova.",
+  "startPage.noMessagesToAppend": "Nessun messaggio trovato nel file di backup da combinare.",
+  "startPage.noPairInBackup": "Il file di backup non contiene messaggi per la tua coppia di lingue attuale. Seleziona un backup che corrisponda alla tua chat corrente.",
+  "startPage.appendSuccess": "Aggiunti con successo {count} messaggi alla chat corrente.",
+  "startPage.combineSuccess": "Chat combinate: {added} nuovi messaggi aggiunti, {total} messaggi totali.",
+  "startPage.combineNoDuplicates": "Tutti i messaggi erano già presenti nella chat. Nessuna modifica effettuata.",
+  "startPage.combineNoChanges": "Nessun nuovo messaggio da aggiungere. La tua chat è invariata.",
+  "startPage.invalidBackupFormat": "File di backup non valido. Seleziona un file di backup Maestro (.ndjson) valido.",
+  "startPage.browserNotSupported": "Il tuo browser non supporta il salvataggio dei file. Usa Chrome o Edge.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Salva tutto",
+  "sessionControls.saveAll.description": "Esporta tutte le chat in un file di backup",
+  "sessionControls.loadAll.label": "Carica tutto",
+  "sessionControls.loadAll.description": "Sostituisci tutte le chat con il file di backup",
+  "sessionControls.reset.label": "Reimposta",
+  "sessionControls.reset.description": "Backup e cancella tutti i dati",
+  "sessionControls.saveThis.label": "Salva chat",
+  "sessionControls.saveThis.description": "Esporta solo questa chat",
+  "sessionControls.combine.label": "Combina",
+  "sessionControls.combine.description": "Unisci backup in questa chat",
+  "sessionControls.trim.label": "Taglia",
+  "sessionControls.trim.description": "Rimuovi messaggi prima del segnalibro",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profilo:",
+  "sessionControls.profilePlaceholder": "Il tuo nome o dettagli...",
+  "sessionControls.editProfile": "Modifica profilo utente",
+  "sessionControls.allChatsControls": "Controlli tutte le chat",
+  "sessionControls.thisChatsControls": "Controlli questa chat",
+  "sessionControls.all": "Tutte",
+  "sessionControls.this": "Questa",
+  "sessionControls.back": "Indietro",
+  "sessionControls.backupAndReset": "Backup e ripristino",
+  "sessionControls.typeToConfirm": "Digita \"{keyword}\" per confermare",
+  "sessionControls.changeAvatar": "Cambia Avatar",
+
+  // General
   "general.clear": "Cancella",
   "general.error": "Spiacente, si è verificato un errore.",
 
@@ -40,6 +92,8 @@ export const itTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Salvataggio...",
   "apiKeyGate.saveKey": "Salva chiave",
   "apiKeyGate.close": "Chiudi",
+
+  // Chat - general
   "chat.thinking": "Sto pensando...",
   "chat.loadingHistory": "Caricamento cronologia chat...",
   "chat.loadingSuggestions": "Caricamento suggerimenti...",
@@ -58,36 +112,50 @@ export const itTranslations: Record<string, string> = {
   "chat.speakThisLine": "Pronuncia questa riga",
   "chat.languageSelector.openGlobe": "Cambia lingue",
   "chat.maestroTranscriptScrollwheel": "Vista a scorrimento della trascrizione Maestro",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT attivo: In ascolto...",
   "chat.mic.enableStt": "Attiva STT",
   "chat.mic.disableStt": "Ferma STT",
   "chat.mic.recordingAudioNote": "Registrazione audio...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "In ascolto in {language}...",
   "chat.placeholder.normal.sttActive": "Parla in {language} o scrivi...",
   "chat.placeholder.normal.sttInactive": "Scrivi o tocca il microfono per parlare in {language}...",
   "chat.placeholder.suggestion.listening": "Parla {language} per tradurre...",
   "chat.placeholder.suggestion.sttActive": "Parla o scrivi in {language} per tradurre...",
   "chat.placeholder.suggestion.sttInactive": "Scrivi in {language} per tradurre...",
+
+  // Chat - camera
   "chat.camera.turnOn": "Attiva anteprima fotocamera",
   "chat.camera.turnOff": "Disattiva anteprima fotocamera",
   "chat.camera.imageGenCameraLabel": "Generazione immagine",
   "chat.camera.captureOrRecord": "Tocca per foto, tieni premuto per video",
   "chat.camera.stopRecording": "Ferma registrazione",
   "chat.bookIcon.toggleImageGen": "Attiva/disattiva modalità generazione immagine",
+
+  // Chat - image
   "chat.imagePreview.alt": "Anteprima",
   "chat.image.dragToEnlarge": "Trascina l'angolo per ingrandire",
   "chat.image.dragToShrink": "Trascina l'angolo per rimpicciolire",
   "chat.annotateImage": "Annota immagine",
   "chat.annotateVideoFrame": "Annota fotogramma corrente",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Immagine da annotare",
   "chat.annotateModal.cancel": "Annulla",
   "chat.annotateModal.saveAndAttach": "Salva e allega",
   "chat.annotateModal.undo": "Annulla",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "Di': \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Pronuncia suggerimento: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Attiva/disattiva modalità creazione suggerimento",
   "chat.suggestion.createAction": "Crea suggerimento",
   "chat.suggestion.creating": "Creazione suggerimento...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro è inattivo",
   "chat.maestro.title.idle": "Maestro è attualmente inattivo.",
   "chat.maestro.resting": "Maestro sta riposando...",
@@ -104,6 +172,8 @@ export const itTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro sta aspettando il tuo input o la tua voce.",
   "chat.maestro.holding": "Maestro è in attesa",
   "chat.maestro.title.holding": "Maestro è in attesa (riattivazione in pausa)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "Messaggi nascosti sopra",
   "chat.bookmark.isHere": "Il segnalibro è qui",
   "chat.bookmark.setHere": "Imposta segnalibro qui",
@@ -114,11 +184,15 @@ export const itTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Mostra uno in più",
   "chat.bookmark.incrementTitle": "Più",
   "chat.bookmark.hiddenBelowHeaderAria": "Messaggi nascosti sotto",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Ottimizzazione video...",
   "chat.sendPrep.optimizingImage": "Ottimizzazione immagine...",
   "chat.sendPrep.preparingMedia": "Preparazione media...",
   "chat.sendPrep.uploadingMedia": "Caricamento media...",
   "chat.sendPrep.finalizing": "Finalizzazione...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "Annotazione",
   "chat.header.recordingAudio": "Registrazione audio",
   "chat.header.recordingVideo": "Registrazione video",
@@ -128,6 +202,8 @@ export const itTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Visualizzazione video",
   "chat.header.viewingAbove": "Visualizzazione messaggi precedenti",
   "chat.header.liveSession": "Sessione dal vivo",
+
+  // Chat - live session
   "chat.liveSession.stop": "Ferma Live",
   "chat.liveSession.retry": "Riprova Live",
   "chat.liveSession.start": "Avvia Live",
@@ -156,6 +232,8 @@ export const itTranslations: Record<string, string> = {
   "error.apiKeyMissing": "La tua chiave API Gemini è mancante. Apri la schermata della chiave API e incolla la tua chiave.",
   "error.apiKeyInvalid": "La tua chiave API Gemini non è valida. Controlla eventuali errori di battitura e incolla una chiave valida.",
   "error.apiQuotaExceeded": "La tua quota gratuita dell'API Gemini per la chat è esaurita. Ho aperto la schermata della chiave API con i passaggi per la fatturazione. Nel frattempo puoi ancora usare la conversazione dal vivo.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Permesso fotocamera negato. Abilita l'accesso alla fotocamera nelle impostazioni del browser.",
   "error.cameraNotFound": "Fotocamera selezionata non trovata. Assicurati che sia collegata o seleziona una fotocamera diversa.",
   "error.cameraAccessNotSupported": "L'accesso alla fotocamera non è supportato dal tuo browser.",
@@ -163,7 +241,7 @@ export const itTranslations: Record<string, string> = {
   "error.cameraStreamNotAvailable": "Stream fotocamera non disponibile per la cattura.",
   "error.imageCaptureGeneric": "Errore sconosciuto durante la cattura dell'immagine.",
 
-  // Errors - visual context
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "Elemento video del contesto visivo non pronto.",
   "error.snapshotVideoElementNotReady": "Elemento video per lo snapshot non pronto.",
   "error.visualContextCameraAccessNotSupported": "Accesso fotocamera non supportato per il contesto visivo.",

@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const nlTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Spraakherkenning instellen op {language}",
+
+  // Header
   "header.targetLanguageTitle": "Huidige doeltaal: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "Klik op het vliegtuig",
   "startPage.saveChats": "Alle chats opslaan",
   "startPage.loadChats": "Chats laden",
+  "startPage.saveThisChat": "Deze chat opslaan",
+  "startPage.appendToChat": "Toevoegen aan chat",
+  "startPage.trimBeforeBookmark": "Trimmen voor bladwijzer",
   "startPage.maestroAvatar": "Maestro-avatar",
   "startPage.addMaestroAvatar": "Maestro-avatar toevoegen",
   "startPage.loadSuccess": "{count} chatsessies succesvol geladen en vervangen!",
   "startPage.loadError": "Fout bij laden van chats. Het bestand is mogelijk beschadigd of heeft een verkeerd formaat.",
   "startPage.noChatsToSave": "Geen chatgeschiedenis om op te slaan.",
   "startPage.saveError": "Fout bij opslaan van chats. Bekijk de console voor meer details.",
+  "startPage.noChatSelected": "Selecteer eerst een taalpaar.",
+  "startPage.noBookmarkSet": "Geen bladwijzer ingesteld. Stel eerst een bladwijzer in om berichten ervoor te verwijderen.",
+  "startPage.noMessagesToTrim": "Geen berichten voor de bladwijzer om te verwijderen.",
+  "startPage.trimSuccess": "{count} berichten voor de bladwijzer verwijderd.",
+  "startPage.trimError": "Trimmen van berichten mislukt. Probeer het opnieuw.",
+  "startPage.noMessagesToAppend": "Geen berichten gevonden in het reservekopiebestand om te combineren.",
+  "startPage.noPairInBackup": "Het reservekopiebestand bevat geen berichten voor uw huidige taalpaar. Selecteer een reservekopie die overeenkomt met uw huidige chat.",
+  "startPage.appendSuccess": "{count} berichten succesvol toegevoegd aan de huidige chat.",
+  "startPage.combineSuccess": "Chats gecombineerd: {added} nieuwe berichten toegevoegd, {total} berichten in totaal.",
+  "startPage.combineNoDuplicates": "Alle berichten stonden al in je chat. Geen wijzigingen aangebracht.",
+  "startPage.combineNoChanges": "Geen nieuwe berichten om toe te voegen. Je chat is ongewijzigd.",
+  "startPage.invalidBackupFormat": "Ongeldig reservekopiebestand. Selecteer een geldig Maestro reservekopiebestand (.ndjson).",
+  "startPage.browserNotSupported": "Je browser ondersteunt het opslaan van bestanden niet. Gebruik Chrome of Edge.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Alles opslaan",
+  "sessionControls.saveAll.description": "Exporteer alle chats naar een reservekopiebestand",
+  "sessionControls.loadAll.label": "Alles laden",
+  "sessionControls.loadAll.description": "Vervang alle chats door een reservekopiebestand",
+  "sessionControls.reset.label": "Resetten",
+  "sessionControls.reset.description": "Back-up maken en alle gegevens verwijderen",
+  "sessionControls.saveThis.label": "Chat opslaan",
+  "sessionControls.saveThis.description": "Exporteer alleen deze chat",
+  "sessionControls.combine.label": "Combineren",
+  "sessionControls.combine.description": "Reservekopie samenvoegen met deze chat",
+  "sessionControls.trim.label": "Trimmen",
+  "sessionControls.trim.description": "Verwijder berichten voor de bladwijzer",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profiel:",
+  "sessionControls.profilePlaceholder": "Je naam of details...",
+  "sessionControls.editProfile": "Gebruikersprofiel bewerken",
+  "sessionControls.allChatsControls": "Bediening voor alle chats",
+  "sessionControls.thisChatsControls": "Bediening voor deze chat",
+  "sessionControls.all": "Alles",
+  "sessionControls.this": "Deze",
+  "sessionControls.back": "Terug",
+  "sessionControls.backupAndReset": "Back-up & Reset",
+  "sessionControls.typeToConfirm": "Typ \"{keyword}\" om te bevestigen",
+  "sessionControls.changeAvatar": "Avatar wijzigen",
+
+  // General
   "general.clear": "Wissen",
   "general.error": "Sorry, er is een fout opgetreden.",
 
@@ -40,6 +92,8 @@ export const nlTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Opslaan...",
   "apiKeyGate.saveKey": "Sleutel opslaan",
   "apiKeyGate.close": "Sluiten",
+
+  // Chat - general
   "chat.thinking": "Aan het denken...",
   "chat.loadingHistory": "Chatgeschiedenis laden...",
   "chat.loadingSuggestions": "Suggesties laden...",
@@ -58,36 +112,50 @@ export const nlTranslations: Record<string, string> = {
   "chat.speakThisLine": "Spreek deze regel uit",
   "chat.languageSelector.openGlobe": "Talen wijzigen",
   "chat.maestroTranscriptScrollwheel": "Maestro transcript scrollweergave",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT actief: Luisteren...",
   "chat.mic.enableStt": "STT inschakelen",
   "chat.mic.disableStt": "STT stoppen",
   "chat.mic.recordingAudioNote": "Audio opnemen...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "Luisteren in {language}...",
   "chat.placeholder.normal.sttActive": "Spreek in {language} of typ...",
   "chat.placeholder.normal.sttInactive": "Typ of tik op de microfoon om in {language} te spreken...",
   "chat.placeholder.suggestion.listening": "Spreek {language} om te vertalen...",
   "chat.placeholder.suggestion.sttActive": "Spreek of typ in {language} om te vertalen...",
   "chat.placeholder.suggestion.sttInactive": "Typ in {language} om te vertalen...",
+
+  // Chat - camera
   "chat.camera.turnOn": "Cameravoorbeeld inschakelen",
   "chat.camera.turnOff": "Cameravoorbeeld uitschakelen",
   "chat.camera.imageGenCameraLabel": "Afbeelding genereren",
   "chat.camera.captureOrRecord": "Tik voor foto, houd ingedrukt voor video",
   "chat.camera.stopRecording": "Opname stoppen",
   "chat.bookIcon.toggleImageGen": "Afbeelding genereren modus wisselen",
+
+  // Chat - image
   "chat.imagePreview.alt": "Voorbeeld",
   "chat.image.dragToEnlarge": "Sleep de hoek om te vergroten",
   "chat.image.dragToShrink": "Sleep de hoek om te verkleinen",
   "chat.annotateImage": "Afbeelding annoteren",
   "chat.annotateVideoFrame": "Huidig frame annoteren",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Afbeelding om te annoteren",
   "chat.annotateModal.cancel": "Annuleren",
   "chat.annotateModal.saveAndAttach": "Opslaan en bijvoegen",
   "chat.annotateModal.undo": "Ongedaan maken",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "Zeg: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Suggestie uitspreken: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Suggestie aanmaakmodus wisselen",
   "chat.suggestion.createAction": "Suggestie maken",
   "chat.suggestion.creating": "Suggestie wordt gemaakt...",
+
+  // Chat - maestro status
   "chat.maestro.idle": "Maestro is inactief",
   "chat.maestro.title.idle": "Maestro is momenteel inactief.",
   "chat.maestro.resting": "Maestro rust...",
@@ -104,6 +172,8 @@ export const nlTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro wacht op uw invoer of stem.",
   "chat.maestro.holding": "Maestro wacht",
   "chat.maestro.title.holding": "Maestro wacht (heractivering gepauzeerd)",
+
+  // Chat - bookmark
   "chat.bookmark.hiddenHeaderAria": "Verborgen berichten hierboven",
   "chat.bookmark.isHere": "Bladwijzer is hier",
   "chat.bookmark.setHere": "Bladwijzer hier instellen",
@@ -114,11 +184,15 @@ export const nlTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Eén meer tonen",
   "chat.bookmark.incrementTitle": "Meer",
   "chat.bookmark.hiddenBelowHeaderAria": "Verborgen berichten hieronder",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Video optimaliseren...",
   "chat.sendPrep.optimizingImage": "Afbeelding optimaliseren...",
   "chat.sendPrep.preparingMedia": "Media voorbereiden...",
   "chat.sendPrep.uploadingMedia": "Media uploaden...",
   "chat.sendPrep.finalizing": "Afronden...",
+
+  // Chat - header activity tokens
   "chat.header.annotating": "Annoteren",
   "chat.header.recordingAudio": "Audio opnemen",
   "chat.header.recordingVideo": "Video opnemen",
@@ -128,6 +202,8 @@ export const nlTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Video bekijken",
   "chat.header.viewingAbove": "Vorige berichten bekijken",
   "chat.header.liveSession": "Live sessie",
+
+  // Chat - live session
   "chat.liveSession.stop": "Live stoppen",
   "chat.liveSession.retry": "Live opnieuw proberen",
   "chat.liveSession.start": "Live starten",
@@ -156,6 +232,8 @@ export const nlTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Je Gemini API-sleutel ontbreekt. Open het API-sleutelscherm en plak je sleutel.",
   "error.apiKeyInvalid": "Je Gemini API-sleutel is ongeldig. Controleer op typefouten en plak een geldige sleutel.",
   "error.apiQuotaExceeded": "Je gratis Gemini API-quotum voor chat is opgebruikt. Ik heb het API-sleutelscherm geopend met factureringsstappen. Ondertussen kun je nog steeds Live-conversatie gebruiken.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Cameratoestemming geweigerd. Schakel cameratoegang in via browserinstellingen.",
   "error.cameraNotFound": "Geselecteerde camera niet gevonden. Zorg dat deze is aangesloten of selecteer een andere camera.",
   "error.cameraAccessNotSupported": "Cameratoegang wordt niet ondersteund door uw browser.",

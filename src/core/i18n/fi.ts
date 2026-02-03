@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const fiTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Aseta puheentunnistus kielelle {language}",
+
+  // Header
   "header.targetLanguageTitle": "Nykyinen kohdekieli: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "Klikkaa lentokonetta",
   "startPage.saveChats": "Tallenna kaikki keskustelut",
   "startPage.loadChats": "Lataa keskustelut",
+  "startPage.saveThisChat": "Tallenna tämä keskustelu",
+  "startPage.appendToChat": "Liitä keskusteluun",
+  "startPage.trimBeforeBookmark": "Rajaa ennen kirjanmerkkiä",
   "startPage.maestroAvatar": "Maestron avatar",
   "startPage.addMaestroAvatar": "Lisää Maestron avatar",
   "startPage.loadSuccess": "{count} keskusteluistuntoa ladattu ja korvattu onnistuneesti!",
   "startPage.loadError": "Virhe keskustelujen lataamisessa. Tiedosto saattaa olla vioittunut tai väärässä muodossa.",
   "startPage.noChatsToSave": "Ei keskusteluhistoriaa tallennettavaksi.",
   "startPage.saveError": "Virhe keskustelujen tallentamisessa. Katso konsoli lisätietoja varten.",
+  "startPage.noChatSelected": "Valitse ensin kielipari.",
+  "startPage.noBookmarkSet": "Kirjanmerkkiä ei ole asetettu. Aseta kirjanmerkki ensin rajataksesi viestit sen edeltä.",
+  "startPage.noMessagesToTrim": "Ei poistettavia viestejä ennen kirjanmerkkiä.",
+  "startPage.trimSuccess": "Poistettiin {count} viestiä ennen kirjanmerkkiä.",
+  "startPage.trimError": "Viestien rajaaminen epäonnistui. Yritä uudelleen.",
+  "startPage.noMessagesToAppend": "Varmuuskopiotiedostosta ei löytynyt yhdistettäviä viestejä.",
+  "startPage.noPairInBackup": "Varmuuskopiotiedosto ei sisällä viestejä nykyiselle kieliparillesi. Valitse varmuuskopio, joka vastaa nykyistä keskusteluasi.",
+  "startPage.appendSuccess": "Liitettiin onnistuneesti {count} viestiä nykyiseen keskusteluun.",
+  "startPage.combineSuccess": "Yhdistetyt keskustelut: {added} uutta viestiä lisätty, yhteensä {total} viestiä.",
+  "startPage.combineNoDuplicates": "Kaikki viestit olivat jo keskustelussasi. Muutoksia ei tehty.",
+  "startPage.combineNoChanges": "Ei lisättäviä uusia viestejä. Keskustelusi on muuttumaton.",
+  "startPage.invalidBackupFormat": "Virheellinen varmuuskopiotiedosto. Valitse kelvollinen Maestro-varmuuskopio (.ndjson).",
+  "startPage.browserNotSupported": "Selaimesi ei tue tiedostojen tallennusta. Käytä Chromea tai Edgeä.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Tallenna kaikki",
+  "sessionControls.saveAll.description": "Vie kaikki keskustelut tiedostoon",
+  "sessionControls.loadAll.label": "Lataa kaikki",
+  "sessionControls.loadAll.description": "Korvaa kaikki keskustelut tiedostolla",
+  "sessionControls.reset.label": "Nollaa",
+  "sessionControls.reset.description": "Varmuuskopioi ja poista kaikki",
+  "sessionControls.saveThis.label": "Tallenna keskustelu",
+  "sessionControls.saveThis.description": "Vie vain tämä keskustelu",
+  "sessionControls.combine.label": "Yhdistä",
+  "sessionControls.combine.description": "Yhdistä varmuuskopio tähän",
+  "sessionControls.trim.label": "Rajaa",
+  "sessionControls.trim.description": "Poista viestit ennen kirjanmerkkiä",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profiili:",
+  "sessionControls.profilePlaceholder": "Nimesi tai tietosi...",
+  "sessionControls.editProfile": "Muokkaa käyttäjäprofiilia",
+  "sessionControls.allChatsControls": "Kaikkien keskustelujen hallinta",
+  "sessionControls.thisChatsControls": "Tämän keskustelun hallinta",
+  "sessionControls.all": "Kaikki",
+  "sessionControls.this": "Tämä",
+  "sessionControls.back": "Takaisin",
+  "sessionControls.backupAndReset": "Varmuuskopioi ja nollaa",
+  "sessionControls.typeToConfirm": "Kirjoita \"{keyword}\" vahvistaaksesi",
+  "sessionControls.changeAvatar": "Vaihda avatar",
+
+  // General
   "general.clear": "Tyhjennä",
   "general.error": "Pahoittelut, tapahtui virhe.",
 
@@ -40,6 +92,8 @@ export const fiTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Tallennetaan...",
   "apiKeyGate.saveKey": "Tallenna avain",
   "apiKeyGate.close": "Sulje",
+
+  // Chat - general
   "chat.thinking": "Ajattelen...",
   "chat.loadingHistory": "Ladataan keskusteluhistoriaa...",
   "chat.loadingSuggestions": "Ladataan ehdotuksia...",
@@ -57,37 +111,51 @@ export const fiTranslations: Record<string, string> = {
   "chat.stopSpeaking": "Lopeta puhuminen",
   "chat.speakThisLine": "Lausu tämä rivi",
   "chat.languageSelector.openGlobe": "Vaihda kielet",
-  "chat.maestroTranscriptScrollwheel": "Maestron transkription vieritys",
+  "chat.maestroTranscriptScrollwheel": "Maestron transkription vieritysnäkymä",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT aktiivinen: Kuuntelen...",
   "chat.mic.enableStt": "Ota STT käyttöön",
   "chat.mic.disableStt": "Pysäytä STT",
   "chat.mic.recordingAudioNote": "Nauhoitetaan ääntä...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "Kuuntelen kielellä {language}...",
   "chat.placeholder.normal.sttActive": "Puhu {language} tai kirjoita...",
   "chat.placeholder.normal.sttInactive": "Kirjoita tai napauta mikrofonia puhuaksesi {language}...",
   "chat.placeholder.suggestion.listening": "Puhu {language} kääntääksesi...",
   "chat.placeholder.suggestion.sttActive": "Puhu tai kirjoita {language} kääntääksesi...",
   "chat.placeholder.suggestion.sttInactive": "Kirjoita {language} kääntääksesi...",
+
+  // Chat - camera
   "chat.camera.turnOn": "Ota kameran esikatselu käyttöön",
   "chat.camera.turnOff": "Poista kameran esikatselu käytöstä",
   "chat.camera.imageGenCameraLabel": "Kuvan luonti",
   "chat.camera.captureOrRecord": "Napauta valokuva, pidä pohjassa video",
   "chat.camera.stopRecording": "Pysäytä nauhoitus",
   "chat.bookIcon.toggleImageGen": "Vaihda kuvan luontitila",
+
+  // Chat - image
   "chat.imagePreview.alt": "Esikatselu",
   "chat.image.dragToEnlarge": "Vedä kulmasta suurentaaksesi",
   "chat.image.dragToShrink": "Vedä kulmasta pienentääksesi",
   "chat.annotateImage": "Merkitse kuvaan",
   "chat.annotateVideoFrame": "Merkitse nykyiseen ruutuun",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Merkittävä kuva",
   "chat.annotateModal.cancel": "Peruuta",
   "chat.annotateModal.saveAndAttach": "Tallenna ja liitä",
   "chat.annotateModal.undo": "Kumoa",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "Sano: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Lausu ehdotus: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Vaihda ehdotuksen luontitila",
   "chat.suggestion.createAction": "Luo ehdotus",
   "chat.suggestion.creating": "Luodaan ehdotusta...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro on jouten",
   "chat.maestro.title.idle": "Maestro on tällä hetkellä jouten.",
   "chat.maestro.resting": "Maestro lepää...",
@@ -104,6 +172,8 @@ export const fiTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro odottaa syötettäsi tai ääntäsi.",
   "chat.maestro.holding": "Maestro odottaa",
   "chat.maestro.title.holding": "Maestro odottaa (uudelleenaktivointi keskeytetty)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "Piilotetut viestit yläpuolella",
   "chat.bookmark.isHere": "Kirjanmerkki on täällä",
   "chat.bookmark.setHere": "Aseta kirjanmerkki tähän",
@@ -114,11 +184,15 @@ export const fiTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Näytä yksi lisää",
   "chat.bookmark.incrementTitle": "Lisää",
   "chat.bookmark.hiddenBelowHeaderAria": "Piilotetut viestit alapuolella",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Optimoidaan videota...",
   "chat.sendPrep.optimizingImage": "Optimoidaan kuvaa...",
   "chat.sendPrep.preparingMedia": "Valmistellaan mediaa...",
   "chat.sendPrep.uploadingMedia": "Ladataan mediaa...",
   "chat.sendPrep.finalizing": "Viimeistellään...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "Merkitään",
   "chat.header.recordingAudio": "Nauhoitetaan ääntä",
   "chat.header.recordingVideo": "Nauhoitetaan videota",
@@ -128,6 +202,8 @@ export const fiTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Katsotaan videota",
   "chat.header.viewingAbove": "Näytetään aiempia viestejä",
   "chat.header.liveSession": "Live-istunto",
+
+  // Chat - live session
   "chat.liveSession.stop": "Pysäytä live",
   "chat.liveSession.retry": "Yritä liveä uudelleen",
   "chat.liveSession.start": "Aloita live",
@@ -137,6 +213,8 @@ export const fiTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hei",
   "chat.liveSession.defaultSuggestion2": "Hyvää huomenta",
   "chat.liveSession.defaultSuggestion3": "Mitä kuuluu?",
+
+  // Chat - errors
   "chat.error.sttError": "STT-virhe: {error}. Kokeile vaihtaa mikrofonia.",
   "chat.error.autoCaptureCameraError": "Automaattisen kameran kaappausvirhe: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,6 +223,8 @@ export const fiTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Keskeytä video merkitäksesi nykyiseen ruutuun",
   "chat.error.imageGenInterrupted": "Kuvan luonti keskeytettiin.",
   "chat.error.thinkingInterrupted": "AI:n vastaus keskeytettiin.",
+
+  // Errors - general
   "error.noLanguagePair": "Kriittinen virhe: Kieliparia ei ole valittu.",
   "error.translationFailed": "Käännös epäonnistui. Yritä uudelleen.",
   "error.imageLimitReached": "Istunnon kuvanluontiraja saavutettu. Aloita uusi istunto.",
@@ -152,12 +232,16 @@ export const fiTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Gemini API -avaimesi puuttuu. Avaa API-avainnäkymä ja liitä avaimesi.",
   "error.apiKeyInvalid": "Gemini API -avaimesi on virheellinen. Tarkista kirjoitusvirheet ja liitä kelvollinen avain.",
   "error.apiQuotaExceeded": "Gemini API:n ilmainen chat-kiintiösi on lopussa. Avasin API-avainnäkymän, jossa on laskutusohjeet. Voit silti käyttää Live-keskustelua sillä välin.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Kameran käyttöoikeus evätty. Ota kameran käyttöoikeus käyttöön selaimen asetuksissa.",
   "error.cameraNotFound": "Valittua kameraa ei löydy. Varmista, että se on yhdistetty, tai valitse toinen kamera.",
   "error.cameraAccessNotSupported": "Selaimesi ei tue kameran käyttöä.",
   "error.cameraUnknown": "Tuntematon virhe kameraan pääsyssä.",
   "error.cameraStreamNotAvailable": "Kameran virta ei ole käytettävissä kaappaukseen.",
   "error.imageCaptureGeneric": "Tuntematon virhe kuvan kaappauksessa.",
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "Visuaalisen kontekstin videoelementti ei ole valmis.",
   "error.snapshotVideoElementNotReady": "Kuvakaappauksen videoelementti ei ole valmis.",
   "error.visualContextCameraAccessNotSupported": "Kameran käyttö ei ole tuettu visuaalisessa kontekstissa.",

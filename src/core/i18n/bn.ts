@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const bnTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "স্পিচ রিকগনিশন {language} এ সেট করুন",
+
+  // Header
   "header.targetLanguageTitle": "বর্তমান টার্গেট ভাষা: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "প্লেনে ক্লিক করুন",
   "startPage.saveChats": "সব চ্যাট সংরক্ষণ করুন",
   "startPage.loadChats": "চ্যাট লোড করুন",
+  "startPage.saveThisChat": "এই চ্যাট সংরক্ষণ করুন",
+  "startPage.appendToChat": "চ্যাটে যোগ করুন",
+  "startPage.trimBeforeBookmark": "বুকমার্কের আগের অংশ ছাঁটুন",
   "startPage.maestroAvatar": "মায়েস্ত্রো অবতার",
   "startPage.addMaestroAvatar": "মায়েস্ত্রো অবতার যোগ করুন",
   "startPage.loadSuccess": "{count}টি চ্যাট সেশন সফলভাবে লোড এবং প্রতিস্থাপিত হয়েছে!",
   "startPage.loadError": "চ্যাট লোড করতে ত্রুটি। ফাইলটি নষ্ট বা ভুল ফরম্যাটে হতে পারে।",
   "startPage.noChatsToSave": "সংরক্ষণ করার মতো কোনো চ্যাট ইতিহাস নেই।",
   "startPage.saveError": "চ্যাট সংরক্ষণে ত্রুটি। আরও বিস্তারিত জানতে কনসোল দেখুন।",
+  "startPage.noChatSelected": "অনুগ্রহ করে প্রথমে একটি ভাষা জোড়া নির্বাচন করুন।",
+  "startPage.noBookmarkSet": "কোনো বুকমার্ক সেট করা নেই। এর আগের বার্তাগুলি ছাঁটতে প্রথমে একটি বুকমার্ক সেট করুন।",
+  "startPage.noMessagesToTrim": "মুছে ফেলার মতো বুকমার্কের আগে কোনো বার্তা নেই।",
+  "startPage.trimSuccess": "বুকমার্কের আগে {count}টি বার্তা সরানো হয়েছে।",
+  "startPage.trimError": "বার্তা ছাঁটতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+  "startPage.noMessagesToAppend": "ব্যাকআপ ফাইলে একত্রিত করার মতো কোনো বার্তা পাওয়া যায়নি।",
+  "startPage.noPairInBackup": "ব্যাকআপ ফাইলটিতে আপনার বর্তমান ভাষা জোড়ার জন্য কোনো বার্তা নেই। অনুগ্রহ করে আপনার বর্তমান চ্যাটের সাথে মিলে এমন একটি ব্যাকআপ নির্বাচন করুন।",
+  "startPage.appendSuccess": "বর্তমান চ্যাটে {count}টি বার্তা সফলভাবে যোগ করা হয়েছে।",
+  "startPage.combineSuccess": "চ্যাট একত্রিত করা হয়েছে: {added}টি নতুন বার্তা যোগ করা হয়েছে, মোট বার্তা {total}টি।",
+  "startPage.combineNoDuplicates": "সব বার্তা ইতিমধ্যেই আপনার চ্যাটে ছিল। কোনো পরিবর্তন করা হয়নি।",
+  "startPage.combineNoChanges": "যোগ করার মতো কোনো নতুন বার্তা নেই। আপনার চ্যাট অপরিবর্তিত আছে।",
+  "startPage.invalidBackupFormat": "অবৈধ ব্যাকআপ ফাইল। অনুগ্রহ করে একটি বৈধ Maestro ব্যাকআপ (.ndjson) ফাইল নির্বাচন করুন।",
+  "startPage.browserNotSupported": "আপনার ব্রাউজার ফাইল সংরক্ষণ সমর্থন করে না। অনুগ্রহ করে Chrome বা Edge ব্যবহার করুন।",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "সব সংরক্ষণ",
+  "sessionControls.saveAll.description": "সব চ্যাট ব্যাকআপ ফাইলে এক্সপোর্ট করুন",
+  "sessionControls.loadAll.label": "সব লোড",
+  "sessionControls.loadAll.description": "ব্যাকআপ ফাইল দিয়ে সব চ্যাট প্রতিস্থাপন করুন",
+  "sessionControls.reset.label": "রিসেট",
+  "sessionControls.reset.description": "ব্যাকআপ এবং সমস্ত ডেটা মুছুন",
+  "sessionControls.saveThis.label": "চ্যাট সংরক্ষণ",
+  "sessionControls.saveThis.description": "শুধুমাত্র এই চ্যাট এক্সপোর্ট করুন",
+  "sessionControls.combine.label": "একত্রিত",
+  "sessionControls.combine.description": "এই চ্যাটে ব্যাকআপ মার্জ করুন",
+  "sessionControls.trim.label": "ছাঁটুন",
+  "sessionControls.trim.description": "বুকমার্কের আগের বার্তা সরান",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "প্রোফাইল:",
+  "sessionControls.profilePlaceholder": "আপনার নাম বা বিবরণ...",
+  "sessionControls.editProfile": "ব্যবহারকারী প্রোফাইল সম্পাদনা করুন",
+  "sessionControls.allChatsControls": "সমস্ত চ্যাট নিয়ন্ত্রণ",
+  "sessionControls.thisChatsControls": "এই চ্যাট নিয়ন্ত্রণ",
+  "sessionControls.all": "সব",
+  "sessionControls.this": "এই",
+  "sessionControls.back": "ফিরে যান",
+  "sessionControls.backupAndReset": "ব্যাকআপ ও রিসেট",
+  "sessionControls.typeToConfirm": "নিশ্চিত করতে \"{keyword}\" টাইপ করুন",
+  "sessionControls.changeAvatar": "অবতার পরিবর্তন করুন",
+
+  // General
   "general.clear": "মুছুন",
   "general.error": "দুঃখিত, একটি ত্রুটি ঘটেছে।",
 
@@ -40,6 +92,8 @@ export const bnTranslations: Record<string, string> = {
   "apiKeyGate.saving": "সংরক্ষণ করা হচ্ছে...",
   "apiKeyGate.saveKey": "কী সংরক্ষণ করুন",
   "apiKeyGate.close": "বন্ধ করুন",
+
+  // Chat - general
   "chat.thinking": "ভাবছি...",
   "chat.loadingHistory": "চ্যাট ইতিহাস লোড হচ্ছে...",
   "chat.loadingSuggestions": "সাজেশন লোড হচ্ছে...",
@@ -58,36 +112,50 @@ export const bnTranslations: Record<string, string> = {
   "chat.speakThisLine": "এই লাইনটি বলুন",
   "chat.languageSelector.openGlobe": "ভাষা পরিবর্তন করুন",
   "chat.maestroTranscriptScrollwheel": "মায়েস্ত্রো ট্রান্সক্রিপ্ট স্ক্রলভিউ",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT সক্রিয়: শুনছি...",
   "chat.mic.enableStt": "STT সক্রিয় করুন",
   "chat.mic.disableStt": "STT বন্ধ করুন",
   "chat.mic.recordingAudioNote": "অডিও রেকর্ড হচ্ছে...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language} এ শুনছি...",
   "chat.placeholder.normal.sttActive": "{language} এ বলুন বা টাইপ করুন...",
   "chat.placeholder.normal.sttInactive": "টাইপ করুন বা {language} এ বলতে মাইকে ট্যাপ করুন...",
   "chat.placeholder.suggestion.listening": "অনুবাদ করতে {language} বলুন...",
   "chat.placeholder.suggestion.sttActive": "অনুবাদ করতে {language} এ বলুন বা টাইপ করুন...",
   "chat.placeholder.suggestion.sttInactive": "অনুবাদ করতে {language} এ টাইপ করুন...",
+
+  // Chat - camera
   "chat.camera.turnOn": "ক্যামেরা প্রিভিউ চালু করুন",
   "chat.camera.turnOff": "ক্যামেরা প্রিভিউ বন্ধ করুন",
   "chat.camera.imageGenCameraLabel": "ছবি তৈরি",
   "chat.camera.captureOrRecord": "ছবির জন্য ট্যাপ করুন, ভিডিওর জন্য ধরে রাখুন",
   "chat.camera.stopRecording": "রেকর্ডিং বন্ধ করুন",
   "chat.bookIcon.toggleImageGen": "ছবি তৈরি মোড টগল করুন",
+
+  // Chat - image
   "chat.imagePreview.alt": "প্রিভিউ",
   "chat.image.dragToEnlarge": "বড় করতে কোণা টানুন",
   "chat.image.dragToShrink": "ছোট করতে কোণা টানুন",
   "chat.annotateImage": "ছবিতে টীকা দিন",
   "chat.annotateVideoFrame": "বর্তমান ফ্রেমে টীকা দিন",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "টীকা দেওয়ার ছবি",
   "chat.annotateModal.cancel": "বাতিল",
   "chat.annotateModal.saveAndAttach": "সংরক্ষণ করুন এবং সংযুক্ত করুন",
   "chat.annotateModal.undo": "পূর্বাবস্থায় ফিরুন",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "বলুন: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "সাজেশন বলুন: {suggestion}",
   "chat.suggestion.toggleCreateMode": "সাজেশন তৈরি মোড টগল করুন",
   "chat.suggestion.createAction": "সাজেশন তৈরি করুন",
   "chat.suggestion.creating": "সাজেশন তৈরি হচ্ছে...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "মায়েস্ত্রো নিষ্ক্রিয়",
   "chat.maestro.title.idle": "মায়েস্ত্রো বর্তমানে নিষ্ক্রিয়।",
   "chat.maestro.resting": "মায়েস্ত্রো বিশ্রাম নিচ্ছে...",
@@ -104,6 +172,8 @@ export const bnTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "মায়েস্ত্রো আপনার ইনপুট বা কণ্ঠের জন্য অপেক্ষা করছে।",
   "chat.maestro.holding": "মায়েস্ত্রো অপেক্ষা করছে",
   "chat.maestro.title.holding": "মায়েস্ত্রো অপেক্ষা করছে (পুনরায় যুক্ত হওয়া বিরতিতে)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "উপরে লুকানো বার্তা",
   "chat.bookmark.isHere": "বুকমার্ক এখানে আছে",
   "chat.bookmark.setHere": "এখানে বুকমার্ক সেট করুন",
@@ -114,11 +184,15 @@ export const bnTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "আরেকটি দেখান",
   "chat.bookmark.incrementTitle": "বেশি",
   "chat.bookmark.hiddenBelowHeaderAria": "নিচে লুকানো বার্তা",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "ভিডিও অপ্টিমাইজ হচ্ছে...",
   "chat.sendPrep.optimizingImage": "ছবি অপ্টিমাইজ হচ্ছে...",
   "chat.sendPrep.preparingMedia": "মিডিয়া প্রস্তুত হচ্ছে...",
   "chat.sendPrep.uploadingMedia": "মিডিয়া আপলোড হচ্ছে...",
   "chat.sendPrep.finalizing": "সম্পন্ন হচ্ছে...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "টীকা দেওয়া হচ্ছে",
   "chat.header.recordingAudio": "অডিও রেকর্ড হচ্ছে",
   "chat.header.recordingVideo": "ভিডিও রেকর্ড হচ্ছে",
@@ -128,6 +202,8 @@ export const bnTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "ভিডিও দেখা হচ্ছে",
   "chat.header.viewingAbove": "পূর্ববর্তী বার্তা দেখা হচ্ছে",
   "chat.header.liveSession": "লাইভ সেশন",
+
+  // Chat - live session
   "chat.liveSession.stop": "লাইভ বন্ধ করুন",
   "chat.liveSession.retry": "লাইভ পুনরায় চেষ্টা করুন",
   "chat.liveSession.start": "লাইভ শুরু করুন",
@@ -137,6 +213,8 @@ export const bnTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "হ্যালো",
   "chat.liveSession.defaultSuggestion2": "শুভ সকাল",
   "chat.liveSession.defaultSuggestion3": "আপনি কেমন আছেন?",
+
+  // Chat - errors
   "chat.error.sttError": "STT ত্রুটি: {error}। মাইক পরিবর্তন করে দেখুন।",
   "chat.error.autoCaptureCameraError": "অটো ক্যাপচার ক্যামেরা ত্রুটি: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,6 +223,8 @@ export const bnTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "বর্তমান ফ্রেমে টীকা দিতে ভিডিও বিরতি দিন",
   "chat.error.imageGenInterrupted": "ছবি তৈরি বাধাগ্রস্ত হয়েছে।",
   "chat.error.thinkingInterrupted": "AI প্রতিক্রিয়া বাধাগ্রস্ত হয়েছে।",
+
+  // Errors - general
   "error.noLanguagePair": "গুরুতর ত্রুটি: কোনো ভাষা জোড়া নির্বাচিত হয়নি।",
   "error.translationFailed": "অনুবাদ ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
   "error.imageLimitReached": "সেশন ছবি তৈরির সীমা পূর্ণ হয়েছে। অনুগ্রহ করে নতুন সেশন শুরু করুন।",
@@ -152,12 +232,16 @@ export const bnTranslations: Record<string, string> = {
   "error.apiKeyMissing": "আপনার Gemini API কী নেই। API Key স্ক্রিন খুলুন এবং আপনার কী পেস্ট করুন।",
   "error.apiKeyInvalid": "আপনার Gemini API কী অবৈধ। অনুগ্রহ করে বানানে ভুল আছে কিনা পরীক্ষা করুন এবং একটি বৈধ কী পেস্ট করুন।",
   "error.apiQuotaExceeded": "চ্যাটের জন্য আপনার Gemini API-এর ফ্রি কোটা শেষ হয়ে গেছে। আমি বিলিং ধাপসহ API Key স্ক্রিন খুলেছি। এর মধ্যে আপনি এখনও লাইভ কথোপকথন ব্যবহার করতে পারেন।",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "ক্যামেরা অনুমতি প্রত্যাখ্যাত। ব্রাউজার সেটিংসে ক্যামেরা অ্যাক্সেস সক্রিয় করুন।",
   "error.cameraNotFound": "নির্বাচিত ক্যামেরা পাওয়া যায়নি। এটি সংযুক্ত আছে কিনা নিশ্চিত করুন বা অন্য ক্যামেরা নির্বাচন করুন।",
   "error.cameraAccessNotSupported": "আপনার ব্রাউজারে ক্যামেরা অ্যাক্সেস সমর্থিত নয়।",
   "error.cameraUnknown": "ক্যামেরা অ্যাক্সেস করতে অজানা ত্রুটি ঘটেছে।",
   "error.cameraStreamNotAvailable": "ক্যাপচারের জন্য ক্যামেরা স্ট্রিম উপলব্ধ নেই।",
   "error.imageCaptureGeneric": "ছবি ক্যাপচার করতে অজানা ত্রুটি।",
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "ভিজ্যুয়াল কনটেক্সট ভিডিও এলিমেন্ট প্রস্তুত নেই।",
   "error.snapshotVideoElementNotReady": "স্ন্যাপশট ভিডিও এলিমেন্ট প্রস্তুত নেই।",
   "error.visualContextCameraAccessNotSupported": "ভিজ্যুয়াল কনটেক্সটের জন্য ক্যামেরা অ্যাক্সেস সমর্থিত নয়।",

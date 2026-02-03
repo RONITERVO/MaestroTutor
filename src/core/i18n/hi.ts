@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const hiTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "स्पीच रिकग्निशन को {language} पर सेट करें",
+
+  // Header
   "header.targetLanguageTitle": "वर्तमान लक्ष्य भाषा: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "हवाई जहाज पर क्लिक करें",
   "startPage.saveChats": "सभी चैट सहेजें",
   "startPage.loadChats": "चैट लोड करें",
+  "startPage.saveThisChat": "यह चैट सहेजें",
+  "startPage.appendToChat": "चैट में जोड़ें",
+  "startPage.trimBeforeBookmark": "बुकमार्क से पहले ट्रिम करें",
   "startPage.maestroAvatar": "मेस्ट्रो अवतार",
   "startPage.addMaestroAvatar": "मेस्ट्रो अवतार जोड़ें",
   "startPage.loadSuccess": "{count} चैट सत्र सफलतापूर्वक लोड और बदले गए!",
   "startPage.loadError": "चैट लोड करने में त्रुटि। फ़ाइल दूषित या गलत प्रारूप में हो सकती है।",
   "startPage.noChatsToSave": "सहेजने के लिए कोई चैट इतिहास नहीं है।",
   "startPage.saveError": "चैट सहेजने में त्रुटि। अधिक जानकारी के लिए कंसोल देखें।",
+  "startPage.noChatSelected": "कृपया पहले एक भाषा जोड़ी चुनें।",
+  "startPage.noBookmarkSet": "कोई बुकमार्क सेट नहीं है। इससे पहले के संदेशों को ट्रिम करने के लिए पहले एक बुकमार्क सेट करें।",
+  "startPage.noMessagesToTrim": "हटाने के लिए बुकमार्क से पहले कोई संदेश नहीं है।",
+  "startPage.trimSuccess": "बुकमार्क से पहले {count} संदेश हटा दिए गए।",
+  "startPage.trimError": "संदेश ट्रिम करने में विफल। कृपया पुन: प्रयास करें।",
+  "startPage.noMessagesToAppend": "बैकअप फ़ाइल में जोड़ने के लिए कोई संदेश नहीं मिला।",
+  "startPage.noPairInBackup": "बैकअप फ़ाइल में आपकी वर्तमान भाषा जोड़ी के लिए संदेश नहीं हैं। कृपया ऐसा बैकअप चुनें जो आपकी वर्तमान चैट से मेल खाता हो।",
+  "startPage.appendSuccess": "वर्तमान चैट में सफलतापूर्वक {count} संदेश जोड़े गए।",
+  "startPage.combineSuccess": "चैट संयुक्त: {added} नए संदेश जोड़े गए, कुल {total} संदेश।",
+  "startPage.combineNoDuplicates": "सभी संदेश आपकी चैट में पहले से थे। कोई बदलाव नहीं किया गया।",
+  "startPage.combineNoChanges": "जोड़ने के लिए कोई नए संदेश नहीं हैं। आपकी चैट अपरिवर्तित है।",
+  "startPage.invalidBackupFormat": "अमान्य बैकअप फ़ाइल। कृपया एक वैध Maestro बैकअप (.ndjson) फ़ाइल चुनें।",
+  "startPage.browserNotSupported": "आपका ब्राउज़र फ़ाइल सहेजने का समर्थन नहीं करता है। कृपया Chrome या Edge का उपयोग करें।",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "सभी सहेजें",
+  "sessionControls.saveAll.description": "सभी चैट बैकअप फ़ाइल में निर्यात करें",
+  "sessionControls.loadAll.label": "सभी लोड करें",
+  "sessionControls.loadAll.description": "सभी चैट बैकअप फ़ाइल से बदलें",
+  "sessionControls.reset.label": "रीसेट",
+  "sessionControls.reset.description": "बैकअप लें और सारा डेटा हटाएँ",
+  "sessionControls.saveThis.label": "चैट सहेजें",
+  "sessionControls.saveThis.description": "केवल यह चैट निर्यात करें",
+  "sessionControls.combine.label": "मिलाएँ",
+  "sessionControls.combine.description": "बैकअप को इस चैट में मिलाएँ",
+  "sessionControls.trim.label": "ट्रिम",
+  "sessionControls.trim.description": "बुकमार्क से पहले के संदेश हटाएँ",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "प्रोफ़ाइल:",
+  "sessionControls.profilePlaceholder": "आपका नाम या विवरण...",
+  "sessionControls.editProfile": "उपयोगकर्ता प्रोफ़ाइल संपादित करें",
+  "sessionControls.allChatsControls": "सभी चैट नियंत्रण",
+  "sessionControls.thisChatsControls": "यह चैट नियंत्रण",
+  "sessionControls.all": "सभी",
+  "sessionControls.this": "यह",
+  "sessionControls.back": "वापस",
+  "sessionControls.backupAndReset": "बैकअप और रीसेट",
+  "sessionControls.typeToConfirm": "पुष्टि करने के लिए \"{keyword}\" टाइप करें",
+  "sessionControls.changeAvatar": "अवतार बदलें",
+
+  // General
   "general.clear": "साफ़ करें",
   "general.error": "क्षमा करें, एक त्रुटि हुई।",
 
@@ -23,7 +75,7 @@ export const hiTranslations: Record<string, string> = {
   "apiKeyGate.privacyPolicy": "गोपनीयता नीति",
   "apiKeyGate.stepsTitle": "दो त्वरित कदम:",
   "apiKeyGate.stepOne": "Google AI Studio खोलें और एक API कुंजी बनाएं।",
-  "apiKeyGate.stepTwo": "नीचे कुंजी पेस्ट करें और सहेजें पर टैप करें.",
+  "apiKeyGate.stepTwo": "नीचे कुंजी पेस्ट करें और सहेजें पर टैप करें।",
   "apiKeyGate.openAiStudio": "Google AI Studio खोलें",
   "apiKeyGate.viewInstructions": "निर्देश देखें",
   "apiKeyGate.closeInstructions": "निर्देश बंद करें",
@@ -40,6 +92,8 @@ export const hiTranslations: Record<string, string> = {
   "apiKeyGate.saving": "सहेज रहा है...",
   "apiKeyGate.saveKey": "कुंजी सहेजें",
   "apiKeyGate.close": "बंद करें",
+
+  // Chat - general
   "chat.thinking": "सोच रहा हूँ...",
   "chat.loadingHistory": "चैट इतिहास लोड हो रहा है...",
   "chat.loadingSuggestions": "सुझाव लोड हो रहे हैं...",
@@ -58,36 +112,50 @@ export const hiTranslations: Record<string, string> = {
   "chat.speakThisLine": "यह पंक्ति बोलें",
   "chat.languageSelector.openGlobe": "भाषाएं बदलें",
   "chat.maestroTranscriptScrollwheel": "मेस्ट्रो ट्रांसक्रिप्ट स्क्रॉलव्हील व्यू",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT सक्रिय: सुन रहा हूँ...",
   "chat.mic.enableStt": "STT सक्षम करें",
   "chat.mic.disableStt": "STT बंद करें",
   "chat.mic.recordingAudioNote": "ऑडियो रिकॉर्ड हो रहा है...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "{language} में सुन रहा हूँ...",
   "chat.placeholder.normal.sttActive": "{language} में बोलें या टाइप करें...",
   "chat.placeholder.normal.sttInactive": "टाइप करें या माइक टैप करके {language} में बोलें...",
   "chat.placeholder.suggestion.listening": "अनुवाद के लिए {language} बोलें...",
   "chat.placeholder.suggestion.sttActive": "अनुवाद के लिए {language} में बोलें या टाइप करें...",
   "chat.placeholder.suggestion.sttInactive": "अनुवाद के लिए {language} में टाइप करें...",
+
+  // Chat - camera
   "chat.camera.turnOn": "कैमरा प्रीव्यू चालू करें",
   "chat.camera.turnOff": "कैमरा प्रीव्यू बंद करें",
   "chat.camera.imageGenCameraLabel": "छवि निर्माण",
   "chat.camera.captureOrRecord": "फोटो के लिए टैप करें, वीडियो के लिए दबाए रखें",
   "chat.camera.stopRecording": "रिकॉर्डिंग बंद करें",
   "chat.bookIcon.toggleImageGen": "छवि निर्माण मोड टॉगल करें",
+
+  // Chat - image
   "chat.imagePreview.alt": "पूर्वावलोकन",
   "chat.image.dragToEnlarge": "बड़ा करने के लिए कोना खींचें",
   "chat.image.dragToShrink": "छोटा करने के लिए कोना खींचें",
   "chat.annotateImage": "छवि पर टिप्पणी करें",
   "chat.annotateVideoFrame": "वर्तमान फ्रेम पर टिप्पणी करें",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "टिप्पणी के लिए छवि",
   "chat.annotateModal.cancel": "रद्द करें",
   "chat.annotateModal.saveAndAttach": "सहेजें और संलग्न करें",
   "chat.annotateModal.undo": "पूर्ववत करें",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "बोलें: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "सुझाव बोलें: {suggestion}",
   "chat.suggestion.toggleCreateMode": "सुझाव निर्माण मोड टॉगल करें",
   "chat.suggestion.createAction": "सुझाव बनाएं",
   "chat.suggestion.creating": "सुझाव बन रहा है...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "मेस्ट्रो निष्क्रिय है",
   "chat.maestro.title.idle": "मेस्ट्रो वर्तमान में निष्क्रिय है।",
   "chat.maestro.resting": "मेस्ट्रो आराम कर रहा है...",
@@ -104,6 +172,8 @@ export const hiTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "मेस्ट्रो आपके इनपुट या आवाज़ का इंतज़ार कर रहा है।",
   "chat.maestro.holding": "मेस्ट्रो रुका हुआ है",
   "chat.maestro.title.holding": "मेस्ट्रो रुका हुआ है (पुनः जुड़ना रुका)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "ऊपर छिपे संदेश",
   "chat.bookmark.isHere": "बुकमार्क यहाँ है",
   "chat.bookmark.setHere": "यहाँ बुकमार्क सेट करें",
@@ -114,11 +184,15 @@ export const hiTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "एक और दिखाएं",
   "chat.bookmark.incrementTitle": "अधिक",
   "chat.bookmark.hiddenBelowHeaderAria": "नीचे छिपे संदेश",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "वीडियो ऑप्टिमाइज़ हो रहा है...",
   "chat.sendPrep.optimizingImage": "छवि ऑप्टिमाइज़ हो रही है...",
   "chat.sendPrep.preparingMedia": "मीडिया तैयार हो रहा है...",
   "chat.sendPrep.uploadingMedia": "मीडिया अपलोड हो रहा है...",
   "chat.sendPrep.finalizing": "पूरा हो रहा है...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "टिप्पणी कर रहे हैं",
   "chat.header.recordingAudio": "ऑडियो रिकॉर्ड हो रहा है",
   "chat.header.recordingVideo": "वीडियो रिकॉर्ड हो रहा है",
@@ -128,6 +202,8 @@ export const hiTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "वीडियो देख रहे हैं",
   "chat.header.viewingAbove": "पिछले संदेश देख रहे हैं",
   "chat.header.liveSession": "लाइव सत्र",
+
+  // Chat - live session
   "chat.liveSession.stop": "लाइव बंद करें",
   "chat.liveSession.retry": "लाइव पुनः प्रयास करें",
   "chat.liveSession.start": "लाइव शुरू करें",
@@ -137,6 +213,8 @@ export const hiTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "नमस्ते",
   "chat.liveSession.defaultSuggestion2": "शुभ प्रभात",
   "chat.liveSession.defaultSuggestion3": "आप कैसे हैं?",
+
+  // Chat - errors
   "chat.error.sttError": "STT त्रुटि: {error}। माइक टॉगल करने का प्रयास करें।",
   "chat.error.autoCaptureCameraError": "ऑटो कैप्चर कैमरा त्रुटि: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,6 +223,8 @@ export const hiTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "वर्तमान फ्रेम पर टिप्पणी करने के लिए वीडियो रोकें",
   "chat.error.imageGenInterrupted": "छवि निर्माण बाधित हुआ।",
   "chat.error.thinkingInterrupted": "AI प्रतिक्रिया बाधित हुई।",
+
+  // Errors - general
   "error.noLanguagePair": "गंभीर त्रुटि: कोई भाषा जोड़ी नहीं चुनी गई।",
   "error.translationFailed": "अनुवाद विफल। कृपया पुनः प्रयास करें।",
   "error.imageLimitReached": "सत्र छवि निर्माण सीमा पूरी हो गई। कृपया नया सत्र शुरू करें।",
@@ -152,12 +232,16 @@ export const hiTranslations: Record<string, string> = {
   "error.apiKeyMissing": "आपकी Gemini API कुंजी गायब है। API कुंजी स्क्रीन खोलें और अपनी कुंजी पेस्ट करें।",
   "error.apiKeyInvalid": "आपकी Gemini API कुंजी अमान्य है। कृपया टाइपो की जांच करें और एक वैध कुंजी पेस्ट करें।",
   "error.apiQuotaExceeded": "चैट के लिए आपका Gemini API फ्री कोटा समाप्त हो गया है। मैंने बिलिंग चरणों के साथ API कुंजी स्क्रीन खोल दी है। आप इस बीच अभी भी लाइव बातचीत का उपयोग कर सकते हैं।",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र सेटिंग्स में कैमरा एक्सेस सक्षम करें।",
   "error.cameraNotFound": "चयनित कैमरा नहीं मिला। सुनिश्चित करें कि यह कनेक्टेड है या अलग कैमरा चुनें।",
   "error.cameraAccessNotSupported": "आपके ब्राउज़र द्वारा कैमरा एक्सेस समर्थित नहीं है।",
   "error.cameraUnknown": "कैमरा एक्सेस करते समय अज्ञात त्रुटि हुई।",
   "error.cameraStreamNotAvailable": "कैप्चर के लिए कैमरा स्ट्रीम उपलब्ध नहीं है।",
   "error.imageCaptureGeneric": "छवि कैप्चर करते समय अज्ञात त्रुटि।",
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "विज़ुअल कॉन्टेक्स्ट वीडियो एलीमेंट तैयार नहीं है।",
   "error.snapshotVideoElementNotReady": "स्नैपशॉट वीडियो एलीमेंट तैयार नहीं है।",
   "error.visualContextCameraAccessNotSupported": "विज़ुअल कॉन्टेक्स्ट के लिए कैमरा एक्सेस समर्थित नहीं है।",

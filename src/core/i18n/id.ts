@@ -2,21 +2,73 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const idTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Atur pengenalan suara ke {language}",
+
+  // Header
   "header.targetLanguageTitle": "Bahasa Target Saat Ini: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "Klik pesawat",
-  "startPage.saveChats": "Simpan semua obrolan",
-  "startPage.loadChats": "Muat obrolan",
+  "startPage.saveChats": "Simpan Semua Obrolan",
+  "startPage.loadChats": "Muat Obrolan",
+  "startPage.saveThisChat": "Simpan Obrolan Ini",
+  "startPage.appendToChat": "Tambahkan ke Obrolan",
+  "startPage.trimBeforeBookmark": "Pangkas Sebelum Penanda",
   "startPage.maestroAvatar": "Avatar Maestro",
   "startPage.addMaestroAvatar": "Tambah avatar Maestro",
   "startPage.loadSuccess": "Berhasil memuat dan mengganti {count} sesi obrolan!",
   "startPage.loadError": "Gagal memuat obrolan. File mungkin rusak atau format salah.",
   "startPage.noChatsToSave": "Tidak ada riwayat obrolan untuk disimpan.",
   "startPage.saveError": "Gagal menyimpan obrolan. Lihat konsol untuk detail lebih lanjut.",
+  "startPage.noChatSelected": "Silakan pilih pasangan bahasa terlebih dahulu.",
+  "startPage.noBookmarkSet": "Belum ada penanda. Pasang penanda terlebih dahulu untuk memangkas pesan sebelumnya.",
+  "startPage.noMessagesToTrim": "Tidak ada pesan sebelum penanda untuk dihapus.",
+  "startPage.trimSuccess": "Menghapus {count} pesan sebelum penanda.",
+  "startPage.trimError": "Gagal memangkas pesan. Silakan coba lagi.",
+  "startPage.noMessagesToAppend": "Tidak ada pesan ditemukan dalam file cadangan untuk digabungkan.",
+  "startPage.noPairInBackup": "File cadangan tidak berisi pesan untuk pasangan bahasa Anda saat ini. Silakan pilih cadangan yang cocok dengan obrolan Anda saat ini.",
+  "startPage.appendSuccess": "Berhasil menambahkan {count} pesan ke obrolan saat ini.",
+  "startPage.combineSuccess": "Obrolan digabungkan: {added} pesan baru ditambahkan, total {total} pesan.",
+  "startPage.combineNoDuplicates": "Semua pesan sudah ada di obrolan Anda. Tidak ada perubahan.",
+  "startPage.combineNoChanges": "Tidak ada pesan baru untuk ditambahkan. Obrolan Anda tidak berubah.",
+  "startPage.invalidBackupFormat": "File cadangan tidak valid. Silakan pilih file cadangan Maestro (.ndjson) yang valid.",
+  "startPage.browserNotSupported": "Browser Anda tidak mendukung penyimpanan file. Silakan gunakan Chrome atau Edge.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Simpan Semua",
+  "sessionControls.saveAll.description": "Ekspor semua obrolan ke file cadangan",
+  "sessionControls.loadAll.label": "Muat Semua",
+  "sessionControls.loadAll.description": "Ganti semua obrolan dengan file cadangan",
+  "sessionControls.reset.label": "Atur Ulang",
+  "sessionControls.reset.description": "Cadangkan & hapus semua data",
+  "sessionControls.saveThis.label": "Simpan Obrolan",
+  "sessionControls.saveThis.description": "Ekspor obrolan ini saja",
+  "sessionControls.combine.label": "Gabungkan",
+  "sessionControls.combine.description": "Gabungkan cadangan ke obrolan ini",
+  "sessionControls.trim.label": "Pangkas",
+  "sessionControls.trim.description": "Hapus pesan sebelum penanda",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profil:",
+  "sessionControls.profilePlaceholder": "Nama atau detail Anda...",
+  "sessionControls.editProfile": "Edit Profil Pengguna",
+  "sessionControls.allChatsControls": "Kontrol Semua Obrolan",
+  "sessionControls.thisChatsControls": "Kontrol Obrolan Ini",
+  "sessionControls.all": "Semua",
+  "sessionControls.this": "Ini",
+  "sessionControls.back": "Kembali",
+  "sessionControls.backupAndReset": "Cadangkan & Atur Ulang",
+  "sessionControls.typeToConfirm": "Ketik \"{keyword}\" untuk konfirmasi",
+  "sessionControls.changeAvatar": "Ubah Avatar",
+
+  // General
   "general.clear": "Hapus",
   "general.error": "Maaf, terjadi kesalahan.",
 
-// API key gate
+  // API key gate
   "apiKeyGate.title": "Hubungkan kunci API Gemini Anda",
   "apiKeyGate.billingTitle": "Siapkan penagihan untuk kuota lebih tinggi",
   "apiKeyGate.subtitle": "Aplikasi ini berjalan sepenuhnya di perangkat Anda. Kunci Anda tidak pernah menyentuh server kami.",
@@ -40,6 +92,8 @@ export const idTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Menyimpan...",
   "apiKeyGate.saveKey": "Simpan kunci",
   "apiKeyGate.close": "Tutup",
+
+  // Chat - general
   "chat.thinking": "Sedang berpikir...",
   "chat.loadingHistory": "Memuat riwayat obrolan...",
   "chat.loadingSuggestions": "Memuat saran...",
@@ -58,36 +112,50 @@ export const idTranslations: Record<string, string> = {
   "chat.speakThisLine": "Ucapkan baris ini",
   "chat.languageSelector.openGlobe": "Ubah bahasa",
   "chat.maestroTranscriptScrollwheel": "Tampilan gulir transkrip Maestro",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT aktif: Mendengarkan...",
   "chat.mic.enableStt": "Aktifkan STT",
   "chat.mic.disableStt": "Hentikan STT",
   "chat.mic.recordingAudioNote": "Merekam audio...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "Mendengarkan dalam {language}...",
   "chat.placeholder.normal.sttActive": "Bicara dalam {language} atau ketik...",
   "chat.placeholder.normal.sttInactive": "Ketik atau ketuk mikrofon untuk berbicara dalam {language}...",
   "chat.placeholder.suggestion.listening": "Ucapkan {language} untuk menerjemahkan...",
   "chat.placeholder.suggestion.sttActive": "Bicara atau ketik dalam {language} untuk menerjemahkan...",
   "chat.placeholder.suggestion.sttInactive": "Ketik dalam {language} untuk menerjemahkan...",
+
+  // Chat - camera
   "chat.camera.turnOn": "Aktifkan pratinjau kamera",
   "chat.camera.turnOff": "Nonaktifkan pratinjau kamera",
   "chat.camera.imageGenCameraLabel": "Pembuatan gambar",
   "chat.camera.captureOrRecord": "Ketuk untuk foto, tahan untuk video",
   "chat.camera.stopRecording": "Hentikan perekaman",
   "chat.bookIcon.toggleImageGen": "Alihkan mode pembuatan gambar",
+
+  // Chat - image
   "chat.imagePreview.alt": "Pratinjau",
   "chat.image.dragToEnlarge": "Seret sudut untuk memperbesar",
   "chat.image.dragToShrink": "Seret sudut untuk memperkecil",
   "chat.annotateImage": "Anotasi gambar",
   "chat.annotateVideoFrame": "Anotasi frame saat ini",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Gambar untuk dianotasi",
   "chat.annotateModal.cancel": "Batal",
   "chat.annotateModal.saveAndAttach": "Simpan dan lampirkan",
   "chat.annotateModal.undo": "Batalkan",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "Ucapkan: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Ucapkan saran: {suggestion}",
   "chat.suggestion.toggleCreateMode": "Alihkan mode buat saran",
   "chat.suggestion.createAction": "Buat saran",
   "chat.suggestion.creating": "Membuat saran...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro menganggur",
   "chat.maestro.title.idle": "Maestro saat ini menganggur.",
   "chat.maestro.resting": "Maestro sedang beristirahat...",
@@ -104,6 +172,8 @@ export const idTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro menunggu input atau suara Anda.",
   "chat.maestro.holding": "Maestro menunggu",
   "chat.maestro.title.holding": "Maestro menunggu (aktivasi ulang dijeda)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "Pesan tersembunyi di atas",
   "chat.bookmark.isHere": "Penanda ada di sini",
   "chat.bookmark.setHere": "Atur penanda di sini",
@@ -114,11 +184,15 @@ export const idTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Tampilkan satu lebih banyak",
   "chat.bookmark.incrementTitle": "Lebih banyak",
   "chat.bookmark.hiddenBelowHeaderAria": "Pesan tersembunyi di bawah",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Mengoptimalkan video...",
   "chat.sendPrep.optimizingImage": "Mengoptimalkan gambar...",
   "chat.sendPrep.preparingMedia": "Menyiapkan media...",
   "chat.sendPrep.uploadingMedia": "Mengunggah media...",
   "chat.sendPrep.finalizing": "Menyelesaikan...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "Menganotasi",
   "chat.header.recordingAudio": "Merekam audio",
   "chat.header.recordingVideo": "Merekam video",
@@ -128,6 +202,8 @@ export const idTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Menonton video",
   "chat.header.viewingAbove": "Melihat pesan sebelumnya",
   "chat.header.liveSession": "Sesi langsung",
+
+  // Chat - live session
   "chat.liveSession.stop": "Hentikan langsung",
   "chat.liveSession.retry": "Coba ulang langsung",
   "chat.liveSession.start": "Mulai langsung",
@@ -137,6 +213,8 @@ export const idTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Halo",
   "chat.liveSession.defaultSuggestion2": "Selamat pagi",
   "chat.liveSession.defaultSuggestion3": "Apa kabar?",
+
+  // Chat - errors
   "chat.error.sttError": "Kesalahan STT: {error}. Coba alihkan mikrofon.",
   "chat.error.autoCaptureCameraError": "Kesalahan tangkap otomatis kamera: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,6 +223,8 @@ export const idTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Jeda video untuk menganotasi frame saat ini",
   "chat.error.imageGenInterrupted": "Pembuatan gambar terganggu.",
   "chat.error.thinkingInterrupted": "Respons AI terganggu.",
+
+  // Errors - general
   "error.noLanguagePair": "Kesalahan kritis: Tidak ada pasangan bahasa yang dipilih.",
   "error.translationFailed": "Terjemahan gagal. Silakan coba lagi.",
   "error.imageLimitReached": "Batas pembuatan gambar sesi tercapai. Silakan mulai sesi baru.",
@@ -152,12 +232,16 @@ export const idTranslations: Record<string, string> = {
   "error.apiKeyMissing": "Kunci Gemini API Anda hilang. Buka layar Kunci API dan tempelkan kunci Anda.",
   "error.apiKeyInvalid": "Kunci Gemini API Anda tidak valid. Silakan periksa kesalahan ketik dan tempelkan kunci yang valid.",
   "error.apiQuotaExceeded": "Kuota gratis Gemini API Anda untuk obrolan telah habis. Saya membuka layar Kunci API dengan langkah-langkah penagihan. Anda masih dapat menggunakan percakapan Langsung sementara itu.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "Izin kamera ditolak. Silakan aktifkan akses kamera di pengaturan browser.",
   "error.cameraNotFound": "Kamera yang dipilih tidak ditemukan. Pastikan terhubung atau pilih kamera lain.",
   "error.cameraAccessNotSupported": "Akses kamera tidak didukung oleh browser Anda.",
   "error.cameraUnknown": "Terjadi kesalahan tidak dikenal saat mengakses kamera.",
   "error.cameraStreamNotAvailable": "Stream kamera tidak tersedia untuk pengambilan.",
   "error.imageCaptureGeneric": "Kesalahan tidak dikenal saat mengambil gambar.",
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "Elemen video konteks visual belum siap.",
   "error.snapshotVideoElementNotReady": "Elemen video snapshot belum siap.",
   "error.visualContextCameraAccessNotSupported": "Akses kamera tidak didukung untuk konteks visual.",

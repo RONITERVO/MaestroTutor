@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const zhTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "将语音识别设置为{language}",
+
+  // Header
   "header.targetLanguageTitle": "当前目标语言：{language}",
+
+  // Start page (used)
   "startPage.clickToStart": "点击飞机",
   "startPage.saveChats": "保存所有聊天",
   "startPage.loadChats": "加载聊天",
+  "startPage.saveThisChat": "保存此聊天",
+  "startPage.appendToChat": "附加到聊天",
+  "startPage.trimBeforeBookmark": "修剪书签前的消息",
   "startPage.maestroAvatar": "Maestro头像",
   "startPage.addMaestroAvatar": "添加Maestro头像",
   "startPage.loadSuccess": "已成功加载并替换{count}个聊天会话！",
   "startPage.loadError": "加载聊天时出错。文件可能已损坏或格式错误。",
   "startPage.noChatsToSave": "没有可保存的聊天记录。",
   "startPage.saveError": "保存聊天时出错。请查看控制台了解更多详情。",
+  "startPage.noChatSelected": "请先选择一个语言对。",
+  "startPage.noBookmarkSet": "未设置书签。请先设置书签以移除其前面的消息。",
+  "startPage.noMessagesToTrim": "书签前没有可移除的消息。",
+  "startPage.trimSuccess": "已移除书签前的 {count} 条消息。",
+  "startPage.trimError": "修剪消息失败。请重试。",
+  "startPage.noMessagesToAppend": "备份文件中未发现可合并的消息。",
+  "startPage.noPairInBackup": "备份文件不包含当前语言对的消息。请选择与当前聊天匹配的备份。",
+  "startPage.appendSuccess": "已成功将 {count} 条消息附加到当前聊天。",
+  "startPage.combineSuccess": "聊天已合并：新增 {added} 条消息，共 {total} 条消息。",
+  "startPage.combineNoDuplicates": "所有消息已存在于您的聊天中。未进行更改。",
+  "startPage.combineNoChanges": "没有新消息可添加。您的聊天未发生更改。",
+  "startPage.invalidBackupFormat": "无效的备份文件。请选择有效的 Maestro 备份 (.ndjson) 文件。",
+  "startPage.browserNotSupported": "您的浏览器不支持文件保存。请使用 Chrome 或 Edge。",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "全部保存",
+  "sessionControls.saveAll.description": "导出所有聊天到备份文件",
+  "sessionControls.loadAll.label": "全部加载",
+  "sessionControls.loadAll.description": "用备份文件替换所有聊天",
+  "sessionControls.reset.label": "重置",
+  "sessionControls.reset.description": "备份并删除所有数据",
+  "sessionControls.saveThis.label": "保存聊天",
+  "sessionControls.saveThis.description": "仅导出此聊天",
+  "sessionControls.combine.label": "合并",
+  "sessionControls.combine.description": "将备份合并到此聊天",
+  "sessionControls.trim.label": "修剪",
+  "sessionControls.trim.description": "删除书签前的消息",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "个人资料：",
+  "sessionControls.profilePlaceholder": "您的名字或详情...",
+  "sessionControls.editProfile": "编辑用户资料",
+  "sessionControls.allChatsControls": "所有聊天控制",
+  "sessionControls.thisChatsControls": "此聊天控制",
+  "sessionControls.all": "全部",
+  "sessionControls.this": "此",
+  "sessionControls.back": "返回",
+  "sessionControls.backupAndReset": "备份并重置",
+  "sessionControls.typeToConfirm": "输入 \"{keyword}\" 以确认",
+  "sessionControls.changeAvatar": "更改头像",
+
+  // General
   "general.clear": "清除",
   "general.error": "抱歉，遇到了错误。",
 
@@ -40,6 +92,8 @@ export const zhTranslations: Record<string, string> = {
   "apiKeyGate.saving": "正在保存...",
   "apiKeyGate.saveKey": "保存密钥",
   "apiKeyGate.close": "关闭",
+
+  // Chat - general
   "chat.thinking": "思考中...",
   "chat.loadingHistory": "加载聊天记录中...",
   "chat.loadingSuggestions": "加载建议中...",
@@ -58,36 +112,50 @@ export const zhTranslations: Record<string, string> = {
   "chat.speakThisLine": "朗读这行",
   "chat.languageSelector.openGlobe": "更改语言",
   "chat.maestroTranscriptScrollwheel": "Maestro转录滚动视图",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT激活：正在听...",
   "chat.mic.enableStt": "启用STT",
   "chat.mic.disableStt": "停止STT",
   "chat.mic.recordingAudioNote": "录音中...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "正在听{language}...",
   "chat.placeholder.normal.sttActive": "用{language}说话或输入...",
   "chat.placeholder.normal.sttInactive": "输入或点击麦克风用{language}说话...",
   "chat.placeholder.suggestion.listening": "说{language}来翻译...",
   "chat.placeholder.suggestion.sttActive": "说或输入{language}来翻译...",
   "chat.placeholder.suggestion.sttInactive": "输入{language}来翻译...",
+
+  // Chat - camera
   "chat.camera.turnOn": "开启相机预览",
   "chat.camera.turnOff": "关闭相机预览",
   "chat.camera.imageGenCameraLabel": "图像生成",
   "chat.camera.captureOrRecord": "点击拍照，长按录像",
   "chat.camera.stopRecording": "停止录制",
   "chat.bookIcon.toggleImageGen": "切换图像生成模式",
+
+  // Chat - image
   "chat.imagePreview.alt": "预览",
   "chat.image.dragToEnlarge": "拖动角落放大",
   "chat.image.dragToShrink": "拖动角落缩小",
   "chat.annotateImage": "标注图像",
   "chat.annotateVideoFrame": "标注当前帧",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "待标注的图像",
   "chat.annotateModal.cancel": "取消",
   "chat.annotateModal.saveAndAttach": "保存并附加",
   "chat.annotateModal.undo": "撤销",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "朗读：\"{suggestion}\"",
   "chat.suggestion.ariaLabel": "朗读建议：{suggestion}",
   "chat.suggestion.toggleCreateMode": "切换建议创建模式",
   "chat.suggestion.createAction": "创建建议",
   "chat.suggestion.creating": "创建建议中...",
+
+  // Chat - maestro status
   "chat.maestro.idle": "Maestro空闲",
   "chat.maestro.title.idle": "Maestro当前处于空闲状态。",
   "chat.maestro.resting": "Maestro休息中...",
@@ -104,6 +172,8 @@ export const zhTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro正在等待您的输入或语音。",
   "chat.maestro.holding": "Maestro等待中",
   "chat.maestro.title.holding": "Maestro等待中（重新参与暂停）",
+
+  // Chat - bookmark
   "chat.bookmark.hiddenHeaderAria": "上方隐藏的消息",
   "chat.bookmark.isHere": "书签在这里",
   "chat.bookmark.setHere": "在这里设置书签",
@@ -114,11 +184,15 @@ export const zhTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "显示多一条",
   "chat.bookmark.incrementTitle": "更多",
   "chat.bookmark.hiddenBelowHeaderAria": "下方隐藏的消息",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "优化视频中...",
   "chat.sendPrep.optimizingImage": "优化图像中...",
   "chat.sendPrep.preparingMedia": "准备媒体中...",
   "chat.sendPrep.uploadingMedia": "上传媒体中...",
   "chat.sendPrep.finalizing": "完成中...",
+
+  // Chat - header activity tokens
   "chat.header.annotating": "标注中",
   "chat.header.recordingAudio": "录音中",
   "chat.header.recordingVideo": "录像中",
@@ -128,6 +202,8 @@ export const zhTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "观看视频中",
   "chat.header.viewingAbove": "查看上方消息",
   "chat.header.liveSession": "实时会话",
+
+  // Chat - live session
   "chat.liveSession.stop": "停止实时",
   "chat.liveSession.retry": "重试实时",
   "chat.liveSession.start": "开始实时",
@@ -156,6 +232,8 @@ export const zhTranslations: Record<string, string> = {
   "error.apiKeyMissing": "您的 Gemini API 密钥缺失。打开 API 密钥屏幕并粘贴您的密钥。",
   "error.apiKeyInvalid": "您的 Gemini API 密钥无效。请检查拼写错误并粘贴有效的密钥。",
   "error.apiQuotaExceeded": "您的 Gemini API 免费聊天配额已用尽。我已打开带有计费步骤的 API 密钥屏幕。在此期间，您仍可以使用实时对话。",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "相机权限被拒绝。请在浏览器设置中启用相机访问。",
   "error.cameraNotFound": "未找到所选相机。请确保已连接或选择其他相机。",
   "error.cameraAccessNotSupported": "您的浏览器不支持相机访问。",

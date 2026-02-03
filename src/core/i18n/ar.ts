@@ -2,17 +2,67 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const arTranslations: Record<string, string> = {
+  // App title
+  "app.title": "مايسترو",
+  // Language selector
   "sttLang.selectLanguage": "تعيين التعرف على الكلام إلى {language}",
+
+  // Header
   "header.targetLanguageTitle": "اللغة المستهدفة الحالية: {language}",
+
+  // Start page
   "startPage.clickToStart": "انقر على الطائرة",
   "startPage.saveChats": "حفظ جميع المحادثات",
   "startPage.loadChats": "تحميل المحادثات",
+  "startPage.saveThisChat": "حفظ هذه المحادثة",
+  "startPage.appendToChat": "إلحاق بالمحادثة",
+  "startPage.trimBeforeBookmark": "قص ما قبل الإشارة المرجعية",
   "startPage.maestroAvatar": "صورة مايسترو الرمزية",
   "startPage.addMaestroAvatar": "إضافة صورة مايسترو الرمزية",
   "startPage.loadSuccess": "تم تحميل واستبدال {count} جلسة محادثة بنجاح!",
   "startPage.loadError": "خطأ في تحميل المحادثات. قد يكون الملف تالفًا أو بتنسيق خاطئ.",
   "startPage.noChatsToSave": "لا يوجد سجل محادثات للحفظ.",
   "startPage.saveError": "خطأ في حفظ المحادثات. راجع وحدة التحكم للمزيد من التفاصيل.",
+  "startPage.noChatSelected": "يرجى اختيار زوج لغات أولاً.",
+  "startPage.noBookmarkSet": "لم يتم تعيين إشارة مرجعية. قم بتعيين واحدة أولاً لقص الرسائل التي تسبقها.",
+  "startPage.noMessagesToTrim": "لا توجد رسائل قبل الإشارة المرجعية لإزالتها.",
+  "startPage.trimSuccess": "تمت إزالة {count} رسالة قبل الإشارة المرجعية.",
+  "startPage.trimError": "فشل قص الرسائل. يرجى المحاولة مرة أخرى.",
+  "startPage.noMessagesToAppend": "لم يتم العثور على رسائل في ملف النسخ الاحتياطي لدمجها.",
+  "startPage.noPairInBackup": "لا يحتوي ملف النسخ الاحتياطي على رسائل لزوج اللغة الحالي. يرجى اختيار نسخة احتياطية تتطابق مع محادثتك الحالية.",
+  "startPage.appendSuccess": "تم إلحاق {count} رسالة بنجاح بالمحادثة الحالية.",
+  "startPage.combineSuccess": "تم دمج المحادثات: تمت إضافة {added} رسالة جديدة، إجمالي الرسائل {total}.",
+  "startPage.combineNoDuplicates": "جميع الرسائل موجودة بالفعل في محادثتك. لم يتم إجراء أي تغييرات.",
+  "startPage.combineNoChanges": "لا توجد رسائل جديدة للإضافة. محادثتك لم تتغير.",
+  "startPage.invalidBackupFormat": "ملف نسخ احتياطي غير صالح. يرجى اختيار ملف نسخ احتياطي Maestro (.ndjson) صالح.",
+  "startPage.browserNotSupported": "متصفحك لا يدعم حفظ الملفات. يرجى استخدام Chrome أو Edge.",
+
+  // Session Controls
+  "sessionControls.saveAll.label": "حفظ الكل",
+  "sessionControls.saveAll.description": "تصدير جميع المحادثات لملف نسخ احتياطي",
+  "sessionControls.loadAll.label": "تحميل الكل",
+  "sessionControls.loadAll.description": "استبدال جميع المحادثات بملف نسخ احتياطي",
+  "sessionControls.reset.label": "إعادة تعيين",
+  "sessionControls.reset.description": "نسخ احتياطي وحذف جميع البيانات",
+  "sessionControls.saveThis.label": "حفظ المحادثة",
+  "sessionControls.saveThis.description": "تصدير هذه المحادثة فقط",
+  "sessionControls.combine.label": "دمج",
+  "sessionControls.combine.description": "دمج النسخة الاحتياطية في هذه المحادثة",
+  "sessionControls.trim.label": "قص",
+  "sessionControls.trim.description": "إزالة الرسائل قبل الإشارة المرجعية",
+  "sessionControls.profile": "الملف الشخصي:",
+  "sessionControls.profilePlaceholder": "اسمك أو التفاصيل...",
+  "sessionControls.editProfile": "تعديل ملف المستخدم",
+  "sessionControls.allChatsControls": "عناصر تحكم جميع المحادثات",
+  "sessionControls.thisChatsControls": "عناصر تحكم هذه المحادثة",
+  "sessionControls.all": "الكل",
+  "sessionControls.this": "هذه",
+  "sessionControls.back": "رجوع",
+  "sessionControls.backupAndReset": "نسخ احتياطي وإعادة تعيين",
+  "sessionControls.typeToConfirm": "اكتب \"{keyword}\" للتأكيد",
+  "sessionControls.changeAvatar": "تغيير الصورة الرمزية",
+
+  // General
   "general.clear": "مسح",
   "general.error": "عذرًا، حدث خطأ.",
 
@@ -40,6 +90,8 @@ export const arTranslations: Record<string, string> = {
   "apiKeyGate.saving": "جارٍ الحفظ...",
   "apiKeyGate.saveKey": "حفظ المفتاح",
   "apiKeyGate.close": "إغلاق",
+
+  // Chat - general
   "chat.thinking": "جارٍ التفكير...",
   "chat.loadingHistory": "جارٍ تحميل سجل المحادثة...",
   "chat.loadingSuggestions": "جارٍ تحميل الاقتراحات...",
@@ -58,36 +110,50 @@ export const arTranslations: Record<string, string> = {
   "chat.speakThisLine": "نطق هذا السطر",
   "chat.languageSelector.openGlobe": "تغيير اللغات",
   "chat.maestroTranscriptScrollwheel": "عرض التمرير لنص مايسترو",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT نشط: جارٍ الاستماع...",
   "chat.mic.enableStt": "تفعيل STT",
   "chat.mic.disableStt": "إيقاف STT",
   "chat.mic.recordingAudioNote": "جارٍ تسجيل الصوت...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "جارٍ الاستماع بـ{language}...",
   "chat.placeholder.normal.sttActive": "تحدث بـ{language} أو اكتب...",
   "chat.placeholder.normal.sttInactive": "اكتب أو انقر على الميكروفون للتحدث بـ{language}...",
   "chat.placeholder.suggestion.listening": "تحدث بـ{language} للترجمة...",
   "chat.placeholder.suggestion.sttActive": "تحدث أو اكتب بـ{language} للترجمة...",
   "chat.placeholder.suggestion.sttInactive": "اكتب بـ{language} للترجمة...",
+
+  // Chat - camera
   "chat.camera.turnOn": "تشغيل معاينة الكاميرا",
   "chat.camera.turnOff": "إيقاف معاينة الكاميرا",
   "chat.camera.imageGenCameraLabel": "إنشاء الصورة",
   "chat.camera.captureOrRecord": "انقر للصورة، اضغط مطولاً للفيديو",
   "chat.camera.stopRecording": "إيقاف التسجيل",
   "chat.bookIcon.toggleImageGen": "تبديل وضع إنشاء الصورة",
+
+  // Chat - image
   "chat.imagePreview.alt": "معاينة",
   "chat.image.dragToEnlarge": "اسحب الزاوية للتكبير",
   "chat.image.dragToShrink": "اسحب الزاوية للتصغير",
   "chat.annotateImage": "إضافة تعليق على الصورة",
   "chat.annotateVideoFrame": "إضافة تعليق على الإطار الحالي",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "صورة للتعليق عليها",
   "chat.annotateModal.cancel": "إلغاء",
   "chat.annotateModal.saveAndAttach": "حفظ وإرفاق",
   "chat.annotateModal.undo": "تراجع",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "قل: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "نطق الاقتراح: {suggestion}",
   "chat.suggestion.toggleCreateMode": "تبديل وضع إنشاء الاقتراح",
   "chat.suggestion.createAction": "إنشاء اقتراح",
   "chat.suggestion.creating": "جارٍ إنشاء الاقتراح...",
+
+  // Chat - maestro status
   "chat.maestro.idle": "مايسترو خامل",
   "chat.maestro.title.idle": "مايسترو خامل حاليًا.",
   "chat.maestro.resting": "مايسترو يرتاح...",
@@ -104,6 +170,8 @@ export const arTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "مايسترو ينتظر إدخالك أو صوتك.",
   "chat.maestro.holding": "مايسترو في الانتظار",
   "chat.maestro.title.holding": "مايسترو في الانتظار (إعادة المشاركة متوقفة)",
+
+  // Chat - bookmark
   "chat.bookmark.hiddenHeaderAria": "رسائل مخفية أعلاه",
   "chat.bookmark.isHere": "الإشارة المرجعية هنا",
   "chat.bookmark.setHere": "تعيين إشارة مرجعية هنا",
@@ -114,11 +182,15 @@ export const arTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "عرض واحد إضافي",
   "chat.bookmark.incrementTitle": "أكثر",
   "chat.bookmark.hiddenBelowHeaderAria": "رسائل مخفية أدناه",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "جارٍ تحسين الفيديو...",
   "chat.sendPrep.optimizingImage": "جارٍ تحسين الصورة...",
   "chat.sendPrep.preparingMedia": "جارٍ تحضير الوسائط...",
   "chat.sendPrep.uploadingMedia": "جارٍ رفع الوسائط...",
   "chat.sendPrep.finalizing": "جارٍ الإنهاء...",
+
+  // Chat - header activity tokens
   "chat.header.annotating": "إضافة تعليق",
   "chat.header.recordingAudio": "تسجيل الصوت",
   "chat.header.recordingVideo": "تسجيل الفيديو",
@@ -128,6 +200,8 @@ export const arTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "مشاهدة الفيديو",
   "chat.header.viewingAbove": "عرض الرسائل السابقة",
   "chat.header.liveSession": "جلسة مباشرة",
+
+  // Chat - live session
   "chat.liveSession.stop": "إيقاف البث المباشر",
   "chat.liveSession.retry": "إعادة محاولة البث المباشر",
   "chat.liveSession.start": "بدء البث المباشر",
@@ -137,6 +211,8 @@ export const arTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "مرحباً",
   "chat.liveSession.defaultSuggestion2": "صباح الخير",
   "chat.liveSession.defaultSuggestion3": "كيف حالك؟",
+
+  // Chat - errors
   "chat.error.sttError": "خطأ STT: {error}. حاول تبديل الميكروفون.",
   "chat.error.autoCaptureCameraError": "خطأ الالتقاط التلقائي للكاميرا: {error}",
   "chat.error.snapshotUserError": "{error}",
@@ -145,6 +221,8 @@ export const arTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "أوقف الفيديو مؤقتًا لإضافة تعليق على الإطار الحالي",
   "chat.error.imageGenInterrupted": "تم مقاطعة إنشاء الصورة.",
   "chat.error.thinkingInterrupted": "تم مقاطعة رد الذكاء الاصطناعي.",
+
+  // Errors - general
   "error.noLanguagePair": "خطأ حرج: لم يتم اختيار زوج لغات.",
   "error.translationFailed": "فشلت الترجمة. يرجى المحاولة مرة أخرى.",
   "error.imageLimitReached": "تم الوصول إلى حد إنشاء الصور للجلسة. يرجى بدء جلسة جديدة.",
@@ -152,12 +230,16 @@ export const arTranslations: Record<string, string> = {
   "error.apiKeyMissing": "مفتاح Gemini API الخاص بك مفقود. افتح شاشة مفتاح API والصق مفتاحك.",
   "error.apiKeyInvalid": "مفتاح Gemini API الخاص بك غير صالح. يرجى التحقق من وجود أخطاء إملائية ولصق مفتاح صالح.",
   "error.apiQuotaExceeded": "تم استنفاد حصة Gemini API المجانية للدردشة. لقد فتحت شاشة مفتاح API مع خطوات الفوترة. يمكنك الاستمرار في استخدام المحادثة المباشرة في هذه الأثناء.",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "تم رفض إذن الكاميرا. يرجى تمكين الوصول إلى الكاميرا في إعدادات المتصفح.",
   "error.cameraNotFound": "لم يتم العثور على الكاميرا المحددة. تأكد من توصيلها أو اختر كاميرا مختلفة.",
   "error.cameraAccessNotSupported": "الوصول إلى الكاميرا غير مدعوم من متصفحك.",
   "error.cameraUnknown": "حدث خطأ غير معروف أثناء الوصول إلى الكاميرا.",
   "error.cameraStreamNotAvailable": "بث الكاميرا غير متاح للالتقاط.",
   "error.imageCaptureGeneric": "خطأ غير معروف أثناء التقاط الصورة.",
+
+  // Errors - visual context
   "error.visualContextVideoElementNotReady": "عنصر فيديو السياق المرئي غير جاهز.",
   "error.snapshotVideoElementNotReady": "عنصر فيديو اللقطة غير جاهز.",
   "error.visualContextCameraAccessNotSupported": "الوصول إلى الكاميرا غير مدعوم للسياق المرئي.",

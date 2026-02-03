@@ -2,17 +2,69 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const thTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
+  // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "ตั้งค่าการรู้จำเสียงเป็น {language}",
+
+  // Header
   "header.targetLanguageTitle": "ภาษาเป้าหมายปัจจุบัน: {language}",
+
+  // Start page (used)
   "startPage.clickToStart": "คลิกที่เครื่องบิน",
   "startPage.saveChats": "บันทึกแชททั้งหมด",
   "startPage.loadChats": "โหลดแชท",
+  "startPage.saveThisChat": "บันทึกแชทนี้",
+  "startPage.appendToChat": "เพิ่มต่อในแชท",
+  "startPage.trimBeforeBookmark": "ตัดส่วนก่อนหน้าบุ๊กมาร์ก",
   "startPage.maestroAvatar": "อวาตาร์ Maestro",
   "startPage.addMaestroAvatar": "เพิ่มอวาตาร์ Maestro",
   "startPage.loadSuccess": "โหลดและแทนที่ {count} เซสชันแชทสำเร็จ!",
   "startPage.loadError": "เกิดข้อผิดพลาดในการโหลดแชท ไฟล์อาจเสียหายหรือรูปแบบไม่ถูกต้อง",
   "startPage.noChatsToSave": "ไม่มีประวัติแชทที่จะบันทึก",
   "startPage.saveError": "เกิดข้อผิดพลาดในการบันทึกแชท ดูคอนโซลสำหรับรายละเอียดเพิ่มเติม",
+  "startPage.noChatSelected": "โปรดเลือกคู่ภาษาก่อน",
+  "startPage.noBookmarkSet": "ยังไม่ได้ตั้งบุ๊กมาร์ก โปรดตั้งบุ๊กมาร์กก่อนเพื่อลบข้อความก่อนหน้านั้น",
+  "startPage.noMessagesToTrim": "ไม่มีข้อความก่อนหน้าบุ๊กมาร์กที่จะลบ",
+  "startPage.trimSuccess": "ลบข้อความ {count} ข้อความก่อนหน้าบุ๊กมาร์กแล้ว",
+  "startPage.trimError": "การลบข้อความล้มเหลว โปรดลองอีกครั้ง",
+  "startPage.noMessagesToAppend": "ไม่พบข้อความในไฟล์สำรองเพื่อนำมารวม",
+  "startPage.noPairInBackup": "ไฟล์สำรองไม่มีข้อความสำหรับคู่ภาษาปัจจุบันของคุณ โปรดเลือกไฟล์สำรองที่ตรงกับแชทปัจจุบัน",
+  "startPage.appendSuccess": "เพิ่ม {count} ข้อความในแชทปัจจุบันเรียบร้อยแล้ว",
+  "startPage.combineSuccess": "รวมแชทสำเร็จ: เพิ่มข้อความใหม่ {added} ข้อความ, รวมทั้งหมด {total} ข้อความ",
+  "startPage.combineNoDuplicates": "มีข้อความทั้งหมดอยู่ในแชทของคุณแล้ว ไม่มีการเปลี่ยนแปลง",
+  "startPage.combineNoChanges": "ไม่มีข้อความใหม่ที่จะเพิ่ม แชทของคุณไม่มีการเปลี่ยนแปลง",
+  "startPage.invalidBackupFormat": "ไฟล์สำรองไม่ถูกต้อง โปรดเลือกไฟล์สำรอง Maestro (.ndjson) ที่ถูกต้อง",
+  "startPage.browserNotSupported": "เบราว์เซอร์ของคุณไม่รองรับการบันทึกไฟล์ โปรดใช้ Chrome หรือ Edge",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "บันทึกทั้งหมด",
+  "sessionControls.saveAll.description": "ส่งออกแชททั้งหมดไปยังไฟล์สำรอง",
+  "sessionControls.loadAll.label": "โหลดทั้งหมด",
+  "sessionControls.loadAll.description": "แทนที่แชททั้งหมดด้วยไฟล์สำรอง",
+  "sessionControls.reset.label": "รีเซ็ต",
+  "sessionControls.reset.description": "สำรองข้อมูลและลบข้อมูลทั้งหมด",
+  "sessionControls.saveThis.label": "บันทึกแชทนี้",
+  "sessionControls.saveThis.description": "ส่งออกเฉพาะแชทนี้",
+  "sessionControls.combine.label": "รวม",
+  "sessionControls.combine.description": "รวมไฟล์สำรองเข้ากับแชทนี้",
+  "sessionControls.trim.label": "ตัด",
+  "sessionControls.trim.description": "ลบข้อความก่อนหน้าบุ๊กมาร์ก",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "โปรไฟล์:",
+  "sessionControls.profilePlaceholder": "ชื่อของคุณหรือรายละเอียด...",
+  "sessionControls.editProfile": "แก้ไขโปรไฟล์ผู้ใช้",
+  "sessionControls.allChatsControls": "การควบคุมแชททั้งหมด",
+  "sessionControls.thisChatsControls": "การควบคุมแชทนี้",
+  "sessionControls.all": "ทั้งหมด",
+  "sessionControls.this": "นี้",
+  "sessionControls.back": "ย้อนกลับ",
+  "sessionControls.backupAndReset": "สำรองข้อมูลและรีเซ็ต",
+  "sessionControls.typeToConfirm": "พิมพ์ \"{keyword}\" เพื่อยืนยัน",
+  "sessionControls.changeAvatar": "เปลี่ยนอวาตาร์",
+
+  // General
   "general.clear": "ล้าง",
   "general.error": "ขออภัย เกิดข้อผิดพลาด",
 
@@ -40,6 +92,8 @@ export const thTranslations: Record<string, string> = {
   "apiKeyGate.saving": "กำลังบันทึก...",
   "apiKeyGate.saveKey": "บันทึกคีย์",
   "apiKeyGate.close": "ปิด",
+
+  // Chat - general
   "chat.thinking": "กำลังคิด...",
   "chat.loadingHistory": "กำลังโหลดประวัติแชท...",
   "chat.loadingSuggestions": "กำลังโหลดคำแนะนำ...",
@@ -58,36 +112,50 @@ export const thTranslations: Record<string, string> = {
   "chat.speakThisLine": "พูดบรรทัดนี้",
   "chat.languageSelector.openGlobe": "เปลี่ยนภาษา",
   "chat.maestroTranscriptScrollwheel": "มุมมองเลื่อนการถอดเสียง Maestro",
+
+  // Chat - mic/STT
   "chat.mic.listening": "STT ใช้งานอยู่: กำลังฟัง...",
   "chat.mic.enableStt": "เปิดใช้ STT",
   "chat.mic.disableStt": "หยุด STT",
   "chat.mic.recordingAudioNote": "กำลังบันทึกเสียง...",
+
+  // Chat - placeholders
   "chat.placeholder.normal.listening": "กำลังฟังใน {language}...",
   "chat.placeholder.normal.sttActive": "พูดใน {language} หรือพิมพ์...",
   "chat.placeholder.normal.sttInactive": "พิมพ์หรือแตะไมค์เพื่อพูดใน {language}...",
   "chat.placeholder.suggestion.listening": "พูด {language} เพื่อแปล...",
   "chat.placeholder.suggestion.sttActive": "พูดหรือพิมพ์ใน {language} เพื่อแปล...",
   "chat.placeholder.suggestion.sttInactive": "พิมพ์ใน {language} เพื่อแปล...",
+
+  // Chat - camera
   "chat.camera.turnOn": "เปิดการแสดงตัวอย่างกล้อง",
   "chat.camera.turnOff": "ปิดการแสดงตัวอย่างกล้อง",
   "chat.camera.imageGenCameraLabel": "การสร้างรูปภาพ",
   "chat.camera.captureOrRecord": "แตะเพื่อถ่ายรูป กดค้างเพื่อบันทึกวิดีโอ",
   "chat.camera.stopRecording": "หยุดการบันทึก",
   "chat.bookIcon.toggleImageGen": "สลับโหมดสร้างรูปภาพ",
+
+  // Chat - image
   "chat.imagePreview.alt": "ตัวอย่าง",
   "chat.image.dragToEnlarge": "ลากมุมเพื่อขยาย",
   "chat.image.dragToShrink": "ลากมุมเพื่อย่อ",
   "chat.annotateImage": "ใส่คำอธิบายรูปภาพ",
   "chat.annotateVideoFrame": "ใส่คำอธิบายเฟรมปัจจุบัน",
+
+  // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "รูปภาพที่จะใส่คำอธิบาย",
   "chat.annotateModal.cancel": "ยกเลิก",
   "chat.annotateModal.saveAndAttach": "บันทึกและแนบ",
   "chat.annotateModal.undo": "เลิกทำ",
+
+  // Chat - suggestions
   "chat.suggestion.speak": "พูด: \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "พูดคำแนะนำ: {suggestion}",
   "chat.suggestion.toggleCreateMode": "สลับโหมดสร้างคำแนะนำ",
   "chat.suggestion.createAction": "สร้างคำแนะนำ",
   "chat.suggestion.creating": "กำลังสร้างคำแนะนำ...",
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro ว่าง",
   "chat.maestro.title.idle": "Maestro อยู่ในโหมดว่างในขณะนี้",
   "chat.maestro.resting": "Maestro กำลังพัก...",
@@ -104,6 +172,8 @@ export const thTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro กำลังรอข้อมูลหรือเสียงของคุณ",
   "chat.maestro.holding": "Maestro กำลังรอ",
   "chat.maestro.title.holding": "Maestro กำลังรอ (การกลับมาใช้งานถูกหยุดชั่วคราว)",
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "ข้อความที่ซ่อนอยู่ด้านบน",
   "chat.bookmark.isHere": "ที่คั่นอยู่ที่นี่",
   "chat.bookmark.setHere": "ตั้งที่คั่นที่นี่",
@@ -114,11 +184,15 @@ export const thTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "แสดงเพิ่มอีกหนึ่ง",
   "chat.bookmark.incrementTitle": "มากขึ้น",
   "chat.bookmark.hiddenBelowHeaderAria": "ข้อความที่ซ่อนอยู่ด้านล่าง",
+
+  // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "กำลังปรับแต่งวิดีโอ...",
   "chat.sendPrep.optimizingImage": "กำลังปรับแต่งรูปภาพ...",
   "chat.sendPrep.preparingMedia": "กำลังเตรียมสื่อ...",
   "chat.sendPrep.uploadingMedia": "กำลังอัปโหลดสื่อ...",
   "chat.sendPrep.finalizing": "กำลังดำเนินการให้เสร็จ...",
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "กำลังใส่คำอธิบาย",
   "chat.header.recordingAudio": "กำลังบันทึกเสียง",
   "chat.header.recordingVideo": "กำลังบันทึกวิดีโอ",
@@ -128,6 +202,8 @@ export const thTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "กำลังดูวิดีโอ",
   "chat.header.viewingAbove": "กำลังดูข้อความก่อนหน้า",
   "chat.header.liveSession": "เซสชันสด",
+
+  // Chat - live session
   "chat.liveSession.stop": "หยุดสด",
   "chat.liveSession.retry": "ลองสดอีกครั้ง",
   "chat.liveSession.start": "เริ่มสด",
@@ -156,12 +232,16 @@ export const thTranslations: Record<string, string> = {
   "error.apiKeyMissing": "คีย์ API Gemini ของคุณหายไป เปิดหน้าจอคีย์ API และวางคีย์ของคุณ",
   "error.apiKeyInvalid": "คีย์ API Gemini ของคุณไม่ถูกต้อง โปรดตรวจสอบการสะกดผิดและวางคีย์ที่ถูกต้อง",
   "error.apiQuotaExceeded": "โควตาฟรีของ Gemini API สำหรับแชทของคุณหมดแล้ว ฉันได้เปิดหน้าจอคีย์ API พร้อมขั้นตอนการเรียกเก็บเงิน ในระหว่างนี้คุณยังสามารถใช้การสนทนาสดได้",
+
+  // Errors - camera
   "error.cameraPermissionDenied": "ปฏิเสธการอนุญาตกล้อง กรุณาเปิดใช้งานการเข้าถึงกล้องในการตั้งค่าเบราว์เซอร์",
-  "error.cameraNotFound": "ไม่พบกล้องที่เลือก ตรวจสอบให้แน่ใจว่าเชื่อมต่อแล้ว หรือเลือกกล้องอื่น",
+  "error.cameraNotFound": "ไม่พบกล้องที่เลือก ตรวจสอบให้แน่ใจว่าเชื่อมต่อแล้ว หรือเลือกกล้องอื่นในการตั้งค่า",
   "error.cameraAccessNotSupported": "การเข้าถึงกล้องไม่ได้รับการสนับสนุนโดยเบราว์เซอร์ของคุณ",
   "error.cameraUnknown": "เกิดข้อผิดพลาดที่ไม่รู้จักขณะเข้าถึงกล้อง",
   "error.cameraStreamNotAvailable": "สตรีมกล้องไม่พร้อมใช้งานสำหรับการจับภาพ",
   "error.imageCaptureGeneric": "เกิดข้อผิดพลาดที่ไม่รู้จักขณะจับภาพ",
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "องค์ประกอบวิดีโอบริบทภาพไม่พร้อม",
   "error.snapshotVideoElementNotReady": "องค์ประกอบวิดีโอสแนปช็อตไม่พร้อม",
   "error.visualContextCameraAccessNotSupported": "การเข้าถึงกล้องไม่รองรับสำหรับบริบทภาพ",

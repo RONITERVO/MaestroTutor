@@ -2,23 +2,68 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const frTranslations: Record<string, string> = {
+  // App title
+  "app.title": "Maestro",
   // Language selector (used in SttLanguageSelector)
   "sttLang.selectLanguage": "Définir la reconnaissance vocale sur {language}",
-  
+
   // Header
   "header.targetLanguageTitle": "Langue cible actuelle : {language}",
-  
+
   // Start page (used)
   "startPage.clickToStart": "Cliquez sur l'avion",
   "startPage.saveChats": "Sauvegarder tous les chats",
   "startPage.loadChats": "Charger les chats",
+  "startPage.saveThisChat": "Sauvegarder ce chat",
+  "startPage.appendToChat": "Ajouter au chat",
+  "startPage.trimBeforeBookmark": "Supprimer avant le marque-page",
   "startPage.maestroAvatar": "Avatar de Maestro",
   "startPage.addMaestroAvatar": "Ajouter un avatar Maestro",
   "startPage.loadSuccess": "{count} sessions de chat chargées et remplacées avec succès !",
   "startPage.loadError": "Erreur lors du chargement des chats. Le fichier peut être corrompu ou dans un mauvais format.",
   "startPage.noChatsToSave": "Aucun historique de chat à sauvegarder.",
   "startPage.saveError": "Erreur lors de la sauvegarde des chats. Consultez la console pour plus de détails.",
-  
+  "startPage.noChatSelected": "Veuillez d'abord sélectionner une paire de langues.",
+  "startPage.noBookmarkSet": "Aucun marque-page défini. Placez un marque-page pour supprimer les messages précédents.",
+  "startPage.noMessagesToTrim": "Aucun message à supprimer avant le marque-page.",
+  "startPage.trimSuccess": "{count} messages supprimés avant le marque-page.",
+  "startPage.trimError": "Échec de la suppression des messages. Veuillez réessayer.",
+  "startPage.noMessagesToAppend": "Aucun message trouvé dans le fichier de sauvegarde à combiner.",
+  "startPage.noPairInBackup": "Le fichier de sauvegarde ne contient pas de messages pour votre paire de langues actuelle. Veuillez sélectionner une sauvegarde correspondant à votre chat actuel.",
+  "startPage.appendSuccess": "{count} messages ajoutés avec succès au chat actuel.",
+  "startPage.combineSuccess": "Chats combinés : {added} nouveaux messages ajoutés, {total} messages au total.",
+  "startPage.combineNoDuplicates": "Tous les messages étaient déjà dans votre chat. Aucune modification effectuée.",
+  "startPage.combineNoChanges": "Aucun nouveau message à ajouter. Votre chat est inchangé.",
+  "startPage.invalidBackupFormat": "Fichier de sauvegarde invalide. Veuillez sélectionner un fichier de sauvegarde Maestro (.ndjson) valide.",
+  "startPage.browserNotSupported": "Votre navigateur ne prend pas en charge la sauvegarde de fichiers. Veuillez utiliser Chrome ou Edge.",
+
+  // Session Controls - Action labels and descriptions
+  "sessionControls.saveAll.label": "Tout sauver",
+  "sessionControls.saveAll.description": "Exporter tous les chats dans un fichier",
+  "sessionControls.loadAll.label": "Tout charger",
+  "sessionControls.loadAll.description": "Remplacer tous les chats par le fichier",
+  "sessionControls.reset.label": "Réinit.",
+  "sessionControls.reset.description": "Sauvegarder et supprimer les données",
+  "sessionControls.saveThis.label": "Sauver chat",
+  "sessionControls.saveThis.description": "Exporter ce chat uniquement",
+  "sessionControls.combine.label": "Combiner",
+  "sessionControls.combine.description": "Fusionner la sauvegarde dans ce chat",
+  "sessionControls.trim.label": "Tronquer",
+  "sessionControls.trim.description": "Supprimer les messages avant le marque-page",
+
+  // Session Controls - UI elements
+  "sessionControls.profile": "Profil :",
+  "sessionControls.profilePlaceholder": "Votre nom ou détails...",
+  "sessionControls.editProfile": "Modifier le profil utilisateur",
+  "sessionControls.allChatsControls": "Contrôles de tous les chats",
+  "sessionControls.thisChatsControls": "Contrôles de ce chat",
+  "sessionControls.all": "Tous",
+  "sessionControls.this": "Celui-ci",
+  "sessionControls.back": "Retour",
+  "sessionControls.backupAndReset": "Sauvegarder & Réinitialiser",
+  "sessionControls.typeToConfirm": "Tapez \"{keyword}\" pour confirmer",
+  "sessionControls.changeAvatar": "Changer d'avatar",
+
   // General
   "general.clear": "Effacer",
   "general.error": "Désolé, j'ai rencontré une erreur.",
@@ -47,7 +92,7 @@ export const frTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Enregistrement...",
   "apiKeyGate.saveKey": "Enregistrer la clé",
   "apiKeyGate.close": "Fermer",
-  
+
   // Chat - general
   "chat.thinking": "Réflexion en cours...",
   "chat.loadingHistory": "Chargement de l'historique...",
@@ -67,13 +112,13 @@ export const frTranslations: Record<string, string> = {
   "chat.speakThisLine": "Prononcer cette ligne",
   "chat.languageSelector.openGlobe": "Changer de langues",
   "chat.maestroTranscriptScrollwheel": "Vue de défilement de la transcription Maestro",
-  
+
   // Chat - mic/STT
   "chat.mic.listening": "STT actif : Écoute en cours...",
   "chat.mic.enableStt": "Activer STT",
   "chat.mic.disableStt": "Arrêter STT",
   "chat.mic.recordingAudioNote": "Enregistrement audio...",
-  
+
   // Chat - placeholders
   "chat.placeholder.normal.listening": "Écoute en {language}...",
   "chat.placeholder.normal.sttActive": "Parlez en {language} ou tapez...",
@@ -81,7 +126,7 @@ export const frTranslations: Record<string, string> = {
   "chat.placeholder.suggestion.listening": "Parlez {language} pour traduire...",
   "chat.placeholder.suggestion.sttActive": "Parlez ou tapez en {language} pour traduire...",
   "chat.placeholder.suggestion.sttInactive": "Tapez en {language} pour traduire...",
-  
+
   // Chat - camera
   "chat.camera.turnOn": "Activer l'aperçu caméra",
   "chat.camera.turnOff": "Désactiver l'aperçu caméra",
@@ -89,28 +134,28 @@ export const frTranslations: Record<string, string> = {
   "chat.camera.captureOrRecord": "Appuyez pour photo, maintenez pour vidéo",
   "chat.camera.stopRecording": "Arrêter l'enregistrement",
   "chat.bookIcon.toggleImageGen": "Activer/désactiver le mode génération d'image",
-  
+
   // Chat - image
   "chat.imagePreview.alt": "Aperçu",
   "chat.image.dragToEnlarge": "Faites glisser le coin pour agrandir",
   "chat.image.dragToShrink": "Faites glisser le coin pour réduire",
   "chat.annotateImage": "Annoter l'image",
   "chat.annotateVideoFrame": "Annoter l'image actuelle",
-  
+
   // Chat - annotate modal
   "chat.annotateModal.editingPreviewAlt": "Image à annoter",
   "chat.annotateModal.cancel": "Annuler",
   "chat.annotateModal.saveAndAttach": "Enregistrer et joindre",
   "chat.annotateModal.undo": "Annuler",
-  
+
   // Chat - suggestions
   "chat.suggestion.speak": "Dire : \"{suggestion}\"",
   "chat.suggestion.ariaLabel": "Dire la suggestion : {suggestion}",
   "chat.suggestion.toggleCreateMode": "Activer/désactiver le mode création de suggestion",
   "chat.suggestion.createAction": "Créer une suggestion",
   "chat.suggestion.creating": "Création de la suggestion...",
-  
-  // Chat - maestro status
+
+  // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro est inactif",
   "chat.maestro.title.idle": "Maestro est actuellement inactif.",
   "chat.maestro.resting": "Maestro se repose...",
@@ -127,8 +172,8 @@ export const frTranslations: Record<string, string> = {
   "chat.maestro.title.listening": "Maestro attend votre saisie ou votre voix.",
   "chat.maestro.holding": "Maestro est en attente",
   "chat.maestro.title.holding": "Maestro est en attente (réactivation en pause)",
-  
-  // Chat - bookmark
+
+  // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "Messages cachés au-dessus",
   "chat.bookmark.isHere": "Le marque-page est ici",
   "chat.bookmark.setHere": "Définir le marque-page ici",
@@ -139,15 +184,15 @@ export const frTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Afficher un de plus",
   "chat.bookmark.incrementTitle": "Plus",
   "chat.bookmark.hiddenBelowHeaderAria": "Messages cachés en dessous",
-  
+
   // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Optimisation de la vidéo...",
   "chat.sendPrep.optimizingImage": "Optimisation de l'image...",
   "chat.sendPrep.preparingMedia": "Préparation du média...",
   "chat.sendPrep.uploadingMedia": "Téléchargement du média...",
   "chat.sendPrep.finalizing": "Finalisation...",
-  
-  // Chat - header activity tokens
+
+  // Chat - header activity tokens (used via activityTokens.ts)
   "chat.header.annotating": "Annotation",
   "chat.header.recordingAudio": "Enregistrement audio",
   "chat.header.recordingVideo": "Enregistrement vidéo",
@@ -157,7 +202,7 @@ export const frTranslations: Record<string, string> = {
   "chat.header.watchingVideo": "Visionnage vidéo",
   "chat.header.viewingAbove": "Affichage des messages précédents",
   "chat.header.liveSession": "Session en direct",
-  
+
   // Chat - live session
   "chat.liveSession.stop": "Arrêter le direct",
   "chat.liveSession.retry": "Réessayer le direct",
@@ -178,7 +223,7 @@ export const frTranslations: Record<string, string> = {
   "chat.error.pauseVideoToAnnotate": "Mettez la vidéo en pause pour annoter l'image actuelle",
   "chat.error.imageGenInterrupted": "La génération d'image a été interrompue.",
   "chat.error.thinkingInterrupted": "La réponse de l'IA a été interrompue.",
-  
+
   // Errors - general
   "error.noLanguagePair": "Erreur critique : Aucune paire de langues sélectionnée.",
   "error.translationFailed": "Échec de la traduction. Veuillez réessayer.",
@@ -195,8 +240,8 @@ export const frTranslations: Record<string, string> = {
   "error.cameraUnknown": "Une erreur inconnue s'est produite lors de l'accès à la caméra.",
   "error.cameraStreamNotAvailable": "Flux caméra non disponible pour la capture.",
   "error.imageCaptureGeneric": "Erreur inconnue lors de la capture d'image.",
-  
-  // Errors - visual context
+
+  // Errors - visual context (dynamically constructed with prefix)
   "error.visualContextVideoElementNotReady": "Élément vidéo du contexte visuel non prêt.",
   "error.snapshotVideoElementNotReady": "Élément vidéo pour la capture non prêt.",
   "error.visualContextCameraAccessNotSupported": "Accès caméra non pris en charge pour le contexte visuel.",
