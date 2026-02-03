@@ -51,7 +51,6 @@ export interface UseDataBackupReturn {
 const BACKUP_FORMAT = 'ndjson-v1';
 const BACKUP_EXT = 'ndjson';
 const BACKUP_MIME = 'application/x-ndjson';
-const LEGACY_JSON_MAX_SIZE = 100 * 1024 * 1024; // 100MB guard for old monolithic JSON backups
 const MAX_CHUNK_CHARS = 1_000_000; // ~1MB per NDJSON line
 const MAX_CHUNK_MESSAGES = 200;
 
@@ -121,38 +120,21 @@ const createNativeLineWriter = (path: string, directory: Directory) => {
 
 const createWebLineWriter = async (filename: string): Promise<BackupLineWriter> => {
   const picker = (typeof window !== 'undefined' ? (window as any).showSaveFilePicker : undefined) as undefined | ((options?: any) => Promise<any>);
-  if (typeof picker === 'function') {
-    const handle = await picker({
-      suggestedName: filename,
-      types: [{ description: 'Maestro Backup', accept: { [BACKUP_MIME]: ['.ndjson', '.jsonl'] } }],
-      excludeAcceptAllOption: false,
-    });
-    const writable = await handle.createWritable();
-    return {
-      write: async (line: string) => {
-        await writable.write(line);
-      },
-      close: async () => {
-        await writable.close();
-      },
-    };
+  if (typeof picker !== 'function') {
+    throw new Error('BROWSER_NOT_SUPPORTED');
   }
-
-  const chunks: string[] = [];
+  const handle = await picker({
+    suggestedName: filename,
+    types: [{ description: 'Maestro Backup', accept: { [BACKUP_MIME]: ['.ndjson', '.jsonl'] } }],
+    excludeAcceptAllOption: false,
+  });
+  const writable = await handle.createWritable();
   return {
     write: async (line: string) => {
-      chunks.push(line);
+      await writable.write(line);
     },
     close: async () => {
-      const blob = new Blob(chunks, { type: BACKUP_MIME });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      await writable.close();
     },
   };
 };
@@ -165,19 +147,6 @@ const readFileAsText = (file: Blob): Promise<string> =>
     reader.onabort = (e) => reject(e);
     reader.readAsText(file);
   });
-
-const sniffBackupFormat = async (file: File): Promise<'ndjson' | 'json'> => {
-  const name = (file.name || '').toLowerCase();
-  if (name.endsWith('.ndjson') || name.endsWith('.jsonl')) return 'ndjson';
-  try {
-    const head = await readFileAsText(file.slice(0, 2048));
-    const trimmed = head.trimStart();
-    if (trimmed.includes('"format":"ndjson-v1"') || trimmed.startsWith('{"type":"header"')) return 'ndjson';
-  } catch {
-    // ignore sniff errors; fall back to legacy JSON
-  }
-  return 'json';
-};
 
 const streamNdjsonLines = async (file: File, onLine: (line: string) => Promise<void> | void) => {
   if (typeof (file as any).stream !== 'function') {
@@ -335,6 +304,13 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
         if (isCancelError(err)) {
           return;
         }
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg === 'BROWSER_NOT_SUPPORTED') {
+          if (!isAuto) {
+            alert(t('startPage.browserNotSupported') || 'Your browser does not support file saving. Please use Chrome or Edge.');
+          }
+          return;
+        }
         throw err;
       }
     } catch (error) {
@@ -342,6 +318,12 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
         return;
       }
       const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg === 'BROWSER_NOT_SUPPORTED') {
+        if (!isAuto) {
+          alert(t('startPage.browserNotSupported') || 'Your browser does not support file saving. Please use Chrome or Edge.');
+        }
+        return;
+      }
       console.error("Failed to save all chats:", error);
       if (!isAuto) {
         alert(`${t('startPage.saveError')}\n${errorMsg}`);
@@ -393,6 +375,28 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
   }, [t, setMessages, setTempNativeLangCode, setTempTargetLangCode, setIsLanguageSelectionOpen]);
 
   const loadNdjsonBackup = useCallback(async (file: File) => {
+    // --- Validation pass: ensure file has valid header before clearing DB ---
+    let hasValidHeader = false;
+    let validLineCount = 0;
+    await streamNdjsonLines(file, async (line) => {
+      let parsed: any;
+      try {
+        parsed = JSON.parse(line);
+      } catch {
+        return; // Skip malformed lines in validation
+      }
+      if (parsed && typeof parsed === 'object') {
+        validLineCount += 1;
+        if (parsed.type === 'header' && parsed.format === BACKUP_FORMAT) {
+          hasValidHeader = true;
+        }
+      }
+    });
+    if (!hasValidHeader || validLineCount < 2) {
+      throw new Error('INVALID_BACKUP_FORMAT');
+    }
+
+    // --- Actual import pass ---
     let globalProfileText: string | null = null;
     let importedLoadingGifs: string[] | null = null;
     let importedMaestroProfile: any | null = null;
@@ -412,7 +416,13 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
     };
 
     await streamNdjsonLines(file, async (line) => {
-      const parsed = JSON.parse(line);
+      let parsed: any;
+      try {
+        parsed = JSON.parse(line);
+      } catch (parseErr) {
+        console.warn('Skipping malformed line in backup:', parseErr);
+        return;
+      }
       if (!parsed || typeof parsed !== 'object') return;
       const type = parsed.type;
 
@@ -491,57 +501,21 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
   const handleLoadAllChats = useCallback(async (file: File) => {
     await handleSaveAllChats({ auto: true });
     try {
-      const format = await sniffBackupFormat(file);
-      if (format === 'ndjson') {
-        await loadNdjsonBackup(file);
-        return;
+      const name = (file.name || '').toLowerCase();
+      if (!name.endsWith('.ndjson') && !name.endsWith('.jsonl')) {
+        throw new Error('UNSUPPORTED_FORMAT');
       }
-
-      if (file.size > LEGACY_JSON_MAX_SIZE) {
-        alert(t('startPage.loadLegacyTooLarge'));
-        return;
-      }
-
-      const content = await readFileAsText(file);
-      const parsed = JSON.parse(content);
-      if (typeof parsed !== 'object' || parsed === null) throw new Error("Invalid format");
-      let chats: Record<string, ChatMessage[]> = {};
-      let metas: Record<string, any> | null = null;
-      let globalProfileText: string | null = null;
-      let importedLoadingGifs: string[] | null = null;
-      let importedMaestroProfile: any | null = null;
-
-      if ('chats' in parsed) {
-        chats = parsed.chats || {};
-        metas = parsed.metas || null;
-        globalProfileText = typeof parsed.globalProfile === 'string' ? parsed.globalProfile : null;
-        if (parsed.assets && Array.isArray(parsed.assets.loadingGifs)) {
-          importedLoadingGifs = parsed.assets.loadingGifs as string[];
-        }
-        if (parsed.assets && parsed.assets.maestroProfile && typeof parsed.assets.maestroProfile === 'object') {
-          const mp = parsed.assets.maestroProfile as any;
-          if (mp && (typeof mp.dataUrl === 'string' || typeof mp.uri === 'string')) {
-            importedMaestroProfile = {
-              dataUrl: typeof mp.dataUrl === 'string' ? mp.dataUrl : undefined,
-              mimeType: typeof mp.mimeType === 'string' ? mp.mimeType : undefined,
-              uri: typeof mp.uri === 'string' ? mp.uri : undefined,
-              updatedAt: typeof mp.updatedAt === 'number' ? mp.updatedAt : Date.now(),
-            };
-          }
-        }
-      } else {
-        chats = parsed as Record<string, ChatMessage[]>;
-      }
-
-      await clearAndSaveAllHistoriesDB(chats, metas, null, globalProfileText);
-      await applyImportedAssets(importedLoadingGifs, importedMaestroProfile);
-      const loadedCount = Object.keys(chats).length;
-      await finalizeLoad(loadedCount);
+      await loadNdjsonBackup(file);
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       console.error("Failed to load chats:", e);
-      alert(t('startPage.loadError'));
+      if (errMsg === 'INVALID_BACKUP_FORMAT' || errMsg === 'UNSUPPORTED_FORMAT') {
+        alert(t('startPage.invalidBackupFormat') || 'Invalid backup file. Please select a valid Maestro backup (.ndjson) file.');
+      } else {
+        alert(t('startPage.loadError'));
+      }
     }
-  }, [handleSaveAllChats, t, applyImportedAssets, finalizeLoad, loadNdjsonBackup]);
+  }, [handleSaveAllChats, t, loadNdjsonBackup]);
 
   return {
     handleSaveAllChats,

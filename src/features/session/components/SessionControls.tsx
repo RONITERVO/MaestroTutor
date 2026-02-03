@@ -446,7 +446,7 @@ const SessionControls: React.FC = () => {
               <IconTrash className="w-4 h-4" />
             </button>
           </div>
-          <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".json,.ndjson,.jsonl" className="hidden" />
+          <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".ndjson,.jsonl" className="hidden" />
 
           {/* Right: Maestro Avatar Cluster */}
           <div
