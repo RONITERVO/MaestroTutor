@@ -27,9 +27,12 @@ export const enTranslations: Record<string, string> = {
   "startPage.noMessagesToTrim": "No messages before the bookmark to remove.",
   "startPage.trimSuccess": "Removed {count} messages before the bookmark.",
   "startPage.trimError": "Failed to trim messages. Please try again.",
-  "startPage.noMessagesToAppend": "No messages found in the backup file to append.",
+  "startPage.noMessagesToAppend": "No messages found in the backup file to combine.",
   "startPage.noPairInBackup": "The backup file does not contain messages for your current language pair. Please select a backup that matches your current chat.",
   "startPage.appendSuccess": "Successfully appended {count} messages to the current chat.",
+  "startPage.combineSuccess": "Combined chats: {added} new messages added, {total} total messages.",
+  "startPage.combineNoDuplicates": "All messages were already in your chat. No changes made.",
+  "startPage.combineNoChanges": "No new messages to add. Your chat is unchanged.",
   "startPage.invalidBackupFormat": "Invalid backup file. Please select a valid Maestro backup (.ndjson) file.",
   "startPage.browserNotSupported": "Your browser does not support file saving. Please use Chrome or Edge.",
 

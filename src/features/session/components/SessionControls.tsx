@@ -57,13 +57,26 @@ const SessionControls: React.FC = () => {
 
   const [maestroAsset, setMaestroAsset] = useState<MaestroProfileAsset | null>(null);
   const [isUploadingMaestro, setIsUploadingMaestro] = useState(false);
-  const [resetMode, setResetMode] = useState(false);
-  const [resetConfirm, setResetConfirm] = useState('');
-  const [trimMode, setTrimMode] = useState(false);
-  const [trimConfirm, setTrimConfirm] = useState('');
   const [controlMode, setControlMode] = useState<'none' | 'all' | 'this'>('none');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileText, setProfileText] = useState('');
+  
+  // Unified pending action confirmation system
+  type PendingActionType = 'none' | 'saveAll' | 'loadAll' | 'reset' | 'saveThis' | 'combine' | 'trim';
+  const [pendingAction, setPendingAction] = useState<PendingActionType>('none');
+  const [confirmInput, setConfirmInput] = useState('');
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  
+  // Action configuration: keyword, color scheme, description
+  const ACTION_CONFIG: Record<PendingActionType, { keyword: string; label: string; description: string; colorClass: string; bgClass: string; borderClass: string; textClass: string; placeholderClass: string; btnClass: string; shadowClass: string }> = {
+    none: { keyword: '', label: '', description: '', colorClass: '', bgClass: '', borderClass: '', textClass: '', placeholderClass: '', btnClass: '', shadowClass: '' },
+    saveAll: { keyword: 'SAVE', label: 'Save All', description: 'Export all chats to backup file', colorClass: 'text-emerald-300', bgClass: 'bg-emerald-950/30', borderClass: 'border-emerald-500/30', textClass: 'text-emerald-100', placeholderClass: 'placeholder-emerald-400/30', btnClass: 'bg-emerald-500/80 hover:bg-emerald-500', shadowClass: 'shadow-emerald-900/20' },
+    loadAll: { keyword: 'LOAD', label: 'Load All', description: 'Replace all chats with backup file', colorClass: 'text-blue-300', bgClass: 'bg-blue-950/30', borderClass: 'border-blue-500/30', textClass: 'text-blue-100', placeholderClass: 'placeholder-blue-400/30', btnClass: 'bg-blue-500/80 hover:bg-blue-500', shadowClass: 'shadow-blue-900/20' },
+    reset: { keyword: 'DELETE', label: 'Reset', description: 'Backup & delete all data', colorClass: 'text-red-300', bgClass: 'bg-red-950/30', borderClass: 'border-red-500/30', textClass: 'text-red-100', placeholderClass: 'placeholder-red-400/30', btnClass: 'bg-red-500/80 hover:bg-red-500', shadowClass: 'shadow-red-900/20' },
+    saveThis: { keyword: 'SAVE', label: 'Save Chat', description: 'Export this chat only', colorClass: 'text-cyan-300', bgClass: 'bg-cyan-950/30', borderClass: 'border-cyan-500/30', textClass: 'text-cyan-100', placeholderClass: 'placeholder-cyan-400/30', btnClass: 'bg-cyan-500/80 hover:bg-cyan-500', shadowClass: 'shadow-cyan-900/20' },
+    combine: { keyword: 'COMBINE', label: 'Combine', description: 'Merge backup into this chat', colorClass: 'text-violet-300', bgClass: 'bg-violet-950/30', borderClass: 'border-violet-500/30', textClass: 'text-violet-100', placeholderClass: 'placeholder-violet-400/30', btnClass: 'bg-violet-500/80 hover:bg-violet-500', shadowClass: 'shadow-violet-900/20' },
+    trim: { keyword: 'TRIM', label: 'Trim', description: 'Remove messages before bookmark', colorClass: 'text-orange-300', bgClass: 'bg-orange-950/30', borderClass: 'border-orange-500/30', textClass: 'text-orange-100', placeholderClass: 'placeholder-orange-400/30', btnClass: 'bg-orange-500/80 hover:bg-orange-500', shadowClass: 'shadow-orange-900/20' },
+  };
 
   // Touch support for avatar cluster
   const [isTouchActive, setIsTouchActive] = useState(false);
@@ -272,100 +285,125 @@ const SessionControls: React.FC = () => {
 
   const handleLoadFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && handleLoadAllChats) {
-      try {
-        if (!loadTokenRef.current) {
-          loadTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
-        }
-        await handleLoadAllChats(file);
-      } finally {
-        if (loadTokenRef.current) {
-          endUiTask(loadTokenRef.current);
-          loadTokenRef.current = null;
-        }
-      }
-    }
     event.target.value = '';
-  };
-
-  const handleSave = async () => {
-    if (handleSaveAllChats) {
-      if (!saveTokenRef.current) {
-        saveTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
-      }
-      try {
-        await handleSaveAllChats();
-      } finally {
-        if (saveTokenRef.current) {
-          endUiTask(saveTokenRef.current);
-          saveTokenRef.current = null;
-        }
-      }
-    }
-  };
-
-  const handleResetConfirm = async () => {
-    if (resetConfirm !== 'DELETE') return;
-    try {
-      const safe = `backup-before-reset-${new Date().toISOString().slice(0, 10)}`;
-      if (handleSaveAllChats) await handleSaveAllChats({ filename: `${safe}.ndjson`, auto: true });
-      await new Promise(r => setTimeout(r, 500));
-      await wipeLocalMemoryAndDb();
-      window.location.reload();
-    } catch {
-      setResetConfirm('');
-    }
-  };
-
-  const handleTrimConfirm = async () => {
-    if (trimConfirm !== 'DELETE') return;
-    try {
-      if (!trimTokenRef.current) {
-        trimTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
-      }
-      await handleTrimBeforeBookmark();
-      setTrimMode(false);
-      setTrimConfirm('');
-    } catch {
-      setTrimConfirm('');
-    } finally {
-      if (trimTokenRef.current) {
-        endUiTask(trimTokenRef.current);
-        trimTokenRef.current = null;
-      }
-    }
-  };
-
-  const handleSaveCurrentChatClick = async () => {
-    if (!saveCurrentTokenRef.current) {
-      saveCurrentTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
-    }
-    try {
-      await handleSaveCurrentChat();
-    } finally {
-      if (saveCurrentTokenRef.current) {
-        endUiTask(saveCurrentTokenRef.current);
-        saveCurrentTokenRef.current = null;
-      }
+    if (file) {
+      // Stage file and show confirmation
+      setPendingFile(file);
+      setPendingAction('loadAll');
+      setConfirmInput('');
     }
   };
 
   const handleAppendFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && handleAppendToCurrentChat) {
-      try {
-        if (!appendTokenRef.current) {
-          appendTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
-        }
-        await handleAppendToCurrentChat(file);
-      } finally {
-        if (appendTokenRef.current) {
-          endUiTask(appendTokenRef.current);
-          appendTokenRef.current = null;
-        }
-      }
-    }
     event.target.value = '';
+    if (file) {
+      // Stage file and show confirmation
+      setPendingFile(file);
+      setPendingAction('combine');
+      setConfirmInput('');
+    }
+  };
+
+  const cancelPendingAction = () => {
+    setPendingAction('none');
+    setConfirmInput('');
+    setPendingFile(null);
+  };
+
+  const executePendingAction = async () => {
+    const config = ACTION_CONFIG[pendingAction];
+    if (confirmInput.toUpperCase() !== config.keyword) return;
+    
+    try {
+      switch (pendingAction) {
+        case 'saveAll':
+          if (!saveTokenRef.current) {
+            saveTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
+          }
+          try {
+            await handleSaveAllChats();
+          } finally {
+            if (saveTokenRef.current) {
+              endUiTask(saveTokenRef.current);
+              saveTokenRef.current = null;
+            }
+          }
+          break;
+          
+        case 'loadAll':
+          if (pendingFile && handleLoadAllChats) {
+            if (!loadTokenRef.current) {
+              loadTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
+            }
+            try {
+              await handleLoadAllChats(pendingFile);
+            } finally {
+              if (loadTokenRef.current) {
+                endUiTask(loadTokenRef.current);
+                loadTokenRef.current = null;
+              }
+            }
+          }
+          break;
+          
+        case 'reset':
+          const safe = `backup-before-reset-${new Date().toISOString().slice(0, 10)}`;
+          if (handleSaveAllChats) await handleSaveAllChats({ filename: `${safe}.ndjson`, auto: true });
+          await new Promise(r => setTimeout(r, 500));
+          await wipeLocalMemoryAndDb();
+          window.location.reload();
+          return; // Don't clear state - page reloads
+          
+        case 'saveThis':
+          if (!saveCurrentTokenRef.current) {
+            saveCurrentTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
+          }
+          try {
+            await handleSaveCurrentChat();
+          } finally {
+            if (saveCurrentTokenRef.current) {
+              endUiTask(saveCurrentTokenRef.current);
+              saveCurrentTokenRef.current = null;
+            }
+          }
+          break;
+          
+        case 'combine':
+          if (pendingFile && handleAppendToCurrentChat) {
+            if (!appendTokenRef.current) {
+              appendTokenRef.current = createUiToken(TOKEN_SUBTYPE.LOAD_POPUP);
+            }
+            try {
+              await handleAppendToCurrentChat(pendingFile);
+            } finally {
+              if (appendTokenRef.current) {
+                endUiTask(appendTokenRef.current);
+                appendTokenRef.current = null;
+              }
+            }
+          }
+          break;
+          
+        case 'trim':
+          if (!trimTokenRef.current) {
+            trimTokenRef.current = createUiToken(TOKEN_SUBTYPE.SAVE_POPUP);
+          }
+          try {
+            await handleTrimBeforeBookmark();
+          } finally {
+            if (trimTokenRef.current) {
+              endUiTask(trimTokenRef.current);
+              trimTokenRef.current = null;
+            }
+          }
+          break;
+      }
+    } catch (err) {
+      console.error('Action failed:', err);
+    }
+    
+    cancelPendingAction();
   };
 
   // Click handlers that ignore emulated clicks after touch gestures
@@ -413,33 +451,41 @@ const SessionControls: React.FC = () => {
   const voiceBgClass = getVoiceColorRing(currentVoiceName).split(' ')[1] || 'bg-blue-900/40';
 
   return (
-    <div className="w-full py-3 px-4 min-h-[64px] flex items-center justify-between gap-4">
+    <div className="w-full py-3 px-4 min-h-[64px] flex items-center justify-between gap-2">
 
-      {/* --- Mode: Reset Confirmation --- */}
-      {resetMode ? (
-        <div className="flex-1 flex items-center justify-between animate-fade-in gap-3">
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-xs font-bold text-red-300 uppercase tracking-wider whitespace-nowrap">Reset:</span>
+      {/* --- Mode: Pending Action Confirmation --- */}
+      {pendingAction !== 'none' ? (
+        <div className="flex-1 flex items-center animate-fade-in gap-2 min-w-0">
+          <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-bold uppercase tracking-wider whitespace-nowrap ${ACTION_CONFIG[pendingAction].colorClass}`}>
+                {ACTION_CONFIG[pendingAction].label}:
+              </span>
+              <span className="text-xs text-slate-400 truncate hidden sm:inline">
+                {ACTION_CONFIG[pendingAction].description}
+              </span>
+            </div>
             <input
-              className="flex-1 min-w-[100px] bg-red-950/30 border border-red-500/30 rounded px-2 py-1.5 text-sm text-red-100 placeholder-red-400/30 focus:outline-none focus:border-red-400 focus:bg-red-950/50 transition-colors"
-              placeholder='Type "DELETE"'
-              value={resetConfirm}
-              onChange={(e) => setResetConfirm(e.target.value)}
+              className={`w-full ${ACTION_CONFIG[pendingAction].bgClass} border ${ACTION_CONFIG[pendingAction].borderClass} rounded px-2 py-1 text-sm ${ACTION_CONFIG[pendingAction].textClass} ${ACTION_CONFIG[pendingAction].placeholderClass} focus:outline-none focus:border-opacity-60 transition-colors`}
+              placeholder={`Type "${ACTION_CONFIG[pendingAction].keyword}" to confirm`}
+              value={confirmInput}
+              onChange={(e) => setConfirmInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && executePendingAction()}
               autoFocus
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <button
               type="button"
-              onClick={handleResetConfirm}
-              disabled={resetConfirm !== 'DELETE'}
-              className="p-2 bg-red-500/80 hover:bg-red-500 rounded-full text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-red-900/20"
+              onClick={executePendingAction}
+              disabled={confirmInput.toUpperCase() !== ACTION_CONFIG[pendingAction].keyword}
+              className={`p-2 ${ACTION_CONFIG[pendingAction].btnClass} rounded-full text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg ${ACTION_CONFIG[pendingAction].shadowClass}`}
             >
               <IconCheck className="w-4 h-4" />
             </button>
             <button
               type="button"
-              onClick={() => { setResetMode(false); setResetConfirm(''); }}
+              onClick={cancelPendingAction}
               className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-full text-slate-300 transition-colors"
             >
               <IconUndo className="w-4 h-4" />
@@ -448,11 +494,11 @@ const SessionControls: React.FC = () => {
         </div>
 
       ) : isEditingProfile ? (
-        <div className="flex-1 flex items-center justify-between animate-fade-in gap-3">
-          <div className="flex items-center gap-2 flex-1">
+        <div className="flex-1 flex items-center justify-between animate-fade-in gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
             <span className="text-xs font-bold text-blue-300 uppercase tracking-wider whitespace-nowrap">Profile:</span>
             <input
-              className="flex-1 min-w-[100px] bg-blue-950/30 border border-blue-500/30 rounded px-2 py-1.5 text-sm text-blue-100 placeholder-blue-400/30 focus:outline-none focus:border-blue-400 focus:bg-blue-950/50 transition-colors"
+              className="flex-1 min-w-0 bg-blue-950/30 border border-blue-500/30 rounded px-2 py-1.5 text-sm text-blue-100 placeholder-blue-400/30 focus:outline-none focus:border-blue-400 focus:bg-blue-950/50 transition-colors"
               placeholder="Your name or details..."
               value={profileText}
               onChange={(e) => setProfileText(e.target.value)}
@@ -460,7 +506,7 @@ const SessionControls: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && handleProfileSave()}
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <button
               type="button"
               onClick={handleProfileSave}
@@ -471,37 +517,6 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsEditingProfile(false)}
-              className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-full text-slate-300 transition-colors"
-            >
-              <IconUndo className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-      ) : trimMode ? (
-        <div className="flex-1 flex items-center justify-between animate-fade-in gap-3">
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-xs font-bold text-orange-300 uppercase tracking-wider whitespace-nowrap">Trim:</span>
-            <input
-              className="flex-1 min-w-[100px] bg-orange-950/30 border border-orange-500/30 rounded px-2 py-1.5 text-sm text-orange-100 placeholder-orange-400/30 focus:outline-none focus:border-orange-400 focus:bg-orange-950/50 transition-colors"
-              placeholder='Type "DELETE" to trim before bookmark'
-              value={trimConfirm}
-              onChange={(e) => setTrimConfirm(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleTrimConfirm}
-              disabled={trimConfirm !== 'DELETE'}
-              className="p-2 bg-orange-500/80 hover:bg-orange-500 rounded-full text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-orange-900/20"
-            >
-              <IconCheck className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => { setTrimMode(false); setTrimConfirm(''); }}
               className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-full text-slate-300 transition-colors"
             >
               <IconUndo className="w-4 h-4" />
@@ -543,7 +558,7 @@ const SessionControls: React.FC = () => {
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveChats') || 'Save All Chats'}>
+                <button type="button" onClick={() => { setPendingAction('saveAll'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveChats') || 'Save All Chats'}>
                   <IconSave className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
@@ -551,26 +566,26 @@ const SessionControls: React.FC = () => {
                   <IconFolderOpen className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => setResetMode(true)} className="p-2 hover:bg-red-500/20 rounded-full text-slate-300 hover:text-red-200 transition-colors" title="Backup & Reset">
+                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-red-500/20 rounded-full text-slate-300 hover:text-red-200 transition-colors" title="Backup & Reset">
                   <IconTrash className="w-4 h-4" />
                 </button>
               </>
             ) : (
-              /* This Chat: Save This, Append, Trim, Back */
+              /* This Chat: Save This, Combine, Trim, Back */
               <>
                 <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title="Back">
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={handleSaveCurrentChatClick} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveThisChat') || 'Save This Chat'}>
+                <button type="button" onClick={() => { setPendingAction('saveThis'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveThisChat') || 'Save This Chat'}>
                   <IconBookmark className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => appendFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.appendToChat') || 'Append to Chat'}>
+                <button type="button" onClick={() => appendFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.appendToChat') || 'Combine Chats'}>
                   <IconPlus className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => setTrimMode(true)} className="p-2 hover:bg-orange-500/20 rounded-full text-slate-300 hover:text-orange-200 transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
+                <button type="button" onClick={() => { setPendingAction('trim'); setConfirmInput(''); }} className="p-2 hover:bg-orange-500/20 rounded-full text-slate-300 hover:text-orange-200 transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
                   <IconScissors className="w-4 h-4" />
                 </button>
               </>
