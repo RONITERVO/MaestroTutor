@@ -57,8 +57,6 @@ export const jaTranslations: Record<string, string> = {
   "sessionControls.editProfile": "ユーザープロフィールを編集",
   "sessionControls.allChatsControls": "全チャット操作",
   "sessionControls.thisChatsControls": "現在のチャット操作",
-  "sessionControls.all": "すべて",
-  "sessionControls.this": "このチャット",
   "sessionControls.back": "戻る",
   "sessionControls.backupAndReset": "バックアップとリセット",
   "sessionControls.typeToConfirm": "確認のため「{keyword}」と入力してください",

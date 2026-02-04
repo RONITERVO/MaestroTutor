@@ -58,8 +58,6 @@ export const enTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Edit User Profile",
   "sessionControls.allChatsControls": "All Chats Controls",
   "sessionControls.thisChatsControls": "This Chat Controls",
-  "sessionControls.all": "All",
-  "sessionControls.this": "This",
   "sessionControls.back": "Back",
   "sessionControls.backupAndReset": "Backup & Reset",
   "sessionControls.typeToConfirm": "Type \"{keyword}\" to confirm",
@@ -131,6 +129,7 @@ export const enTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Activate camera preview",
   "chat.camera.turnOff": "Deactivate camera preview",
+  "chat.camera.selectCamera": "Select camera",
   "chat.camera.imageGenCameraLabel": "Image Generation",
   "chat.camera.captureOrRecord": "Tap for photo, long press for video",
   "chat.camera.stopRecording": "Stop Recording",

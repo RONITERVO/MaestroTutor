@@ -57,8 +57,6 @@ export const hiTranslations: Record<string, string> = {
   "sessionControls.editProfile": "उपयोगकर्ता प्रोफ़ाइल संपादित करें",
   "sessionControls.allChatsControls": "सभी चैट नियंत्रण",
   "sessionControls.thisChatsControls": "यह चैट नियंत्रण",
-  "sessionControls.all": "सभी",
-  "sessionControls.this": "यह",
   "sessionControls.back": "वापस",
   "sessionControls.backupAndReset": "बैकअप और रीसेट",
   "sessionControls.typeToConfirm": "पुष्टि करने के लिए \"{keyword}\" टाइप करें",

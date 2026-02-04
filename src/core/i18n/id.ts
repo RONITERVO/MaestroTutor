@@ -57,8 +57,6 @@ export const idTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Edit Profil Pengguna",
   "sessionControls.allChatsControls": "Kontrol Semua Obrolan",
   "sessionControls.thisChatsControls": "Kontrol Obrolan Ini",
-  "sessionControls.all": "Semua",
-  "sessionControls.this": "Ini",
   "sessionControls.back": "Kembali",
   "sessionControls.backupAndReset": "Cadangkan & Atur Ulang",
   "sessionControls.typeToConfirm": "Ketik \"{keyword}\" untuk konfirmasi",

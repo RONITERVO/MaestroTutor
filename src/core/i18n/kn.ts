@@ -57,8 +57,6 @@ export const knTranslations: Record<string, string> = {
   "sessionControls.editProfile": "ಬಳಕೆದಾರರ ಪ್ರೊಫೈಲ್ ಎಡಿಟ್ ಮಾಡಿ",
   "sessionControls.allChatsControls": "ಎಲ್ಲಾ ಚಾಟ್ ನಿಯಂತ್ರಣಗಳು",
   "sessionControls.thisChatsControls": "ಈ ಚಾಟ್‌ನ ನಿಯಂತ್ರಣಗಳು",
-  "sessionControls.all": "ಎಲ್ಲಾ",
-  "sessionControls.this": "ಈ",
   "sessionControls.back": "ಹಿಂದಕ್ಕೆ",
   "sessionControls.backupAndReset": "ಬ್ಯಾಕಪ್ ಮತ್ತು ಮರುಹೊಂದಿಸಿ",
   "sessionControls.typeToConfirm": "ಖಚಿತಪಡಿಸಲು \"{keyword}\" ಎಂದು ಟೈಪ್ ಮಾಡಿ",

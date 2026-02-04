@@ -57,8 +57,6 @@ export const mrTranslations: Record<string, string> = {
   "sessionControls.editProfile": "वापरकर्ता प्रोफाइल संपादित करा",
   "sessionControls.allChatsControls": "सर्व गप्पा नियंत्रणे",
   "sessionControls.thisChatsControls": "या गप्पांची नियंत्रणे",
-  "sessionControls.all": "सर्व",
-  "sessionControls.this": "हे",
   "sessionControls.back": "मागे",
   "sessionControls.backupAndReset": "बॅकअप आणि रीसेट",
   "sessionControls.typeToConfirm": "पुष्टी करण्यासाठी \"{keyword}\" टाइप करा",

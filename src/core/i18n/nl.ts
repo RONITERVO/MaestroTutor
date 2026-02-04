@@ -57,8 +57,6 @@ export const nlTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Gebruikersprofiel bewerken",
   "sessionControls.allChatsControls": "Bediening voor alle chats",
   "sessionControls.thisChatsControls": "Bediening voor deze chat",
-  "sessionControls.all": "Alles",
-  "sessionControls.this": "Deze",
   "sessionControls.back": "Terug",
   "sessionControls.backupAndReset": "Back-up & Reset",
   "sessionControls.typeToConfirm": "Typ \"{keyword}\" om te bevestigen",

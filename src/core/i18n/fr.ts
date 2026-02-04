@@ -57,8 +57,6 @@ export const frTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Modifier le profil utilisateur",
   "sessionControls.allChatsControls": "Contrôles de tous les chats",
   "sessionControls.thisChatsControls": "Contrôles de ce chat",
-  "sessionControls.all": "Tous",
-  "sessionControls.this": "Celui-ci",
   "sessionControls.back": "Retour",
   "sessionControls.backupAndReset": "Sauvegarder & Réinitialiser",
   "sessionControls.typeToConfirm": "Tapez \"{keyword}\" pour confirmer",

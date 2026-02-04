@@ -57,8 +57,6 @@ export const trTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Kullanıcı Profilini Düzenle",
   "sessionControls.allChatsControls": "Tüm Sohbet Kontrolleri",
   "sessionControls.thisChatsControls": "Bu Sohbetin Kontrolleri",
-  "sessionControls.all": "Tümü",
-  "sessionControls.this": "Bu",
   "sessionControls.back": "Geri",
   "sessionControls.backupAndReset": "Yedekle ve Sıfırla",
   "sessionControls.typeToConfirm": "Onaylamak için \"{keyword}\" yazın",

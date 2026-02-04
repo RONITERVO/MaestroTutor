@@ -57,8 +57,6 @@ export const guTranslations: Record<string, string> = {
   "sessionControls.editProfile": "વપરાશકર્તા પ્રોફાઇલ સંપાદિત કરો",
   "sessionControls.allChatsControls": "બધી ચેટ્સ નિયંત્રણો",
   "sessionControls.thisChatsControls": "આ ચેટ નિયંત્રણો",
-  "sessionControls.all": "બધું",
-  "sessionControls.this": "આ",
   "sessionControls.back": "પાછા",
   "sessionControls.backupAndReset": "બેકઅપ અને રીસેટ",
   "sessionControls.typeToConfirm": "પુષ્ટિ કરવા માટે \"{keyword}\" ટાઇપ કરો",

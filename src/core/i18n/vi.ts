@@ -57,8 +57,6 @@ export const viTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Chỉnh sửa hồ sơ người dùng",
   "sessionControls.allChatsControls": "Điều khiển tất cả trò chuyện",
   "sessionControls.thisChatsControls": "Điều khiển trò chuyện này",
-  "sessionControls.all": "Tất cả",
-  "sessionControls.this": "Đây",
   "sessionControls.back": "Quay lại",
   "sessionControls.backupAndReset": "Sao lưu & Đặt lại",
   "sessionControls.typeToConfirm": "Nhập \"{keyword}\" để xác nhận",

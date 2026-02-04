@@ -57,8 +57,6 @@ export const taTranslations: Record<string, string> = {
   "sessionControls.editProfile": "பயனர் சுயவிவரத்தைத் திருத்தவும்",
   "sessionControls.allChatsControls": "அனைத்து அரட்டை கட்டுப்பாடுகள்",
   "sessionControls.thisChatsControls": "இந்த அரட்டை கட்டுப்பாடுகள்",
-  "sessionControls.all": "அனைத்தும்",
-  "sessionControls.this": "இது",
   "sessionControls.back": "பின்செல்",
   "sessionControls.backupAndReset": "காப்புப்பிரதி மற்றும் மீட்டமைப்பு",
   "sessionControls.typeToConfirm": "உறுதிப்படுத்த \"{keyword}\" என தட்டச்சு செய்யவும்",

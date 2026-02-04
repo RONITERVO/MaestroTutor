@@ -57,8 +57,6 @@ export const zhTranslations: Record<string, string> = {
   "sessionControls.editProfile": "编辑用户资料",
   "sessionControls.allChatsControls": "所有聊天控制",
   "sessionControls.thisChatsControls": "此聊天控制",
-  "sessionControls.all": "全部",
-  "sessionControls.this": "此",
   "sessionControls.back": "返回",
   "sessionControls.backupAndReset": "备份并重置",
   "sessionControls.typeToConfirm": "输入 \"{keyword}\" 以确认",
