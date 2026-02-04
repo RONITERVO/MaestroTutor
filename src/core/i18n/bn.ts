@@ -57,8 +57,6 @@ export const bnTranslations: Record<string, string> = {
   "sessionControls.editProfile": "ব্যবহারকারী প্রোফাইল সম্পাদনা করুন",
   "sessionControls.allChatsControls": "সমস্ত চ্যাট নিয়ন্ত্রণ",
   "sessionControls.thisChatsControls": "এই চ্যাট নিয়ন্ত্রণ",
-  "sessionControls.all": "সব",
-  "sessionControls.this": "এই",
   "sessionControls.back": "ফিরে যান",
   "sessionControls.backupAndReset": "ব্যাকআপ ও রিসেট",
   "sessionControls.typeToConfirm": "নিশ্চিত করতে \"{keyword}\" টাইপ করুন",

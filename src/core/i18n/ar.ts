@@ -55,8 +55,6 @@ export const arTranslations: Record<string, string> = {
   "sessionControls.editProfile": "تعديل ملف المستخدم",
   "sessionControls.allChatsControls": "عناصر تحكم جميع المحادثات",
   "sessionControls.thisChatsControls": "عناصر تحكم هذه المحادثة",
-  "sessionControls.all": "الكل",
-  "sessionControls.this": "هذه",
   "sessionControls.back": "رجوع",
   "sessionControls.backupAndReset": "نسخ احتياطي وإعادة تعيين",
   "sessionControls.typeToConfirm": "اكتب \"{keyword}\" للتأكيد",

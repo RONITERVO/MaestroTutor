@@ -57,8 +57,6 @@ export const ruTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Изменить профиль пользователя",
   "sessionControls.allChatsControls": "Управление всеми чатами",
   "sessionControls.thisChatsControls": "Управление этим чатом",
-  "sessionControls.all": "Все",
-  "sessionControls.this": "Этот",
   "sessionControls.back": "Назад",
   "sessionControls.backupAndReset": "Резервная копия и сброс",
   "sessionControls.typeToConfirm": "Введите «{keyword}» для подтверждения",

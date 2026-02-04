@@ -57,8 +57,6 @@ export const koTranslations: Record<string, string> = {
   "sessionControls.editProfile": "사용자 프로필 수정",
   "sessionControls.allChatsControls": "모든 채팅 제어",
   "sessionControls.thisChatsControls": "이 채팅 제어",
-  "sessionControls.all": "전체",
-  "sessionControls.this": "현재",
   "sessionControls.back": "뒤로",
   "sessionControls.backupAndReset": "백업 및 초기화",
   "sessionControls.typeToConfirm": "확인을 위해 \"{keyword}\"를 입력하세요",

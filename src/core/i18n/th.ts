@@ -57,8 +57,6 @@ export const thTranslations: Record<string, string> = {
   "sessionControls.editProfile": "แก้ไขโปรไฟล์ผู้ใช้",
   "sessionControls.allChatsControls": "การควบคุมแชททั้งหมด",
   "sessionControls.thisChatsControls": "การควบคุมแชทนี้",
-  "sessionControls.all": "ทั้งหมด",
-  "sessionControls.this": "นี้",
   "sessionControls.back": "ย้อนกลับ",
   "sessionControls.backupAndReset": "สำรองข้อมูลและรีเซ็ต",
   "sessionControls.typeToConfirm": "พิมพ์ \"{keyword}\" เพื่อยืนยัน",

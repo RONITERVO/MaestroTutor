@@ -60,6 +60,7 @@ const SessionControls: React.FC = () => {
   const [controlMode, setControlMode] = useState<'none' | 'all' | 'this'>('none');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileText, setProfileText] = useState('');
+
   
   // Unified pending action confirmation system
   type PendingActionType = 'none' | 'saveAll' | 'loadAll' | 'reset' | 'saveThis' | 'combine' | 'trim';
@@ -78,11 +79,12 @@ const SessionControls: React.FC = () => {
     trim: { keyword: 'TRIM', label: t('sessionControls.trim.label') || 'Trim', description: t('sessionControls.trim.description') || 'Remove messages before bookmark', colorClass: 'text-orange-300', bgClass: 'bg-orange-950/30', borderClass: 'border-orange-500/30', textClass: 'text-orange-100', placeholderClass: 'placeholder-orange-400/30', btnClass: 'bg-orange-500/80 hover:bg-orange-500', shadowClass: 'shadow-orange-900/20' },
   };
 
-  // Touch support for avatar cluster
-  const [isTouchActive, setIsTouchActive] = useState(false);
-  const [touchSide, setTouchSide] = useState<'left' | 'right' | null>(null);
-  const avatarClusterRef = useRef<HTMLDivElement>(null);
-  const recentTouch = useRef(false);
+  // Unified pointer handling for avatar cluster
+  const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
+  const [highlightedSide, setHighlightedSide] = useState<'left' | 'right' | null>(null);
+  const pointerTypeRef = useRef<'mouse' | 'touch' | 'pen' | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
+  const collapseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const saveTokenRef = useRef<string | null>(null);
   const loadTokenRef = useRef<string | null>(null);
@@ -104,6 +106,13 @@ const SessionControls: React.FC = () => {
       } catch { }
     })();
     return () => { mounted = false; };
+  }, []);
+
+  // Cleanup collapse timer on unmount
+  useEffect(() => {
+    return () => {
+      if (collapseTimeoutRef.current) clearTimeout(collapseTimeoutRef.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -407,22 +416,126 @@ const SessionControls: React.FC = () => {
     cancelPendingAction();
   };
 
-  // Click handlers that ignore emulated clicks after touch gestures
-  const handleLeftButtonClick = useCallback(() => {
-    if (recentTouch.current) {
-      recentTouch.current = false;
-      return;
-    }
-    handleSwapAvatarClick();
-  }, [isUploadingMaestro]); // Note: isUploadingMaestro check is now in the button's conditional onClick
+  // Data attribute for identifying interactive elements
+  const DATA_AVATAR_ACTION = 'data-avatar-action';
 
-  const handleRightButtonClick = useCallback(() => {
-    if (recentTouch.current) {
-      recentTouch.current = false;
-      return;
+  // Find the action target from an element (walks up the DOM tree)
+  const getActionFromElement = useCallback((element: Element | null): string | null => {
+    let current = element;
+    while (current && current !== document.body) {
+      const action = current.getAttribute(DATA_AVATAR_ACTION);
+      if (action) return action;
+      current = current.parentElement;
     }
-    handleVoiceCycle();
-  }, [handleVoiceCycle]);
+    return null;
+  }, []);
+
+  // Clear collapse timer
+  const clearCollapseTimer = useCallback(() => {
+    if (collapseTimeoutRef.current) {
+      clearTimeout(collapseTimeoutRef.current);
+      collapseTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Start collapse timer
+  const startCollapseTimer = useCallback((delay: number = 300) => {
+    clearCollapseTimer();
+    collapseTimeoutRef.current = setTimeout(() => {
+      setIsAvatarExpanded(false);
+      setHighlightedSide(null);
+    }, delay);
+  }, [clearCollapseTimer]);
+
+  // Execute avatar action
+  const executeAvatarAction = useCallback((action: string) => {
+    if (action === 'swap' && !isUploadingMaestro) {
+      handleSwapAvatarClick();
+    } else if (action === 'voice') {
+      handleVoiceCycle();
+    }
+    // Collapse after action
+    startCollapseTimer(200);
+  }, [isUploadingMaestro, handleVoiceCycle, startCollapseTimer]);
+
+  // Unified pointer down handler for avatar cluster
+  const handleAvatarPointerDown = useCallback((e: React.PointerEvent) => {
+    pointerTypeRef.current = e.pointerType as 'mouse' | 'touch' | 'pen';
+    activePointerIdRef.current = e.pointerId;
+    clearCollapseTimer();
+
+    if (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen') {
+      // Touch/pen: expand and highlight
+      setIsAvatarExpanded(true);
+      const action = getActionFromElement(e.target as Element);
+      setHighlightedSide(action === 'swap' ? 'left' : action === 'voice' ? 'right' : null);
+      (e.target as Element).setPointerCapture?.(e.pointerId);
+    }
+  }, [getActionFromElement, clearCollapseTimer]);
+
+  // Unified pointer move handler for avatar cluster
+  const handleAvatarPointerMove = useCallback((e: React.PointerEvent) => {
+    if (activePointerIdRef.current !== e.pointerId) return;
+
+    if (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen') {
+      // Touch/pen: update highlight based on element under pointer
+      const element = document.elementFromPoint(e.clientX, e.clientY);
+      const action = getActionFromElement(element);
+      setHighlightedSide(action === 'swap' ? 'left' : action === 'voice' ? 'right' : null);
+    }
+  }, [getActionFromElement]);
+
+  // Unified pointer up handler for avatar cluster
+  const handleAvatarPointerUp = useCallback((e: React.PointerEvent) => {
+    if (activePointerIdRef.current !== e.pointerId) return;
+
+    (e.target as Element).releasePointerCapture?.(e.pointerId);
+
+    // Get the element under the pointer at release
+    const element = document.elementFromPoint(e.clientX, e.clientY);
+    const action = getActionFromElement(element);
+
+    if (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen') {
+      // Touch/pen: execute action on release if over a valid target
+      if (action) {
+        executeAvatarAction(action);
+      }
+      // Always collapse and reset after touch ends (whether action executed or dragged away)
+      setHighlightedSide(null);
+      setIsAvatarExpanded(false);
+    } else {
+      // Mouse: execute action on click
+      if (action) {
+        executeAvatarAction(action);
+      }
+      setHighlightedSide(null);
+    }
+
+    activePointerIdRef.current = null;
+  }, [getActionFromElement, executeAvatarAction]);
+
+  // Pointer cancel handler
+  const handleAvatarPointerCancel = useCallback((e: React.PointerEvent) => {
+    if (activePointerIdRef.current === e.pointerId) {
+      setHighlightedSide(null);
+      setIsAvatarExpanded(false);
+      activePointerIdRef.current = null;
+    }
+  }, []);
+
+  // Mouse enter/leave for hover expansion (mouse only)
+  const handleAvatarMouseEnter = useCallback(() => {
+    if (pointerTypeRef.current !== 'touch' && pointerTypeRef.current !== 'pen') {
+      clearCollapseTimer();
+      setIsAvatarExpanded(true);
+    }
+  }, [clearCollapseTimer]);
+
+  const handleAvatarMouseLeave = useCallback(() => {
+    if (pointerTypeRef.current !== 'touch' && pointerTypeRef.current !== 'pen') {
+      startCollapseTimer(300);
+    }
+  }, [startCollapseTimer]);
 
   // --- Render Helpers ---
 
@@ -456,16 +569,11 @@ const SessionControls: React.FC = () => {
 
       {/* --- Mode: Pending Action Confirmation --- */}
       {pendingAction !== 'none' ? (
-        <div className="flex-1 flex items-center animate-fade-in gap-2 min-w-0">
-          <div className="flex flex-col flex-1 min-w-0 gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-bold uppercase tracking-wider whitespace-nowrap ${ACTION_CONFIG[pendingAction].colorClass}`}>
-                {ACTION_CONFIG[pendingAction].label}:
-              </span>
-              <span className="text-xs text-slate-400 truncate hidden sm:inline">
-                {ACTION_CONFIG[pendingAction].description}
-              </span>
-            </div>
+        <div className="flex-1 flex items-start animate-fade-in gap-2 min-w-0">
+          <div className="flex flex-col flex-1 min-w-0 gap-1">
+            <span className={`text-xs font-bold uppercase tracking-wider ${ACTION_CONFIG[pendingAction].colorClass}`}>
+              {ACTION_CONFIG[pendingAction].label}:
+            </span>
             <input
               className={`w-full ${ACTION_CONFIG[pendingAction].bgClass} border ${ACTION_CONFIG[pendingAction].borderClass} rounded px-2 py-1 text-sm ${ACTION_CONFIG[pendingAction].textClass} ${ACTION_CONFIG[pendingAction].placeholderClass} focus:outline-none focus:border-opacity-60 transition-colors`}
               placeholder={(t('sessionControls.typeToConfirm') || 'Type "{keyword}" to confirm').replace('{keyword}', ACTION_CONFIG[pendingAction].keyword)}
@@ -474,6 +582,9 @@ const SessionControls: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && executePendingAction()}
               autoFocus
             />
+            <span className="text-xs text-slate-400 break-words">
+              {ACTION_CONFIG[pendingAction].description}
+            </span>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             <button
@@ -495,11 +606,11 @@ const SessionControls: React.FC = () => {
         </div>
 
       ) : isEditingProfile ? (
-        <div className="flex-1 flex items-center justify-between animate-fade-in gap-2">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-xs font-bold text-blue-300 uppercase tracking-wider whitespace-nowrap">{t('sessionControls.profile') || 'Profile:'}</span>
+        <div className="flex-1 flex items-start justify-between animate-fade-in gap-2">
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+            <span className="text-xs font-bold text-blue-300 uppercase tracking-wider">{t('sessionControls.profile') || 'Profile:'}</span>
             <input
-              className="flex-1 min-w-0 bg-blue-950/30 border border-blue-500/30 rounded px-2 py-1.5 text-sm text-blue-100 placeholder-blue-400/30 focus:outline-none focus:border-blue-400 focus:bg-blue-950/50 transition-colors"
+              className="w-full max-w-[520px] bg-blue-950/30 border border-blue-500/30 rounded px-2 py-1.5 text-sm text-blue-100 placeholder-blue-400/30 focus:outline-none focus:border-blue-400 focus:bg-blue-950/50 transition-colors"
               placeholder={t('sessionControls.profilePlaceholder') || 'Your name or details...'}
               value={profileText}
               onChange={(e) => setProfileText(e.target.value)}
@@ -545,11 +656,11 @@ const SessionControls: React.FC = () => {
               /* Default: Show two group selectors */
               <>
                 <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
-                  {t('sessionControls.all') || 'All'}
+                  {'🔧🌐💬'}
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
                 <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
-                  {t('sessionControls.this') || 'This'}
+                  {'🔧🎯💬'}
                 </button>
               </>
             ) : controlMode === 'all' ? (
@@ -595,64 +706,44 @@ const SessionControls: React.FC = () => {
           <input type="file" ref={loadFileInputRef} onChange={handleLoadFileChange} accept=".ndjson,.jsonl" className="hidden" />
           <input type="file" ref={appendFileInputRef} onChange={handleAppendFileChange} accept=".ndjson,.jsonl" className="hidden" />
 
-          {/* Right: Maestro Avatar Cluster */}
+          {/* Right: Maestro Avatar Cluster - unified pointer event handling */}
           <div
-            ref={avatarClusterRef}
-            className="relative group flex items-center justify-center w-14 h-10"
-            onTouchStart={(e) => {
-              recentTouch.current = true;
-              if (!avatarClusterRef.current) return;
-              const touch = e.touches[0];
-              const rect = avatarClusterRef.current.getBoundingClientRect();
-              const relX = (touch.clientX - rect.left) / rect.width;
-              setTouchSide(relX < 0.4 ? 'left' : relX > 0.6 ? 'right' : null);
-              setIsTouchActive(true);
-              e.preventDefault();
-            }}
-            onTouchMove={(e) => {
-              if (!avatarClusterRef.current) return;
-              const touch = e.touches[0];
-              const rect = avatarClusterRef.current.getBoundingClientRect();
-              const relX = (touch.clientX - rect.left) / rect.width;
-              setTouchSide(relX < 0.4 ? 'left' : relX > 0.6 ? 'right' : null);
-              e.preventDefault();
-            }}
-            onTouchEnd={(e) => {
-              if (!avatarClusterRef.current) return;
-              const touch = e.changedTouches[0];
-              if (touch) {
-                const rect = avatarClusterRef.current.getBoundingClientRect();
-                const relX = (touch.clientX - rect.left) / rect.width;
-                if (relX < 0.4) {
-                  if (!isUploadingMaestro) handleSwapAvatarClick();
-                } else if (relX > 0.6) {
-                  handleVoiceCycle();
-                }
-              }
-              setIsTouchActive(false);
-              setTouchSide(null);
-              setTimeout(() => { recentTouch.current = false; }, 500);
-            }}
+            className="relative flex items-center justify-center w-14 h-10 select-none"
+            onPointerDown={handleAvatarPointerDown}
+            onPointerMove={handleAvatarPointerMove}
+            onPointerUp={handleAvatarPointerUp}
+            onPointerCancel={handleAvatarPointerCancel}
+            onMouseEnter={handleAvatarMouseEnter}
+            onMouseLeave={handleAvatarMouseLeave}
+            style={{ touchAction: 'none' }}
           >
             {/* Left Wing: Swap/Upload */}
             <button
               type="button"
-              onClick={isUploadingMaestro ? undefined : handleLeftButtonClick}
-              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-500 hover:z-20 hover:scale-110 transition-all duration-300 shadow-lg z-0 group-hover:-translate-x-[36px] ${isTouchActive ? '-translate-x-[36px] text-white bg-slate-700 border-slate-500 z-20 scale-110' : ''} ${touchSide === 'left' ? 'text-white bg-slate-700 border-slate-500 z-20 scale-110' : ''}`}
+              {...{ [DATA_AVATAR_ACTION]: 'swap' }}
+              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-all duration-200 shadow-lg z-0 ${
+                isAvatarExpanded ? '-translate-x-[36px]' : ''
+              } ${
+                highlightedSide === 'left' ? 'text-white bg-slate-700 border-slate-500 z-20 scale-110 ring-2 ring-white/30' : 'hover:z-20 hover:scale-105'
+              }`}
               title={t('general.clear') + " / " + (t('sessionControls.changeAvatar') || 'Change Avatar')}
             >
               <IconSwap className="w-3.5 h-3.5" />
 
               <IconSwap
-                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2.5 w-3 h-3 text-slate-500 opacity-100 group-hover:opacity-0 transition-opacity duration-300 ${isTouchActive ? 'opacity-0' : ''}`}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2.5 w-3 h-3 text-slate-500 transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
               />
             </button>
-
+ 
             {/* Right Wing: Voice Toggle */}
             <button
               type="button"
-              onClick={handleRightButtonClick}
-              className={`absolute right-1/2 translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border flex items-center justify-center hover:z-20 hover:scale-110 transition-all duration-300 shadow-lg z-0 group-hover:translate-x-[36px] ${getVoiceColorRing(currentVoiceName)} ring-1 border-white/10 ${isTouchActive ? 'translate-x-[36px]' : ''} ${touchSide === 'right' ? 'z-20 scale-110' : ''}`}
+              {...{ [DATA_AVATAR_ACTION]: 'voice' }}
+              className={`absolute right-1/2 translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 shadow-lg z-0 ${getVoiceColorRing(currentVoiceName)} ring-1 border-white/10 ${
+                isAvatarExpanded ? 'translate-x-[36px]' : ''
+              } ${
+                highlightedSide === 'right' ? 'z-20 scale-110 ring-2 ring-white/30' : 'hover:z-20 hover:scale-105'
+              }`}
               title={`Voice: ${currentVoiceName}`}
             >
               <div className="absolute inset-0 pointer-events-none">
@@ -668,7 +759,7 @@ const SessionControls: React.FC = () => {
               />
 
               <IconSpeaker
-                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2.5 w-3 h-3 text-white/70 opacity-100 group-hover:opacity-0 transition-opacity duration-300 ${isTouchActive ? 'opacity-0' : ''}`}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2.5 w-3 h-3 text-white/70 transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
               />
             </button>
 

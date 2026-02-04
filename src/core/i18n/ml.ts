@@ -57,8 +57,6 @@ export const mlTranslations: Record<string, string> = {
   "sessionControls.editProfile": "ഉപയോക്തൃ പ്രൊഫൈൽ എഡിറ്റ് ചെയ്യുക",
   "sessionControls.allChatsControls": "എല്ലാ ചാറ്റുകളുടെയും നിയന്ത്രണങ്ങൾ",
   "sessionControls.thisChatsControls": "ഈ ചാറ്റിന്റെ നിയന്ത്രണങ്ങൾ",
-  "sessionControls.all": "എല്ലാം",
-  "sessionControls.this": "ഇത്",
   "sessionControls.back": "പിന്നിലേക്ക്",
   "sessionControls.backupAndReset": "ബാക്കപ്പും റീസെറ്റും",
   "sessionControls.typeToConfirm": "സ്ഥിരീകരിക്കുന്നതിന് \"{keyword}\" എന്ന് ടൈപ്പ് ചെയ്യുക",

@@ -57,8 +57,6 @@ export const fiTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Muokkaa käyttäjäprofiilia",
   "sessionControls.allChatsControls": "Kaikkien keskustelujen hallinta",
   "sessionControls.thisChatsControls": "Tämän keskustelun hallinta",
-  "sessionControls.all": "Kaikki",
-  "sessionControls.this": "Tämä",
   "sessionControls.back": "Takaisin",
   "sessionControls.backupAndReset": "Varmuuskopioi ja nollaa",
   "sessionControls.typeToConfirm": "Kirjoita \"{keyword}\" vahvistaaksesi",

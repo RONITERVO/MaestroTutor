@@ -57,8 +57,6 @@ export const svTranslations: Record<string, string> = {
   "sessionControls.editProfile": "Redigera användarprofil",
   "sessionControls.allChatsControls": "Kontroller för alla chattar",
   "sessionControls.thisChatsControls": "Kontroller för denna chatt",
-  "sessionControls.all": "Alla",
-  "sessionControls.this": "Denna",
   "sessionControls.back": "Bakåt",
   "sessionControls.backupAndReset": "Säkerhetskopiera & Återställ",
   "sessionControls.typeToConfirm": "Skriv \"{keyword}\" för att bekräfta",

@@ -57,8 +57,6 @@ export const teTranslations: Record<string, string> = {
   "sessionControls.editProfile": "యూజర్ ప్రొఫైల్‌ను సవరించండి",
   "sessionControls.allChatsControls": "అన్ని చాట్‌ల నియంత్రణలు",
   "sessionControls.thisChatsControls": "ఈ చాట్ నియంత్రణలు",
-  "sessionControls.all": "అన్నీ",
-  "sessionControls.this": "ఇది",
   "sessionControls.back": "వెనుకకు",
   "sessionControls.backupAndReset": "బ్యాకప్ మరియు రీసెట్",
   "sessionControls.typeToConfirm": "ధృవీకరించడానికి \"{keyword}\" అని టైప్ చేయండి",
