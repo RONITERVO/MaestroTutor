@@ -5,6 +5,13 @@ import { debugLogService } from '../../features/diagnostics';
 import { getAi } from './client';
 
 /**
+ * Set of URIs known to be expired/deleted (403/404).
+ * Once expired, a URI never becomes valid again, so we track them permanently
+ * for the session to avoid redundant API calls.
+ */
+const knownExpiredUris = new Set<string>();
+
+/**
  * Normalizes a MIME type to avoid encoding issues with parameters.
  * For audio/webm;codecs=opus, the = sign can get escaped as \u003d in JSON
  * which causes the Gemini API to reject the file with a MIME type mismatch.
@@ -77,32 +84,54 @@ export const checkFileStatuses = async (uris: string[]): Promise<Record<string, 
   if (!uris || !uris.length) return {};
   const ai = await getAi();
   const out: Record<string, { deleted: boolean; active: boolean }> = {};
-  await Promise.all(
-    uris.map(async (uri) => {
-      try {
-        let name = uri;
-        const m = /\/files\/([^?\s]+)/.exec(uri || '');
-        if (m) name = `files/${m[1]}`;
-        const f = await ai.files.get({ name });
-        out[uri] = {
-          deleted: f.state === 'FAILED',
-          active: f.state === 'ACTIVE',
-        };
-      } catch (e: any) {
-        // Check numeric status first, then fall back to safer string checks
-        const is404 = e.status === 404 || Number(e.status) === 404 ||
-          (e.status === undefined && (
-            e.message?.toLowerCase() === 'not found' ||
-            e.message?.includes('404')
-          ));
-        if (is404) {
-          out[uri] = { deleted: true, active: false };
-        } else {
-          out[uri] = { deleted: false, active: false };
+
+  // Filter out URIs already known to be expired
+  const uncheckedUris: string[] = [];
+  for (const uri of uris) {
+    if (knownExpiredUris.has(uri)) {
+      out[uri] = { deleted: true, active: false };
+    } else {
+      uncheckedUris.push(uri);
+    }
+  }
+
+  // Only make API calls for URIs not known to be expired
+  if (uncheckedUris.length > 0) {
+    await Promise.all(
+      uncheckedUris.map(async (uri) => {
+        try {
+          let name = uri;
+          const m = /\/files\/([^?\s]+)/.exec(uri || '');
+          if (m) name = `files/${m[1]}`;
+          const f = await ai.files.get({ name });
+          out[uri] = {
+            deleted: f.state === 'FAILED',
+            active: f.state === 'ACTIVE',
+          };
+          // If FAILED, mark as expired
+          if (f.state === 'FAILED') {
+            knownExpiredUris.add(uri);
+          }
+        } catch (e: any) {
+          // Check numeric status first, then fall back to safer string checks
+          const is404or403 = e.status === 404 || e.status === 403 ||
+            Number(e.status) === 404 || Number(e.status) === 403 ||
+            (e.status === undefined && (
+              e.message?.toLowerCase() === 'not found' ||
+              e.message?.includes('404') ||
+              e.message?.includes('403') ||
+              e.message?.toLowerCase().includes('forbidden')
+            ));
+          if (is404or403) {
+            out[uri] = { deleted: true, active: false };
+            knownExpiredUris.add(uri);
+          } else {
+            out[uri] = { deleted: false, active: false };
+          }
         }
-      }
-    })
-  );
+      })
+    );
+  }
   return out;
 };
 
@@ -111,16 +140,23 @@ export const sanitizeHistoryWithVerifiedUris = async (history: any[]) => {
   if (uris.length === 0) return history;
 
   const statuses = await checkFileStatuses(uris);
-  return history.map(h => {
+  let strippedCount = 0;
+  const result = history.map((h, idx) => {
     if (h.imageFileUri) {
       const status = statuses[h.imageFileUri];
       if (status?.deleted || !status?.active) {
+        strippedCount++;
+        console.warn(`[sanitizeHistory] Stripping expired/invalid media URI from history item ${idx}:`, h.imageFileUri?.slice(0, 80));
         const { imageFileUri, imageMimeType, ...rest } = h;
         return rest;
       }
     }
     return h;
   });
+  if (strippedCount > 0) {
+    console.warn(`[sanitizeHistory] Total media items stripped due to expired URIs: ${strippedCount}/${uris.length}`);
+  }
+  return result;
 };
 
 export const uploadMediaToFiles = async (

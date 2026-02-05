@@ -443,18 +443,32 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const llmMime = (m as any).storageOptimizedImageMimeType as string | undefined;
       const uiUrl = m.imageUrl as string | undefined;
       const uiMime = m.imageMimeType as string | undefined;
-      if (!(llmUrl && llmMime) && !(uiUrl && uiMime)) continue;
-
       const cachedUri = (m as any).uploadedFileUri as string | undefined;
       const cachedMime = (m as any).uploadedFileMimeType as string | undefined;
+      
+      // Check if we have any data URL to potentially re-upload from
+      const hasDataUrl = !!(llmUrl && llmMime) || !!(uiUrl && uiMime);
+      
+      // Check if the cached URI is expired/deleted
       let cachedDeleted = false;
       if (cachedUri && cachedMime) {
         try {
           const st = cachedStatuses && cachedStatuses[cachedUri];
           cachedDeleted = !!(st && st.deleted);
         } catch { cachedDeleted = false; }
-        if (!cachedDeleted) continue;
       }
+      
+      // CRITICAL: If URI is expired but we have no data URL to re-upload, media will be lost
+      if (cachedDeleted && !hasDataUrl) {
+        console.warn(`[ensureUris] Message ${m.id} has expired uploadedFileUri but no data URL to re-upload. Media will be omitted from API payload.`);
+        continue;
+      }
+      
+      // Skip if no data URL available (nothing to upload)
+      if (!hasDataUrl) continue;
+      
+      // Skip if we have a valid (non-expired) cached URI
+      if (cachedUri && cachedMime && !cachedDeleted) continue;
 
       let dataForUpload: { dataUrl: string; mimeType: string } | null = null;
       try {
@@ -887,7 +901,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         if (!sendWithFileUploadInProgressRef.current) {
           sendWithFileUploadInProgressRef.current = true;
         }
-        const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, { t });
+        setSendPrep({ active: true, label: t('chat.sendPrep.optimizingImage') || 'Optimizing...' });
+        const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, {
+          t,
+          onProgress: (label, done, total, etaMs) => {
+            setSendPrep({ active: true, label, done, total, etaMs });
+          }
+        });
         userImageToProcessStorageOptimizedBase64 = optimized.dataUrl;
         userImageToProcessStorageOptimizedMimeType = optimized.mimeType;
       } catch {}
@@ -920,6 +940,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     claimRecordedUtterance,
     recordedUtterancePendingRef,
     sendWithFileUploadInProgressRef,
+    setSendPrep,
     t,
     updateMessage,
   ]);
