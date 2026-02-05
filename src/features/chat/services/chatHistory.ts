@@ -264,7 +264,7 @@ export const setChatMetaDB = async (pairId: string, meta: ChatMeta | null): Prom
   });
 };
 
-type DerivedHistoryItem = { role: 'user' | 'assistant'; text?: string; rawAssistantResponse?: string; imageFileUri?: string; imageMimeType?: string };
+type DerivedHistoryItem = { role: 'user' | 'assistant'; text?: string; rawAssistantResponse?: string; imageFileUri?: string; imageMimeType?: string; chatSummary?: string };
 
 export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?: Array<'user' | 'assistant' | 'system'>; maxMessages?: number; maxMediaToKeep?: number; contextSummary?: string; globalProfileText?: string; placeholderLatestUserMessage?: string; }) => {
     const { roles = ['user','assistant'], maxMessages, maxMediaToKeep = MAX_MEDIA_TO_KEEP, contextSummary, globalProfileText, placeholderLatestUserMessage } = opts || {};
@@ -292,6 +292,7 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
         rawAssistantResponse: m.rawAssistantResponse,
         imageFileUri: uri,
         imageMimeType: mime,
+        chatSummary: m.chatSummary,
       };
     });
 

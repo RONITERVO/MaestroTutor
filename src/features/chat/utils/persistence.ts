@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, TtsProvider, SttProvider } from '../../../core/types';
 
-export const INLINE_CAP_IMAGE = 1_000_000; // ~1MB
+export const INLINE_CAP_IMAGE = 2_000_000; // ~2MB (increased from 1MB to reduce data loss from large images)
 export const INLINE_CAP_VIDEO = 4_000_000; // ~4MB
 export const INLINE_CAP_OTHER = 8_000_000; // ~8MB
 export const INLINE_CAP_AUDIO = 10_000_000; // ~10MB for cached TTS data URLs
@@ -79,10 +79,14 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   }
 
   // Cap the size of the image (whether original or promoted optimized version)
+  // CRITICAL: If imageUrl is deleted due to size AND uploadedFileUri expires later, media will be permanently lost
   if (typeof out.imageUrl === 'string') {
     const effMime = out.imageMimeType || inferMimeFromDataUrl(out.imageUrl) || 'image/*';
     const cap = capForMime(effMime);
     if (out.imageUrl.length > cap) {
+      // Log warning so developers know media may be lost after URI expiration
+      const hasUploadedUri = !!(out as any).uploadedFileUri;
+      console.warn(`[sanitizeForPersistence] Image exceeds ${Math.round(cap/1000)}KB cap (${Math.round(out.imageUrl.length/1000)}KB). Deleting from persistence.${hasUploadedUri ? ' uploadedFileUri exists (valid for 48h).' : ' WARNING: No uploadedFileUri - media will be lost!'}`);
       out.imageUrl = undefined;
       out.imageMimeType = undefined;
     }

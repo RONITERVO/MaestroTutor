@@ -28,6 +28,9 @@ export const generateImage = async (params: {
 
   let processedHistory = history ? history.map(h => ({ ...h })) : [];
 
+  // Track the index of the first kept image (3rd from the end with an image)
+  // Image generation expects strict alternation: user (text only) -> model (image only)
+  let firstKeptImageIndex = -1;
   let imageCount = 0;
   for (let i = processedHistory.length - 1; i >= 0; i--) {
     const h = processedHistory[i];
@@ -49,25 +52,69 @@ export const generateImage = async (params: {
           else h.text = (h.text || '') + note;
         } else {
           imageCount++;
+          firstKeptImageIndex = i; // Update to earliest kept image index
         }
       }
     }
   }
 
-  if (processedHistory.length > 0) {
-    processedHistory.forEach(h => {
-      const parts: any[] = [];
-      const textContent = h.rawAssistantResponse || h.text;
-      if (textContent) parts.push({ text: textContent });
+  // Drop messages before the first kept image to reduce payload size.
+  // Extract chatSummary from the first kept image message (or most recent before it) to preserve maximal context.
+  let contextSummary: string | undefined;
+  if (firstKeptImageIndex > 0 && imageCount >= 3) {
+    // Find the most recent chatSummary at or before firstKeptImageIndex
+    for (let i = firstKeptImageIndex; i >= 0; i--) {
+      const msg = processedHistory[i];
+      if (msg.role === 'assistant' && typeof msg.chatSummary === 'string' && msg.chatSummary.trim()) {
+        contextSummary = msg.chatSummary.trim();
+        break;
+      }
+    }
+    processedHistory = processedHistory.slice(firstKeptImageIndex);
+  }
 
-      if (h.imageFileUri) {
-        const m = (h.imageMimeType || '').toLowerCase();
-        if (m.startsWith('image/')) {
-          parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
+  // Build contents array from processed history
+  // Image generation payload must be: user (text only) -> model (image only) -> user (text only) -> model (image only) ...
+  // Transform:
+  // - User message with image: split into user turn (text only) + model turn (image only)
+  // - Assistant message with text+image: split into user turn (text only) + model turn (image only)
+  if (processedHistory.length > 0) {
+    processedHistory.forEach((h, idx) => {
+      let textContent = h.rawAssistantResponse || h.text;
+      const hasImage = h.imageFileUri && (h.imageMimeType || '').toLowerCase().startsWith('image/');
+
+      // Prepend contextSummary to the first user message when history was trimmed
+      if (contextSummary && idx === 0 && h.role === 'user') {
+        const summaryPrefix = `[Conversation Summary from earlier context]\n${contextSummary}\n\n`;
+        textContent = summaryPrefix + (textContent || '');
+      }
+
+      if (h.role === 'user') {
+        // User turn: text only (no image)
+        if (textContent) {
+          contents.push({ role: 'user', parts: [{ text: textContent }] });
+        }
+        // If user had an image, add it as a separate model turn after
+        if (hasImage) {
+          contents.push({ role: 'model', parts: [{ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } }] });
+        }
+      } else if (h.role === 'assistant') {
+        // Assistant turn: if has text, add as user turn first
+        if (textContent) {
+          contents.push({ role: 'user', parts: [{ text: textContent }] });
+        }
+        // Assistant image goes as model turn (image only)
+        if (hasImage) {
+          contents.push({ role: 'model', parts: [{ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } }] });
         }
       }
-      if (parts.length) contents.push({ role: h.role === 'assistant' ? 'model' : 'user', parts });
     });
+  }
+
+  // If history was trimmed and contextSummary exists but first message wasn't user, prepend summary as separate turn
+  if (contextSummary && processedHistory.length > 0 && processedHistory[0]?.role !== 'user') {
+    const summaryText = `[Conversation Summary from earlier context]\n${contextSummary}`;
+    contents.unshift({ role: 'user', parts: [{ text: summaryText }] });
   }
 
   const currentParts: any[] = [];
@@ -85,9 +132,8 @@ export const generateImage = async (params: {
   }
 
   if (currentParts.length) {
-    // Map role: 'assistant' -> 'model', default to 'user'
-    const role = params.latestMessageRole === 'assistant' ? 'model' : (params.latestMessageRole || 'user');
-    contents.push({ role, parts: currentParts });
+    // Always add the latest message as user turn (image gen thinks it's the assistant replying)
+    contents.push({ role: 'user', parts: currentParts });
   }
 
   const model = getGeminiModels().image.generation;
@@ -114,9 +160,16 @@ export const generateImage = async (params: {
         }
       }
     }
-    // No valid image found in response
-    log.error(new Error('No image generated'));
-    return { error: 'No image generated' };
+    // No valid image found in response - extract any text response for debugging
+    let textResponse = '';
+    for (const c of candidates) {
+      for (const part of c.content?.parts || []) {
+        if (part.text) textResponse += part.text;
+      }
+    }
+    const errorMsg = textResponse ? `No image generated. Model responded: ${textResponse}` : 'No image generated';
+    log.error(new Error(errorMsg));
+    return { error: errorMsg };
   } catch (e: any) {
     log.error(e);
     return { error: e.message };
