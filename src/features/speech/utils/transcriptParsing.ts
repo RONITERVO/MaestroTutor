@@ -61,7 +61,7 @@ function hasContent(text: string): boolean {
 /**
  * Simple text similarity using word overlap.
  */
-function calculateSimilarity(a: string, b: string): number {
+export function calculateSimilarity(a: string, b: string): number {
   const aNorm = normalizeTextForComparison(a);
   const bNorm = normalizeTextForComparison(b);
   
