@@ -26,6 +26,7 @@ import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
 
 // ============================================================================
 // TYPES
@@ -158,7 +159,10 @@ IMPORTANT RULES:
 - Do NOT modify, translate, or interpret the text
 - Just speak the text immediately
 TEXT TO READ:
-${textBlock}`;
+${textBlock}
+
+First reason how the response text is supposed to look like, then verify, then speak.
+Don't forget to start your response with your thinking stage`;
 
   const model = getGeminiModels().audio.live;
   const config = {
@@ -251,15 +255,22 @@ ${textBlock}`;
       const audioSegments: Int16Array[] = [];
       const includeTrailingRemainder = reason === 'turn-complete';
 
-      // Split audio at recorded points
+      // Get expected segment count from transcript newlines
+      const expectedSegments = countTranscriptNewlines(transcriptAccumulator) + 1;
+      
+      // Split audio at recorded points, keeping ALL points (no deduplication)
+      // This maintains correspondence with transcript lines
       if (splitPoints.length > 0 && fullAudio.length > 0) {
         let startSample = 0;
-        const uniquePoints = [...new Set(splitPoints)]
+        
+        // Sort but DON'T deduplicate - keep all split points to match transcript lines
+        const sortedPoints = [...splitPoints]
           .sort((a, b) => a - b)
-          .filter(p => p > 0 && p < fullAudio.length);
+          .filter(p => p <= fullAudio.length); // Only filter points beyond audio length
 
-        for (const point of uniquePoints) {
-          if (point > startSample) {
+        for (const point of sortedPoints) {
+          if (point >= startSample) {
+            // Allow segments starting from position 0, and allow empty segments
             audioSegments.push(fullAudio.slice(startSample, point));
             startSample = point;
           }
@@ -273,12 +284,26 @@ ${textBlock}`;
         }
       }
 
-      // No offset compensation for TTS
-      for (let i = 0; i < audioSegments.length && i < lines.length; i++) {
-        onLineComplete?.(i, audioSegments[i]);
+      console.debug(`[GeminiLiveTts] Expected ${expectedSegments} segments from transcript, got ${audioSegments.length} from splits`);
+
+      // Map audio segments to original lines using text similarity
+      const originalTexts = lines.map(l => l.text);
+      const mapping = mapAudioSegmentsToTextLines(originalTexts, transcriptAccumulator, audioSegments.length);
+      
+      console.debug(`[GeminiLiveTts] ${audioSegments.length} segments, ${lines.length} lines, mapping: [${mapping.join(',')}]`);
+      
+      // Cache each segment with correct line (skip empty segments)
+      for (let i = 0; i < audioSegments.length; i++) {
+        const lineIdx = mapping[i];
+        const segment = audioSegments[i];
+        // Skip empty segments (from duplicate split points)
+        if (segment.length < 100) continue; // Less than ~4ms of audio
+        if (lineIdx !== -1 && lineIdx < lines.length) {
+          onLineComplete?.(lineIdx, segment);
+        }
       }
 
-      return { audioSegments };
+      return { audioSegments, mapping };
     };
 
     try {
@@ -348,19 +373,20 @@ ${textBlock}`;
             // 2. Handle Transcript - detect newlines for split points
             if (msg.serverContent?.outputTranscription?.text) {
               transcriptAccumulator += msg.serverContent.outputTranscription.text;
-              const normalizedTranscript = transcriptAccumulator.replace(/\r\n/g, '\n').replace(/\n+/g, '\n');
-              const newlineCount = (normalizedTranscript.match(/\n/g) || []).length;
+              // Use transcript parsing utility to handle language codes [xx-XX] as newlines
+              const newlineCount = countTranscriptNewlines(transcriptAccumulator);
               if (newlineCount > lastNewlineCount) {
                 const diff = newlineCount - lastNewlineCount;
                 for (let i = 0; i < diff; i++) {
                   splitPoints.push(audioTotalLength);
                 }
+                
+                // Simple sequential highlight during streaming
+                // Accurate mapping happens at end for cache
                 if (startedLineIndex !== null) {
-                  for (let i = 0; i < diff; i++) {
-                    const lineIndex = lastNewlineCount + i + 1;
-                    if (lineIndex < lines.length) {
-                      scheduleLineStart(lineIndex, lines[lineIndex].text, audioTotalLength);
-                    }
+                  const nextLine = Math.min(newlineCount, lines.length - 1);
+                  if (nextLine >= 0 && nextLine < lines.length) {
+                    scheduleLineStart(nextLine, lines[nextLine].text, audioTotalLength);
                   }
                 }
                 lastNewlineCount = newlineCount;
