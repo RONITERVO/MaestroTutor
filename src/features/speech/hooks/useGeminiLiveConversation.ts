@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob } from '@google/genai';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
+import { countTranscriptNewlines } from '../utils/transcriptParsing';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
@@ -398,8 +399,10 @@ export function useGeminiLiveConversation(
                // Transcripts arrive with delay after audio, so we record the current
                // accumulated audio length as the split boundary when a newline appears.
                // This naturally accounts for the audio-ahead-of-transcript timing.
+               // Use transcript parsing utility to handle language codes [xx-XX] as newlines
+               // This ensures consistent splitting even when model doesn't add actual newlines
                const currentText = currentOutputTranscriptionRef.current;
-               const newlineCount = (currentText.match(/\n/g) || []).length;
+               const newlineCount = countTranscriptNewlines(currentText);
                
                if (newlineCount > lastNewlineCountRef.current) {
                  const diff = newlineCount - lastNewlineCountRef.current;

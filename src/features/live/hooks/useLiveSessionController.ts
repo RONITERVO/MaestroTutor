@@ -20,7 +20,7 @@ import {
   RecordedUtterance,
   TtsAudioCacheEntry 
 } from '../../../core/types';
-import { useGeminiLiveConversation, LiveSessionState, pcmToWav } from '../../speech';
+import { useGeminiLiveConversation, LiveSessionState, pcmToWav, mapAudioSegmentsToTextLines } from '../../speech';
 import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles } from '../../../api/gemini/files';
 import { generateImage } from '../../../api/gemini/vision';
 import { getGlobalProfileDB } from '../../session';
@@ -340,76 +340,49 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           } as ChatMessage);
 
           // ============================================================================
-          // AUDIO-TO-TEXT ALIGNMENT FOR GOOGLE LIVE API
+          // AUDIO-TO-TEXT ALIGNMENT FOR CACHE
           // ============================================================================
-          // 
-          // KNOWN BEHAVIOR (as of Jan 2026):
-          // Google's Live API transcript includes short intro lines (e.g., "¡Perfecto!" / 
-          // "Täydellistä!") that are transcribed but NOT included in the audio stream.
-          // The audio segments start AFTER these intro lines, causing an offset.
-          //
-          // Example:
-          //   Transcript: "¡Perfecto!", "Täydellistä!", "Describiste...", "Kuvasit..."  (8 lines)
-          //   Audio:      [segment for "Describiste..."], [segment for "Kuvasit..."]   (6 segments)
-          //   Offset:     8 - 6 = 2 → skip first 2 text lines when mapping audio
-          //
-          // TO REVERT (if Google fixes this behavior):
-          //   Set ENABLE_LIVE_AUDIO_TEXT_OFFSET_COMPENSATION = false below.
-          //   This will use 1:1 mapping (audio[0] → text[0], audio[1] → text[1], etc.)
+          // Use text similarity to map audio segments to correct text lines.
+          // Handles: skipped lines, empty markers [sv-SE], truncated text.
           // ============================================================================
-          
-          // Toggle this to false if Google Live API starts including all lines in audio
-          const ENABLE_LIVE_AUDIO_TEXT_OFFSET_COMPENSATION = true;
           
           if (modelAudioLines && modelAudioLines.length > 0) {
             const targetLang = getPrimaryCode(selectedLanguagePairRef.current.targetLanguageCode);
             const nativeLang = getPrimaryCode(selectedLanguagePairRef.current.nativeLanguageCode);
             
-            // Flatten translations to a linear list of text lines with their languages
+            // Flatten translations to text lines
             const textLines: Array<{text: string; lang: string}> = [];
             translations.forEach(pair => {
               if (pair.target) textLines.push({ text: pair.target, lang: targetLang });
               if (pair.native) textLines.push({ text: pair.native, lang: nativeLang });
             });
             
-            // Calculate offset: intro lines in transcript that have no audio
-            // When disabled, offset = 0 for direct 1:1 mapping
-            const offset = ENABLE_LIVE_AUDIO_TEXT_OFFSET_COMPENSATION
-              ? Math.max(0, textLines.length - modelAudioLines.length)
-              : 0;
+            // Map audio segments to text lines using text similarity
+            const originalTexts = textLines.map(t => t.text);
+            const mapping = mapAudioSegmentsToTextLines(originalTexts, modelText, modelAudioLines.length);
             
-            if (offset > 0) {
-              const skippedLines = textLines.slice(0, offset).map(l => l.text).join(' / ');
-              console.debug(
-                `[Live] Audio-text offset: ${offset} intro text lines without audio. ` +
-                `Skipped: "${skippedLines.substring(0, 80)}${skippedLines.length > 80 ? '...' : ''}"`
-              );
-            } else if (textLines.length !== modelAudioLines.length) {
-              console.debug(
-                `[Live] Audio-text count: ${modelAudioLines.length} audio segments for ${textLines.length} text lines.`
-              );
-            }
+            console.debug(`[Live] Cache: ${modelAudioLines.length} audio, ${textLines.length} text, mapping=[${mapping.join(',')}]`);
             
-            // Map audio segments to text lines, applying offset if enabled
-            // Use voiceName from settings to match the key used during playback lookup
+            // Cache each audio segment with its matched text
             const voiceName = settingsRef.current.tts.voiceName || 'Kore';
-            for (let i = 0; i < modelAudioLines.length && (i + offset) < textLines.length; i++) {
+            for (let i = 0; i < modelAudioLines.length; i++) {
               const audioPcm = modelAudioLines[i];
-              const textEntry = textLines[i + offset];
+              const lineIdx = mapping[i];
               
-              if (audioPcm && audioPcm.length > 0 && textEntry) {
-                const cleanedText = textEntry.text.trim();
-                const key = computeTtsCacheKey(cleanedText, textEntry.lang, 'gemini-live', voiceName);
-                console.debug(`[TTS Cache] STORE key=${key.substring(0, 20)}... text="${cleanedText.substring(0, 30)}..." voice=${voiceName}`);
-                upsertMessageTtsCache(assistantId, {
-                  key,
-                  langCode: textEntry.lang,
-                  provider: 'gemini-live',
-                  audioDataUrl: pcmToWav(audioPcm, 24000),
-                  updatedAt: Date.now(),
-                  voiceName,
-                });
-              }
+              if (!audioPcm || audioPcm.length === 0) continue;
+              if (lineIdx === -1 || !textLines[lineIdx]) continue;
+              
+              const textEntry = textLines[lineIdx];
+              const key = computeTtsCacheKey(textEntry.text.trim(), textEntry.lang, 'gemini-live', voiceName);
+              console.debug(`[TTS Cache] seg${i}→line${lineIdx} "${textEntry.text.substring(0, 30)}..."`);
+              upsertMessageTtsCache(assistantId, {
+                key,
+                langCode: textEntry.lang,
+                provider: 'gemini-live',
+                audioDataUrl: pcmToWav(audioPcm, 24000),
+                updatedAt: Date.now(),
+                voiceName,
+              });
             }
           }
 

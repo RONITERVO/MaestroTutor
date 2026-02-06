@@ -26,6 +26,7 @@ import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { countTranscriptNewlines, mapAudioSegmentsToTextLines, normalizeTranscriptForSplitting, normalizeTextForComparison, calculateSimilarity } from '../utils/transcriptParsing';
 
 // ============================================================================
 // TYPES
@@ -157,6 +158,7 @@ IMPORTANT RULES:
 - Do NOT add any intro, outro, commentary, or acknowledgment
 - Do NOT modify, translate, or interpret the text
 - Just speak the text immediately
+- Replace language codes with newlines.
 TEXT TO READ:
 ${textBlock}`;
 
@@ -166,6 +168,7 @@ ${textBlock}`;
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
     systemInstruction: { parts: [{ text: systemInstructionText }] },
     outputAudioTranscription: {},
+    thinkingConfig: {thinkingBudget: 0},
   };
 
   const log = debugLogService.logRequest('streamGeminiLiveTts', model, {
@@ -222,6 +225,9 @@ ${textBlock}`;
     let lastNewlineCount = 0;
     let transcriptAccumulator = '';
     let startedLineIndex: number | null = null;
+    // Self-correcting highlight: track actual position via transcript matching
+    let correctedHighlightIndex = 0;
+    let lastScheduledHighlightIndex = -1;
 
     const cleanup = () => {
       isStreaming = false;
@@ -251,15 +257,22 @@ ${textBlock}`;
       const audioSegments: Int16Array[] = [];
       const includeTrailingRemainder = reason === 'turn-complete';
 
-      // Split audio at recorded points
+      // Get expected segment count from transcript newlines
+      const expectedSegments = countTranscriptNewlines(transcriptAccumulator) + 1;
+      
+      // Split audio at recorded points, keeping ALL points (no deduplication)
+      // This maintains correspondence with transcript lines
       if (splitPoints.length > 0 && fullAudio.length > 0) {
         let startSample = 0;
-        const uniquePoints = [...new Set(splitPoints)]
+        
+        // Sort but DON'T deduplicate - keep all split points to match transcript lines
+        const sortedPoints = [...splitPoints]
           .sort((a, b) => a - b)
-          .filter(p => p > 0 && p < fullAudio.length);
+          .filter(p => p <= fullAudio.length); // Only filter points beyond audio length
 
-        for (const point of uniquePoints) {
-          if (point > startSample) {
+        for (const point of sortedPoints) {
+          if (point >= startSample) {
+            // Allow segments starting from position 0, and allow empty segments
             audioSegments.push(fullAudio.slice(startSample, point));
             startSample = point;
           }
@@ -273,12 +286,26 @@ ${textBlock}`;
         }
       }
 
-      // No offset compensation for TTS
-      for (let i = 0; i < audioSegments.length && i < lines.length; i++) {
-        onLineComplete?.(i, audioSegments[i]);
+      console.debug(`[GeminiLiveTts] Expected ${expectedSegments} segments from transcript, got ${audioSegments.length} from splits`);
+
+      // Map audio segments to original lines using text similarity
+      const originalTexts = lines.map(l => l.text);
+      const mapping = mapAudioSegmentsToTextLines(originalTexts, transcriptAccumulator, audioSegments.length);
+      
+      console.debug(`[GeminiLiveTts] ${audioSegments.length} segments, ${lines.length} lines, mapping: [${mapping.join(',')}]`);
+      
+      // Cache each segment with correct line (skip empty segments)
+      for (let i = 0; i < audioSegments.length; i++) {
+        const lineIdx = mapping[i];
+        const segment = audioSegments[i];
+        // Skip empty segments (from duplicate split points)
+        if (segment.length < 100) continue; // Less than ~4ms of audio
+        if (lineIdx !== -1 && lineIdx < lines.length) {
+          onLineComplete?.(lineIdx, segment);
+        }
       }
 
-      return { audioSegments };
+      return { audioSegments, mapping };
     };
 
     try {
@@ -303,8 +330,7 @@ ${textBlock}`;
 
                 // Trigger line start when first audio arrives (schedule to playback time)
                 if (startedLineIndex === null) {
-                  const initialIndex = Math.min(lastNewlineCount, lines.length - 1);
-                  startedLineIndex = initialIndex;
+                  startedLineIndex = correctedHighlightIndex;
                 }
 
                 // Decode and schedule playback immediately
@@ -327,9 +353,10 @@ ${textBlock}`;
                 nextStartTime = Math.max(audioContext.currentTime, nextStartTime);
                 if (sessionStartTime === null) {
                   sessionStartTime = nextStartTime;
-                  const initialIndex = Math.min(lastNewlineCount, lines.length - 1);
+                  const initialIndex = correctedHighlightIndex;
                   if (initialIndex >= 0 && lines[initialIndex]) {
                     scheduleLineStart(initialIndex, lines[initialIndex].text, 0);
+                    lastScheduledHighlightIndex = initialIndex;
                   }
                   if (pendingLineStarts.length > 0) {
                     for (const pending of pendingLineStarts) {
@@ -348,22 +375,88 @@ ${textBlock}`;
             // 2. Handle Transcript - detect newlines for split points
             if (msg.serverContent?.outputTranscription?.text) {
               transcriptAccumulator += msg.serverContent.outputTranscription.text;
-              const normalizedTranscript = transcriptAccumulator.replace(/\r\n/g, '\n').replace(/\n+/g, '\n');
-              const newlineCount = (normalizedTranscript.match(/\n/g) || []).length;
+              // Use transcript parsing utility to handle language codes [xx-XX] as newlines
+              const newlineCount = countTranscriptNewlines(transcriptAccumulator);
               if (newlineCount > lastNewlineCount) {
                 const diff = newlineCount - lastNewlineCount;
                 for (let i = 0; i < diff; i++) {
                   splitPoints.push(audioTotalLength);
                 }
+
+                // Self-correcting highlight: match completed transcript segment
+                // to original lines instead of blindly using newlineCount
                 if (startedLineIndex !== null) {
-                  for (let i = 0; i < diff; i++) {
-                    const lineIndex = lastNewlineCount + i + 1;
-                    if (lineIndex < lines.length) {
-                      scheduleLineStart(lineIndex, lines[lineIndex].text, audioTotalLength);
+                  const normalized = normalizeTranscriptForSplitting(transcriptAccumulator);
+                  const segments = normalized.split('\n');
+
+                  // Find the most recent completed segment with meaningful content
+                  let justCompletedText = '';
+                  for (let s = segments.length - 2; s >= 0; s--) {
+                    const seg = segments[s].trim();
+                    if (normalizeTextForComparison(seg).length >= 3) {
+                      justCompletedText = seg;
+                      break;
                     }
+                  }
+
+                  if (justCompletedText) {
+                    // Match against original lines to find what was just spoken
+                    let bestMatch = -1;
+                    let bestScore = 0;
+                    for (let j = 0; j < lines.length; j++) {
+                      const score = calculateSimilarity(justCompletedText, lines[j].text);
+                      if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = j;
+                      }
+                    }
+
+                    if (bestScore >= 0.3 && bestMatch !== -1) {
+                      // Matched - next line to highlight is after the matched one
+                      correctedHighlightIndex = Math.min(bestMatch + 1, lines.length - 1);
+                    }
+                    // If no match (thinking/preamble text), don't advance
+                  }
+
+                  // Schedule highlight only if index changed
+                  if (correctedHighlightIndex !== lastScheduledHighlightIndex &&
+                      correctedHighlightIndex >= 0 && correctedHighlightIndex < lines.length) {
+                    scheduleLineStart(correctedHighlightIndex, lines[correctedHighlightIndex].text, audioTotalLength);
+                    lastScheduledHighlightIndex = correctedHighlightIndex;
                   }
                 }
                 lastNewlineCount = newlineCount;
+              }
+
+              // Continuous self-correction: if current highlight clearly doesn't match
+              // what's being spoken, correct immediately (catches long-duration mismatches)
+              if (startedLineIndex !== null) {
+                const normalized = normalizeTranscriptForSplitting(transcriptAccumulator);
+                const ongoingSegments = normalized.split('\n');
+                const currentOngoingText = ongoingSegments[ongoingSegments.length - 1]?.trim() || '';
+                const normalizedOngoing = normalizeTextForComparison(currentOngoingText);
+
+                if (normalizedOngoing.length >= 20) {
+                  const currentLine = lines[correctedHighlightIndex];
+                  if (currentLine) {
+                    const currentSim = calculateSimilarity(currentOngoingText, currentLine.text);
+                    if (currentSim < 0.1) {
+                      // Very low similarity to current highlight - find the right line
+                      let bestIdx = -1;
+                      let bestSim = 0;
+                      for (let j = 0; j < lines.length; j++) {
+                        const s = calculateSimilarity(currentOngoingText, lines[j].text);
+                        if (s > bestSim) { bestSim = s; bestIdx = j; }
+                      }
+                      if (bestSim >= 0.5 && bestIdx !== -1 && bestIdx !== correctedHighlightIndex) {
+                        console.debug(`[GeminiLiveTts] Self-correcting highlight: ${correctedHighlightIndex} → ${bestIdx} (sim: ${bestSim.toFixed(2)})`);
+                        correctedHighlightIndex = bestIdx;
+                        onLineStart?.(bestIdx, lines[bestIdx].text);
+                        lastScheduledHighlightIndex = bestIdx;
+                      }
+                    }
+                  }
+                }
               }
             }
 
