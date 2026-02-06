@@ -168,7 +168,7 @@ ${textBlock}`;
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
     systemInstruction: { parts: [{ text: systemInstructionText }] },
     outputAudioTranscription: {},
-    thinkingKonfig: {thinkingBudget: 0},
+    thinkingConfig: {thinkingBudget: 0},
   };
 
   const log = debugLogService.logRequest('streamGeminiLiveTts', model, {
