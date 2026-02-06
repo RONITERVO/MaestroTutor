@@ -13,9 +13,10 @@
 export { processMediaForUpload } from './services/mediaOptimizationService';
 
 // Utils
-export { 
+export {
   getFacingModeFromLabel,
   createKeyframeFromVideoDataUrl,
+  createAvatarWithOverlay,
 } from './utils/mediaUtils';
 
 // Hooks

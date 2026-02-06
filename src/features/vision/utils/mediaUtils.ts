@@ -204,3 +204,37 @@ export const createKeyframeFromVideoDataUrl = async (
     const frameDataUrl = canvas.toDataURL(outputMime, quality);
     return { dataUrl: frameDataUrl, mimeType: outputMime };
 };
+
+export const createAvatarWithOverlay = async (
+    dataUrl: string,
+    opts?: { maxDim?: number; quality?: number; overlayText?: string }
+): Promise<{ dataUrl: string; mimeType: string }> => {
+  const { maxDim = 512, quality = 0.7, overlayText = 'This is you Gemini, Maestro. When you see this avatar in images it is not the user, it is you.' } = opts || {};
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Avatar image load failed'));
+      img.src = dataUrl;
+    });
+    const w = img.naturalWidth || 1;
+    const h = img.naturalHeight || 1;
+    const scale = Math.min(1, maxDim / Math.max(w, h));
+    const outW = Math.max(1, Math.round(w * scale));
+    const outH = Math.max(1, Math.round(h * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = outW; canvas.height = outH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context not available');
+    ctx.drawImage(img, 0, 0, outW, outH);
+    const fontSize = Math.max(14, Math.round(outH * 0.06));
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.textAlign = 'center';
+    const padding = Math.round(fontSize * 0.4);
+    const barHeight = fontSize + padding * 2;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(0, outH - barHeight, outW, barHeight);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(overlayText, outW / 2, outH - padding, outW - padding * 2);
+    const out = canvas.toDataURL('image/jpeg', quality);
+    return { dataUrl: out, mimeType: 'image/jpeg' };
+};
