@@ -25,6 +25,7 @@ import { ApiError } from '../../../api/gemini/client';
 import { generateGeminiResponse, translateText } from '../../../api/gemini/generative';
 import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from '../../../api/gemini/files';
 import { generateImage } from '../../../api/gemini/vision';
+import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../api/gemini/maestroAvatarEnsure';
 import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../session';
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
@@ -309,6 +310,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   useEffect(() => { isSendingRef.current = isSending; }, [isSending]);
   useEffect(() => { sendPrepRef.current = sendPrep; }, [sendPrep]);
   useEffect(() => () => { isMountedRef.current = false; }, []);
+
+  // Invalidate avatar cache when avatar changes
+  useEffect(() => {
+    const handler = () => { invalidateMaestroAvatarCache(); };
+    window.addEventListener('maestro-avatar-updated', handler);
+    return () => window.removeEventListener('maestro-avatar-updated', handler);
+  }, []);
 
   // Utility functions
   const stripBracketedContent = useCallback((input: string | undefined | null): string => {
@@ -1423,11 +1431,28 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         globalProfileText = gp2?.text || undefined;
       } catch {}
 
+      // Ensure Maestro avatar URIs are valid before sending
+      let avatarOverlayFileUri: string | undefined = undefined;
+      let avatarOverlayMimeType: string | undefined = undefined;
+      try {
+        const avatarResult = await ensureMaestroAvatarUris();
+        if (avatarResult.rawUri) {
+          maestroAvatarUriRef.current = avatarResult.rawUri;
+          maestroAvatarMimeTypeRef.current = avatarResult.rawMimeType;
+        }
+        avatarOverlayFileUri = avatarResult.overlayUri || undefined;
+        avatarOverlayMimeType = avatarResult.overlayMimeType || undefined;
+      } catch (e) {
+        console.warn('Failed to ensure Maestro avatar URIs:', e);
+      }
+
       const derivedHistory = deriveHistoryForApi(historySubsetForSendFinal, {
         maxMessages: computeMaxMessagesForArray(historySubsetForSendFinal.filter((m: ChatMessage) => m.role === 'user' || m.role === 'assistant')),
         maxMediaToKeep: MAX_MEDIA_TO_KEEP,
         contextSummary: resolveBookmarkContextSummary() || undefined,
         globalProfileText,
+        avatarOverlayFileUri,
+        avatarOverlayMimeType,
       });
       const sanitizedDerivedHistory = await sanitizeHistoryWithVerifiedUris(derivedHistory as any);
 

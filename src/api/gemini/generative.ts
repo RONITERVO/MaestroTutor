@@ -31,6 +31,10 @@ export const generateGeminiResponse = async (
       if (b64) parts.push({ inlineData: { data: b64, mimeType: h.imageMimeType } });
     }
 
+    if (h.avatarFileUri) {
+      parts.push({ fileData: { fileUri: h.avatarFileUri, mimeType: h.avatarMimeType || 'image/jpeg' } });
+    }
+
     if (parts.length > 0) {
       const role = h.role === 'assistant' ? 'model' : 'user';
       contents.push({ role, parts });

@@ -264,10 +264,10 @@ export const setChatMetaDB = async (pairId: string, meta: ChatMeta | null): Prom
   });
 };
 
-type DerivedHistoryItem = { role: 'user' | 'assistant'; text?: string; rawAssistantResponse?: string; imageFileUri?: string; imageMimeType?: string; chatSummary?: string };
+type DerivedHistoryItem = { role: 'user' | 'assistant'; text?: string; rawAssistantResponse?: string; imageFileUri?: string; imageMimeType?: string; chatSummary?: string; avatarFileUri?: string; avatarMimeType?: string };
 
-export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?: Array<'user' | 'assistant' | 'system'>; maxMessages?: number; maxMediaToKeep?: number; contextSummary?: string; globalProfileText?: string; placeholderLatestUserMessage?: string; }) => {
-    const { roles = ['user','assistant'], maxMessages, maxMediaToKeep = MAX_MEDIA_TO_KEEP, contextSummary, globalProfileText, placeholderLatestUserMessage } = opts || {};
+export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?: Array<'user' | 'assistant' | 'system'>; maxMessages?: number; maxMediaToKeep?: number; contextSummary?: string; globalProfileText?: string; placeholderLatestUserMessage?: string; avatarOverlayFileUri?: string; avatarOverlayMimeType?: string; }) => {
+    const { roles = ['user','assistant'], maxMessages, maxMediaToKeep = MAX_MEDIA_TO_KEEP, contextSummary, globalProfileText, placeholderLatestUserMessage, avatarOverlayFileUri, avatarOverlayMimeType } = opts || {};
     const roleSet = new Set(roles);
     
     // 1. Filter relevant messages
@@ -329,6 +329,12 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
       } else {
           history.unshift({ role: 'user', text: prefaceText });
       }
+    }
+
+    // 6b. Attach avatar overlay to the context message (first user message)
+    if (avatarOverlayFileUri && avatarOverlayMimeType && history.length > 0 && history[0].role === 'user') {
+      history[0].avatarFileUri = avatarOverlayFileUri;
+      history[0].avatarMimeType = avatarOverlayMimeType;
     }
 
     // 7. Append placeholder latest message if provided (e.g. for Image Gen context)
