@@ -19,8 +19,8 @@ Check: Verify android/app/src/main/res/mipmap-* contains your logo, not the defa
 
 ## 2) Versioning (Required for every upload)
 Edit `android/app/build.gradle`:
-- [2] Increment `versionCode`
-- ["1.0.0"] Update `versionName`
+- [3] Increment `versionCode`
+- ["1.1.0"] Update `versionName`
 
 ## 3) Build Web Assets
 ```bash
@@ -68,11 +68,11 @@ Write: "This app requires a user-generated Google Gemini API Key. For testing pu
 
 ## 7) Data Safety Form
 Recommended answers:
-- [ ] Data collected/shared: **Yes**
-- [ ] Data encrypted in transit: **Yes**
-- [ ] User data deletion: **Users can delete by uninstalling app**
-- [ ] Data type: “Messages / User content”
-- [ ] Purpose: “App functionality”
+- [x] Data collected/shared: **Yes**
+- [x] Data encrypted in transit: **Yes**
+- [x] User data deletion: **Users can delete by uninstalling app**
+- [x] Data type: “Messages / User content”
+- [x] Purpose: “App functionality”
 
 ## 8) Store Listing (Short copy to add)
 ```
@@ -83,7 +83,7 @@ No backend. Your key stays on-device.
 ## 9) After Approval
 - [ ] Revoke the temporary review key
 - [ ] Tag the release in Git
-- [ ] Archive the AAB + keystore info
+- [x] Archive the AAB + keystore info
 
 ## Common Gotchas
 - Forgot to bump `versionCode` → upload fails

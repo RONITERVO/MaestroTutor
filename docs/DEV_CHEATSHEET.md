@@ -84,7 +84,7 @@ If it crashes on launch or when you save the key: You need to add Proguard rules
 - Android Studio doesn’t see device  
   → Verify USB Debugging and accept device prompt
 
-[ ] Release Build Verified: Installed app-release.apk locally to ensure Minification/R8 didn't break the Gemini SDK.
+[x] Release Build Verified: Installed app-release.apk locally to ensure Minification/R8 didn't break the Gemini SDK.
 
 ## Safe Defaults
 - Do **not** ship `.env` keys in production  
