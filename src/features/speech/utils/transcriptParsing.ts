@@ -22,12 +22,18 @@ const EMOTION_TAG_PATTERN = /\[(laughing|chuckles|excited|happy|thoughtful|curio
 
 /**
  * Normalizes transcript for splitting: language codes become newlines.
+ * Trims the leading newline that results from the first language code
+ * being replaced — that replacement is not a boundary between lines,
+ * it's the start of the first line.  Without this trim, N lines produce
+ * N newlines (and therefore N split points → N+1 segments) instead of
+ * the correct N-1.
  */
 export function normalizeTranscriptForSplitting(transcript: string): string {
   return transcript
     .replace(/\r\n/g, '\n')
     .replace(LANGUAGE_CODE_PATTERN, '\n')
-    .replace(/\n+/g, '\n');
+    .replace(/\n+/g, '\n')
+    .replace(/^\n/, '');
 }
 
 /**

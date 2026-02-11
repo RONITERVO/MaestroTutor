@@ -158,7 +158,7 @@ IMPORTANT RULES:
 - Do NOT add any intro, outro, commentary, or acknowledgment
 - Do NOT modify, translate, or interpret the text
 - Just speak the text immediately
-- dont replace language codes with newlines.
+- Do NOT replace language codes with newlines.
 TEXT TO READ:
 ${textBlock}`;
 
