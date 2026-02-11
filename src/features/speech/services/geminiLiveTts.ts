@@ -26,7 +26,7 @@ import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
-import { countLanguageCodeSeparators, countTranscriptNewlines, splitTranscriptByLanguageCodes, mapAudioSegmentsToTextLines, normalizeTextForComparison, calculateSimilarity } from '../utils/transcriptParsing';
+import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
 
 // ============================================================================
 // TYPES
@@ -228,8 +228,7 @@ ${textBlock}`;
     const nlSplitPoints: number[] = [];    // from newlines (normalized)
     let lastNlCount = 0;
     let transcriptAccumulator = '';
-    let startedLineIndex: number | null = null;
-    // Self-correcting highlight: track actual position via transcript matching
+    // Highlight tracking: simple boundary counter
     let correctedHighlightIndex = 0;
     let lastScheduledHighlightIndex = -1;
 
@@ -357,11 +356,6 @@ ${textBlock}`;
                 audioChunks.push(pcm16);
                 audioTotalLength += pcm16.length;
 
-                // Trigger line start when first audio arrives (schedule to playback time)
-                if (startedLineIndex === null) {
-                  startedLineIndex = correctedHighlightIndex;
-                }
-
                 // Decode and schedule playback immediately
                 const chunk = base64ToUint8(inlineAudio);
                 const audioBuffer = pcmToAudioBuffer(chunk, audioContext, OUTPUT_SAMPLE_RATE);
@@ -405,9 +399,6 @@ ${textBlock}`;
             if (msg.serverContent?.outputTranscription?.text) {
               transcriptAccumulator += msg.serverContent.outputTranscription.text;
 
-              const prevLangCodeCount = lastLangCodeCount;
-              const prevNlCount = lastNlCount;
-
               // Track language code boundaries [xx-XX]
               const langCodeCount = countLanguageCodeSeparators(transcriptAccumulator);
               if (langCodeCount > lastLangCodeCount) {
@@ -428,79 +419,13 @@ ${textBlock}`;
                 lastNlCount = nlCount;
               }
 
-              // Trigger highlight logic if any boundary was detected (either type)
-              if (langCodeCount > prevLangCodeCount || nlCount > prevNlCount) {
-                // Self-correcting highlight: match completed transcript segment
-                // to original lines instead of blindly using boundary count
-                if (startedLineIndex !== null) {
-                  const segments = splitTranscriptByLanguageCodes(transcriptAccumulator);
-
-                  // Find the most recent completed segment with meaningful content
-                  let justCompletedText = '';
-                  for (let s = segments.length - 2; s >= 0; s--) {
-                    const seg = segments[s].trim();
-                    if (normalizeTextForComparison(seg).length >= 3) {
-                      justCompletedText = seg;
-                      break;
-                    }
-                  }
-
-                  if (justCompletedText) {
-                    // Match against original lines to find what was just spoken
-                    let bestMatch = -1;
-                    let bestScore = 0;
-                    for (let j = 0; j < lines.length; j++) {
-                      const score = calculateSimilarity(justCompletedText, lines[j].text);
-                      if (score > bestScore) {
-                        bestScore = score;
-                        bestMatch = j;
-                      }
-                    }
-
-                    if (bestScore >= 0.3 && bestMatch !== -1) {
-                      // Matched - next line to highlight is after the matched one
-                      correctedHighlightIndex = Math.min(bestMatch + 1, lines.length - 1);
-                    }
-                    // If no match (thinking/preamble text), don't advance
-                  }
-
-                  // Schedule highlight only if index changed
-                  if (correctedHighlightIndex !== lastScheduledHighlightIndex &&
-                      correctedHighlightIndex >= 0 && correctedHighlightIndex < lines.length) {
-                    scheduleLineStart(correctedHighlightIndex, lines[correctedHighlightIndex].text, audioTotalLength);
-                    lastScheduledHighlightIndex = correctedHighlightIndex;
-                  }
-                }
-              }
-
-              // Continuous self-correction: if current highlight clearly doesn't match
-              // what's being spoken, correct immediately (catches long-duration mismatches)
-              if (startedLineIndex !== null) {
-                const ongoingSegments = splitTranscriptByLanguageCodes(transcriptAccumulator);
-                const currentOngoingText = ongoingSegments[ongoingSegments.length - 1]?.trim() || '';
-                const normalizedOngoing = normalizeTextForComparison(currentOngoingText);
-
-                if (normalizedOngoing.length >= 20) {
-                  const currentLine = lines[correctedHighlightIndex];
-                  if (currentLine) {
-                    const currentSim = calculateSimilarity(currentOngoingText, currentLine.text);
-                    if (currentSim < 0.1) {
-                      // Very low similarity to current highlight - find the right line
-                      let bestIdx = -1;
-                      let bestSim = 0;
-                      for (let j = 0; j < lines.length; j++) {
-                        const s = calculateSimilarity(currentOngoingText, lines[j].text);
-                        if (s > bestSim) { bestSim = s; bestIdx = j; }
-                      }
-                      if (bestSim >= 0.5 && bestIdx !== -1 && bestIdx !== correctedHighlightIndex) {
-                        console.debug(`[GeminiLiveTts] Self-correcting highlight: ${correctedHighlightIndex} → ${bestIdx} (sim: ${bestSim.toFixed(2)})`);
-                        correctedHighlightIndex = bestIdx;
-                        onLineStart?.(bestIdx, lines[bestIdx].text);
-                        lastScheduledHighlightIndex = bestIdx;
-                      }
-                    }
-                  }
-                }
+              // Advance highlight using boundary count (whichever track found more)
+              const boundaryCount = Math.max(langCodeCount, nlCount);
+              const newHighlightIndex = Math.min(boundaryCount, lines.length - 1);
+              if (newHighlightIndex !== lastScheduledHighlightIndex && newHighlightIndex < lines.length) {
+                correctedHighlightIndex = newHighlightIndex;
+                scheduleLineStart(newHighlightIndex, lines[newHighlightIndex].text, audioTotalLength);
+                lastScheduledHighlightIndex = newHighlightIndex;
               }
             }
 
