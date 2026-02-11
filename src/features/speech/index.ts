@@ -27,9 +27,11 @@ export { validateTriggerAudio } from './services/triggerAudioAsset';
 
 // Utils
 export { pcmToWav, splitPcmBySilence } from './utils/audioProcessing';
-export { 
-  normalizeTranscriptForSplitting, 
+export {
+  normalizeTranscriptForSplitting,
   countTranscriptNewlines,
+  countLanguageCodeSeparators,
+  splitTranscriptByLanguageCodes,
   normalizeTextForComparison,
   extractContentLines,
   mapAudioSegmentsToTextLines

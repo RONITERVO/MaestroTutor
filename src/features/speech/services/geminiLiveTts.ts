@@ -26,7 +26,7 @@ import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
-import { countTranscriptNewlines, mapAudioSegmentsToTextLines, normalizeTranscriptForSplitting, normalizeTextForComparison, calculateSimilarity } from '../utils/transcriptParsing';
+import { countLanguageCodeSeparators, countTranscriptNewlines, splitTranscriptByLanguageCodes, mapAudioSegmentsToTextLines, normalizeTextForComparison, calculateSimilarity } from '../utils/transcriptParsing';
 
 // ============================================================================
 // TYPES
@@ -158,7 +158,7 @@ IMPORTANT RULES:
 - Do NOT add any intro, outro, commentary, or acknowledgment
 - Do NOT modify, translate, or interpret the text
 - Just speak the text immediately
-- Replace language codes with newlines.
+- dont replace language codes with newlines.
 TEXT TO READ:
 ${textBlock}`;
 
@@ -221,8 +221,12 @@ ${textBlock}`;
     // Audio accumulation for transcript-aware splitting
     const audioChunks: Int16Array[] = [];
     let audioTotalLength = 0;
-    const splitPoints: number[] = [];
-    let lastNewlineCount = 0;
+    // Dual-track split points: record from both separator types independently
+    // At finalization, we pick whichever found more boundaries (more = better segmentation)
+    const splitPoints: number[] = [];      // from language codes [xx-XX]
+    let lastLangCodeCount = 0;
+    const nlSplitPoints: number[] = [];    // from newlines (normalized)
+    let lastNlCount = 0;
     let transcriptAccumulator = '';
     let startedLineIndex: number | null = null;
     // Self-correcting highlight: track actual position via transcript matching
@@ -257,16 +261,31 @@ ${textBlock}`;
       const audioSegments: Int16Array[] = [];
       const includeTrailingRemainder = reason === 'turn-complete';
 
-      // Get expected segment count from transcript newlines
-      const expectedSegments = countTranscriptNewlines(transcriptAccumulator) + 1;
-      
+      // Single-line TTS: no ambiguity about audio-to-line mapping.
+      // The audio must be for the only line, regardless of transcript content.
+      // This avoids failed caching when the transcript contains only markers
+      // (e.g., "[es-ES] [happy]") without the actual spoken text.
+      if (lines.length === 1 && fullAudio.length >= 100 && includeTrailingRemainder) {
+        console.debug(`[GeminiLiveTts] Single-line TTS: direct mapping to line 0 (${(fullAudio.length / OUTPUT_SAMPLE_RATE).toFixed(1)}s audio)`);
+        onLineComplete?.(0, fullAudio);
+        return { audioSegments: [fullAudio], mapping: [0] };
+      }
+
+      // Choose best split method: whichever found more boundaries is more reliable.
+      // Language codes are preferred when equal (more precise boundaries),
+      // but if the model used only newlines, those will have more entries.
+      const useLangCodeSplits = splitPoints.length >= nlSplitPoints.length;
+      const activeSplitPoints = useLangCodeSplits ? splitPoints : nlSplitPoints;
+
+      console.debug(`[GeminiLiveTts] Split points: ${splitPoints.length} lang-code, ${nlSplitPoints.length} newline → using ${useLangCodeSplits ? 'lang-code' : 'newline'}`);
+
       // Split audio at recorded points, keeping ALL points (no deduplication)
       // This maintains correspondence with transcript lines
-      if (splitPoints.length > 0 && fullAudio.length > 0) {
+      if (activeSplitPoints.length > 0 && fullAudio.length > 0) {
         let startSample = 0;
         
         // Sort but DON'T deduplicate - keep all split points to match transcript lines
-        const sortedPoints = [...splitPoints]
+        const sortedPoints = [...activeSplitPoints]
           .sort((a, b) => a - b)
           .filter(p => p <= fullAudio.length); // Only filter points beyond audio length
 
@@ -286,20 +305,30 @@ ${textBlock}`;
         }
       }
 
-      console.debug(`[GeminiLiveTts] Expected ${expectedSegments} segments from transcript, got ${audioSegments.length} from splits`);
+      console.debug(`[GeminiLiveTts] ${audioSegments.length} audio segments from ${activeSplitPoints.length} split points`);
 
       // Map audio segments to original lines using text similarity
       const originalTexts = lines.map(l => l.text);
-      const mapping = mapAudioSegmentsToTextLines(originalTexts, transcriptAccumulator, audioSegments.length);
+      const mapping = mapAudioSegmentsToTextLines(originalTexts, transcriptAccumulator, audioSegments.length, useLangCodeSplits);
       
       console.debug(`[GeminiLiveTts] ${audioSegments.length} segments, ${lines.length} lines, mapping: [${mapping.join(',')}]`);
       
-      // Cache each segment with correct line (skip empty segments)
+      // Cache each segment with correct line (skip empty/oversized segments)
+      // Safety: reject segments longer than 3x average line length — they likely
+      // contain multiple lines' audio lumped together due to missing split points.
+      const avgSamplesPerLine = fullAudio.length / Math.max(lines.length, 1);
+      const maxSegmentSamples = avgSamplesPerLine * 3;
+
       for (let i = 0; i < audioSegments.length; i++) {
         const lineIdx = mapping[i];
         const segment = audioSegments[i];
         // Skip empty segments (from duplicate split points)
         if (segment.length < 100) continue; // Less than ~4ms of audio
+        // Skip oversized segments (likely contain audio from multiple lines)
+        if (segment.length > maxSegmentSamples) {
+          console.debug(`[GeminiLiveTts] seg${i} skipped: too long (${(segment.length / OUTPUT_SAMPLE_RATE).toFixed(1)}s vs avg ${(avgSamplesPerLine / OUTPUT_SAMPLE_RATE).toFixed(1)}s)`);
+          continue;
+        }
         if (lineIdx !== -1 && lineIdx < lines.length) {
           onLineComplete?.(lineIdx, segment);
         }
@@ -372,22 +401,39 @@ ${textBlock}`;
               }
             }
 
-            // 2. Handle Transcript - detect newlines for split points
+            // 2. Handle Transcript - dual-track split points (language codes AND newlines)
             if (msg.serverContent?.outputTranscription?.text) {
               transcriptAccumulator += msg.serverContent.outputTranscription.text;
-              // Use transcript parsing utility to handle language codes [xx-XX] as newlines
-              const newlineCount = countTranscriptNewlines(transcriptAccumulator);
-              if (newlineCount > lastNewlineCount) {
-                const diff = newlineCount - lastNewlineCount;
+
+              const prevLangCodeCount = lastLangCodeCount;
+              const prevNlCount = lastNlCount;
+
+              // Track language code boundaries [xx-XX]
+              const langCodeCount = countLanguageCodeSeparators(transcriptAccumulator);
+              if (langCodeCount > lastLangCodeCount) {
+                const diff = langCodeCount - lastLangCodeCount;
                 for (let i = 0; i < diff; i++) {
                   splitPoints.push(audioTotalLength);
                 }
+                lastLangCodeCount = langCodeCount;
+              }
 
+              // Track newline boundaries (independent of language codes)
+              const nlCount = countTranscriptNewlines(transcriptAccumulator);
+              if (nlCount > lastNlCount) {
+                const diff = nlCount - lastNlCount;
+                for (let i = 0; i < diff; i++) {
+                  nlSplitPoints.push(audioTotalLength);
+                }
+                lastNlCount = nlCount;
+              }
+
+              // Trigger highlight logic if any boundary was detected (either type)
+              if (langCodeCount > prevLangCodeCount || nlCount > prevNlCount) {
                 // Self-correcting highlight: match completed transcript segment
-                // to original lines instead of blindly using newlineCount
+                // to original lines instead of blindly using boundary count
                 if (startedLineIndex !== null) {
-                  const normalized = normalizeTranscriptForSplitting(transcriptAccumulator);
-                  const segments = normalized.split('\n');
+                  const segments = splitTranscriptByLanguageCodes(transcriptAccumulator);
 
                   // Find the most recent completed segment with meaningful content
                   let justCompletedText = '';
@@ -425,14 +471,12 @@ ${textBlock}`;
                     lastScheduledHighlightIndex = correctedHighlightIndex;
                   }
                 }
-                lastNewlineCount = newlineCount;
               }
 
               // Continuous self-correction: if current highlight clearly doesn't match
               // what's being spoken, correct immediately (catches long-duration mismatches)
               if (startedLineIndex !== null) {
-                const normalized = normalizeTranscriptForSplitting(transcriptAccumulator);
-                const ongoingSegments = normalized.split('\n');
+                const ongoingSegments = splitTranscriptByLanguageCodes(transcriptAccumulator);
                 const currentOngoingText = ongoingSegments[ongoingSegments.length - 1]?.trim() || '';
                 const normalizedOngoing = normalizeTextForComparison(currentOngoingText);
 
