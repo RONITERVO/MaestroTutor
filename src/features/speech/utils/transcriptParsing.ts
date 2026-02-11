@@ -14,8 +14,8 @@
  * - So: skip leading empty lines, then map 1:1 with audio segments
  */
 
-/** Matches language codes like [sv-SE], [fi-FI], [en-US] */
-const LANGUAGE_CODE_PATTERN = /\[([a-z]{2}-[A-Z]{2})\]/g;
+/** Matches language codes like [sv-SE], [fi-FI], [en-US], [cmn-CN] */
+const LANGUAGE_CODE_PATTERN = /\[([a-z]{2,3}-[A-Z]{2})\]/g;
 
 /** Matches emotion tags like [laughing], [excited] */
 const EMOTION_TAG_PATTERN = /\[(laughing|chuckles|excited|happy|thoughtful|curious|sad|angry|surprised|nervous|confident|whispers|sighs)\]/gi;
@@ -45,7 +45,7 @@ export function countTranscriptNewlines(transcript: string): number {
 }
 
 /**
- * Counts segment boundaries using language codes [xx-XX].
+ * Counts segment boundaries using language codes [xx-XX] or [xxx-XX].
  * Each language code marks the start of a new segment.
  * Returns number of boundaries (= language code count - 1).
  *
@@ -64,7 +64,7 @@ export function countLanguageCodeSeparators(transcript: string): number {
  * Falls back to returning the full transcript as a single entry if no codes found.
  */
 export function splitTranscriptByLanguageCodes(transcript: string): string[] {
-  const parts = transcript.split(/\[[a-z]{2}-[A-Z]{2}\]/);
+  const parts = transcript.split(/\[[a-z]{2,3}-[A-Z]{2}\]/);
   if (parts.length <= 1) return [transcript.trim()];
   return parts.slice(1).map(p => p.replace(/[\n\r]+/g, ' ').trim());
 }
