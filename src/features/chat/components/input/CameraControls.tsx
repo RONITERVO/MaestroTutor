@@ -67,6 +67,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
   const activePointerIdRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
   const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const wasExpandedOnTouchStartRef = useRef(false);
   
   // Timers
   const collapseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -187,6 +188,8 @@ const CameraControls: React.FC<CameraControlsProps> = ({
     const target = getActionFromElement(e.target as Element);
     
     if (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen') {
+      // Track whether selector was already open before this touch
+      wasExpandedOnTouchStartRef.current = isExpanded;
       // Touch/pen: expand immediately on any touch within cluster
       clearCollapseTimers();
       setIsExpanded(true);
@@ -205,7 +208,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
         startAutoCollapseTimer();
       }
     }
-  }, [getActionFromElement, clearCollapseTimers, startAutoCollapseTimer]);
+  }, [getActionFromElement, clearCollapseTimers, startAutoCollapseTimer, isExpanded]);
 
   // Unified pointer move handler
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
@@ -246,13 +249,33 @@ const CameraControls: React.FC<CameraControlsProps> = ({
     const target = getActionFromElement(element);
     
     if (pointerTypeRef.current === 'touch' || pointerTypeRef.current === 'pen') {
-      // Touch/pen: execute action on release if over a valid target
-      if (target) {
-        executeAction(target.action, target.deviceId);
+      const isTap = !isDraggingRef.current;
+      const wasClosed = !wasExpandedOnTouchStartRef.current;
+
+      if (isTap && wasClosed && target?.action === 'expand') {
+        // Tap on expand button when selector was closed → open and keep open for tap-to-select
+        setHighlightedAction(null);
+        startAutoCollapseTimer();
+      } else if (isTap && !wasClosed) {
+        // Tap when selector was already open (from a previous tap) → execute action or close
+        if (target && target.action !== 'expand') {
+          executeAction(target.action, target.deviceId);
+        } else {
+          // Tapped expand again or empty area → close
+          clearCollapseTimers();
+          setIsExpanded(false);
+        }
+        setHighlightedAction(null);
+      } else {
+        // Hold-and-drag gesture: execute action on release if over a valid target
+        if (target) {
+          executeAction(target.action, target.deviceId);
+        }
+        setHighlightedAction(null);
+        if (!target || target.action === 'expand') {
+          setIsExpanded(false);
+        }
       }
-      // Always collapse and reset after touch ends (whether action executed or dragged away)
-      setHighlightedAction(null);
-      setIsExpanded(false);
     } else {
       // Mouse: execute action on click (not drag)
       if (target && !isDraggingRef.current) {
@@ -265,7 +288,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
     activePointerIdRef.current = null;
     isDraggingRef.current = false;
     dragStartPosRef.current = null;
-  }, [getElementAtPoint, getActionFromElement, executeAction]);
+  }, [getElementAtPoint, getActionFromElement, executeAction, clearCollapseTimers, startAutoCollapseTimer]);
 
   // Pointer cancel handler
   const handlePointerCancel = useCallback((e: React.PointerEvent) => {
