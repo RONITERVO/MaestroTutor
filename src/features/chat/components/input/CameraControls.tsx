@@ -272,7 +272,9 @@ const CameraControls: React.FC<CameraControlsProps> = ({
           executeAction(target.action, target.deviceId);
         }
         setHighlightedAction(null);
-        setIsExpanded(false);
+        if (!target || target.action === 'expand') {
+          setIsExpanded(false);
+        }
       }
     } else {
       // Mouse: execute action on click (not drag)
