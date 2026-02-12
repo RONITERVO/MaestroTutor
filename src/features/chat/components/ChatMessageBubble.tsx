@@ -8,6 +8,7 @@ import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconChe
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import TextScrollwheel from './TextScrollwheel';
 import AudioPlayer from './AudioPlayer';
+import PdfViewer from './PdfViewer';
 import { useMaestroStore } from '../../../store';
 import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
@@ -541,11 +542,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isAttachmentAnImage = !!displayMime?.startsWith('image/');
   const isAttachmentAVideo = !!displayMime?.startsWith('video/');
   const isAttachmentAAudio = !!displayMime?.startsWith('audio/');
+  const isAttachmentAPdf = displayMime === 'application/pdf';
 
   const isImageSuccessfullyDisplayed = isAttachmentAnImage && displayUrl && !message.isGeneratingImage && !message.imageGenError;
   const isVideoSuccessfullyDisplayed = isAttachmentAVideo && displayUrl;
   const isAudioSuccessfullyDisplayed = isAttachmentAAudio && displayUrl && !message.isGeneratingImage && !message.imageGenError;
-  const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && displayUrl && !message.isGeneratingImage && !message.imageGenError;
+  const isPdfSuccessfullyDisplayed = isAttachmentAPdf && displayUrl && !message.isGeneratingImage && !message.imageGenError;
+  const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && displayUrl && !message.isGeneratingImage && !message.imageGenError;
 
   const selectedLoadingGif = useMemo(() => {
     const userLoadingGifs = loadingGifs as string[] | undefined;
@@ -565,7 +568,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     setLoadingGifError(false);
   }, [selectedLoadingGif, message.id, message.isGeneratingImage]);
 
-  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed);
+  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   
   if (message.thinking && !message.isGeneratingImage) {
     return (
@@ -648,7 +651,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         }}
         ref={registerBubbleEl}
       >
-          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed) && (
+          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && (
                <div 
                   ref={annotationViewportRef} 
                   className={`${imageContainerBaseClasses} ${imageContainerSizeClasses} ${imageContainerAspectClasses} ${imageContainerDynamicBg} ${imageContainerFlexCenteringClasses}`}
@@ -828,7 +831,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       </div>
                   )}
 
-                  {(isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed) && !isAnnotationActive && (
+                  {(isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && !isAnnotationActive && (
                       <div
                           ref={resizerRef}
                           onPointerDown={handleResizePointerDown}
@@ -846,6 +849,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                           <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-white' : 'text-gray-700'}`}>{message.imageMimeType}</p>
                           <p className={`mt-1 text-xs ${isUser ? 'text-blue-200' : 'text-gray-500'}`}>{t('chat.fileAttachment')}</p>
                       </div>
+                  )}
+                  {isPdfSuccessfullyDisplayed && !isAnnotationActive && (
+                    <div className="relative w-full">
+                      <PdfViewer
+                        src={displayUrl!}
+                        variant={isUser ? 'user' : 'assistant'}
+                      />
+                    </div>
                   )}
           {isAudioSuccessfullyDisplayed && !isAnnotationActive && (
             <div className="relative w-full">
