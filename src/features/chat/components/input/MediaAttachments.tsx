@@ -87,7 +87,6 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   const handleStopRecording = useCallback(() => {
     const rec = mediaRecorderRef.current;
     if (rec && rec.state === 'recording') {
-      try { rec.requestData(); } catch {}
       rec.stop();
     }
     if (recordingTimerRef.current) {
@@ -139,7 +138,9 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       recordedChunksRef.current = [];
       rec.ondataavailable = (event) => { if (event.data && event.data.size > 0) recordedChunksRef.current.push(event.data); };
       rec.onstop = () => {
-        const chosenType = rec.mimeType || mimeType || 'video/webm';
+        // Strip codec params (e.g. ";codecs=vp9,opus") — the comma in the
+        // codec list breaks data-URL parsing (browser splits on first comma).
+        const chosenType = (rec.mimeType || mimeType || 'video/webm').split(';')[0];
         const chunks = recordedChunksRef.current;
         recordedChunksRef.current = [];
         if (!chunks.length) return;
@@ -155,7 +156,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
           videoRecordTokenRef.current = null;
         }
       };
-      rec.start(1000);
+      rec.start();
       setIsRecording(true);
       recordingTimerRef.current = window.setTimeout(() => {
         if (mediaRecorderRef.current?.state === 'recording') {

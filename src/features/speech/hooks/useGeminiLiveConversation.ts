@@ -88,7 +88,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reje
   const reader = new FileReader();
   reader.onloadend = () => {
     const result = reader.result as string;
-    const [, base64] = result.split(',', 2);
+    const base64 = result.substring(result.indexOf(',') + 1);
     resolve(base64 || '');
   };
   reader.onerror = reject;
