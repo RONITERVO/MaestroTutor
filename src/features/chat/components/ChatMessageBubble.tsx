@@ -7,6 +7,7 @@ import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import TextScrollwheel from './TextScrollwheel';
+import AudioPlayer from './AudioPlayer';
 import { useMaestroStore } from '../../../store';
 import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
@@ -848,14 +849,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   )}
           {isAudioSuccessfullyDisplayed && !isAnnotationActive && (
             <div className="relative w-full">
-              <audio
+              <AudioPlayer
                 src={displayUrl!}
-                controls
-                className="w-full"
-              >
-                {t('chat.audioNotSupported')}
-              </audio>
-              <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-white/80' : 'text-gray-700'}`}>{displayMime}</p>
+                variant={isUser ? 'user' : 'assistant'}
+              />
             </div>
           )}
               </div>
@@ -874,7 +871,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
         {hasTextContent && (
            <div className={`transition-opacity duration-300
-                ${applyFocusedImageStyles 
+                ${applyFocusedImageStyles && !isAudioSuccessfullyDisplayed
                     ? `absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10`
                     : 'relative z-10 mt-1'
                 }

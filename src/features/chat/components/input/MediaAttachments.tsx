@@ -9,6 +9,7 @@ import { SmallSpinner } from '../../../../shared/ui/SmallSpinner';
 import { useMaestroStore } from '../../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityTokens';
 import LiveSessionControls from './LiveSessionControls';
+import AudioPlayer from '../AudioPlayer';
 
 interface MediaAttachmentsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
@@ -279,8 +280,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             </div>
           ) : attachedImageMimeType?.startsWith('audio/') ? (
             <div className="relative">
-              <audio src={attachedImageBase64} controls className="h-24 w-full object-contain rounded bg-black/5" />
-              <span className={`text-xs mt-1 truncate max-w-full px-1 block ${isSuggestionMode ? 'text-gray-600' : 'text-white'}`}>{attachedImageMimeType}</span>
+              <AudioPlayer src={attachedImageBase64} variant="preview" compact />
             </div>
           ) : (
             <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-gray-100' : 'bg-blue-300'} rounded`}>
