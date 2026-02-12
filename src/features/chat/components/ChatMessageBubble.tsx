@@ -4,11 +4,12 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
-import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck } from '../../../shared/ui/Icons';
+import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck, IconChevronLeft, IconChevronRight } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import TextScrollwheel from './TextScrollwheel';
 import AudioPlayer from './AudioPlayer';
 import PdfViewer from './PdfViewer';
+import { renderPdfPageToImage, getPdfPageCount } from './PdfViewer';
 import { useMaestroStore } from '../../../store';
 import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
@@ -95,6 +96,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const annotationTokenRef = useRef<string | null>(null);
+
+  // PDF page navigation state (used during annotation of a PDF)
+  const [pdfPageNum, setPdfPageNum] = useState(1);
+  const [pdfPageCount, setPdfPageCount] = useState(0);
+  const pdfSrcRef = useRef<string | null>(null);
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const createUiToken = useCallback(
@@ -222,6 +228,33 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     }
   };
 
+  const handleAnnotatePdf = async () => {
+    if (!displayUrl || !isPdfSuccessfullyDisplayed) return;
+    const [pageImage, count] = await Promise.all([
+      renderPdfPageToImage(displayUrl),
+      getPdfPageCount(displayUrl),
+    ]);
+    pdfSrcRef.current = displayUrl;
+    setPdfPageNum(1);
+    setPdfPageCount(count);
+    handleStartAnnotation(pageImage);
+  };
+
+  const handlePdfPageChange = useCallback(async (delta: number) => {
+    const src = pdfSrcRef.current;
+    if (!src || pdfPageCount <= 1) return;
+    const next = Math.max(1, Math.min(pdfPageNum + delta, pdfPageCount));
+    if (next === pdfPageNum) return;
+    const pageImage = await renderPdfPageToImage(src, next);
+    setPdfPageNum(next);
+    setAnnotationSourceUrl(pageImage);
+    setUndoStack([]);
+    isNewStrokeRef.current = true;
+    const canvas = editCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }, [pdfPageNum, pdfPageCount]);
+
   const handleLinePointerDown = (e: React.PointerEvent) => {
     pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
   };
@@ -314,6 +347,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     activePointersRef.current = [];
     setUndoStack([]);
     isNewStrokeRef.current = true;
+    // Reset PDF page state
+    setPdfPageNum(1);
+    setPdfPageCount(0);
+    pdfSrcRef.current = null;
     if (annotationTokenRef.current) {
       removeActivityToken(annotationTokenRef.current);
       annotationTokenRef.current = null;
@@ -734,6 +771,33 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                         )}
                         {isAnnotationActive && (
                           <>
+                            {pdfPageCount > 1 && (
+                              <div
+                                className="absolute top-2 left-2 z-30 pointer-events-auto flex items-center space-x-1"
+                                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                                onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                              >
+                                <button
+                                  onClick={() => handlePdfPageChange(-1)}
+                                  disabled={pdfPageNum <= 1}
+                                  className="p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80 disabled:opacity-40 disabled:cursor-default focus:outline-none transition-colors"
+                                >
+                                  <IconChevronLeft className="w-4 h-4" />
+                                </button>
+                                <span className="text-white text-xs font-medium tabular-nums bg-black/60 rounded px-1.5 py-0.5 select-none">
+                                  {pdfPageNum}/{pdfPageCount}
+                                </span>
+                                <button
+                                  onClick={() => handlePdfPageChange(1)}
+                                  disabled={pdfPageNum >= pdfPageCount}
+                                  className="p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80 disabled:opacity-40 disabled:cursor-default focus:outline-none transition-colors"
+                                >
+                                  <IconChevronRight className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
                             <div
                               className="absolute top-2 right-2 z-30 pointer-events-auto"
                               onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
@@ -856,6 +920,16 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                         src={displayUrl!}
                         variant={isUser ? 'user' : 'assistant'}
                       />
+                      {isFocusedMode && (
+                        <button
+                          onClick={handleAnnotatePdf}
+                          className="absolute top-2 right-2 z-20 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
+                          title={t('chat.annotateImage')}
+                          aria-label={t('chat.annotateImage')}
+                        >
+                          <IconPencil className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   )}
           {isAudioSuccessfullyDisplayed && !isAnnotationActive && (

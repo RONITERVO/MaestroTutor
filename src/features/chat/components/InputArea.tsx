@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { ALL_LANGUAGES } from '../../../core/config/languages';
-import { IconXMark, IconUndo, IconCheck, IconSend, IconPlus } from '../../../shared/ui/Icons';
+import { IconXMark, IconUndo, IconCheck, IconSend, IconPlus, IconChevronLeft, IconChevronRight } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import { LanguageSelectorGlobe } from '../../session';
 import { useMaestroStore } from '../../../store';
@@ -18,6 +18,7 @@ import Composer from './input/Composer';
 import AudioControls from './input/AudioControls';
 import CameraControls from './input/CameraControls';
 import SessionControls from '../../session/components/SessionControls';
+import { renderPdfPageToImage, getPdfPageCount } from './PdfViewer';
 
 interface InputAreaProps {
   onSttToggle: () => void;
@@ -181,6 +182,11 @@ const InputArea: React.FC<InputAreaProps> = ({
   const composerLastPinchDistanceRef = useRef<number>(0);
   const composerIsNewStrokeRef = useRef(true);
 
+  // PDF page navigation state (used during annotation of a PDF)
+  const [composerPdfPageNum, setComposerPdfPageNum] = useState(1);
+  const [composerPdfPageCount, setComposerPdfPageCount] = useState(0);
+  const composerPdfSrcRef = useRef<string | null>(null);
+
   const showLiveFeed = Boolean(liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !languageSelectionOpen);
   const isTwoUp = Boolean(attachedImageBase64 && showLiveFeed);
 
@@ -297,6 +303,34 @@ const InputArea: React.FC<InputAreaProps> = ({
     const frame = cv.toDataURL('image/jpeg', 0.92);
     startComposerAnnotationFromImage(frame);
   }, [t, startComposerAnnotationFromImage]);
+
+  const handleComposerAnnotatePdf = useCallback(async () => {
+    if (!attachedImageBase64 || attachedImageMimeType !== 'application/pdf') return;
+    const [pageImage, count] = await Promise.all([
+      renderPdfPageToImage(attachedImageBase64),
+      getPdfPageCount(attachedImageBase64),
+    ]);
+    composerPdfSrcRef.current = attachedImageBase64;
+    setComposerPdfPageNum(1);
+    setComposerPdfPageCount(count);
+    startComposerAnnotationFromImage(pageImage);
+  }, [attachedImageBase64, attachedImageMimeType, startComposerAnnotationFromImage]);
+
+  const handleComposerPdfPageChange = useCallback(async (delta: number) => {
+    const src = composerPdfSrcRef.current;
+    if (!src || composerPdfPageCount <= 1) return;
+    const next = Math.max(1, Math.min(composerPdfPageNum + delta, composerPdfPageCount));
+    if (next === composerPdfPageNum) return;
+    const pageImage = await renderPdfPageToImage(src, next);
+    setComposerPdfPageNum(next);
+    // Reset drawing canvas and undo stack for the new page
+    setComposerAnnotationSourceUrl(pageImage);
+    setComposerUndoStack([]);
+    composerIsNewStrokeRef.current = true;
+    const canvas = composerEditCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }, [composerPdfPageNum, composerPdfPageCount]);
 
   const composerGetPos = useCallback((e: React.PointerEvent<any>) => {
     const canvas = composerEditCanvasRef.current;
@@ -433,6 +467,10 @@ const InputArea: React.FC<InputAreaProps> = ({
     composerActivePointersRef.current = [];
     setComposerUndoStack([]);
     composerIsNewStrokeRef.current = true;
+    // Reset PDF page state
+    setComposerPdfPageNum(1);
+    setComposerPdfPageCount(0);
+    composerPdfSrcRef.current = null;
     if (composerAnnotateTokenRef.current) {
       endUiTask(composerAnnotateTokenRef.current);
       composerAnnotateTokenRef.current = null;
@@ -679,6 +717,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 onRemoveAttachment={removeAttachedImage}
                 onAnnotateImage={handleComposerAnnotateImage}
                 onAnnotateVideo={handleComposerAnnotateVideo}
+                onAnnotatePdf={handleComposerAnnotatePdf}
                 onSetAttachedImage={onSetAttachedImage}
                 onUserInputActivity={onUserInputActivity}
                 attachedPreviewVideoRef={attachedPreviewVideoRef}
@@ -730,6 +769,36 @@ const InputArea: React.FC<InputAreaProps> = ({
                   <canvas ref={composerEditCanvasRef} className="absolute top-0 left-0 w-full h-full cursor-crosshair" />
                 </div>
                 <div className="absolute inset-0 pointer-events-none">
+                  {composerPdfPageCount > 1 && (
+                    <div
+                      className="absolute top-2 left-2 pointer-events-auto flex items-center space-x-1"
+                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onPointerUp={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onPointerCancel={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleComposerPdfPageChange(-1)}
+                        disabled={composerPdfPageNum <= 1}
+                        className="p-1.5 rounded-full bg-black/60 text-white hover:bg-black disabled:opacity-40 disabled:cursor-default focus:outline-none"
+                      >
+                        <IconChevronLeft className="w-4 h-4" />
+                      </button>
+                      <span className="text-white text-xs font-medium tabular-nums bg-black/60 rounded px-1.5 py-0.5 select-none">
+                        {composerPdfPageNum}/{composerPdfPageCount}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleComposerPdfPageChange(1)}
+                        disabled={composerPdfPageNum >= composerPdfPageCount}
+                        className="p-1.5 rounded-full bg-black/60 text-white hover:bg-black disabled:opacity-40 disabled:cursor-default focus:outline-none"
+                      >
+                        <IconChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
                   <div
                     className="absolute top-2 right-2 pointer-events-auto"
                     onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}

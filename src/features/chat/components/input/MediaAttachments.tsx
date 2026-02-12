@@ -27,6 +27,7 @@ interface MediaAttachmentsProps {
   onRemoveAttachment: () => void;
   onAnnotateImage: () => void;
   onAnnotateVideo: () => void;
+  onAnnotatePdf: () => void;
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
   onUserInputActivity: () => void;
   attachedPreviewVideoRef: React.RefObject<HTMLVideoElement | null>;
@@ -47,6 +48,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   onRemoveAttachment,
   onAnnotateImage,
   onAnnotateVideo,
+  onAnnotatePdf,
   onSetAttachedImage,
   onUserInputActivity,
   attachedPreviewVideoRef,
@@ -286,6 +288,14 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
           ) : attachedImageMimeType === 'application/pdf' ? (
             <div className="relative">
               <PdfViewer src={attachedImageBase64} variant="preview" compact />
+              <button
+                type="button"
+                onClick={onAnnotatePdf}
+                className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-black"
+                title={t('chat.annotateImage')}
+              >
+                <IconPencil className="w-4 h-4" />
+              </button>
             </div>
           ) : (
             <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-gray-100' : 'bg-blue-300'} rounded`}>
