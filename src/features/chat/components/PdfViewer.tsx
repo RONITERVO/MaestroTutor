@@ -10,7 +10,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.
 
 /** Decode a base64 data-URL (or raw base64 string) into a Uint8Array. */
 export function decodeBase64ToUint8Array(src: string): Uint8Array {
-  const base64Part = src.includes(',') ? src.split(',')[1] : src;
+  const base64Part = src.includes(',') ? src.substring(src.indexOf(',') + 1) : src;
   const binaryString = atob(base64Part);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {

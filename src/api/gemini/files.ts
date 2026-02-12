@@ -15,12 +15,14 @@ const knownExpiredUris = new Set<string>();
  * Normalizes a MIME type to avoid encoding issues with parameters.
  * For audio/webm;codecs=opus, the = sign can get escaped as \u003d in JSON
  * which causes the Gemini API to reject the file with a MIME type mismatch.
- * This function strips codec parameters for audio types to avoid this issue.
+ * For video/webm;codecs=vp9,opus, the comma in the codec list breaks
+ * data URL parsing (split on comma grabs wrong segment).
+ * This function strips codec parameters to avoid these issues.
  */
 const normalizeMimeTypeForUpload = (mimeType: string): string => {
   if (!mimeType) return mimeType;
 
-  if (mimeType.startsWith('audio/') && mimeType.includes(';')) {
+  if (mimeType.includes(';')) {
     return mimeType.split(';')[0];
   }
 
@@ -168,7 +170,7 @@ export const uploadMediaToFiles = async (
 
   const normalizedMimeType = normalizeMimeTypeForUpload(mimeType);
 
-  const base64Data = dataUrl.split(',')[1];
+  const base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
   const byteCharacters = atob(base64Data);
   const byteNumbers = new Array(byteCharacters.length);
   for (let i = 0; i < byteCharacters.length; i++) {

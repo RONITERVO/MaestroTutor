@@ -189,7 +189,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         const videoConstraints: MediaStreamConstraints['video'] = selectedCameraId
           ? { deviceId: { exact: selectedCameraId } }
           : true;
-        const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
         visualContextStreamRef.current = stream;
         setLiveVideoStream(stream);
         if (visualContextVideoRef.current) {

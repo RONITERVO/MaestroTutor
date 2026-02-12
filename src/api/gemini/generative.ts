@@ -27,7 +27,7 @@ export const generateGeminiResponse = async (
     if (h.imageFileUri) {
       parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
     } else if (h.imageUrl && h.imageMimeType) {
-      const b64 = h.imageUrl.split(',')[1];
+      const b64 = h.imageUrl.substring(h.imageUrl.indexOf(',') + 1);
       if (b64) parts.push({ inlineData: { data: b64, mimeType: h.imageMimeType } });
     }
 
@@ -45,7 +45,7 @@ export const generateGeminiResponse = async (
   if (imageFileUri) {
     currentParts.push({ fileData: { fileUri: imageFileUri, mimeType: imageMimeType || 'image/jpeg' } });
   } else if (imageBase64 && imageMimeType) {
-    const b64 = imageBase64.split(',')[1];
+    const b64 = imageBase64.substring(imageBase64.indexOf(',') + 1);
     if (b64) currentParts.push({ inlineData: { data: b64, mimeType: imageMimeType } });
   }
 
