@@ -8,6 +8,40 @@ import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
 
+/** Return the total number of pages in a PDF data-URL. */
+export async function getPdfPageCount(src: string): Promise<number> {
+  const base64Part = src.includes(',') ? src.split(',')[1] : src;
+  const binaryString = atob(base64Part);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  return pdf.numPages;
+}
+
+/** Render a single PDF page to a JPEG data-URL (re-usable outside PdfViewer). */
+export async function renderPdfPageToImage(
+  src: string,
+  pageNum: number = 1,
+  scale: number = 1.5,
+): Promise<string> {
+  const base64Part = src.includes(',') ? src.split(',')[1] : src;
+  const binaryString = atob(base64Part);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  const page = await pdf.getPage(Math.min(pageNum, pdf.numPages));
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvas, viewport }).promise;
+  return canvas.toDataURL('image/jpeg', 0.92);
+}
+
 interface PdfViewerProps {
   src: string;
   variant: 'user' | 'assistant' | 'preview';
