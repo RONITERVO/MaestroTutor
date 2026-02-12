@@ -699,7 +699,7 @@ const InputArea: React.FC<InputAreaProps> = ({
           </div>
 
           {!languageSelectionOpen && (
-            <div className="animate-fade-in-up">
+            <div className="animate-fade-in-up mt-2">
               <MediaAttachments
                 t={t}
                 isSuggestionMode={isSuggestionMode}

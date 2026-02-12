@@ -229,7 +229,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   const liveSessionConnecting = liveSessionState === 'connecting';
 
   return (
-    <div className="flex flex-wrap justify-center items-start gap-2 mb-2 order-first w-full">
+    <div className="flex flex-wrap justify-center items-start gap-2 w-full">
       {attachedImageBase64 && (
         <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-gray-300' : 'bg-blue-400'} p-1 rounded-md`}>
           {attachedImageMimeType?.startsWith('image/') ? (
