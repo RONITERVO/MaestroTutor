@@ -18,7 +18,7 @@ import Composer from './input/Composer';
 import AudioControls from './input/AudioControls';
 import CameraControls from './input/CameraControls';
 import SessionControls from '../../session/components/SessionControls';
-import { renderPdfPageToImage, getPdfPageCount } from './PdfViewer';
+import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 
 interface InputAreaProps {
   onSttToggle: () => void;
@@ -182,11 +182,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   const composerLastPinchDistanceRef = useRef<number>(0);
   const composerIsNewStrokeRef = useRef(true);
 
-  // PDF page navigation state (used during annotation of a PDF)
-  const [composerPdfPageNum, setComposerPdfPageNum] = useState(1);
-  const [composerPdfPageCount, setComposerPdfPageCount] = useState(0);
-  const composerPdfSrcRef = useRef<string | null>(null);
-
   const showLiveFeed = Boolean(liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !languageSelectionOpen);
   const isTwoUp = Boolean(attachedImageBase64 && showLiveFeed);
 
@@ -304,33 +299,24 @@ const InputArea: React.FC<InputAreaProps> = ({
     startComposerAnnotationFromImage(frame);
   }, [t, startComposerAnnotationFromImage]);
 
+  const {
+    pdfPageNum: composerPdfPageNum,
+    pdfPageCount: composerPdfPageCount,
+    startPdfAnnotation: composerStartPdfAnnotation,
+    changePdfPage: handleComposerPdfPageChange,
+    resetPdfState: composerResetPdfState,
+  } = usePdfAnnotation({
+    editCanvasRef: composerEditCanvasRef,
+    onStartAnnotation: startComposerAnnotationFromImage,
+    setAnnotationSourceUrl: setComposerAnnotationSourceUrl,
+    setUndoStack: setComposerUndoStack,
+    isNewStrokeRef: composerIsNewStrokeRef,
+  });
+
   const handleComposerAnnotatePdf = useCallback(async () => {
     if (!attachedImageBase64 || attachedImageMimeType !== 'application/pdf') return;
-    const [pageImage, count] = await Promise.all([
-      renderPdfPageToImage(attachedImageBase64),
-      getPdfPageCount(attachedImageBase64),
-    ]);
-    composerPdfSrcRef.current = attachedImageBase64;
-    setComposerPdfPageNum(1);
-    setComposerPdfPageCount(count);
-    startComposerAnnotationFromImage(pageImage);
-  }, [attachedImageBase64, attachedImageMimeType, startComposerAnnotationFromImage]);
-
-  const handleComposerPdfPageChange = useCallback(async (delta: number) => {
-    const src = composerPdfSrcRef.current;
-    if (!src || composerPdfPageCount <= 1) return;
-    const next = Math.max(1, Math.min(composerPdfPageNum + delta, composerPdfPageCount));
-    if (next === composerPdfPageNum) return;
-    const pageImage = await renderPdfPageToImage(src, next);
-    setComposerPdfPageNum(next);
-    // Reset drawing canvas and undo stack for the new page
-    setComposerAnnotationSourceUrl(pageImage);
-    setComposerUndoStack([]);
-    composerIsNewStrokeRef.current = true;
-    const canvas = composerEditCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }, [composerPdfPageNum, composerPdfPageCount]);
+    await composerStartPdfAnnotation(attachedImageBase64);
+  }, [attachedImageBase64, attachedImageMimeType, composerStartPdfAnnotation]);
 
   const composerGetPos = useCallback((e: React.PointerEvent<any>) => {
     const canvas = composerEditCanvasRef.current;
@@ -467,15 +453,12 @@ const InputArea: React.FC<InputAreaProps> = ({
     composerActivePointersRef.current = [];
     setComposerUndoStack([]);
     composerIsNewStrokeRef.current = true;
-    // Reset PDF page state
-    setComposerPdfPageNum(1);
-    setComposerPdfPageCount(0);
-    composerPdfSrcRef.current = null;
+    composerResetPdfState();
     if (composerAnnotateTokenRef.current) {
       endUiTask(composerAnnotateTokenRef.current);
       composerAnnotateTokenRef.current = null;
     }
-  }, [endUiTask]);
+  }, [endUiTask, composerResetPdfState]);
 
   const handleComposerSave = useCallback(() => {
     if (!composerEditCanvasRef.current || !composerImageRef.current || !composerViewportRef.current) return;
