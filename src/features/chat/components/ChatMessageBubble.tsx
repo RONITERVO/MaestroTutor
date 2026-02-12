@@ -9,7 +9,7 @@ import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import TextScrollwheel from './TextScrollwheel';
 import AudioPlayer from './AudioPlayer';
 import PdfViewer from './PdfViewer';
-import { renderPdfPageToImage, getPdfPageCount } from './PdfViewer';
+import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 import { useMaestroStore } from '../../../store';
 import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
@@ -97,10 +97,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const annotationTokenRef = useRef<string | null>(null);
 
-  // PDF page navigation state (used during annotation of a PDF)
-  const [pdfPageNum, setPdfPageNum] = useState(1);
-  const [pdfPageCount, setPdfPageCount] = useState(0);
-  const pdfSrcRef = useRef<string | null>(null);
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const createUiToken = useCallback(
@@ -203,6 +199,20 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     setIsAnnotating(true);
   }, [isFocusedMode, onUserInputActivity, createUiToken]);
 
+  const {
+    pdfPageNum,
+    pdfPageCount,
+    startPdfAnnotation,
+    changePdfPage: handlePdfPageChange,
+    resetPdfState,
+  } = usePdfAnnotation({
+    editCanvasRef,
+    onStartAnnotation: handleStartAnnotation,
+    setAnnotationSourceUrl,
+    setUndoStack,
+    isNewStrokeRef,
+  });
+
   const handleAnnotateVideo = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -230,30 +240,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   const handleAnnotatePdf = async () => {
     if (!displayUrl || !isPdfSuccessfullyDisplayed) return;
-    const [pageImage, count] = await Promise.all([
-      renderPdfPageToImage(displayUrl),
-      getPdfPageCount(displayUrl),
-    ]);
-    pdfSrcRef.current = displayUrl;
-    setPdfPageNum(1);
-    setPdfPageCount(count);
-    handleStartAnnotation(pageImage);
+    await startPdfAnnotation(displayUrl);
   };
-
-  const handlePdfPageChange = useCallback(async (delta: number) => {
-    const src = pdfSrcRef.current;
-    if (!src || pdfPageCount <= 1) return;
-    const next = Math.max(1, Math.min(pdfPageNum + delta, pdfPageCount));
-    if (next === pdfPageNum) return;
-    const pageImage = await renderPdfPageToImage(src, next);
-    setPdfPageNum(next);
-    setAnnotationSourceUrl(pageImage);
-    setUndoStack([]);
-    isNewStrokeRef.current = true;
-    const canvas = editCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }, [pdfPageNum, pdfPageCount]);
 
   const handleLinePointerDown = (e: React.PointerEvent) => {
     pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
@@ -347,15 +335,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     activePointersRef.current = [];
     setUndoStack([]);
     isNewStrokeRef.current = true;
-    // Reset PDF page state
-    setPdfPageNum(1);
-    setPdfPageCount(0);
-    pdfSrcRef.current = null;
+    resetPdfState();
     if (annotationTokenRef.current) {
       removeActivityToken(annotationTokenRef.current);
       annotationTokenRef.current = null;
     }
-  }, [removeActivityToken]);
+  }, [removeActivityToken, resetPdfState]);
 
   const handleSaveAnnotation = () => {
     if (!editCanvasRef.current || !imageForAnnotationRef.current || !annotationViewportRef.current) return;
@@ -914,13 +899,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                           <p className={`mt-1 text-xs ${isUser ? 'text-blue-200' : 'text-gray-500'}`}>{t('chat.fileAttachment')}</p>
                       </div>
                   )}
-                  {isPdfSuccessfullyDisplayed && !isAnnotationActive && (
-                    <div className="relative w-full">
+                  {isPdfSuccessfullyDisplayed && (
+                    <div className={`relative w-full ${isAnnotationActive ? 'hidden' : ''}`}>
                       <PdfViewer
                         src={displayUrl!}
                         variant={isUser ? 'user' : 'assistant'}
                       />
-                      {isFocusedMode && (
+                      {isFocusedMode && !isAnnotationActive && (
                         <button
                           onClick={handleAnnotatePdf}
                           className="absolute top-2 right-2 z-20 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"

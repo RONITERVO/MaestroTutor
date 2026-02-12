@@ -8,15 +8,43 @@ import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
 
-/** Return the total number of pages in a PDF data-URL. */
-export async function getPdfPageCount(src: string): Promise<number> {
+/** Decode a base64 data-URL (or raw base64 string) into a Uint8Array. */
+export function decodeBase64ToUint8Array(src: string): Uint8Array {
   const base64Part = src.includes(',') ? src.split(',')[1] : src;
   const binaryString = atob(base64Part);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  return bytes;
+}
+
+// Simple cache for parsed PDFDocumentProxy objects keyed by src.
+const pdfPromiseCache = new Map<string, Promise<pdfjsLib.PDFDocumentProxy>>();
+const PDF_CACHE_MAX = 4;
+
+/** Return a cached or freshly-loaded PDFDocumentProxy for the given src. */
+export async function getOrLoadPdf(src: string): Promise<pdfjsLib.PDFDocumentProxy> {
+  const existing = pdfPromiseCache.get(src);
+  if (existing) return existing;
+
+  const bytes = decodeBase64ToUint8Array(src);
+  const loadPromise = pdfjsLib.getDocument({ data: bytes }).promise;
+
+  if (pdfPromiseCache.size >= PDF_CACHE_MAX) {
+    const oldestKey = pdfPromiseCache.keys().next().value;
+    if (oldestKey !== undefined) pdfPromiseCache.delete(oldestKey);
+  }
+
+  pdfPromiseCache.set(src, loadPromise);
+  loadPromise.catch(() => pdfPromiseCache.delete(src));
+
+  return loadPromise;
+}
+
+/** Return the total number of pages in a PDF data-URL. */
+export async function getPdfPageCount(src: string): Promise<number> {
+  const pdf = await getOrLoadPdf(src);
   return pdf.numPages;
 }
 
@@ -26,13 +54,8 @@ export async function renderPdfPageToImage(
   pageNum: number = 1,
   scale: number = 1.5,
 ): Promise<string> {
-  const base64Part = src.includes(',') ? src.split(',')[1] : src;
-  const binaryString = atob(base64Part);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  if (pageNum < 1) throw new Error(`Invalid page number: ${pageNum}. Must be >= 1.`);
+  const pdf = await getOrLoadPdf(src);
   const page = await pdf.getPage(Math.min(pageNum, pdf.numPages));
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
@@ -69,14 +92,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
       setVisiblePage(1);
 
       try {
-        const base64Part = src.includes(',') ? src.split(',')[1] : src;
-        const binaryString = atob(base64Part);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+        const pdf = await getOrLoadPdf(src);
         if (cancelled) return;
 
         const numPages = pdf.numPages;
