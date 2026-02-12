@@ -339,7 +339,21 @@ const InputArea: React.FC<InputAreaProps> = ({
       composerLastPosRef.current = composerGetPos(e);
       composerIsNewStrokeRef.current = true;
     } else if (composerActivePointersRef.current.length === 2) {
+      // If a stroke was accidentally started by the first finger, undo it
+      if (!composerIsNewStrokeRef.current) {
+        const canvas = composerEditCanvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (canvas && ctx) {
+          setComposerUndoStack(prev => {
+            if (prev.length === 0) return prev;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.putImageData(prev[prev.length - 1], 0, 0);
+            return prev.slice(0, -1);
+          });
+        }
+      }
       composerIsDrawingRef.current = false;
+      composerLastPosRef.current = null;
       const vp = composerViewportRef.current?.getBoundingClientRect();
       if (!vp) return;
       const [p1, p2] = composerActivePointersRef.current;
@@ -438,7 +452,8 @@ const InputArea: React.FC<InputAreaProps> = ({
       if (prev.length === 0) return prev;
       const newStack = prev.slice(0, -1);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (newStack.length > 0) ctx.putImageData(newStack[newStack.length - 1], 0, 0);
+      // Restore the last snapshot (state before the last stroke was drawn)
+      ctx.putImageData(prev[prev.length - 1], 0, 0);
       return newStack;
     });
   }, []);
@@ -736,7 +751,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                     src={composerAnnotationSourceUrl!}
                     alt={t('chat.annotateModal.editingPreviewAlt')}
                     className="block w-full h-full object-contain pointer-events-none"
-                    style={{ opacity: 0.7 }}
+                    style={{ opacity: 1 }}
                     onLoad={(e) => {
                       const img = e.currentTarget;
                       if (img.naturalWidth > 0) {

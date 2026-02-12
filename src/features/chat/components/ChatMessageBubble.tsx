@@ -386,13 +386,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         }
   
         const newStack = prevStack.slice(0, -1);
-        
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        if (newStack.length > 0) {
-            ctx.putImageData(newStack[newStack.length - 1], 0, 0);
-        }
-        
+
+        // Restore the last snapshot (state before the last stroke was drawn)
+        ctx.putImageData(prevStack[prevStack.length - 1], 0, 0);
+
         return newStack;
     });
   }, []);
@@ -418,7 +417,21 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           lastPosRef.current = getTransformedPos(e);
           isNewStrokeRef.current = true;
       } else if (activePointersRef.current.length === 2) {
+          // If a stroke was accidentally started by the first finger, undo it
+          if (!isNewStrokeRef.current) {
+              const canvas = editCanvasRef.current;
+              const ctx = canvas?.getContext('2d');
+              if (canvas && ctx) {
+                  setUndoStack(prev => {
+                      if (prev.length === 0) return prev;
+                      ctx.clearRect(0, 0, canvas.width, canvas.height);
+                      ctx.putImageData(prev[prev.length - 1], 0, 0);
+                      return prev.slice(0, -1);
+                  });
+              }
+          }
           isDrawingRef.current = false;
+          lastPosRef.current = null;
           const viewportRect = annotationViewportRef.current?.getBoundingClientRect();
           if (!viewportRect) return;
           const p1 = activePointersRef.current[0];
@@ -728,7 +741,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                 src={isAnnotationActive ? annotationSourceUrl! : displayUrl!}
                                 alt={isAnnotationActive ? t('chat.annotateModal.editingPreviewAlt') : (t('chat.imagePreview.alt'))}
                                 className={`block w-full h-full pointer-events-none ${!isAnnotationActive ? 'object-contain' : ''}`}
-                                style={{ opacity: isAnnotationActive ? 0.7 : 1 }}
+                                style={{ opacity: 1 }}
                                 onLoad={(e) => {
                                     const img = e.currentTarget;
                                     if (img.naturalWidth > 0 && img.naturalHeight > 0) {
