@@ -10,6 +10,7 @@ import { useMaestroStore } from '../../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityTokens';
 import LiveSessionControls from './LiveSessionControls';
 import AudioPlayer from '../AudioPlayer';
+import PdfViewer from '../PdfViewer';
 
 interface MediaAttachmentsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
@@ -281,6 +282,10 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
           ) : attachedImageMimeType?.startsWith('audio/') ? (
             <div className="relative">
               <AudioPlayer src={attachedImageBase64} variant="preview" compact />
+            </div>
+          ) : attachedImageMimeType === 'application/pdf' ? (
+            <div className="relative">
+              <PdfViewer src={attachedImageBase64} variant="preview" compact />
             </div>
           ) : (
             <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-gray-100' : 'bg-blue-300'} rounded`}>
