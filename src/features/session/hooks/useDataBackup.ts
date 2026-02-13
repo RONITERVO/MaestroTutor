@@ -340,7 +340,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       const current = (await getAssetsLoadingGifs()) || [];
       let manifest: string[] = [];
       try {
-        const resp = await fetch('/gifs/manifest.json', { cache: 'force-cache' });
+        const resp = await fetch(import.meta.env.BASE_URL + 'gifs/manifest.json', { cache: 'force-cache' });
         if (resp.ok) manifest = await resp.json();
       } catch {}
       const merged = uniq([...current, ...(importedLoadingGifs || []), ...manifest]);

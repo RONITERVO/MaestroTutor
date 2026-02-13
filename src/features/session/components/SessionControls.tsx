@@ -196,14 +196,14 @@ const SessionControls: React.FC = () => {
 
     // Restore default avatar after clearing
     try {
-      const man = await fetch('/maestro-avatars/manifest.json', { cache: 'force-cache' });
+      const man = await fetch(import.meta.env.BASE_URL + 'maestro-avatars/manifest.json', { cache: 'force-cache' });
       let defaultFound = false;
       if (man.ok) {
         const list: string[] = await man.json();
         if (Array.isArray(list)) {
           for (const name of list) {
             try {
-              const r = await fetch(`/maestro-avatars/${name}`, { cache: 'force-cache' });
+              const r = await fetch(`${import.meta.env.BASE_URL}maestro-avatars/${name}`, { cache: 'force-cache' });
               if (r.ok) {
                 const blob = await r.blob();
                 const mime = blob.type || 'image/png';

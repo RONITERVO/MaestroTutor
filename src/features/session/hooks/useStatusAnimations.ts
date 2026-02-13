@@ -23,7 +23,7 @@ export const useStatusAnimations = () => {
   useEffect(() => {
     (async () => {
       try {
-        const resp = await fetch('/animations/manifest.json', { cache: 'force-cache' });
+        const resp = await fetch(import.meta.env.BASE_URL + 'animations/manifest.json', { cache: 'force-cache' });
         if (!resp.ok) return;
         const data: AnimationManifest = await resp.json();
         const map: StageAnimationMap = new Map();
@@ -47,7 +47,7 @@ export const useStatusAnimations = () => {
     if (!pool || pool.length === 0) return;
 
     const randomIndex = Math.floor(Math.random() * pool.length);
-    setCurrentAnimation('/animations/' + pool[randomIndex]);
+    setCurrentAnimation(import.meta.env.BASE_URL + 'animations/' + pool[randomIndex]);
     setIsVisible(true);
   }, [maestroActivityStage]);
 
