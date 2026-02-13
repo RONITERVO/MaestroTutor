@@ -170,7 +170,7 @@ export const useAppAssets = ({
         const current = (await getAssetsLoadingGifs()) || [];
         let manifest: string[] = [];
         try {
-          const resp = await fetch('/gifs/manifest.json', { cache: 'force-cache' });
+          const resp = await fetch(import.meta.env.BASE_URL + 'gifs/manifest.json', { cache: 'force-cache' });
           if (resp.ok) manifest = await resp.json();
         } catch { /* ignore */ }
         const merged = uniq([...current, ...manifest]);
