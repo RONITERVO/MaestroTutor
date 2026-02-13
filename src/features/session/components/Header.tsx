@@ -4,7 +4,9 @@
 import React, { forwardRef, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
+import StatusAnimationBubble from './StatusAnimationBubble';
 import { IconShield, IconTerminal } from '../../../shared/ui/Icons';
+import { useStatusAnimations } from '../hooks/useStatusAnimations';
 import { useMaestroStore } from '../../../store';
 import { parseLanguagePairId } from '../../../shared/utils/languageUtils';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
@@ -129,6 +131,8 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
     [maestroActivityStage, activeUiTokens, isHolding, isLive]
   );
 
+  const { currentAnimation, isVisible, handleAnimationEnded, handleTransitionEnd } = useStatusAnimations();
+
   return (
     <>
       {/* 
@@ -170,6 +174,21 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
           </div>
         </div>
        </div>
+
+       {/* Status Animation Bubble - circular video below the flag */}
+       {currentAnimation && (
+         <div
+           className="fixed left-0 z-40 pl-3"
+           style={{ top: 'calc(1rem + env(safe-area-inset-top) + 40px)' }}
+         >
+           <StatusAnimationBubble
+             currentAnimation={currentAnimation}
+             isVisible={isVisible}
+             onEnded={handleAnimationEnded}
+             onTransitionEnd={handleTransitionEnd}
+           />
+         </div>
+       )}
 
        <div
          className={`fixed top-4 right-4 z-40 flex items-center gap-2 transition-all duration-300 ease-in-out ${
