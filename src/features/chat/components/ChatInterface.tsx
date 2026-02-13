@@ -85,7 +85,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
   const targetLanguageDef = useMaestroStore(selectTargetLanguageDef) || ALL_LANGUAGES[0];
   const nativeLanguageDef = useMaestroStore(selectNativeLanguageDef) || ALL_LANGUAGES[0];
-  const loadingGifs = useMaestroStore(state => state.loadingGifs);
+  const loadingAnimations = useMaestroStore(state => state.loadingAnimations);
   const transitioningImageId = useMaestroStore(state => state.transitioningImageId);
   const speakingUtteranceText = useMaestroStore(selectSpeakingUtteranceText);
   const imageLoadDurations = useMaestroStore(state => state.imageLoadDurations);
@@ -691,7 +691,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 isFocusedMode={imageFocusedModeEnabled} 
                 speakingUtteranceText={speakingUtteranceText} 
                 estimatedLoadTime={estimatedImageLoadTime} 
-                loadingGifs={loadingGifs}
+                loadingAnimations={loadingAnimations}
                 t={t}
                 onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                 handleSpeakWholeMessage={handleSpeakWholeMessage}

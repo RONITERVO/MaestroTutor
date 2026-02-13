@@ -111,7 +111,6 @@ export interface AppSettings {
   isSuggestionMode: boolean;
   historyBookmarkMessageId?: string | null;
   maxVisibleMessages?: number;
-  loadingGifs?: string[] | null;
 }
 
 export interface GroundingChunk {

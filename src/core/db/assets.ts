@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { openDB, ASSETS_STORE } from './index';
 
-const LOADING_GIFS_KEY = 'loadingGifs';
+const LEGACY_LOADING_GIFS_KEY = 'loadingGifs';
 const MAESTRO_PROFILE_KEY = 'maestroProfileImage';
 
 export type MaestroProfileAsset = {
@@ -13,24 +13,13 @@ export type MaestroProfileAsset = {
   updatedAt?: number;
 };
 
-export async function getLoadingGifsDB(): Promise<string[] | null> {
+export async function deleteLegacyLoadingGifsDB(): Promise<void> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(ASSETS_STORE, 'readonly');
-    const st = tx.objectStore(ASSETS_STORE);
-    const req = st.get(LOADING_GIFS_KEY);
-    req.onerror = () => reject(new Error('Error reading loading gifs from DB'));
-    req.onsuccess = () => resolve(req.result ? (req.result.value as string[]) : null);
-  });
-}
-
-export async function setLoadingGifsDB(gifs: string[]): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const tx = db.transaction(ASSETS_STORE, 'readwrite');
     const st = tx.objectStore(ASSETS_STORE);
-    const req = st.put({ key: LOADING_GIFS_KEY, value: gifs });
-    req.onerror = () => reject(new Error('Error saving loading gifs to DB'));
+    const req = st.delete(LEGACY_LOADING_GIFS_KEY);
+    req.onerror = () => resolve();
     req.onsuccess = () => resolve();
   });
 }

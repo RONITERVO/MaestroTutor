@@ -29,14 +29,13 @@ import {
   setChatMetaDB,
 } from '../../chat';
 import { getGlobalProfileDB, setGlobalProfileDB } from '..';
-import { getLoadingGifsDB as getAssetsLoadingGifs, setLoadingGifsDB as setAssetsLoadingGifs, getMaestroProfileImageDB, setMaestroProfileImageDB } from '../../../core/db/assets';
+import { getMaestroProfileImageDB, setMaestroProfileImageDB } from '../../../core/db/assets';
 import { DB_VERSION } from '../../../core/db/index';
 
 // --- Config ---
 import { ALL_LANGUAGES, DEFAULT_NATIVE_LANG_CODE } from '../../../core/config/languages';
 
 // --- Utils ---
-import { uniq } from '../../../shared/utils/common';
 import { findLanguageByExactCode, findLanguageByPrimarySubtag } from '../../../shared/utils/languageUtils';
 import { useMaestroStore } from '../../../store';
 
@@ -188,7 +187,6 @@ const streamNdjsonLines = async (file: File, onLine: (line: string) => Promise<v
 
 export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn => {
   const setMessages = useMaestroStore(state => state.setMessages);
-  const setLoadingGifs = useMaestroStore(state => state.setLoadingGifs);
   const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
   const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
   const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
@@ -212,8 +210,6 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
 
       const allMetas = await getAllChatMetasDB();
       const gp = await getGlobalProfileDB();
-      let assetsLoadingGifs: string[] = [];
-      try { assetsLoadingGifs = (await getAssetsLoadingGifs()) || []; } catch {}
       let maestroProfile: any = null;
       try { maestroProfile = await getMaestroProfileImageDB(); } catch {}
 
@@ -227,7 +223,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       const writeBackupLines = async (writer: BackupLineWriter) => {
         await writer.write(buildHeaderLine());
         await writer.write(buildJsonLine({ type: 'globalProfile', text: gp?.text || null }));
-        await writer.write(buildJsonLine({ type: 'assets', loadingGifs: assetsLoadingGifs, maestroProfile }));
+        await writer.write(buildJsonLine({ type: 'assets', maestroProfile }));
 
         await iterateChatHistoriesDB(async (pairId, messages) => {
           if (!pairId) return;
@@ -335,19 +331,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
     }
   }, [t]);
 
-  const applyImportedAssets = useCallback(async (importedLoadingGifs: string[] | null, importedMaestroProfile: any | null) => {
-    try {
-      const current = (await getAssetsLoadingGifs()) || [];
-      let manifest: string[] = [];
-      try {
-        const resp = await fetch(import.meta.env.BASE_URL + 'gifs/manifest.json', { cache: 'force-cache' });
-        if (resp.ok) manifest = await resp.json();
-      } catch {}
-      const merged = uniq([...current, ...(importedLoadingGifs || []), ...manifest]);
-      await setAssetsLoadingGifs(merged);
-      setLoadingGifs(merged);
-    } catch {}
-
+  const applyImportedAssets = useCallback(async (importedMaestroProfile: any | null) => {
     if (importedMaestroProfile) {
       try {
         let profileToPersist: any = { ...importedMaestroProfile };
@@ -358,7 +342,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
         } catch { /* ignore */ }
       } catch { /* ignore */ }
     }
-  }, [setLoadingGifs]);
+  }, []);
 
   const finalizeLoad = useCallback(async (loadedCount: number) => {
     alert(t('startPage.loadSuccess', { count: loadedCount }));
@@ -402,7 +386,6 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
 
     // --- Actual import pass ---
     let globalProfileText: string | null = null;
-    let importedLoadingGifs: string[] | null = null;
     let importedMaestroProfile: any | null = null;
     const metas: Record<string, any> = {};
     let currentPairId: string | null = null;
@@ -440,9 +423,6 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       }
 
       if (type === 'assets') {
-        if (Array.isArray(parsed.loadingGifs)) {
-          importedLoadingGifs = parsed.loadingGifs as string[];
-        }
         if (parsed.maestroProfile && typeof parsed.maestroProfile === 'object') {
           const mp = parsed.maestroProfile as any;
           if (mp && (typeof mp.dataUrl === 'string' || typeof mp.uri === 'string')) {
@@ -498,7 +478,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       try { await setGlobalProfileDB(trimmed); } catch { /* ignore */ }
     }
 
-    await applyImportedAssets(importedLoadingGifs, importedMaestroProfile);
+    await applyImportedAssets(importedMaestroProfile);
     await finalizeLoad(loadedCount);
   }, [applyImportedAssets, finalizeLoad]);
 
@@ -547,7 +527,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
       const writeBackupLines = async (writer: BackupLineWriter) => {
         await writer.write(buildHeaderLine());
         await writer.write(buildJsonLine({ type: 'globalProfile', text: null }));
-        await writer.write(buildJsonLine({ type: 'assets', loadingGifs: [], maestroProfile: null }));
+        await writer.write(buildJsonLine({ type: 'assets', maestroProfile: null }));
 
         let chunkIndex = 0;
         let parts: string[] = [];
