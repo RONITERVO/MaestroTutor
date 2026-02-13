@@ -1,0 +1,592 @@
+{
+  "version": 1,
+  "animations": [
+    {
+      "file": "maestro_1.mp4",
+      "stages": [
+        "observing_high",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_2.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_3.mp4",
+      "stages": [
+        "speaking"
+      ]
+    },
+    {
+      "file": "maestro_4.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_5.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_6.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_7.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_8.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_9.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_10.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_11.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_12.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_13.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_14.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_15.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_16.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_17.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_18.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_19.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_20.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_21.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_22.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_23.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_24.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_25.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_26.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_27.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_28.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_29.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_30.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_31.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_32.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_33.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_34.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_35.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_36.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_37.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_38.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_39.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_40.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_41.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_42.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_43.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_44.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_45.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_46.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_47.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_48.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_49.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    },
+    {
+      "file": "maestro_50.mp4",
+      "stages": [
+        "idle",
+        "observing_low",
+        "observing_medium",
+        "observing_high",
+        "typing",
+        "speaking",
+        "listening"
+      ]
+    }
+  ]
+}
