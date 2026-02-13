@@ -16,11 +16,13 @@ export { default as LanguageScrollWheel } from './components/LanguageScrollWheel
 export { default as GlobalProfileSummary } from './components/GlobalProfileSummary';
 export { default as CollapsedMaestroStatus } from './components/CollapsedMaestroStatus';
 export { default as SessionControls } from './components/SessionControls';
+export { default as StatusAnimationBubble } from './components/StatusAnimationBubble';
 
 // Hooks
 export { useSmartReengagement } from './hooks/useSmartReengagement';
 export { useLanguageSelectionController as useLanguageSelection } from './hooks/useLanguageSelection';
 export { useDataBackup } from './hooks/useDataBackup';
+export { useStatusAnimations } from './hooks/useStatusAnimations';
 
 // Services
 export {
