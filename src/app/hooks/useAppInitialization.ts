@@ -33,11 +33,11 @@ export const useAppInitialization = ({
 
   useAppLifecycle(t);
 
-  const setLoadingGifs = useMaestroStore(state => state.setLoadingGifs);
+  const setLoadingAnimations = useMaestroStore(state => state.setLoadingAnimations);
   const setMaestroAvatar = useMaestroStore(state => state.setMaestroAvatar);
 
   useAppAssets({
-    setLoadingGifs,
+    setLoadingAnimations,
     setMaestroAvatar,
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,

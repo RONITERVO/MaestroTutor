@@ -6,12 +6,11 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import type { MutableRefObject } from 'react';
-import { uniq, fetchDefaultAvatarBlob } from '../../shared/utils/common';
+import { fetchDefaultAvatarBlob } from '../../shared/utils/common';
 import {
-  getLoadingGifsDB as getAssetsLoadingGifs,
+  deleteLegacyLoadingGifsDB,
   getMaestroProfileImageDB,
   setMaestroProfileImageDB,
-  setLoadingGifsDB as setAssetsLoadingGifs,
 } from '../../core/db/assets';
 import { uploadMediaToFiles } from '../../api/gemini/files';
 import { loadApiKey } from '../../core/security/apiKeyStorage';
@@ -26,14 +25,14 @@ const mimeFromDataUrl = (dataUrl?: string | null): string | null => {
 };
 
 interface UseAppAssetsConfig {
-  setLoadingGifs: (gifs: string[]) => void;
+  setLoadingAnimations: (animations: string[]) => void;
   setMaestroAvatar: (uri: string | null, mimeType: string | null) => void;
   maestroAvatarUriRef: MutableRefObject<string | null>;
   maestroAvatarMimeTypeRef: MutableRefObject<string | null>;
 }
 
 export const useAppAssets = ({
-  setLoadingGifs,
+  setLoadingAnimations,
   setMaestroAvatar,
   maestroAvatarUriRef,
   maestroAvatarMimeTypeRef,
@@ -167,20 +166,18 @@ export const useAppAssets = ({
   useEffect(() => {
     (async () => {
       try {
-        const current = (await getAssetsLoadingGifs()) || [];
+        // Clean up legacy gif entries from DB
+        try { await deleteLegacyLoadingGifsDB(); } catch { /* ignore */ }
+
         let manifest: string[] = [];
         try {
-          const resp = await fetch(import.meta.env.BASE_URL + 'gifs/manifest.json', { cache: 'force-cache' });
+          const resp = await fetch(import.meta.env.BASE_URL + 'loading-animations/manifest.json', { cache: 'force-cache' });
           if (resp.ok) manifest = await resp.json();
         } catch { /* ignore */ }
-        const merged = uniq([...current, ...manifest]);
-        setLoadingGifs(merged);
-        if (current.length === 0 && merged.length > 0) {
-          try { await setAssetsLoadingGifs(merged); } catch { /* ignore */ }
-        }
+        setLoadingAnimations(manifest);
       } catch { /* ignore */ }
     })();
-  }, [setLoadingGifs]);
+  }, [setLoadingAnimations]);
 };
 
 export default useAppAssets;

@@ -8,7 +8,7 @@
  * - Shell state (topbar open)
  * - Unified Activity Token State (replaces scattered boolean flags)
  * - Maestro activity stage
- * - Loading assets (gifs, avatar)
+ * - Loading assets (animations, avatar)
  * - Transition states
  * 
  * Activity Token System:
@@ -49,7 +49,7 @@ export interface UiSlice {
   maestroActivityStage: MaestroActivityStage;
   
   // Assets
-  loadingGifs: string[];
+  loadingAnimations: string[];
   transitioningImageId: string | null;
   maestroAvatarUri: string | null;
   maestroAvatarMimeType: string | null;
@@ -85,7 +85,7 @@ export interface UiSlice {
   setMaestroActivityStage: (stage: MaestroActivityStage) => void;
   
   // Actions - Assets
-  setLoadingGifs: (gifs: string[]) => void;
+  setLoadingAnimations: (animations: string[]) => void;
   setTransitioningImageId: (id: string | null) => void;
   setMaestroAvatar: (uri: string | null, mimeType: string | null) => void;
 }
@@ -185,7 +185,7 @@ export const createUiSlice: StateCreator<
   maestroActivityStage: 'idle',
   
   // Initial Assets state
-  loadingGifs: [],
+  loadingAnimations: [],
   transitioningImageId: null,
   maestroAvatarUri: null,
   maestroAvatarMimeType: null,
@@ -261,8 +261,8 @@ export const createUiSlice: StateCreator<
   },
   
   // Assets Actions
-  setLoadingGifs: (gifs: string[]) => {
-    set({ loadingGifs: gifs });
+  setLoadingAnimations: (animations: string[]) => {
+    set({ loadingAnimations: animations });
   },
   
   setTransitioningImageId: (id: string | null) => {

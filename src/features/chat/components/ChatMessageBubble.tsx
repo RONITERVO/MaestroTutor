@@ -21,7 +21,7 @@ interface ChatMessageBubbleProps {
   isFocusedMode: boolean; 
   speakingUtteranceText: string | null; 
   estimatedLoadTime: number; 
-  loadingGifs?: string[] | null;
+  loadingAnimations?: string[] | null;
   t: (key: string, replacements?: TranslationReplacements) => string;
   onToggleSpeakNativeLang: () => void;
   handleSpeakWholeMessage: (message: ChatMessage) => void;
@@ -37,7 +37,7 @@ interface ChatMessageBubbleProps {
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({ 
-  message, isFocusedMode, speakingUtteranceText, estimatedLoadTime, loadingGifs,
+  message, isFocusedMode, speakingUtteranceText, estimatedLoadTime, loadingAnimations,
   t,
   onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
@@ -63,7 +63,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [isAnnotating, setIsAnnotating] = useState(false);
   const [annotationSourceUrl, setAnnotationSourceUrl] = useState<string | null>(null);
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
-  const [loadingGifError, setLoadingGifError] = useState(false);
 
   const isAnnotationActive = isAnnotating && isFocusedMode;
   const isAssistant = message.role === 'assistant';
@@ -585,9 +584,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isPdfSuccessfullyDisplayed = isAttachmentAPdf && displayUrl && !message.isGeneratingImage && !message.imageGenError;
   const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && displayUrl && !message.isGeneratingImage && !message.imageGenError;
 
-  const selectedLoadingGif = useMemo(() => {
-    const userLoadingGifs = loadingGifs as string[] | undefined;
-    const source = (userLoadingGifs && userLoadingGifs.length > 0) ? userLoadingGifs : [];
+  const selectedLoadingAnimation = useMemo(() => {
+    const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
     if (!message.isGeneratingImage || source.length === 0) return null;
     const seedStr = `${message.id || ''}|${message.imageGenerationStartTime || 0}`;
     let h = 0;
@@ -597,11 +595,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     }
     const idx = Math.abs(h) % source.length;
     return source[idx];
-  }, [message.id, message.imageGenerationStartTime, message.isGeneratingImage, loadingGifs]);
+  }, [message.id, message.imageGenerationStartTime, message.isGeneratingImage, loadingAnimations]);
+
+  const [loadingAnimationError, setLoadingAnimationError] = useState(false);
 
   useEffect(() => {
-    setLoadingGifError(false);
-  }, [selectedLoadingGif, message.id, message.isGeneratingImage]);
+    setLoadingAnimationError(false);
+  }, [selectedLoadingAnimation, message.id, message.isGeneratingImage]);
 
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   
@@ -700,12 +700,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   {message.isGeneratingImage && (
                       <div className="absolute top-2 right-2 flex flex-col items-end z-20">
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-black/30 drop-shadow-md flex items-center justify-center">
-                          {selectedLoadingGif && !loadingGifError ? (
-                            <img
-                              src={selectedLoadingGif}
-                              alt={t('chat.imagePreview.alt')}
-                              className="w-full h-full object-contain opacity-90"
-                              onError={() => setLoadingGifError(true)}
+                          {selectedLoadingAnimation && !loadingAnimationError ? (
+                            <video
+                              src={selectedLoadingAnimation}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-full object-cover opacity-90"
+                              onError={() => setLoadingAnimationError(true)}
                             />
                           ) : (
                             <SmallSpinner className="w-full h-full text-slate-100" />
