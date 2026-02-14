@@ -142,10 +142,10 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-card shadow-xl border border-border sketchy-border">
+      <div className="w-full max-w-lg bg-card shadow-xl sketchy-border">
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-accent">
+            <div className="flex h-10 w-10 items-center justify-center bg-accent/15 text-accent sketchy-border-thin">
               <IconShield className="h-5 w-5" />
             </div>
             <div>
@@ -177,7 +177,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
         <div className="px-6 py-4 space-y-4">
           {showInstructions ? (
             <div className="flex flex-col items-center gap-4">
-              <div className="relative w-full max-w-[360px] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="relative w-full max-w-[360px] overflow-hidden bg-card shadow-sm sketchy-border-thin">
                 <div className="aspect-[9/16] w-full bg-muted">
                   <img
                     src={currentInstruction}
@@ -193,7 +193,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         type="button"
                         onClick={() => handleInstructionStep(-1)}
                         aria-label={t('apiKeyGate.previousInstruction')}
-                        className="pointer-events-auto rounded-full bg-card/90 p-2 text-muted-foreground shadow hover:bg-card"
+                        className="pointer-events-auto bg-card/90 p-2 text-muted-foreground shadow hover:bg-card sketchy-border-thin"
                       >
                         <IconChevronLeft className="h-5 w-5" />
                       </button>
@@ -201,14 +201,14 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         type="button"
                         onClick={() => handleInstructionStep(1)}
                         aria-label={t('apiKeyGate.nextInstruction')}
-                        className="pointer-events-auto rounded-full bg-card/90 p-2 text-muted-foreground shadow hover:bg-card"
+                        className="pointer-events-auto bg-card/90 p-2 text-muted-foreground shadow hover:bg-card sketchy-border-thin"
                       >
                         <IconChevronRight className="h-5 w-5" />
                       </button>
                     </div>
                     {!isBillingHelp && (
                       <>
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-card/90 px-3 py-1 shadow-sm">
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-card/90 px-3 py-1 shadow-sm sketchy-border-thin">
                           <div className="flex items-center gap-1.5">
                             {INSTRUCTION_IMAGES.slice(0, REGULAR_INSTRUCTIONS_COUNT).map((_, index) => (
                               <button
@@ -216,12 +216,12 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                                 type="button"
                                 aria-label={t('apiKeyGate.instructionStep', { step: index + 1, total: REGULAR_INSTRUCTIONS_COUNT })}
                                 onClick={() => handleInstructionJump(index)}
-                                className={`h-2 w-2 rounded-full ${index === instructionIndex ? 'bg-accent' : 'bg-border'}`}
+                                className={`h-2 w-2 sketchy-border-thin ${index === instructionIndex ? 'bg-accent' : 'bg-border'}`}
                               />
                             ))}
                           </div>
                         </div>
-                        <div className="absolute right-3 top-3 rounded-full bg-card/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">
+                        <div className="absolute right-3 top-3 bg-card/90 px-2 py-1 text-xs text-muted-foreground shadow-sm sketchy-border-thin">
                           {instructionIndex + 1} / {REGULAR_INSTRUCTIONS_COUNT}
                         </div>
                       </>
@@ -232,7 +232,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-border bg-muted p-4 text-sm text-foreground space-y-2">
+              <div className="bg-muted p-4 text-sm text-foreground space-y-2 sketchy-border-thin">
                 <div className="font-medium text-foreground font-sketch">{t('apiKeyGate.stepsTitle')}</div>
                 <ol className="list-decimal pl-5 space-y-1">
                   <li>{t('apiKeyGate.stepOne')}</li>
@@ -240,7 +240,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 </ol>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-accent-foreground hover:bg-accent/80"
+                    className="inline-flex items-center gap-2 bg-accent px-3 py-2 text-accent-foreground hover:bg-accent/80 sketchy-border-thin"
                     onClick={() => openExternalUrl(AI_STUDIO_URL)}
                   >
                     {t('apiKeyGate.openAiStudio')}
@@ -253,7 +253,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                       setIsAutoPlaying(true);
                     }}
                     aria-label={t('apiKeyGate.viewInstructions')}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted"
+                    className="inline-flex h-9 w-9 items-center justify-center bg-card text-muted-foreground hover:bg-muted sketchy-border-thin"
                   >
                     <IconQuestionMarkCircle className="h-5 w-5" />
                   </button>
@@ -272,11 +272,11 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   }}
                   onClick={attemptAutoPasteFromClipboard}
                   placeholder={t('apiKeyGate.placeholder')}
-                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="flex-1 px-3 py-2 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin"
                   autoFocus
                 />
                 <button
-                  className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted"
+                  className="px-3 py-2 text-sm text-foreground hover:bg-muted sketchy-border-thin"
                   onClick={() => setShowKey(!showKey)}
                   type="button"
                 >
@@ -287,7 +287,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               {error && <div className="text-sm text-destructive">{error}</div>}
 
               {hasKey && (
-                <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-800 flex items-center gap-2">
+                <div className="bg-green-50 p-3 text-sm text-green-800 flex items-center gap-2 sketchy-border-thin" style={{borderColor: 'hsl(120 40% 60%)'}}>
                   <IconCheck className="h-4 w-4" />
                   {t('apiKeyGate.currentKeySaved', { maskedKey: maskedKey ? `(${maskedKey})` : '' }).trim()}
                 </div>
@@ -309,7 +309,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               {canClose && (
                 <button
                   onClick={onClose}
-                  className="rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-muted"
+                  className="px-4 py-2 text-sm text-foreground hover:bg-muted sketchy-border-thin"
                 >
                   {t('apiKeyGate.cancel')}
                 </button>
@@ -323,7 +323,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   }
                 }}
                 disabled={!canSave}
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50"
+                className="bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50 sketchy-border-thin"
               >
                 {isSaving ? t('apiKeyGate.saving') : t('apiKeyGate.saveKey')}
               </button>

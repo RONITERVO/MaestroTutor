@@ -102,7 +102,7 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
             <button
                 key={index}
                 onClick={(e) => { e.stopPropagation(); handleSuggestionBubbleClick(suggestion); }}
-                className={`inline-block px-3 py-1.5 rounded-full transition-colors text-foreground bg-secondary hover:bg-paper-dark sketchy-border-thin ${doubleClickedSuggestionTarget === suggestion.target ? 'focus:outline-none focus:ring-2 focus:ring-watercolor' : 'focus:outline-none focus:ring-2 focus:ring-accent'}`}
+                className={`inline-block px-3 py-1.5 transition-colors text-foreground bg-secondary hover:bg-paper-dark sketchy-border-thin ${doubleClickedSuggestionTarget === suggestion.target ? 'focus:outline-none focus:ring-2 focus:ring-watercolor' : 'focus:outline-none focus:ring-2 focus:ring-accent'}`}
                 style={{ fontSize: '3.1cqw' }}
                 title={t('chat.suggestion.speak', { suggestion: suggestion.target })}
                 aria-label={t('chat.suggestion.ariaLabel', { suggestion: suggestion.target })}
@@ -114,7 +114,7 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
             {!isLoadingSuggestions && isSttSupported && replySuggestions.length > 0 && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleSuggestionMode(); }}
-                    className={`inline-flex items-center justify-center w-[34px] h-[34px] text-sm rounded-full transition-colors disabled:opacity-50
+                    className={`inline-flex items-center justify-center w-[34px] h-[34px] text-sm transition-colors disabled:opacity-50 sketchy-border-thin
                         ${isSuggestionMode
                             ? 'bg-accent text-accent-foreground animate-pulse'
                             : 'text-foreground bg-secondary hover:bg-paper-dark'
