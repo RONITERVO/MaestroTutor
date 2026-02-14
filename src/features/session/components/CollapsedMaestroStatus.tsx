@@ -91,16 +91,16 @@ export const getStatusConfig = (
 
   switch (stage) {
     case 'speaking':
-      return { color: 'bg-blue-500', borderColor: 'border-blue-600', textColor: 'text-white' };
+      return { color: 'bg-accent', borderColor: 'border-accent', textColor: 'text-accent-foreground' };
     case 'typing':
-      return { color: 'bg-blue-400', borderColor: 'border-blue-500', textColor: 'text-white' };
+      return { color: 'bg-accent/80', borderColor: 'border-accent', textColor: 'text-accent-foreground' };
     case 'listening':
-      return { color: 'bg-green-500', borderColor: 'border-green-600', textColor: 'text-white' };
+      return { color: 'bg-green-600', borderColor: 'border-green-700', textColor: 'text-white' };
     case 'observing_high':
-      return { color: 'bg-amber-500', borderColor: 'border-amber-600', textColor: 'text-white' };
+      return { color: 'bg-amber-600', borderColor: 'border-amber-700', textColor: 'text-white' };
     case 'observing_low':
     case 'observing_medium':
-      return { color: 'bg-slate-200', borderColor: 'border-slate-300', textColor: 'text-slate-600' };
+      return { color: 'bg-secondary', borderColor: 'border-border', textColor: 'text-muted-foreground' };
     case 'idle':
     default: {
       const hasBusyTasks = activeUiTokens.length > 0 || isLive;
@@ -115,9 +115,9 @@ export const getStatusConfig = (
         }
       }
       if (hasBusyTasks) {
-        return { color: 'bg-indigo-100', borderColor: 'border-indigo-200', textColor: 'text-indigo-700' };
+        return { color: 'bg-watercolor/20', borderColor: 'border-watercolor/30', textColor: 'text-watercolor' };
       }
-      return { color: 'bg-slate-100', borderColor: 'border-slate-200', textColor: 'text-slate-500' };
+      return { color: 'bg-muted', borderColor: 'border-border', textColor: 'text-muted-foreground' };
     }
   }
 };

@@ -249,7 +249,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
             <div className="relative w-full max-w-[20rem] aspect-square">
                 <div
                     ref={globeRef}
-                    className="globe-bg absolute inset-0 border-2 rounded-full flex items-center justify-center bg-slate-800 text-white overflow-hidden shadow-inner touch-none"
+                    className="globe-bg absolute inset-0 border-2 rounded-full flex items-center justify-center bg-primary text-white overflow-hidden shadow-inner touch-none"
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
@@ -258,7 +258,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     onWheel={handleWheel}
                 >
                 {/* Spiral indicator - shows current position in the full language list */}
-                <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-slate-400 opacity-60 pointer-events-none">
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground opacity-60 pointer-events-none">
                     {Math.floor(spiralOffset * ALL_LANGUAGES.length) + 1} / {ALL_LANGUAGES.length}
                 </div>
 
@@ -266,7 +266,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 >
                     <div
-                        className="pointer-events-auto w-[70%] max-w-[10rem] bg-slate-900/60 backdrop-blur-md rounded-2xl px-3 py-2 transition-opacity duration-200 opacity-40 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10"
+                        className="pointer-events-auto w-[70%] max-w-[10rem] bg-primary/60 backdrop-blur-md rounded-2xl px-3 py-2 transition-opacity duration-200 opacity-40 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10"
                     >
                         <div className="flex justify-center items-start gap-3">
                             <LanguageScrollWheel

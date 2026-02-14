@@ -231,7 +231,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
       {attachedImageBase64 && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-gray-300' : 'bg-blue-400'} p-1 rounded-md`}>
+        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-secondary' : 'bg-accent/80'} p-1 rounded-md`}>
           {attachedImageMimeType?.startsWith('image/') ? (
             <div className="relative">
               <img src={attachedImageBase64} alt={t('chat.imagePreview.alt')} className="h-24 w-full object-cover rounded" />
@@ -299,9 +299,9 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               </button>
             </div>
           ) : (
-            <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-gray-100' : 'bg-blue-300'} rounded`}>
-              <IconPaperclip className={`w-8 h-8 ${isSuggestionMode ? 'text-gray-500' : 'text-blue-100'}`} />
-              <span className={`text-xs mt-1 truncate max-w-full px-1 ${isSuggestionMode ? 'text-gray-600' : 'text-white'}`}>{attachedImageMimeType}</span>
+            <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-muted' : 'bg-accent/60'} rounded`}>
+              <IconPaperclip className={`w-8 h-8 ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`} />
+              <span className={`text-xs mt-1 truncate max-w-full px-1 ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground'}`}>{attachedImageMimeType}</span>
             </div>
           )}
           <div className="absolute -top-2 -right-2 flex items-center space-x-1">
@@ -313,7 +313,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       )}
 
       {showLiveFeed && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-gray-300' : 'bg-blue-400'} p-1 rounded-md`}>
+        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-secondary' : 'bg-accent/80'} p-1 rounded-md`}>
           <div className="relative group">
             <video
               ref={livePreviewVideoRef}
@@ -371,7 +371,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             )}
           </div>
           {liveSessionError && (
-            <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-red-100 text-red-700' : 'bg-red-600/20 text-red-100'}`}>
+            <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-destructive/10 text-destructive' : 'bg-red-600/20 text-red-100'}`}>
               {liveSessionError}
             </div>
           )}

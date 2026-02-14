@@ -240,7 +240,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
           onClick={handleOpenLanguageSelector}
           className={`flex flex-col items-center justify-center p-1 rounded-full transition-colors ${
             isSuggestionMode
-              ? 'hover:bg-gray-100'
+              ? 'hover:bg-secondary'
               : 'hover:bg-white/20'
           }`}
           title={t('chat.languageSelector.openGlobe')}
@@ -248,11 +248,11 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         >
           <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '10px' }}>
             {nativeLanguageDef.flag}
-            {hasSharedFlag(nativeLanguageDef) && <span className={`text-[7px] font-bold ${isSuggestionMode ? 'text-gray-500' : 'text-blue-100'}`}>{nativeLanguageDef.shortCode}</span>}
+            {hasSharedFlag(nativeLanguageDef) && <span className={`text-[7px] font-bold ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`}>{nativeLanguageDef.shortCode}</span>}
           </span>
           <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '14px' }}>
             {targetLanguageDef.flag}
-            {hasSharedFlag(targetLanguageDef) && <span className={`text-[9px] font-bold ${isSuggestionMode ? 'text-gray-500' : 'text-blue-100'}`}>{targetLanguageDef.shortCode}</span>}
+            {hasSharedFlag(targetLanguageDef) && <span className={`text-[9px] font-bold ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`}>{targetLanguageDef.shortCode}</span>}
           </span>
         </button>
       )}
@@ -267,7 +267,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
           style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
           className={`relative overflow-visible p-2 rounded-full transition-colors touch-manipulation select-none ${
-            isRecordingAudioNote ? 'bg-red-500 text-white ring-2 ring-red-300' : isListening ? 'bg-red-500/80 text-white' : (isSuggestionMode ? 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' : 'text-blue-100 hover:text-white hover:bg-white/20')
+            isRecordingAudioNote ? 'bg-red-500 text-white ring-2 ring-red-300' : isListening ? 'bg-red-500/80 text-white' : (isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-accent-foreground/70 hover:text-accent-foreground hover:bg-white/20')
           } disabled:opacity-50`}
           title={getMicButtonTitle()}
           disabled={isSending || isSpeaking || isLanguageSelectionOpen}

@@ -24,27 +24,27 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
   const isTargetSelected = currentSttLangCode === targetCode || targetLang.code.includes(currentSttLangCode);
   const isNativeSelected = currentSttLangCode === nativeCode || nativeLang.code.includes(currentSttLangCode);
   
-  const wrapperClass = isCollapsed ? (isInSuggestionMode ? 'p-0.5 bg-gray-300/60 rounded-full' : 'p-0.5 bg-blue-400/60 rounded-full') : 'p-0.5 bg-gray-200 rounded-full';
+  const wrapperClass = isCollapsed ? (isInSuggestionMode ? 'p-0.5 bg-secondary/60 rounded-full' : 'p-0.5 bg-accent/60 rounded-full') : 'p-0.5 bg-secondary rounded-full';
   const buttonBase = isCollapsed ? 'p-1.5 rounded-full' : 'p-2 rounded-full';
   const flagBase = isCollapsed ? 'text-base leading-none' : 'text-lg leading-none';
   const selectedClassCollapsed = isInSuggestionMode ? 'bg-white/50' : 'bg-white/30';
-  const selectedClassExpanded = isInSuggestionMode ? 'bg-gray-800' : 'bg-blue-500';
+  const selectedClassExpanded = isInSuggestionMode ? 'bg-primary' : 'bg-accent';
   const unselectedHoverCollapsed = isInSuggestionMode ? 'hover:bg-black/20' : 'hover:bg-white/20';
 
   return (
     <div className={`flex items-center space-x-0.5 ${wrapperClass}`}>
-      <button 
+      <button
         onClick={() => onSelectLang(targetCode)}
-        className={`${buttonBase} transition-colors ${isTargetSelected ? (isCollapsed ? selectedClassCollapsed : selectedClassExpanded) : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-gray-300')}`}
+        className={`${buttonBase} transition-colors ${isTargetSelected ? (isCollapsed ? selectedClassCollapsed : selectedClassExpanded) : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
         title={t('sttLang.selectLanguage', { language: targetLang.displayName })}
         aria-label={t('sttLang.selectLanguage', { language: targetLang.displayName })}
         aria-pressed={isTargetSelected}
       >
         <span className={`${flagBase} ${isTargetSelected && !isCollapsed ? 'text-white' : ''}`}>{targetLang.flag}</span>
       </button>
-      <button 
+      <button
         onClick={() => onSelectLang(nativeCode)}
-        className={`${buttonBase} transition-colors ${isNativeSelected ? (isCollapsed ? selectedClassCollapsed : selectedClassExpanded) : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-gray-300')}`}
+        className={`${buttonBase} transition-colors ${isNativeSelected ? (isCollapsed ? selectedClassCollapsed : selectedClassExpanded) : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
         title={t('sttLang.selectLanguage', { language: nativeLang.displayName })}
         aria-label={t('sttLang.selectLanguage', { language: nativeLang.displayName })}
         aria-pressed={isNativeSelected}

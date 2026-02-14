@@ -168,15 +168,15 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
 
   const isUser = variant === 'user';
 
-  const containerBg = isUser ? 'bg-blue-600/20' : 'bg-gray-50';
+  const containerBg = isUser ? 'bg-primary/20' : 'bg-secondary';
   const indicatorBg = 'bg-black/60 text-white';
-  const errorTextColor = isUser ? 'text-blue-100' : 'text-gray-500';
-  const iconColor = isUser ? 'text-blue-100' : 'text-gray-400';
+  const errorTextColor = isUser ? 'text-primary-foreground/70' : 'text-muted-foreground';
+  const iconColor = isUser ? 'text-primary-foreground/70' : 'text-muted-foreground';
 
   if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center rounded-lg ${containerBg} ${compact ? 'h-24 w-full' : 'h-48 w-full'}`}>
-        <SmallSpinner className={`w-6 h-6 ${isUser ? 'text-white' : 'text-blue-500'}`} />
+        <SmallSpinner className={`w-6 h-6 ${isUser ? 'text-white' : 'text-accent'}`} />
         <p className={`mt-2 text-xs ${errorTextColor}`}>Loading PDF...</p>
       </div>
     );

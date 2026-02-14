@@ -130,7 +130,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
       >
         +
       </button>
-      <div className="w-px h-4 bg-white/40 mx-1" aria-hidden />
+      <div className="w-px h-4 bg-primary-foreground/40 mx-1" aria-hidden />
       <button
         type="button"
         onClick={startEditing}

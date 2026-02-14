@@ -582,7 +582,7 @@ const SessionControls: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && executePendingAction()}
               autoFocus
             />
-            <span className="text-xs text-slate-400 break-words">
+            <span className="text-xs text-muted-foreground break-words">
               {ACTION_CONFIG[pendingAction].description}
             </span>
           </div>
@@ -598,7 +598,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={cancelPendingAction}
-              className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-full text-slate-300 transition-colors"
+              className="p-2 bg-primary/50 hover:bg-primary/70 rounded-full text-primary-foreground/70 transition-colors"
             >
               <IconUndo className="w-4 h-4" />
             </button>
@@ -608,9 +608,9 @@ const SessionControls: React.FC = () => {
       ) : isEditingProfile ? (
         <div className="flex-1 flex items-start justify-between animate-fade-in gap-2">
           <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <span className="text-xs font-bold text-blue-300 uppercase tracking-wider">{t('sessionControls.profile') || 'Profile:'}</span>
+            <span className="text-xs font-bold text-watercolor uppercase tracking-wider">{t('sessionControls.profile') || 'Profile:'}</span>
             <input
-              className="w-full max-w-[520px] bg-blue-950/30 border border-blue-500/30 rounded px-2 py-1.5 text-sm text-blue-100 placeholder-blue-400/30 focus:outline-none focus:border-blue-400 focus:bg-blue-950/50 transition-colors"
+              className="w-full max-w-[520px] bg-watercolor/10 border border-watercolor/30 rounded px-2 py-1.5 text-sm text-primary-foreground/80 placeholder-watercolor/30 focus:outline-none focus:border-watercolor/60 focus:bg-watercolor/15 transition-colors"
               placeholder={t('sessionControls.profilePlaceholder') || 'Your name or details...'}
               value={profileText}
               onChange={(e) => setProfileText(e.target.value)}
@@ -629,7 +629,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsEditingProfile(false)}
-              className="p-2 bg-slate-700/50 hover:bg-slate-600 rounded-full text-slate-300 transition-colors"
+              className="p-2 bg-primary/50 hover:bg-primary/70 rounded-full text-primary-foreground/70 transition-colors"
             >
               <IconUndo className="w-4 h-4" />
             </button>
@@ -643,7 +643,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={startProfileEdit}
-              className="group p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+              className="group p-2.5 rounded-full text-muted-foreground hover:text-white hover:bg-white/10 transition-all"
               title={t('sessionControls.editProfile') || 'Edit User Profile'}
             >
               <IconPencil className="w-4 h-4 opacity-70 group-hover:opacity-100" />
@@ -651,53 +651,53 @@ const SessionControls: React.FC = () => {
           </div>
 
           {/* Center: Action Pill - Grouped Controls */}
-          <div className="flex items-center bg-slate-800/60 backdrop-blur-sm rounded-full p-1 border border-white/5 shadow-inner">
+          <div className="flex items-center bg-primary/60 backdrop-blur-sm rounded-full p-1 border border-white/5 shadow-inner">
             {controlMode === 'none' ? (
               /* Default: Show two group selectors */
               <>
-                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
+                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
                   {'🔧🌐💬'}
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
+                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
                   {'🔧🎯💬'}
                 </button>
               </>
             ) : controlMode === 'all' ? (
               /* All Chats: Save All, Load All, Reset, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('saveAll'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveChats') || 'Save All Chats'}>
+                <button type="button" onClick={() => { setPendingAction('saveAll'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.saveChats') || 'Save All Chats'}>
                   <IconSave className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.loadChats') || 'Load All Chats'}>
+                <button type="button" onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.loadChats') || 'Load All Chats'}>
                   <IconFolderOpen className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-red-500/20 rounded-full text-slate-300 hover:text-red-200 transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
+                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-red-500/20 rounded-full text-primary-foreground/70 hover:text-red-200 transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
                   <IconTrash className="w-4 h-4" />
                 </button>
               </>
             ) : (
               /* This Chat: Save This, Combine, Trim, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('saveThis'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.saveThisChat') || 'Save This Chat'}>
+                <button type="button" onClick={() => { setPendingAction('saveThis'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.saveThisChat') || 'Save This Chat'}>
                   <IconBookmark className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => appendFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors" title={t('startPage.appendToChat') || 'Combine Chats'}>
+                <button type="button" onClick={() => appendFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.appendToChat') || 'Combine Chats'}>
                   <IconPlus className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('trim'); setConfirmInput(''); }} className="p-2 hover:bg-orange-500/20 rounded-full text-slate-300 hover:text-orange-200 transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
+                <button type="button" onClick={() => { setPendingAction('trim'); setConfirmInput(''); }} className="p-2 hover:bg-orange-500/20 rounded-full text-primary-foreground/70 hover:text-orange-200 transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
                   <IconScissors className="w-4 h-4" />
                 </button>
               </>
@@ -721,17 +721,17 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               {...{ [DATA_AVATAR_ACTION]: 'swap' }}
-              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-all duration-200 shadow-lg z-0 ${
+              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary border border-border flex items-center justify-center text-muted-foreground hover:text-white hover:bg-primary/80 hover:border-border transition-all duration-200 shadow-lg z-0 ${
                 isAvatarExpanded ? '-translate-x-[36px]' : ''
               } ${
-                highlightedSide === 'left' ? 'text-white bg-slate-700 border-slate-500 z-20 scale-110 ring-2 ring-white/30' : 'hover:z-20 hover:scale-105'
+                highlightedSide === 'left' ? 'text-white bg-primary/80 border-border z-20 scale-110 ring-2 ring-white/30' : 'hover:z-20 hover:scale-105'
               }`}
               title={t('general.clear') + " / " + (t('sessionControls.changeAvatar') || 'Change Avatar')}
             >
               <IconSwap className="w-3.5 h-3.5" />
 
               <IconSwap
-                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2.5 w-3 h-3 text-slate-500 transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2.5 w-3 h-3 text-muted-foreground transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
               />
             </button>
  
@@ -766,15 +766,15 @@ const SessionControls: React.FC = () => {
             {/* Center: The Avatar (Visual Anchor) */}
             <div className="relative z-10 w-10 h-10 pointer-events-none">
               <div
-                className={`w-full h-full rounded-full overflow-hidden border-2 flex items-center justify-center bg-slate-900 transition-all duration-300
+                className={`w-full h-full rounded-full overflow-hidden border-2 flex items-center justify-center bg-primary transition-all duration-300
                     ${maestroAsset?.dataUrl
-                    ? 'border-blue-400/60 shadow-[0_0_15px_rgba(96,165,250,0.5)]'
-                    : 'border-slate-600 border-dashed opacity-80'}`}
+                    ? 'border-accent/60 shadow-[0_0_15px_rgba(191,106,58,0.5)]'
+                    : 'border-border border-dashed opacity-80'}`}
               >
                 {maestroAsset?.dataUrl ? (
                   <img src={maestroAsset.dataUrl} alt={t('startPage.maestroAvatar') || 'Maestro avatar'} className="w-full h-full object-cover" />
                 ) : (
-                  <IconPlus className="w-4 h-4 text-slate-500" />
+                  <IconPlus className="w-4 h-4 text-muted-foreground" />
                 )}
 
                 {isUploadingMaestro && (

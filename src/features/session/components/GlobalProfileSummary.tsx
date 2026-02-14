@@ -34,7 +34,7 @@ const GlobalProfileSummary: React.FC<GlobalProfileSummaryProps> = ({ t: _t, mess
   
   return (
     <div
-      className="text-[11px] text-slate-700 whitespace-nowrap overflow-x-auto overflow-y-hidden flex-1 min-w-0 no-scrollbar"
+      className="text-[11px] text-muted-foreground whitespace-nowrap overflow-x-auto overflow-y-hidden flex-1 min-w-0 no-scrollbar"
       style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' as any, msOverflowStyle: 'none' as any, scrollbarWidth: 'none' as any }}
       title={summary}
       tabIndex={0}

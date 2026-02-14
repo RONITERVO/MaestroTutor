@@ -208,18 +208,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
   const isPreview = variant === 'preview';
 
   const containerClasses = isUser
-    ? 'bg-blue-600/30'
+    ? 'bg-primary/30'
     : isPreview
-      ? 'bg-gray-100'
-      : 'bg-gray-100';
+      ? 'bg-secondary'
+      : 'bg-secondary';
 
   const playBtnClasses = isUser
     ? 'bg-white/20 hover:bg-white/30 text-white'
-    : 'bg-blue-500 hover:bg-blue-600 text-white';
+    : 'bg-accent hover:bg-accent/80 text-accent-foreground';
 
-  const barPlayedColor = isUser ? 'bg-white' : 'bg-blue-500';
-  const barUnplayedColor = isUser ? 'bg-white/35' : 'bg-blue-200';
-  const timeColor = isUser ? 'text-white/70' : 'text-gray-500';
+  const barPlayedColor = isUser ? 'bg-white' : 'bg-accent';
+  const barUnplayedColor = isUser ? 'bg-white/35' : 'bg-accent/30';
+  const timeColor = isUser ? 'text-white/70' : 'text-muted-foreground';
 
   const btnSize = compact ? 'w-8 h-8' : 'w-10 h-10';
   const iconScale = compact ? 'w-4 h-4' : 'w-5 h-5';
