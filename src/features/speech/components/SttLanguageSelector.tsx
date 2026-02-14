@@ -24,11 +24,11 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
   const isTargetSelected = currentSttLangCode === targetCode || targetLang.code.includes(currentSttLangCode);
   const isNativeSelected = currentSttLangCode === nativeCode || nativeLang.code.includes(currentSttLangCode);
   
-  const wrapperClass = isCollapsed ? (isInSuggestionMode ? 'p-0.5 bg-secondary/60 rounded-full' : 'p-0.5 bg-accent/60 rounded-full') : 'p-0.5 bg-secondary rounded-full';
-  const buttonBase = isCollapsed ? 'p-1.5 rounded-full' : 'p-2 rounded-full';
+  const wrapperClass = isCollapsed ? (isInSuggestionMode ? 'p-0.5 bg-secondary/60 sketchy-border-thin' : 'p-0.5 bg-primary/60 sketchy-border-thin') : 'p-0.5 bg-secondary sketchy-border-thin';
+  const buttonBase = isCollapsed ? 'p-1.5 sketchy-border-thin' : 'p-2 sketchy-border-thin';
   const flagBase = isCollapsed ? 'text-base leading-none' : 'text-lg leading-none';
   const selectedClassCollapsed = isInSuggestionMode ? 'bg-white/50' : 'bg-white/30';
-  const selectedClassExpanded = isInSuggestionMode ? 'bg-primary' : 'bg-accent';
+  const selectedClassExpanded = isInSuggestionMode ? 'bg-primary' : 'bg-primary';
   const unselectedHoverCollapsed = isInSuggestionMode ? 'hover:bg-black/20' : 'hover:bg-white/20';
 
   return (

@@ -593,11 +593,11 @@ const InputArea: React.FC<InputAreaProps> = ({
   };
 
   const containerClass = isSuggestionMode
-    ? 'bg-card text-foreground shadow-sm ring-1 ring-border focus-within:ring-2 focus-within:ring-pencil-light'
-    : 'bg-accent text-accent-foreground shadow-sm ring-1 ring-accent focus-within:ring-2 focus-within:ring-primary-foreground/80';
+    ? 'bg-card text-foreground shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-pencil-light'
+    : 'bg-primary text-primary-foreground shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-pencil-light';
 
-  const sendButtonStyle = isSuggestionMode ? 'bg-primary text-primary-foreground hover:bg-primary/80 focus:ring-ring' : 'bg-card text-accent hover:bg-secondary focus:ring-accent';
-  const iconButtonStyle = isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-accent-foreground/70 hover:text-accent-foreground hover:bg-white/20';
+  const sendButtonStyle = isSuggestionMode ? 'bg-primary text-primary-foreground hover:bg-primary/80 focus:ring-ring' : 'bg-card text-primary hover:bg-secondary focus:ring-primary';
+  const iconButtonStyle = isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/20';
 
   const handlePaperclipClick = () => {
     if (!paperclipOpenTokenRef.current) {
@@ -621,7 +621,7 @@ const InputArea: React.FC<InputAreaProps> = ({
         <>
           {/* attachments moved below input */}
 
-          <div className={`relative w-full flex flex-col rounded-3xl overflow-hidden transition-colors ${containerClass}`}>
+          <div className={`relative w-full flex flex-col overflow-hidden transition-colors ${containerClass}`}>
             {languageSelectionOpen ? (
               <SessionControls />
             ) : (
@@ -678,7 +678,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 <button
                   type="button"
                   onClick={handleSend}
-                  className={`p-2 rounded-full focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 shadow-sm ${sendButtonStyle}`}
+                  className={`p-2 focus:outline-none focus:ring-2 transition-colors disabled:opacity-50 shadow-sm sketchy-border-thin ${sendButtonStyle}`}
                   disabled={isSending || ((!inputText.trim() && !attachedImageBase64) && !languageSelectionOpen) || isSpeaking || (isSuggestionMode && isCreatingSuggestion)}
                   aria-label={
                     languageSelectionOpen
@@ -872,7 +872,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
           {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
           {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
-          {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-accent bg-accent/10' : 'text-orange-200 bg-orange-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
+          {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-primary bg-primary/10' : 'text-yellow-200 bg-yellow-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
         </>
     </>
   );

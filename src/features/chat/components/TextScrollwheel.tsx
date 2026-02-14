@@ -4,6 +4,7 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { SpeechPart } from '../../../core/types';
+import { IconSpeaker, IconVolumeOff } from '../../../shared/ui/Icons';
 
 interface TextScrollwheelProps {
   translations: Array<{ target: string; native: string; }>;
@@ -197,7 +198,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                     {line.text}
                     {line.type === 'native' && index === flashIndex && (
                       <span className="ml-2 inline-block align-middle animate-speak-flash">
-                        {flashIsOn ? '🔊' : '🔇'}
+                        {flashIsOn ? <IconSpeaker className="w-3 h-3 inline" /> : <IconVolumeOff className="w-3 h-3 inline" />}
                       </span>
                     )}
                   </p> 

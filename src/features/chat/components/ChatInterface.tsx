@@ -628,7 +628,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                    </div>
                  )}
                  <button
-                   className={`p-1 rounded-full bg-accent/80 text-accent-foreground hover:bg-accent shadow-sm border border-accent`}
+                   className={`p-1 bg-accent/80 text-accent-foreground hover:bg-accent shadow-sm sketchy-border-thin`}
                    onClick={(e) => { e.stopPropagation(); setOpenBookmarkControlsForId(prev => prev === msg.id ? null : msg.id); }}
                    title={t('chat.bookmark.actionsToggleTitle') || 'Bookmark options'}
                    aria-expanded={openBookmarkControlsForId === msg.id}
@@ -665,7 +665,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                >
                  {isAssistant && (msg.id === bookmarkedMessageId || bookmarkEligibleAssistantIds.has(msg.id)) && (
                    <button
-                     className={`p-2 rounded-full ${isSuggestionMode ? 'bg-secondary text-foreground' : 'bg-accent text-accent-foreground'} shadow`}
+                     className={`p-2 ${isSuggestionMode ? 'bg-secondary text-foreground' : 'bg-accent text-accent-foreground'} shadow sketchy-border-thin`}
                      onPointerDown={(e) => { e.stopPropagation(); }}
                          onClick={(e) => { e.stopPropagation(); if (msg.id !== bookmarkedMessageId) { onBookmarkAt(msg.id); } }}
                          title={msg.id === bookmarkedMessageId ? (t('chat.bookmark.isHere') || 'Bookmark is here') : (t('chat.bookmark.setHere') || 'Set bookmark here')}
@@ -675,7 +675,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                    </button>
                  )}
                  <button
-                   className={`p-2 rounded-full ${isSuggestionMode ? 'bg-secondary text-foreground' : 'bg-eraser text-accent-foreground'} shadow`}
+                   className={`p-2 ${isSuggestionMode ? 'bg-secondary text-foreground' : 'bg-eraser text-accent-foreground'} shadow sketchy-border-thin`}
                    onPointerDown={(e) => { e.stopPropagation(); }}
                    onClick={(e) => { e.stopPropagation(); onDeleteMessage(msg.id); }}
                    title="Delete message"

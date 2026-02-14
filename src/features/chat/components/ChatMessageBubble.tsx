@@ -4,7 +4,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
-import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck, IconChevronLeft, IconChevronRight } from '../../../shared/ui/Icons';
+import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck, IconChevronLeft, IconChevronRight, IconSpeaker, IconVolumeOff } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import TextScrollwheel from './TextScrollwheel';
 import AudioPlayer from './AudioPlayer';
@@ -1099,7 +1099,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                           {pair.native}
                           {nativeFlashIndex === index && (
                             <span className="ml-1 inline-block align-middle animate-speak-flash">
-                              {nativeFlashIsOn ? '🔊' : '🔇'}
+                              {nativeFlashIsOn ? <IconSpeaker className="w-3 h-3 inline" /> : <IconVolumeOff className="w-3 h-3 inline" />}
                             </span>
                           )}
                          </p>

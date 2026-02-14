@@ -227,14 +227,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
   const containerPad = compact ? 'p-1.5 gap-2' : 'p-2 gap-2.5';
 
   return (
-    <div className={`flex items-center ${containerPad} rounded-2xl ${containerClasses} w-full select-none`}>
+    <div className={`flex items-center ${containerPad} ${containerClasses} w-full select-none sketchy-border-thin`}>
       <audio ref={audioRef} src={src} preload="metadata" />
 
       {/* Play / Pause */}
       <button
         type="button"
         onClick={togglePlay}
-        className={`flex-shrink-0 ${btnSize} rounded-full flex items-center justify-center transition-colors ${playBtnClasses}`}
+        className={`flex-shrink-0 ${btnSize} flex items-center justify-center transition-colors ${playBtnClasses} sketchy-border-thin`}
         aria-label={isPlaying ? 'Pause' : 'Play'}
       >
         {isPlaying ? (
