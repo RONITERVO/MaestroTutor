@@ -20,6 +20,10 @@ import {
   IconSwap,
   IconBookmark,
   IconScissors,
+  IconCog,
+  IconGlobe,
+  IconMessageSquare,
+  IconTarget,
 } from '../../../shared/ui/Icons';
 
 import { getGlobalProfileDB, setGlobalProfileDB } from '../services/globalProfile';
@@ -655,12 +659,16 @@ const SessionControls: React.FC = () => {
             {controlMode === 'none' ? (
               /* Default: Show two group selectors */
               <>
-                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
-                  {'🔧🌐💬'}
+                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
+                  <IconCog className="w-3.5 h-3.5" />
+                  <IconGlobe className="w-3.5 h-3.5" />
+                  <IconMessageSquare className="w-3.5 h-3.5" />
                 </button>
                 <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
-                  {'🔧🎯💬'}
+                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
+                  <IconCog className="w-3.5 h-3.5" />
+                  <IconTarget className="w-3.5 h-3.5" />
+                  <IconMessageSquare className="w-3.5 h-3.5" />
                 </button>
               </>
             ) : controlMode === 'all' ? (
