@@ -5,7 +5,7 @@ import React, { forwardRef, useState, useEffect, useRef, useMemo, useCallback } 
 import { useShallow } from 'zustand/react/shallow';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
 import StatusAnimationBubble from './StatusAnimationBubble';
-import { IconShield, IconTerminal } from '../../../shared/ui/Icons';
+import { IconKey, IconTerminal } from '../../../shared/ui/Icons';
 import { useStatusAnimations } from '../hooks/useStatusAnimations';
 import { useMaestroStore } from '../../../store';
 import { parseLanguagePairId } from '../../../shared/utils/languageUtils';
@@ -199,19 +199,19 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
          {onOpenApiKey && (
            <button
              onClick={onOpenApiKey}
-             className={`flex items-center gap-2 px-3 py-2 rounded-full shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm
+             className={`flex items-center gap-2 px-3 py-2 shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm sketchy-border-thin
                ${hasApiKey ? 'bg-emerald-600/85 text-white hover:bg-emerald-600' : 'bg-rose-600/90 text-white hover:bg-rose-600'}
              `}
              title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
            >
-             <IconShield className="w-4 h-4" />
+             <IconKey className="w-4 h-4" />
              <span className="hidden sm:inline">{hasApiKey ? 'API Key' : 'API Key Required'}</span>
            </button>
          )}
 
          <button
            onClick={toggleDebugLogs}
-           className="p-2 bg-primary/80 hover:bg-primary text-muted-foreground hover:text-primary-foreground rounded-full shadow-sm backdrop-blur-sm transition-all"
+           className="p-2 bg-primary/80 hover:bg-primary text-muted-foreground hover:text-primary-foreground shadow-sm backdrop-blur-sm transition-all sketchy-border-thin"
            title="View Traffic Logs"
          >
            <IconTerminal className="w-4 h-4" />

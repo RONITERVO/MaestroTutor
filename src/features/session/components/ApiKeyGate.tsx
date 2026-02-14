@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
-import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconShield, IconXMark } from '../../../shared/ui/Icons';
+import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
@@ -146,7 +146,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center bg-accent/15 text-accent sketchy-border-thin">
-              <IconShield className="h-5 w-5" />
+              <IconKey className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground font-sketch">
