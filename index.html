@@ -4,77 +4,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Gemini Language Tutor</title> 
+    <title>Gemini Language Tutor</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* Custom scrollbar for webkit browsers */
-      ::-webkit-scrollbar { width: 8px; height: 8px; }
-      ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
-
-      /* Splash screen styles */
-      #splash-screen {
-        position: fixed;
-        z-index: 9999;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #f8fafc; /* slate-50 */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        transition: opacity 0.5s ease-in-out;
-        opacity: 1;
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sketch: ['"Caveat"', 'cursive'],
+              hand: ['"Patrick Hand"', 'cursive'],
+              architect: ['"Architects Daughter"', 'cursive'],
+            },
+            colors: {
+              border: 'hsl(var(--border))',
+              input: 'hsl(var(--input))',
+              ring: 'hsl(var(--ring))',
+              background: 'hsl(var(--background))',
+              foreground: 'hsl(var(--foreground))',
+              primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+              secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+              destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+              muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+              accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+              popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
+              card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+              paper: 'hsl(var(--paper))',
+              'paper-dark': 'hsl(var(--paper-dark))',
+              pencil: 'hsl(var(--pencil))',
+              'pencil-light': 'hsl(var(--pencil-light))',
+              'sketch-shadow': 'hsl(var(--sketch-shadow))',
+              eraser: 'hsl(var(--eraser))',
+              watercolor: 'hsl(var(--watercolor))',
+              ink: 'hsl(var(--ink))',
+            },
+            borderRadius: {
+              sketchy: '255px 15px 225px 15px / 15px 225px 15px 255px',
+            },
+            keyframes: {
+              wobble: { '0%, 100%': { transform: 'rotate(-0.5deg)' }, '25%': { transform: 'rotate(0.3deg)' }, '50%': { transform: 'rotate(-0.2deg)' }, '75%': { transform: 'rotate(0.4deg)' } },
+              float: { '0%, 100%': { transform: 'translateY(0) rotate(0deg)' }, '33%': { transform: 'translateY(-3px) rotate(0.5deg)' }, '66%': { transform: 'translateY(1px) rotate(-0.3deg)' } },
+              'pencil-scribble': { '0%': { width: '0%' }, '100%': { width: '100%' } },
+              'fade-up': { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+              'sketch-in': { '0%': { opacity: '0', transform: 'scale(0.9) rotate(-1deg)' }, '100%': { opacity: '1', transform: 'scale(1) rotate(0deg)' } },
+            },
+            animation: {
+              wobble: 'wobble 3s ease-in-out infinite',
+              float: 'float 4s ease-in-out infinite',
+              'pencil-scribble': 'pencil-scribble 1.5s ease-in-out',
+              'fade-up': 'fade-up 0.5s ease-out',
+              'sketch-in': 'sketch-in 0.4s ease-out',
+            },
+          },
+        },
       }
-      #splash-screen.fade-out { opacity: 0; pointer-events: none; }
-      .splash-content { text-align: center; animation: pulseFade 2.5s infinite ease-in-out; }
-      @keyframes pulseFade {
-          0%, 100% { opacity: 0.8; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.02); }
-      }
-
-      /* Utilities */
-      .scrollbar-hide::-webkit-scrollbar { display: none; }
-      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-      /* Image placeholder spinner */
-      .image-placeholder-spinner {
-        border: 4px solid rgba(0, 0, 0, 0.1);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border-left-color: #09f;
-        animation: spin 1s ease infinite;
-      }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-      .globe-bg {
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Flag_map_of_the_world_%282009_version%29.svg/2000px-Flag_map_of_the_world_%282009_version%29.svg.png');
-        background-size: 200% auto;
-        background-position: 0% center;
-        animation: rotate-globe 120s linear infinite;
-        box-shadow: inset 0 0 30px 10px rgba(0,0,0,0.5), 0 0 25px -8px rgba(70, 130, 180, 0.6);
-        border-color: rgba(113, 168, 212, 0.4);
-      }
-      @keyframes rotate-globe { from { background-position: 0% center; } to { background-position: 200% center; } }
-
-      /* Base styles */
-      body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-          sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-    </style>
-
+    </script>
+
     <script type="importmap">
     {
       "imports": {
@@ -85,16 +73,16 @@
       }
     }
     </script>
-  <script type="module" crossorigin src="/MaestroTutor/assets/index-C30vhgYw.js"></script>
-  <link rel="stylesheet" crossorigin href="/MaestroTutor/assets/index-DGnEAwOM.css">
+  <script type="module" crossorigin src="/MaestroTutor/assets/index-D3IfD0xg.js"></script>
+  <link rel="stylesheet" crossorigin href="/MaestroTutor/assets/index-B0bsYbuz.css">
 </head>
-<body class="antialiased">
+<body class="antialiased bg-background text-foreground">
     <div id="splash-screen">
       <div class="splash-content">
         <div style="font-size: 5rem; line-height: 1; margin-bottom: 1rem;">📚</div>
-        <h1 style="font-size: 1.5rem; font-weight: bold; color: #334155;">Gemini Language Tutor</h1>
+        <h1 style="font-size: 1.8rem; font-weight: bold; color: #3d3228; font-family: 'Caveat', cursive;">Maestro Tutor</h1>
       </div>
     </div>
-    <div id="root"></div>
+    <div id="root"></div>
 </body>
 </html>
