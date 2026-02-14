@@ -146,14 +146,14 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
 
     const scrollingBorderClass = isScrolling && variant
         ? variant === 'native'
-            ? 'ring-2 ring-accent shadow-accent/30 shadow-md'
+            ? 'ring-2 ring-watercolor shadow-watercolor/30 shadow-md'
             : 'ring-2 ring-green-500 shadow-green-500/30 shadow-md'
         : '';
 
     return (
         <div className={`flex-1 text-center relative min-w-[3rem] ${disabled ? 'opacity-50' : ''}`}>
             {title && <p className="text-xs text-muted-foreground mb-1 h-4">{title}</p>}
-            <div className={`rounded-lg transition-all duration-150 ${scrollingBorderClass}`}>
+            <div className={`transition-all duration-150 sketchy-border-thin ${scrollingBorderClass}`}>
                 <div 
                     ref={scrollContainerRef}
                     className={`h-32 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}

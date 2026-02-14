@@ -249,7 +249,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
             <div className="relative w-full max-w-[20rem] aspect-square">
                 <div
                     ref={globeRef}
-                    className="globe-bg absolute inset-0 border-2 rounded-full flex items-center justify-center bg-primary text-white overflow-hidden shadow-inner touch-none"
+                    className="globe-bg absolute inset-0 border-2 flex items-center justify-center bg-primary text-white overflow-hidden shadow-inner touch-none sketchy-border"
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
@@ -266,7 +266,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 >
                     <div
-                        className="pointer-events-auto w-[70%] max-w-[10rem] bg-primary/60 backdrop-blur-md rounded-2xl px-3 py-2 transition-opacity duration-200 opacity-40 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10"
+                        className="pointer-events-auto w-[70%] max-w-[10rem] bg-primary/60 backdrop-blur-md px-3 py-2 transition-opacity duration-200 opacity-40 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10 sketchy-border-thin"
                     >
                         <div className="flex justify-center items-start gap-3">
                             <LanguageScrollWheel
@@ -277,7 +277,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                 title=""
                                 variant="native"
                             />
-                            <div className="w-px h-24 bg-white/30 self-center rounded-full"></div>
+                            <div className="w-px h-24 bg-white/30 self-center"></div>
                             <LanguageScrollWheel
                                 languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
                                 selectedValue={targetLang}
@@ -306,7 +306,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         <button
                             key={lang.langCode}
                             ref={el => { if (el) flagRefs.current.set(lang.langCode, el); else flagRefs.current.delete(lang.langCode); }}
-                            className="spiral-flag absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center p-1 rounded-full z-10"
+                            className="spiral-flag absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center p-1 z-10 sketchy-border-thin"
                             style={{ 
                                 top: `${pos.y}%`, 
                                 left: `${pos.x}%`,
@@ -323,8 +323,8 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                             {showShortCode && (
                                 <span className="text-[8px] font-bold text-white/90 leading-none mt-0.5 drop-shadow-sm">{lang.shortCode}</span>
                             )}
-                            <div className={`absolute -inset-1 rounded-full border-2 transition-all duration-300 pointer-events-none ${
-                                isNative ? 'border-sky-400 shadow-sky-400/50 shadow-lg' :
+                            <div className={`absolute -inset-1 border-2 transition-all duration-300 pointer-events-none sketchy-border-thin ${
+                                isNative ? 'border-watercolor shadow-watercolor/50 shadow-lg' :
                                 isTarget ? 'border-green-400 shadow-green-400/50 shadow-lg' :
                                 'border-transparent'
                             }`}></div>
