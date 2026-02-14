@@ -96,13 +96,13 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
     >
         <div className="flex flex-wrap gap-2 justify-end">
             {isLoadingSuggestions && (
-              <span className="inline-block px-3 py-1.5 text-gray-500 italic" style={{ fontSize: '2.8cqw' }}>{t('chat.loadingSuggestions')}</span>
+              <span className="inline-block px-3 py-1.5 text-muted-foreground italic" style={{ fontSize: '2.8cqw' }}>{t('chat.loadingSuggestions')}</span>
             )}
             {!isLoadingSuggestions && replySuggestions.map((suggestion, index) => (
             <button
                 key={index}
                 onClick={(e) => { e.stopPropagation(); handleSuggestionBubbleClick(suggestion); }}
-                className={`inline-block px-3 py-1.5 rounded-full transition-colors text-gray-700 bg-gray-200 hover:bg-gray-300 ${doubleClickedSuggestionTarget === suggestion.target ? 'focus:outline-none focus:ring-2 focus:ring-sky-400' : 'focus:outline-none focus:ring-2 focus:ring-blue-400'}`}
+                className={`inline-block px-3 py-1.5 rounded-full transition-colors text-foreground bg-secondary hover:bg-paper-dark sketchy-border-thin ${doubleClickedSuggestionTarget === suggestion.target ? 'focus:outline-none focus:ring-2 focus:ring-watercolor' : 'focus:outline-none focus:ring-2 focus:ring-accent'}`}
                 style={{ fontSize: '3.1cqw' }}
                 title={t('chat.suggestion.speak', { suggestion: suggestion.target })}
                 aria-label={t('chat.suggestion.ariaLabel', { suggestion: suggestion.target })}
@@ -115,18 +115,18 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleSuggestionMode(); }}
                     className={`inline-flex items-center justify-center w-[34px] h-[34px] text-sm rounded-full transition-colors disabled:opacity-50
-                        ${isSuggestionMode 
-                            ? 'bg-sky-500 text-white animate-pulse' 
-                            : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
+                        ${isSuggestionMode
+                            ? 'bg-accent text-accent-foreground animate-pulse'
+                            : 'text-foreground bg-secondary hover:bg-paper-dark'
                         }
-                        focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                        focus:outline-none focus:ring-2 focus:ring-accent`}
                     style={{ fontSize: '3cqw' }}
                     title={t('chat.suggestion.toggleCreateMode')}
                     aria-label={t('chat.suggestion.toggleCreateMode')}
                     aria-pressed={isSuggestionMode}
                     disabled={isCreatingSuggestion}
                 >
-                    {isCreatingSuggestion ? <SmallSpinner className="w-5 h-5 text-sky-200" /> : <IconTranslate className="w-5 h-5" />}
+                    {isCreatingSuggestion ? <SmallSpinner className="w-5 h-5 text-accent-foreground/70" /> : <IconTranslate className="w-5 h-5" />}
                 </button>
             )}
         </div>

@@ -171,7 +171,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                 className="text-center p-1 w-full opacity-0 select-none pointer-events-none"
               >
                 <p
-                  className="italic text-gray-300"
+                  className="italic text-white/40"
                   style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                 >
                   \u00A0
@@ -188,7 +188,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                   onContextMenu={(e) => e.preventDefault()}
                 > 
                   <p 
-                    className={`${line.type === 'target' ? 'font-semibold text-white' : 'italic text-gray-300'} pointer-events-none`}
+                    className={`${line.type === 'target' ? 'font-semibold text-white' : 'italic text-white/50'} pointer-events-none`}
                     style={{
                       fontSize: line.type === 'target' ? '4cqw' : '3.55cqw',
                       lineHeight: 1.3
@@ -209,7 +209,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                 className="text-center p-1 w-full opacity-0 select-none pointer-events-none"
               >
                 <p
-                  className="italic text-gray-300"
+                  className="italic text-white/40"
                   style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                 >
                   \u00A0

@@ -28,26 +28,26 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-slate-900 shadow-2xl z-[100] flex flex-col border-l border-slate-700 font-mono text-sm">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-primary shadow-2xl z-[100] flex flex-col border-l border-border font-mono text-sm">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 pb-3 bg-slate-800 border-b border-slate-700"
+        className="flex items-center justify-between px-4 pb-3 bg-primary/90 border-b border-border"
         style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
       >
-        <h2 className="text-slate-200 font-semibold flex items-center gap-2">
+        <h2 className="text-primary-foreground font-semibold flex items-center gap-2">
           <span className="text-green-400">➜</span> Traffic Log
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={handleClear}
-            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-eraser hover:bg-primary/70 rounded transition-colors"
             title="Clear logs"
           >
             <IconTrash className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-primary-foreground hover:bg-primary/70 rounded transition-colors"
             title="Close"
           >
             <IconXMark className="w-5 h-5" />
@@ -56,9 +56,9 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
       </div>
 
       {/* Log List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-slate-900">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-primary">
         {logs.length === 0 && (
-          <div className="text-slate-500 text-center py-10 italic">
+          <div className="text-muted-foreground text-center py-10 italic">
             No traffic recorded yet.
           </div>
         )}
@@ -71,36 +71,36 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           return (
             <div
               key={log.id}
-              className={`rounded border ${isError ? 'border-red-800 bg-red-900/10' : 'border-slate-700 bg-slate-800/50'} overflow-hidden transition-colors`}
+              className={`rounded border ${isError ? 'border-red-800 bg-red-900/10' : 'border-border bg-primary/70'} overflow-hidden transition-colors`}
             >
               <div
                 className="px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-white/5 select-none"
                 onClick={() => toggleExpand(log.id)}
               >
                 <div className="flex items-center gap-2 overflow-hidden">
-                  <span className={`text-xs ${isError ? 'text-red-400' : 'text-slate-500'}`}>{time}</span>
-                  <span className={`font-semibold truncate ${isError ? 'text-red-300' : 'text-blue-300'}`}>{log.type}</span>
-                  <span className="text-xs text-slate-500 truncate hidden sm:inline-block">- {log.model}</span>
+                  <span className={`text-xs ${isError ? 'text-red-400' : 'text-muted-foreground'}`}>{time}</span>
+                  <span className={`font-semibold truncate ${isError ? 'text-red-300' : 'text-watercolor'}`}>{log.type}</span>
+                  <span className="text-xs text-muted-foreground truncate hidden sm:inline-block">- {log.model}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <span className={`${isError ? 'text-red-400' : 'text-green-400'}`}>{duration}</span>
-                  <span className="text-slate-600">{isExpanded ? '▲' : '▼'}</span>
+                  <span className="text-muted-foreground">{isExpanded ? '▲' : '▼'}</span>
                 </div>
               </div>
 
               {isExpanded && (
-                <div className="border-t border-slate-700/50">
+                <div className="border-t border-border/50">
                   {/* Request Section */}
-                  <div className="bg-slate-950/50 p-2">
-                    <div className="text-xs text-slate-400 uppercase font-bold mb-1 px-1">Request Payload</div>
-                    <pre className="text-xs text-slate-300 overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
+                  <div className="bg-black/20 p-2">
+                    <div className="text-xs text-muted-foreground uppercase font-bold mb-1 px-1">Request Payload</div>
+                    <pre className="text-xs text-primary-foreground/70 overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
                       {JSON.stringify(log.request, null, 2)}
                     </pre>
                   </div>
 
                   {/* Response Section */}
                   {(log.response || log.error) && (
-                    <div className="bg-slate-950/30 p-2 border-t border-slate-800/50">
+                    <div className="bg-black/10 p-2 border-t border-border/30">
                       <div className={`text-xs uppercase font-bold mb-1 px-1 ${isError ? 'text-red-400' : 'text-green-400'}`}>
                         {isError ? 'Error' : 'Response'}
                       </div>

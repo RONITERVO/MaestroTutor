@@ -520,10 +520,10 @@ const App: React.FC = () => {
 
   if (isApiKeyLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <SmallSpinner className="w-8 h-8 text-gray-500 block mx-auto" />
-          <p className="mt-2 text-gray-600">Loading app...</p>
+      <div className="flex h-screen w-full items-center justify-center bg-background paper-texture">
+        <div className="text-center relative z-10">
+          <SmallSpinner className="w-8 h-8 text-pencil-light block mx-auto" />
+          <p className="mt-2 text-muted-foreground font-hand">Loading app...</p>
         </div>
       </div>
     );
@@ -531,17 +531,17 @@ const App: React.FC = () => {
 
   if (isLoadingHistory && settings.selectedLanguagePairId) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <SmallSpinner className="w-8 h-8 text-gray-500 block mx-auto" />
-          <p className="mt-2 text-gray-600">{t('chat.loadingHistory')}</p>
+      <div className="flex h-screen w-full items-center justify-center bg-background paper-texture">
+        <div className="text-center relative z-10">
+          <SmallSpinner className="w-8 h-8 text-pencil-light block mx-auto" />
+          <p className="mt-2 text-muted-foreground font-hand">{t('chat.loadingHistory')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen antialiased text-gray-800 bg-gray-100">
+    <div className="flex flex-col min-h-screen antialiased text-foreground bg-background paper-texture">
       <Header
         onOpenApiKey={() => {
           setApiKeyError(null);
@@ -569,7 +569,7 @@ const App: React.FC = () => {
         }}
       />
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 flex flex-col bg-slate-50">
+        <main className="flex-1 flex flex-col bg-paper relative z-10">
           <ChatInterface
             onSendMessage={handleSendMessageInternalRef.current || handleSendMessageInternal}
             onDeleteMessage={handleDeleteMessage}

@@ -608,8 +608,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   if (message.thinking && !message.isGeneratingImage) {
     return (
       <div className="flex justify-start mb-3 animate-pulse">
-        <div className="bg-gray-200 rounded-lg p-3 max-w-xl">
-          <p className="text-sm text-gray-700">{t('chat.thinking')}</p>
+        <div className="bg-secondary rounded-sketchy p-3 max-w-xl sketchy-border-thin">
+          <p className="text-sm text-muted-foreground font-hand">{t('chat.thinking')}</p>
         </div>
       </div>
     );
@@ -620,22 +620,22 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
 
-  let bubbleWrapperClasses = "shadow relative overflow-hidden rounded-lg transition-all duration-300 ease-in-out";
+  let bubbleWrapperClasses = "shadow relative overflow-hidden rounded-sketchy transition-all duration-300 ease-in-out";
    if (applyFocusedImageStyles) {
-      bubbleWrapperClasses += " w-full"; 
-      if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) { 
-           bubbleWrapperClasses += " p-3"; 
-           if (isUser) bubbleWrapperClasses += " bg-blue-500 bg-opacity-90 text-white";
-           else if (isError) bubbleWrapperClasses += " bg-red-100 bg-opacity-90 text-red-700";
-           else if (isStatus) bubbleWrapperClasses += " bg-yellow-100 bg-opacity-90 text-yellow-700";
-           else bubbleWrapperClasses += " bg-white bg-opacity-90 text-gray-800";
+      bubbleWrapperClasses += " w-full";
+      if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
+           bubbleWrapperClasses += " p-3";
+           if (isUser) bubbleWrapperClasses += " bg-primary bg-opacity-90 text-primary-foreground";
+           else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
+           else if (isStatus) bubbleWrapperClasses += " bg-accent/10 bg-opacity-90 text-accent";
+           else bubbleWrapperClasses += " bg-card bg-opacity-90 text-foreground";
       }
-  } else { 
+  } else {
       bubbleWrapperClasses += " p-3 max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
-      if (isUser) bubbleWrapperClasses += " bg-blue-500 bg-opacity-90 text-white";
-      else if (isError) bubbleWrapperClasses += " bg-red-100 bg-opacity-90 text-red-700";
-      else if (isStatus) bubbleWrapperClasses += " bg-yellow-100 bg-opacity-90 text-yellow-700";
-      else bubbleWrapperClasses += " bg-white bg-opacity-90 text-gray-800";
+      if (isUser) bubbleWrapperClasses += " bg-primary bg-opacity-90 text-primary-foreground";
+      else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
+      else if (isStatus) bubbleWrapperClasses += " bg-accent/10 bg-opacity-90 text-accent";
+      else bubbleWrapperClasses += " bg-card bg-opacity-90 text-foreground sketchy-border-thin";
   }
 
   const imageContainerBaseClasses = "relative rounded-lg group transition-all duration-300 ease-in-out";
@@ -649,7 +649,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           imageContainerAspectClasses = "aspect-square"; 
       } else if (isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed) {
           if (isAnnotationActive) {
-              imageContainerAspectClasses = "bg-gray-800"; 
+              imageContainerAspectClasses = "bg-primary"; 
               imageContainerFlexCenteringClasses = ""; 
           } else {
               imageContainerAspectClasses = "";
@@ -661,7 +661,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   }
   
   const imageContainerDynamicBg = message.isGeneratingImage ? 
-      (applyFocusedImageStyles ? (isUser ? 'bg-blue-600/40' : 'bg-slate-700/50') : (isUser ? 'bg-blue-400/30' : 'bg-gray-200/50')) 
+      (applyFocusedImageStyles ? (isUser ? 'bg-primary/40' : 'bg-pencil/50') : (isUser ? 'bg-primary/30' : 'bg-secondary/50')) 
       : '';
 
   const imageContainerStyle: React.CSSProperties = {};
@@ -711,11 +711,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                               onError={() => setLoadingAnimationError(true)}
                             />
                           ) : (
-                            <SmallSpinner className="w-full h-full text-slate-100" />
+                            <SmallSpinner className="w-full h-full text-primary-foreground" />
                           )}
                         </div>
                         {remainingTimeDisplay && (
-                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? 'text-slate-200 bg-slate-800/60' : 'text-gray-700 bg-gray-100/70'}`}>
+                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? 'text-primary-foreground/70 bg-primary/60' : 'text-muted-foreground bg-secondary/70'}`}>
                             {remainingTimeDisplay}
                           </p>
                         )}
@@ -842,7 +842,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                             >
                               <button
                                 onClick={handleSaveAnnotation}
-                                className="p-2 bg-white text-black rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
+                                className="p-2 bg-card text-foreground rounded-full hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-card transition-colors"
                                 title={t('chat.annotateModal.saveAndAttach')}
                                 aria-label={t('chat.annotateModal.saveAndAttach')}
                               >
@@ -909,10 +909,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       </div>
                   )}
                   {isFileSuccessfullyDisplayed && (
-                      <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg h-full ${isUser ? 'bg-blue-400' : 'bg-gray-200'}`}>
-                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-blue-100' : 'text-gray-500'}`} />
-                          <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-white' : 'text-gray-700'}`}>{message.imageMimeType}</p>
-                          <p className={`mt-1 text-xs ${isUser ? 'text-blue-200' : 'text-gray-500'}`}>{t('chat.fileAttachment')}</p>
+                      <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg h-full ${isUser ? 'bg-primary/80' : 'bg-secondary'}`}>
+                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
+                          <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-primary-foreground' : 'text-foreground'}`}>{message.imageMimeType}</p>
+                          <p className={`mt-1 text-xs ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{t('chat.fileAttachment')}</p>
                       </div>
                   )}
                   {isPdfSuccessfullyDisplayed && (
@@ -946,7 +946,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           
           {message.imageGenError && !message.isGeneratingImage && (
                <div className={`flex flex-col items-center justify-center p-2 rounded-lg 
-                  ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-blue-400/60' : 'bg-gray-300/60'}`}
+                  ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-primary/60' : 'bg-secondary/60'}`}
                `}>
                   <IconXMark className="w-8 h-8 text-red-300 mb-1"/>
                   <p className={`text-xs text-center ${applyFocusedImageStyles ? 'text-red-200' : 'text-red-700'}`}>
@@ -1025,7 +1025,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                              className={`font-semibold whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  applyFocusedImageStyles
                                  ? (isCurrentLineSpeaking ? 'bg-sky-400 text-sky-900' : 'hover:text-sky-200 text-white')
-                                 : (isCurrentLineSpeaking ? 'bg-sky-100 text-sky-800' : 'hover:text-blue-600 text-gray-800')
+                                 : (isCurrentLineSpeaking ? 'bg-sky-100 text-sky-800' : 'hover:text-accent text-foreground')
                              }`}
                              style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}
@@ -1074,8 +1074,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        {pair.native && (
                         <p className={`italic mt-0.5 whitespace-pre-wrap pl-2 border-l-2 rounded-sm px-1 -mx-1 ${
                              applyFocusedImageStyles
-                             ? (isCurrentLineSpeaking ? 'bg-slate-500 text-slate-100' : 'text-gray-200 border-gray-400')
-                             : (isCurrentLineSpeaking ? 'bg-slate-200 text-slate-800' : 'text-gray-500 border-gray-300')
+                             ? (isCurrentLineSpeaking ? 'bg-primary/60 text-primary-foreground/80' : 'text-primary-foreground/50 border-primary-foreground/30')
+                             : (isCurrentLineSpeaking ? 'bg-secondary text-foreground' : 'text-muted-foreground border-border')
                          }`} style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                          onPointerDown={handleLinePointerDown}
                          onPointerUp={(e) => {
@@ -1114,7 +1114,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                              className={`whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  applyFocusedImageStyles
                                  ? (isCurrentlySpeakingRaw ? 'bg-sky-400 text-sky-900' : 'hover:text-sky-200 text-white')
-                                 : (isCurrentlySpeakingRaw ? 'bg-sky-100 text-sky-800' : 'hover:text-blue-600 text-gray-800')
+                                 : (isCurrentlySpeakingRaw ? 'bg-sky-100 text-sky-800' : 'hover:text-accent text-foreground')
                              }`} style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}
                              onPointerUp={(e) => handleLinePointerUp(e, message.rawAssistantResponse!, currentTargetLangCode)}
@@ -1146,7 +1146,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                      </p>
                    )}
                    {isAssistant && !message.translations?.length && !message.rawAssistantResponse && !message.imageUrl && !message.isGeneratingImage && message.text && (
-                     <p className={`whitespace-pre-wrap ${applyFocusedImageStyles ? 'text-white' : 'text-gray-800'}`} style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>{message.text}</p>
+                     <p className={`whitespace-pre-wrap ${applyFocusedImageStyles ? 'text-white' : 'text-foreground'}`} style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>{message.text}</p>
                    )}
                </>
              )}

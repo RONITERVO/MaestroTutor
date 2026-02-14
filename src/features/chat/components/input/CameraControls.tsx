@@ -341,8 +341,8 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 
   // Selector colors
   const selectorColors = isSuggestionMode
-    ? { bg: 'bg-gray-200/80', activeBg: 'bg-white', activeText: 'text-gray-800', inactiveText: 'text-gray-500', hoverBg: 'hover:bg-gray-300/80' }
-    : { bg: 'bg-blue-500/40', activeBg: 'bg-white', activeText: 'text-blue-600', inactiveText: 'text-blue-200', hoverBg: 'hover:bg-blue-400/60' };
+    ? { bg: 'bg-secondary/80', activeBg: 'bg-card', activeText: 'text-accent', inactiveText: 'text-muted-foreground', hoverBg: 'hover:bg-muted' }
+    : { bg: 'bg-accent/40', activeBg: 'bg-card', activeText: 'text-accent', inactiveText: 'text-accent-foreground/60', hoverBg: 'hover:bg-accent/60' };
 
   // Check if a specific action is highlighted (for visual feedback during touch drag)
   const isHighlighted = useCallback((action: string, deviceId?: string) => {

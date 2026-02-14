@@ -31,8 +31,8 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
   const liveSessionButtonClasses = liveSessionActive
     ? 'bg-red-600/80 hover:bg-red-500 text-white'
     : (liveSessionErrored
-      ? 'bg-yellow-500/80 hover:bg-yellow-500 text-slate-900'
-      : (isSuggestionMode ? 'bg-gray-700/80 hover:bg-gray-800 text-white' : 'bg-black/60 hover:bg-black/80 text-white'));
+      ? 'bg-yellow-500/80 hover:bg-yellow-500 text-foreground'
+      : (isSuggestionMode ? 'bg-primary/80 hover:bg-primary text-primary-foreground' : 'bg-black/60 hover:bg-black/80 text-white'));
 
   const handleLiveSessionToggle = useCallback(() => {
     if (liveSessionActive) {
