@@ -229,7 +229,9 @@ export const knTranslations: Record<string, string> = {
   "error.tokenLimitReached": "ಸೆಷನ್ ಟೋಕನ್ ಮಿತಿ ತಲುಪಿದೆ. ದಯವಿಟ್ಟು ಹೊಸ ಸೆಷನ್ ಪ್ರಾರಂಭಿಸಿ.",
   "error.apiKeyMissing": "ನಿಮ್ಮ Gemini API ಕೀ ಕಾಣೆಯಾಗಿದೆ. API ಕೀ ಪರದೆಯನ್ನು ತೆರೆಯಿರಿ ಮತ್ತು ನಿಮ್ಮ ಕೀಯನ್ನು ಅಂಟಿಸಿ.",
   "error.apiKeyInvalid": "ನಿಮ್ಮ Gemini API ಕೀ ಅಮಾನ್ಯವಾಗಿದೆ. ದಯವಿಟ್ಟು ಕಾಗುಣಿತ ತಪ್ಪುಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮಾನ್ಯವಾದ ಕೀಯನ್ನು ಅಂಟಿಸಿ.",
-  "error.apiQuotaExceeded": "ಚಾಟ್‌ಗಾಗಿ ನಿಮ್ಮ Gemini API ಉಚಿತ ಮಿತಿ ಮುಗಿದಿದೆ. ಬಿಲ್ಲಿಂಗ್ ಹಂತಗಳೊಂದಿಗೆ ನಾನು API ಕೀ ಪರದೆಯನ್ನು ತೆರೆದಿದ್ದೇನೆ. ಈ ಮಧ್ಯೆ ನೀವು ಇನ್ನೂ ಲೈವ್ ಸಂಭಾಷಣೆಯನ್ನು ಬಳಸಬಹುದು.",
+  "error.apiQuotaExceeded": "ಚಾಟ್‌ಗಾಗಿ ನಿಮ್ಮ Gemini API ಉಚಿತ ಮಿತಿ ಮುಗಿದಿದೆ.",
+  "error.quotaSetupBilling": "ಬಿಲ್ಲಿಂಗ್ ಸೆಟ್ ಅಪ್ ಮಾಡಿ",
+  "error.quotaStartLive": "ಬದಲಿಗೆ ಲೈವ್ ಪ್ರಾರಂಭಿಸಿ",
 
   // Errors - camera
   "error.cameraPermissionDenied": "ಕ್ಯಾಮರಾ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಬ್ರೌಸರ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಕ್ಯಾಮರಾ ಪ್ರವೇಶವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.",

@@ -229,7 +229,9 @@ export const zhTranslations: Record<string, string> = {
   "error.tokenLimitReached": "已达到会话令牌限制。请开始新会话。",
   "error.apiKeyMissing": "您的 Gemini API 密钥缺失。打开 API 密钥屏幕并粘贴您的密钥。",
   "error.apiKeyInvalid": "您的 Gemini API 密钥无效。请检查拼写错误并粘贴有效的密钥。",
-  "error.apiQuotaExceeded": "您的 Gemini API 免费聊天配额已用尽。我已打开带有计费步骤的 API 密钥屏幕。在此期间，您仍可以使用实时对话。",
+  "error.apiQuotaExceeded": "您的 Gemini API 免费聊天配额已用尽。",
+  "error.quotaSetupBilling": "设置计费",
+  "error.quotaStartLive": "改用实时对话",
 
   // Errors - camera
   "error.cameraPermissionDenied": "相机权限被拒绝。请在浏览器设置中启用相机访问。",

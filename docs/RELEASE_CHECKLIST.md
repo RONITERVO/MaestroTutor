@@ -64,7 +64,7 @@ Select: "All or some functionality is restricted" -> Add instructions.
 
 Write: "This app requires a user-generated Google Gemini API Key. For testing purposes, please use this valid key: [PASTE_YOUR_KEY_HERE]. You can revoke this key after testing."
 
-- [X] Add privacy policy URL: `https://ronitervo.github.io/MaestroTutor/public/privacy.html`
+- [X] Add privacy policy URL: `https://ronitervo.github.io/MaestroTutor/privacy.html`
 
 ## 7) Data Safety Form
 Recommended answers:

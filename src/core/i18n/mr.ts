@@ -229,7 +229,9 @@ export const mrTranslations: Record<string, string> = {
   "error.tokenLimitReached": "सत्र टोकन मर्यादा गाठली. कृपया नवीन सत्र सुरू करा.",
   "error.apiKeyMissing": "तुमची Gemini API की गहाळ आहे. API की स्क्रीन उघडा आणि तुमची की पेस्ट करा.",
   "error.apiKeyInvalid": "तुमची Gemini API की अवैध आहे. कृपया टायपो तपासा आणि वैध की पेस्ट करा.",
-  "error.apiQuotaExceeded": "तुमचा चॅटसाठीचा Gemini API मोफत कोटा संपला आहे. मी बिलिंग चरणांसह API की स्क्रीन उघडली आहे. तुम्ही तोपर्यंत लाइव्ह संभाषण वापरू शकता.",
+  "error.apiQuotaExceeded": "तुमचा चॅटसाठीचा Gemini API मोफत कोटा संपला आहे.",
+  "error.quotaSetupBilling": "बिलिंग सेट करा",
+  "error.quotaStartLive": "त्याऐवजी लाइव्ह सुरू करा",
 
   // Errors - camera
   "error.cameraPermissionDenied": "कॅमेरा परवानगी नाकारली. ब्राउझर सेटिंग्जमध्ये कॅमेरा प्रवेश सक्षम करा.",

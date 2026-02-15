@@ -229,7 +229,9 @@ export const idTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Batas token sesi tercapai. Silakan mulai sesi baru.",
   "error.apiKeyMissing": "Kunci Gemini API Anda hilang. Buka layar Kunci API dan tempelkan kunci Anda.",
   "error.apiKeyInvalid": "Kunci Gemini API Anda tidak valid. Silakan periksa kesalahan ketik dan tempelkan kunci yang valid.",
-  "error.apiQuotaExceeded": "Kuota gratis Gemini API Anda untuk obrolan telah habis. Saya membuka layar Kunci API dengan langkah-langkah penagihan. Anda masih dapat menggunakan percakapan Langsung sementara itu.",
+  "error.apiQuotaExceeded": "Kuota gratis Gemini API Anda untuk obrolan telah habis.",
+  "error.quotaSetupBilling": "Atur penagihan",
+  "error.quotaStartLive": "Mulai Live sebagai gantinya",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Izin kamera ditolak. Silakan aktifkan akses kamera di pengaturan browser.",

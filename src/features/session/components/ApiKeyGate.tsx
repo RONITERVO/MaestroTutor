@@ -24,7 +24,7 @@ interface ApiKeyGateProps {
 }
 
 const AI_STUDIO_URL = 'https://aistudio.google.com/app/apikey';
-const PRIVACY_POLICY_URL = 'https://ronitervo.github.io/MaestroTutor/public/privacy.html';
+const PRIVACY_POLICY_URL = 'https://ronitervo.github.io/MaestroTutor/privacy.html';
 const INSTRUCTION_IMAGES = Array.from({ length: 12 }, (_, index) => `${import.meta.env.BASE_URL}api-key-instructions/step-${index + 1}.jpg`);
 const INSTRUCTION_AUTO_ADVANCE_MS = 3200;
 const REGULAR_INSTRUCTIONS_COUNT = 9;

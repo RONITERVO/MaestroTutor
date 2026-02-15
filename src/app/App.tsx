@@ -513,6 +513,35 @@ const App: React.FC = () => {
     maestroAvatarMimeTypeRef,
   });
 
+  // ============================================================
+  // QUOTA ERROR ACTIONS
+  // ============================================================
+
+  const handleQuotaSetupBilling = useCallback(() => {
+    handleApiKeyGateOpen({ reason: 'quota', instructionIndex: 9 });
+  }, [handleApiKeyGateOpen]);
+
+  const handleQuotaStartLive = useCallback(async () => {
+    // Select the first available physical camera if none is selected
+    const currentCameraId = settingsRef.current.selectedCameraId;
+    if (!currentCameraId || currentCameraId === IMAGE_GEN_CAMERA_ID) {
+      const firstPhysicalCamera = availableCamerasRef.current[0];
+      if (firstPhysicalCamera) {
+        handleSettingsChange('selectedCameraId', firstPhysicalCamera.deviceId);
+      }
+    }
+    // Ensure snapshot sending is enabled so the camera feed is active
+    if (!settingsRef.current.sendWithSnapshotEnabled) {
+      handleSettingsChange('sendWithSnapshotEnabled', true);
+    }
+    // Start the live session
+    try {
+      await handleStartLiveSession();
+    } catch {
+      // handleStartLiveSession already handles its own errors
+    }
+  }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSession]);
+
 
   // ============================================================
   // RENDER
@@ -624,6 +653,8 @@ const App: React.FC = () => {
             onStopLiveSession={handleStopLiveSession}
             onToggleSuggestionMode={handleToggleSuggestionMode}
             onCreateSuggestion={handleCreateSuggestion}
+            onQuotaSetupBilling={handleQuotaSetupBilling}
+            onQuotaStartLive={handleQuotaStartLive}
           />
         </main>
       </div>

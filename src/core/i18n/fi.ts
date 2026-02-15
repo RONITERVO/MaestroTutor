@@ -229,7 +229,9 @@ export const fiTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Istunnon token-raja saavutettu. Aloita uusi istunto.",
   "error.apiKeyMissing": "Gemini API -avaimesi puuttuu. Avaa API-avainnäkymä ja liitä avaimesi.",
   "error.apiKeyInvalid": "Gemini API -avaimesi on virheellinen. Tarkista kirjoitusvirheet ja liitä kelvollinen avain.",
-  "error.apiQuotaExceeded": "Gemini API:n ilmainen chat-kiintiösi on lopussa. Avasin API-avainnäkymän, jossa on laskutusohjeet. Voit silti käyttää Live-keskustelua sillä välin.",
+  "error.apiQuotaExceeded": "Gemini API:n ilmainen chat-kiintiösi on lopussa.",
+  "error.quotaSetupBilling": "Määritä laskutus",
+  "error.quotaStartLive": "Käynnistä Live sen sijaan",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Kameran käyttöoikeus evätty. Ota kameran käyttöoikeus käyttöön selaimen asetuksissa.",

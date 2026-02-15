@@ -229,7 +229,9 @@ export const jaTranslations: Record<string, string> = {
   "error.tokenLimitReached": "セッションのトークン制限に達しました。新しいセッションを開始してください。",
   "error.apiKeyMissing": "Gemini APIキーが見つかりません。APIキー画面を開いてキーを貼り付けてください。",
   "error.apiKeyInvalid": "Gemini APIキーが無効です。誤字脱字を確認し、有効なキーを貼り付けてください。",
-  "error.apiQuotaExceeded": "チャット用のGemini API無料枠を使い果たしました。課金手順を含むAPIキー画面を開きました。その間もライブ会話は引き続きご利用いただけます。",
+  "error.apiQuotaExceeded": "チャット用のGemini API無料枠を使い果たしました。",
+  "error.quotaSetupBilling": "課金を設定",
+  "error.quotaStartLive": "代わりにライブを開始",
 
   // Errors - camera
   "error.cameraPermissionDenied": "カメラの許可が拒否されました。ブラウザの設定でカメラへのアクセスを有効にしてください。",

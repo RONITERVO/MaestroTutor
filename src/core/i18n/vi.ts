@@ -229,7 +229,9 @@ export const viTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Đã đạt giới hạn token của phiên. Vui lòng bắt đầu phiên mới.",
   "error.apiKeyMissing": "Thiếu khóa Gemini API của bạn. Mở màn hình Khóa API và dán khóa của bạn vào.",
   "error.apiKeyInvalid": "Khóa Gemini API của bạn không hợp lệ. Vui lòng kiểm tra lỗi chính tả và dán khóa hợp lệ.",
-  "error.apiQuotaExceeded": "Hạn ngạch miễn phí Gemini API cho trò chuyện của bạn đã hết. Tôi đã mở màn hình Khóa API với các bước thanh toán. Trong thời gian chờ đợi, bạn vẫn có thể sử dụng Trò chuyện trực tiếp.",
+  "error.apiQuotaExceeded": "Hạn ngạch miễn phí Gemini API cho trò chuyện của bạn đã hết.",
+  "error.quotaSetupBilling": "Thiết lập thanh toán",
+  "error.quotaStartLive": "Bắt đầu Trực tiếp thay thế",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Quyền camera bị từ chối. Vui lòng bật quyền truy cập camera trong cài đặt trình duyệt.",

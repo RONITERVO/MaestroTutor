@@ -234,7 +234,9 @@ export const enTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Session token limit reached. Please start a new session.",
   "error.apiKeyMissing": "Your Gemini API key is missing. Open the API Key screen and paste your key.",
   "error.apiKeyInvalid": "Your Gemini API key is invalid. Please check for typos and paste a valid key.",
-  "error.apiQuotaExceeded": "Your Gemini API free quota for chat is exhausted. I opened the API Key screen with billing steps. You can still use Live conversation in the meantime.",
+  "error.apiQuotaExceeded": "Your Gemini API free quota for chat is exhausted.",
+  "error.quotaSetupBilling": "Set up billing",
+  "error.quotaStartLive": "Start Live instead",
   
   // Errors - camera
   "error.cameraPermissionDenied": "Camera permission denied. Please enable camera access in your browser settings.",

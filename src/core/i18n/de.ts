@@ -227,7 +227,9 @@ export const deTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Sitzungs-Token-Limit erreicht. Bitte neue Sitzung starten.",
   "error.apiKeyMissing": "Ihr Gemini-API-Schlüssel fehlt. Öffnen Sie den API-Schlüssel-Bildschirm und fügen Sie Ihren Schlüssel ein.",
   "error.apiKeyInvalid": "Ihr Gemini-API-Schlüssel ist ungültig. Bitte prüfen Sie auf Tippfehler und fügen Sie einen gültigen Schlüssel ein.",
-  "error.apiQuotaExceeded": "Ihr kostenloses Gemini-API-Kontingent für den Chat ist erschöpft. Ich habe den API-Schlüssel-Bildschirm mit den Abrechnungsschritten geöffnet. In der Zwischenzeit können Sie weiterhin die Live-Unterhaltung nutzen.",
+  "error.apiQuotaExceeded": "Ihr kostenloses Gemini-API-Kontingent für den Chat ist erschöpft.",
+  "error.quotaSetupBilling": "Abrechnung einrichten",
+  "error.quotaStartLive": "Stattdessen Live starten",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Kameraberechtigung verweigert. Bitte aktivieren Sie den Kamerazugriff in Ihren Browsereinstellungen.",

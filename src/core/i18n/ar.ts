@@ -227,7 +227,9 @@ export const arTranslations: Record<string, string> = {
   "error.tokenLimitReached": "تم الوصول إلى حد الرموز للجلسة. يرجى بدء جلسة جديدة.",
   "error.apiKeyMissing": "مفتاح Gemini API الخاص بك مفقود. افتح شاشة مفتاح API والصق مفتاحك.",
   "error.apiKeyInvalid": "مفتاح Gemini API الخاص بك غير صالح. يرجى التحقق من وجود أخطاء إملائية ولصق مفتاح صالح.",
-  "error.apiQuotaExceeded": "تم استنفاد حصة Gemini API المجانية للدردشة. لقد فتحت شاشة مفتاح API مع خطوات الفوترة. يمكنك الاستمرار في استخدام المحادثة المباشرة في هذه الأثناء.",
+  "error.apiQuotaExceeded": "تم استنفاد حصة Gemini API المجانية للدردشة.",
+  "error.quotaSetupBilling": "إعداد الفوترة",
+  "error.quotaStartLive": "ابدأ المحادثة المباشرة بدلاً من ذلك",
 
   // Errors - camera
   "error.cameraPermissionDenied": "تم رفض إذن الكاميرا. يرجى تمكين الوصول إلى الكاميرا في إعدادات المتصفح.",

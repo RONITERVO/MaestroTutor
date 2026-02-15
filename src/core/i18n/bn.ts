@@ -229,7 +229,9 @@ export const bnTranslations: Record<string, string> = {
   "error.tokenLimitReached": "সেশন টোকেন সীমা পূর্ণ হয়েছে। অনুগ্রহ করে নতুন সেশন শুরু করুন।",
   "error.apiKeyMissing": "আপনার Gemini API কী নেই। API Key স্ক্রিন খুলুন এবং আপনার কী পেস্ট করুন।",
   "error.apiKeyInvalid": "আপনার Gemini API কী অবৈধ। অনুগ্রহ করে বানানে ভুল আছে কিনা পরীক্ষা করুন এবং একটি বৈধ কী পেস্ট করুন।",
-  "error.apiQuotaExceeded": "চ্যাটের জন্য আপনার Gemini API-এর ফ্রি কোটা শেষ হয়ে গেছে। আমি বিলিং ধাপসহ API Key স্ক্রিন খুলেছি। এর মধ্যে আপনি এখনও লাইভ কথোপকথন ব্যবহার করতে পারেন।",
+  "error.apiQuotaExceeded": "চ্যাটের জন্য আপনার Gemini API-এর ফ্রি কোটা শেষ হয়ে গেছে।",
+  "error.quotaSetupBilling": "বিলিং সেট আপ করুন",
+  "error.quotaStartLive": "পরিবর্তে লাইভ শুরু করুন",
 
   // Errors - camera
   "error.cameraPermissionDenied": "ক্যামেরা অনুমতি প্রত্যাখ্যাত। ব্রাউজার সেটিংসে ক্যামেরা অ্যাক্সেস সক্রিয় করুন।",

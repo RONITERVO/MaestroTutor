@@ -229,7 +229,9 @@ export const hiTranslations: Record<string, string> = {
   "error.tokenLimitReached": "सत्र टोकन सीमा पूरी हो गई। कृपया नया सत्र शुरू करें।",
   "error.apiKeyMissing": "आपकी Gemini API कुंजी गायब है। API कुंजी स्क्रीन खोलें और अपनी कुंजी पेस्ट करें।",
   "error.apiKeyInvalid": "आपकी Gemini API कुंजी अमान्य है। कृपया टाइपो की जांच करें और एक वैध कुंजी पेस्ट करें।",
-  "error.apiQuotaExceeded": "चैट के लिए आपका Gemini API फ्री कोटा समाप्त हो गया है। मैंने बिलिंग चरणों के साथ API कुंजी स्क्रीन खोल दी है। आप इस बीच अभी भी लाइव बातचीत का उपयोग कर सकते हैं।",
+  "error.apiQuotaExceeded": "चैट के लिए आपका Gemini API फ्री कोटा समाप्त हो गया है।",
+  "error.quotaSetupBilling": "बिलिंग सेट अप करें",
+  "error.quotaStartLive": "इसके बजाय लाइव शुरू करें",
 
   // Errors - camera
   "error.cameraPermissionDenied": "कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र सेटिंग्स में कैमरा एक्सेस सक्षम करें।",

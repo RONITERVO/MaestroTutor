@@ -229,7 +229,9 @@ export const thTranslations: Record<string, string> = {
   "error.tokenLimitReached": "ถึงขีดจำกัดโทเค็นของเซสชันแล้ว กรุณาเริ่มเซสชันใหม่",
   "error.apiKeyMissing": "คีย์ API Gemini ของคุณหายไป เปิดหน้าจอคีย์ API และวางคีย์ของคุณ",
   "error.apiKeyInvalid": "คีย์ API Gemini ของคุณไม่ถูกต้อง โปรดตรวจสอบการสะกดผิดและวางคีย์ที่ถูกต้อง",
-  "error.apiQuotaExceeded": "โควตาฟรีของ Gemini API สำหรับแชทของคุณหมดแล้ว ฉันได้เปิดหน้าจอคีย์ API พร้อมขั้นตอนการเรียกเก็บเงิน ในระหว่างนี้คุณยังสามารถใช้การสนทนาสดได้",
+  "error.apiQuotaExceeded": "โควตาฟรีของ Gemini API สำหรับแชทของคุณหมดแล้ว",
+  "error.quotaSetupBilling": "ตั้งค่าการเรียกเก็บเงิน",
+  "error.quotaStartLive": "เริ่ม Live แทน",
 
   // Errors - camera
   "error.cameraPermissionDenied": "ปฏิเสธการอนุญาตกล้อง กรุณาเปิดใช้งานการเข้าถึงกล้องในการตั้งค่าเบราว์เซอร์",

@@ -229,7 +229,9 @@ export const koTranslations: Record<string, string> = {
   "error.tokenLimitReached": "세션 토큰 한도에 도달했습니다. 새 세션을 시작해 주세요.",
   "error.apiKeyMissing": "Gemini API 키가 누락되었습니다. API 키 화면을 열고 키를 붙여넣으세요.",
   "error.apiKeyInvalid": "Gemini API 키가 유효하지 않습니다. 오타가 있는지 확인하고 유효한 키를 붙여넣으세요.",
-  "error.apiQuotaExceeded": "Gemini API의 무료 채팅 할당량이 소진되었습니다. 결제 단계가 포함된 API 키 화면을 열었습니다. 그동안 라이브 대화를 계속 사용할 수 있습니다.",
+  "error.apiQuotaExceeded": "Gemini API의 무료 채팅 할당량이 소진되었습니다.",
+  "error.quotaSetupBilling": "결제 설정",
+  "error.quotaStartLive": "대신 라이브 시작",
 
   // Errors - camera
   "error.cameraPermissionDenied": "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 액세스를 활성화하세요.",
