@@ -241,7 +241,7 @@ export const enTranslations: Record<string, string> = {
   "error.quotaStartLive": "Start Live instead",
   "error.imageGenCostWarning": "Image generation costs ~0.05\u20ac per image (messages cost less, billed by Google). You can ignore this if you\u2019re OK with the cost.",
   "error.imageGenDisable": "Disable Image Generation",
-  "error.imageGenViewCost": "View image Generation Costs",
+  "error.imageGenViewCost": "View image Generation Cost",
   
   // Errors - camera
   "error.cameraPermissionDenied": "Camera permission denied. Please enable camera access in your browser settings.",
