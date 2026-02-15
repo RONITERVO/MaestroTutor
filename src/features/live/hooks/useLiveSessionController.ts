@@ -172,11 +172,16 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     if (liveSessionCaptureRef.current) {
       const { stream, created } = liveSessionCaptureRef.current;
       if (created && stream) {
+        // We created this stream for the live session, so stop its tracks
+        // and clear liveVideoStream since it's no longer valid.
         stream.getTracks().forEach(t => t.stop());
+        setLiveVideoStream(null);
       }
+      // When the stream was borrowed from useCameraManager (created === false),
+      // it's still active and managed by the camera effect - don't clear
+      // liveVideoStream so the camera preview remains visible after the session.
       liveSessionCaptureRef.current = null;
     }
-    setLiveVideoStream(null);
   }, [setLiveVideoStream]);
 
   /**

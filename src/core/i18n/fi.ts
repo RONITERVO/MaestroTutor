@@ -204,7 +204,7 @@ export const fiTranslations: Record<string, string> = {
   // Chat - live session
   "chat.liveSession.stop": "Pysäytä live",
   "chat.liveSession.retry": "Yritä liveä uudelleen",
-  "chat.liveSession.start": "Aloita live",
+  "chat.liveSession.start": "-->Soita live puhelu<--",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Yhdistetään",
   "chat.liveSession.defaultLastMessage": "Hei! Kuinka voin auttaa sinua tänään?",
