@@ -1020,8 +1020,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   )}
  
                    {isAssistant && message.translations && message.translations.length > 0 && message.translations.map((pair, index) => {
-                     const isCurrentlySpeakingTarget = pair.target && speakingUtteranceText === pair.target.replace(/\*/g, '');
-                     const isCurrentlySpeakingNative = pair.native && speakingUtteranceText === pair.native.replace(/\*/g, '');
+                     const cleanedUtterance = speakingUtteranceText?.replace(/\*/g, '') ?? null;
+                     const isCurrentlySpeakingTarget = pair.target && cleanedUtterance === pair.target.replace(/\*/g, '');
+                     const isCurrentlySpeakingNative = pair.native && cleanedUtterance === pair.native.replace(/\*/g, '');
                      const isCurrentLineSpeaking = isCurrentlySpeakingTarget || isCurrentlySpeakingNative;
  
                      return (
@@ -1114,7 +1115,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                    )})}
                    {isAssistant && (!message.translations || message.translations.length === 0) && message.rawAssistantResponse && (
                      (() => {
-                       const isCurrentlySpeakingRaw = message.rawAssistantResponse && speakingUtteranceText === message.rawAssistantResponse.replace(/\*/g, '');
+                       const isCurrentlySpeakingRaw = message.rawAssistantResponse && (speakingUtteranceText?.replace(/\*/g, '') ?? null) === message.rawAssistantResponse.replace(/\*/g, '');
                        return (
                          <p
                              className={`whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
