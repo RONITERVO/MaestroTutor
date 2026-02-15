@@ -229,7 +229,9 @@ export const ptTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Limite de tokens da sessão atingido. Por favor, inicie uma nova sessão.",
   "error.apiKeyMissing": "Sua chave API do Gemini está faltando. Abra a tela de chave API e cole sua chave.",
   "error.apiKeyInvalid": "Sua chave API do Gemini é inválida. Verifique se há erros de digitação e cole uma chave válida.",
-  "error.apiQuotaExceeded": "Sua cota gratuita da API Gemini para chat esgotou. Abri a tela de chave API com passos de faturamento. Você ainda pode usar a conversa ao vivo enquanto isso.",
+  "error.apiQuotaExceeded": "Sua cota gratuita da API Gemini para chat esgotou.",
+  "error.quotaSetupBilling": "Configurar faturamento",
+  "error.quotaStartLive": "Iniciar Live em vez disso",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Permissão da câmera negada. Por favor, habilite o acesso à câmera nas configurações do seu navegador.",

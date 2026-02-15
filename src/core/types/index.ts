@@ -35,6 +35,8 @@ export interface ChatMessage {
   imageGenerationStartTime?: number;
   tempSelectedNativeLangCode?: string;
   tempSelectedTargetLangCode?: string;
+  /** Optional action hint for error messages (e.g. 'quota') to render contextual action buttons */
+  errorAction?: string;
 }
 
 export interface SpeechPart {

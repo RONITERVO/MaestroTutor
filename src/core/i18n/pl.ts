@@ -229,7 +229,9 @@ export const plTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Osiągnięto limit tokenów sesji. Rozpocznij nową sesję.",
   "error.apiKeyMissing": "Brak klucza API Gemini. Otwórz ekran klucza API i wklej swój klucz.",
   "error.apiKeyInvalid": "Klucz API Gemini jest nieprawidłowy. Sprawdź, czy nie ma literówek i wklej prawidłowy klucz.",
-  "error.apiQuotaExceeded": "Twój bezpłatny limit Gemini API na czat został wyczerpany. Otworzyłem ekran klucza API z krokami rozliczeniowymi. W międzyczasie nadal możesz korzystać z rozmowy na żywo.",
+  "error.apiQuotaExceeded": "Twój bezpłatny limit Gemini API na czat został wyczerpany.",
+  "error.quotaSetupBilling": "Skonfiguruj rozliczenia",
+  "error.quotaStartLive": "Zacznij rozmowę na żywo",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Odmówiono dostępu do kamery. Włącz dostęp do kamery w ustawieniach przeglądarki.",

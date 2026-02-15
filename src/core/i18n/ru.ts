@@ -229,7 +229,9 @@ export const ruTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Достигнут лимит токенов сессии. Пожалуйста, начните новую сессию.",
   "error.apiKeyMissing": "Ваш ключ API Gemini отсутствует. Откройте экран ключа API и вставьте свой ключ.",
   "error.apiKeyInvalid": "Ваш ключ API Gemini недействителен. Пожалуйста, проверьте на наличие опечаток и вставьте действующий ключ.",
-  "error.apiQuotaExceeded": "Ваша бесплатная квота Gemini API для чата исчерпана. Я открыл экран ключа API с инструкциями по биллингу. Вы все еще можете использовать живое общение в это время.",
+  "error.apiQuotaExceeded": "Ваша бесплатная квота Gemini API для чата исчерпана.",
+  "error.quotaSetupBilling": "Настроить биллинг",
+  "error.quotaStartLive": "Начать Live вместо этого",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Разрешение на использование камеры отклонено. Пожалуйста, включите доступ к камере в настройках вашего браузера.",

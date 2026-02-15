@@ -229,7 +229,9 @@ export const trTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Oturum belirteç (token) sınırına ulaşıldı. Lütfen yeni bir oturum başlatın.",
   "error.apiKeyMissing": "Gemini API anahtarınız eksik. API Anahtarı ekranını açın ve anahtarınızı yapıştırın.",
   "error.apiKeyInvalid": "Gemini API anahtarınız geçersiz. Lütfen yazım hatalarını kontrol edin ve geçerli bir anahtar yapıştırın.",
-  "error.apiQuotaExceeded": "Sohbet için ücretsiz Gemini API kotanız doldu. Faturalandırma adımlarını içeren API Anahtarı ekranını açtım. Bu sırada hala Canlı sohbeti kullanmaya devam edebilirsiniz.",
+  "error.apiQuotaExceeded": "Sohbet için ücretsiz Gemini API kotanız doldu.",
+  "error.quotaSetupBilling": "Faturalandırmayı ayarlayın",
+  "error.quotaStartLive": "Bunun yerine Canlı başlatın",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Kamera izni reddedildi. Lütfen tarayıcı ayarlarından kamera erişimine izin verin.",

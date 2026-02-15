@@ -61,7 +61,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
     if (n !== maxVisibleMessages) onChangeMaxVisibleMessages(n);
   };
 
-  const containerClasses = "flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/90 text-white border border-amber-400 rounded-full shadow-md";
+  const containerClasses = "flex items-center gap-1 px-1.5 py-0.5 bg-accent/90 text-accent-foreground sketchy-border-thin shadow-sm";
 
   if (isEditing) {
     return (
@@ -71,14 +71,14 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
           value={summaryText}
           onChange={(e) => setSummaryText(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="bg-black/10 border border-white/30 rounded px-2 py-0.5 text-xs text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-black/20 w-48 transition-colors"
+          className="bg-card/80 border border-pencil-light/30 rounded-sketchy px-2 py-0.5 text-xs text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-accent focus:bg-card w-48 transition-colors font-hand"
           placeholder="Summary..."
           autoFocus
         />
         <button
           type="button"
           onClick={save}
-          className="p-1 rounded-full hover:bg-amber-400/50 text-white transition-colors"
+          className="p-1 rounded-sketchy hover:bg-accent/50 text-accent-foreground transition-colors"
           title="Save"
         >
           <IconCheck className="w-3.5 h-3.5" />
@@ -86,7 +86,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         <button
           type="button"
           onClick={cancel}
-          className="p-1 rounded-full hover:bg-amber-400/50 text-white transition-colors"
+          className="p-1 rounded-sketchy hover:bg-accent/50 text-accent-foreground transition-colors"
           title="Cancel"
         >
           <IconXMark className="w-3.5 h-3.5" />
@@ -107,14 +107,14 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         type="button"
         onClick={dec}
         disabled={maxVisibleMessages <= 2}
-        className="px-2 py-0.5 text-xs rounded-full hover:bg-amber-400/30 disabled:opacity-50"
+        className="px-2 py-0.5 text-xs font-hand rounded-sketchy hover:bg-accent/30 disabled:opacity-50"
         aria-label={t('chat.bookmark.decrementAria') || 'Decrease maximum visible messages'}
         title={t('chat.bookmark.decrementTitle') || 'Decrease'}
       >
         −
       </button>
       <span
-        className="px-2 py-0.5 text-xs font-semibold select-none min-w-[2.5rem] text-center"
+        className="px-2 py-0.5 text-xs font-semibold font-hand select-none min-w-[2.5rem] text-center"
         aria-live="polite"
         aria-atomic="true"
       >
@@ -124,17 +124,17 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         type="button"
         onClick={inc}
         disabled={maxVisibleMessages >= 100}
-        className="px-2 py-0.5 text-xs rounded-full hover:bg-amber-400/30 disabled:opacity-50"
+        className="px-2 py-0.5 text-xs font-hand rounded-sketchy hover:bg-accent/30 disabled:opacity-50"
         aria-label={t('chat.bookmark.incrementAria') || 'Increase maximum visible messages'}
         title={t('chat.bookmark.incrementTitle') || 'Increase'}
       >
         +
       </button>
-      <div className="w-px h-4 bg-primary-foreground/40 mx-1" aria-hidden />
+      <div className="w-px h-4 bg-pencil-light/40 mx-1" aria-hidden />
       <button
         type="button"
         onClick={startEditing}
-        className="px-1.5 py-0.5 rounded-full hover:bg-amber-400/30"
+        className="px-1.5 py-0.5 rounded-sketchy hover:bg-accent/30"
         title="Edit bookmark summary"
         aria-label="Edit bookmark summary"
       >

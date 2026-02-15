@@ -229,7 +229,9 @@ export const guTranslations: Record<string, string> = {
   "error.tokenLimitReached": "સત્ર ટોકન મર્યાદા પૂરી થઈ. કૃપા કરીને નવું સત્ર શરૂ કરો.",
   "error.apiKeyMissing": "તમારી Gemini API કી ખૂટે છે. API કી સ્ક્રીન ખોલો અને તમારી કી પેસ્ટ કરો.",
   "error.apiKeyInvalid": "તમારી Gemini API કી અમાન્ય છે. કૃપા કરીને ટાઈપો માટે તપાસો અને માન્ય કી પેસ્ટ કરો.",
-  "error.apiQuotaExceeded": "ચેટ માટે તમારો Gemini API ફ્રી ક્વોટા સમાપ્ત થઈ ગયો છે. મેં બિલિંગ સ્ટેપ્સ સાથે API કી સ્ક્રીન ખોલી છે. તમે તે દરમિયાન હજુ પણ લાઈવ વાતચીતનો ઉપયોગ કરી શકો છો.",
+  "error.apiQuotaExceeded": "ચેટ માટે તમારો Gemini API ફ્રી ક્વોટા સમાપ્ત થઈ ગયો છે.",
+  "error.quotaSetupBilling": "બિલિંગ સેટ કરો",
+  "error.quotaStartLive": "તેના બદલે લાઈવ શરૂ કરો",
 
   // Errors - camera
   "error.cameraPermissionDenied": "કેમેરા પરવાનગી નકારી. બ્રાઉઝર સેટિંગ્સમાં કેમેરા ઍક્સેસ સક્ષમ કરો.",

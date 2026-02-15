@@ -229,7 +229,9 @@ export const svTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Sessionens tokengräns nådd. Starta en ny session.",
   "error.apiKeyMissing": "Din Gemini API-nyckel saknas. Öppna API-nyckelskärmen och klistra in din nyckel.",
   "error.apiKeyInvalid": "Din Gemini API-nyckel är ogiltig. Kontrollera om det finns stavfel och klistra in en giltig nyckel.",
-  "error.apiQuotaExceeded": "Din Gemini API-gratiskvot för chatt är förbrukad. Jag öppnade API-nyckelskärmen med faktureringssteg. Du kan fortfarande använda Live-konversation under tiden.",
+  "error.apiQuotaExceeded": "Din Gemini API-gratiskvot för chatt är förbrukad.",
+  "error.quotaSetupBilling": "Konfigurera fakturering",
+  "error.quotaStartLive": "Starta Live istället",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Kamerabehörighet nekad. Aktivera kameraåtkomst i webbläsarens inställningar.",

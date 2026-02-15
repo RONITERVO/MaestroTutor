@@ -33,6 +33,8 @@ interface ChatMessageBubbleProps {
   transitioningImageId: string | null;
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
   onUserInputActivity: () => void;
+  onQuotaSetupBilling?: () => void;
+  onQuotaStartLive?: () => void;
   registerBubbleEl?: (el: HTMLDivElement | null) => void;
 }
 
@@ -41,6 +43,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   t,
   onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
+  onQuotaSetupBilling, onQuotaStartLive,
   registerBubbleEl
 }) => {
   const isUser = message.role === 'user';
@@ -1144,6 +1147,30 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                         style={{ fontSize: '3.2cqw', lineHeight: 1.25 }}>
                          {message.text}
                      </p>
+                   )}
+                   {isError && message.errorAction === 'quota' && (
+                     <div className="flex flex-wrap gap-2 mt-2">
+                       {onQuotaSetupBilling && (
+                         <button
+                           type="button"
+                           onClick={onQuotaSetupBilling}
+                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-accent-foreground bg-accent hover:bg-accent/80 sketchy-border-thin"
+                           style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
+                         >
+                           {t('error.quotaSetupBilling')}
+                         </button>
+                       )}
+                       {onQuotaStartLive && (
+                         <button
+                           type="button"
+                           onClick={onQuotaStartLive}
+                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-foreground bg-card hover:bg-muted sketchy-border-thin"
+                           style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
+                         >
+                           {t('error.quotaStartLive')}
+                         </button>
+                       )}
+                     </div>
                    )}
                    {isAssistant && !message.translations?.length && !message.rawAssistantResponse && !message.imageUrl && !message.isGeneratingImage && message.text && (
                      <p className={`whitespace-pre-wrap ${applyFocusedImageStyles ? 'text-white' : 'text-foreground'}`} style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>{message.text}</p>

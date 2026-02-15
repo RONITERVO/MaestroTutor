@@ -229,7 +229,9 @@ export const nlTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Sessietokenlimiet bereikt. Start een nieuwe sessie.",
   "error.apiKeyMissing": "Je Gemini API-sleutel ontbreekt. Open het API-sleutelscherm en plak je sleutel.",
   "error.apiKeyInvalid": "Je Gemini API-sleutel is ongeldig. Controleer op typefouten en plak een geldige sleutel.",
-  "error.apiQuotaExceeded": "Je gratis Gemini API-quotum voor chat is opgebruikt. Ik heb het API-sleutelscherm geopend met factureringsstappen. Ondertussen kun je nog steeds Live-conversatie gebruiken.",
+  "error.apiQuotaExceeded": "Je gratis Gemini API-quotum voor chat is opgebruikt.",
+  "error.quotaSetupBilling": "Facturering instellen",
+  "error.quotaStartLive": "Start Live in plaats daarvan",
 
   // Errors - camera
   "error.cameraPermissionDenied": "Cameratoestemming geweigerd. Schakel cameratoegang in via browserinstellingen.",

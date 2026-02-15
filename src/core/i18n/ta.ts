@@ -229,7 +229,9 @@ export const taTranslations: Record<string, string> = {
   "error.tokenLimitReached": "அமர்வு டோக்கன் வரம்பை அடைந்தது. புதிய அமர்வைத் தொடங்கவும்.",
   "error.apiKeyMissing": "உங்கள் Gemini API சாவி இல்லை. API சாவி திரையைத் திறந்து உங்கள் சாவியை ஒட்டவும்.",
   "error.apiKeyInvalid": "உங்கள் Gemini API சாவி தவறானது. எழுத்துப் பிழைகளைச் சரிபார்த்து சரியான சாவியை ஒட்டவும்.",
-  "error.apiQuotaExceeded": "அரட்டைக்கான உங்கள் Gemini API இலவச ஒதுக்கீடு முடிந்தது. பில்லிங் படிகளுடன் API சாவி திரையைத் திறந்தேன். இதற்கிடையில் நீங்கள் நேரடி உரையாடலைப் பயன்படுத்தலாம்.",
+  "error.apiQuotaExceeded": "அரட்டைக்கான உங்கள் Gemini API இலவச ஒதுக்கீடு முடிந்தது.",
+  "error.quotaSetupBilling": "பில்லிங் அமைக்கவும்",
+  "error.quotaStartLive": "அதற்கு பதிலாக நேரடியைத் தொடங்கவும்",
 
   // Errors - camera
   "error.cameraPermissionDenied": "கேமரா அனுமதி மறுக்கப்பட்டது. உலாவி அமைப்புகளில் கேமரா அணுகலை இயக்கவும்.",

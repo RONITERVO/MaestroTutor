@@ -229,7 +229,9 @@ export const teTranslations: Record<string, string> = {
   "error.tokenLimitReached": "సెషన్ టోకెన్ పరిమితి చేరుకుంది. దయచేసి కొత్త సెషన్ ప్రారంభించండి.",
   "error.apiKeyMissing": "మీ Gemini API కీ లేదు. API కీ స్క్రీన్‌ను తెరిచి మీ కీని అతికించండి.",
   "error.apiKeyInvalid": "మీ Gemini API కీ చెల్లదు. దయచేసి టైపోల కోసం తనిఖీ చేసి, చెల్లుబాటు అయ్యే కీని అతికించండి.",
-  "error.apiQuotaExceeded": "చాట్ కోసం మీ Gemini API ఉచిత కోటా ముగిసింది. నేను బిల్లింగ్ దశలతో API కీ స్క్రీన్‌ను తెరిచాను. ఈలోపు మీరు లైవ్ సంభాషణను ఉపయోగించవచ్చు.",
+  "error.apiQuotaExceeded": "చాట్ కోసం మీ Gemini API ఉచిత కోటా ముగిసింది.",
+  "error.quotaSetupBilling": "బిల్లింగ్ సెటప్ చేయండి",
+  "error.quotaStartLive": "బదులుగా లైవ్ ప్రారంభించండి",
 
   // Errors - camera
   "error.cameraPermissionDenied": "కెమెరా అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్‌లలో కెమెరా యాక్సెస్‌ని ఎనేబుల్ చేయండి.",

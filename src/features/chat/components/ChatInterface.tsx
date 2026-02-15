@@ -50,6 +50,8 @@ interface ChatInterfaceProps {
   
   onToggleSuggestionMode: (forceState?: boolean) => void;
   onCreateSuggestion: (text: string) => Promise<void>;
+  onQuotaSetupBilling?: () => void;
+  onQuotaStartLive?: () => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
@@ -73,7 +75,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onToggleSuggestionMode,
     onCreateSuggestion,
     onBookmarkAt,
-    onSendMessage
+    onSendMessage,
+    onQuotaSetupBilling,
+    onQuotaStartLive
   } = props;
 
   const { t } = useAppTranslations();
@@ -201,7 +205,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   }>({ messageId: null, startX: 0, startY: 0, isUser: false, isSwiping: false, trayWidth: 0 });
 
   const [openTrayForId, setOpenTrayForId] = useState<string | null>(null);
+  const trayAutoCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openBookmarkControlsForId, setOpenBookmarkControlsForId] = useState<string | null>(null);
+
+  // Auto-close the swipe tray after 3 seconds
+  useEffect(() => {
+    if (trayAutoCloseTimer.current) {
+      clearTimeout(trayAutoCloseTimer.current);
+      trayAutoCloseTimer.current = null;
+    }
+    if (openTrayForId) {
+      trayAutoCloseTimer.current = setTimeout(() => {
+        const bubble = bubbleWrapperRefs.current.get(openTrayForId);
+        if (bubble) {
+          bubble.style.transition = 'transform 0.25s ease-out';
+          bubble.style.transform = 'translateX(0px)';
+        }
+        setOpenTrayForId(null);
+        trayAutoCloseTimer.current = null;
+      }, 3000);
+    }
+    return () => {
+      if (trayAutoCloseTimer.current) {
+        clearTimeout(trayAutoCloseTimer.current);
+        trayAutoCloseTimer.current = null;
+      }
+    };
+  }, [openTrayForId]);
 
   const translateOrFallback = useCallback(
     (key: string, fallback: string, replacements?: TranslationReplacements) => {
@@ -721,6 +751,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 transitioningImageId={transitioningImageId}
                 onSetAttachedImage={onSetAttachedImage}
                 onUserInputActivity={onUserInputActivity}
+                onQuotaSetupBilling={onQuotaSetupBilling}
+                onQuotaStartLive={onQuotaStartLive}
                 registerBubbleEl={(el) => {
                   if (el) bubbleWrapperRefs.current.set(msg.id, el);
                   else bubbleWrapperRefs.current.delete(msg.id);

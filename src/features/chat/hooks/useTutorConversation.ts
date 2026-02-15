@@ -1568,7 +1568,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           onApiKeyGateOpen?.({ reason: 'missing', instructionIndex: 0 });
         } else if (isQuotaError(error)) {
           errorMessage = t('error.apiQuotaExceeded');
-          onApiKeyGateOpen?.({ reason: 'quota', instructionIndex: 9 });
         } else {
           const parsedMessage = parseApiErrorMessage(error.message);
           errorMessage = parsedMessage || error.code || `HTTP ${error.status}`;
@@ -1576,12 +1575,14 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
+      const isQuota = error instanceof ApiError && isQuotaError(error);
       updateMessage(thinkingMessageId, {
         thinking: false, 
         role: 'error', 
         text: errorMessage, 
         rawAssistantResponse: undefined, 
         translations: undefined,
+        ...(isQuota ? { errorAction: 'quota' } : {}),
       });
       // Remove sending token on error (replaces setIsSending(false))
       if (sendingTokenRef.current) {

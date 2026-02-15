@@ -229,7 +229,9 @@ export const mlTranslations: Record<string, string> = {
   "error.tokenLimitReached": "സെഷൻ ടോക്കൺ പരിധി എത്തി. ദയവായി പുതിയ സെഷൻ ആരംഭിക്കുക.",
   "error.apiKeyMissing": "നിങ്ങളുടെ Gemini API കീ കാണാനില്ല. API കീ സ്ക്രീൻ തുറന്ന് കീ ഒട്ടിക്കുക.",
   "error.apiKeyInvalid": "നിങ്ങളുടെ Gemini API കീ അസാധുവാണ്. അക്ഷരത്തെറ്റുകൾ ഉണ്ടോ എന്ന് പരിശോധിക്കുക.",
-  "error.apiQuotaExceeded": "ചാറ്ററ്റിനായുള്ള നിങ്ങളുടെ Gemini API സൗജന്യ ക്വോട്ട തീർന്നു. ബില്ലിംഗ് ഘട്ടങ്ങളുള്ള API കീ സ്ക്രീൻ ഞാൻ തുറന്നു. അതിനിടയിൽ നിങ്ങൾക്ക് ലൈവ് സംഭാഷണം ഉപയോഗിക്കാം.",
+  "error.apiQuotaExceeded": "ചാറ്റിനായുള്ള നിങ്ങളുടെ Gemini API സൗജന്യ ക്വോട്ട തീർന്നു.",
+  "error.quotaSetupBilling": "ബില്ലിംഗ് സജ്ജീകരിക്കുക",
+  "error.quotaStartLive": "പകരം ലൈവ് ആരംഭിക്കുക",
 
   // Errors - camera
   "error.cameraPermissionDenied": "ക്യാമറ അനുമതി നിരസിച്ചു. ബ്രൗസർ ക്രമീകരണങ്ങളിൽ ക്യാമറ ആക്സസ് പ്രവർത്തനക്ഷമമാക്കുക.",
