@@ -85,11 +85,13 @@ export const ptTranslations: Record<string, string> = {
   "apiKeyGate.show": "Mostrar",
   "apiKeyGate.hide": "Ocultar",
   "apiKeyGate.currentKeySaved": "Chave atual salva {maskedKey}",
+  "apiKeyGate.keyInvalid": "Chave inválida {maskedKey} — cole uma nova chave abaixo",
   "apiKeyGate.clearSavedKey": "Limpar chave salva",
   "apiKeyGate.cancel": "Cancelar",
   "apiKeyGate.saving": "Salvando...",
   "apiKeyGate.saveKey": "Salvar chave",
   "apiKeyGate.close": "Fechar",
+  "apiKeyGate.imageGenCostLabel": "Custo de geração de imagens",
 
   // Chat - general
   "chat.thinking": "Pensando...",
@@ -104,6 +106,9 @@ export const ptTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Seu navegador não suporta a tag de vídeo.",
   "chat.audioNotSupported": "Seu navegador não suporta a tag de áudio.",
   "chat.fileAttachment": "Anexo de arquivo",
+  "chat.pdf.loading": "Carregando PDF...",
+  "chat.pdf.error": "Não é possível exibir o PDF",
+  "chat.pdf.pageIndicator": "Página {current} de {total}",
   "chat.imageGenError": "Erro na geração de imagem",
   "chat.generatingImageLoadingSlow": "Demorando um pouco mais...",
   "chat.stopSpeaking": "Parar de falar",
@@ -128,6 +133,7 @@ export const ptTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Ativar visualização da câmera",
   "chat.camera.turnOff": "Desativar visualização da câmera",
+  "chat.camera.selectCamera": "Selecionar câmera",
   "chat.camera.imageGenCameraLabel": "Geração de imagem",
   "chat.camera.captureOrRecord": "Toque para foto, segure para vídeo",
   "chat.camera.stopRecording": "Parar gravação",
@@ -232,7 +238,9 @@ export const ptTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Sua cota gratuita da API Gemini para chat esgotou.",
   "error.quotaSetupBilling": "Configurar faturamento",
   "error.quotaStartLive": "Iniciar Live em vez disso",
-
+  "error.imageGenCostWarning": "A geração de imagens custa ~0,05\u20ac por imagem (mensagens custam menos, faturado pelo Google). Você pode ignorar isso se concordar com o custo.",
+  "error.imageGenDisable": "Desativar geração de imagens",
+  "error.imageGenViewCost": "Ver custos de geração de imagens",
   // Errors - camera
   "error.cameraPermissionDenied": "Permissão da câmera negada. Por favor, habilite o acesso à câmera nas configurações do seu navegador.",
   "error.cameraNotFound": "Câmera selecionada não encontrada. Certifique-se de que está conectada ou selecione uma câmera diferente nas configurações.",

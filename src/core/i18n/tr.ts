@@ -85,11 +85,13 @@ export const trTranslations: Record<string, string> = {
   "apiKeyGate.show": "Göster",
   "apiKeyGate.hide": "Gizle",
   "apiKeyGate.currentKeySaved": "Geçerli anahtar kaydedildi {maskedKey}",
+  "apiKeyGate.keyInvalid": "Anahtar geçersiz {maskedKey} — aşağıya yeni bir anahtar yapıştırın",
   "apiKeyGate.clearSavedKey": "Kaydedilmiş anahtarı temizle",
   "apiKeyGate.cancel": "İptal",
   "apiKeyGate.saving": "Kaydediliyor...",
   "apiKeyGate.saveKey": "Anahtarı kaydet",
   "apiKeyGate.close": "Kapat",
+  "apiKeyGate.imageGenCostLabel": "Görsel oluşturma maliyeti",
 
   // Chat - general
   "chat.thinking": "Düşünüyor...",
@@ -104,6 +106,9 @@ export const trTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Tarayıcınız video etiketini desteklemiyor.",
   "chat.audioNotSupported": "Tarayıcınız ses etiketini desteklemiyor.",
   "chat.fileAttachment": "Dosya Eki",
+  "chat.pdf.loading": "PDF yükleniyor...",
+  "chat.pdf.error": "PDF görüntülenemiyor",
+  "chat.pdf.pageIndicator": "Sayfa {current} / {total}",
   "chat.imageGenError": "Görsel Oluşturma Hatası",
   "chat.generatingImageLoadingSlow": "Biraz daha uzun sürüyor...",
   "chat.stopSpeaking": "Konuşmayı durdur",
@@ -128,6 +133,7 @@ export const trTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Kamera önizlemesini etkinleştir",
   "chat.camera.turnOff": "Kamera önizlemesini kapat",
+  "chat.camera.selectCamera": "Kamera seç",
   "chat.camera.imageGenCameraLabel": "Görsel Oluşturma",
   "chat.camera.captureOrRecord": "Fotoğraf için dokunun, video için basılı tutun",
   "chat.camera.stopRecording": "Kaydı Durdur",
@@ -232,7 +238,9 @@ export const trTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Sohbet için ücretsiz Gemini API kotanız doldu.",
   "error.quotaSetupBilling": "Faturalandırmayı ayarlayın",
   "error.quotaStartLive": "Bunun yerine Canlı başlatın",
-
+  "error.imageGenCostWarning": "Resim oluşturma maliyeti resim başına ~0,05\u20ac'dur (mesajlar daha ucuzdur, Google tarafından faturalandırılır). Maliyeti kabul ediyorsanız bunu görmezden gelebilirsiniz.",
+  "error.imageGenDisable": "Resim Oluşturmayı Devre Dışı Bırak",
+  "error.imageGenViewCost": "Resim Oluşturma Maliyetlerini Görüntüle",
   // Errors - camera
   "error.cameraPermissionDenied": "Kamera izni reddedildi. Lütfen tarayıcı ayarlarından kamera erişimine izin verin.",
   "error.cameraNotFound": "Seçilen kamera bulunamadı. Bağlı olduğundan emin olun veya ayarlardan farklı bir kamera seçin.",

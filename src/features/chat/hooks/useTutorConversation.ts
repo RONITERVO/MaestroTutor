@@ -41,6 +41,7 @@ import {
   composeMaestroSystemInstruction 
 } from '../../../core/config/prompts';
 import { isRealChatMessage } from '../../../shared/utils/common';
+import { incrementImageGenCount, hasShownImageGenCostWarning, setImageGenCostWarningShown } from '../../../shared/utils/imageGenCost';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { getPrimarySubtag, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
@@ -137,7 +138,7 @@ export interface UseTutorConversationConfig {
   setSnapshotUserError?: React.Dispatch<React.SetStateAction<string | null>>;
 
   // Api key gate
-  onApiKeyGateOpen?: (options?: { reason?: 'missing' | 'quota'; instructionIndex?: number }) => void;
+  onApiKeyGateOpen?: (options?: { reason?: 'missing' | 'invalid' | 'quota'; instructionIndex?: number }) => void;
 }
 
 export interface UseTutorConversationReturn {
@@ -1001,7 +1002,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     userImageToProcessBase64?: string;
     sanitizedDerivedHistory: any[];
   }) => {
-    if (!params.shouldGenerateUserImage || !params.currentSettingsVal.sendWithSnapshotEnabled || params.messageType !== 'user' ||
+    if (!params.shouldGenerateUserImage || !params.currentSettingsVal.imageGenerationModeEnabled ||
+      !params.currentSettingsVal.sendWithSnapshotEnabled || params.messageType !== 'user' ||
       !params.userMessageText.trim() || !params.userMessageId || params.userImageToProcessBase64) {
       return {};
     }
@@ -1035,6 +1037,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     if (finalResult && 'base64Image' in finalResult) {
       const duration = Date.now() - userImageGenStartTime;
       addImageLoadDuration(duration);
+      incrementImageGenCount();
+      if (!hasShownImageGenCostWarning()) {
+        setImageGenCostWarningShown();
+        addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
+      }
       try {
         const { optimized, upload } = await optimizeAndUploadMedia({
           dataUrl: finalResult.base64Image as string,
@@ -1074,6 +1081,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
     return {};
   }, [
+    addMessage,
     generateImage,
     maestroAvatarMimeTypeRef,
     maestroAvatarUriRef,
@@ -1148,6 +1156,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if ('base64Image' in assistantImgGenResult) {
         const duration = Date.now() - assistantStartTime;
         addImageLoadDuration(duration);
+        incrementImageGenCount();
+        if (!hasShownImageGenCostWarning()) {
+          setImageGenCostWarningShown();
+          addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
+        }
         try {
           const { optimized, upload } = await optimizeAndUploadMedia({
             dataUrl: assistantImgGenResult.base64Image as string,
@@ -1187,6 +1200,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
     }
   }, [
+    addMessage,
     computeMaxMessagesForArray,
     ensureUrisForHistoryForSend,
     generateImage,
@@ -1565,7 +1579,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           onApiKeyGateOpen?.({ reason: 'missing', instructionIndex: 0 });
         } else if (isInvalidApiKeyError(error)) {
           errorMessage = t('error.apiKeyInvalid');
-          onApiKeyGateOpen?.({ reason: 'missing', instructionIndex: 0 });
+          onApiKeyGateOpen?.({ reason: 'invalid', instructionIndex: 0 });
         } else if (isQuotaError(error)) {
           errorMessage = t('error.apiQuotaExceeded');
         } else {

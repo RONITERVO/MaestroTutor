@@ -85,11 +85,13 @@ export const jaTranslations: Record<string, string> = {
   "apiKeyGate.show": "表示",
   "apiKeyGate.hide": "非表示",
   "apiKeyGate.currentKeySaved": "現在のキーが保存されました {maskedKey}",
+  "apiKeyGate.keyInvalid": "キーが無効です {maskedKey} — 下に新しいキーを貼り付けてください",
   "apiKeyGate.clearSavedKey": "保存されたキーを消去",
   "apiKeyGate.cancel": "キャンセル",
   "apiKeyGate.saving": "保存中...",
   "apiKeyGate.saveKey": "キーを保存",
   "apiKeyGate.close": "閉じる",
+  "apiKeyGate.imageGenCostLabel": "画像生成コスト",
 
   // Chat - general
   "chat.thinking": "考え中...",
@@ -104,6 +106,9 @@ export const jaTranslations: Record<string, string> = {
   "chat.videoNotSupported": "お使いのブラウザはビデオタグをサポートしていません。",
   "chat.audioNotSupported": "お使いのブラウザはオーディオタグをサポートしていません。",
   "chat.fileAttachment": "ファイル添付",
+  "chat.pdf.loading": "PDFを読み込み中...",
+  "chat.pdf.error": "PDFを表示できません",
+  "chat.pdf.pageIndicator": "ページ {current} / {total}",
   "chat.imageGenError": "画像生成エラー",
   "chat.generatingImageLoadingSlow": "もう少し時間がかかっています...",
   "chat.stopSpeaking": "読み上げを停止",
@@ -128,6 +133,7 @@ export const jaTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "カメラプレビューを有効にする",
   "chat.camera.turnOff": "カメラプレビューを無効にする",
+  "chat.camera.selectCamera": "カメラを選択",
   "chat.camera.imageGenCameraLabel": "画像生成",
   "chat.camera.captureOrRecord": "タップで写真、長押しで動画",
   "chat.camera.stopRecording": "録画を停止",
@@ -232,7 +238,9 @@ export const jaTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "チャット用のGemini API無料枠を使い果たしました。",
   "error.quotaSetupBilling": "課金を設定",
   "error.quotaStartLive": "代わりにライブを開始",
-
+  "error.imageGenCostWarning": "画像生成には1枚あたり約0.05ユーロかかります（メッセージはより安価で、Googleから請求されます）。コストに問題がなければ、これは無視して構いません。",
+  "error.imageGenDisable": "画像生成を無効にする",
+  "error.imageGenViewCost": "画像生成コストを表示",
   // Errors - camera
   "error.cameraPermissionDenied": "カメラの許可が拒否されました。ブラウザの設定でカメラへのアクセスを有効にしてください。",
   "error.cameraNotFound": "選択されたカメラが見つかりません。接続されていることを確認するか、別のカメラを選択してください。",

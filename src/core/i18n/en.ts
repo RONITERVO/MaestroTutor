@@ -86,11 +86,13 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.show": "Show",
   "apiKeyGate.hide": "Hide",
   "apiKeyGate.currentKeySaved": "Current key saved {maskedKey}",
+  "apiKeyGate.keyInvalid": "Key invalid {maskedKey} \u2014 paste a new key below",
   "apiKeyGate.clearSavedKey": "Clear saved key",
   "apiKeyGate.cancel": "Cancel",
   "apiKeyGate.saving": "Saving...",
   "apiKeyGate.saveKey": "Save key",
   "apiKeyGate.close": "Close",
+  "apiKeyGate.imageGenCostLabel": "Image gen cost",
   
   // Chat - general
   "chat.thinking": "Thinking...",
@@ -209,7 +211,7 @@ export const enTranslations: Record<string, string> = {
   // Chat - live session
   "chat.liveSession.stop": "Stop Live",
   "chat.liveSession.retry": "Retry Live",
-  "chat.liveSession.start": "Start Live",
+  "chat.liveSession.start": "-->Start Live call<--",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Connecting",
   "chat.liveSession.defaultLastMessage": "Hello! How can I help you today?",
@@ -237,6 +239,9 @@ export const enTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Your Gemini API free quota for chat is exhausted.",
   "error.quotaSetupBilling": "Set up billing",
   "error.quotaStartLive": "Start Live instead",
+  "error.imageGenCostWarning": "Image generation costs ~0.05\u20ac per image (messages cost less, billed by Google). You can ignore this if you\u2019re OK with the cost.",
+  "error.imageGenDisable": "Disable Image Generation",
+  "error.imageGenViewCost": "View image Generation Cost",
   
   // Errors - camera
   "error.cameraPermissionDenied": "Camera permission denied. Please enable camera access in your browser settings.",

@@ -5,6 +5,16 @@ import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { getAi } from './client';
 
+const TIMEOUT_MS = 120_000; // 2 minutes
+
+const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`Request timed out after ${ms / 1000}s`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+};
+
 // Add invisible noise to text without changing its meaning
 const addNoise = (text: string): string => {
   const timestamp = Date.now();
@@ -141,11 +151,14 @@ export const generateImage = async (params: {
   const log = debugLogService.logRequest('generateImage', model, { contents, config });
 
   try {
-    const result = await ai.models.generateContent({
-      model,
-      contents,
-      config: config as any,
-    });
+    const result = await withTimeout(
+      ai.models.generateContent({
+        model,
+        contents,
+        config: config as any,
+      }),
+      TIMEOUT_MS
+    );
 
     log.complete({ candidates: result.candidates?.length });
 

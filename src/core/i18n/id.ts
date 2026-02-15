@@ -85,11 +85,13 @@ export const idTranslations: Record<string, string> = {
   "apiKeyGate.show": "Tampilkan",
   "apiKeyGate.hide": "Sembunyikan",
   "apiKeyGate.currentKeySaved": "Kunci saat ini tersimpan {maskedKey}",
+  "apiKeyGate.keyInvalid": "Kunci tidak valid {maskedKey} — tempel kunci baru di bawah",
   "apiKeyGate.clearSavedKey": "Hapus kunci tersimpan",
   "apiKeyGate.cancel": "Batal",
   "apiKeyGate.saving": "Menyimpan...",
   "apiKeyGate.saveKey": "Simpan kunci",
   "apiKeyGate.close": "Tutup",
+  "apiKeyGate.imageGenCostLabel": "Biaya pembuatan gambar",
 
   // Chat - general
   "chat.thinking": "Sedang berpikir...",
@@ -104,6 +106,9 @@ export const idTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Browser Anda tidak mendukung tag video.",
   "chat.audioNotSupported": "Browser Anda tidak mendukung tag audio.",
   "chat.fileAttachment": "Lampiran file",
+  "chat.pdf.loading": "Memuat PDF...",
+  "chat.pdf.error": "Tidak dapat menampilkan PDF",
+  "chat.pdf.pageIndicator": "Halaman {current} dari {total}",
   "chat.imageGenError": "Kesalahan pembuatan gambar",
   "chat.generatingImageLoadingSlow": "Membutuhkan waktu lebih lama...",
   "chat.stopSpeaking": "Berhenti berbicara",
@@ -128,6 +133,7 @@ export const idTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Aktifkan pratinjau kamera",
   "chat.camera.turnOff": "Nonaktifkan pratinjau kamera",
+  "chat.camera.selectCamera": "Pilih kamera",
   "chat.camera.imageGenCameraLabel": "Pembuatan gambar",
   "chat.camera.captureOrRecord": "Ketuk untuk foto, tahan untuk video",
   "chat.camera.stopRecording": "Hentikan perekaman",
@@ -232,7 +238,9 @@ export const idTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Kuota gratis Gemini API Anda untuk obrolan telah habis.",
   "error.quotaSetupBilling": "Atur penagihan",
   "error.quotaStartLive": "Mulai Live sebagai gantinya",
-
+  "error.imageGenCostWarning": "Biaya pembuatan gambar ~0,05\u20ac per gambar (pesan lebih murah, ditagih oleh Google). Anda dapat mengabaikan ini jika Anda setuju dengan biayanya.",
+  "error.imageGenDisable": "Nonaktifkan Pembuatan Gambar",
+  "error.imageGenViewCost": "Lihat Biaya Pembuatan Gambar",
   // Errors - camera
   "error.cameraPermissionDenied": "Izin kamera ditolak. Silakan aktifkan akses kamera di pengaturan browser.",
   "error.cameraNotFound": "Kamera yang dipilih tidak ditemukan. Pastikan terhubung atau pilih kamera lain.",

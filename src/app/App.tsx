@@ -105,11 +105,13 @@ const App: React.FC = () => {
 
   const [isApiKeyGateOpen, setIsApiKeyGateOpen] = useState(false);
   const [apiKeyGateInstructionIndex, setApiKeyGateInstructionIndex] = useState<number | null>(null);
+  const [apiKeyInvalid, setApiKeyInvalid] = useState(false);
   const showApiKeyGate = !hasApiKey || isApiKeyGateOpen;
 
-  const handleApiKeyGateOpen = useCallback((options?: { reason?: 'missing' | 'quota'; instructionIndex?: number }) => {
+  const handleApiKeyGateOpen = useCallback((options?: { reason?: 'missing' | 'invalid' | 'quota'; instructionIndex?: number }) => {
     setApiKeyError(null);
     setIsApiKeyGateOpen(true);
+    setApiKeyInvalid(options?.reason === 'invalid');
     if (typeof options?.instructionIndex === 'number') {
       setApiKeyGateInstructionIndex(options.instructionIndex);
     } else {
@@ -530,17 +532,42 @@ const App: React.FC = () => {
         handleSettingsChange('selectedCameraId', firstPhysicalCamera.deviceId);
       }
     }
-    // Ensure snapshot sending is enabled so the camera feed is active
+    // Enable snapshot sending so the camera feed + preview are activated
+    // by useCameraManager's effect (creates the stream via getUserMedia).
     if (!settingsRef.current.sendWithSnapshotEnabled) {
       handleSettingsChange('sendWithSnapshotEnabled', true);
     }
-    // Start the live session
+    // Wait for useCameraManager's effect to create the camera stream before
+    // starting the live session. Without this, handleStartLiveSession would
+    // also call getUserMedia concurrently, causing race conditions that can
+    // invalidate the stream ("No active stream provided") on some platforms.
+    const maxWaitMs = 5000;
+    const pollMs = 50;
+    const startTime = Date.now();
+    while (Date.now() - startTime < maxWaitMs) {
+      if (visualContextStreamRef.current && visualContextStreamRef.current.active) break;
+      await new Promise(resolve => setTimeout(resolve, pollMs));
+    }
+    // Start the live session. handleStartLiveSession will reuse the stream
+    // from visualContextStreamRef instead of creating a competing one.
     try {
       await handleStartLiveSession();
     } catch {
       // handleStartLiveSession already handles its own errors
     }
-  }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSession]);
+  }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSession, visualContextStreamRef]);
+
+  const handleImageGenDisable = useCallback(() => {
+    handleSettingsChange('imageGenerationModeEnabled', false);
+    if (settingsRef.current.selectedCameraId === IMAGE_GEN_CAMERA_ID) {
+      const firstPhysicalCamera = availableCamerasRef.current[0];
+      handleSettingsChange('selectedCameraId', firstPhysicalCamera ? firstPhysicalCamera.deviceId : null);
+    }
+  }, [handleSettingsChange, settingsRef, availableCamerasRef]);
+
+  const handleImageGenViewCost = useCallback(() => {
+    handleApiKeyGateOpen();
+  }, [handleApiKeyGateOpen]);
 
 
   // ============================================================
@@ -587,6 +614,7 @@ const App: React.FC = () => {
         hasKey={hasApiKey}
         maskedKey={maskedApiKey}
         error={apiKeyError}
+        keyInvalid={apiKeyInvalid}
         instructionFocusIndex={apiKeyGateInstructionIndex}
         onSave={saveApiKey}
         onClear={clearApiKey}
@@ -594,6 +622,7 @@ const App: React.FC = () => {
         onClose={() => {
           setApiKeyError(null);
           setApiKeyGateInstructionIndex(null);
+          setApiKeyInvalid(false);
           setIsApiKeyGateOpen(false);
         }}
       />
@@ -655,6 +684,8 @@ const App: React.FC = () => {
             onCreateSuggestion={handleCreateSuggestion}
             onQuotaSetupBilling={handleQuotaSetupBilling}
             onQuotaStartLive={handleQuotaStartLive}
+            onImageGenDisable={handleImageGenDisable}
+            onImageGenViewCost={handleImageGenViewCost}
           />
         </main>
       </div>

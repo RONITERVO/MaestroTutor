@@ -85,11 +85,13 @@ export const knTranslations: Record<string, string> = {
   "apiKeyGate.show": "ತೋರಿಸು",
   "apiKeyGate.hide": "ಮರೆಮಾಡು",
   "apiKeyGate.currentKeySaved": "ಪ್ರಸ್ತುತ ಕೀಯನ್ನು ಉಳಿಸಲಾಗಿದೆ {maskedKey}",
+  "apiKeyGate.keyInvalid": "ಕೀ ಅಮಾನ್ಯ {maskedKey} — ಕೆಳಗೆ ಹೊಸ ಕೀ ಅಂಟಿಸಿ",
   "apiKeyGate.clearSavedKey": "ಉಳಿಸಿದ ಕೀಯನ್ನು ಅಳಿಸಿ",
   "apiKeyGate.cancel": "ರದ್ದುಮಾಡಿ",
   "apiKeyGate.saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
   "apiKeyGate.saveKey": "ಕೀಯನ್ನು ಉಳಿಸಿ",
   "apiKeyGate.close": "ಮುಚ್ಚಿ",
+  "apiKeyGate.imageGenCostLabel": "ಚಿತ್ರ ರಚನೆ ವೆಚ್ಚ",
 
   // Chat - general
   "chat.thinking": "ಯೋಚಿಸುತ್ತಿದ್ದೇನೆ...",
@@ -104,6 +106,9 @@ export const knTranslations: Record<string, string> = {
   "chat.videoNotSupported": "ನಿಮ್ಮ ಬ್ರೌಸರ್ ವೀಡಿಯೊ ಟ್ಯಾಗ್ ಅನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.",
   "chat.audioNotSupported": "ನಿಮ್ಮ ಬ್ರೌಸರ್ ಆಡಿಯೊ ಟ್ಯಾಗ್ ಅನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.",
   "chat.fileAttachment": "ಫೈಲ್ ಲಗತ್ತು",
+  "chat.pdf.loading": "PDF ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+  "chat.pdf.error": "PDF ಪ್ರದರ್ಶಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ",
+  "chat.pdf.pageIndicator": "ಪುಟ {current} / {total}",
   "chat.imageGenError": "ಚಿತ್ರ ರಚನೆ ದೋಷ",
   "chat.generatingImageLoadingSlow": "ಸ್ವಲ್ಪ ಹೆಚ್ಚು ಸಮಯ ತೆಗೆದುಕೊಳ್ಳುತ್ತಿದೆ...",
   "chat.stopSpeaking": "ಮಾತನಾಡುವುದನ್ನು ನಿಲ್ಲಿಸಿ",
@@ -128,6 +133,7 @@ export const knTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "ಕ್ಯಾಮರಾ ಮುನ್ನೋಟ ಆನ್ ಮಾಡಿ",
   "chat.camera.turnOff": "ಕ್ಯಾಮರಾ ಮುನ್ನೋಟ ಆಫ್ ಮಾಡಿ",
+  "chat.camera.selectCamera": "ಕ್ಯಾಮರಾ ಆಯ್ಕೆಮಾಡಿ",
   "chat.camera.imageGenCameraLabel": "ಚಿತ್ರ ರಚನೆ",
   "chat.camera.captureOrRecord": "ಫೋಟೋಗೆ ಟ್ಯಾಪ್ ಮಾಡಿ, ವೀಡಿಯೊಗೆ ಹಿಡಿದುಕೊಳ್ಳಿ",
   "chat.camera.stopRecording": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
@@ -232,7 +238,9 @@ export const knTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "ಚಾಟ್‌ಗಾಗಿ ನಿಮ್ಮ Gemini API ಉಚಿತ ಮಿತಿ ಮುಗಿದಿದೆ.",
   "error.quotaSetupBilling": "ಬಿಲ್ಲಿಂಗ್ ಸೆಟ್ ಅಪ್ ಮಾಡಿ",
   "error.quotaStartLive": "ಬದಲಿಗೆ ಲೈವ್ ಪ್ರಾರಂಭಿಸಿ",
-
+  "error.imageGenCostWarning": "ಚಿತ್ರ ರಚನೆಯ ವೆಚ್ಚವು ಪ್ರತಿ ಚಿತ್ರಕ್ಕೆ ~0.05€ ಆಗಿರುತ್ತದೆ (ಸಂದೇಶಗಳ ವೆಚ್ಚ ಕಡಿಮೆ, Google ನಿಂದ ಬಿಲ್ ಮಾಡಲಾಗುತ್ತದೆ). ವೆಚ್ಚದ ಬಗ್ಗೆ ನಿಮಗೆ ಸಮ್ಮತವಿದ್ದರೆ ಇದನ್ನು ನಿರ್ಲಕ್ಷಿಸಬಹುದು.",
+  "error.imageGenDisable": "ಚಿತ್ರ ರಚನೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ",
+  "error.imageGenViewCost": "ಚಿತ್ರ ರಚನೆಯ ವೆಚ್ಚಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
   // Errors - camera
   "error.cameraPermissionDenied": "ಕ್ಯಾಮರಾ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಬ್ರೌಸರ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಕ್ಯಾಮರಾ ಪ್ರವೇಶವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.",
   "error.cameraNotFound": "ಆಯ್ಕೆ ಮಾಡಿದ ಕ್ಯಾಮರಾ ಕಂಡುಬಂದಿಲ್ಲ. ಅದು ಸಂಪರ್ಕಗೊಂಡಿದೆಯೇ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ ಅಥವಾ ಬೇರೆ ಕ್ಯಾಮರಾ ಆಯ್ಕೆ ಮಾಡಿ.",

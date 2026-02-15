@@ -85,11 +85,13 @@ export const ruTranslations: Record<string, string> = {
   "apiKeyGate.show": "Показать",
   "apiKeyGate.hide": "Скрыть",
   "apiKeyGate.currentKeySaved": "Текущий ключ сохранен {maskedKey}",
+  "apiKeyGate.keyInvalid": "Ключ недействителен {maskedKey} — вставьте новый ключ ниже",
   "apiKeyGate.clearSavedKey": "Очистить сохраненный ключ",
   "apiKeyGate.cancel": "Отмена",
   "apiKeyGate.saving": "Сохранение...",
   "apiKeyGate.saveKey": "Сохранить ключ",
   "apiKeyGate.close": "Закрыть",
+  "apiKeyGate.imageGenCostLabel": "Стоимость генерации изображений",
 
   // Chat - general
   "chat.thinking": "Думаю...",
@@ -104,6 +106,9 @@ export const ruTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Ваш браузер не поддерживает тег video.",
   "chat.audioNotSupported": "Ваш браузер не поддерживает тег audio.",
   "chat.fileAttachment": "Прикреплённый файл",
+  "chat.pdf.loading": "Загрузка PDF...",
+  "chat.pdf.error": "Не удалось отобразить PDF",
+  "chat.pdf.pageIndicator": "Страница {current} из {total}",
   "chat.imageGenError": "Ошибка генерации изображения",
   "chat.generatingImageLoadingSlow": "Занимает немного больше времени...",
   "chat.stopSpeaking": "Остановить озвучивание",
@@ -128,6 +133,7 @@ export const ruTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Включить предпросмотр камеры",
   "chat.camera.turnOff": "Выключить предпросмотр камеры",
+  "chat.camera.selectCamera": "Выбрать камеру",
   "chat.camera.imageGenCameraLabel": "Генерация изображения",
   "chat.camera.captureOrRecord": "Нажмите для фото, удерживайте для видео",
   "chat.camera.stopRecording": "Остановить запись",
@@ -232,7 +238,9 @@ export const ruTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Ваша бесплатная квота Gemini API для чата исчерпана.",
   "error.quotaSetupBilling": "Настроить биллинг",
   "error.quotaStartLive": "Начать Live вместо этого",
-
+  "error.imageGenCostWarning": "Создание изображения стоит ~0.05\u20ac за штуку (сообщения дешевле, счет выставляется Google). Вы можете проигнорировать это, если вас устраивает стоимость.",
+  "error.imageGenDisable": "Отключить создание изображений",
+  "error.imageGenViewCost": "Посмотреть стоимость создания изображений",
   // Errors - camera
   "error.cameraPermissionDenied": "Разрешение на использование камеры отклонено. Пожалуйста, включите доступ к камере в настройках вашего браузера.",
   "error.cameraNotFound": "Выбранная камера не найдена. Пожалуйста, убедитесь, что она подключена, или выберите другую камеру в настройках.",

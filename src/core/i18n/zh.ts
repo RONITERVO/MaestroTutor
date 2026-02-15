@@ -85,11 +85,13 @@ export const zhTranslations: Record<string, string> = {
   "apiKeyGate.show": "显示",
   "apiKeyGate.hide": "隐藏",
   "apiKeyGate.currentKeySaved": "当前密钥已保存 {maskedKey}",
+  "apiKeyGate.keyInvalid": "密钥无效 {maskedKey} — 在下方粘贴新密钥",
   "apiKeyGate.clearSavedKey": "清除已保存的密钥",
   "apiKeyGate.cancel": "取消",
   "apiKeyGate.saving": "正在保存...",
   "apiKeyGate.saveKey": "保存密钥",
   "apiKeyGate.close": "关闭",
+  "apiKeyGate.imageGenCostLabel": "图像生成费用",
 
   // Chat - general
   "chat.thinking": "思考中...",
@@ -104,6 +106,9 @@ export const zhTranslations: Record<string, string> = {
   "chat.videoNotSupported": "您的浏览器不支持视频标签。",
   "chat.audioNotSupported": "您的浏览器不支持音频标签。",
   "chat.fileAttachment": "文件附件",
+  "chat.pdf.loading": "正在加载 PDF...",
+  "chat.pdf.error": "无法显示 PDF",
+  "chat.pdf.pageIndicator": "第 {current} 页，共 {total} 页",
   "chat.imageGenError": "图像生成错误",
   "chat.generatingImageLoadingSlow": "需要更长时间...",
   "chat.stopSpeaking": "停止朗读",
@@ -128,6 +133,7 @@ export const zhTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "开启相机预览",
   "chat.camera.turnOff": "关闭相机预览",
+  "chat.camera.selectCamera": "选择摄像头",
   "chat.camera.imageGenCameraLabel": "图像生成",
   "chat.camera.captureOrRecord": "点击拍照，长按录像",
   "chat.camera.stopRecording": "停止录制",
@@ -232,7 +238,9 @@ export const zhTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "您的 Gemini API 免费聊天配额已用尽。",
   "error.quotaSetupBilling": "设置计费",
   "error.quotaStartLive": "改用实时对话",
-
+  "error.imageGenCostWarning": "生成图像的费用约为每张 0.05 欧元（消息费用较低，由 Google 计费）。如果您接受此费用，可以忽略此提示。",
+  "error.imageGenDisable": "禁用图像生成",
+  "error.imageGenViewCost": "查看图像生成费用",
   // Errors - camera
   "error.cameraPermissionDenied": "相机权限被拒绝。请在浏览器设置中启用相机访问。",
   "error.cameraNotFound": "未找到所选相机。请确保已连接或选择其他相机。",

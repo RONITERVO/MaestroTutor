@@ -10,4 +10,3 @@ export {
   sanitizeHistoryWithVerifiedUris,
 } from './files';
 export { generateImage } from './vision';
-export { generateSpeech } from './audio';

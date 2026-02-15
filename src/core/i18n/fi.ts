@@ -85,11 +85,13 @@ export const fiTranslations: Record<string, string> = {
   "apiKeyGate.show": "Näytä",
   "apiKeyGate.hide": "Piilota",
   "apiKeyGate.currentKeySaved": "Nykyinen avain tallennettu {maskedKey}",
+  "apiKeyGate.keyInvalid": "Virheellinen avain {maskedKey} — liitä uusi avain alle",
   "apiKeyGate.clearSavedKey": "Tyhjennä tallennettu avain",
   "apiKeyGate.cancel": "Peruuta",
   "apiKeyGate.saving": "Tallennetaan...",
   "apiKeyGate.saveKey": "Tallenna avain",
   "apiKeyGate.close": "Sulje",
+  "apiKeyGate.imageGenCostLabel": "Kuvan luonnin hinta",
 
   // Chat - general
   "chat.thinking": "Ajattelen...",
@@ -104,6 +106,9 @@ export const fiTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Selaimesi ei tue video-tunnistetta.",
   "chat.audioNotSupported": "Selaimesi ei tue audio-tunnistetta.",
   "chat.fileAttachment": "Tiedostoliite",
+  "chat.pdf.loading": "Ladataan PDF-tiedostoa...",
+  "chat.pdf.error": "PDF-tiedostoa ei voida näyttää",
+  "chat.pdf.pageIndicator": "Sivu {current} / {total}",
   "chat.imageGenError": "Kuvan luontivirhe",
   "chat.generatingImageLoadingSlow": "Kestää hieman pidempään...",
   "chat.stopSpeaking": "Lopeta puhuminen",
@@ -128,6 +133,7 @@ export const fiTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Ota kameran esikatselu käyttöön",
   "chat.camera.turnOff": "Poista kameran esikatselu käytöstä",
+  "chat.camera.selectCamera": "Valitse kamera",
   "chat.camera.imageGenCameraLabel": "Kuvan luonti",
   "chat.camera.captureOrRecord": "Napauta valokuva, pidä pohjassa video",
   "chat.camera.stopRecording": "Pysäytä nauhoitus",
@@ -204,7 +210,7 @@ export const fiTranslations: Record<string, string> = {
   // Chat - live session
   "chat.liveSession.stop": "Pysäytä live",
   "chat.liveSession.retry": "Yritä liveä uudelleen",
-  "chat.liveSession.start": "Aloita live",
+  "chat.liveSession.start": "-->Soita live puhelu<--",
   "chat.liveSession.liveBadge": "Live",
   "chat.liveSession.connecting": "Yhdistetään",
   "chat.liveSession.defaultLastMessage": "Hei! Kuinka voin auttaa sinua tänään?",
@@ -232,7 +238,9 @@ export const fiTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Gemini API:n ilmainen chat-kiintiösi on lopussa.",
   "error.quotaSetupBilling": "Määritä laskutus",
   "error.quotaStartLive": "Käynnistä Live sen sijaan",
-
+  "error.imageGenCostWarning": "Kuvien luominen maksaa ~0,05 \u20ac/kuva (viestit ovat halvempia, laskutus Googlelta). Voit ohittaa tämän, jos hyväksyt hinnan.",
+  "error.imageGenDisable": "Poista kuvien luonti käytöstä",
+  "error.imageGenViewCost": "Katso kuvien luonnin kustannukset",
   // Errors - camera
   "error.cameraPermissionDenied": "Kameran käyttöoikeus evätty. Ota kameran käyttöoikeus käyttöön selaimen asetuksissa.",
   "error.cameraNotFound": "Valittua kameraa ei löydy. Varmista, että se on yhdistetty, tai valitse toinen kamera.",

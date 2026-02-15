@@ -85,11 +85,13 @@ export const koTranslations: Record<string, string> = {
   "apiKeyGate.show": "표시",
   "apiKeyGate.hide": "숨기기",
   "apiKeyGate.currentKeySaved": "현재 키가 저장됨 {maskedKey}",
+  "apiKeyGate.keyInvalid": "키가 유효하지 않음 {maskedKey} — 아래에 새 키를 붙여넣으세요",
   "apiKeyGate.clearSavedKey": "저장된 키 삭제",
   "apiKeyGate.cancel": "취소",
   "apiKeyGate.saving": "저장 중...",
   "apiKeyGate.saveKey": "키 저장",
   "apiKeyGate.close": "닫기",
+  "apiKeyGate.imageGenCostLabel": "이미지 생성 비용",
 
   // Chat - general
   "chat.thinking": "생각 중...",
@@ -104,6 +106,9 @@ export const koTranslations: Record<string, string> = {
   "chat.videoNotSupported": "브라우저가 비디오 태그를 지원하지 않습니다.",
   "chat.audioNotSupported": "브라우저가 오디오 태그를 지원하지 않습니다.",
   "chat.fileAttachment": "파일 첨부",
+  "chat.pdf.loading": "PDF 로딩 중...",
+  "chat.pdf.error": "PDF를 표시할 수 없습니다",
+  "chat.pdf.pageIndicator": "페이지 {current} / {total}",
   "chat.imageGenError": "이미지 생성 오류",
   "chat.generatingImageLoadingSlow": "조금 더 시간이 걸리고 있습니다...",
   "chat.stopSpeaking": "말하기 중지",
@@ -128,6 +133,7 @@ export const koTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "카메라 미리보기 켜기",
   "chat.camera.turnOff": "카메라 미리보기 끄기",
+  "chat.camera.selectCamera": "카메라 선택",
   "chat.camera.imageGenCameraLabel": "이미지 생성",
   "chat.camera.captureOrRecord": "탭하여 사진, 길게 눌러 동영상",
   "chat.camera.stopRecording": "녹화 중지",
@@ -232,7 +238,9 @@ export const koTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Gemini API의 무료 채팅 할당량이 소진되었습니다.",
   "error.quotaSetupBilling": "결제 설정",
   "error.quotaStartLive": "대신 라이브 시작",
-
+  "error.imageGenCostWarning": "이미지 생성 비용은 이미지당 약 0.05\u20ac입니다(메시지 비용은 더 저렴하며, Google에서 청구). 비용에 동의하시면 이 메시지를 무시하셔도 됩니다.",
+  "error.imageGenDisable": "이미지 생성 비활성화",
+  "error.imageGenViewCost": "이미지 생성 비용 보기",
   // Errors - camera
   "error.cameraPermissionDenied": "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 액세스를 활성화하세요.",
   "error.cameraNotFound": "선택한 카메라를 찾을 수 없습니다. 연결되어 있는지 확인하거나 다른 카메라를 선택하세요.",

@@ -85,11 +85,13 @@ export const esTranslations: Record<string, string> = {
   "apiKeyGate.show": "Mostrar",
   "apiKeyGate.hide": "Ocultar",
   "apiKeyGate.currentKeySaved": "Clave actual guardada {maskedKey}",
+  "apiKeyGate.keyInvalid": "Clave inválida {maskedKey} — pega una nueva clave abajo",
   "apiKeyGate.clearSavedKey": "Borrar clave guardada",
   "apiKeyGate.cancel": "Cancelar",
   "apiKeyGate.saving": "Guardando...",
   "apiKeyGate.saveKey": "Guardar clave",
   "apiKeyGate.close": "Cerrar",
+  "apiKeyGate.imageGenCostLabel": "Coste de generación de imágenes",
 
   // Chat - general
   "chat.thinking": "Pensando...",
@@ -104,6 +106,9 @@ export const esTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Tu navegador no soporta la etiqueta de video.",
   "chat.audioNotSupported": "Tu navegador no soporta la etiqueta de audio.",
   "chat.fileAttachment": "Archivo adjunto",
+  "chat.pdf.loading": "Cargando PDF...",
+  "chat.pdf.error": "No se puede mostrar el PDF",
+  "chat.pdf.pageIndicator": "Página {current} de {total}",
   "chat.imageGenError": "Error de generación de imagen",
   "chat.generatingImageLoadingSlow": "Tardando un poco más...",
   "chat.stopSpeaking": "Dejar de hablar",
@@ -128,6 +133,7 @@ export const esTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Activar vista previa de cámara",
   "chat.camera.turnOff": "Desactivar vista previa de cámara",
+  "chat.camera.selectCamera": "Seleccionar cámara",
   "chat.camera.imageGenCameraLabel": "Generación de imagen",
   "chat.camera.captureOrRecord": "Toca para foto, mantén presionado para video",
   "chat.camera.stopRecording": "Detener grabación",
@@ -232,7 +238,9 @@ export const esTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Tu cuota gratuita de la API de Gemini para el chat se ha agotado.",
   "error.quotaSetupBilling": "Configurar facturación",
   "error.quotaStartLive": "Iniciar Live en su lugar",
-
+  "error.imageGenCostWarning": "La generación de imágenes cuesta ~0,05 \u20ac por imagen (los mensajes cuestan menos, facturado por Google). Puede ignorar esto si está de acuerdo con el coste.",
+  "error.imageGenDisable": "Desactivar generación de imágenes",
+  "error.imageGenViewCost": "Ver costes de generación de imágenes",
   // Errors - camera
   "error.cameraPermissionDenied": "Permiso de cámara denegado. Por favor habilita el acceso a la cámara en la configuración de tu navegador.",
   "error.cameraNotFound": "Cámara seleccionada no encontrada. Por favor asegúrate de que está conectada o selecciona una cámara diferente.",

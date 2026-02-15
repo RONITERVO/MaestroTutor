@@ -85,11 +85,13 @@ export const teTranslations: Record<string, string> = {
   "apiKeyGate.show": "చూపించు",
   "apiKeyGate.hide": "దాచు",
   "apiKeyGate.currentKeySaved": "ప్రస్తుత కీ సేవ్ చేయబడింది {maskedKey}",
+  "apiKeyGate.keyInvalid": "కీ చెల్లదు {maskedKey} — క్రింద కొత్త కీని పేస్ట్ చేయండి",
   "apiKeyGate.clearSavedKey": "సేవ్ చేసిన కీని క్లియర్ చేయండి",
   "apiKeyGate.cancel": "రద్దు చేయండి",
   "apiKeyGate.saving": "సేవ్ అవుతోంది...",
   "apiKeyGate.saveKey": "కీని సేవ్ చేయండి",
   "apiKeyGate.close": "ముగించు",
+  "apiKeyGate.imageGenCostLabel": "ఇమేజ్ జెనరేషన్ ఖర్చు",
 
   // Chat - general
   "chat.thinking": "ఆలోచిస్తోంది...",
@@ -104,6 +106,9 @@ export const teTranslations: Record<string, string> = {
   "chat.videoNotSupported": "మీ బ్రౌజర్ వీడియో ట్యాగ్‌కు మద్దతు ఇవ్వదు.",
   "chat.audioNotSupported": "మీ బ్రౌజర్ ఆడియో ట్యాగ్‌కు మద్దతు ఇవ్వదు.",
   "chat.fileAttachment": "ఫైల్ జోడింపు",
+  "chat.pdf.loading": "PDF లోడ్ అవుతోంది...",
+  "chat.pdf.error": "PDF ప్రదర్శించడం సాధ్యం కాలేదు",
+  "chat.pdf.pageIndicator": "పేజీ {current} / {total}",
   "chat.imageGenError": "చిత్రం తయారీ లోపం",
   "chat.generatingImageLoadingSlow": "కొంచెం ఎక్కువ సమయం పడుతోంది...",
   "chat.stopSpeaking": "మాట్లాడటం ఆపండి",
@@ -128,6 +133,7 @@ export const teTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "కెమెరా ప్రివ్యూని ఆన్ చేయండి",
   "chat.camera.turnOff": "కెమెరా ప్రివ్యూని ఆఫ్ చేయండి",
+  "chat.camera.selectCamera": "కెమెరాను ఎంచుకోండి",
   "chat.camera.imageGenCameraLabel": "చిత్రం తయారీ",
   "chat.camera.captureOrRecord": "ఫోటో కోసం నొక్కండి, వీడియో కోసం హోల్డ్ చేయండి",
   "chat.camera.stopRecording": "రికార్డింగ్‌ను ఆపండి",
@@ -232,7 +238,9 @@ export const teTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "చాట్ కోసం మీ Gemini API ఉచిత కోటా ముగిసింది.",
   "error.quotaSetupBilling": "బిల్లింగ్ సెటప్ చేయండి",
   "error.quotaStartLive": "బదులుగా లైవ్ ప్రారంభించండి",
-
+  "error.imageGenCostWarning": "ఇమేజ్ జనరేషన్ ఖర్చు ఇమేజ్‌కు ~0.05€ ఉంటుంది (మెసేజ్‌ల ఖర్చు తక్కువ, Google ద్వారా బిల్ చేయబడుతుంది). మీరు ఖర్చుతో సమ్మతిస్తే దీనిని విస్మరించవచ్చు.",
+  "error.imageGenDisable": "ఇమేజ్ జనరేషన్‌ను ఆపివేయి",
+  "error.imageGenViewCost": "ఇమేజ్ జనరేషన్ ఖర్చులను చూడండి",
   // Errors - camera
   "error.cameraPermissionDenied": "కెమెరా అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్‌లలో కెమెరా యాక్సెస్‌ని ఎనేబుల్ చేయండి.",
   "error.cameraNotFound": "ఎంచుకున్న కెమెరా కనుగొనబడలేదు. ఇది కనెక్ట్ అయిందని నిర్ధారించుకోండి లేదా వేరే కెమెరాను ఎంచుకోండి.",

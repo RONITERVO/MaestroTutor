@@ -85,11 +85,13 @@ export const bnTranslations: Record<string, string> = {
   "apiKeyGate.show": "দেখান",
   "apiKeyGate.hide": "লুকান",
   "apiKeyGate.currentKeySaved": "বর্তমান কী সংরক্ষিত {maskedKey}",
+  "apiKeyGate.keyInvalid": "কী অবৈধ {maskedKey} — নিচে একটি নতুন কী পেস্ট করুন",
   "apiKeyGate.clearSavedKey": "সংরক্ষিত কী মুছুন",
   "apiKeyGate.cancel": "বাতিল",
   "apiKeyGate.saving": "সংরক্ষণ করা হচ্ছে...",
   "apiKeyGate.saveKey": "কী সংরক্ষণ করুন",
   "apiKeyGate.close": "বন্ধ করুন",
+  "apiKeyGate.imageGenCostLabel": "ছবি তৈরির খরচ",
 
   // Chat - general
   "chat.thinking": "ভাবছি...",
@@ -104,6 +106,9 @@ export const bnTranslations: Record<string, string> = {
   "chat.videoNotSupported": "আপনার ব্রাউজার ভিডিও ট্যাগ সমর্থন করে না।",
   "chat.audioNotSupported": "আপনার ব্রাউজার অডিও ট্যাগ সমর্থন করে না।",
   "chat.fileAttachment": "ফাইল সংযুক্তি",
+  "chat.pdf.loading": "PDF লোড হচ্ছে...",
+  "chat.pdf.error": "PDF প্রদর্শন করা যাচ্ছে না",
+  "chat.pdf.pageIndicator": "পৃষ্ঠা {current} / {total}",
   "chat.imageGenError": "ছবি তৈরিতে ত্রুটি",
   "chat.generatingImageLoadingSlow": "একটু বেশি সময় নিচ্ছে...",
   "chat.stopSpeaking": "কথা বলা বন্ধ করুন",
@@ -128,6 +133,7 @@ export const bnTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "ক্যামেরা প্রিভিউ চালু করুন",
   "chat.camera.turnOff": "ক্যামেরা প্রিভিউ বন্ধ করুন",
+  "chat.camera.selectCamera": "ক্যামেরা নির্বাচন করুন",
   "chat.camera.imageGenCameraLabel": "ছবি তৈরি",
   "chat.camera.captureOrRecord": "ছবির জন্য ট্যাপ করুন, ভিডিওর জন্য ধরে রাখুন",
   "chat.camera.stopRecording": "রেকর্ডিং বন্ধ করুন",
@@ -232,7 +238,9 @@ export const bnTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "চ্যাটের জন্য আপনার Gemini API-এর ফ্রি কোটা শেষ হয়ে গেছে।",
   "error.quotaSetupBilling": "বিলিং সেট আপ করুন",
   "error.quotaStartLive": "পরিবর্তে লাইভ শুরু করুন",
-
+  "error.imageGenCostWarning": "ছবি তৈরির খরচ প্রতি ছবিতে ~০.০৫€ (মেসেজের খরচ কম, Google দ্বারা বিল করা হয়)। আপনি যদি খরচের বিষয়ে সম্মত হন তবে এটি উপেক্ষা করতে পারেন।",
+  "error.imageGenDisable": "ছবি তৈরি করা অক্ষম করুন",
+  "error.imageGenViewCost": "ছবি তৈরির খরচ দেখুন",
   // Errors - camera
   "error.cameraPermissionDenied": "ক্যামেরা অনুমতি প্রত্যাখ্যাত। ব্রাউজার সেটিংসে ক্যামেরা অ্যাক্সেস সক্রিয় করুন।",
   "error.cameraNotFound": "নির্বাচিত ক্যামেরা পাওয়া যায়নি। এটি সংযুক্ত আছে কিনা নিশ্চিত করুন বা অন্য ক্যামেরা নির্বাচন করুন।",

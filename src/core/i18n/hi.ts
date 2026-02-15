@@ -85,11 +85,13 @@ export const hiTranslations: Record<string, string> = {
   "apiKeyGate.show": "दिखाएं",
   "apiKeyGate.hide": "छिपाएं",
   "apiKeyGate.currentKeySaved": "वर्तमान कुंजी सहेजी गई {maskedKey}",
+  "apiKeyGate.keyInvalid": "कुंजी अमान्य {maskedKey} — नीचे नई कुंजी चिपकाएं",
   "apiKeyGate.clearSavedKey": "सहेजी गई कुंजी साफ़ करें",
   "apiKeyGate.cancel": "रद्द करें",
   "apiKeyGate.saving": "सहेज रहा है...",
   "apiKeyGate.saveKey": "कुंजी सहेजें",
   "apiKeyGate.close": "बंद करें",
+  "apiKeyGate.imageGenCostLabel": "इमेज जनरेशन लागत",
 
   // Chat - general
   "chat.thinking": "सोच रहा हूँ...",
@@ -104,6 +106,9 @@ export const hiTranslations: Record<string, string> = {
   "chat.videoNotSupported": "आपका ब्राउज़र वीडियो टैग का समर्थन नहीं करता।",
   "chat.audioNotSupported": "आपका ब्राउज़र ऑडियो टैग का समर्थन नहीं करता।",
   "chat.fileAttachment": "फ़ाइल अटैचमेंट",
+  "chat.pdf.loading": "PDF लोड हो रहा है...",
+  "chat.pdf.error": "PDF प्रदर्शित करने में असमर्थ",
+  "chat.pdf.pageIndicator": "पृष्ठ {current} / {total}",
   "chat.imageGenError": "छवि निर्माण त्रुटि",
   "chat.generatingImageLoadingSlow": "थोड़ा अधिक समय लग रहा है...",
   "chat.stopSpeaking": "बोलना बंद करें",
@@ -128,6 +133,7 @@ export const hiTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "कैमरा प्रीव्यू चालू करें",
   "chat.camera.turnOff": "कैमरा प्रीव्यू बंद करें",
+  "chat.camera.selectCamera": "कैमरा चुनें",
   "chat.camera.imageGenCameraLabel": "छवि निर्माण",
   "chat.camera.captureOrRecord": "फोटो के लिए टैप करें, वीडियो के लिए दबाए रखें",
   "chat.camera.stopRecording": "रिकॉर्डिंग बंद करें",
@@ -232,7 +238,9 @@ export const hiTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "चैट के लिए आपका Gemini API फ्री कोटा समाप्त हो गया है।",
   "error.quotaSetupBilling": "बिलिंग सेट अप करें",
   "error.quotaStartLive": "इसके बजाय लाइव शुरू करें",
-
+  "error.imageGenCostWarning": "इमेज बनाने की लागत ~0.05€ प्रति इमेज है (संदेशों की लागत कम है, Google द्वारा बिल किया जाता है)। यदि आप लागत के साथ ठीक हैं तो आप इसे अनदेखा कर सकते हैं।",
+  "error.imageGenDisable": "इमेज बनाना अक्षम करें",
+  "error.imageGenViewCost": "इमेज बनाने की लागत देखें",
   // Errors - camera
   "error.cameraPermissionDenied": "कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र सेटिंग्स में कैमरा एक्सेस सक्षम करें।",
   "error.cameraNotFound": "चयनित कैमरा नहीं मिला। सुनिश्चित करें कि यह कनेक्टेड है या अलग कैमरा चुनें।",

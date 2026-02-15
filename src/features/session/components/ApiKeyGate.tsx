@@ -4,10 +4,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
-import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark } from '../../../shared/ui/Icons';
+import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark, IconSparkles } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
+import { getImageGenCount, IMAGE_GEN_COST_PER_IMAGE, GOOGLE_BILLING_URL } from '../../../shared/utils/imageGenCost';
 
 interface ApiKeyGateProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface ApiKeyGateProps {
   maskedKey?: string | null;
   isSaving?: boolean;
   error?: string | null;
+  keyInvalid?: boolean;
   instructionFocusIndex?: number | null;
   onSave: (value: string) => Promise<boolean>;
   onClear: () => Promise<void>;
@@ -36,6 +38,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   maskedKey,
   isSaving = false,
   error,
+  keyInvalid = false,
   instructionFocusIndex,
   onSave,
   onClear,
@@ -48,6 +51,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [imageGenCount, setImageGenCount] = useState(0);
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
   const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
@@ -61,6 +65,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
       setShowInstructions(false);
       setInstructionIndex(0);
       setIsAutoPlaying(true);
+    } else {
+      setImageGenCount(getImageGenCount());
     }
   }, [isOpen]);
 
@@ -287,9 +293,35 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               {error && <div className="text-sm text-destructive">{error}</div>}
 
               {hasKey && (
-                <div className="bg-green-50 p-3 text-sm text-green-800 flex items-center gap-2 sketchy-border-thin" style={{borderColor: 'hsl(120 40% 60%)'}}>
-                  <IconCheck className="h-4 w-4" />
-                  {t('apiKeyGate.currentKeySaved', { maskedKey: maskedKey ? `(${maskedKey})` : '' }).trim()}
+                <div
+                  className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${
+                    keyInvalid
+                      ? 'bg-red-50 text-red-800'
+                      : 'bg-green-50 text-green-800'
+                  }`}
+                  style={{ borderColor: keyInvalid ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
+                >
+                  {keyInvalid ? (
+                    <IconXMark className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <IconCheck className="h-4 w-4 shrink-0" />
+                  )}
+                  <span className="truncate">
+                    {keyInvalid
+                      ? t('apiKeyGate.keyInvalid', { maskedKey: maskedKey || '' })
+                      : t('apiKeyGate.currentKeySaved', { maskedKey: maskedKey ? `(${maskedKey})` : '' }).trim()}
+                  </span>
+                  {imageGenCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => openExternalUrl(GOOGLE_BILLING_URL)}
+                      className="ml-auto shrink-0 flex items-center gap-1 text-xs opacity-70 hover:opacity-100"
+                      aria-label={t('apiKeyGate.imageGenCostLabel')}
+                    >
+                      <IconSparkles className="h-3 w-3" />
+                      <span>{imageGenCount} ~{(imageGenCount * IMAGE_GEN_COST_PER_IMAGE).toFixed(2)}{'\u20ac'}</span>
+                    </button>
+                  )}
                 </div>
               )}
             </>
