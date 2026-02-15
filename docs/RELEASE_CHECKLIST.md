@@ -19,8 +19,8 @@ Check: Verify android/app/src/main/res/mipmap-* contains your logo, not the defa
 
 ## 2) Versioning (Required for every upload)
 Edit `android/app/build.gradle`:
-- [5] Increment `versionCode`
-- ["1.1.2"] Update `versionName`
+- [6] Increment `versionCode`
+- ["1.2.2"] Update `versionName`
 
 ## 3) Build Web Assets
 ```bash
