@@ -85,11 +85,13 @@ export const trTranslations: Record<string, string> = {
   "apiKeyGate.show": "Göster",
   "apiKeyGate.hide": "Gizle",
   "apiKeyGate.currentKeySaved": "Geçerli anahtar kaydedildi {maskedKey}",
+  "apiKeyGate.keyInvalid": "Anahtar geçersiz {maskedKey} — aşağıya yeni bir anahtar yapıştırın",
   "apiKeyGate.clearSavedKey": "Kaydedilmiş anahtarı temizle",
   "apiKeyGate.cancel": "İptal",
   "apiKeyGate.saving": "Kaydediliyor...",
   "apiKeyGate.saveKey": "Anahtarı kaydet",
   "apiKeyGate.close": "Kapat",
+  "apiKeyGate.imageGenCostLabel": "Görsel oluşturma maliyeti",
 
   // Chat - general
   "chat.thinking": "Düşünüyor...",
@@ -104,6 +106,9 @@ export const trTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Tarayıcınız video etiketini desteklemiyor.",
   "chat.audioNotSupported": "Tarayıcınız ses etiketini desteklemiyor.",
   "chat.fileAttachment": "Dosya Eki",
+  "chat.pdf.loading": "PDF yükleniyor...",
+  "chat.pdf.error": "PDF görüntülenemiyor",
+  "chat.pdf.pageIndicator": "Sayfa {current} / {total}",
   "chat.imageGenError": "Görsel Oluşturma Hatası",
   "chat.generatingImageLoadingSlow": "Biraz daha uzun sürüyor...",
   "chat.stopSpeaking": "Konuşmayı durdur",
@@ -128,6 +133,7 @@ export const trTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Kamera önizlemesini etkinleştir",
   "chat.camera.turnOff": "Kamera önizlemesini kapat",
+  "chat.camera.selectCamera": "Kamera seç",
   "chat.camera.imageGenCameraLabel": "Görsel Oluşturma",
   "chat.camera.captureOrRecord": "Fotoğraf için dokunun, video için basılı tutun",
   "chat.camera.stopRecording": "Kaydı Durdur",

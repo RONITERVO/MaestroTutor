@@ -85,11 +85,13 @@ export const plTranslations: Record<string, string> = {
   "apiKeyGate.show": "Pokaż",
   "apiKeyGate.hide": "Ukryj",
   "apiKeyGate.currentKeySaved": "Bieżący klucz zapisany {maskedKey}",
+  "apiKeyGate.keyInvalid": "Klucz nieprawidłowy {maskedKey} — wklej nowy klucz poniżej",
   "apiKeyGate.clearSavedKey": "Wyczyść zapisany klucz",
   "apiKeyGate.cancel": "Anuluj",
   "apiKeyGate.saving": "Zapisywanie...",
   "apiKeyGate.saveKey": "Zapisz klucz",
   "apiKeyGate.close": "Zamknij",
+  "apiKeyGate.imageGenCostLabel": "Koszt generowania obrazów",
 
   // Chat - general
   "chat.thinking": "Myślę...",
@@ -104,6 +106,9 @@ export const plTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Twoja przeglądarka nie obsługuje tagu wideo.",
   "chat.audioNotSupported": "Twoja przeglądarka nie obsługuje tagu audio.",
   "chat.fileAttachment": "Załącznik",
+  "chat.pdf.loading": "Ładowanie PDF...",
+  "chat.pdf.error": "Nie można wyświetlić PDF",
+  "chat.pdf.pageIndicator": "Strona {current} z {total}",
   "chat.imageGenError": "Błąd generowania obrazu",
   "chat.generatingImageLoadingSlow": "To trwa trochę dłużej...",
   "chat.stopSpeaking": "Przestań mówić",
@@ -128,6 +133,7 @@ export const plTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Włącz podgląd kamery",
   "chat.camera.turnOff": "Wyłącz podgląd kamery",
+  "chat.camera.selectCamera": "Wybierz kamerę",
   "chat.camera.imageGenCameraLabel": "Generowanie obrazu",
   "chat.camera.captureOrRecord": "Dotknij, aby zrobić zdjęcie, przytrzymaj, aby nagrać wideo",
   "chat.camera.stopRecording": "Zatrzymaj nagrywanie",

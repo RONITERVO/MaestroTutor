@@ -85,11 +85,13 @@ export const mrTranslations: Record<string, string> = {
   "apiKeyGate.show": "दाखवा",
   "apiKeyGate.hide": "लपवा",
   "apiKeyGate.currentKeySaved": "वर्तमान की जतन केली आहे {maskedKey}",
+  "apiKeyGate.keyInvalid": "की अवैध {maskedKey} — खाली नवीन की पेस्ट करा",
   "apiKeyGate.clearSavedKey": "जतन केलेली की पुसा",
   "apiKeyGate.cancel": "रद्द करा",
   "apiKeyGate.saving": "जतन करत आहे...",
   "apiKeyGate.saveKey": "की जतन करा",
   "apiKeyGate.close": "बंद करा",
+  "apiKeyGate.imageGenCostLabel": "इमेज जनरेशन खर्च",
 
   // Chat - general
   "chat.thinking": "विचार करत आहे...",
@@ -104,6 +106,9 @@ export const mrTranslations: Record<string, string> = {
   "chat.videoNotSupported": "तुमचा ब्राउझर व्हिडिओ टॅगला सपोर्ट करत नाही.",
   "chat.audioNotSupported": "तुमचा ब्राउझर ऑडिओ टॅगला सपोर्ट करत नाही.",
   "chat.fileAttachment": "फाइल संलग्नक",
+  "chat.pdf.loading": "PDF लोड होत आहे...",
+  "chat.pdf.error": "PDF प्रदर्शित करता येत नाही",
+  "chat.pdf.pageIndicator": "पृष्ठ {current} / {total}",
   "chat.imageGenError": "प्रतिमा निर्मिती त्रुटी",
   "chat.generatingImageLoadingSlow": "थोडा जास्त वेळ लागत आहे...",
   "chat.stopSpeaking": "बोलणे थांबवा",
@@ -128,6 +133,7 @@ export const mrTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "कॅमेरा पूर्वावलोकन चालू करा",
   "chat.camera.turnOff": "कॅमेरा पूर्वावलोकन बंद करा",
+  "chat.camera.selectCamera": "कॅमेरा निवडा",
   "chat.camera.imageGenCameraLabel": "प्रतिमा निर्मिती",
   "chat.camera.captureOrRecord": "फोटोसाठी टॅप करा, व्हिडिओसाठी धरून ठेवा",
   "chat.camera.stopRecording": "रेकॉर्डिंग थांबवा",

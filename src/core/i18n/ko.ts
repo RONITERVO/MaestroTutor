@@ -85,11 +85,13 @@ export const koTranslations: Record<string, string> = {
   "apiKeyGate.show": "표시",
   "apiKeyGate.hide": "숨기기",
   "apiKeyGate.currentKeySaved": "현재 키가 저장됨 {maskedKey}",
+  "apiKeyGate.keyInvalid": "키가 유효하지 않음 {maskedKey} — 아래에 새 키를 붙여넣으세요",
   "apiKeyGate.clearSavedKey": "저장된 키 삭제",
   "apiKeyGate.cancel": "취소",
   "apiKeyGate.saving": "저장 중...",
   "apiKeyGate.saveKey": "키 저장",
   "apiKeyGate.close": "닫기",
+  "apiKeyGate.imageGenCostLabel": "이미지 생성 비용",
 
   // Chat - general
   "chat.thinking": "생각 중...",
@@ -104,6 +106,9 @@ export const koTranslations: Record<string, string> = {
   "chat.videoNotSupported": "브라우저가 비디오 태그를 지원하지 않습니다.",
   "chat.audioNotSupported": "브라우저가 오디오 태그를 지원하지 않습니다.",
   "chat.fileAttachment": "파일 첨부",
+  "chat.pdf.loading": "PDF 로딩 중...",
+  "chat.pdf.error": "PDF를 표시할 수 없습니다",
+  "chat.pdf.pageIndicator": "페이지 {current} / {total}",
   "chat.imageGenError": "이미지 생성 오류",
   "chat.generatingImageLoadingSlow": "조금 더 시간이 걸리고 있습니다...",
   "chat.stopSpeaking": "말하기 중지",
@@ -128,6 +133,7 @@ export const koTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "카메라 미리보기 켜기",
   "chat.camera.turnOff": "카메라 미리보기 끄기",
+  "chat.camera.selectCamera": "카메라 선택",
   "chat.camera.imageGenCameraLabel": "이미지 생성",
   "chat.camera.captureOrRecord": "탭하여 사진, 길게 눌러 동영상",
   "chat.camera.stopRecording": "녹화 중지",

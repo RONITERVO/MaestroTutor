@@ -85,11 +85,13 @@ export const frTranslations: Record<string, string> = {
   "apiKeyGate.show": "Afficher",
   "apiKeyGate.hide": "Masquer",
   "apiKeyGate.currentKeySaved": "Clé actuelle enregistrée {maskedKey}",
+  "apiKeyGate.keyInvalid": "Clé invalide {maskedKey} — collez une nouvelle clé ci-dessous",
   "apiKeyGate.clearSavedKey": "Effacer la clé enregistrée",
   "apiKeyGate.cancel": "Annuler",
   "apiKeyGate.saving": "Enregistrement...",
   "apiKeyGate.saveKey": "Enregistrer la clé",
   "apiKeyGate.close": "Fermer",
+  "apiKeyGate.imageGenCostLabel": "Coût de génération d'images",
 
   // Chat - general
   "chat.thinking": "Réflexion en cours...",
@@ -104,6 +106,9 @@ export const frTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Votre navigateur ne prend pas en charge la balise vidéo.",
   "chat.audioNotSupported": "Votre navigateur ne prend pas en charge la balise audio.",
   "chat.fileAttachment": "Pièce jointe",
+  "chat.pdf.loading": "Chargement du PDF...",
+  "chat.pdf.error": "Impossible d'afficher le PDF",
+  "chat.pdf.pageIndicator": "Page {current} sur {total}",
   "chat.imageGenError": "Erreur de génération d'image",
   "chat.generatingImageLoadingSlow": "Cela prend un peu plus de temps...",
   "chat.stopSpeaking": "Arrêter de parler",
@@ -128,6 +133,7 @@ export const frTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Activer l'aperçu caméra",
   "chat.camera.turnOff": "Désactiver l'aperçu caméra",
+  "chat.camera.selectCamera": "Sélectionner la caméra",
   "chat.camera.imageGenCameraLabel": "Génération d'image",
   "chat.camera.captureOrRecord": "Appuyez pour photo, maintenez pour vidéo",
   "chat.camera.stopRecording": "Arrêter l'enregistrement",

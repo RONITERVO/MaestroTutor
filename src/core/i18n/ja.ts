@@ -85,11 +85,13 @@ export const jaTranslations: Record<string, string> = {
   "apiKeyGate.show": "表示",
   "apiKeyGate.hide": "非表示",
   "apiKeyGate.currentKeySaved": "現在のキーが保存されました {maskedKey}",
+  "apiKeyGate.keyInvalid": "キーが無効です {maskedKey} — 下に新しいキーを貼り付けてください",
   "apiKeyGate.clearSavedKey": "保存されたキーを消去",
   "apiKeyGate.cancel": "キャンセル",
   "apiKeyGate.saving": "保存中...",
   "apiKeyGate.saveKey": "キーを保存",
   "apiKeyGate.close": "閉じる",
+  "apiKeyGate.imageGenCostLabel": "画像生成コスト",
 
   // Chat - general
   "chat.thinking": "考え中...",
@@ -104,6 +106,9 @@ export const jaTranslations: Record<string, string> = {
   "chat.videoNotSupported": "お使いのブラウザはビデオタグをサポートしていません。",
   "chat.audioNotSupported": "お使いのブラウザはオーディオタグをサポートしていません。",
   "chat.fileAttachment": "ファイル添付",
+  "chat.pdf.loading": "PDFを読み込み中...",
+  "chat.pdf.error": "PDFを表示できません",
+  "chat.pdf.pageIndicator": "ページ {current} / {total}",
   "chat.imageGenError": "画像生成エラー",
   "chat.generatingImageLoadingSlow": "もう少し時間がかかっています...",
   "chat.stopSpeaking": "読み上げを停止",
@@ -128,6 +133,7 @@ export const jaTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "カメラプレビューを有効にする",
   "chat.camera.turnOff": "カメラプレビューを無効にする",
+  "chat.camera.selectCamera": "カメラを選択",
   "chat.camera.imageGenCameraLabel": "画像生成",
   "chat.camera.captureOrRecord": "タップで写真、長押しで動画",
   "chat.camera.stopRecording": "録画を停止",

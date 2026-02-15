@@ -85,11 +85,13 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.show": "காண்பி",
   "apiKeyGate.hide": "மறை",
   "apiKeyGate.currentKeySaved": "தற்போதைய சாவி சேமிக்கப்பட்டது {maskedKey}",
+  "apiKeyGate.keyInvalid": "சாவி செல்லாதது {maskedKey} — கீழே புதிய சாவியை ஒட்டவும்",
   "apiKeyGate.clearSavedKey": "சேமித்த சாவியை அழி",
   "apiKeyGate.cancel": "ரத்துசெய்",
   "apiKeyGate.saving": "சேமிக்கிறது...",
   "apiKeyGate.saveKey": "சாவியைச் சேமி",
   "apiKeyGate.close": "மூடு",
+  "apiKeyGate.imageGenCostLabel": "படம் உருவாக்க செலவு",
 
   // Chat - general
   "chat.thinking": "யோசிக்கிறேன்...",
@@ -104,6 +106,9 @@ export const taTranslations: Record<string, string> = {
   "chat.videoNotSupported": "உங்கள் உலாவி வீடியோ டேக்கை ஆதரிக்கவில்லை.",
   "chat.audioNotSupported": "உங்கள் உலாவி ஆடியோ டேக்கை ஆதரிக்கவில்லை.",
   "chat.fileAttachment": "கோப்பு இணைப்பு",
+  "chat.pdf.loading": "PDF ஏற்றப்படுகிறது...",
+  "chat.pdf.error": "PDF ஐ காண்பிக்க இயலவில்லை",
+  "chat.pdf.pageIndicator": "பக்கம் {current} / {total}",
   "chat.imageGenError": "படம் உருவாக்குவதில் பிழை",
   "chat.generatingImageLoadingSlow": "சிறிது அதிக நேரம் எடுக்கிறது...",
   "chat.stopSpeaking": "பேசுவதை நிறுத்தவும்",
@@ -128,6 +133,7 @@ export const taTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "கேமரா முன்னோட்டத்தை இயக்கவும்",
   "chat.camera.turnOff": "கேமரா முன்னோட்டத்தை முடக்கவும்",
+  "chat.camera.selectCamera": "கேமராவைத் தேர்ந்தெடுக்கவும்",
   "chat.camera.imageGenCameraLabel": "படம் உருவாக்கம்",
   "chat.camera.captureOrRecord": "படத்திற்கு தொடவும், வீடியோவிற்கு அழுத்திப் பிடிக்கவும்",
   "chat.camera.stopRecording": "பதிவை நிறுத்தவும்",

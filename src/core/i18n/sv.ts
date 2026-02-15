@@ -85,11 +85,13 @@ export const svTranslations: Record<string, string> = {
   "apiKeyGate.show": "Visa",
   "apiKeyGate.hide": "Dölj",
   "apiKeyGate.currentKeySaved": "Aktuell nyckel sparad {maskedKey}",
+  "apiKeyGate.keyInvalid": "Nyckel ogiltig {maskedKey} — klistra in en ny nyckel nedan",
   "apiKeyGate.clearSavedKey": "Rensa sparad nyckel",
   "apiKeyGate.cancel": "Avbryt",
   "apiKeyGate.saving": "Sparar...",
   "apiKeyGate.saveKey": "Spara nyckel",
   "apiKeyGate.close": "Stäng",
+  "apiKeyGate.imageGenCostLabel": "Kostnad för bildgenerering",
 
   // Chat - general
   "chat.thinking": "Tänker...",
@@ -104,6 +106,9 @@ export const svTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Din webbläsare stöder inte videotaggen.",
   "chat.audioNotSupported": "Din webbläsare stöder inte ljudtaggen.",
   "chat.fileAttachment": "Filbilaga",
+  "chat.pdf.loading": "Laddar PDF...",
+  "chat.pdf.error": "Kan inte visa PDF",
+  "chat.pdf.pageIndicator": "Sida {current} av {total}",
   "chat.imageGenError": "Fel vid bildgenerering",
   "chat.generatingImageLoadingSlow": "Det tar lite längre tid...",
   "chat.stopSpeaking": "Sluta prata",
@@ -128,6 +133,7 @@ export const svTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Aktivera kameraförhandsgranskning",
   "chat.camera.turnOff": "Inaktivera kameraförhandsgranskning",
+  "chat.camera.selectCamera": "Välj kamera",
   "chat.camera.imageGenCameraLabel": "Bildgenerering",
   "chat.camera.captureOrRecord": "Tryck för foto, håll för video",
   "chat.camera.stopRecording": "Stoppa inspelning",

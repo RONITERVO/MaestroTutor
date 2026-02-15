@@ -85,11 +85,13 @@ export const mlTranslations: Record<string, string> = {
   "apiKeyGate.show": "കാണിക്കുക",
   "apiKeyGate.hide": "മറയ്ക്കുക",
   "apiKeyGate.currentKeySaved": "നിലവിലെ കീ സേവ് ചെയ്തു {maskedKey}",
+  "apiKeyGate.keyInvalid": "കീ അസാധുവാണ് {maskedKey} — താഴെ ഒരു പുതിയ കീ ഒട്ടിക്കുക",
   "apiKeyGate.clearSavedKey": "സേവ് ചെയ്ത കീ മായ്ക്കുക",
   "apiKeyGate.cancel": "റദ്ദാക്കുക",
   "apiKeyGate.saving": "സേവ് ചെയ്യുന്നു...",
   "apiKeyGate.saveKey": "കീ സേവ് ചെയ്യുക",
   "apiKeyGate.close": "അടയ്ക്കുക",
+  "apiKeyGate.imageGenCostLabel": "ഇമേജ് ജനറേഷൻ ചെലവ്",
 
   // Chat - general
   "chat.thinking": "ചിന്തിക്കുന്നു...",
@@ -104,6 +106,9 @@ export const mlTranslations: Record<string, string> = {
   "chat.videoNotSupported": "നിങ്ങളുടെ ബ്രൗസർ വീഡിയോ ടാഗ് പിന്തുണയ്ക്കുന്നില്ല.",
   "chat.audioNotSupported": "നിങ്ങളുടെ ബ്രൗസർ ഓഡിയോ ടാഗ് പിന്തുണയ്ക്കുന്നില്ല.",
   "chat.fileAttachment": "ഫയൽ അറ്റാച്ച്‌മെന്റ്",
+  "chat.pdf.loading": "PDF ലോഡ് ചെയ്യുന്നു...",
+  "chat.pdf.error": "PDF പ്രദർശിപ്പിക്കാൻ കഴിയുന്നില്ല",
+  "chat.pdf.pageIndicator": "പേജ് {current} / {total}",
   "chat.imageGenError": "ചിത്രം ജനിപ്പിക്കുന്നതിൽ പിശക്",
   "chat.generatingImageLoadingSlow": "അല്പം കൂടുതൽ സമയമെടുക്കുന്നു...",
   "chat.stopSpeaking": "സംസാരിക്കുന്നത് നിർത്തുക",
@@ -128,6 +133,7 @@ export const mlTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "ക്യാമറ പ്രിവ്യൂ ഓണാക്കുക",
   "chat.camera.turnOff": "ക്യാമറ പ്രിവ്യൂ ഓഫാക്കുക",
+  "chat.camera.selectCamera": "ക്യാമറ തിരഞ്ഞെടുക്കുക",
   "chat.camera.imageGenCameraLabel": "ചിത്രം ജനിപ്പിക്കൽ",
   "chat.camera.captureOrRecord": "ഫോട്ടോയ്ക്ക് ടാപ്പ് ചെയ്യുക, വീഡിയോയ്ക്ക് പിടിക്കുക",
   "chat.camera.stopRecording": "റെക്കോർഡിംഗ് നിർത്തുക",

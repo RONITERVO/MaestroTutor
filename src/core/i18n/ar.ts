@@ -83,11 +83,13 @@ export const arTranslations: Record<string, string> = {
   "apiKeyGate.show": "إظهار",
   "apiKeyGate.hide": "إخفاء",
   "apiKeyGate.currentKeySaved": "تم حفظ المفتاح الحالي {maskedKey}",
+  "apiKeyGate.keyInvalid": "المفتاح غير صالح {maskedKey} — الصق مفتاحًا جديدًا أدناه",
   "apiKeyGate.clearSavedKey": "مسح المفتاح المحفوظ",
   "apiKeyGate.cancel": "إلغاء",
   "apiKeyGate.saving": "جارٍ الحفظ...",
   "apiKeyGate.saveKey": "حفظ المفتاح",
   "apiKeyGate.close": "إغلاق",
+  "apiKeyGate.imageGenCostLabel": "تكلفة إنشاء الصور",
 
   // Chat - general
   "chat.thinking": "جارٍ التفكير...",
@@ -102,6 +104,9 @@ export const arTranslations: Record<string, string> = {
   "chat.videoNotSupported": "متصفحك لا يدعم وسم الفيديو.",
   "chat.audioNotSupported": "متصفحك لا يدعم وسم الصوت.",
   "chat.fileAttachment": "مرفق ملف",
+  "chat.pdf.loading": "جارٍ تحميل PDF...",
+  "chat.pdf.error": "تعذّر عرض PDF",
+  "chat.pdf.pageIndicator": "الصفحة {current} من {total}",
   "chat.imageGenError": "خطأ في إنشاء الصورة",
   "chat.generatingImageLoadingSlow": "يستغرق وقتًا أطول قليلاً...",
   "chat.stopSpeaking": "إيقاف الكلام",
@@ -126,6 +131,7 @@ export const arTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "تشغيل معاينة الكاميرا",
   "chat.camera.turnOff": "إيقاف معاينة الكاميرا",
+  "chat.camera.selectCamera": "اختر الكاميرا",
   "chat.camera.imageGenCameraLabel": "إنشاء الصورة",
   "chat.camera.captureOrRecord": "انقر للصورة، اضغط مطولاً للفيديو",
   "chat.camera.stopRecording": "إيقاف التسجيل",

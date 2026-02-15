@@ -85,11 +85,13 @@ export const viTranslations: Record<string, string> = {
   "apiKeyGate.show": "Hiện",
   "apiKeyGate.hide": "Ẩn",
   "apiKeyGate.currentKeySaved": "Khóa hiện tại đã lưu {maskedKey}",
+  "apiKeyGate.keyInvalid": "Khóa không hợp lệ {maskedKey} — dán khóa mới bên dưới",
   "apiKeyGate.clearSavedKey": "Xóa khóa đã lưu",
   "apiKeyGate.cancel": "Hủy",
   "apiKeyGate.saving": "Đang lưu...",
   "apiKeyGate.saveKey": "Lưu khóa",
   "apiKeyGate.close": "Đóng",
+  "apiKeyGate.imageGenCostLabel": "Chi phí tạo ảnh",
 
   // Chat - general
   "chat.thinking": "Đang suy nghĩ...",
@@ -104,6 +106,9 @@ export const viTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Trình duyệt của bạn không hỗ trợ thẻ video.",
   "chat.audioNotSupported": "Trình duyệt của bạn không hỗ trợ thẻ âm thanh.",
   "chat.fileAttachment": "Tệp đính kèm",
+  "chat.pdf.loading": "Đang tải PDF...",
+  "chat.pdf.error": "Không thể hiển thị PDF",
+  "chat.pdf.pageIndicator": "Trang {current} / {total}",
   "chat.imageGenError": "Lỗi tạo hình ảnh",
   "chat.generatingImageLoadingSlow": "Mất nhiều thời gian hơn một chút...",
   "chat.stopSpeaking": "Dừng nói",
@@ -128,6 +133,7 @@ export const viTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Bật xem trước camera",
   "chat.camera.turnOff": "Tắt xem trước camera",
+  "chat.camera.selectCamera": "Chọn camera",
   "chat.camera.imageGenCameraLabel": "Tạo hình ảnh",
   "chat.camera.captureOrRecord": "Chạm để chụp ảnh, giữ để quay video",
   "chat.camera.stopRecording": "Dừng ghi",

@@ -85,11 +85,13 @@ export const fiTranslations: Record<string, string> = {
   "apiKeyGate.show": "Näytä",
   "apiKeyGate.hide": "Piilota",
   "apiKeyGate.currentKeySaved": "Nykyinen avain tallennettu {maskedKey}",
+  "apiKeyGate.keyInvalid": "Virheellinen avain {maskedKey} — liitä uusi avain alle",
   "apiKeyGate.clearSavedKey": "Tyhjennä tallennettu avain",
   "apiKeyGate.cancel": "Peruuta",
   "apiKeyGate.saving": "Tallennetaan...",
   "apiKeyGate.saveKey": "Tallenna avain",
   "apiKeyGate.close": "Sulje",
+  "apiKeyGate.imageGenCostLabel": "Kuvan luonnin hinta",
 
   // Chat - general
   "chat.thinking": "Ajattelen...",
@@ -104,6 +106,9 @@ export const fiTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Selaimesi ei tue video-tunnistetta.",
   "chat.audioNotSupported": "Selaimesi ei tue audio-tunnistetta.",
   "chat.fileAttachment": "Tiedostoliite",
+  "chat.pdf.loading": "Ladataan PDF-tiedostoa...",
+  "chat.pdf.error": "PDF-tiedostoa ei voida näyttää",
+  "chat.pdf.pageIndicator": "Sivu {current} / {total}",
   "chat.imageGenError": "Kuvan luontivirhe",
   "chat.generatingImageLoadingSlow": "Kestää hieman pidempään...",
   "chat.stopSpeaking": "Lopeta puhuminen",
@@ -128,6 +133,7 @@ export const fiTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Ota kameran esikatselu käyttöön",
   "chat.camera.turnOff": "Poista kameran esikatselu käytöstä",
+  "chat.camera.selectCamera": "Valitse kamera",
   "chat.camera.imageGenCameraLabel": "Kuvan luonti",
   "chat.camera.captureOrRecord": "Napauta valokuva, pidä pohjassa video",
   "chat.camera.stopRecording": "Pysäytä nauhoitus",

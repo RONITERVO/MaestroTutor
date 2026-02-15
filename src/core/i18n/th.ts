@@ -85,11 +85,13 @@ export const thTranslations: Record<string, string> = {
   "apiKeyGate.show": "แสดง",
   "apiKeyGate.hide": "ซ่อน",
   "apiKeyGate.currentKeySaved": "บันทึกคีย์ปัจจุบันแล้ว {maskedKey}",
+  "apiKeyGate.keyInvalid": "คีย์ไม่ถูกต้อง {maskedKey} — วางคีย์ใหม่ด้านล่าง",
   "apiKeyGate.clearSavedKey": "ล้างคีย์ที่บันทึกไว้",
   "apiKeyGate.cancel": "ยกเลิก",
   "apiKeyGate.saving": "กำลังบันทึก...",
   "apiKeyGate.saveKey": "บันทึกคีย์",
   "apiKeyGate.close": "ปิด",
+  "apiKeyGate.imageGenCostLabel": "ค่าใช้จ่ายสร้างรูปภาพ",
 
   // Chat - general
   "chat.thinking": "กำลังคิด...",
@@ -104,6 +106,9 @@ export const thTranslations: Record<string, string> = {
   "chat.videoNotSupported": "เบราว์เซอร์ของคุณไม่รองรับแท็กวิดีโอ",
   "chat.audioNotSupported": "เบราว์เซอร์ของคุณไม่รองรับแท็กเสียง",
   "chat.fileAttachment": "ไฟล์แนบ",
+  "chat.pdf.loading": "กำลังโหลด PDF...",
+  "chat.pdf.error": "ไม่สามารถแสดง PDF ได้",
+  "chat.pdf.pageIndicator": "หน้า {current} จาก {total}",
   "chat.imageGenError": "ข้อผิดพลาดในการสร้างรูปภาพ",
   "chat.generatingImageLoadingSlow": "ใช้เวลานานกว่าปกติเล็กน้อย...",
   "chat.stopSpeaking": "หยุดพูด",
@@ -128,6 +133,7 @@ export const thTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "เปิดการแสดงตัวอย่างกล้อง",
   "chat.camera.turnOff": "ปิดการแสดงตัวอย่างกล้อง",
+  "chat.camera.selectCamera": "เลือกกล้อง",
   "chat.camera.imageGenCameraLabel": "การสร้างรูปภาพ",
   "chat.camera.captureOrRecord": "แตะเพื่อถ่ายรูป กดค้างเพื่อบันทึกวิดีโอ",
   "chat.camera.stopRecording": "หยุดการบันทึก",

@@ -85,11 +85,13 @@ export const nlTranslations: Record<string, string> = {
   "apiKeyGate.show": "Tonen",
   "apiKeyGate.hide": "Verbergen",
   "apiKeyGate.currentKeySaved": "Huidige sleutel opgeslagen {maskedKey}",
+  "apiKeyGate.keyInvalid": "Sleutel ongeldig {maskedKey} — plak hieronder een nieuwe sleutel",
   "apiKeyGate.clearSavedKey": "Opgeslagen sleutel wissen",
   "apiKeyGate.cancel": "Annuleren",
   "apiKeyGate.saving": "Opslaan...",
   "apiKeyGate.saveKey": "Sleutel opslaan",
   "apiKeyGate.close": "Sluiten",
+  "apiKeyGate.imageGenCostLabel": "Kosten beeldgeneratie",
 
   // Chat - general
   "chat.thinking": "Aan het denken...",
@@ -104,6 +106,9 @@ export const nlTranslations: Record<string, string> = {
   "chat.videoNotSupported": "Uw browser ondersteunt de video-tag niet.",
   "chat.audioNotSupported": "Uw browser ondersteunt de audio-tag niet.",
   "chat.fileAttachment": "Bestandsbijlage",
+  "chat.pdf.loading": "PDF laden...",
+  "chat.pdf.error": "Kan PDF niet weergeven",
+  "chat.pdf.pageIndicator": "Pagina {current} van {total}",
   "chat.imageGenError": "Fout bij afbeelding genereren",
   "chat.generatingImageLoadingSlow": "Het duurt iets langer...",
   "chat.stopSpeaking": "Stop met spreken",
@@ -128,6 +133,7 @@ export const nlTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "Cameravoorbeeld inschakelen",
   "chat.camera.turnOff": "Cameravoorbeeld uitschakelen",
+  "chat.camera.selectCamera": "Camera selecteren",
   "chat.camera.imageGenCameraLabel": "Afbeelding genereren",
   "chat.camera.captureOrRecord": "Tik voor foto, houd ingedrukt voor video",
   "chat.camera.stopRecording": "Opname stoppen",

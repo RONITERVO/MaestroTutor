@@ -85,11 +85,13 @@ export const knTranslations: Record<string, string> = {
   "apiKeyGate.show": "ತೋರಿಸು",
   "apiKeyGate.hide": "ಮರೆಮಾಡು",
   "apiKeyGate.currentKeySaved": "ಪ್ರಸ್ತುತ ಕೀಯನ್ನು ಉಳಿಸಲಾಗಿದೆ {maskedKey}",
+  "apiKeyGate.keyInvalid": "ಕೀ ಅಮಾನ್ಯ {maskedKey} — ಕೆಳಗೆ ಹೊಸ ಕೀ ಅಂಟಿಸಿ",
   "apiKeyGate.clearSavedKey": "ಉಳಿಸಿದ ಕೀಯನ್ನು ಅಳಿಸಿ",
   "apiKeyGate.cancel": "ರದ್ದುಮಾಡಿ",
   "apiKeyGate.saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
   "apiKeyGate.saveKey": "ಕೀಯನ್ನು ಉಳಿಸಿ",
   "apiKeyGate.close": "ಮುಚ್ಚಿ",
+  "apiKeyGate.imageGenCostLabel": "ಚಿತ್ರ ರಚನೆ ವೆಚ್ಚ",
 
   // Chat - general
   "chat.thinking": "ಯೋಚಿಸುತ್ತಿದ್ದೇನೆ...",
@@ -104,6 +106,9 @@ export const knTranslations: Record<string, string> = {
   "chat.videoNotSupported": "ನಿಮ್ಮ ಬ್ರೌಸರ್ ವೀಡಿಯೊ ಟ್ಯಾಗ್ ಅನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.",
   "chat.audioNotSupported": "ನಿಮ್ಮ ಬ್ರೌಸರ್ ಆಡಿಯೊ ಟ್ಯಾಗ್ ಅನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.",
   "chat.fileAttachment": "ಫೈಲ್ ಲಗತ್ತು",
+  "chat.pdf.loading": "PDF ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+  "chat.pdf.error": "PDF ಪ್ರದರ್ಶಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ",
+  "chat.pdf.pageIndicator": "ಪುಟ {current} / {total}",
   "chat.imageGenError": "ಚಿತ್ರ ರಚನೆ ದೋಷ",
   "chat.generatingImageLoadingSlow": "ಸ್ವಲ್ಪ ಹೆಚ್ಚು ಸಮಯ ತೆಗೆದುಕೊಳ್ಳುತ್ತಿದೆ...",
   "chat.stopSpeaking": "ಮಾತನಾಡುವುದನ್ನು ನಿಲ್ಲಿಸಿ",
@@ -128,6 +133,7 @@ export const knTranslations: Record<string, string> = {
   // Chat - camera
   "chat.camera.turnOn": "ಕ್ಯಾಮರಾ ಮುನ್ನೋಟ ಆನ್ ಮಾಡಿ",
   "chat.camera.turnOff": "ಕ್ಯಾಮರಾ ಮುನ್ನೋಟ ಆಫ್ ಮಾಡಿ",
+  "chat.camera.selectCamera": "ಕ್ಯಾಮರಾ ಆಯ್ಕೆಮಾಡಿ",
   "chat.camera.imageGenCameraLabel": "ಚಿತ್ರ ರಚನೆ",
   "chat.camera.captureOrRecord": "ಫೋಟೋಗೆ ಟ್ಯಾಪ್ ಮಾಡಿ, ವೀಡಿಯೊಗೆ ಹಿಡಿದುಕೊಳ್ಳಿ",
   "chat.camera.stopRecording": "ರೆಕಾರ್ಡಿಂಗ್ ನಿಲ್ಲಿಸಿ",
