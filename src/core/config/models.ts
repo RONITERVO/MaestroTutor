@@ -12,7 +12,6 @@ export interface GeminiModelRegistry {
     generation: string;
   };
   audio: {
-    tts: string;
     live: string;
   };
 }
@@ -31,7 +30,6 @@ const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
     generation: 'gemini-2.5-flash-image',
   },
   audio: {
-    tts: 'gemini-2.5-flash-preview-tts',
     live: 'gemini-2.5-flash-native-audio-preview-12-2025',
   },
 };
@@ -52,7 +50,6 @@ const isValidRegistry = (value: any): value is GeminiModelRegistry => {
     isNonEmptyString(value?.text?.aux) &&
     isNonEmptyString(value?.text?.translation) &&
     isNonEmptyString(value?.image?.generation) &&
-    isNonEmptyString(value?.audio?.tts) &&
     isNonEmptyString(value?.audio?.live)
   );
 };
@@ -67,7 +64,6 @@ const mergeWithDefaults = (value: Partial<GeminiModelRegistry>): GeminiModelRegi
     generation: value?.image?.generation ?? DEFAULT_GEMINI_MODELS.image.generation,
   },
   audio: {
-    tts: value?.audio?.tts ?? DEFAULT_GEMINI_MODELS.audio.tts,
     live: value?.audio?.live ?? DEFAULT_GEMINI_MODELS.audio.live,
   },
 });

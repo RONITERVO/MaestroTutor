@@ -232,7 +232,9 @@ export const fiTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Gemini API:n ilmainen chat-kiintiösi on lopussa.",
   "error.quotaSetupBilling": "Määritä laskutus",
   "error.quotaStartLive": "Käynnistä Live sen sijaan",
-
+  "error.imageGenCostWarning": "Kuvien luominen maksaa ~0,05 \u20ac/kuva (viestit ovat halvempia, laskutus Googlelta). Voit ohittaa tämän, jos hyväksyt hinnan.",
+  "error.imageGenDisable": "Poista kuvien luonti käytöstä",
+  "error.imageGenViewCost": "Katso kuvien luonnin kustannukset",
   // Errors - camera
   "error.cameraPermissionDenied": "Kameran käyttöoikeus evätty. Ota kameran käyttöoikeus käyttöön selaimen asetuksissa.",
   "error.cameraNotFound": "Valittua kameraa ei löydy. Varmista, että se on yhdistetty, tai valitse toinen kamera.",

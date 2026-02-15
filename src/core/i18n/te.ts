@@ -232,7 +232,9 @@ export const teTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "చాట్ కోసం మీ Gemini API ఉచిత కోటా ముగిసింది.",
   "error.quotaSetupBilling": "బిల్లింగ్ సెటప్ చేయండి",
   "error.quotaStartLive": "బదులుగా లైవ్ ప్రారంభించండి",
-
+  "error.imageGenCostWarning": "ఇమేజ్ జనరేషన్ ఖర్చు ఇమేజ్‌కు ~0.05€ ఉంటుంది (మెసేజ్‌ల ఖర్చు తక్కువ, Google ద్వారా బిల్ చేయబడుతుంది). మీరు ఖర్చుతో సమ్మతిస్తే దీనిని విస్మరించవచ్చు.",
+  "error.imageGenDisable": "ఇమేజ్ జనరేషన్‌ను ఆపివేయి",
+  "error.imageGenViewCost": "ఇమేజ్ జనరేషన్ ఖర్చులను చూడండి",
   // Errors - camera
   "error.cameraPermissionDenied": "కెమెరా అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్‌లలో కెమెరా యాక్సెస్‌ని ఎనేబుల్ చేయండి.",
   "error.cameraNotFound": "ఎంచుకున్న కెమెరా కనుగొనబడలేదు. ఇది కనెక్ట్ అయిందని నిర్ధారించుకోండి లేదా వేరే కెమెరాను ఎంచుకోండి.",

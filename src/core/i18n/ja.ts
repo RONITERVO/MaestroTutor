@@ -232,7 +232,9 @@ export const jaTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "チャット用のGemini API無料枠を使い果たしました。",
   "error.quotaSetupBilling": "課金を設定",
   "error.quotaStartLive": "代わりにライブを開始",
-
+  "error.imageGenCostWarning": "画像生成には1枚あたり約0.05ユーロかかります（メッセージはより安価で、Googleから請求されます）。コストに問題がなければ、これは無視して構いません。",
+  "error.imageGenDisable": "画像生成を無効にする",
+  "error.imageGenViewCost": "画像生成コストを表示",
   // Errors - camera
   "error.cameraPermissionDenied": "カメラの許可が拒否されました。ブラウザの設定でカメラへのアクセスを有効にしてください。",
   "error.cameraNotFound": "選択されたカメラが見つかりません。接続されていることを確認するか、別のカメラを選択してください。",

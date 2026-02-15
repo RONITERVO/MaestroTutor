@@ -232,7 +232,9 @@ export const ptTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Sua cota gratuita da API Gemini para chat esgotou.",
   "error.quotaSetupBilling": "Configurar faturamento",
   "error.quotaStartLive": "Iniciar Live em vez disso",
-
+  "error.imageGenCostWarning": "A geração de imagens custa ~0,05\u20ac por imagem (mensagens custam menos, faturado pelo Google). Você pode ignorar isso se concordar com o custo.",
+  "error.imageGenDisable": "Desativar geração de imagens",
+  "error.imageGenViewCost": "Ver custos de geração de imagens",
   // Errors - camera
   "error.cameraPermissionDenied": "Permissão da câmera negada. Por favor, habilite o acesso à câmera nas configurações do seu navegador.",
   "error.cameraNotFound": "Câmera selecionada não encontrada. Certifique-se de que está conectada ou selecione uma câmera diferente nas configurações.",

@@ -232,7 +232,9 @@ export const zhTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "您的 Gemini API 免费聊天配额已用尽。",
   "error.quotaSetupBilling": "设置计费",
   "error.quotaStartLive": "改用实时对话",
-
+  "error.imageGenCostWarning": "生成图像的费用约为每张 0.05 欧元（消息费用较低，由 Google 计费）。如果您接受此费用，可以忽略此提示。",
+  "error.imageGenDisable": "禁用图像生成",
+  "error.imageGenViewCost": "查看图像生成费用",
   // Errors - camera
   "error.cameraPermissionDenied": "相机权限被拒绝。请在浏览器设置中启用相机访问。",
   "error.cameraNotFound": "未找到所选相机。请确保已连接或选择其他相机。",

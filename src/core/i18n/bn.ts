@@ -232,7 +232,9 @@ export const bnTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "চ্যাটের জন্য আপনার Gemini API-এর ফ্রি কোটা শেষ হয়ে গেছে।",
   "error.quotaSetupBilling": "বিলিং সেট আপ করুন",
   "error.quotaStartLive": "পরিবর্তে লাইভ শুরু করুন",
-
+  "error.imageGenCostWarning": "ছবি তৈরির খরচ প্রতি ছবিতে ~০.০৫€ (মেসেজের খরচ কম, Google দ্বারা বিল করা হয়)। আপনি যদি খরচের বিষয়ে সম্মত হন তবে এটি উপেক্ষা করতে পারেন।",
+  "error.imageGenDisable": "ছবি তৈরি করা অক্ষম করুন",
+  "error.imageGenViewCost": "ছবি তৈরির খরচ দেখুন",
   // Errors - camera
   "error.cameraPermissionDenied": "ক্যামেরা অনুমতি প্রত্যাখ্যাত। ব্রাউজার সেটিংসে ক্যামেরা অ্যাক্সেস সক্রিয় করুন।",
   "error.cameraNotFound": "নির্বাচিত ক্যামেরা পাওয়া যায়নি। এটি সংযুক্ত আছে কিনা নিশ্চিত করুন বা অন্য ক্যামেরা নির্বাচন করুন।",

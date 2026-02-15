@@ -232,7 +232,9 @@ export const plTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Twój bezpłatny limit Gemini API na czat został wyczerpany.",
   "error.quotaSetupBilling": "Skonfiguruj rozliczenia",
   "error.quotaStartLive": "Zacznij rozmowę na żywo",
-
+  "error.imageGenCostWarning": "Generowanie obrazów kosztuje ~0,05 \u20ac za obraz (wiadomości są tańsze, rozliczane przez Google). Możesz to zignorować, jeśli akceptujesz koszt.",
+  "error.imageGenDisable": "Wyłącz generowanie obrazów",
+  "error.imageGenViewCost": "Zobacz koszty generowania obrazów",
   // Errors - camera
   "error.cameraPermissionDenied": "Odmówiono dostępu do kamery. Włącz dostęp do kamery w ustawieniach przeglądarki.",
   "error.cameraNotFound": "Nie znaleziono wybranej kamery. Upewnij się, że jest podłączona lub wybierz inną kamerę w ustawieniach.",

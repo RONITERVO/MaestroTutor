@@ -232,7 +232,9 @@ export const nlTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Je gratis Gemini API-quotum voor chat is opgebruikt.",
   "error.quotaSetupBilling": "Facturering instellen",
   "error.quotaStartLive": "Start Live in plaats daarvan",
-
+  "error.imageGenCostWarning": "Het genereren van afbeeldingen kost ~0,05\u20ac per afbeelding (berichten kosten minder, gefactureerd door Google). U kunt dit negeren als u akkoord gaat met de kosten.",
+  "error.imageGenDisable": "Afbeeldingen genereren uitschakelen",
+  "error.imageGenViewCost": "Kosten voor het genereren van afbeeldingen bekijken",
   // Errors - camera
   "error.cameraPermissionDenied": "Cameratoestemming geweigerd. Schakel cameratoegang in via browserinstellingen.",
   "error.cameraNotFound": "Geselecteerde camera niet gevonden. Zorg dat deze is aangesloten of selecteer een andere camera.",

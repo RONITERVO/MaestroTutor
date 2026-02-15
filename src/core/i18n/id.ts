@@ -232,7 +232,9 @@ export const idTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Kuota gratis Gemini API Anda untuk obrolan telah habis.",
   "error.quotaSetupBilling": "Atur penagihan",
   "error.quotaStartLive": "Mulai Live sebagai gantinya",
-
+  "error.imageGenCostWarning": "Biaya pembuatan gambar ~0,05\u20ac per gambar (pesan lebih murah, ditagih oleh Google). Anda dapat mengabaikan ini jika Anda setuju dengan biayanya.",
+  "error.imageGenDisable": "Nonaktifkan Pembuatan Gambar",
+  "error.imageGenViewCost": "Lihat Biaya Pembuatan Gambar",
   // Errors - camera
   "error.cameraPermissionDenied": "Izin kamera ditolak. Silakan aktifkan akses kamera di pengaturan browser.",
   "error.cameraNotFound": "Kamera yang dipilih tidak ditemukan. Pastikan terhubung atau pilih kamera lain.",

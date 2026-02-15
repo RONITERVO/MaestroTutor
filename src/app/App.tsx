@@ -105,11 +105,13 @@ const App: React.FC = () => {
 
   const [isApiKeyGateOpen, setIsApiKeyGateOpen] = useState(false);
   const [apiKeyGateInstructionIndex, setApiKeyGateInstructionIndex] = useState<number | null>(null);
+  const [apiKeyInvalid, setApiKeyInvalid] = useState(false);
   const showApiKeyGate = !hasApiKey || isApiKeyGateOpen;
 
-  const handleApiKeyGateOpen = useCallback((options?: { reason?: 'missing' | 'quota'; instructionIndex?: number }) => {
+  const handleApiKeyGateOpen = useCallback((options?: { reason?: 'missing' | 'invalid' | 'quota'; instructionIndex?: number }) => {
     setApiKeyError(null);
     setIsApiKeyGateOpen(true);
+    setApiKeyInvalid(options?.reason === 'invalid');
     if (typeof options?.instructionIndex === 'number') {
       setApiKeyGateInstructionIndex(options.instructionIndex);
     } else {
@@ -542,6 +544,18 @@ const App: React.FC = () => {
     }
   }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSession]);
 
+  const handleImageGenDisable = useCallback(() => {
+    handleSettingsChange('imageGenerationModeEnabled', false);
+    if (settingsRef.current.selectedCameraId === IMAGE_GEN_CAMERA_ID) {
+      const firstPhysicalCamera = availableCamerasRef.current[0];
+      handleSettingsChange('selectedCameraId', firstPhysicalCamera ? firstPhysicalCamera.deviceId : null);
+    }
+  }, [handleSettingsChange, settingsRef, availableCamerasRef]);
+
+  const handleImageGenViewCost = useCallback(() => {
+    handleApiKeyGateOpen();
+  }, [handleApiKeyGateOpen]);
+
 
   // ============================================================
   // RENDER
@@ -587,6 +601,7 @@ const App: React.FC = () => {
         hasKey={hasApiKey}
         maskedKey={maskedApiKey}
         error={apiKeyError}
+        keyInvalid={apiKeyInvalid}
         instructionFocusIndex={apiKeyGateInstructionIndex}
         onSave={saveApiKey}
         onClear={clearApiKey}
@@ -594,6 +609,7 @@ const App: React.FC = () => {
         onClose={() => {
           setApiKeyError(null);
           setApiKeyGateInstructionIndex(null);
+          setApiKeyInvalid(false);
           setIsApiKeyGateOpen(false);
         }}
       />
@@ -655,6 +671,8 @@ const App: React.FC = () => {
             onCreateSuggestion={handleCreateSuggestion}
             onQuotaSetupBilling={handleQuotaSetupBilling}
             onQuotaStartLive={handleQuotaStartLive}
+            onImageGenDisable={handleImageGenDisable}
+            onImageGenViewCost={handleImageGenViewCost}
           />
         </main>
       </div>

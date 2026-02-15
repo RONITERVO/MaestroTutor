@@ -232,7 +232,9 @@ export const knTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "ಚಾಟ್‌ಗಾಗಿ ನಿಮ್ಮ Gemini API ಉಚಿತ ಮಿತಿ ಮುಗಿದಿದೆ.",
   "error.quotaSetupBilling": "ಬಿಲ್ಲಿಂಗ್ ಸೆಟ್ ಅಪ್ ಮಾಡಿ",
   "error.quotaStartLive": "ಬದಲಿಗೆ ಲೈವ್ ಪ್ರಾರಂಭಿಸಿ",
-
+  "error.imageGenCostWarning": "ಚಿತ್ರ ರಚನೆಯ ವೆಚ್ಚವು ಪ್ರತಿ ಚಿತ್ರಕ್ಕೆ ~0.05€ ಆಗಿರುತ್ತದೆ (ಸಂದೇಶಗಳ ವೆಚ್ಚ ಕಡಿಮೆ, Google ನಿಂದ ಬಿಲ್ ಮಾಡಲಾಗುತ್ತದೆ). ವೆಚ್ಚದ ಬಗ್ಗೆ ನಿಮಗೆ ಸಮ್ಮತವಿದ್ದರೆ ಇದನ್ನು ನಿರ್ಲಕ್ಷಿಸಬಹುದು.",
+  "error.imageGenDisable": "ಚಿತ್ರ ರಚನೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ",
+  "error.imageGenViewCost": "ಚಿತ್ರ ರಚನೆಯ ವೆಚ್ಚಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
   // Errors - camera
   "error.cameraPermissionDenied": "ಕ್ಯಾಮರಾ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಬ್ರೌಸರ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಕ್ಯಾಮರಾ ಪ್ರವೇಶವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.",
   "error.cameraNotFound": "ಆಯ್ಕೆ ಮಾಡಿದ ಕ್ಯಾಮರಾ ಕಂಡುಬಂದಿಲ್ಲ. ಅದು ಸಂಪರ್ಕಗೊಂಡಿದೆಯೇ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ ಅಥವಾ ಬೇರೆ ಕ್ಯಾಮರಾ ಆಯ್ಕೆ ಮಾಡಿ.",

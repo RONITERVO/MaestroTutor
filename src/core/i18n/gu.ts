@@ -232,7 +232,9 @@ export const guTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "ચેટ માટે તમારો Gemini API ફ્રી ક્વોટા સમાપ્ત થઈ ગયો છે.",
   "error.quotaSetupBilling": "બિલિંગ સેટ કરો",
   "error.quotaStartLive": "તેના બદલે લાઈવ શરૂ કરો",
-
+  "error.imageGenCostWarning": "ઈમેજ જનરેશનનો ખર્ચ ઈમેજ દીઠ ~0.05€ છે (મેસેજનો ખર્ચ ઓછો છે, Google દ્વારા બિલ કરવામાં આવે છે). જો તમે ખર્ચ સાથે સંમત હોવ તો તમે આને અવગણી શકો છો.",
+  "error.imageGenDisable": "ઈમેજ જનરેશન અક્ષમ કરો",
+  "error.imageGenViewCost": "ઈમેજ જનરેશન ખર્ચ જુઓ",
   // Errors - camera
   "error.cameraPermissionDenied": "કેમેરા પરવાનગી નકારી. બ્રાઉઝર સેટિંગ્સમાં કેમેરા ઍક્સેસ સક્ષમ કરો.",
   "error.cameraNotFound": "પસંદ કરેલ કેમેરા મળ્યો નથી. ખાતરી કરો કે તે કનેક્ટ થયેલ છે અથવા અન્ય કેમેરા પસંદ કરો.",

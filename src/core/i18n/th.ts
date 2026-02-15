@@ -232,7 +232,9 @@ export const thTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "โควตาฟรีของ Gemini API สำหรับแชทของคุณหมดแล้ว",
   "error.quotaSetupBilling": "ตั้งค่าการเรียกเก็บเงิน",
   "error.quotaStartLive": "เริ่ม Live แทน",
-
+  "error.imageGenCostWarning": "การสร้างรูปภาพมีค่าใช้จ่าย ~0.05\u20ac ต่อรูป (ข้อความมีราคาถูกกว่า เรียกเก็บเงินโดย Google) คุณสามารถเพิกเฉยได้หากคุณยอมรับค่าใช้จ่ายนี้",
+  "error.imageGenDisable": "ปิดการใช้งานการสร้างรูปภาพ",
+  "error.imageGenViewCost": "ดูค่าใช้จ่ายในการสร้างรูปภาพ",
   // Errors - camera
   "error.cameraPermissionDenied": "ปฏิเสธการอนุญาตกล้อง กรุณาเปิดใช้งานการเข้าถึงกล้องในการตั้งค่าเบราว์เซอร์",
   "error.cameraNotFound": "ไม่พบกล้องที่เลือก ตรวจสอบให้แน่ใจว่าเชื่อมต่อแล้ว หรือเลือกกล้องอื่นในการตั้งค่า",

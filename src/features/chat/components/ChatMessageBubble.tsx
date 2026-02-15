@@ -35,6 +35,8 @@ interface ChatMessageBubbleProps {
   onUserInputActivity: () => void;
   onQuotaSetupBilling?: () => void;
   onQuotaStartLive?: () => void;
+  onImageGenDisable?: () => void;
+  onImageGenViewCost?: () => void;
   registerBubbleEl?: (el: HTMLDivElement | null) => void;
 }
 
@@ -44,6 +46,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
   onQuotaSetupBilling, onQuotaStartLive,
+  onImageGenDisable, onImageGenViewCost,
   registerBubbleEl
 }) => {
   const isUser = message.role === 'user';
@@ -1168,6 +1171,30 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                            style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
                          >
                            {t('error.quotaStartLive')}
+                         </button>
+                       )}
+                     </div>
+                   )}
+                   {isError && message.errorAction === 'imageGenCost' && (
+                     <div className="flex flex-wrap gap-2 mt-2">
+                       {onImageGenDisable && (
+                         <button
+                           type="button"
+                           onClick={onImageGenDisable}
+                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-accent-foreground bg-accent hover:bg-accent/80 sketchy-border-thin"
+                           style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
+                         >
+                           {t('error.imageGenDisable')}
+                         </button>
+                       )}
+                       {onImageGenViewCost && (
+                         <button
+                           type="button"
+                           onClick={onImageGenViewCost}
+                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-foreground bg-card hover:bg-muted sketchy-border-thin"
+                           style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
+                         >
+                           {t('error.imageGenViewCost')}
                          </button>
                        )}
                      </div>

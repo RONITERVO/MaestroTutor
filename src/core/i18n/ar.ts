@@ -230,7 +230,9 @@ export const arTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "تم استنفاد حصة Gemini API المجانية للدردشة.",
   "error.quotaSetupBilling": "إعداد الفوترة",
   "error.quotaStartLive": "ابدأ المحادثة المباشرة بدلاً من ذلك",
-
+  "error.imageGenCostWarning": "تكلفة إنشاء الصورة حوالي 0.05 يورو لكل صورة (الرسائل تكلف أقل، يتم الدفع عبر Google). يمكنك تجاهل هذا إذا كنت موافقًا على التكلفة.",
+  "error.imageGenDisable": "تعطيل إنشاء الصور",
+  "error.imageGenViewCost": "عرض تكاليف إنشاء الصور",
   // Errors - camera
   "error.cameraPermissionDenied": "تم رفض إذن الكاميرا. يرجى تمكين الوصول إلى الكاميرا في إعدادات المتصفح.",
   "error.cameraNotFound": "لم يتم العثور على الكاميرا المحددة. تأكد من توصيلها أو اختر كاميرا مختلفة.",

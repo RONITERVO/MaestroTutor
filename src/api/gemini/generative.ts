@@ -5,6 +5,16 @@ import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { ApiError, getAi } from './client';
 
+const DEFAULT_TIMEOUT_MS = 120_000; // 2 minutes
+
+const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`Request timed out after ${ms / 1000}s`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+};
+
 export const generateGeminiResponse = async (
   modelName: string,
   userPrompt: string,
@@ -14,7 +24,8 @@ export const generateGeminiResponse = async (
   imageMimeType?: string,
   imageFileUri?: string,
   useGoogleSearch?: boolean,
-  configOverrides?: any
+  configOverrides?: any,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
 ) => {
   const ai = await getAi();
   const contents: any[] = [];
@@ -77,11 +88,14 @@ export const generateGeminiResponse = async (
   const log = debugLogService.logRequest('generateContent', modelName, { contents: redactedContents, config });
 
   try {
-    const result = await ai.models.generateContent({
-      model: modelName,
-      contents,
-      config,
-    });
+    const result = await withTimeout(
+      ai.models.generateContent({
+        model: modelName,
+        contents,
+        config,
+      }),
+      timeoutMs
+    );
     log.complete({ text: result.text, usage: result.usageMetadata });
     return {
       text: result.text,
@@ -102,10 +116,13 @@ export const translateText = async (text: string, from: string, to: string) => {
   const log = debugLogService.logRequest('translateText', model, { prompt });
 
   try {
-    const result = await ai.models.generateContent({
-      model,
-      contents: prompt,
-    });
+    const result = await withTimeout(
+      ai.models.generateContent({
+        model,
+        contents: prompt,
+      }),
+      DEFAULT_TIMEOUT_MS
+    );
     log.complete({ text: result.text });
     return { translatedText: result.text || '' };
   } catch (e: any) {

@@ -52,6 +52,8 @@ interface ChatInterfaceProps {
   onCreateSuggestion: (text: string) => Promise<void>;
   onQuotaSetupBilling?: () => void;
   onQuotaStartLive?: () => void;
+  onImageGenDisable?: () => void;
+  onImageGenViewCost?: () => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
@@ -77,7 +79,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onBookmarkAt,
     onSendMessage,
     onQuotaSetupBilling,
-    onQuotaStartLive
+    onQuotaStartLive,
+    onImageGenDisable,
+    onImageGenViewCost
   } = props;
 
   const { t } = useAppTranslations();
@@ -753,6 +757,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 onUserInputActivity={onUserInputActivity}
                 onQuotaSetupBilling={onQuotaSetupBilling}
                 onQuotaStartLive={onQuotaStartLive}
+                onImageGenDisable={onImageGenDisable}
+                onImageGenViewCost={onImageGenViewCost}
                 registerBubbleEl={(el) => {
                   if (el) bubbleWrapperRefs.current.set(msg.id, el);
                   else bubbleWrapperRefs.current.delete(msg.id);

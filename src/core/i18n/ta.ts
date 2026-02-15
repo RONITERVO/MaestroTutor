@@ -232,7 +232,9 @@ export const taTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "அரட்டைக்கான உங்கள் Gemini API இலவச ஒதுக்கீடு முடிந்தது.",
   "error.quotaSetupBilling": "பில்லிங் அமைக்கவும்",
   "error.quotaStartLive": "அதற்கு பதிலாக நேரடியைத் தொடங்கவும்",
-
+  "error.imageGenCostWarning": "படம் உருவாக்க ஒரு படத்திற்கு ~0.05€ செலவாகும் (செய்திகள் விலை குறைவு, Google மூலம் பில் செய்யப்படும்). செலவு பரவாயில்லை என்றால் இதை நீங்கள் புறக்கணிக்கலாம்.",
+  "error.imageGenDisable": "படம் உருவாக்குவதை முடக்கு",
+  "error.imageGenViewCost": "படம் உருவாக்கும் செலவுகளைப் பார்",
   // Errors - camera
   "error.cameraPermissionDenied": "கேமரா அனுமதி மறுக்கப்பட்டது. உலாவி அமைப்புகளில் கேமரா அணுகலை இயக்கவும்.",
   "error.cameraNotFound": "தேர்ந்தெடுக்கப்பட்ட கேமரா கண்டறியப்படவில்லை. இணைக்கப்பட்டுள்ளதா என்பதை உறுதிசெய்யவும் அல்லது வேறு கேமராவைத் தேர்ந்தெடுக்கவும்.",

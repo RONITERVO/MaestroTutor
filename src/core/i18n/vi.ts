@@ -232,7 +232,9 @@ export const viTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Hạn ngạch miễn phí Gemini API cho trò chuyện của bạn đã hết.",
   "error.quotaSetupBilling": "Thiết lập thanh toán",
   "error.quotaStartLive": "Bắt đầu Trực tiếp thay thế",
-
+  "error.imageGenCostWarning": "Phí tạo hình ảnh là ~0,05\u20ac mỗi ảnh (tin nhắn rẻ hơn, do Google tính phí). Bạn có thể bỏ qua thông báo này nếu chấp nhận mức phí.",
+  "error.imageGenDisable": "Tắt tính năng tạo hình ảnh",
+  "error.imageGenViewCost": "Xem chi phí tạo hình ảnh",
   // Errors - camera
   "error.cameraPermissionDenied": "Quyền camera bị từ chối. Vui lòng bật quyền truy cập camera trong cài đặt trình duyệt.",
   "error.cameraNotFound": "Không tìm thấy camera đã chọn. Đảm bảo nó được kết nối hoặc chọn camera khác trong cài đặt.",

@@ -232,7 +232,9 @@ export const koTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Gemini API의 무료 채팅 할당량이 소진되었습니다.",
   "error.quotaSetupBilling": "결제 설정",
   "error.quotaStartLive": "대신 라이브 시작",
-
+  "error.imageGenCostWarning": "이미지 생성 비용은 이미지당 약 0.05\u20ac입니다(메시지 비용은 더 저렴하며, Google에서 청구). 비용에 동의하시면 이 메시지를 무시하셔도 됩니다.",
+  "error.imageGenDisable": "이미지 생성 비활성화",
+  "error.imageGenViewCost": "이미지 생성 비용 보기",
   // Errors - camera
   "error.cameraPermissionDenied": "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 액세스를 활성화하세요.",
   "error.cameraNotFound": "선택한 카메라를 찾을 수 없습니다. 연결되어 있는지 확인하거나 다른 카메라를 선택하세요.",

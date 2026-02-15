@@ -232,7 +232,9 @@ export const mlTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "ചാറ്റിനായുള്ള നിങ്ങളുടെ Gemini API സൗജന്യ ക്വോട്ട തീർന്നു.",
   "error.quotaSetupBilling": "ബില്ലിംഗ് സജ്ജീകരിക്കുക",
   "error.quotaStartLive": "പകരം ലൈവ് ആരംഭിക്കുക",
-
+  "error.imageGenCostWarning": "ഇമേജ് നിർമ്മാണത്തിന് ഒരു ചിത്രത്തിന് ~0.05€ ചെലവാകും (സന്ദേശങ്ങൾക്ക് ചിലവ് കുറവാണ്, Google ആണ് ബിൽ ചെയ്യുന്നത്). ചെലവ് നിങ്ങൾക്ക് സമ്മതമാണെങ്കിൽ ഇത് അവഗണിക്കാം.",
+  "error.imageGenDisable": "ഇമേജ് നിർമ്മാണം പ്രവർത്തനരഹിതമാക്കുക",
+  "error.imageGenViewCost": "ഇമേജ് നിർമ്മാണ ചെലവുകൾ കാണുക",
   // Errors - camera
   "error.cameraPermissionDenied": "ക്യാമറ അനുമതി നിരസിച്ചു. ബ്രൗസർ ക്രമീകരണങ്ങളിൽ ക്യാമറ ആക്സസ് പ്രവർത്തനക്ഷമമാക്കുക.",
   "error.cameraNotFound": "തിരഞ്ഞെടുത്ത ക്യാമറ കണ്ടെത്തിയില്ല. അത് കണക്റ്റുചെയ്തിട്ടുണ്ടെന്ന് ഉറപ്പാക്കുക അല്ലെങ്കിൽ മറ്റൊരു ക്യാമറ തിരഞ്ഞെടുക്കുക.",

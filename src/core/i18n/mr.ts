@@ -232,7 +232,9 @@ export const mrTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "तुमचा चॅटसाठीचा Gemini API मोफत कोटा संपला आहे.",
   "error.quotaSetupBilling": "बिलिंग सेट करा",
   "error.quotaStartLive": "त्याऐवजी लाइव्ह सुरू करा",
-
+  "error.imageGenCostWarning": "इमेज जनरेशनचा खर्च प्रति इमेज ~0.05€ आहे (मेसेजचा खर्च कमी आहे, Google द्वारे बिल केले जाते). जर तुम्हाला हा खर्च मान्य असेल तर तुम्ही याकडे दुर्लक्ष करू शकता.",
+  "error.imageGenDisable": "इमेज जनरेशन अक्षम करा",
+  "error.imageGenViewCost": "इमेज जनरेशन खर्च पहा",
   // Errors - camera
   "error.cameraPermissionDenied": "कॅमेरा परवानगी नाकारली. ब्राउझर सेटिंग्जमध्ये कॅमेरा प्रवेश सक्षम करा.",
   "error.cameraNotFound": "निवडलेला कॅमेरा आढळला नाही. तो जोडलेला असल्याचे सुनिश्चित करा किंवा दुसरा कॅमेरा निवडा.",

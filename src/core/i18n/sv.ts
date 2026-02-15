@@ -232,7 +232,9 @@ export const svTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Din Gemini API-gratiskvot för chatt är förbrukad.",
   "error.quotaSetupBilling": "Konfigurera fakturering",
   "error.quotaStartLive": "Starta Live istället",
-
+  "error.imageGenCostWarning": "Bildgenerering kostar ~0,05 \u20ac per bild (meddelanden kostar mindre, faktureras av Google). Du kan ignorera detta om du godkänner kostnaden.",
+  "error.imageGenDisable": "Inaktivera bildgenerering",
+  "error.imageGenViewCost": "Visa kostnader för bildgenerering",
   // Errors - camera
   "error.cameraPermissionDenied": "Kamerabehörighet nekad. Aktivera kameraåtkomst i webbläsarens inställningar.",
   "error.cameraNotFound": "Vald kamera hittades inte. Se till att den är ansluten eller välj en annan kamera.",

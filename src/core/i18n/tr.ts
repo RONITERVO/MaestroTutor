@@ -232,7 +232,9 @@ export const trTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Sohbet için ücretsiz Gemini API kotanız doldu.",
   "error.quotaSetupBilling": "Faturalandırmayı ayarlayın",
   "error.quotaStartLive": "Bunun yerine Canlı başlatın",
-
+  "error.imageGenCostWarning": "Resim oluşturma maliyeti resim başına ~0,05\u20ac'dur (mesajlar daha ucuzdur, Google tarafından faturalandırılır). Maliyeti kabul ediyorsanız bunu görmezden gelebilirsiniz.",
+  "error.imageGenDisable": "Resim Oluşturmayı Devre Dışı Bırak",
+  "error.imageGenViewCost": "Resim Oluşturma Maliyetlerini Görüntüle",
   // Errors - camera
   "error.cameraPermissionDenied": "Kamera izni reddedildi. Lütfen tarayıcı ayarlarından kamera erişimine izin verin.",
   "error.cameraNotFound": "Seçilen kamera bulunamadı. Bağlı olduğundan emin olun veya ayarlardan farklı bir kamera seçin.",

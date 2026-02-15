@@ -232,7 +232,9 @@ export const ruTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Ваша бесплатная квота Gemini API для чата исчерпана.",
   "error.quotaSetupBilling": "Настроить биллинг",
   "error.quotaStartLive": "Начать Live вместо этого",
-
+  "error.imageGenCostWarning": "Создание изображения стоит ~0.05\u20ac за штуку (сообщения дешевле, счет выставляется Google). Вы можете проигнорировать это, если вас устраивает стоимость.",
+  "error.imageGenDisable": "Отключить создание изображений",
+  "error.imageGenViewCost": "Посмотреть стоимость создания изображений",
   // Errors - camera
   "error.cameraPermissionDenied": "Разрешение на использование камеры отклонено. Пожалуйста, включите доступ к камере в настройках вашего браузера.",
   "error.cameraNotFound": "Выбранная камера не найдена. Пожалуйста, убедитесь, что она подключена, или выберите другую камеру в настройках.",
