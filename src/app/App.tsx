@@ -532,17 +532,30 @@ const App: React.FC = () => {
         handleSettingsChange('selectedCameraId', firstPhysicalCamera.deviceId);
       }
     }
-    // Ensure snapshot sending is enabled so the camera feed is active
+    // Enable snapshot sending so the camera feed + preview are activated
+    // by useCameraManager's effect (creates the stream via getUserMedia).
     if (!settingsRef.current.sendWithSnapshotEnabled) {
       handleSettingsChange('sendWithSnapshotEnabled', true);
     }
-    // Start the live session
+    // Wait for useCameraManager's effect to create the camera stream before
+    // starting the live session. Without this, handleStartLiveSession would
+    // also call getUserMedia concurrently, causing race conditions that can
+    // invalidate the stream ("No active stream provided") on some platforms.
+    const maxWaitMs = 5000;
+    const pollMs = 50;
+    const startTime = Date.now();
+    while (Date.now() - startTime < maxWaitMs) {
+      if (visualContextStreamRef.current && visualContextStreamRef.current.active) break;
+      await new Promise(resolve => setTimeout(resolve, pollMs));
+    }
+    // Start the live session. handleStartLiveSession will reuse the stream
+    // from visualContextStreamRef instead of creating a competing one.
     try {
       await handleStartLiveSession();
     } catch {
       // handleStartLiveSession already handles its own errors
     }
-  }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSession]);
+  }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSession, visualContextStreamRef]);
 
   const handleImageGenDisable = useCallback(() => {
     handleSettingsChange('imageGenerationModeEnabled', false);
