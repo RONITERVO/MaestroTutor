@@ -5,7 +5,6 @@ import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { ALL_LANGUAGES } from '../../../core/config/languages';
 import { IconXMark, IconUndo, IconCheck, IconSend, IconPlus, IconChevronLeft, IconChevronRight } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
-import { LanguageSelectorGlobe } from '../../session';
 import { useMaestroStore } from '../../../store';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { useLanguageSelection } from '../../session';
@@ -70,7 +69,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   const setIsLanguageSelectionOpen = useMaestroStore(state => state.setIsLanguageSelectionOpen);
   const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
   const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
-  const updateLanguageSelectorInteraction = useMaestroStore(state => state.updateLanguageSelectorInteraction);
   const updateSetting = useMaestroStore(state => state.updateSetting);
   const setAttachedImage = useMaestroStore(state => state.setAttachedImage);
   const microphoneApiAvailable = useMaestroStore(state => state.microphoneApiAvailable);
@@ -118,7 +116,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     updateSetting('selectedCameraId', deviceId);
   }, [updateSetting]);
 
-  const { handleShowLanguageSelector, handleTempNativeSelect, handleTempTargetSelect, handleConfirmLanguageSelection } = useLanguageSelection({
+  const { handleShowLanguageSelector } = useLanguageSelection({
     isSettingsLoaded,
     settings,
     settingsRef,
@@ -607,6 +605,10 @@ const InputArea: React.FC<InputAreaProps> = ({
     fileInputRef.current?.click();
   };
 
+  const outerContainerClass = isSuggestionMode
+    ? 'bg-secondary text-foreground'
+    : 'bg-accent text-accent-foreground';
+
   return (
     <>
       <style>{`
@@ -619,7 +621,14 @@ const InputArea: React.FC<InputAreaProps> = ({
         }
       `}</style>
         <>
-          {/* attachments moved below input */}
+          {/* Core input controls - wrapped in the accent container */}
+          <div
+            className={`transition-colors duration-300 rounded-sketchy p-3 shadow-lg w-full max-w-2xl sketchy-border ${outerContainerClass} relative`}
+            style={{
+              // @ts-ignore
+              containerType: 'inline-size'
+            }}
+          >
 
           <div className={`relative w-full flex flex-col overflow-hidden transition-colors ${containerClass}`}>
             {languageSelectionOpen ? (
@@ -698,8 +707,14 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           </div>
 
+          {sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
+          {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
+          {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-primary bg-primary/10' : 'text-yellow-200 bg-yellow-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
+          </div>{/* end outer accent container */}
+
+          {/* Media attachments and annotation - outside accent container, free-floating */}
           {!languageSelectionOpen && (
-            <div className="animate-fade-in-up mt-2">
+            <div className="animate-fade-in-up mt-3 w-full max-w-2xl">
               <MediaAttachments
                 t={t}
                 isSuggestionMode={isSuggestionMode}
@@ -724,7 +739,7 @@ const InputArea: React.FC<InputAreaProps> = ({
           )}
 
           {isComposerAnnotating && (
-            <div className="mt-2 w-full animate-fade-in-up">
+            <div className="mt-3 w-full max-w-2xl animate-fade-in-up">
               <div
                 ref={composerViewportRef}
                 className="relative w-full max-h-[75vh] bg-black rounded-md overflow-hidden transition-all duration-300"
@@ -856,23 +871,8 @@ const InputArea: React.FC<InputAreaProps> = ({
               </div>
             </div>
           )}
-          {languageSelectionOpen && (
-            <div className="mt-2 animate-fade-in-up">
-              <LanguageSelectorGlobe
-                nativeLangCode={tempNativeLangCode || null}
-                targetLangCode={tempTargetLangCode || null}
-                onSelectNative={handleTempNativeSelect}
-                onSelectTarget={handleTempTargetSelect}
-                onConfirm={handleConfirmLanguageSelection}
-                t={t}
-                onInteract={updateLanguageSelectorInteraction}
-              />
-            </div>
-          )}
 
-          {sttError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
-          {autoCaptureError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
-          {snapshotUserError && <p className={`p-1 rounded mt-1 ${isSuggestionMode ? 'text-primary bg-primary/10' : 'text-yellow-200 bg-yellow-900/50'}`} style={{ fontSize: '2.8cqw' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
+
         </>
     </>
   );

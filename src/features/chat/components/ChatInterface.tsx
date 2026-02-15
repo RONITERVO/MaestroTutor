@@ -9,6 +9,7 @@ import BookmarkActions from './BookmarkActions';
 import ChatMessageBubble from './ChatMessageBubble';
 import SuggestionsList from './SuggestionsList';
 import InputArea from './InputArea';
+import { LanguageSelectorGlobe } from '../../session';
 import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT } from '../../../store';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { selectMessages, selectReplySuggestions, selectLatestGroundingChunks } from '../../../store/slices/chatSlice';
@@ -89,6 +90,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const transitioningImageId = useMaestroStore(state => state.transitioningImageId);
   const speakingUtteranceText = useMaestroStore(selectSpeakingUtteranceText);
   const imageLoadDurations = useMaestroStore(state => state.imageLoadDurations);
+
+  // Language selector globe state (rendered outside the input container)
+  const isLanguageSelectionOpen = useMaestroStore(state => state.isLanguageSelectionOpen);
+  const tempNativeLangCode = useMaestroStore(state => state.tempNativeLangCode);
+  const tempTargetLangCode = useMaestroStore(state => state.tempTargetLangCode);
+  const setTempNativeLangCode = useMaestroStore(state => state.setTempNativeLangCode);
+  const setTempTargetLangCode = useMaestroStore(state => state.setTempTargetLangCode);
+  const updateLanguageSelectorInteraction = useMaestroStore(state => state.updateLanguageSelectorInteraction);
+
+  const handleGlobeNativeSelect = useCallback((code: string | null) => {
+    setTempNativeLangCode(code);
+    if (code && code === tempTargetLangCode) setTempTargetLangCode(null);
+  }, [setTempNativeLangCode, tempTargetLangCode, setTempTargetLangCode]);
+
+  const handleGlobeTargetSelect = useCallback((code: string | null) => {
+    setTempTargetLangCode(code);
+  }, [setTempTargetLangCode]);
 
   const isSuggestionMode = settings.isSuggestionMode;
   const speakNativeLang = settings.tts.speakNative;
@@ -796,13 +814,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
         {/* Note: Input area is always rendered now, but modes switch inside */}
         <div className="flex flex-col items-end mt-2">
-            <div
-                className={`transition-colors duration-300 rounded-sketchy p-3 shadow-lg w-full max-w-2xl sketchy-border ${isSuggestionMode ? 'bg-secondary text-foreground' : 'bg-accent text-accent-foreground'} relative`}
-                style={{
-                // @ts-ignore
-                containerType: 'inline-size'
-                }}
-            >
                 <InputArea
                     onSttToggle={onSttToggle}
                     onSendMessage={onSendMessage}
@@ -815,7 +826,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
                     onToggleImageGenerationMode={onToggleImageGenerationMode}
                 />
-            </div>
+            {isLanguageSelectionOpen && (
+                <div className="mt-3 w-full max-w-2xl animate-fade-in-up">
+                    <LanguageSelectorGlobe
+                        nativeLangCode={tempNativeLangCode || null}
+                        targetLangCode={tempTargetLangCode || null}
+                        onSelectNative={handleGlobeNativeSelect}
+                        onSelectTarget={handleGlobeTargetSelect}
+                        onConfirm={() => {}}
+                        onCancel={() => setTempTargetLangCode(null)}
+                        t={t}
+                        onInteract={updateLanguageSelectorInteraction}
+                    />
+                </div>
+            )}
             {(isLoadingSuggestions || replySuggestions.length > 0) && (
                 <SuggestionsList
                     t={t}
