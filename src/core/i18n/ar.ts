@@ -67,7 +67,7 @@ export const arTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "ربط مفتاح واجهة برمجة تطبيقات Gemini",
   "apiKeyGate.billingTitle": "إعداد الفوترة لزيادة الحصة",
-  "apiKeyGate.subtitle": "يعمل هذا التطبيق بالكامل على جهازك. مفتاحك لا يلمس خوادمنا أبدًا.",
+  "apiKeyGate.subtitle": "يعمل هذا التطبيق بالكامل على جهازك. مفتاحك والفوترة يتمان مباشرة عبر Google. لا توجد رسوم من Google بدون إذنك.",
   "apiKeyGate.privacyPolicy": "سياسة الخصوصية",
   "apiKeyGate.stepsTitle": "خطوتان سريعتان:",
   "apiKeyGate.stepOne": "افتح Google AI Studio وأنشئ مفتاح API.",
@@ -89,8 +89,7 @@ export const arTranslations: Record<string, string> = {
   "apiKeyGate.saving": "جارٍ الحفظ...",
   "apiKeyGate.saveKey": "حفظ المفتاح",
   "apiKeyGate.close": "إغلاق",
-  "apiKeyGate.imageGenCostLabel": "تكلفة إنشاء الصور",
-
+  "apiKeyGate.costLabel": "تكلفة API المقدرة",
   // Chat - general
   "chat.thinking": "جارٍ التفكير...",
   "chat.loadingHistory": "جارٍ تحميل سجل المحادثة...",
@@ -236,8 +235,7 @@ export const arTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "تم استنفاد حصة Gemini API المجانية للدردشة.",
   "error.quotaSetupBilling": "إعداد الفوترة",
   "error.quotaStartLive": "ابدأ المحادثة المباشرة بدلاً من ذلك",
-  "error.imageGenCostWarning": "تكلفة إنشاء الصورة حوالي 0.05 يورو لكل صورة (الرسائل تكلف أقل، يتم الدفع عبر Google). يمكنك تجاهل هذا إذا كنت موافقًا على التكلفة.",
-  "error.imageGenDisable": "تعطيل إنشاء الصور",
+  "error.imageGenCostWarning": "تكلفة إنشاء الصور حوالي 0.04 دولار لكل صورة. رسائل الدردشة لها تكلفة رمزية صغيرة أيضًا. تتم الفوترة بالكامل بواسطة Google. يمكنك تتبع التكاليف في شاشة مفتاح API.",  "error.imageGenDisable": "تعطيل إنشاء الصور",
   "error.imageGenViewCost": "عرض تكاليف إنشاء الصور",
   // Errors - camera
   "error.cameraPermissionDenied": "تم رفض إذن الكاميرا. يرجى تمكين الوصول إلى الكاميرا في إعدادات المتصفح.",

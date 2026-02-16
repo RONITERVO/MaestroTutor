@@ -67,7 +67,7 @@ export const deTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Verbinden Sie Ihren Gemini-API-Schlüssel",
   "apiKeyGate.billingTitle": "Abrechnung für höheres Kontingent einrichten",
-  "apiKeyGate.subtitle": "Diese App läuft vollständig auf Ihrem Gerät. Ihr Schlüssel berührt niemals unsere Server.",
+  "apiKeyGate.subtitle": "Diese App läuft vollständig auf Ihrem Gerät. Ihr Schlüssel und die Abrechnung erfolgen direkt über Google. Keine Abrechnung durch Google ohne Ihre Erlaubnis.",
   "apiKeyGate.privacyPolicy": "Datenschutzerklärung",
   "apiKeyGate.stepsTitle": "Zwei schnelle Schritte:",
   "apiKeyGate.stepOne": "Öffnen Sie Google AI Studio und erstellen Sie einen API-Schlüssel.",
@@ -89,8 +89,7 @@ export const deTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Speichern...",
   "apiKeyGate.saveKey": "Schlüssel speichern",
   "apiKeyGate.close": "Schließen",
-  "apiKeyGate.imageGenCostLabel": "Bildgenerierungskosten",
-
+  "apiKeyGate.costLabel": "Geschätzte API-Kosten",
   // Chat - general
   "chat.thinking": "Denke nach...",
   "chat.loadingHistory": "Lade Chatverlauf...",
@@ -236,8 +235,7 @@ export const deTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Ihr kostenloses Gemini-API-Kontingent für den Chat ist erschöpft.",
   "error.quotaSetupBilling": "Abrechnung einrichten",
   "error.quotaStartLive": "Stattdessen Live starten",
-  "error.imageGenCostWarning": "Die Bildgenerierung kostet ~0,05 \u20ac pro Bild (Nachrichten kosten weniger, Abrechnung durch Google). Sie können dies ignorieren, wenn Sie mit den Kosten einverstanden sind.",
-  "error.imageGenDisable": "Bildgenerierung deaktivieren",
+  "error.imageGenCostWarning": "Die Bildgenerierung kostet ca. 0,04 $ pro Bild. Für Chatnachrichten fallen ebenfalls geringe Tokenkosten an. Die Abrechnung erfolgt über Google. Sie können die Kosten im API-Schlüssel-Bildschirm verfolgen.",  "error.imageGenDisable": "Bildgenerierung deaktivieren",
   "error.imageGenViewCost": "Kosten der Bildgenerierung ansehen",
   // Errors - camera
   "error.cameraPermissionDenied": "Kameraberechtigung verweigert. Bitte aktivieren Sie den Kamerazugriff in Ihren Browsereinstellungen.",

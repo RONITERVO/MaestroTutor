@@ -123,8 +123,8 @@ export const translateText = async (text: string, from: string, to: string) => {
       }),
       DEFAULT_TIMEOUT_MS
     );
-    log.complete({ text: result.text });
-    return { translatedText: result.text || '' };
+    log.complete({ text: result.text, usage: result.usageMetadata });
+    return { translatedText: result.text || '', usageMetadata: result.usageMetadata };
   } catch (e: any) {
     log.error(e);
     throw new ApiError(e.message || 'Translation failed', { status: e.status || 500, code: e.code });

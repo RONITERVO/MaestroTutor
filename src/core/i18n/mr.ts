@@ -69,7 +69,7 @@ export const mrTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "तुमची Gemini API की जोडा",
   "apiKeyGate.billingTitle": "उच्च कोट्यासाठी बिलिंग सेट करा",
-  "apiKeyGate.subtitle": "हे ॲप पूर्णपणे तुमच्या डिव्हाइसवर चालते. तुमची की आमच्या सर्व्हरला कधीही स्पर्श करत नाही.",
+  "apiKeyGate.subtitle": "हे ॲप पूर्णपणे तुमच्या डिव्हाइसवर चालते. तुमची की आणि बिलिंग थेट Google द्वारे होते. तुमच्या परवानगीशिवाय Google कडून कोणतेही बिल आकारले जाणार नाही.",
   "apiKeyGate.privacyPolicy": "गोपनीयता धोरण",
   "apiKeyGate.stepsTitle": "दोन जलद पावले:",
   "apiKeyGate.stepOne": "Google AI Studio उघडा आणि API की तयार करा.",
@@ -91,8 +91,7 @@ export const mrTranslations: Record<string, string> = {
   "apiKeyGate.saving": "जतन करत आहे...",
   "apiKeyGate.saveKey": "की जतन करा",
   "apiKeyGate.close": "बंद करा",
-  "apiKeyGate.imageGenCostLabel": "इमेज जनरेशन खर्च",
-
+  "apiKeyGate.costLabel": "अंदाजित API खर्च",
   // Chat - general
   "chat.thinking": "विचार करत आहे...",
   "chat.loadingHistory": "गप्पा इतिहास लोड करत आहे...",
@@ -238,8 +237,7 @@ export const mrTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "तुमचा चॅटसाठीचा Gemini API मोफत कोटा संपला आहे.",
   "error.quotaSetupBilling": "बिलिंग सेट करा",
   "error.quotaStartLive": "त्याऐवजी लाइव्ह सुरू करा",
-  "error.imageGenCostWarning": "इमेज जनरेशनचा खर्च प्रति इमेज ~0.05€ आहे (मेसेजचा खर्च कमी आहे, Google द्वारे बिल केले जाते). जर तुम्हाला हा खर्च मान्य असेल तर तुम्ही याकडे दुर्लक्ष करू शकता.",
-  "error.imageGenDisable": "इमेज जनरेशन अक्षम करा",
+  "error.imageGenCostWarning": "इमेज जनरेशनचा खर्च प्रति इमेज ~$0.04 आहे. चॅट मेसेजसाठीही थोडा टोकन खर्च लागतो. सर्व बिल Google द्वारे केले जाते. तुम्ही API की स्क्रीनमध्ये खर्चाचा मागोवा घेऊ शकता.",  "error.imageGenDisable": "इमेज जनरेशन अक्षम करा",
   "error.imageGenViewCost": "इमेज जनरेशन खर्च पहा",
   // Errors - camera
   "error.cameraPermissionDenied": "कॅमेरा परवानगी नाकारली. ब्राउझर सेटिंग्जमध्ये कॅमेरा प्रवेश सक्षम करा.",

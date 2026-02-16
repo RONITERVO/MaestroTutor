@@ -69,7 +69,7 @@ export const frTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Connectez votre clé API Gemini",
   "apiKeyGate.billingTitle": "Configurer la facturation pour un quota plus élevé",
-  "apiKeyGate.subtitle": "Cette application fonctionne entièrement sur votre appareil. Votre clé ne touche jamais nos serveurs.",
+  "apiKeyGate.subtitle": "Cette application fonctionne entièrement sur votre appareil. Votre clé et la facturation passent directement par Google. Aucune facturation de Google sans votre permission.",
   "apiKeyGate.privacyPolicy": "Politique de confidentialité",
   "apiKeyGate.stepsTitle": "Deux étapes rapides :",
   "apiKeyGate.stepOne": "Ouvrez Google AI Studio et créez une clé API.",
@@ -91,8 +91,7 @@ export const frTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Enregistrement...",
   "apiKeyGate.saveKey": "Enregistrer la clé",
   "apiKeyGate.close": "Fermer",
-  "apiKeyGate.imageGenCostLabel": "Coût de génération d'images",
-
+  "apiKeyGate.costLabel": "Coût estimé de l'API",
   // Chat - general
   "chat.thinking": "Réflexion en cours...",
   "chat.loadingHistory": "Chargement de l'historique...",
@@ -238,8 +237,7 @@ export const frTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Votre quota gratuit Gemini API pour le chat est épuisé.",
   "error.quotaSetupBilling": "Configurer la facturation",
   "error.quotaStartLive": "Démarrer Live à la place",
-  "error.imageGenCostWarning": "La génération d'images coûte ~0,05 \u20ac par image (les messages coûtent moins cher, facturés par Google). Vous pouvez ignorer ceci si vous acceptez le coût.",
-  "error.imageGenDisable": "Désactiver la génération d'images",
+  "error.imageGenCostWarning": "La génération d'images coûte environ 0,04 $ par image. Les messages de chat ont également un petit coût en jetons. Tout est facturé par Google. Vous pouvez suivre les coûts sur l'écran de la clé API.",  "error.imageGenDisable": "Désactiver la génération d'images",
   "error.imageGenViewCost": "Voir les coûts de génération d'images",
   // Errors - camera
   "error.cameraPermissionDenied": "Permission caméra refusée. Veuillez activer l'accès caméra dans les paramètres de votre navigateur.",

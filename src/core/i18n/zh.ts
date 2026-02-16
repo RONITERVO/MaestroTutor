@@ -69,7 +69,7 @@ export const zhTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "连接您的 Gemini API 密钥",
   "apiKeyGate.billingTitle": "设置计费以获得更高配额",
-  "apiKeyGate.subtitle": "此应用完全在您的设备上运行。您的密钥永远不会接触我们的服务器。",
+  "apiKeyGate.subtitle": "此应用完全在您的设备上运行。您的密钥和账单直接通过 Google 处理。未经您的允许，Google 不会扣费。",
   "apiKeyGate.privacyPolicy": "隐私政策",
   "apiKeyGate.stepsTitle": "两个快速步骤：",
   "apiKeyGate.stepOne": "打开 Google AI Studio 并创建一个 API 密钥。",
@@ -91,8 +91,7 @@ export const zhTranslations: Record<string, string> = {
   "apiKeyGate.saving": "正在保存...",
   "apiKeyGate.saveKey": "保存密钥",
   "apiKeyGate.close": "关闭",
-  "apiKeyGate.imageGenCostLabel": "图像生成费用",
-
+  "apiKeyGate.costLabel": "预估 API 成本",
   // Chat - general
   "chat.thinking": "思考中...",
   "chat.loadingHistory": "加载聊天记录中...",
@@ -238,8 +237,7 @@ export const zhTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "您的 Gemini API 免费聊天配额已用尽。",
   "error.quotaSetupBilling": "设置计费",
   "error.quotaStartLive": "改用实时对话",
-  "error.imageGenCostWarning": "生成图像的费用约为每张 0.05 欧元（消息费用较低，由 Google 计费）。如果您接受此费用，可以忽略此提示。",
-  "error.imageGenDisable": "禁用图像生成",
+  "error.imageGenCostWarning": "生成图片的费用约为每张 $0.04。聊天消息也有少量的 token 费用。所有费用由 Google 结算。您可以在 API 密钥屏幕中跟踪费用。",  "error.imageGenDisable": "禁用图像生成",
   "error.imageGenViewCost": "查看图像生成费用",
   // Errors - camera
   "error.cameraPermissionDenied": "相机权限被拒绝。请在浏览器设置中启用相机访问。",

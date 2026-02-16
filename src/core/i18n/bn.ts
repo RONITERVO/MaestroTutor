@@ -69,7 +69,7 @@ export const bnTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "আপনার Gemini API কী সংযোগ করুন",
   "apiKeyGate.billingTitle": "উচ্চতর কোটার জন্য বিলিং সেট আপ করুন",
-  "apiKeyGate.subtitle": "এই অ্যাপ্লিকেশনটি পুরোপুরি আপনার ডিভাইসে চলে। আপনার কী কখনও আমাদের সার্ভার স্পর্শ করে না।",
+  "apiKeyGate.subtitle": "এই অ্যাপটি সম্পূর্ণ আপনার ডিভাইসে চলে। আপনার কী এবং বিলিং সরাসরি Google-এর মাধ্যমে হয়। আপনার অনুমতি ছাড়া Google থেকে কোনও চার্জ করা হবে না।",
   "apiKeyGate.privacyPolicy": "গোপনীয়তা নীতি",
   "apiKeyGate.stepsTitle": "দুটি দ্রুত ধাপ:",
   "apiKeyGate.stepOne": "Google AI Studio খুলুন এবং একটি API কী তৈরি করুন।",
@@ -91,8 +91,7 @@ export const bnTranslations: Record<string, string> = {
   "apiKeyGate.saving": "সংরক্ষণ করা হচ্ছে...",
   "apiKeyGate.saveKey": "কী সংরক্ষণ করুন",
   "apiKeyGate.close": "বন্ধ করুন",
-  "apiKeyGate.imageGenCostLabel": "ছবি তৈরির খরচ",
-
+  "apiKeyGate.costLabel": "আনুমানিক API খরচ",
   // Chat - general
   "chat.thinking": "ভাবছি...",
   "chat.loadingHistory": "চ্যাট ইতিহাস লোড হচ্ছে...",
@@ -238,8 +237,7 @@ export const bnTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "চ্যাটের জন্য আপনার Gemini API-এর ফ্রি কোটা শেষ হয়ে গেছে।",
   "error.quotaSetupBilling": "বিলিং সেট আপ করুন",
   "error.quotaStartLive": "পরিবর্তে লাইভ শুরু করুন",
-  "error.imageGenCostWarning": "ছবি তৈরির খরচ প্রতি ছবিতে ~০.০৫€ (মেসেজের খরচ কম, Google দ্বারা বিল করা হয়)। আপনি যদি খরচের বিষয়ে সম্মত হন তবে এটি উপেক্ষা করতে পারেন।",
-  "error.imageGenDisable": "ছবি তৈরি করা অক্ষম করুন",
+  "error.imageGenCostWarning": "ছবি তৈরির খরচ প্রতি ছবিতে ~$0.04। চ্যাট মেসেজের জন্যও সামান্য টোকেন খরচ আছে। সব খরচ Google দ্বারা বিল করা হয়। আপনি API কী স্ক্রিনে খরচ ট্র্যাক করতে পারেন।",  "error.imageGenDisable": "ছবি তৈরি করা অক্ষম করুন",
   "error.imageGenViewCost": "ছবি তৈরির খরচ দেখুন",
   // Errors - camera
   "error.cameraPermissionDenied": "ক্যামেরা অনুমতি প্রত্যাখ্যাত। ব্রাউজার সেটিংসে ক্যামেরা অ্যাক্সেস সক্রিয় করুন।",

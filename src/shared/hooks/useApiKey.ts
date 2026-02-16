@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useState } from 'react';
 import { clearApiKey, isLikelyApiKey, loadApiKey, normalizeApiKey, setApiKey } from '../../core/security/apiKeyStorage';
+import { resetCostTracking } from '../utils/costTracker';
 
 const dispatchApiKeyChanged = (hasKey: boolean) => {
   try {
@@ -61,6 +62,7 @@ export const useApiKey = () => {
 
   const clear = useCallback(async () => {
     await clearApiKey();
+    resetCostTracking();
     setApiKeyState(null);
     setError(null);
     dispatchApiKeyChanged(false);

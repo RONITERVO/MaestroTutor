@@ -69,7 +69,7 @@ export const teTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "మీ Gemini API కీని కనెక్ట్ చేయండి",
   "apiKeyGate.billingTitle": "అధిక కోటా కోసం బిల్లింగ్‌ను సెటప్ చేయండి",
-  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో నడుస్తుంది. మీ కీ మా సర్వర్‌లను ఎప్పువు తాకదు.",
+  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో పని చేస్తుంది. మీ కీ మరియు బిల్లింగ్ నేరుగా Google ద్వారా జరుగుతాయి. మీ అనుమతి లేకుండా Google నుండి ఎటువంటి ఛార్జీలు ఉండవు.",
   "apiKeyGate.privacyPolicy": "గోప్యతా విధానం",
   "apiKeyGate.stepsTitle": "రెండు శీఘ్ర దశలు:",
   "apiKeyGate.stepOne": "Google AI Studioని తెరిచి API కీని సృష్టించండి.",
@@ -91,8 +91,7 @@ export const teTranslations: Record<string, string> = {
   "apiKeyGate.saving": "సేవ్ అవుతోంది...",
   "apiKeyGate.saveKey": "కీని సేవ్ చేయండి",
   "apiKeyGate.close": "ముగించు",
-  "apiKeyGate.imageGenCostLabel": "ఇమేజ్ జెనరేషన్ ఖర్చు",
-
+  "apiKeyGate.costLabel": "అంచనా API ఖర్చు",
   // Chat - general
   "chat.thinking": "ఆలోచిస్తోంది...",
   "chat.loadingHistory": "చాట్ చరిత్రను లోడ్ చేస్తోంది...",
@@ -238,8 +237,7 @@ export const teTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "చాట్ కోసం మీ Gemini API ఉచిత కోటా ముగిసింది.",
   "error.quotaSetupBilling": "బిల్లింగ్ సెటప్ చేయండి",
   "error.quotaStartLive": "బదులుగా లైవ్ ప్రారంభించండి",
-  "error.imageGenCostWarning": "ఇమేజ్ జనరేషన్ ఖర్చు ఇమేజ్‌కు ~0.05€ ఉంటుంది (మెసేజ్‌ల ఖర్చు తక్కువ, Google ద్వారా బిల్ చేయబడుతుంది). మీరు ఖర్చుతో సమ్మతిస్తే దీనిని విస్మరించవచ్చు.",
-  "error.imageGenDisable": "ఇమేజ్ జనరేషన్‌ను ఆపివేయి",
+  "error.imageGenCostWarning": "ఇమేజ్ జనరేషన్ ఖర్చు ప్రతి ఇమేజ్‌కి ~$0.04. చాట్ మెసేజ్‌లకు కూడా చిన్న టోకెన్ ఖర్చు ఉంటుంది. అన్నీ Google ద్వారా బిల్ చేయబడతాయి. మీరు API కీ స్క్రీన్లో ఖర్చులను ట్రాక్ చేయవచ్చు.",  "error.imageGenDisable": "ఇమేజ్ జనరేషన్‌ను ఆపివేయి",
   "error.imageGenViewCost": "ఇమేజ్ జనరేషన్ ఖర్చులను చూడండి",
   // Errors - camera
   "error.cameraPermissionDenied": "కెమెరా అనుమతి నిరాకరించబడింది. బ్రౌజర్ సెట్టింగ్‌లలో కెమెరా యాక్సెస్‌ని ఎనేబుల్ చేయండి.",

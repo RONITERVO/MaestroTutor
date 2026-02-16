@@ -69,7 +69,7 @@ export const hiTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "अपनी Gemini API कुंजी कनेक्ट करें",
   "apiKeyGate.billingTitle": "उच्च कोटा के लिए बिलिंग सेट करें",
-  "apiKeyGate.subtitle": "यह ऐप पूरी तरह से आपके डिवाइस पर चलता है। आपकी कुंजी कभी भी हमारे सर्वर को स्पर्श नहीं करती है।",
+  "apiKeyGate.subtitle": "यह ऐप पूरी तरह से आपके डिवाइस पर चलता है। आपकी कुंजी और बिलिंग सीधे Google के माध्यम से होती है। आपकी अनुमति के बिना Google से कोई शुल्क नहीं लिया जाएगा।",
   "apiKeyGate.privacyPolicy": "गोपनीयता नीति",
   "apiKeyGate.stepsTitle": "दो त्वरित कदम:",
   "apiKeyGate.stepOne": "Google AI Studio खोलें और एक API कुंजी बनाएं।",
@@ -91,8 +91,7 @@ export const hiTranslations: Record<string, string> = {
   "apiKeyGate.saving": "सहेज रहा है...",
   "apiKeyGate.saveKey": "कुंजी सहेजें",
   "apiKeyGate.close": "बंद करें",
-  "apiKeyGate.imageGenCostLabel": "इमेज जनरेशन लागत",
-
+  "apiKeyGate.costLabel": "अनुमानित API लागत",
   // Chat - general
   "chat.thinking": "सोच रहा हूँ...",
   "chat.loadingHistory": "चैट इतिहास लोड हो रहा है...",
@@ -238,8 +237,7 @@ export const hiTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "चैट के लिए आपका Gemini API फ्री कोटा समाप्त हो गया है।",
   "error.quotaSetupBilling": "बिलिंग सेट अप करें",
   "error.quotaStartLive": "इसके बजाय लाइव शुरू करें",
-  "error.imageGenCostWarning": "इमेज बनाने की लागत ~0.05€ प्रति इमेज है (संदेशों की लागत कम है, Google द्वारा बिल किया जाता है)। यदि आप लागत के साथ ठीक हैं तो आप इसे अनदेखा कर सकते हैं।",
-  "error.imageGenDisable": "इमेज बनाना अक्षम करें",
+  "error.imageGenCostWarning": "इमेज जनरेशन की लागत प्रति इमेज ~$0.04 है। चैट संदेशों की भी छोटी टोकन लागत होती है। सभी का बिल Google द्वारा भेजा जाता है। आप API कुंजी स्क्रीन में लागत देख सकते हैं।",  "error.imageGenDisable": "इमेज बनाना अक्षम करें",
   "error.imageGenViewCost": "इमेज बनाने की लागत देखें",
   // Errors - camera
   "error.cameraPermissionDenied": "कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र सेटिंग्स में कैमरा एक्सेस सक्षम करें।",

@@ -69,7 +69,7 @@ export const ruTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Подключите ваш ключ API Gemini",
   "apiKeyGate.billingTitle": "Настройте биллинг для увеличения квоты",
-  "apiKeyGate.subtitle": "Это приложение полностью работает на вашем устройстве. Ваш ключ никогда не попадает на наши серверы.",
+  "apiKeyGate.subtitle": "Это приложение работает полностью на вашем устройстве. Ваш ключ и оплата проходят напрямую через Google. Никаких списаний от Google без вашего разрешения.",
   "apiKeyGate.privacyPolicy": "Политика конфиденциальности",
   "apiKeyGate.stepsTitle": "Два быстрых шага:",
   "apiKeyGate.stepOne": "Откройте Google AI Studio и создайте ключ API.",
@@ -91,8 +91,7 @@ export const ruTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Сохранение...",
   "apiKeyGate.saveKey": "Сохранить ключ",
   "apiKeyGate.close": "Закрыть",
-  "apiKeyGate.imageGenCostLabel": "Стоимость генерации изображений",
-
+  "apiKeyGate.costLabel": "Ориентировочная стоимость API",
   // Chat - general
   "chat.thinking": "Думаю...",
   "chat.loadingHistory": "Загрузка истории чата...",
@@ -238,8 +237,7 @@ export const ruTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Ваша бесплатная квота Gemini API для чата исчерпана.",
   "error.quotaSetupBilling": "Настроить биллинг",
   "error.quotaStartLive": "Начать Live вместо этого",
-  "error.imageGenCostWarning": "Создание изображения стоит ~0.05\u20ac за штуку (сообщения дешевле, счет выставляется Google). Вы можете проигнорировать это, если вас устраивает стоимость.",
-  "error.imageGenDisable": "Отключить создание изображений",
+  "error.imageGenCostWarning": "Генерация изображений стоит ~$0.04 за изображение. Сообщения в чате также имеют небольшую стоимость токенов. Счета выставляет Google. Вы можете отслеживать расходы на экране ключа API.",  "error.imageGenDisable": "Отключить создание изображений",
   "error.imageGenViewCost": "Посмотреть стоимость создания изображений",
   // Errors - camera
   "error.cameraPermissionDenied": "Разрешение на использование камеры отклонено. Пожалуйста, включите доступ к камере в настройках вашего браузера.",

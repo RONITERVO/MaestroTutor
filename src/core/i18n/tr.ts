@@ -69,7 +69,7 @@ export const trTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Gemini API anahtarınızı bağlayın",
   "apiKeyGate.billingTitle": "Daha yüksek kota için faturalandırmayı ayarlayın",
-  "apiKeyGate.subtitle": "Bu uygulama tamamen cihazınızda çalışır. Anahtarınız sunucularımıza asla ulaşmaz.",
+  "apiKeyGate.subtitle": "Bu uygulama tamamen cihazınızda çalışır. Anahtarınız ve faturalandırma işlemleriniz doğrudan Google üzerindendir. İzniniz olmadan Google tarafından ücretlendirme yapılmaz.",
   "apiKeyGate.privacyPolicy": "Gizlilik Politikası",
   "apiKeyGate.stepsTitle": "İki hızlı adım:",
   "apiKeyGate.stepOne": "Google AI Studio'yu açın ve bir API anahtarı oluşturun.",
@@ -91,8 +91,7 @@ export const trTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Kaydediliyor...",
   "apiKeyGate.saveKey": "Anahtarı kaydet",
   "apiKeyGate.close": "Kapat",
-  "apiKeyGate.imageGenCostLabel": "Görsel oluşturma maliyeti",
-
+  "apiKeyGate.costLabel": "Tahmini API maliyeti",
   // Chat - general
   "chat.thinking": "Düşünüyor...",
   "chat.loadingHistory": "Sohbet geçmişi yükleniyor...",
@@ -238,8 +237,7 @@ export const trTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Sohbet için ücretsiz Gemini API kotanız doldu.",
   "error.quotaSetupBilling": "Faturalandırmayı ayarlayın",
   "error.quotaStartLive": "Bunun yerine Canlı başlatın",
-  "error.imageGenCostWarning": "Resim oluşturma maliyeti resim başına ~0,05\u20ac'dur (mesajlar daha ucuzdur, Google tarafından faturalandırılır). Maliyeti kabul ediyorsanız bunu görmezden gelebilirsiniz.",
-  "error.imageGenDisable": "Resim Oluşturmayı Devre Dışı Bırak",
+  "error.imageGenCostWarning": "Görsel oluşturma maliyeti görsel başına ~$0.04'dır. Sohbet mesajlarının da küçük bir jeton maliyeti vardır. Hepsi Google tarafından faturalandırılır. Maliyetleri API anahtarı ekranından takip edebilirsiniz.",  "error.imageGenDisable": "Resim Oluşturmayı Devre Dışı Bırak",
   "error.imageGenViewCost": "Resim Oluşturma Maliyetlerini Görüntüle",
   // Errors - camera
   "error.cameraPermissionDenied": "Kamera izni reddedildi. Lütfen tarayıcı ayarlarından kamera erişimine izin verin.",

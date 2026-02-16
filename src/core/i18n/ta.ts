@@ -69,7 +69,7 @@ export const taTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "உங்கள் Gemini API சாவியை இணைக்கவும்",
   "apiKeyGate.billingTitle": "அதிக ஒதுக்கீட்டிற்கு பில்லிங் அமைக்கவும்",
-  "apiKeyGate.subtitle": "இந்த ஆப்ஸ் உங்கள் சாதனத்தில் முழுமையாக இயங்குகிறது. உங்கள் சாவி ஒருபோதும் எங்கள் சேவையகங்களைத் தொடுவதில்லை.",
+  "apiKeyGate.subtitle": "இந்த செயலி முழுவதுமாக உங்கள் சாதனத்தில் இயங்குகிறது. உங்கள் திறவுகோல் மற்றும் பில்லிங் நேரடியாக Google மூலம் கையாளப்படுகிறது. உங்கள் அனுமதியின்றி Google-ிடமிருந்து எந்த கட்டணமும் வசூலிக்கப்படாது.",
   "apiKeyGate.privacyPolicy": "தனியுரிமைக் கொள்கை",
   "apiKeyGate.stepsTitle": "இரண்டு விரைவான படிகள்:",
   "apiKeyGate.stepOne": "Google AI Studio-ஐத் திறந்து API சாவியை உருவாக்கவும்.",
@@ -91,8 +91,7 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.saving": "சேமிக்கிறது...",
   "apiKeyGate.saveKey": "சாவியைச் சேமி",
   "apiKeyGate.close": "மூடு",
-  "apiKeyGate.imageGenCostLabel": "படம் உருவாக்க செலவு",
-
+  "apiKeyGate.costLabel": "மதிப்பிடப்பட்ட API செலவு",
   // Chat - general
   "chat.thinking": "யோசிக்கிறேன்...",
   "chat.loadingHistory": "அரட்டை வரலாற்றை ஏற்றுகிறது...",
@@ -238,8 +237,7 @@ export const taTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "அரட்டைக்கான உங்கள் Gemini API இலவச ஒதுக்கீடு முடிந்தது.",
   "error.quotaSetupBilling": "பில்லிங் அமைக்கவும்",
   "error.quotaStartLive": "அதற்கு பதிலாக நேரடியைத் தொடங்கவும்",
-  "error.imageGenCostWarning": "படம் உருவாக்க ஒரு படத்திற்கு ~0.05€ செலவாகும் (செய்திகள் விலை குறைவு, Google மூலம் பில் செய்யப்படும்). செலவு பரவாயில்லை என்றால் இதை நீங்கள் புறக்கணிக்கலாம்.",
-  "error.imageGenDisable": "படம் உருவாக்குவதை முடக்கு",
+  "error.imageGenCostWarning": "பட உருவாக்கத்திற்கு ஒரு படத்திற்கு ~$0.04 செலவாகும். அரட்டை செய்திகளுக்கும் சிறிய டோக்கன் செலவு உண்டு. அனைத்தும் Google-ஆல் பில் செய்யப்படும். API கீ திரையில் நீங்கள் செலவுகளைக் கண்காணிக்கலாம்.",  "error.imageGenDisable": "படம் உருவாக்குவதை முடக்கு",
   "error.imageGenViewCost": "படம் உருவாக்கும் செலவுகளைப் பார்",
   // Errors - camera
   "error.cameraPermissionDenied": "கேமரா அனுமதி மறுக்கப்பட்டது. உலாவி அமைப்புகளில் கேமரா அணுகலை இயக்கவும்.",
