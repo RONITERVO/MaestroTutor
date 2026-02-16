@@ -169,6 +169,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
+
+  const handleContainerScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    shouldAutoScrollRef.current = distanceFromBottom < 500;
+  }, []);
+
+  useEffect(() => {
+    if (shouldAutoScrollRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const [bookmarkViewMode, setBookmarkViewMode] = useState<'below' | 'above'>('below');
   const [bookmarkAboveChunkIndex, setBookmarkAboveChunkIndex] = useState(0);
@@ -555,9 +569,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
   return (
     <div className="flex flex-col h-full bg-background notebook-lines">
-      <div 
+      <div
         ref={scrollContainerRef}
         className="flex-grow overflow-y-auto p-4"
+        onScroll={handleContainerScroll}
         onPointerMove={handleSwipePointerMove}
         onPointerUp={handleSwipePointerUp}
         onPointerCancel={handleSwipePointerCancel}
