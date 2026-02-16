@@ -70,7 +70,7 @@ export const enTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Connect your Gemini API key",
   "apiKeyGate.billingTitle": "Set up billing for higher quota",
-  "apiKeyGate.subtitle": "This app runs fully on your device. Your key never touches our servers.",
+  "apiKeyGate.subtitle": "This app runs entirely on your device. Your key and billing are handled directly via Google. No billing from Google without your permission.",
   "apiKeyGate.privacyPolicy": "Privacy Policy",
   "apiKeyGate.stepsTitle": "Two quick steps:",
   "apiKeyGate.stepOne": "Open Google AI Studio and create an API key.",
@@ -92,7 +92,7 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Saving...",
   "apiKeyGate.saveKey": "Save key",
   "apiKeyGate.close": "Close",
-  "apiKeyGate.imageGenCostLabel": "Image gen cost",
+  "apiKeyGate.costLabel": "Estimated API cost",
   
   // Chat - general
   "chat.thinking": "Thinking...",
@@ -239,7 +239,7 @@ export const enTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Your Gemini API free quota for chat is exhausted.",
   "error.quotaSetupBilling": "Set up billing",
   "error.quotaStartLive": "Start Live instead",
-  "error.imageGenCostWarning": "Image generation costs ~0.05\u20ac per image (messages cost less, billed by Google). You can ignore this if you\u2019re OK with the cost.",
+  "error.imageGenCostWarning": "Image generation costs ~$0.04 per image. Chat messages also have a small token cost. All billed by Google. You can track costs in the API key screen.",
   "error.imageGenDisable": "Disable Image Generation",
   "error.imageGenViewCost": "View image Generation Cost",
   

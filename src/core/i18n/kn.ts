@@ -69,7 +69,7 @@ export const knTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "ನಿಮ್ಮ Gemini API ಕೀಯನ್ನು ಸಂಪರ್ಕಿಸಿ",
   "apiKeyGate.billingTitle": "ಹೆಚ್ಚಿನ ಮಿತಿಗಾಗಿ ಬಿಲ್ಲಿಂಗ್ ಹೊಂದಿಸಿ",
-  "apiKeyGate.subtitle": "ಈ ಅಪ್ಲಿಕೇಶನ್ ಸಂಪೂರ್ಣವಾಗಿ ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಚಲಿಸುತ್ತದೆ. ನಿಮ್ಮ ಕೀ ಎಂದಿಗೂ ನಮ್ಮ ಸರ್ವರ್‌ಗಳನ್ನು ತಲುಪುವುದಿಲ್ಲ.",
+  "apiKeyGate.subtitle": "ಈ ಅಪ್ಲಿಕೇಶನ್ ಸಂಪೂರ್ಣವಾಗಿ ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ. ನಿಮ್ಮ ಕೀ ಮತ್ತು ಬಿಲ್ಲಿಂಗ್ ನೇರವಾಗಿ Google ಮೂಲಕ ನಡೆಯುತ್ತದೆ. ನಿಮ್ಮ ಅನುಮತಿಯಿಲ್ಲದೆ Google ನಿಂದ ಯಾವುದೇ ಬಿಲ್ಲಿಂಗ್ ಇರುವುದಿಲ್ಲ.",
   "apiKeyGate.privacyPolicy": "ಗೌಪ್ಯತಾ ನೀತಿ",
   "apiKeyGate.stepsTitle": "ಎರಡು ತ್ವರಿತ ಹಂತಗಳು:",
   "apiKeyGate.stepOne": "Google AI Studio ಅನ್ನು ತೆರೆಯಿರಿ ಮತ್ತು API ಕೀಯನ್ನು ರಚಿಸಿ.",
@@ -91,8 +91,7 @@ export const knTranslations: Record<string, string> = {
   "apiKeyGate.saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
   "apiKeyGate.saveKey": "ಕೀಯನ್ನು ಉಳಿಸಿ",
   "apiKeyGate.close": "ಮುಚ್ಚಿ",
-  "apiKeyGate.imageGenCostLabel": "ಚಿತ್ರ ರಚನೆ ವೆಚ್ಚ",
-
+  "apiKeyGate.costLabel": "ಅಂದಾಜು API ವೆಚ್ಚ",
   // Chat - general
   "chat.thinking": "ಯೋಚಿಸುತ್ತಿದ್ದೇನೆ...",
   "chat.loadingHistory": "ಚಾಟ್ ಇತಿಹಾಸ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
@@ -238,8 +237,7 @@ export const knTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "ಚಾಟ್‌ಗಾಗಿ ನಿಮ್ಮ Gemini API ಉಚಿತ ಮಿತಿ ಮುಗಿದಿದೆ.",
   "error.quotaSetupBilling": "ಬಿಲ್ಲಿಂಗ್ ಸೆಟ್ ಅಪ್ ಮಾಡಿ",
   "error.quotaStartLive": "ಬದಲಿಗೆ ಲೈವ್ ಪ್ರಾರಂಭಿಸಿ",
-  "error.imageGenCostWarning": "ಚಿತ್ರ ರಚನೆಯ ವೆಚ್ಚವು ಪ್ರತಿ ಚಿತ್ರಕ್ಕೆ ~0.05€ ಆಗಿರುತ್ತದೆ (ಸಂದೇಶಗಳ ವೆಚ್ಚ ಕಡಿಮೆ, Google ನಿಂದ ಬಿಲ್ ಮಾಡಲಾಗುತ್ತದೆ). ವೆಚ್ಚದ ಬಗ್ಗೆ ನಿಮಗೆ ಸಮ್ಮತವಿದ್ದರೆ ಇದನ್ನು ನಿರ್ಲಕ್ಷಿಸಬಹುದು.",
-  "error.imageGenDisable": "ಚಿತ್ರ ರಚನೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ",
+  "error.imageGenCostWarning": "ಇಮೇಜ್ ರಚನೆಯ ವೆಚ್ಚ ಪ್ರತಿ ಇಮೇಜ್‌ಗೆ ~$0.04 ಆಗಿದೆ. ಚಾಟ್ ಸಂದೇಶಗಳಿಗೂ ಸಣ್ಣ ಟೋಕನ್ ವೆಚ್ಚವಿದೆ. ಎಲ್ಲವನ್ನೂ Google ಬಿಲ್ ಮಾಡುತ್ತದೆ. ನೀವು API ಕೀ ಸ್ಕ್ರೀನ್‌ನಲ್ಲಿ ವೆಚ್ಚಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಬಹುದು.",  "error.imageGenDisable": "ಚಿತ್ರ ರಚನೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ",
   "error.imageGenViewCost": "ಚಿತ್ರ ರಚನೆಯ ವೆಚ್ಚಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
   // Errors - camera
   "error.cameraPermissionDenied": "ಕ್ಯಾಮರಾ ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. ಬ್ರೌಸರ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಕ್ಯಾಮರಾ ಪ್ರವೇಶವನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ.",

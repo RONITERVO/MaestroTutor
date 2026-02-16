@@ -69,7 +69,7 @@ export const jaTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Gemini APIキーを接続する",
   "apiKeyGate.billingTitle": "高制限のための課金設定",
-  "apiKeyGate.subtitle": "このアプリは完全にデバイス上で動作します。キーがサーバーに送信されることはありません。",
+  "apiKeyGate.subtitle": "このアプリは完全にお使いのデバイス上で動作します。キーと請求はGoogle経由で直接処理されます。許可なくGoogleから請求されることはありません。",
   "apiKeyGate.privacyPolicy": "プライバシーポリシー",
   "apiKeyGate.stepsTitle": "2つの簡単なステップ：",
   "apiKeyGate.stepOne": "Google AI Studioを開き、APIキーを作成します。",
@@ -91,8 +91,7 @@ export const jaTranslations: Record<string, string> = {
   "apiKeyGate.saving": "保存中...",
   "apiKeyGate.saveKey": "キーを保存",
   "apiKeyGate.close": "閉じる",
-  "apiKeyGate.imageGenCostLabel": "画像生成コスト",
-
+  "apiKeyGate.costLabel": "推定APIコスト",
   // Chat - general
   "chat.thinking": "考え中...",
   "chat.loadingHistory": "チャット履歴を読み込み中...",
@@ -238,8 +237,7 @@ export const jaTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "チャット用のGemini API無料枠を使い果たしました。",
   "error.quotaSetupBilling": "課金を設定",
   "error.quotaStartLive": "代わりにライブを開始",
-  "error.imageGenCostWarning": "画像生成には1枚あたり約0.05ユーロかかります（メッセージはより安価で、Googleから請求されます）。コストに問題がなければ、これは無視して構いません。",
-  "error.imageGenDisable": "画像生成を無効にする",
+  "error.imageGenCostWarning": "画像生成のコストは1枚あたり約$0.04です。チャットメッセージにも少額のトークンコストがかかります。すべてGoogleから請求されます。コストはAPIキー画面で確認できます。",  "error.imageGenDisable": "画像生成を無効にする",
   "error.imageGenViewCost": "画像生成コストを表示",
   // Errors - camera
   "error.cameraPermissionDenied": "カメラの許可が拒否されました。ブラウザの設定でカメラへのアクセスを有効にしてください。",

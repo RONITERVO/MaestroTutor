@@ -69,7 +69,7 @@ export const mlTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "നിങ്ങളുടെ Gemini API കീ ബന്ധിപ്പിക്കുക",
   "apiKeyGate.billingTitle": "കൂടുതൽ ക്വോട്ടയ്ക്കായി ബില്ലിംഗ് സജ്ജമാക്കുക",
-  "apiKeyGate.subtitle": "ഈ ആപ്പ് പൂർണ്ണമായും നിങ്ങളുടെ ഉപകരണത്തിൽ പ്രവർത്തിക്കുന്നു. നിങ്ങളുടെ കീ ഒരിക്കലും ഞങ്ങളുടെ സെർവറുകളിൽ എത്തുന്നില്ല.",
+  "apiKeyGate.subtitle": "ഈ ആപ്പ് പൂർണ്ണമായും നിങ്ങളുടെ ഉപകരണത്തിൽ പ്രവർത്തിക്കുന്നു. നിങ്ങളുടെ കീയും ബില്ലിംഗും നേരിട്ട് Google വഴിയാണ്. നിങ്ങളുടെ അനുവാദമില്ലാതെ Google-ൽ നിന്ന് ബില്ലിംഗൊന്നുമില്ല.",
   "apiKeyGate.privacyPolicy": "സ്വകാര്യതാ നയം",
   "apiKeyGate.stepsTitle": "രണ്ട് ദ്രുത ഘട്ടങ്ങൾ:",
   "apiKeyGate.stepOne": "Google AI Studio തുറന്ന് ഒരു API കീ സൃഷ്ടിക്കുക.",
@@ -91,8 +91,7 @@ export const mlTranslations: Record<string, string> = {
   "apiKeyGate.saving": "സേവ് ചെയ്യുന്നു...",
   "apiKeyGate.saveKey": "കീ സേവ് ചെയ്യുക",
   "apiKeyGate.close": "അടയ്ക്കുക",
-  "apiKeyGate.imageGenCostLabel": "ഇമേജ് ജനറേഷൻ ചെലവ്",
-
+  "apiKeyGate.costLabel": "കണക്കാക്കിയ API ചെലവ്",
   // Chat - general
   "chat.thinking": "ചിന്തിക്കുന്നു...",
   "chat.loadingHistory": "ചാറ്റ് ചരിത്രം ലോഡുചെയ്യുന്നു...",
@@ -238,8 +237,7 @@ export const mlTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "ചാറ്റിനായുള്ള നിങ്ങളുടെ Gemini API സൗജന്യ ക്വോട്ട തീർന്നു.",
   "error.quotaSetupBilling": "ബില്ലിംഗ് സജ്ജീകരിക്കുക",
   "error.quotaStartLive": "പകരം ലൈവ് ആരംഭിക്കുക",
-  "error.imageGenCostWarning": "ഇമേജ് നിർമ്മാണത്തിന് ഒരു ചിത്രത്തിന് ~0.05€ ചെലവാകും (സന്ദേശങ്ങൾക്ക് ചിലവ് കുറവാണ്, Google ആണ് ബിൽ ചെയ്യുന്നത്). ചെലവ് നിങ്ങൾക്ക് സമ്മതമാണെങ്കിൽ ഇത് അവഗണിക്കാം.",
-  "error.imageGenDisable": "ഇമേജ് നിർമ്മാണം പ്രവർത്തനരഹിതമാക്കുക",
+  "error.imageGenCostWarning": "ഇമേജ് ജനറേഷന് ഒരു ഇമേജിന് ~$0.04 ആണ് ചിലവ്. ചാറ്റ് സന്ദേശങ്ങൾക്കും ചെറിയ ടോക്കൺ ചിലവുണ്ട്. എല്ലാം Google ആണ് ബില്ല് ചെയ്യുന്നത്. API കീ സ്ക്രീനിൽ നിങ്ങൾക്ക് ചിലവുകൾ ട്രാക്ക് ചെയ്യാം.",  "error.imageGenDisable": "ഇമേജ് നിർമ്മാണം പ്രവർത്തനരഹിതമാക്കുക",
   "error.imageGenViewCost": "ഇമേജ് നിർമ്മാണ ചെലവുകൾ കാണുക",
   // Errors - camera
   "error.cameraPermissionDenied": "ക്യാമറ അനുമതി നിരസിച്ചു. ബ്രൗസർ ക്രമീകരണങ്ങളിൽ ക്യാമറ ആക്സസ് പ്രവർത്തനക്ഷമമാക്കുക.",

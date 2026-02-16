@@ -69,7 +69,7 @@ export const esTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Conecta tu clave API de Gemini",
   "apiKeyGate.billingTitle": "Configurar facturación para mayor cuota",
-  "apiKeyGate.subtitle": "Esta aplicación se ejecuta totalmente en tu dispositivo. Tu clave nunca toca nuestros servidores.",
+  "apiKeyGate.subtitle": "Esta aplicación funciona completamente en su dispositivo. Su clave y facturación se gestionan directamente a través de Google. No habrá cargos de Google sin su permiso.",
   "apiKeyGate.privacyPolicy": "Política de privacidad",
   "apiKeyGate.stepsTitle": "Dos pasos rápidos:",
   "apiKeyGate.stepOne": "Abre Google AI Studio y crea una clave API.",
@@ -91,8 +91,7 @@ export const esTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Guardando...",
   "apiKeyGate.saveKey": "Guardar clave",
   "apiKeyGate.close": "Cerrar",
-  "apiKeyGate.imageGenCostLabel": "Coste de generación de imágenes",
-
+  "apiKeyGate.costLabel": "Costo estimado de la API",
   // Chat - general
   "chat.thinking": "Pensando...",
   "chat.loadingHistory": "Cargando historial de chat...",
@@ -238,8 +237,7 @@ export const esTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Tu cuota gratuita de la API de Gemini para el chat se ha agotado.",
   "error.quotaSetupBilling": "Configurar facturación",
   "error.quotaStartLive": "Iniciar Live en su lugar",
-  "error.imageGenCostWarning": "La generación de imágenes cuesta ~0,05 \u20ac por imagen (los mensajes cuestan menos, facturado por Google). Puede ignorar esto si está de acuerdo con el coste.",
-  "error.imageGenDisable": "Desactivar generación de imágenes",
+  "error.imageGenCostWarning": "La generación de imágenes cuesta ~$0.04 por imagen. Los mensajes de chat también tienen un pequeño costo de tokens. Todo facturado por Google. Puedes seguir los costos en la pantalla de clave API.",  "error.imageGenDisable": "Desactivar generación de imágenes",
   "error.imageGenViewCost": "Ver costes de generación de imágenes",
   // Errors - camera
   "error.cameraPermissionDenied": "Permiso de cámara denegado. Por favor habilita el acceso a la cámara en la configuración de tu navegador.",

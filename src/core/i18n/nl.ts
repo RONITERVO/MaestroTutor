@@ -69,7 +69,7 @@ export const nlTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Verbind je Gemini API-sleutel",
   "apiKeyGate.billingTitle": "Facturering instellen voor hoger quotum",
-  "apiKeyGate.subtitle": "Deze app draait volledig op je apparaat. Je sleutel raakt onze servers nooit.",
+  "apiKeyGate.subtitle": "Deze app draait volledig op uw apparaat. Uw sleutel en facturering verlopen rechtstreeks via Google. Geen kosten van Google zonder uw toestemming.",
   "apiKeyGate.privacyPolicy": "Privacybeleid",
   "apiKeyGate.stepsTitle": "Twee snelle stappen:",
   "apiKeyGate.stepOne": "Open Google AI Studio en maak een API-sleutel.",
@@ -91,8 +91,7 @@ export const nlTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Opslaan...",
   "apiKeyGate.saveKey": "Sleutel opslaan",
   "apiKeyGate.close": "Sluiten",
-  "apiKeyGate.imageGenCostLabel": "Kosten beeldgeneratie",
-
+  "apiKeyGate.costLabel": "Geschatte API-kosten",
   // Chat - general
   "chat.thinking": "Aan het denken...",
   "chat.loadingHistory": "Chatgeschiedenis laden...",
@@ -238,8 +237,7 @@ export const nlTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Je gratis Gemini API-quotum voor chat is opgebruikt.",
   "error.quotaSetupBilling": "Facturering instellen",
   "error.quotaStartLive": "Start Live in plaats daarvan",
-  "error.imageGenCostWarning": "Het genereren van afbeeldingen kost ~0,05\u20ac per afbeelding (berichten kosten minder, gefactureerd door Google). U kunt dit negeren als u akkoord gaat met de kosten.",
-  "error.imageGenDisable": "Afbeeldingen genereren uitschakelen",
+  "error.imageGenCostWarning": "Het genereren van afbeeldingen kost ~$0,04 per afbeelding. Chatberichten hebben ook kleine tokenkosten. Alles wordt gefactureerd door Google. U kunt de kosten volgen in het API-sleutelscherm.",  "error.imageGenDisable": "Afbeeldingen genereren uitschakelen",
   "error.imageGenViewCost": "Kosten voor het genereren van afbeeldingen bekijken",
   // Errors - camera
   "error.cameraPermissionDenied": "Cameratoestemming geweigerd. Schakel cameratoegang in via browserinstellingen.",

@@ -69,7 +69,7 @@ export const thTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "เชื่อมต่อคีย์ API Gemini ของคุณ",
   "apiKeyGate.billingTitle": "ตั้งค่าการเรียกเก็บเงินสำหรับโควตาที่สูงขึ้น",
-  "apiKeyGate.subtitle": "แอปนี้ทำงานบนอุปกรณ์ของคุณโดยสมบูรณ์ คีย์ของคุณจะไม่ถูกส่งไปยังเซิร์ฟเวอร์ของเรา",
+  "apiKeyGate.subtitle": "แอปนี้ทำงานบนอุปกรณ์ของคุณทั้งหมด คีย์และการเรียกเก็บเงินของคุณจะผ่าน Google โดยตรง ไม่มีการเรียกเก็บเงินจาก Google โดยไม่ได้รับอนุญาตจากคุณ",
   "apiKeyGate.privacyPolicy": "นโยบายความเป็นส่วนตัว",
   "apiKeyGate.stepsTitle": "สองขั้นตอนง่ายๆ:",
   "apiKeyGate.stepOne": "เปิด Google AI Studio และสร้างคีย์ API",
@@ -91,8 +91,7 @@ export const thTranslations: Record<string, string> = {
   "apiKeyGate.saving": "กำลังบันทึก...",
   "apiKeyGate.saveKey": "บันทึกคีย์",
   "apiKeyGate.close": "ปิด",
-  "apiKeyGate.imageGenCostLabel": "ค่าใช้จ่ายสร้างรูปภาพ",
-
+  "apiKeyGate.costLabel": "ค่าใช้จ่าย API โดยประมาณ",
   // Chat - general
   "chat.thinking": "กำลังคิด...",
   "chat.loadingHistory": "กำลังโหลดประวัติแชท...",
@@ -238,8 +237,7 @@ export const thTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "โควตาฟรีของ Gemini API สำหรับแชทของคุณหมดแล้ว",
   "error.quotaSetupBilling": "ตั้งค่าการเรียกเก็บเงิน",
   "error.quotaStartLive": "เริ่ม Live แทน",
-  "error.imageGenCostWarning": "การสร้างรูปภาพมีค่าใช้จ่าย ~0.05\u20ac ต่อรูป (ข้อความมีราคาถูกกว่า เรียกเก็บเงินโดย Google) คุณสามารถเพิกเฉยได้หากคุณยอมรับค่าใช้จ่ายนี้",
-  "error.imageGenDisable": "ปิดการใช้งานการสร้างรูปภาพ",
+  "error.imageGenCostWarning": "การสร้างรูปภาพมีค่าใช้จ่าย ~$0.04 ต่อรูป ข้อความแชทมีค่าใช้จ่ายโทเค็นเล็กน้อย ทั้งหมดเรียกเก็บเงินโดย Google คุณสามารถติดตามค่าใช้จ่ายได้ในหน้าจอคีย์ API",  "error.imageGenDisable": "ปิดการใช้งานการสร้างรูปภาพ",
   "error.imageGenViewCost": "ดูค่าใช้จ่ายในการสร้างรูปภาพ",
   // Errors - camera
   "error.cameraPermissionDenied": "ปฏิเสธการอนุญาตกล้อง กรุณาเปิดใช้งานการเข้าถึงกล้องในการตั้งค่าเบราว์เซอร์",

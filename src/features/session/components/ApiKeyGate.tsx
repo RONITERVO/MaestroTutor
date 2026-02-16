@@ -8,7 +8,7 @@ import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, I
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
-import { getImageGenCount, IMAGE_GEN_COST_PER_IMAGE, GOOGLE_BILLING_URL } from '../../../shared/utils/imageGenCost';
+import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTracker';
 
 interface ApiKeyGateProps {
   isOpen: boolean;
@@ -51,7 +51,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [imageGenCount, setImageGenCount] = useState(0);
+  const [costSummary, setCostSummary] = useState({ inputTokens: 0, outputTokens: 0, imageGenCount: 0, totalCostUsd: 0 });
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
   const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
@@ -66,7 +66,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
       setInstructionIndex(0);
       setIsAutoPlaying(true);
     } else {
-      setImageGenCount(getImageGenCount());
+      setCostSummary(getCostSummary());
     }
   }, [isOpen]);
 
@@ -311,15 +311,15 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                       ? t('apiKeyGate.keyInvalid', { maskedKey: maskedKey || '' })
                       : t('apiKeyGate.currentKeySaved', { maskedKey: maskedKey ? `(${maskedKey})` : '' }).trim()}
                   </span>
-                  {imageGenCount > 0 && (
+                  {costSummary.totalCostUsd > 0 && (
                     <button
                       type="button"
                       onClick={() => openExternalUrl(GOOGLE_BILLING_URL)}
                       className="ml-auto shrink-0 flex items-center gap-1 text-xs opacity-70 hover:opacity-100"
-                      aria-label={t('apiKeyGate.imageGenCostLabel')}
+                      aria-label={t('apiKeyGate.costLabel')}
                     >
                       <IconSparkles className="h-3 w-3" />
-                      <span>{imageGenCount} ~{(imageGenCount * IMAGE_GEN_COST_PER_IMAGE).toFixed(2)}{'\u20ac'}</span>
+                      <span>~${costSummary.totalCostUsd.toFixed(2)}</span>
                     </button>
                   )}
                 </div>

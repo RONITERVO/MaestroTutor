@@ -69,7 +69,7 @@ export const koTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Gemini API 키 연결",
   "apiKeyGate.billingTitle": "더 높은 할당량을 위한 결제 설정",
-  "apiKeyGate.subtitle": "이 앱은 기기에서 완전히 실행됩니다. 키는 서버에 전송되지 않습니다.",
+  "apiKeyGate.subtitle": "이 앱은 기기에서만 완전히 작동합니다. 키와 결제는 Google을 통해 직접 처리됩니다. 귀하의 허락 없이 Google에서 요금을 청구하지 않습니다.",
   "apiKeyGate.privacyPolicy": "개인정보 처리방침",
   "apiKeyGate.stepsTitle": "두 가지 간단한 단계:",
   "apiKeyGate.stepOne": "Google AI Studio를 열고 API 키를 생성합니다.",
@@ -91,8 +91,7 @@ export const koTranslations: Record<string, string> = {
   "apiKeyGate.saving": "저장 중...",
   "apiKeyGate.saveKey": "키 저장",
   "apiKeyGate.close": "닫기",
-  "apiKeyGate.imageGenCostLabel": "이미지 생성 비용",
-
+  "apiKeyGate.costLabel": "예상 API 비용",
   // Chat - general
   "chat.thinking": "생각 중...",
   "chat.loadingHistory": "채팅 기록 로드 중...",
@@ -238,8 +237,7 @@ export const koTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Gemini API의 무료 채팅 할당량이 소진되었습니다.",
   "error.quotaSetupBilling": "결제 설정",
   "error.quotaStartLive": "대신 라이브 시작",
-  "error.imageGenCostWarning": "이미지 생성 비용은 이미지당 약 0.05\u20ac입니다(메시지 비용은 더 저렴하며, Google에서 청구). 비용에 동의하시면 이 메시지를 무시하셔도 됩니다.",
-  "error.imageGenDisable": "이미지 생성 비활성화",
+  "error.imageGenCostWarning": "이미지 생성 비용은 이미지당 약 $0.04입니다. 채팅 메시지에도 소액의 토큰 비용이 발생합니다. 모든 청구는 Google에서 처리합니다. API 키 화면에서 비용을 확인할 수 있습니다.",  "error.imageGenDisable": "이미지 생성 비활성화",
   "error.imageGenViewCost": "이미지 생성 비용 보기",
   // Errors - camera
   "error.cameraPermissionDenied": "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 액세스를 활성화하세요.",

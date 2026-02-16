@@ -69,7 +69,7 @@ export const idTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Hubungkan kunci API Gemini Anda",
   "apiKeyGate.billingTitle": "Siapkan penagihan untuk kuota lebih tinggi",
-  "apiKeyGate.subtitle": "Aplikasi ini berjalan sepenuhnya di perangkat Anda. Kunci Anda tidak pernah menyentuh server kami.",
+  "apiKeyGate.subtitle": "Aplikasi ini berjalan sepenuhnya di perangkat Anda. Kunci dan penagihan Anda dikelola langsung melalui Google. Tidak ada tagihan dari Google tanpa izin Anda.",
   "apiKeyGate.privacyPolicy": "Kebijakan Privasi",
   "apiKeyGate.stepsTitle": "Dua langkah cepat:",
   "apiKeyGate.stepOne": "Buka Google AI Studio dan buat kunci API.",
@@ -91,8 +91,7 @@ export const idTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Menyimpan...",
   "apiKeyGate.saveKey": "Simpan kunci",
   "apiKeyGate.close": "Tutup",
-  "apiKeyGate.imageGenCostLabel": "Biaya pembuatan gambar",
-
+  "apiKeyGate.costLabel": "Perkiraan biaya API",
   // Chat - general
   "chat.thinking": "Sedang berpikir...",
   "chat.loadingHistory": "Memuat riwayat obrolan...",
@@ -238,8 +237,7 @@ export const idTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Kuota gratis Gemini API Anda untuk obrolan telah habis.",
   "error.quotaSetupBilling": "Atur penagihan",
   "error.quotaStartLive": "Mulai Live sebagai gantinya",
-  "error.imageGenCostWarning": "Biaya pembuatan gambar ~0,05\u20ac per gambar (pesan lebih murah, ditagih oleh Google). Anda dapat mengabaikan ini jika Anda setuju dengan biayanya.",
-  "error.imageGenDisable": "Nonaktifkan Pembuatan Gambar",
+  "error.imageGenCostWarning": "Biaya pembuatan gambar ~$0,04 per gambar. Pesan obrolan juga memiliki biaya token kecil. Semua ditagih oleh Google. Anda dapat melacak biaya di layar kunci API.",  "error.imageGenDisable": "Nonaktifkan Pembuatan Gambar",
   "error.imageGenViewCost": "Lihat Biaya Pembuatan Gambar",
   // Errors - camera
   "error.cameraPermissionDenied": "Izin kamera ditolak. Silakan aktifkan akses kamera di pengaturan browser.",

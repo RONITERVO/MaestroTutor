@@ -69,7 +69,7 @@ export const svTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Anslut din Gemini API-nyckel",
   "apiKeyGate.billingTitle": "Ställ in fakturering för högre kvot",
-  "apiKeyGate.subtitle": "Den här appen körs helt på din enhet. Din nyckel når aldrig våra servrar.",
+  "apiKeyGate.subtitle": "Denna app körs helt på din enhet. Din nyckel och fakturering sker direkt via Google. Ingen debitering från Google utan din tillåtelse.",
   "apiKeyGate.privacyPolicy": "Integritetspolicy",
   "apiKeyGate.stepsTitle": "Två snabba steg:",
   "apiKeyGate.stepOne": "Öppna Google AI Studio och skapa en API-nyckel.",
@@ -91,8 +91,7 @@ export const svTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Sparar...",
   "apiKeyGate.saveKey": "Spara nyckel",
   "apiKeyGate.close": "Stäng",
-  "apiKeyGate.imageGenCostLabel": "Kostnad för bildgenerering",
-
+  "apiKeyGate.costLabel": "Uppskattad API-kostnad",
   // Chat - general
   "chat.thinking": "Tänker...",
   "chat.loadingHistory": "Laddar chatthistorik...",
@@ -238,8 +237,7 @@ export const svTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Din Gemini API-gratiskvot för chatt är förbrukad.",
   "error.quotaSetupBilling": "Konfigurera fakturering",
   "error.quotaStartLive": "Starta Live istället",
-  "error.imageGenCostWarning": "Bildgenerering kostar ~0,05 \u20ac per bild (meddelanden kostar mindre, faktureras av Google). Du kan ignorera detta om du godkänner kostnaden.",
-  "error.imageGenDisable": "Inaktivera bildgenerering",
+  "error.imageGenCostWarning": "Bildgenerering kostar ~$0.04 per bild. Chattmeddelanden har också en liten tokenkostnad. Allt faktureras av Google. Du kan följa kostnaderna på skärmen för API-nycklar.",  "error.imageGenDisable": "Inaktivera bildgenerering",
   "error.imageGenViewCost": "Visa kostnader för bildgenerering",
   // Errors - camera
   "error.cameraPermissionDenied": "Kamerabehörighet nekad. Aktivera kameraåtkomst i webbläsarens inställningar.",

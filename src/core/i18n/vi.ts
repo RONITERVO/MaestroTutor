@@ -69,7 +69,7 @@ export const viTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Kết nối khóa API Gemini của bạn",
   "apiKeyGate.billingTitle": "Thiết lập thanh toán để có hạn ngạch cao hơn",
-  "apiKeyGate.subtitle": "Ứng dụng này chạy hoàn toàn trên thiết bị của bạn. Khóa của bạn không bao giờ được gửi đến máy chủ của chúng tôi.",
+  "apiKeyGate.subtitle": "Ứng dụng này chạy hoàn toàn trên thiết bị của bạn. Khóa và thanh toán của bạn được thực hiện trực tiếp qua Google. Không có khoản phí nào từ Google nếu không có sự cho phép của bạn.",
   "apiKeyGate.privacyPolicy": "Chính sách bảo mật",
   "apiKeyGate.stepsTitle": "Hai bước nhanh chóng:",
   "apiKeyGate.stepOne": "Mở Google AI Studio và tạo khóa API.",
@@ -91,8 +91,7 @@ export const viTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Đang lưu...",
   "apiKeyGate.saveKey": "Lưu khóa",
   "apiKeyGate.close": "Đóng",
-  "apiKeyGate.imageGenCostLabel": "Chi phí tạo ảnh",
-
+  "apiKeyGate.costLabel": "Chi phí API ước tính",
   // Chat - general
   "chat.thinking": "Đang suy nghĩ...",
   "chat.loadingHistory": "Đang tải lịch sử trò chuyện...",
@@ -238,8 +237,7 @@ export const viTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Hạn ngạch miễn phí Gemini API cho trò chuyện của bạn đã hết.",
   "error.quotaSetupBilling": "Thiết lập thanh toán",
   "error.quotaStartLive": "Bắt đầu Trực tiếp thay thế",
-  "error.imageGenCostWarning": "Phí tạo hình ảnh là ~0,05\u20ac mỗi ảnh (tin nhắn rẻ hơn, do Google tính phí). Bạn có thể bỏ qua thông báo này nếu chấp nhận mức phí.",
-  "error.imageGenDisable": "Tắt tính năng tạo hình ảnh",
+  "error.imageGenCostWarning": "Chi phí tạo hình ảnh là ~$0.04 mỗi ảnh. Tin nhắn trò chuyện cũng có chi phí token nhỏ. Tất cả được thanh toán bởi Google. Bạn có thể theo dõi chi phí trong màn hình khóa API.",  "error.imageGenDisable": "Tắt tính năng tạo hình ảnh",
   "error.imageGenViewCost": "Xem chi phí tạo hình ảnh",
   // Errors - camera
   "error.cameraPermissionDenied": "Quyền camera bị từ chối. Vui lòng bật quyền truy cập camera trong cài đặt trình duyệt.",

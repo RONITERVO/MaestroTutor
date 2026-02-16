@@ -69,7 +69,7 @@ export const plTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Podłącz klucz API Gemini",
   "apiKeyGate.billingTitle": "Skonfiguruj rozliczenia dla wyższego limitu",
-  "apiKeyGate.subtitle": "Ta aplikacja działa w całości na Twoim urządzeniu. Twój klucz nigdy nie trafia na nasze serwery.",
+  "apiKeyGate.subtitle": "Ta aplikacja działa całkowicie na Twoim urządzeniu. Twój klucz i płatności są obsługiwane bezpośrednio przez Google. Brak opłat od Google bez Twojej zgody.",
   "apiKeyGate.privacyPolicy": "Polityka prywatności",
   "apiKeyGate.stepsTitle": "Dwa szybkie kroki:",
   "apiKeyGate.stepOne": "Otwórz Google AI Studio i utwórz klucz API.",
@@ -91,8 +91,7 @@ export const plTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Zapisywanie...",
   "apiKeyGate.saveKey": "Zapisz klucz",
   "apiKeyGate.close": "Zamknij",
-  "apiKeyGate.imageGenCostLabel": "Koszt generowania obrazów",
-
+  "apiKeyGate.costLabel": "Szacowany koszt API",
   // Chat - general
   "chat.thinking": "Myślę...",
   "chat.loadingHistory": "Wczytywanie historii czatu...",
@@ -238,8 +237,7 @@ export const plTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Twój bezpłatny limit Gemini API na czat został wyczerpany.",
   "error.quotaSetupBilling": "Skonfiguruj rozliczenia",
   "error.quotaStartLive": "Zacznij rozmowę na żywo",
-  "error.imageGenCostWarning": "Generowanie obrazów kosztuje ~0,05 \u20ac za obraz (wiadomości są tańsze, rozliczane przez Google). Możesz to zignorować, jeśli akceptujesz koszt.",
-  "error.imageGenDisable": "Wyłącz generowanie obrazów",
+  "error.imageGenCostWarning": "Generowanie obrazu kosztuje ~$0.04 za obraz. Wiadomości czatu mają również niewielki koszt tokenów. Wszystko rozliczane przez Google. Koszty można śledzić na ekranie klucza API.",  "error.imageGenDisable": "Wyłącz generowanie obrazów",
   "error.imageGenViewCost": "Zobacz koszty generowania obrazów",
   // Errors - camera
   "error.cameraPermissionDenied": "Odmówiono dostępu do kamery. Włącz dostęp do kamery w ustawieniach przeglądarki.",

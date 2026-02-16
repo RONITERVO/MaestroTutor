@@ -41,7 +41,7 @@ import {
   composeMaestroSystemInstruction 
 } from '../../../core/config/prompts';
 import { isRealChatMessage } from '../../../shared/utils/common';
-import { incrementImageGenCount, hasShownImageGenCostWarning, setImageGenCostWarningShown } from '../../../shared/utils/imageGenCost';
+import { trackTokenUsage, trackImageGeneration, hasShownCostWarning, setCostWarningShown } from '../../../shared/utils/costTracker';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { getPrimarySubtag, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
@@ -625,6 +625,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           { responseMimeType: "application/json" }
         );
 
+        trackTokenUsage(getGeminiModels().text.aux, response.usageMetadata);
+
         let jsonStr = (response.text || '').trim();
         const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
         const fenceMatch = jsonStr.match(fenceRegex);
@@ -734,7 +736,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     try {
-      const { translatedText } = await translateText(sanitized, fromLangName, toLangName);
+      const { translatedText, usageMetadata } = await translateText(sanitized, fromLangName, toLangName);
+      trackTokenUsage(getGeminiModels().text.translation, usageMetadata);
       const newSuggestion: ReplySuggestion = {
         target: originalTextIsTarget ? sanitized : translatedText,
         native: originalTextIsTarget ? translatedText : sanitized,
@@ -975,6 +978,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       undefined
     );
 
+    trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
+
     const accumulatedFullText = response.text || "";
     const parsedTranslationsOnComplete = parseGeminiResponse(accumulatedFullText);
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
@@ -1037,9 +1042,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     if (finalResult && 'base64Image' in finalResult) {
       const duration = Date.now() - userImageGenStartTime;
       addImageLoadDuration(duration);
-      incrementImageGenCount();
-      if (!hasShownImageGenCostWarning()) {
-        setImageGenCostWarningShown();
+      trackImageGeneration();
+      if (!hasShownCostWarning()) {
+        setCostWarningShown();
         addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
       }
       try {
@@ -1156,9 +1161,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if ('base64Image' in assistantImgGenResult) {
         const duration = Date.now() - assistantStartTime;
         addImageLoadDuration(duration);
-        incrementImageGenCount();
-        if (!hasShownImageGenCostWarning()) {
-          setImageGenCostWarningShown();
+        trackImageGeneration();
+        if (!hasShownCostWarning()) {
+          setCostWarningShown();
           addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
         }
         try {

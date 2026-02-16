@@ -69,7 +69,7 @@ export const ptTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Conecte sua chave API do Gemini",
   "apiKeyGate.billingTitle": "Configurar faturamento para cota maior",
-  "apiKeyGate.subtitle": "Este app roda totalmente no seu dispositivo. Sua chave nunca passa pelos nossos servidores.",
+  "apiKeyGate.subtitle": "Este aplicativo roda inteiramente no seu dispositivo. Sua chave e cobrança são gerenciadas diretamente pelo Google. Sem cobranças do Google sem sua permissão.",
   "apiKeyGate.privacyPolicy": "Política de Privacidade",
   "apiKeyGate.stepsTitle": "Dois passos rápidos:",
   "apiKeyGate.stepOne": "Abra o Google AI Studio e crie uma chave API.",
@@ -91,8 +91,7 @@ export const ptTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Salvando...",
   "apiKeyGate.saveKey": "Salvar chave",
   "apiKeyGate.close": "Fechar",
-  "apiKeyGate.imageGenCostLabel": "Custo de geração de imagens",
-
+  "apiKeyGate.costLabel": "Custo estimado da API",
   // Chat - general
   "chat.thinking": "Pensando...",
   "chat.loadingHistory": "Carregando histórico do chat...",
@@ -238,8 +237,7 @@ export const ptTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Sua cota gratuita da API Gemini para chat esgotou.",
   "error.quotaSetupBilling": "Configurar faturamento",
   "error.quotaStartLive": "Iniciar Live em vez disso",
-  "error.imageGenCostWarning": "A geração de imagens custa ~0,05\u20ac por imagem (mensagens custam menos, faturado pelo Google). Você pode ignorar isso se concordar com o custo.",
-  "error.imageGenDisable": "Desativar geração de imagens",
+  "error.imageGenCostWarning": "A geração de imagens custa ~$0,04 por imagem. Mensagens de chat também têm um pequeno custo de tokens. Tudo faturado pelo Google. Você pode acompanhar os custos na tela da chave API.",  "error.imageGenDisable": "Desativar geração de imagens",
   "error.imageGenViewCost": "Ver custos de geração de imagens",
   // Errors - camera
   "error.cameraPermissionDenied": "Permissão da câmera negada. Por favor, habilite o acesso à câmera nas configurações do seu navegador.",

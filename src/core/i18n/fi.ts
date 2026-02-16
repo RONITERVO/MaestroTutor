@@ -69,7 +69,7 @@ export const fiTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Yhdistä Gemini API -avain",
   "apiKeyGate.billingTitle": "Määritä laskutus suurempaa kiintiötä varten",
-  "apiKeyGate.subtitle": "Tämä sovellus toimii kokonaan laitteellasi. Avaimesi ei koskaan kulje palvelimiemme kautta.",
+  "apiKeyGate.subtitle": "Tämä sovellus toimii kokonaan laitteellasi. Avaimesi ja laskutus suoraan googlen kautta. Ei laskutusta Googlelta ilman lupaasi.",
   "apiKeyGate.privacyPolicy": "Tietosuojakäytäntö",
   "apiKeyGate.stepsTitle": "Kaksi nopeaa vaihetta:",
   "apiKeyGate.stepOne": "Avaa Google AI Studio ja luo API-avain.",
@@ -91,8 +91,7 @@ export const fiTranslations: Record<string, string> = {
   "apiKeyGate.saving": "Tallennetaan...",
   "apiKeyGate.saveKey": "Tallenna avain",
   "apiKeyGate.close": "Sulje",
-  "apiKeyGate.imageGenCostLabel": "Kuvan luonnin hinta",
-
+  "apiKeyGate.costLabel": "Arvioitu API-kustannus",
   // Chat - general
   "chat.thinking": "Ajattelen...",
   "chat.loadingHistory": "Ladataan keskusteluhistoriaa...",
@@ -238,8 +237,7 @@ export const fiTranslations: Record<string, string> = {
   "error.apiQuotaExceeded": "Gemini API:n ilmainen chat-kiintiösi on lopussa.",
   "error.quotaSetupBilling": "Määritä laskutus",
   "error.quotaStartLive": "Käynnistä Live sen sijaan",
-  "error.imageGenCostWarning": "Kuvien luominen maksaa ~0,05 \u20ac/kuva (viestit ovat halvempia, laskutus Googlelta). Voit ohittaa tämän, jos hyväksyt hinnan.",
-  "error.imageGenDisable": "Poista kuvien luonti käytöstä",
+  "error.imageGenCostWarning": "Kuvien luominen maksaa n. 0,04 $ kuvalta. Chat-viesteistä menee myös pieni token-maksu. Google laskuttaa kaiken. Voit seurata kuluja API-avainnäkymässä.",  "error.imageGenDisable": "Poista kuvien luonti käytöstä",
   "error.imageGenViewCost": "Katso kuvien luonnin kustannukset",
   // Errors - camera
   "error.cameraPermissionDenied": "Kameran käyttöoikeus evätty. Ota kameran käyttöoikeus käyttöön selaimen asetuksissa.",
