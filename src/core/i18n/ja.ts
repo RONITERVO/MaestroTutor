@@ -69,7 +69,11 @@ export const jaTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Gemini APIキーを接続する",
   "apiKeyGate.billingTitle": "高制限のための課金設定",
-  "apiKeyGate.subtitle": "このアプリは完全にお使いのデバイス上で動作します。キーと請求はGoogle経由で直接処理されます。許可なくGoogleから請求されることはありません。",
+  "apiKeyGate.infoLogin": "ログイン情報: APIキー",
+  "apiKeyGate.infoVisibility": "閲覧可能者: あなたのみ",
+  "apiKeyGate.infoBilling": "請求: Googleから毎月請求",
+  "apiKeyGate.infoCost": "コスト: アプリ内に表示 — タップして確認",
+  "apiKeyGate.infoMore": "詳細:",
   "apiKeyGate.privacyPolicy": "プライバシーポリシー",
   "apiKeyGate.stepsTitle": "2つの簡単なステップ：",
   "apiKeyGate.stepOne": "Google AI Studioを開き、APIキーを作成します。",

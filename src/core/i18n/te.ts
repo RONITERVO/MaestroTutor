@@ -69,7 +69,11 @@ export const teTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "మీ Gemini API కీని కనెక్ట్ చేయండి",
   "apiKeyGate.billingTitle": "అధిక కోటా కోసం బిల్లింగ్‌ను సెటప్ చేయండి",
-  "apiKeyGate.subtitle": "ఈ యాప్ పూర్తిగా మీ పరికరంలో పని చేస్తుంది. మీ కీ మరియు బిల్లింగ్ నేరుగా Google ద్వారా జరుగుతాయి. మీ అనుమతి లేకుండా Google నుండి ఎటువంటి ఛార్జీలు ఉండవు.",
+  "apiKeyGate.infoLogin": "మీ లాగిన్: ఒక API కీ",
+  "apiKeyGate.infoVisibility": "ఎవరు చూస్తారు: మీరు మాత్రమే",
+  "apiKeyGate.infoBilling": "బిల్లింగ్: నెలవారీ, Google నుండి",
+  "apiKeyGate.infoCost": "ఖర్చు: యాప్‌లో చూపబడుతుంది — చూడటానికి నొక్కండి",
+  "apiKeyGate.infoMore": "మరింత సమాచారం:",
   "apiKeyGate.privacyPolicy": "గోప్యతా విధానం",
   "apiKeyGate.stepsTitle": "రెండు శీఘ్ర దశలు:",
   "apiKeyGate.stepOne": "Google AI Studioని తెరిచి API కీని సృష్టించండి.",

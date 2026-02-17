@@ -69,7 +69,11 @@ export const nlTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Verbind je Gemini API-sleutel",
   "apiKeyGate.billingTitle": "Facturering instellen voor hoger quotum",
-  "apiKeyGate.subtitle": "Deze app draait volledig op uw apparaat. Uw sleutel en facturering verlopen rechtstreeks via Google. Geen kosten van Google zonder uw toestemming.",
+  "apiKeyGate.infoLogin": "Uw login: Een API-sleutel",
+  "apiKeyGate.infoVisibility": "Wie ziet het: Alleen u",
+  "apiKeyGate.infoBilling": "Facturering: Maandelijks, via Google",
+  "apiKeyGate.infoCost": "Kosten: Zichtbaar in app — tik om te bekijken",
+  "apiKeyGate.infoMore": "Meer info:",
   "apiKeyGate.privacyPolicy": "Privacybeleid",
   "apiKeyGate.stepsTitle": "Twee snelle stappen:",
   "apiKeyGate.stepOne": "Open Google AI Studio en maak een API-sleutel.",

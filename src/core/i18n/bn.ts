@@ -69,7 +69,11 @@ export const bnTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "আপনার Gemini API কী সংযোগ করুন",
   "apiKeyGate.billingTitle": "উচ্চতর কোটার জন্য বিলিং সেট আপ করুন",
-  "apiKeyGate.subtitle": "এই অ্যাপটি সম্পূর্ণ আপনার ডিভাইসে চলে। আপনার কী এবং বিলিং সরাসরি Google-এর মাধ্যমে হয়। আপনার অনুমতি ছাড়া Google থেকে কোনও চার্জ করা হবে না।",
+  "apiKeyGate.infoLogin": "আপনার লগইন: একটি API কী",
+  "apiKeyGate.infoVisibility": "কে এটি দেখে: শুধুমাত্র আপনি",
+  "apiKeyGate.infoBilling": "লিং: মাসিক, Google থেকে",
+  "apiKeyGate.infoCost": "খরচ: অ্যাপে দেখানো হয়েছে — দেখতে ট্যাপ করুন",
+  "apiKeyGate.infoMore": "আরও তথ্য:",
   "apiKeyGate.privacyPolicy": "গোপনীয়তা নীতি",
   "apiKeyGate.stepsTitle": "দুটি দ্রুত ধাপ:",
   "apiKeyGate.stepOne": "Google AI Studio খুলুন এবং একটি API কী তৈরি করুন।",

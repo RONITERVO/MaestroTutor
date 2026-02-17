@@ -69,7 +69,11 @@ export const ruTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Подключите ваш ключ API Gemini",
   "apiKeyGate.billingTitle": "Настройте биллинг для увеличения квоты",
-  "apiKeyGate.subtitle": "Это приложение работает полностью на вашем устройстве. Ваш ключ и оплата проходят напрямую через Google. Никаких списаний от Google без вашего разрешения.",
+  "apiKeyGate.infoLogin": "Ваш вход: API-ключ",
+  "apiKeyGate.infoVisibility": "Кто видит: Только вы",
+  "apiKeyGate.infoBilling": "Оплата: Ежемесячно, от Google",
+  "apiKeyGate.infoCost": "Стоимость: Указана в приложении — нажмите для просмотра",
+  "apiKeyGate.infoMore": "Подробнее:",
   "apiKeyGate.privacyPolicy": "Политика конфиденциальности",
   "apiKeyGate.stepsTitle": "Два быстрых шага:",
   "apiKeyGate.stepOne": "Откройте Google AI Studio и создайте ключ API.",

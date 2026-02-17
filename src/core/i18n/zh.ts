@@ -69,7 +69,11 @@ export const zhTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "连接您的 Gemini API 密钥",
   "apiKeyGate.billingTitle": "设置计费以获得更高配额",
-  "apiKeyGate.subtitle": "此应用完全在您的设备上运行。您的密钥和账单直接通过 Google 处理。未经您的允许，Google 不会扣费。",
+  "apiKeyGate.infoLogin": "您的登录方式：API 密钥",
+  "apiKeyGate.infoVisibility": "可见范围：仅限您自己",
+  "apiKeyGate.infoBilling": "账单：按月结算，由 Google 提供",
+  "apiKeyGate.infoCost": "费用：显示在应用中 — 点击查看",
+  "apiKeyGate.infoMore": "更多信息：",
   "apiKeyGate.privacyPolicy": "隐私政策",
   "apiKeyGate.stepsTitle": "两个快速步骤：",
   "apiKeyGate.stepOne": "打开 Google AI Studio 并创建一个 API 密钥。",

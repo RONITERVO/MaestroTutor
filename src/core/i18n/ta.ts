@@ -69,7 +69,11 @@ export const taTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "உங்கள் Gemini API சாவியை இணைக்கவும்",
   "apiKeyGate.billingTitle": "அதிக ஒதுக்கீட்டிற்கு பில்லிங் அமைக்கவும்",
-  "apiKeyGate.subtitle": "இந்த செயலி முழுவதுமாக உங்கள் சாதனத்தில் இயங்குகிறது. உங்கள் திறவுகோல் மற்றும் பில்லிங் நேரடியாக Google மூலம் கையாளப்படுகிறது. உங்கள் அனுமதியின்றி Google-ிடமிருந்து எந்த கட்டணமும் வசூலிக்கப்படாது.",
+  "apiKeyGate.infoLogin": "உங்கள் உள்நுழைவு: ஒரு API விசை",
+  "apiKeyGate.infoVisibility": "யார் பார்ப்பது: நீங்கள் மட்டுமே",
+  "apiKeyGate.infoBilling": "பில்லிங்: மாதந்தோறும், Google இலிருந்து",
+  "apiKeyGate.infoCost": "செலவு: பயன்பாட்டில் காட்டப்பட்டுள்ளது — பார்க்கத் தட்டவும்",
+  "apiKeyGate.infoMore": "மேலும் தகவல்:",
   "apiKeyGate.privacyPolicy": "தனியுரிமைக் கொள்கை",
   "apiKeyGate.stepsTitle": "இரண்டு விரைவான படிகள்:",
   "apiKeyGate.stepOne": "Google AI Studio-ஐத் திறந்து API சாவியை உருவாக்கவும்.",

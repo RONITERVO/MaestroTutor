@@ -69,7 +69,11 @@ export const ptTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Conecte sua chave API do Gemini",
   "apiKeyGate.billingTitle": "Configurar faturamento para cota maior",
-  "apiKeyGate.subtitle": "Este aplicativo roda inteiramente no seu dispositivo. Sua chave e cobrança são gerenciadas diretamente pelo Google. Sem cobranças do Google sem sua permissão.",
+  "apiKeyGate.infoLogin": "Seu login: Uma chave de API",
+  "apiKeyGate.infoVisibility": "Quem vê: Apenas você",
+  "apiKeyGate.infoBilling": "Cobrança: Mensal, do Google",
+  "apiKeyGate.infoCost": "Custo: Mostrado no app — toque para ver",
+  "apiKeyGate.infoMore": "Mais informações:",
   "apiKeyGate.privacyPolicy": "Política de Privacidade",
   "apiKeyGate.stepsTitle": "Dois passos rápidos:",
   "apiKeyGate.stepOne": "Abra o Google AI Studio e crie uma chave API.",

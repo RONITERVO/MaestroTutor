@@ -67,7 +67,11 @@ export const arTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "ربط مفتاح واجهة برمجة تطبيقات Gemini",
   "apiKeyGate.billingTitle": "إعداد الفوترة لزيادة الحصة",
-  "apiKeyGate.subtitle": "يعمل هذا التطبيق بالكامل على جهازك. مفتاحك والفوترة يتمان مباشرة عبر Google. لا توجد رسوم من Google بدون إذنك.",
+  "apiKeyGate.infoLogin": "تسجيل الدخول الخاص بك: مفتاح API",
+  "apiKeyGate.infoVisibility": "من يراه: أنت فقط",
+  "apiKeyGate.infoBilling": "الفوترة: شهرية، من Google",
+  "apiKeyGate.infoCost": "التكلفة: تظهر في التطبيق — انقر للعرض",
+  "apiKeyGate.infoMore": "مزيد من المعلومات:",
   "apiKeyGate.privacyPolicy": "سياسة الخصوصية",
   "apiKeyGate.stepsTitle": "خطوتان سريعتان:",
   "apiKeyGate.stepOne": "افتح Google AI Studio وأنشئ مفتاح API.",

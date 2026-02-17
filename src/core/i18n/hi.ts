@@ -69,7 +69,11 @@ export const hiTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "अपनी Gemini API कुंजी कनेक्ट करें",
   "apiKeyGate.billingTitle": "उच्च कोटा के लिए बिलिंग सेट करें",
-  "apiKeyGate.subtitle": "यह ऐप पूरी तरह से आपके डिवाइस पर चलता है। आपकी कुंजी और बिलिंग सीधे Google के माध्यम से होती है। आपकी अनुमति के बिना Google से कोई शुल्क नहीं लिया जाएगा।",
+  "apiKeyGate.infoLogin": "आपका लॉगिन: एक API कुंजी",
+  "apiKeyGate.infoVisibility": "इसे कौन देखता है: केवल आप",
+  "apiKeyGate.infoBilling": "बिलिंग: मासिक, Google से",
+  "apiKeyGate.infoCost": "लागत: ऐप में दिखाई गई — देखने के लिए टैप करें",
+  "apiKeyGate.infoMore": "अधिक जानकारी:",
   "apiKeyGate.privacyPolicy": "गोपनीयता नीति",
   "apiKeyGate.stepsTitle": "दो त्वरित कदम:",
   "apiKeyGate.stepOne": "Google AI Studio खोलें और एक API कुंजी बनाएं।",

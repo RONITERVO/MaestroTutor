@@ -69,7 +69,11 @@ export const svTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Anslut din Gemini API-nyckel",
   "apiKeyGate.billingTitle": "Ställ in fakturering för högre kvot",
-  "apiKeyGate.subtitle": "Denna app körs helt på din enhet. Din nyckel och fakturering sker direkt via Google. Ingen debitering från Google utan din tillåtelse.",
+  "apiKeyGate.infoLogin": "Din inloggning: En API-nyckel",
+  "apiKeyGate.infoVisibility": "Vem ser den: Bara du",
+  "apiKeyGate.infoBilling": "Fakturering: Månadsvis, från Google",
+  "apiKeyGate.infoCost": "Kostnad: Visas i appen — tryck för att se",
+  "apiKeyGate.infoMore": "Mer info:",
   "apiKeyGate.privacyPolicy": "Integritetspolicy",
   "apiKeyGate.stepsTitle": "Två snabba steg:",
   "apiKeyGate.stepOne": "Öppna Google AI Studio och skapa en API-nyckel.",

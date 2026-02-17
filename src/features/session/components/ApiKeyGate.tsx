@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
-import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark, IconSparkles } from '../../../shared/ui/Icons';
+import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark, IconSparkles, IconEyeOpen, IconCreditCard, IconShield } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
@@ -150,7 +150,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg bg-card shadow-xl sketchy-border">
         <div className="flex items-start justify-between px-6 pt-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center bg-accent/15 text-accent sketchy-border-thin">
               <IconKey className="h-5 w-5" />
             </div>
@@ -158,15 +158,34 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               <h2 className="text-lg font-semibold text-foreground font-sketch">
                 {isBillingHelp ? t('apiKeyGate.billingTitle') : t('apiKeyGate.title')}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {t('apiKeyGate.subtitle')}{' '}
-                <button
-                  onClick={() => openExternalUrl(PRIVACY_POLICY_URL)}
-                  className="text-accent hover:underline inline-flex items-center"
-                >
-                  {t('apiKeyGate.privacyPolicy')}
-                </button>
-              </p>
+              <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <IconKey className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t('apiKeyGate.infoLogin')}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <IconEyeOpen className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t('apiKeyGate.infoVisibility')}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <IconCreditCard className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t('apiKeyGate.infoBilling')}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <IconSparkles className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t('apiKeyGate.infoCost')}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <IconShield className="h-3.5 w-3.5 shrink-0" />
+                  <span>{t('apiKeyGate.infoMore')}</span>
+                  <button
+                    onClick={() => openExternalUrl(PRIVACY_POLICY_URL)}
+                    className="text-accent hover:underline"
+                  >
+                    {t('apiKeyGate.privacyPolicy')}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           {showHeaderClose && (
