@@ -440,7 +440,7 @@ export function useGeminiLiveConversation(
                     const points = modelAudioSplitPointsRef.current
                         .slice()
                         .sort((a, b) => a - b)
-                        .filter(p => p > 0 && p < modelAudioFull.length);
+                        .filter(p => p < modelAudioFull.length);
 
                     for (const point of points) {
                         if (point > startSample) {
