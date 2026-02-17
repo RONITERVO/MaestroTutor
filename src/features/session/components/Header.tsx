@@ -5,7 +5,7 @@ import React, { forwardRef, useState, useEffect, useRef, useMemo, useCallback } 
 import { useShallow } from 'zustand/react/shallow';
 import CollapsedMaestroStatus, { getStatusConfig } from './CollapsedMaestroStatus';
 import StatusAnimationBubble from './StatusAnimationBubble';
-import { IconKey, IconTerminal } from '../../../shared/ui/Icons';
+import { IconKey, IconTerminal, IconPause, IconPlay } from '../../../shared/ui/Icons';
 import { useStatusAnimations } from '../hooks/useStatusAnimations';
 import { useMaestroStore } from '../../../store';
 import { parseLanguagePairId } from '../../../shared/utils/languageUtils';
@@ -151,8 +151,9 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
           className={`flex items-center cursor-pointer select-none touch-none transition-all duration-300
             ${statusConfig.color} ${statusConfig.borderColor}
             ${statusConfig.textColor}
-            ${isOpen ? 'shadow-md border-y border-r rounded-r-xl pr-4 pl-3 py-1.5' : 'drop-shadow-md pl-3 pr-3 py-2 animate-flag-wave'}
+            ${isOpen ? 'drop-shadow-md border-y border-r pr-4 pl-3 py-1.5' : 'drop-shadow-md pl-3 pr-3 py-2 animate-flag-wave'}
           `}
+          style={isOpen ? { borderRadius: '0 15px 225px 0 / 0 225px 15px 0' } : undefined}
           onClick={handleClick}
           onPointerDown={handlePointerDown}
           onPointerUp={handlePointerUp}
@@ -160,7 +161,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
           onContextMenu={(e) => e.preventDefault()}
           role="status"
           aria-live="polite"
-          title={!isOpen ? "Click to view status, Long press to Hold" : undefined}
+          title={!isOpen ? "Click to view status" : undefined}
         >
           <div className={`transition-opacity duration-300`}>
             <CollapsedMaestroStatus
@@ -172,6 +173,24 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
               isExpanded={isOpen}
             />
           </div>
+          {isOpen && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleHold();
+                if (navigator.vibrate) navigator.vibrate(50);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="ml-2 pl-2 border-l border-current opacity-70 hover:opacity-100 transition-opacity duration-200"
+              aria-label={isHolding ? 'Resume Maestro' : 'Pause Maestro'}
+            >
+              {isHolding ? (
+                <IconPlay className="w-4 h-4" />
+              ) : (
+                <IconPause className="w-4 h-4" />
+              )}
+            </button>
+          )}
         </div>
        </div>
 
