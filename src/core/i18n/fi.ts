@@ -69,7 +69,11 @@ export const fiTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Yhdistä Gemini API -avain",
   "apiKeyGate.billingTitle": "Määritä laskutus suurempaa kiintiötä varten",
-  "apiKeyGate.subtitle": "Tämä sovellus toimii kokonaan laitteellasi. Avaimesi ja laskutus suoraan googlen kautta. Ei laskutusta Googlelta ilman lupaasi.",
+  "apiKeyGate.infoLogin": "Käyttäjätunnus: API-avain",
+  "apiKeyGate.infoVisibility": "Avaimen näkee: Vain sinä",
+  "apiKeyGate.infoBilling": "Laskutus: Kuun lopussa Googlelta",
+  "apiKeyGate.infoCost": "Laskun summa: Sovellus näyttää arvion, klikkaa sitä",
+  "apiKeyGate.infoMore": "Lisätietoja:",
   "apiKeyGate.privacyPolicy": "Tietosuojakäytäntö",
   "apiKeyGate.stepsTitle": "Kaksi nopeaa vaihetta:",
   "apiKeyGate.stepOne": "Avaa Google AI Studio ja luo API-avain.",

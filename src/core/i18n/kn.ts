@@ -69,7 +69,11 @@ export const knTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "ನಿಮ್ಮ Gemini API ಕೀಯನ್ನು ಸಂಪರ್ಕಿಸಿ",
   "apiKeyGate.billingTitle": "ಹೆಚ್ಚಿನ ಮಿತಿಗಾಗಿ ಬಿಲ್ಲಿಂಗ್ ಹೊಂದಿಸಿ",
-  "apiKeyGate.subtitle": "ಈ ಅಪ್ಲಿಕೇಶನ್ ಸಂಪೂರ್ಣವಾಗಿ ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ. ನಿಮ್ಮ ಕೀ ಮತ್ತು ಬಿಲ್ಲಿಂಗ್ ನೇರವಾಗಿ Google ಮೂಲಕ ನಡೆಯುತ್ತದೆ. ನಿಮ್ಮ ಅನುಮತಿಯಿಲ್ಲದೆ Google ನಿಂದ ಯಾವುದೇ ಬಿಲ್ಲಿಂಗ್ ಇರುವುದಿಲ್ಲ.",
+  "apiKeyGate.infoLogin": "ನಿಮ್ಮ ಲಾಗಿನ್: ಒಂದು API ಕೀ",
+  "apiKeyGate.infoVisibility": "ಯಾರು ನೋಡುತ್ತಾರೆ: ನೀವು ಮಾತ್ರ",
+  "apiKeyGate.infoBilling": "ಬಿಲ್ಲಿಂಗ್: ಮಾಸಿಕ, Google ನಿಂದ",
+  "apiKeyGate.infoCost": "ವೆಚ್ಚ: ಅಪ್ಲಿಕೇಶನ್‌ನಲ್ಲಿ ತೋರಿಸಲಾಗಿದೆ — ವೀಕ್ಷಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+  "apiKeyGate.infoMore": "ಹೆಚ್ಚಿನ ಮಾಹಿತಿ:",
   "apiKeyGate.privacyPolicy": "ಗೌಪ್ಯತಾ ನೀತಿ",
   "apiKeyGate.stepsTitle": "ಎರಡು ತ್ವರಿತ ಹಂತಗಳು:",
   "apiKeyGate.stepOne": "Google AI Studio ಅನ್ನು ತೆರೆಯಿರಿ ಮತ್ತು API ಕೀಯನ್ನು ರಚಿಸಿ.",

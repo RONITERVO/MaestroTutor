@@ -69,7 +69,11 @@ export const idTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Hubungkan kunci API Gemini Anda",
   "apiKeyGate.billingTitle": "Siapkan penagihan untuk kuota lebih tinggi",
-  "apiKeyGate.subtitle": "Aplikasi ini berjalan sepenuhnya di perangkat Anda. Kunci dan penagihan Anda dikelola langsung melalui Google. Tidak ada tagihan dari Google tanpa izin Anda.",
+  "apiKeyGate.infoLogin": "Login Anda: Kunci API",
+  "apiKeyGate.infoVisibility": "Yang melihat: Hanya Anda",
+  "apiKeyGate.infoBilling": "Tagihan: Bulanan, dari Google",
+  "apiKeyGate.infoCost": "Biaya: Ditampilkan di aplikasi — ketuk untuk melihat",
+  "apiKeyGate.infoMore": "Info selengkapnya:",
   "apiKeyGate.privacyPolicy": "Kebijakan Privasi",
   "apiKeyGate.stepsTitle": "Dua langkah cepat:",
   "apiKeyGate.stepOne": "Buka Google AI Studio dan buat kunci API.",

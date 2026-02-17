@@ -69,7 +69,11 @@ export const trTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Gemini API anahtarınızı bağlayın",
   "apiKeyGate.billingTitle": "Daha yüksek kota için faturalandırmayı ayarlayın",
-  "apiKeyGate.subtitle": "Bu uygulama tamamen cihazınızda çalışır. Anahtarınız ve faturalandırma işlemleriniz doğrudan Google üzerindendir. İzniniz olmadan Google tarafından ücretlendirme yapılmaz.",
+  "apiKeyGate.infoLogin": "Giriş bilgileriniz: Bir API anahtarı",
+  "apiKeyGate.infoVisibility": "Kim görür: Sadece siz",
+  "apiKeyGate.infoBilling": "Faturalandırma: Aylık, Google'dan",
+  "apiKeyGate.infoCost": "Maliyet: Uygulamada gösterilir — görmek için dokunun",
+  "apiKeyGate.infoMore": "Daha fazla bilgi:",
   "apiKeyGate.privacyPolicy": "Gizlilik Politikası",
   "apiKeyGate.stepsTitle": "İki hızlı adım:",
   "apiKeyGate.stepOne": "Google AI Studio'yu açın ve bir API anahtarı oluşturun.",

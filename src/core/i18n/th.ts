@@ -69,7 +69,11 @@ export const thTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "เชื่อมต่อคีย์ API Gemini ของคุณ",
   "apiKeyGate.billingTitle": "ตั้งค่าการเรียกเก็บเงินสำหรับโควตาที่สูงขึ้น",
-  "apiKeyGate.subtitle": "แอปนี้ทำงานบนอุปกรณ์ของคุณทั้งหมด คีย์และการเรียกเก็บเงินของคุณจะผ่าน Google โดยตรง ไม่มีการเรียกเก็บเงินจาก Google โดยไม่ได้รับอนุญาตจากคุณ",
+  "apiKeyGate.infoLogin": "การเข้าสู่ระบบของคุณ: คีย์ API",
+  "apiKeyGate.infoVisibility": "ใครเห็นบ้าง: คุณเท่านั้น",
+  "apiKeyGate.infoBilling": "การเรียกเก็บเงิน: รายเดือน จาก Google",
+  "apiKeyGate.infoCost": "ค่าใช้จ่าย: แสดงในแอป — แตะเพื่อดู",
+  "apiKeyGate.infoMore": "ข้อมูลเพิ่มเติม:",
   "apiKeyGate.privacyPolicy": "นโยบายความเป็นส่วนตัว",
   "apiKeyGate.stepsTitle": "สองขั้นตอนง่ายๆ:",
   "apiKeyGate.stepOne": "เปิด Google AI Studio และสร้างคีย์ API",

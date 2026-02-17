@@ -69,7 +69,11 @@ export const koTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Gemini API 키 연결",
   "apiKeyGate.billingTitle": "더 높은 할당량을 위한 결제 설정",
-  "apiKeyGate.subtitle": "이 앱은 기기에서만 완전히 작동합니다. 키와 결제는 Google을 통해 직접 처리됩니다. 귀하의 허락 없이 Google에서 요금을 청구하지 않습니다.",
+  "apiKeyGate.infoLogin": "로그인 정보: API 키",
+  "apiKeyGate.infoVisibility": "공개 범위: 본인만 확인 가능",
+  "apiKeyGate.infoBilling": "청구: 매월, Google에서 청구",
+  "apiKeyGate.infoCost": "비용: 앱에 표시됨 — 탭하여 확인",
+  "apiKeyGate.infoMore": "더 보기:",
   "apiKeyGate.privacyPolicy": "개인정보 처리방침",
   "apiKeyGate.stepsTitle": "두 가지 간단한 단계:",
   "apiKeyGate.stepOne": "Google AI Studio를 열고 API 키를 생성합니다.",

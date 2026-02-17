@@ -69,7 +69,11 @@ export const viTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "Kết nối khóa API Gemini của bạn",
   "apiKeyGate.billingTitle": "Thiết lập thanh toán để có hạn ngạch cao hơn",
-  "apiKeyGate.subtitle": "Ứng dụng này chạy hoàn toàn trên thiết bị của bạn. Khóa và thanh toán của bạn được thực hiện trực tiếp qua Google. Không có khoản phí nào từ Google nếu không có sự cho phép của bạn.",
+  "apiKeyGate.infoLogin": "Đăng nhập của bạn: Khóa API",
+  "apiKeyGate.infoVisibility": "Ai nhìn thấy: Chỉ mình bạn",
+  "apiKeyGate.infoBilling": "Thanh toán: Hàng tháng, từ Google",
+  "apiKeyGate.infoCost": "Chi phí: Hiển thị trong ứng dụng — chạm để xem",
+  "apiKeyGate.infoMore": "Thêm thông tin:",
   "apiKeyGate.privacyPolicy": "Chính sách bảo mật",
   "apiKeyGate.stepsTitle": "Hai bước nhanh chóng:",
   "apiKeyGate.stepOne": "Mở Google AI Studio và tạo khóa API.",

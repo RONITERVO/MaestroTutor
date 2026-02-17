@@ -69,7 +69,11 @@ export const mlTranslations: Record<string, string> = {
   // API key gate
   "apiKeyGate.title": "നിങ്ങളുടെ Gemini API കീ ബന്ധിപ്പിക്കുക",
   "apiKeyGate.billingTitle": "കൂടുതൽ ക്വോട്ടയ്ക്കായി ബില്ലിംഗ് സജ്ജമാക്കുക",
-  "apiKeyGate.subtitle": "ഈ ആപ്പ് പൂർണ്ണമായും നിങ്ങളുടെ ഉപകരണത്തിൽ പ്രവർത്തിക്കുന്നു. നിങ്ങളുടെ കീയും ബില്ലിംഗും നേരിട്ട് Google വഴിയാണ്. നിങ്ങളുടെ അനുവാദമില്ലാതെ Google-ൽ നിന്ന് ബില്ലിംഗൊന്നുമില്ല.",
+  "apiKeyGate.infoLogin": "നിങ്ങളുടെ ലോഗിൻ: ഒരു API കീ",
+  "apiKeyGate.infoVisibility": "ഇത് കാണുന്നത്: നിങ്ങൾ മാത്രം",
+  "apiKeyGate.infoBilling": "ബില്ലിംഗ്: പ്രതിമാസം, Google-ൽ നിന്ന്",
+  "apiKeyGate.infoCost": "ചെലവ്: ആപ്പിൽ കാണിച്ചിരിക്കുന്നു — കാണാൻ ടാപ്പുചെയ്യുക",
+  "apiKeyGate.infoMore": "കൂടുതൽ വിവരങ്ങൾ:",
   "apiKeyGate.privacyPolicy": "സ്വകാര്യതാ നയം",
   "apiKeyGate.stepsTitle": "രണ്ട് ദ്രുത ഘട്ടങ്ങൾ:",
   "apiKeyGate.stepOne": "Google AI Studio തുറന്ന് ഒരു API കീ സൃഷ്ടിക്കുക.",
