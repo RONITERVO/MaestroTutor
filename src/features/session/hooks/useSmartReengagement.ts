@@ -266,8 +266,13 @@ export const useSmartReengagement = ({
         window.clearTimeout(userActiveTimerRef.current);
         userActiveTimerRef.current = null;
       }
+      // Reset store flag on unmount so isUserActive doesn't stay stuck true
+      if (isUserActiveRef.current) {
+        isUserActiveRef.current = false;
+        setIsUserActive(false);
+      }
     };
-  }, []);
+  }, [setIsUserActive]);
 
   return {
     reengagementPhase,
