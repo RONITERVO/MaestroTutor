@@ -433,15 +433,22 @@ export function useGeminiLiveConversation(
                 
                 if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
                     let startSample = 0;
-                    // Ensure unique sorted split points within bounds
-                    const points = [...new Set(modelAudioSplitPointsRef.current)]
+                    // Sort split points but do NOT deduplicate.
+                    // Duplicate split points (same audio position for consecutive newlines)
+                    // mean a transcript line had no audio — we must create an empty segment
+                    // to maintain 1:1 alignment between audio segments and transcript lines.
+                    const points = modelAudioSplitPointsRef.current
+                        .slice()
                         .sort((a, b) => a - b)
                         .filter(p => p > 0 && p < modelAudioFull.length);
-                    
+
                     for (const point of points) {
                         if (point > startSample) {
                             modelAudioLines.push(modelAudioFull.slice(startSample, point));
                             startSample = point;
+                        } else {
+                            // Duplicate split point: transcript line with no audio
+                            modelAudioLines.push(new Int16Array(0));
                         }
                     }
                     // Add remainder as final segment
