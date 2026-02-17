@@ -38,7 +38,7 @@ export const useSmartReengagement = ({
   const reengagementTokensRef = useRef<{ waitToken: string | null; countdownToken: string | null }>({ waitToken: null, countdownToken: null });
   const reengagementDeadlineRef = useRef<number | null>(null);
   const isUserActiveRef = useRef<boolean>(false);
-  const userActiveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userActiveTimerRef = useRef<number | null>(null);
   
   // Refs to store the latest versions of interdependent functions
   // This breaks the circular dependency chain by allowing functions to call
@@ -249,15 +249,25 @@ export const useSmartReengagement = ({
     isUserActiveRef.current = true;
     setIsUserActive(true);
     cancelReengagementRef.current();
-    if (userActiveTimerRef.current) {
-      clearTimeout(userActiveTimerRef.current);
+    if (userActiveTimerRef.current !== null) {
+      window.clearTimeout(userActiveTimerRef.current);
     }
-    userActiveTimerRef.current = setTimeout(() => {
+    userActiveTimerRef.current = window.setTimeout(() => {
       userActiveTimerRef.current = null;
       isUserActiveRef.current = false;
       setIsUserActive(false);
     }, 3000);
   }, [setIsUserActive]);
+
+  // Cleanup userActiveTimer on unmount to prevent stale setIsUserActive calls
+  useEffect(() => {
+    return () => {
+      if (userActiveTimerRef.current !== null) {
+        window.clearTimeout(userActiveTimerRef.current);
+        userActiveTimerRef.current = null;
+      }
+    };
+  }, []);
 
   return {
     reengagementPhase,
