@@ -309,7 +309,13 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 </button>
               </div>
 
-              {error && <div className="text-sm text-destructive">{error}</div>}
+              {error && (
+                <div className="text-sm text-destructive">
+                  {error === 'apiKeyGate.keyInvalid'
+                    ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}····${value.slice(-4)}` : '' })
+                    : error}
+                </div>
+              )}
 
               {hasKey && (
                 <div
