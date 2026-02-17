@@ -16,6 +16,42 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Validates an API key by making a lightweight models list call.
+ * Returns `{ valid: true }` for valid keys or non-key-related errors (network, quota).
+ * Returns `{ valid: false }` only for definitively invalid keys.
+ */
+export const validateApiKey = async (apiKey: string): Promise<{ valid: boolean }> => {
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?pageSize=1`,
+      {
+        method: 'GET',
+        headers: { 'x-goog-api-key': apiKey } // Safer than query param
+      }
+    );
+
+    if (resp.ok) return { valid: true };
+
+    const errorBody = await resp.json();
+    const status = resp.status;
+    const errorMessage = errorBody.error?.message || '';
+    const errorStatus = errorBody.error?.status || '';
+
+    // Google returns 400 (INVALID_ARGUMENT) for bad keys.
+    // We strictly check for Key validity issues to avoid false positives on other errors.
+    if (status === 400 && (errorStatus === 'INVALID_ARGUMENT' || errorMessage.includes('API key'))) {
+      return { valid: false };
+    }
+
+    // Treat other errors (403 Project Not Enabled, 429 Quota, 500 Server) as "valid key, temporary issue"
+    return { valid: true };
+
+  } catch {
+    return { valid: true };
+  }
+};
+
 export const getAi = async () => {
   try {
     const apiKey = await getApiKeyOrThrow();

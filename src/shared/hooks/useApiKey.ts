@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useState } from 'react';
 import { clearApiKey, isLikelyApiKey, loadApiKey, normalizeApiKey, setApiKey } from '../../core/security/apiKeyStorage';
+import { validateApiKey } from '../../api/gemini/client';
 import { resetCostTracking } from '../utils/costTracker';
 
 const dispatchApiKeyChanged = (hasKey: boolean) => {
@@ -17,6 +18,7 @@ const dispatchApiKeyChanged = (hasKey: boolean) => {
 export const useApiKey = () => {
   const [apiKey, setApiKeyState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,14 +50,25 @@ export const useApiKey = () => {
       setError('That key looks too short. Please paste the full Gemini API key.');
       return false;
     }
+    setIsSaving(true);
     try {
+      // Validate the key with a lightweight API call before persisting
+      const result = await validateApiKey(value);
+      if (!result.valid) {
+        setError('apiKeyGate.keyInvalid');
+        setIsSaving(false);
+        return false;
+      }
+
       await setApiKey(value);
       setApiKeyState(value);
       setError(null);
       dispatchApiKeyChanged(true);
+      setIsSaving(false);
       return true;
     } catch {
       setError('Failed to save API key securely. Please try again.');
+      setIsSaving(false);
       return false;
     }
   }, []);
@@ -74,6 +87,7 @@ export const useApiKey = () => {
     apiKey,
     maskedKey,
     isLoading,
+    isSaving,
     hasKey: !!apiKey,
     error,
     setError,

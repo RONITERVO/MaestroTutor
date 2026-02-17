@@ -97,6 +97,7 @@ const App: React.FC = () => {
     hasKey: hasApiKey,
     maskedKey: maskedApiKey,
     isLoading: isApiKeyLoading,
+    isSaving: isApiKeySaving,
     error: apiKeyError,
     setError: setApiKeyError,
     saveApiKey,
@@ -613,6 +614,7 @@ const App: React.FC = () => {
         isBlocking={!hasApiKey}
         hasKey={hasApiKey}
         maskedKey={maskedApiKey}
+        isSaving={isApiKeySaving}
         error={apiKeyError}
         keyInvalid={apiKeyInvalid}
         instructionFocusIndex={apiKeyGateInstructionIndex}
