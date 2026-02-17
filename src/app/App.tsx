@@ -525,6 +525,8 @@ const App: React.FC = () => {
   }, [handleApiKeyGateOpen]);
 
   const handleQuotaStartLive = useCallback(async () => {
+    // Disable image generation – live is free, image gen costs money
+    handleSettingsChange('imageGenerationModeEnabled', false);
     // Select the first available physical camera if none is selected
     const currentCameraId = settingsRef.current.selectedCameraId;
     if (!currentCameraId || currentCameraId === IMAGE_GEN_CAMERA_ID) {
