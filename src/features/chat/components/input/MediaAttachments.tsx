@@ -77,6 +77,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   const recordingTimerRef = useRef<number | null>(null);
   const videoRecordTokenRef = useRef<string | null>(null);
   const capturePressTimerRef = useRef<number | null>(null);
+  const recordingAudioStreamRef = useRef<MediaStream | null>(null);
 
   const pickRecorderMimeType = () => {
     const candidates = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
@@ -88,6 +89,10 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
     const rec = mediaRecorderRef.current;
     if (rec && rec.state === 'recording') {
       rec.stop();
+    }
+    if (recordingAudioStreamRef.current) {
+      recordingAudioStreamRef.current.getTracks().forEach(track => track.stop());
+      recordingAudioStreamRef.current = null;
     }
     if (recordingTimerRef.current) {
       clearTimeout(recordingTimerRef.current);
@@ -108,6 +113,11 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       if (rec && rec.state === 'recording') {
         try { rec.stop(); } catch {}
       }
+      // Stop recording audio stream
+      if (recordingAudioStreamRef.current) {
+        recordingAudioStreamRef.current.getTracks().forEach(track => track.stop());
+        recordingAudioStreamRef.current = null;
+      }
       // Clear timers
       if (recordingTimerRef.current) {
         clearTimeout(recordingTimerRef.current);
@@ -125,15 +135,29 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
     };
   }, [endUiTask]);
 
-  const handleStartRecording = useCallback(() => {
+  const handleStartRecording = useCallback(async () => {
     if (isRecording || !liveVideoStream) return;
     try {
       if (!videoRecordTokenRef.current) {
         videoRecordTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIDEO_RECORD);
       }
+
+      // Acquire audio lazily to avoid mobile "call mode" from combined audio+video streams
+      let recordStream: MediaStream = liveVideoStream;
+      try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordingAudioStreamRef.current = audioStream;
+        recordStream = new MediaStream([
+          ...liveVideoStream.getVideoTracks(),
+          ...audioStream.getAudioTracks(),
+        ]);
+      } catch {
+        // Audio unavailable (permission denied, no mic, etc.) -- record video without audio
+      }
+
       const mimeType = pickRecorderMimeType();
       const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
-      const rec = new MediaRecorder(liveVideoStream, options);
+      const rec = new MediaRecorder(recordStream, options);
       mediaRecorderRef.current = rec;
       recordedChunksRef.current = [];
       rec.ondataavailable = (event) => { if (event.data && event.data.size > 0) recordedChunksRef.current.push(event.data); };
@@ -166,6 +190,10 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       }, 15 * 60 * 1000);
     } catch (e) {
       console.error('Failed to start media recorder:', e);
+      if (recordingAudioStreamRef.current) {
+        recordingAudioStreamRef.current.getTracks().forEach(track => track.stop());
+        recordingAudioStreamRef.current = null;
+      }
       if (videoRecordTokenRef.current) {
         endUiTask(videoRecordTokenRef.current);
         videoRecordTokenRef.current = null;
