@@ -19,8 +19,8 @@ Check: Verify android/app/src/main/res/mipmap-* contains your logo, not the defa
 
 ## 2) Versioning (Required for every upload)
 Edit `android/app/build.gradle`:
-- [8] Increment `versionCode`
-- ["1.2.4"] Update `versionName`
+- [9] Increment `versionCode`
+- ["1.2.5"] Update `versionName`
 
 ## 3) Build Web Assets
 ```bash
@@ -64,7 +64,7 @@ Select: "All or some functionality is restricted" -> Add instructions.
 
 Write: "This app requires a user-generated Google Gemini API Key. For testing purposes, please use this valid key: [PASTE_YOUR_KEY_HERE]. You can revoke this key after testing."
 
-- [X] Add privacy policy URL: `https://ronitervo.github.io/MaestroTutor/privacy.html`
+- [X] Add privacy policy URL: `https://chatwithmaestro.com/privacy.html`
 
 ## 7) Data Safety Form
 Recommended answers:
