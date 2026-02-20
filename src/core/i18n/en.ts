@@ -111,6 +111,7 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Submission limit reached. Thank you!",
   "apiKeyGate.developerLogin": "developer login",
   "apiKeyGate.SubmitAnotherEmail": "Entered the wrong email? Submit another.",
+  "apiKeyGate.testerFormDuplicateEmail": "This email has already been submitted.",
   
   // Chat - general
   "chat.thinking": "Thinking...",

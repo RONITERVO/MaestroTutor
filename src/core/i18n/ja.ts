@@ -110,6 +110,7 @@ export const jaTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "送信上限に達しました。ありがとうございます！",
   "apiKeyGate.developerLogin": "開発者ログイン",
   "apiKeyGate.SubmitAnotherEmail": "間違ったメールアドレスを入力しましたか？別のアドレスを送信してください。",
+  "apiKeyGate.testerFormDuplicateEmail": "このメールアドレスはすでに送信されています。",
   // Chat - general
   "chat.thinking": "考え中...",
   "chat.loadingHistory": "チャット履歴を読み込み中...",

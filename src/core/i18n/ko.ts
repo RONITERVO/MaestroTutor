@@ -110,6 +110,7 @@ export const koTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "제출 한도에 도달했습니다. 감사합니다!",
   "apiKeyGate.developerLogin": "개발자 로그인",
   "apiKeyGate.SubmitAnotherEmail": "잘못된 이메일을 입력하셨나요? 다른 이메일을 제출해 주세요.",
+  "apiKeyGate.testerFormDuplicateEmail": "이 이메일은 이미 제출되었습니다.",
   // Chat - general
   "chat.thinking": "생각 중...",
   "chat.loadingHistory": "채팅 기록 로드 중...",

@@ -108,6 +108,7 @@ export const arTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "تم الوصول إلى الحد الأقصى للإرسال. شكرًا لك!",
   "apiKeyGate.developerLogin": "تسجيل دخول المطور",
   "apiKeyGate.SubmitAnotherEmail": "هل أدخلت بريدًا إلكترونيًا خاطئًا؟ أرسل بريدًا آخر.",
+  "apiKeyGate.testerFormDuplicateEmail": "تم إرسال هذا البريد الإلكتروني بالفعل.",
   // Chat - general
   "chat.thinking": "جارٍ التفكير...",
   "chat.loadingHistory": "جارٍ تحميل سجل المحادثة...",

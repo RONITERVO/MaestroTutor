@@ -110,6 +110,7 @@ export const guTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "સબમિશન મર્યાદા પહોંચી ગઈ છે. આભાર!",
   "apiKeyGate.developerLogin": "ડેવલપર લૉગિન",
   "apiKeyGate.SubmitAnotherEmail": "ખોટો ઈમેલ દાખલ કર્યો છે? બીજો સબમિટ કરો.",
+  "apiKeyGate.testerFormDuplicateEmail": "આ ઈમેલ પહેલેથી જ સબમિટ થઈ चुका છે.",
   // Chat - general
   "chat.thinking": "વિચારું છું...",
   "chat.loadingHistory": "ચેટ ઇતિહાસ લોડ કરી રહ્યું છે...",

@@ -110,6 +110,7 @@ export const fiTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Lähetysraja saavutettu. Kiitos!",
   "apiKeyGate.developerLogin": "kehittäjän sisäänkirjautuminen",
   "apiKeyGate.SubmitAnotherEmail": "Syötitkö väärän sähköpostiosoitteen? Lähetä uusi.",
+  "apiKeyGate.testerFormDuplicateEmail": "Tämä sähköpostiosoite on jo lähetetty.",
   // Chat - general
   "chat.thinking": "Ajattelen...",
   "chat.loadingHistory": "Ladataan keskusteluhistoriaa...",

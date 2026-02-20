@@ -110,6 +110,7 @@ export const nlTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Inzendingslimiet bereikt. Bedankt!",
   "apiKeyGate.developerLogin": "ontwikkelaars login",
   "apiKeyGate.SubmitAnotherEmail": "Verkeerd e-mailadres ingevoerd? Dien een ander in.",
+  "apiKeyGate.testerFormDuplicateEmail": "Dit e-mailadres is al ingediend.",
   // Chat - general
   "chat.thinking": "Aan het denken...",
   "chat.loadingHistory": "Chatgeschiedenis laden...",

@@ -110,6 +110,7 @@ export const bnTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "জমা দেওয়ার সীমায় পৌঁছেছে। ধন্যবাদ!",
   "apiKeyGate.developerLogin": "ডেভেলপার লগইন",
   "apiKeyGate.SubmitAnotherEmail": "ভুল ইমেইল দিয়েছেন? আরেকটি জমা দিন।",
+  "apiKeyGate.testerFormDuplicateEmail": "এই ইমেইল ইতিমধ্যেই জমা দেওয়া হয়েছে।",
   // Chat - general
   "chat.thinking": "ভাবছি...",
   "chat.loadingHistory": "চ্যাট ইতিহাস লোড হচ্ছে...",

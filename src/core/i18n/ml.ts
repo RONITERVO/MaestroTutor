@@ -110,6 +110,7 @@ export const mlTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "സമർപ്പണ പരിധിയിലെത്തി. നന്ദി!",
   "apiKeyGate.developerLogin": "ഡെവലപ്പർ ലോഗിൻ",
   "apiKeyGate.SubmitAnotherEmail": "തെറ്റായ ഇമെയിൽ നൽകിയോ? മറ്റൊന്ന് സമർപ്പിക്കുക.",
+  "apiKeyGate.testerFormDuplicateEmail": "ഈ ഇമെയിൽ ഇതിനകം സമർപ്പിച്ചിരിക്കുന്നു.",
   // Chat - general
   "chat.thinking": "ചിന്തിക്കുന്നു...",
   "chat.loadingHistory": "ചാറ്റ് ചരിത്രം ലോഡുചെയ്യുന്നു...",

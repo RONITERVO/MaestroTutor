@@ -320,7 +320,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     />
                     {isDuplicateEmail && testerEmail.length > 0 && (
                       <p className="text-xs text-amber-600 text-left mt-1">
-                        This email has already been submitted.
+                        {t('apiKeyGate.testerFormDuplicateEmail')}
                       </p>
                     )}
                     {testerStatus === 'error' && (

@@ -110,6 +110,7 @@ export const ruTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Достигнут лимит заявок. Спасибо!",
   "apiKeyGate.developerLogin": "вход для разработчиков",
   "apiKeyGate.SubmitAnotherEmail": "Ввели неверный email? Отправьте другой.",
+  "apiKeyGate.testerFormDuplicateEmail": "Этот email уже был отправлен.",
   // Chat - general
   "chat.thinking": "Думаю...",
   "chat.loadingHistory": "Загрузка истории чата...",

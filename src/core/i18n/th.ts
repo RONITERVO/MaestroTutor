@@ -110,6 +110,7 @@ export const thTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "ถึงขีดจำกัดการส่งแล้ว ขอบคุณ!",
   "apiKeyGate.developerLogin": "เข้าสู่ระบบสำหรับนักพัฒนาซอฟต์แวร์",
   "apiKeyGate.SubmitAnotherEmail": "ใส่อีเมลผิดใช่ไหม? ส่งอีกครั้ง",
+  "apiKeyGate.testerFormDuplicateEmail": "อีเมลนี้ถูกส่งไปแล้ว",
   // Chat - general
   "chat.thinking": "กำลังคิด...",
   "chat.loadingHistory": "กำลังโหลดประวัติแชท...",

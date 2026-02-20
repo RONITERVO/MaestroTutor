@@ -110,6 +110,7 @@ export const trTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Gönderim sınırına ulaşıldı. Teşekkürler!",
   "apiKeyGate.developerLogin": "geliştirici girişi",
   "apiKeyGate.SubmitAnotherEmail": "Yanlış e-posta mı girdiniz? Başka bir tane gönderin.",
+  "apiKeyGate.testerFormDuplicateEmail": "Bu e-posta zaten gönderildi.",
   // Chat - general
   "chat.thinking": "Düşünüyor...",
   "chat.loadingHistory": "Sohbet geçmişi yükleniyor...",

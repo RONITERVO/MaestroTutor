@@ -110,6 +110,7 @@ export const zhTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "已达到提交上限。谢谢！",
   "apiKeyGate.developerLogin": "开发者登录",
   "apiKeyGate.SubmitAnotherEmail": "输入了错误的电子邮件？重新提交。",
+  "apiKeyGate.testerFormDuplicateEmail": "此电子邮件已提交过了。",
   // Chat - general
   "chat.thinking": "思考中...",
   "chat.loadingHistory": "加载聊天记录中...",

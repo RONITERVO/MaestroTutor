@@ -110,6 +110,7 @@ export const idTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Batas pengiriman tercapai. Terima kasih!",
   "apiKeyGate.developerLogin": "login pengembang",
   "apiKeyGate.SubmitAnotherEmail": "Salah memasukkan email? Kirim yang lain.",
+  "apiKeyGate.testerFormDuplicateEmail": "Email ini sudah dikirim.",
   // Chat - general
   "chat.thinking": "Sedang berpikir...",
   "chat.loadingHistory": "Memuat riwayat obrolan...",

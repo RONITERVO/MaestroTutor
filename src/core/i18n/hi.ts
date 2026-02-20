@@ -110,6 +110,7 @@ export const hiTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "सबमिशन सीमा पूरी हो गई। धन्यवाद!",
   "apiKeyGate.developerLogin": "डेवलपर लॉगिन",
   "apiKeyGate.SubmitAnotherEmail": "गलत ईमेल दर्ज किया? दूसरा सबमिट करें।",
+  "apiKeyGate.testerFormDuplicateEmail": "यह ईमेल पहले ही सबमिट किया जा चुका है।",
   // Chat - general
   "chat.thinking": "सोच रहा हूँ...",
   "chat.loadingHistory": "चैट इतिहास लोड हो रहा है...",

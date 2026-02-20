@@ -110,6 +110,7 @@ export const knTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "ಸಲ್ಲಿಕೆ ಮಿತಿಯನ್ನು ತಲುಪಲಾಗಿದೆ. ಧನ್ಯವಾದಗಳು!",
   "apiKeyGate.developerLogin": "ಡೆವಲಪರ್ ಲಾಗಿನ್",
   "apiKeyGate.SubmitAnotherEmail": "ತಪ್ಪಾದ ಇಮೇಲ್ ನಮೂದಿಸಿದ್ದೀರಾ? ಇನ್ನೊಂದನ್ನು ಸಲ್ಲಿಸಿ.",
+  "apiKeyGate.testerFormDuplicateEmail": "ಈ ಇಮೇಲ್ ಈಗಾಗಲೇ ಸಲ್ಲಿಸಲಾಗಿದೆ.",
   // Chat - general
   "chat.thinking": "ಯೋಚಿಸುತ್ತಿದ್ದೇನೆ...",
   "chat.loadingHistory": "ಚಾಟ್ ಇತಿಹಾಸ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",

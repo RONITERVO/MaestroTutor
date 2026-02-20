@@ -110,6 +110,7 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "சமர்ப்பிப்பு வரம்பை எட்டிவிட்டது. நன்றி!",
   "apiKeyGate.developerLogin": "டெவலப்பர் உள்நுழைவு",
   "apiKeyGate.SubmitAnotherEmail": "தவறான மின்னஞ்சலை உள்ளிட்டுவிட்டீர்களா? மற்றொன்றைச் சமர்ப்பிக்கவும்.",
+  "apiKeyGate.testerFormDuplicateEmail": "இந்த மின்னஞ்சல் ஏற்கனவே சமர்ப்பிக்கப்பட்டுள்ளது.",
   
   // Chat - general
   "chat.thinking": "யோசிக்கிறேன்...",

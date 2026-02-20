@@ -110,6 +110,7 @@ export const itTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Limite di invio raggiunto. Grazie!",
   "apiKeyGate.developerLogin": "login sviluppatore",
   "apiKeyGate.SubmitAnotherEmail": "Hai inserito l'email sbagliata? Inseriscine un'altra.",
+  "apiKeyGate.testerFormDuplicateEmail": "Questa email è già stata inviata.",
   // Chat - general
   "chat.thinking": "Sto pensando...",
   "chat.loadingHistory": "Caricamento cronologia chat...",

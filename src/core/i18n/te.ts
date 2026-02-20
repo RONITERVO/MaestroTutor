@@ -110,6 +110,7 @@ export const teTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "సమర్పణ పరిమితి చేరుకుంది. ధన్యవాదాలు!",
   "apiKeyGate.developerLogin": "డెవలపర్ లాగిన్",
   "apiKeyGate.SubmitAnotherEmail": "తప్పు ఇమెయిల్ నమోదు చేశారా? మరొకదాన్ని సమర్పించండి.",
+  "apiKeyGate.testerFormDuplicateEmail": "ఈ ఇమెయిల్ ఇప్పటికే సమర్పించబడింది.",
   // Chat - general
   "chat.thinking": "ఆలోచిస్తోంది...",
   "chat.loadingHistory": "చాట్ చరిత్రను లోడ్ చేస్తోంది...",

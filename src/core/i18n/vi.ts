@@ -110,6 +110,7 @@ export const viTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Đã đạt đến giới hạn gửi. Cảm ơn!",
   "apiKeyGate.developerLogin": "đăng nhập dành cho nhà phát triển",
   "apiKeyGate.SubmitAnotherEmail": "Nhập sai email? Hãy gửi một email khác.",
+  "apiKeyGate.testerFormDuplicateEmail": "Email này đã được gửi rồi.",
   // Chat - general
   "chat.thinking": "Đang suy nghĩ...",
   "chat.loadingHistory": "Đang tải lịch sử trò chuyện...",

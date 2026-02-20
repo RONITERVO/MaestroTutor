@@ -108,6 +108,7 @@ export const deTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Einreichungslimit erreicht. Danke!",
   "apiKeyGate.developerLogin": "Entwickler-Login",
   "apiKeyGate.SubmitAnotherEmail": "Falsche E-Mail eingegeben? Geben Sie eine andere ein.",
+  "apiKeyGate.testerFormDuplicateEmail": "Diese E-Mail wurde bereits eingereicht.",
 
   // Chat - general
   "chat.thinking": "Denke nach...",

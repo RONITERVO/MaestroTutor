@@ -110,6 +110,7 @@ export const svTranslations: Record<string, string> = {
   "apiKeyGate.testerFormCapReached": "Gränsen för inlämningar har nåtts. Tack!",
   "apiKeyGate.developerLogin": "utvecklarinloggning",
   "apiKeyGate.SubmitAnotherEmail": "Angav du fel e-postadress? Skicka in en ny.",
+  "apiKeyGate.testerFormDuplicateEmail": "Denna e-postadress har redan skickats in.",
   // Chat - general
   "chat.thinking": "Tänker...",
   "chat.loadingHistory": "Laddar chatthistorik...",
