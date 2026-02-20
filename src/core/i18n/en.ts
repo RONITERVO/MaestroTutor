@@ -97,6 +97,17 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Save key",
   "apiKeyGate.close": "Close",
   "apiKeyGate.costLabel": "Estimated API cost",
+  // API key gate - tester form
+  "apiKeyGate.testerFormTitle": "Test the App",
+  "apiKeyGate.testerFormDescription": "Enter the email you use for the Google Play Store to get an invite to our Android beta!",
+  "apiKeyGate.testerFormPlaceholder": "googlePlayEmail@gmail.com",
+  "apiKeyGate.testerFormSubmit": "Get Early Access",
+  "apiKeyGate.testerFormSubmitting": "Sending...",
+  "apiKeyGate.testerFormSuccessTitle": "Thanks!",
+  "apiKeyGate.testerFormSuccessDesc": "Humans are confirming your email. This will take time. The link will not work for {TheUserEmail} yet.",
+  "apiKeyGate.testerFormNextSteps":  "When confirmation is done (up to 1 day) we will email you the same link: ",
+  "apiKeyGate.testerFormError": "Something went wrong. Please try again.",
+  "apiKeyGate.developerLogin": "developer login",
   
   // Chat - general
   "chat.thinking": "Thinking...",
