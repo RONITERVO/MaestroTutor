@@ -96,6 +96,21 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "சாவியைச் சேமி",
   "apiKeyGate.close": "மூடு",
   "apiKeyGate.costLabel": "மதிப்பிடப்பட்ட API செலவு",
+  // API key gate - tester form
+  "apiKeyGate.testerFormTitle": "செயலியைச் சோதிக்கவும்",
+  "apiKeyGate.testAppLink": " சமர்ப்பித்துவிட்டு, மின்னஞ்சல் உறுதிப்படுத்தலைப் பெற்றுவிட்டீர்களா? செயலியை இங்கே பெறவும்: https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor",
+  "apiKeyGate.testerFormDescription": "எங்கள் Android பீட்டாவிற்கான அழைப்பைப் பெற நீங்கள் Google Play Store இல் பயன்படுத்தும் மின்னஞ்சலை உள்ளிடவும்!",
+  "apiKeyGate.testerFormSubmit": "முன்கூட்டியே அணுகலைப் பெறுக",
+  "apiKeyGate.testerFormSubmitting": "அனுப்பப்படுகிறது...",
+  "apiKeyGate.testerFormSuccessTitle": "நன்றி!",
+  "apiKeyGate.testerFormSuccessDesc": "மனிதர்கள் உங்கள் மின்னஞ்சலை உறுதிப்படுத்துகிறார்கள். இதற்கு நேரம் எடுக்கும். {TheUserEmail} க்கான இணைப்பு உடனடியாகச் செயல்படாது.",
+  "apiKeyGate.testerFormNextSteps": "உறுதிப்படுத்தல் முடிந்ததும் (1 நாள் வரை) இந்த இணைப்பை உங்களுக்கு மின்னஞ்சலில் அனுப்புவோம் (தற்போதைக்கு நீங்கள் இந்தப் பக்கத்திலிருந்து வெளியேறலாம்): ",
+  "apiKeyGate.testerFormError": "ஏதோ தவறு நடந்துவிட்டது. மீண்டும் முயற்சிக்கவும்.",
+  "apiKeyGate.testerFormMustBeGmail": "Google Play க்கான @gmail.com முகவரியைப் பயன்படுத்தவும்.",
+  "apiKeyGate.testerFormCapReached": "சமர்ப்பிப்பு வரம்பை எட்டிவிட்டது. நன்றி!",
+  "apiKeyGate.developerLogin": "டெவலப்பர் உள்நுழைவு",
+  "apiKeyGate.SubmitAnotherEmail": "தவறான மின்னஞ்சலை உள்ளிட்டுவிட்டீர்களா? மற்றொன்றைச் சமர்ப்பிக்கவும்.",
+  
   // Chat - general
   "chat.thinking": "யோசிக்கிறேன்...",
   "chat.loadingHistory": "அரட்டை வரலாற்றை ஏற்றுகிறது...",

@@ -14,6 +14,9 @@ import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTr
 // Password is: thedev
 const DEV_PASSWORD = 'thedev';
 const STORAGE_KEY_EMAIL = 'maestro_tester_email';
+const STORAGE_KEY_SUBMISSION_COUNT = 'maestro_tester_submission_count';
+const MAX_SUBMISSIONS = 3;
+const MAX_EMAIL_LENGTH = 100;
 
 interface ApiKeyGateProps {
   isOpen: boolean;
@@ -62,10 +65,15 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const [showTesterForm, setShowTesterForm] = useState(() => !Capacitor.isNativePlatform() && !hasKey);
   const [testerEmail, setTesterEmail] = useState('');
   const [testerStatus, setTesterStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [emailErrorMsg, setEmailErrorMsg] = useState('');
 
   // Memory & Developer Gate State
   const [lastSubmittedEmail, setLastSubmittedEmail] = useState(() => localStorage.getItem(STORAGE_KEY_EMAIL) || '');
   const [submittedEmailDisplay, setSubmittedEmailDisplay] = useState(lastSubmittedEmail);
+  const [submissionCount, setSubmissionCount] = useState(() => {
+    const stored = localStorage.getItem(STORAGE_KEY_SUBMISSION_COUNT);
+    return stored ? parseInt(stored, 10) : 0;
+  });
   const [showDevPassword, setShowDevPassword] = useState(false);
   const [devPasswordInput, setDevPasswordInput] = useState('');
   // -------------------------
@@ -89,6 +97,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
         setTesterStatus('idle');
         setTesterEmail('');
       }
+      setEmailErrorMsg('');
       setShowDevPassword(false);
       setDevPasswordInput('');
     } else {
@@ -126,17 +135,17 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
     if (totalInstructions === 0) return;
 
     if (isBillingHelp) {
-       // Loop within the billing set [REGULAR_INSTRUCTIONS_COUNT, totalInstructions - 1]
-       const start = REGULAR_INSTRUCTIONS_COUNT;
-       const count = totalInstructions - start;
-       if (count <= 0) return;
-       const relativeIndex = instructionIndex - start;
-       const nextRelative = (relativeIndex + direction + count) % count;
-       setInstructionIndex(start + nextRelative);
+      // Loop within the billing set [REGULAR_INSTRUCTIONS_COUNT, totalInstructions - 1]
+      const start = REGULAR_INSTRUCTIONS_COUNT;
+      const count = totalInstructions - start;
+      if (count <= 0) return;
+      const relativeIndex = instructionIndex - start;
+      const nextRelative = (relativeIndex + direction + count) % count;
+      setInstructionIndex(start + nextRelative);
     } else {
-       // Loop within regular set [0, REGULAR_INSTRUCTIONS_COUNT - 1]
-       const count = REGULAR_INSTRUCTIONS_COUNT;
-       setInstructionIndex((prev) => (prev + direction + count) % count);
+      // Loop within regular set [0, REGULAR_INSTRUCTIONS_COUNT - 1]
+      const count = REGULAR_INSTRUCTIONS_COUNT;
+      setInstructionIndex((prev) => (prev + direction + count) % count);
     }
     setIsAutoPlaying(false);
   };
@@ -206,22 +215,28 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   {/* Notice how we pass TheUserEmail into the translation string here */}
                   {t('apiKeyGate.testerFormSuccessDesc', { TheUserEmail: submittedEmailDisplay })}
                 </p>
-                <div className="mt-3 pt-3 border-t border-green-200/50">
+                <div className="mt-3 pt-3 border-t border-green-200/50 flex flex-col gap-1">
                   <p className="text-xs opacity-90 font-medium">
                     {t('apiKeyGate.testerFormNextSteps')}
-                    <a href="https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor" target="_blank" rel="noreferrer" className="underline break-all">
-                      https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor
-                    </a>
                   </p>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] underline break-all text-green-700/80 hover:text-green-900 transition-colors"
+                  >
+                    https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor
+                  </a>
                 </div>
                 <button
                   onClick={() => {
                     setTesterStatus('idle');
                     setTesterEmail('');
+                    setEmailErrorMsg('');
                   }}
                   className="mt-2 text-xs text-green-700/70 hover:text-green-800 underline"
                 >
-                  Submit another email
+                  {t('apiKeyGate.SubmitAnotherEmail')}
                 </button>
               </div>
             ) : (
@@ -233,7 +248,30 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   className="w-full space-y-4"
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    if (!testerEmail || isDuplicateEmail) return;
+
+                    // 1. Sanitize
+                    const cleanEmail = testerEmail.trim().toLowerCase();
+
+                    if (!cleanEmail || isDuplicateEmail) return;
+
+                    // 2. Guard: Submission cap
+                    if (submissionCount >= MAX_SUBMISSIONS) {
+                      setEmailErrorMsg(t('apiKeyGate.testerFormCapReached'));
+                      return;
+                    }
+
+                    // 3. Guard: Must be a Gmail address
+                    if (!cleanEmail.endsWith('@gmail.com') && !cleanEmail.endsWith('@googlemail.com')) {
+                      setEmailErrorMsg(t('apiKeyGate.testerFormMustBeGmail'));
+                      return;
+                    }
+
+                    // 4. Guard: Length limits (shortest valid is a@gmail.com = 11 chars)
+                    if (cleanEmail.length < 11 || cleanEmail.length > MAX_EMAIL_LENGTH) {
+                      setEmailErrorMsg(t('apiKeyGate.testerFormError'));
+                      return;
+                    }
+
                     setTesterStatus('submitting');
 
                     try {
@@ -244,26 +282,23 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                           'Accept': 'application/json',
                           'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ email: testerEmail })
+                        body: JSON.stringify({ email: cleanEmail })
                       });
 
                       if (response.ok) {
-                        const savedEmail = testerEmail.trim().toLowerCase();
-                        localStorage.setItem(STORAGE_KEY_EMAIL, savedEmail);
-                        setLastSubmittedEmail(savedEmail);
-                        setSubmittedEmailDisplay(testerEmail.trim());
+                        const newCount = submissionCount + 1;
+                        localStorage.setItem(STORAGE_KEY_EMAIL, cleanEmail);
+                        localStorage.setItem(STORAGE_KEY_SUBMISSION_COUNT, String(newCount));
+                        setLastSubmittedEmail(cleanEmail);
+                        setSubmittedEmailDisplay(cleanEmail);
+                        setSubmissionCount(newCount);
                         setTesterStatus('success');
                       } else {
                         setTesterStatus('error');
                       }
                     } catch (error) {
                       console.error('Form submission failed', error);
-                      // Fallback to success to prevent endless errors for grandmas behind strict firewalls
-                      const savedEmail = testerEmail.trim().toLowerCase();
-                      localStorage.setItem(STORAGE_KEY_EMAIL, savedEmail);
-                      setLastSubmittedEmail(savedEmail);
-                      setSubmittedEmailDisplay(testerEmail.trim());
-                      setTesterStatus('success');
+                      setTesterStatus('error');
                     }
                   }}
                 >
@@ -275,10 +310,12 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                       onChange={(e) => {
                         setTesterEmail(e.target.value);
                         if (testerStatus === 'error') setTesterStatus('idle');
+                        if (emailErrorMsg) setEmailErrorMsg('');
                       }}
-                      placeholder={t('apiKeyGate.testerFormPlaceholder')}
+                      placeholder="@gmail.com"
                       className={`w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin ${isDuplicateEmail ? 'border-amber-500/50 focus:ring-amber-500/50' : ''
                         }`}
+                      maxLength={MAX_EMAIL_LENGTH}
                       autoFocus
                     />
                     {isDuplicateEmail && testerEmail.length > 0 && (
@@ -291,18 +328,37 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         {t('apiKeyGate.testerFormError')}
                       </p>
                     )}
+                    {emailErrorMsg && (
+                      <p className="text-xs text-amber-600 text-left mt-1">
+                        {emailErrorMsg}
+                      </p>
+                    )}
                   </div>
 
                   <button
                     type="submit"
-                    disabled={testerStatus === 'submitting' || isDuplicateEmail}
+                    disabled={testerStatus === 'submitting' || isDuplicateEmail || submissionCount >= MAX_SUBMISSIONS}
                     className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50 sketchy-border-thin transition-opacity"
                   >
-                    {testerStatus === 'submitting'
-                      ? t('apiKeyGate.testerFormSubmitting')
-                      : t('apiKeyGate.testerFormSubmit')}
+                    {submissionCount >= MAX_SUBMISSIONS
+                      ? t('apiKeyGate.testerFormCapReached')
+                      : testerStatus === 'submitting'
+                        ? t('apiKeyGate.testerFormSubmitting')
+                        : t('apiKeyGate.testerFormSubmit')}
                   </button>
                 </form>
+
+                {/* Sub-action for existing users */}
+                <div className="w-full pt-4 mt-2 border-t border-border/40">
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-[11px] leading-relaxed text-muted-foreground hover:text-accent transition-colors underline decoration-muted-foreground/30 underline-offset-2 break-words"
+                  >
+                    {t('apiKeyGate.testAppLink')}
+                  </a>
+                </div>
               </>
             )}
           </div>
@@ -520,11 +576,10 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
               {hasKey && (
                 <div
-                  className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${
-                    keyInvalid
+                  className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${keyInvalid
                       ? 'bg-red-50 text-red-800'
                       : 'bg-green-50 text-green-800'
-                  }`}
+                    }`}
                   style={{ borderColor: keyInvalid ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
                 >
                   {keyInvalid ? (

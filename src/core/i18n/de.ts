@@ -94,6 +94,21 @@ export const deTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Schlüssel speichern",
   "apiKeyGate.close": "Schließen",
   "apiKeyGate.costLabel": "Geschätzte API-Kosten",
+  // API key gate - tester form
+  "apiKeyGate.testerFormTitle": "App testen",
+  "apiKeyGate.testAppLink": " Eingereicht und Bestätigungs-E-Mail erhalten? Holen Sie sich die App hier: https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor",
+  "apiKeyGate.testerFormDescription": "Geben Sie die E-Mail-Adresse ein, die Sie für den Google Play Store verwenden, um eine Einladung zu unserer Android-Beta zu erhalten!",
+  "apiKeyGate.testerFormSubmit": "Vorabzugriff erhalten",
+  "apiKeyGate.testerFormSubmitting": "Wird gesendet...",
+  "apiKeyGate.testerFormSuccessTitle": "Danke!",
+  "apiKeyGate.testerFormSuccessDesc": "Menschen überprüfen Ihre E-Mail. Dies wird einige Zeit dauern. Der Link wird für {TheUserEmail} nicht sofort funktionieren.",
+  "apiKeyGate.testerFormNextSteps": "Wenn die Bestätigung abgeschlossen ist (bis zu 1 Tag), senden wir Ihnen diesen Link per E-Mail (Sie können diese Seite vorerst verlassen): ",
+  "apiKeyGate.testerFormError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+  "apiKeyGate.testerFormMustBeGmail": "Bitte verwenden Sie eine @gmail.com-Adresse für Google Play.",
+  "apiKeyGate.testerFormCapReached": "Einreichungslimit erreicht. Danke!",
+  "apiKeyGate.developerLogin": "Entwickler-Login",
+  "apiKeyGate.SubmitAnotherEmail": "Falsche E-Mail eingegeben? Geben Sie eine andere ein.",
+
   // Chat - general
   "chat.thinking": "Denke nach...",
   "chat.loadingHistory": "Lade Chatverlauf...",
