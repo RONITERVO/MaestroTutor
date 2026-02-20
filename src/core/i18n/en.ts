@@ -97,6 +97,21 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Save key",
   "apiKeyGate.close": "Close",
   "apiKeyGate.costLabel": "Estimated API cost",
+  // API key gate - tester form
+  "apiKeyGate.testerFormTitle": "Test the App",
+  "apiKeyGate.testAppLink": " Have submitted, and received email confirmation? Get the app here: https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor",
+  "apiKeyGate.testerFormDescription": "Enter the email you use for the Google Play Store to get an invite to our Android beta!",
+  "apiKeyGate.testerFormSubmit": "Get Early Access",
+  "apiKeyGate.testerFormSubmitting": "Sending...",
+  "apiKeyGate.testerFormSuccessTitle": "Thanks!",
+  "apiKeyGate.testerFormSuccessDesc": "Humans are confirming your email. This will take time. The link will not work for {TheUserEmail} instantly.",
+  "apiKeyGate.testerFormNextSteps":  "When confirmation is done (up to 1 day) we will email you this link (you can leave this page for now): ",
+  "apiKeyGate.testerFormError": "Something went wrong. Please try again.",
+  "apiKeyGate.testerFormMustBeGmail": "Please use an @gmail.com address for Google Play.",
+  "apiKeyGate.testerFormCapReached": "Submission limit reached. Thank you!",
+  "apiKeyGate.developerLogin": "developer login",
+  "apiKeyGate.SubmitAnotherEmail": "Entered the wrong email? Submit another.",
+  "apiKeyGate.testerFormDuplicateEmail": "This email has already been submitted.",
   
   // Chat - general
   "chat.thinking": "Thinking...",
