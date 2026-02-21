@@ -107,7 +107,7 @@ export const deTranslations: Record<string, string> = {
   "apiKeyGate.testerFormMustBeGmail": "Bitte verwenden Sie eine @gmail.com-Adresse für Google Play.",
   "apiKeyGate.testerFormCapReached": "Einreichungslimit erreicht. Danke!",
   "apiKeyGate.developerLogin": "Entwickler-Login",
-  "apiKeyGate.SubmitAnotherEmail": "Falsche E-Mail eingegeben? Geben Sie eine andere ein.",
+  "apiKeyGate.submitAnotherEmail": "Falsche E-Mail eingegeben? Geben Sie eine andere ein.",
   "apiKeyGate.testerFormDuplicateEmail": "Diese E-Mail wurde bereits eingereicht.",
 
   // Chat - general
@@ -252,11 +252,12 @@ export const deTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Sitzungs-Token-Limit erreicht. Bitte neue Sitzung starten.",
   "error.apiKeyMissing": "Ihr Gemini-API-Schlüssel fehlt. Öffnen Sie den API-Schlüssel-Bildschirm und fügen Sie Ihren Schlüssel ein.",
   "error.apiKeyInvalid": "Ihr Gemini-API-Schlüssel ist ungültig. Bitte prüfen Sie auf Tippfehler und fügen Sie einen gültigen Schlüssel ein.",
-  "error.apiQuotaExceeded": "Ihr kostenloses Gemini-API-Kontingent für den Chat ist erschöpft.",
+  "error.apiQuotaExceeded": "Ihr Kontingent ist erschöpft (Kostenpflichtig: intelligenterer Chat, Video, PDF und Bilderzeugung)",
   "error.quotaSetupBilling": "Abrechnung einrichten",
-  "error.quotaStartLive": "Stattdessen Live starten",
-  "error.imageGenCostWarning": "Die Bildgenerierung kostet ca. 0,04 $ pro Bild. Für Chatnachrichten fallen ebenfalls geringe Tokenkosten an. Die Abrechnung erfolgt über Google. Sie können die Kosten im API-Schlüssel-Bildschirm verfolgen.",  "error.imageGenDisable": "Bildgenerierung deaktivieren",
-  "error.imageGenViewCost": "Kosten der Bildgenerierung ansehen",
+  "error.quotaStartLive": "Kostenlose Live-Version starten (keine Bilderzeugung)",
+  "error.imageGenCostWarning": "Die Bilderzeugung kostet ca. 0,04 $ pro Bild. Chat-Nachrichten haben ebenfalls kleine Kosten. Alles wird von Google abgerechnet. Sie können die Kosten im API-Schlüssel-Bildschirm verfolgen.",
+  "error.imageGenDisable": "Bilderzeugung deaktivieren",
+  "error.imageGenViewCost": "Verfolgen Sie die Kosten im API-Schlüssel-Bildschirm.",
   // Errors - camera
   "error.cameraPermissionDenied": "Kameraberechtigung verweigert. Bitte aktivieren Sie den Kamerazugriff in Ihren Browsereinstellungen.",
   "error.cameraNotFound": "Ausgewählte Kamera nicht gefunden. Stellen Sie sicher, dass sie angeschlossen ist, oder wählen Sie eine andere Kamera.",

@@ -110,7 +110,7 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.testerFormMustBeGmail": "Please use an @gmail.com address for Google Play.",
   "apiKeyGate.testerFormCapReached": "Submission limit reached. Thank you!",
   "apiKeyGate.developerLogin": "developer login",
-  "apiKeyGate.SubmitAnotherEmail": "Entered the wrong email? Submit another.",
+  "apiKeyGate.submitAnotherEmail": "Entered the wrong email? Submit another.",
   "apiKeyGate.testerFormDuplicateEmail": "This email has already been submitted.",
   
   // Chat - general
@@ -255,12 +255,12 @@ export const enTranslations: Record<string, string> = {
   "error.tokenLimitReached": "Session token limit reached. Please start a new session.",
   "error.apiKeyMissing": "Your Gemini API key is missing. Open the API Key screen and paste your key.",
   "error.apiKeyInvalid": "Your Gemini API key is invalid. Please check for typos and paste a valid key.",
-  "error.apiQuotaExceeded": "Your Gemini API free quota for chat is exhausted.",
+  "error.apiQuotaExceeded": "Your quota is exhausted (Paid: smarter chat, video, pdf, and image generation)",
   "error.quotaSetupBilling": "Set up billing",
-  "error.quotaStartLive": "Start Live instead",
-  "error.imageGenCostWarning": "Image generation costs ~$0.04 per image. Chat messages also have a small token cost. All billed by Google. You can track costs in the API key screen.",
+  "error.quotaStartLive": "Start Live free version (no image gen)",
+  "error.imageGenCostWarning": "Image generation costs ~$0.04 per image. Chat messages also have a small cost. All billed by Google. You can track costs in the API key screen.",
   "error.imageGenDisable": "Disable Image Generation",
-  "error.imageGenViewCost": "View image Generation Cost",
+  "error.imageGenViewCost": "Track costs in the API key screen",
   
   // Errors - camera
   "error.cameraPermissionDenied": "Camera permission denied. Please enable camera access in your browser settings.",

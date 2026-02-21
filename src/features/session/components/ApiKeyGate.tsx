@@ -13,9 +13,13 @@ import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTr
 // Hardcoded developer password to bypass the tester form. 
 // Password is: thedev
 const DEV_PASSWORD = 'thedev';
+
+// REPLACE THIS with your deployed Google Apps Script Web App URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQu5RPmR7nmgTgVffeKBbXTGGX3d3HYc5v515kt6YyJ4gz7AWI6__2aBj2p19H9pi2/exec';
+
 const STORAGE_KEY_EMAIL = 'maestro_tester_email';
 const STORAGE_KEY_SUBMISSION_COUNT = 'maestro_tester_submission_count';
-const MAX_SUBMISSIONS = 3;
+const MAX_SUBMISSIONS = 100;
 const MAX_EMAIL_LENGTH = 100;
 
 interface ApiKeyGateProps {
@@ -212,7 +216,6 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               <div className="p-4 bg-green-50 text-green-800 sketchy-border-thin w-full text-center space-y-2 mt-4">
                 <p className="font-medium text-lg">{t('apiKeyGate.testerFormSuccessTitle')}</p>
                 <p className="text-sm">
-                  {/* Notice how we pass TheUserEmail into the translation string here */}
                   {t('apiKeyGate.testerFormSuccessDesc', { TheUserEmail: submittedEmailDisplay })}
                 </p>
                 <div className="mt-3 pt-3 border-t border-green-200/50 flex flex-col gap-1">
@@ -236,7 +239,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   }}
                   className="mt-2 text-xs text-green-700/70 hover:text-green-800 underline"
                 >
-                  {t('apiKeyGate.SubmitAnotherEmail')}
+                  {t('apiKeyGate.submitAnotherEmail')}
                 </button>
               </div>
             ) : (
@@ -266,7 +269,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                       return;
                     }
 
-                    // 4. Guard: Length limits (shortest valid is a@gmail.com = 11 chars)
+                    // 4. Guard: Length limits
                     if (cleanEmail.length < 11 || cleanEmail.length > MAX_EMAIL_LENGTH) {
                       setEmailErrorMsg(t('apiKeyGate.testerFormError'));
                       return;
@@ -275,17 +278,20 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     setTesterStatus('submitting');
 
                     try {
-                      const FORMSPREE_URL = 'https://formspree.io/f/xzdaaozp';
-                      const response = await fetch(FORMSPREE_URL, {
-                        method: 'POST',
-                        headers: {
-                          'Accept': 'application/json',
-                          'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ email: cleanEmail })
-                      });
+                      // Using URLSearchParams ensures it sends as application/x-www-form-urlencoded
+                      // This completely bypasses preflight CORS checks required by Google Apps Script
+                      const formData = new URLSearchParams();
+                      formData.append('email', cleanEmail);
+                      formData.append('source', 'web_tester_form');
 
-                      if (response.ok) {
+                      const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        body: formData,
+                        // Do not set Content-Type header manually here; URLSearchParams handles it automatically.
+                      });
+                      const data = await response.json();
+                      // GAS returns a 200 OK with custom JSON on success
+                      if (response.ok && data.result === "success") {
                         const newCount = submissionCount + 1;
                         localStorage.setItem(STORAGE_KEY_EMAIL, cleanEmail);
                         localStorage.setItem(STORAGE_KEY_SUBMISSION_COUNT, String(newCount));
@@ -294,6 +300,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         setSubmissionCount(newCount);
                         setTesterStatus('success');
                       } else {
+                        console.error("Apps script returned an error:", data.error);
                         setTesterStatus('error');
                       }
                     } catch (error) {
@@ -577,8 +584,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               {hasKey && (
                 <div
                   className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${keyInvalid
-                      ? 'bg-red-50 text-red-800'
-                      : 'bg-green-50 text-green-800'
+                    ? 'bg-red-50 text-red-800'
+                    : 'bg-green-50 text-green-800'
                     }`}
                   style={{ borderColor: keyInvalid ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
                 >

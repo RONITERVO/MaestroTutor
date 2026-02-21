@@ -109,7 +109,7 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.testerFormMustBeGmail": "Google Play க்கான @gmail.com முகவரியைப் பயன்படுத்தவும்.",
   "apiKeyGate.testerFormCapReached": "சமர்ப்பிப்பு வரம்பை எட்டிவிட்டது. நன்றி!",
   "apiKeyGate.developerLogin": "டெவலப்பர் உள்நுழைவு",
-  "apiKeyGate.SubmitAnotherEmail": "தவறான மின்னஞ்சலை உள்ளிட்டுவிட்டீர்களா? மற்றொன்றைச் சமர்ப்பிக்கவும்.",
+  "apiKeyGate.submitAnotherEmail": "தவறான மின்னஞ்சலை உள்ளிட்டுவிட்டீர்களா? மற்றொன்றைச் சமர்ப்பிக்கவும்.",
   "apiKeyGate.testerFormDuplicateEmail": "இந்த மின்னஞ்சல் ஏற்கனவே சமர்ப்பிக்கப்பட்டுள்ளது.",
   
   // Chat - general
@@ -254,11 +254,12 @@ export const taTranslations: Record<string, string> = {
   "error.tokenLimitReached": "அமர்வு டோக்கன் வரம்பை அடைந்தது. புதிய அமர்வைத் தொடங்கவும்.",
   "error.apiKeyMissing": "உங்கள் Gemini API சாவி இல்லை. API சாவி திரையைத் திறந்து உங்கள் சாவியை ஒட்டவும்.",
   "error.apiKeyInvalid": "உங்கள் Gemini API சாவி தவறானது. எழுத்துப் பிழைகளைச் சரிபார்த்து சரியான சாவியை ஒட்டவும்.",
-  "error.apiQuotaExceeded": "அரட்டைக்கான உங்கள் Gemini API இலவச ஒதுக்கீடு முடிந்தது.",
-  "error.quotaSetupBilling": "பில்லிங் அமைக்கவும்",
-  "error.quotaStartLive": "அதற்கு பதிலாக நேரடியைத் தொடங்கவும்",
-  "error.imageGenCostWarning": "பட உருவாக்கத்திற்கு ஒரு படத்திற்கு ~$0.04 செலவாகும். அரட்டை செய்திகளுக்கும் சிறிய டோக்கன் செலவு உண்டு. அனைத்தும் Google-ஆல் பில் செய்யப்படும். API கீ திரையில் நீங்கள் செலவுகளைக் கண்காணிக்கலாம்.",  "error.imageGenDisable": "படம் உருவாக்குவதை முடக்கு",
-  "error.imageGenViewCost": "படம் உருவாக்கும் செலவுகளைப் பார்",
+  "error.apiQuotaExceeded": "உங்கள் ஒதுக்கீடு தீர்ந்துவிட்டது (கட்டணம்: சிறந்த அரட்டை, வீடியோ, பிடிஎஃப் மற்றும் பட உருவாக்கம்)",
+  "error.quotaSetupBilling": "பில்லிங்கை அமை",
+  "error.quotaStartLive": "நேரலை இலவச பதிப்பைத் தொடங்கு (பட உருவாக்கம் இல்லை)",
+  "error.imageGenCostWarning": "பட உருவாக்கத்திற்கு ஒரு படத்திற்கு ~$0.04 செலவாகும். அரட்டை செய்திகளுக்கும் சிறிய செலவு உள்ளது. அனைத்தும் Google ஆல் பில் செய்யப்படுகின்றன. ஏபிஐ கீ திரையில் நீங்கள் செலவுகளைக் கண்காணிக்கலாம்.",
+  "error.imageGenDisable": "பட உருவாக்கத்தை முடக்கு",
+  "error.imageGenViewCost": "ஏபிஐ கீ திரையில் செலவுகளைக் கண்காணிக்கவும்.",
   // Errors - camera
   "error.cameraPermissionDenied": "கேமரா அனுமதி மறுக்கப்பட்டது. உலாவி அமைப்புகளில் கேமரா அணுகலை இயக்கவும்.",
   "error.cameraNotFound": "தேர்ந்தெடுக்கப்பட்ட கேமரா கண்டறியப்படவில்லை. இணைக்கப்பட்டுள்ளதா என்பதை உறுதிசெய்யவும் அல்லது வேறு கேமராவைத் தேர்ந்தெடுக்கவும்.",
