@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
 import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark, IconSparkles, IconEyeOpen, IconCreditCard, IconShield } from '../../../shared/ui/Icons';
@@ -13,9 +13,13 @@ import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTr
 // Hardcoded developer password to bypass the tester form. 
 // Password is: thedev
 const DEV_PASSWORD = 'thedev';
+
+// REPLACE THIS with your deployed Google Apps Script Web App URL
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYCcKruNccmRqB7YmVFPBLUpC4gvTAMtfOjYJ1oJS-Dp44Am1HJoKJAp-RRtf02eIx/exec';
+
 const STORAGE_KEY_EMAIL = 'maestro_tester_email';
 const STORAGE_KEY_SUBMISSION_COUNT = 'maestro_tester_submission_count';
-const MAX_SUBMISSIONS = 3;
+const MAX_SUBMISSIONS = 100;
 const MAX_EMAIL_LENGTH = 100;
 
 interface ApiKeyGateProps {
@@ -64,16 +68,25 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // --- TESTER FORM STATE ---
   const [showTesterForm, setShowTesterForm] = useState(() => !Capacitor.isNativePlatform() && !hasKey);
   const [testerEmail, setTesterEmail] = useState('');
-  const [testerStatus, setTesterStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [testerStatus, setTesterStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
   const [emailErrorMsg, setEmailErrorMsg] = useState('');
 
-  // Memory & Developer Gate State
+  // Memory & Approval State
   const [lastSubmittedEmail, setLastSubmittedEmail] = useState(() => localStorage.getItem(STORAGE_KEY_EMAIL) || '');
-  const [submittedEmailDisplay, setSubmittedEmailDisplay] = useState(lastSubmittedEmail);
+  const [isCheckingApproval, setIsCheckingApproval] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const skipNextCheckRef = useRef(false); // Prevents checking immediately after a POST race condition
+
+  // Alternate Form View Mode
+  const [viewMode, setViewMode] = useState<'submit' | 'check'>('submit');
+  const [checkEmailInput, setCheckEmailInput] = useState('');
+  const [notFoundError, setNotFoundError] = useState(false);
+
   const [submissionCount, setSubmissionCount] = useState(() => {
     const stored = localStorage.getItem(STORAGE_KEY_SUBMISSION_COUNT);
     return stored ? parseInt(stored, 10) : 0;
   });
+
   const [showDevPassword, setShowDevPassword] = useState(false);
   const [devPasswordInput, setDevPasswordInput] = useState('');
   // -------------------------
@@ -93,17 +106,57 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
       setIsAutoPlaying(true);
 
       // Keep memory of submission, but reset UI state if reopened
-      if (testerStatus !== 'success') {
-        setTesterStatus('idle');
-        setTesterEmail('');
-      }
+      setTesterStatus('idle');
+      setTesterEmail('');
       setEmailErrorMsg('');
       setShowDevPassword(false);
       setDevPasswordInput('');
     } else {
       setCostSummary(getCostSummary());
     }
-  }, [isOpen, testerStatus]);
+  }, [isOpen]);
+
+  // Check approval status on load if we have a saved email
+  useEffect(() => {
+    const checkApprovalStatus = async () => {
+      if (!lastSubmittedEmail || !showTesterForm) return;
+
+      // If we just submitted the form, skip the fetch so we don't hit a sheet sync race condition
+      if (skipNextCheckRef.current) {
+        skipNextCheckRef.current = false;
+        return;
+      }
+
+      setIsCheckingApproval(true);
+      try {
+        const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?email=${encodeURIComponent(lastSubmittedEmail)}`, {
+          redirect: "follow"
+        });
+        const data = await response.json();
+
+        if (data.found) {
+          setIsApproved(!!data.approved);
+          setNotFoundError(false);
+          // Save to local storage just in case it was a manual check
+          localStorage.setItem(STORAGE_KEY_EMAIL, lastSubmittedEmail);
+        } else {
+          // They checked an email that isn't in the sheet at all
+          setLastSubmittedEmail('');
+          localStorage.removeItem(STORAGE_KEY_EMAIL);
+          setNotFoundError(true);
+          setViewMode('submit'); // Send them back to the main form to apply
+        }
+      } catch (e) {
+        console.error("Failed to check approval status", e);
+        // Fallback: don't delete their email if network fails, just show pending
+        setIsApproved(false);
+      } finally {
+        setIsCheckingApproval(false);
+      }
+    };
+
+    checkApprovalStatus();
+  }, [lastSubmittedEmail, showTesterForm]);
 
   useEffect(() => {
     if (!isOpen || typeof instructionFocusIndex !== 'number' || totalInstructions <= 0) return;
@@ -118,7 +171,6 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
     if (!showInstructions || !isAutoPlaying || totalInstructions <= 1 || isBillingHelp) return;
     const intervalId = window.setInterval(() => {
       setInstructionIndex((prev) => {
-        // Prevent advancing into billing instructions on any edge case
         if (prev >= REGULAR_INSTRUCTIONS_COUNT - 1) return 0;
         return prev + 1;
       });
@@ -135,7 +187,6 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
     if (totalInstructions === 0) return;
 
     if (isBillingHelp) {
-      // Loop within the billing set [REGULAR_INSTRUCTIONS_COUNT, totalInstructions - 1]
       const start = REGULAR_INSTRUCTIONS_COUNT;
       const count = totalInstructions - start;
       if (count <= 0) return;
@@ -143,7 +194,6 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
       const nextRelative = (relativeIndex + direction + count) % count;
       setInstructionIndex(start + nextRelative);
     } else {
-      // Loop within regular set [0, REGULAR_INSTRUCTIONS_COUNT - 1]
       const count = REGULAR_INSTRUCTIONS_COUNT;
       setInstructionIndex((prev) => (prev + direction + count) % count);
     }
@@ -182,11 +232,9 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   if (!isOpen) return null;
 
   // =========================================================================
-  // TESTER FORM VIEW (Web Only)
+  // TESTER FORM VIEW (Web Only) - GRANDMA PROOF VERSION
   // =========================================================================
   if (showTesterForm) {
-    const isDuplicateEmail = testerEmail.trim().toLowerCase() === lastSubmittedEmail;
-
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
         <div className="w-full max-w-sm bg-card shadow-xl sketchy-border p-8 relative">
@@ -204,69 +252,99 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             <div className="flex h-12 w-12 items-center justify-center bg-accent/15 text-accent sketchy-border-thin rounded-full mb-2">
               <IconSparkles className="h-6 w-6" />
             </div>
-            <h2 className="text-2xl font-semibold text-foreground font-sketch">
-              {t('apiKeyGate.testerFormTitle')}
-            </h2>
 
-            {testerStatus === 'success' ? (
-              <div className="p-4 bg-green-50 text-green-800 sketchy-border-thin w-full text-center space-y-2 mt-4">
-                <p className="font-medium text-lg">{t('apiKeyGate.testerFormSuccessTitle')}</p>
-                <p className="text-sm">
-                  {/* Notice how we pass TheUserEmail into the translation string here */}
-                  {t('apiKeyGate.testerFormSuccessDesc', { TheUserEmail: submittedEmailDisplay })}
+            {/* GRANDMA-PROOF STATE 1: CHECKING STATUS */}
+            {isCheckingApproval && (
+              <div className="py-8 space-y-4 w-full flex flex-col items-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-accent"></div>
+                <p className="text-sm text-muted-foreground">{t('apiKeyGate.testerFormChecking')}</p>
+              </div>
+            )}
+
+            {/* GRANDMA-PROOF STATE 2: APPROVED! SHOW DOWNLOAD LINK */}
+            {!isCheckingApproval && isApproved && (
+              <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                <h2 className="text-2xl font-semibold text-green-600 font-sketch">
+                  {t('apiKeyGate.testerFormApprovedTitle')}
+                </h2>
+                <p className="text-sm text-foreground">
+                  {t('apiKeyGate.testerFormApprovedDesc')}
                 </p>
-                <div className="mt-3 pt-3 border-t border-green-200/50 flex flex-col gap-1">
-                  <p className="text-xs opacity-90 font-medium">
-                    {t('apiKeyGate.testerFormNextSteps')}
-                  </p>
-                  <a
-                    href="https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] underline break-all text-green-700/80 hover:text-green-900 transition-colors"
-                  >
-                    https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor
-                  </a>
+                <button
+                  onClick={() => openExternalUrl("https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor")}
+                  className="w-full bg-green-600 px-4 py-4 mt-2 text-base font-bold text-white hover:bg-green-700 sketchy-border-thin transition-colors rounded-md shadow-md"
+                >
+                  {t('apiKeyGate.testerFormDownloadBtn')}
+                </button>
+                <button
+                  onClick={() => {
+                    setLastSubmittedEmail('');
+                    localStorage.removeItem(STORAGE_KEY_EMAIL);
+                    setIsApproved(false);
+                    setViewMode('submit');
+                  }}
+                  className="mt-4 text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+                >
+                  {t('apiKeyGate.submitAnotherEmail')}
+                </button>
+              </div>
+            )}
+
+            {/* GRANDMA-PROOF STATE 3: PENDING (Submitted, but not ticked in sheet yet) */}
+            {!isCheckingApproval && !isApproved && lastSubmittedEmail && (
+              <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                <h2 className="text-2xl font-semibold text-foreground font-sketch">
+                  {t('apiKeyGate.testerFormPendingTitle')}
+                </h2>
+                <div className="p-4 bg-amber-50 text-amber-900 sketchy-border-thin text-sm space-y-2">
+                  <p>{t('apiKeyGate.testerFormPendingDesc')}</p>
+                  <p className="font-medium opacity-80">{lastSubmittedEmail}</p>
                 </div>
                 <button
                   onClick={() => {
-                    setTesterStatus('idle');
-                    setTesterEmail('');
-                    setEmailErrorMsg('');
+                    setLastSubmittedEmail('');
+                    localStorage.removeItem(STORAGE_KEY_EMAIL);
+                    setViewMode('submit');
                   }}
-                  className="mt-2 text-xs text-green-700/70 hover:text-green-800 underline"
+                  className="mt-4 text-xs text-muted-foreground hover:text-foreground underline transition-colors"
                 >
-                  {t('apiKeyGate.SubmitAnotherEmail')}
+                  {t('apiKeyGate.submitAnotherEmail')}
                 </button>
               </div>
-            ) : (
-              <>
+            )}
+
+            {/* GRANDMA-PROOF STATE 4A: FIRST TIME INPUT FORM */}
+            {!isCheckingApproval && !isApproved && !lastSubmittedEmail && viewMode === 'submit' && (
+              <div className="w-full space-y-2 animate-in fade-in">
+                <h2 className="text-2xl font-semibold text-foreground font-sketch">
+                  {t('apiKeyGate.testerFormTitle')}
+                </h2>
                 <p className="text-sm text-muted-foreground pb-4">
                   {t('apiKeyGate.testerFormDescription')}
                 </p>
+
+                {notFoundError && (
+                  <div className="p-3 mb-4 text-sm bg-red-50 text-red-800 sketchy-border-thin">
+                    {t('apiKeyGate.testerFormNotFound')}
+                  </div>
+                )}
+
                 <form
                   className="w-full space-y-4"
                   onSubmit={async (e) => {
                     e.preventDefault();
-
-                    // 1. Sanitize
                     const cleanEmail = testerEmail.trim().toLowerCase();
 
-                    if (!cleanEmail || isDuplicateEmail) return;
+                    if (!cleanEmail) return;
 
-                    // 2. Guard: Submission cap
                     if (submissionCount >= MAX_SUBMISSIONS) {
                       setEmailErrorMsg(t('apiKeyGate.testerFormCapReached'));
                       return;
                     }
-
-                    // 3. Guard: Must be a Gmail address
                     if (!cleanEmail.endsWith('@gmail.com') && !cleanEmail.endsWith('@googlemail.com')) {
                       setEmailErrorMsg(t('apiKeyGate.testerFormMustBeGmail'));
                       return;
                     }
-
-                    // 4. Guard: Length limits (shortest valid is a@gmail.com = 11 chars)
                     if (cleanEmail.length < 11 || cleanEmail.length > MAX_EMAIL_LENGTH) {
                       setEmailErrorMsg(t('apiKeyGate.testerFormError'));
                       return;
@@ -275,24 +353,26 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     setTesterStatus('submitting');
 
                     try {
-                      const FORMSPREE_URL = 'https://formspree.io/f/xzdaaozp';
-                      const response = await fetch(FORMSPREE_URL, {
+                      const formData = new URLSearchParams();
+                      formData.append('email', cleanEmail);
+                      formData.append('source', 'web_tester_form');
+
+                      const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
                         method: 'POST',
-                        headers: {
-                          'Accept': 'application/json',
-                          'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ email: cleanEmail })
+                        body: formData,
                       });
 
                       if (response.ok) {
                         const newCount = submissionCount + 1;
                         localStorage.setItem(STORAGE_KEY_EMAIL, cleanEmail);
                         localStorage.setItem(STORAGE_KEY_SUBMISSION_COUNT, String(newCount));
-                        setLastSubmittedEmail(cleanEmail);
-                        setSubmittedEmailDisplay(cleanEmail);
+
+                        skipNextCheckRef.current = true; // Prevent race condition
+                        setNotFoundError(false);
+                        setIsApproved(false);
                         setSubmissionCount(newCount);
-                        setTesterStatus('success');
+                        setTesterStatus('idle');
+                        setLastSubmittedEmail(cleanEmail);
                       } else {
                         setTesterStatus('error');
                       }
@@ -313,16 +393,10 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         if (emailErrorMsg) setEmailErrorMsg('');
                       }}
                       placeholder="@gmail.com"
-                      className={`w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin ${isDuplicateEmail ? 'border-amber-500/50 focus:ring-amber-500/50' : ''
-                        }`}
+                      className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin"
                       maxLength={MAX_EMAIL_LENGTH}
                       autoFocus
                     />
-                    {isDuplicateEmail && testerEmail.length > 0 && (
-                      <p className="text-xs text-amber-600 text-left mt-1">
-                        {t('apiKeyGate.testerFormDuplicateEmail')}
-                      </p>
-                    )}
                     {testerStatus === 'error' && (
                       <p className="text-xs text-destructive text-left mt-1">
                         {t('apiKeyGate.testerFormError')}
@@ -337,7 +411,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
                   <button
                     type="submit"
-                    disabled={testerStatus === 'submitting' || isDuplicateEmail || submissionCount >= MAX_SUBMISSIONS}
+                    disabled={testerStatus === 'submitting' || submissionCount >= MAX_SUBMISSIONS}
                     className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50 sketchy-border-thin transition-opacity"
                   >
                     {submissionCount >= MAX_SUBMISSIONS
@@ -348,18 +422,71 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   </button>
                 </form>
 
-                {/* Sub-action for existing users */}
-                <div className="w-full pt-4 mt-2 border-t border-border/40">
-                  <a
-                    href="https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block text-[11px] leading-relaxed text-muted-foreground hover:text-accent transition-colors underline decoration-muted-foreground/30 underline-offset-2 break-words"
+                <div className="w-full pt-4 mt-2 border-t border-border/40 text-center">
+                  <button
+                    onClick={() => {
+                      setViewMode('check');
+                      setNotFoundError(false);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-accent transition-colors underline decoration-muted-foreground/30 underline-offset-2"
                   >
-                    {t('apiKeyGate.testAppLink')}
-                  </a>
+                    {t('apiKeyGate.checkStatusModeBtn')}
+                  </button>
                 </div>
-              </>
+              </div>
+            )}
+
+            {/* GRANDMA-PROOF STATE 4B: CHECK EXISTING STATUS FORM */}
+            {!isCheckingApproval && !isApproved && !lastSubmittedEmail && viewMode === 'check' && (
+              <div className="w-full space-y-2 animate-in fade-in">
+                <h2 className="text-2xl font-semibold text-foreground font-sketch">
+                  {t('apiKeyGate.checkStatusTitle')}
+                </h2>
+                <p className="text-sm text-muted-foreground pb-4">
+                  {t('apiKeyGate.checkStatusDesc')}
+                </p>
+
+                <form
+                  className="w-full space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const cleanEmail = checkEmailInput.trim().toLowerCase();
+                    if (!cleanEmail) return;
+
+                    skipNextCheckRef.current = false; // Make sure it fetches from network
+                    setNotFoundError(false);
+                    setLastSubmittedEmail(cleanEmail); // Triggers useEffect
+                  }}
+                >
+                  <input
+                    type="email"
+                    required
+                    value={checkEmailInput}
+                    onChange={(e) => setCheckEmailInput(e.target.value)}
+                    placeholder="@gmail.com"
+                    className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 sketchy-border-thin transition-opacity"
+                  >
+                    {t('apiKeyGate.checkStatusSubmit')}
+                  </button>
+                </form>
+
+                <div className="w-full pt-4 mt-2 border-t border-border/40 text-center">
+                  <button
+                    onClick={() => {
+                      setViewMode('submit');
+                      setNotFoundError(false);
+                    }}
+                    className="text-xs text-muted-foreground hover:text-accent transition-colors underline decoration-muted-foreground/30 underline-offset-2"
+                  >
+                    {t('apiKeyGate.submitModeBtn')}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -577,8 +704,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               {hasKey && (
                 <div
                   className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${keyInvalid
-                      ? 'bg-red-50 text-red-800'
-                      : 'bg-green-50 text-green-800'
+                    ? 'bg-red-50 text-red-800'
+                    : 'bg-green-50 text-green-800'
                     }`}
                   style={{ borderColor: keyInvalid ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
                 >
