@@ -95,20 +95,27 @@ export const arTranslations: Record<string, string> = {
   "apiKeyGate.close": "إغلاق",
   "apiKeyGate.costLabel": "تكلفة API المقدرة",
   // API key gate - tester form
-  "apiKeyGate.testerFormTitle": "اختبر التطبيق",
-  "apiKeyGate.testAppLink": " هل قمت بالإرسال وتلقيت رسالة التأكيد بالبريد الإلكتروني؟ احصل على التطبيق من هنا: https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor",
-  "apiKeyGate.testerFormDescription": "أدخل البريد الإلكتروني الذي تستخدمه في متجر Google Play للحصول على دعوة لنسخة أندرويد التجريبية!",
+  "apiKeyGate.testerFormTitle": "جرب التطبيق",
+  "apiKeyGate.testerFormDescription": "أدخل البريد الإلكتروني الذي تستخدمه لمتجر Google Play للحصول على دعوة للإصدار التجريبي من Android!",
   "apiKeyGate.testerFormSubmit": "احصل على وصول مبكر",
-  "apiKeyGate.testerFormSubmitting": "جاري الإرسال...",
-  "apiKeyGate.testerFormSuccessTitle": "شكرًا لك!",
-  "apiKeyGate.testerFormSuccessDesc": "يقوم فريقنا بتأكيد بريدك الإلكتروني. سيستغرق هذا بعض الوقت. لن يعمل الرابط مع {TheUserEmail} على الفور.",
-  "apiKeyGate.testerFormNextSteps": "عند الانتهاء من التأكيد (قد يستغرق حتى يوم واحد) سنرسل لك هذا الرابط عبر البريد الإلكتروني (يمكنك مغادرة هذه الصفحة الآن): ",
+  "apiKeyGate.testerFormSubmitting": "جارٍ الإرسال...",
   "apiKeyGate.testerFormError": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
   "apiKeyGate.testerFormMustBeGmail": "يرجى استخدام عنوان @gmail.com لمتجر Google Play.",
-  "apiKeyGate.testerFormCapReached": "تم الوصول إلى الحد الأقصى للإرسال. شكرًا لك!",
+  "apiKeyGate.testerFormCapReached": "تم الوصول إلى الحد الأقصى للطلبات. شكراً لك!",
   "apiKeyGate.developerLogin": "تسجيل دخول المطور",
-  "apiKeyGate.submitAnotherEmail": "هل أدخلت بريدًا إلكترونيًا خاطئًا؟ أرسل بريدًا آخر.",
-  "apiKeyGate.testerFormDuplicateEmail": "تم إرسال هذا البريد الإلكتروني بالفعل.",
+  "apiKeyGate.submitAnotherEmail": "هل أدخلت بريداً إلكترونياً خاطئاً؟ أعد التعيين وجرب بريداً آخر.",
+  "apiKeyGate.testerFormChecking": "جارٍ التحقق من حالة دعوتك...",
+  "apiKeyGate.testerFormApprovedTitle": "لقد انضممت! 🎉",
+  "apiKeyGate.testerFormApprovedDesc": "تمت الموافقة على بريدك الإلكتروني لبرنامج اختبار Android التجريبي.",
+  "apiKeyGate.testerFormDownloadBtn": "تنزيل التطبيق من Google Play",
+  "apiKeyGate.testerFormPendingTitle": "أنت على قائمة الانتظار!",
+  "apiKeyGate.testerFormPendingDesc": "لقد استلمنا بريدك الإلكتروني. تستغرق معالجة الدعوة يدوياً بعض الوقت. يرجى التحقق مرة أخرى لاحقاً!",
+  "apiKeyGate.checkStatusModeBtn": "هل قدمت طلباً بالفعل؟ تحقق من حالتك.",
+  "apiKeyGate.submitModeBtn": "هل تحتاج إلى التقديم؟ سجل هنا.",
+  "apiKeyGate.checkStatusTitle": "التحقق من حالة الدعوة",
+  "apiKeyGate.checkStatusDesc": "أدخل البريد الإلكتروني الذي استخدمته للتقديم في قائمة الانتظار.",
+  "apiKeyGate.checkStatusSubmit": "التحقق من الحالة",
+  "apiKeyGate.testerFormNotFound": "البريد الإلكتروني غير موجود في قائمة الانتظار. يرجى التسجيل أولاً.",
   // Chat - general
   "chat.thinking": "جارٍ التفكير...",
   "chat.loadingHistory": "جارٍ تحميل سجل المحادثة...",
