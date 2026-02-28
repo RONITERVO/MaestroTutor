@@ -163,6 +163,8 @@ export const enTranslations: Record<string, string> = {
   "chat.camera.selectCamera": "Select camera",
   "chat.camera.imageGenCameraLabel": "Image Generation",
   "chat.camera.captureOrRecord": "Tap for photo, long press for video",
+  "chat.camera.capturePhoto": "Take photo",
+  "chat.camera.startRecording": "Start video recording",
   "chat.camera.stopRecording": "Stop Recording",
   "chat.bookIcon.toggleImageGen": "Toggle Image Generation Mode",
   
@@ -275,6 +277,7 @@ export const enTranslations: Record<string, string> = {
   "error.cameraAccessNotSupported": "Camera access is not supported by your browser.",
   "error.cameraUnknown": "An unknown error occurred while accessing the camera.",
   "error.cameraStreamNotAvailable": "Camera stream not available for capture.",
+  "error.cameraOverconstrained": "Camera not available with the requested settings. {errorMessage}",
   "error.imageCaptureGeneric": "Unknown error during image capture.",
   
   // Errors - visual context (dynamically constructed with prefix)

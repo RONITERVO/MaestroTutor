@@ -1,6 +1,17 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+/**
+ * Detects auxiliary camera sensors (depth, IR, ToF, etc.) that Android devices
+ * enumerate but cannot be independently accessed via getUserMedia.
+ * Matching is case-insensitive and uses word boundaries to avoid false positives
+ * (e.g. "virtual" won't match the "ir" pattern).
+ */
+export const isAuxiliaryCameraSensor = (label: string): boolean => {
+  if (!label) return false;
+  return /\b(depth|infrared|ir|tof|time[\s-]?of[\s-]?flight|rgb[\s-]?ir)\b/i.test(label);
+};
+
 export const getFacingModeFromLabel = (label: string): 'user' | 'environment' | 'unknown' => {
     const lowerLabel = label.toLowerCase();
     if (lowerLabel.includes('front') || lowerLabel.includes('user')) return 'user';
