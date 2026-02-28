@@ -113,6 +113,7 @@ export interface AppSettings {
   isSuggestionMode: boolean;
   historyBookmarkMessageId?: string | null;
   maxVisibleMessages?: number;
+  customColors?: Record<string, string>;
 }
 
 export interface GroundingChunk {

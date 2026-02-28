@@ -466,6 +466,8 @@ export const IconAssistantImageGen = (props: any) => (
 	</svg>
 );
 
+export const IconPalette = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402M6.75 21A3.75 3.75 0 0 1 3 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 0 0 3.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.586-.585 1.536-.585 2.122 0l1.378 1.378c.586.586.586 1.536 0 2.122l-2.88 2.88M10.5 8.197l-1.28 4.686a.75.75 0 0 0 .93.93l4.686-1.28" /></svg>;
+
 export const IconCameraOff = (p: any) => (
 	<svg
 		{...p}

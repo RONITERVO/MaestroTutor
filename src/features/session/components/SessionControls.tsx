@@ -24,6 +24,7 @@ import {
   IconGlobe,
   IconMessageSquare,
   IconTarget,
+  IconPalette,
 } from '../../../shared/ui/Icons';
 
 import { getGlobalProfileDB, setGlobalProfileDB } from '../services/globalProfile';
@@ -36,6 +37,7 @@ import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { useDataBackup } from '../hooks/useDataBackup';
 import { GEMINI_VOICES } from '../../../core/config/app';
 import { selectSettings } from '../../../store/slices/settingsSlice';
+import { ThemeCustomizerPanel } from '../../theme';
 
 const SessionControls: React.FC = () => {
   const { t } = useAppTranslations();
@@ -64,6 +66,7 @@ const SessionControls: React.FC = () => {
   const [controlMode, setControlMode] = useState<'none' | 'all' | 'this'>('none');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileText, setProfileText] = useState('');
+  const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
 
   
   // Unified pending action confirmation system
@@ -569,6 +572,7 @@ const SessionControls: React.FC = () => {
   const voiceBgClass = getVoiceColorRing(currentVoiceName).split(' ')[1] || 'bg-blue-900/40';
 
   return (
+    <>
     <div className="w-full py-3 px-4 min-h-[64px] flex items-center justify-between gap-2">
 
       {/* --- Mode: Pending Action Confirmation --- */}
@@ -689,6 +693,10 @@ const SessionControls: React.FC = () => {
                 <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-red-500/20 rounded-full text-primary-foreground/70 hover:text-red-200 transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
                   <IconTrash className="w-4 h-4" />
                 </button>
+                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
+                <button type="button" onClick={() => setIsThemeCustomizerOpen(true)} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title="Customize Colors">
+                  <IconPalette className="w-4 h-4" />
+                </button>
               </>
             ) : (
               /* This Chat: Save This, Combine, Trim, Back */
@@ -799,6 +807,10 @@ const SessionControls: React.FC = () => {
         </>
       )}
     </div>
+    {isThemeCustomizerOpen && (
+      <ThemeCustomizerPanel onClose={() => setIsThemeCustomizerOpen(false)} />
+    )}
+    </>
   );
 };
 

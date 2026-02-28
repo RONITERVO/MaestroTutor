@@ -29,6 +29,7 @@ import { useTutorConversation, useSuggestions, useChatPersistence } from '../fea
 import { useSpeechOrchestrator, useAutoSendOnSilence, useSuggestionModeAutoRestart } from '../features/speech';
 import { useCameraManager } from '../features/vision';
 import { useLiveSessionController } from '../features/live';
+import { useApplyCustomColors } from '../features/theme';
 import { MAX_VISIBLE_MESSAGES_DEFAULT, useMaestroStore } from '../store';
 
 // --- Feature Hooks ---
@@ -126,6 +127,9 @@ const App: React.FC = () => {
   const lastFetchedSuggestionsForRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.lastFetchedSuggestionsFor), []);
 
   useChatPersistence();
+
+  // Apply user-customized theme colors to CSS variables
+  useApplyCustomColors();
 
   // --- Hardware ---
   const {

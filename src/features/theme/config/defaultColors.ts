@@ -1,0 +1,37 @@
+// Copyright 2025 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+
+/** Default HSL values extracted from src/app/index.css :root */
+export const DEFAULT_COLORS: Record<string, string> = {
+  'background': '210 20% 97%',
+  'foreground': '220 30% 20%',
+  'card': '210 25% 99%',
+  'card-foreground': '220 30% 20%',
+  'popover': '210 25% 99%',
+  'popover-foreground': '220 30% 20%',
+  'primary': '220 30% 20%',
+  'primary-foreground': '210 20% 98%',
+  'secondary': '210 15% 90%',
+  'secondary-foreground': '220 30% 25%',
+  'muted': '210 15% 92%',
+  'muted-foreground': '220 15% 45%',
+  'accent': '220 70% 55%',
+  'accent-foreground': '210 25% 99%',
+  'destructive': '350 70% 50%',
+  'destructive-foreground': '210 25% 99%',
+  'border': '210 15% 82%',
+  'input': '210 15% 82%',
+  'ring': '220 40% 40%',
+  'paper': '210 20% 97%',
+  'paper-dark': '210 15% 92%',
+  'pencil': '220 25% 30%',
+  'pencil-light': '220 15% 65%',
+  'sketch-shadow': '220 30% 20%',
+  'eraser': '350 70% 65%',
+  'watercolor': '190 60% 55%',
+  'ink': '230 40% 20%',
+  'highlight': '60 85% 80%',
+  'highlight-text': '220 30% 20%',
+  'pencil-mark': '220 25% 30%',
+  'correction': '350 70% 50%',
+};
