@@ -34,4 +34,31 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'highlight-text': '220 30% 20%',
   'pencil-mark': '220 25% 30%',
   'correction': '350 70% 50%',
+
+  // Status indicator colors
+  'status-hold': '292 84% 61%',
+  'status-hold-text': '0 0% 100%',
+
+  // Action confirmation panel colors
+  'action-load': '217 91% 60%',
+  'action-load-text': '214 95% 93%',
+  'action-danger': '0 72% 51%',
+  'action-danger-text': '0 86% 97%',
+  'action-export': '188 95% 43%',
+  'action-export-text': '188 100% 94%',
+  'action-combine': '263 70% 50%',
+  'action-combine-text': '263 70% 93%',
+  'action-trim': '25 95% 53%',
+  'action-trim-text': '33 100% 96%',
+
+  // Voice character identity colors
+  'voice-zephyr': '188 79% 41%',
+  'voice-puck': '43 96% 56%',
+  'voice-charon': '220 15% 65%',
+  'voice-kore': '217 91% 60%',
+  'voice-fenrir': '350 70% 50%',
+
+  // Recording indicator
+  'recording': '0 72% 51%',
+  'recording-text': '0 0% 100%',
 };

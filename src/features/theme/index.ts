@@ -5,3 +5,4 @@ export { default as ThemeCustomizerPanel } from './components/ThemeCustomizerPan
 export { useApplyCustomColors } from './hooks/useApplyCustomColors';
 export { COLOR_GROUPS, ALL_COLOR_VARS } from './config/colorRegistry';
 export { DEFAULT_COLORS } from './config/defaultColors';
+export { PRESET_THEMES } from './config/presetThemes';

@@ -86,7 +86,7 @@ export const getStatusConfig = (
     if (holdColor) {
       return { color: holdColor.bg, borderColor: holdColor.border, textColor: holdColor.text };
     }
-    return { color: 'bg-pencil-light', borderColor: 'border-pencil-mark', textColor: 'text-white' };
+    return { color: 'bg-pencil-light', borderColor: 'border-pencil-mark', textColor: 'text-paper' };
   }
 
   switch (stage) {
@@ -95,9 +95,9 @@ export const getStatusConfig = (
     case 'typing':
       return { color: 'bg-accent/80', borderColor: 'border-accent', textColor: 'text-accent-foreground' };
     case 'listening':
-      return { color: 'bg-pencil', borderColor: 'border-pencil-mark', textColor: 'text-white' };
+      return { color: 'bg-pencil', borderColor: 'border-pencil-mark', textColor: 'text-paper' };
     case 'observing_high':
-      return { color: 'bg-accent', borderColor: 'border-accent', textColor: 'text-white' };
+      return { color: 'bg-accent', borderColor: 'border-accent', textColor: 'text-accent-foreground' };
     case 'observing_low':
     case 'observing_medium':
       return { color: 'bg-secondary', borderColor: 'border-border', textColor: 'text-muted-foreground' };

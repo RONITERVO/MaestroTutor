@@ -313,7 +313,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             </div>
           )}
           <div className="absolute -top-2 -right-2 flex items-center space-x-1">
-            <button type="button" onClick={onRemoveAttachment} className="p-1 bg-red-500/80 text-white rounded-full hover:bg-red-500" aria-label={t('chat.removeAttachedImage')}>
+            <button type="button" onClick={onRemoveAttachment} className="p-1 bg-recording/80 text-recording-text rounded-full hover:bg-recording" aria-label={t('chat.removeAttachedImage')}>
               <IconXMark className="w-4 h-4" />
             </button>
           </div>
@@ -333,17 +333,17 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
               {liveSessionActive ? (
                 <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/80 text-white uppercase text-xs font-semibold tracking-wide">
-                    <span className="inline-flex h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden />
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-recording/80 text-recording-text uppercase text-xs font-semibold tracking-wide">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-recording-text animate-pulse" aria-hidden />
                     Live
                   </div>
                   <button
                     type="button"
                     onClick={onStopLiveSession}
-                    className="p-2 rounded-full bg-red-500/80 text-white group-hover:bg-red-500 transition-colors"
+                    className="p-2 rounded-full bg-recording/80 text-recording-text group-hover:bg-recording transition-colors"
                     aria-label={t('chat.camera.stopRecording')}
                   >
-                    <div className="w-4 h-4 bg-white rounded-sm" />
+                    <div className="w-4 h-4 bg-recording-text rounded-sm" />
                   </button>
                 </div>
               ) : liveSessionConnecting ? (
@@ -355,10 +355,10 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 <button
                   type="button"
                   onClick={handleStopRecording}
-                  className="p-2 rounded-full bg-red-500/80 text-white group-hover:bg-red-500 transition-colors"
+                  className="p-2 rounded-full bg-recording/80 text-recording-text group-hover:bg-recording transition-colors"
                   aria-label={t('chat.camera.stopRecording')}
                 >
-                  <div className="w-4 h-4 bg-white rounded-sm" />
+                  <div className="w-4 h-4 bg-recording-text rounded-sm" />
                 </button>
               ) : (
                 <div className="flex items-center gap-3">
@@ -395,13 +395,13 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             </div>
             {isRecording && !liveSessionActive && !liveSessionConnecting && (
               <div className="absolute top-1 left-1 flex items-center space-x-1 p-1 bg-black/50 rounded-lg z-20">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-recording rounded-full animate-pulse" />
                 <span className="text-white text-xs font-mono">REC</span>
               </div>
             )}
           </div>
           {liveSessionError && (
-            <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-destructive/10 text-destructive' : 'bg-red-600/20 text-red-100'}`}>
+            <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-destructive/10 text-destructive' : 'bg-recording/20 text-recording-text'}`}>
               {liveSessionError}
             </div>
           )}
