@@ -458,7 +458,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         // Construct prompt asking for "Next Image" based on this context
         const sanitizedHistory = await sanitizeHistoryWithVerifiedUris(apiHistory as any);
 
-        // Retry flow: 1st attempt normal, retry with copyright avoidance if needed (max 1 retry to stay live)
+        // Retry flow: 1st attempt normal, retry with copyright avoidance if needed
         (async () => {
           for (let attempt = 0; attempt < 7; attempt++) {
             try {
@@ -496,7 +496,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
               // Generation threw — retry if attempts remain
             }
           }
-          // If both attempts failed, clear the generating state
+          // If all attempts failed, clear the generating state
           const msg = messagesRef.current.find(m => m.id === assistantId);
           if (msg && msg.isGeneratingImage) {
             updateMessage(assistantId, { isGeneratingImage: false, imageGenerationStartTime: undefined });
