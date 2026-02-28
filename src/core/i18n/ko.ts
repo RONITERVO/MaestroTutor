@@ -242,6 +242,7 @@ export const koTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "안녕하세요",
   "chat.liveSession.defaultSuggestion2": "좋은 아침입니다",
   "chat.liveSession.defaultSuggestion3": "어떻게 지내세요?",
+  "chat.liveSession.activeIndicator": "라이브 비디오 세션이 활성화되었습니다. 마에스트로가 당신을 보고 듣고 있습니다.",
 
   // Chat - errors
   "chat.error.sttError": "STT 오류: {error}. 마이크를 전환해 보세요.",

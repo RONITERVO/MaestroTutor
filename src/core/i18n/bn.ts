@@ -242,6 +242,7 @@ export const bnTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "হ্যালো",
   "chat.liveSession.defaultSuggestion2": "শুভ সকাল",
   "chat.liveSession.defaultSuggestion3": "আপনি কেমন আছেন?",
+  "chat.liveSession.activeIndicator": "লাইভ ভিডিও কল চলছে, মায়েস্ত্রো আপনাকে দেখতে এবং শুনতে পাচ্ছে।",
 
   // Chat - errors
   "chat.error.sttError": "STT ত্রুটি: {error}। মাইক পরিবর্তন করে দেখুন।",

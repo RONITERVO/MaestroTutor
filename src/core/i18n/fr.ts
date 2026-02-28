@@ -242,6 +242,7 @@ export const frTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Bonjour",
   "chat.liveSession.defaultSuggestion2": "Bon matin",
   "chat.liveSession.defaultSuggestion3": "Comment allez-vous ?",
+  "chat.liveSession.activeIndicator": "La vidéoconférence en direct est active. Maestro peut vous voir et vous entendre.",
 
   // Chat - errors
   "chat.error.sttError": "Erreur STT : {error}. Essayez de basculer le micro.",

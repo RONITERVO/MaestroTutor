@@ -184,6 +184,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     }
   }, [messages]);
 
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  const liveSessionState = useMaestroStore(state => state.liveSessionState);
+  const prevLiveStateRef = useRef(liveSessionState);
+  useEffect(() => {
+    if (liveSessionState === 'active' && prevLiveStateRef.current !== 'active') {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    prevLiveStateRef.current = liveSessionState;
+  }, [liveSessionState]);
+
   const [bookmarkViewMode, setBookmarkViewMode] = useState<'below' | 'above'>('below');
   const [bookmarkAboveChunkIndex, setBookmarkAboveChunkIndex] = useState(0);
 
@@ -878,6 +891,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     onToggleSendWithSnapshot={onToggleSendWithSnapshot}
                     onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
                     onToggleImageGenerationMode={onToggleImageGenerationMode}
+                    onScrollToBottom={scrollToBottom}
                 />
             {isLanguageSelectionOpen && (
                 <div className="mt-3 w-full max-w-2xl animate-fade-in-up">

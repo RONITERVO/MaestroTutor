@@ -242,6 +242,7 @@ export const ruTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Привет",
   "chat.liveSession.defaultSuggestion2": "Доброе утро",
   "chat.liveSession.defaultSuggestion3": "Как дела?",
+  "chat.liveSession.activeIndicator": "Прямая видеосессия активна, Маэстро может вас видеть и слышать.",
 
   // Chat - errors
   "chat.error.sttError": "Ошибка STT: {error}. Попробуйте переключить микрофон.",

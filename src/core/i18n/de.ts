@@ -241,6 +241,7 @@ export const deTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hallo",
   "chat.liveSession.defaultSuggestion2": "Guten Morgen",
   "chat.liveSession.defaultSuggestion3": "Wie geht es Ihnen?",
+  "chat.liveSession.activeIndicator": "Die Live-Videokonversation ist aktiv. Maestro kann Sie sehen und hören.",
 
   // Chat - errors
   "chat.error.sttError": "STT-Fehler: {error}. Versuchen Sie, das Mikrofon umzuschalten.",

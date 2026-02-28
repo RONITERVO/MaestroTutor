@@ -242,6 +242,7 @@ export const thTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "สวัสดี",
   "chat.liveSession.defaultSuggestion2": "อรุณสวัสดิ์",
   "chat.liveSession.defaultSuggestion3": "สบายดีไหม?",
+  "chat.liveSession.activeIndicator": "เซสชันวิดีโอสดกำลังใช้งาน Maestro สามารถเห็นและได้ยินคุณ",
 
   // Chat - errors
   "chat.error.sttError": "ข้อผิดพลาด STT: {error} ลองสลับไมค์",

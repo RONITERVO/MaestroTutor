@@ -30,6 +30,7 @@ interface InputAreaProps {
   onToggleSendWithSnapshot: () => void;
   onToggleUseVisualContextForReengagement: () => void;
   onToggleImageGenerationMode: () => void;
+  onScrollToBottom?: () => void;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
@@ -43,6 +44,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   onToggleSendWithSnapshot,
   onToggleUseVisualContextForReengagement,
   onToggleImageGenerationMode,
+  onScrollToBottom,
 }) => {
   const { t } = useAppTranslations();
   const settings = useMaestroStore(state => state.settings);
@@ -182,6 +184,25 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const showLiveFeed = Boolean(liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !languageSelectionOpen);
   const isTwoUp = Boolean(attachedImageBase64 && showLiveFeed);
+  const isLive = liveSessionState === 'active' || liveSessionState === 'connecting';
+
+  // Auto-scroll to bottom when live feed appears
+  const prevShowLiveFeedRef = useRef(showLiveFeed);
+  useEffect(() => {
+    if (showLiveFeed && !prevShowLiveFeedRef.current) {
+      onScrollToBottom?.();
+    }
+    prevShowLiveFeedRef.current = showLiveFeed;
+  }, [showLiveFeed, onScrollToBottom]);
+
+  // Auto-scroll to bottom when annotation mode opens
+  const prevAnnotatingRef = useRef(isComposerAnnotating);
+  useEffect(() => {
+    if (isComposerAnnotating && !prevAnnotatingRef.current) {
+      onScrollToBottom?.();
+    }
+    prevAnnotatingRef.current = isComposerAnnotating;
+  }, [isComposerAnnotating, onScrollToBottom]);
 
   useEffect(() => {
     if (transcript === prevTranscriptRef.current) return;
@@ -631,7 +652,11 @@ const InputArea: React.FC<InputAreaProps> = ({
           >
 
           <div className={`relative w-full flex flex-col overflow-hidden transition-colors ${containerClass}`}>
-            {languageSelectionOpen ? (
+            {isLive && !isSuggestionMode ? (
+              <div className="w-full py-3 px-4 min-h-[50px] flex items-center" style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>
+                <span className="opacity-60 italic">{t('chat.liveSession.activeIndicator')}</span>
+              </div>
+            ) : languageSelectionOpen ? (
               <SessionControls />
             ) : (
               <Composer
@@ -666,10 +691,14 @@ const InputArea: React.FC<InputAreaProps> = ({
                 onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
                 onToggleImageGenerationMode={onToggleImageGenerationMode}
                 iconButtonStyle={iconButtonStyle}
+                isLive={isLive}
               />
 
+            {/* Show controls if not live, OR if we are in suggestion mode */}
+            {(!isLive || isSuggestionMode) && (
               <div className="flex items-center space-x-1">
-                <AudioControls
+                {!isLive && (
+                  <AudioControls
                   t={t}
                   isLanguageSelectionOpen={languageSelectionOpen}
                   isSttSupported={isSttSupported}
@@ -684,6 +713,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                   onSetAttachedImage={onSetAttachedImage}
                   onUserInputActivity={onUserInputActivity}
                 />
+                )}
                 <button
                   type="button"
                   onClick={handleSend}
@@ -704,10 +734,11 @@ const InputArea: React.FC<InputAreaProps> = ({
                       : (sendPrep && sendPrep.active ? <SmallSpinner className="w-5 h-5" /> : <IconSend className="w-5 h-5" />)}
                 </button>
               </div>
+            )}
             </div>
           </div>
 
-          {sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
+          {!isLive && sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
           {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
           {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-primary bg-primary/10' : 'text-yellow-200 bg-yellow-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
           </div>{/* end outer accent container */}

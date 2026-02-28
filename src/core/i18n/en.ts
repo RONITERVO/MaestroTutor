@@ -208,6 +208,13 @@ export const enTranslations: Record<string, string> = {
   
   // Chat - bookmark (used)
   "chat.bookmark.hiddenHeaderAria": "Hidden above messages",
+  "chat.bookmark.hiddenCount": "{count} above messages hidden",
+  "chat.bookmark.showingAboveRange": "Showing messages above {start}-{end} of {total}",
+  "chat.bookmark.showAboveChunk": "Show messages above",
+  "chat.bookmark.showNextChunk": "Show {count} above",
+  "chat.bookmark.showPreviousChunk": "Show {count} below",
+  "chat.bookmark.returnToRecent": "Back to messages below",
+  "chat.bookmark.hiddenBelow": "Messages are hidden below",
   "chat.bookmark.isHere": "Bookmark is here",
   "chat.bookmark.setHere": "Set bookmark here",
   "chat.bookmark.actionsRegionAria": "Bookmark actions",
@@ -246,6 +253,7 @@ export const enTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hello",
   "chat.liveSession.defaultSuggestion2": "Good morning",
   "chat.liveSession.defaultSuggestion3": "How are you?",
+  "chat.liveSession.activeIndicator": "The live video call is active. Maestro can see and hear you.",
 
   // Chat - errors
   "chat.error.sttError": "STT Error: {error}. Try toggling mic.",

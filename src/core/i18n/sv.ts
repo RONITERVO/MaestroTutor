@@ -242,6 +242,7 @@ export const svTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hej",
   "chat.liveSession.defaultSuggestion2": "God morgon",
   "chat.liveSession.defaultSuggestion3": "Hur mår du?",
+  "chat.liveSession.activeIndicator": "Live videosession är aktiv, Maestro kan se och höra dig.",
 
   // Chat - errors
   "chat.error.sttError": "STT-fel: {error}. Prova att byta mikrofon.",

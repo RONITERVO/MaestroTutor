@@ -242,6 +242,7 @@ export const teTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "నమస్కారం",
   "chat.liveSession.defaultSuggestion2": "శుభోదయం",
   "chat.liveSession.defaultSuggestion3": "మీరు ఎలా ఉన్నారు?",
+  "chat.liveSession.activeIndicator": "లైవ్ వీడియో కాల్ సక్రియంగా ఉంది, మాస్ట్రో మీను చూడగలడు మరియు వినగలడు.",
 
   // Chat - errors
   "chat.error.sttError": "STT లోపం: {error}. మైక్‌ని మార్చడానికి ప్రయత్నించండి.",

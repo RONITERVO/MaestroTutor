@@ -242,6 +242,7 @@ export const hiTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "नमस्ते",
   "chat.liveSession.defaultSuggestion2": "शुभ प्रभात",
   "chat.liveSession.defaultSuggestion3": "आप कैसे हैं?",
+  "chat.liveSession.activeIndicator": "लाइव वीडियो कॉल सक्रिय है। मेस्ट्रो आपको देख और सुन सकता है।",
 
   // Chat - errors
   "chat.error.sttError": "STT त्रुटि: {error}। माइक टॉगल करने का प्रयास करें।",

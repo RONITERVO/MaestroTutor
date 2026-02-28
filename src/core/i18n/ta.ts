@@ -243,6 +243,7 @@ export const taTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "வணக்கம்",
   "chat.liveSession.defaultSuggestion2": "காலை வணக்கம்",
   "chat.liveSession.defaultSuggestion3": "நீங்கள் எப்படி இருக்கிறீர்கள்?",
+  "chat.liveSession.activeIndicator": "நேரடி வீடியோ அமர்வு செயல்பாட்டில் உள்ளது, மேஸ்ட்ரோ உங்களை பார்க்கவும் கேட்கவும் முடியும்.",
 
   // Chat - errors
   "chat.error.sttError": "STT பிழை: {error}. மைக்கை மாற்றி முயற்சிக்கவும்.",

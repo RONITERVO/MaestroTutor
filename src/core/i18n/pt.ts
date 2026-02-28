@@ -242,6 +242,7 @@ export const ptTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Olá",
   "chat.liveSession.defaultSuggestion2": "Bom dia",
   "chat.liveSession.defaultSuggestion3": "Como você está?",
+  "chat.liveSession.activeIndicator": "A sessão de vídeo ao vivo está ativa, o Maestro pode vê-lo e ouvi-lo.",
 
   // Chat - errors
   "chat.error.sttError": "Erro STT: {error}. Tente alternar o microfone.",

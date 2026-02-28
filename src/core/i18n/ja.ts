@@ -242,6 +242,7 @@ export const jaTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "こんにちは",
   "chat.liveSession.defaultSuggestion2": "おはようございます",
   "chat.liveSession.defaultSuggestion3": "お元気ですか？",
+  "chat.liveSession.activeIndicator": "ライブビデオセッションがアクティブです。マエストロはあなたを見て聞くことができます。",
 
   // Chat - errors
   "chat.error.sttError": "STTエラー：{error}。マイクを切り替えてみてください。",

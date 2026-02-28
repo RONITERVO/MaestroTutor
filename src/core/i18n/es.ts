@@ -242,6 +242,7 @@ export const esTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hola",
   "chat.liveSession.defaultSuggestion2": "Buenos días",
   "chat.liveSession.defaultSuggestion3": "¿Cómo estás?",
+  "chat.liveSession.activeIndicator": "La videollamada en vivo está activa. Maestro puede verte y escucharte.",
 
   // Chat - errors
   "chat.error.sttError": "Error de STT: {error}. Intenta alternar el micrófono.",
