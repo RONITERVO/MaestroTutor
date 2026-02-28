@@ -4,11 +4,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TranslationReplacements } from '../../../../core/i18n/index';
 import { LiveSessionState } from '../../../speech';
-import { IconCamera, IconPaperclip, IconPencil, IconXMark } from '../../../../shared/ui/Icons';
+import { IconCamera, IconPaperclip, IconPencil, IconXMark, IconVideoCamera } from '../../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../../shared/ui/SmallSpinner';
 import { useMaestroStore } from '../../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityTokens';
-import LiveSessionControls from './LiveSessionControls';
 import AudioPlayer from '../AudioPlayer';
 import PdfViewer from '../PdfViewer';
 
@@ -76,7 +75,6 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   const recordedChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<number | null>(null);
   const videoRecordTokenRef = useRef<string | null>(null);
-  const capturePressTimerRef = useRef<number | null>(null);
   const recordingAudioStreamRef = useRef<MediaStream | null>(null);
 
   const pickRecorderMimeType = () => {
@@ -122,10 +120,6 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       if (recordingTimerRef.current) {
         clearTimeout(recordingTimerRef.current);
         recordingTimerRef.current = null;
-      }
-      if (capturePressTimerRef.current) {
-        clearTimeout(capturePressTimerRef.current);
-        capturePressTimerRef.current = null;
       }
       // End any pending UI tokens
       if (videoRecordTokenRef.current) {
@@ -217,26 +211,11 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
     }
   }, [liveVideoStream, onSetAttachedImage, onUserInputActivity]);
 
-  const handleCaptureButtonPointerDown = () => {
-    if (capturePressTimerRef.current) clearTimeout(capturePressTimerRef.current);
-    capturePressTimerRef.current = window.setTimeout(() => {
-      handleStartRecording();
-      capturePressTimerRef.current = null;
-    }, 500);
-  };
-  const handleCaptureButtonPointerUp = () => {
-    if (capturePressTimerRef.current) {
-      clearTimeout(capturePressTimerRef.current);
-      capturePressTimerRef.current = null;
-      handleCaptureImage();
-    }
-  };
-  const handleCaptureButtonPointerLeave = () => {
-    if (capturePressTimerRef.current) {
-      clearTimeout(capturePressTimerRef.current);
-      capturePressTimerRef.current = null;
-    }
-  };
+  const handleLiveSessionStart = useCallback(() => {
+    Promise.resolve(onStartLiveSession()).catch((err) => {
+      console.error('Failed to start live session:', err);
+    });
+  }, [onStartLiveSession]);
 
   useEffect(() => {
     if (livePreviewVideoRef.current && liveVideoStream) {
@@ -255,6 +234,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
 
   const liveSessionActive = liveSessionState === 'active';
   const liveSessionConnecting = liveSessionState === 'connecting';
+  const liveSessionErrored = liveSessionState === 'error';
 
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
@@ -350,23 +330,26 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               muted
               className="h-24 w-full object-cover rounded pointer-events-none"
             />
-            <LiveSessionControls
-              t={t}
-              liveSessionState={liveSessionState}
-              isSuggestionMode={isSuggestionMode}
-              onStartLiveSession={onStartLiveSession}
-              onStopLiveSession={onStopLiveSession}
-            />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
               {liveSessionActive ? (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/80 text-white uppercase text-xs font-semibold tracking-wide">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden />
-                  {t('chat.liveSession.liveBadge') || 'Live'}
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/80 text-white uppercase text-xs font-semibold tracking-wide">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-white animate-pulse" aria-hidden />
+                    Live
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onStopLiveSession}
+                    className="p-2 rounded-full bg-red-500/80 text-white group-hover:bg-red-500 transition-colors"
+                    aria-label={t('chat.camera.stopRecording')}
+                  >
+                    <div className="w-4 h-4 bg-white rounded-sm" />
+                  </button>
                 </div>
               ) : liveSessionConnecting ? (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 text-white text-xs">
                   <SmallSpinner className="w-4 h-4 text-white" />
-                  <span>{t('chat.liveSession.connecting') || 'Connecting'}</span>
+                  <span>Connecting</span>
                 </div>
               ) : isRecording ? (
                 <button
@@ -378,17 +361,36 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                   <div className="w-4 h-4 bg-white rounded-sm" />
                 </button>
               ) : (
-                <button
-                  type="button"
-                  onPointerDown={handleCaptureButtonPointerDown}
-                  onPointerUp={handleCaptureButtonPointerUp}
-                  onPointerLeave={handleCaptureButtonPointerLeave}
-                  onContextMenu={(e) => e.preventDefault()}
-                  className="p-2 rounded-full bg-white/30 text-white group-hover:bg-white/50 transition-colors"
-                  aria-label={t('chat.camera.captureOrRecord')}
-                >
-                  <IconCamera className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCaptureImage}
+                    className="p-2 rounded-full bg-white/30 text-white hover:bg-white/50 transition-colors"
+                    aria-label={t('chat.camera.capturePhoto')}
+                  >
+                    <IconCamera className="w-6 h-6" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStartRecording()}
+                    className="p-2 rounded-full bg-white/30 text-white hover:bg-white/50 transition-colors"
+                    aria-label={t('chat.camera.startRecording')}
+                  >
+                    <IconVideoCamera className="w-6 h-6" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLiveSessionStart}
+                    className={`p-2 rounded-full transition-colors ${
+                      liveSessionErrored
+                        ? 'bg-yellow-500/80 text-black hover:bg-yellow-500'
+                        : 'bg-white/30 text-white hover:bg-white/50'
+                    }`}
+                    aria-label="LIVE"
+                  >
+                    <span className="w-6 h-6 flex items-center justify-center text-[10px] font-bold leading-none">LIVE</span>
+                  </button>
+                </div>
               )}
             </div>
             {isRecording && !liveSessionActive && !liveSessionConnecting && (

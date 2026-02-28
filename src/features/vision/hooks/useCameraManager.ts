@@ -12,7 +12,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { CameraDevice } from '../../../core/types';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
-import { getFacingModeFromLabel } from '../utils/mediaUtils';
+import { getFacingModeFromLabel, isAuxiliaryCameraSensor } from '../utils/mediaUtils';
 import { useMaestroStore } from '../../../store';
 
 export interface UseCameraManagerConfig {
@@ -70,6 +70,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
   const setStoreLiveVideoStream = useMaestroStore(state => state.setLiveVideoStream);
   const setStoreVisualContextCameraError = useMaestroStore(state => state.setVisualContextCameraError);
   const setStoreSnapshotUserError = useMaestroStore(state => state.setSnapshotUserError);
+  const updateSetting = useMaestroStore(state => state.updateSetting);
 
   const visualContextVideoRef = useRef<HTMLVideoElement>(null);
   const visualContextStreamRef = useRef<MediaStream | null>(null);
@@ -132,7 +133,12 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
       if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        const cameraList: CameraDevice[] = videoDevices.map((device, index) => ({
+        // Filter out auxiliary sensors (depth, IR, ToF, etc.) that Android exposes
+        // but which cannot be accessed via getUserMedia
+        const usableDevices = videoDevices.filter(
+          device => !isAuxiliaryCameraSensor(device.label)
+        );
+        const cameraList: CameraDevice[] = usableDevices.map((device, index) => ({
           deviceId: device.deviceId,
           label: device.label || `Camera ${index + 1}`,
           facingMode: getFacingModeFromLabel(device.label)
@@ -189,7 +195,49 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         const videoConstraints: MediaStreamConstraints['video'] = selectedCameraId
           ? { deviceId: { exact: selectedCameraId } }
           : true;
-        const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+        } catch (deviceErr) {
+          // If a specific device was requested and it failed with a hardware/constraint
+          // error, remove it from the available list and attempt a facingMode-based
+          // fallback before surfacing the error to the user.
+          const isRecoverableError = deviceErr instanceof Error &&
+            ['NotReadableError', 'OverconstrainedError', 'NotFoundError', 'DevicesNotFoundError'].includes(deviceErr.name);
+
+          if (selectedCameraId && isRecoverableError) {
+            const selected = availableCamerasRef.current.find(c => c.deviceId === selectedCameraId);
+            const fallbackFacingMode = selected?.facingMode === 'user' ? 'user' : 'environment';
+
+            console.warn(
+              `Camera "${selected?.label ?? selectedCameraId}" failed (${(deviceErr as Error).name}), ` +
+              `removing from list and falling back to facingMode: ${fallbackFacingMode}`
+            );
+
+            setAvailableCameras(prev => prev.filter(c => c.deviceId !== selectedCameraId));
+
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: fallbackFacingMode } }
+              });
+
+              // Sync selectedCameraId to the device the OS actually gave us,
+              // so the camera selector highlights the correct item.
+              const fallbackTrack = stream.getVideoTracks()[0];
+              const actualDeviceId = fallbackTrack?.getSettings()?.deviceId;
+              if (actualDeviceId) {
+                updateSetting('selectedCameraId', actualDeviceId);
+              }
+            } catch {
+              // Fallback also failed — propagate the original error
+              throw deviceErr;
+            }
+          } else {
+            throw deviceErr;
+          }
+        }
+
         visualContextStreamRef.current = stream;
         setLiveVideoStream(stream);
         if (visualContextVideoRef.current) {
@@ -205,11 +253,28 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
       } catch (err) {
         console.error("Error accessing camera for visual context:", err);
         let message = t("error.cameraUnknown");
+        let excludeCamera = false;
         if (err instanceof Error) {
           if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") message = t('error.cameraPermissionDenied');
-          else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") message = t('error.cameraNotFound');
-          else if (err.name === "OverconstrainedError") message = t('error.cameraOverconstrained', { errorMessage: err.message });
+          else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+            message = t('error.cameraNotFound');
+            excludeCamera = true;
+          }
+          else if (err.name === "OverconstrainedError") {
+            message = t('error.cameraOverconstrained', { errorMessage: err.message });
+            excludeCamera = true;
+          }
+          else if (err.name === "NotReadableError") {
+            message = t('error.cameraStreamNotAvailable');
+            excludeCamera = true;
+          }
           else message = t('error.visualContextCameraGeneric', { details: err.message });
+
+          // Remove unusable cameras from the selector (common on Android where OS-managed
+          // sub-cameras are enumerated but cannot be independently accessed)
+          if (excludeCamera && selectedCameraId) {
+            setAvailableCameras(prev => prev.filter(c => c.deviceId !== selectedCameraId));
+          }
         }
         setVisualContextCameraError(message);
         setLiveVideoStream(null);
