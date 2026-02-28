@@ -242,6 +242,7 @@ export const guTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "નમસ્તે",
   "chat.liveSession.defaultSuggestion2": "શુભ સવાર",
   "chat.liveSession.defaultSuggestion3": "તમે કેમ છો?",
+  "chat.liveSession.activeIndicator": "લાઇવ વિડિઓ કોલ સક્રિય છે. માએસ્ટ્રો તમને જોઈ અને સાંભળી શકે છે.",
 
   // Chat - errors
   "chat.error.sttError": "STT ભૂલ: {error}. માઇક બદલવાનો પ્રયાસ કરો.",

@@ -242,6 +242,7 @@ export const mlTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "നമസ്‌കാരം",
   "chat.liveSession.defaultSuggestion2": "സുപ്രഭാതം",
   "chat.liveSession.defaultSuggestion3": "എങ്ങനെയുണ്ട്?",
+  "chat.liveSession.activeIndicator": "തൽസമയം സജീവമാണ്, മാസ്ട്രോ നിങ്ങളെ കാണുകയും കേൾക്കുകയും ചെയ്യുന്നു.",
 
   // Chat - errors
   "chat.error.sttError": "STT പിശക്: {error}. മൈക്ക് മാറ്റാൻ ശ്രമിക്കുക.",

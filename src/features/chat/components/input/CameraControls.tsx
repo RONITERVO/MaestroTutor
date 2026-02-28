@@ -30,6 +30,7 @@ interface CameraControlsProps {
   onToggleUseVisualContextForReengagement: () => void;
   onToggleImageGenerationMode: () => void;
   iconButtonStyle: string;
+  isLive?: boolean;
 }
 
 // Special device ID for "camera off" option
@@ -54,6 +55,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
   onToggleUseVisualContextForReengagement,
   onToggleImageGenerationMode,
   iconButtonStyle,
+  isLive,
 }) => {
   const isCameraActive = sendWithSnapshotEnabled || useVisualContextForReengagementEnabled;
 
@@ -320,17 +322,21 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 
   const allCameraOptions = useMemo(() => {
     // Start with "Camera Off" option
-    const cameraOptions: CameraDevice[] = [
-      { deviceId: CAMERA_OFF_ID, label: t('chat.camera.turnOff'), facingMode: 'unknown' }
-    ];
+    const cameraOptions: CameraDevice[] = [];
+    // Only add "Camera Off" option if live is not active
+    // (selecting it during live hides the feed and confuses users)
+    if (!isLive) {
+      cameraOptions.push({ deviceId: CAMERA_OFF_ID, label: t('chat.camera.turnOff'), facingMode: 'unknown' });
+    }
     // Add available cameras
     cameraOptions.push(...availableCameras);
-    // Add image gen camera if enabled
-    if (imageGenerationModeEnabled) {
+    // Add image gen camera if enabled, but not during live sessions
+    // (selecting it during live hides the feed and confuses users)
+    if (imageGenerationModeEnabled && !isLive) {
       cameraOptions.push({ deviceId: IMAGE_GEN_CAMERA_ID, label: t('chat.camera.imageGenCameraLabel'), facingMode: 'unknown' });
     }
     return cameraOptions;
-  }, [availableCameras, imageGenerationModeEnabled, t]);
+  }, [availableCameras, imageGenerationModeEnabled, isLive, t]);
 
   // Get the current camera icon based on selection and facing mode
   const CurrentCameraIcon = useMemo(() => {
@@ -363,14 +369,21 @@ const CameraControls: React.FC<CameraControlsProps> = ({
             className="hidden"
             id="imageUpload"
           />
-          <button
-            type="button"
-            className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
-            title={t('chat.attachImageFromFile')}
-            onClick={onPaperclipClick}
-          >
-            <IconPaperclip className="w-5 h-5" />
-          </button>
+          {isLive ? (
+            /* Invisible spacer keeps camera cluster in original position during live */
+            <div className="p-2 rounded-full invisible" aria-hidden="true">
+              <IconPaperclip className="w-5 h-5" />
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={`p-2 cursor-pointer rounded-full transition-colors ${iconButtonStyle}`}
+              title={t('chat.attachImageFromFile')}
+              onClick={onPaperclipClick}
+            >
+              <IconPaperclip className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Camera toggle cluster - unified pointer event handling */}
           <div

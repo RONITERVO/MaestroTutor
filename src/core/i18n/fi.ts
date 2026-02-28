@@ -242,6 +242,7 @@ export const fiTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hei",
   "chat.liveSession.defaultSuggestion2": "Hyvää huomenta",
   "chat.liveSession.defaultSuggestion3": "Mitä kuuluu?",
+  "chat.liveSession.activeIndicator": "Live-videopuhelu on aktiivinen. Maestro näkee ja kuulee sinut.",
 
   // Chat - errors
   "chat.error.sttError": "STT-virhe: {error}. Kokeile vaihtaa mikrofonia.",

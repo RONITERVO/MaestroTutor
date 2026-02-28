@@ -242,6 +242,7 @@ export const mrTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "नमस्कार",
   "chat.liveSession.defaultSuggestion2": "शुभ प्रभात",
   "chat.liveSession.defaultSuggestion3": "तुम्ही कसे आहात?",
+  "chat.liveSession.activeIndicator": "लाइव्ह वीडियो कॉल सक्रिय है। मेस्ट्रो आपको देख और सुन सकता है।",
 
   // Chat - errors
   "chat.error.sttError": "STT त्रुटी: {error}. माइक बदलून पहा.",

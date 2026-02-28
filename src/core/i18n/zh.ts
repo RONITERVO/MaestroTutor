@@ -242,6 +242,7 @@ export const zhTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "你好",
   "chat.liveSession.defaultSuggestion2": "早上好",
   "chat.liveSession.defaultSuggestion3": "你好吗？",
+  "chat.liveSession.activeIndicator": "实时视频会话正在进行中，Maestro可以看到和听到你",
 
   // Chat - errors
   "chat.error.sttError": "STT错误：{error}。请尝试切换麦克风。",

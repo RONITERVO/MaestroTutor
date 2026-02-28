@@ -242,6 +242,7 @@ export const idTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Halo",
   "chat.liveSession.defaultSuggestion2": "Selamat pagi",
   "chat.liveSession.defaultSuggestion3": "Apa kabar?",
+  "chat.liveSession.activeIndicator": "Sesi video langsung aktif, Maestro dapat melihat dan mendengar Anda.",
 
   // Chat - errors
   "chat.error.sttError": "Kesalahan STT: {error}. Coba alihkan mikrofon.",

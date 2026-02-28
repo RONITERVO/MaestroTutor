@@ -242,6 +242,7 @@ export const nlTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Hallo",
   "chat.liveSession.defaultSuggestion2": "Goedemorgen",
   "chat.liveSession.defaultSuggestion3": "Hoe gaat het?",
+  "chat.liveSession.activeIndicator": "Live videosessie is actief, Maestro kan je zien en horen.",
 
   // Chat - errors
   "chat.error.sttError": "STT-fout: {error}. Probeer de microfoon te wisselen.",

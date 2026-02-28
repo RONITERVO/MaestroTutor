@@ -242,6 +242,7 @@ export const viTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Xin chào",
   "chat.liveSession.defaultSuggestion2": "Chào buổi sáng",
   "chat.liveSession.defaultSuggestion3": "Bạn khỏe không?",
+  "chat.liveSession.activeIndicator": "Phiên video trực tiếp đang hoạt động, Maestro có thể thấy và nghe bạn.",
 
   // Chat - errors
   "chat.error.sttError": "Lỗi STT: {error}. Thử chuyển đổi mic.",

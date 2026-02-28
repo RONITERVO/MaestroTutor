@@ -242,6 +242,7 @@ export const plTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Cześć",
   "chat.liveSession.defaultSuggestion2": "Dzień dobry",
   "chat.liveSession.defaultSuggestion3": "Jak się masz?",
+  "chat.liveSession.activeIndicator": "Sesja wideo na żywo jest aktywna, Maestro może Cię widzieć i słyszeć.",
 
   // Chat - errors
   "chat.error.sttError": "Błąd STT: {error}. Spróbuj przełączyć mikrofon.",

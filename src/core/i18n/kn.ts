@@ -242,6 +242,7 @@ export const knTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "ನಮಸ್ಕಾರ",
   "chat.liveSession.defaultSuggestion2": "ಶುಭೋದಯ",
   "chat.liveSession.defaultSuggestion3": "ನೀವು ಹೇಗಿದ್ದೀರಿ?",
+  "chat.liveSession.activeIndicator": "ಲೈವ್ ವಿಡಿಯೋ ಕಾಲ್ ಸಕ್ರಿಯವಾಗಿದೆ. ಮೈಸ್ಟ್ರೋ ನಿಮ್ಮನ್ನು ನೋಡಬಹುದು ಮತ್ತು ಕೇಳಬಹುದು.",
 
   // Chat - errors
   "chat.error.sttError": "STT ದೋಷ: {error}. ಮೈಕ್ ಬದಲಾಯಿಸಲು ಪ್ರಯತ್ನಿಸಿ.",

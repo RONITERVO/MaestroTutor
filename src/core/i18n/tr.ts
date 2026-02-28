@@ -242,6 +242,7 @@ export const trTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Merhaba",
   "chat.liveSession.defaultSuggestion2": "Günaydın",
   "chat.liveSession.defaultSuggestion3": "Nasılsın?",
+  "chat.liveSession.activeIndicator": "Canlı video oturumu aktif, Maestro sizi görebilir ve duyabilir.",
 
   // Chat - errors
   "chat.error.sttError": "STT Hatası: {error}. Mikrofonu kapatıp açmayı deneyin.",

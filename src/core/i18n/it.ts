@@ -242,6 +242,7 @@ export const itTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "Ciao",
   "chat.liveSession.defaultSuggestion2": "Buongiorno",
   "chat.liveSession.defaultSuggestion3": "Come stai?",
+  "chat.liveSession.activeIndicator": "La sessione video live è attiva, Maestro può vederti e sentirti.",
 
   // Chat - errors
   "chat.error.sttError": "Errore STT: {error}. Prova a cambiare il microfono.",

@@ -240,6 +240,7 @@ export const arTranslations: Record<string, string> = {
   "chat.liveSession.defaultSuggestion1": "مرحباً",
   "chat.liveSession.defaultSuggestion2": "صباح الخير",
   "chat.liveSession.defaultSuggestion3": "كيف حالك؟",
+  "chat.liveSession.activeIndicator": "المحادثة المباشرة نشطة، مايسترو يمكنه رؤيتك وسماعك.",
 
   // Chat - errors
   "chat.error.sttError": "خطأ STT: {error}. حاول تبديل الميكروفون.",
