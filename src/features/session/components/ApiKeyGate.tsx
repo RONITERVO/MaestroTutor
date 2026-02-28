@@ -237,7 +237,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   if (showTesterForm) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-        <div className="w-full max-w-sm bg-card shadow-xl sketchy-border p-8 relative">
+        <div className="w-full max-w-sm bg-card shadow-xl sketchy-border sketch-shape-3 p-8 relative">
 
           {canClose && (
             <button
@@ -264,7 +264,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             {/* GRANDMA-PROOF STATE 2: APPROVED! SHOW DOWNLOAD LINK */}
             {!isCheckingApproval && isApproved && (
               <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                <h2 className="text-2xl font-semibold text-green-600 font-sketch">
+                <h2 className="text-2xl font-semibold text-pencil font-sketch">
                   {t('apiKeyGate.testerFormApprovedTitle')}
                 </h2>
                 <p className="text-sm text-foreground">
@@ -272,7 +272,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 </p>
                 <button
                   onClick={() => openExternalUrl("https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor")}
-                  className="w-full bg-green-600 px-4 py-4 mt-2 text-base font-bold text-white hover:bg-green-700 sketchy-border-thin transition-colors rounded-md shadow-md"
+                  className="w-full bg-pencil px-4 py-4 mt-2 text-base font-bold text-paper hover:bg-pencil-mark sketchy-border-thin transition-colors rounded-md shadow-md"
                 >
                   {t('apiKeyGate.testerFormDownloadBtn')}
                 </button>
@@ -393,7 +393,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         if (emailErrorMsg) setEmailErrorMsg('');
                       }}
                       placeholder="@gmail.com"
-                      className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin"
+                      className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin sketch-shape-1"
                       maxLength={MAX_EMAIL_LENGTH}
                       autoFocus
                     />
@@ -412,7 +412,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   <button
                     type="submit"
                     disabled={testerStatus === 'submitting' || submissionCount >= MAX_SUBMISSIONS}
-                    className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50 sketchy-border-thin transition-opacity"
+                    className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50 sketchy-border-thin sketch-shape-5 transition-opacity"
                   >
                     {submissionCount >= MAX_SUBMISSIONS
                       ? t('apiKeyGate.testerFormCapReached')
@@ -464,12 +464,12 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     value={checkEmailInput}
                     onChange={(e) => setCheckEmailInput(e.target.value)}
                     placeholder="@gmail.com"
-                    className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin"
+                    className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin sketch-shape-9"
                     autoFocus
                   />
                   <button
                     type="submit"
-                    className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 sketchy-border-thin transition-opacity"
+                    className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 sketchy-border-thin sketch-shape-11 transition-opacity"
                   >
                     {t('apiKeyGate.checkStatusSubmit')}
                   </button>
@@ -532,7 +532,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // =========================================================================
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-card shadow-xl sketchy-border">
+      <div className="w-full max-w-lg bg-card shadow-xl sketchy-border sketch-shape-7">
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center bg-accent/15 text-accent sketchy-border-thin">
@@ -705,7 +705,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 <div
                   className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${keyInvalid
                     ? 'bg-red-50 text-red-800'
-                    : 'bg-green-50 text-green-800'
+                    : 'bg-secondary text-pencil'
                     }`}
                   style={{ borderColor: keyInvalid ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
                 >

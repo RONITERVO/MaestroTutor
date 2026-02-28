@@ -15,10 +15,12 @@ import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, se
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
+import { sketchShapeClass, sketchShapeStyle } from '../../../shared/utils/sketchyShape';
 
-interface ChatMessageBubbleProps { 
-  message: ChatMessage; 
-  isFocusedMode: boolean; 
+interface ChatMessageBubbleProps {
+  message: ChatMessage;
+  messageIndex: number;
+  isFocusedMode: boolean;
   speakingUtteranceText: string | null; 
   estimatedLoadTime: number; 
   loadingAnimations?: string[] | null;
@@ -40,8 +42,8 @@ interface ChatMessageBubbleProps {
   registerBubbleEl?: (el: HTMLDivElement | null) => void;
 }
 
-const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({ 
-  message, isFocusedMode, speakingUtteranceText, estimatedLoadTime, loadingAnimations,
+const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
+  message, messageIndex, isFocusedMode, speakingUtteranceText, estimatedLoadTime, loadingAnimations,
   t,
   onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
@@ -557,7 +559,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         canvas.width = imageEl.naturalWidth;
         canvas.height = imageEl.naturalHeight;
   
-        ctx.strokeStyle = '#EF4444'; 
+        ctx.strokeStyle = 'hsl(5, 45%, 55%)';
         ctx.lineWidth = Math.max(5, imageEl.naturalWidth * 0.01);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -609,12 +611,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     setLoadingAnimationError(false);
   }, [selectedLoadingAnimation, message.id, message.isGeneratingImage]);
 
+  const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
+
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   
   if (message.thinking && !message.isGeneratingImage) {
     return (
       <div className="flex justify-start mb-3 animate-pulse">
-        <div className="bg-secondary rounded-sketchy p-3 max-w-xl sketchy-border-thin">
+        <div className={`bg-secondary p-3 max-w-xl sketchy-border-thin ${sketchShapeClass(messageIndex)}`}>
           <p className="text-sm text-muted-foreground font-hand">{t('chat.thinking')}</p>
         </div>
       </div>
@@ -626,7 +630,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
 
-  let bubbleWrapperClasses = "shadow relative overflow-hidden rounded-sketchy transition-all duration-300 ease-in-out";
+  let bubbleWrapperClasses = "shadow relative overflow-hidden transition-all duration-300 ease-in-out";
    if (applyFocusedImageStyles) {
       bubbleWrapperClasses += " w-full";
       if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
@@ -679,16 +683,17 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   if ((isAnnotationActive || (isFocusedMode && isImageSuccessfullyDisplayed)) && imageAspectRatio) {
     imageContainerStyle.aspectRatio = `${imageAspectRatio}`;
   }
-  
+
   return (
     <div className={`flex mb-4 ${bubbleAlignClass}`}>
-      <div 
-        className={bubbleWrapperClasses} 
+      <div
+        className={bubbleWrapperClasses}
         style={{
-          touchAction: 'pan-y', 
+          touchAction: 'pan-y',
           // @ts-ignore
           containerType: 'inline-size',
-          width: '100%'
+          width: '100%',
+          ...bubbleShapeStyle
         }}
         ref={registerBubbleEl}
       >
@@ -954,8 +959,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                <div className={`flex flex-col items-center justify-center p-2 rounded-lg 
                   ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-primary/60' : 'bg-secondary/60'}`}
                `}>
-                  <IconXMark className="w-8 h-8 text-red-300 mb-1"/>
-                  <p className={`text-xs text-center ${applyFocusedImageStyles ? 'text-red-200' : 'text-red-700'}`}>
+                  <IconXMark className="w-8 h-8 text-correction mb-1"/>
+                  <p className={`text-xs text-center ${applyFocusedImageStyles ? 'text-paper/80' : 'text-correction'}`}>
                       {t('chat.imageGenError')}: {message.imageGenError}
                   </p>
               </div>
@@ -1031,8 +1036,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`font-semibold whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  applyFocusedImageStyles
-                                 ? (isCurrentLineSpeaking ? 'bg-sky-400 text-sky-900' : 'hover:text-sky-200 text-white')
-                                 : (isCurrentLineSpeaking ? 'bg-sky-100 text-sky-800' : 'hover:text-accent text-foreground')
+                                 ? (isCurrentLineSpeaking ? 'bg-highlight text-highlight-text' : 'hover:text-paper-dark text-white')
+                                 : (isCurrentLineSpeaking ? 'bg-highlight text-highlight-text' : 'hover:text-accent text-foreground')
                              }`}
                              style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}
@@ -1120,8 +1125,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  applyFocusedImageStyles
-                                 ? (isCurrentlySpeakingRaw ? 'bg-sky-400 text-sky-900' : 'hover:text-sky-200 text-white')
-                                 : (isCurrentlySpeakingRaw ? 'bg-sky-100 text-sky-800' : 'hover:text-accent text-foreground')
+                                 ? (isCurrentlySpeakingRaw ? 'bg-highlight text-highlight-text' : 'hover:text-paper-dark text-white')
+                                 : (isCurrentlySpeakingRaw ? 'bg-highlight text-highlight-text' : 'hover:text-accent text-foreground')
                              }`} style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}
                              onPointerUp={(e) => handleLinePointerUp(e, message.rawAssistantResponse!, currentTargetLangCode)}
@@ -1147,7 +1152,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                      })()
                    )}
                    {(isError || isStatus) && message.text && (
-                     <p className={`${ applyFocusedImageStyles ? (isError ? 'text-red-200 font-semibold' : 'text-yellow-200 font-semibold') : ''}`}
+                     <p className={`${ applyFocusedImageStyles ? (isError ? 'text-correction font-semibold' : 'text-highlight font-semibold') : ''}`}
                         style={{ fontSize: '3.2cqw', lineHeight: 1.25 }}>
                          {message.text}
                      </p>

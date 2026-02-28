@@ -219,7 +219,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
            <button
              onClick={onOpenApiKey}
              className={`flex items-center gap-2 px-3 py-2 shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm sketchy-border-thin
-               ${hasApiKey ? 'bg-emerald-600/85 text-white hover:bg-emerald-600' : 'bg-rose-600/90 text-white hover:bg-rose-600'}
+               ${hasApiKey ? 'bg-pencil/85 text-paper hover:bg-pencil' : 'bg-correction/90 text-paper hover:bg-correction'}
              `}
              title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
            >

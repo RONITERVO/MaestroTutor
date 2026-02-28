@@ -383,7 +383,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                     onClick={handleLiveSessionStart}
                     className={`p-2 rounded-full transition-colors ${
                       liveSessionErrored
-                        ? 'bg-yellow-500/80 text-black hover:bg-yellow-500'
+                        ? 'bg-accent/80 text-paper hover:bg-accent'
                         : 'bg-white/30 text-white hover:bg-white/50'
                     }`}
                     aria-label="LIVE"

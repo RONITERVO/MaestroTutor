@@ -75,7 +75,7 @@ const SessionControls: React.FC = () => {
   // Action configuration: keyword, color scheme, description
   const ACTION_CONFIG: Record<PendingActionType, { keyword: string; label: string; description: string; colorClass: string; bgClass: string; borderClass: string; textClass: string; placeholderClass: string; btnClass: string; shadowClass: string }> = {
     none: { keyword: '', label: '', description: '', colorClass: '', bgClass: '', borderClass: '', textClass: '', placeholderClass: '', btnClass: '', shadowClass: '' },
-    saveAll: { keyword: 'SAVE', label: t('sessionControls.saveAll.label') || 'Save All', description: t('sessionControls.saveAll.description') || 'Export all chats to backup file', colorClass: 'text-emerald-300', bgClass: 'bg-emerald-950/30', borderClass: 'border-emerald-500/30', textClass: 'text-emerald-100', placeholderClass: 'placeholder-emerald-400/30', btnClass: 'bg-emerald-500/80 hover:bg-emerald-500', shadowClass: 'shadow-emerald-900/20' },
+    saveAll: { keyword: 'SAVE', label: t('sessionControls.saveAll.label') || 'Save All', description: t('sessionControls.saveAll.description') || 'Export all chats to backup file', colorClass: 'text-pencil-light', bgClass: 'bg-pencil/30', borderClass: 'border-pencil-light/30', textClass: 'text-paper', placeholderClass: 'placeholder-pencil-light/30', btnClass: 'bg-pencil/80 hover:bg-pencil', shadowClass: 'shadow-pencil/20' },
     loadAll: { keyword: 'LOAD', label: t('sessionControls.loadAll.label') || 'Load All', description: t('sessionControls.loadAll.description') || 'Replace all chats with backup file', colorClass: 'text-blue-300', bgClass: 'bg-blue-950/30', borderClass: 'border-blue-500/30', textClass: 'text-blue-100', placeholderClass: 'placeholder-blue-400/30', btnClass: 'bg-blue-500/80 hover:bg-blue-500', shadowClass: 'shadow-blue-900/20' },
     reset: { keyword: 'DELETE', label: t('sessionControls.reset.label') || 'Reset', description: t('sessionControls.reset.description') || 'Backup & delete all data', colorClass: 'text-red-300', bgClass: 'bg-red-950/30', borderClass: 'border-red-500/30', textClass: 'text-red-100', placeholderClass: 'placeholder-red-400/30', btnClass: 'bg-red-500/80 hover:bg-red-500', shadowClass: 'shadow-red-900/20' },
     saveThis: { keyword: 'SAVE', label: t('sessionControls.saveThis.label') || 'Save Chat', description: t('sessionControls.saveThis.description') || 'Export this chat only', colorClass: 'text-cyan-300', bgClass: 'bg-cyan-950/30', borderClass: 'border-cyan-500/30', textClass: 'text-cyan-100', placeholderClass: 'placeholder-cyan-400/30', btnClass: 'bg-cyan-500/80 hover:bg-cyan-500', shadowClass: 'shadow-cyan-900/20' },
@@ -558,9 +558,9 @@ const SessionControls: React.FC = () => {
     const map: Record<string, string> = {
       Zephyr: 'ring-cyan-300/50 bg-cyan-900/40',
       Puck: 'ring-amber-300/50 bg-amber-900/40',
-      Charon: 'ring-emerald-300/50 bg-emerald-900/40',
+      Charon: 'ring-pencil-light/50 bg-pencil/40',
       Kore: 'ring-blue-300/50 bg-blue-900/40',
-      Fenrir: 'ring-rose-300/50 bg-rose-900/40'
+      Fenrir: 'ring-correction/50 bg-correction/40'
     };
     return map[voiceId] || 'ring-blue-300/50 bg-blue-900/40';
   };
@@ -626,7 +626,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={handleProfileSave}
-              className="p-2 bg-green-500/80 hover:bg-green-500 rounded-full text-white transition-all shadow-lg shadow-green-900/20"
+              className="p-2 bg-pencil/80 hover:bg-pencil rounded-full text-paper transition-all shadow-lg shadow-pencil/20"
             >
               <IconCheck className="w-4 h-4" />
             </button>

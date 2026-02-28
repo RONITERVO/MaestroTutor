@@ -45,6 +45,12 @@
     --eraser: 0 60% 65%;
     --watercolor: 200 45% 55%;
     --ink: 220 30% 20%;
+
+    /* Notebook-specific semantic colors */
+    --highlight: 43 65% 75%;
+    --highlight-text: 30 40% 20%;
+    --pencil-mark: 25 20% 35%;
+    --correction: 5 45% 55%;
   }
 
   * {
@@ -83,14 +89,32 @@
    ============================================================ */
 .sketchy-border {
   border: 2px solid hsl(var(--pencil));
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  border-radius: var(--sketch-radius, 255px 15px 225px 15px / 15px 225px 15px 255px);
   position: relative;
 }
 
 .sketchy-border-thin {
   border: 1.5px solid hsl(var(--pencil-light));
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  border-radius: var(--sketch-radius, 255px 15px 225px 15px / 15px 225px 15px 255px);
 }
+
+/* ============================================================
+   SHAPE VARIANTS - 12 unique organic silhouettes
+   Each creates a distinct hand-drawn feel. Apply via
+   sketchyShape() utility or directly as classes.
+   ============================================================ */
+.sketch-shape-0  { --sketch-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; border-radius: var(--sketch-radius); }
+.sketch-shape-1  { --sketch-radius: 15px 255px 15px 225px / 225px 15px 255px 15px; border-radius: var(--sketch-radius); }
+.sketch-shape-2  { --sketch-radius: 185px 25px 235px 20px / 20px 210px 25px 185px; border-radius: var(--sketch-radius); }
+.sketch-shape-3  { --sketch-radius: 25px 195px 15px 240px / 240px 20px 195px 15px; border-radius: var(--sketch-radius); }
+.sketch-shape-4  { --sketch-radius: 225px 20px 195px 25px / 25px 185px 20px 225px; border-radius: var(--sketch-radius); }
+.sketch-shape-5  { --sketch-radius: 20px 225px 25px 195px / 195px 25px 225px 20px; border-radius: var(--sketch-radius); }
+.sketch-shape-6  { --sketch-radius: 245px 18px 210px 22px / 22px 235px 18px 245px; border-radius: var(--sketch-radius); }
+.sketch-shape-7  { --sketch-radius: 18px 245px 22px 210px / 210px 22px 245px 18px; border-radius: var(--sketch-radius); }
+.sketch-shape-8  { --sketch-radius: 200px 30px 240px 12px / 12px 200px 30px 240px; border-radius: var(--sketch-radius); }
+.sketch-shape-9  { --sketch-radius: 30px 200px 12px 240px / 240px 12px 200px 30px; border-radius: var(--sketch-radius); }
+.sketch-shape-10 { --sketch-radius: 215px 22px 250px 18px / 18px 215px 22px 250px; border-radius: var(--sketch-radius); }
+.sketch-shape-11 { --sketch-radius: 22px 215px 18px 250px / 250px 18px 215px 22px; border-radius: var(--sketch-radius); }
 
 .sketchy-underline {
   text-decoration: none;
