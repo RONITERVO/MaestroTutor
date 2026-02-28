@@ -5,7 +5,7 @@ import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { CameraDevice } from '../../../../core/types';
 import { TranslationReplacements } from '../../../../core/i18n/index';
 import { IMAGE_GEN_CAMERA_ID } from '../../../../core/config/app';
-import { IconPaperclip, IconCameraOff, IconCameraFront, IconCamera, IconSparkles, IconBookOpen } from '../../../../shared/ui/Icons';
+import { IconPaperclip, IconCameraOff, IconCameraFront, IconCamera, IconUserImageGen, IconAssistantImageGen } from '../../../../shared/ui/Icons';
 
 // Data attribute for identifying interactive elements
 const DATA_ACTION = 'data-camera-action';
@@ -340,7 +340,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 
   // Get the current camera icon based on selection and facing mode
   const CurrentCameraIcon = useMemo(() => {
-    if (isImageGenCameraSelected) return IconSparkles;
+    if (isImageGenCameraSelected) return IconUserImageGen;
     if (currentCameraFacingMode === 'user') return IconCameraFront;
     return IconCamera;
   }, [isImageGenCameraSelected, currentCameraFacingMode]);
@@ -413,7 +413,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
               }`}
               title={t('chat.bookIcon.toggleImageGen')}
             >
-              <IconBookOpen className="w-5 h-5" />
+              <IconAssistantImageGen className="w-5 h-5" />
             </button>
 
             {/* Central Camera Icon - click/tap to expand selector */}
@@ -454,7 +454,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
                   
                   let Icon;
                   if (isCameraOffOption) Icon = IconCameraOff;
-                  else if (cam.deviceId === IMAGE_GEN_CAMERA_ID) Icon = IconSparkles;
+                  else if (cam.deviceId === IMAGE_GEN_CAMERA_ID) Icon = IconUserImageGen;
                   else if (cam.facingMode === 'user') Icon = IconCameraFront;
                   else Icon = IconCamera;
 
