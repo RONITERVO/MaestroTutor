@@ -1,7 +1,7 @@
 # Maestro Tutor - Design System
 
 A complete reference for the Sketch/Notebook design system used throughout the app.
-All UI should feel like a hand-drawn notebook: warm, organic, paper-like.
+All UI should feel like a hand-drawn notebook: crisp, organic, paper-like.
 
 ---
 
@@ -13,67 +13,66 @@ All colors are defined as HSL values in CSS custom properties (`src/app/index.cs
 
 | Token | HSL | Hex (approx) | Usage |
 |-------|-----|---------------|-------|
-| `--background` | `39 35% 93%` | `#ece4d4` | Page background, body |
-| `--foreground` | `25 15% 20%` | `#3d3228` | Primary text color |
-| `--card` | `39 40% 96%` | `#f6f1e8` | Card/panel backgrounds |
-| `--card-foreground` | `25 15% 20%` | `#3d3228` | Text on cards |
-| `--primary` | `25 20% 25%` | `#4d3d30` | User message bubbles, emphasis |
-| `--primary-foreground` | `39 35% 93%` | `#ece4d4` | Text on primary backgrounds |
-| `--secondary` | `35 25% 85%` | `#ddd4c4` | Secondary surfaces, bookmark bars |
-| `--secondary-foreground` | `25 15% 25%` | `#4d3d30` | Text on secondary |
-| `--muted` | `35 20% 88%` | `#e3dcd0` | Disabled/muted backgrounds |
-| `--muted-foreground` | `25 10% 45%` | `#807568` | De-emphasized text |
-| `--accent` | `18 60% 55%` | `#c06a3a` | Warm orange highlights, CTAs |
-| `--accent-foreground` | `39 35% 96%` | `#f6f1e8` | Text on accent |
-| `--destructive` | `0 65% 50%` | `#d42d2d` | Destructive actions |
-| `--destructive-foreground` | `39 35% 96%` | `#f6f1e8` | Text on destructive |
+| `--background` | `210 20% 97%` | `#f4f6f8` | Page background, slightly cool paper |
+| `--foreground` | `220 30% 20%` | `#242c3d` | Primary ink text color |
+| `--card` | `210 25% 99%` | `#fafbfc` | Card/panel backgrounds |
+| `--card-foreground` | `220 30% 20%` | `#242c3d` | Text on cards |
+| `--primary` | `220 30% 20%` | `#242c3d` | User message bubbles, emphasis |
+| `--primary-foreground` | `210 20% 98%` | `#f5f7f9` | Text on primary backgrounds |
+| `--secondary` | `210 15% 90%` | `#e2e6eb` | Secondary surfaces, bookmark bars |
+| `--secondary-foreground` | `220 30% 25%` | `#2d374d` | Text on secondary |
+| `--muted` | `210 15% 92%` | `#e7eaef` | Disabled/muted backgrounds |
+| `--muted-foreground` | `220 15% 45%` | `#626c7e` | De-emphasized text |
+| `--accent` | `220 70% 55%` | `#3d79df` | Blue pen highlights, primary CTAs |
+| `--accent-foreground` | `210 25% 99%` | `#fafbfc` | Text on accent |
+| `--destructive` | `350 70% 50%` | `#da2640` | Destructive actions (red ink) |
+| `--destructive-foreground` | `210 25% 99%` | `#fafbfc` | Text on destructive |
 
 ### Border & Input
 
 | Token | HSL | Hex (approx) | Usage |
 |-------|-----|---------------|-------|
-| `--border` | `25 18% 70%` | `#b8a998` | Default border color |
-| `--input` | `25 18% 75%` | `#c4b6a6` | Input field borders |
-| `--ring` | `25 20% 35%` | `#6b5845` | Focus ring color |
+| `--border` | `210 15% 82%` | `#ced3da` | Default border color |
+| `--input` | `210 15% 82%` | `#ced3da` | Input field borders |
+| `--ring` | `220 40% 40%` | `#3d548f` | Focus ring color |
 
 ### Sketch-Specific Tokens
 
 | Token | HSL | Hex (approx) | Usage |
 |-------|-----|---------------|-------|
-| `--paper` | `39 35% 93%` | `#ece4d4` | Paper white (off-white) |
-| `--paper-dark` | `35 12% 85%` | `#dbd6ce` | Aged/darker paper |
-| `--pencil` | `25 15% 25%` | `#4d3d30` | Pencil strokes, dark borders |
-| `--pencil-light` | `25 10% 55%` | `#968a7e` | Light pencil, subtle lines |
-| `--pencil-mark` | `25 20% 35%` | `#6b5845` | Darker pencil for emphasis |
-| `--sketch-shadow` | `25 15% 20%` | `#3d3228` | Shadow color |
-| `--eraser` | `0 60% 65%` | `#d45c5c` | Eraser/deletion actions |
-| `--watercolor` | `200 45% 55%` | `#5099cc` | Water blue accent (use sparingly) |
-| `--ink` | `220 30% 20%` | `#243042` | Dark ink text |
+| `--paper` | `210 20% 97%` | `#f4f6f8` | Paper white |
+| `--paper-dark` | `210 15% 92%` | `#e7eaef` | Aged/darker paper |
+| `--pencil` | `220 25% 30%` | `#394660` | Graphite strokes, dark borders |
+| `--pencil-light` | `220 15% 65%` | `#969fae` | Light graphite, subtle lines |
+| `--pencil-mark` | `220 25% 30%` | `#394660` | Darker graphite for emphasis |
+| `--sketch-shadow` | `220 30% 20%` | `#242c3d` | Shadow color |
+| `--eraser` | `350 70% 65%` | `#e7647a` | Pink eraser/deletion actions |
+| `--watercolor` | `190 60% 55%` | `#45b4cc` | Water blue accent |
+| `--ink` | `230 40% 20%` | `#1f2447` | Dark blue ink text |
 
 ### Semantic Notebook Tokens
 
 | Token | HSL | Hex (approx) | Usage |
 |-------|-----|---------------|-------|
-| `--highlight` | `43 65% 75%` | `#dfc77a` | Highlighter marker (speaking highlights) |
-| `--highlight-text` | `30 40% 20%` | `#473620` | Text on highlight |
-| `--correction` | `5 45% 55%` | `#c76858` | Teacher's red pencil (errors, corrections) |
+| `--highlight` | `60 85% 80%` | `#f6f69e` | Yellow highlighter marker |
+| `--highlight-text` | `220 30% 20%` | `#242c3d` | Text on highlight |
+| `--correction` | `350 70% 50%` | `#da2640` | Teacher's red pen (errors, corrections) |
 
 ### Color Rules
 
 **DO:**
-- Use warm earth tones (browns, creams, tans) from the token system
-- Use `--highlight` for active/speaking state highlights (like a real marker on paper)
+- Use the cool-toned paper and dark ink tones from the token system
+- Use `--highlight` for active/speaking state highlights (like a yellow marker)
 - Use `--correction` for errors and corrections (like a teacher's red pen)
 - Use `--pencil` / `--pencil-mark` for emphasis, confirmations, success states
 - Use `--paper` instead of pure `white` for light backgrounds
 - Keep `--eraser` for delete actions
-- Use `--accent` (warm orange) for primary CTAs
+- Use `--accent` (blue pen color) for primary CTAs
 
 **DON'T:**
-- Use `sky-`, `blue-`, `green-`, `emerald-`, `fuchsia-`, `purple-`, `cyan-`, `teal-`, `lime-`, `indigo-`, `violet-` Tailwind colors
-- Use `rose-` or `pink-` (use `--correction` or `--eraser` instead)
+- Use old warm browns or oranges unless conceptually required
 - Use pure `white` or `#ffffff` (use `--paper` or `--card`)
-- Use pure `black` (use `--foreground` or `--pencil`)
+- Use pure `black` (use `--foreground` or `--ink`)
 
 ---
 
@@ -117,18 +116,18 @@ Every sketchy-bordered element should have a **unique organic shape**. No two ad
 
 | Class | Border Radius | Visual Character |
 |-------|--------------|------------------|
-| `sketch-shape-0` | `255px 15px 225px 15px / 15px 225px 15px 255px` | Top-left & bottom-right rounded |
-| `sketch-shape-1` | `15px 255px 15px 225px / 225px 15px 255px 15px` | Top-right & bottom-left rounded |
-| `sketch-shape-2` | `185px 25px 235px 20px / 20px 210px 25px 185px` | Gentle asymmetry |
-| `sketch-shape-3` | `25px 195px 15px 240px / 240px 20px 195px 15px` | Reversed gentle asymmetry |
-| `sketch-shape-4` | `225px 20px 195px 25px / 25px 185px 20px 225px` | Wide top-left curve |
-| `sketch-shape-5` | `20px 225px 25px 195px / 195px 25px 225px 20px` | Wide top-right curve |
-| `sketch-shape-6` | `245px 18px 210px 22px / 22px 235px 18px 245px` | Tall, narrow feel |
-| `sketch-shape-7` | `18px 245px 22px 210px / 210px 22px 245px 18px` | Reversed tall feel |
-| `sketch-shape-8` | `200px 30px 240px 12px / 12px 200px 30px 240px` | Organic blob |
-| `sketch-shape-9` | `30px 200px 12px 240px / 240px 12px 200px 30px` | Reversed blob |
-| `sketch-shape-10` | `215px 22px 250px 18px / 18px 215px 22px 250px` | Stretched diagonal |
-| `sketch-shape-11` | `22px 215px 18px 250px / 250px 18px 215px 22px` | Reversed stretched |
+| `sketch-shape-0` | `255px 15px 225px 15px / 15px 225px 15px 255px` | Classic skewed rectangle |
+| `sketch-shape-1` | `15px 255px 15px 225px / 225px 15px 255px 15px` | Reversed skewed rectangle |
+| `sketch-shape-2` | `235px 25px 15px 225px / 20px 245px 210px 15px` | Wide bottom, tapered |
+| `sketch-shape-3` | `25px 235px 225px 15px / 245px 20px 15px 210px` | Wide top, tapered |
+| `sketch-shape-4` | `255px 255px 15px 15px / 15px 15px 255px 255px` | Round top corners |
+| `sketch-shape-5` | `15px 15px 255px 255px / 255px 255px 15px 15px` | Round bottom corners |
+| `sketch-shape-6` | `200px 15px 15px 200px / 15px 200px 200px 15px` | Bowed left edge |
+| `sketch-shape-7` | `15px 200px 200px 15px / 200px 15px 15px 200px` | Bowed right edge |
+| `sketch-shape-8` | `255px 20px 255px 20px / 20px 255px 20px 255px` | Tilted right |
+| `sketch-shape-9` | `20px 255px 20px 255px / 255px 20px 255px 20px` | Tilted left |
+| `sketch-shape-10` | `245px 245px 245px 20px / 20px 20px 20px 245px` | Bulging roundness |
+| `sketch-shape-11` | `20px 245px 245px 245px / 245px 20px 20px 20px` | Sharp top-left, fluid otherwise |
 
 ### Usage Patterns
 

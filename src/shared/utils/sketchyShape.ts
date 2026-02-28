@@ -39,22 +39,33 @@ const SMALLS = [12, 15, 18, 20, 22, 25, 28, 30];
  * No two seeds produce the same shape. Use for truly unique per-element shapes.
  */
 export function sketchShapeStyle(seed: number): { borderRadius: string } {
-  const h = hash(seed);
+  const h1 = hash(seed);
   const h2 = hash(seed + 7919); // second hash for variety
+  const h3 = hash(seed + 104729); // third hash to determine large/small mappings
 
-  const pick = (arr: number[], n: number) => arr[n % arr.length];
+  const getVal = (isLarge: boolean, n: number) => {
+    const arr = isLarge ? CORNERS : SMALLS;
+    return arr[n % arr.length];
+  };
 
-  const tl = pick(CORNERS, h);
-  const tr = pick(SMALLS, h >> 4);
-  const br = pick(CORNERS, h >> 8);
-  const bl = pick(SMALLS, h >> 12);
+  // Determine structural pattern for each corner. 0 = (Large, Small), 1 = (Small, Large)
+  // This drastically increases unpredictability by changing the curve orientation.
+  const pathTL = h3 & 1;
+  const pathTR = (h3 >> 1) & 1;
+  const pathBR = (h3 >> 2) & 1;
+  const pathBL = (h3 >> 3) & 1;
 
-  const tl2 = pick(SMALLS, h2);
-  const tr2 = pick(CORNERS, h2 >> 4);
-  const br2 = pick(SMALLS, h2 >> 8);
-  const bl2 = pick(CORNERS, h2 >> 12);
+  const tlX = getVal(pathTL === 0, h1);
+  const trX = getVal(pathTR === 0, h1 >> 4);
+  const brX = getVal(pathBR === 0, h1 >> 8);
+  const blX = getVal(pathBL === 0, h1 >> 12);
+
+  const tlY = getVal(pathTL === 1, h2);
+  const trY = getVal(pathTR === 1, h2 >> 4);
+  const brY = getVal(pathBR === 1, h2 >> 8);
+  const blY = getVal(pathBL === 1, h2 >> 12);
 
   return {
-    borderRadius: `${tl}px ${tr}px ${br}px ${bl}px / ${tl2}px ${tr2}px ${br2}px ${bl2}px`,
+    borderRadius: `${tlX}px ${trX}px ${brX}px ${blX}px / ${tlY}px ${trY}px ${brY}px ${blY}px`,
   };
 }

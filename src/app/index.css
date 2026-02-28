@@ -7,50 +7,50 @@
    ============================================================ */
 @layer base {
   :root {
-    --background: 39 35% 93%;
-    --foreground: 25 15% 20%;
+    --background: 210 20% 97%; /* Cool-toned paper white */
+    --foreground: 220 30% 20%; /* Deep ink/graphite */
 
-    --card: 39 40% 96%;
-    --card-foreground: 25 15% 20%;
+    --card: 210 25% 99%;
+    --card-foreground: 220 30% 20%;
 
-    --popover: 39 40% 96%;
-    --popover-foreground: 25 15% 20%;
+    --popover: 210 25% 99%;
+    --popover-foreground: 220 30% 20%;
 
-    --primary: 25 20% 25%;
-    --primary-foreground: 39 35% 93%;
+    --primary: 220 30% 20%;
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 35 25% 85%;
-    --secondary-foreground: 25 15% 25%;
+    --secondary: 210 15% 90%;
+    --secondary-foreground: 220 30% 25%;
 
-    --muted: 35 20% 88%;
-    --muted-foreground: 25 10% 45%;
+    --muted: 210 15% 92%;
+    --muted-foreground: 220 15% 45%;
 
-    --accent: 18 60% 55%;
-    --accent-foreground: 39 35% 96%;
+    --accent: 220 70% 55%; /* Blue pen instead of orange */
+    --accent-foreground: 210 25% 99%;
 
-    --destructive: 0 65% 50%;
-    --destructive-foreground: 39 35% 96%;
+    --destructive: 350 70% 50%;
+    --destructive-foreground: 210 25% 99%;
 
-    --border: 25 18% 70%;
-    --input: 25 18% 75%;
-    --ring: 25 20% 35%;
+    --border: 210 15% 82%;
+    --input: 210 15% 82%;
+    --ring: 220 40% 40%;
 
     --radius: 0.5rem;
 
-    --paper: 39 35% 93%;
-    --paper-dark: 35 12% 85%;
-    --pencil: 25 15% 25%;
-    --pencil-light: 25 10% 55%;
-    --sketch-shadow: 25 15% 20%;
-    --eraser: 0 60% 65%;
-    --watercolor: 200 45% 55%;
-    --ink: 220 30% 20%;
+    --paper: 210 20% 97%;
+    --paper-dark: 210 15% 92%;
+    --pencil: 220 25% 30%;
+    --pencil-light: 220 15% 65%;
+    --sketch-shadow: 220 30% 20%;
+    --eraser: 350 70% 65%;
+    --watercolor: 190 60% 55%;
+    --ink: 230 40% 20%;
 
     /* Notebook-specific semantic colors */
-    --highlight: 43 65% 75%;
-    --highlight-text: 30 40% 20%;
-    --pencil-mark: 25 20% 35%;
-    --correction: 5 45% 55%;
+    --highlight: 60 85% 80%; /* Yellow highlighter */
+    --highlight-text: 220 30% 20%;
+    --pencil-mark: 220 25% 30%;
+    --correction: 350 70% 50%;
   }
 
   * {
@@ -105,20 +105,20 @@
    ============================================================ */
 .sketch-shape-0  { --sketch-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; border-radius: var(--sketch-radius); }
 .sketch-shape-1  { --sketch-radius: 15px 255px 15px 225px / 225px 15px 255px 15px; border-radius: var(--sketch-radius); }
-.sketch-shape-2  { --sketch-radius: 185px 25px 235px 20px / 20px 210px 25px 185px; border-radius: var(--sketch-radius); }
-.sketch-shape-3  { --sketch-radius: 25px 195px 15px 240px / 240px 20px 195px 15px; border-radius: var(--sketch-radius); }
-.sketch-shape-4  { --sketch-radius: 225px 20px 195px 25px / 25px 185px 20px 225px; border-radius: var(--sketch-radius); }
-.sketch-shape-5  { --sketch-radius: 20px 225px 25px 195px / 195px 25px 225px 20px; border-radius: var(--sketch-radius); }
-.sketch-shape-6  { --sketch-radius: 245px 18px 210px 22px / 22px 235px 18px 245px; border-radius: var(--sketch-radius); }
-.sketch-shape-7  { --sketch-radius: 18px 245px 22px 210px / 210px 22px 245px 18px; border-radius: var(--sketch-radius); }
-.sketch-shape-8  { --sketch-radius: 200px 30px 240px 12px / 12px 200px 30px 240px; border-radius: var(--sketch-radius); }
-.sketch-shape-9  { --sketch-radius: 30px 200px 12px 240px / 240px 12px 200px 30px; border-radius: var(--sketch-radius); }
-.sketch-shape-10 { --sketch-radius: 215px 22px 250px 18px / 18px 215px 22px 250px; border-radius: var(--sketch-radius); }
-.sketch-shape-11 { --sketch-radius: 22px 215px 18px 250px / 250px 18px 215px 22px; border-radius: var(--sketch-radius); }
+.sketch-shape-2  { --sketch-radius: 235px 25px 15px 225px / 20px 245px 210px 15px; border-radius: var(--sketch-radius); }
+.sketch-shape-3  { --sketch-radius: 25px 235px 225px 15px / 245px 20px 15px 210px; border-radius: var(--sketch-radius); }
+.sketch-shape-4  { --sketch-radius: 255px 255px 15px 15px / 15px 15px 255px 255px; border-radius: var(--sketch-radius); }
+.sketch-shape-5  { --sketch-radius: 15px 15px 255px 255px / 255px 255px 15px 15px; border-radius: var(--sketch-radius); }
+.sketch-shape-6  { --sketch-radius: 200px 15px 15px 200px / 15px 200px 200px 15px; border-radius: var(--sketch-radius); }
+.sketch-shape-7  { --sketch-radius: 15px 200px 200px 15px / 200px 15px 15px 200px; border-radius: var(--sketch-radius); }
+.sketch-shape-8  { --sketch-radius: 255px 20px 255px 20px / 20px 255px 20px 255px; border-radius: var(--sketch-radius); }
+.sketch-shape-9  { --sketch-radius: 20px 255px 20px 255px / 255px 20px 255px 20px; border-radius: var(--sketch-radius); }
+.sketch-shape-10 { --sketch-radius: 245px 245px 245px 20px / 20px 20px 20px 245px; border-radius: var(--sketch-radius); }
+.sketch-shape-11 { --sketch-radius: 20px 245px 245px 245px / 245px 20px 20px 20px; border-radius: var(--sketch-radius); }
 
 .sketchy-underline {
   text-decoration: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8'%3E%3Cpath d='M0,5 Q25,2 50,5 T100,5 T150,5 T200,5' fill='none' stroke='%23594a3a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8'%3E%3Cpath d='M0,5 Q25,2 50,5 T100,5 T150,5 T200,5' fill='none' stroke='%23394660' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-position: bottom;
   background-repeat: repeat-x;
   background-size: 200px 8px;
@@ -146,10 +146,11 @@
   transform: translateX(-50%) rotate(-2deg);
   width: 60px;
   height: 24px;
-  background: hsl(45 60% 80% / 0.6);
-  border: 1px solid hsl(45 30% 60% / 0.4);
+  background: hsl(210 20% 95% / 0.5);
+  border: 1px solid hsl(210 15% 80% / 0.5);
   z-index: 10;
   border-radius: 2px;
+  backdrop-filter: blur(1px);
 }
 
 .torn-paper {
@@ -229,9 +230,9 @@
    SCROLLBAR - sketchy style
    ============================================================ */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #ece4d4; }
-::-webkit-scrollbar-thumb { background: #8a7e72; border-radius: 12px; }
-::-webkit-scrollbar-thumb:hover { background: #6b5e50; }
+::-webkit-scrollbar-track { background: #f4f6f8; }
+::-webkit-scrollbar-thumb { background: #969fae; border-radius: 12px; }
+::-webkit-scrollbar-thumb:hover { background: #394660; }
 
 /* ============================================================
    SPLASH SCREEN
@@ -243,7 +244,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #ece4d4;
+  background-color: #f4f6f8;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -274,7 +275,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border-left-color: #c06a3a;
+  border-left-color: #3d79df;
   animation: spin 1s ease infinite;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -287,7 +288,7 @@
   background-size: 200% auto;
   background-position: 0% center;
   animation: rotate-globe 120s linear infinite;
-  box-shadow: inset 0 0 30px 10px rgba(0,0,0,0.5), 0 0 25px -8px rgba(89, 74, 58, 0.6);
-  border-color: rgba(89, 74, 58, 0.4);
+  box-shadow: inset 0 0 30px 10px rgba(0,0,0,0.5), 0 0 25px -8px rgba(57, 70, 96, 0.6);
+  border-color: rgba(57, 70, 96, 0.4);
 }
 @keyframes rotate-globe { from { background-position: 0% center; } to { background-position: 200% center; } }
