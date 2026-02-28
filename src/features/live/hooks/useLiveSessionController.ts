@@ -28,10 +28,11 @@ import { deriveHistoryForApi, computeTtsCacheKey } from '../../chat';
 import { processMediaForUpload } from '../../vision';
 import { MAX_MEDIA_TO_KEEP } from '../../../core/config/app';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../../core/config/activityTokens';
-import { 
-  DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
-  IMAGE_GEN_SYSTEM_INSTRUCTION, 
-  IMAGE_GEN_USER_PROMPT_TEMPLATE 
+import {
+  DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
+  IMAGE_GEN_SYSTEM_INSTRUCTION,
+  IMAGE_GEN_USER_PROMPT_TEMPLATE,
+  IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION
 } from '../../../core/config/prompts';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
@@ -455,38 +456,52 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         apiHistory.push({ role: 'user', text: DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE });
 
         // Construct prompt asking for "Next Image" based on this context
-        const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", modelText);
-        
         const sanitizedHistory = await sanitizeHistoryWithVerifiedUris(apiHistory as any);
 
-        generateImage({
-          history: sanitizedHistory,
-          latestMessageText: prompt,
-          latestMessageRole: 'user',
-          systemInstruction: IMAGE_GEN_SYSTEM_INSTRUCTION,
-          maestroAvatarUri: maestroAvatarUriRef.current || undefined,
-          maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
-        }).then(async (res: any) => {
-          if (res.base64Image) {
-            const optimized = await processMediaForUpload(res.base64Image, res.mimeType, { t });
-            const up = await uploadMediaToFiles(res.base64Image, res.mimeType, 'live-gen');
-            
-            updateMessage(assistantId, {
-              imageUrl: res.base64Image,
-              imageMimeType: res.mimeType,
-              storageOptimizedImageUrl: optimized.dataUrl,
-              storageOptimizedImageMimeType: optimized.mimeType,
-              uploadedFileUri: up.uri,
-              uploadedFileMimeType: up.mimeType,
-              isGeneratingImage: false,
-              imageGenerationStartTime: undefined
-            });
-          } else {
-            updateMessage(assistantId, { isGeneratingImage: false });
+        // Retry flow: 1st attempt normal, retry with copyright avoidance if needed
+        (async () => {
+          for (let attempt = 0; attempt < 7; attempt++) {
+            try {
+              const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}",
+                modelText + (attempt !== 0 ? IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION : "")
+              );
+
+              const res: any = await generateImage({
+                history: sanitizedHistory,
+                latestMessageText: prompt,
+                latestMessageRole: 'user',
+                systemInstruction: IMAGE_GEN_SYSTEM_INSTRUCTION,
+                maestroAvatarUri: maestroAvatarUriRef.current || undefined,
+                maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
+              });
+
+              if (res.base64Image) {
+                const optimized = await processMediaForUpload(res.base64Image, res.mimeType, { t });
+                const up = await uploadMediaToFiles(res.base64Image, res.mimeType, 'live-gen');
+
+                updateMessage(assistantId, {
+                  imageUrl: res.base64Image,
+                  imageMimeType: res.mimeType,
+                  storageOptimizedImageUrl: optimized.dataUrl,
+                  storageOptimizedImageMimeType: optimized.mimeType,
+                  uploadedFileUri: up.uri,
+                  uploadedFileMimeType: up.mimeType,
+                  isGeneratingImage: false,
+                  imageGenerationStartTime: undefined
+                });
+                break;
+              }
+              // No base64Image returned — retry if attempts remain
+            } catch {
+              // Generation threw — retry if attempts remain
+            }
           }
-        }).catch(() => {
-          updateMessage(assistantId, { isGeneratingImage: false });
-        });
+          // If all attempts failed, clear the generating state
+          const msg = messagesRef.current.find(m => m.id === assistantId);
+          if (msg && msg.isGeneratingImage) {
+            updateMessage(assistantId, { isGeneratingImage: false, imageGenerationStartTime: undefined });
+          }
+        })();
       }
     }
   }, [

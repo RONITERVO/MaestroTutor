@@ -38,6 +38,7 @@ import {
   DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
   IMAGE_GEN_SYSTEM_INSTRUCTION, 
   IMAGE_GEN_USER_PROMPT_TEMPLATE,
+  IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION,
   composeMaestroSystemInstruction 
 } from '../../../core/config/prompts';
 import { isRealChatMessage } from '../../../shared/utils/common';
@@ -1025,7 +1026,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     let finalResult: any = null;
 
     for (let attempt = 0; attempt < 7; attempt++) {
-      const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", params.userMessageText);
+      const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", params.userMessageText + (attempt !== 0 ? IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION : ""));
       const userImgGenResult = await generateImage({
         history: sanitizedUserHistoryForImage,
         latestMessageText: prompt,
@@ -1148,7 +1149,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       });
       const sanitizedAssistantHistoryForImage = await sanitizeHistoryWithVerifiedUris(assistantHistory as any);
 
-      const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", params.accumulatedFullText);
+      const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", params.accumulatedFullText + (attempt !== 0 ? IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION : ""));
       const assistantImgGenResult = await generateImage({
         history: sanitizedAssistantHistoryForImage,
         latestMessageText: prompt,
