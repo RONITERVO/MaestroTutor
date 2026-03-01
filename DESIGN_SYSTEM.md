@@ -15,24 +15,26 @@ All colors are defined as HSL values in CSS custom properties (`src/app/index.cs
 |-------|-----|---------------|-------|
 | `--background` | `210 20% 97%` | `#f4f6f8` | Page background, slightly cool paper |
 | `--foreground` | `220 30% 20%` | `#242c3d` | Primary ink text color |
-| `--card` | `210 25% 99%` | `#fafbfc` | Card/panel backgrounds |
+| `--card` | `210 25% 99%` | `#fafbfc` | Assistant message bubbles, translation input, quick themes panel, undo/send button backgrounds |
 | `--card-foreground` | `220 30% 20%` | `#242c3d` | Text on cards |
-| `--primary` | `220 30% 20%` | `#242c3d` | User message bubbles, emphasis |
-| `--primary-foreground` | `210 20% 98%` | `#f5f7f9` | Text on primary backgrounds |
-| `--secondary` | `210 15% 90%` | `#e2e6eb` | Secondary surfaces, bookmark bars |
+| `--popover` | `210 25% 99%` | `#fafbfc` | Popup menu and dialog background color |
+| `--popover-foreground` | `220 30% 20%` | `#242c3d` | Text inside popups and dialogs |
+| `--primary` | `220 30% 20%` | `#242c3d` | Text input area background, terminal button, traffic log panel, dark button backgrounds |
+| `--primary-foreground` | `210 20% 98%` | `#f5f7f9` | Text and icons in the input area, navigation icons (globe, target, message, speaker), paperclip, traffic log text |
+| `--secondary` | `210 15% 90%` | `#e2e6eb` | Language selector undo button, API key background in key gate, secondary action button backgrounds |
 | `--secondary-foreground` | `220 30% 25%` | `#2d374d` | Text on secondary |
-| `--muted` | `210 15% 92%` | `#e7eaef` | Disabled/muted backgrounds |
-| `--muted-foreground` | `220 15% 45%` | `#626c7e` | De-emphasized text |
-| `--accent` | `220 70% 55%` | `#3d79df` | Blue pen highlights, primary CTAs |
-| `--accent-foreground` | `210 25% 99%` | `#fafbfc` | Text on accent |
-| `--destructive` | `350 70% 50%` | `#da2640` | Destructive actions (red ink) |
+| `--muted` | `210 15% 92%` | `#e7eaef` | Color gradient picker background, selected-color highlight in color panel, low-priority section backgrounds |
+| `--muted-foreground` | `220 15% 45%` | `#626c7e` | Helper text, toolbar icons (global profile, avatar swap, terminal), API key gate text |
+| `--accent` | `220 70% 55%` | `#3d79df` | Action buttons (Save Key, Open Google AI Studio), input area focus border, color-circle borders, API key icon/input border, privacy policy link text |
+| `--accent-foreground` | `210 25% 99%` | `#fafbfc` | Text on accent buttons (Save Key, Open Google AI Studio, Disable Image Generation) |
+| `--destructive` | `350 70% 50%` | `#da2640` | Error message background and text, danger/delete action buttons |
 | `--destructive-foreground` | `210 25% 99%` | `#fafbfc` | Text on destructive |
 
 ### Border & Input
 
 | Token | HSL | Hex (approx) | Usage |
 |-------|-----|---------------|-------|
-| `--border` | `210 15% 82%` | `#ced3da` | Default border color |
+| `--border` | `210 15% 82%` | `#ced3da` | Most borders and separators, color picker outline, avatar reset border, quick themes border, traffic log header line |
 | `--input` | `210 15% 82%` | `#ced3da` | Input field borders |
 | `--ring` | `220 40% 40%` | `#3d548f` | Focus ring color |
 
@@ -40,14 +42,14 @@ All colors are defined as HSL values in CSS custom properties (`src/app/index.cs
 
 | Token | HSL | Hex (approx) | Usage |
 |-------|-----|---------------|-------|
-| `--paper` | `210 20% 97%` | `#f4f6f8` | Paper white |
+| `--paper` | `210 20% 97%` | `#f4f6f8` | Save/confirm dialog checkmark and button text, and text on dark input-area overlays |
 | `--paper-dark` | `210 15% 92%` | `#e7eaef` | Aged/darker paper |
-| `--pencil` | `220 25% 30%` | `#394660` | Graphite strokes, dark borders |
-| `--pencil-light` | `220 15% 65%` | `#969fae` | Light graphite, subtle lines |
+| `--pencil` | `220 25% 30%` | `#394660` | Input area inner/outer sketch outlines, API key gate sketch lines, heading, key text and usage cost display |
+| `--pencil-light` | `220 15% 65%` | `#969fae` | Sketchy outlines on suggestion chips, focused inputs, language undo, assistant bubbles, error buttons, API key inputs/icons, language flags, send button |
 | `--pencil-mark` | `220 25% 30%` | `#394660` | Darker graphite for emphasis |
 | `--sketch-shadow` | `220 30% 20%` | `#242c3d` | Shadow color |
-| `--eraser` | `350 70% 65%` | `#e7647a` | Pink eraser/deletion actions |
-| `--watercolor` | `190 60% 55%` | `#45b4cc` | Water blue accent |
+| `--eraser` | `350 70% 65%` | `#e7647a` | Delete individual message button (pink eraser-style) |
+| `--watercolor` | `190 60% 55%` | `#45b4cc` | Global profile editing section, URL links in chat, native language selection highlight, watercolor accent wash |
 | `--ink` | `230 40% 20%` | `#1f2447` | Dark blue ink text |
 
 ### Semantic Notebook Tokens
