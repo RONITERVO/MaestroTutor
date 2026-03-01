@@ -124,6 +124,17 @@ export const COLOR_GROUPS: ColorGroup[] = [
     ],
   },
   {
+    groupName: 'API Key',
+    groupDescription: 'The API key button next to traffic logs',
+    collapsedByDefault: true,
+    colors: [
+      { cssVar: 'api-key-valid', friendlyName: 'Key Set', description: 'Button color when an API key is configured' },
+      { cssVar: 'api-key-valid-text', friendlyName: 'Key Set Text', description: 'Text when an API key is configured' },
+      { cssVar: 'api-key-missing', friendlyName: 'Key Missing', description: 'Button color when no API key is set' },
+      { cssVar: 'api-key-missing-text', friendlyName: 'Key Missing Text', description: 'Text when no API key is set' },
+    ],
+  },
+  {
     groupName: 'Recording',
     groupDescription: 'Microphone and video recording indicators',
     collapsedByDefault: true,

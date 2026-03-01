@@ -251,8 +251,8 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
       {/* Panel */}
       <div
-        className="fixed inset-x-0 bottom-0 z-[90] flex flex-col bg-card/95 backdrop-blur-md border-t border-border shadow-2xl rounded-t-2xl overflow-hidden"
-        style={{ height: '75vh', maxHeight: '75vh' }}
+        className="fixed inset-x-0 bottom-0 z-[90] flex flex-col bg-card/10 backdrop-blur-md border-t border-border shadow-2xl rounded-t-2xl overflow-hidden"
+        style={{ height: '45vh', maxHeight: '45vh' }}
       >
         {/* Header */}
         <div className="flex flex-col items-center pt-2 pb-1 px-4 shrink-0">

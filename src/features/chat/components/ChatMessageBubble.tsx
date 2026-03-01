@@ -637,14 +637,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
            bubbleWrapperClasses += " p-3";
            if (isUser) bubbleWrapperClasses += " bg-primary bg-opacity-90 text-primary-foreground";
            else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
-           else if (isStatus) bubbleWrapperClasses += " bg-accent/10 bg-opacity-90 text-accent";
+           else if (isStatus) bubbleWrapperClasses += " bg-secondary bg-opacity-90 text-foreground";
            else bubbleWrapperClasses += " bg-card bg-opacity-90 text-foreground";
       }
   } else {
       bubbleWrapperClasses += " p-3 max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
       if (isUser) bubbleWrapperClasses += " bg-primary bg-opacity-90 text-primary-foreground";
       else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
-      else if (isStatus) bubbleWrapperClasses += " bg-accent/10 bg-opacity-90 text-accent";
+      else if (isStatus) bubbleWrapperClasses += " bg-secondary bg-opacity-90 text-foreground";
       else bubbleWrapperClasses += " bg-card bg-opacity-90 text-foreground sketchy-border-thin";
   }
 

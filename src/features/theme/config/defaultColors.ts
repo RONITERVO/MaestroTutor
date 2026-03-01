@@ -58,6 +58,12 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'voice-kore': '217 91% 60%',
   'voice-fenrir': '350 70% 50%',
 
+  // API key button
+  'api-key-valid': '161 94% 30%',
+  'api-key-valid-text': '0 0% 100%',
+  'api-key-missing': '347 77% 50%',
+  'api-key-missing-text': '0 0% 100%',
+
   // Recording indicator
   'recording': '0 72% 51%',
   'recording-text': '0 0% 100%',
