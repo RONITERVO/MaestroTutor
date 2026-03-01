@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { DEFAULT_COLORS } from './defaultColors';
+
 export interface PresetTheme {
   name: string;
   /** Short description for the user. */
@@ -9,7 +11,7 @@ export interface PresetTheme {
   colors: Record<string, string>;
 }
 
-export const PRESET_THEMES: PresetTheme[] = [
+const BASE_PRESET_THEMES: PresetTheme[] = [
   {
     name: 'Notebook',
     description: 'The original hand-drawn look',
@@ -334,4 +336,154 @@ export const PRESET_THEMES: PresetTheme[] = [
     },
   },
 ];
+
+interface HslTriplet {
+  h: number;
+  s: number;
+  l: number;
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const parseHslTriplet = (value: string): HslTriplet | null => {
+  const match = value.trim().match(/^(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%$/);
+  if (!match) return null;
+  return {
+    h: Number(match[1]),
+    s: Number(match[2]),
+    l: Number(match[3]),
+  };
+};
+
+const formatHslTriplet = ({ h, s, l }: HslTriplet): string => {
+  const hue = ((h % 360) + 360) % 360;
+  return `${Math.round(hue)} ${Math.round(clamp(s, 0, 100))}% ${Math.round(clamp(l, 0, 100))}%`;
+};
+
+const tune = (
+  source: string,
+  { hue = 0, saturation = 0, lightness = 0 }: { hue?: number; saturation?: number; lightness?: number }
+): string => {
+  const parsed = parseHslTriplet(source);
+  if (!parsed) return source;
+  return formatHslTriplet({
+    h: parsed.h + hue,
+    s: parsed.s + saturation,
+    l: parsed.l + lightness,
+  });
+};
+
+const pick = (colors: Record<string, string>, ...keys: string[]): string => {
+  for (const key of keys) {
+    if (colors[key]) return colors[key];
+    if (DEFAULT_COLORS[key]) return DEFAULT_COLORS[key];
+  }
+  return '0 0% 50%';
+};
+
+const withDedicatedUiStateColors = (baseColors: Record<string, string>): Record<string, string> => {
+  if (Object.keys(baseColors).length === 0) return baseColors;
+
+  const vivid = pick(baseColors, 'ring', 'accent');
+  const vividText = pick(baseColors, 'accent-foreground', 'primary-foreground');
+  const paper = pick(baseColors, 'paper', 'background');
+  const pencil = pick(baseColors, 'pencil');
+  const secondary = pick(baseColors, 'secondary');
+  const muted = pick(baseColors, 'muted');
+  const mutedText = pick(baseColors, 'muted-foreground', 'secondary-foreground');
+  const border = pick(baseColors, 'border');
+  const watercolor = pick(baseColors, 'watercolor');
+  const correction = pick(baseColors, 'correction', 'destructive');
+  const correctionText = pick(baseColors, 'destructive-foreground', 'accent-foreground');
+  const apiKeyValidBg = pick(baseColors, 'api-key-valid-bg');
+  const apiKeyMissingBg = pick(baseColors, 'api-key-missing-bg');
+  const liveErrorBase = tune(vivid, { lightness: 3, saturation: 6 });
+  const trimBase = pick(baseColors, 'action-trim', 'accent', 'watercolor');
+  const dangerBase = pick(baseColors, 'action-danger', 'destructive', 'correction');
+
+  const derivedColors: Record<string, string> = {
+    // Status flag states
+    'status-hold-bg': tune(vivid, { hue: 68, saturation: 8, lightness: 4 }),
+    'status-hold-border': tune(vivid, { hue: 68, saturation: 12, lightness: -2 }),
+    'status-hold-text': vividText,
+    'status-speaking-bg': vivid,
+    'status-speaking-border': tune(vivid, { saturation: 6, lightness: -6 }),
+    'status-speaking-text': vividText,
+    'status-typing-bg': tune(vivid, { saturation: 8, lightness: -11 }),
+    'status-typing-border': tune(vivid, { saturation: 10, lightness: -15 }),
+    'status-typing-text': vividText,
+    'status-listening-bg': pencil,
+    'status-listening-border': tune(pencil, { saturation: 4, lightness: -8 }),
+    'status-listening-text': paper,
+    'status-observing-bg': secondary,
+    'status-observing-border': tune(secondary, { saturation: 2, lightness: -8 }),
+    'status-observing-text': mutedText,
+    'status-observing-high-bg': tune(vivid, { saturation: 4, lightness: -4 }),
+    'status-observing-high-border': tune(vivid, { saturation: 8, lightness: -10 }),
+    'status-observing-high-text': vividText,
+    'status-idle-bg': muted,
+    'status-idle-border': border,
+    'status-idle-text': mutedText,
+    'status-busy-bg': watercolor,
+    'status-busy-border': tune(watercolor, { saturation: 6, lightness: -8 }),
+    'status-busy-text': tune(watercolor, { saturation: 10, lightness: -12 }),
+
+    // API key button
+    'api-key-valid-hover-bg': tune(apiKeyValidBg, { saturation: 2, lightness: -6 }),
+    'api-key-missing-hover-bg': tune(apiKeyMissingBg, { saturation: 2, lightness: -6 }),
+
+    // Microphone / recording controls
+    'recording-mic-armed-bg': correction,
+    'recording-mic-armed-text': correctionText,
+    'recording-mic-armed-ring': tune(correction, { saturation: 4, lightness: -5 }),
+    'recording-mic-listening-bg': tune(correction, { saturation: -6, lightness: 5 }),
+    'recording-mic-listening-text': correctionText,
+    'recording-mic-pulse-outer': correction,
+    'recording-mic-pulse-inner': tune(correction, { saturation: -10, lightness: 10 }),
+    'recording-live-chip-bg': tune(correction, { saturation: 4, lightness: -2 }),
+    'recording-live-chip-text': correctionText,
+    'recording-live-chip-dot': correctionText,
+    'recording-live-stop-bg': tune(correction, { saturation: 6, lightness: -4 }),
+    'recording-live-stop-hover-bg': tune(correction, { saturation: 8, lightness: -10 }),
+    'recording-live-stop-text': correctionText,
+    'recording-live-stop-icon': correctionText,
+    'recording-local-stop-bg': tune(correction, { saturation: -4, lightness: 3 }),
+    'recording-local-stop-hover-bg': tune(correction, { saturation: 2, lightness: -3 }),
+    'recording-local-stop-text': correctionText,
+    'recording-local-stop-icon': correctionText,
+    'recording-remove-bg': tune(correction, { saturation: -2, lightness: 1 }),
+    'recording-remove-hover-bg': tune(correction, { saturation: 4, lightness: -6 }),
+    'recording-remove-text': correctionText,
+    'recording-indicator-dot': tune(correction, { saturation: 6, lightness: -2 }),
+    'recording-inline-error-bg': tune(correction, { saturation: -4, lightness: 2 }),
+    'recording-inline-error-text': correctionText,
+
+    // Live session action buttons
+    'live-session-button-active-bg': tune(correction, { hue: -8, saturation: 2, lightness: -4 }),
+    'live-session-button-active-hover-bg': tune(correction, { hue: -8, saturation: 4, lightness: -10 }),
+    'live-session-button-active-text': correctionText,
+    'live-session-button-error-bg': liveErrorBase,
+    'live-session-button-error-hover-bg': tune(liveErrorBase, { saturation: 2, lightness: -6 }),
+    'live-session-button-error-text': pick(baseColors, 'foreground'),
+    'live-overlay-button-error-bg': tune(liveErrorBase, { saturation: -4, lightness: 4 }),
+    'live-overlay-button-error-hover-bg': tune(liveErrorBase, { saturation: 2, lightness: -2 }),
+    'live-overlay-button-error-text': vividText,
+
+    // Session shortcut hover states
+    'action-danger-shortcut-hover-bg': tune(dangerBase, { saturation: 4, lightness: -2 }),
+    'action-danger-shortcut-hover-text': pick(baseColors, 'action-danger-text', 'destructive-foreground', 'accent-foreground'),
+    'action-trim-shortcut-hover-bg': tune(trimBase, { saturation: 4, lightness: -2 }),
+    'action-trim-shortcut-hover-text': pick(baseColors, 'action-trim-text', 'accent-foreground'),
+  };
+
+  return {
+    ...derivedColors,
+    ...baseColors,
+  };
+};
+
+export const PRESET_THEMES: PresetTheme[] = BASE_PRESET_THEMES.map((preset) => ({
+  ...preset,
+  colors: withDedicatedUiStateColors(preset.colors),
+}));
 
