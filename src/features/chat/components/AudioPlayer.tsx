@@ -207,11 +207,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
   const isUser = variant === 'user';
   const isPreview = variant === 'preview';
 
-  const containerClasses = isUser
-    ? 'bg-user-bubble-bg/30'
-    : isPreview
-      ? 'bg-secondary'
-      : 'bg-secondary';
+  const containerClasses = isUser ? 'bg-user-bubble-bg/30' : 'bg-assistant-bubble-bg';
 
   const playBtnClasses = isUser
     ? 'bg-white/20 hover:bg-white/30 text-white'

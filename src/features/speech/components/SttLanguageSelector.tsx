@@ -28,14 +28,13 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
   const buttonBase = isCollapsed ? 'p-1.5 sketchy-border-thin' : 'p-2 sketchy-border-thin';
   const flagBase = isCollapsed ? 'text-base leading-none' : 'text-lg leading-none';
   const selectedClassCollapsed = isInSuggestionMode ? 'bg-white/50' : 'bg-white/30';
-  const selectedClassExpanded = isInSuggestionMode ? 'bg-primary' : 'bg-chat-input-bg';
   const unselectedHoverCollapsed = isInSuggestionMode ? 'hover:bg-black/20' : 'hover:bg-white/20';
 
   return (
     <div className={`flex items-center space-x-0.5 ${wrapperClass}`}>
       <button
         onClick={() => onSelectLang(targetCode)}
-        className={`${buttonBase} transition-colors ${isTargetSelected ? (isCollapsed ? selectedClassCollapsed : selectedClassExpanded) : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
+        className={`${buttonBase} transition-colors ${isTargetSelected ? (isCollapsed ? selectedClassCollapsed : 'bg-chat-input-bg') : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
         title={t('sttLang.selectLanguage', { language: targetLang.displayName })}
         aria-label={t('sttLang.selectLanguage', { language: targetLang.displayName })}
         aria-pressed={isTargetSelected}
@@ -44,7 +43,7 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
       </button>
       <button
         onClick={() => onSelectLang(nativeCode)}
-        className={`${buttonBase} transition-colors ${isNativeSelected ? (isCollapsed ? selectedClassCollapsed : selectedClassExpanded) : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
+        className={`${buttonBase} transition-colors ${isNativeSelected ? (isCollapsed ? selectedClassCollapsed : 'bg-chat-input-bg') : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
         title={t('sttLang.selectLanguage', { language: nativeLang.displayName })}
         aria-label={t('sttLang.selectLanguage', { language: nativeLang.displayName })}
         aria-pressed={isNativeSelected}

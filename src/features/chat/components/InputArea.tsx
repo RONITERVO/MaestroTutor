@@ -628,7 +628,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const outerContainerClass = isSuggestionMode
     ? 'bg-secondary text-foreground'
-    : 'bg-accent text-accent-foreground';
+    : 'bg-input-surround-bg text-input-surround-text';
 
   return (
     <>

@@ -134,4 +134,10 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'debug-panel-text': '210 20% 98%',
   'session-bar-bg': '220 30% 20%',
   'session-bar-text': '210 20% 98%',
+  'assistant-bubble-bg': '210 25% 99%',
+  'assistant-bubble-text': '220 30% 20%',
+  'status-bubble-bg': '210 15% 90%',
+  'status-bubble-text': '220 30% 20%',
+  'input-surround-bg': '220 70% 55%',
+  'input-surround-text': '210 25% 99%',
 };

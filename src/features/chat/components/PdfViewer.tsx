@@ -168,7 +168,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
 
   const isUser = variant === 'user';
 
-  const containerBg = isUser ? 'bg-user-bubble-bg/20' : 'bg-secondary';
+  const containerBg = isUser ? 'bg-user-bubble-bg/20' : 'bg-assistant-bubble-bg';
   const indicatorBg = 'bg-black/60 text-white';
   const errorTextColor = isUser ? 'text-user-bubble-text/70' : 'text-muted-foreground';
   const iconColor = isUser ? 'text-user-bubble-text/70' : 'text-muted-foreground';

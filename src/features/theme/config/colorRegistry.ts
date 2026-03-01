@@ -142,6 +142,30 @@ export const COLOR_GROUPS: ColorGroup[] = [
     ],
   },
   {
+    groupName: 'Assistant Message Bubbles',
+    groupDescription: 'Background and text color of AI response messages',
+    colors: [
+      { cssVar: 'assistant-bubble-bg', friendlyName: 'Assistant Bubble Background', description: 'Background color of messages from the AI (Maestro)' },
+      { cssVar: 'assistant-bubble-text', friendlyName: 'Assistant Bubble Text', description: 'Text and icon color inside AI response messages' },
+    ],
+  },
+  {
+    groupName: 'Status & Thinking Messages',
+    groupDescription: 'System messages: the "thinking…" placeholder and session status notes',
+    colors: [
+      { cssVar: 'status-bubble-bg', friendlyName: 'Status Message Background', description: 'Background of "thinking…" placeholder and system status messages (e.g. session started)' },
+      { cssVar: 'status-bubble-text', friendlyName: 'Status Message Text', description: 'Text color of status and thinking messages' },
+    ],
+  },
+  {
+    groupName: 'Input Area Outer Surround',
+    groupDescription: 'The outer sketchy-shaped wrapper around the text input box (normal chat mode)',
+    colors: [
+      { cssVar: 'input-surround-bg', friendlyName: 'Input Surround Background', description: 'Outer wrapper color around the text input box in normal chat mode' },
+      { cssVar: 'input-surround-text', friendlyName: 'Input Surround Text', description: 'Text and icon color on the outer input wrapper in normal chat mode' },
+    ],
+  },
+  {
     groupName: 'API Key Button',
     groupDescription: 'Top-right button that shows key present/missing',
     collapsedByDefault: true,
