@@ -6,3 +6,4 @@ export { useApplyCustomColors } from './hooks/useApplyCustomColors';
 export { COLOR_GROUPS, ALL_COLOR_VARS } from './config/colorRegistry';
 export { DEFAULT_COLORS } from './config/defaultColors';
 export { PRESET_THEMES } from './config/presetThemes';
+export { exportThemeToFile, importThemeFromFile, validateThemePreset } from './utils/themeFileIO';

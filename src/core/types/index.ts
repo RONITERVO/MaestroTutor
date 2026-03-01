@@ -114,6 +114,7 @@ export interface AppSettings {
   historyBookmarkMessageId?: string | null;
   maxVisibleMessages?: number;
   customColors?: Record<string, string>;
+  savedThemePresets?: Array<{ name: string; description: string; colors: Record<string, string> }>;
 }
 
 export interface GroundingChunk {

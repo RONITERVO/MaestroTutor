@@ -3,13 +3,14 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
-import { IconXMark, IconUndo } from '../../../shared/ui/Icons';
+import { IconXMark, IconUndo, IconBookmark, IconDownload, IconUpload, IconCheck } from '../../../shared/ui/Icons';
 import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
 import { DEFAULT_COLORS } from '../config/defaultColors';
 import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
 import { hslStringToHex, hexToHslString } from '../utils/colorConversion';
+import { exportThemeToFile, importThemeFromFile } from '../utils/themeFileIO';
 
 interface ThemeCustomizerPanelProps {
   onClose: () => void;
@@ -240,6 +241,93 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
   const isModified = (cssVar: string) => cssVar in customColors;
   const hasAnyCustomization = Object.keys(customColors).length > 0;
+  const savedPresets = settings.savedThemePresets || [];
+
+  // Inline naming state: 'save' or 'export' mode, or null when idle
+  const [namingMode, setNamingMode] = useState<'save' | 'export' | null>(null);
+  const [nameInput, setNameInput] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const startNaming = useCallback((mode: 'save' | 'export') => {
+    if (!hasAnyCustomization) return;
+    setNameInput('');
+    setNamingMode(mode);
+    // Focus after render
+    setTimeout(() => nameInputRef.current?.focus(), 0);
+  }, [hasAnyCustomization]);
+
+  const cancelNaming = useCallback(() => {
+    setNamingMode(null);
+    setNameInput('');
+  }, []);
+
+  const confirmNaming = useCallback(async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed || !namingMode) return;
+
+    if (namingMode === 'save') {
+      const preset: PresetTheme = {
+        name: trimmed,
+        description: 'Custom theme',
+        colors: { ...customColors },
+      };
+      setSettings(prev => ({
+        ...prev,
+        savedThemePresets: [...(prev.savedThemePresets || []), preset],
+      }));
+    } else {
+      try {
+        await exportThemeToFile({
+          name: trimmed,
+          description: 'Custom theme',
+          colors: { ...customColors },
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!msg.toLowerCase().includes('cancel')) {
+          console.error('Failed to export theme:', err);
+        }
+      }
+    }
+
+    setNamingMode(null);
+    setNameInput('');
+  }, [nameInput, namingMode, customColors, setSettings]);
+
+  const handleDeleteSavedPreset = useCallback((index: number) => {
+    setSettings(prev => {
+      const next = [...(prev.savedThemePresets || [])];
+      next.splice(index, 1);
+      return { ...prev, savedThemePresets: next.length > 0 ? next : undefined };
+    });
+  }, [setSettings]);
+
+  const handleImport = useCallback(async () => {
+    try {
+      const preset = await importThemeFromFile();
+      applyPreset(preset);
+
+      // Auto-save the imported theme so it appears in Quick Themes
+      // and can be switched back to without re-importing.
+      // Skip if a saved preset with the same name already exists.
+      setSettings(prev => {
+        const existing = prev.savedThemePresets || [];
+        if (existing.some(p => p.name === preset.name)) return prev;
+        return {
+          ...prev,
+          savedThemePresets: [...existing, preset],
+        };
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg === 'CANCELLED') return;
+      if (msg === 'INVALID_THEME_FORMAT') {
+        alert('Invalid theme file. Please select a valid .json theme file.');
+        return;
+      }
+      console.error('Failed to import theme:', err);
+    }
+  }, [applyPreset, setSettings]);
 
   return (
     <>
@@ -259,7 +347,35 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
           <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mb-2" />
           <div className="flex w-full items-center justify-between">
             <h2 className="text-lg font-sketch text-foreground">Colors</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {hasAnyCustomization && (
+                <button
+                  type="button"
+                  onClick={() => startNaming('save')}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors"
+                  title="Save as preset"
+                >
+                  <IconBookmark className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {hasAnyCustomization && (
+                <button
+                  type="button"
+                  onClick={() => startNaming('export')}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors"
+                  title="Export to file"
+                >
+                  <IconDownload className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleImport}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors"
+                title="Import from file"
+              >
+                <IconUpload className="w-3.5 h-3.5" />
+              </button>
               {hasAnyCustomization && (
                 <button
                   type="button"
@@ -279,6 +395,45 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
               </button>
             </div>
           </div>
+
+          {/* Inline naming row */}
+          {namingMode && (
+            <div className="flex w-full items-center gap-1.5 mt-1.5 animate-fade-up">
+              <span className="text-[10px] font-hand text-muted-foreground uppercase tracking-wider shrink-0">
+                {namingMode === 'save' ? 'Save as' : 'Export as'}
+              </span>
+              <input
+                ref={nameInputRef}
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') confirmNaming();
+                  if (e.key === 'Escape') cancelNaming();
+                }}
+                className="flex-1 bg-card/80 border border-pencil-light/30 sketchy-border-thin px-2 py-0.5 text-xs text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-accent transition-colors font-hand"
+                placeholder="Theme name..."
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={confirmNaming}
+                disabled={!nameInput.trim()}
+                className="p-1 text-accent hover:text-foreground disabled:opacity-30 transition-colors"
+                title="Confirm"
+              >
+                <IconCheck className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={cancelNaming}
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                title="Cancel"
+              >
+                <IconXMark className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Scrollable content */}
@@ -318,6 +473,43 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                       </div>
                     </div>
                   </button>
+                );
+              })}
+              {savedPresets.map((preset, idx) => {
+                const previewBg = preset.colors['background'] || DEFAULT_COLORS['background'];
+                const previewAccent = preset.colors['accent'] || DEFAULT_COLORS['accent'];
+                const previewFg = preset.colors['foreground'] || DEFAULT_COLORS['foreground'];
+
+                return (
+                  <div key={`saved-${idx}`} className="relative group/saved">
+                    <button
+                      type="button"
+                      onClick={() => applyPreset(preset)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-accent/30 hover:border-accent/50 bg-card/60 hover:bg-muted/50 transition-all active:scale-95"
+                    >
+                      <div className="flex gap-0.5">
+                        <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewBg) }} />
+                        <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewAccent) }} />
+                        <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewFg) }} />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-xs font-semibold text-foreground leading-tight">
+                          {preset.name}
+                        </div>
+                        <div className="text-[9px] text-muted-foreground leading-tight">
+                          {preset.description}
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleDeleteSavedPreset(idx); }}
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] leading-none opacity-0 group-hover/saved:opacity-100 transition-opacity"
+                      title="Delete saved preset"
+                    >
+                      &times;
+                    </button>
+                  </div>
                 );
               })}
             </div>

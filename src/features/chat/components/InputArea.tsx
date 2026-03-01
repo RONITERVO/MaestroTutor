@@ -652,7 +652,7 @@ const InputArea: React.FC<InputAreaProps> = ({
           >
 
           <div className={`relative w-full flex flex-col overflow-hidden transition-colors ${containerClass}`}>
-            {isLive && !isSuggestionMode ? (
+            {isLive && !isSuggestionMode && !languageSelectionOpen ? (
               <div className="w-full py-3 px-4 min-h-[50px] flex items-center" style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>
                 <span className="opacity-60 italic">{t('chat.liveSession.activeIndicator')}</span>
               </div>
@@ -695,7 +695,7 @@ const InputArea: React.FC<InputAreaProps> = ({
               />
 
             {/* Show controls if not live, OR if we are in suggestion mode */}
-            {(!isLive || isSuggestionMode) && (
+            {(!isLive || isSuggestionMode || languageSelectionOpen) && (
               <div className="flex items-center space-x-1">
                 {!isLive && (
                   <AudioControls

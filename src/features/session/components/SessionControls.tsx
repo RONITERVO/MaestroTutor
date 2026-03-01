@@ -646,7 +646,7 @@ const SessionControls: React.FC = () => {
 
       ) : (
         <>
-          {/* Left: Edit Profile */}
+          {/* Left: Edit Profile + Palette */}
           <div className="flex items-center">
             <button
               type="button"
@@ -656,6 +656,14 @@ const SessionControls: React.FC = () => {
             >
               <IconPencil className="w-4 h-4 opacity-70 group-hover:opacity-100" />
             </button>
+            <button
+              type="button"
+              onClick={() => setIsThemeCustomizerOpen(true)}
+              className="group p-2.5 rounded-full text-muted-foreground hover:text-primary-foreground hover:bg-primary-foreground/10 transition-all"
+              title="Customize Colors"
+            >
+              <IconPalette className="w-4 h-4 opacity-70 group-hover:opacity-100" />
+            </button>
           </div>
 
           {/* Center: Action Pill - Grouped Controls */}
@@ -664,13 +672,11 @@ const SessionControls: React.FC = () => {
               /* Default: Show two group selectors */
               <>
                 <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
-                  <IconCog className="w-3.5 h-3.5" />
                   <IconGlobe className="w-3.5 h-3.5" />
                   <IconMessageSquare className="w-3.5 h-3.5" />
                 </button>
                 <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
                 <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
-                  <IconCog className="w-3.5 h-3.5" />
                   <IconTarget className="w-3.5 h-3.5" />
                   <IconMessageSquare className="w-3.5 h-3.5" />
                 </button>
@@ -692,10 +698,6 @@ const SessionControls: React.FC = () => {
                 <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
                 <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-action-danger/20 rounded-full text-primary-foreground/70 hover:text-action-danger-text transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
                   <IconTrash className="w-4 h-4" />
-                </button>
-                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
-                <button type="button" onClick={() => setIsThemeCustomizerOpen(true)} className="p-2 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors" title="Customize Colors">
-                  <IconPalette className="w-4 h-4" />
                 </button>
               </>
             ) : (
