@@ -613,10 +613,10 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const containerClass = isSuggestionMode
     ? 'bg-card text-foreground shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-pencil-light'
-    : 'bg-primary text-primary-foreground shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-pencil-light';
+    : 'bg-chat-input-bg text-chat-input-text shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-pencil-light';
 
   const sendButtonStyle = isSuggestionMode ? 'bg-primary text-primary-foreground hover:bg-primary/80 focus:ring-ring' : 'bg-card text-primary hover:bg-secondary focus:ring-primary';
-  const iconButtonStyle = isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/20';
+  const iconButtonStyle = isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-chat-input-text/70 hover:text-chat-input-text hover:bg-white/20';
 
   const handlePaperclipClick = () => {
     if (!paperclipOpenTokenRef.current) {

@@ -109,6 +109,39 @@ export const COLOR_GROUPS: ColorGroup[] = [
     ],
   },
   {
+    groupName: 'User Message Bubbles',
+    groupDescription: 'Background and text color of messages you send',
+    colors: [
+      { cssVar: 'user-bubble-bg', friendlyName: 'User Bubble Background', description: 'Background color of your sent messages' },
+      { cssVar: 'user-bubble-text', friendlyName: 'User Bubble Text', description: 'Text and icon color inside your sent messages' },
+    ],
+  },
+  {
+    groupName: 'Chat Input Area',
+    groupDescription: 'The dark text-input box where you type your message',
+    colors: [
+      { cssVar: 'chat-input-bg', friendlyName: 'Input Area Background', description: 'Background color of the text input box (normal mode)' },
+      { cssVar: 'chat-input-text', friendlyName: 'Input Area Text & Icons', description: 'Text and icon color inside the input box: globe, target, speaker, mic, paperclip, and typed text' },
+    ],
+  },
+  {
+    groupName: 'Session Controls Bar',
+    groupDescription: 'The bottom bar with the action pill, avatar, and session buttons',
+    colors: [
+      { cssVar: 'session-bar-bg', friendlyName: 'Session Bar Background', description: 'Background of the session controls pill, avatar buttons, and cancel/undo buttons in the bottom bar' },
+      { cssVar: 'session-bar-text', friendlyName: 'Session Bar Icons & Text', description: 'Icon and text color in the session controls bar' },
+    ],
+  },
+  {
+    groupName: 'Traffic Log Panel',
+    groupDescription: 'The developer traffic log panel (opened with the terminal icon)',
+    collapsedByDefault: true,
+    colors: [
+      { cssVar: 'debug-panel-bg', friendlyName: 'Traffic Log Background', description: 'Background color of the traffic log panel' },
+      { cssVar: 'debug-panel-text', friendlyName: 'Traffic Log Text & Icons', description: 'Text and icon color in the traffic log header and request payloads' },
+    ],
+  },
+  {
     groupName: 'API Key Button',
     groupDescription: 'Top-right button that shows key present/missing',
     collapsedByDefault: true,

@@ -635,14 +635,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       bubbleWrapperClasses += " w-full";
       if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
-           if (isUser) bubbleWrapperClasses += " bg-primary bg-opacity-90 text-primary-foreground";
+           if (isUser) bubbleWrapperClasses += " bg-user-bubble-bg bg-opacity-90 text-user-bubble-text";
            else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
            else if (isStatus) bubbleWrapperClasses += " bg-secondary bg-opacity-90 text-foreground";
            else bubbleWrapperClasses += " bg-card bg-opacity-90 text-foreground";
       }
   } else {
       bubbleWrapperClasses += " p-3 max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
-      if (isUser) bubbleWrapperClasses += " bg-primary bg-opacity-90 text-primary-foreground";
+      if (isUser) bubbleWrapperClasses += " bg-user-bubble-bg bg-opacity-90 text-user-bubble-text";
       else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
       else if (isStatus) bubbleWrapperClasses += " bg-secondary bg-opacity-90 text-foreground";
       else bubbleWrapperClasses += " bg-card bg-opacity-90 text-foreground sketchy-border-thin";
@@ -659,7 +659,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           imageContainerAspectClasses = "aspect-square"; 
       } else if (isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed) {
           if (isAnnotationActive) {
-              imageContainerAspectClasses = "bg-primary"; 
+              imageContainerAspectClasses = "bg-user-bubble-bg"; 
               imageContainerFlexCenteringClasses = ""; 
           } else {
               imageContainerAspectClasses = "";
@@ -671,7 +671,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   }
   
   const imageContainerDynamicBg = message.isGeneratingImage ? 
-      (applyFocusedImageStyles ? (isUser ? 'bg-primary/40' : 'bg-pencil/50') : (isUser ? 'bg-primary/30' : 'bg-secondary/50')) 
+      (applyFocusedImageStyles ? (isUser ? 'bg-user-bubble-bg/40' : 'bg-pencil/50') : (isUser ? 'bg-user-bubble-bg/30' : 'bg-secondary/50')) 
       : '';
 
   const imageContainerStyle: React.CSSProperties = {};
@@ -722,11 +722,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                               onError={() => setLoadingAnimationError(true)}
                             />
                           ) : (
-                            <SmallSpinner className="w-full h-full text-primary-foreground" />
+                            <SmallSpinner className="w-full h-full text-user-bubble-text" />
                           )}
                         </div>
                         {remainingTimeDisplay && (
-                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? 'text-primary-foreground/70 bg-primary/60' : 'text-muted-foreground bg-secondary/70'}`}>
+                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? 'text-user-bubble-text/70 bg-user-bubble-bg/60' : 'text-muted-foreground bg-secondary/70'}`}>
                             {remainingTimeDisplay}
                           </p>
                         )}
@@ -920,10 +920,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       </div>
                   )}
                   {isFileSuccessfullyDisplayed && (
-                      <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg h-full ${isUser ? 'bg-primary/80' : 'bg-secondary'}`}>
-                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
-                          <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-primary-foreground' : 'text-foreground'}`}>{message.imageMimeType}</p>
-                          <p className={`mt-1 text-xs ${isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{t('chat.fileAttachment')}</p>
+                      <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg h-full ${isUser ? 'bg-user-bubble-bg/80' : 'bg-secondary'}`}>
+                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-bubble-text/70' : 'text-muted-foreground'}`} />
+                          <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-user-bubble-text' : 'text-foreground'}`}>{message.imageMimeType}</p>
+                          <p className={`mt-1 text-xs ${isUser ? 'text-user-bubble-text/70' : 'text-muted-foreground'}`}>{t('chat.fileAttachment')}</p>
                       </div>
                   )}
                   {isPdfSuccessfullyDisplayed && (
@@ -957,7 +957,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           
           {message.imageGenError && !message.isGeneratingImage && (
                <div className={`flex flex-col items-center justify-center p-2 rounded-lg 
-                  ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-primary/60' : 'bg-secondary/60'}`}
+                  ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-user-bubble-bg/60' : 'bg-secondary/60'}`}
                `}>
                   <IconXMark className="w-8 h-8 text-correction mb-1"/>
                   <p className={`text-xs text-center ${applyFocusedImageStyles ? 'text-paper/80' : 'text-correction'}`}>
@@ -1086,7 +1086,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        {pair.native && (
                         <p className={`italic mt-0.5 whitespace-pre-wrap pl-2 border-l-2 rounded-sm px-1 -mx-1 ${
                              applyFocusedImageStyles
-                             ? (isCurrentLineSpeaking ? 'bg-primary/60 text-primary-foreground/80' : 'text-primary-foreground/50 border-primary-foreground/30')
+                             ? (isCurrentLineSpeaking ? 'bg-user-bubble-bg/60 text-user-bubble-text/80' : 'text-user-bubble-text/50 border-user-bubble-text/30')
                              : (isCurrentLineSpeaking ? 'bg-secondary text-foreground' : 'text-muted-foreground border-border')
                          }`} style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                          onPointerDown={handleLinePointerDown}

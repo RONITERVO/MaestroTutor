@@ -28,26 +28,26 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-primary shadow-2xl z-[100] flex flex-col border-l border-border font-mono text-sm">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-debug-panel-bg shadow-2xl z-[100] flex flex-col border-l border-border font-mono text-sm">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 pb-3 bg-primary/90 border-b border-border"
+        className="flex items-center justify-between px-4 pb-3 bg-debug-panel-bg/90 border-b border-border"
         style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
       >
-        <h2 className="text-primary-foreground font-semibold flex items-center gap-2">
+        <h2 className="text-debug-panel-text font-semibold flex items-center gap-2">
           <span className="text-green-400">➜</span> Traffic Log
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={handleClear}
-            className="p-1.5 text-muted-foreground hover:text-eraser hover:bg-primary/70 rounded transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-eraser hover:bg-debug-panel-bg/70 rounded transition-colors"
             title="Clear logs"
           >
             <IconTrash className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 text-muted-foreground hover:text-primary-foreground hover:bg-primary/70 rounded transition-colors"
+            className="p-1.5 text-muted-foreground hover:text-debug-panel-text hover:bg-debug-panel-bg/70 rounded transition-colors"
             title="Close"
           >
             <IconXMark className="w-5 h-5" />
@@ -56,7 +56,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
       </div>
 
       {/* Log List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-primary">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-debug-panel-bg">
         {logs.length === 0 && (
           <div className="text-muted-foreground text-center py-10 italic">
             No traffic recorded yet.
@@ -71,7 +71,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           return (
             <div
               key={log.id}
-              className={`rounded border ${isError ? 'border-red-800 bg-red-900/10' : 'border-border bg-primary/70'} overflow-hidden transition-colors`}
+              className={`rounded border ${isError ? 'border-red-800 bg-red-900/10' : 'border-border bg-debug-panel-bg/70'} overflow-hidden transition-colors`}
             >
               <div
                 className="px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-white/5 select-none"
@@ -93,7 +93,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
                   {/* Request Section */}
                   <div className="bg-black/20 p-2">
                     <div className="text-xs text-muted-foreground uppercase font-bold mb-1 px-1">Request Payload</div>
-                    <pre className="text-xs text-primary-foreground/70 overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
+                    <pre className="text-xs text-debug-panel-text/70 overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
                       {JSON.stringify(log.request, null, 2)}
                     </pre>
                   </div>

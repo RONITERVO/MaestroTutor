@@ -147,6 +147,14 @@
     --live-overlay-button-error-bg: 220 74% 59%;
     --live-overlay-button-error-hover-bg: 220 74% 53%;
     --live-overlay-button-error-text: 210 25% 99%;
+    --user-bubble-bg: 220 30% 20%;
+    --user-bubble-text: 210 20% 98%;
+    --chat-input-bg: 220 30% 20%;
+    --chat-input-text: 210 20% 98%;
+    --debug-panel-bg: 220 30% 20%;
+    --debug-panel-text: 210 20% 98%;
+    --session-bar-bg: 220 30% 20%;
+    --session-bar-text: 210 20% 98%;
 
   }
 
