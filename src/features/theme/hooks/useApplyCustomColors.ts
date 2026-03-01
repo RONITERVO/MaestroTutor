@@ -16,7 +16,12 @@ export function useApplyCustomColors() {
 
   useEffect(() => {
     const root = document.documentElement;
-    for (const { cssVar } of ALL_COLOR_VARS) {
+    const managedVars = new Set([
+      ...ALL_COLOR_VARS.map(({ cssVar }) => cssVar),
+      ...Object.keys(customColors || {}),
+    ]);
+
+    for (const cssVar of managedVars) {
       const customValue = customColors?.[cssVar];
       if (customValue) {
         root.style.setProperty(`--${cssVar}`, customValue);

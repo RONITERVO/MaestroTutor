@@ -346,7 +346,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
         <div className="flex flex-col items-center pt-2 pb-1 px-4 shrink-0">
           <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mb-2" />
           <div className="flex w-full items-center justify-between">
-            <h2 className="text-lg font-sketch text-foreground">Colors</h2>
+            <h2 className="text-lg font-sketch text-foreground">Paint Colors</h2>
             <div className="flex items-center gap-1">
               {hasAnyCustomization && (
                 <button
@@ -395,6 +395,9 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
               </button>
             </div>
           </div>
+          <p className="w-full text-[11px] text-muted-foreground/85 mt-0.5">
+            Tap a color circle, then drag in the picker. Changes apply instantly.
+          </p>
 
           {/* Inline naming row */}
           {namingMode && (

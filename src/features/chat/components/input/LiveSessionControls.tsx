@@ -29,9 +29,9 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
     ? t('chat.liveSession.stop')
     : (liveSessionErrored ? t('chat.liveSession.retry') : t('chat.liveSession.start'));
   const liveSessionButtonClasses = liveSessionActive
-    ? 'bg-recording/80 hover:bg-recording text-recording-text'
+    ? 'bg-live-session-button-active-bg hover:bg-live-session-button-active-hover-bg text-live-session-button-active-text'
     : (liveSessionErrored
-      ? 'bg-accent/80 hover:bg-accent text-foreground'
+      ? 'bg-live-session-button-error-bg hover:bg-live-session-button-error-hover-bg text-live-session-button-error-text'
       : (isSuggestionMode ? 'bg-primary/80 hover:bg-primary text-primary-foreground' : 'bg-primary/60 hover:bg-primary/80 text-primary-foreground'));
 
   const handleLiveSessionToggle = useCallback(() => {

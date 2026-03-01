@@ -267,7 +267,11 @@ const AudioControls: React.FC<AudioControlsProps> = ({
           onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
           style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
           className={`relative overflow-visible p-2 rounded-full transition-colors touch-manipulation select-none ${
-            isRecordingAudioNote ? 'bg-recording text-recording-text ring-2 ring-recording/50' : isListening ? 'bg-recording/80 text-recording-text' : (isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-accent-foreground/70 hover:text-accent-foreground hover:bg-white/20')
+            isRecordingAudioNote
+              ? 'bg-recording-mic-armed-bg text-recording-mic-armed-text ring-2 ring-recording-mic-armed-ring/50'
+              : isListening
+                ? 'bg-recording-mic-listening-bg text-recording-mic-listening-text'
+                : (isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-accent-foreground/70 hover:text-accent-foreground hover:bg-white/20')
           } disabled:opacity-50`}
           title={getMicButtonTitle()}
           disabled={isSending || isSpeaking || isLanguageSelectionOpen}
@@ -275,8 +279,8 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         >
           {isRecordingAudioNote && (
             <>
-              <span className="pointer-events-none absolute -inset-4 rounded-full bg-recording/30 animate-ping" />
-              <span className="pointer-events-none absolute -inset-6 rounded-full bg-recording/15 animate-ping" style={{ animationDuration: '2s' }} />
+              <span className="pointer-events-none absolute -inset-4 rounded-full bg-recording-mic-pulse-outer/30 animate-ping" />
+              <span className="pointer-events-none absolute -inset-6 rounded-full bg-recording-mic-pulse-inner/15 animate-ping" style={{ animationDuration: '2s' }} />
             </>
           )}
           <IconMicrophone className={`relative z-10 w-5 h-5 ${isRecordingAudioNote ? 'drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]' : ''}`} />

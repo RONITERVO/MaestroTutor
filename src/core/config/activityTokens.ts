@@ -116,7 +116,7 @@ export const UI_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
     titleKey: 'chat.maestro.title.holding',
     animate: true,
     priority: 0,
-    color: { bg: 'bg-status-hold', border: 'border-status-hold', text: 'text-status-hold-text' },
+    color: { bg: 'bg-status-hold-bg', border: 'border-status-hold-border', text: 'text-status-hold-text' },
   },
   [TOKEN_SUBTYPE.VIDEO_PLAY]: {
     icon: 'IconPlay',

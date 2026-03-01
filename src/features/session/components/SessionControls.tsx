@@ -20,7 +20,6 @@ import {
   IconSwap,
   IconBookmark,
   IconScissors,
-  IconCog,
   IconGlobe,
   IconMessageSquare,
   IconTarget,
@@ -696,7 +695,7 @@ const SessionControls: React.FC = () => {
                   <IconFolderOpen className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-action-danger/20 rounded-full text-primary-foreground/70 hover:text-action-danger-text transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
+                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-action-danger-shortcut-hover-bg/20 rounded-full text-primary-foreground/70 hover:text-action-danger-shortcut-hover-text transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
                   <IconTrash className="w-4 h-4" />
                 </button>
               </>
@@ -715,7 +714,7 @@ const SessionControls: React.FC = () => {
                   <IconPlus className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('trim'); setConfirmInput(''); }} className="p-2 hover:bg-action-trim/20 rounded-full text-primary-foreground/70 hover:text-action-trim-text transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
+                <button type="button" onClick={() => { setPendingAction('trim'); setConfirmInput(''); }} className="p-2 hover:bg-action-trim-shortcut-hover-bg/20 rounded-full text-primary-foreground/70 hover:text-action-trim-shortcut-hover-text transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
                   <IconScissors className="w-4 h-4" />
                 </button>
               </>
