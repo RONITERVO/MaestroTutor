@@ -30,7 +30,7 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'eraser': '350 70% 65%',
   'watercolor': '190 60% 55%',
   'ink': '230 40% 20%',
-  'highlight': '199 100% 82%',
+  'highlight': '60 85% 80%',
   'highlight-text': '220 30% 20%',
   'pencil-mark': '220 25% 30%',
   'correction': '350 70% 50%',
