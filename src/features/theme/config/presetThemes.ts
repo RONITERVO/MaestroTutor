@@ -157,6 +157,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '220 30% 20%',
       'input-surround-bg': '220 70% 55%',
       'input-surround-text': '210 25% 99%',
+      'attachment-thumb-bg': '220 70% 55%',
+      'attachment-thumb-text': '210 25% 99%',
     },
   },
   {
@@ -275,6 +277,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '25 15% 20%',
       'input-surround-bg': '18 60% 55%',
       'input-surround-text': '39 35% 96%',
+      'attachment-thumb-bg': '18 60% 55%',
+      'attachment-thumb-text': '39 35% 96%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',
@@ -422,6 +426,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '210 40% 96%',
       'input-surround-bg': '222 47% 10%',
       'input-surround-text': '210 40% 96%',
+      'attachment-thumb-bg': '222 47% 10%',
+      'attachment-thumb-text': '210 40% 96%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',
@@ -569,6 +575,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '210 40% 18%',
       'input-surround-bg': '195 80% 42%',
       'input-surround-text': '200 30% 98%',
+      'attachment-thumb-bg': '195 80% 42%',
+      'attachment-thumb-text': '200 30% 98%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',
@@ -716,6 +724,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '90 25% 18%',
       'input-surround-bg': '140 55% 38%',
       'input-surround-text': '80 15% 98%',
+      'attachment-thumb-bg': '140 55% 38%',
+      'attachment-thumb-text': '80 15% 98%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',
@@ -863,6 +873,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '20 35% 18%',
       'input-surround-bg': '15 80% 55%',
       'input-surround-text': '30 25% 98%',
+      'attachment-thumb-bg': '15 80% 55%',
+      'attachment-thumb-text': '30 25% 98%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',
@@ -1010,6 +1022,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '0 0% 5%',
       'input-surround-bg': '220 90% 50%',
       'input-surround-text': '0 0% 100%',
+      'attachment-thumb-bg': '220 90% 50%',
+      'attachment-thumb-text': '0 0% 100%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',
@@ -1157,6 +1171,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '270 30% 18%',
       'input-surround-bg': '270 65% 55%',
       'input-surround-text': '270 20% 98%',
+      'attachment-thumb-bg': '270 65% 55%',
+      'attachment-thumb-text': '270 20% 98%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',
@@ -1304,6 +1320,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       'status-bubble-text': '250 30% 20%',
       'input-surround-bg': '260 85% 65%',
       'input-surround-text': '0 0% 100%',
+      'attachment-thumb-bg': '260 85% 65%',
+      'attachment-thumb-text': '0 0% 100%',
       // Action Confirmation Panels
       'action-load': '217 91% 60%',
       'action-load-text': '214 95% 93%',

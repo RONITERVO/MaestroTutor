@@ -239,7 +239,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
       {attachedImageBase64 && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-secondary' : 'bg-accent/80'} p-1 rounded-md`}>
+        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 bg-attachment-thumb-bg p-1 rounded-md`}>
           {attachedImageMimeType?.startsWith('image/') ? (
             <div className="relative">
               <img src={attachedImageBase64} alt={t('chat.imagePreview.alt')} className="h-24 w-full object-cover rounded" />
@@ -307,9 +307,9 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               </button>
             </div>
           ) : (
-            <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-muted' : 'bg-accent/60'} rounded`}>
-              <IconPaperclip className={`w-8 h-8 ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`} />
-              <span className={`text-xs mt-1 truncate max-w-full px-1 ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground'}`}>{attachedImageMimeType}</span>
+            <div className="h-24 w-full flex flex-col items-center justify-center bg-attachment-thumb-bg rounded">
+              <IconPaperclip className="w-8 h-8 text-attachment-thumb-text/70" />
+              <span className="text-xs mt-1 truncate max-w-full px-1 text-attachment-thumb-text">{attachedImageMimeType}</span>
             </div>
           )}
           <div className="absolute -top-2 -right-2 flex items-center space-x-1">
@@ -326,7 +326,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       )}
 
       {showLiveFeed && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-secondary' : 'bg-accent/80'} p-1 rounded-md`}>
+        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 bg-attachment-thumb-bg p-1 rounded-md`}>
           <div className="relative group">
             <video
               ref={livePreviewVideoRef}

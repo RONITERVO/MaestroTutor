@@ -140,4 +140,6 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'status-bubble-text': '220 30% 20%',
   'input-surround-bg': '220 70% 55%',
   'input-surround-text': '210 25% 99%',
+  'attachment-thumb-bg': '220 70% 55%',
+  'attachment-thumb-text': '210 25% 99%',
 };

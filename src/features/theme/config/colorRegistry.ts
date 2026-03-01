@@ -33,11 +33,11 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupName: 'Cards and Popups',
     groupDescription: 'Message cards, dialogs, and secondary text',
     colors: [
-      { cssVar: 'card', friendlyName: 'Card Background', description: 'Background for assistant message bubbles, quick themes buttons, color tuner panel, API key gate card, and text input area in suggestion mode. NOT used for user messages (those use Primary)' },
+      { cssVar: 'card', friendlyName: 'Card Background', description: 'Background for the color tuner panel, quick theme buttons, API key gate cards and text inputs, chat control buttons, bookmark note field, and the text input box in suggestion mode' },
       { cssVar: 'card-foreground', friendlyName: 'Card Text', description: 'Text inside cards and bubbles' },
       { cssVar: 'popover', friendlyName: 'Popup Background', description: 'Popup menu and dialog background color' },
       { cssVar: 'popover-foreground', friendlyName: 'Popup Text', description: 'Text inside popups and dialogs' },
-      { cssVar: 'muted', friendlyName: 'Soft Surface', description: 'Soft background for the selected color swatch in the color tuner, color picker inline editor, and hover surfaces' },
+      { cssVar: 'muted', friendlyName: 'Soft Surface', description: 'Soft background for the selected color swatch in the color tuner, hover surfaces for theme buttons and control buttons, and sections inside the API key gate (instruction area, option buttons)' },
       { cssVar: 'muted-foreground', friendlyName: 'Soft Text', description: 'Secondary text and icons: color tuner labels, profile icon, swap avatar icon, terminal icon, and API key gate descriptions' },
     ],
   },
@@ -45,9 +45,9 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupName: 'Buttons and Actions',
     groupDescription: 'Main button colors for normal and danger actions',
     colors: [
-      { cssVar: 'primary', friendlyName: 'Primary Button', description: 'Main dark color — text input area (normal mode), user message bubbles, traffic log panel, and session controls bottom bar' },
-      { cssVar: 'primary-foreground', friendlyName: 'Primary Button Text', description: 'Text and icons on dark surfaces: input area icons (globe, target, speaker, paperclip), user message text, and traffic log text' },
-      { cssVar: 'secondary', friendlyName: 'Secondary Button', description: 'Medium-light surface for suggestion list items, language selector undo button, API key gate secondary areas, and card hover states' },
+      { cssVar: 'primary', friendlyName: 'Primary Button', description: 'Action color for the send button in suggestion mode and the live session start/stop button' },
+      { cssVar: 'primary-foreground', friendlyName: 'Primary Button Text', description: 'Text on primary-colored buttons: send button text in suggestion mode and live session button text' },
+      { cssVar: 'secondary', friendlyName: 'Secondary Button', description: 'Medium-light surface for suggestion list items, the input area outer wrapper in suggestion mode, chat control button hover states, and camera controls background' },
       { cssVar: 'secondary-foreground', friendlyName: 'Secondary Button Text', description: 'Text and icons on secondary buttons' },
       { cssVar: 'accent', friendlyName: 'Accent Button', description: 'Main action color (blue by default) — API key gate save/confirm buttons, input focus rings, links, bookmark actions, and color tuner highlights' },
       { cssVar: 'accent-foreground', friendlyName: 'Accent Button Text', description: 'Text on accent-colored buttons and surfaces (Save Key, Open AI Studio, bookmark bar)' },
@@ -120,8 +120,8 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupName: 'Chat Input Area',
     groupDescription: 'The dark text-input box where you type your message',
     colors: [
-      { cssVar: 'chat-input-bg', friendlyName: 'Input Area Background', description: 'Background color of the text input box (normal mode)' },
-      { cssVar: 'chat-input-text', friendlyName: 'Input Area Text & Icons', description: 'Text and icon color inside the input box: globe, target, speaker, mic, paperclip, and typed text' },
+      { cssVar: 'chat-input-bg', friendlyName: 'Input Area Background', description: 'Background color of the text input box in normal chat mode; also the selected-language highlight in the expanded language selector' },
+      { cssVar: 'chat-input-text', friendlyName: 'Input Area Text & Icons', description: 'Text and icon color inside the text input box: globe, target, speaker, mic, paperclip, and typed text (normal mode)' },
     ],
   },
   {
@@ -145,8 +145,8 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupName: 'Assistant Message Bubbles',
     groupDescription: 'Background and text color of AI response messages',
     colors: [
-      { cssVar: 'assistant-bubble-bg', friendlyName: 'Assistant Bubble Background', description: 'Background color of messages from the AI (Maestro)' },
-      { cssVar: 'assistant-bubble-text', friendlyName: 'Assistant Bubble Text', description: 'Text and icon color inside AI response messages' },
+      { cssVar: 'assistant-bubble-bg', friendlyName: 'Assistant Bubble Background', description: 'Background color of AI (Maestro) response message bubbles, their file and video attachment placeholders, the line highlight during text playback, and the annotation confirm (✓) button that appears when drawing on an image' },
+      { cssVar: 'assistant-bubble-text', friendlyName: 'Assistant Bubble Text', description: 'Text and icon color inside AI response message bubbles and their attachment placeholders' },
     ],
   },
   {
@@ -161,8 +161,16 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupName: 'Input Area Outer Surround',
     groupDescription: 'The outer sketchy-shaped wrapper around the text input box (normal chat mode)',
     colors: [
-      { cssVar: 'input-surround-bg', friendlyName: 'Input Surround Background', description: 'Outer wrapper color around the text input box in normal chat mode' },
-      { cssVar: 'input-surround-text', friendlyName: 'Input Surround Text', description: 'Text and icon color on the outer input wrapper in normal chat mode' },
+      { cssVar: 'input-surround-bg', friendlyName: 'Input Surround Background', description: 'Color of the sketchy accent wrapper that frames the text input box in normal chat mode' },
+      { cssVar: 'input-surround-text', friendlyName: 'Input Surround Text', description: 'Text and icon color on the accent wrapper around the input box in normal chat mode' },
+    ],
+  },
+  {
+    groupName: 'Input Area Attachment Thumbnails',
+    groupDescription: 'The colored thumbnail wrapper shown when you attach an image, video, audio or file before sending',
+    colors: [
+      { cssVar: 'attachment-thumb-bg', friendlyName: 'Attachment Thumbnail Background', description: 'Background color of the attachment preview card in the input area (the small wrapper that appears when you pick an image, video, audio or file to send)' },
+      { cssVar: 'attachment-thumb-text', friendlyName: 'Attachment Thumbnail Text & Icons', description: 'Text and icon color inside the attachment preview card (file name, file type icon, and placeholder icons)' },
     ],
   },
   {
