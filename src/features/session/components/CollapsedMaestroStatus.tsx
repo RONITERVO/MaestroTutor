@@ -86,21 +86,21 @@ export const getStatusConfig = (
     if (holdColor) {
       return { color: holdColor.bg, borderColor: holdColor.border, textColor: holdColor.text };
     }
-    return { color: 'bg-fuchsia-500', borderColor: 'border-fuchsia-600', textColor: 'text-white' };
+    return { color: 'bg-status-hold-bg', borderColor: 'border-status-hold-border', textColor: 'text-status-hold-text' };
   }
 
   switch (stage) {
     case 'speaking':
-      return { color: 'bg-accent', borderColor: 'border-accent', textColor: 'text-accent-foreground' };
+      return { color: 'bg-status-speaking-bg', borderColor: 'border-status-speaking-border', textColor: 'text-status-speaking-text' };
     case 'typing':
-      return { color: 'bg-accent/80', borderColor: 'border-accent', textColor: 'text-accent-foreground' };
+      return { color: 'bg-status-typing-bg', borderColor: 'border-status-typing-border', textColor: 'text-status-typing-text' };
     case 'listening':
-      return { color: 'bg-green-600', borderColor: 'border-green-700', textColor: 'text-white' };
+      return { color: 'bg-status-listening-bg', borderColor: 'border-status-listening-border', textColor: 'text-status-listening-text' };
     case 'observing_high':
-      return { color: 'bg-amber-600', borderColor: 'border-amber-700', textColor: 'text-white' };
+      return { color: 'bg-status-observing-high-bg', borderColor: 'border-status-observing-high-border', textColor: 'text-status-observing-high-text' };
     case 'observing_low':
     case 'observing_medium':
-      return { color: 'bg-secondary', borderColor: 'border-border', textColor: 'text-muted-foreground' };
+      return { color: 'bg-status-observing-bg', borderColor: 'border-status-observing-border', textColor: 'text-status-observing-text' };
     case 'idle':
     default: {
       const hasBusyTasks = activeUiTokens.length > 0 || isLive;
@@ -115,9 +115,9 @@ export const getStatusConfig = (
         }
       }
       if (hasBusyTasks) {
-        return { color: 'bg-watercolor/20', borderColor: 'border-watercolor/30', textColor: 'text-watercolor' };
+        return { color: 'bg-status-busy-bg/20', borderColor: 'border-status-busy-border/30', textColor: 'text-status-busy-text' };
       }
-      return { color: 'bg-muted', borderColor: 'border-border', textColor: 'text-muted-foreground' };
+      return { color: 'bg-status-idle-bg', borderColor: 'border-status-idle-border', textColor: 'text-status-idle-text' };
     }
   }
 };

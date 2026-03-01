@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Gemini Language Tutor</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23594a3a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'/></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23394660' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -40,6 +40,92 @@
               eraser: 'hsl(var(--eraser))',
               watercolor: 'hsl(var(--watercolor))',
               ink: 'hsl(var(--ink))',
+              highlight: 'hsl(var(--highlight))',
+              'highlight-text': 'hsl(var(--highlight-text))',
+              'pencil-mark': 'hsl(var(--pencil-mark))',
+              correction: 'hsl(var(--correction))',
+              'status-hold-bg': 'hsl(var(--status-hold-bg))',
+              'status-hold-border': 'hsl(var(--status-hold-border))',
+              'status-hold-text': 'hsl(var(--status-hold-text))',
+              'status-speaking-bg': 'hsl(var(--status-speaking-bg))',
+              'status-speaking-border': 'hsl(var(--status-speaking-border))',
+              'status-speaking-text': 'hsl(var(--status-speaking-text))',
+              'status-typing-bg': 'hsl(var(--status-typing-bg))',
+              'status-typing-border': 'hsl(var(--status-typing-border))',
+              'status-typing-text': 'hsl(var(--status-typing-text))',
+              'status-listening-bg': 'hsl(var(--status-listening-bg))',
+              'status-listening-border': 'hsl(var(--status-listening-border))',
+              'status-listening-text': 'hsl(var(--status-listening-text))',
+              'status-observing-bg': 'hsl(var(--status-observing-bg))',
+              'status-observing-border': 'hsl(var(--status-observing-border))',
+              'status-observing-text': 'hsl(var(--status-observing-text))',
+              'status-observing-high-bg': 'hsl(var(--status-observing-high-bg))',
+              'status-observing-high-border': 'hsl(var(--status-observing-high-border))',
+              'status-observing-high-text': 'hsl(var(--status-observing-high-text))',
+              'status-idle-bg': 'hsl(var(--status-idle-bg))',
+              'status-idle-border': 'hsl(var(--status-idle-border))',
+              'status-idle-text': 'hsl(var(--status-idle-text))',
+              'status-busy-bg': 'hsl(var(--status-busy-bg))',
+              'status-busy-border': 'hsl(var(--status-busy-border))',
+              'status-busy-text': 'hsl(var(--status-busy-text))',
+              'action-load': 'hsl(var(--action-load))',
+              'action-load-text': 'hsl(var(--action-load-text))',
+              'action-danger': 'hsl(var(--action-danger))',
+              'action-danger-text': 'hsl(var(--action-danger-text))',
+              'action-export': 'hsl(var(--action-export))',
+              'action-export-text': 'hsl(var(--action-export-text))',
+              'action-combine': 'hsl(var(--action-combine))',
+              'action-combine-text': 'hsl(var(--action-combine-text))',
+              'action-trim': 'hsl(var(--action-trim))',
+              'action-trim-text': 'hsl(var(--action-trim-text))',
+              'action-danger-shortcut-hover-bg': 'hsl(var(--action-danger-shortcut-hover-bg))',
+              'action-danger-shortcut-hover-text': 'hsl(var(--action-danger-shortcut-hover-text))',
+              'action-trim-shortcut-hover-bg': 'hsl(var(--action-trim-shortcut-hover-bg))',
+              'action-trim-shortcut-hover-text': 'hsl(var(--action-trim-shortcut-hover-text))',
+              'voice-zephyr': 'hsl(var(--voice-zephyr))',
+              'voice-puck': 'hsl(var(--voice-puck))',
+              'voice-charon': 'hsl(var(--voice-charon))',
+              'voice-kore': 'hsl(var(--voice-kore))',
+              'voice-fenrir': 'hsl(var(--voice-fenrir))',
+              'api-key-valid-bg': 'hsl(var(--api-key-valid-bg))',
+              'api-key-valid-hover-bg': 'hsl(var(--api-key-valid-hover-bg))',
+              'api-key-valid-text': 'hsl(var(--api-key-valid-text))',
+              'api-key-missing-bg': 'hsl(var(--api-key-missing-bg))',
+              'api-key-missing-hover-bg': 'hsl(var(--api-key-missing-hover-bg))',
+              'api-key-missing-text': 'hsl(var(--api-key-missing-text))',
+              'recording-mic-armed-bg': 'hsl(var(--recording-mic-armed-bg))',
+              'recording-mic-armed-text': 'hsl(var(--recording-mic-armed-text))',
+              'recording-mic-armed-ring': 'hsl(var(--recording-mic-armed-ring))',
+              'recording-mic-listening-bg': 'hsl(var(--recording-mic-listening-bg))',
+              'recording-mic-listening-text': 'hsl(var(--recording-mic-listening-text))',
+              'recording-mic-pulse-outer': 'hsl(var(--recording-mic-pulse-outer))',
+              'recording-mic-pulse-inner': 'hsl(var(--recording-mic-pulse-inner))',
+              'recording-live-chip-bg': 'hsl(var(--recording-live-chip-bg))',
+              'recording-live-chip-text': 'hsl(var(--recording-live-chip-text))',
+              'recording-live-chip-dot': 'hsl(var(--recording-live-chip-dot))',
+              'recording-live-stop-bg': 'hsl(var(--recording-live-stop-bg))',
+              'recording-live-stop-hover-bg': 'hsl(var(--recording-live-stop-hover-bg))',
+              'recording-live-stop-text': 'hsl(var(--recording-live-stop-text))',
+              'recording-live-stop-icon': 'hsl(var(--recording-live-stop-icon))',
+              'recording-local-stop-bg': 'hsl(var(--recording-local-stop-bg))',
+              'recording-local-stop-hover-bg': 'hsl(var(--recording-local-stop-hover-bg))',
+              'recording-local-stop-text': 'hsl(var(--recording-local-stop-text))',
+              'recording-local-stop-icon': 'hsl(var(--recording-local-stop-icon))',
+              'recording-remove-bg': 'hsl(var(--recording-remove-bg))',
+              'recording-remove-hover-bg': 'hsl(var(--recording-remove-hover-bg))',
+              'recording-remove-text': 'hsl(var(--recording-remove-text))',
+              'recording-indicator-dot': 'hsl(var(--recording-indicator-dot))',
+              'recording-inline-error-bg': 'hsl(var(--recording-inline-error-bg))',
+              'recording-inline-error-text': 'hsl(var(--recording-inline-error-text))',
+              'live-session-button-active-bg': 'hsl(var(--live-session-button-active-bg))',
+              'live-session-button-active-hover-bg': 'hsl(var(--live-session-button-active-hover-bg))',
+              'live-session-button-active-text': 'hsl(var(--live-session-button-active-text))',
+              'live-session-button-error-bg': 'hsl(var(--live-session-button-error-bg))',
+              'live-session-button-error-hover-bg': 'hsl(var(--live-session-button-error-hover-bg))',
+              'live-session-button-error-text': 'hsl(var(--live-session-button-error-text))',
+              'live-overlay-button-error-bg': 'hsl(var(--live-overlay-button-error-bg))',
+              'live-overlay-button-error-hover-bg': 'hsl(var(--live-overlay-button-error-hover-bg))',
+              'live-overlay-button-error-text': 'hsl(var(--live-overlay-button-error-text))',
             },
             borderRadius: {
               sketchy: '255px 15px 225px 15px / 15px 225px 15px 255px',
@@ -77,10 +163,10 @@
 <body class="antialiased bg-background text-foreground">
     <div id="splash-screen">
       <div class="splash-content">
-        <svg style="width: 5rem; height: 5rem; margin: 0 auto 1rem; display: block;" fill="none" viewBox="0 0 24 24" stroke="#594a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg style="width: 5rem; height: 5rem; margin: 0 auto 1rem; display: block;" fill="none" viewBox="0 0 24 24" stroke="#394660" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
         </svg>
-        <h1 style="font-size: 1.8rem; font-weight: bold; color: #3d3228; font-family: 'Caveat', cursive;">Maestro Tutor</h1>
+        <h1 style="font-size: 1.8rem; font-weight: bold; color: #242c3d; font-family: 'Caveat', cursive;">Maestro Tutor</h1>
       </div>
     </div>
     <div id="root"></div>

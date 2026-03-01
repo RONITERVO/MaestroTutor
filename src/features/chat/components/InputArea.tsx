@@ -532,7 +532,7 @@ const InputArea: React.FC<InputAreaProps> = ({
       if (img.naturalWidth > 0) {
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
-        ctx.strokeStyle = '#EF4444';
+        ctx.strokeStyle = 'hsl(5, 45%, 55%)';
         ctx.lineWidth = Math.max(5, img.naturalWidth * 0.01);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -644,7 +644,7 @@ const InputArea: React.FC<InputAreaProps> = ({
         <>
           {/* Core input controls - wrapped in the accent container */}
           <div
-            className={`transition-colors duration-300 rounded-sketchy p-3 shadow-lg w-full max-w-2xl sketchy-border ${outerContainerClass} relative`}
+            className={`transition-colors duration-300 sketch-shape-3 p-3 shadow-lg w-full max-w-2xl sketchy-border ${outerContainerClass} relative`}
             style={{
               // @ts-ignore
               containerType: 'inline-size'
@@ -652,7 +652,7 @@ const InputArea: React.FC<InputAreaProps> = ({
           >
 
           <div className={`relative w-full flex flex-col overflow-hidden transition-colors ${containerClass}`}>
-            {isLive && !isSuggestionMode ? (
+            {isLive && !isSuggestionMode && !languageSelectionOpen ? (
               <div className="w-full py-3 px-4 min-h-[50px] flex items-center" style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>
                 <span className="opacity-60 italic">{t('chat.liveSession.activeIndicator')}</span>
               </div>
@@ -695,7 +695,7 @@ const InputArea: React.FC<InputAreaProps> = ({
               />
 
             {/* Show controls if not live, OR if we are in suggestion mode */}
-            {(!isLive || isSuggestionMode) && (
+            {(!isLive || isSuggestionMode || languageSelectionOpen) && (
               <div className="flex items-center space-x-1">
                 {!isLive && (
                   <AudioControls
@@ -738,9 +738,9 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           </div>
 
-          {!isLive && sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
-          {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-red-200 bg-red-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
-          {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-primary bg-primary/10' : 'text-yellow-200 bg-yellow-900/50'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
+          {!isLive && sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-paper/80 bg-correction/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
+          {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-paper/80 bg-correction/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
+          {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-primary bg-primary/10' : 'text-paper/80 bg-pencil-mark/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
           </div>{/* end outer accent container */}
 
           {/* Media attachments and annotation - outside accent container, free-floating */}
@@ -891,7 +891,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                     <button
                       type="button"
                       onClick={handleComposerSave}
-                      className="p-2 rounded-full bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300"
+                      className="p-2 rounded-full bg-pencil text-paper hover:bg-pencil-mark focus:outline-none focus:ring-2 focus:ring-pencil-light"
                       title={t('chat.annotateModal.saveAndAttach')}
                       aria-label={t('chat.annotateModal.saveAndAttach')}
                     >

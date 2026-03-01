@@ -20,10 +20,10 @@ import {
   IconSwap,
   IconBookmark,
   IconScissors,
-  IconCog,
   IconGlobe,
   IconMessageSquare,
   IconTarget,
+  IconPalette,
 } from '../../../shared/ui/Icons';
 
 import { getGlobalProfileDB, setGlobalProfileDB } from '../services/globalProfile';
@@ -36,6 +36,7 @@ import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { useDataBackup } from '../hooks/useDataBackup';
 import { GEMINI_VOICES } from '../../../core/config/app';
 import { selectSettings } from '../../../store/slices/settingsSlice';
+import { ThemeCustomizerPanel } from '../../theme';
 
 const SessionControls: React.FC = () => {
   const { t } = useAppTranslations();
@@ -64,6 +65,7 @@ const SessionControls: React.FC = () => {
   const [controlMode, setControlMode] = useState<'none' | 'all' | 'this'>('none');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileText, setProfileText] = useState('');
+  const [isThemeCustomizerOpen, setIsThemeCustomizerOpen] = useState(false);
 
   
   // Unified pending action confirmation system
@@ -75,12 +77,12 @@ const SessionControls: React.FC = () => {
   // Action configuration: keyword, color scheme, description
   const ACTION_CONFIG: Record<PendingActionType, { keyword: string; label: string; description: string; colorClass: string; bgClass: string; borderClass: string; textClass: string; placeholderClass: string; btnClass: string; shadowClass: string }> = {
     none: { keyword: '', label: '', description: '', colorClass: '', bgClass: '', borderClass: '', textClass: '', placeholderClass: '', btnClass: '', shadowClass: '' },
-    saveAll: { keyword: 'SAVE', label: t('sessionControls.saveAll.label') || 'Save All', description: t('sessionControls.saveAll.description') || 'Export all chats to backup file', colorClass: 'text-emerald-300', bgClass: 'bg-emerald-950/30', borderClass: 'border-emerald-500/30', textClass: 'text-emerald-100', placeholderClass: 'placeholder-emerald-400/30', btnClass: 'bg-emerald-500/80 hover:bg-emerald-500', shadowClass: 'shadow-emerald-900/20' },
-    loadAll: { keyword: 'LOAD', label: t('sessionControls.loadAll.label') || 'Load All', description: t('sessionControls.loadAll.description') || 'Replace all chats with backup file', colorClass: 'text-blue-300', bgClass: 'bg-blue-950/30', borderClass: 'border-blue-500/30', textClass: 'text-blue-100', placeholderClass: 'placeholder-blue-400/30', btnClass: 'bg-blue-500/80 hover:bg-blue-500', shadowClass: 'shadow-blue-900/20' },
-    reset: { keyword: 'DELETE', label: t('sessionControls.reset.label') || 'Reset', description: t('sessionControls.reset.description') || 'Backup & delete all data', colorClass: 'text-red-300', bgClass: 'bg-red-950/30', borderClass: 'border-red-500/30', textClass: 'text-red-100', placeholderClass: 'placeholder-red-400/30', btnClass: 'bg-red-500/80 hover:bg-red-500', shadowClass: 'shadow-red-900/20' },
-    saveThis: { keyword: 'SAVE', label: t('sessionControls.saveThis.label') || 'Save Chat', description: t('sessionControls.saveThis.description') || 'Export this chat only', colorClass: 'text-cyan-300', bgClass: 'bg-cyan-950/30', borderClass: 'border-cyan-500/30', textClass: 'text-cyan-100', placeholderClass: 'placeholder-cyan-400/30', btnClass: 'bg-cyan-500/80 hover:bg-cyan-500', shadowClass: 'shadow-cyan-900/20' },
-    combine: { keyword: 'COMBINE', label: t('sessionControls.combine.label') || 'Combine', description: t('sessionControls.combine.description') || 'Merge backup into this chat', colorClass: 'text-violet-300', bgClass: 'bg-violet-950/30', borderClass: 'border-violet-500/30', textClass: 'text-violet-100', placeholderClass: 'placeholder-violet-400/30', btnClass: 'bg-violet-500/80 hover:bg-violet-500', shadowClass: 'shadow-violet-900/20' },
-    trim: { keyword: 'TRIM', label: t('sessionControls.trim.label') || 'Trim', description: t('sessionControls.trim.description') || 'Remove messages before bookmark', colorClass: 'text-orange-300', bgClass: 'bg-orange-950/30', borderClass: 'border-orange-500/30', textClass: 'text-orange-100', placeholderClass: 'placeholder-orange-400/30', btnClass: 'bg-orange-500/80 hover:bg-orange-500', shadowClass: 'shadow-orange-900/20' },
+    saveAll: { keyword: 'SAVE', label: t('sessionControls.saveAll.label') || 'Save All', description: t('sessionControls.saveAll.description') || 'Export all chats to backup file', colorClass: 'text-pencil-light', bgClass: 'bg-pencil/30', borderClass: 'border-pencil-light/30', textClass: 'text-paper', placeholderClass: 'placeholder-pencil-light/30', btnClass: 'bg-pencil/80 hover:bg-pencil', shadowClass: 'shadow-pencil/20' },
+    loadAll: { keyword: 'LOAD', label: t('sessionControls.loadAll.label') || 'Load All', description: t('sessionControls.loadAll.description') || 'Replace all chats with backup file', colorClass: 'text-action-load', bgClass: 'bg-action-load/10', borderClass: 'border-action-load/30', textClass: 'text-action-load-text', placeholderClass: 'placeholder-action-load/30', btnClass: 'bg-action-load/80 hover:bg-action-load', shadowClass: 'shadow-action-load/20' },
+    reset: { keyword: 'DELETE', label: t('sessionControls.reset.label') || 'Reset', description: t('sessionControls.reset.description') || 'Backup & delete all data', colorClass: 'text-action-danger', bgClass: 'bg-action-danger/10', borderClass: 'border-action-danger/30', textClass: 'text-action-danger-text', placeholderClass: 'placeholder-action-danger/30', btnClass: 'bg-action-danger/80 hover:bg-action-danger', shadowClass: 'shadow-action-danger/20' },
+    saveThis: { keyword: 'SAVE', label: t('sessionControls.saveThis.label') || 'Save Chat', description: t('sessionControls.saveThis.description') || 'Export this chat only', colorClass: 'text-action-export', bgClass: 'bg-action-export/10', borderClass: 'border-action-export/30', textClass: 'text-action-export-text', placeholderClass: 'placeholder-action-export/30', btnClass: 'bg-action-export/80 hover:bg-action-export', shadowClass: 'shadow-action-export/20' },
+    combine: { keyword: 'COMBINE', label: t('sessionControls.combine.label') || 'Combine', description: t('sessionControls.combine.description') || 'Merge backup into this chat', colorClass: 'text-action-combine', bgClass: 'bg-action-combine/10', borderClass: 'border-action-combine/30', textClass: 'text-action-combine-text', placeholderClass: 'placeholder-action-combine/30', btnClass: 'bg-action-combine/80 hover:bg-action-combine', shadowClass: 'shadow-action-combine/20' },
+    trim: { keyword: 'TRIM', label: t('sessionControls.trim.label') || 'Trim', description: t('sessionControls.trim.description') || 'Remove messages before bookmark', colorClass: 'text-action-trim', bgClass: 'bg-action-trim/10', borderClass: 'border-action-trim/30', textClass: 'text-action-trim-text', placeholderClass: 'placeholder-action-trim/30', btnClass: 'bg-action-trim/80 hover:bg-action-trim', shadowClass: 'shadow-action-trim/20' },
   };
 
   // Unified pointer handling for avatar cluster
@@ -556,19 +558,20 @@ const SessionControls: React.FC = () => {
 
   const getVoiceColorRing = (voiceId: string) => {
     const map: Record<string, string> = {
-      Zephyr: 'ring-cyan-300/50 bg-cyan-900/40',
-      Puck: 'ring-amber-300/50 bg-amber-900/40',
-      Charon: 'ring-emerald-300/50 bg-emerald-900/40',
-      Kore: 'ring-blue-300/50 bg-blue-900/40',
-      Fenrir: 'ring-rose-300/50 bg-rose-900/40'
+      Zephyr: 'ring-voice-zephyr/50 bg-voice-zephyr/15',
+      Puck: 'ring-voice-puck/50 bg-voice-puck/15',
+      Charon: 'ring-voice-charon/50 bg-voice-charon/15',
+      Kore: 'ring-voice-kore/50 bg-voice-kore/15',
+      Fenrir: 'ring-voice-fenrir/50 bg-voice-fenrir/15'
     };
-    return map[voiceId] || 'ring-blue-300/50 bg-blue-900/40';
+    return map[voiceId] || 'ring-voice-kore/50 bg-voice-kore/15';
   };
 
   const VoiceIconComponent = getVoiceIcon(currentVoiceName);
-  const voiceBgClass = getVoiceColorRing(currentVoiceName).split(' ')[1] || 'bg-blue-900/40';
+  const voiceBgClass = getVoiceColorRing(currentVoiceName).split(' ')[1] || 'bg-voice-kore/15';
 
   return (
+    <>
     <div className="w-full py-3 px-4 min-h-[64px] flex items-center justify-between gap-2">
 
       {/* --- Mode: Pending Action Confirmation --- */}
@@ -595,7 +598,7 @@ const SessionControls: React.FC = () => {
               type="button"
               onClick={executePendingAction}
               disabled={confirmInput.toUpperCase() !== ACTION_CONFIG[pendingAction].keyword}
-              className={`p-2 ${ACTION_CONFIG[pendingAction].btnClass} rounded-full text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg ${ACTION_CONFIG[pendingAction].shadowClass}`}
+              className={`p-2 ${ACTION_CONFIG[pendingAction].btnClass} rounded-full ${ACTION_CONFIG[pendingAction].textClass} disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg ${ACTION_CONFIG[pendingAction].shadowClass}`}
             >
               <IconCheck className="w-4 h-4" />
             </button>
@@ -626,7 +629,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={handleProfileSave}
-              className="p-2 bg-green-500/80 hover:bg-green-500 rounded-full text-white transition-all shadow-lg shadow-green-900/20"
+              className="p-2 bg-pencil/80 hover:bg-pencil rounded-full text-paper transition-all shadow-lg shadow-pencil/20"
             >
               <IconCheck className="w-4 h-4" />
             </button>
@@ -642,31 +645,37 @@ const SessionControls: React.FC = () => {
 
       ) : (
         <>
-          {/* Left: Edit Profile */}
+          {/* Left: Edit Profile + Palette */}
           <div className="flex items-center">
             <button
               type="button"
               onClick={startProfileEdit}
-              className="group p-2.5 rounded-full text-muted-foreground hover:text-white hover:bg-white/10 transition-all"
+              className="group p-2.5 rounded-full text-muted-foreground hover:text-primary-foreground hover:bg-primary-foreground/10 transition-all"
               title={t('sessionControls.editProfile') || 'Edit User Profile'}
             >
               <IconPencil className="w-4 h-4 opacity-70 group-hover:opacity-100" />
             </button>
+            <button
+              type="button"
+              onClick={() => setIsThemeCustomizerOpen(true)}
+              className="group p-2.5 rounded-full text-muted-foreground hover:text-primary-foreground hover:bg-primary-foreground/10 transition-all"
+              title="Customize Colors"
+            >
+              <IconPalette className="w-4 h-4 opacity-70 group-hover:opacity-100" />
+            </button>
           </div>
 
           {/* Center: Action Pill - Grouped Controls */}
-          <div className="flex items-center bg-primary/60 backdrop-blur-sm rounded-full p-1 border border-white/5 shadow-inner">
+          <div className="flex items-center bg-primary/60 backdrop-blur-sm rounded-full p-1 border border-primary-foreground/5 shadow-inner">
             {controlMode === 'none' ? (
               /* Default: Show two group selectors */
               <>
-                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
-                  <IconCog className="w-3.5 h-3.5" />
+                <button type="button" onClick={() => setControlMode('all')} className="px-3 py-1.5 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.allChatsControls') || 'All Chats Controls'}>
                   <IconGlobe className="w-3.5 h-3.5" />
                   <IconMessageSquare className="w-3.5 h-3.5" />
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
-                  <IconCog className="w-3.5 h-3.5" />
+                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
+                <button type="button" onClick={() => setControlMode('this')} className="px-3 py-1.5 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors text-xs font-medium flex items-center gap-1" title={t('sessionControls.thisChatsControls') || 'This Chat Controls'}>
                   <IconTarget className="w-3.5 h-3.5" />
                   <IconMessageSquare className="w-3.5 h-3.5" />
                 </button>
@@ -674,38 +683,38 @@ const SessionControls: React.FC = () => {
             ) : controlMode === 'all' ? (
               /* All Chats: Save All, Load All, Reset, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-primary-foreground/10 rounded-full text-muted-foreground hover:text-primary-foreground transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('saveAll'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.saveChats') || 'Save All Chats'}>
+                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
+                <button type="button" onClick={() => { setPendingAction('saveAll'); setConfirmInput(''); }} className="p-2 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors" title={t('startPage.saveChats') || 'Save All Chats'}>
                   <IconSave className="w-4 h-4" />
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.loadChats') || 'Load All Chats'}>
+                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
+                <button type="button" onClick={() => loadFileInputRef.current?.click()} className="p-2 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors" title={t('startPage.loadChats') || 'Load All Chats'}>
                   <IconFolderOpen className="w-4 h-4" />
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-red-500/20 rounded-full text-primary-foreground/70 hover:text-red-200 transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
+                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
+                <button type="button" onClick={() => { setPendingAction('reset'); setConfirmInput(''); }} className="p-2 hover:bg-action-danger-shortcut-hover-bg/20 rounded-full text-primary-foreground/70 hover:text-action-danger-shortcut-hover-text transition-colors" title={t('sessionControls.backupAndReset') || 'Backup & Reset'}>
                   <IconTrash className="w-4 h-4" />
                 </button>
               </>
             ) : (
               /* This Chat: Save This, Combine, Trim, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white transition-colors" title={t('sessionControls.back') || 'Back'}>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-primary-foreground/10 rounded-full text-muted-foreground hover:text-primary-foreground transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('saveThis'); setConfirmInput(''); }} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.saveThisChat') || 'Save This Chat'}>
+                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
+                <button type="button" onClick={() => { setPendingAction('saveThis'); setConfirmInput(''); }} className="p-2 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors" title={t('startPage.saveThisChat') || 'Save This Chat'}>
                   <IconBookmark className="w-4 h-4" />
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => appendFileInputRef.current?.click()} className="p-2 hover:bg-white/10 rounded-full text-primary-foreground/70 hover:text-white transition-colors" title={t('startPage.appendToChat') || 'Combine Chats'}>
+                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
+                <button type="button" onClick={() => appendFileInputRef.current?.click()} className="p-2 hover:bg-primary-foreground/10 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors" title={t('startPage.appendToChat') || 'Combine Chats'}>
                   <IconPlus className="w-4 h-4" />
                 </button>
-                <div className="w-px h-4 bg-white/10 mx-0.5"></div>
-                <button type="button" onClick={() => { setPendingAction('trim'); setConfirmInput(''); }} className="p-2 hover:bg-orange-500/20 rounded-full text-primary-foreground/70 hover:text-orange-200 transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
+                <div className="w-px h-4 bg-primary-foreground/10 mx-0.5"></div>
+                <button type="button" onClick={() => { setPendingAction('trim'); setConfirmInput(''); }} className="p-2 hover:bg-action-trim-shortcut-hover-bg/20 rounded-full text-primary-foreground/70 hover:text-action-trim-shortcut-hover-text transition-colors" title={t('startPage.trimBeforeBookmark') || 'Trim Before Bookmark'}>
                   <IconScissors className="w-4 h-4" />
                 </button>
               </>
@@ -729,10 +738,10 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               {...{ [DATA_AVATAR_ACTION]: 'swap' }}
-              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary border border-border flex items-center justify-center text-muted-foreground hover:text-white hover:bg-primary/80 hover:border-border transition-all duration-200 shadow-lg z-0 ${
+              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary border border-border flex items-center justify-center text-muted-foreground hover:text-primary-foreground hover:bg-primary/80 hover:border-border transition-all duration-200 shadow-lg z-0 ${
                 isAvatarExpanded ? '-translate-x-[36px]' : ''
               } ${
-                highlightedSide === 'left' ? 'text-white bg-primary/80 border-border z-20 scale-110 ring-2 ring-white/30' : 'hover:z-20 hover:scale-105'
+                highlightedSide === 'left' ? 'text-primary-foreground bg-primary/80 border-border z-20 scale-110 ring-2 ring-primary-foreground/30' : 'hover:z-20 hover:scale-105'
               }`}
               title={t('general.clear') + " / " + (t('sessionControls.changeAvatar') || 'Change Avatar')}
             >
@@ -747,10 +756,10 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               {...{ [DATA_AVATAR_ACTION]: 'voice' }}
-              className={`absolute right-1/2 translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 shadow-lg z-0 ${getVoiceColorRing(currentVoiceName)} ring-1 border-white/10 ${
+              className={`absolute right-1/2 translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-200 shadow-lg z-0 ${getVoiceColorRing(currentVoiceName)} ring-1 border-primary-foreground/10 ${
                 isAvatarExpanded ? 'translate-x-[36px]' : ''
               } ${
-                highlightedSide === 'right' ? 'z-20 scale-110 ring-2 ring-white/30' : 'hover:z-20 hover:scale-105'
+                highlightedSide === 'right' ? 'z-20 scale-110 ring-2 ring-primary-foreground/30' : 'hover:z-20 hover:scale-105'
               }`}
               title={`Voice: ${currentVoiceName}`}
             >
@@ -763,11 +772,11 @@ const SessionControls: React.FC = () => {
 
               <VoiceIconComponent
                 key={currentVoiceName}
-                className="w-3.5 h-3.5 text-white/90 animate-voice-swap"
+                className="w-3.5 h-3.5 text-primary-foreground/90 animate-voice-swap"
               />
 
               <IconSpeaker
-                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2.5 w-3 h-3 text-white/70 transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2.5 w-3 h-3 text-primary-foreground/70 transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
               />
             </button>
 
@@ -787,7 +796,7 @@ const SessionControls: React.FC = () => {
 
                 {isUploadingMaestro && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
-                    <SmallSpinner className="w-4 h-4 text-white" />
+                    <SmallSpinner className="w-4 h-4 text-primary-foreground" />
                   </div>
                 )}
               </div>
@@ -799,6 +808,10 @@ const SessionControls: React.FC = () => {
         </>
       )}
     </div>
+    {isThemeCustomizerOpen && (
+      <ThemeCustomizerPanel onClose={() => setIsThemeCustomizerOpen(false)} />
+    )}
+    </>
   );
 };
 
