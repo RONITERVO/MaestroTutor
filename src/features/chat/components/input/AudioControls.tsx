@@ -240,7 +240,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
           onClick={handleOpenLanguageSelector}
           className={`flex flex-col items-center justify-center p-1 rounded-full transition-colors ${
             isSuggestionMode
-              ? 'hover:bg-secondary'
+              ? 'hover:bg-chip-surface'
               : 'hover:bg-white/20'
           }`}
           title={t('chat.languageSelector.openGlobe')}
@@ -248,11 +248,11 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         >
           <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '10px' }}>
             {nativeLanguageDef.flag}
-            {hasSharedFlag(nativeLanguageDef) && <span className={`text-[7px] font-bold ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`}>{nativeLanguageDef.shortCode}</span>}
+            {hasSharedFlag(nativeLanguageDef) && <span className={`text-[7px] font-bold ${isSuggestionMode ? 'text-faded-label' : 'text-action-accent-text/70'}`}>{nativeLanguageDef.shortCode}</span>}
           </span>
           <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '14px' }}>
             {targetLanguageDef.flag}
-            {hasSharedFlag(targetLanguageDef) && <span className={`text-[9px] font-bold ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`}>{targetLanguageDef.shortCode}</span>}
+            {hasSharedFlag(targetLanguageDef) && <span className={`text-[9px] font-bold ${isSuggestionMode ? 'text-faded-label' : 'text-action-accent-text/70'}`}>{targetLanguageDef.shortCode}</span>}
           </span>
         </button>
       )}
@@ -271,7 +271,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
               ? 'bg-recording-mic-armed-bg text-recording-mic-armed-text ring-2 ring-recording-mic-armed-ring/50'
               : isListening
                 ? 'bg-recording-mic-listening-bg text-recording-mic-listening-text'
-                : (isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-accent-foreground/70 hover:text-accent-foreground hover:bg-white/20')
+                : (isSuggestionMode ? 'text-faded-label hover:text-foreground hover:bg-chip-surface' : 'text-action-accent-text/70 hover:text-action-accent-text hover:bg-white/20')
           } disabled:opacity-50`}
           title={getMicButtonTitle()}
           disabled={isSending || isSpeaking || isLanguageSelectionOpen}

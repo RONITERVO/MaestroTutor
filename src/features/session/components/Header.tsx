@@ -230,7 +230,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
 
          <button
            onClick={toggleDebugLogs}
-           className="p-2 bg-debug-panel-bg/80 hover:bg-debug-panel-bg text-muted-foreground hover:text-debug-panel-text shadow-sm backdrop-blur-sm transition-all sketchy-border-thin"
+           className="p-2 bg-debug-panel-bg/80 hover:bg-debug-panel-bg text-faded-label hover:text-debug-panel-text shadow-sm backdrop-blur-sm transition-all sketchy-border-thin"
            title="View Traffic Logs"
          >
            <IconTerminal className="w-4 h-4" />

@@ -585,8 +585,8 @@ const App: React.FC = () => {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background paper-texture">
         <div className="text-center relative z-10">
-          <SmallSpinner className="w-8 h-8 text-pencil-light block mx-auto" />
-          <p className="mt-2 text-muted-foreground font-hand">Loading app...</p>
+          <SmallSpinner className="w-8 h-8 text-sketch-ring block mx-auto" />
+          <p className="mt-2 text-faded-label font-hand">Loading app...</p>
         </div>
       </div>
     );
@@ -596,8 +596,8 @@ const App: React.FC = () => {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background paper-texture">
         <div className="text-center relative z-10">
-          <SmallSpinner className="w-8 h-8 text-pencil-light block mx-auto" />
-          <p className="mt-2 text-muted-foreground font-hand">{t('chat.loadingHistory')}</p>
+          <SmallSpinner className="w-8 h-8 text-sketch-ring block mx-auto" />
+          <p className="mt-2 text-faded-label font-hand">{t('chat.loadingHistory')}</p>
         </div>
       </div>
     );
@@ -635,7 +635,7 @@ const App: React.FC = () => {
         }}
       />
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 flex flex-col bg-paper relative z-10">
+        <main className="flex-1 flex flex-col bg-page-bg relative z-10">
           <ChatInterface
             onSendMessage={handleSendMessageInternalRef.current || handleSendMessageInternal}
             onDeleteMessage={handleDeleteMessage}

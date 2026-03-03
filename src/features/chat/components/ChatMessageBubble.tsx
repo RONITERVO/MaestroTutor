@@ -619,7 +619,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     return (
       <div className="flex justify-start mb-3 animate-pulse">
         <div className={`bg-status-bubble-bg p-3 max-w-xl sketchy-border-thin ${sketchShapeClass(messageIndex)}`}>
-          <p className="text-sm text-muted-foreground font-hand">{t('chat.thinking')}</p>
+          <p className="text-sm text-faded-label font-hand">{t('chat.thinking')}</p>
         </div>
       </div>
     );
@@ -636,14 +636,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
            if (isUser) bubbleWrapperClasses += " bg-user-bubble-bg bg-opacity-90 text-user-bubble-text";
-           else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
+           else if (isError) bubbleWrapperClasses += " bg-danger-color/10 bg-opacity-90 text-danger-color";
            else if (isStatus) bubbleWrapperClasses += " bg-status-bubble-bg bg-opacity-90 text-status-bubble-text";
            else bubbleWrapperClasses += " bg-assistant-bubble-bg bg-opacity-90 text-assistant-bubble-text";
       }
   } else {
       bubbleWrapperClasses += " p-3 max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
       if (isUser) bubbleWrapperClasses += " bg-user-bubble-bg bg-opacity-90 text-user-bubble-text";
-      else if (isError) bubbleWrapperClasses += " bg-destructive/10 bg-opacity-90 text-destructive";
+      else if (isError) bubbleWrapperClasses += " bg-danger-color/10 bg-opacity-90 text-danger-color";
       else if (isStatus) bubbleWrapperClasses += " bg-status-bubble-bg bg-opacity-90 text-status-bubble-text";
       else bubbleWrapperClasses += " bg-assistant-bubble-bg bg-opacity-90 text-assistant-bubble-text sketchy-border-thin";
   }
@@ -671,7 +671,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   }
   
   const imageContainerDynamicBg = message.isGeneratingImage ? 
-      (applyFocusedImageStyles ? (isUser ? 'bg-user-bubble-bg/40' : 'bg-pencil/50') : (isUser ? 'bg-user-bubble-bg/30' : 'bg-assistant-bubble-bg/50')) 
+      (applyFocusedImageStyles ? (isUser ? 'bg-user-bubble-bg/40' : 'bg-sketch-ink/50') : (isUser ? 'bg-user-bubble-bg/30' : 'bg-assistant-bubble-bg/50')) 
       : '';
 
   const imageContainerStyle: React.CSSProperties = {};
@@ -726,7 +726,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                           )}
                         </div>
                         {remainingTimeDisplay && (
-                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? 'text-user-bubble-text/70 bg-user-bubble-bg/60' : 'text-muted-foreground bg-assistant-bubble-bg/70'}`}>
+                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? 'text-user-bubble-text/70 bg-user-bubble-bg/60' : 'text-faded-label bg-assistant-bubble-bg/70'}`}>
                             {remainingTimeDisplay}
                           </p>
                         )}
@@ -921,9 +921,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   )}
                   {isFileSuccessfullyDisplayed && (
                       <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg h-full ${isUser ? 'bg-user-bubble-bg/80' : 'bg-assistant-bubble-bg'}`}>
-                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-bubble-text/70' : 'text-muted-foreground'}`} />
+                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-bubble-text/70' : 'text-faded-label'}`} />
                           <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-user-bubble-text' : 'text-foreground'}`}>{message.imageMimeType}</p>
-                          <p className={`mt-1 text-xs ${isUser ? 'text-user-bubble-text/70' : 'text-muted-foreground'}`}>{t('chat.fileAttachment')}</p>
+                          <p className={`mt-1 text-xs ${isUser ? 'text-user-bubble-text/70' : 'text-faded-label'}`}>{t('chat.fileAttachment')}</p>
                       </div>
                   )}
                   {isPdfSuccessfullyDisplayed && (
@@ -959,8 +959,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                <div className={`flex flex-col items-center justify-center p-2 rounded-lg 
                   ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-user-bubble-bg/60' : 'bg-assistant-bubble-bg/60'}`}
                `}>
-                  <IconXMark className="w-8 h-8 text-correction mb-1"/>
-                  <p className={`text-xs text-center ${applyFocusedImageStyles ? 'text-paper/80' : 'text-correction'}`}>
+                  <IconXMark className="w-8 h-8 text-red-correction mb-1"/>
+                  <p className={`text-xs text-center ${applyFocusedImageStyles ? 'text-page-bg/80' : 'text-red-correction'}`}>
                       {t('chat.imageGenError')}: {message.imageGenError}
                   </p>
               </div>
@@ -1036,8 +1036,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`font-semibold whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  applyFocusedImageStyles
-                                 ? (isCurrentLineSpeaking ? 'bg-highlight text-highlight-text' : 'hover:text-paper-dark text-white')
-                                 : (isCurrentLineSpeaking ? 'bg-highlight text-highlight-text' : 'hover:text-accent text-foreground')
+                                 ? (isCurrentLineSpeaking ? 'bg-word-mark-bg text-word-mark-text' : 'hover:text-page-hover text-white')
+                                 : (isCurrentLineSpeaking ? 'bg-word-mark-bg text-word-mark-text' : 'hover:text-action-accent text-foreground')
                              }`}
                              style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}
@@ -1087,7 +1087,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                         <p className={`italic mt-0.5 whitespace-pre-wrap pl-2 border-l-2 rounded-sm px-1 -mx-1 ${
                              applyFocusedImageStyles
                              ? (isCurrentLineSpeaking ? 'bg-user-bubble-bg/60 text-user-bubble-text/80' : 'text-user-bubble-text/50 border-user-bubble-text/30')
-                             : (isCurrentLineSpeaking ? 'bg-assistant-bubble-bg text-assistant-bubble-text' : 'text-muted-foreground border-border')
+                             : (isCurrentLineSpeaking ? 'bg-assistant-bubble-bg text-assistant-bubble-text' : 'text-faded-label border-ui-border')
                          }`} style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                          onPointerDown={handleLinePointerDown}
                          onPointerUp={(e) => {
@@ -1125,8 +1125,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  applyFocusedImageStyles
-                                 ? (isCurrentlySpeakingRaw ? 'bg-highlight text-highlight-text' : 'hover:text-paper-dark text-white')
-                                 : (isCurrentlySpeakingRaw ? 'bg-highlight text-highlight-text' : 'hover:text-accent text-foreground')
+                                 ? (isCurrentlySpeakingRaw ? 'bg-word-mark-bg text-word-mark-text' : 'hover:text-page-hover text-white')
+                                 : (isCurrentlySpeakingRaw ? 'bg-word-mark-bg text-word-mark-text' : 'hover:text-action-accent text-foreground')
                              }`} style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}
                              onPointerUp={(e) => handleLinePointerUp(e, message.rawAssistantResponse!, currentTargetLangCode)}
@@ -1152,7 +1152,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                      })()
                    )}
                    {(isError || isStatus) && message.text && (
-                     <p className={`${ applyFocusedImageStyles ? (isError ? 'text-correction font-semibold' : 'text-highlight font-semibold') : ''}`}
+                     <p className={`${ applyFocusedImageStyles ? (isError ? 'text-red-correction font-semibold' : 'text-word-mark-bg font-semibold') : ''}`}
                         style={{ fontSize: '3.2cqw', lineHeight: 1.25 }}>
                          {message.text}
                      </p>
@@ -1163,7 +1163,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <button
                            type="button"
                            onClick={onQuotaSetupBilling}
-                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-accent-foreground bg-accent hover:bg-accent/80 sketchy-border-thin"
+                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-action-accent-text bg-action-accent hover:bg-action-accent/80 sketchy-border-thin"
                            style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
                          >
                            {t('error.quotaSetupBilling')}
@@ -1187,7 +1187,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <button
                            type="button"
                            onClick={onImageGenDisable}
-                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-accent-foreground bg-accent hover:bg-accent/80 sketchy-border-thin"
+                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-action-accent-text bg-action-accent hover:bg-action-accent/80 sketchy-border-thin"
                            style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
                          >
                            {t('error.imageGenDisable')}

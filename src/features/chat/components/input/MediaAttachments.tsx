@@ -406,7 +406,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             )}
           </div>
           {liveSessionError && (
-            <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-destructive/10 text-destructive' : 'bg-recording-inline-error-bg/20 text-recording-inline-error-text'}`}>
+            <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-danger-color/10 text-danger-color' : 'bg-recording-inline-error-bg/20 text-recording-inline-error-text'}`}>
               {liveSessionError}
             </div>
           )}

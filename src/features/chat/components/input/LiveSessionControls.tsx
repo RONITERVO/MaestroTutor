@@ -32,7 +32,7 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
     ? 'bg-live-session-button-active-bg hover:bg-live-session-button-active-hover-bg text-live-session-button-active-text'
     : (liveSessionErrored
       ? 'bg-live-session-button-error-bg hover:bg-live-session-button-error-hover-bg text-live-session-button-error-text'
-      : (isSuggestionMode ? 'bg-primary/80 hover:bg-primary text-primary-foreground' : 'bg-primary/60 hover:bg-primary/80 text-primary-foreground'));
+      : (isSuggestionMode ? 'bg-cta-btn/80 hover:bg-cta-btn text-cta-btn-text' : 'bg-cta-btn/60 hover:bg-cta-btn/80 text-cta-btn-text'));
 
   const handleLiveSessionToggle = useCallback(() => {
     if (liveSessionActive) {
@@ -46,7 +46,7 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
 
   return (
     <div className="absolute top-1 right-1 flex items-center gap-2 z-30">
-      {liveSessionConnecting && <SmallSpinner className="w-5 h-5 text-primary-foreground drop-shadow" />}
+      {liveSessionConnecting && <SmallSpinner className="w-5 h-5 text-cta-btn-text drop-shadow" />}
       <button
         type="button"
         onClick={handleLiveSessionToggle}

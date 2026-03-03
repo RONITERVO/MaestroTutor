@@ -612,11 +612,11 @@ const InputArea: React.FC<InputAreaProps> = ({
   };
 
   const containerClass = isSuggestionMode
-    ? 'bg-card text-foreground shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-pencil-light'
-    : 'bg-chat-input-bg text-chat-input-text shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-pencil-light';
+    ? 'bg-panel-surface text-foreground shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-sketch-ring'
+    : 'bg-chat-input-bg text-chat-input-text shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-sketch-ring';
 
-  const sendButtonStyle = isSuggestionMode ? 'bg-primary text-primary-foreground hover:bg-primary/80 focus:ring-ring' : 'bg-card text-primary hover:bg-secondary focus:ring-primary';
-  const iconButtonStyle = isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-chat-input-text/70 hover:text-chat-input-text hover:bg-white/20';
+  const sendButtonStyle = isSuggestionMode ? 'bg-cta-btn text-cta-btn-text hover:bg-cta-btn/80 focus:ring-kbd-focus-ring' : 'bg-panel-surface text-cta-btn hover:bg-chip-surface focus:ring-cta-btn';
+  const iconButtonStyle = isSuggestionMode ? 'text-faded-label hover:text-foreground hover:bg-chip-surface' : 'text-chat-input-text/70 hover:text-chat-input-text hover:bg-white/20';
 
   const handlePaperclipClick = () => {
     if (!paperclipOpenTokenRef.current) {
@@ -627,8 +627,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   };
 
   const outerContainerClass = isSuggestionMode
-    ? 'bg-secondary text-foreground'
-    : 'bg-input-surround-bg text-input-surround-text';
+    ? 'bg-chip-surface text-foreground'
+    : 'bg-form-field-outline-surround-bg text-input-surround-text';
 
   return (
     <>
@@ -738,9 +738,9 @@ const InputArea: React.FC<InputAreaProps> = ({
             </div>
           </div>
 
-          {!isLive && sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-paper/80 bg-correction/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
-          {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-destructive bg-destructive/10' : 'text-paper/80 bg-correction/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
-          {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-primary bg-primary/10' : 'text-paper/80 bg-pencil-mark/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
+          {!isLive && sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-danger-color bg-danger-color/10' : 'text-page-bg/80 bg-red-correction/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
+          {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-danger-color bg-danger-color/10' : 'text-page-bg/80 bg-red-correction/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
+          {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-cta-btn bg-cta-btn/10' : 'text-page-bg/80 bg-sketch-pressed/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
           </div>{/* end outer accent container */}
 
           {/* Media attachments and annotation - outside accent container, free-floating */}
@@ -891,7 +891,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                     <button
                       type="button"
                       onClick={handleComposerSave}
-                      className="p-2 rounded-full bg-pencil text-paper hover:bg-pencil-mark focus:outline-none focus:ring-2 focus:ring-pencil-light"
+                      className="p-2 rounded-full bg-sketch-ink text-page-bg hover:bg-sketch-pressed focus:outline-none focus:ring-2 focus:ring-sketch-ring"
                       title={t('chat.annotateModal.saveAndAttach')}
                       aria-label={t('chat.annotateModal.saveAndAttach')}
                     >

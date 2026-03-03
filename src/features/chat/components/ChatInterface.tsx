@@ -602,7 +602,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
         <div className="space-y-2">
        {bookmarkInfo.hasBookmark && hiddenCount > 0 && (
          <div
-           className="my-1 px-2 py-1 bg-secondary border border-border sketch-shape-2 flex items-center gap-2"
+           className="my-1 px-2 py-1 bg-chip-surface border border-ui-border sketch-shape-2 flex items-center gap-2"
            role="region"
            aria-label={t('chat.bookmark.hiddenHeaderAria') || 'Hidden messages above'}
            style={{
@@ -610,7 +610,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
              containerType: 'inline-size'
            }}
          >
-           <IconEyeOpen className="w-4 h-4 text-pencil-light" />
+           <IconEyeOpen className="w-4 h-4 text-sketch-ring" />
            <span className="text-foreground" style={{ fontSize: '2.8cqw' }}>
              {bookmarkViewMode === 'above' && bookmarkChunkMeta
                ? translateOrFallback(
@@ -627,7 +627,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
            <div className="ml-auto flex items-center gap-2" style={{ fontSize: '2.8cqw' }}>
              {bookmarkViewMode === 'above' && bookmarkChunkMeta ? (
                <button
-                 className="px-2 py-1 sketch-shape-4 bg-card hover:bg-secondary text-foreground border border-border disabled:opacity-50"
+                 className="px-2 py-1 sketch-shape-4 bg-panel-surface hover:bg-chip-surface text-foreground border border-ui-border disabled:opacity-50"
                  onClick={() => {
                    if (bookmarkChunkMeta && bookmarkChunkMeta.chunkIndex < bookmarkChunkMeta.chunkCount - 1) {
                      setBookmarkAboveChunkIndex(prev => Math.min(prev + 1, bookmarkChunkMeta.chunkCount - 1));
@@ -648,7 +648,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                </button>
              ) : (
                <button
-                 className="px-2 py-1 sketch-shape-6 bg-card hover:bg-secondary text-foreground border border-border"
+                 className="px-2 py-1 sketch-shape-6 bg-panel-surface hover:bg-chip-surface text-foreground border border-ui-border"
                  onClick={() => {
                    if (hiddenCount > 0) {
                      setBookmarkViewMode('above');
@@ -708,7 +708,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                    </div>
                  )}
                  <button
-                   className={`p-1 bg-accent/80 text-accent-foreground hover:bg-accent shadow-sm sketchy-border-thin`}
+                   className={`p-1 bg-action-accent/80 text-action-accent-text hover:bg-action-accent shadow-sm sketchy-border-thin`}
                    onClick={(e) => { e.stopPropagation(); setOpenBookmarkControlsForId(prev => prev === msg.id ? null : msg.id); }}
                    title={t('chat.bookmark.actionsToggleTitle') || 'Bookmark options'}
                    aria-expanded={openBookmarkControlsForId === msg.id}
@@ -745,7 +745,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                >
                  {isAssistant && (msg.id === bookmarkedMessageId || bookmarkEligibleAssistantIds.has(msg.id)) && (
                    <button
-                     className={`p-2 ${isSuggestionMode ? 'bg-secondary text-foreground' : 'bg-accent text-accent-foreground'} shadow sketchy-border-thin`}
+                     className={`p-2 ${isSuggestionMode ? 'bg-chip-surface text-foreground' : 'bg-action-accent text-action-accent-text'} shadow sketchy-border-thin`}
                      onPointerDown={(e) => { e.stopPropagation(); }}
                          onClick={(e) => { e.stopPropagation(); if (msg.id !== bookmarkedMessageId) { onBookmarkAt(msg.id); } }}
                          title={msg.id === bookmarkedMessageId ? (t('chat.bookmark.isHere') || 'Bookmark is here') : (t('chat.bookmark.setHere') || 'Set bookmark here')}
@@ -755,7 +755,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                    </button>
                  )}
                  <button
-                   className={`p-2 ${isSuggestionMode ? 'bg-secondary text-foreground' : 'bg-eraser text-accent-foreground'} shadow sketchy-border-thin`}
+                   className={`p-2 ${isSuggestionMode ? 'bg-chip-surface text-foreground' : 'bg-delete-msg-btn text-action-accent-text'} shadow sketchy-border-thin`}
                    onPointerDown={(e) => { e.stopPropagation(); }}
                    onClick={(e) => { e.stopPropagation(); onDeleteMessage(msg.id); }}
                    title="Delete message"
@@ -798,13 +798,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
         })}
         {latestGroundingChunks && latestGroundingChunks.length > 0 && (
           <div
-            className="mt-4 p-3 bg-secondary sketch-shape-8 shadow sketchy-border-thin"
+            className="mt-4 p-3 bg-chip-surface sketch-shape-8 shadow sketchy-border-thin"
             style={{
               // @ts-ignore
               containerType: 'inline-size'
             }}
           >
-            <h4 className="font-semibold text-muted-foreground mb-1 font-sketch" style={{ fontSize: '2.9cqw' }}>{t('chat.retrievedFromWeb')}</h4>
+            <h4 className="font-semibold text-faded-label mb-1 font-sketch" style={{ fontSize: '2.9cqw' }}>{t('chat.retrievedFromWeb')}</h4>
             <ul className="space-y-1">
               {latestGroundingChunks.map((chunk, index) => (
                 (chunk.web || chunk.retrievedContext) && (
@@ -813,7 +813,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                       href={(chunk.web?.uri || chunk.retrievedContext?.uri)!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-watercolor hover:underline truncate block"
+                      className="text-teal-accent hover:underline truncate block"
                       style={{ fontSize: '2.8cqw' }}
                       title={(chunk.web?.title || chunk.retrievedContext?.title || chunk.web?.uri || chunk.retrievedContext?.uri)!}
                     >
@@ -829,7 +829,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
        {bookmarkInfo.hasBookmark && bookmarkViewMode === 'above' && (
          <div
-           className="my-1 px-2 py-1 bg-secondary border border-border sketch-shape-10 flex items-center gap-2"
+           className="my-1 px-2 py-1 bg-chip-surface border border-ui-border sketch-shape-10 flex items-center gap-2"
            role="region"
            aria-label={t('chat.bookmark.hiddenBelowHeaderAria') || 'Hidden messages below'}
            style={{
@@ -837,7 +837,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
              containerType: 'inline-size'
            }}
          >
-           <IconEyeOpen className="w-4 h-4 text-pencil-light" />
+           <IconEyeOpen className="w-4 h-4 text-sketch-ring" />
            <span className="text-foreground" style={{ fontSize: '2.8cqw' }}>
              {bookmarkChunkMeta
                ? translateOrFallback(
@@ -853,7 +853,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
            <div className="ml-auto flex items-center gap-2" style={{ fontSize: '2.8cqw' }}>
              {bookmarkChunkMeta && bookmarkChunkMeta.chunkIndex > 0 && (
                <button
-                 className="px-2 py-1 sketch-shape-11 bg-card hover:bg-secondary text-foreground border border-border"
+                 className="px-2 py-1 sketch-shape-11 bg-panel-surface hover:bg-chip-surface text-foreground border border-ui-border"
                  onClick={() => setBookmarkAboveChunkIndex(prev => Math.max(prev - 1, 0))}
                  title={translateOrFallback(
                    'chat.bookmark.showPreviousChunk',
@@ -869,7 +869,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                </button>
              )}
              <button
-               className="px-2 py-1 rounded bg-card hover:bg-secondary text-foreground border border-border"
+               className="px-2 py-1 rounded bg-panel-surface hover:bg-chip-surface text-foreground border border-ui-border"
                onClick={() => setBookmarkViewMode('below')}
                title={translateOrFallback('chat.bookmark.returnToRecent', 'Back to messages below')}
              >

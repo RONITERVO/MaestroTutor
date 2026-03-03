@@ -211,11 +211,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
 
   const playBtnClasses = isUser
     ? 'bg-white/20 hover:bg-white/30 text-white'
-    : 'bg-accent hover:bg-accent/80 text-accent-foreground';
+    : 'bg-action-accent hover:bg-action-accent/80 text-action-accent-text';
 
-  const barPlayedColor = isUser ? 'bg-white' : 'bg-accent';
-  const barUnplayedColor = isUser ? 'bg-white/35' : 'bg-accent/30';
-  const timeColor = isUser ? 'text-white/70' : 'text-muted-foreground';
+  const barPlayedColor = isUser ? 'bg-white' : 'bg-action-accent';
+  const barUnplayedColor = isUser ? 'bg-white/35' : 'bg-action-accent/30';
+  const timeColor = isUser ? 'text-white/70' : 'text-faded-label';
 
   const btnSize = compact ? 'w-8 h-8' : 'w-10 h-10';
   const iconScale = compact ? 'w-4 h-4' : 'w-5 h-5';

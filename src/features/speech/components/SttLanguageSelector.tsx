@@ -24,7 +24,7 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
   const isTargetSelected = currentSttLangCode === targetCode || targetLang.code.includes(currentSttLangCode);
   const isNativeSelected = currentSttLangCode === nativeCode || nativeLang.code.includes(currentSttLangCode);
   
-  const wrapperClass = isCollapsed ? (isInSuggestionMode ? 'p-0.5 bg-secondary/60 sketchy-border-thin' : 'p-0.5 bg-chat-input-bg/60 sketchy-border-thin') : 'p-0.5 bg-secondary sketchy-border-thin';
+  const wrapperClass = isCollapsed ? (isInSuggestionMode ? 'p-0.5 bg-chip-surface/60 sketchy-border-thin' : 'p-0.5 bg-chat-input-bg/60 sketchy-border-thin') : 'p-0.5 bg-chip-surface sketchy-border-thin';
   const buttonBase = isCollapsed ? 'p-1.5 sketchy-border-thin' : 'p-2 sketchy-border-thin';
   const flagBase = isCollapsed ? 'text-base leading-none' : 'text-lg leading-none';
   const selectedClassCollapsed = isInSuggestionMode ? 'bg-white/50' : 'bg-white/30';
@@ -34,7 +34,7 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
     <div className={`flex items-center space-x-0.5 ${wrapperClass}`}>
       <button
         onClick={() => onSelectLang(targetCode)}
-        className={`${buttonBase} transition-colors ${isTargetSelected ? (isCollapsed ? selectedClassCollapsed : 'bg-chat-input-bg') : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
+        className={`${buttonBase} transition-colors ${isTargetSelected ? (isCollapsed ? selectedClassCollapsed : 'bg-chat-input-bg') : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-chip-surface')}`}
         title={t('sttLang.selectLanguage', { language: targetLang.displayName })}
         aria-label={t('sttLang.selectLanguage', { language: targetLang.displayName })}
         aria-pressed={isTargetSelected}
@@ -43,7 +43,7 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
       </button>
       <button
         onClick={() => onSelectLang(nativeCode)}
-        className={`${buttonBase} transition-colors ${isNativeSelected ? (isCollapsed ? selectedClassCollapsed : 'bg-chat-input-bg') : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-secondary')}`}
+        className={`${buttonBase} transition-colors ${isNativeSelected ? (isCollapsed ? selectedClassCollapsed : 'bg-chat-input-bg') : (isCollapsed ? `opacity-70 hover:opacity-100 ${unselectedHoverCollapsed}` : 'hover:bg-chip-surface')}`}
         title={t('sttLang.selectLanguage', { language: nativeLang.displayName })}
         aria-label={t('sttLang.selectLanguage', { language: nativeLang.displayName })}
         aria-pressed={isNativeSelected}

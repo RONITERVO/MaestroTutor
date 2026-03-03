@@ -77,7 +77,7 @@ const SessionControls: React.FC = () => {
   // Action configuration: keyword, color scheme, description
   const ACTION_CONFIG: Record<PendingActionType, { keyword: string; label: string; description: string; colorClass: string; bgClass: string; borderClass: string; textClass: string; placeholderClass: string; btnClass: string; shadowClass: string }> = {
     none: { keyword: '', label: '', description: '', colorClass: '', bgClass: '', borderClass: '', textClass: '', placeholderClass: '', btnClass: '', shadowClass: '' },
-    saveAll: { keyword: 'SAVE', label: t('sessionControls.saveAll.label') || 'Save All', description: t('sessionControls.saveAll.description') || 'Export all chats to backup file', colorClass: 'text-pencil-light', bgClass: 'bg-pencil/30', borderClass: 'border-pencil-light/30', textClass: 'text-paper', placeholderClass: 'placeholder-pencil-light/30', btnClass: 'bg-pencil/80 hover:bg-pencil', shadowClass: 'shadow-pencil/20' },
+    saveAll: { keyword: 'SAVE', label: t('sessionControls.saveAll.label') || 'Save All', description: t('sessionControls.saveAll.description') || 'Export all chats to backup file', colorClass: 'text-sketch-ring', bgClass: 'bg-sketch-ink/30', borderClass: 'border-sketch-ring/30', textClass: 'text-page-bg', placeholderClass: 'placeholder-sketch-ring/30', btnClass: 'bg-sketch-ink/80 hover:bg-sketch-ink', shadowClass: 'shadow-sketch-ink/20' },
     loadAll: { keyword: 'LOAD', label: t('sessionControls.loadAll.label') || 'Load All', description: t('sessionControls.loadAll.description') || 'Replace all chats with backup file', colorClass: 'text-action-load', bgClass: 'bg-action-load/10', borderClass: 'border-action-load/30', textClass: 'text-action-load-text', placeholderClass: 'placeholder-action-load/30', btnClass: 'bg-action-load/80 hover:bg-action-load', shadowClass: 'shadow-action-load/20' },
     reset: { keyword: 'DELETE', label: t('sessionControls.reset.label') || 'Reset', description: t('sessionControls.reset.description') || 'Backup & delete all data', colorClass: 'text-action-danger', bgClass: 'bg-action-danger/10', borderClass: 'border-action-danger/30', textClass: 'text-action-danger-text', placeholderClass: 'placeholder-action-danger/30', btnClass: 'bg-action-danger/80 hover:bg-action-danger', shadowClass: 'shadow-action-danger/20' },
     saveThis: { keyword: 'SAVE', label: t('sessionControls.saveThis.label') || 'Save Chat', description: t('sessionControls.saveThis.description') || 'Export this chat only', colorClass: 'text-action-export', bgClass: 'bg-action-export/10', borderClass: 'border-action-export/30', textClass: 'text-action-export-text', placeholderClass: 'placeholder-action-export/30', btnClass: 'bg-action-export/80 hover:bg-action-export', shadowClass: 'shadow-action-export/20' },
@@ -589,7 +589,7 @@ const SessionControls: React.FC = () => {
               onKeyDown={(e) => e.key === 'Enter' && executePendingAction()}
               autoFocus
             />
-            <span className="text-xs text-muted-foreground break-words">
+            <span className="text-xs text-faded-label break-words">
               {ACTION_CONFIG[pendingAction].description}
             </span>
           </div>
@@ -615,9 +615,9 @@ const SessionControls: React.FC = () => {
       ) : isEditingProfile ? (
         <div className="flex-1 flex items-start justify-between animate-fade-in gap-2">
           <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <span className="text-xs font-bold text-watercolor uppercase tracking-wider">{t('sessionControls.profile') || 'Profile:'}</span>
+            <span className="text-xs font-bold text-teal-accent uppercase tracking-wider">{t('sessionControls.profile') || 'Profile:'}</span>
             <input
-              className="w-full max-w-[520px] bg-watercolor/10 border border-watercolor/30 rounded px-2 py-1.5 text-sm text-session-bar-text/80 placeholder-watercolor/30 focus:outline-none focus:border-watercolor/60 focus:bg-watercolor/15 transition-colors"
+              className="w-full max-w-[520px] bg-teal-accent/10 border border-teal-accent/30 rounded px-2 py-1.5 text-sm text-session-bar-text/80 placeholder-teal-accent/30 focus:outline-none focus:border-teal-accent/60 focus:bg-teal-accent/15 transition-colors"
               placeholder={t('sessionControls.profilePlaceholder') || 'Your name or details...'}
               value={profileText}
               onChange={(e) => setProfileText(e.target.value)}
@@ -629,7 +629,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={handleProfileSave}
-              className="p-2 bg-pencil/80 hover:bg-pencil rounded-full text-paper transition-all shadow-lg shadow-pencil/20"
+              className="p-2 bg-sketch-ink/80 hover:bg-sketch-ink rounded-full text-page-bg transition-all shadow-lg shadow-sketch-ink/20"
             >
               <IconCheck className="w-4 h-4" />
             </button>
@@ -650,7 +650,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={startProfileEdit}
-              className="group p-2.5 rounded-full text-muted-foreground hover:text-session-bar-text hover:bg-session-bar-text/10 transition-all"
+              className="group p-2.5 rounded-full text-faded-label hover:text-session-bar-text hover:bg-session-bar-text/10 transition-all"
               title={t('sessionControls.editProfile') || 'Edit User Profile'}
             >
               <IconPencil className="w-4 h-4 opacity-70 group-hover:opacity-100" />
@@ -658,7 +658,7 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsThemeCustomizerOpen(true)}
-              className="group p-2.5 rounded-full text-muted-foreground hover:text-session-bar-text hover:bg-session-bar-text/10 transition-all"
+              className="group p-2.5 rounded-full text-faded-label hover:text-session-bar-text hover:bg-session-bar-text/10 transition-all"
               title="Customize Colors"
             >
               <IconPalette className="w-4 h-4 opacity-70 group-hover:opacity-100" />
@@ -683,7 +683,7 @@ const SessionControls: React.FC = () => {
             ) : controlMode === 'all' ? (
               /* All Chats: Save All, Load All, Reset, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-session-bar-text/10 rounded-full text-muted-foreground hover:text-session-bar-text transition-colors" title={t('sessionControls.back') || 'Back'}>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-session-bar-text/10 rounded-full text-faded-label hover:text-session-bar-text transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-session-bar-text/10 mx-0.5"></div>
@@ -702,7 +702,7 @@ const SessionControls: React.FC = () => {
             ) : (
               /* This Chat: Save This, Combine, Trim, Back */
               <>
-                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-session-bar-text/10 rounded-full text-muted-foreground hover:text-session-bar-text transition-colors" title={t('sessionControls.back') || 'Back'}>
+                <button type="button" onClick={() => setControlMode('none')} className="p-2 hover:bg-session-bar-text/10 rounded-full text-faded-label hover:text-session-bar-text transition-colors" title={t('sessionControls.back') || 'Back'}>
                   <IconUndo className="w-4 h-4" />
                 </button>
                 <div className="w-px h-4 bg-session-bar-text/10 mx-0.5"></div>
@@ -738,17 +738,17 @@ const SessionControls: React.FC = () => {
             <button
               type="button"
               {...{ [DATA_AVATAR_ACTION]: 'swap' }}
-              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-session-bar-bg border border-border flex items-center justify-center text-muted-foreground hover:text-session-bar-text hover:bg-session-bar-bg/80 hover:border-border transition-all duration-200 shadow-lg z-0 ${
+              className={`absolute left-1/2 -translate-x-[24px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-session-bar-bg border border-ui-border flex items-center justify-center text-faded-label hover:text-session-bar-text hover:bg-session-bar-bg/80 hover:border-ui-border transition-all duration-200 shadow-lg z-0 ${
                 isAvatarExpanded ? '-translate-x-[36px]' : ''
               } ${
-                highlightedSide === 'left' ? 'text-session-bar-text bg-session-bar-bg/80 border-border z-20 scale-110 ring-2 ring-session-bar-text/30' : 'hover:z-20 hover:scale-105'
+                highlightedSide === 'left' ? 'text-session-bar-text bg-session-bar-bg/80 border-ui-border z-20 scale-110 ring-2 ring-session-bar-text/30' : 'hover:z-20 hover:scale-105'
               }`}
               title={t('general.clear') + " / " + (t('sessionControls.changeAvatar') || 'Change Avatar')}
             >
               <IconSwap className="w-3.5 h-3.5" />
 
               <IconSwap
-                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2.5 w-3 h-3 text-muted-foreground transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2.5 w-3 h-3 text-faded-label transition-opacity duration-200 ${isAvatarExpanded ? 'opacity-0' : 'opacity-100'}`}
               />
             </button>
  
@@ -785,13 +785,13 @@ const SessionControls: React.FC = () => {
               <div
                 className={`w-full h-full rounded-full overflow-hidden border-2 flex items-center justify-center bg-session-bar-bg transition-all duration-300
                     ${maestroAsset?.dataUrl
-                    ? 'border-accent/60 shadow-[0_0_15px_rgba(191,106,58,0.5)]'
-                    : 'border-border border-dashed opacity-80'}`}
+                    ? 'border-action-accent/60 shadow-[0_0_15px_rgba(191,106,58,0.5)]'
+                    : 'border-ui-border border-dashed opacity-80'}`}
               >
                 {maestroAsset?.dataUrl ? (
                   <img src={maestroAsset.dataUrl} alt={t('startPage.maestroAvatar') || 'Maestro avatar'} className="w-full h-full object-cover" />
                 ) : (
-                  <IconPlus className="w-4 h-4 text-muted-foreground" />
+                  <IconPlus className="w-4 h-4 text-faded-label" />
                 )}
 
                 {isUploadingMaestro && (
