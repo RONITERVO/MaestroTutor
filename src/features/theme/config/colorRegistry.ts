@@ -49,7 +49,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
       { cssVar: 'primary-foreground', friendlyName: 'Primary Button Text', description: 'Text on primary-colored buttons: send button text in suggestion mode and live session button text' },
       { cssVar: 'secondary', friendlyName: 'Secondary Button', description: 'Medium-light surface for suggestion list items, the input area outer wrapper in suggestion mode, chat control button hover states, and camera controls background' },
       { cssVar: 'secondary-foreground', friendlyName: 'Secondary Button Text', description: 'Text and icons on secondary buttons' },
-      { cssVar: 'accent', friendlyName: 'Accent Button', description: 'Main action color (blue by default) — API key gate save/confirm buttons, input focus rings, links, bookmark actions, and color tuner highlights' },
+      { cssVar: 'accent', friendlyName: 'Accent Button', description: 'Main action color (blue by default) — API key gate save/confirm buttons, API key text field focus rings, suggestion item keyboard focus rings, the selected-preset ring in the color tuner, links, bookmark actions, and color tuner highlights. Does NOT control the chat input area border or focus glow (those have their own dedicated tokens)' },
       { cssVar: 'accent-foreground', friendlyName: 'Accent Button Text', description: 'Text on accent-colored buttons and surfaces (Save Key, Open AI Studio, bookmark bar)' },
       { cssVar: 'destructive', friendlyName: 'Danger Button', description: 'Error and danger color — error message backgrounds (tinted), error text, invalid API key messages, and delete saved theme button' },
       { cssVar: 'destructive-foreground', friendlyName: 'Danger Button Text', description: 'Text on danger buttons and alerts' },
@@ -63,7 +63,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
       { cssVar: 'border', friendlyName: 'Default Border', description: 'Most borders and separator lines' },
       { cssVar: 'input', friendlyName: 'Input Border', description: 'Text input outlines' },
       { cssVar: 'ring', friendlyName: 'Focus Glow', description: 'Glow shown when controls are focused' },
-      { cssVar: 'pencil-light', friendlyName: 'Light Pencil Line', description: 'Thin hand-drawn outlines used on most sketchy-border-thin elements: suggestions, focused input, assistant messages, API key gate sections, and language selector' },
+      { cssVar: 'pencil-light', friendlyName: 'Light Pencil Line', description: 'Thin hand-drawn outlines and the chat input focus glow — sketchy-border-thin elements (suggestions, assistant messages, API key gate sections, language selector), and the glowing ring that appears around the text input box when you start typing' },
     ],
   },
   {
@@ -161,8 +161,8 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupName: 'Input Area Outer Surround',
     groupDescription: 'The outer sketchy-shaped wrapper around the text input box (normal chat mode)',
     colors: [
-      { cssVar: 'input-surround-bg', friendlyName: 'Input Surround Background', description: 'Color of the sketchy accent wrapper that frames the text input box in normal chat mode' },
-      { cssVar: 'input-surround-text', friendlyName: 'Input Surround Text', description: 'Text and icon color on the accent wrapper around the input box in normal chat mode' },
+      { cssVar: 'input-surround-bg', friendlyName: 'Input Surround Background', description: 'Color of the sketchy shaped outer wrapper that frames the text input box in normal chat mode. This is an independent token — changing it only affects this wrapper and nothing else. It starts with the same value as Accent Button in the built-in presets, but once you paint it separately it will not follow Accent Button changes' },
+      { cssVar: 'input-surround-text', friendlyName: 'Input Surround Text', description: 'Text and icon color on the outer wrapper around the input box in normal chat mode. Independent from all other tokens' },
     ],
   },
   {
