@@ -290,7 +290,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         <div className="cloud-layer cloud-layer-near"></div>
                         <div className="cloud-layer cloud-layer-highlights"></div>
 
-                        {/* ── Scroll wheel overlay (always on top, always blocks input) ── */}
+                        {/* Scroll wheel overlay (always on top, always blocks input) */}
                         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 100, pointerEvents: 'none' }}>
                             <div
                                 className="w-[70%] max-w-[10rem] backdrop-blur-md px-3 py-2 transition-opacity duration-200 opacity-50 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10 sketchy-border-thin"
@@ -319,7 +319,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                             </div>
                         </div>
 
-                        {/* ── Projected 3D flags ── */}
+                        {/* Projected 3D flags */}
                         {sortedFlags.map(({ lang, screenX, screenY, depth }) => {
                             // Cull back-hemisphere flags
                             if (depth < 0.05) return null;
@@ -357,7 +357,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                         <span className="text-[8px] font-bold text-white/90 leading-none mt-0.5 drop-shadow-sm">{lang.shortCode}</span>
                                     )}
                                     <div className={`absolute -inset-1 border-2 transition-all duration-300 pointer-events-none sketchy-border-thin ${
-                                        isNative ? 'border-watercolor shadow-watercolor/50 shadow-lg' :
+                                        isNative ? 'border-profile-input-accent shadow-profile-input-accent/50 shadow-lg' :
                                         isTarget ? 'border-green-400 shadow-green-400/50 shadow-lg' :
                                         'border-transparent'
                                     }`}></div>
@@ -504,3 +504,4 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 };
 
 export default LanguageSelectorGlobe;
+

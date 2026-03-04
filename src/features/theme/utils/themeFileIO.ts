@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import type { PresetTheme } from '../config/presetThemes';
+import { migrateLegacyColorMap } from '../config/colorRenameMap';
 
 const THEME_MIME = 'application/json';
 
@@ -35,7 +36,7 @@ export const validateThemePreset = (obj: unknown): PresetTheme => {
   return {
     name: raw.name.trim(),
     description: typeof raw.description === 'string' ? raw.description.trim() : '',
-    colors,
+    colors: migrateLegacyColorMap(colors),
   };
 };
 

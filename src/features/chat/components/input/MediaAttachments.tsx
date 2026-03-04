@@ -156,7 +156,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       recordedChunksRef.current = [];
       rec.ondataavailable = (event) => { if (event.data && event.data.size > 0) recordedChunksRef.current.push(event.data); };
       rec.onstop = () => {
-        // Strip codec params (e.g. ";codecs=vp9,opus") — the comma in the
+        // Strip codec params (e.g. ";codecs=vp9,opus") - the comma in the
         // codec list breaks data-URL parsing (browser splits on first comma).
         const chosenType = (rec.mimeType || mimeType || 'video/webm').split(';')[0];
         const chunks = recordedChunksRef.current;
@@ -239,7 +239,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
       {attachedImageBase64 && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-secondary' : 'bg-accent/80'} p-1 rounded-md`}>
+        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
           {attachedImageMimeType?.startsWith('image/') ? (
             <div className="relative">
               <img src={attachedImageBase64} alt={t('chat.imagePreview.alt')} className="h-24 w-full object-cover rounded" />
@@ -307,16 +307,16 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               </button>
             </div>
           ) : (
-            <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-muted' : 'bg-accent/60'} rounded`}>
-              <IconPaperclip className={`w-8 h-8 ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`} />
-              <span className={`text-xs mt-1 truncate max-w-full px-1 ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground'}`}>{attachedImageMimeType}</span>
+            <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-empty-bg/60'} rounded`}>
+              <IconPaperclip className="w-8 h-8 text-media-empty-text/70" />
+              <span className="text-xs mt-1 truncate max-w-full px-1 text-media-empty-text">{attachedImageMimeType}</span>
             </div>
           )}
           <div className="absolute -top-2 -right-2 flex items-center space-x-1">
             <button
               type="button"
               onClick={onRemoveAttachment}
-              className="p-1 bg-recording-remove-bg text-recording-remove-text rounded-full hover:bg-recording-remove-hover-bg"
+              className="p-1 bg-remove-attach-bg text-remove-attach-icon rounded-full hover:bg-remove-attach-hover"
               aria-label={t('chat.removeAttachedImage')}
             >
               <IconXMark className="w-4 h-4" />
@@ -326,7 +326,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       )}
 
       {showLiveFeed && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-secondary' : 'bg-accent/80'} p-1 rounded-md`}>
+        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
           <div className="relative group">
             <video
               ref={livePreviewVideoRef}
@@ -338,17 +338,17 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
               {liveSessionActive ? (
                 <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-recording-live-chip-bg text-recording-live-chip-text uppercase text-xs font-semibold tracking-wide">
-                    <span className="inline-flex h-2 w-2 rounded-full bg-recording-live-chip-dot animate-pulse" aria-hidden />
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-live-badge-bg text-live-badge-text uppercase text-xs font-semibold tracking-wide">
+                    <span className="inline-flex h-2 w-2 rounded-full bg-live-badge-dot animate-pulse" aria-hidden />
                     Live
                   </div>
                   <button
                     type="button"
                     onClick={onStopLiveSession}
-                    className="p-2 rounded-full bg-recording-live-stop-bg text-recording-live-stop-text group-hover:bg-recording-live-stop-hover-bg transition-colors"
+                    className="p-2 rounded-full bg-live-stop-bg text-live-stop-text group-hover:bg-live-stop-hover transition-colors"
                     aria-label={t('chat.camera.stopRecording')}
                   >
-                    <div className="w-4 h-4 bg-recording-live-stop-icon rounded-sm" />
+                    <div className="w-4 h-4 bg-live-stop-icon rounded-sm" />
                   </button>
                 </div>
               ) : liveSessionConnecting ? (
@@ -360,10 +360,10 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 <button
                   type="button"
                   onClick={handleStopRecording}
-                  className="p-2 rounded-full bg-recording-local-stop-bg text-recording-local-stop-text group-hover:bg-recording-local-stop-hover-bg transition-colors"
+                  className="p-2 rounded-full bg-vid-stop-bg text-vid-stop-text group-hover:bg-vid-stop-hover transition-colors"
                   aria-label={t('chat.camera.stopRecording')}
                 >
-                  <div className="w-4 h-4 bg-recording-local-stop-icon rounded-sm" />
+                  <div className="w-4 h-4 bg-vid-stop-icon rounded-sm" />
                 </button>
               ) : (
                 <div className="flex items-center gap-3">
@@ -388,8 +388,8 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                     onClick={handleLiveSessionStart}
                     className={`p-2 rounded-full transition-colors ${
                       liveSessionErrored
-                        ? 'bg-live-overlay-button-error-bg text-live-overlay-button-error-text hover:bg-live-overlay-button-error-hover-bg'
-                        : 'bg-white/30 text-white hover:bg-white/50'
+                        ? 'bg-overlay-live-error-bg text-overlay-live-error-text hover:bg-overlay-live-error-hover'
+                        : 'bg-live-idle-btn-bg text-live-idle-btn-text hover:bg-live-idle-btn-bg/80'
                     }`}
                     aria-label="LIVE"
                   >
@@ -400,13 +400,13 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             </div>
             {isRecording && !liveSessionActive && !liveSessionConnecting && (
               <div className="absolute top-1 left-1 flex items-center space-x-1 p-1 bg-black/50 rounded-lg z-20">
-                <div className="w-2 h-2 bg-recording-indicator-dot rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-rec-dot rounded-full animate-pulse" />
                 <span className="text-white text-xs font-mono">REC</span>
               </div>
             )}
           </div>
           {liveSessionError && (
-            <div className={`mt-1 px-2 py-1 text-xs rounded ${isSuggestionMode ? 'bg-destructive/10 text-destructive' : 'bg-recording-inline-error-bg/20 text-recording-inline-error-text'}`}>
+            <div className="mt-1 px-2 py-1 text-xs rounded bg-rec-error-bg/20 text-rec-error-text">
               {liveSessionError}
             </div>
           )}
@@ -417,3 +417,4 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
 };
 
 export default MediaAttachments;
+

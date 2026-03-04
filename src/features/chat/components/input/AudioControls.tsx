@@ -240,7 +240,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
           onClick={handleOpenLanguageSelector}
           className={`flex flex-col items-center justify-center p-1 rounded-full transition-colors ${
             isSuggestionMode
-              ? 'hover:bg-secondary'
+              ? 'hover:bg-sugg-outer-bg'
               : 'hover:bg-white/20'
           }`}
           title={t('chat.languageSelector.openGlobe')}
@@ -248,11 +248,11 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         >
           <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '10px' }}>
             {nativeLanguageDef.flag}
-            {hasSharedFlag(nativeLanguageDef) && <span className={`text-[7px] font-bold ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`}>{nativeLanguageDef.shortCode}</span>}
+            {hasSharedFlag(nativeLanguageDef) && <span className={`text-[7px] font-bold ${isSuggestionMode ? 'text-sugg-input-icon' : 'text-chat-input-icon/70'}`}>{nativeLanguageDef.shortCode}</span>}
           </span>
           <span className="flex items-center gap-0.5 leading-none" style={{ fontSize: '14px' }}>
             {targetLanguageDef.flag}
-            {hasSharedFlag(targetLanguageDef) && <span className={`text-[9px] font-bold ${isSuggestionMode ? 'text-muted-foreground' : 'text-accent-foreground/70'}`}>{targetLanguageDef.shortCode}</span>}
+            {hasSharedFlag(targetLanguageDef) && <span className={`text-[9px] font-bold ${isSuggestionMode ? 'text-sugg-input-icon' : 'text-chat-input-icon/70'}`}>{targetLanguageDef.shortCode}</span>}
           </span>
         </button>
       )}
@@ -268,10 +268,10 @@ const AudioControls: React.FC<AudioControlsProps> = ({
           style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}
           className={`relative overflow-visible p-2 rounded-full transition-colors touch-manipulation select-none ${
             isRecordingAudioNote
-              ? 'bg-recording-mic-armed-bg text-recording-mic-armed-text ring-2 ring-recording-mic-armed-ring/50'
+              ? 'bg-mic-record-bg text-mic-record-icon ring-2 ring-mic-record-ring/50'
               : isListening
-                ? 'bg-recording-mic-listening-bg text-recording-mic-listening-text'
-                : (isSuggestionMode ? 'text-muted-foreground hover:text-foreground hover:bg-secondary' : 'text-accent-foreground/70 hover:text-accent-foreground hover:bg-white/20')
+                ? 'bg-mic-stt-bg text-mic-stt-icon'
+                : (isSuggestionMode ? 'text-sugg-input-icon hover:text-sugg-input-text hover:bg-sugg-outer-bg' : 'text-chat-input-icon/70 hover:text-chat-input-icon hover:bg-white/20')
           } disabled:opacity-50`}
           title={getMicButtonTitle()}
           disabled={isSending || isSpeaking || isLanguageSelectionOpen}
@@ -279,8 +279,8 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         >
           {isRecordingAudioNote && (
             <>
-              <span className="pointer-events-none absolute -inset-4 rounded-full bg-recording-mic-pulse-outer/30 animate-ping" />
-              <span className="pointer-events-none absolute -inset-6 rounded-full bg-recording-mic-pulse-inner/15 animate-ping" style={{ animationDuration: '2s' }} />
+              <span className="pointer-events-none absolute -inset-4 rounded-full bg-mic-pulse-outer/30 animate-ping" />
+              <span className="pointer-events-none absolute -inset-6 rounded-full bg-mic-pulse-inner/15 animate-ping" style={{ animationDuration: '2s' }} />
             </>
           )}
           <IconMicrophone className={`relative z-10 w-5 h-5 ${isRecordingAudioNote ? 'drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]' : ''}`} />
@@ -291,3 +291,4 @@ const AudioControls: React.FC<AudioControlsProps> = ({
 };
 
 export default AudioControls;
+

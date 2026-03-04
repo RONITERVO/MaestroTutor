@@ -237,27 +237,27 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   if (showTesterForm) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-        <div className="w-full max-w-sm bg-card shadow-xl sketchy-border sketch-shape-3 p-8 relative">
+        <div className="w-full max-w-sm bg-gate-bg shadow-xl sketchy-border sketch-shape-3 p-8 relative">
 
           {canClose && (
             <button
               onClick={onClose}
-              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+              className="absolute right-4 top-4 text-gate-muted-text hover:text-gate-text"
             >
               <IconXMark className="h-5 w-5" />
             </button>
           )}
 
           <div className="flex flex-col items-center text-center space-y-3">
-            <div className="flex h-12 w-12 items-center justify-center bg-accent/15 text-accent sketchy-border-thin rounded-full mb-2">
+            <div className="flex h-12 w-12 items-center justify-center bg-gate-accent/15 text-gate-accent sketchy-border-thin rounded-full mb-2">
               <IconSparkles className="h-6 w-6" />
             </div>
 
             {/* GRANDMA-PROOF STATE 1: CHECKING STATUS */}
             {isCheckingApproval && (
               <div className="py-8 space-y-4 w-full flex flex-col items-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-accent"></div>
-                <p className="text-sm text-muted-foreground">{t('apiKeyGate.testerFormChecking')}</p>
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gate-accent"></div>
+                <p className="text-sm text-gate-muted-text">{t('apiKeyGate.testerFormChecking')}</p>
               </div>
             )}
 
@@ -267,12 +267,12 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 <h2 className="text-2xl font-semibold text-pencil font-sketch">
                   {t('apiKeyGate.testerFormApprovedTitle')}
                 </h2>
-                <p className="text-sm text-foreground">
+                <p className="text-sm text-gate-text">
                   {t('apiKeyGate.testerFormApprovedDesc')}
                 </p>
                 <button
                   onClick={() => openExternalUrl("https://play.google.com/store/apps/details?id=com.ronitervo.maestrotutor")}
-                  className="w-full bg-pencil px-4 py-4 mt-2 text-base font-bold text-paper hover:bg-pencil-mark sketchy-border-thin transition-colors rounded-md shadow-md"
+                  className="w-full bg-gate-btn-bg px-4 py-4 mt-2 text-base font-bold text-gate-btn-text hover:bg-gate-btn-bg/85 sketchy-border-thin transition-colors rounded-md shadow-md"
                 >
                   {t('apiKeyGate.testerFormDownloadBtn')}
                 </button>
@@ -283,7 +283,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     setIsApproved(false);
                     setViewMode('submit');
                   }}
-                  className="mt-4 text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+                  className="mt-4 text-xs text-gate-muted-text hover:text-gate-text underline transition-colors"
                 >
                   {t('apiKeyGate.submitAnotherEmail')}
                 </button>
@@ -293,7 +293,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             {/* GRANDMA-PROOF STATE 3: PENDING (Submitted, but not ticked in sheet yet) */}
             {!isCheckingApproval && !isApproved && lastSubmittedEmail && (
               <div className="w-full space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                <h2 className="text-2xl font-semibold text-foreground font-sketch">
+                <h2 className="text-2xl font-semibold text-gate-text font-sketch">
                   {t('apiKeyGate.testerFormPendingTitle')}
                 </h2>
                 <div className="p-4 bg-amber-50 text-amber-900 sketchy-border-thin text-sm space-y-2">
@@ -306,7 +306,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     localStorage.removeItem(STORAGE_KEY_EMAIL);
                     setViewMode('submit');
                   }}
-                  className="mt-4 text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+                  className="mt-4 text-xs text-gate-muted-text hover:text-gate-text underline transition-colors"
                 >
                   {t('apiKeyGate.submitAnotherEmail')}
                 </button>
@@ -316,10 +316,10 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             {/* GRANDMA-PROOF STATE 4A: FIRST TIME INPUT FORM */}
             {!isCheckingApproval && !isApproved && !lastSubmittedEmail && viewMode === 'submit' && (
               <div className="w-full space-y-2 animate-in fade-in">
-                <h2 className="text-2xl font-semibold text-foreground font-sketch">
+                <h2 className="text-2xl font-semibold text-gate-text font-sketch">
                   {t('apiKeyGate.testerFormTitle')}
                 </h2>
-                <p className="text-sm text-muted-foreground pb-4">
+                <p className="text-sm text-gate-muted-text pb-4">
                   {t('apiKeyGate.testerFormDescription')}
                 </p>
 
@@ -393,12 +393,12 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         if (emailErrorMsg) setEmailErrorMsg('');
                       }}
                       placeholder="@gmail.com"
-                      className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin sketch-shape-1"
+                      className="w-full px-3 py-3 text-sm bg-gate-bg text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin sketch-shape-1"
                       maxLength={MAX_EMAIL_LENGTH}
                       autoFocus
                     />
                     {testerStatus === 'error' && (
-                      <p className="text-xs text-destructive text-left mt-1">
+                      <p className="text-xs text-gate-error-text text-left mt-1">
                         {t('apiKeyGate.testerFormError')}
                       </p>
                     )}
@@ -412,7 +412,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   <button
                     type="submit"
                     disabled={testerStatus === 'submitting' || submissionCount >= MAX_SUBMISSIONS}
-                    className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50 sketchy-border-thin sketch-shape-5 transition-opacity"
+                    className="w-full bg-gate-btn-bg px-4 py-3 text-sm font-medium text-gate-btn-text hover:bg-gate-btn-bg/80 disabled:opacity-50 sketchy-border-thin sketch-shape-5 transition-opacity"
                   >
                     {submissionCount >= MAX_SUBMISSIONS
                       ? t('apiKeyGate.testerFormCapReached')
@@ -422,13 +422,13 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   </button>
                 </form>
 
-                <div className="w-full pt-4 mt-2 border-t border-border/40 text-center">
+                <div className="w-full pt-4 mt-2 border-t border-line-border/40 text-center">
                   <button
                     onClick={() => {
                       setViewMode('check');
                       setNotFoundError(false);
                     }}
-                    className="text-xs text-muted-foreground hover:text-accent transition-colors underline decoration-muted-foreground/30 underline-offset-2"
+                    className="text-xs text-gate-muted-text hover:text-gate-accent transition-colors underline decoration-gate-muted-text/30 underline-offset-2"
                   >
                     {t('apiKeyGate.checkStatusModeBtn')}
                   </button>
@@ -439,10 +439,10 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             {/* GRANDMA-PROOF STATE 4B: CHECK EXISTING STATUS FORM */}
             {!isCheckingApproval && !isApproved && !lastSubmittedEmail && viewMode === 'check' && (
               <div className="w-full space-y-2 animate-in fade-in">
-                <h2 className="text-2xl font-semibold text-foreground font-sketch">
+                <h2 className="text-2xl font-semibold text-gate-text font-sketch">
                   {t('apiKeyGate.checkStatusTitle')}
                 </h2>
-                <p className="text-sm text-muted-foreground pb-4">
+                <p className="text-sm text-gate-muted-text pb-4">
                   {t('apiKeyGate.checkStatusDesc')}
                 </p>
 
@@ -464,24 +464,24 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     value={checkEmailInput}
                     onChange={(e) => setCheckEmailInput(e.target.value)}
                     placeholder="@gmail.com"
-                    className="w-full px-3 py-3 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin sketch-shape-9"
+                    className="w-full px-3 py-3 text-sm bg-gate-bg text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin sketch-shape-9"
                     autoFocus
                   />
                   <button
                     type="submit"
-                    className="w-full bg-accent px-4 py-3 text-sm font-medium text-accent-foreground hover:bg-accent/80 sketchy-border-thin sketch-shape-11 transition-opacity"
+                    className="w-full bg-gate-btn-bg px-4 py-3 text-sm font-medium text-gate-btn-text hover:bg-gate-btn-bg/80 sketchy-border-thin sketch-shape-11 transition-opacity"
                   >
                     {t('apiKeyGate.checkStatusSubmit')}
                   </button>
                 </form>
 
-                <div className="w-full pt-4 mt-2 border-t border-border/40 text-center">
+                <div className="w-full pt-4 mt-2 border-t border-line-border/40 text-center">
                   <button
                     onClick={() => {
                       setViewMode('submit');
                       setNotFoundError(false);
                     }}
-                    className="text-xs text-muted-foreground hover:text-accent transition-colors underline decoration-muted-foreground/30 underline-offset-2"
+                    className="text-xs text-gate-muted-text hover:text-gate-accent transition-colors underline decoration-gate-muted-text/30 underline-offset-2"
                   >
                     {t('apiKeyGate.submitModeBtn')}
                   </button>
@@ -496,7 +496,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               <button
                 type="button"
                 onClick={() => setShowDevPassword(true)}
-                className="text-[10px] text-muted-foreground/30 hover:text-muted-foreground transition-colors px-2 py-1"
+                className="text-[10px] text-gate-muted-text/30 hover:text-gate-muted-text transition-colors px-2 py-1"
               >
                 {t('apiKeyGate.developerLogin')}
               </button>
@@ -517,7 +517,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 onBlur={() => {
                   if (!devPasswordInput) setShowDevPassword(false);
                 }}
-                className="w-24 px-2 py-1 text-[10px] bg-card text-foreground sketchy-border-thin focus:outline-none"
+                className="w-24 px-2 py-1 text-[10px] bg-gate-bg text-gate-text sketchy-border-thin focus:outline-none"
                 autoFocus
               />
             )}
@@ -532,17 +532,17 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // =========================================================================
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-card shadow-xl sketchy-border sketch-shape-7">
+      <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7">
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center bg-accent/15 text-accent sketchy-border-thin">
+            <div className="flex h-10 w-10 items-center justify-center bg-gate-accent/15 text-gate-accent sketchy-border-thin">
               <IconKey className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground font-sketch">
+              <h2 className="text-lg font-semibold text-gate-text font-sketch">
                 {isBillingHelp ? t('apiKeyGate.billingTitle') : t('apiKeyGate.title')}
               </h2>
-              <div className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+              <div className="mt-1 space-y-0.5 text-sm text-gate-muted-text">
                 <div className="flex items-center gap-1.5">
                   <IconKey className="h-3.5 w-3.5 shrink-0" />
                   <span>{t('apiKeyGate.infoLogin')}</span>
@@ -564,7 +564,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   <span>{t('apiKeyGate.infoMore')}</span>
                   <button
                     onClick={() => openExternalUrl(PRIVACY_POLICY_URL)}
-                    className="text-accent hover:underline"
+                    className="text-gate-accent hover:underline"
                   >
                     {t('apiKeyGate.privacyPolicy')}
                   </button>
@@ -575,7 +575,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
           {showHeaderClose && (
             <button
               onClick={handleHeaderClose}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-gate-muted-text hover:text-gate-text"
               aria-label={headerCloseLabel}
             >
               <IconXMark className="h-5 w-5" />
@@ -586,8 +586,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
         <div className="px-6 py-4 space-y-4">
           {showInstructions ? (
             <div className="flex flex-col items-center gap-4">
-              <div className="relative w-full max-w-[360px] overflow-hidden bg-card shadow-sm sketchy-border-thin">
-                <div className="aspect-[9/16] w-full bg-muted">
+              <div className="relative w-full max-w-[360px] overflow-hidden bg-gate-bg shadow-sm sketchy-border-thin">
+                <div className="aspect-[9/16] w-full bg-gate-input-bg/70">
                   <img
                     src={currentInstruction}
                     alt={t('apiKeyGate.instructionStep', { step: instructionIndex + 1, total: totalInstructions })}
@@ -602,7 +602,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         type="button"
                         onClick={() => handleInstructionStep(-1)}
                         aria-label={t('apiKeyGate.previousInstruction')}
-                        className="pointer-events-auto bg-card/90 p-2 text-muted-foreground shadow hover:bg-card sketchy-border-thin"
+                        className="pointer-events-auto bg-gate-bg/90 p-2 text-gate-muted-text shadow hover:bg-gate-bg sketchy-border-thin"
                       >
                         <IconChevronLeft className="h-5 w-5" />
                       </button>
@@ -610,14 +610,14 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                         type="button"
                         onClick={() => handleInstructionStep(1)}
                         aria-label={t('apiKeyGate.nextInstruction')}
-                        className="pointer-events-auto bg-card/90 p-2 text-muted-foreground shadow hover:bg-card sketchy-border-thin"
+                        className="pointer-events-auto bg-gate-bg/90 p-2 text-gate-muted-text shadow hover:bg-gate-bg sketchy-border-thin"
                       >
                         <IconChevronRight className="h-5 w-5" />
                       </button>
                     </div>
                     {!isBillingHelp && (
                       <>
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-card/90 px-3 py-1 shadow-sm sketchy-border-thin">
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-gate-bg/90 px-3 py-1 shadow-sm sketchy-border-thin">
                           <div className="flex items-center gap-1.5">
                             {INSTRUCTION_IMAGES.slice(0, REGULAR_INSTRUCTIONS_COUNT).map((_, index) => (
                               <button
@@ -625,12 +625,12 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                                 type="button"
                                 aria-label={t('apiKeyGate.instructionStep', { step: index + 1, total: REGULAR_INSTRUCTIONS_COUNT })}
                                 onClick={() => handleInstructionJump(index)}
-                                className={`h-2 w-2 sketchy-border-thin ${index === instructionIndex ? 'bg-accent' : 'bg-border'}`}
+                                className={`h-2 w-2 sketchy-border-thin ${index === instructionIndex ? 'bg-gate-btn-bg' : 'bg-line-border'}`}
                               />
                             ))}
                           </div>
                         </div>
-                        <div className="absolute right-3 top-3 bg-card/90 px-2 py-1 text-xs text-muted-foreground shadow-sm sketchy-border-thin">
+                        <div className="absolute right-3 top-3 bg-gate-bg/90 px-2 py-1 text-xs text-gate-muted-text shadow-sm sketchy-border-thin">
                           {instructionIndex + 1} / {REGULAR_INSTRUCTIONS_COUNT}
                         </div>
                       </>
@@ -641,15 +641,15 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             </div>
           ) : (
             <>
-              <div className="bg-muted p-4 text-sm text-foreground space-y-2 sketchy-border-thin">
-                <div className="font-medium text-foreground font-sketch">{t('apiKeyGate.stepsTitle')}</div>
+              <div className="bg-gate-input-bg/70 p-4 text-sm text-gate-text space-y-2 sketchy-border-thin">
+                <div className="font-medium text-gate-text font-sketch">{t('apiKeyGate.stepsTitle')}</div>
                 <ol className="list-decimal pl-5 space-y-1">
                   <li>{t('apiKeyGate.stepOne')}</li>
                   <li>{t('apiKeyGate.stepTwo')}</li>
                 </ol>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    className="inline-flex items-center gap-2 bg-accent px-3 py-2 text-accent-foreground hover:bg-accent/80 sketchy-border-thin"
+                    className="inline-flex items-center gap-2 bg-gate-btn-bg px-3 py-2 text-gate-btn-text hover:bg-gate-btn-bg/80 sketchy-border-thin"
                     onClick={() => openExternalUrl(AI_STUDIO_URL)}
                   >
                     {t('apiKeyGate.openAiStudio')}
@@ -662,14 +662,14 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                       setIsAutoPlaying(true);
                     }}
                     aria-label={t('apiKeyGate.viewInstructions')}
-                    className="inline-flex h-9 w-9 items-center justify-center bg-card text-muted-foreground hover:bg-muted sketchy-border-thin"
+                    className="inline-flex h-9 w-9 items-center justify-center bg-gate-bg text-gate-muted-text hover:bg-gate-input-bg sketchy-border-thin"
                   >
                     <IconQuestionMarkCircle className="h-5 w-5" />
                   </button>
                 </div>
               </div>
 
-              <label className="block text-sm font-medium text-foreground">{t('apiKeyGate.keyLabel')}</label>
+              <label className="block text-sm font-medium text-gate-text">{t('apiKeyGate.keyLabel')}</label>
               <div className="flex items-center gap-2">
                 <input
                   type={showKey ? 'text' : 'password'}
@@ -681,11 +681,11 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   }}
                   onClick={attemptAutoPasteFromClipboard}
                   placeholder={t('apiKeyGate.placeholder')}
-                  className="flex-1 px-3 py-2 text-sm bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-accent sketchy-border-thin"
+                  className="flex-1 px-3 py-2 text-sm bg-gate-bg text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
                   autoFocus
                 />
                 <button
-                  className="px-3 py-2 text-sm text-foreground hover:bg-muted sketchy-border-thin"
+                  className="px-3 py-2 text-sm text-gate-text hover:bg-gate-input-bg sketchy-border-thin"
                   onClick={() => setShowKey(!showKey)}
                   type="button"
                 >
@@ -694,9 +694,9 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               </div>
 
               {error && (
-                <div className="text-sm text-destructive">
+                <div className="text-sm text-gate-error-text">
                   {error === 'apiKeyGate.keyInvalid'
-                    ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}····${value.slice(-4)}` : '' })
+                      ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}····${value.slice(-4)}` : '' })
                     : error}
                 </div>
               )}
@@ -705,7 +705,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 <div
                   className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${keyInvalid
                     ? 'bg-red-50 text-red-800'
-                    : 'bg-secondary text-pencil'
+                    : 'bg-gate-input-bg/70 text-gate-text'
                     }`}
                   style={{ borderColor: keyInvalid ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
                 >
@@ -739,7 +739,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
         {!showInstructions && (
           <div className="flex items-center justify-between px-6 pb-6">
             <button
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-gate-muted-text hover:text-gate-text"
               onClick={onClear}
               disabled={!hasKey}
             >
@@ -749,7 +749,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               {canClose && (
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 text-sm text-foreground hover:bg-muted sketchy-border-thin"
+                  className="px-4 py-2 text-sm text-gate-text hover:bg-gate-input-bg sketchy-border-thin"
                 >
                   {t('apiKeyGate.cancel')}
                 </button>
@@ -763,7 +763,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   }
                 }}
                 disabled={!canSave}
-                className="bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/80 disabled:opacity-50 sketchy-border-thin"
+                className="bg-gate-btn-bg px-4 py-2 text-sm font-medium text-gate-btn-text hover:bg-gate-btn-bg/80 disabled:opacity-50 sketchy-border-thin"
               >
                 {isSaving ? t('apiKeyGate.saving') : t('apiKeyGate.saveKey')}
               </button>
@@ -776,3 +776,4 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 };
 
 export default ApiKeyGate;
+

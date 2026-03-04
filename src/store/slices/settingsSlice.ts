@@ -15,12 +15,40 @@ import { getAppSettingsDB, setAppSettingsDB } from '../../features/session';
 import { ALL_LANGUAGES, STT_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE, type LanguageDefinition } from '../../core/config/languages';
 import { generateAllLanguagePairs, getPrimaryCode, parseLanguagePairId } from '../../shared/utils/languageUtils';
 import { IMAGE_GEN_CAMERA_ID } from '../../core/config/app';
+import { hasLegacyColorKeys, migrateLegacyColorMap } from '../../features/theme/config/colorRenameMap';
 import type { MaestroStore } from '../maestroStore';
 
 // Generate language pairs once
 const allGeneratedLanguagePairs = generateAllLanguagePairs();
 const DEFAULT_LANGUAGE_PAIR_ID = `${DEFAULT_TARGET_LANG_CODE}-${DEFAULT_NATIVE_LANG_CODE}`;
 const MAX_VISIBLE_MESSAGES_DEFAULT = 50;
+
+const migrateLegacyThemeSettings = (settings: AppSettings): AppSettings => {
+  const migratedCustomColors = hasLegacyColorKeys(settings.customColors)
+    ? migrateLegacyColorMap(settings.customColors)
+    : settings.customColors;
+
+  const migratedSavedPresets = settings.savedThemePresets?.map((preset) => ({
+    ...preset,
+    colors: hasLegacyColorKeys(preset.colors) ? migrateLegacyColorMap(preset.colors) : preset.colors,
+  }));
+
+  const hasCustomColorChanges = migratedCustomColors !== settings.customColors;
+  const hasPresetChanges = Boolean(
+    migratedSavedPresets && settings.savedThemePresets &&
+    migratedSavedPresets.some((preset, idx) => preset.colors !== settings.savedThemePresets?.[idx]?.colors)
+  );
+
+  if (!hasCustomColorChanges && !hasPresetChanges) {
+    return settings;
+  }
+
+  return {
+    ...settings,
+    customColors: migratedCustomColors && Object.keys(migratedCustomColors).length > 0 ? migratedCustomColors : undefined,
+    savedThemePresets: migratedSavedPresets && migratedSavedPresets.length > 0 ? migratedSavedPresets : undefined,
+  };
+};
 
 // Initial settings values
 export const initialSettings: AppSettings = {
@@ -163,6 +191,8 @@ export const createSettingsSlice: StateCreator<
     try {
       const fromDb = await getAppSettingsDB();
       let effective = fromDb || initialSettings;
+
+      effective = migrateLegacyThemeSettings(effective);
 
       if (!effective.tts || effective.tts.provider !== 'gemini-live') {
         effective = { ...effective, tts: { ...effective.tts, provider: 'gemini-live' } };

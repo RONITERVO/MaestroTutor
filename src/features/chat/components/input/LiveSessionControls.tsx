@@ -29,10 +29,10 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
     ? t('chat.liveSession.stop')
     : (liveSessionErrored ? t('chat.liveSession.retry') : t('chat.liveSession.start'));
   const liveSessionButtonClasses = liveSessionActive
-    ? 'bg-live-session-button-active-bg hover:bg-live-session-button-active-hover-bg text-live-session-button-active-text'
+    ? 'bg-top-live-active-bg hover:bg-top-live-active-hover text-top-live-active-text'
     : (liveSessionErrored
-      ? 'bg-live-session-button-error-bg hover:bg-live-session-button-error-hover-bg text-live-session-button-error-text'
-      : (isSuggestionMode ? 'bg-primary/80 hover:bg-primary text-primary-foreground' : 'bg-primary/60 hover:bg-primary/80 text-primary-foreground'));
+      ? 'bg-top-live-error-bg hover:bg-top-live-error-hover text-top-live-error-text'
+      : (isSuggestionMode ? 'bg-live-idle-btn-bg hover:bg-live-idle-btn-bg/80 text-live-idle-btn-text' : 'bg-live-idle-btn-bg hover:bg-live-idle-btn-bg/80 text-live-idle-btn-text'));
 
   const handleLiveSessionToggle = useCallback(() => {
     if (liveSessionActive) {
@@ -46,7 +46,7 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
 
   return (
     <div className="absolute top-1 right-1 flex items-center gap-2 z-30">
-      {liveSessionConnecting && <SmallSpinner className="w-5 h-5 text-primary-foreground drop-shadow" />}
+      {liveSessionConnecting && <SmallSpinner className="w-5 h-5 text-live-idle-btn-text drop-shadow" />}
       <button
         type="button"
         onClick={handleLiveSessionToggle}

@@ -47,7 +47,7 @@ async function decodeWaveform(src: string, barCount: number): Promise<number[]> 
       }
       bars.push(sum / (end - start));
     }
-    // Normalize to 0.1–1.0 range
+    // Normalize to 0.1-1.0 range
     const max = Math.max(...bars) || 1;
     return bars.map(v => 0.1 + (v / max) * 0.9);
   } finally {
@@ -87,6 +87,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
   }, [src, barCount]);
 
   const progress = duration > 0 ? currentTime / duration : 0;
+
+  // Variant is kept for API stability across caller sites.
+  void variant;
 
   const updateTime = useCallback(() => {
     const audio = audioRef.current;
@@ -203,23 +206,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
     setCurrentTime(audio.currentTime);
   }, [duration]);
 
-  // Colors based on variant
-  const isUser = variant === 'user';
-  const isPreview = variant === 'preview';
+  // Keep audio controls visually consistent across all message variants.
+  const containerClasses = 'bg-audio-player-bg';
+  const playBtnClasses = 'bg-audio-play-btn hover:bg-audio-play-btn/80 text-audio-play-text';
 
-  const containerClasses = isUser
-    ? 'bg-primary/30'
-    : isPreview
-      ? 'bg-secondary'
-      : 'bg-secondary';
-
-  const playBtnClasses = isUser
-    ? 'bg-white/20 hover:bg-white/30 text-white'
-    : 'bg-accent hover:bg-accent/80 text-accent-foreground';
-
-  const barPlayedColor = isUser ? 'bg-white' : 'bg-accent';
-  const barUnplayedColor = isUser ? 'bg-white/35' : 'bg-accent/30';
-  const timeColor = isUser ? 'text-white/70' : 'text-muted-foreground';
+  const barPlayedColor = 'bg-audio-bar';
+  const barUnplayedColor = 'bg-audio-bar/30';
+  const timeColor = 'text-audio-time-text';
 
   const btnSize = compact ? 'w-8 h-8' : 'w-10 h-10';
   const iconScale = compact ? 'w-4 h-4' : 'w-5 h-5';
@@ -290,3 +283,4 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
 AudioPlayer.displayName = 'AudioPlayer';
 
 export default AudioPlayer;
+

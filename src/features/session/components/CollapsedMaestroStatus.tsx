@@ -86,21 +86,21 @@ export const getStatusConfig = (
     if (holdColor) {
       return { color: holdColor.bg, borderColor: holdColor.border, textColor: holdColor.text };
     }
-    return { color: 'bg-status-hold-bg', borderColor: 'border-status-hold-border', textColor: 'text-status-hold-text' };
+    return { color: 'bg-flag-hold-bg', borderColor: 'border-flag-hold-border', textColor: 'text-flag-hold-text' };
   }
 
   switch (stage) {
     case 'speaking':
-      return { color: 'bg-status-speaking-bg', borderColor: 'border-status-speaking-border', textColor: 'text-status-speaking-text' };
+      return { color: 'bg-flag-speaking-bg', borderColor: 'border-flag-speaking-border', textColor: 'text-flag-speaking-text' };
     case 'typing':
-      return { color: 'bg-status-typing-bg', borderColor: 'border-status-typing-border', textColor: 'text-status-typing-text' };
+      return { color: 'bg-flag-typing-bg', borderColor: 'border-flag-typing-border', textColor: 'text-flag-typing-text' };
     case 'listening':
-      return { color: 'bg-status-listening-bg', borderColor: 'border-status-listening-border', textColor: 'text-status-listening-text' };
+      return { color: 'bg-flag-listening-bg', borderColor: 'border-flag-listening-border', textColor: 'text-flag-listening-text' };
     case 'observing_high':
-      return { color: 'bg-status-observing-high-bg', borderColor: 'border-status-observing-high-border', textColor: 'text-status-observing-high-text' };
+      return { color: 'bg-flag-engaging-bg', borderColor: 'border-flag-engaging-border', textColor: 'text-flag-engaging-text' };
     case 'observing_low':
     case 'observing_medium':
-      return { color: 'bg-status-observing-bg', borderColor: 'border-status-observing-border', textColor: 'text-status-observing-text' };
+      return { color: 'bg-flag-observing-bg', borderColor: 'border-flag-observing-border', textColor: 'text-flag-observing-text' };
     case 'idle':
     default: {
       const hasBusyTasks = activeUiTokens.length > 0 || isLive;
@@ -115,9 +115,9 @@ export const getStatusConfig = (
         }
       }
       if (hasBusyTasks) {
-        return { color: 'bg-status-busy-bg/20', borderColor: 'border-status-busy-border/30', textColor: 'text-status-busy-text' };
+        return { color: 'bg-flag-busy-bg/20', borderColor: 'border-flag-busy-border/30', textColor: 'text-flag-busy-text' };
       }
-      return { color: 'bg-status-idle-bg', borderColor: 'border-status-idle-border', textColor: 'text-status-idle-text' };
+      return { color: 'bg-flag-idle-bg', borderColor: 'border-flag-idle-border', textColor: 'text-flag-idle-text' };
     }
   }
 };
