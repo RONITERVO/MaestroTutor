@@ -78,7 +78,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         <button
           type="button"
           onClick={save}
-          className="p-1 sketch-shape-2 hover:bg-accent/50 text-accent-foreground transition-colors"
+          className="p-1 sketch-shape-2 hover:bg-bookmark-bg/70 text-bookmark-text transition-colors"
           title="Save"
         >
           <IconCheck className="w-3.5 h-3.5" />
@@ -86,7 +86,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         <button
           type="button"
           onClick={cancel}
-          className="p-1 sketch-shape-4 hover:bg-accent/50 text-accent-foreground transition-colors"
+          className="p-1 sketch-shape-4 hover:bg-bookmark-bg/70 text-bookmark-text transition-colors"
           title="Cancel"
         >
           <IconXMark className="w-3.5 h-3.5" />
@@ -107,11 +107,11 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         type="button"
         onClick={dec}
         disabled={maxVisibleMessages <= 2}
-        className="px-2 py-0.5 text-xs font-hand sketch-shape-6 hover:bg-accent/30 disabled:opacity-50"
+        className="px-2 py-0.5 text-xs font-hand sketch-shape-6 hover:bg-bookmark-bg/50 disabled:opacity-50"
         aria-label={t('chat.bookmark.decrementAria') || 'Decrease maximum visible messages'}
         title={t('chat.bookmark.decrementTitle') || 'Decrease'}
       >
-        −
+        âˆ’
       </button>
       <span
         className="px-2 py-0.5 text-xs font-semibold font-hand select-none min-w-[2.5rem] text-center"
@@ -124,17 +124,17 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         type="button"
         onClick={inc}
         disabled={maxVisibleMessages >= 100}
-        className="px-2 py-0.5 text-xs font-hand sketch-shape-8 hover:bg-accent/30 disabled:opacity-50"
+        className="px-2 py-0.5 text-xs font-hand sketch-shape-8 hover:bg-bookmark-bg/50 disabled:opacity-50"
         aria-label={t('chat.bookmark.incrementAria') || 'Increase maximum visible messages'}
         title={t('chat.bookmark.incrementTitle') || 'Increase'}
       >
         +
       </button>
-      <div className="w-px h-4 bg-pencil-light/40 mx-1" aria-hidden />
+      <div className="w-px h-4 bg-bookmark-divider/40 mx-1" aria-hidden />
       <button
         type="button"
         onClick={startEditing}
-        className="px-1.5 py-0.5 sketch-shape-10 hover:bg-accent/30"
+        className="px-1.5 py-0.5 sketch-shape-10 hover:bg-bookmark-bg/50"
         title="Edit bookmark summary"
         aria-label="Edit bookmark summary"
       >
@@ -145,3 +145,4 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
 };
 
 export default BookmarkActions;
+

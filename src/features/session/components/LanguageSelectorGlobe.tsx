@@ -17,14 +17,14 @@ interface LanguageSelectorGlobeProps {
     onInteract: () => void;
 }
 
-// ── Fibonacci sphere distribution ──
+// â”€â”€ Fibonacci sphere distribution â”€â”€
 // Returns evenly-spaced points on a unit sphere
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 function fibonacciSphere(count: number): { lat: number; lng: number }[] {
     const points: { lat: number; lng: number }[] = [];
     for (let i = 0; i < count; i++) {
-        const lat = Math.asin(1 - (2 * i) / (count - 1)); // +π/2 → -π/2
+        const lat = Math.asin(1 - (2 * i) / (count - 1)); // +Ï€/2 â†’ -Ï€/2
         const lng = GOLDEN_ANGLE * i;
         points.push({ lat, lng });
     }
@@ -51,7 +51,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     const [timeAngleDeg, setTimeAngleDeg] = useState(0);
     const [glintPos, setGlintPos] = useState<{ x: number; y: number }>({ x: 45, y: 35 });
 
-    // ── Sphere rotation state (two axes) ──
+    // â”€â”€ Sphere rotation state (two axes) â”€â”€
     const [rotLng, setRotLng] = useState(0); // horizontal rotation (radians)
     const [rotLat, setRotLat] = useState(0); // vertical rotation (radians)
 
@@ -79,7 +79,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         return () => clearInterval(id);
     }, []);
 
-    // ── Project all flags through rotation → 2D ──
+    // â”€â”€ Project all flags through rotation â†’ 2D â”€â”€
     const projectedFlags = useMemo(() => {
         const cosLng = Math.cos(rotLng);
         const sinLng = Math.sin(rotLng);
@@ -94,12 +94,12 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
             const py = Math.sin(lat);
             const pz = Math.cos(lat) * Math.cos(lng);
 
-            // Y-axis rotation (horizontal drag → longitude)
+            // Y-axis rotation (horizontal drag â†’ longitude)
             const x1 = px * cosLng + pz * sinLng;
             const y1 = py;
             const z1 = -px * sinLng + pz * cosLng;
 
-            // X-axis rotation (vertical drag → latitude)
+            // X-axis rotation (vertical drag â†’ latitude)
             const x2 = x1;
             const y2 = y1 * cosLat - z1 * sinLat;
             const z2 = y1 * sinLat + z1 * cosLat;
@@ -114,7 +114,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         });
     }, [rotLng, rotLat, spherePositions]);
 
-    // ── Interaction: pointer drag (two-axis rotation) ──
+    // â”€â”€ Interaction: pointer drag (two-axis rotation) â”€â”€
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
         isDraggingRef.current = true;
         lastPointerRef.current = { x: e.clientX, y: e.clientY };
@@ -168,7 +168,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         }
     }, []);
 
-    // Wheel → horizontal rotation
+    // Wheel â†’ horizontal rotation
     const handleWheel = useCallback((e: React.WheelEvent) => {
         e.preventDefault();
         onInteract();
@@ -214,7 +214,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         }
     }, [onSelectNative, onSelectTarget, spherePositions]);
 
-    // ── Flight-path arc between selected flags ──
+    // â”€â”€ Flight-path arc between selected flags â”€â”€
     const getScreenPos = (langCode: string) => {
         const p = projectedFlags.find(f => f.lang.langCode === langCode);
         return p ? { x: p.screenX, y: p.screenY } : null;
@@ -290,7 +290,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         <div className="cloud-layer cloud-layer-near"></div>
                         <div className="cloud-layer cloud-layer-highlights"></div>
 
-                        {/* ── Scroll wheel overlay (always on top, always blocks input) ── */}
+                        {/* â”€â”€ Scroll wheel overlay (always on top, always blocks input) â”€â”€ */}
                         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 100, pointerEvents: 'none' }}>
                             <div
                                 className="w-[70%] max-w-[10rem] backdrop-blur-md px-3 py-2 transition-opacity duration-200 opacity-50 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10 sketchy-border-thin"
@@ -319,7 +319,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                             </div>
                         </div>
 
-                        {/* ── Projected 3D flags ── */}
+                        {/* â”€â”€ Projected 3D flags â”€â”€ */}
                         {sortedFlags.map(({ lang, screenX, screenY, depth }) => {
                             // Cull back-hemisphere flags
                             if (depth < 0.05) return null;
@@ -329,7 +329,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                             const showShortCode = hasSharedFlag(lang);
 
                             // Depth-based visual properties
-                            const scale = 0.45 + depth * 0.75;     // 0.45 → 1.2
+                            const scale = 0.45 + depth * 0.75;     // 0.45 â†’ 1.2
                             const scaleX = 0.3 + depth * 0.7;      // horizontal compression at edges
                             const opacity = Math.pow(depth, 0.6);   // smooth fade
                             const zIndex = Math.floor(depth * 20) + 10;
@@ -357,7 +357,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                         <span className="text-[8px] font-bold text-white/90 leading-none mt-0.5 drop-shadow-sm">{lang.shortCode}</span>
                                     )}
                                     <div className={`absolute -inset-1 border-2 transition-all duration-300 pointer-events-none sketchy-border-thin ${
-                                        isNative ? 'border-watercolor shadow-watercolor/50 shadow-lg' :
+                                        isNative ? 'border-profile-input-accent shadow-profile-input-accent/50 shadow-lg' :
                                         isTarget ? 'border-green-400 shadow-green-400/50 shadow-lg' :
                                         'border-transparent'
                                     }`}></div>
@@ -384,7 +384,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                     dominantBaseline="middle"
                                     textAnchor="middle"
                                 >
-                                    ✈️
+                                    âœˆï¸
                                 </text>
                             </g>
                         </svg>
@@ -504,3 +504,4 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 };
 
 export default LanguageSelectorGlobe;
+

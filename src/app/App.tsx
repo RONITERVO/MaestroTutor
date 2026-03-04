@@ -529,7 +529,7 @@ const App: React.FC = () => {
   }, [handleApiKeyGateOpen]);
 
   const handleQuotaStartLive = useCallback(async () => {
-    // Disable image generation – live is free, image gen costs money
+    // Disable image generation â€“ live is free, image gen costs money
     handleSettingsChange('imageGenerationModeEnabled', false);
     // Select the first available physical camera if none is selected
     const currentCameraId = settingsRef.current.selectedCameraId;
@@ -583,10 +583,10 @@ const App: React.FC = () => {
 
   if (isApiKeyLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background paper-texture">
+      <div className="flex h-screen w-full items-center justify-center bg-page-bg paper-texture">
         <div className="text-center relative z-10">
-          <SmallSpinner className="w-8 h-8 text-pencil-light block mx-auto" />
-          <p className="mt-2 text-muted-foreground font-hand">Loading app...</p>
+          <SmallSpinner className="w-8 h-8 text-loading-spinner block mx-auto" />
+          <p className="mt-2 text-page-text/70 font-hand">Loading app...</p>
         </div>
       </div>
     );
@@ -594,17 +594,17 @@ const App: React.FC = () => {
 
   if (isLoadingHistory && settings.selectedLanguagePairId) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background paper-texture">
+      <div className="flex h-screen w-full items-center justify-center bg-page-bg paper-texture">
         <div className="text-center relative z-10">
-          <SmallSpinner className="w-8 h-8 text-pencil-light block mx-auto" />
-          <p className="mt-2 text-muted-foreground font-hand">{t('chat.loadingHistory')}</p>
+          <SmallSpinner className="w-8 h-8 text-loading-spinner block mx-auto" />
+          <p className="mt-2 text-page-text/70 font-hand">{t('chat.loadingHistory')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen antialiased text-foreground bg-background paper-texture">
+    <div className="flex flex-col min-h-screen antialiased text-page-text bg-page-bg paper-texture">
       <Header
         onOpenApiKey={() => {
           setApiKeyError(null);
@@ -635,7 +635,7 @@ const App: React.FC = () => {
         }}
       />
       <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 flex flex-col bg-paper relative z-10">
+        <main className="flex-1 flex flex-col bg-paper-surface relative z-10">
           <ChatInterface
             onSendMessage={handleSendMessageInternalRef.current || handleSendMessageInternal}
             onDeleteMessage={handleDeleteMessage}
@@ -702,3 +702,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

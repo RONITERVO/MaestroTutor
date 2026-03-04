@@ -146,13 +146,13 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
 
     const scrollingBorderClass = isScrolling && variant
         ? variant === 'native'
-            ? 'ring-2 ring-watercolor shadow-watercolor/30 shadow-md'
+            ? 'ring-2 ring-profile-input-accent shadow-profile-input-accent/30 shadow-md'
             : 'ring-2 ring-green-500 shadow-green-500/30 shadow-md'
         : '';
 
     return (
         <div className={`flex-1 text-center relative min-w-[3rem] ${disabled ? 'opacity-50' : ''}`}>
-            {title && <p className="text-xs text-muted-foreground mb-1 h-4">{title}</p>}
+            {title && <p className="text-xs text-ctrl-muted-text mb-1 h-4">{title}</p>}
             <div className={`transition-all duration-150 sketchy-border-thin ${scrollingBorderClass}`}>
                 <div 
                     ref={scrollContainerRef}
@@ -178,7 +178,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                         >
                             <span className={`text-2xl font-semibold flex items-center gap-0.5 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-125' : 'opacity-50 scale-100'}`}>
                                 {lang.flag}
-                                {showShortCode && <span className="text-[9px] text-primary-foreground/50 font-bold ml-0.5">{lang.shortCode}</span>}
+                                {showShortCode && <span className="text-[9px] text-mode-toggle-text/50 font-bold ml-0.5">{lang.shortCode}</span>}
                             </span>
                         </div>
                     );
@@ -191,3 +191,4 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
 };
 
 export default LanguageScrollWheel;
+

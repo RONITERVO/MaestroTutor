@@ -255,15 +255,15 @@ const CameraControls: React.FC<CameraControlsProps> = ({
       const wasClosed = !wasExpandedOnTouchStartRef.current;
 
       if (isTap && wasClosed && target?.action === 'expand') {
-        // Tap on expand button when selector was closed → open and keep open for tap-to-select
+        // Tap on expand button when selector was closed â†’ open and keep open for tap-to-select
         setHighlightedAction(null);
         startAutoCollapseTimer();
       } else if (isTap && !wasClosed) {
-        // Tap when selector was already open (from a previous tap) → execute action or close
+        // Tap when selector was already open (from a previous tap) â†’ execute action or close
         if (target && target.action !== 'expand') {
           executeAction(target.action, target.deviceId);
         } else {
-          // Tapped expand again or empty area → close
+          // Tapped expand again or empty area â†’ close
           clearCollapseTimers();
           setIsExpanded(false);
         }
@@ -347,8 +347,8 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 
   // Selector colors
   const selectorColors = isSuggestionMode
-    ? { bg: 'bg-secondary/80', activeBg: 'bg-card', activeText: 'text-accent', inactiveText: 'text-muted-foreground', hoverBg: 'hover:bg-muted' }
-    : { bg: 'bg-accent/40', activeBg: 'bg-card', activeText: 'text-accent', inactiveText: 'text-accent-foreground/60', hoverBg: 'hover:bg-accent/60' };
+    ? { bg: 'bg-sugg-outer-bg/80', activeBg: 'bg-sugg-input-bg', activeText: 'text-camera-toggle-text', inactiveText: 'text-sugg-input-icon', hoverBg: 'hover:bg-sugg-input-bg' }
+    : { bg: 'bg-chat-outer-bg/40', activeBg: 'bg-send-btn-bg', activeText: 'text-camera-toggle-text', inactiveText: 'text-chat-outer-text/60', hoverBg: 'hover:bg-chat-outer-bg/60' };
 
   // Check if a specific action is highlighted (for visual feedback during touch drag)
   const isHighlighted = useCallback((action: string, deviceId?: string) => {
@@ -492,3 +492,4 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 };
 
 export default CameraControls;
+

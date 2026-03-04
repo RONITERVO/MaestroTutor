@@ -59,21 +59,21 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="flex items-center w-full gap-2 py-1 group"
       >
-        <span className={`text-[10px] text-muted-foreground transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}>
+        <span className={`text-[10px] text-theme-muted-text transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}>
           &#9654;
         </span>
-        <span className="text-xs font-hand text-muted-foreground uppercase tracking-wider">
+        <span className="text-xs font-hand text-theme-muted-text uppercase tracking-wider">
           {group.groupName}
         </span>
         {groupModifiedCount > 0 && (
-          <span className="ml-auto text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded-full font-semibold">
+          <span className="ml-auto text-[10px] bg-theme-input-border/20 text-theme-input-border px-1.5 py-0.5 rounded-full font-semibold">
             {groupModifiedCount}
           </span>
         )}
       </button>
 
       {group.groupDescription && !isCollapsed && (
-        <p className="text-[10px] text-muted-foreground/70 ml-4 -mt-0.5 mb-1.5">
+        <p className="text-[10px] text-theme-muted-text/70 ml-4 -mt-0.5 mb-1.5">
           {group.groupDescription}
         </p>
       )}
@@ -93,18 +93,18 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
                   type="button"
                   onClick={() => onSelectColor(active ? '' : cv.cssVar)}
                   className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all duration-150
-                    ${active ? 'bg-muted ring-2 ring-accent scale-105' : 'active:scale-95'}`}
+                    ${active ? 'bg-theme-panel-bg/80 ring-2 ring-theme-input-border scale-105' : 'active:scale-95'}`}
                 >
                   <div
                     className={`w-8 h-8 rounded-full border-2 shadow-sm transition-colors
-                      ${modified ? 'border-accent' : 'border-border'}`}
+                      ${modified ? 'border-theme-input-border' : 'border-line-border'}`}
                     style={{ backgroundColor: hex }}
                   />
-                  <span className="text-[10px] text-muted-foreground leading-tight text-center truncate w-full">
+                  <span className="text-[10px] text-theme-muted-text leading-tight text-center truncate w-full">
                     {cv.friendlyName}
                   </span>
                   {modified && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent -mt-0.5" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-theme-input-border -mt-0.5" />
                   )}
                 </button>
               );
@@ -113,16 +113,16 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
 
           {/* Inline picker for the selected color */}
           {activeColor && activeColorVar && (
-            <div className="mt-3 p-3 bg-muted/50 rounded-lg border border-border/50 animate-fade-up">
+            <div className="mt-3 p-3 bg-theme-panel-bg/50 rounded-lg border border-line-border/50 animate-fade-up">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-hand text-foreground">
+                <span className="text-sm font-hand text-theme-panel-text">
                   {activeColor.friendlyName}
                 </span>
                 {isModified(activeColorVar) && (
                   <button
                     type="button"
                     onClick={() => onResetColor(activeColorVar)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text transition-colors"
                   >
                     <IconUndo className="w-3 h-3" />
                     Reset
@@ -130,7 +130,7 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
                 )}
               </div>
               {activeColor.description && (
-                <p className="text-[11px] text-muted-foreground/80 mb-2 leading-snug">
+                <p className="text-[11px] text-theme-muted-text/80 mb-2 leading-snug">
                   {activeColor.description}
                 </p>
               )}
@@ -139,7 +139,7 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
                 onChange={(hex) => onColorChange(activeColorVar, hex)}
                 style={{ width: '100%', height: '160px' }}
               />
-              <div className="mt-2 text-xs text-muted-foreground text-center font-mono">
+              <div className="mt-2 text-xs text-theme-muted-text text-center font-mono">
                 {getEffectiveHex(activeColorVar).toUpperCase()}
               </div>
             </div>
@@ -339,20 +339,20 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
       {/* Panel */}
       <div
-        className="fixed inset-x-0 bottom-0 z-[90] flex flex-col bg-card/10 backdrop-blur-md border-t border-border shadow-2xl rounded-t-2xl overflow-hidden"
+        className="fixed inset-x-0 bottom-0 z-[90] flex flex-col bg-theme-panel-bg/10 backdrop-blur-md border-t border-line-border shadow-2xl rounded-t-2xl overflow-hidden"
         style={{ height: '45vh', maxHeight: '45vh' }}
       >
         {/* Header */}
         <div className="flex flex-col items-center pt-2 pb-1 px-4 shrink-0">
-          <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mb-2" />
+          <div className="w-10 h-1 bg-theme-muted-text/30 rounded-full mb-2" />
           <div className="flex w-full items-center justify-between">
-            <h2 className="text-lg font-sketch text-foreground">Paint Colors</h2>
+            <h2 className="text-lg font-sketch text-theme-panel-text">Paint Colors</h2>
             <div className="flex items-center gap-1">
               {hasAnyCustomization && (
                 <button
                   type="button"
                   onClick={() => startNaming('save')}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors"
+                  className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
                   title="Save as preset"
                 >
                   <IconBookmark className="w-3.5 h-3.5" />
@@ -362,7 +362,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 <button
                   type="button"
                   onClick={() => startNaming('export')}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors"
+                  className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
                   title="Export to file"
                 >
                   <IconDownload className="w-3.5 h-3.5" />
@@ -371,7 +371,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
               <button
                 type="button"
                 onClick={handleImport}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors"
+                className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
                 title="Import from file"
               >
                 <IconUpload className="w-3.5 h-3.5" />
@@ -380,7 +380,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 <button
                   type="button"
                   onClick={handleResetAll}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors"
+                  className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
                 >
                   <IconUndo className="w-3 h-3" />
                   Reset All
@@ -389,20 +389,20 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 text-muted-foreground hover:text-foreground rounded-full transition-colors"
+                className="p-1.5 text-theme-muted-text hover:text-theme-panel-text rounded-full transition-colors"
               >
                 <IconXMark className="w-5 h-5" />
               </button>
             </div>
           </div>
-          <p className="w-full text-[11px] text-muted-foreground/85 mt-0.5">
+          <p className="w-full text-[11px] text-theme-muted-text/85 mt-0.5">
             Tap a color circle, then drag in the picker. Changes apply instantly.
           </p>
 
           {/* Inline naming row */}
           {namingMode && (
             <div className="flex w-full items-center gap-1.5 mt-1.5 animate-fade-up">
-              <span className="text-[10px] font-hand text-muted-foreground uppercase tracking-wider shrink-0">
+              <span className="text-[10px] font-hand text-theme-muted-text uppercase tracking-wider shrink-0">
                 {namingMode === 'save' ? 'Save as' : 'Export as'}
               </span>
               <input
@@ -414,7 +414,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                   if (e.key === 'Enter') confirmNaming();
                   if (e.key === 'Escape') cancelNaming();
                 }}
-                className="flex-1 bg-card/80 border border-pencil-light/30 sketchy-border-thin px-2 py-0.5 text-xs text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-accent transition-colors font-hand"
+                className="flex-1 bg-theme-input-bg/80 border border-theme-input-border/30 sketchy-border-thin px-2 py-0.5 text-xs text-theme-panel-text placeholder-theme-muted-text/60 focus:outline-none focus:border-theme-input-border transition-colors font-hand"
                 placeholder="Theme name..."
                 autoFocus
               />
@@ -422,7 +422,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 type="button"
                 onClick={confirmNaming}
                 disabled={!nameInput.trim()}
-                className="p-1 text-accent hover:text-foreground disabled:opacity-30 transition-colors"
+                className="p-1 text-theme-input-border hover:text-theme-panel-text disabled:opacity-30 transition-colors"
                 title="Confirm"
               >
                 <IconCheck className="w-4 h-4" />
@@ -430,7 +430,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
               <button
                 type="button"
                 onClick={cancelNaming}
-                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-1 text-theme-muted-text hover:text-theme-panel-text transition-colors"
                 title="Cancel"
               >
                 <IconXMark className="w-4 h-4" />
@@ -444,34 +444,34 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
           {/* ── Quick Themes ────────────────────────── */}
           <div>
-            <h3 className="text-xs font-hand text-muted-foreground uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-hand text-theme-muted-text uppercase tracking-wider mb-2">
               Quick Themes
             </h3>
             <div className="flex flex-wrap gap-2">
               {PRESET_THEMES.map(preset => {
-                // Show a small preview swatch of the preset's accent or background
-                const previewBg = preset.colors['background'] || DEFAULT_COLORS['background'];
-                const previewAccent = preset.colors['accent'] || DEFAULT_COLORS['accent'];
-                const previewFg = preset.colors['foreground'] || DEFAULT_COLORS['foreground'];
+                // Show a small preview swatch of the preset's main canvas and accent.
+                const previewBg = preset.colors['page-bg'] || DEFAULT_COLORS['page-bg'];
+                const previewAccent = preset.colors['chat-outer-bg'] || DEFAULT_COLORS['chat-outer-bg'];
+                const previewFg = preset.colors['page-text'] || DEFAULT_COLORS['page-text'];
 
                 return (
                   <button
                     key={preset.name}
                     type="button"
                     onClick={() => applyPreset(preset)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 hover:border-accent/50 bg-card/60 hover:bg-muted/50 transition-all active:scale-95"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-line-border/60 hover:border-theme-input-border/50 bg-theme-preset-btn/60 hover:bg-theme-panel-bg/50 transition-all active:scale-95"
                   >
                     {/* 3-dot preview swatch */}
                     <div className="flex gap-0.5">
-                      <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewBg) }} />
-                      <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewAccent) }} />
-                      <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewFg) }} />
+                      <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewBg) }} />
+                      <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewAccent) }} />
+                      <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewFg) }} />
                     </div>
                     <div className="text-left">
-                      <div className="text-xs font-semibold text-foreground leading-tight">
+                      <div className="text-xs font-semibold text-theme-panel-text leading-tight">
                         {preset.name}
                       </div>
-                      <div className="text-[9px] text-muted-foreground leading-tight">
+                      <div className="text-[9px] text-theme-muted-text leading-tight">
                         {preset.description}
                       </div>
                     </div>
@@ -479,27 +479,27 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 );
               })}
               {savedPresets.map((preset, idx) => {
-                const previewBg = preset.colors['background'] || DEFAULT_COLORS['background'];
-                const previewAccent = preset.colors['accent'] || DEFAULT_COLORS['accent'];
-                const previewFg = preset.colors['foreground'] || DEFAULT_COLORS['foreground'];
+                const previewBg = preset.colors['page-bg'] || DEFAULT_COLORS['page-bg'];
+                const previewAccent = preset.colors['chat-outer-bg'] || DEFAULT_COLORS['chat-outer-bg'];
+                const previewFg = preset.colors['page-text'] || DEFAULT_COLORS['page-text'];
 
                 return (
                   <div key={`saved-${idx}`} className="relative group/saved">
                     <button
                       type="button"
                       onClick={() => applyPreset(preset)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-accent/30 hover:border-accent/50 bg-card/60 hover:bg-muted/50 transition-all active:scale-95"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-theme-input-border/30 hover:border-theme-input-border/50 bg-theme-preset-btn/60 hover:bg-theme-panel-bg/50 transition-all active:scale-95"
                     >
                       <div className="flex gap-0.5">
-                        <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewBg) }} />
-                        <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewAccent) }} />
-                        <div className="w-3 h-3 rounded-full border border-border/40" style={{ backgroundColor: hslStringToHex(previewFg) }} />
+                        <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewBg) }} />
+                        <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewAccent) }} />
+                        <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewFg) }} />
                       </div>
                       <div className="text-left">
-                        <div className="text-xs font-semibold text-foreground leading-tight">
+                        <div className="text-xs font-semibold text-theme-panel-text leading-tight">
                           {preset.name}
                         </div>
-                        <div className="text-[9px] text-muted-foreground leading-tight">
+                        <div className="text-[9px] text-theme-muted-text leading-tight">
                           {preset.description}
                         </div>
                       </div>
@@ -507,7 +507,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleDeleteSavedPreset(idx); }}
-                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] leading-none opacity-0 group-hover/saved:opacity-100 transition-opacity"
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gate-error-text text-gate-btn-text flex items-center justify-center text-[10px] leading-none opacity-0 group-hover/saved:opacity-100 transition-opacity"
                       title="Delete saved preset"
                     >
                       &times;
@@ -519,7 +519,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
           </div>
 
           {/* ── Divider ────────────────────────── */}
-          <div className="border-t border-border/30" />
+          <div className="border-t border-line-border/30" />
 
           {/* ── Individual Color Groups ────────────────────────── */}
           {COLOR_GROUPS.map(group => (

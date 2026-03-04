@@ -219,7 +219,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
            <button
              onClick={onOpenApiKey}
              className={`flex items-center gap-2 px-3 py-2 shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm sketchy-border-thin
-               ${hasApiKey ? 'bg-api-key-valid-bg text-api-key-valid-text hover:bg-api-key-valid-hover-bg' : 'bg-api-key-missing-bg text-api-key-missing-text hover:bg-api-key-missing-hover-bg'}
+               ${hasApiKey ? 'bg-apikey-ok-bg text-apikey-ok-text hover:bg-apikey-ok-hover' : 'bg-apikey-missing-bg text-apikey-missing-text hover:bg-apikey-missing-hover'}
              `}
              title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
            >
@@ -230,7 +230,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
 
          <button
            onClick={toggleDebugLogs}
-           className="p-2 bg-primary/80 hover:bg-primary text-muted-foreground hover:text-primary-foreground shadow-sm backdrop-blur-sm transition-all sketchy-border-thin"
+           className="p-2 bg-debug-btn-bg/80 hover:bg-debug-btn-bg text-debug-btn-muted hover:text-debug-btn-text shadow-sm backdrop-blur-sm transition-all sketchy-border-thin"
            title="View Traffic Logs"
          >
            <IconTerminal className="w-4 h-4" />
