@@ -111,7 +111,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         aria-label={t('chat.bookmark.decrementAria') || 'Decrease maximum visible messages'}
         title={t('chat.bookmark.decrementTitle') || 'Decrease'}
       >
-        âˆ’
+        -
       </button>
       <span
         className="px-2 py-0.5 text-xs font-semibold font-hand select-none min-w-[2.5rem] text-center"

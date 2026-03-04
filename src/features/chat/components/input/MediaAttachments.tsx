@@ -156,7 +156,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       recordedChunksRef.current = [];
       rec.ondataavailable = (event) => { if (event.data && event.data.size > 0) recordedChunksRef.current.push(event.data); };
       rec.onstop = () => {
-        // Strip codec params (e.g. ";codecs=vp9,opus") â€” the comma in the
+        // Strip codec params (e.g. ";codecs=vp9,opus") - the comma in the
         // codec list breaks data-URL parsing (browser splits on first comma).
         const chosenType = (rec.mimeType || mimeType || 'video/webm').split(';')[0];
         const chunks = recordedChunksRef.current;

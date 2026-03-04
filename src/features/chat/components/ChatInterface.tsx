@@ -481,7 +481,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
        } else if (message.rawAssistantResponse) { 
          let textToSay = message.rawAssistantResponse;
          let langToUse = currentTargetLangCode;
-         const mightBeNative = !textToSay.match(/[Â¡Â¿Ã±Ã¡Ã©Ã­Ã³Ãº]/i) && currentNativeLangCode.startsWith('en') && textToSay.match(/[a-zA-Z]/);
+         const mightBeNative = !textToSay.match(/[¡¿ñáéíóú]/i) && currentNativeLangCode.startsWith('en') && textToSay.match(/[a-zA-Z]/);
          if (mightBeNative && speakNativeLang) {
            langToUse = currentNativeLangCode;
          }
@@ -492,7 +492,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
        } else if (message.text) { 
            let textToSay = message.text;
            let langToUse = currentTargetLangCode;
-           const mightBeNative = !textToSay.match(/[Â¡Â¿Ã±Ã¡Ã©Ã­Ã³Ãº]/i) && currentNativeLangCode.startsWith('en') && textToSay.match(/[a-zA-Z]/);
+           const mightBeNative = !textToSay.match(/[¡¿ñáéíóú]/i) && currentNativeLangCode.startsWith('en') && textToSay.match(/[a-zA-Z]/);
            if (mightBeNative && speakNativeLang) {
              langToUse = currentNativeLangCode;
            }
@@ -568,7 +568,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
       let langToUse = currentTargetLangCode || 'es';
       if (targetMessage.text && currentNativeLangCode && currentNativeLangCode.startsWith('en')) {
-        const mightBeNative = !targetMessage.text.match(/[Â¡Â¿Ã±Ã¡Ã©Ã­Ã³Ãº]/i) && /[a-zA-Z]/.test(targetMessage.text);
+        const mightBeNative = !targetMessage.text.match(/[¡¿ñáéíóú]/i) && /[a-zA-Z]/.test(targetMessage.text);
         if (mightBeNative) {
           langToUse = currentNativeLangCode;
         }

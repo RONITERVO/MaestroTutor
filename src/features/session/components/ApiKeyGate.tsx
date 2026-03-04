@@ -696,7 +696,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               {error && (
                 <div className="text-sm text-gate-error-text">
                   {error === 'apiKeyGate.keyInvalid'
-                    ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}Â·Â·Â·Â·${value.slice(-4)}` : '' })
+                      ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}····${value.slice(-4)}` : '' })
                     : error}
                 </div>
               )}

@@ -255,15 +255,15 @@ const CameraControls: React.FC<CameraControlsProps> = ({
       const wasClosed = !wasExpandedOnTouchStartRef.current;
 
       if (isTap && wasClosed && target?.action === 'expand') {
-        // Tap on expand button when selector was closed â†’ open and keep open for tap-to-select
+        // Tap on expand button when selector was closed → open and keep open for tap-to-select
         setHighlightedAction(null);
         startAutoCollapseTimer();
       } else if (isTap && !wasClosed) {
-        // Tap when selector was already open (from a previous tap) â†’ execute action or close
+        // Tap when selector was already open (from a previous tap) → execute action or close
         if (target && target.action !== 'expand') {
           executeAction(target.action, target.deviceId);
         } else {
-          // Tapped expand again or empty area â†’ close
+          // Tapped expand again or empty area → close
           clearCollapseTimers();
           setIsExpanded(false);
         }

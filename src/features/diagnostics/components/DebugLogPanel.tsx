@@ -84,7 +84,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <span className={`${isError ? 'text-red-400' : 'text-green-400'}`}>{duration}</span>
-                  <span className="text-debug-btn-muted">{isExpanded ? 'â–²' : 'â–¼'}</span>
+                  <span className="text-debug-btn-muted">{isExpanded ? '▲' : '▼'}</span>
                 </div>
               </div>
 

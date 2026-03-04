@@ -47,7 +47,7 @@ async function decodeWaveform(src: string, barCount: number): Promise<number[]> 
       }
       bars.push(sum / (end - start));
     }
-    // Normalize to 0.1â€“1.0 range
+    // Normalize to 0.1-1.0 range
     const max = Math.max(...bars) || 1;
     return bars.map(v => 0.1 + (v / max) * 0.9);
   } finally {
