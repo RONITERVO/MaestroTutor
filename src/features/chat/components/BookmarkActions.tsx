@@ -61,7 +61,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
     if (n !== maxVisibleMessages) onChangeMaxVisibleMessages(n);
   };
 
-  const containerClasses = "flex items-center gap-1 px-1.5 py-0.5 bg-accent/90 text-accent-foreground sketchy-border-thin shadow-sm";
+  const containerClasses = "flex items-center gap-1 px-1.5 py-0.5 bg-bookmark-bg/90 text-bookmark-text sketchy-border-thin shadow-sm";
 
   if (isEditing) {
     return (
@@ -71,7 +71,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
           value={summaryText}
           onChange={(e) => setSummaryText(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="bg-card/80 border border-pencil-light/30 sketch-shape-0 px-2 py-0.5 text-xs text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-accent focus:bg-card w-48 transition-colors font-hand"
+          className="bg-bookmark-input-bg/80 border border-bookmark-divider/30 sketch-shape-0 px-2 py-0.5 text-xs text-bookmark-input-text placeholder-bookmark-text/60 focus:outline-none focus:border-bookmark-bg focus:bg-bookmark-input-bg w-48 transition-colors font-hand"
           placeholder="Summary..."
           autoFocus
         />
