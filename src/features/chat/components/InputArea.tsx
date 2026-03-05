@@ -169,6 +169,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   const [composerScale, setComposerScale] = useState(1);
   const [composerPan, setComposerPan] = useState({ x: 0, y: 0 });
   const [composerUndoStack, setComposerUndoStack] = useState<ImageData[]>([]);
+  const [composerIsBlankCanvas, setComposerIsBlankCanvas] = useState(false);
 
   const composerViewportRef = useRef<HTMLDivElement>(null);
   const composerImageRef = useRef<HTMLImageElement | null>(null);
@@ -268,10 +269,60 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
   };
 
-  const startComposerAnnotationFromImage = useCallback((dataUrl: string) => {
+  const createDottedPaperDataUrl = useCallback((width: number, height: number) => {
+    const safeWidth = Math.max(640, Math.floor(width));
+    const safeHeight = Math.max(480, Math.floor(height));
+    const paper = document.createElement('canvas');
+    paper.width = safeWidth;
+    paper.height = safeHeight;
+    const ctx = paper.getContext('2d');
+    if (!ctx) return null;
+
+    ctx.fillStyle = '#f4efdf';
+    ctx.fillRect(0, 0, safeWidth, safeHeight);
+
+    const wash = ctx.createLinearGradient(0, 0, 0, safeHeight);
+    wash.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+    wash.addColorStop(1, 'rgba(120, 98, 63, 0.09)');
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, 0, safeWidth, safeHeight);
+
+    const spacing = Math.max(10, Math.round(safeWidth / 110));
+    const radius = Math.max(0.8, safeWidth / 1600);
+    ctx.fillStyle = 'rgba(72, 61, 42, 0.2)';
+    for (let y = spacing / 2; y < safeHeight; y += spacing) {
+      for (let x = spacing / 2; x < safeWidth; x += spacing) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.strokeStyle = 'rgba(101, 84, 57, 0.08)';
+    ctx.lineWidth = 1;
+    for (let y = spacing * 2; y < safeHeight; y += spacing * 6) {
+      ctx.beginPath();
+      ctx.moveTo(0, y + 0.5);
+      ctx.lineTo(safeWidth, y + 0.5);
+      ctx.stroke();
+    }
+
+    const grainCount = Math.floor((safeWidth * safeHeight) / 1500);
+    ctx.fillStyle = 'rgba(71, 56, 34, 0.05)';
+    for (let i = 0; i < grainCount; i++) {
+      const x = Math.floor(Math.random() * safeWidth);
+      const y = Math.floor(Math.random() * safeHeight);
+      ctx.fillRect(x, y, 1, 1);
+    }
+
+    return paper.toDataURL('image/jpeg', 0.92);
+  }, []);
+
+  const startComposerAnnotationFromImage = useCallback((dataUrl: string, options?: { blankCanvas?: boolean }) => {
     if (!composerAnnotateTokenRef.current) {
       composerAnnotateTokenRef.current = createUiToken(TOKEN_SUBTYPE.COMPOSER_ANNOTATE);
     }
+    setComposerIsBlankCanvas(Boolean(options?.blankCanvas));
     setComposerAnnotationSourceUrl(dataUrl);
 
     setTimeout(() => {
@@ -336,6 +387,16 @@ const InputArea: React.FC<InputAreaProps> = ({
     if (!attachedImageBase64 || attachedImageMimeType !== 'application/pdf') return;
     await composerStartPdfAnnotation(attachedImageBase64);
   }, [attachedImageBase64, attachedImageMimeType, composerStartPdfAnnotation]);
+
+  const handleComposerStartBlankCanvas = useCallback(() => {
+    const baseWidth = typeof window !== 'undefined'
+      ? Math.max(960, Math.min(1800, Math.round(window.innerWidth * 1.4)))
+      : 1200;
+    const baseHeight = Math.round(baseWidth * 0.75);
+    const paperDataUrl = createDottedPaperDataUrl(baseWidth, baseHeight);
+    if (!paperDataUrl) return;
+    startComposerAnnotationFromImage(paperDataUrl, { blankCanvas: true });
+  }, [createDottedPaperDataUrl, startComposerAnnotationFromImage]);
 
   const composerGetPos = useCallback((e: React.PointerEvent<any>) => {
     const canvas = composerEditCanvasRef.current;
@@ -480,6 +541,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   const handleComposerCancel = useCallback(() => {
     setIsComposerAnnotating(false);
     setComposerAnnotationSourceUrl(null);
+    setComposerIsBlankCanvas(false);
     composerIsDrawingRef.current = false;
     composerLastPosRef.current = null;
     setComposerScale(1);
@@ -532,8 +594,10 @@ const InputArea: React.FC<InputAreaProps> = ({
       if (img.naturalWidth > 0) {
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
-        ctx.strokeStyle = 'hsl(5, 45%, 55%)';
-        ctx.lineWidth = Math.max(5, img.naturalWidth * 0.01);
+        ctx.strokeStyle = composerIsBlankCanvas ? 'rgba(56, 43, 24, 0.9)' : 'hsl(5, 45%, 55%)';
+        ctx.lineWidth = composerIsBlankCanvas
+          ? Math.max(4, img.naturalWidth * 0.008)
+          : Math.max(5, img.naturalWidth * 0.01);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
       }
@@ -541,7 +605,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     if (img.complete && img.naturalWidth > 0) setup();
     else img.addEventListener('load', setup);
     return () => img.removeEventListener('load', setup);
-  }, [isComposerAnnotating, composerAnnotationSourceUrl]);
+  }, [isComposerAnnotating, composerAnnotationSourceUrl, composerIsBlankCanvas]);
 
   const handleImageAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (paperclipOpenTokenRef.current) {
@@ -664,10 +728,14 @@ const InputArea: React.FC<InputAreaProps> = ({
                 inputText={inputText}
                 placeholder={getPlaceholderText()}
                 isDisabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
+                isDrawDisabled={isSending || isSpeaking || isComposerAnnotating || (isSuggestionMode && isCreatingSuggestion)}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
+                onOpenDrawCanvas={handleComposerStartBlankCanvas}
                 bubbleTextAreaRef={bubbleTextAreaRef}
                 prepDisplay={prepDisplay}
+                drawCanvasLabel={t('chat.drawMessage')}
+                drawButtonClassName={iconButtonStyle}
               />
             )}
 
@@ -774,7 +842,11 @@ const InputArea: React.FC<InputAreaProps> = ({
               <div
                 ref={composerViewportRef}
                 className="relative w-full max-h-[75vh] bg-black rounded-md overflow-hidden transition-all duration-300"
-                style={{ aspectRatio: composerImageAspectRatio || undefined, touchAction: 'none' }}
+                style={{
+                  aspectRatio: composerImageAspectRatio || undefined,
+                  touchAction: 'none',
+                  backgroundColor: composerIsBlankCanvas ? '#f4efdf' : '#000000',
+                }}
                 onPointerDown={handleComposerPointerDown}
                 onPointerMove={handleComposerPointerMove}
                 onPointerUp={handleComposerPointerUp}
