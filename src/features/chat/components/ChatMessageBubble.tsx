@@ -16,6 +16,7 @@ import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 import { sketchShapeClass, sketchShapeStyle } from '../../../shared/utils/sketchyShape';
+import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -612,6 +613,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   }, [selectedLoadingAnimation, message.id, message.isGeneratingImage]);
 
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
+  const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
 
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   
@@ -631,6 +633,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
 
   let bubbleWrapperClasses = "shadow relative overflow-hidden transition-all duration-300 ease-in-out";
+  let tapeWrapperMaxWidth = '';
    if (applyFocusedImageStyles) {
       bubbleWrapperClasses += " w-full";
       if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
@@ -641,7 +644,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
            else bubbleWrapperClasses += " bg-ai-msg-bg bg-opacity-90 text-ai-msg-text";
       }
   } else {
-      bubbleWrapperClasses += " p-3 max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
+      tapeWrapperMaxWidth = "max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
+      bubbleWrapperClasses += " p-3";
       if (isUser) bubbleWrapperClasses += " bg-user-msg-bg bg-opacity-90 text-user-msg-text";
       else if (isError) bubbleWrapperClasses += " bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
       else if (isStatus) bubbleWrapperClasses += " bg-status-msg-bg bg-opacity-90 text-status-msg-text";
@@ -684,10 +688,24 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     imageContainerStyle.aspectRatio = `${imageAspectRatio}`;
   }
 
+  // Build corner-lift class list for un-taped corners
+  const cornerLiftClasses = tapeLayout.liftedCorners.length > 0
+    ? `msg-corner-lift msg-corner-lift-${tapeLayout.liftedCorners[0]}`
+    : '';
+
   return (
     <div className={`flex mb-4 ${bubbleAlignClass}`}>
+      <div className={`relative ${tapeWrapperMaxWidth} ${tapeLayout.liftedCorners.length > 0 ? 'msg-lifted-shadow' : ''}`} style={applyFocusedImageStyles ? { width: '100%' } : undefined}>
+        {/* Tape strips */}
+        {tapeLayout.tapes.map((tape, i) => (
+          <div
+            key={i}
+            className={`msg-tape${tape.wrinkled ? ' msg-tape-wrinkled' : ''}${tape.lifted ? ' msg-tape-lifted' : ''}`}
+            style={tapeStripStyle(tape) as React.CSSProperties}
+          />
+        ))}
       <div
-        className={bubbleWrapperClasses}
+        className={`${bubbleWrapperClasses} ${cornerLiftClasses}`}
         style={{
           touchAction: 'pan-y',
           // @ts-ignore
@@ -1212,6 +1230,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
              )}
            </div>
          )}
+       </div>
+        {/* Corner lift overlays for un-taped corners beyond the first */}
+        {tapeLayout.liftedCorners.slice(1).map(corner => (
+          <div key={corner} className={`absolute pointer-events-none msg-corner-lift msg-corner-lift-${corner}`} style={{ inset: 0, zIndex: 2 }}>
+            <div style={{ position: 'absolute', ...(corner.includes('t') ? { top: -1 } : { bottom: -1 }), ...(corner.includes('l') ? { left: -1 } : { right: -1 }), width: 20, height: 20, background: corner === 'tl' ? 'linear-gradient(135deg, hsl(var(--page-bg)) 30%, transparent 70%)' : corner === 'tr' ? 'linear-gradient(225deg, hsl(var(--page-bg)) 30%, transparent 70%)' : corner === 'bl' ? 'linear-gradient(45deg, hsl(var(--page-bg)) 30%, transparent 70%)' : 'linear-gradient(315deg, hsl(var(--page-bg)) 30%, transparent 70%)' }} />
+          </div>
+        ))}
        </div>
      </div>
    );
