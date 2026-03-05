@@ -263,6 +263,22 @@ export const COLOR_GROUPS: ColorGroup[] = [
     ],
   },
   {
+    groupName: 'Message Tape Effect',
+    groupDescription: 'Translucent tape strips, wrinkles, and lifted tape shading on message bubbles',
+    collapsedByDefault: true,
+    colors: [
+      { cssVar: 'tape-bg-light', friendlyName: 'Tape Light Fill', description: 'Lightest translucent tone in the tape gradient' },
+      { cssVar: 'tape-bg-mid', friendlyName: 'Tape Mid Fill', description: 'Mid translucent tone in the tape gradient' },
+      { cssVar: 'tape-bg-dark', friendlyName: 'Tape Dark Fill', description: 'Darkest translucent tone in the tape gradient' },
+      { cssVar: 'tape-border', friendlyName: 'Tape Border', description: 'Thin border line around each tape strip' },
+      { cssVar: 'tape-shadow', friendlyName: 'Tape Shadow', description: 'Outer shadow beneath tape strips and lifted corners' },
+      { cssVar: 'tape-inset', friendlyName: 'Tape Inset Glow', description: 'Soft inner glow inside tape strips' },
+      { cssVar: 'tape-wrinkle', friendlyName: 'Tape Wrinkle', description: 'Crease tint used in wrinkled tape strips' },
+      { cssVar: 'tape-highlight', friendlyName: 'Tape Highlight', description: 'Glossy highlight streak inside tape strips' },
+      { cssVar: 'tape-crease', friendlyName: 'Tape Crease Shadow', description: 'Lower crease shadow in wrinkled tape strips' },
+    ],
+  },
+  {
     groupName: 'Borders and Focus',
     groupDescription: 'Global outlines and focus glow',
     collapsedByDefault: true,

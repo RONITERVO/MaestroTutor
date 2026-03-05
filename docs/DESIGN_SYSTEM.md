@@ -5,8 +5,8 @@ This is the canonical color and UI styling reference for contributors.
 ## Overview
 
 - Last updated: 2026-03-05
-- Active color tokens: 206
-- Token groups: 27
+- Active color tokens: 215
+- Token groups: 28
 - Legacy migration keys supported: 89
 - Token model: one token per visual UI element (1:1 element token mapping)
 - Source of truth files: `src/app/index.css`, `index.html`, `src/features/theme/config/colorRegistry.ts`, `src/features/theme/config/defaultColors.ts`, `src/features/theme/config/presetThemes.ts`
@@ -50,6 +50,7 @@ When adding or changing a colorized element:
 - Composer send and icon state isolation: `send-sugg-btn-bg`, `send-sugg-btn-text`, `chat-input-icon-hover-bg`, `snapshot-error-bg`.
 - Suggestions double-click focus isolation: `suggestion-double-ring`.
 - Session selector isolation: `scroll-wheel-target-accent`, `globe-native-accent`, `globe-target-accent`, `maestro-avatar-glow`.
+- Message tape isolation: `tape-bg-light`, `tape-bg-mid`, `tape-bg-dark`, `tape-border`, `tape-shadow`, `tape-inset`, `tape-wrinkle`, `tape-highlight`, `tape-crease`.
 
 ## Typography
 
@@ -327,6 +328,22 @@ Sketch lines, watercolor wash, and correction marks
 | `--sketch-shadow` | `220 30% 20%` | Sketch Shadow | Shadows in hand-drawn elements |
 | `--watercolor-wash` | `190 60% 55%` | Watercolor Wash | Soft watercolor accent wash |
 | `--correction-pen` | `350 70% 50%` | Correction Pen | Correction/error red pen color |
+
+### Message Tape Effect
+
+Translucent tape strips, wrinkles, and lifted tape shading on message bubbles
+
+| CSS Variable | Default HSL | Friendly Name | Description |
+|---|---|---|---|
+| `--tape-bg-light` | `50 30% 92%` | Tape Light Fill | Lightest translucent tone in the tape gradient |
+| `--tape-bg-mid` | `50 20% 95%` | Tape Mid Fill | Mid translucent tone in the tape gradient |
+| `--tape-bg-dark` | `50 30% 90%` | Tape Dark Fill | Darkest translucent tone in the tape gradient |
+| `--tape-border` | `40 20% 80%` | Tape Border | Thin border line around each tape strip |
+| `--tape-shadow` | `220 30% 20%` | Tape Shadow | Outer shadow beneath tape strips and lifted corners |
+| `--tape-inset` | `50 20% 95%` | Tape Inset Glow | Soft inner glow inside tape strips |
+| `--tape-wrinkle` | `40 25% 85%` | Tape Wrinkle | Crease tint used in wrinkled tape strips |
+| `--tape-highlight` | `0 0% 100%` | Tape Highlight | Glossy highlight streak inside tape strips |
+| `--tape-crease` | `40 20% 70%` | Tape Crease Shadow | Lower crease shadow in wrinkled tape strips |
 
 ### Borders and Focus
 
