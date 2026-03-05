@@ -1,10 +1,10 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ReplySuggestion } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
-import { IconTranslate } from '../../../shared/ui/Icons';
+import { IconTranslate, IconSpeaker, IconVolumeOff } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import { useMaestroStore } from '../../../store';
 import { selectReplySuggestions } from '../../../store/slices/chatSlice';
@@ -16,13 +16,17 @@ interface SuggestionsListProps {
   onToggleSuggestionMode: () => void;
   onSuggestionClick: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
   stopSpeaking: () => void;
+  onToggleSpeakNativeLang: () => void;
+  speakNativeLang: boolean;
 }
 
 const SuggestionsList: React.FC<SuggestionsListProps> = ({
   t,
   onToggleSuggestionMode,
   onSuggestionClick,
-  stopSpeaking
+  stopSpeaking,
+  onToggleSpeakNativeLang,
+  speakNativeLang
 }) => {
   const replySuggestions = useMaestroStore(selectReplySuggestions);
   const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
@@ -33,53 +37,56 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
   const microphoneApiAvailable = useMaestroStore(state => state.microphoneApiAvailable);
   const isSttSupported = microphoneApiAvailable;
 
-  const [clickTimeoutId, setClickTimeoutId] = useState<number | null>(null);
-  const [lastClickedSuggestionInfo, setLastClickedSuggestionInfo] = useState<{ suggestion: ReplySuggestion, timestamp: number } | null>(null);
-  const [doubleClickedSuggestionTarget, setDoubleClickedSuggestionTarget] = useState<string | null>(null);
+  const [expandedSuggestionTarget, setExpandedSuggestionTarget] = useState<string | null>(null);
+  const [nativeFlashTarget, setNativeFlashTarget] = useState<string | null>(null);
+  const [nativeFlashIsOn, setNativeFlashIsOn] = useState<boolean>(false);
+  const nativeFlashTimeoutRef = useRef<number | null>(null);
+  const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    setDoubleClickedSuggestionTarget(null);
+    setExpandedSuggestionTarget(null);
+    setNativeFlashTarget(null);
   }, [replySuggestions]);
+
+  useEffect(() => {
+    return () => {
+      if (nativeFlashTimeoutRef.current) clearTimeout(nativeFlashTimeoutRef.current);
+    };
+  }, []);
 
   const handleSuggestionBubbleClick = (suggestion: ReplySuggestion) => {
     if (isSpeaking) {
-      if (clickTimeoutId) {
-        clearTimeout(clickTimeoutId);
-        setClickTimeoutId(null);
-      }
-      setLastClickedSuggestionInfo(null);
-      setDoubleClickedSuggestionTarget(null);
       stopSpeaking();
       return;
     }
-     const now = Date.now();
- 
-     if (clickTimeoutId) {
-         clearTimeout(clickTimeoutId);
-         setClickTimeoutId(null);
-     }
- 
-     if (lastClickedSuggestionInfo &&
-         lastClickedSuggestionInfo.suggestion.target === suggestion.target &&
-         (now - lastClickedSuggestionInfo.timestamp < 300)) {
- 
-         onSuggestionClick(suggestion, 'native');
-         setDoubleClickedSuggestionTarget(suggestion.target); 
-         setLastClickedSuggestionInfo(null);
-     } else {
-         setLastClickedSuggestionInfo({ suggestion, timestamp: now });
-         const timeoutId = window.setTimeout(() => {
-             onSuggestionClick(suggestion, 'target');
-             setDoubleClickedSuggestionTarget(null); 
-             setLastClickedSuggestionInfo(null);
-             setClickTimeoutId(null);
-         }, 300);
-         setClickTimeoutId(timeoutId);
-         if (doubleClickedSuggestionTarget !== null && doubleClickedSuggestionTarget !== suggestion.target) {
-             setDoubleClickedSuggestionTarget(null);
-         }
-     }
-   };
+    setExpandedSuggestionTarget(suggestion.target);
+    onSuggestionClick(suggestion, 'target');
+  };
+
+  const handleNativePointerDown = (e: React.PointerEvent) => {
+    pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleNativePointerUp = (e: React.PointerEvent, suggestion: ReplySuggestion) => {
+    if (pointerDownPosRef.current) {
+      const dx = Math.abs(e.clientX - pointerDownPosRef.current.x);
+      const dy = Math.abs(e.clientY - pointerDownPosRef.current.y);
+      if (dx < 10 && dy < 10) {
+        e.preventDefault();
+        const next = !speakNativeLang;
+        setNativeFlashTarget(suggestion.target);
+        setNativeFlashIsOn(next);
+        if (nativeFlashTimeoutRef.current) clearTimeout(nativeFlashTimeoutRef.current);
+        nativeFlashTimeoutRef.current = window.setTimeout(() => { setNativeFlashTarget(null); }, 900);
+        onToggleSpeakNativeLang();
+      }
+    }
+    pointerDownPosRef.current = null;
+  };
+
+  const handleNativePointerLeave = () => {
+    pointerDownPosRef.current = null;
+  };
 
    // Always fully expanded, matching GitHub edition behavior.
    const suggestionsContainerClasses = "pt-2 max-w-2xl w-full";
@@ -94,23 +101,56 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
         containerType: 'inline-size'
       }}
     >
+        <style>{`
+        @keyframes pop-fade-speak { 0% { transform: scale(0.85); opacity: 0; } 20% { transform: scale(1.15); opacity: 1; } 80% { transform: scale(1.0); opacity: 1; } 100% { transform: scale(0.95); opacity: 0; } }
+        .animate-speak-flash { animation: pop-fade-speak 900ms ease-out both; }
+        `}</style>
         <div className="flex flex-wrap gap-2 justify-end">
             {isLoadingSuggestions && (
               <span className="inline-block px-3 py-1.5 text-page-text/70 italic" style={{ fontSize: '2.8cqw' }}>{t('chat.loadingSuggestions')}</span>
             )}
-            {!isLoadingSuggestions && replySuggestions.map((suggestion, index) => (
-            <button
-                key={index}
-                onClick={(e) => { e.stopPropagation(); handleSuggestionBubbleClick(suggestion); }}
-                className={`inline-block px-3 py-1.5 transition-colors text-page-text bg-suggestion-bg hover:bg-suggestion-hover sketchy-border-thin ${doubleClickedSuggestionTarget === suggestion.target ? 'focus:outline-none focus:ring-2 focus:ring-suggestion-double-ring' : 'focus:outline-none focus:ring-2 focus:ring-suggestion-ring'}`}
-                style={{ fontSize: '3.1cqw' }}
-                title={t('chat.suggestion.speak', { suggestion: suggestion.target })}
-                aria-label={t('chat.suggestion.ariaLabel', { suggestion: suggestion.target })}
-                tabIndex={0}
-            >
-                {suggestion.target}
-            </button>
-            ))}
+            {!isLoadingSuggestions && replySuggestions.map((suggestion, index) => {
+              const isExpanded = expandedSuggestionTarget === suggestion.target;
+              return (
+                <div key={index} className="inline-block">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleSuggestionBubbleClick(suggestion); }}
+                    className="px-3 py-1.5 transition-colors text-page-text bg-suggestion-bg hover:bg-suggestion-hover sketchy-border-thin focus:outline-none focus:ring-2 focus:ring-suggestion-ring"
+                    style={{ fontSize: '3.1cqw' }}
+                    title={t('chat.suggestion.speak', { suggestion: suggestion.target })}
+                    aria-label={t('chat.suggestion.ariaLabel', { suggestion: suggestion.target })}
+                    tabIndex={0}
+                  >
+                    {suggestion.target}
+                  </button>
+                  <div
+                    style={{
+                      maxHeight: isExpanded ? '80px' : '0px',
+                      opacity: isExpanded ? 1 : 0,
+                      overflow: 'hidden',
+                      transition: 'max-height 300ms ease-out, opacity 200ms ease-out',
+                    }}
+                  >
+                    {suggestion.native && (
+                      <p
+                        className="italic mt-0.5 whitespace-pre-wrap pl-2 border-l-2 rounded-sm px-1 text-ai-file-text border-line-border cursor-pointer"
+                        style={{ fontSize: '2.8cqw', lineHeight: 1.3 }}
+                        onPointerDown={handleNativePointerDown}
+                        onPointerUp={(e) => handleNativePointerUp(e, suggestion)}
+                        onPointerLeave={handleNativePointerLeave}
+                      >
+                        {suggestion.native}
+                        {nativeFlashTarget === suggestion.target && (
+                          <span className="ml-1 inline-block align-middle animate-speak-flash">
+                            {nativeFlashIsOn ? <IconSpeaker className="w-3 h-3 inline" /> : <IconVolumeOff className="w-3 h-3 inline" />}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
             {!isLoadingSuggestions && isSttSupported && replySuggestions.length > 0 && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onToggleSuggestionMode(); }}
@@ -135,4 +175,3 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
 };
 
 export default SuggestionsList;
-

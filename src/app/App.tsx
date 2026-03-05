@@ -41,6 +41,9 @@ import { IMAGE_GEN_CAMERA_ID } from '../core/config/app';
 import { selectNonReengagementBusy } from '../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 
+// --- Types ---
+import { SpeechPart } from '../core/types';
+
 // --- Utils ---
 import { getPrimaryCode } from '../shared/utils/languageUtils';
 import { createSmartRef } from '../shared/utils/smartRef';
@@ -669,17 +672,29 @@ const App: React.FC = () => {
             onSuggestionClick={(suggestion, langType) => {
               handleSuggestionInteraction(suggestion, langType);
               if (!speechIsSpeakingRef.current && selectedLanguagePairRef.current) {
-                const textToSpeak = langType === 'target' ? suggestion.target : suggestion.native;
-                const langCodeToUse = langType === 'target'
-                  ? getPrimaryCode(selectedLanguagePairRef.current.targetLanguageCode)
-                  : getPrimaryCode(selectedLanguagePairRef.current.nativeLanguageCode);
-                if (textToSpeak && langCodeToUse) {
-                  const messageId = lastFetchedSuggestionsForRef.current;
-                  const suggestionIndex = replySuggestions.findIndex((s) => s.target === suggestion.target && s.native === suggestion.native);
-                  const context = (messageId && suggestionIndex >= 0)
-                    ? { source: 'suggestion' as const, messageId, suggestionIndex, suggestionLang: langType }
-                    : { source: 'adHoc' as const };
-                  speakWrapper([{ text: textToSpeak, langCode: langCodeToUse, context }], langCodeToUse);
+                const targetLang = getPrimaryCode(selectedLanguagePairRef.current.targetLanguageCode);
+                const nativeLang = getPrimaryCode(selectedLanguagePairRef.current.nativeLanguageCode);
+                const messageId = lastFetchedSuggestionsForRef.current;
+                const suggestionIndex = replySuggestions.findIndex((s) => s.target === suggestion.target && s.native === suggestion.native);
+                const isSuggestionCtx = messageId && suggestionIndex >= 0;
+                const targetContext = isSuggestionCtx
+                  ? { source: 'suggestion' as const, messageId, suggestionIndex, suggestionLang: 'target' as const }
+                  : { source: 'adHoc' as const };
+                const nativeContext = isSuggestionCtx
+                  ? { source: 'suggestion' as const, messageId, suggestionIndex, suggestionLang: 'native' as const }
+                  : { source: 'adHoc' as const };
+
+                const partsToSpeak: SpeechPart[] = [];
+
+                if (suggestion.target && suggestion.target.trim() && targetLang) {
+                  partsToSpeak.push({ text: suggestion.target, langCode: targetLang, context: targetContext });
+                }
+                if (settingsRef.current.tts.speakNative && suggestion.native && suggestion.native.trim() && nativeLang) {
+                  partsToSpeak.push({ text: suggestion.native, langCode: nativeLang, context: nativeContext });
+                }
+
+                if (partsToSpeak.length > 0) {
+                  speakWrapper(partsToSpeak, targetLang);
                 }
               }
               handleUserInputActivity();
