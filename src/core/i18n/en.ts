@@ -172,6 +172,7 @@ export const enTranslations: Record<string, string> = {
   "chat.imagePreview.alt": "Preview",
   "chat.image.dragToEnlarge": "Drag corner to enlarge",
   "chat.image.dragToShrink": "Drag corner to shrink",
+  "chat.drawMessage": "Draw message",
   "chat.annotateImage": "Annotate Image",
   "chat.annotateVideoFrame": "Annotate current frame",
   
