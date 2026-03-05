@@ -695,7 +695,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   return (
     <div className={`flex mb-4 ${bubbleAlignClass}`}>
-      <div className={`relative ${tapeWrapperMaxWidth} ${tapeLayout.liftedCorners.length > 0 ? 'msg-lifted-shadow' : ''}`} style={applyFocusedImageStyles ? { width: '100%' } : undefined}>
+      <div className={`relative ${tapeWrapperMaxWidth} ${tapeLayout.liftedCorners.length > 0 ? 'msg-lifted-shadow' : ''}`} style={{ width: '100%' }}>
         {/* Tape strips */}
         {tapeLayout.tapes.map((tape, i) => (
           <div
