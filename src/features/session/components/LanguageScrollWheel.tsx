@@ -147,7 +147,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
     const scrollingBorderClass = isScrolling && variant
         ? variant === 'native'
             ? 'ring-2 ring-profile-input-accent shadow-profile-input-accent/30 shadow-md'
-            : 'ring-2 ring-green-500 shadow-green-500/30 shadow-md'
+            : 'ring-2 ring-scroll-wheel-target-accent shadow-scroll-wheel-target-accent/30 shadow-md'
         : '';
 
     return (

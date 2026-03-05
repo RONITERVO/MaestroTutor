@@ -853,7 +853,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                             >
                               <button
                                 onClick={handleSaveAnnotation}
-                                className="p-2 bg-ai-msg-bg text-ai-msg-text rounded-full hover:bg-status-msg-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-ai-msg-bg transition-colors"
+                                className="p-2 bg-annotation-btn-bg text-annotation-btn-text rounded-full hover:bg-annotation-btn-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-annotation-btn-focus transition-colors"
                                 title={t('chat.annotateModal.saveAndAttach')}
                                 aria-label={t('chat.annotateModal.saveAndAttach')}
                               >

@@ -615,8 +615,8 @@ const InputArea: React.FC<InputAreaProps> = ({
     ? 'bg-sugg-input-bg text-sugg-input-text shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-input-focus-ring'
     : 'bg-chat-input-bg text-chat-input-text shadow-sm sketchy-border focus-within:ring-2 focus-within:ring-input-focus-ring';
 
-  const sendButtonStyle = isSuggestionMode ? 'bg-send-btn-bg text-send-btn-text hover:bg-send-btn-bg/80 focus:ring-focus-ring' : 'bg-send-btn-bg text-send-btn-text hover:bg-send-btn-bg/80 focus:ring-focus-ring';
-  const iconButtonStyle = isSuggestionMode ? 'text-sugg-input-icon hover:text-sugg-input-text hover:bg-sugg-outer-bg' : 'text-chat-input-icon/70 hover:text-chat-input-icon hover:bg-white/20';
+  const sendButtonStyle = isSuggestionMode ? 'bg-send-sugg-btn-bg text-send-sugg-btn-text hover:bg-send-sugg-btn-bg/80 focus:ring-focus-ring' : 'bg-send-btn-bg text-send-btn-text hover:bg-send-btn-bg/80 focus:ring-focus-ring';
+  const iconButtonStyle = isSuggestionMode ? 'text-sugg-input-icon hover:text-sugg-input-text hover:bg-sugg-outer-bg' : 'text-chat-input-icon/70 hover:text-chat-input-icon hover:bg-chat-input-icon-hover-bg';
 
   const handlePaperclipClick = () => {
     if (!paperclipOpenTokenRef.current) {
@@ -740,7 +740,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
           {!isLive && sttError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-input-error-text bg-input-error-bg/10' : 'text-input-error-text/80 bg-input-error-bg/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.sttError', {error: sttError})}</p>}
           {autoCaptureError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-input-error-text bg-input-error-bg/10' : 'text-input-error-text/80 bg-input-error-bg/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.autoCaptureCameraError', {error: autoCaptureError})}</p>}
-          {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-sugg-input-text bg-sugg-input-bg/10' : 'text-input-error-text/80 bg-pencil-emphasis/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
+          {snapshotUserError && <p className={`w-full max-w-2xl p-1 rounded mt-1 ${isSuggestionMode ? 'text-sugg-input-text bg-sugg-input-bg/10' : 'text-input-error-text/80 bg-snapshot-error-bg/30'}`} style={{ fontSize: '0.75rem' }} role="alert">{t('chat.error.snapshotUserError', {error: snapshotUserError})}</p>}
           </div>{/* end outer accent container */}
 
           {/* Media attachments and annotation - outside accent container, free-floating */}
