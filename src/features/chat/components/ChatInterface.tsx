@@ -913,6 +913,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     onToggleSuggestionMode={() => onToggleSuggestionMode()}
                     onSuggestionClick={onSuggestionClick}
                     stopSpeaking={stopSpeaking}
+                    onToggleSpeakNativeLang={onToggleSpeakNativeLang}
+                    speakNativeLang={speakNativeLang}
                 />
             )}
         </div>
