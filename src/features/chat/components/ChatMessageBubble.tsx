@@ -632,10 +632,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
 
-  let bubbleWrapperClasses = "relative overflow-hidden transition-all duration-300 ease-in-out";
+  let bubbleWrapperClasses = "relative transition-all duration-300 ease-in-out";
   let tapeWrapperMaxWidth = '';
    if (applyFocusedImageStyles) {
-      bubbleWrapperClasses += " w-full";
+      bubbleWrapperClasses += " w-full overflow-hidden";
       if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
            if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
@@ -645,7 +645,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       }
   } else {
       tapeWrapperMaxWidth = "max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
-      bubbleWrapperClasses += " p-3";
+      bubbleWrapperClasses += " p-3 overflow-visible";
       if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
       else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
       else if (isStatus) bubbleWrapperClasses += " msg-depth bg-status-msg-bg bg-opacity-90 text-status-msg-text";
