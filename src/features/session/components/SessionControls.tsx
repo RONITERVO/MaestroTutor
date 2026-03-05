@@ -785,7 +785,7 @@ const SessionControls: React.FC = () => {
               <div
                 className={`w-full h-full rounded-full overflow-hidden border-2 flex items-center justify-center bg-profile-btn-bg transition-all duration-300
                     ${maestroAsset?.dataUrl
-                    ? 'border-profile-input-accent/60 shadow-[0_0_15px_rgba(191,106,58,0.5)]'
+                    ? 'border-profile-input-accent/60 shadow-[0_0_15px] shadow-maestro-avatar-glow/50'
                     : 'border-line-border border-dashed opacity-80'}`}
               >
                 {maestroAsset?.dataUrl ? (

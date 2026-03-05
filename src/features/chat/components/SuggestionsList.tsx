@@ -102,7 +102,7 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
             <button
                 key={index}
                 onClick={(e) => { e.stopPropagation(); handleSuggestionBubbleClick(suggestion); }}
-                className={`inline-block px-3 py-1.5 transition-colors text-page-text bg-suggestion-bg hover:bg-suggestion-hover sketchy-border-thin ${doubleClickedSuggestionTarget === suggestion.target ? 'focus:outline-none focus:ring-2 focus:ring-suggestion-ring' : 'focus:outline-none focus:ring-2 focus:ring-suggestion-ring'}`}
+                className={`inline-block px-3 py-1.5 transition-colors text-page-text bg-suggestion-bg hover:bg-suggestion-hover sketchy-border-thin ${doubleClickedSuggestionTarget === suggestion.target ? 'focus:outline-none focus:ring-2 focus:ring-suggestion-double-ring' : 'focus:outline-none focus:ring-2 focus:ring-suggestion-ring'}`}
                 style={{ fontSize: '3.1cqw' }}
                 title={t('chat.suggestion.speak', { suggestion: suggestion.target })}
                 aria-label={t('chat.suggestion.ariaLabel', { suggestion: suggestion.target })}

@@ -48,14 +48,18 @@ export const PRESET_THEMES: PresetTheme[] = [
       'chat-input-bg': '220 30% 20%',
       'chat-input-text': '210 20% 98%',
       'chat-input-icon': '210 20% 98%',
+      'chat-input-icon-hover-bg': '0 0% 100%',
       'sugg-input-bg': '210 25% 99%',
       'sugg-input-text': '220 30% 20%',
       'sugg-input-icon': '220 15% 45%',
       'send-btn-bg': '210 25% 99%',
       'send-btn-text': '220 30% 20%',
+      'send-sugg-btn-bg': '210 25% 99%',
+      'send-sugg-btn-text': '220 30% 20%',
       'input-focus-ring': '220 15% 65%',
       'input-error-bg': '350 70% 50%',
       'input-error-text': '210 20% 97%',
+      'snapshot-error-bg': '220 25% 30%',
       'chat-outer-bg': '220 70% 55%',
       'chat-outer-text': '210 25% 99%',
       'sugg-outer-bg': '210 15% 90%',
@@ -92,12 +96,17 @@ export const PRESET_THEMES: PresetTheme[] = [
       'suggestion-bg': '210 15% 90%',
       'suggestion-hover': '210 15% 92%',
       'suggestion-ring': '220 70% 55%',
+      'suggestion-double-ring': '220 70% 55%',
       'suggestion-active-bg': '220 70% 55%',
       'suggestion-active-text': '210 25% 99%',
 
       // Session Controls
       'profile-label-text': '190 60% 55%',
       'profile-input-accent': '190 60% 55%',
+      'scroll-wheel-target-accent': '142 71% 45%',
+      'globe-native-accent': '190 60% 55%',
+      'globe-target-accent': '142 71% 60%',
+      'maestro-avatar-glow': '22 53% 49%',
       'profile-btn-bg': '220 30% 20%',
       'profile-btn-text': '210 20% 98%',
       'profile-accept-bg': '220 25% 30%',
@@ -116,6 +125,9 @@ export const PRESET_THEMES: PresetTheme[] = [
       // Live Session Idle Button
       'live-idle-btn-bg': '220 30% 20%',
       'live-idle-btn-text': '210 20% 98%',
+      'live-idle-sugg-btn-bg': '210 15% 90%',
+      'live-idle-sugg-btn-text': '220 30% 20%',
+      'live-idle-spinner': '210 20% 98%',
 
       // Media Attachments
       'media-chat-bg': '220 70% 55%',
@@ -149,6 +161,8 @@ export const PRESET_THEMES: PresetTheme[] = [
       // Annotation Save Button
       'annotation-btn-bg': '220 25% 30%',
       'annotation-btn-text': '210 20% 97%',
+      'annotation-btn-hover': '220 25% 24%',
+      'annotation-btn-focus': '220 25% 30%',
 
       // Translation Highlight
       'marker-bg': '60 85% 80%',

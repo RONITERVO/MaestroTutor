@@ -357,8 +357,8 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                         <span className="text-[8px] font-bold text-white/90 leading-none mt-0.5 drop-shadow-sm">{lang.shortCode}</span>
                                     )}
                                     <div className={`absolute -inset-1 border-2 transition-all duration-300 pointer-events-none sketchy-border-thin ${
-                                        isNative ? 'border-profile-input-accent shadow-profile-input-accent/50 shadow-lg' :
-                                        isTarget ? 'border-green-400 shadow-green-400/50 shadow-lg' :
+                                        isNative ? 'border-globe-native-accent shadow-globe-native-accent/50 shadow-lg' :
+                                        isTarget ? 'border-globe-target-accent shadow-globe-target-accent/50 shadow-lg' :
                                         'border-transparent'
                                     }`}></div>
                                 </button>
