@@ -160,6 +160,17 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'watercolor-wash': '190 60% 55%',
   'correction-pen': '350 70% 50%',
 
+  // Message Tape Effect
+  'tape-bg-light': '50 30% 92%',
+  'tape-bg-mid': '50 20% 95%',
+  'tape-bg-dark': '50 30% 90%',
+  'tape-border': '40 20% 80%',
+  'tape-shadow': '220 30% 20%',
+  'tape-inset': '50 20% 95%',
+  'tape-wrinkle': '40 25% 85%',
+  'tape-highlight': '0 0% 100%',
+  'tape-crease': '40 20% 70%',
+
   // Global Borders & Focus
   'line-border': '210 15% 82%',
   'input-outline': '210 15% 82%',

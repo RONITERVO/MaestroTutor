@@ -165,6 +165,17 @@
     --watercolor-wash: 190 60% 55%;
     --correction-pen: 350 70% 50%;
 
+    /* ── Message Tape Effect ── */
+    --tape-bg-light: 50 30% 92%;
+    --tape-bg-mid: 50 20% 95%;
+    --tape-bg-dark: 50 30% 90%;
+    --tape-border: 40 20% 80%;
+    --tape-shadow: 220 30% 20%;
+    --tape-inset: 50 20% 95%;
+    --tape-wrinkle: 40 25% 85%;
+    --tape-highlight: 0 0% 100%;
+    --tape-crease: 40 20% 70%;
+
     /* ── Global Borders & Focus ── */
     --line-border: 210 15% 82%;
     --input-outline: 210 15% 82%;
@@ -352,22 +363,94 @@
   background-position-y: 8px;
 }
 
-.tape-effect {
+/* ============================================================
+   TAPE STRIP SYSTEM
+   Individual tape strips that hold messages to the page.
+   Each .msg-tape is positioned absolutely around the message.
+   ============================================================ */
+.msg-tape {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+  /* Semi-transparent frosted tape base */
+  background: linear-gradient(
+    135deg,
+    hsl(var(--tape-bg-light) / 0.55) 0%,
+    hsl(var(--tape-bg-mid) / 0.45) 40%,
+    hsl(var(--tape-bg-dark) / 0.5) 100%
+  );
+  border: 1px solid hsl(var(--tape-border) / 0.35);
+  border-radius: 1px;
+  backdrop-filter: blur(0.5px);
+  box-shadow:
+    0 1px 2px hsl(var(--tape-shadow) / 0.10),
+    inset 0 0 8px hsl(var(--tape-inset) / 0.3);
+}
+
+/* Wrinkle effect — a subtle crease line through the tape */
+.msg-tape-wrinkled {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--tape-bg-light) / 0.55) 0%,
+    hsl(var(--tape-bg-mid) / 0.45) 35%,
+    hsl(var(--tape-wrinkle) / 0.6) 48%,
+    hsl(var(--tape-highlight) / 0.7) 52%,
+    hsl(var(--tape-bg-mid) / 0.45) 65%,
+    hsl(var(--tape-bg-dark) / 0.5) 100%
+  );
+  box-shadow:
+    0 1px 3px hsl(var(--tape-shadow) / 0.13),
+    inset 0 0 8px hsl(var(--tape-inset) / 0.3),
+    inset 0 1px 0 hsl(var(--tape-highlight) / 0.4),
+    inset 0 -1px 0 hsl(var(--tape-crease) / 0.3);
+}
+
+/* Poorly-attached tape lifts slightly — extra shadow under one side */
+.msg-tape-lifted {
+  box-shadow:
+    0 2px 5px hsl(var(--tape-shadow) / 0.18),
+    0 3px 8px hsl(var(--tape-shadow) / 0.08),
+    inset 0 0 8px hsl(var(--tape-inset) / 0.3),
+    inset 0 1px 0 hsl(var(--tape-highlight) / 0.5);
+}
+
+/* Corner lift effect for un-taped corners of the message */
+.msg-corner-lift {
   position: relative;
 }
-.tape-effect::before {
+.msg-corner-lift::before {
   content: '';
   position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-2deg);
-  width: 60px;
-  height: 24px;
-  background: hsl(210 20% 95% / 0.5);
-  border: 1px solid hsl(210 15% 80% / 0.5);
-  z-index: 10;
-  border-radius: 2px;
-  backdrop-filter: blur(1px);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+/* Specific corner lifts */
+.msg-corner-lift-tl::before {
+  top: -1px; left: -1px;
+  background: linear-gradient(135deg, hsl(var(--page-bg)) 30%, transparent 70%);
+  border-radius: 0 0 6px 0;
+}
+.msg-corner-lift-tr::before {
+  top: -1px; right: -1px; left: auto;
+  background: linear-gradient(225deg, hsl(var(--page-bg)) 30%, transparent 70%);
+  border-radius: 0 0 0 6px;
+}
+.msg-corner-lift-bl::before {
+  bottom: -1px; left: -1px; top: auto;
+  background: linear-gradient(45deg, hsl(var(--page-bg)) 30%, transparent 70%);
+  border-radius: 0 6px 0 0;
+}
+.msg-corner-lift-br::before {
+  bottom: -1px; right: -1px; top: auto; left: auto;
+  background: linear-gradient(315deg, hsl(var(--page-bg)) 30%, transparent 70%);
+  border-radius: 6px 0 0 0;
+}
+
+/* Shadow under un-taped corners to simulate separation from paper */
+.msg-lifted-shadow {
+  filter: drop-shadow(2px 3px 3px hsl(var(--tape-shadow) / 0.12));
 }
 
 .torn-paper {
