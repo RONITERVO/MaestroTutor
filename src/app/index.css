@@ -421,36 +421,67 @@
 .msg-corner-lift::before {
   content: '';
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   pointer-events: none;
   z-index: 1;
 }
 /* Specific corner lifts */
 .msg-corner-lift-tl::before {
   top: -1px; left: -1px;
-  background: linear-gradient(135deg, hsl(var(--page-bg)) 30%, transparent 70%);
-  border-radius: 0 0 6px 0;
+  background: linear-gradient(135deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%);
+  border-radius: 0 0 8px 0;
 }
 .msg-corner-lift-tr::before {
   top: -1px; right: -1px; left: auto;
-  background: linear-gradient(225deg, hsl(var(--page-bg)) 30%, transparent 70%);
-  border-radius: 0 0 0 6px;
+  background: linear-gradient(225deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%);
+  border-radius: 0 0 0 8px;
 }
 .msg-corner-lift-bl::before {
   bottom: -1px; left: -1px; top: auto;
-  background: linear-gradient(45deg, hsl(var(--page-bg)) 30%, transparent 70%);
-  border-radius: 0 6px 0 0;
+  background: linear-gradient(45deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%);
+  border-radius: 0 8px 0 0;
 }
 .msg-corner-lift-br::before {
   bottom: -1px; right: -1px; top: auto; left: auto;
-  background: linear-gradient(315deg, hsl(var(--page-bg)) 30%, transparent 70%);
-  border-radius: 6px 0 0 0;
+  background: linear-gradient(315deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%);
+  border-radius: 8px 0 0 0;
 }
 
 /* Shadow under un-taped corners to simulate separation from paper */
 .msg-lifted-shadow {
-  filter: drop-shadow(2px 3px 3px hsl(var(--tape-shadow) / 0.12));
+  filter: drop-shadow(2px 4px 4px hsl(var(--tape-shadow) / 0.18))
+          drop-shadow(0px 1px 1px hsl(var(--tape-shadow) / 0.10));
+}
+
+/* ============================================================
+   MESSAGE DEPTH — layered shadows for a tactile, lifted feel.
+   Applied to .msg-depth on the bubble wrapper. A stack of
+   shadows at increasing offsets creates parallax-like depth,
+   as if each note is a physical card hovering above the page.
+   ============================================================ */
+.msg-depth {
+  box-shadow:
+    /* tight contact shadow — anchors the card to the page */
+    0 1px 1px hsl(var(--tape-shadow) / 0.07),
+    /* soft penumbra — the main depth cue */
+    0 4px 6px -1px hsl(var(--tape-shadow) / 0.10),
+    /* wide ambient glow — creates the "floating" look */
+    0 10px 15px -3px hsl(var(--tape-shadow) / 0.08),
+    /* subtle inner highlight along the top edge — catches light */
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.45),
+    /* faint inner shadow at the bottom — paper thickness cue */
+    inset 0 -1px 0 0 hsl(var(--tape-shadow) / 0.04);
+}
+
+/* User messages already have a dark bg so tone down the inner highlights */
+.msg-depth-user {
+  box-shadow:
+    0 1px 1px hsl(var(--tape-shadow) / 0.12),
+    0 4px 6px -1px hsl(var(--tape-shadow) / 0.14),
+    0 10px 15px -3px hsl(var(--tape-shadow) / 0.10),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.08),
+    inset 0 -1px 0 0 hsl(0 0% 0% / 0.10);
 }
 
 .torn-paper {

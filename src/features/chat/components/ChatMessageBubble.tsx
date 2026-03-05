@@ -632,24 +632,24 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
 
-  let bubbleWrapperClasses = "shadow relative overflow-hidden transition-all duration-300 ease-in-out";
+  let bubbleWrapperClasses = "relative overflow-hidden transition-all duration-300 ease-in-out";
   let tapeWrapperMaxWidth = '';
    if (applyFocusedImageStyles) {
       bubbleWrapperClasses += " w-full";
       if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
-           if (isUser) bubbleWrapperClasses += " bg-user-msg-bg bg-opacity-90 text-user-msg-text";
-           else if (isError) bubbleWrapperClasses += " bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
-           else if (isStatus) bubbleWrapperClasses += " bg-status-msg-bg bg-opacity-90 text-status-msg-text";
-           else bubbleWrapperClasses += " bg-ai-msg-bg bg-opacity-90 text-ai-msg-text";
+           if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
+           else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
+           else if (isStatus) bubbleWrapperClasses += " msg-depth bg-status-msg-bg bg-opacity-90 text-status-msg-text";
+           else bubbleWrapperClasses += " msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text";
       }
   } else {
       tapeWrapperMaxWidth = "max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
       bubbleWrapperClasses += " p-3";
-      if (isUser) bubbleWrapperClasses += " bg-user-msg-bg bg-opacity-90 text-user-msg-text";
-      else if (isError) bubbleWrapperClasses += " bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
-      else if (isStatus) bubbleWrapperClasses += " bg-status-msg-bg bg-opacity-90 text-status-msg-text";
-      else bubbleWrapperClasses += " bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin";
+      if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
+      else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
+      else if (isStatus) bubbleWrapperClasses += " msg-depth bg-status-msg-bg bg-opacity-90 text-status-msg-text";
+      else bubbleWrapperClasses += " msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin";
   }
 
   const imageContainerBaseClasses = "relative rounded-lg group transition-all duration-300 ease-in-out";
@@ -1234,7 +1234,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         {/* Corner lift overlays for un-taped corners beyond the first */}
         {tapeLayout.liftedCorners.slice(1).map(corner => (
           <div key={corner} className={`absolute pointer-events-none msg-corner-lift msg-corner-lift-${corner}`} style={{ inset: 0, zIndex: 2 }}>
-            <div style={{ position: 'absolute', ...(corner.includes('t') ? { top: -1 } : { bottom: -1 }), ...(corner.includes('l') ? { left: -1 } : { right: -1 }), width: 20, height: 20, background: corner === 'tl' ? 'linear-gradient(135deg, hsl(var(--page-bg)) 30%, transparent 70%)' : corner === 'tr' ? 'linear-gradient(225deg, hsl(var(--page-bg)) 30%, transparent 70%)' : corner === 'bl' ? 'linear-gradient(45deg, hsl(var(--page-bg)) 30%, transparent 70%)' : 'linear-gradient(315deg, hsl(var(--page-bg)) 30%, transparent 70%)' }} />
+            <div style={{ position: 'absolute', ...(corner.includes('t') ? { top: -1 } : { bottom: -1 }), ...(corner.includes('l') ? { left: -1 } : { right: -1 }), width: 28, height: 28, borderRadius: corner === 'tl' ? '0 0 8px 0' : corner === 'tr' ? '0 0 0 8px' : corner === 'bl' ? '0 8px 0 0' : '8px 0 0 0', background: corner === 'tl' ? 'linear-gradient(135deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' : corner === 'tr' ? 'linear-gradient(225deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' : corner === 'bl' ? 'linear-gradient(45deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' : 'linear-gradient(315deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' }} />
           </div>
         ))}
        </div>
