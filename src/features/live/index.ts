@@ -6,3 +6,4 @@
  * Entry point for Gemini Live functionality.
  */
 export { useLiveSessionController } from './hooks/useLiveSessionController';
+export { useSilentObserverController } from './hooks/useSilentObserverController';

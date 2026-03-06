@@ -28,7 +28,7 @@ import { useAppInitialization, useMaestroActivityStage, useIdleReengagement } fr
 import { useTutorConversation, useSuggestions, useChatPersistence } from '../features/chat';
 import { useSpeechOrchestrator, useAutoSendOnSilence, useSuggestionModeAutoRestart } from '../features/speech';
 import { useCameraManager } from '../features/vision';
-import { useLiveSessionController } from '../features/live';
+import { useLiveSessionController, useSilentObserverController } from '../features/live';
 import { useApplyCustomColors } from '../features/theme';
 import { MAX_VISIBLE_MESSAGES_DEFAULT, useMaestroStore } from '../store';
 
@@ -73,6 +73,7 @@ const App: React.FC = () => {
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const isBlockingActivity = useMaestroStore(selectNonReengagementBusy);
+  const liveSessionState = useMaestroStore(state => state.liveSessionState);
   const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
 
   const {
@@ -176,6 +177,7 @@ const App: React.FC = () => {
   // Re-engagement callbacks refs - will be populated after useSmartReengagement
   const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
   const cancelReengagementRef = useRef<() => void>(() => {});
+  const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
   
   // Toggle suggestion mode callback ref - will be populated after handleToggleSuggestionMode is defined
   const handleToggleSuggestionModeRef = useRef<((forceState?: boolean) => void) | undefined>(undefined);
@@ -274,6 +276,7 @@ const App: React.FC = () => {
     if (isLoadingHistoryRef.current || isSendingRef.current || speechIsSpeakingRef.current || isCurrentlyPerformingVisualContextCaptureRef.current) {
       return;
     }
+    await stopSilentObserverRef.current();
 
     setReplySuggestions([]);
     // Note: isLoadingSuggestions is now managed via tokens in useMaestroController
@@ -424,6 +427,7 @@ const App: React.FC = () => {
     }
 
     // If disabled, turn it ON.
+    void stopSilentObserverRef.current();
     const currentSttSettings = settingsRef.current.stt;
     const nextSettings = { ...settingsRef.current, stt: { ...currentSttSettings, enabled: true } };
     setSettings(nextSettings);
@@ -523,6 +527,26 @@ const App: React.FC = () => {
     maestroAvatarMimeTypeRef,
   });
 
+  const { stopSilentObserver } = useSilentObserverController({
+    enabled: hasApiKey && !showApiKeyGate,
+    isBlockingActivity,
+    liveSessionState,
+    liveVideoStream,
+    visualContextVideoRef,
+    currentSystemPromptText,
+    resolveBookmarkContextSummary,
+    computeHistorySubsetForMedia,
+  });
+
+  useEffect(() => {
+    stopSilentObserverRef.current = stopSilentObserver;
+  }, [stopSilentObserver]);
+
+  const handleStartLiveSessionWithObserverStop = useCallback(async () => {
+    await stopSilentObserver();
+    await handleStartLiveSession();
+  }, [handleStartLiveSession, stopSilentObserver]);
+
   // ============================================================
   // QUOTA ERROR ACTIONS
   // ============================================================
@@ -561,11 +585,11 @@ const App: React.FC = () => {
     // Start the live session. handleStartLiveSession will reuse the stream
     // from visualContextStreamRef instead of creating a competing one.
     try {
-      await handleStartLiveSession();
+      await handleStartLiveSessionWithObserverStop();
     } catch {
       // handleStartLiveSession already handles its own errors
     }
-  }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSession, visualContextStreamRef]);
+  }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSessionWithObserverStop, visualContextStreamRef]);
 
   const handleImageGenDisable = useCallback(() => {
     handleSettingsChange('imageGenerationModeEnabled', false);
@@ -701,8 +725,9 @@ const App: React.FC = () => {
             }}
             onToggleImageGenerationMode={handleToggleImageGenerationMode}
             onToggleImageFocusedMode={handleToggleImageFocusedMode}
-            onStartLiveSession={handleStartLiveSession}
+            onStartLiveSession={handleStartLiveSessionWithObserverStop}
             onStopLiveSession={handleStopLiveSession}
+            onStopSilentObserver={stopSilentObserver}
             onToggleSuggestionMode={handleToggleSuggestionMode}
             onCreateSuggestion={handleCreateSuggestion}
             onQuotaSetupBilling={handleQuotaSetupBilling}

@@ -39,6 +39,7 @@ import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { useMaestroStore } from '../../../store';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { createSmartRef } from '../../../shared/utils/smartRef';
+import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
 
 export interface UseLiveSessionControllerConfig {
   // Translation function
@@ -205,27 +206,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    * Generate a context-rich system instruction for the live session
    */
   const generateLiveSystemInstruction = useCallback(async (): Promise<string> => {
-    let basePrompt = currentSystemPromptText;
-
-    const historySubset = computeHistorySubsetForMedia(messagesRef.current);
-    const apiHistory = deriveHistoryForApi(historySubset, {
-      maxMessages: 10,
-      contextSummary: resolveBookmarkContextSummary() || undefined,
-      globalProfileText: (await getGlobalProfileDB())?.text || undefined
+    return buildLiveSystemInstruction({
+      basePrompt: currentSystemPromptText,
+      messages: messagesRef.current,
+      computeHistorySubsetForMedia,
+      resolveBookmarkContextSummary,
     });
-
-    let historyContext = "";
-    apiHistory.forEach((h: any) => {
-      const text = h.rawAssistantResponse || h.text || "(image)";
-      const role = h.role === 'user' ? 'User' : 'Maestro';
-      historyContext += `${role}: ${text}\n`;
-    });
-
-    if (historyContext) {
-      basePrompt += `\n\n--- CURRENT CONVERSATION CONTEXT (History) ---\n${historyContext}\n--- END CONTEXT ---`;
-    }
-
-    return basePrompt;
   }, [currentSystemPromptText, resolveBookmarkContextSummary, computeHistorySubsetForMedia, messagesRef]);
 
   /**

@@ -24,6 +24,7 @@ interface AudioControlsProps {
   onSttToggle: () => void;
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
   onUserInputActivity: () => void;
+  onStopSilentObserver?: () => Promise<void> | void;
 }
 
 const AudioControls: React.FC<AudioControlsProps> = ({
@@ -40,6 +41,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   onSttToggle,
   onSetAttachedImage,
   onUserInputActivity,
+  onStopSilentObserver,
 }) => {
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
@@ -74,6 +76,10 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   const startAudioNoteRecording = useCallback(async () => {
     if (isRecordingAudioNote || isSttGloballyEnabled) return;
     try {
+      if (onStopSilentObserver) {
+        await Promise.resolve(onStopSilentObserver());
+      }
+
       // EXPLICIT PERMISSION REQUEST:
       // We request the stream and await it. If the user sees a prompt,
       // this await will pause execution until they Allow or Deny.
@@ -123,7 +129,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
       setIsRecordingAudioNote(false);
       micHoldActiveRef.current = false;
     }
-  }, [isRecordingAudioNote, isSttGloballyEnabled, onSetAttachedImage, onUserInputActivity, createUiToken, endUiTask]);
+  }, [isRecordingAudioNote, isSttGloballyEnabled, onStopSilentObserver, onSetAttachedImage, onUserInputActivity, createUiToken, endUiTask]);
 
   const stopAudioNoteRecording = useCallback(() => {
     const rec = audioNoteRecorderRef.current;

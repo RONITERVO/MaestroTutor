@@ -23,6 +23,7 @@ interface MediaAttachmentsProps {
   liveSessionError: string | null;
   onStartLiveSession: () => Promise<void> | void;
   onStopLiveSession: () => void;
+  onBeforeStartVideoRecording?: () => Promise<void> | void;
   onRemoveAttachment: () => void;
   onAnnotateImage: () => void;
   onAnnotateVideo: () => void;
@@ -30,6 +31,7 @@ interface MediaAttachmentsProps {
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
   onUserInputActivity: () => void;
   attachedPreviewVideoRef: React.RefObject<HTMLVideoElement | null>;
+  isSilentObserverActive?: boolean;
 }
 
 const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
@@ -44,6 +46,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   liveSessionError,
   onStartLiveSession,
   onStopLiveSession,
+  onBeforeStartVideoRecording,
   onRemoveAttachment,
   onAnnotateImage,
   onAnnotateVideo,
@@ -51,6 +54,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   onSetAttachedImage,
   onUserInputActivity,
   attachedPreviewVideoRef,
+  isSilentObserverActive = false,
 }) => {
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
@@ -132,6 +136,10 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   const handleStartRecording = useCallback(async () => {
     if (isRecording || !liveVideoStream) return;
     try {
+      if (onBeforeStartVideoRecording) {
+        await Promise.resolve(onBeforeStartVideoRecording());
+      }
+
       if (!videoRecordTokenRef.current) {
         videoRecordTokenRef.current = createUiToken(TOKEN_SUBTYPE.VIDEO_RECORD);
       }
@@ -193,7 +201,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
         videoRecordTokenRef.current = null;
       }
     }
-  }, [isRecording, liveVideoStream, onSetAttachedImage, onUserInputActivity, t, handleStopRecording, createUiToken, endUiTask]);
+  }, [isRecording, liveVideoStream, onBeforeStartVideoRecording, onSetAttachedImage, onUserInputActivity, t, handleStopRecording, createUiToken, endUiTask]);
 
   const handleCaptureImage = useCallback(() => {
     if (!livePreviewVideoRef.current || !liveVideoStream || !livePreviewVideoRef.current.srcObject) return;
@@ -335,6 +343,13 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               muted
               className="h-24 w-full object-cover rounded pointer-events-none"
             />
+            {isSilentObserverActive && !liveSessionActive && !liveSessionConnecting && (
+              <div
+                className="absolute top-1 right-1 z-20 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-black/40"
+                title="Observer active"
+                aria-label="Observer active"
+              />
+            )}
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
               {liveSessionActive ? (
                 <div className="flex flex-col items-center gap-2">

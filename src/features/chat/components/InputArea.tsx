@@ -25,6 +25,7 @@ interface InputAreaProps {
   onUserInputActivity: () => void;
   onStartLiveSession: () => Promise<void> | void;
   onStopLiveSession: () => void;
+  onStopSilentObserver: () => Promise<void> | void;
   onToggleSuggestionMode: (force?: boolean) => void;
   onCreateSuggestion: (text: string) => Promise<void>;
   onToggleSendWithSnapshot: () => void;
@@ -39,6 +40,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   onUserInputActivity,
   onStartLiveSession,
   onStopLiveSession,
+  onStopSilentObserver,
   onToggleSuggestionMode,
   onCreateSuggestion,
   onToggleSendWithSnapshot,
@@ -58,6 +60,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   const liveVideoStream = useMaestroStore(state => state.liveVideoStream);
   const liveSessionState = useMaestroStore(state => state.liveSessionState);
   const liveSessionError = useMaestroStore(state => state.liveSessionError);
+  const silentObserverState = useMaestroStore(state => state.silentObserverState);
   const availableCameras = useMaestroStore(state => state.availableCameras);
   const currentCameraFacingMode = useMaestroStore(state => state.currentCameraFacingMode);
   const autoCaptureError = useMaestroStore(state => state.visualContextCameraError);
@@ -780,6 +783,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                   onSttToggle={onSttToggle}
                   onSetAttachedImage={onSetAttachedImage}
                   onUserInputActivity={onUserInputActivity}
+                  onStopSilentObserver={onStopSilentObserver}
                 />
                 )}
                 <button
@@ -826,6 +830,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 liveSessionError={liveSessionError}
                 onStartLiveSession={onStartLiveSession}
                 onStopLiveSession={onStopLiveSession}
+                onBeforeStartVideoRecording={onStopSilentObserver}
                 onRemoveAttachment={removeAttachedImage}
                 onAnnotateImage={handleComposerAnnotateImage}
                 onAnnotateVideo={handleComposerAnnotateVideo}
@@ -833,6 +838,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 onSetAttachedImage={onSetAttachedImage}
                 onUserInputActivity={onUserInputActivity}
                 attachedPreviewVideoRef={attachedPreviewVideoRef}
+                isSilentObserverActive={silentObserverState === 'active' && !isLive}
               />
             </div>
           )}

@@ -2,7 +2,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob } from '@google/genai';
+import {
+  GoogleGenAI,
+  LiveServerMessage,
+  Modality,
+  Blob as GenAIBlob,
+  LiveServerGoAway,
+  LiveServerSessionResumptionUpdate,
+  SessionResumptionConfig,
+} from '@google/genai';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { countTranscriptNewlines } from '../utils/transcriptParsing';
 import { debugLogService } from '../../diagnostics';
@@ -15,6 +23,8 @@ export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 export interface UseGeminiLiveConversationCallbacks {
   onStateChange?: (state: LiveSessionState) => void;
   onError?: (message: string) => void;
+  onGoAway?: (goAway: LiveServerGoAway) => void;
+  onSessionResumptionUpdate?: (update: LiveServerSessionResumptionUpdate) => void;
   /**
    * Called when a turn completes with consolidated transcripts and audio.
    * @param userText - The user's transcribed speech
@@ -25,6 +35,17 @@ export interface UseGeminiLiveConversationCallbacks {
    *                          Splitting accounts for delay between audio arrival and transcript appearance.
    */
   onTurnComplete?: (userText: string, modelText: string, userAudioPcm?: Int16Array, modelAudioLines?: Int16Array[]) => void;
+}
+
+export interface StartLiveConversationOptions {
+  systemInstruction?: string;
+  stream?: MediaStream | null;
+  videoElement?: HTMLVideoElement | null;
+  voiceName?: string;
+  responseModalities?: Modality[];
+  playModelAudio?: boolean;
+  emitTurns?: boolean;
+  sessionResumption?: SessionResumptionConfig;
 }
 
 const INPUT_SAMPLE_RATE = 16000;
@@ -125,6 +146,7 @@ export function useGeminiLiveConversation(
   const logFinalizedRef = useRef<boolean>(false);
   const modelRef = useRef<string>('');
   const pendingUserTurnRef = useRef<{ text: string; transcript: string; audio: Int16Array } | null>(null);
+  const videoUpdateVersionRef = useRef<number>(0);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -161,6 +183,28 @@ export function useGeminiLiveConversation(
     nextAudioStartTimeRef.current = 0;
   }, []);
 
+  const stopVideoFrameLoop = useCallback(() => {
+    if (frameIntervalRef.current !== null) {
+      window.clearInterval(frameIntervalRef.current);
+      frameIntervalRef.current = null;
+    }
+  }, []);
+
+  const detachCaptureVideo = useCallback(() => {
+    if (!captureVideoRef.current) return;
+    try {
+      // Only fully detach if we created this hidden element.
+      if (captureVideoRef.current.parentElement === document.body && captureVideoRef.current.style.position === 'fixed') {
+        captureVideoRef.current.pause();
+        captureVideoRef.current.srcObject = null;
+        document.body.removeChild(captureVideoRef.current);
+      }
+    } catch {
+      // Ignore detach errors.
+    }
+    captureVideoRef.current = null;
+  }, []);
+
   const cleanup = useCallback(async () => {
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
@@ -169,10 +213,7 @@ export function useGeminiLiveConversation(
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
     
-    if (frameIntervalRef.current) {
-      window.clearInterval(frameIntervalRef.current);
-      frameIntervalRef.current = null;
-    }
+    stopVideoFrameLoop();
     
     // Clear worklet message handler FIRST to stop new audio from accumulating
     if (workletNodeRef.current) {
@@ -205,17 +246,7 @@ export function useGeminiLiveConversation(
       }
     }
     
-    if (captureVideoRef.current) {
-        try {
-            // Only fully detach if we created this hidden element
-            if (captureVideoRef.current.parentElement === document.body && captureVideoRef.current.style.position === 'fixed') {
-                captureVideoRef.current.pause();
-                captureVideoRef.current.srcObject = null;
-                document.body.removeChild(captureVideoRef.current);
-            } 
-        } catch { }
-        captureVideoRef.current = null;
-    }
+    detachCaptureVideo();
     canvasRef.current = null;
 
     if (sessionRef.current) {
@@ -235,7 +266,7 @@ export function useGeminiLiveConversation(
     pendingUserTurnRef.current = null;
     
     isCleaningUpRef.current = false;
-  }, [stopAllAudio]);
+  }, [detachCaptureVideo, stopAllAudio, stopVideoFrameLoop]);
 
   // Load the AudioWorklet module (only needs to happen once per AudioContext)
   const ensureCaptureWorklet = useCallback(async (ctx: AudioContext) => {
@@ -246,7 +277,13 @@ export function useGeminiLiveConversation(
   }, []);
 
   const ensureVideoElementReady = useCallback(async (stream: MediaStream, providedElement?: HTMLVideoElement | null) => {
-    if (providedElement && providedElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && providedElement.videoWidth > 0 && providedElement.videoHeight > 0) {
+    if (
+      providedElement &&
+      providedElement.srcObject === stream &&
+      providedElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+      providedElement.videoWidth > 0 &&
+      providedElement.videoHeight > 0
+    ) {
       captureVideoRef.current = providedElement;
       return providedElement;
     }
@@ -272,8 +309,70 @@ export function useGeminiLiveConversation(
     return video;
   }, []);
 
-  const start = useCallback(async (opts: { systemInstruction?: string, stream?: MediaStream, videoElement?: HTMLVideoElement | null, voiceName?: string }) => {
-    const { stream, videoElement, systemInstruction, voiceName } = opts;
+  const startVideoFrameLoop = useCallback((sessionId: number) => {
+    stopVideoFrameLoop();
+    frameIntervalRef.current = window.setInterval(() => {
+      // Check session is still valid
+      if (currentSessionIdRef.current !== sessionId) return;
+
+      const activeSession = sessionRef.current;
+      const activeVideo = captureVideoRef.current;
+      const activeCanvas = canvasRef.current;
+      if (!activeSession || !activeVideo || !activeCanvas) return;
+      if (activeVideo.videoWidth === 0) return;
+
+      const ctx = activeCanvas.getContext('2d');
+      if (!ctx) return;
+      activeCanvas.width = activeVideo.videoWidth;
+      activeCanvas.height = activeVideo.videoHeight;
+      ctx.drawImage(activeVideo, 0, 0);
+
+      activeCanvas.toBlob(async (blob) => {
+        if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
+          const b64 = await blobToBase64(blob);
+          if (currentSessionIdRef.current !== sessionId) return;
+          sessionRef.current.sendRealtimeInput({ media: { data: b64, mimeType: 'image/jpeg' } });
+        }
+      }, 'image/jpeg', 0.5);
+    }, 1000);
+  }, [stopVideoFrameLoop]);
+
+  const updateVideoInput = useCallback(async (
+    stream?: MediaStream | null,
+    providedElement?: HTMLVideoElement | null
+  ) => {
+    const updateVersion = ++videoUpdateVersionRef.current;
+    stopVideoFrameLoop();
+    detachCaptureVideo();
+
+    if (!stream || !stream.active) {
+      return;
+    }
+
+    await ensureVideoElementReady(stream, providedElement);
+    if (updateVersion !== videoUpdateVersionRef.current) return;
+
+    if (!canvasRef.current) {
+      canvasRef.current = document.createElement('canvas');
+    }
+
+    const activeSessionId = currentSessionIdRef.current;
+    if (activeSessionId) {
+      startVideoFrameLoop(activeSessionId);
+    }
+  }, [detachCaptureVideo, ensureVideoElementReady, startVideoFrameLoop, stopVideoFrameLoop]);
+
+  const start = useCallback(async (opts: StartLiveConversationOptions = {}) => {
+    const {
+      stream,
+      videoElement,
+      systemInstruction,
+      voiceName,
+      responseModalities = [Modality.AUDIO],
+      playModelAudio = true,
+      emitTurns = true,
+      sessionResumption,
+    } = opts;
     
     // Wait for any in-progress cleanup to finish
     while (isCleaningUpRef.current) {
@@ -301,13 +400,14 @@ export function useGeminiLiveConversation(
     };
 
     try {
-      if (!stream || !stream.active) throw new Error('No active stream provided');
-
-      // Video Setup
-      await ensureVideoElementReady(stream, videoElement);
-      if (await abortIfInvalidated()) return;
-      const canvas = document.createElement('canvas');
-      canvasRef.current = canvas;
+      if (stream && stream.active) {
+        // Video setup is optional in observer mode (audio-only fallback).
+        await ensureVideoElementReady(stream, videoElement);
+        if (await abortIfInvalidated()) return;
+        if (!canvasRef.current) {
+          canvasRef.current = document.createElement('canvas');
+        }
+      }
 
       // Audio Setup
       const AudioContextCtor: typeof AudioContext = (window.AudioContext || (window as any).webkitAudioContext);
@@ -326,14 +426,16 @@ export function useGeminiLiveConversation(
       const workletNode = new AudioWorkletNode(inputCtx, FLOAT_TO_INT16_PROCESSOR_NAME, { numberOfInputs: 1, numberOfOutputs: 0 });
       workletNodeRef.current = workletNode;
 
-      const outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
-      outputAudioContextRef.current = outputCtx;
+      if (playModelAudio) {
+        const outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
+        outputAudioContextRef.current = outputCtx;
+      }
 
       const model = getGeminiModels().audio.live;
       modelRef.current = model;
       logFinalizedRef.current = false;
       logRef.current = debugLogService.logRequest('useGeminiLiveConversation', model, {
-        responseModalities: [Modality.AUDIO],
+        responseModalities,
         systemInstruction: systemInstruction || '',
         inputAudioTranscription: {},
         outputAudioTranscription: {},
@@ -344,13 +446,14 @@ export function useGeminiLiveConversation(
       const session = await ai.live.connect({
         model,
         config: {
-          responseModalities: [Modality.AUDIO],
+          responseModalities,
           systemInstruction: systemInstruction,
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
+          sessionResumption,
         },
         callbacks: {
           onopen: () => {
@@ -361,10 +464,17 @@ export function useGeminiLiveConversation(
           onmessage: async (msg: LiveServerMessage) => {
              // Check session is still valid before processing message
              if (currentSessionIdRef.current !== sessionId) return;
-             
+
+             if (msg.goAway) {
+               callbacksRef.current.onGoAway?.(msg.goAway);
+             }
+             if (msg.sessionResumptionUpdate) {
+               callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate);
+             }
+
              // 1. Handle Audio Output
              const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-             if (inlineAudio && outputAudioContextRef.current) {
+             if (inlineAudio) {
                  try {
                     // Accumulate raw PCM16 for turn handling
                     const pcm16 = base64ToInt16(inlineAudio);
@@ -372,16 +482,18 @@ export function useGeminiLiveConversation(
                     // Track total audio sample count for transcript-synchronized splitting
                     currentModelAudioTotalLengthRef.current += pcm16.length;
 
-                    const ctx = outputAudioContextRef.current;
-                    const buffer = await decodePcm16ToAudioBuffer(base64ToUint8(inlineAudio), ctx, OUTPUT_SAMPLE_RATE, 1);
-                    const source = ctx.createBufferSource();
-                    source.buffer = buffer;
-                    source.connect(ctx.destination);
-                    const next = Math.max(nextAudioStartTimeRef.current, ctx.currentTime);
-                    source.start(next);
-                    nextAudioStartTimeRef.current = next + buffer.duration;
-                    audioSourcesRef.current.add(source);
-                    source.addEventListener('ended', () => audioSourcesRef.current.delete(source));
+                    if (playModelAudio && outputAudioContextRef.current) {
+                      const ctx = outputAudioContextRef.current;
+                      const buffer = await decodePcm16ToAudioBuffer(base64ToUint8(inlineAudio), ctx, OUTPUT_SAMPLE_RATE, 1);
+                      const source = ctx.createBufferSource();
+                      source.buffer = buffer;
+                      source.connect(ctx.destination);
+                      const next = Math.max(nextAudioStartTimeRef.current, ctx.currentTime);
+                      source.start(next);
+                      nextAudioStartTimeRef.current = next + buffer.duration;
+                      audioSourcesRef.current.add(source);
+                      source.addEventListener('ended', () => audioSourcesRef.current.delete(source));
+                    }
                  } catch (e) {
                      console.warn('Audio decode failed', e);
                  }
@@ -435,7 +547,7 @@ export function useGeminiLiveConversation(
                     let startSample = 0;
                     // Sort split points but do NOT deduplicate.
                     // Duplicate split points (same audio position for consecutive newlines)
-                    // mean a transcript line had no audio — we must create an empty segment
+                    // mean a transcript line had no audio - we must create an empty segment
                     // to maintain 1:1 alignment between audio segments and transcript lines.
                     const points = modelAudioSplitPointsRef.current
                         .slice()
@@ -504,7 +616,9 @@ export function useGeminiLiveConversation(
                         pendingUserTurnRef.current = null;
                     }
 
-                    callbacksRef.current.onTurnComplete?.(finalUserText, modelText, finalUserAudio, modelAudioLines);
+                    if (emitTurns) {
+                      callbacksRef.current.onTurnComplete?.(finalUserText, modelText, finalUserAudio, modelAudioLines);
+                    }
                     if (logRef.current && !logFinalizedRef.current) {
                       logRef.current.complete({
                         status: 'turn-complete',
@@ -542,7 +656,9 @@ export function useGeminiLiveConversation(
 
              // 4. Handle Interruption
              if (msg.serverContent?.interrupted) {
-                 stopAllAudio();
+                 if (playModelAudio) {
+                   stopAllAudio();
+                 }
                  // Reset model output accumulators and sync tracking
                  currentOutputTranscriptionRef.current = '';
                  currentModelAudioChunksRef.current = [];
@@ -623,30 +739,9 @@ export function useGeminiLiveConversation(
       };
       source.connect(workletNode);
 
-      // Video Streaming Loop (Canvas Resize) with session validation
-      frameIntervalRef.current = window.setInterval(() => {
-          // Check session is still valid
-          if (currentSessionIdRef.current !== sessionId) return;
-          
-          const activeSession = sessionRef.current;
-          const activeVideo = captureVideoRef.current;
-          const activeCanvas = canvasRef.current;
-          if (!activeSession || !activeVideo || !activeCanvas) return;
-          if (activeVideo.videoWidth === 0) return;
-          
-          const ctx = activeCanvas.getContext('2d');
-          if (!ctx) return;
-          activeCanvas.width = activeVideo.videoWidth;
-          activeCanvas.height = activeVideo.videoHeight;
-          ctx.drawImage(activeVideo, 0, 0);
-          
-          activeCanvas.toBlob(async (blob) => {
-              if (blob && sessionRef.current) {
-                  const b64 = await blobToBase64(blob);
-                  sessionRef.current.sendRealtimeInput({ media: { data: b64, mimeType: 'image/jpeg' } });
-              }
-          }, 'image/jpeg', 0.5);
-      }, 1000);
+      if (stream && stream.active) {
+        startVideoFrameLoop(sessionId);
+      }
 
     } catch (e) {
       updateState('error');
@@ -661,7 +756,7 @@ export function useGeminiLiveConversation(
       callbacksRef.current.onError?.(e instanceof Error ? e.message : String(e));
       await cleanup();
     }
-  }, [updateState, cleanup, stopAllAudio, ensureCaptureWorklet, ensureVideoElementReady]);
+  }, [updateState, cleanup, stopAllAudio, ensureCaptureWorklet, ensureVideoElementReady, startVideoFrameLoop]);
 
   const stop = useCallback(async () => {
     updateState('idle');
@@ -684,5 +779,5 @@ export function useGeminiLiveConversation(
       return () => { cleanupRef.current(); };
   }, []); // Empty deps - only runs on unmount
 
-  return { start, stop };
+  return { start, stop, updateVideoInput };
 }
