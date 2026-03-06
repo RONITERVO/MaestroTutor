@@ -241,15 +241,46 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         visualContextStreamRef.current = stream;
         setLiveVideoStream(stream);
         if (visualContextVideoRef.current) {
-          visualContextVideoRef.current.srcObject = stream;
-          visualContextVideoRef.current.muted = true;
-          visualContextVideoRef.current.playsInline = true;
-          visualContextVideoRef.current.play().catch(playError => {
-            console.error("Error playing visual context video:", playError);
-            setVisualContextCameraError(t('error.visualContextStreamPlayback', { details: playError.message }));
-          });
+          const videoElement = visualContextVideoRef.current;
+          videoElement.srcObject = stream;
+          videoElement.muted = true;
+          videoElement.playsInline = true;
+
+          let hasBlockingPlaybackError = false;
+          try {
+            await videoElement.play();
+          } catch (playError: any) {
+            const latestVideoElement = visualContextVideoRef.current;
+            const isStalePlaybackError =
+              visualContextStreamRef.current !== stream ||
+              !latestVideoElement ||
+              latestVideoElement.srcObject !== stream;
+            const hasRenderableFrame = Boolean(
+              latestVideoElement &&
+              latestVideoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+              latestVideoElement.videoWidth > 0 &&
+              latestVideoElement.videoHeight > 0
+            );
+            const errorName = typeof playError?.name === 'string' ? playError.name : '';
+
+            // AbortError is usually emitted when startup races replace srcObject while play() is pending.
+            if (isStalePlaybackError || hasRenderableFrame || errorName === 'AbortError') {
+              console.warn('Ignoring transient visual context playback error:', playError);
+            } else {
+              hasBlockingPlaybackError = true;
+              console.error("Error playing visual context video:", playError);
+              setVisualContextCameraError(t('error.visualContextStreamPlayback', {
+                details: playError?.message || String(playError)
+              }));
+            }
+          }
+
+          if (!hasBlockingPlaybackError) {
+            setVisualContextCameraError(null);
+          }
+        } else {
+          setVisualContextCameraError(null);
         }
-        setVisualContextCameraError(null);
       } catch (err) {
         console.error("Error accessing camera for visual context:", err);
         let message = t("error.cameraUnknown");
