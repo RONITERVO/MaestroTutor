@@ -143,7 +143,7 @@ export const useSilentObserverController = ({
       systemInstruction: liveSystemInstruction,
       voiceName,
       responseModalities: [Modality.AUDIO],
-      playModelAudio: false,
+      playModelAudio: true,
       emitTurns: Boolean(onTurnComplete),
       sessionResumption,
     });

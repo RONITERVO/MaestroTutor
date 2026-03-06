@@ -528,6 +528,16 @@ const App: React.FC = () => {
     maestroAvatarMimeTypeRef,
   });
 
+  const handleSilentObserverTurnComplete = useCallback(async (
+    userText: string,
+    modelText: string,
+    userAudioPcm?: Int16Array,
+    modelAudioLines?: Int16Array[]
+  ) => {
+    await handleLiveTurnComplete(userText, modelText, userAudioPcm, modelAudioLines);
+    scheduleReengagement('silent-observer-response');
+  }, [handleLiveTurnComplete, scheduleReengagement]);
+
   const { stopSilentObserver } = useSilentObserverController({
     enabled: hasApiKey && !showApiKeyGate,
     isBlockingActivity,
@@ -537,7 +547,7 @@ const App: React.FC = () => {
     currentSystemPromptText,
     resolveBookmarkContextSummary,
     computeHistorySubsetForMedia,
-    onTurnComplete: handleLiveTurnComplete,
+    onTurnComplete: handleSilentObserverTurnComplete,
   });
 
   useEffect(() => {
