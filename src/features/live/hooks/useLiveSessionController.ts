@@ -99,6 +99,12 @@ export interface UseLiveSessionControllerReturn {
   // Handlers
   handleStartLiveSession: () => Promise<void>;
   handleStopLiveSession: () => Promise<void>;
+  handleLiveTurnComplete: (
+    userText: string,
+    modelText: string,
+    userAudioPcm?: Int16Array,
+    modelAudioLines?: Int16Array[]
+  ) => Promise<void>;
 }
 
 /**
@@ -657,6 +663,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     liveSessionError,
     handleStartLiveSession,
     handleStopLiveSession,
+    handleLiveTurnComplete,
   };
 };
 

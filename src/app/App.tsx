@@ -496,6 +496,7 @@ const App: React.FC = () => {
   const {
     handleStartLiveSession,
     handleStopLiveSession,
+    handleLiveTurnComplete,
   } = useLiveSessionController({
     t,
     setSettings,
@@ -536,6 +537,7 @@ const App: React.FC = () => {
     currentSystemPromptText,
     resolveBookmarkContextSummary,
     computeHistorySubsetForMedia,
+    onTurnComplete: handleLiveTurnComplete,
   });
 
   useEffect(() => {

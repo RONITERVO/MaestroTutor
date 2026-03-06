@@ -21,6 +21,12 @@ export interface UseSilentObserverControllerConfig {
   currentSystemPromptText: string;
   resolveBookmarkContextSummary: () => string | null;
   computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
+  onTurnComplete?: (
+    userText: string,
+    modelText: string,
+    userAudioPcm?: Int16Array,
+    modelAudioLines?: Int16Array[]
+  ) => void | Promise<void>;
 }
 
 export interface UseSilentObserverControllerReturn {
@@ -45,6 +51,7 @@ export const useSilentObserverController = ({
   currentSystemPromptText,
   resolveBookmarkContextSummary,
   computeHistorySubsetForMedia,
+  onTurnComplete,
 }: UseSilentObserverControllerConfig): UseSilentObserverControllerReturn => {
   const [isForeground, setIsForeground] = useState<boolean>(() => readForegroundState());
   const [lifecycleTick, setLifecycleTick] = useState(0);
@@ -96,6 +103,9 @@ export const useSilentObserverController = ({
     onError: (message) => {
       setSilentObserverError(message);
     },
+    onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines) => {
+      void onTurnComplete?.(userText, modelText, userAudioPcm, modelAudioLines);
+    },
     onGoAway: () => {
       if (!shouldRunRef.current) return;
       void stopObserverInternalRef.current?.('observer-go-away', 0);
@@ -123,6 +133,9 @@ export const useSilentObserverController = ({
     const liveSystemInstruction = await buildObserverInstruction();
     const voiceName = settingsRef.current.tts.voiceName || 'Kore';
     const activeStream = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
+    const sessionResumption = resumptionHandleRef.current
+      ? { handle: resumptionHandleRef.current }
+      : {};
 
     await startObserverConversation({
       stream: activeStream,
@@ -131,16 +144,14 @@ export const useSilentObserverController = ({
       voiceName,
       responseModalities: [Modality.AUDIO],
       playModelAudio: false,
-      emitTurns: false,
-      sessionResumption: {
-        handle: resumptionHandleRef.current,
-        transparent: true,
-      },
+      emitTurns: Boolean(onTurnComplete),
+      sessionResumption,
     });
   }, [
     buildObserverInstruction,
     clearRetryTimer,
     liveVideoStream,
+    onTurnComplete,
     settingsRef,
     startObserverConversation,
     visualContextVideoRef,
