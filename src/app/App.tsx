@@ -412,7 +412,7 @@ const App: React.FC = () => {
     handleToggleSuggestionModeRef.current = handleToggleSuggestionMode;
   }, [handleToggleSuggestionMode]);
 
-  const sttMasterToggle = useCallback(() => {
+  const sttMasterToggle = useCallback(async () => {
     // If enabled, turn it OFF (regardless of error state). This allows clearing stuck states.
     if (settingsRef.current.stt.enabled) {
       const nextSettings = { ...settingsRef.current, stt: { ...settingsRef.current.stt, enabled: false } };
@@ -427,7 +427,11 @@ const App: React.FC = () => {
     }
 
     // If disabled, turn it ON.
-    void stopSilentObserverRef.current();
+    try {
+      await Promise.resolve(stopSilentObserverRef.current?.());
+    } catch (error) {
+      console.warn('Failed to stop silent observer before STT start', error);
+    }
     const currentSttSettings = settingsRef.current.stt;
     const nextSettings = { ...settingsRef.current, stt: { ...currentSttSettings, enabled: true } };
     setSettings(nextSettings);

@@ -34,7 +34,12 @@ export interface UseGeminiLiveConversationCallbacks {
    *                          Each element corresponds to a line in modelText (target line, then native translation line).
    *                          Splitting accounts for delay between audio arrival and transcript appearance.
    */
-  onTurnComplete?: (userText: string, modelText: string, userAudioPcm?: Int16Array, modelAudioLines?: Int16Array[]) => void;
+  onTurnComplete?: (
+    userText: string,
+    modelText: string,
+    userAudioPcm?: Int16Array,
+    modelAudioLines?: Int16Array[]
+  ) => void | Promise<void>;
 }
 
 export interface StartLiveConversationOptions {
@@ -246,6 +251,8 @@ export function useGeminiLiveConversation(
       }
     }
     
+    // Invalidate any in-flight async video setup so stale calls cannot repopulate refs after teardown.
+    videoUpdateVersionRef.current += 1;
     detachCaptureVideo();
     canvasRef.current = null;
 
@@ -350,7 +357,10 @@ export function useGeminiLiveConversation(
     }
 
     await ensureVideoElementReady(stream, providedElement);
-    if (updateVersion !== videoUpdateVersionRef.current) return;
+    if (updateVersion !== videoUpdateVersionRef.current) {
+      detachCaptureVideo();
+      return;
+    }
 
     if (!canvasRef.current) {
       canvasRef.current = document.createElement('canvas');
@@ -617,7 +627,21 @@ export function useGeminiLiveConversation(
                     }
 
                     if (emitTurns) {
-                      callbacksRef.current.onTurnComplete?.(finalUserText, modelText, finalUserAudio, modelAudioLines);
+                      try {
+                        const callbackResult = callbacksRef.current.onTurnComplete?.(
+                          finalUserText,
+                          modelText,
+                          finalUserAudio,
+                          modelAudioLines
+                        );
+                        if (callbackResult instanceof Promise) {
+                          void callbackResult.catch((error) => {
+                            console.error('Live turn completion callback rejected:', error);
+                          });
+                        }
+                      } catch (error) {
+                        console.error('Live turn completion callback failed:', error);
+                      }
                     }
                     if (logRef.current && !logFinalizedRef.current) {
                       logRef.current.complete({
@@ -680,7 +704,9 @@ export function useGeminiLiveConversation(
               });
             }
             updateState('idle');
-            cleanup();
+            void cleanup().catch((error) => {
+              console.warn('Live cleanup after close failed:', error);
+            });
           },
           onerror: (err: any) => {
             // Check session is still valid before updating state
@@ -707,7 +733,9 @@ export function useGeminiLiveConversation(
               });
             }
             callbacksRef.current.onError?.(message);
-            cleanup();
+            void cleanup().catch((error) => {
+              console.warn('Live cleanup after error failed:', error);
+            });
           }
         }
       });
@@ -776,7 +804,11 @@ export function useGeminiLiveConversation(
   cleanupRef.current = cleanup;
 
   useEffect(() => {
-      return () => { cleanupRef.current(); };
+      return () => {
+        void cleanupRef.current().catch((error) => {
+          console.warn('Live cleanup on unmount failed:', error);
+        });
+      };
   }, []); // Empty deps - only runs on unmount
 
   return { start, stop, updateVideoInput };

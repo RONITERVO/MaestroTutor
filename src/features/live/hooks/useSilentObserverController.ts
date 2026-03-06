@@ -104,7 +104,10 @@ export const useSilentObserverController = ({
       setSilentObserverError(message);
     },
     onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines) => {
-      void onTurnComplete?.(userText, modelText, userAudioPcm, modelAudioLines);
+      if (!onTurnComplete) return;
+      void Promise.resolve(onTurnComplete(userText, modelText, userAudioPcm, modelAudioLines)).catch((error) => {
+        console.error('Silent observer turn handler failed:', error);
+      });
     },
     onGoAway: () => {
       if (!shouldRunRef.current) return;
@@ -128,31 +131,44 @@ export const useSilentObserverController = ({
 
   const startObserverInternal = useCallback(async () => {
     clearRetryTimer();
-    lastStartAttemptRef.current = Date.now();
+    const startAttempt = Date.now();
+    lastStartAttemptRef.current = startAttempt;
 
-    const liveSystemInstruction = await buildObserverInstruction();
-    const voiceName = settingsRef.current.tts.voiceName || 'Kore';
-    const activeStream = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
-    const sessionResumption = resumptionHandleRef.current
-      ? { handle: resumptionHandleRef.current }
-      : {};
+    try {
+      const liveSystemInstruction = await buildObserverInstruction();
+      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
 
-    await startObserverConversation({
-      stream: activeStream,
-      videoElement: visualContextVideoRef.current,
-      systemInstruction: liveSystemInstruction,
-      voiceName,
-      responseModalities: [Modality.AUDIO],
-      playModelAudio: true,
-      emitTurns: Boolean(onTurnComplete),
-      sessionResumption,
-    });
+      const voiceName = settingsRef.current.tts.voiceName || 'Kore';
+      const activeStream = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
+      const sessionResumption = resumptionHandleRef.current
+        ? { handle: resumptionHandleRef.current }
+        : {};
+
+      await startObserverConversation({
+        stream: activeStream,
+        videoElement: visualContextVideoRef.current,
+        systemInstruction: liveSystemInstruction,
+        voiceName,
+        responseModalities: [Modality.AUDIO],
+        playModelAudio: true,
+        emitTurns: Boolean(onTurnComplete),
+        sessionResumption,
+      });
+    } catch (error) {
+      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
+      clearRetryTimer();
+      const message = error instanceof Error ? error.message : String(error);
+      setSilentObserverError(message);
+      setSilentObserverState('error');
+    }
   }, [
     buildObserverInstruction,
     clearRetryTimer,
     liveVideoStream,
     onTurnComplete,
     settingsRef,
+    setSilentObserverError,
+    setSilentObserverState,
     startObserverConversation,
     visualContextVideoRef,
   ]);
