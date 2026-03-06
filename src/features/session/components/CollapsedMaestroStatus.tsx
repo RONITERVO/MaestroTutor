@@ -132,6 +132,12 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
 }) => {
   const activeUiTokens = useMaestroStore(useShallow(selectActiveUiTokens));
   const isLive = useMaestroStore(selectIsLive);
+  const silentObserverState = useMaestroStore(state => state.silentObserverState);
+  const liveVideoStream = useMaestroStore(state => state.liveVideoStream);
+
+  const isObserverActive = silentObserverState === 'active' || silentObserverState === 'connecting';
+  const showMicUsageBadge = isObserverActive || isLive;
+  const showCameraUsageBadge = showMicUsageBadge && Boolean(liveVideoStream && liveVideoStream.active);
 
   const displayTokens = useMemo(() => {
     const tokens: string[] = [...activeUiTokens];
@@ -144,15 +150,31 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
       .sort((a, b) => (a.config.priority ?? 100) - (b.config.priority ?? 100));
   }, [activeUiTokens, isLive]);
 
-  const renderIcon = (token: string, config: TokenDisplayConfig, idx: number) => {
+  const renderUsageBadges = () => {
+    if (!showMicUsageBadge) return null;
+
+    return (
+      <span
+        className="pointer-events-none absolute top-0 right-0 z-10 flex flex-col items-end leading-none"
+        aria-hidden
+      >
+        <Icons.IconMicrophone className="w-2 h-2" />
+        {showCameraUsageBadge && <Icons.IconCamera className="w-2 h-2 -mt-px" />}
+      </span>
+    );
+  };
+
+  const renderIcon = (token: string, config: TokenDisplayConfig, idx: number, includeUsageBadges = false) => {
     const IconComponent = Icons[config.icon as keyof typeof Icons];
     if (!IconComponent) return null;
     return (
-      <IconComponent
-        key={`${token}-${idx}`}
-        className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`}
-        title={t(config.titleKey)}
-      />
+      <span key={`${token}-${idx}`} className="relative inline-flex items-center justify-center">
+        <IconComponent
+          className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`}
+          title={t(config.titleKey)}
+        />
+        {includeUsageBadges ? renderUsageBadges() : null}
+      </span>
     );
   };
 
@@ -162,7 +184,10 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     return (
       <div className={`flex items-center ${className || ''}`} title={t(config.titleKey)}>
         {IconComponent && (
-          <IconComponent className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`} />
+          <span className="relative inline-flex items-center justify-center">
+            <IconComponent className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`} />
+            {renderUsageBadges()}
+          </span>
         )}
         <div
           className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${
@@ -187,9 +212,9 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     return (
       <div className={`flex items-center ${className || ''}`} title={t(primary.config.titleKey)}>
         <div className="flex items-center gap-1">
-          {renderIcon(primary.token, primary.config, 0)}
+          {renderIcon(primary.token, primary.config, 0, true)}
           {isExpanded &&
-            displayTokens.slice(1).map((entry, idx) => renderIcon(entry.token, entry.config, idx + 1))}
+            displayTokens.slice(1).map((entry, idx) => renderIcon(entry.token, entry.config, idx + 1, false))}
         </div>
         <div
           className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${
@@ -213,7 +238,12 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
   const IdleIcon = Icons[idleConfig.icon as keyof typeof Icons];
   return (
     <div className={`flex items-center ${className || ''}`} title={t(idleConfig.titleKey)}>
-      {IdleIcon && <IdleIcon className="w-4 h-4" />}
+      {IdleIcon && (
+        <span className="relative inline-flex items-center justify-center">
+          <IdleIcon className="w-4 h-4" />
+          {renderUsageBadges()}
+        </span>
+      )}
       <div
         className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${
           isExpanded ? 'max-w-xs opacity-100 ml-2' : 'max-w-0 opacity-0 ml-0'
