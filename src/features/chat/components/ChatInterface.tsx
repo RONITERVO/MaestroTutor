@@ -47,6 +47,7 @@ interface ChatInterfaceProps {
   onToggleImageFocusedMode: (messageId: string) => void;
   onStartLiveSession: () => Promise<void> | void;
   onStopLiveSession: () => void;
+  onStopSilentObserver: () => Promise<void> | void;
   
   onToggleSuggestionMode: (forceState?: boolean) => void;
   onCreateSuggestion: (text: string) => Promise<void>;
@@ -74,6 +75,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onToggleImageFocusedMode,
     onStartLiveSession,
     onStopLiveSession,
+    onStopSilentObserver,
     onToggleSuggestionMode,
     onCreateSuggestion,
     onBookmarkAt,
@@ -886,6 +888,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     onUserInputActivity={onUserInputActivity}
                     onStartLiveSession={onStartLiveSession}
                     onStopLiveSession={onStopLiveSession}
+                    onStopSilentObserver={onStopSilentObserver}
                     onToggleSuggestionMode={onToggleSuggestionMode}
                     onCreateSuggestion={onCreateSuggestion}
                     onToggleSendWithSnapshot={onToggleSendWithSnapshot}

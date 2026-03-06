@@ -39,6 +39,7 @@ import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { useMaestroStore } from '../../../store';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { createSmartRef } from '../../../shared/utils/smartRef';
+import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
 
 export interface UseLiveSessionControllerConfig {
   // Translation function
@@ -98,6 +99,12 @@ export interface UseLiveSessionControllerReturn {
   // Handlers
   handleStartLiveSession: () => Promise<void>;
   handleStopLiveSession: () => Promise<void>;
+  handleLiveTurnComplete: (
+    userText: string,
+    modelText: string,
+    userAudioPcm?: Int16Array,
+    modelAudioLines?: Int16Array[]
+  ) => Promise<void>;
 }
 
 /**
@@ -205,27 +212,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    * Generate a context-rich system instruction for the live session
    */
   const generateLiveSystemInstruction = useCallback(async (): Promise<string> => {
-    let basePrompt = currentSystemPromptText;
-
-    const historySubset = computeHistorySubsetForMedia(messagesRef.current);
-    const apiHistory = deriveHistoryForApi(historySubset, {
-      maxMessages: 10,
-      contextSummary: resolveBookmarkContextSummary() || undefined,
-      globalProfileText: (await getGlobalProfileDB())?.text || undefined
+    return buildLiveSystemInstruction({
+      basePrompt: currentSystemPromptText,
+      messages: messagesRef.current,
+      computeHistorySubsetForMedia,
+      resolveBookmarkContextSummary,
     });
-
-    let historyContext = "";
-    apiHistory.forEach((h: any) => {
-      const text = h.rawAssistantResponse || h.text || "(image)";
-      const role = h.role === 'user' ? 'User' : 'Maestro';
-      historyContext += `${role}: ${text}\n`;
-    });
-
-    if (historyContext) {
-      basePrompt += `\n\n--- CURRENT CONVERSATION CONTEXT (History) ---\n${historyContext}\n--- END CONTEXT ---`;
-    }
-
-    return basePrompt;
   }, [currentSystemPromptText, resolveBookmarkContextSummary, computeHistorySubsetForMedia, messagesRef]);
 
   /**
@@ -242,86 +234,87 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     userAudioPcm?: Int16Array, 
     modelAudioLines?: Int16Array[]
   ) => {
-    let userMessageId = '';
-    let snapshotData: any = null;
-    let snapshotUploadPromise: Promise<{ uri: string; mimeType: string } | null> | null = null;
-    
-    // 1. Add User Message with Snapshot & Audio
-    if (userText) {
-      try {
-        // Capture snapshot of the user when they finished speaking
-        snapshotData = await captureSnapshot(false);
-      } catch { /* ignore */ }
+    try {
+      let userMessageId = '';
+      let snapshotData: any = null;
+      let snapshotUploadPromise: Promise<{ uri: string; mimeType: string } | null> | null = null;
+      
+      // 1. Add User Message with Snapshot & Audio
+      if (userText) {
+        try {
+          // Capture snapshot of the user when they finished speaking
+          snapshotData = await captureSnapshot(false);
+        } catch { /* ignore */ }
 
-      // Save User Audio if available
-      let recordedUtterance: RecordedUtterance | undefined = undefined;
-      if (userAudioPcm && userAudioPcm.length > 0) {
-        const wavBase64 = pcmToWav(userAudioPcm, 16000);
-        recordedUtterance = {
-          dataUrl: wavBase64,
-          provider: 'gemini', // Using Gemini Live worklet capture
-          langCode: settingsRef.current.stt.language,
-          transcript: userText
-        };
-      }
+        // Save User Audio if available
+        let recordedUtterance: RecordedUtterance | undefined = undefined;
+        if (userAudioPcm && userAudioPcm.length > 0) {
+          const wavBase64 = pcmToWav(userAudioPcm, 16000);
+          recordedUtterance = {
+            dataUrl: wavBase64,
+            provider: 'gemini', // Using Gemini Live worklet capture
+            langCode: settingsRef.current.stt.language,
+            transcript: userText
+          };
+        }
 
-      userMessageId = addMessage({
-        role: 'user',
-        text: userText,
-        imageUrl: snapshotData?.base64,
-        imageMimeType: snapshotData?.mimeType,
-        storageOptimizedImageUrl: snapshotData?.storageOptimizedBase64,
-        storageOptimizedImageMimeType: snapshotData?.storageOptimizedMimeType,
-        recordedUtterance
-      });
+        userMessageId = addMessage({
+          role: 'user',
+          text: userText,
+          imageUrl: snapshotData?.base64,
+          imageMimeType: snapshotData?.mimeType,
+          storageOptimizedImageUrl: snapshotData?.storageOptimizedBase64,
+          storageOptimizedImageMimeType: snapshotData?.storageOptimizedMimeType,
+          recordedUtterance
+        });
 
-      // Background optimization and upload for live snapshots
-      if (snapshotData && userMessageId) {
-        snapshotUploadPromise = (async () => {
-          let optimizedDataUrl = snapshotData.storageOptimizedBase64;
-          let optimizedMime = snapshotData.storageOptimizedMimeType;
-          
-          try {
-            // 1. Optimize for local persistence (low-res)
-            const optimized = await processMediaForUpload(snapshotData.base64, snapshotData.mimeType, { t });
-            optimizedDataUrl = optimized.dataUrl;
-            optimizedMime = optimized.mimeType;
-          } catch (e) {
-            console.warn('Optimization failed, using original for persistence', e);
-          }
-
-          try {
-            // 2. Upload FULL resolution to Files API for model context
-            const up = await uploadMediaToFiles(snapshotData.base64, snapshotData.mimeType, 'live-user-snapshot');
+        // Background optimization and upload for live snapshots
+        if (snapshotData && userMessageId) {
+          snapshotUploadPromise = (async () => {
+            let optimizedDataUrl = snapshotData.storageOptimizedBase64;
+            let optimizedMime = snapshotData.storageOptimizedMimeType;
             
-            // 3. Update message with both low-res (local) and URI (remote)
-            updateMessage(userMessageId, {
-              storageOptimizedImageUrl: optimizedDataUrl,
-              storageOptimizedImageMimeType: optimizedMime,
-              uploadedFileUri: up.uri,
-              uploadedFileMimeType: up.mimeType
-            });
-            return { uri: up.uri, mimeType: up.mimeType };
-          } catch (e) {
-            console.warn('Upload failed', e);
-            // Still update persistence image
-            updateMessage(userMessageId, {
-              storageOptimizedImageUrl: optimizedDataUrl,
-              storageOptimizedImageMimeType: optimizedMime
-            });
-            return null;
-          }
-        })();
-      }
-    }
+            try {
+              // 1. Optimize for local persistence (low-res)
+              const optimized = await processMediaForUpload(snapshotData.base64, snapshotData.mimeType, { t });
+              optimizedDataUrl = optimized.dataUrl;
+              optimizedMime = optimized.mimeType;
+            } catch (e) {
+              console.warn('Optimization failed, using original for persistence', e);
+            }
 
-    // 2. Add Model Message
-    if (modelText) {
-      const assistantId = addMessage({
-        role: 'assistant',
-        text: modelText,
-        rawAssistantResponse: modelText
-      });
+            try {
+              // 2. Upload FULL resolution to Files API for model context
+              const up = await uploadMediaToFiles(snapshotData.base64, snapshotData.mimeType, 'live-user-snapshot');
+              
+              // 3. Update message with both low-res (local) and URI (remote)
+              updateMessage(userMessageId, {
+                storageOptimizedImageUrl: optimizedDataUrl,
+                storageOptimizedImageMimeType: optimizedMime,
+                uploadedFileUri: up.uri,
+                uploadedFileMimeType: up.mimeType
+              });
+              return { uri: up.uri, mimeType: up.mimeType };
+            } catch (e) {
+              console.warn('Upload failed', e);
+              // Still update persistence image
+              updateMessage(userMessageId, {
+                storageOptimizedImageUrl: optimizedDataUrl,
+                storageOptimizedImageMimeType: optimizedMime
+              });
+              return null;
+            }
+          })();
+        }
+      }
+
+      // 2. Add Model Message
+      if (modelText) {
+        const assistantId = addMessage({
+          role: 'assistant',
+          text: modelText,
+          rawAssistantResponse: modelText
+        });
 
         // 3. Post-processing: Formatting Transcript & Translations
         if (selectedLanguagePairRef.current) {
@@ -329,7 +322,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           const structuredText = modelText;
           const translations = parseGeminiResponse(structuredText);
           let completeHistory: ChatMessage[] = [...messagesRef.current];
-          if (userMessageId) {
+          if (userMessageId && !completeHistory.some(message => message.id === userMessageId)) {
             completeHistory.push({
               id: userMessageId,
               role: 'user',
@@ -337,13 +330,23 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
               timestamp: Date.now()
             } as ChatMessage);
           }
-          completeHistory.push({
-            id: assistantId,
-            role: 'assistant',
-            rawAssistantResponse: structuredText,
-            translations: translations,
-            timestamp: Date.now()
-          } as ChatMessage);
+          const assistantHistoryIndex = completeHistory.findIndex(message => message.id === assistantId);
+          if (assistantHistoryIndex >= 0) {
+            completeHistory[assistantHistoryIndex] = {
+              ...completeHistory[assistantHistoryIndex],
+              rawAssistantResponse: structuredText,
+              translations: translations,
+            };
+          } else {
+            completeHistory.push({
+              id: assistantId,
+              role: 'assistant',
+              text: structuredText,
+              rawAssistantResponse: structuredText,
+              translations: translations,
+              timestamp: Date.now()
+            } as ChatMessage);
+          }
 
           // ============================================================================
           // AUDIO-TO-TEXT ALIGNMENT FOR CACHE
@@ -398,7 +401,10 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           });
 
           // 4. Generate Suggestions Immediately
-          fetchAndSetReplySuggestions(assistantId, structuredText, getHistoryRespectingBookmark(completeHistory));
+          void fetchAndSetReplySuggestions(assistantId, structuredText, getHistoryRespectingBookmark(completeHistory))
+            .catch((error) => {
+              console.warn('Failed to fetch live reply suggestions', error);
+            });
           lastFetchedSuggestionsForRef.current = assistantId;
         }
 
@@ -503,6 +509,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           }
         })();
       }
+      }
+    } catch (error) {
+      console.error('Failed to process live turn completion:', error);
     }
   }, [
     addMessage, 
@@ -671,6 +680,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     liveSessionError,
     handleStartLiveSession,
     handleStopLiveSession,
+    handleLiveTurnComplete,
   };
 };
 

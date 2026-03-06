@@ -66,7 +66,7 @@ export const initialSettings: AppSettings = {
     provider: 'gemini',
   },
   smartReengagement: {
-    thresholdSeconds: 45,
+    thresholdSeconds: 90,
     useVisualContext: true,
   },
   enableGoogleSearch: true,

@@ -24,6 +24,7 @@ interface AudioControlsProps {
   onSttToggle: () => void;
   onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
   onUserInputActivity: () => void;
+  onStopSilentObserver?: () => Promise<void> | void;
 }
 
 const AudioControls: React.FC<AudioControlsProps> = ({
@@ -40,6 +41,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   onSttToggle,
   onSetAttachedImage,
   onUserInputActivity,
+  onStopSilentObserver,
 }) => {
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
@@ -64,6 +66,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   const audioNoteTokenRef = useRef<string | null>(null);
   const micHoldTimerRef = useRef<number | null>(null);
   const micHoldActiveRef = useRef<boolean>(false);
+  const audioNoteStartVersionRef = useRef<number>(0);
 
   const pickAudioMimeType = () => {
     const candidates = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4', 'audio/webm'];
@@ -73,11 +76,21 @@ const AudioControls: React.FC<AudioControlsProps> = ({
 
   const startAudioNoteRecording = useCallback(async () => {
     if (isRecordingAudioNote || isSttGloballyEnabled) return;
+    const startVersion = ++audioNoteStartVersionRef.current;
     try {
+      if (onStopSilentObserver) {
+        await Promise.resolve(onStopSilentObserver());
+        if (startVersion !== audioNoteStartVersionRef.current) return;
+      }
+
       // EXPLICIT PERMISSION REQUEST:
       // We request the stream and await it. If the user sees a prompt,
       // this await will pause execution until they Allow or Deny.
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (startVersion !== audioNoteStartVersionRef.current) {
+        try { stream.getTracks().forEach(t => t.stop()); } catch {}
+        return;
+      }
 
       // If we got here, permission is granted!
       audioNoteStreamRef.current = stream;
@@ -116,16 +129,22 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         audioNoteTokenRef.current = createUiToken(TOKEN_SUBTYPE.AUDIO_NOTE);
       }
       rec.start(250);
+      if (startVersion !== audioNoteStartVersionRef.current) {
+        try { rec.stop(); } catch {}
+        return;
+      }
       setIsRecordingAudioNote(true);
     } catch (e) {
+      if (startVersion !== audioNoteStartVersionRef.current) return;
       console.error('Failed to start audio note recording:', e);
       // User denied permission or system error
       setIsRecordingAudioNote(false);
       micHoldActiveRef.current = false;
     }
-  }, [isRecordingAudioNote, isSttGloballyEnabled, onSetAttachedImage, onUserInputActivity, createUiToken, endUiTask]);
+  }, [isRecordingAudioNote, isSttGloballyEnabled, onStopSilentObserver, onSetAttachedImage, onUserInputActivity, createUiToken, endUiTask]);
 
   const stopAudioNoteRecording = useCallback(() => {
+    audioNoteStartVersionRef.current += 1;
     const rec = audioNoteRecorderRef.current;
     if (rec && rec.state === 'recording') { try { rec.requestData(); } catch {} rec.stop(); }
     setIsRecordingAudioNote(false);
@@ -155,6 +174,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
   const handleMicPointerUp = useCallback((e: React.PointerEvent) => {
     if (micHoldTimerRef.current) { clearTimeout(micHoldTimerRef.current); micHoldTimerRef.current = null; }
     if (!isSttGloballyEnabled && micHoldActiveRef.current) {
+      audioNoteStartVersionRef.current += 1;
       stopAudioNoteRecording();
       e.preventDefault(); e.stopPropagation();
       window.setTimeout(() => { micHoldActiveRef.current = false; }, 200);
@@ -163,7 +183,11 @@ const AudioControls: React.FC<AudioControlsProps> = ({
 
   const handleMicPointerCancel = useCallback(() => {
     if (micHoldTimerRef.current) { clearTimeout(micHoldTimerRef.current); micHoldTimerRef.current = null; }
-    if (!isSttGloballyEnabled && micHoldActiveRef.current) { stopAudioNoteRecording(); micHoldActiveRef.current = false; }
+    if (!isSttGloballyEnabled && micHoldActiveRef.current) {
+      audioNoteStartVersionRef.current += 1;
+      stopAudioNoteRecording();
+      micHoldActiveRef.current = false;
+    }
   }, [isSttGloballyEnabled, stopAudioNoteRecording]);
 
   const handleMicClick = useCallback((e: React.MouseEvent) => {
@@ -180,6 +204,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
         clearTimeout(micHoldTimerRef.current);
         micHoldTimerRef.current = null;
       }
+      audioNoteStartVersionRef.current += 1;
       // Stop MediaRecorder if active
       const rec = audioNoteRecorderRef.current;
       if (rec && rec.state === 'recording') {

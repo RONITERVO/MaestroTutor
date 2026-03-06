@@ -146,7 +146,7 @@ Generate a single JSON object with four keys: "suggestions", "reengagementSecond
     - You will need to remember everything about the user as they develop over time in {TARGET_LANGUAGE_NAME} this is really important for successful teaching.
     - Reply suggestions should be personalized. This will be evaluated.
 
-3.  "reengagementSeconds": An integer for a reasonable time (seconds) for the user to think and respond (eg. from 20 seconds up to user requested time in seconds).
+3.  "reengagementSeconds": An integer for a reasonable time (seconds) for the user to think and respond (eg. from 90 seconds up to user requested time in seconds).
 
 4.  "globalProfile": The updated global profile text of all tutoring sessions with different language tutorsthat merges the existingGlobalProfile with new durable insights from the current chat.
     - Keep information that is durable across sessions.

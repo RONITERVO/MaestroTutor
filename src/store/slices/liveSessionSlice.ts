@@ -18,11 +18,16 @@ export interface LiveSessionSlice {
   // State
   liveSessionState: LiveSessionState;
   liveSessionError: string | null;
+  silentObserverState: LiveSessionState;
+  silentObserverError: string | null;
   
   // Actions
   setLiveSessionState: (state: LiveSessionState) => void;
   setLiveSessionError: (error: string | null) => void;
+  setSilentObserverState: (state: LiveSessionState) => void;
+  setSilentObserverError: (error: string | null) => void;
   resetLiveSession: () => void;
+  resetSilentObserver: () => void;
 }
 
 export const createLiveSessionSlice: StateCreator<
@@ -34,6 +39,8 @@ export const createLiveSessionSlice: StateCreator<
   // Initial state
   liveSessionState: 'idle',
   liveSessionError: null,
+  silentObserverState: 'idle',
+  silentObserverError: null,
   
   // Actions
   setLiveSessionState: (state: LiveSessionState) => {
@@ -48,11 +55,30 @@ export const createLiveSessionSlice: StateCreator<
   setLiveSessionError: (error: string | null) => {
     set({ liveSessionError: error });
   },
+
+  setSilentObserverState: (state: LiveSessionState) => {
+    set((prev) => ({
+      ...prev,
+      silentObserverState: state,
+      silentObserverError: state === 'connecting' ? null : prev.silentObserverError,
+    }));
+  },
+
+  setSilentObserverError: (error: string | null) => {
+    set({ silentObserverError: error });
+  },
   
   resetLiveSession: () => {
     set({ 
       liveSessionState: 'idle', 
       liveSessionError: null 
+    });
+  },
+
+  resetSilentObserver: () => {
+    set({
+      silentObserverState: 'idle',
+      silentObserverError: null,
     });
   },
 });
