@@ -134,13 +134,15 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
   const isLive = useMaestroStore(selectIsLive);
   const silentObserverState = useMaestroStore(state => state.silentObserverState);
   const liveVideoStream = useMaestroStore(state => state.liveVideoStream);
+  const isHolding = activeUiTokens.some(token => getTokenSubtype(token) === TOKEN_SUBTYPE.HOLD);
 
   const isObserverActive = silentObserverState === 'active' || silentObserverState === 'connecting';
   const showMicUsageBadge = isObserverActive || isLive;
   const showCameraUsageBadge = showMicUsageBadge && Boolean(liveVideoStream && liveVideoStream.active);
+  const showHoldUsageBadge = isHolding;
 
   const displayTokens = useMemo(() => {
-    const tokens: string[] = [...activeUiTokens];
+    const tokens: string[] = activeUiTokens.filter(token => getTokenSubtype(token) !== TOKEN_SUBTYPE.HOLD);
     if (isLive) {
       tokens.push(buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.SESSION));
     }
@@ -151,14 +153,15 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
   }, [activeUiTokens, isLive]);
 
   const renderUsageBadges = () => {
-    if (!showMicUsageBadge) return null;
+    if (!showHoldUsageBadge && !showMicUsageBadge) return null;
 
     return (
       <span
         className="pointer-events-none absolute top-0 right-0 z-10 flex flex-col items-end leading-none"
         aria-hidden
       >
-        <Icons.IconMicrophone className="w-2 h-2" />
+        {showHoldUsageBadge && <Icons.IconPause className="w-2 h-2" />}
+        {showMicUsageBadge && <Icons.IconMicrophone className="w-2 h-2 -mt-px" />}
         {showCameraUsageBadge && <Icons.IconCamera className="w-2 h-2 -mt-px" />}
       </span>
     );
@@ -234,10 +237,13 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     );
   }
 
+  const holdConfig = UI_TOKEN_DISPLAY[TOKEN_SUBTYPE.HOLD];
   const idleConfig = STAGE_DISPLAY.idle;
+  const idleTextKey = isHolding && holdConfig ? holdConfig.textKey : idleConfig.textKey;
+  const idleTitleKey = isHolding && holdConfig ? holdConfig.titleKey : idleConfig.titleKey;
   const IdleIcon = Icons[idleConfig.icon as keyof typeof Icons];
   return (
-    <div className={`flex items-center ${className || ''}`} title={t(idleConfig.titleKey)}>
+    <div className={`flex items-center ${className || ''}`} title={t(idleTitleKey)}>
       {IdleIcon && (
         <span className="relative inline-flex items-center justify-center">
           <IdleIcon className="w-4 h-4" />
@@ -255,7 +261,7 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
           </span>
         )}
         <span className="text-xs font-semibold uppercase tracking-wide whitespace-nowrap">
-          {t(idleConfig.textKey)}
+          {t(idleTextKey)}
         </span>
       </div>
     </div>
