@@ -18,7 +18,8 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/
 import { sketchShapeClass, sketchShapeStyle } from '../../../shared/utils/sketchyShape';
 import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
 import TextFileViewer from './TextFileViewer';
-import { isTextLikeAttachment } from '../utils/fileAttachments';
+import OfficeFileViewer from './OfficeFileViewer';
+import { isOfficeAttachment, isTextLikeAttachment } from '../utils/fileAttachments';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -588,6 +589,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isAttachmentAVideo = !!displayMime?.startsWith('video/');
   const isAttachmentAAudio = !!displayMime?.startsWith('audio/');
   const isAttachmentAPdf = displayMime === 'application/pdf';
+  const isAttachmentAOffice = isOfficeAttachment(displayMime, message.attachmentName);
   const isAttachmentAText = isTextLikeAttachment(displayMime, message.attachmentName);
   const hasAttachmentSource = !!displayUrl || !!message.uploadedFileUri;
 
@@ -595,9 +597,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isVideoSuccessfullyDisplayed = isAttachmentAVideo && displayUrl;
   const isAudioSuccessfullyDisplayed = isAttachmentAAudio && displayUrl && !message.isGeneratingImage && !message.imageGenError;
   const isPdfSuccessfullyDisplayed = isAttachmentAPdf && displayUrl && !message.isGeneratingImage && !message.imageGenError;
+  const isOfficeFileSuccessfullyDisplayed = isAttachmentAOffice && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
   const isTextFileSuccessfullyDisplayed = isAttachmentAText && !!displayUrl && !message.isGeneratingImage && !message.imageGenError;
   const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && !!message.uploadedFileUri && !message.isGeneratingImage && !message.imageGenError;
-  const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAText && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
+  const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAOffice && !isAttachmentAText && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
 
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
@@ -621,7 +624,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
 
-  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   
   if (message.thinking && !message.isGeneratingImage) {
     return (
@@ -642,7 +645,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   let tapeWrapperMaxWidth = '';
    if (applyFocusedImageStyles) {
       bubbleWrapperClasses += " w-full overflow-hidden";
-      if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isTextFileRemoteOnly && !isVideoSuccessfullyDisplayed) {
+      if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isOfficeFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isTextFileRemoteOnly && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
            if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
            else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
@@ -721,7 +724,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         }}
         ref={registerBubbleEl}
       >
-          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && (
+          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && (
                <div 
                   ref={annotationViewportRef} 
                   className={`${imageContainerBaseClasses} ${imageContainerSizeClasses} ${imageContainerAspectClasses} ${imageContainerDynamicBg} ${imageContainerFlexCenteringClasses}`}
@@ -949,6 +952,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       variant={isUser ? 'user' : 'assistant'}
                       fileName={message.attachmentName}
                       mimeType={displayMime}
+                    />
+                  )}
+                  {isOfficeFileSuccessfullyDisplayed && (
+                    <OfficeFileViewer
+                      src={displayUrl}
+                      variant={isUser ? 'user' : 'assistant'}
+                      fileName={message.attachmentName}
+                      mimeType={displayMime}
+                      hasRemoteUri={Boolean(message.uploadedFileUri)}
                     />
                   )}
                   {isTextFileRemoteOnly && (
