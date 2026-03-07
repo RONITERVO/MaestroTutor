@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TranslationReplacements } from '../../../../core/i18n/index';
 import { LiveSessionState } from '../../../speech';
 import { IconCamera, IconPaperclip, IconPencil, IconXMark, IconVideoCamera } from '../../../../shared/ui/Icons';
@@ -10,12 +10,14 @@ import { useMaestroStore } from '../../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityTokens';
 import AudioPlayer from '../AudioPlayer';
 import PdfViewer from '../PdfViewer';
+import { decodeTextPreviewFromDataUrl, isTextLikeAttachment } from '../../utils/fileAttachments';
 
 interface MediaAttachmentsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
   isSuggestionMode: boolean;
   attachedImageBase64: string | null;
   attachedImageMimeType: string | null;
+  attachedFileName?: string | null;
   showLiveFeed: boolean;
   isTwoUp: boolean;
   liveVideoStream: MediaStream | null;
@@ -28,7 +30,7 @@ interface MediaAttachmentsProps {
   onAnnotateImage: () => void;
   onAnnotateVideo: () => void;
   onAnnotatePdf: () => void;
-  onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
+  onSetAttachedImage: (base64: string | null, mimeType: string | null, fileName?: string | null) => void;
   onUserInputActivity: () => void;
   attachedPreviewVideoRef: React.RefObject<HTMLVideoElement | null>;
   isSilentObserverActive?: boolean;
@@ -39,6 +41,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   isSuggestionMode,
   attachedImageBase64,
   attachedImageMimeType,
+  attachedFileName,
   showLiveFeed,
   isTwoUp,
   liveVideoStream,
@@ -238,6 +241,12 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
     }
   }, [liveVideoStream, attachedImageBase64]);
 
+  const isTextAttachment = isTextLikeAttachment(attachedImageMimeType, attachedFileName);
+  const textAttachmentPreview = useMemo(() => {
+    if (!attachedImageBase64 || !isTextAttachment) return null;
+    return decodeTextPreviewFromDataUrl(attachedImageBase64, { maxChars: 900, maxBytes: 48 * 1024 });
+  }, [attachedImageBase64, isTextAttachment]);
+
   if (!attachedImageBase64 && !showLiveFeed) return null;
 
   const liveSessionActive = liveSessionState === 'active';
@@ -313,6 +322,15 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               >
                 <IconPencil className="w-4 h-4" />
               </button>
+            </div>
+          ) : isTextAttachment ? (
+            <div className={`h-24 w-full rounded p-2 overflow-hidden ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-empty-bg/60'}`}>
+              <p className="text-[10px] font-mono truncate text-media-empty-text/90">
+                {attachedFileName || attachedImageMimeType || 'text file'}
+              </p>
+              <pre className="mt-1 text-[10px] leading-4 whitespace-pre-wrap break-words overflow-hidden text-media-empty-text">
+                {textAttachmentPreview || 'Text preview unavailable.'}
+              </pre>
             </div>
           ) : (
             <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-empty-bg/60'} rounded`}>

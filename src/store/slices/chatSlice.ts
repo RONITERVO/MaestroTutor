@@ -38,6 +38,7 @@ export interface ChatSlice {
   imageLoadDurations: number[];
   attachedImageBase64: string | null;
   attachedImageMimeType: string | null;
+  attachedFileName: string | null;
   
   // Actions
   loadHistoryForPair: (pairId: string, t: (key: string) => string) => Promise<void>;
@@ -50,7 +51,7 @@ export interface ChatSlice {
   setSendPrep: (prep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null | ((prev: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null) => { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null)) => void;
   setLatestGroundingChunks: (chunks: GroundingChunk[] | undefined) => void;
   addImageLoadDuration: (duration: number) => void;
-  setAttachedImage: (base64: string | null, mimeType: string | null) => void;
+  setAttachedImage: (base64: string | null, mimeType: string | null, fileName?: string | null) => void;
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
   upsertSuggestionTtsCache: (messageId: string, suggestionIndex: number, entry: TtsAudioCacheEntry) => void;
   
@@ -76,6 +77,7 @@ export const selectLatestGroundingChunks = (state: Pick<ChatSlice, 'latestGround
 // Individual selectors for attached image - avoid returning new objects to prevent infinite loops
 export const selectAttachedImageBase64 = (state: Pick<ChatSlice, 'attachedImageBase64'>) => state.attachedImageBase64;
 export const selectAttachedImageMimeType = (state: Pick<ChatSlice, 'attachedImageMimeType'>) => state.attachedImageMimeType;
+export const selectAttachedFileName = (state: Pick<ChatSlice, 'attachedFileName'>) => state.attachedFileName;
 
 // DEPRECATED: This selector returns a new object on every call, causing infinite loops in React 18+ strict mode.
 // Use selectAttachedImageBase64 and selectAttachedImageMimeType instead.
@@ -102,6 +104,7 @@ export const createChatSlice: StateCreator<
   imageLoadDurations: [],
   attachedImageBase64: null,
   attachedImageMimeType: null,
+  attachedFileName: null,
   
   // Actions
   loadHistoryForPair: async (pairId: string, t: (key: string) => string) => {
@@ -216,8 +219,12 @@ export const createChatSlice: StateCreator<
     });
   },
   
-  setAttachedImage: (base64: string | null, mimeType: string | null) => {
-    set({ attachedImageBase64: base64, attachedImageMimeType: mimeType });
+  setAttachedImage: (base64: string | null, mimeType: string | null, fileName: string | null = null) => {
+    set({
+      attachedImageBase64: base64,
+      attachedImageMimeType: mimeType,
+      attachedFileName: base64 && mimeType ? (fileName || null) : null,
+    });
   },
   
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => {

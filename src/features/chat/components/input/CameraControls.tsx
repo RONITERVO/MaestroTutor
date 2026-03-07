@@ -363,7 +363,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
         <>
           <input
             type="file"
-            accept="image/*,video/*,audio/*,application/pdf,text/plain,text/csv,text/markdown"
+            accept="image/*,video/*,audio/*,application/pdf,text/plain,text/csv,text/markdown,application/json,.txt,.md,.markdown,.json,.json5,.jsonc,.js,.jsx,.ts,.tsx,.mjs,.cjs,.py,.java,.kt,.kts,.swift,.go,.rs,.rb,.php,.c,.cc,.cpp,.cxx,.h,.hh,.hpp,.hxx,.cs,.html,.htm,.css,.scss,.sass,.less,.vue,.svelte,.xml,.yml,.yaml,.toml,.ini,.cfg,.conf,.properties,.env,.sql,.graphql,.gql,.sh,.bash,.zsh,.fish,.ps1,.bat,.cmd,.dockerfile,.makefile,.gitignore,.gitattributes,.npmrc,.editorconfig"
             ref={fileInputRef}
             onChange={onImageAttach}
             className="hidden"

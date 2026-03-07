@@ -272,6 +272,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     imageLoadDurations,
     attachedImageBase64,
     attachedImageMimeType,
+    attachedFileName,
   } = useMaestroStore(useShallow(state => ({
     sendPrep: state.sendPrep,
     latestGroundingChunks: state.latestGroundingChunks,
@@ -279,6 +280,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     imageLoadDurations: state.imageLoadDurations,
     attachedImageBase64: state.attachedImageBase64,
     attachedImageMimeType: state.attachedImageMimeType,
+    attachedFileName: state.attachedFileName,
   })));
 
   // Derive activity states from tokens using selectors
@@ -493,7 +495,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           } catch { /* optimization for storage is optional */ }
         }
         if (dataForUpload) {
-          const up = await uploadMediaToFiles(dataForUpload.dataUrl, dataForUpload.mimeType, 'send-history');
+          const up = await uploadMediaToFiles(
+            dataForUpload.dataUrl,
+            dataForUpload.mimeType,
+            m.attachmentName || 'send-history'
+          );
           updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
           (m as any).uploadedFileUri = up.uri;
           (m as any).uploadedFileMimeType = up.mimeType;
@@ -932,6 +938,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       recordedUtterance: recordedSpeechForMessage || undefined,
       imageUrl: userImageToProcessBase64,
       imageMimeType: userImageToProcessMimeType,
+      attachmentName: attachedFileName || undefined,
       storageOptimizedImageUrl: userImageToProcessStorageOptimizedBase64,
       storageOptimizedImageMimeType: userImageToProcessStorageOptimizedMimeType,
     });
@@ -949,6 +956,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     addMessage,
     attachedImageBase64,
     attachedImageMimeType,
+    attachedFileName,
     captureSnapshot,
     claimRecordedUtterance,
     recordedUtterancePendingRef,
@@ -1377,7 +1385,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           sendWithFileUploadInProgressRef.current = true;
         }
         setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
-        const up = await uploadMediaToFiles(imageForGeminiContextBase64, imageForGeminiContextMimeType, 'current-user-media');
+        const up = await uploadMediaToFiles(
+          imageForGeminiContextBase64,
+          imageForGeminiContextMimeType,
+          attachedFileName || 'current-user-media'
+        );
         // CRITICAL: Use the normalized MIME type returned from upload to avoid mismatch errors
         // The upload normalizes audio/webm;codecs=opus -> audio/webm, so we must use up.mimeType
         imageForGeminiContextMimeType = up.mimeType;
@@ -1662,6 +1674,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     currentSystemPromptText,
     attachedImageBase64,
     attachedImageMimeType,
+    attachedFileName,
     setAttachedImage,
     addActivityToken,
     removeActivityToken,

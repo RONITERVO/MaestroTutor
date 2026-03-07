@@ -19,6 +19,8 @@ export interface ChatMessage {
   ttsAudioCache?: TtsAudioCacheEntry[];
   imageUrl?: string;
   imageMimeType?: string;
+  /** Original attachment file name if available (e.g. README.md, app.tsx) */
+  attachmentName?: string;
   imageFileUri?: string;
   /** Optimized (lower res) image for local storage to reduce DB size */
   storageOptimizedImageUrl?: string;
