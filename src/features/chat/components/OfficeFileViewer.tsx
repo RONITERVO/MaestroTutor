@@ -234,7 +234,10 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
               {previewText ? (
                 <details className="mt-2">
                   <summary className={`text-xs cursor-pointer ${subtleText}`}>Raw extracted text</summary>
-                  <div className="mt-1 rounded border border-black/10 bg-black/5 max-h-72 overflow-auto">
+                  <div
+                    className="mt-1 rounded border border-black/10 bg-black/5 max-h-72 overflow-auto"
+                    style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
+                  >
                     <pre className={`p-2 text-xs leading-5 whitespace-pre-wrap break-words ${subtleText}`}>
                       {previewText}
                     </pre>
@@ -243,7 +246,10 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
               ) : null}
             </>
           ) : previewText ? (
-            <div className="mt-2 max-h-64 overflow-auto rounded border border-black/10 bg-black/5">
+            <div
+              className="mt-2 max-h-64 overflow-auto rounded border border-black/10 bg-black/5"
+              style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
+            >
               <pre className={`p-2 text-xs leading-5 whitespace-pre-wrap break-words ${subtleText}`}>
                 {previewText}
               </pre>

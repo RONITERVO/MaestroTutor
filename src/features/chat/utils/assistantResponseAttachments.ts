@@ -10,7 +10,7 @@ interface AttachmentCandidate {
 }
 
 export interface ParsedAssistantAttachment {
-  kind: 'svg' | 'chart' | 'code';
+  kind: 'svg' | 'image' | 'chart' | 'code';
   dataUrl: string;
   mimeType: string;
   fileName: string;
@@ -23,14 +23,18 @@ export interface ParsedAssistantResponse {
 
 const MAX_ATTACHMENT_TEXT_CHARS = 180_000;
 
-const FENCE_REGEX = /```([^\n`]*)\n([\s\S]*?)```/g;
+const FENCE_REGEX = /```([^\n`]*)\n?([\s\S]*?)```/g;
 const INLINE_SVG_REGEX = /<svg[\s\S]*?<\/svg>/i;
+const INLINE_IMAGE_DATA_URL_REGEX = /data:image\/[a-z0-9.+-]+(?:;[a-z0-9=._-]+)*,[a-z0-9+/%=._\-\s]+/i;
 
 const CODE_LANGUAGE_TO_EXTENSION: Record<string, string> = {
   js: 'js',
   javascript: 'js',
   mjs: 'mjs',
   cjs: 'cjs',
+  text: 'txt',
+  plaintext: 'txt',
+  txt: 'txt',
   ts: 'ts',
   typescript: 'ts',
   jsx: 'jsx',
@@ -68,9 +72,53 @@ const CODE_LANGUAGE_TO_EXTENSION: Record<string, string> = {
   yaml: 'yaml',
   yml: 'yml',
   toml: 'toml',
+  ini: 'ini',
+  conf: 'conf',
+  env: 'env',
   xml: 'xml',
   md: 'md',
   markdown: 'md',
+  dockerfile: 'dockerfile',
+  makefile: 'makefile',
+};
+
+const MIME_TYPE_TO_EXTENSION: Record<string, string> = {
+  'text/plain': 'txt',
+  'text/markdown': 'md',
+  'text/html': 'html',
+  'text/css': 'css',
+  'text/javascript': 'js',
+  'text/typescript': 'ts',
+  'text/csv': 'csv',
+  'text/tab-separated-values': 'tsv',
+  'application/json': 'json',
+  'application/ld+json': 'json',
+  'application/xml': 'xml',
+  'application/yaml': 'yaml',
+  'text/yaml': 'yaml',
+  'application/toml': 'toml',
+  'image/svg+xml': 'svg',
+};
+
+const IMAGE_EXTENSION_TO_MIME: Record<string, string> = {
+  svg: 'image/svg+xml',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  bmp: 'image/bmp',
+};
+
+const IMAGE_MIME_TO_EXTENSION: Record<string, string> = {
+  'image/svg+xml': 'svg',
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'image/bmp': 'bmp',
 };
 
 const CHART_LANG_TAGS = new Set(['chart', 'chart-json', 'chartjson', 'chart_data', 'chartdata', 'plot', 'graph']);
@@ -125,16 +173,114 @@ const tryParseJson = (value: string): any | null => {
   return null;
 };
 
+const getExtensionFromFileName = (fileName?: string): string => {
+  const normalized = (fileName || '').trim().toLowerCase();
+  const dot = normalized.lastIndexOf('.');
+  if (dot < 0 || dot >= normalized.length - 1) return '';
+  return normalized.slice(dot + 1).replace(/[^a-z0-9_+-]/g, '');
+};
+
+const normalizeImageMimeType = (mimeType?: string | null): string | null => {
+  const normalized = (mimeType || '').trim().toLowerCase();
+  if (!normalized.startsWith('image/')) return null;
+  const canonical = normalized === 'image/jpg' ? 'image/jpeg' : normalized;
+  return IMAGE_MIME_TO_EXTENSION[canonical] ? canonical : null;
+};
+
+const inferImageMimeType = (langToken: string, mimeToken: string, fileNameHint?: string): string | null => {
+  const fromMime = normalizeImageMimeType(mimeToken);
+  if (fromMime) return fromMime;
+
+  const normalizedLangToken = langToken.replace(/^\.+/, '');
+  const fromLang = IMAGE_EXTENSION_TO_MIME[normalizedLangToken];
+  if (fromLang) return fromLang;
+
+  const fromFileName = IMAGE_EXTENSION_TO_MIME[getExtensionFromFileName(fileNameHint)];
+  if (fromFileName) return fromFileName;
+
+  return null;
+};
+
+const extractInlineImageDataUrl = (value: string): { dataUrl: string; mimeType: string } | null => {
+  const match = INLINE_IMAGE_DATA_URL_REGEX.exec(value || '');
+  if (!match) return null;
+
+  const raw = (match[0] || '').trim();
+  if (!raw) return null;
+
+  const cleaned = raw.replace(/[)\]}>,.;]+$/g, '').replace(/\s+/g, '');
+  const mimeMatch = /^data:(image\/[a-z0-9.+-]+)(;[^,]*)?,/i.exec(cleaned);
+  if (!mimeMatch) return null;
+
+  const mimeType = normalizeImageMimeType(mimeMatch[1]);
+  if (!mimeType) return null;
+
+  return { dataUrl: cleaned, mimeType };
+};
+
+const normalizeBase64 = (value: string): string | null => {
+  const raw = (value || '').trim();
+  if (!raw) return null;
+
+  const withoutPrefix = raw
+    .replace(/^data:[^,]*,/i, '')
+    .replace(/^base64,/i, '')
+    .replace(/\s+/g, '');
+  if (!withoutPrefix || withoutPrefix.length < 32) return null;
+  if (!/^[a-z0-9+/]+={0,2}$/i.test(withoutPrefix)) return null;
+
+  const padded = withoutPrefix.padEnd(withoutPrefix.length + ((4 - (withoutPrefix.length % 4)) % 4), '=');
+  try {
+    atob(padded);
+  } catch {
+    return null;
+  }
+  return padded;
+};
+
+const resolveImageFileName = (mimeType: string, fileNameHint?: string): string => {
+  const extFromName = getExtensionFromFileName(fileNameHint);
+  if (extFromName && IMAGE_EXTENSION_TO_MIME[extFromName]) {
+    return sanitizeFileName(fileNameHint || `generated.${extFromName}`);
+  }
+  const ext = IMAGE_MIME_TO_EXTENSION[mimeType] || 'img';
+  return sanitizeFileName(fileNameHint || `generated.${ext}`);
+};
+
+const inferCodeExtension = (lang: string, fileNameHint?: string): string => {
+  const fromFileName = getExtensionFromFileName(fileNameHint);
+  if (fromFileName) return fromFileName;
+
+  const normalizedLang = (lang || '').trim().toLowerCase();
+  if (!normalizedLang) return 'txt';
+
+  const mimeToken = normalizedLang.split(';')[0].trim();
+  const fromMime = MIME_TYPE_TO_EXTENSION[mimeToken];
+  if (fromMime) return fromMime;
+
+  const fromKnownLanguage = CODE_LANGUAGE_TO_EXTENSION[normalizedLang];
+  if (fromKnownLanguage) return fromKnownLanguage;
+
+  const fallback = normalizedLang
+    .replace(/^\.+/, '')
+    .replace(/[^a-z0-9_+-]/g, '')
+    .slice(0, 16);
+  return fallback || 'txt';
+};
+
 const parseFenceInfo = (rawInfo: string): { lang: string; fileNameHint?: string } => {
   const info = (rawInfo || '').trim();
   if (!info) return { lang: '' };
 
-  const filenameMatch = info.match(/filename\s*=\s*([^\s]+)/i);
-  const explicitFileName = filenameMatch?.[1];
+  const filenameMatch = info.match(/(?:^|\s)(?:file(?:name)?|name)\s*[:=]\s*(?:"([^"]+)"|'([^']+)'|([^\s]+))/i);
+  const explicitFileName = filenameMatch?.[1] || filenameMatch?.[2] || filenameMatch?.[3];
 
   const tokens = info.split(/\s+/).filter(Boolean);
-  const lang = (tokens[0] || '').toLowerCase();
-  const tokenFileName = tokens.find((token) => token.includes('.') && !token.includes('='));
+  const firstToken = (tokens[0] || '').replace(/^["'`]+|["'`,;:]+$/g, '');
+  const lang = (firstToken.includes('=') || firstToken.includes(':')) ? '' : firstToken.toLowerCase();
+  const tokenFileName = tokens
+    .map((token) => token.replace(/^["'`]+|["'`,;:]+$/g, ''))
+    .find((token) => token.includes('.') && !token.includes('='));
 
   return {
     lang,
@@ -209,6 +355,43 @@ const createSvgAttachment = (svgText: string, fileNameHint?: string): ParsedAssi
   };
 };
 
+const createImageAttachmentFromDataUrl = (
+  dataUrl: string,
+  mimeType: string,
+  fileNameHint?: string
+): ParsedAssistantAttachment | null => {
+  const normalizedMime = normalizeImageMimeType(mimeType);
+  if (!normalizedMime) return null;
+  if (!dataUrl || typeof dataUrl !== 'string') return null;
+  const headerMatch = /^data:(image\/[a-z0-9.+-]+)(;[^,]*)?,/i.exec(dataUrl);
+  if (!headerMatch) return null;
+  const mimeFromDataUrl = normalizeImageMimeType(headerMatch[1]);
+  if (!mimeFromDataUrl || mimeFromDataUrl !== normalizedMime) return null;
+  return {
+    kind: 'image',
+    dataUrl,
+    mimeType: normalizedMime,
+    fileName: resolveImageFileName(normalizedMime, fileNameHint),
+  };
+};
+
+const createImageAttachmentFromBase64 = (
+  base64Content: string,
+  mimeType: string,
+  fileNameHint?: string
+): ParsedAssistantAttachment | null => {
+  const normalizedMime = normalizeImageMimeType(mimeType);
+  if (!normalizedMime) return null;
+  const normalizedBase64 = normalizeBase64(base64Content);
+  if (!normalizedBase64) return null;
+  return {
+    kind: 'image',
+    dataUrl: `data:${normalizedMime};base64,${normalizedBase64}`,
+    mimeType: normalizedMime,
+    fileName: resolveImageFileName(normalizedMime, fileNameHint),
+  };
+};
+
 const createTabularAttachment = (content: string, isTsv: boolean, fileNameHint?: string): ParsedAssistantAttachment | null => {
   const normalized = normalizeAttachmentText(content);
   if (!normalized) return null;
@@ -235,9 +418,9 @@ const createChartJsonAttachment = (content: string, fileNameHint?: string): Pars
 const createCodeAttachment = (lang: string, content: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
   const normalized = normalizeAttachmentText(content);
   if (!normalized) return null;
-  if (normalized.length < 20 && !normalized.includes('\n')) return null;
+  if (!fileNameHint && normalized.length < 20 && !normalized.includes('\n')) return null;
 
-  const ext = CODE_LANGUAGE_TO_EXTENSION[lang] || 'txt';
+  const ext = inferCodeExtension(lang, fileNameHint);
   return {
     kind: 'code',
     dataUrl: toUtf8DataUrl('text/plain', normalized),
@@ -248,35 +431,53 @@ const createCodeAttachment = (lang: string, content: string, fileNameHint?: stri
 
 const parseFenceAttachment = (lang: string, content: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
   const normalizedLang = (lang || '').trim().toLowerCase();
+  const mimeToken = normalizedLang.split(';')[0].trim();
+  const langToken = mimeToken.includes('/') ? mimeToken : normalizedLang;
   const normalizedContent = content || '';
+  const inlineImageData = extractInlineImageDataUrl(normalizedContent);
+  if (inlineImageData) {
+    const inlineImageAttachment = createImageAttachmentFromDataUrl(
+      inlineImageData.dataUrl,
+      inlineImageData.mimeType,
+      fileNameHint
+    );
+    if (inlineImageAttachment) return inlineImageAttachment;
+  }
 
-  if (normalizedLang === 'svg' || /<svg[\s>]/i.test(normalizedContent)) {
+  if (langToken === 'svg' || mimeToken === 'image/svg+xml' || /<svg[\s>]/i.test(normalizedContent)) {
     return createSvgAttachment(normalizedContent, fileNameHint);
   }
-  if (normalizedLang === 'csv') {
+
+  const inferredImageMimeType = inferImageMimeType(langToken, mimeToken, fileNameHint);
+  if (inferredImageMimeType && inferredImageMimeType !== 'image/svg+xml') {
+    const imageAttachment = createImageAttachmentFromBase64(normalizedContent, inferredImageMimeType, fileNameHint);
+    if (imageAttachment) return imageAttachment;
+  }
+
+  if (langToken === 'csv' || mimeToken.includes('csv')) {
     return createTabularAttachment(normalizedContent, false, fileNameHint);
   }
-  if (normalizedLang === 'tsv') {
+  if (langToken === 'tsv' || mimeToken.includes('tab-separated-values')) {
     return createTabularAttachment(normalizedContent, true, fileNameHint);
   }
-  if (CHART_LANG_TAGS.has(normalizedLang)) {
+  if (CHART_LANG_TAGS.has(langToken)) {
     return createChartJsonAttachment(normalizedContent, fileNameHint);
   }
-  if (normalizedLang.includes('json')) {
+  if (langToken.includes('json') || mimeToken.includes('json')) {
     const parsedChart = createChartJsonAttachment(normalizedContent, fileNameHint);
     if (parsedChart) return parsedChart;
-    return createCodeAttachment(normalizedLang, normalizedContent, fileNameHint || 'generated.json');
+    return createCodeAttachment(langToken, normalizedContent, fileNameHint || 'generated.json');
   }
-  if (CODE_EXCLUDED_LANG_TAGS.has(normalizedLang)) return null;
+  if (CODE_EXCLUDED_LANG_TAGS.has(langToken)) return null;
 
-  if (!normalizedLang) {
+  if (!langToken) {
     if (/<svg[\s>]/i.test(normalizedContent)) {
       return createSvgAttachment(normalizedContent, fileNameHint);
     }
-    return null;
+    return createCodeAttachment('txt', normalizedContent, fileNameHint || 'generated.txt');
   }
 
-  return createCodeAttachment(normalizedLang, normalizedContent, fileNameHint);
+  return createCodeAttachment(langToken, normalizedContent, fileNameHint);
 };
 
 const stripRangeFromText = (source: string, start: number, end: number): string => {
@@ -304,6 +505,8 @@ export const parseAssistantResponseForAttachment = (responseText?: string | null
 
     const priority = attachment.kind === 'svg'
       ? 100
+      : attachment.kind === 'image'
+        ? 98
       : attachment.kind === 'chart'
         ? 90
         : 70;
@@ -313,6 +516,25 @@ export const parseAssistantResponseForAttachment = (responseText?: string | null
       priority,
       attachment,
     });
+  }
+
+  if (candidates.length === 0) {
+    const inlineImageData = extractInlineImageDataUrl(source);
+    if (inlineImageData) {
+      const attachment = createImageAttachmentFromDataUrl(
+        inlineImageData.dataUrl,
+        inlineImageData.mimeType
+      );
+      const rawMatch = INLINE_IMAGE_DATA_URL_REGEX.exec(source);
+      if (attachment && rawMatch && typeof rawMatch.index === 'number') {
+        candidates.push({
+          start: rawMatch.index,
+          end: rawMatch.index + rawMatch[0].length,
+          priority: 94,
+          attachment,
+        });
+      }
+    }
   }
 
   if (candidates.length === 0) {

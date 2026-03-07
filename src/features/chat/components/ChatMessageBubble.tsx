@@ -91,6 +91,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [nativeFlashIsOn, setNativeFlashIsOn] = useState<boolean>(false);
   const nativeFlashTimeoutRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const textOverlayRef = useRef<HTMLDivElement>(null);
+  const [textOverlayHeight, setTextOverlayHeight] = useState(0);
 
   const imageForAnnotationRef = useRef<HTMLImageElement | null>(null);
   const editCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -625,6 +627,21 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
 
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const hasVisibleAttachment = message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
+  const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !isAudioSuccessfullyDisplayed;
+  const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment;
+  const shouldInsetScrollableAttachmentForOverlay = shouldUseScrollableTextOverlay && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
+  const textOverlayScrollStyle: React.CSSProperties | undefined = shouldUseScrollableTextOverlay
+    ? {
+        maxHeight: '40vh',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch' as any,
+        scrollbarGutter: 'stable',
+      }
+    : undefined;
   
   if (message.thinking && !message.isGeneratingImage) {
     return (
@@ -640,6 +657,31 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
+
+  useEffect(() => {
+    if (!shouldUseScrollableTextOverlay) {
+      setTextOverlayHeight(0);
+      return;
+    }
+
+    const overlayEl = textOverlayRef.current;
+    if (!overlayEl) return;
+
+    const updateHeight = () => {
+      setTextOverlayHeight(overlayEl.clientHeight);
+    };
+    updateHeight();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(updateHeight);
+      resizeObserver.observe(overlayEl);
+    }
+
+    return () => {
+      resizeObserver?.disconnect();
+    };
+  }, [shouldUseScrollableTextOverlay, message.text, message.rawAssistantResponse, message.translations]);
 
   let bubbleWrapperClasses = "relative transition-all duration-300 ease-in-out";
   let tapeWrapperMaxWidth = '';
@@ -724,7 +766,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         }}
         ref={registerBubbleEl}
       >
-          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && (
+          {hasVisibleAttachment && (
                <div 
                   ref={annotationViewportRef} 
                   className={`${imageContainerBaseClasses} ${imageContainerSizeClasses} ${imageContainerAspectClasses} ${imageContainerDynamicBg} ${imageContainerFlexCenteringClasses}`}
@@ -952,6 +994,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       variant={isUser ? 'user' : 'assistant'}
                       fileName={message.attachmentName}
                       mimeType={displayMime}
+                      bottomInset={scrollableAttachmentBottomInset}
                     />
                   )}
                   {isOfficeFileSuccessfullyDisplayed && (
@@ -986,6 +1029,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       <PdfViewer
                         src={displayUrl!}
                         variant={isUser ? 'user' : 'assistant'}
+                        bottomInset={scrollableAttachmentBottomInset}
                       />
                       {isFocusedMode && !isAnnotationActive && (
                         <button
@@ -1023,12 +1067,17 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
         {hasTextContent && (
            <div className={`transition-opacity duration-300
-                ${applyFocusedImageStyles && !isAudioSuccessfullyDisplayed
+                ${shouldOverlayTextOnAttachment
                     ? `absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10`
                     : 'relative z-10 mt-1'
                 }
+                ${shouldUseScrollableTextOverlay ? 'pointer-events-auto' : ''}
                 ${isAnnotationActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}
+            style={textOverlayScrollStyle}
+            onWheel={shouldUseScrollableTextOverlay ? (e) => e.stopPropagation() : undefined}
+            onTouchMove={shouldUseScrollableTextOverlay ? (e) => e.stopPropagation() : undefined}
+            ref={textOverlayRef}
            >
         <style>{`
         @keyframes pop-fade-speak { 0% { transform: scale(0.85); opacity: 0; } 20% { transform: scale(1.15); opacity: 1; } 80% { transform: scale(1.0); opacity: 1; } 100% { transform: scale(0.95); opacity: 0; } }
