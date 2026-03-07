@@ -39,7 +39,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
 
   if (compact) {
     return (
-      <div className={`w-full max-w-full min-w-0 rounded-lg overflow-hidden ${containerBg}`}>
+      <div className={`w-full max-w-full min-w-0 rounded-lg overflow-hidden ${containerBg}`} style={{ contain: 'inline-size' }}>
         <div className={`px-2 py-1 text-[10px] font-mono truncate ${headerBg} ${textColor}`}>
           {metaLabel}
         </div>
@@ -56,7 +56,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   }
 
   return (
-    <div className="relative w-full max-w-full min-w-0">
+    <div className="relative w-full max-w-full min-w-0 overflow-hidden">
       <div
         className={`w-full max-w-full min-w-0 overflow-x-auto overflow-y-scroll rounded-lg ${containerBg}`}
         style={{ maxHeight: '60vh', scrollbarGutter: 'stable' }}
