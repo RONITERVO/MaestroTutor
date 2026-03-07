@@ -592,7 +592,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isAttachmentAAudio = !!displayMime?.startsWith('audio/');
   const isAttachmentAPdf = displayMime === 'application/pdf';
   const isAttachmentAOffice = isOfficeAttachment(displayMime, message.attachmentName);
-  const isAttachmentAText = isTextLikeAttachment(displayMime, message.attachmentName);
+  const isAttachmentAText =
+    !isAttachmentAnImage &&
+    !isAttachmentAVideo &&
+    !isAttachmentAAudio &&
+    !isAttachmentAPdf &&
+    isTextLikeAttachment(displayMime, message.attachmentName);
   const hasAttachmentSource = !!displayUrl || !!message.uploadedFileUri;
 
   const isImageSuccessfullyDisplayed = isAttachmentAnImage && displayUrl && !message.isGeneratingImage && !message.imageGenError;
