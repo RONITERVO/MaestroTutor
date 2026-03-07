@@ -29,6 +29,9 @@ import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../
 import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../session';
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
+import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
+import { getOfficePreview } from '../utils/officePreview';
+import { isGoogleWorkspaceShortcutMimeType, isMicrosoftOfficeMimeType } from '../utils/fileAttachments';
 import { 
   IMAGE_GEN_CAMERA_ID,
   MAX_MEDIA_TO_KEEP 
@@ -85,6 +88,31 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
   const msg = (error.message || '').toLowerCase();
   // Check for both the RPC reason and the message content
   return msg.includes('api_key_invalid') || msg.includes('api key not valid');
+};
+
+const isSvgMimeType = (mimeType?: string | null): boolean => {
+  return (mimeType || '').trim().toLowerCase() === 'image/svg+xml';
+};
+
+const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
+  const normalized = (mimeType || '').trim().toLowerCase();
+  if (!normalized) return false;
+  return isMicrosoftOfficeMimeType(normalized) || isGoogleWorkspaceShortcutMimeType(normalized);
+};
+
+const toUtf8Base64DataUrl = (mimeType: string, text: string): string => {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return `data:${mimeType};charset=utf-8;base64,${btoa(binary)}`;
+};
+
+type MediaPayloadOverride = {
+  oldUri?: string;
+  newUri?: string;
+  newMimeType?: string;
+  transient?: boolean;
+  omitFromPayload?: boolean;
 };
 
 export interface UseTutorConversationConfig {
@@ -175,7 +203,7 @@ export interface UseTutorConversationReturn {
   // Utilities
   stripBracketedContent: (input: string | undefined | null) => string;
   resolveBookmarkContextSummary: () => string | null;
-  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, { oldUri?: string; newUri: string }>>;
+  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, MediaPayloadOverride>>;
   computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
   handleReengagementThresholdChange: (newThreshold: number) => void;
   calculateEstimatedImageLoadTime: () => number;
@@ -392,7 +420,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const ensureUrisForHistoryForSend = useCallback(async (
     arr: ChatMessage[], 
     onProgress?: (done: number, total: number, etaMs?: number) => void
-  ): Promise<Record<string, { oldUri?: string; newUri: string }>> => {
+  ): Promise<Record<string, MediaPayloadOverride>> => {
     const candidates = computeHistorySubsetForMedia(arr);
 
     const mediaIndices: number[] = [];
@@ -431,7 +459,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const cachedUri0 = (m0 as any).uploadedFileUri as string | undefined;
       const cachedMime0 = (m0 as any).uploadedFileMimeType as string | undefined;
       const hasAnyMedia0 = !!((llmUrl0 && llmMime0) || (uiUrl0 && uiMime0));
-      const missing = !(cachedUri0 && cachedMime0);
+      const cachedMimeRequiresUpgrade0 = isSvgMimeType(cachedMime0) || isOfficeMimeUnsupportedByGemini(cachedMime0);
+      const missing = !(cachedUri0 && cachedMime0) || cachedMimeRequiresUpgrade0;
       const deleted = !!(cachedUri0 && cachedStatuses[cachedUri0]?.deleted);
       if ((missing || deleted) && hasAnyMedia0) totalToEnsure++;
     }
@@ -447,7 +476,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       onProgress(doneCount, totalToEnsure, eta);
     };
 
-    const updatedUriMap: Record<string, { oldUri?: string; newUri: string }> = {};
+    const updatedUriMap: Record<string, MediaPayloadOverride> = {};
     for (let idx = 0; idx < candidates.length; idx++) {
       if (!keepMediaIdx.has(idx)) continue;
       const m = candidates[idx];
@@ -457,6 +486,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const uiMime = m.imageMimeType as string | undefined;
       const cachedUri = (m as any).uploadedFileUri as string | undefined;
       const cachedMime = (m as any).uploadedFileMimeType as string | undefined;
+      const cachedMimeRequiresUpgrade = isSvgMimeType(cachedMime) || isOfficeMimeUnsupportedByGemini(cachedMime);
       
       // Check if we have any data URL to potentially re-upload from
       const hasDataUrl = !!(llmUrl && llmMime) || !!(uiUrl && uiMime);
@@ -473,6 +503,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       // CRITICAL: If URI is expired but we have no data URL to re-upload, media will be lost
       if (cachedDeleted && !hasDataUrl) {
         console.warn(`[ensureUris] Message ${m.id} has expired uploadedFileUri but no data URL to re-upload. Media will be omitted from API payload.`);
+        updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
+        continue;
+      }
+      if (cachedMimeRequiresUpgrade && !hasDataUrl) {
+        console.warn(`[ensureUris] Message ${m.id} has unsupported upload MIME metadata but no local data URL for conversion. Omitting media from this payload only.`);
+        updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
         continue;
       }
       
@@ -480,7 +516,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (!hasDataUrl) continue;
       
       // Skip if we have a valid (non-expired) cached URI
-      if (cachedUri && cachedMime && !cachedDeleted) continue;
+      if (cachedUri && cachedMime && !cachedDeleted && !cachedMimeRequiresUpgrade) continue;
 
       let dataForUpload: { dataUrl: string; mimeType: string } | null = null;
       try {
@@ -495,15 +531,56 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           } catch { /* optimization for storage is optional */ }
         }
         if (dataForUpload) {
+          const originalMime = (dataForUpload.mimeType || '').trim().toLowerCase();
+          if (isOfficeMimeUnsupportedByGemini(dataForUpload.mimeType)) {
+            try {
+              const preview = await getOfficePreview(dataForUpload.dataUrl, dataForUpload.mimeType, m.attachmentName);
+              const extracted = (preview.text || '').trim();
+              if (!extracted) {
+                throw new Error(preview.note || 'No extracted Office text available for Gemini upload conversion.');
+              }
+              dataForUpload = {
+                dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
+                mimeType: 'text/plain',
+              };
+            } catch (officeErr) {
+              console.warn(`[ensureUris] Failed to convert Office document to text for message ${m.id}; omitting this media from API payload.`, officeErr);
+              updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
+              continue;
+            }
+          }
+          if (isSvgMimeType(dataForUpload.mimeType)) {
+            try {
+              const rasterized = await processMediaForUpload(dataForUpload.dataUrl, dataForUpload.mimeType, { t });
+              if (!rasterized.dataUrl || !rasterized.mimeType || !rasterized.mimeType.startsWith('image/') || isSvgMimeType(rasterized.mimeType)) {
+                throw new Error(`SVG rasterization did not produce a supported image MIME: ${rasterized.mimeType}`);
+              }
+              dataForUpload = { dataUrl: rasterized.dataUrl, mimeType: rasterized.mimeType };
+            } catch (svgErr) {
+              console.warn(`[ensureUris] Failed to convert SVG to JPEG for message ${m.id}; omitting this media from API payload.`, svgErr);
+              updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
+              continue;
+            }
+          }
           const up = await uploadMediaToFiles(
             dataForUpload.dataUrl,
             dataForUpload.mimeType,
             m.attachmentName || 'send-history'
           );
-          updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
-          (m as any).uploadedFileUri = up.uri;
-          (m as any).uploadedFileMimeType = up.mimeType;
-          updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri };
+          const isSurrogateUpload = isOfficeMimeUnsupportedByGemini(originalMime) || isSvgMimeType(originalMime);
+          if (isSurrogateUpload) {
+            updatedUriMap[m.id] = {
+              oldUri: cachedUri,
+              newUri: up.uri,
+              newMimeType: up.mimeType,
+              transient: true,
+            };
+          } else {
+            updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
+            (m as any).uploadedFileUri = up.uri;
+            (m as any).uploadedFileMimeType = up.mimeType;
+            updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri, newMimeType: up.mimeType };
+          }
         }
       } catch (e) {
         console.warn('Pre-send URI ensure failed for message', m.id, e);
@@ -990,21 +1067,36 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
 
     const accumulatedFullText = response.text || "";
-    const parsedTranslationsOnComplete = parseGeminiResponse(accumulatedFullText);
+    const parsedAttachment = parseAssistantResponseForAttachment(accumulatedFullText);
+    const responseTextForConversation = parsedAttachment.cleanedText;
+    const parsedTranslationsOnComplete = parseGeminiResponse(responseTextForConversation);
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
     if (groundingChunks?.length) {
       setLatestGroundingChunks(groundingChunks);
     }
 
-    const finalMessageUpdates = {
+    const finalMessageUpdates: Partial<ChatMessage> = {
       thinking: false,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
-      rawAssistantResponse: accumulatedFullText,
-      text: parsedTranslationsOnComplete.length === 0 ? accumulatedFullText : undefined,
+      rawAssistantResponse: responseTextForConversation,
+      text: parsedTranslationsOnComplete.length === 0 ? responseTextForConversation : undefined,
     };
+    if (parsedAttachment.attachment) {
+      finalMessageUpdates.imageUrl = parsedAttachment.attachment.dataUrl;
+      finalMessageUpdates.imageMimeType = parsedAttachment.attachment.mimeType;
+      finalMessageUpdates.attachmentName = parsedAttachment.attachment.fileName;
+      finalMessageUpdates.storageOptimizedImageUrl = undefined;
+      finalMessageUpdates.storageOptimizedImageMimeType = undefined;
+      finalMessageUpdates.uploadedFileUri = undefined;
+      finalMessageUpdates.uploadedFileMimeType = undefined;
+    }
     updateMessage(params.thinkingMessageId, finalMessageUpdates);
 
-    return { accumulatedFullText, finalMessageUpdates };
+    return {
+      accumulatedFullText: responseTextForConversation,
+      finalMessageUpdates,
+      hasParsedAttachment: Boolean(parsedAttachment.attachment),
+    };
   }, [parseGeminiResponse, setLatestGroundingChunks, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
@@ -1112,6 +1204,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     currentSettingsVal: AppSettings;
   }) => {
     if (!params.currentSettingsVal.imageGenerationModeEnabled || !params.accumulatedFullText.trim()) return;
+    const existing = messagesRef.current.find((m) => m.id === params.thinkingMessageId);
+    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileUri && existing.uploadedFileMimeType))) {
+      return;
+    }
 
     const assistantStartTime = Date.now();
     updateMessage(params.thinkingMessageId, {
@@ -1132,8 +1228,21 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       });
       historyForAssistantImageGen = baseForEnsure.map(m => {
         const upd = ensuredUpdates[m.id];
-        if (upd && upd.newUri && (m as any).uploadedFileUri !== upd.newUri) {
-          return { ...m, uploadedFileUri: upd.newUri } as ChatMessage;
+        if (!upd) return m;
+        if (upd.omitFromPayload) {
+          return {
+            ...m,
+            uploadedFileUri: undefined,
+            uploadedFileMimeType: undefined,
+            imageFileUri: undefined,
+            imageMimeType: undefined,
+          } as ChatMessage;
+        }
+        if (upd.newUri) {
+          const nextMime = upd.newMimeType || (m as any).uploadedFileMimeType;
+          if ((m as any).uploadedFileUri !== upd.newUri || (upd.newMimeType && (m as any).uploadedFileMimeType !== upd.newMimeType)) {
+            return { ...m, uploadedFileUri: upd.newUri, uploadedFileMimeType: nextMime } as ChatMessage;
+          }
         }
         return m;
       });
@@ -1385,9 +1494,34 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           sendWithFileUploadInProgressRef.current = true;
         }
         setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
+        let uploadSource = {
+          dataUrl: imageForGeminiContextBase64,
+          mimeType: imageForGeminiContextMimeType,
+        };
+        if (isOfficeMimeUnsupportedByGemini(uploadSource.mimeType)) {
+          const officePreview = await getOfficePreview(uploadSource.dataUrl, uploadSource.mimeType, attachedFileName);
+          const extracted = (officePreview.text || '').trim();
+          if (!extracted) {
+            throw new Error(`Failed to extract Office text for Gemini context upload. ${officePreview.note || ''}`.trim());
+          }
+          uploadSource = {
+            dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
+            mimeType: 'text/plain',
+          };
+        }
+        if (isSvgMimeType(uploadSource.mimeType)) {
+          const rasterized = await processMediaForUpload(uploadSource.dataUrl, uploadSource.mimeType, { t });
+          if (!rasterized.dataUrl || !rasterized.mimeType || !rasterized.mimeType.startsWith('image/') || isSvgMimeType(rasterized.mimeType)) {
+            throw new Error(`Failed to rasterize SVG upload for Gemini context. Result MIME: ${rasterized.mimeType}`);
+          }
+          uploadSource = {
+            dataUrl: rasterized.dataUrl,
+            mimeType: rasterized.mimeType,
+          };
+        }
         const up = await uploadMediaToFiles(
-          imageForGeminiContextBase64,
-          imageForGeminiContextMimeType,
+          uploadSource.dataUrl,
+          uploadSource.mimeType,
           attachedFileName || 'current-user-media'
         );
         // CRITICAL: Use the normalized MIME type returned from upload to avoid mismatch errors
@@ -1424,7 +1558,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const historySubsetForSend: ChatMessage[] = getHistoryRespectingBookmark(historyForGemini);
       setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done: 0, total: 0 });
       
-      let ensuredUpdates: Record<string, { oldUri?: string; newUri: string }> = {};
+      let ensuredUpdates: Record<string, MediaPayloadOverride> = {};
       try {
         ensuredUpdates = await ensureUrisForHistoryForSend(historySubsetForSend, (done, total, etaMs) => {
           setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
@@ -1439,23 +1573,25 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       const historySubsetForSendFinal: ChatMessage[] = getHistoryRespectingBookmark(historyForGeminiPostEnsure)
         .map((m: ChatMessage) => {
-          if (ensuredUpdates[m.id]?.newUri) {
-            const nu = ensuredUpdates[m.id].newUri;
-            if ((m as any).uploadedFileUri !== nu) {
-              return { ...m, uploadedFileUri: nu } as ChatMessage;
+          const upd = ensuredUpdates[m.id];
+          if (!upd) return m;
+          if (upd.omitFromPayload) {
+            return {
+              ...m,
+              uploadedFileUri: undefined,
+              uploadedFileMimeType: undefined,
+              imageFileUri: undefined,
+              imageMimeType: undefined,
+            } as ChatMessage;
+          }
+          if (upd.newUri) {
+            const nextMime = upd.newMimeType || (m as any).uploadedFileMimeType;
+            if ((m as any).uploadedFileUri !== upd.newUri || (upd.newMimeType && (m as any).uploadedFileMimeType !== upd.newMimeType)) {
+              return { ...m, uploadedFileUri: upd.newUri, uploadedFileMimeType: nextMime } as ChatMessage;
             }
           }
           return m;
         });
-
-      try {
-        for (const m of historySubsetForSendFinal) {
-          const upd = ensuredUpdates[m.id];
-          if (upd && upd.newUri && (m as any).uploadedFileUri !== upd.newUri) {
-            (m as any).uploadedFileUri = upd.newUri;
-          }
-        }
-      } catch {}
 
       let globalProfileText: string | undefined = undefined;
       try {
@@ -1503,7 +1639,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         imageForGeminiContextMimeType = userImageContext.imageForGeminiContextMimeType;
       }
 
-      const { accumulatedFullText, finalMessageUpdates } = await handleGeminiResponse({
+      const { accumulatedFullText, finalMessageUpdates, hasParsedAttachment } = await handleGeminiResponse({
         thinkingMessageId,
         geminiPromptText,
         sanitizedDerivedHistory,
@@ -1544,11 +1680,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       await new Promise(resolve => setTimeout(resolve, 0));
 
       // Image generation for assistant response
-      await runAssistantImageGeneration({
-        thinkingMessageId,
-        accumulatedFullText,
-        currentSettingsVal,
-      });
+      if (!hasParsedAttachment) {
+        await runAssistantImageGeneration({
+          thinkingMessageId,
+          accumulatedFullText,
+          currentSettingsVal,
+        });
+      }
 
       try {
         sendWithFileUploadInProgressRef.current = false;

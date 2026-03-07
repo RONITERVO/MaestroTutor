@@ -5,6 +5,52 @@
 const MARKDOWN_EXTENSIONS = new Set(['md', 'markdown', 'mdx']);
 const JSON_EXTENSIONS = new Set(['json', 'json5', 'jsonc']);
 const CSV_EXTENSIONS = new Set(['csv']);
+const MICROSOFT_WORD_EXTENSIONS = new Set(['doc', 'docx', 'docm', 'dot', 'dotx', 'dotm', 'rtf']);
+const MICROSOFT_EXCEL_EXTENSIONS = new Set(['xls', 'xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm']);
+const MICROSOFT_POWERPOINT_EXTENSIONS = new Set(['ppt', 'pptx', 'pptm', 'pps', 'ppsx', 'pot', 'potx']);
+const OPEN_DOCUMENT_EXTENSIONS = new Set(['odt', 'ods', 'odp']);
+const GOOGLE_WORKSPACE_SHORTCUT_EXTENSIONS = new Set(['gdoc', 'gsheet', 'gslides']);
+
+const MICROSOFT_WORD_MIME_TYPES = new Set([
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+  'application/vnd.ms-word.document.macroenabled.12',
+  'application/vnd.ms-word.template.macroenabled.12',
+  'application/rtf',
+  'text/rtf',
+]);
+
+const MICROSOFT_EXCEL_MIME_TYPES = new Set([
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+  'application/vnd.ms-excel.sheet.macroenabled.12',
+  'application/vnd.ms-excel.template.macroenabled.12',
+  'application/vnd.ms-excel.sheet.binary.macroenabled.12',
+]);
+
+const MICROSOFT_POWERPOINT_MIME_TYPES = new Set([
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+  'application/vnd.openxmlformats-officedocument.presentationml.template',
+  'application/vnd.ms-powerpoint.presentation.macroenabled.12',
+  'application/vnd.ms-powerpoint.slideshow.macroenabled.12',
+  'application/vnd.ms-powerpoint.template.macroenabled.12',
+]);
+
+const OPEN_DOCUMENT_MIME_TYPES = new Set([
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.oasis.opendocument.presentation',
+]);
+
+const GOOGLE_WORKSPACE_SHORTCUT_MIME_TYPES = new Set([
+  'application/vnd.google-apps.document',
+  'application/vnd.google-apps.spreadsheet',
+  'application/vnd.google-apps.presentation',
+]);
 
 const CODE_TEXT_EXTENSIONS = new Set([
   'js', 'jsx', 'ts', 'tsx', 'mjs', 'cjs',
@@ -47,6 +93,117 @@ const getExtension = (fileName?: string | null): string => {
   return name.slice(lastDot + 1);
 };
 
+const inferOfficeMimeTypeFromFileName = (fileName?: string | null): string | null => {
+  const ext = getExtension(fileName);
+  if (!ext) return null;
+
+  if (MICROSOFT_WORD_EXTENSIONS.has(ext)) {
+    switch (ext) {
+      case 'doc':
+      case 'dot':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'dotx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.template';
+      case 'docm':
+        return 'application/vnd.ms-word.document.macroenabled.12';
+      case 'dotm':
+        return 'application/vnd.ms-word.template.macroenabled.12';
+      case 'rtf':
+        return 'application/rtf';
+      default:
+        return 'application/msword';
+    }
+  }
+
+  if (MICROSOFT_EXCEL_EXTENSIONS.has(ext)) {
+    switch (ext) {
+      case 'xls':
+        return 'application/vnd.ms-excel';
+      case 'xlsx':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      case 'xltx':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.template';
+      case 'xlsm':
+        return 'application/vnd.ms-excel.sheet.macroenabled.12';
+      case 'xltm':
+        return 'application/vnd.ms-excel.template.macroenabled.12';
+      case 'xlsb':
+        return 'application/vnd.ms-excel.sheet.binary.macroenabled.12';
+      default:
+        return 'application/vnd.ms-excel';
+    }
+  }
+
+  if (MICROSOFT_POWERPOINT_EXTENSIONS.has(ext)) {
+    switch (ext) {
+      case 'ppt':
+      case 'pps':
+      case 'pot':
+        return 'application/vnd.ms-powerpoint';
+      case 'pptx':
+        return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      case 'ppsx':
+        return 'application/vnd.openxmlformats-officedocument.presentationml.slideshow';
+      case 'potx':
+        return 'application/vnd.openxmlformats-officedocument.presentationml.template';
+      case 'pptm':
+        return 'application/vnd.ms-powerpoint.presentation.macroenabled.12';
+      default:
+        return 'application/vnd.ms-powerpoint';
+    }
+  }
+
+  if (OPEN_DOCUMENT_EXTENSIONS.has(ext)) {
+    if (ext === 'odt') return 'application/vnd.oasis.opendocument.text';
+    if (ext === 'ods') return 'application/vnd.oasis.opendocument.spreadsheet';
+    if (ext === 'odp') return 'application/vnd.oasis.opendocument.presentation';
+  }
+
+  if (GOOGLE_WORKSPACE_SHORTCUT_EXTENSIONS.has(ext)) {
+    // Desktop Google Workspace shortcuts are JSON manifests.
+    return 'application/json';
+  }
+
+  return null;
+};
+
+export const isMicrosoftOfficeMimeType = (mimeType?: string | null): boolean => {
+  const mime = (mimeType || '').trim().toLowerCase();
+  if (!mime) return false;
+  return (
+    MICROSOFT_WORD_MIME_TYPES.has(mime) ||
+    MICROSOFT_EXCEL_MIME_TYPES.has(mime) ||
+    MICROSOFT_POWERPOINT_MIME_TYPES.has(mime) ||
+    OPEN_DOCUMENT_MIME_TYPES.has(mime)
+  );
+};
+
+export const isGoogleWorkspaceShortcutMimeType = (mimeType?: string | null): boolean => {
+  const mime = (mimeType || '').trim().toLowerCase();
+  return GOOGLE_WORKSPACE_SHORTCUT_MIME_TYPES.has(mime);
+};
+
+export const isGoogleWorkspaceShortcutFileName = (fileName?: string | null): boolean => {
+  const ext = getExtension(fileName);
+  return GOOGLE_WORKSPACE_SHORTCUT_EXTENSIONS.has(ext);
+};
+
+export const isOfficeAttachment = (mimeType?: string | null, fileName?: string | null): boolean => {
+  if (isMicrosoftOfficeMimeType(mimeType)) return true;
+  if (isGoogleWorkspaceShortcutMimeType(mimeType)) return true;
+
+  const ext = getExtension(fileName);
+  return (
+    MICROSOFT_WORD_EXTENSIONS.has(ext) ||
+    MICROSOFT_EXCEL_EXTENSIONS.has(ext) ||
+    MICROSOFT_POWERPOINT_EXTENSIONS.has(ext) ||
+    OPEN_DOCUMENT_EXTENSIONS.has(ext) ||
+    GOOGLE_WORKSPACE_SHORTCUT_EXTENSIONS.has(ext)
+  );
+};
+
 export const inferTextMimeTypeFromFileName = (fileName?: string | null): string | null => {
   const name = getLowerName(fileName);
   if (!name) return null;
@@ -62,6 +219,9 @@ export const inferTextMimeTypeFromFileName = (fileName?: string | null): string 
 };
 
 export const normalizeAttachmentMimeType = (fileLike: { name?: string | null; type?: string | null }): string => {
+  const inferredOffice = inferOfficeMimeTypeFromFileName(fileLike.name);
+  if (inferredOffice) return inferredOffice;
+
   const inferred = inferTextMimeTypeFromFileName(fileLike.name);
   if (inferred) return inferred;
 
@@ -74,6 +234,8 @@ export const normalizeAttachmentMimeType = (fileLike: { name?: string | null; ty
 export const isTextLikeMimeType = (mimeType?: string | null): boolean => {
   const mime = (mimeType || '').trim().toLowerCase();
   if (!mime) return false;
+  if (isMicrosoftOfficeMimeType(mime)) return false;
+  if (isGoogleWorkspaceShortcutMimeType(mime)) return false;
   if (mime.startsWith('text/')) return true;
 
   return (
@@ -93,6 +255,7 @@ export const isTextLikeMimeType = (mimeType?: string | null): boolean => {
 };
 
 export const isTextLikeAttachment = (mimeType?: string | null, fileName?: string | null): boolean => {
+  if (isOfficeAttachment(mimeType, fileName)) return false;
   if (isTextLikeMimeType(mimeType)) return true;
   return !!inferTextMimeTypeFromFileName(fileName);
 };
@@ -202,4 +365,31 @@ export const decodeTextPreviewFromDataUrl = (
   const truncated = text.length > maxChars || payload.length > maxBase64Chars;
 
   return truncated ? `${clipped}\n...` : clipped;
+};
+
+const GOOGLE_WORKSPACE_URL_REGEX = /https:\/\/docs\.google\.com\/(?:document|spreadsheets|presentation)\/[^\s"'\\]+/i;
+
+const isGoogleWorkspaceUrl = (value?: string | null): boolean => {
+  if (!value || typeof value !== 'string') return false;
+  return GOOGLE_WORKSPACE_URL_REGEX.test(value.trim());
+};
+
+export const extractGoogleWorkspaceUrlFromDataUrl = (dataUrl?: string | null): string | null => {
+  const decodedText = decodeTextFromDataUrl(dataUrl);
+  if (!decodedText) return null;
+
+  try {
+    const parsed = JSON.parse(decodedText) as Record<string, unknown>;
+    const candidates = [parsed.url, parsed.doc_url, parsed.alternateLink, parsed.alternate_link];
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && isGoogleWorkspaceUrl(candidate)) {
+        return candidate.trim();
+      }
+    }
+  } catch {
+    // Fallback to regex extraction below.
+  }
+
+  const match = decodedText.match(GOOGLE_WORKSPACE_URL_REGEX);
+  return match?.[0] || null;
 };

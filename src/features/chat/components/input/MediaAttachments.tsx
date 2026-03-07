@@ -11,7 +11,8 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityT
 import AudioPlayer from '../AudioPlayer';
 import PdfViewer from '../PdfViewer';
 import TextFileViewer from '../TextFileViewer';
-import { isTextLikeAttachment } from '../../utils/fileAttachments';
+import OfficeFileViewer from '../OfficeFileViewer';
+import { isOfficeAttachment, isTextLikeAttachment } from '../../utils/fileAttachments';
 
 interface MediaAttachmentsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
@@ -243,6 +244,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   }, [liveVideoStream, attachedImageBase64]);
 
   const isTextAttachment = isTextLikeAttachment(attachedImageMimeType, attachedFileName);
+  const isOfficeAttachmentFile = isOfficeAttachment(attachedImageMimeType, attachedFileName);
 
   if (!attachedImageBase64 && !showLiveFeed) return null;
 
@@ -323,6 +325,14 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 <IconPencil className="w-4 h-4" />
               </button>
             </div>
+          ) : isOfficeAttachmentFile ? (
+            <OfficeFileViewer
+              src={attachedImageBase64}
+              variant="preview"
+              compact
+              fileName={attachedFileName}
+              mimeType={attachedImageMimeType}
+            />
           ) : isTextAttachment ? (
             <TextFileViewer
               src={attachedImageBase64}
