@@ -29,6 +29,7 @@ import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../
 import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../session';
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
+import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
 import { 
   IMAGE_GEN_CAMERA_ID,
   MAX_MEDIA_TO_KEEP 
@@ -990,21 +991,36 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
 
     const accumulatedFullText = response.text || "";
-    const parsedTranslationsOnComplete = parseGeminiResponse(accumulatedFullText);
+    const parsedAttachment = parseAssistantResponseForAttachment(accumulatedFullText);
+    const responseTextForConversation = parsedAttachment.cleanedText;
+    const parsedTranslationsOnComplete = parseGeminiResponse(responseTextForConversation);
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
     if (groundingChunks?.length) {
       setLatestGroundingChunks(groundingChunks);
     }
 
-    const finalMessageUpdates = {
+    const finalMessageUpdates: Partial<ChatMessage> = {
       thinking: false,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
-      rawAssistantResponse: accumulatedFullText,
-      text: parsedTranslationsOnComplete.length === 0 ? accumulatedFullText : undefined,
+      rawAssistantResponse: responseTextForConversation,
+      text: parsedTranslationsOnComplete.length === 0 ? responseTextForConversation : undefined,
     };
+    if (parsedAttachment.attachment) {
+      finalMessageUpdates.imageUrl = parsedAttachment.attachment.dataUrl;
+      finalMessageUpdates.imageMimeType = parsedAttachment.attachment.mimeType;
+      finalMessageUpdates.attachmentName = parsedAttachment.attachment.fileName;
+      finalMessageUpdates.storageOptimizedImageUrl = undefined;
+      finalMessageUpdates.storageOptimizedImageMimeType = undefined;
+      finalMessageUpdates.uploadedFileUri = undefined;
+      finalMessageUpdates.uploadedFileMimeType = undefined;
+    }
     updateMessage(params.thinkingMessageId, finalMessageUpdates);
 
-    return { accumulatedFullText, finalMessageUpdates };
+    return {
+      accumulatedFullText: responseTextForConversation,
+      finalMessageUpdates,
+      hasParsedAttachment: Boolean(parsedAttachment.attachment),
+    };
   }, [parseGeminiResponse, setLatestGroundingChunks, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
@@ -1112,6 +1128,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     currentSettingsVal: AppSettings;
   }) => {
     if (!params.currentSettingsVal.imageGenerationModeEnabled || !params.accumulatedFullText.trim()) return;
+    const existing = messagesRef.current.find((m) => m.id === params.thinkingMessageId);
+    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileUri && existing.uploadedFileMimeType))) {
+      return;
+    }
 
     const assistantStartTime = Date.now();
     updateMessage(params.thinkingMessageId, {
@@ -1503,7 +1523,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         imageForGeminiContextMimeType = userImageContext.imageForGeminiContextMimeType;
       }
 
-      const { accumulatedFullText, finalMessageUpdates } = await handleGeminiResponse({
+      const { accumulatedFullText, finalMessageUpdates, hasParsedAttachment } = await handleGeminiResponse({
         thinkingMessageId,
         geminiPromptText,
         sanitizedDerivedHistory,
@@ -1544,11 +1564,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       await new Promise(resolve => setTimeout(resolve, 0));
 
       // Image generation for assistant response
-      await runAssistantImageGeneration({
-        thinkingMessageId,
-        accumulatedFullText,
-        currentSettingsVal,
-      });
+      if (!hasParsedAttachment) {
+        await runAssistantImageGeneration({
+          thinkingMessageId,
+          accumulatedFullText,
+          currentSettingsVal,
+        });
+      }
 
       try {
         sendWithFileUploadInProgressRef.current = false;
