@@ -249,11 +249,14 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   const liveSessionActive = liveSessionState === 'active';
   const liveSessionConnecting = liveSessionState === 'connecting';
   const liveSessionErrored = liveSessionState === 'error';
+  const panelWidthClass = isTwoUp
+    ? 'w-[calc(50%-0.25rem)] max-w-[calc(50%-0.25rem)]'
+    : 'w-[min(50%,22rem)] max-w-[50%]';
 
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
       {attachedImageBase64 && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
+        <div className={`relative ${panelWidthClass} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
           {attachedImageMimeType?.startsWith('image/') ? (
             <div className="relative">
               <img src={attachedImageBase64} alt={t('chat.imagePreview.alt')} className="h-24 w-full object-cover rounded" />
@@ -348,7 +351,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       )}
 
       {showLiveFeed && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
+        <div className={`relative ${panelWidthClass} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
           <div className="relative group">
             <video
               ref={livePreviewVideoRef}
