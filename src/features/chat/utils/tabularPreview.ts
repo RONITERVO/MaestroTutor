@@ -6,6 +6,13 @@ export interface TabularChartSeries {
   labels: string[];
   values: number[];
   label?: string;
+  sourceColumnIndex?: number;
+}
+
+export interface TabularSheetPreview {
+  name: string;
+  rows: string[][];
+  chartSeriesList: TabularChartSeries[];
 }
 
 const parseDelimitedLine = (line: string, delimiter: string): string[] => {
@@ -131,38 +138,14 @@ const normalizeNumericCell = (value: string): number | null => {
   return out;
 };
 
-export const deriveChartSeriesFromRows = (rows: string[][]): TabularChartSeries | null => {
-  if (!rows || rows.length < 2) return null;
-
+const deriveBestLabelColumn = (rows: string[][], dataStart: number, numericColumns: number[]): number => {
+  const numericSet = new Set(numericColumns);
   const maxCols = rows.reduce((max, row) => Math.max(max, row.length), 0);
-  if (maxCols === 0) return null;
-
-  let bestNumericCol = -1;
-  let bestNumericCount = 0;
-
-  for (let c = 0; c < maxCols; c++) {
-    let count = 0;
-    for (let r = 0; r < rows.length; r++) {
-      const value = rows[r][c] || '';
-      if (normalizeNumericCell(value) !== null) count++;
-    }
-    if (count > bestNumericCount) {
-      bestNumericCount = count;
-      bestNumericCol = c;
-    }
-  }
-
-  if (bestNumericCol < 0 || bestNumericCount < 2) return null;
-
-  const firstNumeric = normalizeNumericCell(rows[0][bestNumericCol] || '');
-  const headerLikely = firstNumeric === null;
-  const dataStart = headerLikely ? 1 : 0;
-
   let labelCol = -1;
   let labelScore = 0;
 
   for (let c = 0; c < maxCols; c++) {
-    if (c === bestNumericCol) continue;
+    if (numericSet.has(c)) continue;
     let score = 0;
     for (let r = dataStart; r < rows.length; r++) {
       const value = (rows[r][c] || '').trim();
@@ -175,22 +158,73 @@ export const deriveChartSeriesFromRows = (rows: string[][]): TabularChartSeries 
     }
   }
 
-  const labels: string[] = [];
-  const values: number[] = [];
+  return labelCol;
+};
 
-  for (let r = dataStart; r < rows.length && values.length < 30; r++) {
-    const numeric = normalizeNumericCell(rows[r][bestNumericCol] || '');
-    if (numeric === null) continue;
-    const labelRaw = labelCol >= 0 ? (rows[r][labelCol] || '').trim() : '';
-    labels.push(labelRaw || `${values.length + 1}`);
-    values.push(numeric);
+export const deriveChartSeriesListFromRows = (rows: string[][]): TabularChartSeries[] => {
+  if (!rows || rows.length < 2) return [];
+
+  const maxCols = rows.reduce((max, row) => Math.max(max, row.length), 0);
+  if (maxCols === 0) return [];
+
+  const numericColumns: Array<{ columnIndex: number; numericCount: number }> = [];
+
+  for (let c = 0; c < maxCols; c++) {
+    let count = 0;
+    for (let r = 0; r < rows.length; r++) {
+      const value = rows[r][c] || '';
+      if (normalizeNumericCell(value) !== null) count++;
+    }
+    if (count >= 2) numericColumns.push({ columnIndex: c, numericCount: count });
   }
 
-  if (values.length < 2) return null;
+  if (numericColumns.length === 0) return [];
+  numericColumns.sort((a, b) => b.numericCount - a.numericCount);
 
-  const label = headerLikely
-    ? ((rows[0][bestNumericCol] || '').trim() || undefined)
-    : undefined;
+  const firstNumeric = normalizeNumericCell(rows[0][numericColumns[0].columnIndex] || '');
+  const headerLikely = firstNumeric === null;
+  const dataStart = headerLikely ? 1 : 0;
 
-  return { labels, values, label };
+  const labelCol = deriveBestLabelColumn(
+    rows,
+    dataStart,
+    numericColumns.map((c) => c.columnIndex)
+  );
+
+  const seriesList: TabularChartSeries[] = [];
+  const maxSeries = 8;
+
+  for (let seriesIndex = 0; seriesIndex < numericColumns.length && seriesList.length < maxSeries; seriesIndex++) {
+    const targetColumn = numericColumns[seriesIndex].columnIndex;
+    const labels: string[] = [];
+    const values: number[] = [];
+
+    for (let r = dataStart; r < rows.length && values.length < 50; r++) {
+      const numeric = normalizeNumericCell(rows[r][targetColumn] || '');
+      if (numeric === null) continue;
+      const labelRaw = labelCol >= 0 ? (rows[r][labelCol] || '').trim() : '';
+      labels.push(labelRaw || `${values.length + 1}`);
+      values.push(numeric);
+    }
+
+    if (values.length < 2) continue;
+
+    const label = headerLikely
+      ? ((rows[0][targetColumn] || '').trim() || undefined)
+      : undefined;
+
+    seriesList.push({
+      labels,
+      values,
+      label,
+      sourceColumnIndex: targetColumn,
+    });
+  }
+
+  return seriesList;
+};
+
+export const deriveChartSeriesFromRows = (rows: string[][]): TabularChartSeries | null => {
+  const list = deriveChartSeriesListFromRows(rows);
+  return list.length > 0 ? list[0] : null;
 };

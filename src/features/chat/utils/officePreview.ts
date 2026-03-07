@@ -9,7 +9,7 @@ import {
   isGoogleWorkspaceShortcutMimeType,
   isMicrosoftOfficeMimeType,
 } from './fileAttachments';
-import { deriveChartSeriesFromRows, type TabularChartSeries } from './tabularPreview';
+import { deriveChartSeriesListFromRows, type TabularChartSeries, type TabularSheetPreview } from './tabularPreview';
 
 const WORD_OPENXML_EXTENSIONS = new Set(['docx', 'docm', 'dotx', 'dotm']);
 const EXCEL_OPENXML_EXTENSIONS = new Set(['xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm']);
@@ -17,10 +17,10 @@ const POWERPOINT_OPENXML_EXTENSIONS = new Set(['pptx', 'pptm', 'ppsx', 'potx']);
 const LEGACY_BINARY_EXTENSIONS = new Set(['doc', 'xls', 'ppt', 'pps', 'pot']);
 const OPEN_DOCUMENT_EXTENSIONS = new Set(['odt', 'ods', 'odp']);
 
-const MAX_PREVIEW_CHARS = 14_000;
-const MAX_SHEET_ROWS = 35;
-const MAX_SHEET_COLS = 10;
-const MAX_SHEETS = 3;
+const MAX_PREVIEW_CHARS = 120_000;
+const MAX_SHEET_ROWS = 220;
+const MAX_SHEET_COLS = 40;
+const MAX_SHEETS = 12;
 const MAX_SLIDES = 20;
 const PREVIEW_CACHE_MAX = 24;
 
@@ -32,6 +32,7 @@ export interface OfficePreviewResult {
   note?: string;
   tableRows?: string[][];
   chartSeries?: TabularChartSeries;
+  sheets?: TabularSheetPreview[];
 }
 
 const previewCache = new Map<string, Promise<OfficePreviewResult>>();
@@ -236,8 +237,7 @@ const parseWorkbookSheetEntries = (
 
 interface SpreadsheetExtractionResult {
   text: string;
-  tableRows: string[][];
-  chartSeries: TabularChartSeries | null;
+  sheets: TabularSheetPreview[];
 }
 
 const extractSpreadsheetText = async (zip: JSZip): Promise<SpreadsheetExtractionResult> => {
@@ -248,11 +248,11 @@ const extractSpreadsheetText = async (zip: JSZip): Promise<SpreadsheetExtraction
   const sharedStrings = parseSharedStrings(sharedStringsXml);
   const entries = parseWorkbookSheetEntries(zip, workbookXml, workbookRelsXml);
   if (entries.length === 0) {
-    return { text: '', tableRows: [], chartSeries: null };
+    return { text: '', sheets: [] };
   }
 
   const chunks: string[] = [];
-  let firstTableRows: string[][] = [];
+  const sheets: TabularSheetPreview[] = [];
 
   for (const entry of entries) {
     const sheetXml = await zip.file(entry.path)?.async('string');
@@ -285,23 +285,21 @@ const extractSpreadsheetText = async (zip: JSZip): Promise<SpreadsheetExtraction
     }
 
     if (rows.length > 0) {
-      if (firstTableRows.length === 0) {
-        firstTableRows = rows.map((row) => [...row]);
-      }
       chunks.push(`[Sheet: ${entry.name}]`);
       chunks.push(rows.map((row) => row.join('\t')).join('\n'));
       chunks.push('');
+
+      sheets.push({
+        name: entry.name,
+        rows: rows.map((row) => [...row]),
+        chartSeriesList: deriveChartSeriesListFromRows(rows),
+      });
     }
   }
 
-  const chartSeries = firstTableRows.length > 0
-    ? deriveChartSeriesFromRows(firstTableRows)
-    : null;
-
   return {
     text: chunks.join('\n').trim(),
-    tableRows: firstTableRows,
-    chartSeries,
+    sheets,
   };
 };
 
@@ -424,14 +422,18 @@ const parseOfficePreviewInternal = async (src: string, mimeType?: string | null,
     let extracted = '';
     let tableRows: string[][] | undefined;
     let chartSeries: TabularChartSeries | undefined;
+    let sheets: TabularSheetPreview[] | undefined;
 
     if (WORD_OPENXML_EXTENSIONS.has(ext) || zip.file('word/document.xml')) {
       extracted = await extractWordProcessingText(zip);
     } else if (EXCEL_OPENXML_EXTENSIONS.has(ext) || zip.file('xl/workbook.xml')) {
       const spreadsheet = await extractSpreadsheetText(zip);
       extracted = spreadsheet.text;
-      if (spreadsheet.tableRows.length > 0) tableRows = spreadsheet.tableRows;
-      if (spreadsheet.chartSeries) chartSeries = spreadsheet.chartSeries;
+      if (spreadsheet.sheets.length > 0) {
+        sheets = spreadsheet.sheets;
+        tableRows = spreadsheet.sheets[0].rows;
+        chartSeries = spreadsheet.sheets[0].chartSeriesList[0];
+      }
     } else if (POWERPOINT_OPENXML_EXTENSIONS.has(ext) || zip.file('ppt/presentation.xml')) {
       extracted = await extractSlidesText(zip);
     } else if (OPEN_DOCUMENT_EXTENSIONS.has(ext) || zip.file('content.xml')) {
@@ -452,6 +454,7 @@ const parseOfficePreviewInternal = async (src: string, mimeType?: string | null,
       text: clipped,
       tableRows,
       chartSeries,
+      sheets,
     };
   } catch (error) {
     return {

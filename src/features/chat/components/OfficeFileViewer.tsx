@@ -11,7 +11,7 @@ import {
   isGoogleWorkspaceShortcutMimeType,
 } from '../utils/fileAttachments';
 import { getOfficePreview } from '../utils/officePreview';
-import type { TabularChartSeries } from '../utils/tabularPreview';
+import type { TabularChartSeries, TabularSheetPreview } from '../utils/tabularPreview';
 
 interface OfficeFileViewerProps {
   src?: string | null;
@@ -89,8 +89,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
 }) => {
   const [previewText, setPreviewText] = React.useState<string | null>(null);
   const [previewNote, setPreviewNote] = React.useState<string | null>(null);
-  const [previewRows, setPreviewRows] = React.useState<string[][] | null>(null);
-  const [previewChart, setPreviewChart] = React.useState<TabularChartSeries | null>(null);
+  const [previewSheets, setPreviewSheets] = React.useState<TabularSheetPreview[]>([]);
   const [isParsingPreview, setIsParsingPreview] = React.useState(false);
 
   const isUser = variant === 'user';
@@ -119,8 +118,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
     if (!src) {
       setPreviewText(null);
       setPreviewNote(hasRemoteUri ? 'Local preview unavailable. Reattach to open locally.' : 'Preview unavailable for this file.');
-      setPreviewRows(null);
-      setPreviewChart(null);
+      setPreviewSheets([]);
       setIsParsingPreview(false);
       return () => { cancelled = true; };
     }
@@ -132,15 +130,20 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
         if (cancelled) return;
         setPreviewText(result.text);
         setPreviewNote(result.note || null);
-        setPreviewRows(result.tableRows || null);
-        setPreviewChart(result.chartSeries || null);
+        if (Array.isArray(result.sheets) && result.sheets.length > 0) {
+          setPreviewSheets(result.sheets);
+        } else if (Array.isArray(result.tableRows) && result.tableRows.length > 0) {
+          const list: TabularChartSeries[] = result.chartSeries ? [result.chartSeries] : [];
+          setPreviewSheets([{ name: 'Sheet 1', rows: result.tableRows, chartSeriesList: list }]);
+        } else {
+          setPreviewSheets([]);
+        }
       })
       .catch((error) => {
         if (cancelled) return;
         setPreviewText(null);
         setPreviewNote(error instanceof Error ? error.message : 'Failed to parse inline preview.');
-        setPreviewRows(null);
-        setPreviewChart(null);
+        setPreviewSheets([]);
       })
       .finally(() => {
         if (!cancelled) setIsParsingPreview(false);
@@ -176,10 +179,9 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
                 <SmallSpinner className="w-3 h-3" />
                 Parsing preview...
               </div>
-            ) : previewRows && previewRows.length > 0 ? (
+            ) : previewSheets.length > 0 ? (
               <TabularPreview
-                rows={previewRows}
-                chartSeries={previewChart}
+                sheets={previewSheets}
                 textColorClass={textColor}
                 subtleTextClass={subtleText}
                 compact
@@ -222,20 +224,21 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
               <SmallSpinner className="w-3.5 h-3.5" />
               Parsing inline preview...
             </div>
-          ) : previewRows && previewRows.length > 0 ? (
+          ) : previewSheets.length > 0 ? (
             <>
               <TabularPreview
-                rows={previewRows}
-                chartSeries={previewChart}
+                sheets={previewSheets}
                 textColorClass={textColor}
                 subtleTextClass={subtleText}
               />
               {previewText ? (
                 <details className="mt-2">
                   <summary className={`text-xs cursor-pointer ${subtleText}`}>Raw extracted text</summary>
-                  <pre className={`mt-1 p-2 text-xs leading-5 whitespace-pre-wrap break-words rounded border border-black/10 bg-black/5 ${subtleText}`}>
-                    {previewText}
-                  </pre>
+                  <div className="mt-1 rounded border border-black/10 bg-black/5 max-h-72 overflow-auto">
+                    <pre className={`p-2 text-xs leading-5 whitespace-pre-wrap break-words ${subtleText}`}>
+                      {previewText}
+                    </pre>
+                  </div>
                 </details>
               ) : null}
             </>
@@ -258,9 +261,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
             >
               {openLabel}
             </a>
-          ) : (
-            <p className={`mt-1 text-xs ${subtleText}`}>{statusText}</p>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

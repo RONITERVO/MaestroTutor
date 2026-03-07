@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { decodeTextFromDataUrl } from '../utils/fileAttachments';
 import TabularPreview from './TabularPreview';
-import { deriveChartSeriesFromRows, parseDelimitedText } from '../utils/tabularPreview';
+import { deriveChartSeriesListFromRows, parseDelimitedText } from '../utils/tabularPreview';
 
 interface TextFileViewerProps {
   src: string;
@@ -41,7 +41,15 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
     if (!decodedText || !isTabularTextFile) return [];
     return parseDelimitedText(decodedText, fileExt === 'tsv' ? '\t' : undefined);
   }, [decodedText, isTabularTextFile, fileExt]);
-  const chartSeries = useMemo(() => deriveChartSeriesFromRows(tabularRows), [tabularRows]);
+  const chartSeriesList = useMemo(() => deriveChartSeriesListFromRows(tabularRows), [tabularRows]);
+  const tabularSheets = useMemo(() => {
+    if (!isTabularTextFile || tabularRows.length <= 1) return [];
+    return [{
+      name: fileName || 'Sheet 1',
+      rows: tabularRows,
+      chartSeriesList,
+    }];
+  }, [isTabularTextFile, tabularRows, chartSeriesList, fileName]);
   const previewSnippet = useMemo(() => {
     if (!decodedText) return '';
     if (decodedText.length <= 3200) return decodedText;
@@ -70,11 +78,10 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
         <div className={`px-2 py-1 text-[10px] font-mono truncate ${headerBg} ${textColor}`}>
           {metaLabel}
         </div>
-        {isTabularTextFile && tabularRows.length > 1 ? (
+        {tabularSheets.length > 0 ? (
           <div className="px-2 pb-2">
             <TabularPreview
-              rows={tabularRows}
-              chartSeries={chartSeries}
+              sheets={tabularSheets}
               textColorClass={textColor}
               subtleTextClass={subtleText}
               compact
@@ -104,19 +111,20 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
           {metaLabel}
         </div>
         <div className="p-3">
-          {isTabularTextFile && tabularRows.length > 1 ? (
+          {tabularSheets.length > 0 ? (
             <>
               <TabularPreview
-                rows={tabularRows}
-                chartSeries={chartSeries}
+                sheets={tabularSheets}
                 textColorClass={textColor}
                 subtleTextClass={subtleText}
               />
               <details className="mt-3">
                 <summary className={`text-xs cursor-pointer ${subtleText}`}>Raw text</summary>
-                <pre className={`mt-1 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
-                  {previewSnippet}
-                </pre>
+                <div className="mt-1 max-h-72 overflow-auto rounded border border-black/10 bg-black/5">
+                  <pre className={`p-2 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
+                    {previewSnippet}
+                  </pre>
+                </div>
               </details>
             </>
           ) : (
