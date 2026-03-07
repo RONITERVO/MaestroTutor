@@ -33,6 +33,7 @@ export interface UseSilentObserverControllerReturn {
   silentObserverState: LiveSessionState;
   silentObserverError: string | null;
   stopSilentObserver: () => Promise<void>;
+  resetSilentObserver: () => Promise<void>;
 }
 
 const readForegroundState = () => {
@@ -182,6 +183,9 @@ export const useSilentObserverController = ({
         suspendWakeTimerRef.current = null;
         setLifecycleTick(prev => prev + 1);
       }, holdMs + 20);
+    } else {
+      suspendUntilRef.current = 0;
+      clearSuspendWakeTimer();
     }
     clearRetryTimer();
     try {
@@ -198,6 +202,14 @@ export const useSilentObserverController = ({
   const stopSilentObserver = useCallback(async () => {
     await stopObserverInternal('manual-stop', OBSERVER_MANUAL_STOP_HOLD_MS);
   }, [stopObserverInternal]);
+
+  const resetSilentObserver = useCallback(async () => {
+    // Drop session resumption so a language switch cannot resume old-context state.
+    resumptionHandleRef.current = undefined;
+    setSilentObserverError(null);
+    await stopObserverInternal('reset', 0);
+    setLifecycleTick(prev => prev + 1);
+  }, [setSilentObserverError, stopObserverInternal]);
 
   useEffect(() => {
     const syncForeground = () => setIsForeground(readForegroundState());
@@ -278,6 +290,7 @@ export const useSilentObserverController = ({
     silentObserverState,
     silentObserverError,
     stopSilentObserver,
+    resetSilentObserver,
   };
 };
 
