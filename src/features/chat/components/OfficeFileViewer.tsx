@@ -3,11 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
+import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import {
   extractGoogleWorkspaceUrlFromDataUrl,
   isGoogleWorkspaceShortcutFileName,
   isGoogleWorkspaceShortcutMimeType,
 } from '../utils/fileAttachments';
+import { getOfficePreview } from '../utils/officePreview';
 
 interface OfficeFileViewerProps {
   src?: string | null;
@@ -83,6 +85,10 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   mimeType,
   hasRemoteUri = false,
 }) => {
+  const [previewText, setPreviewText] = React.useState<string | null>(null);
+  const [previewNote, setPreviewNote] = React.useState<string | null>(null);
+  const [isParsingPreview, setIsParsingPreview] = React.useState(false);
+
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
   const headerBg = isUser ? 'bg-user-msg-bg/40' : 'bg-ai-msg-bg/60';
@@ -103,9 +109,47 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   const shouldUseDownload = Boolean(src && !googleWorkspaceLink && /^data:|^blob:/i.test(src));
   const downloadName = fileName || 'office-attachment';
 
-  const statusText = !openHref
+  React.useEffect(() => {
+    let cancelled = false;
+
+    if (!src) {
+      setPreviewText(null);
+      setPreviewNote(hasRemoteUri ? 'Local preview unavailable. Reattach to open locally.' : 'Preview unavailable for this file.');
+      setIsParsingPreview(false);
+      return () => { cancelled = true; };
+    }
+
+    setIsParsingPreview(true);
+    setPreviewNote(null);
+    getOfficePreview(src, mimeType, fileName)
+      .then((result) => {
+        if (cancelled) return;
+        setPreviewText(result.text);
+        setPreviewNote(result.note || null);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setPreviewText(null);
+        setPreviewNote(error instanceof Error ? error.message : 'Failed to parse inline preview.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsParsingPreview(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [src, mimeType, fileName, hasRemoteUri]);
+
+  const compactPreviewSnippet = useMemo(() => {
+    if (!previewText) return null;
+    const lines = previewText.split('\n').slice(0, 4);
+    const joined = lines.join('\n');
+    if (joined.length <= 240) return joined;
+    return `${joined.slice(0, 240)}...`;
+  }, [previewText]);
+
+  const statusText = previewNote || (!openHref
     ? (hasRemoteUri ? 'Local preview unavailable. Reattach to open locally.' : 'Preview unavailable for this file.')
-    : null;
+    : null);
 
   if (compact) {
     return (
@@ -117,6 +161,18 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
           <IconPaperclip className={`w-4 h-4 shrink-0 mt-0.5 ${textColor}`} />
           <div className="min-w-0 flex-1">
             <p className={`text-[11px] font-semibold truncate ${textColor}`}>{attachmentLabel}</p>
+            {isParsingPreview ? (
+              <div className={`mt-1 inline-flex items-center gap-1 text-[10px] ${subtleText}`}>
+                <SmallSpinner className="w-3 h-3" />
+                Parsing preview...
+              </div>
+            ) : compactPreviewSnippet ? (
+              <pre className={`mt-1 text-[10px] leading-4 whitespace-pre-wrap break-words ${subtleText}`}>
+                {compactPreviewSnippet}
+              </pre>
+            ) : statusText ? (
+              <p className={`mt-1 text-[10px] ${subtleText}`}>{statusText}</p>
+            ) : null}
             {openHref ? (
               <a
                 href={openHref}
@@ -127,9 +183,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
               >
                 {openLabel}
               </a>
-            ) : (
-              <p className={`text-[10px] ${subtleText}`}>{statusText}</p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -145,6 +199,20 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
         <IconPaperclip className={`w-6 h-6 shrink-0 mt-0.5 ${textColor}`} />
         <div className="min-w-0 flex-1">
           <p className={`text-sm font-semibold ${textColor}`}>{attachmentLabel}</p>
+          {isParsingPreview ? (
+            <div className={`mt-2 inline-flex items-center gap-1.5 text-xs ${subtleText}`}>
+              <SmallSpinner className="w-3.5 h-3.5" />
+              Parsing inline preview...
+            </div>
+          ) : previewText ? (
+            <div className="mt-2 max-h-64 overflow-auto rounded border border-black/10 bg-black/5">
+              <pre className={`p-2 text-xs leading-5 whitespace-pre-wrap break-words ${subtleText}`}>
+                {previewText}
+              </pre>
+            </div>
+          ) : (
+            <p className={`mt-2 text-xs ${subtleText}`}>{statusText}</p>
+          )}
           {openHref ? (
             <a
               href={openHref}
