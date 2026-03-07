@@ -75,6 +75,7 @@ const App: React.FC = () => {
   const isBlockingActivity = useMaestroStore(selectNonReengagementBusy);
   const liveSessionState = useMaestroStore(state => state.liveSessionState);
   const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
+  const setSttError = useMaestroStore(state => state.setSttError);
 
   const {
     t,
@@ -542,7 +543,7 @@ const App: React.FC = () => {
     scheduleReengagement('silent-observer-response');
   }, [handleLiveTurnComplete, scheduleReengagement]);
 
-  const { stopSilentObserver } = useSilentObserverController({
+  const { stopSilentObserver, resetSilentObserver } = useSilentObserverController({
     enabled: hasApiKey && !showApiKeyGate,
     isBlockingActivity,
     liveSessionState,
@@ -562,6 +563,63 @@ const App: React.FC = () => {
     await stopSilentObserver();
     await handleStartLiveSession();
   }, [handleStartLiveSession, stopSilentObserver]);
+
+  const previousLanguagePairIdRef = useRef<string | null>(settings.selectedLanguagePairId);
+  useEffect(() => {
+    const currentPairId = settings.selectedLanguagePairId;
+    const previousPairId = previousLanguagePairIdRef.current;
+
+    if (!currentPairId || !previousPairId || currentPairId === previousPairId) {
+      previousLanguagePairIdRef.current = currentPairId;
+      return;
+    }
+    previousLanguagePairIdRef.current = currentPairId;
+
+    let cancelled = false;
+
+    const resetLiveSystemsForLanguageChange = async () => {
+      cancelReengagement();
+
+      const shouldRestartStt = settingsRef.current.stt.enabled;
+      stopSpeaking();
+      stopListening();
+      clearTranscript();
+      setSttError(null);
+
+      await Promise.allSettled([
+        Promise.resolve(resetSilentObserver()),
+        handleStopLiveSession({ scheduleReengagement: false }),
+      ]);
+
+      if (!shouldRestartStt || cancelled) return;
+
+      window.setTimeout(() => {
+        if (cancelled) return;
+        const state = useMaestroStore.getState();
+        const liveState = state.liveSessionState;
+        if (state.settings.stt.enabled && (liveState === 'idle' || liveState === 'error')) {
+          startListening(settingsRef.current.stt.language);
+        }
+      }, STT_RESTART_DELAY_MS);
+    };
+
+    void resetLiveSystemsForLanguageChange();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    cancelReengagement,
+    clearTranscript,
+    handleStopLiveSession,
+    resetSilentObserver,
+    settings.selectedLanguagePairId,
+    settingsRef,
+    setSttError,
+    startListening,
+    stopListening,
+    stopSpeaking,
+  ]);
 
   // ============================================================
   // QUOTA ERROR ACTIONS

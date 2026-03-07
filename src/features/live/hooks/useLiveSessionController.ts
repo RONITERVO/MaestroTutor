@@ -98,7 +98,7 @@ export interface UseLiveSessionControllerReturn {
   
   // Handlers
   handleStartLiveSession: () => Promise<void>;
-  handleStopLiveSession: () => Promise<void>;
+  handleStopLiveSession: (options?: { scheduleReengagement?: boolean }) => Promise<void>;
   handleLiveTurnComplete: (
     userText: string,
     modelText: string,
@@ -662,7 +662,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   /**
    * Stop the current Gemini Live conversation session
    */
-  const handleStopLiveSession = useCallback(async () => {
+  const handleStopLiveSession = useCallback(async (options?: { scheduleReengagement?: boolean }) => {
+    const scheduleStopReengagement = options?.scheduleReengagement ?? true;
     try {
       await stopLiveConversation();
     } catch (error) {
@@ -671,7 +672,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       releaseLiveSessionCapture();
       restoreSttAfterLiveSession();
       setLiveSessionError(null);
-      scheduleReengagement('live-session-stopped');
+      if (scheduleStopReengagement) {
+        scheduleReengagement('live-session-stopped');
+      }
     }
   }, [releaseLiveSessionCapture, restoreSttAfterLiveSession, scheduleReengagement, stopLiveConversation]);
 
