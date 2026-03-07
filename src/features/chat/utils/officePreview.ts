@@ -9,6 +9,7 @@ import {
   isGoogleWorkspaceShortcutMimeType,
   isMicrosoftOfficeMimeType,
 } from './fileAttachments';
+import { deriveChartSeriesFromRows, type TabularChartSeries } from './tabularPreview';
 
 const WORD_OPENXML_EXTENSIONS = new Set(['docx', 'docm', 'dotx', 'dotm']);
 const EXCEL_OPENXML_EXTENSIONS = new Set(['xlsx', 'xlsm', 'xlsb', 'xltx', 'xltm']);
@@ -29,6 +30,8 @@ export interface OfficePreviewResult {
   status: OfficePreviewStatus;
   text: string | null;
   note?: string;
+  tableRows?: string[][];
+  chartSeries?: TabularChartSeries;
 }
 
 const previewCache = new Map<string, Promise<OfficePreviewResult>>();
@@ -231,16 +234,25 @@ const parseWorkbookSheetEntries = (
   return fallbackPaths.map((path, index) => ({ name: `Sheet ${index + 1}`, path }));
 };
 
-const extractSpreadsheetText = async (zip: JSZip): Promise<string> => {
+interface SpreadsheetExtractionResult {
+  text: string;
+  tableRows: string[][];
+  chartSeries: TabularChartSeries | null;
+}
+
+const extractSpreadsheetText = async (zip: JSZip): Promise<SpreadsheetExtractionResult> => {
   const sharedStringsXml = await zip.file('xl/sharedStrings.xml')?.async('string');
   const workbookXml = await zip.file('xl/workbook.xml')?.async('string');
   const workbookRelsXml = await zip.file('xl/_rels/workbook.xml.rels')?.async('string');
 
   const sharedStrings = parseSharedStrings(sharedStringsXml);
   const entries = parseWorkbookSheetEntries(zip, workbookXml, workbookRelsXml);
-  if (entries.length === 0) return '';
+  if (entries.length === 0) {
+    return { text: '', tableRows: [], chartSeries: null };
+  }
 
   const chunks: string[] = [];
+  let firstTableRows: string[][] = [];
 
   for (const entry of entries) {
     const sheetXml = await zip.file(entry.path)?.async('string');
@@ -249,7 +261,7 @@ const extractSpreadsheetText = async (zip: JSZip): Promise<string> => {
     if (!sheetDoc) continue;
 
     const rowNodes = findByLocalName(sheetDoc, 'row');
-    const rows: string[] = [];
+    const rows: string[][] = [];
 
     for (let rowIndex = 0; rowIndex < rowNodes.length && rows.length < MAX_SHEET_ROWS; rowIndex++) {
       const rowNode = rowNodes[rowIndex];
@@ -269,17 +281,28 @@ const extractSpreadsheetText = async (zip: JSZip): Promise<string> => {
       let lastNonEmpty = cols.length - 1;
       while (lastNonEmpty >= 0 && !cols[lastNonEmpty]) lastNonEmpty--;
       if (lastNonEmpty < 0) continue;
-      rows.push(cols.slice(0, lastNonEmpty + 1).join('\t'));
+      rows.push(cols.slice(0, lastNonEmpty + 1));
     }
 
     if (rows.length > 0) {
+      if (firstTableRows.length === 0) {
+        firstTableRows = rows.map((row) => [...row]);
+      }
       chunks.push(`[Sheet: ${entry.name}]`);
-      chunks.push(rows.join('\n'));
+      chunks.push(rows.map((row) => row.join('\t')).join('\n'));
       chunks.push('');
     }
   }
 
-  return chunks.join('\n').trim();
+  const chartSeries = firstTableRows.length > 0
+    ? deriveChartSeriesFromRows(firstTableRows)
+    : null;
+
+  return {
+    text: chunks.join('\n').trim(),
+    tableRows: firstTableRows,
+    chartSeries,
+  };
 };
 
 const extractSlidesText = async (zip: JSZip): Promise<string> => {
@@ -399,11 +422,16 @@ const parseOfficePreviewInternal = async (src: string, mimeType?: string | null,
   try {
     const zip = await JSZip.loadAsync(bytes);
     let extracted = '';
+    let tableRows: string[][] | undefined;
+    let chartSeries: TabularChartSeries | undefined;
 
     if (WORD_OPENXML_EXTENSIONS.has(ext) || zip.file('word/document.xml')) {
       extracted = await extractWordProcessingText(zip);
     } else if (EXCEL_OPENXML_EXTENSIONS.has(ext) || zip.file('xl/workbook.xml')) {
-      extracted = await extractSpreadsheetText(zip);
+      const spreadsheet = await extractSpreadsheetText(zip);
+      extracted = spreadsheet.text;
+      if (spreadsheet.tableRows.length > 0) tableRows = spreadsheet.tableRows;
+      if (spreadsheet.chartSeries) chartSeries = spreadsheet.chartSeries;
     } else if (POWERPOINT_OPENXML_EXTENSIONS.has(ext) || zip.file('ppt/presentation.xml')) {
       extracted = await extractSlidesText(zip);
     } else if (OPEN_DOCUMENT_EXTENSIONS.has(ext) || zip.file('content.xml')) {
@@ -422,6 +450,8 @@ const parseOfficePreviewInternal = async (src: string, mimeType?: string | null,
     return {
       status: 'ready',
       text: clipped,
+      tableRows,
+      chartSeries,
     };
   } catch (error) {
     return {

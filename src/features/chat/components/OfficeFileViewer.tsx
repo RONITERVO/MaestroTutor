@@ -4,12 +4,14 @@
 import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
+import TabularPreview from './TabularPreview';
 import {
   extractGoogleWorkspaceUrlFromDataUrl,
   isGoogleWorkspaceShortcutFileName,
   isGoogleWorkspaceShortcutMimeType,
 } from '../utils/fileAttachments';
 import { getOfficePreview } from '../utils/officePreview';
+import type { TabularChartSeries } from '../utils/tabularPreview';
 
 interface OfficeFileViewerProps {
   src?: string | null;
@@ -87,6 +89,8 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
 }) => {
   const [previewText, setPreviewText] = React.useState<string | null>(null);
   const [previewNote, setPreviewNote] = React.useState<string | null>(null);
+  const [previewRows, setPreviewRows] = React.useState<string[][] | null>(null);
+  const [previewChart, setPreviewChart] = React.useState<TabularChartSeries | null>(null);
   const [isParsingPreview, setIsParsingPreview] = React.useState(false);
 
   const isUser = variant === 'user';
@@ -115,6 +119,8 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
     if (!src) {
       setPreviewText(null);
       setPreviewNote(hasRemoteUri ? 'Local preview unavailable. Reattach to open locally.' : 'Preview unavailable for this file.');
+      setPreviewRows(null);
+      setPreviewChart(null);
       setIsParsingPreview(false);
       return () => { cancelled = true; };
     }
@@ -126,11 +132,15 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
         if (cancelled) return;
         setPreviewText(result.text);
         setPreviewNote(result.note || null);
+        setPreviewRows(result.tableRows || null);
+        setPreviewChart(result.chartSeries || null);
       })
       .catch((error) => {
         if (cancelled) return;
         setPreviewText(null);
         setPreviewNote(error instanceof Error ? error.message : 'Failed to parse inline preview.');
+        setPreviewRows(null);
+        setPreviewChart(null);
       })
       .finally(() => {
         if (!cancelled) setIsParsingPreview(false);
@@ -166,6 +176,14 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
                 <SmallSpinner className="w-3 h-3" />
                 Parsing preview...
               </div>
+            ) : previewRows && previewRows.length > 0 ? (
+              <TabularPreview
+                rows={previewRows}
+                chartSeries={previewChart}
+                textColorClass={textColor}
+                subtleTextClass={subtleText}
+                compact
+              />
             ) : compactPreviewSnippet ? (
               <pre className={`mt-1 text-[10px] leading-4 whitespace-pre-wrap break-words ${subtleText}`}>
                 {compactPreviewSnippet}
@@ -204,6 +222,23 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
               <SmallSpinner className="w-3.5 h-3.5" />
               Parsing inline preview...
             </div>
+          ) : previewRows && previewRows.length > 0 ? (
+            <>
+              <TabularPreview
+                rows={previewRows}
+                chartSeries={previewChart}
+                textColorClass={textColor}
+                subtleTextClass={subtleText}
+              />
+              {previewText ? (
+                <details className="mt-2">
+                  <summary className={`text-xs cursor-pointer ${subtleText}`}>Raw extracted text</summary>
+                  <pre className={`mt-1 p-2 text-xs leading-5 whitespace-pre-wrap break-words rounded border border-black/10 bg-black/5 ${subtleText}`}>
+                    {previewText}
+                  </pre>
+                </details>
+              ) : null}
+            </>
           ) : previewText ? (
             <div className="mt-2 max-h-64 overflow-auto rounded border border-black/10 bg-black/5">
               <pre className={`p-2 text-xs leading-5 whitespace-pre-wrap break-words ${subtleText}`}>
