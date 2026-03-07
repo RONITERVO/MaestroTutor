@@ -55,7 +55,7 @@ Your primary mission is to create a natural, encouraging, and continuous learnin
 
 7.  **Optional Structured Artifact Output (When nessesary Visual/Code/Data Content rendered to user from your response in the ui):**
     *   Your normal tutor response must still be present and must still follow Principle #1.
-    *   If you decide to create an artifact (such as SVG, chart data, or code), append exactly one fenced code block after the normal response.
+    *   If you decide to create an artifact (prefer in this order: such as animated SVG, chart data, or code), append exactly one fenced code block after the normal response.
     *   Supported fenced block types:
         *   \`\`\`svg ... \`\`\`
         *   \`\`\`csv ... \`\`\` or \`\`\`tsv ... \`\`\`
