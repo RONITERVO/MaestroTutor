@@ -19,6 +19,7 @@ import CameraControls from './input/CameraControls';
 import SessionControls from '../../session/components/SessionControls';
 import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 import { normalizeAttachmentMimeType } from '../utils/fileAttachments';
+import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
 
 interface InputAreaProps {
   onSttToggle: () => void;
@@ -34,6 +35,121 @@ interface InputAreaProps {
   onToggleImageGenerationMode: () => void;
   onScrollToBottom?: () => void;
 }
+
+type ComposerAttachmentCandidate = {
+  cleanedText: string;
+  attachment: {
+    dataUrl: string;
+    mimeType: string;
+    fileName: string;
+  };
+};
+
+const normalizeComposerInputText = (value: string): string =>
+  (value || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+
+const toUtf8Base64DataUrl = (mimeType: string, text: string): string => {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return `data:${mimeType};charset=utf-8;base64,${btoa(binary)}`;
+};
+
+const inferPlainCodeAttachmentFileName = (text: string): string => {
+  const normalized = normalizeComposerInputText(text);
+  if (!normalized) return 'pasted-code.txt';
+
+  if (/^\s*#!/.test(normalized)) {
+    if (/python/i.test(normalized)) return 'pasted.py';
+    if (/(bash|sh|zsh|fish)/i.test(normalized)) return 'pasted.sh';
+    if (/(pwsh|powershell)/i.test(normalized)) return 'pasted.ps1';
+  }
+
+  if (/^\s*(select|insert|update|delete|create|alter|drop)\b/im.test(normalized)) {
+    return 'pasted.sql';
+  }
+
+  if (/^\s*(import|from)\s+.+\s+import\s+/m.test(normalized) || /^\s*(def|class)\s+\w+\s*\(/m.test(normalized)) {
+    return 'pasted.py';
+  }
+
+  if (/^\s*(import|export)\s+/m.test(normalized) || /^\s*(const|let|var)\s+\w+/m.test(normalized)) {
+    return 'pasted.ts';
+  }
+
+  if (/^\s*<!doctype html/i.test(normalized) || /<\/?[a-z][\w:-]*[^>]*>/i.test(normalized)) {
+    return 'pasted.html';
+  }
+
+  if ((normalized.startsWith('{') || normalized.startsWith('['))) {
+    try {
+      JSON.parse(normalized);
+      return 'pasted.json';
+    } catch {
+      // not JSON
+    }
+  }
+
+  return 'pasted-code.txt';
+};
+
+const looksLikeStandaloneCodeSnippet = (source: string): boolean => {
+  const normalized = normalizeComposerInputText(source);
+  if (!normalized || normalized.length < 120) return false;
+
+  const lines = normalized.split('\n').filter(line => line.trim().length > 0);
+  if (lines.length < 4) return false;
+
+  let score = 0;
+  if (/[{}[\];]/.test(normalized)) score += 1;
+  if (/=>|::|<\/?[a-z][\w:-]*[^>]*>/i.test(normalized)) score += 1;
+  if (/^\s*(import|export|const|let|var|function|class|interface|type|enum|def|return|if|for|while|select|insert|update|delete|create)\b/m.test(normalized)) score += 1;
+  if (/^\s*["']?[a-zA-Z0-9_$-]+["']?\s*:\s*.+$/m.test(normalized)) score += 1;
+  if (lines.filter(line => /^\s{2,}\S/.test(line)).length >= 2) score += 1;
+
+  return score >= 3;
+};
+
+const getComposerAttachmentCandidate = (pastedText: string): ComposerAttachmentCandidate | null => {
+  const parsed = parseAssistantResponseForAttachment(pastedText);
+  if (parsed.attachment) {
+    if (parsed.attachment.kind !== 'code') {
+      return {
+        cleanedText: parsed.cleanedText,
+        attachment: {
+          dataUrl: parsed.attachment.dataUrl,
+          mimeType: parsed.attachment.mimeType,
+          fileName: parsed.attachment.fileName,
+        },
+      };
+    }
+
+    const normalized = normalizeComposerInputText(pastedText);
+    const lineCount = normalized ? normalized.split('\n').length : 0;
+    if (normalized.length >= 80 || lineCount >= 4) {
+      return {
+        cleanedText: parsed.cleanedText,
+        attachment: {
+          dataUrl: parsed.attachment.dataUrl,
+          mimeType: parsed.attachment.mimeType,
+          fileName: parsed.attachment.fileName,
+        },
+      };
+    }
+  }
+
+  const normalized = normalizeComposerInputText(pastedText);
+  if (!looksLikeStandaloneCodeSnippet(normalized)) return null;
+
+  return {
+    cleanedText: '',
+    attachment: {
+      dataUrl: toUtf8Base64DataUrl('text/plain', normalized),
+      mimeType: 'text/plain',
+      fileName: inferPlainCodeAttachmentFileName(normalized),
+    },
+  };
+};
 
 const InputArea: React.FC<InputAreaProps> = ({
   onSttToggle,
@@ -258,6 +374,50 @@ const InputArea: React.FC<InputAreaProps> = ({
       onUserInputActivity();
     }
   };
+
+  const handleComposerPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (isSuggestionMode || languageSelectionOpen || !!attachedImageBase64) return;
+
+    const pastedText = e.clipboardData.getData('text/plain');
+    if (!pastedText || !pastedText.trim()) return;
+
+    const candidate = getComposerAttachmentCandidate(pastedText);
+    if (!candidate) return;
+
+    e.preventDefault();
+
+    const textarea = e.currentTarget;
+    const selectionStart = Number.isFinite(textarea.selectionStart) ? textarea.selectionStart : textarea.value.length;
+    const selectionEnd = Number.isFinite(textarea.selectionEnd) ? textarea.selectionEnd : selectionStart;
+    const cleanedInsertText = candidate.cleanedText;
+    const nextCaretPos = selectionStart + cleanedInsertText.length;
+
+    setInputText(prev => {
+      const safeStart = Math.max(0, Math.min(selectionStart, prev.length));
+      const safeEnd = Math.max(safeStart, Math.min(selectionEnd, prev.length));
+      return `${prev.slice(0, safeStart)}${cleanedInsertText}${prev.slice(safeEnd)}`;
+    });
+
+    onSetAttachedImage(
+      candidate.attachment.dataUrl,
+      candidate.attachment.mimeType,
+      candidate.attachment.fileName
+    );
+    onUserInputActivity();
+
+    requestAnimationFrame(() => {
+      if (!bubbleTextAreaRef.current) return;
+      bubbleTextAreaRef.current.focus();
+      bubbleTextAreaRef.current.selectionStart = nextCaretPos;
+      bubbleTextAreaRef.current.selectionEnd = nextCaretPos;
+    });
+  }, [
+    attachedImageBase64,
+    isSuggestionMode,
+    languageSelectionOpen,
+    onSetAttachedImage,
+    onUserInputActivity,
+  ]);
 
   const handleSend = async () => {
     if (languageSelectionOpen) {
@@ -755,6 +915,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 isDrawDisabled={isSending || isSpeaking || isComposerAnnotating || (isSuggestionMode && isCreatingSuggestion)}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
+                onPaste={handleComposerPaste}
                 onOpenDrawCanvas={handleComposerStartBlankCanvas}
                 bubbleTextAreaRef={bubbleTextAreaRef}
                 prepDisplay={prepDisplay}
