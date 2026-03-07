@@ -30,6 +30,8 @@ import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
 import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
+import { getOfficePreview } from '../utils/officePreview';
+import { isGoogleWorkspaceShortcutMimeType, isMicrosoftOfficeMimeType } from '../utils/fileAttachments';
 import { 
   IMAGE_GEN_CAMERA_ID,
   MAX_MEDIA_TO_KEEP 
@@ -90,6 +92,19 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
 
 const isSvgMimeType = (mimeType?: string | null): boolean => {
   return (mimeType || '').trim().toLowerCase() === 'image/svg+xml';
+};
+
+const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
+  const normalized = (mimeType || '').trim().toLowerCase();
+  if (!normalized) return false;
+  return isMicrosoftOfficeMimeType(normalized) || isGoogleWorkspaceShortcutMimeType(normalized);
+};
+
+const toUtf8Base64DataUrl = (mimeType: string, text: string): string => {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return `data:${mimeType};charset=utf-8;base64,${btoa(binary)}`;
 };
 
 export interface UseTutorConversationConfig {
@@ -436,7 +451,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const cachedUri0 = (m0 as any).uploadedFileUri as string | undefined;
       const cachedMime0 = (m0 as any).uploadedFileMimeType as string | undefined;
       const hasAnyMedia0 = !!((llmUrl0 && llmMime0) || (uiUrl0 && uiMime0));
-      const cachedMimeRequiresUpgrade0 = isSvgMimeType(cachedMime0);
+      const cachedMimeRequiresUpgrade0 = isSvgMimeType(cachedMime0) || isOfficeMimeUnsupportedByGemini(cachedMime0);
       const missing = !(cachedUri0 && cachedMime0) || cachedMimeRequiresUpgrade0;
       const deleted = !!(cachedUri0 && cachedStatuses[cachedUri0]?.deleted);
       if ((missing || deleted) && hasAnyMedia0) totalToEnsure++;
@@ -463,7 +478,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const uiMime = m.imageMimeType as string | undefined;
       const cachedUri = (m as any).uploadedFileUri as string | undefined;
       const cachedMime = (m as any).uploadedFileMimeType as string | undefined;
-      const cachedMimeRequiresUpgrade = isSvgMimeType(cachedMime);
+      const cachedMimeRequiresUpgrade = isSvgMimeType(cachedMime) || isOfficeMimeUnsupportedByGemini(cachedMime);
       
       // Check if we have any data URL to potentially re-upload from
       const hasDataUrl = !!(llmUrl && llmMime) || !!(uiUrl && uiMime);
@@ -483,7 +498,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         continue;
       }
       if (cachedMimeRequiresUpgrade && !hasDataUrl) {
-        console.warn(`[ensureUris] Message ${m.id} has SVG upload metadata but no local data URL for JPEG conversion. Removing cached URI from API payload.`);
+        console.warn(`[ensureUris] Message ${m.id} has unsupported upload MIME metadata but no local data URL for conversion. Removing cached URI from API payload.`);
         updateMessage(m.id, { uploadedFileUri: undefined, uploadedFileMimeType: undefined });
         (m as any).uploadedFileUri = undefined;
         (m as any).uploadedFileMimeType = undefined;
@@ -509,6 +524,22 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           } catch { /* optimization for storage is optional */ }
         }
         if (dataForUpload) {
+          if (isOfficeMimeUnsupportedByGemini(dataForUpload.mimeType)) {
+            try {
+              const preview = await getOfficePreview(dataForUpload.dataUrl, dataForUpload.mimeType, m.attachmentName);
+              const extracted = (preview.text || '').trim();
+              if (!extracted) {
+                throw new Error(preview.note || 'No extracted Office text available for Gemini upload conversion.');
+              }
+              dataForUpload = {
+                dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
+                mimeType: 'text/plain',
+              };
+            } catch (officeErr) {
+              console.warn(`[ensureUris] Failed to convert Office document to text for message ${m.id}; omitting this media from API payload.`, officeErr);
+              continue;
+            }
+          }
           if (isSvgMimeType(dataForUpload.mimeType)) {
             try {
               const rasterized = await processMediaForUpload(dataForUpload.dataUrl, dataForUpload.mimeType, { t });
@@ -1434,6 +1465,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           dataUrl: imageForGeminiContextBase64,
           mimeType: imageForGeminiContextMimeType,
         };
+        if (isOfficeMimeUnsupportedByGemini(uploadSource.mimeType)) {
+          const officePreview = await getOfficePreview(uploadSource.dataUrl, uploadSource.mimeType, attachedFileName);
+          const extracted = (officePreview.text || '').trim();
+          if (!extracted) {
+            throw new Error(`Failed to extract Office text for Gemini context upload. ${officePreview.note || ''}`.trim());
+          }
+          uploadSource = {
+            dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
+            mimeType: 'text/plain',
+          };
+        }
         if (isSvgMimeType(uploadSource.mimeType)) {
           const rasterized = await processMediaForUpload(uploadSource.dataUrl, uploadSource.mimeType, { t });
           if (!rasterized.dataUrl || !rasterized.mimeType || !rasterized.mimeType.startsWith('image/') || isSvgMimeType(rasterized.mimeType)) {
