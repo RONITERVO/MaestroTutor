@@ -155,19 +155,27 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
   const renderUsageBadges = () => {
     if (!showHoldUsageBadge && !showMicUsageBadge) return null;
 
-    const badges: React.ReactNode[] = [];
-    if (showHoldUsageBadge) badges.push(<Icons.IconPause key="hold" className="w-2.5 h-2.5 drop-shadow-sm" />);
-    if (showMicUsageBadge) badges.push(<Icons.IconMicrophone key="mic" className="w-2.5 h-2.5 drop-shadow-sm" />);
-    if (showCameraUsageBadge) badges.push(<Icons.IconCamera key="cam" className="w-2.5 h-2.5 drop-shadow-sm" />);
+    // Collect badges in priority order (hold > mic > camera), max 2.
+    const allBadges: React.ReactNode[] = [];
+    if (showHoldUsageBadge) allBadges.push(<Icons.IconPause key="hold" className="w-2.5 h-2.5 drop-shadow-sm" />);
+    if (showMicUsageBadge) allBadges.push(<Icons.IconMicrophone key="mic" className="w-2.5 h-2.5 drop-shadow-sm" />);
+    if (showCameraUsageBadge) allBadges.push(<Icons.IconCamera key="cam" className="w-2.5 h-2.5 drop-shadow-sm" />);
+    const capped = allBadges.slice(0, 2);
 
-    // Position badges as a superscript row to the right of the icon,
-    // sitting clearly outside the icon boundary like an exponent.
+    if (capped.length === 1) {
+      // Single badge: superscript position
+      return (
+        <span className="pointer-events-none inline-flex leading-none opacity-80 -mt-1.5 -ml-0.5" aria-hidden>
+          {capped[0]}
+        </span>
+      );
+    }
+
+    // Two badges: first as superscript, second as subscript
     return (
-      <span
-        className="pointer-events-none inline-flex items-start gap-0.5 leading-none opacity-80 -mt-1.5 -ml-0.5"
-        aria-hidden
-      >
-        {badges}
+      <span className="pointer-events-none inline-flex flex-col items-center leading-none opacity-80 -ml-1" aria-hidden>
+        <span className="-mb-1">{capped[0]}</span>
+        <span>{capped[1]}</span>
       </span>
     );
   };

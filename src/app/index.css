@@ -640,23 +640,40 @@
     100% { transform: rotateY(0deg) translateY(0px); }
   }
 
+  /* Flag waving – traveling wave clip-path.
+     Both top and bottom edges shift in the SAME direction at each
+     control-point so the fabric moves as a coherent sheet rather
+     than breathing in/out.  Amplitude grows from the fixed left
+     edge (0 %) toward the free right edge. */
   @keyframes flag-wave-clip {
     0% {
       clip-path: polygon(
-        0% 0%, 33% 4%, 66% 0%, 100% 6%,
-        100% 94%, 66% 100%, 33% 96%, 0% 100%
+        0% 3%, 25% 4%, 50% 3%, 75% 1%, 100% 3%,
+        100% 97%, 75% 95%, 50% 97%, 25% 98%, 0% 97%
+      );
+    }
+    25% {
+      clip-path: polygon(
+        0% 3%, 25% 3%, 50% 5%, 75% 3%, 100% 0%,
+        100% 94%, 75% 97%, 50% 99%, 25% 97%, 0% 97%
       );
     }
     50% {
       clip-path: polygon(
-        0% 4%, 33% 0%, 66% 4%, 96% 0%,
-        96% 100%, 66% 96%, 33% 100%, 0% 96%
+        0% 3%, 25% 2%, 50% 3%, 75% 5%, 100% 3%,
+        100% 97%, 75% 99%, 50% 97%, 25% 96%, 0% 97%
+      );
+    }
+    75% {
+      clip-path: polygon(
+        0% 3%, 25% 3%, 50% 1%, 75% 3%, 100% 6%,
+        100% 100%, 75% 97%, 50% 95%, 25% 97%, 0% 97%
       );
     }
     100% {
       clip-path: polygon(
-        0% 0%, 33% 4%, 66% 0%, 100% 6%,
-        100% 94%, 66% 100%, 33% 96%, 0% 100%
+        0% 3%, 25% 4%, 50% 3%, 75% 1%, 100% 3%,
+        100% 97%, 75% 95%, 50% 97%, 25% 98%, 0% 97%
       );
     }
   }
@@ -669,7 +686,7 @@
     perspective: 600px;
     animation:
       flag-wave-transform 3s ease-in-out infinite,
-      flag-wave-clip 1.5s linear infinite;
+      flag-wave-clip 2.5s ease-in-out infinite;
   }
 
   /* Half-moon overlays matching avatar size */
