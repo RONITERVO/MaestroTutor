@@ -638,29 +638,33 @@
      giving a turbulent, organic feel.
 
      TRANSFORM – 3-D body motion of the whole flag.
-       Asymmetric rotateY (wind never pushes perfectly evenly),
-       translateY (fabric sag / lift), and scaleX (wind stretching
-       the cloth vs. bunching when it slacks). */
+       Rotates around transform-origin: left center (the pole).
+       rotateZ pivots the flag vertically around the pole —
+       zero displacement at the left (fixed) edge, increasing
+       toward the free right end, like wind lifting fabric.
+       scaleX simulates wind stretching the cloth vs. bunching
+       when it slacks. */
   @keyframes flag-wave-transform {
-    0%   { transform: rotateY(0deg)   translateY(0px)    scaleX(1); }
-    8%   { transform: rotateY(8deg)   translateY(1.5px)  scaleX(1.003); }
-    18%  { transform: rotateY(-4deg)  translateY(-1px)   scaleX(0.998); }
-    28%  { transform: rotateY(14deg)  translateY(3px)    scaleX(1.005); }
-    38%  { transform: rotateY(2deg)   translateY(0.5px)  scaleX(1.001); }
-    50%  { transform: rotateY(-10deg) translateY(-2px)   scaleX(0.996); }
-    62%  { transform: rotateY(6deg)   translateY(1px)    scaleX(1.003); }
-    75%  { transform: rotateY(-7deg)  translateY(-1.5px) scaleX(0.998); }
-    88%  { transform: rotateY(11deg)  translateY(2.5px)  scaleX(1.004); }
-    100% { transform: rotateY(0deg)   translateY(0px)    scaleX(1); }
+    0%   { transform: rotateY(0deg)   rotateZ(0deg)    scaleX(1); }
+    8%   { transform: rotateY(8deg)   rotateZ(1.2deg)  scaleX(1.003); }
+    18%  { transform: rotateY(-4deg)  rotateZ(-0.8deg) scaleX(0.998); }
+    28%  { transform: rotateY(14deg)  rotateZ(2.5deg)  scaleX(1.005); }
+    38%  { transform: rotateY(2deg)   rotateZ(0.4deg)  scaleX(1.001); }
+    50%  { transform: rotateY(-10deg) rotateZ(-1.8deg) scaleX(0.996); }
+    62%  { transform: rotateY(6deg)   rotateZ(0.9deg)  scaleX(1.003); }
+    75%  { transform: rotateY(-7deg)  rotateZ(-1.3deg) scaleX(0.998); }
+    88%  { transform: rotateY(11deg)  rotateZ(2.0deg)  scaleX(1.004); }
+    100% { transform: rotateY(0deg)   rotateZ(0deg)    scaleX(1); }
   }
 
   /* CLIP-PATH – edge ripple of the fabric.
      5 control points across the width, top + bottom.
      At every point, top and bottom shift in the SAME direction
      (fabric is a coherent sheet, not breathing in/out).
-     Amplitude grows from the anchored left edge toward the
-     free right edge.  Keyframe spacing is irregular to avoid
-     a metronomic feel. */
+     x=0 % is nailed to the pole (3 % top, 97 % bottom — never
+     moves).  x=25 % is constrained to ±1 % (near the pole).
+     Amplitude grows from there toward the free right edge.
+     Keyframe spacing is irregular to avoid a metronomic feel. */
   @keyframes flag-wave-clip {
     0% {
       clip-path: polygon(
@@ -676,8 +680,8 @@
     }
     25% {
       clip-path: polygon(
-        0% 3%, 25% 5%, 50% 2%, 75% 6%, 100% 4%,
-        100% 98%, 75% 100%, 50% 96%, 25% 99%, 0% 97%
+        0% 3%, 25% 4%, 50% 2%, 75% 6%, 100% 4%,
+        100% 98%, 75% 100%, 50% 96%, 25% 98%, 0% 97%
       );
     }
     38% {
@@ -700,8 +704,8 @@
     }
     78% {
       clip-path: polygon(
-        0% 3%, 25% 1%, 50% 6%, 75% 2%, 100% 0%,
-        100% 94%, 75% 96%, 50% 100%, 25% 95%, 0% 97%
+        0% 3%, 25% 2%, 50% 6%, 75% 2%, 100% 0%,
+        100% 94%, 75% 96%, 50% 100%, 25% 96%, 0% 97%
       );
     }
     90% {
