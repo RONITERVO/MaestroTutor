@@ -613,6 +613,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isTextFileSuccessfullyDisplayed = isAttachmentAText && !!displayUrl && !message.isGeneratingImage && !message.imageGenError;
   const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && !!message.uploadedFileUri && !message.isGeneratingImage && !message.imageGenError;
   const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAOffice && !isAttachmentAText && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
+  const isScrollableFileAttachment = isTextFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileRemoteOnly;
   const svgSourceCode = useMemo(() => {
     if (!isAttachmentSvg || !displayUrl) return null;
     return decodeTextFromDataUrl(displayUrl);
@@ -750,8 +751,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           }
       }
   } else { 
-      imageContainerSizeClasses = "w-full max-w-[250px] mx-auto my-2";
-      imageContainerAspectClasses = "aspect-square"; 
+      imageContainerSizeClasses = isScrollableFileAttachment ? "w-full max-w-[320px] mx-auto my-2" : "w-full max-w-[250px] mx-auto my-2";
+      imageContainerAspectClasses = isScrollableFileAttachment ? "" : "aspect-square";
+      if (isScrollableFileAttachment) {
+        imageContainerFlexCenteringClasses = "";
+      }
   }
   
   const imageContainerDynamicBg = message.isGeneratingImage ? 
