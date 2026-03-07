@@ -17,6 +17,7 @@ export { default as GlobalProfileSummary } from './components/GlobalProfileSumma
 export { default as CollapsedMaestroStatus } from './components/CollapsedMaestroStatus';
 export { default as SessionControls } from './components/SessionControls';
 export { default as StatusAnimationBubble } from './components/StatusAnimationBubble';
+export { default as ApiKeyGate } from './components/ApiKeyGate';
 
 // Hooks
 export { useSmartReengagement } from './hooks/useSmartReengagement';

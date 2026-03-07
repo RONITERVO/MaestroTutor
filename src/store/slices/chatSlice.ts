@@ -19,13 +19,12 @@ import type { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, GroundingChunk }
 import { 
   getChatHistoryDB, 
   safeSaveChatHistoryDB, 
-  getChatMetaDB
+  getChatMetaDB,
+  INLINE_CAP_AUDIO,
 } from '../../features/chat';
 import { upsertTtsCacheEntries } from '../../features/chat';
 import { isRealChatMessage } from '../../shared/utils/common';
 import type { MaestroStore } from '../maestroStore';
-
-import { INLINE_CAP_AUDIO } from '../../features/chat/utils/persistence';
 
 export interface ChatSlice {
   // State

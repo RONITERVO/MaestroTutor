@@ -534,7 +534,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           }
         }
         if (dataForUpload) {
-          const originalMime = (dataForUpload.mimeType || '').trim().toLowerCase();
           if (isOfficeMimeUnsupportedByGemini(dataForUpload.mimeType)) {
             try {
               const preview = await getOfficePreview(dataForUpload.dataUrl, dataForUpload.mimeType, m.attachmentName);
@@ -570,20 +569,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             dataForUpload.mimeType,
             m.attachmentName || 'send-history'
           );
-          const isSurrogateUpload = isOfficeMimeUnsupportedByGemini(originalMime) || isSvgMimeType(originalMime);
-          if (isSurrogateUpload) {
-            updatedUriMap[m.id] = {
-              oldUri: cachedUri,
-              newUri: up.uri,
-              newMimeType: up.mimeType,
-              transient: true,
-            };
-          } else {
-            updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
-            (m as any).uploadedFileUri = up.uri;
-            (m as any).uploadedFileMimeType = up.mimeType;
-            updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri, newMimeType: up.mimeType };
-          }
+          // Persist all successful uploads (including SVG/Office surrogates) so we do not
+          // re-convert/re-upload the same message media on every send.
+          updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
+          (m as any).uploadedFileUri = up.uri;
+          (m as any).uploadedFileMimeType = up.mimeType;
+          updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri, newMimeType: up.mimeType };
         }
       } catch (e) {
         console.warn('Pre-send URI ensure failed for message', m.id, e);
@@ -1532,17 +1523,24 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         imageForGeminiContextMimeType = up.mimeType;
         if (messageType === 'user' && userMessageId) {
           const existing = (messagesRef.current || []).find(m => m.id === userMessageId);
-          const hasExisting = !!(existing && typeof (existing as any).uploadedFileUri === 'string' && (existing as any).uploadedFileUri);
-          if (!hasExisting) {
+          const existingUri = (existing as any)?.uploadedFileUri as string | undefined;
+          const existingMime = (existing as any)?.uploadedFileMimeType as string | undefined;
+          const hasReusableExisting = !!(
+            existingUri &&
+            existingMime &&
+            !isSvgMimeType(existingMime) &&
+            !isOfficeMimeUnsupportedByGemini(existingMime)
+          );
+          if (!hasReusableExisting) {
             updateMessage(userMessageId, {
               uploadedFileUri: up.uri,
               uploadedFileMimeType: up.mimeType,
             });
             imageForGeminiContextFileUri = up.uri;
           } else {
-            imageForGeminiContextFileUri = (existing as any).uploadedFileUri as string;
+            imageForGeminiContextFileUri = existingUri;
             // Also use the existing mime type if we're reusing an existing URI
-            imageForGeminiContextMimeType = (existing as any).uploadedFileMimeType as string || imageForGeminiContextMimeType;
+            imageForGeminiContextMimeType = existingMime || imageForGeminiContextMimeType;
           }
         } else {
           imageForGeminiContextFileUri = up.uri;
