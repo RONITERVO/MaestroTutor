@@ -88,6 +88,10 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
   return msg.includes('api_key_invalid') || msg.includes('api key not valid');
 };
 
+const isSvgMimeType = (mimeType?: string | null): boolean => {
+  return (mimeType || '').trim().toLowerCase() === 'image/svg+xml';
+};
+
 export interface UseTutorConversationConfig {
   // Translation function
   t: TranslationFunction;
@@ -432,7 +436,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const cachedUri0 = (m0 as any).uploadedFileUri as string | undefined;
       const cachedMime0 = (m0 as any).uploadedFileMimeType as string | undefined;
       const hasAnyMedia0 = !!((llmUrl0 && llmMime0) || (uiUrl0 && uiMime0));
-      const missing = !(cachedUri0 && cachedMime0);
+      const cachedMimeRequiresUpgrade0 = isSvgMimeType(cachedMime0);
+      const missing = !(cachedUri0 && cachedMime0) || cachedMimeRequiresUpgrade0;
       const deleted = !!(cachedUri0 && cachedStatuses[cachedUri0]?.deleted);
       if ((missing || deleted) && hasAnyMedia0) totalToEnsure++;
     }
@@ -458,6 +463,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const uiMime = m.imageMimeType as string | undefined;
       const cachedUri = (m as any).uploadedFileUri as string | undefined;
       const cachedMime = (m as any).uploadedFileMimeType as string | undefined;
+      const cachedMimeRequiresUpgrade = isSvgMimeType(cachedMime);
       
       // Check if we have any data URL to potentially re-upload from
       const hasDataUrl = !!(llmUrl && llmMime) || !!(uiUrl && uiMime);
@@ -476,12 +482,19 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         console.warn(`[ensureUris] Message ${m.id} has expired uploadedFileUri but no data URL to re-upload. Media will be omitted from API payload.`);
         continue;
       }
+      if (cachedMimeRequiresUpgrade && !hasDataUrl) {
+        console.warn(`[ensureUris] Message ${m.id} has SVG upload metadata but no local data URL for JPEG conversion. Removing cached URI from API payload.`);
+        updateMessage(m.id, { uploadedFileUri: undefined, uploadedFileMimeType: undefined });
+        (m as any).uploadedFileUri = undefined;
+        (m as any).uploadedFileMimeType = undefined;
+        continue;
+      }
       
       // Skip if no data URL available (nothing to upload)
       if (!hasDataUrl) continue;
       
       // Skip if we have a valid (non-expired) cached URI
-      if (cachedUri && cachedMime && !cachedDeleted) continue;
+      if (cachedUri && cachedMime && !cachedDeleted && !cachedMimeRequiresUpgrade) continue;
 
       let dataForUpload: { dataUrl: string; mimeType: string } | null = null;
       try {
@@ -496,6 +509,18 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           } catch { /* optimization for storage is optional */ }
         }
         if (dataForUpload) {
+          if (isSvgMimeType(dataForUpload.mimeType)) {
+            try {
+              const rasterized = await processMediaForUpload(dataForUpload.dataUrl, dataForUpload.mimeType, { t });
+              if (!rasterized.dataUrl || !rasterized.mimeType || !rasterized.mimeType.startsWith('image/') || isSvgMimeType(rasterized.mimeType)) {
+                throw new Error(`SVG rasterization did not produce a supported image MIME: ${rasterized.mimeType}`);
+              }
+              dataForUpload = { dataUrl: rasterized.dataUrl, mimeType: rasterized.mimeType };
+            } catch (svgErr) {
+              console.warn(`[ensureUris] Failed to convert SVG to JPEG for message ${m.id}; omitting this media from API payload.`, svgErr);
+              continue;
+            }
+          }
           const up = await uploadMediaToFiles(
             dataForUpload.dataUrl,
             dataForUpload.mimeType,
@@ -1405,9 +1430,23 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           sendWithFileUploadInProgressRef.current = true;
         }
         setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
+        let uploadSource = {
+          dataUrl: imageForGeminiContextBase64,
+          mimeType: imageForGeminiContextMimeType,
+        };
+        if (isSvgMimeType(uploadSource.mimeType)) {
+          const rasterized = await processMediaForUpload(uploadSource.dataUrl, uploadSource.mimeType, { t });
+          if (!rasterized.dataUrl || !rasterized.mimeType || !rasterized.mimeType.startsWith('image/') || isSvgMimeType(rasterized.mimeType)) {
+            throw new Error(`Failed to rasterize SVG upload for Gemini context. Result MIME: ${rasterized.mimeType}`);
+          }
+          uploadSource = {
+            dataUrl: rasterized.dataUrl,
+            mimeType: rasterized.mimeType,
+          };
+        }
         const up = await uploadMediaToFiles(
-          imageForGeminiContextBase64,
-          imageForGeminiContextMimeType,
+          uploadSource.dataUrl,
+          uploadSource.mimeType,
           attachedFileName || 'current-user-media'
         );
         // CRITICAL: Use the normalized MIME type returned from upload to avoid mismatch errors
