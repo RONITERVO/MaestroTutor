@@ -585,7 +585,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     <div className="flex flex-col h-full bg-page-bg notebook-lines">
       <div
         ref={scrollContainerRef}
-        className="flex-grow overflow-y-auto p-4"
+        className="flex-grow overflow-y-auto overflow-x-hidden p-4"
         onScroll={handleContainerScroll}
         onPointerMove={handleSwipePointerMove}
         onPointerUp={handleSwipePointerUp}

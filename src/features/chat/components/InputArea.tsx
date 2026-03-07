@@ -18,6 +18,7 @@ import AudioControls from './input/AudioControls';
 import CameraControls from './input/CameraControls';
 import SessionControls from '../../session/components/SessionControls';
 import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
+import { normalizeAttachmentMimeType } from '../utils/fileAttachments';
 
 interface InputAreaProps {
   onSttToggle: () => void;
@@ -54,6 +55,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   const nativeLanguageDef = useMaestroStore(selectNativeLanguageDef) || ALL_LANGUAGES[0];
   const attachedImageBase64 = useMaestroStore(state => state.attachedImageBase64);
   const attachedImageMimeType = useMaestroStore(state => state.attachedImageMimeType);
+  const attachedFileName = useMaestroStore(state => state.attachedFileName);
   const sendPrep = useMaestroStore(state => state.sendPrep);
   const transcript = useMaestroStore(state => state.transcript);
   const sttError = useMaestroStore(state => state.sttError);
@@ -113,8 +115,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   const selectedCameraId = settings.selectedCameraId;
   const isImageGenCameraSelected = selectedCameraId === IMAGE_GEN_CAMERA_ID;
 
-  const onSetAttachedImage = useCallback((base64: string | null, mimeType: string | null) => {
-    setAttachedImage(base64, mimeType);
+  const onSetAttachedImage = useCallback((base64: string | null, mimeType: string | null, fileName: string | null = null) => {
+    setAttachedImage(base64, mimeType, fileName);
   }, [setAttachedImage]);
 
   const handleSelectCamera = useCallback((deviceId: string) => {
@@ -634,20 +636,22 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
     const file = e.target.files?.[0];
     if (file) {
-      if (file.type.startsWith('video/')) {
+      const normalizedMimeType = normalizeAttachmentMimeType(file);
+
+      if (normalizedMimeType.startsWith('video/')) {
         const video = document.createElement('video');
         video.preload = 'metadata';
         video.onloadedmetadata = () => {
           window.URL.revokeObjectURL(video.src);
           const reader = new FileReader();
-          reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
+          reader.onloadend = () => { onSetAttachedImage(reader.result as string, normalizedMimeType, file.name || null); };
           reader.readAsDataURL(file);
         };
         video.onerror = () => { window.URL.revokeObjectURL(video.src); console.error(t('chat.error.videoMetadataError')); if (fileInputRef.current) fileInputRef.current.value = ''; };
         video.src = URL.createObjectURL(file);
       } else {
         const reader = new FileReader();
-        reader.onloadend = () => { onSetAttachedImage(reader.result as string, file.type); };
+        reader.onloadend = () => { onSetAttachedImage(reader.result as string, normalizedMimeType, file.name || null); };
         reader.readAsDataURL(file);
       }
     }
@@ -840,6 +844,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 isSuggestionMode={isSuggestionMode}
                 attachedImageBase64={attachedImageBase64}
                 attachedImageMimeType={attachedImageMimeType}
+                attachedFileName={attachedFileName}
                 showLiveFeed={showLiveFeed}
                 isTwoUp={isTwoUp}
                 liveVideoStream={liveVideoStream}

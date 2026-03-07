@@ -10,12 +10,15 @@ import { useMaestroStore } from '../../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityTokens';
 import AudioPlayer from '../AudioPlayer';
 import PdfViewer from '../PdfViewer';
+import TextFileViewer from '../TextFileViewer';
+import { isTextLikeAttachment } from '../../utils/fileAttachments';
 
 interface MediaAttachmentsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
   isSuggestionMode: boolean;
   attachedImageBase64: string | null;
   attachedImageMimeType: string | null;
+  attachedFileName?: string | null;
   showLiveFeed: boolean;
   isTwoUp: boolean;
   liveVideoStream: MediaStream | null;
@@ -28,7 +31,7 @@ interface MediaAttachmentsProps {
   onAnnotateImage: () => void;
   onAnnotateVideo: () => void;
   onAnnotatePdf: () => void;
-  onSetAttachedImage: (base64: string | null, mimeType: string | null) => void;
+  onSetAttachedImage: (base64: string | null, mimeType: string | null, fileName?: string | null) => void;
   onUserInputActivity: () => void;
   attachedPreviewVideoRef: React.RefObject<HTMLVideoElement | null>;
   isSilentObserverActive?: boolean;
@@ -39,6 +42,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   isSuggestionMode,
   attachedImageBase64,
   attachedImageMimeType,
+  attachedFileName,
   showLiveFeed,
   isTwoUp,
   liveVideoStream,
@@ -238,16 +242,21 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
     }
   }, [liveVideoStream, attachedImageBase64]);
 
+  const isTextAttachment = isTextLikeAttachment(attachedImageMimeType, attachedFileName);
+
   if (!attachedImageBase64 && !showLiveFeed) return null;
 
   const liveSessionActive = liveSessionState === 'active';
   const liveSessionConnecting = liveSessionState === 'connecting';
   const liveSessionErrored = liveSessionState === 'error';
+  const panelWidthClass = isTwoUp
+    ? 'w-[calc(50%-0.25rem)] max-w-[calc(50%-0.25rem)]'
+    : 'w-[min(50%,22rem)] max-w-[50%]';
 
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
       {attachedImageBase64 && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
+        <div className={`relative ${panelWidthClass} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
           {attachedImageMimeType?.startsWith('image/') ? (
             <div className="relative">
               <img src={attachedImageBase64} alt={t('chat.imagePreview.alt')} className="h-24 w-full object-cover rounded" />
@@ -314,6 +323,14 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 <IconPencil className="w-4 h-4" />
               </button>
             </div>
+          ) : isTextAttachment ? (
+            <TextFileViewer
+              src={attachedImageBase64}
+              variant="preview"
+              compact
+              fileName={attachedFileName}
+              mimeType={attachedImageMimeType}
+            />
           ) : (
             <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-empty-bg/60'} rounded`}>
               <IconPaperclip className="w-8 h-8 text-media-empty-text/70" />
@@ -334,7 +351,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
       )}
 
       {showLiveFeed && (
-        <div className={`relative ${isTwoUp ? 'w-[calc(50%-0.25rem)] sm:w-48' : 'w-48'} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
+        <div className={`relative ${panelWidthClass} min-w-0 ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-chat-bg/80'} p-1 rounded-md`}>
           <div className="relative group">
             <video
               ref={livePreviewVideoRef}
