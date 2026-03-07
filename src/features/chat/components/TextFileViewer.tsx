@@ -13,6 +13,7 @@ interface TextFileViewerProps {
   compact?: boolean;
   fileName?: string | null;
   mimeType?: string | null;
+  bottomInset?: number;
 }
 
 const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
@@ -21,6 +22,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   compact = false,
   fileName,
   mimeType,
+  bottomInset = 0,
 }) => {
   const decodedText = useMemo(() => decodeTextFromDataUrl(src), [src]);
   const fileExt = useMemo(() => {
@@ -62,6 +64,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   const textColor = isUser ? 'text-user-msg-text' : 'text-ai-file-text';
   const subtleText = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text';
   const metaLabel = fileName || mimeType || 'text attachment';
+  const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
 
   if (!decodedText) {
     return (
@@ -90,7 +93,13 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
         ) : (
           <div
             className="w-full max-w-full min-w-0 overflow-x-auto overflow-y-scroll"
-            style={{ maxHeight: '5.25rem', scrollbarGutter: 'stable' }}
+            style={{
+              maxHeight: '5.25rem',
+              scrollbarGutter: 'stable',
+              overscrollBehavior: 'contain',
+              touchAction: 'pan-y',
+              WebkitOverflowScrolling: 'touch' as any,
+            }}
           >
             <pre className={`p-2 text-[10px] leading-4 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
               {decodedText}
@@ -105,12 +114,22 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
     <div className="relative w-full max-w-full min-w-0 overflow-hidden">
       <div
         className={`w-full max-w-full min-w-0 overflow-x-auto overflow-y-scroll rounded-lg ${containerBg}`}
-        style={{ maxHeight: '60vh', scrollbarGutter: 'stable' }}
+        style={{
+          maxHeight: '60vh',
+          scrollbarGutter: 'stable',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch' as any,
+          scrollPaddingBottom: `${effectiveBottomInset}px`,
+        }}
       >
         <div className={`sticky top-0 z-10 px-3 py-1.5 text-[11px] font-mono truncate ${headerBg} ${textColor}`}>
           {metaLabel}
         </div>
-        <div className="p-3">
+        <div
+          className="p-3"
+          style={effectiveBottomInset > 0 ? { paddingBottom: `calc(0.75rem + ${effectiveBottomInset}px)` } : undefined}
+        >
           {tabularSheets.length > 0 ? (
             <>
               <TabularPreview
@@ -120,7 +139,10 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
               />
               <details className="mt-3">
                 <summary className={`text-xs cursor-pointer ${subtleText}`}>Raw text</summary>
-                <div className="mt-1 max-h-72 overflow-auto rounded border border-black/10 bg-black/5">
+                <div
+                  className="mt-1 max-h-72 overflow-auto rounded border border-black/10 bg-black/5"
+                  style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
+                >
                   <pre className={`p-2 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
                     {previewSnippet}
                   </pre>

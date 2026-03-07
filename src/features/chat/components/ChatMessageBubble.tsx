@@ -19,7 +19,7 @@ import { sketchShapeClass, sketchShapeStyle } from '../../../shared/utils/sketch
 import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
 import TextFileViewer from './TextFileViewer';
 import OfficeFileViewer from './OfficeFileViewer';
-import { isOfficeAttachment, isTextLikeAttachment } from '../utils/fileAttachments';
+import { decodeTextFromDataUrl, isOfficeAttachment, isTextLikeAttachment } from '../utils/fileAttachments';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -85,12 +85,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoPlayTokenRef = useRef<string | null>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
+  const [showSvgCodeView, setShowSvgCodeView] = useState(false);
 
   const pointerDownPosRef = useRef<{x: number, y: number} | null>(null);
   const [nativeFlashIndex, setNativeFlashIndex] = useState<number | null>(null);
   const [nativeFlashIsOn, setNativeFlashIsOn] = useState<boolean>(false);
   const nativeFlashTimeoutRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const textOverlayRef = useRef<HTMLDivElement>(null);
+  const [textOverlayHeight, setTextOverlayHeight] = useState(0);
 
   const imageForAnnotationRef = useRef<HTMLImageElement | null>(null);
   const editCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -583,14 +586,23 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     };
   }, [isAnnotating, annotationSourceUrl]);
 
-  const displayUrl = (message.imageUrl || message.storageOptimizedImageUrl);
-  const displayMime = (message.imageMimeType || message.storageOptimizedImageMimeType || message.uploadedFileMimeType);
+  const displayUrlRaw = message.imageUrl || message.storageOptimizedImageUrl;
+  const displayUrl = typeof displayUrlRaw === 'string' ? displayUrlRaw : undefined;
+  const displayMimeRaw = message.imageMimeType || message.storageOptimizedImageMimeType || message.uploadedFileMimeType;
+  const displayMime = typeof displayMimeRaw === 'string' ? displayMimeRaw : '';
+  const normalizedDisplayMime = (displayMime || '').trim().toLowerCase();
   const isAttachmentAnImage = !!displayMime?.startsWith('image/');
   const isAttachmentAVideo = !!displayMime?.startsWith('video/');
   const isAttachmentAAudio = !!displayMime?.startsWith('audio/');
   const isAttachmentAPdf = displayMime === 'application/pdf';
+  const isAttachmentSvg = normalizedDisplayMime.startsWith('image/svg+xml');
   const isAttachmentAOffice = isOfficeAttachment(displayMime, message.attachmentName);
-  const isAttachmentAText = isTextLikeAttachment(displayMime, message.attachmentName);
+  const isAttachmentAText =
+    !isAttachmentAnImage &&
+    !isAttachmentAVideo &&
+    !isAttachmentAAudio &&
+    !isAttachmentAPdf &&
+    isTextLikeAttachment(displayMime, message.attachmentName);
   const hasAttachmentSource = !!displayUrl || !!message.uploadedFileUri;
 
   const isImageSuccessfullyDisplayed = isAttachmentAnImage && displayUrl && !message.isGeneratingImage && !message.imageGenError;
@@ -601,6 +613,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isTextFileSuccessfullyDisplayed = isAttachmentAText && !!displayUrl && !message.isGeneratingImage && !message.imageGenError;
   const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && !!message.uploadedFileUri && !message.isGeneratingImage && !message.imageGenError;
   const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAOffice && !isAttachmentAText && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
+  const isScrollableFileAttachment = isTextFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileRemoteOnly;
+  const svgSourceCode = useMemo(() => {
+    if (!isAttachmentSvg || !displayUrl) return null;
+    return decodeTextFromDataUrl(displayUrl);
+  }, [isAttachmentSvg, displayUrl]);
 
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
@@ -621,11 +638,71 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     setLoadingAnimationError(false);
   }, [selectedLoadingAnimation, message.id, message.isGeneratingImage]);
 
+  useEffect(() => {
+    setShowSvgCodeView(false);
+  }, [message.id, displayUrl, isAttachmentSvg]);
+
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
 
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const hasVisibleAttachment = message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
+  const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !isAudioSuccessfullyDisplayed;
+  const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment;
+  const shouldInsetScrollableAttachmentForOverlay = shouldUseScrollableTextOverlay && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
+  const textOverlayScrollStyle: React.CSSProperties | undefined = shouldUseScrollableTextOverlay
+    ? {
+        maxHeight: '40vh',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch' as any,
+        scrollbarGutter: 'stable',
+      }
+    : undefined;
+  const handleAttachmentImageLoad = useCallback((img: HTMLImageElement) => {
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      setImageAspectRatio(img.naturalWidth / img.naturalHeight);
+
+      if (isAnnotationActive && annotationViewportRef.current) {
+        const vw = annotationViewportRef.current.clientWidth;
+        setScale(vw / img.naturalWidth);
+        setPan({ x: 0, y: 0 });
+      }
+    }
+  }, [isAnnotationActive]);
   
+  const bubbleAlignClass = isUser ? 'justify-end' : 'justify-start';
+  const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
+  const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
+  const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
+
+  useEffect(() => {
+    if (!shouldUseScrollableTextOverlay) {
+      setTextOverlayHeight(0);
+      return;
+    }
+
+    const overlayEl = textOverlayRef.current;
+    if (!overlayEl) return;
+
+    const updateHeight = () => {
+      setTextOverlayHeight(overlayEl.clientHeight);
+    };
+    updateHeight();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(updateHeight);
+      resizeObserver.observe(overlayEl);
+    }
+
+    return () => {
+      resizeObserver?.disconnect();
+    };
+  }, [shouldUseScrollableTextOverlay, message.text, message.rawAssistantResponse, message.translations]);
+
   if (message.thinking && !message.isGeneratingImage) {
     return (
       <div className="flex justify-start mb-3 animate-pulse">
@@ -635,11 +712,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       </div>
     );
   }
-
-  const bubbleAlignClass = isUser ? 'justify-end' : 'justify-start';
-  const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
-  const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
-  const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
 
   let bubbleWrapperClasses = "relative transition-all duration-300 ease-in-out";
   let tapeWrapperMaxWidth = '';
@@ -679,8 +751,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           }
       }
   } else { 
-      imageContainerSizeClasses = "w-full max-w-[250px] mx-auto my-2";
-      imageContainerAspectClasses = "aspect-square"; 
+      imageContainerSizeClasses = isScrollableFileAttachment ? "w-full max-w-[320px] mx-auto my-2" : "w-full max-w-[250px] mx-auto my-2";
+      imageContainerAspectClasses = isScrollableFileAttachment ? "" : "aspect-square";
+      if (isScrollableFileAttachment) {
+        imageContainerFlexCenteringClasses = "";
+      }
   }
   
   const imageContainerDynamicBg = message.isGeneratingImage ? 
@@ -724,7 +799,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         }}
         ref={registerBubbleEl}
       >
-          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && (
+          {hasVisibleAttachment && (
                <div 
                   ref={annotationViewportRef} 
                   className={`${imageContainerBaseClasses} ${imageContainerSizeClasses} ${imageContainerAspectClasses} ${imageContainerDynamicBg} ${imageContainerFlexCenteringClasses}`}
@@ -762,43 +837,57 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
                   {(isImageSuccessfullyDisplayed || (isAnnotationActive && annotationSourceUrl)) && (
                     <>
-                        <div 
-                            style={isAnnotationActive ? {
-                                width: imageForAnnotationRef.current?.naturalWidth,
-                                height: imageForAnnotationRef.current?.naturalHeight,
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-                                transition: activePointersRef.current.length > 0 ? 'none' : 'transform 0.1s ease-out',
-                            } : {
-                                position: 'relative',
-                                width: '100%',
-                                height: '100%',
+                        {!isAnnotationActive && isAttachmentSvg && showSvgCodeView ? (
+                          <div
+                            className={`relative w-full h-full overflow-auto rounded-lg ${isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg'}`}
+                            style={{
+                              overscrollBehavior: 'contain',
+                              touchAction: 'pan-x pan-y',
+                              WebkitOverflowScrolling: 'touch' as any,
                             }}
-                        >
-              <img
-                                ref={imageForAnnotationRef}
-                src={isAnnotationActive ? annotationSourceUrl! : displayUrl!}
-                                alt={isAnnotationActive ? t('chat.annotateModal.editingPreviewAlt') : (t('chat.imagePreview.alt'))}
-                                className={`block w-full h-full pointer-events-none ${!isAnnotationActive ? 'object-contain' : ''}`}
-                                style={{ opacity: 1 }}
-                                onLoad={(e) => {
-                                    const img = e.currentTarget;
-                                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-                                      setImageAspectRatio(img.naturalWidth / img.naturalHeight);
-                                  
-                                      if (isAnnotationActive && annotationViewportRef.current) {
-                                        const vw = annotationViewportRef.current.clientWidth;
-                                        setScale(vw / img.naturalWidth);
-                                        setPan({ x: 0, y: 0 });
-                                      }
-                                    }
-                                  }}
+                          >
+                            <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${isUser ? 'text-user-msg-text' : 'text-ai-file-text'}`}>
+                              {svgSourceCode || 'SVG source unavailable for this attachment.'}
+                            </pre>
+                          </div>
+                        ) : (
+                          <div 
+                              style={isAnnotationActive ? {
+                                  width: imageForAnnotationRef.current?.naturalWidth,
+                                  height: imageForAnnotationRef.current?.naturalHeight,
+                                  position: 'absolute',
+                                  top: '50%',
+                                  left: '50%',
+                                  transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+                                  transition: activePointersRef.current.length > 0 ? 'none' : 'transform 0.1s ease-out',
+                              } : {
+                                  position: 'relative',
+                                  width: '100%',
+                                  height: '100%',
+                              }}
+                          >
+                            <img
+                              ref={imageForAnnotationRef}
+                              src={isAnnotationActive ? annotationSourceUrl! : displayUrl!}
+                              alt={isAnnotationActive ? t('chat.annotateModal.editingPreviewAlt') : (t('chat.imagePreview.alt'))}
+                              className={`block w-full h-full pointer-events-none ${!isAnnotationActive ? 'object-contain' : ''}`}
+                              style={{ opacity: 1 }}
+                              onLoad={(e) => handleAttachmentImageLoad(e.currentTarget)}
                             />
                             {isAnnotationActive && ( <canvas ref={editCanvasRef} className="absolute top-0 left-0 w-full h-full cursor-crosshair" /> )}
-                        </div>
-      {!isAnnotationActive && isFocusedMode && isImageSuccessfullyDisplayed && (
+                          </div>
+                        )}
+      {!isAnnotationActive && isImageSuccessfullyDisplayed && isAttachmentSvg && (
+                            <button
+        onClick={() => setShowSvgCodeView((prev) => !prev)}
+                                className="absolute top-2 left-2 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
+                                title={showSvgCodeView ? 'Show SVG preview' : 'Show SVG code'}
+                                aria-label={showSvgCodeView ? 'Show SVG preview' : 'Show SVG code'}
+                            >
+                                {showSvgCodeView ? <IconChevronLeft className="w-5 h-5" /> : <IconChevronRight className="w-5 h-5" />}
+                            </button>
+                        )}
+      {!isAnnotationActive && isFocusedMode && isImageSuccessfullyDisplayed && !(isAttachmentSvg && showSvgCodeView) && (
                             <button
         onClick={() => handleStartAnnotation(displayUrl!)}
                                 className="absolute top-2 right-2 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
@@ -952,6 +1041,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       variant={isUser ? 'user' : 'assistant'}
                       fileName={message.attachmentName}
                       mimeType={displayMime}
+                      bottomInset={scrollableAttachmentBottomInset}
                     />
                   )}
                   {isOfficeFileSuccessfullyDisplayed && (
@@ -986,6 +1076,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       <PdfViewer
                         src={displayUrl!}
                         variant={isUser ? 'user' : 'assistant'}
+                        bottomInset={scrollableAttachmentBottomInset}
                       />
                       {isFocusedMode && !isAnnotationActive && (
                         <button
@@ -1023,12 +1114,17 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
         {hasTextContent && (
            <div className={`transition-opacity duration-300
-                ${applyFocusedImageStyles && !isAudioSuccessfullyDisplayed
+                ${shouldOverlayTextOnAttachment
                     ? `absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10`
                     : 'relative z-10 mt-1'
                 }
+                ${shouldUseScrollableTextOverlay ? 'pointer-events-auto' : ''}
                 ${isAnnotationActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}
+            style={textOverlayScrollStyle}
+            onWheel={shouldUseScrollableTextOverlay ? (e) => e.stopPropagation() : undefined}
+            onTouchMove={shouldUseScrollableTextOverlay ? (e) => e.stopPropagation() : undefined}
+            ref={textOverlayRef}
            >
         <style>{`
         @keyframes pop-fade-speak { 0% { transform: scale(0.85); opacity: 0; } 20% { transform: scale(1.15); opacity: 1; } 80% { transform: scale(1.0); opacity: 1; } 100% { transform: scale(0.95); opacity: 0; } }

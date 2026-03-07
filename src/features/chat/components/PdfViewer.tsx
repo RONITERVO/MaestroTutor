@@ -69,9 +69,10 @@ interface PdfViewerProps {
   src: string;
   variant: 'user' | 'assistant' | 'preview';
   compact?: boolean;
+  bottomInset?: number;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact = false }) => {
+const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact = false, bottomInset = 0 }) => {
   const [pages, setPages] = useState<string[]>([]);
   const [pageCount, setPageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -172,6 +173,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
   const indicatorBg = 'bg-black/60 text-white';
   const errorTextColor = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text';
   const iconColor = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text';
+  const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
 
   if (isLoading) {
     return (
@@ -213,9 +215,18 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
       <div
         ref={scrollContainerRef}
         className={`overflow-y-auto rounded-lg ${containerBg}`}
-        style={{ maxHeight: '60vh' }}
+        style={{
+          maxHeight: '60vh',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch' as any,
+          scrollPaddingBottom: `${effectiveBottomInset}px`,
+        }}
       >
-        <div className="flex flex-col gap-1 p-1">
+        <div
+          className="flex flex-col gap-1 p-1"
+          style={effectiveBottomInset > 0 ? { paddingBottom: `${effectiveBottomInset + 4}px` } : undefined}
+        >
           {pages.map((pageUrl, index) => (
             <img
               key={index}

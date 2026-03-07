@@ -17,10 +17,9 @@ import React, { useEffect, useCallback, useRef, useMemo, useState } from 'react'
 
 // --- Features Components ---
 import { ChatInterface } from '../features/chat';
-import { Header, useSmartReengagement } from '../features/session';
+import { ApiKeyGate, Header, useSmartReengagement } from '../features/session';
 import { DebugLogPanel } from '../features/diagnostics';
 import { VisualContextVideo } from '../features/vision';
-import ApiKeyGate from '../features/session/components/ApiKeyGate';
 
 // --- Hooks ---
 import { useAppInitialization, useMaestroActivityStage, useIdleReengagement } from './hooks';
