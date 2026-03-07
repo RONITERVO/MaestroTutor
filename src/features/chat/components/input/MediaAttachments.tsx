@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TranslationReplacements } from '../../../../core/i18n/index';
 import { LiveSessionState } from '../../../speech';
 import { IconCamera, IconPaperclip, IconPencil, IconXMark, IconVideoCamera } from '../../../../shared/ui/Icons';
@@ -10,7 +10,8 @@ import { useMaestroStore } from '../../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../../core/config/activityTokens';
 import AudioPlayer from '../AudioPlayer';
 import PdfViewer from '../PdfViewer';
-import { decodeTextPreviewFromDataUrl, isTextLikeAttachment } from '../../utils/fileAttachments';
+import TextFileViewer from '../TextFileViewer';
+import { isTextLikeAttachment } from '../../utils/fileAttachments';
 
 interface MediaAttachmentsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
@@ -242,10 +243,6 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   }, [liveVideoStream, attachedImageBase64]);
 
   const isTextAttachment = isTextLikeAttachment(attachedImageMimeType, attachedFileName);
-  const textAttachmentPreview = useMemo(() => {
-    if (!attachedImageBase64 || !isTextAttachment) return null;
-    return decodeTextPreviewFromDataUrl(attachedImageBase64, { maxChars: 900, maxBytes: 48 * 1024 });
-  }, [attachedImageBase64, isTextAttachment]);
 
   if (!attachedImageBase64 && !showLiveFeed) return null;
 
@@ -324,14 +321,13 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               </button>
             </div>
           ) : isTextAttachment ? (
-            <div className={`h-24 w-full rounded p-2 overflow-hidden ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-empty-bg/60'}`}>
-              <p className="text-[10px] font-mono truncate text-media-empty-text/90">
-                {attachedFileName || attachedImageMimeType || 'text file'}
-              </p>
-              <pre className="mt-1 text-[10px] leading-4 whitespace-pre-wrap break-words overflow-hidden text-media-empty-text">
-                {textAttachmentPreview || 'Text preview unavailable.'}
-              </pre>
-            </div>
+            <TextFileViewer
+              src={attachedImageBase64}
+              variant="preview"
+              compact
+              fileName={attachedFileName}
+              mimeType={attachedImageMimeType}
+            />
           ) : (
             <div className={`h-24 w-full flex flex-col items-center justify-center ${isSuggestionMode ? 'bg-media-sugg-bg' : 'bg-media-empty-bg/60'} rounded`}>
               <IconPaperclip className="w-8 h-8 text-media-empty-text/70" />

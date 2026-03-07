@@ -102,6 +102,52 @@ interface DecodePreviewOptions {
   maxBytes?: number;
 }
 
+export const decodeTextFromDataUrl = (dataUrl?: string | null): string | null => {
+  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+
+  const commaIndex = dataUrl.indexOf(',');
+  if (commaIndex <= 5) return null;
+
+  const header = dataUrl.slice(5, commaIndex);
+  const payload = dataUrl.slice(commaIndex + 1);
+  if (!payload) return null;
+
+  const charsetMatch = /charset=([^;]+)/i.exec(header);
+  const requestedCharset = charsetMatch?.[1]?.trim() || 'utf-8';
+
+  let decoder: TextDecoder;
+  try {
+    decoder = new TextDecoder(requestedCharset);
+  } catch {
+    decoder = new TextDecoder('utf-8');
+  }
+
+  const isBase64 = header.toLowerCase().includes(';base64');
+  let bytes: Uint8Array;
+
+  if (isBase64) {
+    let binary = '';
+    try {
+      binary = atob(payload);
+    } catch {
+      return null;
+    }
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  } else {
+    try {
+      const decodedPayload = decodeURIComponent(payload);
+      bytes = new TextEncoder().encode(decodedPayload);
+    } catch {
+      return null;
+    }
+  }
+
+  const text = decoder.decode(bytes).replace(/\u0000/g, '');
+  if (!text.trim()) return null;
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+};
+
 export const decodeTextPreviewFromDataUrl = (
   dataUrl?: string | null,
   options?: DecodePreviewOptions
@@ -157,4 +203,3 @@ export const decodeTextPreviewFromDataUrl = (
 
   return truncated ? `${clipped}\n...` : clipped;
 };
-

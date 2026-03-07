@@ -17,7 +17,8 @@ import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 import { sketchShapeClass, sketchShapeStyle } from '../../../shared/utils/sketchyShape';
 import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
-import { decodeTextPreviewFromDataUrl, isTextLikeAttachment } from '../utils/fileAttachments';
+import TextFileViewer from './TextFileViewer';
+import { isTextLikeAttachment } from '../utils/fileAttachments';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -594,16 +595,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isVideoSuccessfullyDisplayed = isAttachmentAVideo && displayUrl;
   const isAudioSuccessfullyDisplayed = isAttachmentAAudio && displayUrl && !message.isGeneratingImage && !message.imageGenError;
   const isPdfSuccessfullyDisplayed = isAttachmentAPdf && displayUrl && !message.isGeneratingImage && !message.imageGenError;
-  const isTextFileSuccessfullyDisplayed = isAttachmentAText && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
+  const isTextFileSuccessfullyDisplayed = isAttachmentAText && !!displayUrl && !message.isGeneratingImage && !message.imageGenError;
+  const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && !!message.uploadedFileUri && !message.isGeneratingImage && !message.imageGenError;
   const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAText && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
-
-  const textAttachmentPreview = useMemo(() => {
-    if (!isTextFileSuccessfullyDisplayed || !displayUrl) return null;
-    return decodeTextPreviewFromDataUrl(displayUrl, {
-      maxChars: isFocusedMode ? 9000 : 1800,
-      maxBytes: isFocusedMode ? 320 * 1024 : 64 * 1024,
-    });
-  }, [displayUrl, isFocusedMode, isTextFileSuccessfullyDisplayed]);
 
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
@@ -627,7 +621,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
 
-  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   
   if (message.thinking && !message.isGeneratingImage) {
     return (
@@ -648,7 +642,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   let tapeWrapperMaxWidth = '';
    if (applyFocusedImageStyles) {
       bubbleWrapperClasses += " w-full overflow-hidden";
-      if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed) {
+      if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isTextFileRemoteOnly && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
            if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
            else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
@@ -727,7 +721,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         }}
         ref={registerBubbleEl}
       >
-          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && (
+          {(message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && (
                <div 
                   ref={annotationViewportRef} 
                   className={`${imageContainerBaseClasses} ${imageContainerSizeClasses} ${imageContainerAspectClasses} ${imageContainerDynamicBg} ${imageContainerFlexCenteringClasses}`}
@@ -950,15 +944,22 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       </div>
                   )}
                   {isTextFileSuccessfullyDisplayed && (
-                    <div className={`w-full rounded-lg p-3 overflow-hidden ${isUser ? 'bg-user-msg-bg/80' : 'bg-ai-file-bg'}`}>
-                      <p className={`text-xs font-mono truncate ${isUser ? 'text-user-msg-text' : 'text-ai-file-text'}`}>
+                    <TextFileViewer
+                      src={displayUrl!}
+                      variant={isUser ? 'user' : 'assistant'}
+                      fileName={message.attachmentName}
+                      mimeType={displayMime}
+                    />
+                  )}
+                  {isTextFileRemoteOnly && (
+                    <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg ${isUser ? 'bg-user-msg-bg/80' : 'bg-ai-file-bg'}`}>
+                      <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-msg-text/70' : 'text-ai-file-text'}`} />
+                      <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-user-msg-text' : 'text-ai-file-text'}`}>
                         {message.attachmentName || displayMime || 'text file'}
                       </p>
-                      <div className={`mt-2 rounded-md p-2 overflow-hidden ${isUser ? 'bg-user-msg-bg/60' : 'bg-ai-msg-bg/50'}`}>
-                        <pre className={`whitespace-pre-wrap break-words text-[11px] leading-4 overflow-hidden ${isUser ? 'text-user-msg-text/90' : 'text-ai-file-text'}`}>
-                          {textAttachmentPreview || 'Text preview unavailable for this attachment.'}
-                        </pre>
-                      </div>
+                      <p className={`mt-1 text-xs ${isUser ? 'text-user-msg-text/70' : 'text-ai-file-text'}`}>
+                        Local text preview unavailable.
+                      </p>
                     </div>
                   )}
                   {isFileSuccessfullyDisplayed && (
