@@ -209,6 +209,7 @@ export const inferTextMimeTypeFromFileName = (fileName?: string | null): string 
   if (!name) return null;
 
   const ext = getExtension(name);
+  if (ext === 'svg') return 'image/svg+xml';
   if (MARKDOWN_EXTENSIONS.has(ext)) return 'text/markdown';
   if (JSON_EXTENSIONS.has(ext)) return 'application/json';
   if (CSV_EXTENSIONS.has(ext)) return 'text/csv';

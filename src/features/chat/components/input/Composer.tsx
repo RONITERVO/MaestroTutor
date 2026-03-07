@@ -13,6 +13,7 @@ interface ComposerProps {
   isDrawDisabled: boolean;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
   onOpenDrawCanvas: () => void;
   bubbleTextAreaRef: React.RefObject<HTMLTextAreaElement | null>;
   prepDisplay: string | null;
@@ -28,6 +29,7 @@ const Composer: React.FC<ComposerProps> = ({
   isDrawDisabled,
   onChange,
   onKeyDown,
+  onPaste,
   onOpenDrawCanvas,
   bubbleTextAreaRef,
   prepDisplay,
@@ -44,6 +46,7 @@ const Composer: React.FC<ComposerProps> = ({
       value={inputText}
       onChange={onChange}
       onKeyDown={onKeyDown}
+      onPaste={onPaste}
       disabled={isDisabled}
       aria-label={t('chat.messageInputAriaLabel')}
     />
