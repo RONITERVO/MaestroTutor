@@ -155,14 +155,27 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
   const renderUsageBadges = () => {
     if (!showHoldUsageBadge && !showMicUsageBadge) return null;
 
+    // Collect badges in priority order (hold > mic > camera), max 2.
+    const allBadges: React.ReactNode[] = [];
+    if (showHoldUsageBadge) allBadges.push(<Icons.IconPause key="hold" className="w-2.5 h-2.5 drop-shadow-sm" />);
+    if (showMicUsageBadge) allBadges.push(<Icons.IconMicrophone key="mic" className="w-2.5 h-2.5 drop-shadow-sm" />);
+    if (showCameraUsageBadge) allBadges.push(<Icons.IconCamera key="cam" className="w-2.5 h-2.5 drop-shadow-sm" />);
+    const capped = allBadges.slice(0, 2);
+
+    if (capped.length === 1) {
+      // Single badge: superscript position
+      return (
+        <span className="pointer-events-none inline-flex leading-none opacity-80 -mt-1.5 -ml-0.5" aria-hidden>
+          {capped[0]}
+        </span>
+      );
+    }
+
+    // Two badges: first as superscript, second as subscript
     return (
-      <span
-        className="pointer-events-none absolute top-0 right-0 z-10 flex flex-col items-end leading-none"
-        aria-hidden
-      >
-        {showHoldUsageBadge && <Icons.IconPause className="w-2 h-2" />}
-        {showMicUsageBadge && <Icons.IconMicrophone className="w-2 h-2 -mt-px" />}
-        {showCameraUsageBadge && <Icons.IconCamera className="w-2 h-2 -mt-px" />}
+      <span className="pointer-events-none inline-flex flex-col items-center leading-none opacity-80 -ml-1" aria-hidden>
+        <span className="-mb-1">{capped[0]}</span>
+        <span>{capped[1]}</span>
       </span>
     );
   };
@@ -171,13 +184,15 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     const IconComponent = Icons[config.icon as keyof typeof Icons];
     if (!IconComponent) return null;
     return (
-      <span key={`${token}-${idx}`} className="relative inline-flex items-center justify-center">
-        <IconComponent
-          className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`}
-          title={t(config.titleKey)}
-        />
+      <React.Fragment key={`${token}-${idx}`}>
+        <span className="inline-flex items-center justify-center">
+          <IconComponent
+            className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`}
+            title={t(config.titleKey)}
+          />
+        </span>
         {includeUsageBadges ? renderUsageBadges() : null}
-      </span>
+      </React.Fragment>
     );
   };
 
@@ -187,10 +202,12 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     return (
       <div className={`flex items-center ${className || ''}`} title={t(config.titleKey)}>
         {IconComponent && (
-          <span className="relative inline-flex items-center justify-center">
-            <IconComponent className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`} />
+          <>
+            <span className="inline-flex items-center justify-center">
+              <IconComponent className={`w-4 h-4 ${config.animate ? 'animate-pulse' : ''}`} />
+            </span>
             {renderUsageBadges()}
-          </span>
+          </>
         )}
         <div
           className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${
@@ -245,10 +262,12 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
   return (
     <div className={`flex items-center ${className || ''}`} title={t(idleTitleKey)}>
       {IdleIcon && (
-        <span className="relative inline-flex items-center justify-center">
-          <IdleIcon className="w-4 h-4" />
+        <>
+          <span className="inline-flex items-center justify-center">
+            <IdleIcon className="w-4 h-4" />
+          </span>
           {renderUsageBadges()}
-        </span>
+        </>
       )}
       <div
         className={`flex items-center overflow-hidden transition-all duration-500 ease-in-out ${

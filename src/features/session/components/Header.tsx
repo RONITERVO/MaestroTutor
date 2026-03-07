@@ -148,10 +148,10 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
         <div
-          className={`flex items-center cursor-pointer select-none touch-none transition-all duration-300
+          className={`flex items-center cursor-pointer select-none touch-none transition-all duration-300 flag-depth
             ${statusConfig.color} ${statusConfig.borderColor}
             ${statusConfig.textColor}
-            ${isOpen ? 'drop-shadow-md border-y border-r pr-4 pl-3 py-1.5' : 'drop-shadow-md pl-3 pr-3 py-2 animate-flag-wave'}
+            ${isOpen ? 'border-y border-r pr-4 pl-3 py-1.5 sketchy-border-thin' : 'pl-3 pr-3 py-2 animate-flag-wave'}
           `}
           style={isOpen ? { borderRadius: '0 15px 225px 0 / 0 225px 15px 0' } : undefined}
           onClick={handleClick}
@@ -218,7 +218,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
          {onOpenApiKey && (
            <button
              onClick={onOpenApiKey}
-             className={`flex items-center gap-2 px-3 py-2 shadow-sm backdrop-blur-sm transition-all text-xs sm:text-sm sketchy-border-thin
+             className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm transition-all text-xs sm:text-sm sketchy-border-thin btn-depth
                ${hasApiKey ? 'bg-apikey-ok-bg text-apikey-ok-text hover:bg-apikey-ok-hover' : 'bg-apikey-missing-bg text-apikey-missing-text hover:bg-apikey-missing-hover'}
              `}
              title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
@@ -230,7 +230,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
 
          <button
            onClick={toggleDebugLogs}
-           className="p-2 bg-debug-btn-bg/80 hover:bg-debug-btn-bg text-debug-btn-muted hover:text-debug-btn-text shadow-sm backdrop-blur-sm transition-all sketchy-border-thin"
+           className="p-2 bg-debug-btn-bg/80 hover:bg-debug-btn-bg text-debug-btn-muted hover:text-debug-btn-text backdrop-blur-sm transition-all sketchy-border-thin btn-depth"
            title="View Traffic Logs"
          >
            <IconTerminal className="w-4 h-4" />
