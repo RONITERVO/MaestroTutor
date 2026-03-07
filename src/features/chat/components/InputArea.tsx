@@ -232,6 +232,23 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
   }, [inputText]);
 
+  // On mount, the container query (3.6cqw font-size) may not be resolved yet,
+  // causing scrollHeight to return an inflated value. Re-measure after layout settles.
+  useEffect(() => {
+    let cancelled = false;
+    requestAnimationFrame(() => {
+      if (cancelled) return;
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        if (bubbleTextAreaRef.current) {
+          bubbleTextAreaRef.current.style.height = 'auto';
+          bubbleTextAreaRef.current.style.height = `${bubbleTextAreaRef.current.scrollHeight}px`;
+        }
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setInputText(newText);
