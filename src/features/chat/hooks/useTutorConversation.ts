@@ -107,6 +107,14 @@ const toUtf8Base64DataUrl = (mimeType: string, text: string): string => {
   return `data:${mimeType};charset=utf-8;base64,${btoa(binary)}`;
 };
 
+type MediaPayloadOverride = {
+  oldUri?: string;
+  newUri?: string;
+  newMimeType?: string;
+  transient?: boolean;
+  omitFromPayload?: boolean;
+};
+
 export interface UseTutorConversationConfig {
   // Translation function
   t: TranslationFunction;
@@ -195,7 +203,7 @@ export interface UseTutorConversationReturn {
   // Utilities
   stripBracketedContent: (input: string | undefined | null) => string;
   resolveBookmarkContextSummary: () => string | null;
-  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, { oldUri?: string; newUri: string }>>;
+  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, MediaPayloadOverride>>;
   computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
   handleReengagementThresholdChange: (newThreshold: number) => void;
   calculateEstimatedImageLoadTime: () => number;
@@ -412,7 +420,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const ensureUrisForHistoryForSend = useCallback(async (
     arr: ChatMessage[], 
     onProgress?: (done: number, total: number, etaMs?: number) => void
-  ): Promise<Record<string, { oldUri?: string; newUri: string }>> => {
+  ): Promise<Record<string, MediaPayloadOverride>> => {
     const candidates = computeHistorySubsetForMedia(arr);
 
     const mediaIndices: number[] = [];
@@ -468,7 +476,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       onProgress(doneCount, totalToEnsure, eta);
     };
 
-    const updatedUriMap: Record<string, { oldUri?: string; newUri: string }> = {};
+    const updatedUriMap: Record<string, MediaPayloadOverride> = {};
     for (let idx = 0; idx < candidates.length; idx++) {
       if (!keepMediaIdx.has(idx)) continue;
       const m = candidates[idx];
@@ -495,13 +503,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       // CRITICAL: If URI is expired but we have no data URL to re-upload, media will be lost
       if (cachedDeleted && !hasDataUrl) {
         console.warn(`[ensureUris] Message ${m.id} has expired uploadedFileUri but no data URL to re-upload. Media will be omitted from API payload.`);
+        updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
         continue;
       }
       if (cachedMimeRequiresUpgrade && !hasDataUrl) {
-        console.warn(`[ensureUris] Message ${m.id} has unsupported upload MIME metadata but no local data URL for conversion. Removing cached URI from API payload.`);
-        updateMessage(m.id, { uploadedFileUri: undefined, uploadedFileMimeType: undefined });
-        (m as any).uploadedFileUri = undefined;
-        (m as any).uploadedFileMimeType = undefined;
+        console.warn(`[ensureUris] Message ${m.id} has unsupported upload MIME metadata but no local data URL for conversion. Omitting media from this payload only.`);
+        updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
         continue;
       }
       
@@ -524,6 +531,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           } catch { /* optimization for storage is optional */ }
         }
         if (dataForUpload) {
+          const originalMime = (dataForUpload.mimeType || '').trim().toLowerCase();
           if (isOfficeMimeUnsupportedByGemini(dataForUpload.mimeType)) {
             try {
               const preview = await getOfficePreview(dataForUpload.dataUrl, dataForUpload.mimeType, m.attachmentName);
@@ -537,6 +545,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
               };
             } catch (officeErr) {
               console.warn(`[ensureUris] Failed to convert Office document to text for message ${m.id}; omitting this media from API payload.`, officeErr);
+              updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
               continue;
             }
           }
@@ -549,6 +558,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
               dataForUpload = { dataUrl: rasterized.dataUrl, mimeType: rasterized.mimeType };
             } catch (svgErr) {
               console.warn(`[ensureUris] Failed to convert SVG to JPEG for message ${m.id}; omitting this media from API payload.`, svgErr);
+              updatedUriMap[m.id] = { oldUri: cachedUri, transient: true, omitFromPayload: true };
               continue;
             }
           }
@@ -557,10 +567,20 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             dataForUpload.mimeType,
             m.attachmentName || 'send-history'
           );
-          updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
-          (m as any).uploadedFileUri = up.uri;
-          (m as any).uploadedFileMimeType = up.mimeType;
-          updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri };
+          const isSurrogateUpload = isOfficeMimeUnsupportedByGemini(originalMime) || isSvgMimeType(originalMime);
+          if (isSurrogateUpload) {
+            updatedUriMap[m.id] = {
+              oldUri: cachedUri,
+              newUri: up.uri,
+              newMimeType: up.mimeType,
+              transient: true,
+            };
+          } else {
+            updateMessage(m.id, { uploadedFileUri: up.uri, uploadedFileMimeType: up.mimeType });
+            (m as any).uploadedFileUri = up.uri;
+            (m as any).uploadedFileMimeType = up.mimeType;
+            updatedUriMap[m.id] = { oldUri: cachedUri, newUri: up.uri, newMimeType: up.mimeType };
+          }
         }
       } catch (e) {
         console.warn('Pre-send URI ensure failed for message', m.id, e);
@@ -1208,8 +1228,21 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       });
       historyForAssistantImageGen = baseForEnsure.map(m => {
         const upd = ensuredUpdates[m.id];
-        if (upd && upd.newUri && (m as any).uploadedFileUri !== upd.newUri) {
-          return { ...m, uploadedFileUri: upd.newUri } as ChatMessage;
+        if (!upd) return m;
+        if (upd.omitFromPayload) {
+          return {
+            ...m,
+            uploadedFileUri: undefined,
+            uploadedFileMimeType: undefined,
+            imageFileUri: undefined,
+            imageMimeType: undefined,
+          } as ChatMessage;
+        }
+        if (upd.newUri) {
+          const nextMime = upd.newMimeType || (m as any).uploadedFileMimeType;
+          if ((m as any).uploadedFileUri !== upd.newUri || (upd.newMimeType && (m as any).uploadedFileMimeType !== upd.newMimeType)) {
+            return { ...m, uploadedFileUri: upd.newUri, uploadedFileMimeType: nextMime } as ChatMessage;
+          }
         }
         return m;
       });
@@ -1525,7 +1558,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const historySubsetForSend: ChatMessage[] = getHistoryRespectingBookmark(historyForGemini);
       setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done: 0, total: 0 });
       
-      let ensuredUpdates: Record<string, { oldUri?: string; newUri: string }> = {};
+      let ensuredUpdates: Record<string, MediaPayloadOverride> = {};
       try {
         ensuredUpdates = await ensureUrisForHistoryForSend(historySubsetForSend, (done, total, etaMs) => {
           setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
@@ -1540,23 +1573,25 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       const historySubsetForSendFinal: ChatMessage[] = getHistoryRespectingBookmark(historyForGeminiPostEnsure)
         .map((m: ChatMessage) => {
-          if (ensuredUpdates[m.id]?.newUri) {
-            const nu = ensuredUpdates[m.id].newUri;
-            if ((m as any).uploadedFileUri !== nu) {
-              return { ...m, uploadedFileUri: nu } as ChatMessage;
+          const upd = ensuredUpdates[m.id];
+          if (!upd) return m;
+          if (upd.omitFromPayload) {
+            return {
+              ...m,
+              uploadedFileUri: undefined,
+              uploadedFileMimeType: undefined,
+              imageFileUri: undefined,
+              imageMimeType: undefined,
+            } as ChatMessage;
+          }
+          if (upd.newUri) {
+            const nextMime = upd.newMimeType || (m as any).uploadedFileMimeType;
+            if ((m as any).uploadedFileUri !== upd.newUri || (upd.newMimeType && (m as any).uploadedFileMimeType !== upd.newMimeType)) {
+              return { ...m, uploadedFileUri: upd.newUri, uploadedFileMimeType: nextMime } as ChatMessage;
             }
           }
           return m;
         });
-
-      try {
-        for (const m of historySubsetForSendFinal) {
-          const upd = ensuredUpdates[m.id];
-          if (upd && upd.newUri && (m as any).uploadedFileUri !== upd.newUri) {
-            (m as any).uploadedFileUri = upd.newUri;
-          }
-        }
-      } catch {}
 
       let globalProfileText: string | undefined = undefined;
       try {
