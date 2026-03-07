@@ -642,6 +642,17 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         scrollbarGutter: 'stable',
       }
     : undefined;
+  const handleAttachmentImageLoad = useCallback((img: HTMLImageElement) => {
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      setImageAspectRatio(img.naturalWidth / img.naturalHeight);
+
+      if (isAnnotationActive && annotationViewportRef.current) {
+        const vw = annotationViewportRef.current.clientWidth;
+        setScale(vw / img.naturalWidth);
+        setPan({ x: 0, y: 0 });
+      }
+    }
+  }, [isAnnotationActive]);
   
   if (message.thinking && !message.isGeneratingImage) {
     return (
@@ -819,26 +830,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                                 height: '100%',
                             }}
                         >
-              <img
-                                ref={imageForAnnotationRef}
-                src={isAnnotationActive ? annotationSourceUrl! : displayUrl!}
-                                alt={isAnnotationActive ? t('chat.annotateModal.editingPreviewAlt') : (t('chat.imagePreview.alt'))}
-                                className={`block w-full h-full pointer-events-none ${!isAnnotationActive ? 'object-contain' : ''}`}
-                                style={{ opacity: 1 }}
-                                onLoad={(e) => {
-                                    const img = e.currentTarget;
-                                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-                                      setImageAspectRatio(img.naturalWidth / img.naturalHeight);
-                                  
-                                      if (isAnnotationActive && annotationViewportRef.current) {
-                                        const vw = annotationViewportRef.current.clientWidth;
-                                        setScale(vw / img.naturalWidth);
-                                        setPan({ x: 0, y: 0 });
-                                      }
-                                    }
-                                  }}
-                            />
-                            {isAnnotationActive && ( <canvas ref={editCanvasRef} className="absolute top-0 left-0 w-full h-full cursor-crosshair" /> )}
+                          <img
+                            ref={imageForAnnotationRef}
+                            src={isAnnotationActive ? annotationSourceUrl! : displayUrl!}
+                            alt={isAnnotationActive ? t('chat.annotateModal.editingPreviewAlt') : (t('chat.imagePreview.alt'))}
+                            className={`block w-full h-full pointer-events-none ${!isAnnotationActive ? 'object-contain' : ''}`}
+                            style={{ opacity: 1 }}
+                            onLoad={(e) => handleAttachmentImageLoad(e.currentTarget)}
+                          />
+                          {isAnnotationActive && ( <canvas ref={editCanvasRef} className="absolute top-0 left-0 w-full h-full cursor-crosshair" /> )}
                         </div>
       {!isAnnotationActive && isFocusedMode && isImageSuccessfullyDisplayed && (
                             <button

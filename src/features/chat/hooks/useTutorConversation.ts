@@ -525,10 +525,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         } else if (uiUrl && uiMime) {
           // Upload ORIGINAL to API for best quality, optimize only for local storage
           dataForUpload = { dataUrl: uiUrl, mimeType: uiMime };
-          try {
-            const optimized = await processMediaForUpload(uiUrl, uiMime, { t });
-            updateMessage(m.id, { storageOptimizedImageUrl: optimized.dataUrl, storageOptimizedImageMimeType: optimized.mimeType });
-          } catch { /* optimization for storage is optional */ }
+          // Keep original SVG payload intact to avoid reload-time fidelity/encoding loss.
+          if (!isSvgMimeType(uiMime)) {
+            try {
+              const optimized = await processMediaForUpload(uiUrl, uiMime, { t });
+              updateMessage(m.id, { storageOptimizedImageUrl: optimized.dataUrl, storageOptimizedImageMimeType: optimized.mimeType });
+            } catch { /* optimization for storage is optional */ }
+          }
         }
         if (dataForUpload) {
           const originalMime = (dataForUpload.mimeType || '').trim().toLowerCase();

@@ -14,8 +14,8 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
 
   const inferMimeFromDataUrl = (dataUrl?: string | null): string | undefined => {
     if (!dataUrl || typeof dataUrl !== 'string') return undefined;
-    const m = dataUrl.match(/^data:([^;]+);base64,/i);
-    return m ? m[1] : undefined;
+    const m = dataUrl.match(/^data:([^;,]+)(?:;[^,]*)?,/i);
+    return m ? m[1].toLowerCase() : undefined;
   };
 
   const capForMime = (mime?: string | null): number => {
@@ -71,9 +71,17 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   // This discards the full-resolution 'imageUrl' to save significant space in IndexedDB,
   // while ensuring the message history remains visually complete (albeit at lower quality) upon reload.
   if (typeof (out as any).storageOptimizedImageUrl === 'string' && (out as any).storageOptimizedImageUrl) {
-    out.imageUrl = (out as any).storageOptimizedImageUrl;
-    out.imageMimeType = (out as any).storageOptimizedImageMimeType || out.imageMimeType;
-    // Remove the specific LLM fields since we've promoted them to the main fields for persistence
+    const originalMime = (out.imageMimeType || '').toLowerCase();
+    const keepOriginalSvg =
+      originalMime === 'image/svg+xml' &&
+      typeof out.imageUrl === 'string' &&
+      /^data:image\/svg\+xml/i.test(out.imageUrl);
+
+    if (!keepOriginalSvg) {
+      out.imageUrl = (out as any).storageOptimizedImageUrl;
+      out.imageMimeType = (out as any).storageOptimizedImageMimeType || out.imageMimeType;
+    }
+    // Remove the specific LLM fields after persistence normalization.
     delete (out as any).storageOptimizedImageUrl;
     delete (out as any).storageOptimizedImageMimeType;
   }
