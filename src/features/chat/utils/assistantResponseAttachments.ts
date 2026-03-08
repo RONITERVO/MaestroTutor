@@ -25,6 +25,8 @@ const MAX_ATTACHMENT_TEXT_CHARS = 180_000;
 
 const FENCE_REGEX = /```([^\n`]*)\n?([\s\S]*?)```/g;
 const INLINE_SVG_REGEX = /<svg[\s\S]*?<\/svg>/i;
+const STANDALONE_SVG_REGEX = /^\s*(?:<\?xml[\s\S]*?\?>\s*)?<svg[\s\S]*<\/svg>\s*$/i;
+const RAW_HTML_DOCUMENT_REGEX = /<!doctype\s+html|<html[\s>]|<body[\s>]|<head[\s>]|<\/html>/i;
 const INLINE_IMAGE_DATA_URL_REGEX = /data:image\/[a-z0-9.+-]+(?:;[a-z0-9=._-]+)*,[a-z0-9+/%=._\-\s]+/i;
 
 const CODE_LANGUAGE_TO_EXTENSION: Record<string, string> = {
@@ -346,7 +348,7 @@ const chartJsonToCsv = (input: any): string | null => {
 
 const createSvgAttachment = (svgText: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
   const normalized = normalizeAttachmentText(svgText);
-  if (!normalized || !/<svg[\s>]/i.test(normalized)) return null;
+  if (!normalized || !STANDALONE_SVG_REGEX.test(normalized)) return null;
   return {
     kind: 'svg',
     dataUrl: toUtf8DataUrl('image/svg+xml', normalized),
@@ -445,7 +447,8 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
   }
 
   if (langToken === 'svg' || mimeToken === 'image/svg+xml' || /<svg[\s>]/i.test(normalizedContent)) {
-    return createSvgAttachment(normalizedContent, fileNameHint);
+    const svgAttachment = createSvgAttachment(normalizedContent, fileNameHint);
+    if (svgAttachment) return svgAttachment;
   }
 
   const inferredImageMimeType = inferImageMimeType(langToken, mimeToken, fileNameHint);
@@ -472,7 +475,8 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
 
   if (!langToken) {
     if (/<svg[\s>]/i.test(normalizedContent)) {
-      return createSvgAttachment(normalizedContent, fileNameHint);
+      const svgAttachment = createSvgAttachment(normalizedContent, fileNameHint);
+      if (svgAttachment) return svgAttachment;
     }
     return createCodeAttachment('txt', normalizedContent, fileNameHint || 'generated.txt');
   }
@@ -516,6 +520,20 @@ export const parseAssistantResponseForAttachment = (responseText?: string | null
       priority,
       attachment,
     });
+  }
+
+  if (candidates.length === 0) {
+    const normalizedSource = normalizeAttachmentText(source);
+    const sourceStartsWithMarkup = normalizedSource.startsWith('<');
+    if (sourceStartsWithMarkup && RAW_HTML_DOCUMENT_REGEX.test(normalizedSource)) {
+      const htmlAttachment = createCodeAttachment('html', normalizedSource, 'generated.html');
+      if (htmlAttachment) {
+        return {
+          cleanedText: '',
+          attachment: htmlAttachment,
+        };
+      }
+    }
   }
 
   if (candidates.length === 0) {
