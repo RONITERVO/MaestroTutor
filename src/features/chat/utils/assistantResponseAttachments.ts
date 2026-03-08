@@ -471,6 +471,23 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
   const mimeToken = normalizedLang.split(';')[0].trim();
   const langToken = mimeToken.includes('/') ? mimeToken : normalizedLang;
   const normalizedContent = content || '';
+  const trimmedContent = normalizedContent.trim();
+  const startsWithMarkup = trimmedContent.startsWith('<');
+  const isExplicitHtmlLang =
+    langToken === 'html' ||
+    langToken === 'htm' ||
+    langToken === 'xhtml' ||
+    mimeToken === 'text/html' ||
+    mimeToken === 'application/xhtml+xml';
+  const isLikelyHtmlDocument = startsWithMarkup && RAW_HTML_DOCUMENT_REGEX.test(trimmedContent);
+  const isLikelyHtmlMiniGameSnippet = startsWithMarkup && INLINE_MINI_GAME_MARKER_REGEX.test(normalizedContent);
+
+  // Important: HTML fences can include inline `data:image/...` snippets (e.g. CSS data URIs).
+  // We must keep the full HTML as code instead of misclassifying/truncating it as an image.
+  if (isExplicitHtmlLang || isLikelyHtmlDocument || isLikelyHtmlMiniGameSnippet) {
+    return createCodeAttachment('html', normalizedContent, fileNameHint || 'generated.html');
+  }
+
   const inlineImageData = extractInlineImageDataUrl(normalizedContent);
   if (inlineImageData) {
     const inlineImageAttachment = createImageAttachmentFromDataUrl(
