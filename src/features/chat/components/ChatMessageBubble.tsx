@@ -677,6 +677,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
+  const thinkingTrace = Array.isArray(message.thinkingTrace)
+    ? message.thinkingTrace.filter(line => typeof line === 'string' && line.trim().length > 0).slice(-6)
+    : [];
+  const thinkingDraftText = typeof message.thinkingDraftText === 'string'
+    ? message.thinkingDraftText
+    : '';
 
   useEffect(() => {
     if (!shouldUseScrollableTextOverlay) {
@@ -708,6 +714,23 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       <div className="flex justify-start mb-3 animate-pulse">
         <div className={`bg-thinking-bubble-bg p-3 max-w-xl sketchy-border-thin ${sketchShapeClass(messageIndex)}`}>
           <p className="text-sm text-thinking-bubble-text font-hand">{t('chat.thinking')}</p>
+          {thinkingDraftText && (
+            <p className="mt-2 text-sm text-thinking-bubble-text font-hand leading-relaxed whitespace-pre-wrap">
+              {thinkingDraftText}
+            </p>
+          )}
+          {thinkingTrace.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {thinkingTrace.map((line, idx) => (
+                <p
+                  key={`${message.id}-thinking-${idx}`}
+                  className="text-xs text-thinking-bubble-text/90 font-hand leading-tight whitespace-pre-wrap"
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );

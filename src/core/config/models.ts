@@ -7,6 +7,7 @@ export interface GeminiModelRegistry {
     default: string;
     aux: string;
     translation: string;
+    fallback: string;
   };
   image: {
     generation: string;
@@ -16,15 +17,32 @@ export interface GeminiModelRegistry {
   };
 }
 
+export interface GeminiModelRegistryInput {
+  text?: {
+    default?: string;
+    aux?: string;
+    translation?: string;
+    fallback?: string;
+  };
+  image?: {
+    generation?: string;
+  };
+  audio?: {
+    live?: string;
+  };
+}
+
 export const MODEL_REGISTRY_STORAGE_KEY = 'maestro_gemini_models_v1';
 export const MODEL_REGISTRY_URL_STORAGE_KEY = 'maestro_gemini_models_url';
 export const DEFAULT_MODEL_REGISTRY_URL = 'https://chatwithmaestro.com/gemini-models.json';
+const DEFAULT_TEXT_FALLBACK_MODEL = 'gemini-3.1-pro-preview';
 
 const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   text: {
     default: 'gemini-3-flash-preview',
     aux: 'gemini-3-flash-preview',
     translation: 'gemini-3-flash-preview',
+    fallback: DEFAULT_TEXT_FALLBACK_MODEL,
   },
   image: {
     generation: 'gemini-2.5-flash-image',
@@ -43,22 +61,28 @@ const getEnvModelRegistryUrl = (): string | null => {
 
 const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 
-const isValidRegistry = (value: any): value is GeminiModelRegistry => {
+const isValidRegistry = (value: any): value is {
+  text: { default: string; aux: string; translation: string; fallback?: string };
+  image: { generation: string };
+  audio: { live: string };
+} => {
   if (!value || typeof value !== 'object') return false;
   return (
     isNonEmptyString(value?.text?.default) &&
     isNonEmptyString(value?.text?.aux) &&
     isNonEmptyString(value?.text?.translation) &&
+    (value?.text?.fallback === undefined || isNonEmptyString(value?.text?.fallback)) &&
     isNonEmptyString(value?.image?.generation) &&
     isNonEmptyString(value?.audio?.live)
   );
 };
 
-const mergeWithDefaults = (value: Partial<GeminiModelRegistry>): GeminiModelRegistry => ({
+const mergeWithDefaults = (value: GeminiModelRegistryInput): GeminiModelRegistry => ({
   text: {
     default: value?.text?.default ?? DEFAULT_GEMINI_MODELS.text.default,
     aux: value?.text?.aux ?? DEFAULT_GEMINI_MODELS.text.aux,
     translation: value?.text?.translation ?? DEFAULT_GEMINI_MODELS.text.translation,
+    fallback: value?.text?.fallback ?? DEFAULT_GEMINI_MODELS.text.fallback,
   },
   image: {
     generation: value?.image?.generation ?? DEFAULT_GEMINI_MODELS.image.generation,
@@ -70,7 +94,7 @@ const mergeWithDefaults = (value: Partial<GeminiModelRegistry>): GeminiModelRegi
 
 export const getGeminiModels = (): GeminiModelRegistry => currentModels;
 
-export const setGeminiModels = (value: Partial<GeminiModelRegistry>) => {
+export const setGeminiModels = (value: GeminiModelRegistryInput) => {
   currentModels = mergeWithDefaults(value);
 };
 
@@ -135,7 +159,7 @@ export const refreshGeminiModelsFromRemote = async (options?: { url?: string; ti
       throw new Error('Model registry is missing required fields');
     }
     setGeminiModels(data);
-    safeWriteLocalStorage(MODEL_REGISTRY_STORAGE_KEY, JSON.stringify(data));
+    safeWriteLocalStorage(MODEL_REGISTRY_STORAGE_KEY, JSON.stringify(getGeminiModels()));
     return { updated: true, source: 'remote' } as const;
   } catch (error) {
     return { updated: false, source: cached ? 'cache' : 'default', error } as const;

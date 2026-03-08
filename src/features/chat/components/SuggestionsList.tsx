@@ -7,7 +7,7 @@ import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconTranslate, IconSpeaker, IconVolumeOff } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import { useMaestroStore } from '../../../store';
-import { selectReplySuggestions } from '../../../store/slices/chatSlice';
+import { selectReplySuggestions, selectSuggestionsLoadingStreamText } from '../../../store/slices/chatSlice';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
 
@@ -29,6 +29,7 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
   speakNativeLang
 }) => {
   const replySuggestions = useMaestroStore(selectReplySuggestions);
+  const suggestionsLoadingStreamText = useMaestroStore(selectSuggestionsLoadingStreamText);
   const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
   const isCreatingSuggestion = useMaestroStore(selectIsCreatingSuggestion);
   const isSpeaking = useMaestroStore(selectIsSpeaking);
@@ -107,7 +108,19 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
         `}</style>
         <div className="flex flex-wrap gap-2 justify-end">
             {isLoadingSuggestions && (
-              <span className="inline-block px-3 py-1.5 text-page-text/70 italic" style={{ fontSize: '2.8cqw' }}>{t('chat.loadingSuggestions')}</span>
+              <span
+                className="inline-block w-full px-3 py-1.5 text-page-text/70 italic"
+                style={{
+                  fontSize: '2.8cqw',
+                  lineHeight: 1.35,
+                  whiteSpace: 'pre-wrap',
+                  overflowWrap: 'anywhere',
+                  textAlign: 'right',
+                }}
+              >
+                {t('chat.loadingSuggestions')}
+                {suggestionsLoadingStreamText ? ` ${suggestionsLoadingStreamText}` : ''}
+              </span>
             )}
             {!isLoadingSuggestions && replySuggestions.map((suggestion, index) => {
               const isExpanded = expandedSuggestionTarget === suggestion.target;

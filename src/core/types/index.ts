@@ -32,6 +32,8 @@ export interface ChatMessage {
   uploadedFileMimeType?: string;
   timestamp: number;
   thinking?: boolean;
+  thinkingTrace?: string[];
+  thinkingDraftText?: string;
   isGeneratingImage?: boolean;
   imageGenError?: string | null;
   imageGenerationStartTime?: number;

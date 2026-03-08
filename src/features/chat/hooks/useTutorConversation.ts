@@ -22,7 +22,7 @@ import {
   RecordedUtterance 
 } from '../../../core/types';
 import { ApiError } from '../../../api/gemini/client';
-import { generateGeminiResponse, translateText } from '../../../api/gemini/generative';
+import { generateGeminiResponse, translateText, type GeminiProgressEvent } from '../../../api/gemini/generative';
 import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from '../../../api/gemini/files';
 import { generateImage } from '../../../api/gemini/vision';
 import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../api/gemini/maestroAvatarEnsure';
@@ -93,6 +93,11 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
 const isSvgMimeType = (mimeType?: string | null): boolean => {
   return (mimeType || '').trim().toLowerCase() === 'image/svg+xml';
 };
+
+const MAX_THINKING_TRACE_LINES = 8;
+const MAX_THINKING_DRAFT_CHARS = 12000;
+const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
+const MAX_SUGGESTIONS_STREAM_CHARS = 1800;
 
 const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
   const normalized = (mimeType || '').trim().toLowerCase();
@@ -319,6 +324,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
   const setSendPrep = useMaestroStore(state => state.setSendPrep);
   const setLatestGroundingChunks = useMaestroStore(state => state.setLatestGroundingChunks);
+  const setSuggestionsLoadingStreamText = useMaestroStore(state => state.setSuggestionsLoadingStreamText);
   const addImageLoadDuration = useMaestroStore(state => state.addImageLoadDuration);
   const setAttachedImage = useMaestroStore(state => state.setAttachedImage);
   const setMaestroActivityStage = useMaestroStore(state => state.setMaestroActivityStage);
@@ -385,6 +391,49 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
     return translations;
   }, [selectedLanguagePairRef]);
+
+  const appendThinkingTrace = useCallback((messageId: string, line: string) => {
+    const cleanedLine = line.trim();
+    if (!cleanedLine) return;
+
+    const current = messagesRef.current.find(m => m.id === messageId);
+    if (!current || !current.thinking) return;
+
+    const prevTrace = Array.isArray(current.thinkingTrace)
+      ? current.thinkingTrace.filter(item => typeof item === 'string' && item.trim().length > 0)
+      : [];
+    if (prevTrace[prevTrace.length - 1] === cleanedLine) return;
+
+    const nextTrace = [...prevTrace, cleanedLine].slice(-MAX_THINKING_TRACE_LINES);
+    updateMessage(messageId, { thinkingTrace: nextTrace });
+  }, [messagesRef, updateMessage]);
+
+  const formatGeminiProgressLine = useCallback((event: GeminiProgressEvent): string | undefined => {
+    const elapsedSeconds = typeof event.elapsedMs === 'number'
+      ? Math.max(0, Math.floor(event.elapsedMs / 1000))
+      : undefined;
+
+    switch (event.phase) {
+      case 'attempt-start':
+        return `Connecting to ${event.model} (attempt ${event.attempt}/${event.totalAttempts})...`;
+      case 'attempt-processing':
+        if (typeof elapsedSeconds !== 'number') return undefined;
+        return `Model is thinking... ${elapsedSeconds}s elapsed.`;
+      case 'high-demand':
+        return 'High demand detected. Request is queued on Google servers.';
+      case 'fallback-switch':
+        return `Switching to fallback model ${event.model}.`;
+      case 'retry-scheduled':
+        return `Retrying in ${Math.ceil((event.retryInMs || 0) / 1000)}s...`;
+      case 'success':
+        if (typeof elapsedSeconds === 'number' && elapsedSeconds > 0) {
+          return `Response received after ${elapsedSeconds}s.`;
+        }
+        return 'Response received.';
+      default:
+        return undefined;
+    }
+  }, []);
 
   const resolveBookmarkContextSummary = useCallback((): string | null => {
     const bm = settingsRef.current.historyBookmarkMessageId;
@@ -616,6 +665,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     // Check if already loading using token state
     if (isLoadingSuggestions) {
       setReplySuggestions([]);
+      setSuggestionsLoadingStreamText('');
       if (suggestionsTokenRef.current) {
         removeActivityToken(suggestionsTokenRef.current);
         suggestionsTokenRef.current = null;
@@ -624,6 +674,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
     if (!lastTutorMessage.trim() || !selectedLanguagePairRef.current) {
       setReplySuggestions([]);
+      setSuggestionsLoadingStreamText('');
       return;
     }
 
@@ -635,6 +686,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         const target = allMsgs[targetIdx];
         if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
           setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
+          setSuggestionsLoadingStreamText('');
           if (suggestionsTokenRef.current) {
             removeActivityToken(suggestionsTokenRef.current);
             suggestionsTokenRef.current = null;
@@ -647,6 +699,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     // Add token for loading suggestions
     suggestionsTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS);
     setReplySuggestions([]);
+    setSuggestionsLoadingStreamText('');
 
     const historyForPrompt = getHistoryRespectingBookmark(history)
       .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -688,9 +741,32 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
 
     const MAX_RETRIES = 2;
+    const formatStreamSegment = (value: string): string => {
+      if (!value) return '';
+      const condensed = value.replace(/\s+/g, ' ').trim();
+      if (!condensed) return '';
+      if (condensed.length <= MAX_SUGGESTIONS_STREAM_CHARS) return condensed;
+      return condensed.slice(-MAX_SUGGESTIONS_STREAM_CHARS);
+    };
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
+        let thoughtText = '';
+        let outputText = '';
+        const flushSuggestionsLoadingText = () => {
+          const thoughtSegment = formatStreamSegment(thoughtText);
+          const outputSegment = formatStreamSegment(outputText);
+          const merged = [
+            thoughtSegment ? `thinking: ${thoughtSegment}` : '',
+            outputSegment ? `output: ${outputSegment}` : '',
+          ]
+            .filter(Boolean)
+            .join(' | ');
+          if (merged) {
+            setSuggestionsLoadingStreamText(merged);
+          }
+        };
+
         const response = await generateGeminiResponse(
           getGeminiModels().text.aux,
           suggestionPrompt,
@@ -700,7 +776,24 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           undefined,
           undefined,
           false,
-          { responseMimeType: "application/json" }
+          { responseMimeType: "application/json" },
+          undefined,
+          {
+            onProgress: (event) => {
+              const progressLine = formatGeminiProgressLine(event);
+              if (progressLine && !thoughtText.trim() && !outputText.trim()) {
+                setSuggestionsLoadingStreamText(progressLine);
+              }
+            },
+            onThoughtDelta: (_deltaThought, fullThought) => {
+              thoughtText = fullThought || thoughtText;
+              flushSuggestionsLoadingText();
+            },
+            onTextDelta: (_deltaText, fullText) => {
+              outputText = fullText || outputText;
+              flushSuggestionsLoadingText();
+            },
+          }
         );
 
         trackTokenUsage(getGeminiModels().text.aux, response.usageMetadata);
@@ -769,6 +862,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
     }
 
+    setSuggestionsLoadingStreamText('');
     // Remove suggestions loading token
     if (suggestionsTokenRef.current) {
       removeActivityToken(suggestionsTokenRef.current);
@@ -785,6 +879,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     addActivityToken,
     removeActivityToken,
     setReplySuggestions,
+    setSuggestionsLoadingStreamText,
+    formatGeminiProgressLine,
     updateMessage
   ]);
 
@@ -1046,6 +1142,33 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     imageForGeminiContextFileUri?: string;
     currentSettingsVal: AppSettings;
   }) => {
+    let lastProcessingBucket = -1;
+    let streamingDraftText = '';
+    let lastDraftFlushAt = 0;
+    let thoughtBuffer = '';
+    let lastThoughtFlushAt = 0;
+
+    const flushThinkingDraft = (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastDraftFlushAt < THINKING_DRAFT_FLUSH_INTERVAL_MS) return;
+      lastDraftFlushAt = now;
+      const draftToShow = streamingDraftText.slice(-MAX_THINKING_DRAFT_CHARS);
+      const current = messagesRef.current.find(m => m.id === params.thinkingMessageId);
+      if (!current || !current.thinking) return;
+      if ((current.thinkingDraftText || '') === draftToShow) return;
+      updateMessage(params.thinkingMessageId, { thinkingDraftText: draftToShow });
+    };
+
+    const flushThoughtTrace = (force = false) => {
+      const condensed = thoughtBuffer.replace(/\s+/g, ' ').trim();
+      if (!condensed) return;
+      const now = Date.now();
+      if (!force && condensed.length < 80 && now - lastThoughtFlushAt < 2000) return;
+      appendThinkingTrace(params.thinkingMessageId, `Model thought: ${condensed.slice(0, 220)}`);
+      thoughtBuffer = '';
+      lastThoughtFlushAt = now;
+    };
+
     const response = await generateGeminiResponse(
       getGeminiModels().text.default,
       params.geminiPromptText,
@@ -1055,8 +1178,31 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       params.imageForGeminiContextMimeType,
       params.imageForGeminiContextFileUri,
       params.currentSettingsVal.enableGoogleSearch,
-      undefined
+      undefined,
+      undefined,
+      {
+        onProgress: (event) => {
+          if (event.phase === 'attempt-processing') {
+            const bucket = Math.floor((event.elapsedMs || 0) / 12000);
+            if (bucket <= 0 || bucket === lastProcessingBucket) return;
+            lastProcessingBucket = bucket;
+          }
+          const line = formatGeminiProgressLine(event);
+          if (line) appendThinkingTrace(params.thinkingMessageId, line);
+        },
+        onTextDelta: (_deltaText, fullText) => {
+          streamingDraftText = fullText || streamingDraftText;
+          flushThinkingDraft(false);
+        },
+        onThoughtDelta: (deltaThought) => {
+          thoughtBuffer += deltaThought;
+          flushThoughtTrace(false);
+        },
+      }
     );
+
+    flushThinkingDraft(true);
+    flushThoughtTrace(true);
 
     trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
 
@@ -1071,6 +1217,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
     const finalMessageUpdates: Partial<ChatMessage> = {
       thinking: false,
+      thinkingTrace: undefined,
+      thinkingDraftText: undefined,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
       rawAssistantResponse: responseTextForConversation,
       text: parsedTranslationsOnComplete.length === 0 ? responseTextForConversation : undefined,
@@ -1091,7 +1239,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       finalMessageUpdates,
       hasParsedAttachment: Boolean(parsedAttachment.attachment),
     };
-  }, [parseGeminiResponse, setLatestGroundingChunks, updateMessage]);
+  }, [appendThinkingTrace, formatGeminiProgressLine, messagesRef, parseGeminiResponse, setLatestGroundingChunks, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
     shouldGenerateUserImage: boolean;
@@ -1365,6 +1513,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
     sendWithFileUploadInProgressRef.current = true;
     setReplySuggestions([]);
+    setSuggestionsLoadingStreamText('');
     // Clear any lingering suggestions token
     if (suggestionsTokenRef.current) {
       removeActivityToken(suggestionsTokenRef.current);
@@ -1397,7 +1546,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       userImageToProcessStorageOptimizedMimeType,
     } = userMessageContext;
 
-    const thinkingMessageId = addMessage({ role: 'assistant', thinking: true });
+    const thinkingMessageId = addMessage({
+      role: 'assistant',
+      thinking: true,
+      thinkingTrace: ['Preparing request context...'],
+      thinkingDraftText: '',
+    });
 
     cancelReengagementRef.current();
 
@@ -1749,6 +1903,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const isQuota = error instanceof ApiError && isQuotaError(error);
       updateMessage(thinkingMessageId, {
         thinking: false, 
+        thinkingTrace: undefined,
+        thinkingDraftText: undefined,
         role: 'error', 
         text: errorMessage, 
         rawAssistantResponse: undefined, 
@@ -1780,6 +1936,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         setAttachedImage(null, null);
       }
       setReplySuggestions([]);
+      setSuggestionsLoadingStreamText('');
       // Clear any suggestions token on error
       if (suggestionsTokenRef.current) {
         removeActivityToken(suggestionsTokenRef.current);
@@ -1819,6 +1976,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     removeActivityToken,
     setLatestGroundingChunks,
     setReplySuggestions,
+    setSuggestionsLoadingStreamText,
     setSendPrep,
     setSnapshotUserError,
     onApiKeyGateOpen,
