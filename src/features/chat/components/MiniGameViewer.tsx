@@ -23,6 +23,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   bottomInset = 0,
 }) => {
   const [showCode, setShowCode] = useState(false);
+  const [controlsExpanded, setControlsExpanded] = useState(false);
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
   const [reloadToken, setReloadToken] = useState(0);
@@ -89,51 +90,84 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       className="w-full flex flex-col items-center"
       style={effectiveBottomInset > 0 ? { paddingBottom: `${effectiveBottomInset}px` } : undefined}
     >
-      <div
-        className={`relative w-full max-w-[560px] min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)]`}
-        style={{ height: 'min(62vh, 480px)' }}
-      >
-        <iframe
-          key={frameId}
-          title={fileName ? `Mini game ${fileName}` : 'Mini game'}
-          srcDoc={srcDoc}
-          className="w-full h-full border-0 bg-black"
-          sandbox="allow-scripts"
-          referrerPolicy="no-referrer"
-          loading="lazy"
-        />
-        {runtimeState !== 'ready' && (
-          <div className={`absolute left-2 right-2 top-2 z-10 rounded-lg px-2 py-1 text-[11px] ${statusBubbleBg} text-white`}>
-            {runtimeState === 'error' ? `Mini-game error: ${runtimeError}` : 'Launching mini-game...'}
-          </div>
-        )}
+      {/* Wrapper: pb-2 gives room for the 8px peek below the game frame */}
+      <div className="relative w-full max-w-[560px]" style={{ paddingBottom: '8px' }}>
+        <div
+          className={`relative w-full min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)]`}
+          style={{ height: 'min(62vh, 480px)' }}
+        >
+          <iframe
+            key={frameId}
+            title={fileName ? `Mini game ${fileName}` : 'Mini game'}
+            srcDoc={srcDoc}
+            className="w-full h-full border-0 bg-black"
+            sandbox="allow-scripts"
+            referrerPolicy="no-referrer"
+            loading="lazy"
+          />
+          {runtimeState !== 'ready' && (
+            <div className={`absolute left-2 right-2 top-2 z-10 rounded-lg px-2 py-1 text-[11px] ${statusBubbleBg} text-white`}>
+              {runtimeState === 'error' ? `Mini-game error: ${runtimeError}` : 'Launching mini-game...'}
+            </div>
+          )}
+        </div>
+
+        {/* Controls: outside overflow-hidden so the bottom peek is always visible */}
         <div
           className="absolute left-2 right-2 z-20 pointer-events-none"
-          style={{ bottom: `${Math.min(-8, effectiveBottomInset - 8)}px` }}
+          style={{ bottom: '0' }}
         >
-          <div className={`rounded-xl border ${lineColor} ${containerBg} px-2 py-1.5 backdrop-blur-sm pointer-events-auto`}>
-            <div className="flex items-center justify-between gap-2">
-              <p className={`text-[10px] uppercase tracking-[0.18em] ${subtleText}`}>Tap Gamepad</p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReloadToken((n) => n + 1)}
-                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] ${textColor} ${padBtnBg}`}
-                >
-                  <IconUndo className="w-3 h-3" />
-                  Restart
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCode((prev) => !prev)}
-                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] ${textColor} ${padBtnBg}`}
-                >
-                  <IconTerminal className="w-3 h-3" />
-                  {showCode ? 'Hide code' : 'Show code'}
-                </button>
+          {controlsExpanded ? (
+            <div
+              className={`w-full rounded-xl border ${lineColor} ${containerBg} px-3 py-1.5 backdrop-blur-sm pointer-events-auto`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className={`text-[10px] uppercase tracking-[0.18em] whitespace-nowrap ${subtleText}`}>Tap Gamepad</p>
+                  <button
+                    type="button"
+                    onClick={() => setControlsExpanded(false)}
+                    className={`inline-flex items-center justify-center rounded-full border ${lineColor} w-6 h-6 shrink-0 ${textColor} ${padBtnBg}`}
+                    aria-label="Collapse gamepad controls"
+                    title="Collapse controls"
+                  >
+                    <span className="text-[10px] leading-none">v</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setReloadToken((n) => n + 1)}
+                    className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] whitespace-nowrap ${textColor} ${padBtnBg}`}
+                  >
+                    <IconUndo className="w-3 h-3 shrink-0" />
+                    <span className="whitespace-nowrap">Restart</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCode((prev) => !prev)}
+                    className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] whitespace-nowrap ${textColor} ${padBtnBg}`}
+                  >
+                    <IconTerminal className="w-3 h-3 shrink-0" />
+                    <span className="whitespace-nowrap">{showCode ? 'Hide code' : 'Show code'}</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setControlsExpanded(true)}
+                className={`pointer-events-auto inline-flex items-center justify-center rounded-full border ${lineColor} w-9 h-6 ${textColor} ${padBtnBg} backdrop-blur-sm shadow-[0_4px_12px_rgba(2,6,23,0.25)]`}
+                aria-label="Expand gamepad controls"
+                aria-expanded={false}
+                title="Expand controls"
+              >
+                <span className="text-[10px] leading-none">^</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
