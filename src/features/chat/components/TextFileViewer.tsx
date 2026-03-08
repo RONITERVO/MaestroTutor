@@ -6,6 +6,8 @@ import { IconPaperclip } from '../../../shared/ui/Icons';
 import { decodeTextFromDataUrl } from '../utils/fileAttachments';
 import TabularPreview from './TabularPreview';
 import { deriveChartSeriesListFromRows, parseDelimitedText } from '../utils/tabularPreview';
+import MiniGameViewer from './MiniGameViewer';
+import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
 
 interface TextFileViewerProps {
   src: string;
@@ -39,6 +41,14 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
       fileExt === 'tsv'
     );
   }, [mimeType, fileExt]);
+  const shouldRenderMiniGame = useMemo(() => {
+    if (compact || !decodedText) return false;
+    return isRunnableMiniGameAttachment({
+      sourceCode: decodedText,
+      fileName,
+      mimeType,
+    });
+  }, [compact, decodedText, fileName, mimeType]);
   const tabularRows = useMemo(() => {
     if (!decodedText || !isTabularTextFile) return [];
     return parseDelimitedText(decodedText, fileExt === 'tsv' ? '\t' : undefined);
@@ -72,6 +82,18 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
         <IconPaperclip className={`w-8 h-8 ${textColor}`} />
         <p className={`mt-2 text-xs ${textColor}`}>Unable to decode text attachment.</p>
       </div>
+    );
+  }
+
+  if (shouldRenderMiniGame) {
+    return (
+      <MiniGameViewer
+        sourceCode={decodedText}
+        variant={variant}
+        fileName={fileName}
+        mimeType={mimeType}
+        bottomInset={effectiveBottomInset}
+      />
     );
   }
 
