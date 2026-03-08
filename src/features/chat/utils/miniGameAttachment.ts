@@ -167,6 +167,33 @@ const buildRuntimeBridge = (frameId: string): string => {
       }
     }
 
+    var children = body.children;
+    var firstVisible = null;
+    var multipleVisible = false;
+    for (var ci = 0; ci < children.length; ci += 1) {
+      if (shouldIgnoreNode(children[ci])) continue;
+      if (!firstVisible) { firstVisible = children[ci]; }
+      else { multipleVisible = true; break; }
+    }
+
+    if (firstVisible && !multipleVisible) {
+      var implicitRect = firstVisible.getBoundingClientRect();
+      if (
+        implicitRect &&
+        isFinite(implicitRect.left) &&
+        isFinite(implicitRect.top) &&
+        isFinite(implicitRect.right) &&
+        isFinite(implicitRect.bottom)
+      ) {
+        return {
+          minLeft: implicitRect.left,
+          minTop: implicitRect.top,
+          width: Math.max(implicitRect.right - implicitRect.left, 1),
+          height: Math.max(implicitRect.bottom - implicitRect.top, 1),
+        };
+      }
+    }
+
     var nodes = body.querySelectorAll('*');
     var hasBounds = false;
     var minLeft = 0;
@@ -293,6 +320,7 @@ const buildRuntimeBridge = (frameId: string): string => {
 };
 
 const buildRuntimeStyle = (): string => `
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; media-src data: blob:;">
 <style>
   :root { color-scheme: light dark; }
   html, body {

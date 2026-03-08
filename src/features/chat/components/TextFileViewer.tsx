@@ -7,6 +7,7 @@ import { decodeTextFromDataUrl } from '../utils/fileAttachments';
 import TabularPreview from './TabularPreview';
 import { deriveChartSeriesListFromRows, parseDelimitedText } from '../utils/tabularPreview';
 import MiniGameViewer from './MiniGameViewer';
+import MiniGameErrorBoundary from './MiniGameErrorBoundary';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
 
 interface TextFileViewerProps {
@@ -87,13 +88,15 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
 
   if (shouldRenderMiniGame) {
     return (
-      <MiniGameViewer
-        sourceCode={decodedText}
-        variant={variant}
-        fileName={fileName}
-        mimeType={mimeType}
-        bottomInset={effectiveBottomInset}
-      />
+      <MiniGameErrorBoundary>
+        <MiniGameViewer
+          sourceCode={decodedText}
+          variant={variant}
+          fileName={fileName}
+          mimeType={mimeType}
+          bottomInset={effectiveBottomInset}
+        />
+      </MiniGameErrorBoundary>
     );
   }
 
