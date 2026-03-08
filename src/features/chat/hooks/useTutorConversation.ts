@@ -97,6 +97,7 @@ const isSvgMimeType = (mimeType?: string | null): boolean => {
 const MAX_THINKING_TRACE_LINES = 8;
 const MAX_THINKING_DRAFT_CHARS = 12000;
 const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
+const MAX_SUGGESTIONS_STREAM_CHARS = 1800;
 
 const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
   const normalized = (mimeType || '').trim().toLowerCase();
@@ -323,6 +324,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
   const setSendPrep = useMaestroStore(state => state.setSendPrep);
   const setLatestGroundingChunks = useMaestroStore(state => state.setLatestGroundingChunks);
+  const setSuggestionsLoadingStreamText = useMaestroStore(state => state.setSuggestionsLoadingStreamText);
   const addImageLoadDuration = useMaestroStore(state => state.addImageLoadDuration);
   const setAttachedImage = useMaestroStore(state => state.setAttachedImage);
   const setMaestroActivityStage = useMaestroStore(state => state.setMaestroActivityStage);
@@ -663,6 +665,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     // Check if already loading using token state
     if (isLoadingSuggestions) {
       setReplySuggestions([]);
+      setSuggestionsLoadingStreamText('');
       if (suggestionsTokenRef.current) {
         removeActivityToken(suggestionsTokenRef.current);
         suggestionsTokenRef.current = null;
@@ -671,6 +674,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
     if (!lastTutorMessage.trim() || !selectedLanguagePairRef.current) {
       setReplySuggestions([]);
+      setSuggestionsLoadingStreamText('');
       return;
     }
 
@@ -682,6 +686,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         const target = allMsgs[targetIdx];
         if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
           setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
+          setSuggestionsLoadingStreamText('');
           if (suggestionsTokenRef.current) {
             removeActivityToken(suggestionsTokenRef.current);
             suggestionsTokenRef.current = null;
@@ -694,6 +699,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     // Add token for loading suggestions
     suggestionsTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS);
     setReplySuggestions([]);
+    setSuggestionsLoadingStreamText('');
 
     const historyForPrompt = getHistoryRespectingBookmark(history)
       .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -735,9 +741,32 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
 
     const MAX_RETRIES = 2;
+    const formatStreamSegment = (value: string): string => {
+      if (!value) return '';
+      const condensed = value.replace(/\s+/g, ' ').trim();
+      if (!condensed) return '';
+      if (condensed.length <= MAX_SUGGESTIONS_STREAM_CHARS) return condensed;
+      return condensed.slice(-MAX_SUGGESTIONS_STREAM_CHARS);
+    };
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
+        let thoughtText = '';
+        let outputText = '';
+        const flushSuggestionsLoadingText = () => {
+          const thoughtSegment = formatStreamSegment(thoughtText);
+          const outputSegment = formatStreamSegment(outputText);
+          const merged = [
+            thoughtSegment ? `thinking: ${thoughtSegment}` : '',
+            outputSegment ? `output: ${outputSegment}` : '',
+          ]
+            .filter(Boolean)
+            .join(' | ');
+          if (merged) {
+            setSuggestionsLoadingStreamText(merged);
+          }
+        };
+
         const response = await generateGeminiResponse(
           getGeminiModels().text.aux,
           suggestionPrompt,
@@ -747,7 +776,24 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           undefined,
           undefined,
           false,
-          { responseMimeType: "application/json" }
+          { responseMimeType: "application/json" },
+          undefined,
+          {
+            onProgress: (event) => {
+              const progressLine = formatGeminiProgressLine(event);
+              if (progressLine && !thoughtText.trim() && !outputText.trim()) {
+                setSuggestionsLoadingStreamText(progressLine);
+              }
+            },
+            onThoughtDelta: (_deltaThought, fullThought) => {
+              thoughtText = fullThought || thoughtText;
+              flushSuggestionsLoadingText();
+            },
+            onTextDelta: (_deltaText, fullText) => {
+              outputText = fullText || outputText;
+              flushSuggestionsLoadingText();
+            },
+          }
         );
 
         trackTokenUsage(getGeminiModels().text.aux, response.usageMetadata);
@@ -816,6 +862,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
     }
 
+    setSuggestionsLoadingStreamText('');
     // Remove suggestions loading token
     if (suggestionsTokenRef.current) {
       removeActivityToken(suggestionsTokenRef.current);
@@ -832,6 +879,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     addActivityToken,
     removeActivityToken,
     setReplySuggestions,
+    setSuggestionsLoadingStreamText,
+    formatGeminiProgressLine,
     updateMessage
   ]);
 
@@ -1464,6 +1513,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
     sendWithFileUploadInProgressRef.current = true;
     setReplySuggestions([]);
+    setSuggestionsLoadingStreamText('');
     // Clear any lingering suggestions token
     if (suggestionsTokenRef.current) {
       removeActivityToken(suggestionsTokenRef.current);
@@ -1886,6 +1936,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         setAttachedImage(null, null);
       }
       setReplySuggestions([]);
+      setSuggestionsLoadingStreamText('');
       // Clear any suggestions token on error
       if (suggestionsTokenRef.current) {
         removeActivityToken(suggestionsTokenRef.current);
@@ -1925,6 +1976,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     removeActivityToken,
     setLatestGroundingChunks,
     setReplySuggestions,
+    setSuggestionsLoadingStreamText,
     setSendPrep,
     setSnapshotUserError,
     onApiKeyGateOpen,

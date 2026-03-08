@@ -31,6 +31,7 @@ export interface ChatSlice {
   messages: ChatMessage[];
   isLoadingHistory: boolean;
   replySuggestions: ReplySuggestion[];
+  suggestionsLoadingStreamText: string;
   lastFetchedSuggestionsFor: string | null;
   sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
   latestGroundingChunks: GroundingChunk[] | undefined;
@@ -46,6 +47,7 @@ export interface ChatSlice {
   deleteMessage: (messageId: string) => void;
   setMessages: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
   setReplySuggestions: (suggestions: ReplySuggestion[] | ((prev: ReplySuggestion[]) => ReplySuggestion[])) => void;
+  setSuggestionsLoadingStreamText: (text: string) => void;
   setLastFetchedSuggestionsFor: (messageId: string | null) => void;
   setSendPrep: (prep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null | ((prev: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null) => { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null)) => void;
   setLatestGroundingChunks: (chunks: GroundingChunk[] | undefined) => void;
@@ -68,6 +70,10 @@ export interface ChatSlice {
 export const selectMessages = (state: Pick<ChatSlice, 'messages'>) => state.messages;
 
 export const selectReplySuggestions = (state: Pick<ChatSlice, 'replySuggestions'>) => state.replySuggestions;
+
+export const selectSuggestionsLoadingStreamText = (
+  state: Pick<ChatSlice, 'suggestionsLoadingStreamText'>
+) => state.suggestionsLoadingStreamText;
 
 export const selectSendPrep = (state: Pick<ChatSlice, 'sendPrep'>) => state.sendPrep;
 
@@ -97,6 +103,7 @@ export const createChatSlice: StateCreator<
   messages: [],
   isLoadingHistory: true,
   replySuggestions: [],
+  suggestionsLoadingStreamText: '',
   lastFetchedSuggestionsFor: null,
   sendPrep: null,
   latestGroundingChunks: undefined,
@@ -107,7 +114,7 @@ export const createChatSlice: StateCreator<
   
   // Actions
   loadHistoryForPair: async (pairId: string, t: (key: string) => string) => {
-    set({ isLoadingHistory: true, messages: [], replySuggestions: [] });
+    set({ isLoadingHistory: true, messages: [], replySuggestions: [], suggestionsLoadingStreamText: '' });
     
     try {
       const history = await getChatHistoryDB(pairId);
@@ -189,6 +196,10 @@ export const createChatSlice: StateCreator<
         ? suggestionsOrUpdater(state.replySuggestions)
         : suggestionsOrUpdater
     }));
+  },
+
+  setSuggestionsLoadingStreamText: (text: string) => {
+    set({ suggestionsLoadingStreamText: text });
   },
   
   setLastFetchedSuggestionsFor: (messageId: string | null) => {
