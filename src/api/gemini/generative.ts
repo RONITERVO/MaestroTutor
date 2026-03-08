@@ -359,6 +359,17 @@ export const generateGeminiResponse = async (
   contents.push({ role: 'user', parts: currentParts });
 
   const config: any = { ...configOverrides };
+  const existingThinkingConfig =
+    config?.thinkingConfig && typeof config.thinkingConfig === 'object'
+      ? config.thinkingConfig
+      : undefined;
+  // Enable thought-part streaming by default so UI can surface thinking traces.
+  if (existingThinkingConfig?.includeThoughts !== false) {
+    config.thinkingConfig = {
+      ...(existingThinkingConfig || {}),
+      includeThoughts: true,
+    };
+  }
   if (systemInstruction) config.systemInstruction = systemInstruction;
 
   if (useGoogleSearch) {
