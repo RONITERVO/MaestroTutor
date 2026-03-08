@@ -5,7 +5,7 @@ import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { ApiError, getAi } from './client';
 
-const DEFAULT_TIMEOUT_MS = 120_000; // 2 minutes
+const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout>;

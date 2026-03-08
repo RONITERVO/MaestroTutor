@@ -128,19 +128,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
             </button>
           </div>
         </div>
-
-        <div className="mt-3 flex items-center justify-between">
-          <div className={`relative w-14 h-14 rounded-full border ${lineColor} ${padBtnBg}`}>
-            <div className={`absolute left-1/2 top-1/2 h-8 w-3 -translate-x-1/2 -translate-y-1/2 rounded ${lineColor} border ${containerBg}`} />
-            <div className={`absolute left-1/2 top-1/2 h-3 w-8 -translate-x-1/2 -translate-y-1/2 rounded ${lineColor} border ${containerBg}`} />
-          </div>
-          <div className="flex items-center gap-3">
-            <div className={`h-9 w-9 rounded-full border ${lineColor} ${padBtnBg} ${textColor} flex items-center justify-center text-xs font-semibold`}>A</div>
-            <div className={`h-9 w-9 rounded-full border ${lineColor} ${padBtnBg} ${textColor} flex items-center justify-center text-xs font-semibold`}>B</div>
-          </div>
-        </div>
-
-        <p className={`mt-2 text-[11px] ${subtleText}`}>Click or tap inside the square to play.</p>
       </div>
 
       {showCode && (
