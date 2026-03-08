@@ -107,28 +107,32 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
             {runtimeState === 'error' ? `Mini-game error: ${runtimeError}` : 'Launching mini-game...'}
           </div>
         )}
-      </div>
-
-      <div className={`mt-2 w-full max-w-[560px] rounded-2xl border ${lineColor} ${containerBg} p-3`}>
-        <div className="flex items-center justify-between gap-2">
-          <p className={`text-[10px] uppercase tracking-[0.18em] ${subtleText}`}>Tap Gamepad</p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setReloadToken((n) => n + 1)}
-              className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] ${textColor} ${padBtnBg}`}
-            >
-              <IconUndo className="w-3 h-3" />
-              Restart
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCode((prev) => !prev)}
-              className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] ${textColor} ${padBtnBg}`}
-            >
-              <IconTerminal className="w-3 h-3" />
-              {showCode ? 'Hide code' : 'Show code'}
-            </button>
+        <div
+          className="absolute left-2 right-2 z-20 pointer-events-none"
+          style={{ bottom: `${Math.min(-8, effectiveBottomInset - 8)}px` }}
+        >
+          <div className={`rounded-xl border ${lineColor} ${containerBg} px-2 py-1.5 backdrop-blur-sm pointer-events-auto`}>
+            <div className="flex items-center justify-between gap-2">
+              <p className={`text-[10px] uppercase tracking-[0.18em] ${subtleText}`}>Tap Gamepad</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReloadToken((n) => n + 1)}
+                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] ${textColor} ${padBtnBg}`}
+                >
+                  <IconUndo className="w-3 h-3" />
+                  Restart
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCode((prev) => !prev)}
+                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] ${textColor} ${padBtnBg}`}
+                >
+                  <IconTerminal className="w-3 h-3" />
+                  {showCode ? 'Hide code' : 'Show code'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
