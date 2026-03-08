@@ -22,7 +22,7 @@ import {
   RecordedUtterance 
 } from '../../../core/types';
 import { ApiError } from '../../../api/gemini/client';
-import { generateGeminiResponse, translateText } from '../../../api/gemini/generative';
+import { generateGeminiResponse, translateText, type GeminiProgressEvent } from '../../../api/gemini/generative';
 import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from '../../../api/gemini/files';
 import { generateImage } from '../../../api/gemini/vision';
 import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../api/gemini/maestroAvatarEnsure';
@@ -93,6 +93,10 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
 const isSvgMimeType = (mimeType?: string | null): boolean => {
   return (mimeType || '').trim().toLowerCase() === 'image/svg+xml';
 };
+
+const MAX_THINKING_TRACE_LINES = 8;
+const MAX_THINKING_DRAFT_CHARS = 12000;
+const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
 
 const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
   const normalized = (mimeType || '').trim().toLowerCase();
@@ -385,6 +389,49 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
     return translations;
   }, [selectedLanguagePairRef]);
+
+  const appendThinkingTrace = useCallback((messageId: string, line: string) => {
+    const cleanedLine = line.trim();
+    if (!cleanedLine) return;
+
+    const current = messagesRef.current.find(m => m.id === messageId);
+    if (!current || !current.thinking) return;
+
+    const prevTrace = Array.isArray(current.thinkingTrace)
+      ? current.thinkingTrace.filter(item => typeof item === 'string' && item.trim().length > 0)
+      : [];
+    if (prevTrace[prevTrace.length - 1] === cleanedLine) return;
+
+    const nextTrace = [...prevTrace, cleanedLine].slice(-MAX_THINKING_TRACE_LINES);
+    updateMessage(messageId, { thinkingTrace: nextTrace });
+  }, [messagesRef, updateMessage]);
+
+  const formatGeminiProgressLine = useCallback((event: GeminiProgressEvent): string | undefined => {
+    const elapsedSeconds = typeof event.elapsedMs === 'number'
+      ? Math.max(0, Math.floor(event.elapsedMs / 1000))
+      : undefined;
+
+    switch (event.phase) {
+      case 'attempt-start':
+        return `Connecting to ${event.model} (attempt ${event.attempt}/${event.totalAttempts})...`;
+      case 'attempt-processing':
+        if (typeof elapsedSeconds !== 'number') return undefined;
+        return `Model is thinking... ${elapsedSeconds}s elapsed.`;
+      case 'high-demand':
+        return 'High demand detected. Request is queued on Google servers.';
+      case 'fallback-switch':
+        return `Switching to fallback model ${event.model}.`;
+      case 'retry-scheduled':
+        return `Retrying in ${Math.ceil((event.retryInMs || 0) / 1000)}s...`;
+      case 'success':
+        if (typeof elapsedSeconds === 'number' && elapsedSeconds > 0) {
+          return `Response received after ${elapsedSeconds}s.`;
+        }
+        return 'Response received.';
+      default:
+        return undefined;
+    }
+  }, []);
 
   const resolveBookmarkContextSummary = useCallback((): string | null => {
     const bm = settingsRef.current.historyBookmarkMessageId;
@@ -1046,6 +1093,33 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     imageForGeminiContextFileUri?: string;
     currentSettingsVal: AppSettings;
   }) => {
+    let lastProcessingBucket = -1;
+    let streamingDraftText = '';
+    let lastDraftFlushAt = 0;
+    let thoughtBuffer = '';
+    let lastThoughtFlushAt = 0;
+
+    const flushThinkingDraft = (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastDraftFlushAt < THINKING_DRAFT_FLUSH_INTERVAL_MS) return;
+      lastDraftFlushAt = now;
+      const draftToShow = streamingDraftText.slice(-MAX_THINKING_DRAFT_CHARS);
+      const current = messagesRef.current.find(m => m.id === params.thinkingMessageId);
+      if (!current || !current.thinking) return;
+      if ((current.thinkingDraftText || '') === draftToShow) return;
+      updateMessage(params.thinkingMessageId, { thinkingDraftText: draftToShow });
+    };
+
+    const flushThoughtTrace = (force = false) => {
+      const condensed = thoughtBuffer.replace(/\s+/g, ' ').trim();
+      if (!condensed) return;
+      const now = Date.now();
+      if (!force && condensed.length < 80 && now - lastThoughtFlushAt < 2000) return;
+      appendThinkingTrace(params.thinkingMessageId, `Model thought: ${condensed.slice(0, 220)}`);
+      thoughtBuffer = '';
+      lastThoughtFlushAt = now;
+    };
+
     const response = await generateGeminiResponse(
       getGeminiModels().text.default,
       params.geminiPromptText,
@@ -1055,8 +1129,31 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       params.imageForGeminiContextMimeType,
       params.imageForGeminiContextFileUri,
       params.currentSettingsVal.enableGoogleSearch,
-      undefined
+      undefined,
+      undefined,
+      {
+        onProgress: (event) => {
+          if (event.phase === 'attempt-processing') {
+            const bucket = Math.floor((event.elapsedMs || 0) / 12000);
+            if (bucket <= 0 || bucket === lastProcessingBucket) return;
+            lastProcessingBucket = bucket;
+          }
+          const line = formatGeminiProgressLine(event);
+          if (line) appendThinkingTrace(params.thinkingMessageId, line);
+        },
+        onTextDelta: (_deltaText, fullText) => {
+          streamingDraftText = fullText || streamingDraftText;
+          flushThinkingDraft(false);
+        },
+        onThoughtDelta: (deltaThought) => {
+          thoughtBuffer += deltaThought;
+          flushThoughtTrace(false);
+        },
+      }
     );
+
+    flushThinkingDraft(true);
+    flushThoughtTrace(true);
 
     trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
 
@@ -1071,6 +1168,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
     const finalMessageUpdates: Partial<ChatMessage> = {
       thinking: false,
+      thinkingTrace: undefined,
+      thinkingDraftText: undefined,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
       rawAssistantResponse: responseTextForConversation,
       text: parsedTranslationsOnComplete.length === 0 ? responseTextForConversation : undefined,
@@ -1091,7 +1190,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       finalMessageUpdates,
       hasParsedAttachment: Boolean(parsedAttachment.attachment),
     };
-  }, [parseGeminiResponse, setLatestGroundingChunks, updateMessage]);
+  }, [appendThinkingTrace, formatGeminiProgressLine, messagesRef, parseGeminiResponse, setLatestGroundingChunks, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
     shouldGenerateUserImage: boolean;
@@ -1397,7 +1496,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       userImageToProcessStorageOptimizedMimeType,
     } = userMessageContext;
 
-    const thinkingMessageId = addMessage({ role: 'assistant', thinking: true });
+    const thinkingMessageId = addMessage({
+      role: 'assistant',
+      thinking: true,
+      thinkingTrace: ['Preparing request context...'],
+      thinkingDraftText: '',
+    });
 
     cancelReengagementRef.current();
 
@@ -1749,6 +1853,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const isQuota = error instanceof ApiError && isQuotaError(error);
       updateMessage(thinkingMessageId, {
         thinking: false, 
+        thinkingTrace: undefined,
+        thinkingDraftText: undefined,
         role: 'error', 
         text: errorMessage, 
         rawAssistantResponse: undefined, 

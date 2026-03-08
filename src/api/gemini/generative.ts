@@ -9,6 +9,32 @@ const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 const HIGH_DEMAND_MAX_RETRIES = 10;
 const HIGH_DEMAND_RETRY_BASE_DELAY_MS = 1_000;
 const HIGH_DEMAND_RETRY_MAX_DELAY_MS = 8_000;
+const HIGH_DEMAND_FALLBACK_MODEL = 'gemini-3.1-pro-preview';
+const PROCESSING_PROGRESS_INTERVAL_MS = 4_000;
+
+export type GeminiProgressPhase =
+  | 'attempt-start'
+  | 'attempt-processing'
+  | 'high-demand'
+  | 'fallback-switch'
+  | 'retry-scheduled'
+  | 'success';
+
+export interface GeminiProgressEvent {
+  phase: GeminiProgressPhase;
+  operation: string;
+  model: string;
+  attempt: number;
+  totalAttempts: number;
+  retryInMs?: number;
+  elapsedMs?: number;
+}
+
+export interface GeminiRequestLifecycleHooks {
+  onProgress?: (event: GeminiProgressEvent) => void;
+  onTextDelta?: (deltaText: string, fullText: string) => void;
+  onThoughtDelta?: (deltaThought: string, fullThought: string) => void;
+}
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -19,6 +45,38 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
 };
 
 const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+const appendChunkWithPrefixDiff = (
+  accumulated: string,
+  previousChunk: string,
+  currentChunk: string
+): { delta: string; nextAccumulated: string; nextPreviousChunk: string } => {
+  if (!currentChunk) {
+    return { delta: '', nextAccumulated: accumulated, nextPreviousChunk: previousChunk };
+  }
+
+  let delta = currentChunk;
+  if (previousChunk && currentChunk.startsWith(previousChunk)) {
+    delta = currentChunk.slice(previousChunk.length);
+  } else if (accumulated && accumulated.endsWith(currentChunk)) {
+    delta = '';
+  }
+
+  return {
+    delta,
+    nextAccumulated: delta ? `${accumulated}${delta}` : accumulated,
+    nextPreviousChunk: currentChunk,
+  };
+};
+
+const extractThoughtText = (response: any): string => {
+  const parts = response?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return '';
+  return parts
+    .filter((part: any) => part?.thought === true && typeof part?.text === 'string' && part.text.length > 0)
+    .map((part: any) => part.text)
+    .join('');
+};
 
 const tryParseJson = (value: string): any | undefined => {
   try {
@@ -96,6 +154,16 @@ const isHighDemandError = (error: any): boolean => {
   );
 };
 
+const normalizeModelName = (model: string): string => model.trim();
+
+const resolveFallbackTextModel = (primaryModel: string): string | undefined => {
+  const normalizedPrimary = normalizeModelName(primaryModel);
+  if (!normalizedPrimary) return undefined;
+  const fallback = normalizeModelName(HIGH_DEMAND_FALLBACK_MODEL);
+  if (!fallback || fallback === normalizedPrimary) return undefined;
+  return fallback;
+};
+
 const buildRetryMeta = (attempt: number, retryInMs?: number) => ({
   attempt,
   totalAttempts: HIGH_DEMAND_MAX_RETRIES + 1,
@@ -105,50 +173,137 @@ const buildRetryMeta = (attempt: number, retryInMs?: number) => ({
 const withHighDemandRetry = async <T>(opts: {
   operation: string;
   model: string;
+  fallbackModel?: string;
   requestPayload: any;
-  run: () => Promise<T>;
+  run: (model: string) => Promise<T>;
   mapSuccess: (result: T) => any;
+  onProgress?: (event: GeminiProgressEvent) => void;
 }): Promise<T> => {
   let lastError: any;
+  let activeModel = normalizeModelName(opts.model);
+  const fallbackModel = opts.fallbackModel
+    ? normalizeModelName(opts.fallbackModel)
+    : undefined;
+  const canUseFallback = Boolean(fallbackModel && fallbackModel !== activeModel);
+  let hasSwitchedToFallback = false;
 
   for (let attempt = 0; attempt <= HIGH_DEMAND_MAX_RETRIES; attempt++) {
     const attemptNumber = attempt + 1;
-    const attemptLog = debugLogService.logRequest(opts.operation, opts.model, {
-      ...opts.requestPayload,
-      retry: buildRetryMeta(attemptNumber),
+    const totalAttempts = HIGH_DEMAND_MAX_RETRIES + 1;
+    opts.onProgress?.({
+      phase: 'attempt-start',
+      operation: opts.operation,
+      model: activeModel,
+      attempt: attemptNumber,
+      totalAttempts,
     });
+    const attemptLog = debugLogService.logRequest(opts.operation, activeModel, opts.requestPayload);
+
+    const attemptStartedAt = Date.now();
+    opts.onProgress?.({
+      phase: 'attempt-processing',
+      operation: opts.operation,
+      model: activeModel,
+      attempt: attemptNumber,
+      totalAttempts,
+      elapsedMs: 0,
+    });
+    const processingTimer = setInterval(() => {
+      opts.onProgress?.({
+        phase: 'attempt-processing',
+        operation: opts.operation,
+        model: activeModel,
+        attempt: attemptNumber,
+        totalAttempts,
+        elapsedMs: Date.now() - attemptStartedAt,
+      });
+    }, PROCESSING_PROGRESS_INTERVAL_MS);
 
     try {
-      const result = await opts.run();
+      const result = await opts.run(activeModel);
+      clearInterval(processingTimer);
+      opts.onProgress?.({
+        phase: 'success',
+        operation: opts.operation,
+        model: activeModel,
+        attempt: attemptNumber,
+        totalAttempts,
+        elapsedMs: Date.now() - attemptStartedAt,
+      });
       attemptLog.complete({ ...opts.mapSuccess(result), retry: buildRetryMeta(attemptNumber) });
       return result;
     } catch (error: any) {
+      clearInterval(processingTimer);
       lastError = error;
 
       const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && isHighDemandError(error);
       let retryInMs: number | undefined;
+      let switchedToFallbackForRetry = false;
       if (canRetry) {
-        retryInMs = Math.min(
-          HIGH_DEMAND_RETRY_MAX_DELAY_MS,
-          HIGH_DEMAND_RETRY_BASE_DELAY_MS * (2 ** attempt)
-        );
+        opts.onProgress?.({
+          phase: 'high-demand',
+          operation: opts.operation,
+          model: activeModel,
+          attempt: attemptNumber,
+          totalAttempts,
+          elapsedMs: Date.now() - attemptStartedAt,
+        });
+        if (canUseFallback && !hasSwitchedToFallback) {
+          hasSwitchedToFallback = true;
+          switchedToFallbackForRetry = true;
+          activeModel = fallbackModel!;
+          retryInMs = 0;
+          opts.onProgress?.({
+            phase: 'fallback-switch',
+            operation: opts.operation,
+            model: activeModel,
+            attempt: attemptNumber,
+            totalAttempts,
+            elapsedMs: Date.now() - attemptStartedAt,
+          });
+        } else {
+          retryInMs = Math.min(
+            HIGH_DEMAND_RETRY_MAX_DELAY_MS,
+            HIGH_DEMAND_RETRY_BASE_DELAY_MS * (2 ** attempt)
+          );
+          opts.onProgress?.({
+            phase: 'retry-scheduled',
+            operation: opts.operation,
+            model: activeModel,
+            attempt: attemptNumber,
+            totalAttempts,
+            retryInMs,
+            elapsedMs: Date.now() - attemptStartedAt,
+          });
+        }
       }
       attemptLog.error({
         status: getErrorStatus(error),
         code: getErrorCode(error),
         message: getNestedErrorMessage(error) || error?.message || 'Gemini API failed',
         retry: buildRetryMeta(attemptNumber, retryInMs),
+        ...(switchedToFallbackForRetry ? { switchedToFallbackModel: activeModel } : {}),
       });
 
       if (!canRetry) {
         throw error;
       }
 
-      console.warn(
-        `[Gemini] ${opts.operation} hit high-demand/unavailable response ` +
-        `(attempt ${attempt + 1}/${HIGH_DEMAND_MAX_RETRIES + 1}), retrying in ${retryInMs}ms.`
-      );
-      await sleep(retryInMs!);
+      if (switchedToFallbackForRetry) {
+        console.warn(
+          `[Gemini] ${opts.operation} hit high-demand/unavailable response ` +
+          `(attempt ${attempt + 1}/${HIGH_DEMAND_MAX_RETRIES + 1}), retrying immediately with fallback model ${activeModel}.`
+        );
+      } else {
+        console.warn(
+          `[Gemini] ${opts.operation} hit high-demand/unavailable response ` +
+          `(attempt ${attempt + 1}/${HIGH_DEMAND_MAX_RETRIES + 1}), retrying in ${retryInMs}ms with model ${activeModel}.`
+        );
+      }
+
+      if (retryInMs && retryInMs > 0) {
+        await sleep(retryInMs);
+      }
     }
   }
 
@@ -165,7 +320,8 @@ export const generateGeminiResponse = async (
   imageFileUri?: string,
   useGoogleSearch?: boolean,
   configOverrides?: any,
-  timeoutMs: number = DEFAULT_TIMEOUT_MS
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
+  lifecycleHooks?: GeminiRequestLifecycleHooks
 ) => {
   const ai = await getAi();
   const contents: any[] = [];
@@ -226,20 +382,61 @@ export const generateGeminiResponse = async (
   const redactedContents = redactInlineData(contents);
 
   try {
+    const fallbackModel = resolveFallbackTextModel(modelName);
     const result = await withHighDemandRetry(
       {
         operation: 'generateContent',
         model: modelName,
+        fallbackModel,
         requestPayload: { contents: redactedContents, config },
-        run: () => withTimeout(
-          ai.models.generateContent({
-            model: modelName,
-            contents,
-            config,
-          }),
+        run: activeModel => withTimeout(
+          (async () => {
+            const stream = await ai.models.generateContentStream({
+              model: activeModel,
+              contents,
+              config,
+            });
+
+            let latestChunk: any | undefined;
+            let accumulatedText = '';
+            let previousChunkText = '';
+            let accumulatedThought = '';
+            let previousChunkThought = '';
+
+            for await (const chunk of stream) {
+              latestChunk = chunk;
+
+              const chunkText = typeof chunk?.text === 'string' ? chunk.text : '';
+              if (chunkText) {
+                const appended = appendChunkWithPrefixDiff(accumulatedText, previousChunkText, chunkText);
+                accumulatedText = appended.nextAccumulated;
+                previousChunkText = appended.nextPreviousChunk;
+                if (appended.delta) {
+                  lifecycleHooks?.onTextDelta?.(appended.delta, accumulatedText);
+                }
+              }
+
+              const chunkThought = extractThoughtText(chunk);
+              if (chunkThought) {
+                const appendedThought = appendChunkWithPrefixDiff(accumulatedThought, previousChunkThought, chunkThought);
+                accumulatedThought = appendedThought.nextAccumulated;
+                previousChunkThought = appendedThought.nextPreviousChunk;
+                if (appendedThought.delta) {
+                  lifecycleHooks?.onThoughtDelta?.(appendedThought.delta, accumulatedThought);
+                }
+              }
+            }
+
+            return {
+              text: accumulatedText || latestChunk?.text || '',
+              candidates: latestChunk?.candidates,
+              usageMetadata: latestChunk?.usageMetadata,
+            };
+          })(),
           timeoutMs
         ),
         mapSuccess: result => ({ text: result.text, usage: result.usageMetadata }),
+        onProgress: lifecycleHooks?.onProgress,
       }
     );
     return {
@@ -257,16 +454,18 @@ export const translateText = async (text: string, from: string, to: string) => {
   const ai = await getAi();
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
   const model = getGeminiModels().text.translation;
+  const fallbackModel = resolveFallbackTextModel(model);
 
   try {
     const result = await withHighDemandRetry(
       {
         operation: 'translateText',
         model,
+        fallbackModel,
         requestPayload: { prompt },
-        run: () => withTimeout(
+        run: activeModel => withTimeout(
           ai.models.generateContent({
-            model,
+            model: activeModel,
             contents: prompt,
           }),
           DEFAULT_TIMEOUT_MS
