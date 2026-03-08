@@ -9,7 +9,6 @@ const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 const HIGH_DEMAND_MAX_RETRIES = 10;
 const HIGH_DEMAND_RETRY_BASE_DELAY_MS = 1_000;
 const HIGH_DEMAND_RETRY_MAX_DELAY_MS = 8_000;
-const HIGH_DEMAND_FALLBACK_MODEL = 'gemini-3.1-pro-preview';
 const PROCESSING_PROGRESS_INTERVAL_MS = 4_000;
 
 export type GeminiProgressPhase =
@@ -159,7 +158,7 @@ const normalizeModelName = (model: string): string => model.trim();
 const resolveFallbackTextModel = (primaryModel: string): string | undefined => {
   const normalizedPrimary = normalizeModelName(primaryModel);
   if (!normalizedPrimary) return undefined;
-  const fallback = normalizeModelName(HIGH_DEMAND_FALLBACK_MODEL);
+  const fallback = normalizeModelName(getGeminiModels().text.fallback);
   if (!fallback || fallback === normalizedPrimary) return undefined;
   return fallback;
 };
