@@ -121,13 +121,17 @@ export const setModelRegistryUrl = (url: string) => {
 };
 
 export const resolveModelRegistryUrl = (): string => {
+  const envUrl = getEnvModelRegistryUrl();
+  const envNormalized = envUrl && envUrl.includes('ronitervo.github.io') ? DEFAULT_MODEL_REGISTRY_URL : envUrl;
+
   const stored = getModelRegistryUrl();
-  // Migrate away from old GitHub Pages URL that causes CORS errors
+  let storedNormalized: string | null = stored;
   if (stored && stored.includes('ronitervo.github.io')) {
     safeWriteLocalStorage(MODEL_REGISTRY_URL_STORAGE_KEY, DEFAULT_MODEL_REGISTRY_URL);
-    return getEnvModelRegistryUrl() || DEFAULT_MODEL_REGISTRY_URL;
+    storedNormalized = DEFAULT_MODEL_REGISTRY_URL;
   }
-  return getEnvModelRegistryUrl() || stored || DEFAULT_MODEL_REGISTRY_URL;
+
+  return envNormalized || storedNormalized || DEFAULT_MODEL_REGISTRY_URL;
 };
 
 export const loadCachedGeminiModels = (): boolean => {
