@@ -61,7 +61,7 @@ const buildRuntimeBridge = (frameId: string): string => {
 (function () {
   var FRAME_ID = ${escapedFrameId};
   var EVENT_TYPE = 'maestro-mini-game-status';
-  var isFitScheduled = false;
+  var fitScheduleTimer = null;
   var fitMutationObserver = null;
   var fitResizeObserver = null;
   var GAME_ROOT_SELECTOR = '[data-mini-game-root], #mini-game-root, .mini-game-root';
@@ -262,12 +262,11 @@ const buildRuntimeBridge = (frameId: string): string => {
   };
 
   var scheduleFitToViewport = function () {
-    if (isFitScheduled) return;
-    isFitScheduled = true;
-    window.requestAnimationFrame(function () {
-      isFitScheduled = false;
+    if (fitScheduleTimer !== null) return;
+    fitScheduleTimer = window.setTimeout(function () {
+      fitScheduleTimer = null;
       fitToViewport();
-    });
+    }, 200);
   };
 
   var startFitObservers = function () {
@@ -280,7 +279,6 @@ const buildRuntimeBridge = (frameId: string): string => {
       });
       fitMutationObserver.observe(gameRoot, {
         childList: true,
-        attributes: true,
       });
     }
 
