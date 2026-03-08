@@ -320,7 +320,7 @@ const buildRuntimeBridge = (frameId: string): string => {
 };
 
 const buildRuntimeStyle = (): string => `
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; media-src data: blob:;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob: https://www.transparenttextures.com; media-src data: blob:;">
 <style>
   :root { color-scheme: light dark; }
   html, body {
