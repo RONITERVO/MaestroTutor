@@ -64,6 +64,9 @@ const buildRuntimeBridge = (frameId: string): string => {
   var isFitScheduled = false;
   var fitMutationObserver = null;
   var fitResizeObserver = null;
+  var GAME_ROOT_SELECTOR = '[data-mini-game-root], #mini-game-root, .mini-game-root';
+  var FIT_TRANSFORM_VAR = '--maestro-fit-transform';
+  var FIT_TRANSFORM_REF = 'var(' + FIT_TRANSFORM_VAR + ')';
 
   var sendStatus = function (status, detail) {
     try {
@@ -97,6 +100,42 @@ const buildRuntimeBridge = (frameId: string): string => {
     );
   };
 
+  var findDeclaredGameRoot = function () {
+    var root = document.querySelector(GAME_ROOT_SELECTOR);
+    if (!root || root.nodeType !== 1) return null;
+    return root;
+  };
+
+  var findObservedGameRoot = function () {
+    var declaredRoot = findDeclaredGameRoot();
+    if (declaredRoot) return declaredRoot;
+
+    var body = document.body;
+    if (!body) return null;
+
+    var children = body.children;
+    for (var i = 0; i < children.length; i += 1) {
+      var node = children[i];
+      if (shouldIgnoreNode(node)) continue;
+      return node;
+    }
+
+    return null;
+  };
+
+  var ensureBodyFitTransformRef = function (body) {
+    if (!body) return;
+    var current = String(body.style.transform || '').trim();
+
+    if (!current || current === 'none') {
+      body.style.transform = FIT_TRANSFORM_REF;
+      return;
+    }
+
+    if (current.indexOf(FIT_TRANSFORM_REF) >= 0) return;
+    body.style.transform = current + ' ' + FIT_TRANSFORM_REF;
+  };
+
   var getContentBounds = function () {
     var fallbackWidth = Math.max(window.innerWidth || 0, 1);
     var fallbackHeight = Math.max(window.innerHeight || 0, 1);
@@ -108,6 +147,25 @@ const buildRuntimeBridge = (frameId: string): string => {
     };
     var body = document.body;
     if (!body) return fallback;
+
+    var declaredRoot = findDeclaredGameRoot();
+    if (declaredRoot) {
+      var rootRect = declaredRoot.getBoundingClientRect();
+      if (
+        rootRect &&
+        isFinite(rootRect.left) &&
+        isFinite(rootRect.top) &&
+        isFinite(rootRect.right) &&
+        isFinite(rootRect.bottom)
+      ) {
+        return {
+          minLeft: rootRect.left,
+          minTop: rootRect.top,
+          width: Math.max(rootRect.right - rootRect.left, 1),
+          height: Math.max(rootRect.bottom - rootRect.top, 1),
+        };
+      }
+    }
 
     var nodes = body.querySelectorAll('*');
     var hasBounds = false;
@@ -152,7 +210,8 @@ const buildRuntimeBridge = (frameId: string): string => {
     var docEl = document.documentElement;
     if (!body || !docEl) return;
 
-    body.style.transform = 'none';
+    ensureBodyFitTransformRef(body);
+    body.style.setProperty(FIT_TRANSFORM_VAR, 'translate(0px, 0px) scale(1)');
 
     var viewportWidth = Math.max(window.innerWidth || 0, docEl.clientWidth || 0, 1);
     var viewportHeight = Math.max(window.innerHeight || 0, docEl.clientHeight || 0, 1);
@@ -169,7 +228,10 @@ const buildRuntimeBridge = (frameId: string): string => {
     var offsetY = ((viewportHeight - (contentHeight * scale)) / 2) - (bounds.minTop * scale);
 
     body.style.transformOrigin = '0 0';
-    body.style.transform = 'translate(' + offsetX.toFixed(2) + 'px, ' + offsetY.toFixed(2) + 'px) scale(' + scale.toFixed(6) + ')';
+    body.style.setProperty(
+      FIT_TRANSFORM_VAR,
+      'translate(' + offsetX.toFixed(2) + 'px, ' + offsetY.toFixed(2) + 'px) scale(' + scale.toFixed(6) + ')'
+    );
   };
 
   var scheduleFitToViewport = function () {
@@ -182,17 +244,16 @@ const buildRuntimeBridge = (frameId: string): string => {
   };
 
   var startFitObservers = function () {
-    var body = document.body;
-    if (!body) return;
+    var gameRoot = findObservedGameRoot();
+    if (!gameRoot) return;
 
     if (typeof MutationObserver === 'function') {
       fitMutationObserver = new MutationObserver(function () {
         scheduleFitToViewport();
       });
-      fitMutationObserver.observe(body, {
+      fitMutationObserver.observe(gameRoot, {
         childList: true,
-        subtree: true,
-        characterData: true,
+        attributes: true,
       });
     }
 
@@ -200,10 +261,7 @@ const buildRuntimeBridge = (frameId: string): string => {
       fitResizeObserver = new ResizeObserver(function () {
         scheduleFitToViewport();
       });
-      fitResizeObserver.observe(body);
-      if (document.documentElement) {
-        fitResizeObserver.observe(document.documentElement);
-      }
+      fitResizeObserver.observe(gameRoot);
     }
 
     window.addEventListener('resize', scheduleFitToViewport);
