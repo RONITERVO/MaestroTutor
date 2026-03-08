@@ -6,6 +6,9 @@ import { getGeminiModels } from '../../core/config/models';
 import { ApiError, getAi } from './client';
 
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
+const HIGH_DEMAND_MAX_RETRIES = 10;
+const HIGH_DEMAND_RETRY_BASE_DELAY_MS = 1_000;
+const HIGH_DEMAND_RETRY_MAX_DELAY_MS = 8_000;
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout>;
@@ -13,6 +16,143 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
     timeoutId = setTimeout(() => reject(new Error(`Request timed out after ${ms / 1000}s`)), ms);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+};
+
+const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+const tryParseJson = (value: string): any | undefined => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+};
+
+const extractErrorPayload = (message?: string): any | undefined => {
+  if (typeof message !== 'string') return undefined;
+  const trimmed = message.trim();
+  if (!trimmed) return undefined;
+
+  const direct = tryParseJson(trimmed);
+  if (direct) return direct;
+
+  const firstBrace = trimmed.indexOf('{');
+  const lastBrace = trimmed.lastIndexOf('}');
+  if (firstBrace === -1 || lastBrace <= firstBrace) return undefined;
+
+  return tryParseJson(trimmed.slice(firstBrace, lastBrace + 1));
+};
+
+const getNestedErrorMessage = (error: any): string | undefined => {
+  const payload = extractErrorPayload(error?.message);
+  const nestedMessage = payload?.error?.message;
+  if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+    return nestedMessage.trim();
+  }
+  return undefined;
+};
+
+const getErrorStatus = (error: any): number | undefined => {
+  const direct = Number(error?.status);
+  if (Number.isFinite(direct)) return direct;
+
+  const payload = extractErrorPayload(error?.message);
+  const payloadCode = payload?.error?.code ?? payload?.code;
+  const parsed = Number(payloadCode);
+  if (Number.isFinite(parsed)) return parsed;
+
+  return undefined;
+};
+
+const getErrorCode = (error: any): string | undefined => {
+  if (typeof error?.code === 'string' && error.code.trim()) {
+    return error.code.trim();
+  }
+
+  const payload = extractErrorPayload(error?.message);
+  const payloadStatus = payload?.error?.status ?? payload?.status;
+  if (typeof payloadStatus === 'string' && payloadStatus.trim()) {
+    return payloadStatus.trim();
+  }
+
+  if (typeof payload?.error?.code === 'number') {
+    return String(payload.error.code);
+  }
+
+  return undefined;
+};
+
+const isHighDemandError = (error: any): boolean => {
+  if (getErrorStatus(error) === 503) return true;
+
+  const code = (getErrorCode(error) || '').toLowerCase();
+  if (code === 'unavailable') return true;
+
+  const message = (getNestedErrorMessage(error) || error?.message || '').toLowerCase();
+  return (
+    message.includes('high demand') ||
+    message.includes('spikes in demand are usually temporary') ||
+    message.includes('"status":"unavailable"')
+  );
+};
+
+const buildRetryMeta = (attempt: number, retryInMs?: number) => ({
+  attempt,
+  totalAttempts: HIGH_DEMAND_MAX_RETRIES + 1,
+  ...(typeof retryInMs === 'number' ? { retryInMs } : {}),
+});
+
+const withHighDemandRetry = async <T>(opts: {
+  operation: string;
+  model: string;
+  requestPayload: any;
+  run: () => Promise<T>;
+  mapSuccess: (result: T) => any;
+}): Promise<T> => {
+  let lastError: any;
+
+  for (let attempt = 0; attempt <= HIGH_DEMAND_MAX_RETRIES; attempt++) {
+    const attemptNumber = attempt + 1;
+    const attemptLog = debugLogService.logRequest(opts.operation, opts.model, {
+      ...opts.requestPayload,
+      retry: buildRetryMeta(attemptNumber),
+    });
+
+    try {
+      const result = await opts.run();
+      attemptLog.complete({ ...opts.mapSuccess(result), retry: buildRetryMeta(attemptNumber) });
+      return result;
+    } catch (error: any) {
+      lastError = error;
+
+      const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && isHighDemandError(error);
+      let retryInMs: number | undefined;
+      if (canRetry) {
+        retryInMs = Math.min(
+          HIGH_DEMAND_RETRY_MAX_DELAY_MS,
+          HIGH_DEMAND_RETRY_BASE_DELAY_MS * (2 ** attempt)
+        );
+      }
+      attemptLog.error({
+        status: getErrorStatus(error),
+        code: getErrorCode(error),
+        message: getNestedErrorMessage(error) || error?.message || 'Gemini API failed',
+        retry: buildRetryMeta(attemptNumber, retryInMs),
+      });
+
+      if (!canRetry) {
+        throw error;
+      }
+
+      console.warn(
+        `[Gemini] ${opts.operation} hit high-demand/unavailable response ` +
+        `(attempt ${attempt + 1}/${HIGH_DEMAND_MAX_RETRIES + 1}), retrying in ${retryInMs}ms.`
+      );
+      await sleep(retryInMs!);
+    }
+  }
+
+  throw lastError;
 };
 
 export const generateGeminiResponse = async (
@@ -85,18 +225,23 @@ export const generateGeminiResponse = async (
   };
   const redactedContents = redactInlineData(contents);
 
-  const log = debugLogService.logRequest('generateContent', modelName, { contents: redactedContents, config });
-
   try {
-    const result = await withTimeout(
-      ai.models.generateContent({
+    const result = await withHighDemandRetry(
+      {
+        operation: 'generateContent',
         model: modelName,
-        contents,
-        config,
-      }),
-      timeoutMs
+        requestPayload: { contents: redactedContents, config },
+        run: () => withTimeout(
+          ai.models.generateContent({
+            model: modelName,
+            contents,
+            config,
+          }),
+          timeoutMs
+        ),
+        mapSuccess: result => ({ text: result.text, usage: result.usageMetadata }),
+      }
     );
-    log.complete({ text: result.text, usage: result.usageMetadata });
     return {
       text: result.text,
       candidates: result.candidates,
@@ -104,8 +249,7 @@ export const generateGeminiResponse = async (
     };
   } catch (e: any) {
     console.error('Gemini API Error:', e);
-    log.error(e);
-    throw new ApiError(e.message || 'Gemini API failed', { status: e.status || 500, code: e.code });
+    throw new ApiError(e.message || 'Gemini API failed', { status: getErrorStatus(e) || 500, code: getErrorCode(e) });
   }
 };
 
@@ -113,20 +257,25 @@ export const translateText = async (text: string, from: string, to: string) => {
   const ai = await getAi();
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
   const model = getGeminiModels().text.translation;
-  const log = debugLogService.logRequest('translateText', model, { prompt });
 
   try {
-    const result = await withTimeout(
-      ai.models.generateContent({
+    const result = await withHighDemandRetry(
+      {
+        operation: 'translateText',
         model,
-        contents: prompt,
-      }),
-      DEFAULT_TIMEOUT_MS
+        requestPayload: { prompt },
+        run: () => withTimeout(
+          ai.models.generateContent({
+            model,
+            contents: prompt,
+          }),
+          DEFAULT_TIMEOUT_MS
+        ),
+        mapSuccess: res => ({ text: res.text, usage: res.usageMetadata }),
+      }
     );
-    log.complete({ text: result.text, usage: result.usageMetadata });
     return { translatedText: result.text || '', usageMetadata: result.usageMetadata };
   } catch (e: any) {
-    log.error(e);
-    throw new ApiError(e.message || 'Translation failed', { status: e.status || 500, code: e.code });
+    throw new ApiError(e.message || 'Translation failed', { status: getErrorStatus(e) || 500, code: getErrorCode(e) });
   }
 };
