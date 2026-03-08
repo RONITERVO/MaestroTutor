@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconPaperclip, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
 import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
 
@@ -27,6 +27,20 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
   const [reloadToken, setReloadToken] = useState(0);
+  const [isNearViewport, setIsNearViewport] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { setIsNearViewport(entry.isIntersecting); },
+      { rootMargin: '600px' },
+    );
+    observer.observe(el);
+    return () => { observer.disconnect(); };
+  }, []);
 
   const frameId = useMemo(
     () => `mini-game-${Math.random().toString(36).slice(2, 10)}-${reloadToken}`,
@@ -43,7 +57,12 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     [sourceCode, fileName, mimeType, frameId]
   );
 
+  const handleReload = useCallback(() => setReloadToken((n) => n + 1), []);
+
+  // Reset boot state when iframe remounts (reload or scroll back into view)
   useEffect(() => {
+    if (!isNearViewport) return;
+
     setRuntimeState('booting');
     setRuntimeError('');
 
@@ -74,7 +93,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       window.clearTimeout(timeout);
       window.removeEventListener('message', onMessage);
     };
-  }, [frameId, srcDoc]);
+  }, [frameId, srcDoc, isNearViewport]);
 
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
@@ -87,6 +106,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
   return (
     <div
+      ref={containerRef}
       className="w-full flex flex-col items-center"
       style={effectiveBottomInset > 0 ? { paddingBottom: `${effectiveBottomInset}px` } : undefined}
     >
@@ -96,16 +116,20 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
           className={`relative w-full min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)]`}
           style={{ height: 'min(62vh, 480px)' }}
         >
-          <iframe
-            key={frameId}
-            title={fileName ? `Mini game ${fileName}` : 'Mini game'}
-            srcDoc={srcDoc}
-            className="w-full h-full border-0 bg-black"
-            sandbox="allow-scripts"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-          />
-          {runtimeState !== 'ready' && (
+          {isNearViewport ? (
+            <iframe
+              key={frameId}
+              title={fileName ? `Mini game ${fileName}` : 'Mini game'}
+              srcDoc={srcDoc}
+              className="w-full h-full border-0 bg-black"
+              sandbox="allow-scripts"
+              referrerPolicy="no-referrer"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-black" />
+          )}
+          {runtimeState !== 'ready' && isNearViewport && (
             <div className={`absolute left-2 right-2 top-2 z-10 rounded-lg px-2 py-1 text-[11px] ${statusBubbleBg} text-white`}>
               {runtimeState === 'error' ? `Mini-game error: ${runtimeError}` : 'Launching mini-game...'}
             </div>
@@ -137,7 +161,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
-                    onClick={() => setReloadToken((n) => n + 1)}
+                    onClick={handleReload}
                     className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] whitespace-nowrap ${textColor} ${padBtnBg}`}
                   >
                     <IconUndo className="w-3 h-3 shrink-0" />
