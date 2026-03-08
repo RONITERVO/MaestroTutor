@@ -57,10 +57,14 @@ const detectDocumentKind = (candidate: MiniGameAttachmentCandidate): 'html' | 's
 const buildRuntimeBridge = (frameId: string): string => {
   const escapedFrameId = JSON.stringify(frameId);
   return `
-<script>
+<script data-maestro-runtime="bridge">
 (function () {
   var FRAME_ID = ${escapedFrameId};
   var EVENT_TYPE = 'maestro-mini-game-status';
+  var isFitScheduled = false;
+  var fitMutationObserver = null;
+  var fitResizeObserver = null;
+
   var sendStatus = function (status, detail) {
     try {
       parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '' }, '*');
@@ -80,6 +84,133 @@ const buildRuntimeBridge = (frameId: string): string => {
     });
   };
 
+  var shouldIgnoreNode = function (node) {
+    if (!node || node.nodeType !== 1) return true;
+    var tagName = String(node.tagName || '').toUpperCase();
+    return (
+      tagName === 'SCRIPT' ||
+      tagName === 'STYLE' ||
+      tagName === 'LINK' ||
+      tagName === 'META' ||
+      tagName === 'NOSCRIPT' ||
+      tagName === 'TITLE'
+    );
+  };
+
+  var getContentBounds = function () {
+    var fallbackWidth = Math.max(window.innerWidth || 0, 1);
+    var fallbackHeight = Math.max(window.innerHeight || 0, 1);
+    var fallback = {
+      minLeft: 0,
+      minTop: 0,
+      width: fallbackWidth,
+      height: fallbackHeight,
+    };
+    var body = document.body;
+    if (!body) return fallback;
+
+    var nodes = body.querySelectorAll('*');
+    var hasBounds = false;
+    var minLeft = 0;
+    var minTop = 0;
+    var maxRight = 0;
+    var maxBottom = 0;
+
+    for (var i = 0; i < nodes.length; i += 1) {
+      var node = nodes[i];
+      if (shouldIgnoreNode(node)) continue;
+      var rect = node.getBoundingClientRect();
+      if (!rect || (!isFinite(rect.width) && !isFinite(rect.height))) continue;
+
+      if (!hasBounds) {
+        minLeft = rect.left;
+        minTop = rect.top;
+        maxRight = rect.right;
+        maxBottom = rect.bottom;
+        hasBounds = true;
+        continue;
+      }
+
+      if (rect.left < minLeft) minLeft = rect.left;
+      if (rect.top < minTop) minTop = rect.top;
+      if (rect.right > maxRight) maxRight = rect.right;
+      if (rect.bottom > maxBottom) maxBottom = rect.bottom;
+    }
+
+    if (!hasBounds) return fallback;
+
+    return {
+      minLeft: minLeft,
+      minTop: minTop,
+      width: Math.max(maxRight - minLeft, 1),
+      height: Math.max(maxBottom - minTop, 1),
+    };
+  };
+
+  var fitToViewport = function () {
+    var body = document.body;
+    var docEl = document.documentElement;
+    if (!body || !docEl) return;
+
+    body.style.transform = 'none';
+
+    var viewportWidth = Math.max(window.innerWidth || 0, docEl.clientWidth || 0, 1);
+    var viewportHeight = Math.max(window.innerHeight || 0, docEl.clientHeight || 0, 1);
+    var bounds = getContentBounds();
+    var contentWidth = Math.max(bounds.width, 1);
+    var contentHeight = Math.max(bounds.height, 1);
+    var scale = Math.min(viewportWidth / contentWidth, viewportHeight / contentHeight, 1);
+
+    if (!isFinite(scale) || scale <= 0) {
+      scale = 1;
+    }
+
+    var offsetX = ((viewportWidth - (contentWidth * scale)) / 2) - (bounds.minLeft * scale);
+    var offsetY = ((viewportHeight - (contentHeight * scale)) / 2) - (bounds.minTop * scale);
+
+    body.style.transformOrigin = '0 0';
+    body.style.transform = 'translate(' + offsetX.toFixed(2) + 'px, ' + offsetY.toFixed(2) + 'px) scale(' + scale.toFixed(6) + ')';
+  };
+
+  var scheduleFitToViewport = function () {
+    if (isFitScheduled) return;
+    isFitScheduled = true;
+    window.requestAnimationFrame(function () {
+      isFitScheduled = false;
+      fitToViewport();
+    });
+  };
+
+  var startFitObservers = function () {
+    var body = document.body;
+    if (!body) return;
+
+    if (typeof MutationObserver === 'function') {
+      fitMutationObserver = new MutationObserver(function () {
+        scheduleFitToViewport();
+      });
+      fitMutationObserver.observe(body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    }
+
+    if (typeof ResizeObserver === 'function') {
+      fitResizeObserver = new ResizeObserver(function () {
+        scheduleFitToViewport();
+      });
+      fitResizeObserver.observe(body);
+      if (document.documentElement) {
+        fitResizeObserver.observe(document.documentElement);
+      }
+    }
+
+    window.addEventListener('resize', scheduleFitToViewport);
+    window.addEventListener('orientationchange', scheduleFitToViewport);
+    window.addEventListener('load', scheduleFitToViewport);
+  };
+
   window.addEventListener('error', function (event) {
     var msg = (event && event.message) ? String(event.message) : 'Runtime error';
     sendStatus('error', msg);
@@ -92,6 +223,11 @@ const buildRuntimeBridge = (frameId: string): string => {
 
   window.addEventListener('DOMContentLoaded', function () {
     lockToClickAndTap();
+    startFitObservers();
+    scheduleFitToViewport();
+    window.setTimeout(scheduleFitToViewport, 80);
+    window.setTimeout(scheduleFitToViewport, 240);
+    window.setTimeout(scheduleFitToViewport, 640);
     sendStatus('ready', 'ok');
   });
 })();
@@ -106,6 +242,7 @@ const buildRuntimeStyle = (): string => `
     width: 100%;
     height: 100%;
     overflow: hidden;
+    transform-origin: 0 0;
     touch-action: manipulation;
     -webkit-user-select: none;
     user-select: none;

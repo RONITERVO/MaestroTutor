@@ -89,7 +89,10 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       className="w-full flex flex-col items-center"
       style={effectiveBottomInset > 0 ? { paddingBottom: `${effectiveBottomInset}px` } : undefined}
     >
-      <div className={`relative w-full max-w-[360px] aspect-square rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)]`}>
+      <div
+        className={`relative w-full max-w-[560px] min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)]`}
+        style={{ height: 'min(62vh, 480px)' }}
+      >
         <iframe
           key={frameId}
           title={fileName ? `Mini game ${fileName}` : 'Mini game'}
@@ -106,7 +109,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
         )}
       </div>
 
-      <div className={`mt-2 w-full max-w-[360px] rounded-2xl border ${lineColor} ${containerBg} p-3`}>
+      <div className={`mt-2 w-full max-w-[560px] rounded-2xl border ${lineColor} ${containerBg} p-3`}>
         <div className="flex items-center justify-between gap-2">
           <p className={`text-[10px] uppercase tracking-[0.18em] ${subtleText}`}>Tap Gamepad</p>
           <div className="flex items-center gap-2">
@@ -131,7 +134,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       </div>
 
       {showCode && (
-        <div className={`mt-2 w-full max-w-[360px] rounded-xl border ${lineColor} ${containerBg} overflow-hidden`}>
+        <div className={`mt-2 w-full max-w-[560px] rounded-xl border ${lineColor} ${containerBg} overflow-hidden`}>
           <div className={`px-3 py-1.5 text-[11px] font-mono truncate border-b ${lineColor} ${textColor}`}>
             {fileName || mimeType || 'mini-game source'}
           </div>
@@ -147,7 +150,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       )}
 
       {!sourceCode.trim() && (
-        <div className={`mt-2 w-full max-w-[360px] rounded-lg border ${lineColor} ${containerBg} p-3 text-center`}>
+        <div className={`mt-2 w-full max-w-[560px] rounded-lg border ${lineColor} ${containerBg} p-3 text-center`}>
           <IconPaperclip className={`w-6 h-6 mx-auto ${textColor}`} />
           <p className={`mt-1 text-xs ${subtleText}`}>Mini-game code is empty.</p>
         </div>
