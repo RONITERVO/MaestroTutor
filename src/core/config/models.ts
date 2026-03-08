@@ -120,7 +120,19 @@ export const setModelRegistryUrl = (url: string) => {
   safeWriteLocalStorage(MODEL_REGISTRY_URL_STORAGE_KEY, url);
 };
 
-export const resolveModelRegistryUrl = (): string => getEnvModelRegistryUrl() || getModelRegistryUrl() || DEFAULT_MODEL_REGISTRY_URL;
+export const resolveModelRegistryUrl = (): string => {
+  const envUrl = getEnvModelRegistryUrl();
+  const envNormalized = envUrl && envUrl.includes('ronitervo.github.io') ? DEFAULT_MODEL_REGISTRY_URL : envUrl;
+
+  const stored = getModelRegistryUrl();
+  let storedNormalized: string | null = stored;
+  if (stored && stored.includes('ronitervo.github.io')) {
+    safeWriteLocalStorage(MODEL_REGISTRY_URL_STORAGE_KEY, DEFAULT_MODEL_REGISTRY_URL);
+    storedNormalized = DEFAULT_MODEL_REGISTRY_URL;
+  }
+
+  return envNormalized || storedNormalized || DEFAULT_MODEL_REGISTRY_URL;
+};
 
 export const loadCachedGeminiModels = (): boolean => {
   const raw = safeReadLocalStorage(MODEL_REGISTRY_STORAGE_KEY);
