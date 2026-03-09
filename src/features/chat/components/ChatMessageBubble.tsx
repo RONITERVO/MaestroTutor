@@ -15,7 +15,7 @@ import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, se
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
-import { sketchShapeClass, sketchShapeStyle } from '../../../shared/utils/sketchyShape';
+import { sketchShapeStyle } from '../../../shared/utils/sketchyShape';
 import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
 import TextFileViewer from './TextFileViewer';
 import OfficeFileViewer from './OfficeFileViewer';
@@ -677,12 +677,103 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
-  const thinkingTrace = Array.isArray(message.thinkingTrace)
-    ? message.thinkingTrace.filter(line => typeof line === 'string' && line.trim().length > 0).slice(-6)
-    : [];
-  const thinkingDraftText = typeof message.thinkingDraftText === 'string'
-    ? message.thinkingDraftText
-    : '';
+  // --- Thinking bubble: content line for the "native" position ---
+  // Concatenate all trace lines into a single ticker string for scrolling effect.
+  // When thinkingDraftText (streamed response) arrives, prioritize that instead.
+  const thinkingTickerText = useMemo(() => {
+    const traceLines = Array.isArray(message.thinkingTrace)
+      ? message.thinkingTrace.filter(line => typeof line === 'string' && line.trim().length > 0)
+      : [];
+    // Join all trace lines with a separator to create a continuous stream effect
+    return traceLines.join('  \u00B7  '); // middot separator between entries
+  }, [message.thinkingTrace]);
+
+  const thinkingDraftCondensed = useMemo(() => {
+    const draftText = typeof message.thinkingDraftText === 'string' ? message.thinkingDraftText : '';
+    if (!draftText) return '';
+    return draftText.replace(/\s+/g, ' ').trim();
+  }, [message.thinkingDraftText]);
+
+  // Ticker offset for the scrolling "train window" effect on thought signatures
+  const tickerOffsetRef = useRef(0);
+  const tickerRafRef = useRef<number | null>(null);
+  const tickerDisplayRef = useRef<HTMLSpanElement | null>(null);
+  const lastTickerTextRef = useRef('');
+
+  // When new trace lines arrive, they seamlessly extend the ticker stream
+  useEffect(() => {
+    if (!message.thinking || message.isGeneratingImage) return; // only for thinking state
+    // If we have streamed response text, stop the ticker animation - the draft text
+    // is displayed via its own mechanism
+    if (thinkingDraftCondensed) {
+      if (tickerRafRef.current !== null) {
+        cancelAnimationFrame(tickerRafRef.current);
+        tickerRafRef.current = null;
+      }
+      return;
+    }
+    if (!thinkingTickerText) return;
+
+    // If the ticker text grew (new thought appended), keep the offset continuous
+    // so there's no jump - only reset if the text shrank (shouldn't happen normally).
+    if (thinkingTickerText.length < lastTickerTextRef.current.length) {
+      tickerOffsetRef.current = 0;
+    }
+    lastTickerTextRef.current = thinkingTickerText;
+
+    const CHARS_PER_SECOND = 18; // scroll speed
+    const VISIBLE_CHARS = 40; // how many chars the "window" shows
+
+    let lastTime = performance.now();
+    let subCharProgress = 0;
+
+    const tick = (now: number) => {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      subCharProgress += dt * CHARS_PER_SECOND;
+      const charsToAdvance = Math.floor(subCharProgress);
+      if (charsToAdvance > 0) {
+        subCharProgress -= charsToAdvance;
+        tickerOffsetRef.current += charsToAdvance;
+      }
+
+      // Build the visible slice by looping through the text
+      const text = lastTickerTextRef.current;
+      if (text.length > 0 && tickerDisplayRef.current) {
+        const start = tickerOffsetRef.current % text.length;
+        let visible = '';
+        for (let i = 0; i < VISIBLE_CHARS; i++) {
+          visible += text[(start + i) % text.length];
+        }
+        tickerDisplayRef.current.textContent = visible;
+      }
+
+      tickerRafRef.current = requestAnimationFrame(tick);
+    };
+
+    tickerRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (tickerRafRef.current !== null) {
+        cancelAnimationFrame(tickerRafRef.current);
+        tickerRafRef.current = null;
+      }
+    };
+  }, [message.thinking, message.isGeneratingImage, thinkingTickerText, thinkingDraftCondensed]);
+
+  // Phase label for the upper line
+  const thinkingPhaseLabel = message.thinkingPhase || t('chat.thinking');
+
+  // The content for the lower line (native position) of the thinking bubble
+  const thinkingContentLine = useMemo(() => {
+    if (thinkingDraftCondensed) {
+      // Streamed response text - show tail like a train window
+      return thinkingDraftCondensed.length > 42
+        ? `\u2026${thinkingDraftCondensed.slice(-42)}`
+        : thinkingDraftCondensed;
+    }
+    // For thought signatures we use the ticker ref, so return null to signal ref usage
+    return null;
+  }, [thinkingDraftCondensed]);
 
   useEffect(() => {
     if (!shouldUseScrollableTextOverlay) {
@@ -711,26 +802,35 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   if (message.thinking && !message.isGeneratingImage) {
     return (
-      <div className="flex justify-start mb-3 animate-pulse">
-        <div className={`bg-thinking-bubble-bg p-3 max-w-xl sketchy-border-thin ${sketchShapeClass(messageIndex)}`}>
-          <p className="text-sm text-thinking-bubble-text font-hand">{t('chat.thinking')}</p>
-          {thinkingDraftText && (
-            <p className="mt-2 text-sm text-thinking-bubble-text font-hand leading-relaxed whitespace-pre-wrap">
-              {thinkingDraftText}
+      <div className="flex justify-start mb-4">
+        <div className="relative max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]" style={{ width: '100%' }}>
+          <div
+            className="relative p-3 overflow-visible msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin animate-pulse"
+            style={{
+              containerType: 'inline-size',
+              width: '100%',
+              ...bubbleShapeStyle,
+            }}
+          >
+            {/* Upper line (target position): phase label */}
+            <p
+              className="font-semibold whitespace-nowrap truncate text-ai-msg-text"
+              style={{ fontSize: '4cqw', lineHeight: 1.3 }}
+            >
+              {thinkingPhaseLabel}
             </p>
-          )}
-          {thinkingTrace.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {thinkingTrace.map((line, idx) => (
-                <p
-                  key={`${message.id}-thinking-${idx}`}
-                  className="text-xs text-thinking-bubble-text/90 font-hand leading-tight whitespace-pre-wrap"
-                >
-                  {line}
-                </p>
-              ))}
-            </div>
-          )}
+            {/* Lower line (native position): thought ticker or streamed text */}
+            <p
+              className="italic mt-0.5 whitespace-nowrap overflow-hidden pl-2 border-l-2 text-ai-file-text border-line-border"
+              style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
+            >
+              {thinkingContentLine !== null ? (
+                thinkingContentLine
+              ) : (
+                <span ref={tickerDisplayRef} className="inline-block font-mono">{'\u00A0'}</span>
+              )}
+            </p>
+          </div>
         </div>
       </div>
     );

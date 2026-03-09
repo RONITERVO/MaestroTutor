@@ -97,7 +97,6 @@ const isSvgMimeType = (mimeType?: string | null): boolean => {
 const MAX_THINKING_TRACE_LINES = 8;
 const MAX_THINKING_DRAFT_CHARS = 12000;
 const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
-const MAX_SUGGESTIONS_STREAM_CHARS = 1800;
 
 const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
   const normalized = (mimeType || '').trim().toLowerCase();
@@ -418,7 +417,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         return `Connecting to ${event.model} (attempt ${event.attempt}/${event.totalAttempts})...`;
       case 'attempt-processing':
         if (typeof elapsedSeconds !== 'number') return undefined;
-        return `Model is thinking... ${elapsedSeconds}s elapsed.`;
+        return `Model is processing... ${elapsedSeconds}s elapsed.`;
       case 'high-demand':
         return 'High demand detected. Request is queued on Google servers.';
       case 'fallback-switch':
@@ -741,29 +740,20 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
 
     const MAX_RETRIES = 2;
-    const formatStreamSegment = (value: string): string => {
-      if (!value) return '';
-      const condensed = value.replace(/\s+/g, ' ').trim();
-      if (!condensed) return '';
-      if (condensed.length <= MAX_SUGGESTIONS_STREAM_CHARS) return condensed;
-      return condensed.slice(-MAX_SUGGESTIONS_STREAM_CHARS);
-    };
-
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         let thoughtText = '';
         let outputText = '';
         const flushSuggestionsLoadingText = () => {
-          const thoughtSegment = formatStreamSegment(thoughtText);
-          const outputSegment = formatStreamSegment(outputText);
-          const merged = [
-            thoughtSegment ? `thinking: ${thoughtSegment}` : '',
-            outputSegment ? `output: ${outputSegment}` : '',
-          ]
-            .filter(Boolean)
-            .join(' | ');
-          if (merged) {
-            setSuggestionsLoadingStreamText(merged);
+          // Show whichever stream is latest, condensed to a short single-line status
+          const condensedThought = thoughtText.replace(/\s+/g, ' ').trim();
+          const condensedOutput = outputText.replace(/\s+/g, ' ').trim();
+          // Prefer output stream if available, otherwise show thought stream
+          const active = condensedOutput || condensedThought;
+          if (active) {
+            const label = condensedOutput ? '' : 'thinking: ';
+            const display = active.length > 48 ? `\u2026${active.slice(-48)}` : active;
+            setSuggestionsLoadingStreamText(`${label}${display}`);
           }
         };
 
@@ -1147,6 +1137,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     let lastDraftFlushAt = 0;
     let thoughtBuffer = '';
     let lastThoughtFlushAt = 0;
+    let currentPhaseLabel = '';
 
     const flushThinkingDraft = (force = false) => {
       const now = Date.now();
@@ -1188,14 +1179,28 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             lastProcessingBucket = bucket;
           }
           const line = formatGeminiProgressLine(event);
-          if (line) appendThinkingTrace(params.thinkingMessageId, line);
+          if (line) {
+            appendThinkingTrace(params.thinkingMessageId, line);
+            if (line !== currentPhaseLabel) {
+              currentPhaseLabel = line;
+              updateMessage(params.thinkingMessageId, { thinkingPhase: line });
+            }
+          }
         },
         onTextDelta: (_deltaText, fullText) => {
           streamingDraftText = fullText || streamingDraftText;
+          if (currentPhaseLabel !== 'Final response') {
+            currentPhaseLabel = 'Final response';
+            updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
+          }
           flushThinkingDraft(false);
         },
         onThoughtDelta: (deltaThought) => {
           thoughtBuffer += deltaThought;
+          if (currentPhaseLabel !== 'Thinking') {
+            currentPhaseLabel = 'Thinking';
+            updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
+          }
           flushThoughtTrace(false);
         },
       }
@@ -1219,6 +1224,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       thinking: false,
       thinkingTrace: undefined,
       thinkingDraftText: undefined,
+      thinkingPhase: undefined,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
       rawAssistantResponse: responseTextForConversation,
       text: parsedTranslationsOnComplete.length === 0 ? responseTextForConversation : undefined,
@@ -1902,12 +1908,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       const isQuota = error instanceof ApiError && isQuotaError(error);
       updateMessage(thinkingMessageId, {
-        thinking: false, 
+        thinking: false,
         thinkingTrace: undefined,
         thinkingDraftText: undefined,
-        role: 'error', 
-        text: errorMessage, 
-        rawAssistantResponse: undefined, 
+        thinkingPhase: undefined,
+        role: 'error',
+        text: errorMessage,
+        rawAssistantResponse: undefined,
         translations: undefined,
         ...(isQuota ? { errorAction: 'quota' } : {}),
       });
