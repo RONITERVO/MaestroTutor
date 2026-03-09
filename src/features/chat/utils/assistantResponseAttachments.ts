@@ -425,15 +425,14 @@ const chartJsonToCsv = (input: any): string | null => {
   const dataRoot = getChartDataRoot(input);
   if (!dataRoot || typeof dataRoot !== 'object') return null;
   const labels = Array.isArray(dataRoot.labels) ? dataRoot.labels.map((x: unknown) => String(x ?? '')) : [];
-  if (!labels.length) return null;
 
-  const writeMultiSeries = (series: Array<{ name: string; data: number[] }>): string | null => {
+  const writeMultiSeries = (series: Array<{ name: string; data: unknown[] }>): string | null => {
     if (!series.length) return null;
     const maxLen = Math.min(
       200,
       Math.max(labels.length, ...series.map((s) => s.data.length))
     );
-    if (maxLen < 2) return null;
+    if (maxLen < 1) return null;
 
     const header = ['label', ...series.map((s) => s.name || 'series')];
     const rows: string[] = [header.map(csvEscape).join(',')];
@@ -449,11 +448,11 @@ const chartJsonToCsv = (input: any): string | null => {
 
   const flatValues = Array.isArray(dataRoot.values) ? dataRoot.values : (Array.isArray(dataRoot.data) ? dataRoot.data : null);
   if (Array.isArray(flatValues)) {
-    const numeric = flatValues.map((v: unknown) => Number(v)).filter((n: number) => Number.isFinite(n));
-    if (numeric.length >= 2) {
+    if (flatValues.length >= 1) {
+      const maxLen = Math.min(200, Math.max(labels.length, flatValues.length));
       const rows = ['label,value'];
-      for (let i = 0; i < Math.min(labels.length, numeric.length, 200); i++) {
-        rows.push(`${csvEscape(labels[i])},${csvEscape(numeric[i])}`);
+      for (let i = 0; i < maxLen; i++) {
+        rows.push(`${csvEscape(labels[i] ?? String(i + 1))},${csvEscape(flatValues[i] ?? '')}`);
       }
       return rows.join('\n');
     }
@@ -464,14 +463,13 @@ const chartJsonToCsv = (input: any): string | null => {
     const normalized = datasets
       .map((series: any, idx: number) => {
         const raw = Array.isArray(series?.data) ? series.data : [];
-        const numeric = raw.map((v: unknown) => Number(v));
-        if (numeric.filter((n: number) => Number.isFinite(n)).length < 2) return null;
+        if (raw.length < 1) return null;
         return {
           name: String(series?.label || series?.name || `series_${idx + 1}`),
-          data: numeric,
+          data: raw,
         };
       })
-      .filter(Boolean) as Array<{ name: string; data: number[] }>;
+      .filter(Boolean) as Array<{ name: string; data: unknown[] }>;
     return writeMultiSeries(normalized);
   }
 
@@ -613,7 +611,9 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
     return createTabularAttachment(normalizedContent, true, fileNameHint);
   }
   if (CHART_LANG_TAGS.has(langToken)) {
-    return createChartJsonAttachment(normalizedContent, fileNameHint);
+    const parsedChart = createChartJsonAttachment(normalizedContent, fileNameHint);
+    if (parsedChart) return parsedChart;
+    return createCodeAttachment('json', normalizedContent, fileNameHint || 'chart-data.json');
   }
   if (langToken.includes('json') || mimeToken.includes('json')) {
     const parsedChart = createChartJsonAttachment(normalizedContent, fileNameHint);
