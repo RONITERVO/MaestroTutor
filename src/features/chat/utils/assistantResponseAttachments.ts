@@ -35,6 +35,8 @@ const RAW_HTML_DOCUMENT_REGEX = /<!doctype\s+html|<html[\s>]|<body[\s>]|<head[\s
 const INLINE_IMAGE_DATA_URL_REGEX = /data:image\/[a-z0-9.+-]+(?:;[a-z0-9=._-]+)*,[a-z0-9+/%=._\-\s]+/i;
 const INLINE_MINI_GAME_MARKER_REGEX = /data-maestro-mini-game|@maestro-mini-game/i;
 const HTML_TAG_REGEX = /<\/?([a-z][\w:-]*)\b[^>]*>/ig;
+// Strong signal that the source contains a scripted HTML artifact (<script> or <style>)
+const SCRIPTED_HTML_SIGNAL_REGEX = /<(?:script|style)\b/i;
 
 const CODE_LANGUAGE_TO_EXTENSION: Record<string, string> = {
   js: 'js',
@@ -576,10 +578,12 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
     mimeToken === 'application/xhtml+xml';
   const isLikelyHtmlDocument = startsWithMarkup && RAW_HTML_DOCUMENT_REGEX.test(trimmedContent);
   const isLikelyHtmlMiniGameSnippet = startsWithMarkup && INLINE_MINI_GAME_MARKER_REGEX.test(normalizedContent);
+  // HTML fragment with <script> or <style> but no full document markers or mini-game marker
+  const isLikelyHtmlFragment = startsWithMarkup && SCRIPTED_HTML_SIGNAL_REGEX.test(trimmedContent);
 
   // Important: HTML fences can include inline `data:image/...` snippets (e.g. CSS data URIs).
   // We must keep the full HTML as code instead of misclassifying/truncating it as an image.
-  if (isExplicitHtmlLang || isLikelyHtmlDocument || isLikelyHtmlMiniGameSnippet) {
+  if (isExplicitHtmlLang || isLikelyHtmlDocument || isLikelyHtmlMiniGameSnippet || isLikelyHtmlFragment) {
     return createCodeAttachment('html', normalizedContent, fileNameHint || 'generated.html');
   }
 
@@ -626,6 +630,10 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
     if (/<svg[\s>]/i.test(normalizedContent)) {
       const svgAttachment = createSvgAttachment(normalizedContent, fileNameHint);
       if (svgAttachment) return svgAttachment;
+    }
+    if (SCRIPTED_HTML_SIGNAL_REGEX.test(normalizedContent)) {
+      const htmlAttachment = createCodeAttachment('html', normalizedContent, fileNameHint || 'generated.html');
+      if (htmlAttachment) return htmlAttachment;
     }
     return createCodeAttachment('txt', normalizedContent, fileNameHint || 'generated.txt');
   }
@@ -779,6 +787,25 @@ const extractInlineMiniGameHtml = (source: string): { start: number; end: number
   return null;
 };
 
+// Extracts an HTML block that appears after a paragraph break in a mixed text+HTML response.
+// Requires <script> or <style> as a strong signal that the block is a scripted artifact.
+const extractInlineHtmlBlock = (source: string): { start: number; end: number; html: string } | null => {
+  if (!SCRIPTED_HTML_SIGNAL_REGEX.test(source)) return null;
+
+  const paragraphBreakRegex = /\n{2,}/g;
+  let paragraphBreakMatch: RegExpExecArray | null;
+  while ((paragraphBreakMatch = paragraphBreakRegex.exec(source)) !== null) {
+    const after = source.slice(paragraphBreakMatch.index + paragraphBreakMatch[0].length);
+    const trimmedAfter = after.trimStart();
+    if (trimmedAfter.startsWith('<')) {
+      const leadingWhitespace = after.length - trimmedAfter.length;
+      const htmlStart = paragraphBreakMatch.index + paragraphBreakMatch[0].length + leadingWhitespace;
+      return { start: htmlStart, end: source.length, html: trimmedAfter };
+    }
+  }
+  return null;
+};
+
 const stripRangeFromText = (source: string, start: number, end: number): string => {
   const before = source.slice(0, start).trimEnd();
   const after = source.slice(end).trimStart();
@@ -839,6 +866,21 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
           start: miniGameHtml.start,
           end: miniGameHtml.end,
           priority: 92,
+          attachment,
+        });
+      }
+    }
+  }
+
+  if (candidates.length === 0) {
+    const inlineHtmlBlock = extractInlineHtmlBlock(source);
+    if (inlineHtmlBlock) {
+      const attachment = createCodeAttachment('html', inlineHtmlBlock.html, 'generated.html');
+      if (attachment) {
+        candidates.push({
+          start: inlineHtmlBlock.start,
+          end: inlineHtmlBlock.end,
+          priority: 88,
           attachment,
         });
       }
