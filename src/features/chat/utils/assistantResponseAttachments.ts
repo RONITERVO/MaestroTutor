@@ -579,12 +579,39 @@ const findMatchingElementEnd = (source: string, startIndex: number, tagName: str
   return null;
 };
 
+const consumeEscapedWhitespaceToken = (source: string, fromIndex: number): number => {
+  let slashCursor = fromIndex;
+  while (source.charCodeAt(slashCursor) === 92) { // '\'
+    slashCursor += 1;
+  }
+  if (slashCursor === fromIndex) return fromIndex;
+
+  const shortEscape = (source.charAt(slashCursor) || '').toLowerCase();
+  if (shortEscape === 'n' || shortEscape === 'r' || shortEscape === 't') {
+    return slashCursor + 1;
+  }
+
+  const unicodeEscape = source.slice(slashCursor, slashCursor + 5).toLowerCase();
+  if (unicodeEscape === 'u000a' || unicodeEscape === 'u000d' || unicodeEscape === 'u0009') {
+    return slashCursor + 5;
+  }
+
+  return fromIndex;
+};
+
 const skipIgnorableHtmlBetweenTags = (source: string, fromIndex: number): number => {
   let cursor = fromIndex;
   while (cursor < source.length) {
     const wsMatch = /^[\t\n\r \f]+/.exec(source.slice(cursor));
     if (wsMatch) {
       cursor += wsMatch[0].length;
+      continue;
+    }
+
+    // Also handle JSON-escaped separators when snippets are pasted from logs.
+    const escapedWhitespaceEnd = consumeEscapedWhitespaceToken(source, cursor);
+    if (escapedWhitespaceEnd > cursor) {
+      cursor = escapedWhitespaceEnd;
       continue;
     }
 
