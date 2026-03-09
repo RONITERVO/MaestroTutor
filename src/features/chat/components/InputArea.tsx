@@ -256,7 +256,6 @@ const InputArea: React.FC<InputAreaProps> = ({
     setTempTargetLangCode,
   });
   const [inputText, setInputText] = useState('');
-  const [backgroundHint, setBackgroundHint] = useState('');
   const bubbleTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTranscriptRef = useRef('');
@@ -331,13 +330,9 @@ const InputArea: React.FC<InputAreaProps> = ({
     const shouldApply = isSttGloballyEnabled || isListening;
     if (shouldApply) {
       const raw = transcript || '';
-      const bgMatches = raw.match(/\[[^\]]*\]/g) || [];
-      const latestBg = bgMatches.length ? bgMatches[bgMatches.length - 1].trim() : '';
-      setBackgroundHint(latestBg);
-      const cleaned = raw.replace(/\[[^\]]*\]/g, ' ').replace(/\s+/g, ' ').trimStart();
-      if (cleaned.length > 0 || isSttGloballyEnabled) {
-        setInputText(cleaned);
-        if (cleaned.trim().length >= 2) onUserInputActivity();
+      if (raw.length > 0 || isSttGloballyEnabled) {
+        setInputText(raw);
+        if (raw.trim().length >= 2) onUserInputActivity();
       }
     }
     prevTranscriptRef.current = transcript;
@@ -370,7 +365,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setInputText(newText);
-    if (newText.replace(/\[[^\]]*\]/g, ' ').trim().length >= 2) {
+    if (newText.trim().length >= 2) {
       onUserInputActivity();
     }
   };
@@ -850,12 +845,12 @@ const InputArea: React.FC<InputAreaProps> = ({
     if (prepDisplay) return prepDisplay;
     if (isSuggestionMode) {
       if (isCreatingSuggestion) return t('chat.suggestion.creating');
-      if (isListening) return backgroundHint ? `${t('chat.placeholder.suggestion.listening', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.suggestion.listening', { language: sttLangFlag });
-      if (isSttGloballyEnabled) return backgroundHint ? `${t('chat.placeholder.suggestion.sttActive', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.suggestion.sttActive', { language: sttLangFlag });
+      if (isListening) return t('chat.placeholder.suggestion.listening', { language: sttLangFlag });
+      if (isSttGloballyEnabled) return t('chat.placeholder.suggestion.sttActive', { language: sttLangFlag });
       return t('chat.placeholder.suggestion.sttInactive', { language: sttLangFlag });
     }
-    if (isListening) return backgroundHint ? `${t('chat.placeholder.normal.listening', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.normal.listening', { language: sttLangFlag });
-    if (isSttGloballyEnabled) return backgroundHint ? `${t('chat.placeholder.normal.sttActive', { language: sttLangFlag })}  ${backgroundHint}` : t('chat.placeholder.normal.sttActive', { language: sttLangFlag });
+    if (isListening) return t('chat.placeholder.normal.listening', { language: sttLangFlag });
+    if (isSttGloballyEnabled) return t('chat.placeholder.normal.sttActive', { language: sttLangFlag });
     return t('chat.placeholder.normal.sttInactive', { language: sttLangFlag });
   };
 
