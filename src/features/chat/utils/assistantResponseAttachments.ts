@@ -21,6 +21,11 @@ export interface ParsedAssistantResponse {
   attachment?: ParsedAssistantAttachment;
 }
 
+interface SourceVariant {
+  label: string;
+  source: string;
+}
+
 const MAX_ATTACHMENT_TEXT_CHARS = 180_000;
 
 const FENCE_REGEX = /```([^\n`]*)\n?([\s\S]*?)```/g;
@@ -194,6 +199,98 @@ const unwrapLoggedResponseText = (value: string): string => {
   }
 };
 
+const extractTopLevelTextField = (value: string): string | null => {
+  const trimmed = (value || '').trim();
+  if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return null;
+  if (!/"text"\s*:/i.test(trimmed)) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const text = (parsed as { text?: unknown }).text;
+    return typeof text === 'string' ? text : null;
+  } catch {
+    return null;
+  }
+};
+
+const toJsonStringLiteral = (value: string): string => {
+  let out = '"';
+  for (let i = 0; i < value.length; i++) {
+    const ch = value.charAt(i);
+    if (ch === '"') {
+      out += '\\"';
+    } else if (ch === '\n') {
+      out += '\\n';
+    } else if (ch === '\r') {
+      out += '\\r';
+    } else if (ch === '\t') {
+      out += '\\t';
+    } else if (ch === '\u2028') {
+      out += '\\u2028';
+    } else if (ch === '\u2029') {
+      out += '\\u2029';
+    } else {
+      out += ch;
+    }
+  }
+  out += '"';
+  return out;
+};
+
+const tryDecodeEscapedTextLayer = (value: string): string | null => {
+  if (!value) return null;
+  const escapedTokenCount = (value.match(/\\(?:n|r|t|u000a|u000d|u0009|")/gi) || []).length;
+  if (escapedTokenCount < 2) return null;
+
+  const wrapped = toJsonStringLiteral(value);
+  try {
+    const decoded = JSON.parse(wrapped);
+    if (typeof decoded !== 'string') return null;
+    if (decoded === value) return null;
+    return decoded;
+  } catch {
+    return null;
+  }
+};
+
+const collectSourceVariants = (rawSource: string): SourceVariant[] => {
+  const variants: SourceVariant[] = [];
+  const seen = new Set<string>();
+
+  const pushVariant = (label: string, source: string | null | undefined) => {
+    const normalized = (source || '').toString();
+    if (!normalized.trim()) return;
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    variants.push({ label, source: normalized });
+  };
+
+  const primary = unwrapLoggedResponseText(rawSource);
+  pushVariant('primary', primary);
+  if (rawSource !== primary) {
+    pushVariant('raw', rawSource);
+  }
+
+  const textFromRawJson = extractTopLevelTextField(rawSource);
+  if (textFromRawJson && textFromRawJson !== primary) {
+    pushVariant('json-text', textFromRawJson);
+  }
+
+  const seeds = variants.slice(0, 3);
+  for (const seed of seeds) {
+    let current = seed.source;
+    for (let depth = 1; depth <= 2; depth++) {
+      const decoded = tryDecodeEscapedTextLayer(current);
+      if (!decoded || decoded === current) break;
+      pushVariant(`${seed.label}-decoded-${depth}`, decoded);
+      current = decoded;
+    }
+  }
+
+  return variants;
+};
+
 const getExtensionFromFileName = (fileName?: string): string => {
   const normalized = (fileName || '').trim().toLowerCase();
   const dot = normalized.lastIndexOf('.');
@@ -328,15 +425,14 @@ const chartJsonToCsv = (input: any): string | null => {
   const dataRoot = getChartDataRoot(input);
   if (!dataRoot || typeof dataRoot !== 'object') return null;
   const labels = Array.isArray(dataRoot.labels) ? dataRoot.labels.map((x: unknown) => String(x ?? '')) : [];
-  if (!labels.length) return null;
 
-  const writeMultiSeries = (series: Array<{ name: string; data: number[] }>): string | null => {
+  const writeMultiSeries = (series: Array<{ name: string; data: unknown[] }>): string | null => {
     if (!series.length) return null;
     const maxLen = Math.min(
       200,
       Math.max(labels.length, ...series.map((s) => s.data.length))
     );
-    if (maxLen < 2) return null;
+    if (maxLen < 1) return null;
 
     const header = ['label', ...series.map((s) => s.name || 'series')];
     const rows: string[] = [header.map(csvEscape).join(',')];
@@ -352,11 +448,11 @@ const chartJsonToCsv = (input: any): string | null => {
 
   const flatValues = Array.isArray(dataRoot.values) ? dataRoot.values : (Array.isArray(dataRoot.data) ? dataRoot.data : null);
   if (Array.isArray(flatValues)) {
-    const numeric = flatValues.map((v: unknown) => Number(v)).filter((n: number) => Number.isFinite(n));
-    if (numeric.length >= 2) {
+    if (flatValues.length >= 1) {
+      const maxLen = Math.min(200, Math.max(labels.length, flatValues.length));
       const rows = ['label,value'];
-      for (let i = 0; i < Math.min(labels.length, numeric.length, 200); i++) {
-        rows.push(`${csvEscape(labels[i])},${csvEscape(numeric[i])}`);
+      for (let i = 0; i < maxLen; i++) {
+        rows.push(`${csvEscape(labels[i] ?? String(i + 1))},${csvEscape(flatValues[i] ?? '')}`);
       }
       return rows.join('\n');
     }
@@ -367,14 +463,13 @@ const chartJsonToCsv = (input: any): string | null => {
     const normalized = datasets
       .map((series: any, idx: number) => {
         const raw = Array.isArray(series?.data) ? series.data : [];
-        const numeric = raw.map((v: unknown) => Number(v));
-        if (numeric.filter((n: number) => Number.isFinite(n)).length < 2) return null;
+        if (raw.length < 1) return null;
         return {
           name: String(series?.label || series?.name || `series_${idx + 1}`),
-          data: numeric,
+          data: raw,
         };
       })
-      .filter(Boolean) as Array<{ name: string; data: number[] }>;
+      .filter(Boolean) as Array<{ name: string; data: unknown[] }>;
     return writeMultiSeries(normalized);
   }
 
@@ -516,7 +611,9 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
     return createTabularAttachment(normalizedContent, true, fileNameHint);
   }
   if (CHART_LANG_TAGS.has(langToken)) {
-    return createChartJsonAttachment(normalizedContent, fileNameHint);
+    const parsedChart = createChartJsonAttachment(normalizedContent, fileNameHint);
+    if (parsedChart) return parsedChart;
+    return createCodeAttachment('json', normalizedContent, fileNameHint || 'chart-data.json');
   }
   if (langToken.includes('json') || mimeToken.includes('json')) {
     const parsedChart = createChartJsonAttachment(normalizedContent, fileNameHint);
@@ -579,6 +676,87 @@ const findMatchingElementEnd = (source: string, startIndex: number, tagName: str
   return null;
 };
 
+const consumeEscapedWhitespaceToken = (source: string, fromIndex: number): number => {
+  let slashCursor = fromIndex;
+  while (source.charCodeAt(slashCursor) === 92) { // '\'
+    slashCursor += 1;
+  }
+  if (slashCursor === fromIndex) return fromIndex;
+
+  const shortEscape = (source.charAt(slashCursor) || '').toLowerCase();
+  if (shortEscape === 'n' || shortEscape === 'r' || shortEscape === 't') {
+    return slashCursor + 1;
+  }
+
+  const unicodeEscape = source.slice(slashCursor, slashCursor + 5).toLowerCase();
+  if (unicodeEscape === 'u000a' || unicodeEscape === 'u000d' || unicodeEscape === 'u0009') {
+    return slashCursor + 5;
+  }
+
+  return fromIndex;
+};
+
+const skipIgnorableHtmlBetweenTags = (source: string, fromIndex: number): number => {
+  let cursor = fromIndex;
+  while (cursor < source.length) {
+    const wsMatch = /^[\t\n\r \f]+/.exec(source.slice(cursor));
+    if (wsMatch) {
+      cursor += wsMatch[0].length;
+      continue;
+    }
+
+    // Also handle JSON-escaped separators when snippets are pasted from logs.
+    const escapedWhitespaceEnd = consumeEscapedWhitespaceToken(source, cursor);
+    if (escapedWhitespaceEnd > cursor) {
+      cursor = escapedWhitespaceEnd;
+      continue;
+    }
+
+    if (source.startsWith('<!--', cursor)) {
+      const commentEnd = source.indexOf('-->', cursor + 4);
+      if (commentEnd < 0) return source.length;
+      cursor = commentEnd + 3;
+      continue;
+    }
+
+    break;
+  }
+  return cursor;
+};
+
+const consumeTrailingScriptBlocks = (source: string, fromIndex: number): number => {
+  let cursor = fromIndex;
+  const lower = source.toLowerCase();
+
+  while (cursor < source.length) {
+    const next = skipIgnorableHtmlBetweenTags(source, cursor);
+    const openMatch = /^<script\b[^>]*>/i.exec(source.slice(next));
+    if (!openMatch) break;
+
+    const openTag = openMatch[0];
+    const contentStart = next + openTag.length;
+    if (/\/>$/.test(openTag)) {
+      cursor = contentStart;
+      continue;
+    }
+
+    const closeStart = lower.indexOf('</script', contentStart);
+    if (closeStart < 0) {
+      cursor = source.length;
+      break;
+    }
+    const closeEnd = source.indexOf('>', closeStart);
+    if (closeEnd < 0) {
+      cursor = source.length;
+      break;
+    }
+
+    cursor = closeEnd + 1;
+  }
+
+  return cursor;
+};
+
 const extractInlineMiniGameHtml = (source: string): { start: number; end: number; html: string } | null => {
   const marker = INLINE_MINI_GAME_MARKER_REGEX.exec(source);
   if (!marker || typeof marker.index !== 'number') return null;
@@ -587,8 +765,9 @@ const extractInlineMiniGameHtml = (source: string): { start: number; end: number
   if (openTag) {
     const end = findMatchingElementEnd(source, openTag.start, openTag.tagName);
     if (typeof end === 'number' && end > openTag.start) {
-      const html = source.slice(openTag.start, end).trim();
-      if (html) return { start: openTag.start, end, html };
+      const expandedEnd = consumeTrailingScriptBlocks(source, end);
+      const html = source.slice(openTag.start, expandedEnd).trim();
+      if (html) return { start: openTag.start, end: expandedEnd, html };
     }
   }
 
@@ -609,9 +788,7 @@ const stripRangeFromText = (source: string, start: number, end: number): string 
   return `${before}\n\n${after}`.replace(/\n{3,}/g, '\n\n').trim();
 };
 
-export const parseAssistantResponseForAttachment = (responseText?: string | null): ParsedAssistantResponse => {
-  const rawSource = (responseText || '').toString();
-  const source = unwrapLoggedResponseText(rawSource);
+const parseAttachmentFromSingleSource = (source: string): ParsedAssistantResponse => {
   if (!source.trim()) return { cleanedText: '' };
 
   const candidates: AttachmentCandidate[] = [];
@@ -714,4 +891,83 @@ export const parseAssistantResponseForAttachment = (responseText?: string | null
     cleanedText: cleaned,
     attachment: selected.attachment,
   };
+};
+
+const decodeAttachmentTextDataUrl = (dataUrl: string): string => {
+  if (!dataUrl || typeof dataUrl !== 'string') return '';
+  const comma = dataUrl.indexOf(',');
+  if (comma < 0) return '';
+
+  const header = dataUrl.slice(0, comma).toLowerCase();
+  const payload = dataUrl.slice(comma + 1);
+  if (!payload) return '';
+
+  try {
+    if (header.includes(';base64')) {
+      const binary = atob(payload);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+    return decodeURIComponent(payload);
+  } catch {
+    return '';
+  }
+};
+
+const scoreAttachmentParse = (parsed: ParsedAssistantResponse): number => {
+  if (!parsed.attachment) return Number.NEGATIVE_INFINITY;
+
+  const attachment = parsed.attachment;
+  const cleaned = (parsed.cleanedText || '').trim();
+
+  let score = 10_000;
+  if (attachment.kind === 'svg') score += 700;
+  else if (attachment.kind === 'image') score += 650;
+  else if (attachment.kind === 'chart') score += 550;
+  else score += 450;
+
+  score -= Math.min(cleaned.length, 1_200);
+
+  if (attachment.kind === 'code') {
+    const attachmentText = decodeAttachmentTextDataUrl(attachment.dataUrl);
+    const hasMiniGameMarker = INLINE_MINI_GAME_MARKER_REGEX.test(attachmentText);
+    const hasScriptInAttachment = /<script[\s>]/i.test(attachmentText) && /<\/script>/i.test(attachmentText);
+    const leakedScriptInCleaned = /<script[\s>]/i.test(cleaned);
+    const leakedMiniGameInCleaned = INLINE_MINI_GAME_MARKER_REGEX.test(cleaned);
+
+    if (hasMiniGameMarker) score += 900;
+    if (hasScriptInAttachment) score += 250;
+    if (hasMiniGameMarker && leakedScriptInCleaned) score -= 1_400;
+    if (hasMiniGameMarker && leakedMiniGameInCleaned) score -= 1_100;
+  }
+
+  return score;
+};
+
+export const parseAssistantResponseForAttachment = (responseText?: string | null): ParsedAssistantResponse => {
+  const rawSource = (responseText || '').toString();
+  const variants = collectSourceVariants(rawSource);
+  if (variants.length === 0) return { cleanedText: '' };
+
+  const parsedByVariant = variants.map((variant, variantIndex) => ({
+    variantIndex,
+    variant,
+    parsed: parseAttachmentFromSingleSource(variant.source),
+  }));
+
+  const attachmentParses = parsedByVariant.filter((entry) => Boolean(entry.parsed.attachment));
+  if (attachmentParses.length === 0) {
+    return parsedByVariant[0].parsed;
+  }
+
+  attachmentParses.sort((a, b) => {
+    const scoreDiff = scoreAttachmentParse(b.parsed) - scoreAttachmentParse(a.parsed);
+    if (scoreDiff !== 0) return scoreDiff;
+    return a.variantIndex - b.variantIndex;
+  });
+
+  return attachmentParses[0].parsed;
 };
