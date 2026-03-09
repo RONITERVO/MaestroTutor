@@ -579,6 +579,60 @@ const findMatchingElementEnd = (source: string, startIndex: number, tagName: str
   return null;
 };
 
+const skipIgnorableHtmlBetweenTags = (source: string, fromIndex: number): number => {
+  let cursor = fromIndex;
+  while (cursor < source.length) {
+    const wsMatch = /^[\t\n\r \f]+/.exec(source.slice(cursor));
+    if (wsMatch) {
+      cursor += wsMatch[0].length;
+      continue;
+    }
+
+    if (source.startsWith('<!--', cursor)) {
+      const commentEnd = source.indexOf('-->', cursor + 4);
+      if (commentEnd < 0) return source.length;
+      cursor = commentEnd + 3;
+      continue;
+    }
+
+    break;
+  }
+  return cursor;
+};
+
+const consumeTrailingScriptBlocks = (source: string, fromIndex: number): number => {
+  let cursor = fromIndex;
+  const lower = source.toLowerCase();
+
+  while (cursor < source.length) {
+    const next = skipIgnorableHtmlBetweenTags(source, cursor);
+    const openMatch = /^<script\b[^>]*>/i.exec(source.slice(next));
+    if (!openMatch) break;
+
+    const openTag = openMatch[0];
+    const contentStart = next + openTag.length;
+    if (/\/>$/.test(openTag)) {
+      cursor = contentStart;
+      continue;
+    }
+
+    const closeStart = lower.indexOf('</script', contentStart);
+    if (closeStart < 0) {
+      cursor = source.length;
+      break;
+    }
+    const closeEnd = source.indexOf('>', closeStart);
+    if (closeEnd < 0) {
+      cursor = source.length;
+      break;
+    }
+
+    cursor = closeEnd + 1;
+  }
+
+  return cursor;
+};
+
 const extractInlineMiniGameHtml = (source: string): { start: number; end: number; html: string } | null => {
   const marker = INLINE_MINI_GAME_MARKER_REGEX.exec(source);
   if (!marker || typeof marker.index !== 'number') return null;
@@ -587,8 +641,9 @@ const extractInlineMiniGameHtml = (source: string): { start: number; end: number
   if (openTag) {
     const end = findMatchingElementEnd(source, openTag.start, openTag.tagName);
     if (typeof end === 'number' && end > openTag.start) {
-      const html = source.slice(openTag.start, end).trim();
-      if (html) return { start: openTag.start, end, html };
+      const expandedEnd = consumeTrailingScriptBlocks(source, end);
+      const html = source.slice(openTag.start, expandedEnd).trim();
+      if (html) return { start: openTag.start, end: expandedEnd, html };
     }
   }
 
