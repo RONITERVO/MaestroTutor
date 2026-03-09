@@ -15,7 +15,7 @@ import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, se
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
-import { sketchShapeClass, sketchShapeStyle } from '../../../shared/utils/sketchyShape';
+import { sketchShapeStyle } from '../../../shared/utils/sketchyShape';
 import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
 import TextFileViewer from './TextFileViewer';
 import OfficeFileViewer from './OfficeFileViewer';
@@ -677,12 +677,23 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
-  const thinkingTrace = Array.isArray(message.thinkingTrace)
-    ? message.thinkingTrace.filter(line => typeof line === 'string' && line.trim().length > 0).slice(-6)
-    : [];
-  const thinkingDraftText = typeof message.thinkingDraftText === 'string'
-    ? message.thinkingDraftText
-    : '';
+  const thinkingStatusLine = useMemo(() => {
+    const draftText = typeof message.thinkingDraftText === 'string' ? message.thinkingDraftText : '';
+    const traceLines = Array.isArray(message.thinkingTrace)
+      ? message.thinkingTrace.filter(line => typeof line === 'string' && line.trim().length > 0)
+      : [];
+    // Priority: latest draft snippet > latest trace line > default
+    if (draftText) {
+      // Show the tail of the streaming response, trimmed to fit mobile
+      const condensed = draftText.replace(/\s+/g, ' ').trim();
+      return condensed.length > 42 ? `\u2026${condensed.slice(-42)}` : condensed;
+    }
+    if (traceLines.length > 0) {
+      const last = traceLines[traceLines.length - 1];
+      return last.length > 50 ? `${last.slice(0, 50)}\u2026` : last;
+    }
+    return '';
+  }, [message.thinkingDraftText, message.thinkingTrace]);
 
   useEffect(() => {
     if (!shouldUseScrollableTextOverlay) {
@@ -711,26 +722,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   if (message.thinking && !message.isGeneratingImage) {
     return (
-      <div className="flex justify-start mb-3 animate-pulse">
-        <div className={`bg-thinking-bubble-bg p-3 max-w-xl sketchy-border-thin ${sketchShapeClass(messageIndex)}`}>
-          <p className="text-sm text-thinking-bubble-text font-hand">{t('chat.thinking')}</p>
-          {thinkingDraftText && (
-            <p className="mt-2 text-sm text-thinking-bubble-text font-hand leading-relaxed whitespace-pre-wrap">
-              {thinkingDraftText}
-            </p>
-          )}
-          {thinkingTrace.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {thinkingTrace.map((line, idx) => (
-                <p
-                  key={`${message.id}-thinking-${idx}`}
-                  className="text-xs text-thinking-bubble-text/90 font-hand leading-tight whitespace-pre-wrap"
-                >
-                  {line}
-                </p>
-              ))}
-            </div>
-          )}
+      <div className="flex justify-start mb-3">
+        <div className="flex items-center gap-2 bg-thinking-bubble-bg px-3 py-1.5 max-w-[85vw] sketchy-border-thin rounded-full">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-thinking-bubble-text/60 animate-pulse flex-shrink-0" />
+          <p className="text-xs text-thinking-bubble-text font-hand truncate leading-tight">
+            {thinkingStatusLine || t('chat.thinking')}
+          </p>
         </div>
       </div>
     );

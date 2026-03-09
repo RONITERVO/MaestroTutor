@@ -109,17 +109,22 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
         <div className="flex flex-wrap gap-2 justify-end">
             {isLoadingSuggestions && (
               <span
-                className="inline-block w-full px-3 py-1.5 text-page-text/70 italic"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-page-text/70 italic max-w-full"
                 style={{
                   fontSize: '2.8cqw',
                   lineHeight: 1.35,
-                  whiteSpace: 'pre-wrap',
-                  overflowWrap: 'anywhere',
                   textAlign: 'right',
+                  marginLeft: 'auto',
                 }}
               >
-                {t('chat.loadingSuggestions')}
-                {suggestionsLoadingStreamText ? ` ${suggestionsLoadingStreamText}` : ''}
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-current opacity-60 animate-pulse flex-shrink-0" />
+                <span className="truncate">
+                  {suggestionsLoadingStreamText
+                    ? suggestionsLoadingStreamText.length > 50
+                      ? `${suggestionsLoadingStreamText.slice(0, 50)}\u2026`
+                      : suggestionsLoadingStreamText
+                    : t('chat.loadingSuggestions')}
+                </span>
               </span>
             )}
             {!isLoadingSuggestions && replySuggestions.map((suggestion, index) => {

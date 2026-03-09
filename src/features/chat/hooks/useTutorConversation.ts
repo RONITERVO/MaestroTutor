@@ -97,7 +97,6 @@ const isSvgMimeType = (mimeType?: string | null): boolean => {
 const MAX_THINKING_TRACE_LINES = 8;
 const MAX_THINKING_DRAFT_CHARS = 12000;
 const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
-const MAX_SUGGESTIONS_STREAM_CHARS = 1800;
 
 const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
   const normalized = (mimeType || '').trim().toLowerCase();
@@ -741,29 +740,20 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
 
     const MAX_RETRIES = 2;
-    const formatStreamSegment = (value: string): string => {
-      if (!value) return '';
-      const condensed = value.replace(/\s+/g, ' ').trim();
-      if (!condensed) return '';
-      if (condensed.length <= MAX_SUGGESTIONS_STREAM_CHARS) return condensed;
-      return condensed.slice(-MAX_SUGGESTIONS_STREAM_CHARS);
-    };
-
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         let thoughtText = '';
         let outputText = '';
         const flushSuggestionsLoadingText = () => {
-          const thoughtSegment = formatStreamSegment(thoughtText);
-          const outputSegment = formatStreamSegment(outputText);
-          const merged = [
-            thoughtSegment ? `thinking: ${thoughtSegment}` : '',
-            outputSegment ? `output: ${outputSegment}` : '',
-          ]
-            .filter(Boolean)
-            .join(' | ');
-          if (merged) {
-            setSuggestionsLoadingStreamText(merged);
+          // Show whichever stream is latest, condensed to a short single-line status
+          const condensedThought = thoughtText.replace(/\s+/g, ' ').trim();
+          const condensedOutput = outputText.replace(/\s+/g, ' ').trim();
+          // Prefer output stream if available, otherwise show thought stream
+          const active = condensedOutput || condensedThought;
+          if (active) {
+            const label = condensedOutput ? '' : 'thinking: ';
+            const display = active.length > 48 ? `\u2026${active.slice(-48)}` : active;
+            setSuggestionsLoadingStreamText(`${label}${display}`);
           }
         };
 
