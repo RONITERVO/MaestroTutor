@@ -34,6 +34,8 @@ export interface ChatMessage {
   thinking?: boolean;
   thinkingTrace?: string[];
   thinkingDraftText?: string;
+  /** Human-readable phase label displayed on the upper line of the thinking bubble */
+  thinkingPhase?: string;
   isGeneratingImage?: boolean;
   imageGenError?: string | null;
   imageGenerationStartTime?: number;

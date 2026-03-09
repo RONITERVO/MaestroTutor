@@ -417,7 +417,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         return `Connecting to ${event.model} (attempt ${event.attempt}/${event.totalAttempts})...`;
       case 'attempt-processing':
         if (typeof elapsedSeconds !== 'number') return undefined;
-        return `Model is thinking... ${elapsedSeconds}s elapsed.`;
+        return `Model is processing... ${elapsedSeconds}s elapsed.`;
       case 'high-demand':
         return 'High demand detected. Request is queued on Google servers.';
       case 'fallback-switch':
@@ -1137,6 +1137,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     let lastDraftFlushAt = 0;
     let thoughtBuffer = '';
     let lastThoughtFlushAt = 0;
+    let currentPhaseLabel = '';
 
     const flushThinkingDraft = (force = false) => {
       const now = Date.now();
@@ -1178,14 +1179,28 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             lastProcessingBucket = bucket;
           }
           const line = formatGeminiProgressLine(event);
-          if (line) appendThinkingTrace(params.thinkingMessageId, line);
+          if (line) {
+            appendThinkingTrace(params.thinkingMessageId, line);
+            if (line !== currentPhaseLabel) {
+              currentPhaseLabel = line;
+              updateMessage(params.thinkingMessageId, { thinkingPhase: line });
+            }
+          }
         },
         onTextDelta: (_deltaText, fullText) => {
           streamingDraftText = fullText || streamingDraftText;
+          if (currentPhaseLabel !== 'Final response') {
+            currentPhaseLabel = 'Final response';
+            updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
+          }
           flushThinkingDraft(false);
         },
         onThoughtDelta: (deltaThought) => {
           thoughtBuffer += deltaThought;
+          if (currentPhaseLabel !== 'Thinking') {
+            currentPhaseLabel = 'Thinking';
+            updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
+          }
           flushThoughtTrace(false);
         },
       }
@@ -1209,6 +1224,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       thinking: false,
       thinkingTrace: undefined,
       thinkingDraftText: undefined,
+      thinkingPhase: undefined,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
       rawAssistantResponse: responseTextForConversation,
       text: parsedTranslationsOnComplete.length === 0 ? responseTextForConversation : undefined,
@@ -1892,12 +1908,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       const isQuota = error instanceof ApiError && isQuotaError(error);
       updateMessage(thinkingMessageId, {
-        thinking: false, 
+        thinking: false,
         thinkingTrace: undefined,
         thinkingDraftText: undefined,
-        role: 'error', 
-        text: errorMessage, 
-        rawAssistantResponse: undefined, 
+        thinkingPhase: undefined,
+        role: 'error',
+        text: errorMessage,
+        rawAssistantResponse: undefined,
         translations: undefined,
         ...(isQuota ? { errorAction: 'quota' } : {}),
       });
