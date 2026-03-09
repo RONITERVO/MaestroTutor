@@ -35,8 +35,10 @@ const RAW_HTML_DOCUMENT_REGEX = /<!doctype\s+html|<html[\s>]|<body[\s>]|<head[\s
 const INLINE_IMAGE_DATA_URL_REGEX = /data:image\/[a-z0-9.+-]+(?:;[a-z0-9=._-]+)*,[a-z0-9+/%=._\-\s]+/i;
 const INLINE_MINI_GAME_MARKER_REGEX = /data-maestro-mini-game|@maestro-mini-game/i;
 const HTML_TAG_REGEX = /<\/?([a-z][\w:-]*)\b[^>]*>/ig;
-// Strong signal that the source contains a scripted HTML artifact (<script> or <style>)
-const SCRIPTED_HTML_SIGNAL_REGEX = /<(?:script|style)\b/i;
+// Strong signals that a bare (unfenced) HTML artifact is present
+const STRONG_HTML_ARTIFACT_REGEX = /<script\b|<style\b|data-maestro-mini-game|@maestro-mini-game/i;
+// Paragraph break (two or more newlines) optionally followed by whitespace, immediately before '<'
+const PARA_BREAK_BEFORE_TAG_REGEX = /\n{2,}\s*(?=<)/;
 
 const CODE_LANGUAGE_TO_EXTENSION: Record<string, string> = {
   js: 'js',
@@ -256,6 +258,36 @@ const tryDecodeEscapedTextLayer = (value: string): string | null => {
   }
 };
 
+/**
+ * When an AI response embeds an HTML artifact inline (no fenced code block),
+ * wrap the HTML portion in an explicit ```html fence so the existing fence
+ * parser handles it correctly.
+ * @param source - raw response text to inspect
+ * @returns normalised string with the HTML block fenced, or null if no change is needed
+ */
+const normalizeMissingFences = (source: string): string | null => {
+  // Already has fenced code blocks — the standard parser will handle them.
+  if (source.includes('```')) return null;
+
+  // Only act when there is a strong signal of a scripted HTML artifact or a
+  // full HTML document.
+  if (!STRONG_HTML_ARTIFACT_REGEX.test(source) && !RAW_HTML_DOCUMENT_REGEX.test(source)) return null;
+
+  // Find the first paragraph break immediately before a '<' tag opener.
+  const match = PARA_BREAK_BEFORE_TAG_REGEX.exec(source);
+  if (!match) return null;
+
+  const htmlStart = match.index + match[0].length;
+  const textPart = source.slice(0, match.index).trimEnd();
+  const htmlPart = source.slice(htmlStart).trim();
+  if (!htmlPart) return null;
+
+  // Wrap the HTML portion in an explicit ```html fence.
+  return textPart
+    ? `${textPart}\n\n\`\`\`html\n${htmlPart}\n\`\`\``
+    : `\`\`\`html\n${htmlPart}\n\`\`\``;
+};
+
 const collectSourceVariants = (rawSource: string): SourceVariant[] => {
   const variants: SourceVariant[] = [];
   const seen = new Set<string>();
@@ -288,6 +320,16 @@ const collectSourceVariants = (rawSource: string): SourceVariant[] => {
       pushVariant(`${seed.label}-decoded-${depth}`, decoded);
       current = decoded;
     }
+  }
+
+  // For each variant that may contain an unfenced HTML artifact, add a
+  // normalised copy where the HTML block is wrapped in ```html fences.
+  // The score-based selection in parseAssistantResponseForAttachment then
+  // picks whichever variant produces the best result.
+  const variantsSnapshot = variants.slice();
+  for (const v of variantsSnapshot) {
+    const fenced = normalizeMissingFences(v.source);
+    if (fenced) pushVariant(`${v.label}-fenced`, fenced);
   }
 
   return variants;
@@ -578,12 +620,10 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
     mimeToken === 'application/xhtml+xml';
   const isLikelyHtmlDocument = startsWithMarkup && RAW_HTML_DOCUMENT_REGEX.test(trimmedContent);
   const isLikelyHtmlMiniGameSnippet = startsWithMarkup && INLINE_MINI_GAME_MARKER_REGEX.test(normalizedContent);
-  // HTML fragment with <script> or <style> but no full document markers or mini-game marker
-  const isLikelyHtmlFragment = startsWithMarkup && SCRIPTED_HTML_SIGNAL_REGEX.test(trimmedContent);
 
   // Important: HTML fences can include inline `data:image/...` snippets (e.g. CSS data URIs).
   // We must keep the full HTML as code instead of misclassifying/truncating it as an image.
-  if (isExplicitHtmlLang || isLikelyHtmlDocument || isLikelyHtmlMiniGameSnippet || isLikelyHtmlFragment) {
+  if (isExplicitHtmlLang || isLikelyHtmlDocument || isLikelyHtmlMiniGameSnippet) {
     return createCodeAttachment('html', normalizedContent, fileNameHint || 'generated.html');
   }
 
@@ -630,10 +670,6 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
     if (/<svg[\s>]/i.test(normalizedContent)) {
       const svgAttachment = createSvgAttachment(normalizedContent, fileNameHint);
       if (svgAttachment) return svgAttachment;
-    }
-    if (SCRIPTED_HTML_SIGNAL_REGEX.test(normalizedContent)) {
-      const htmlAttachment = createCodeAttachment('html', normalizedContent, fileNameHint || 'generated.html');
-      if (htmlAttachment) return htmlAttachment;
     }
     return createCodeAttachment('txt', normalizedContent, fileNameHint || 'generated.txt');
   }
@@ -787,25 +823,6 @@ const extractInlineMiniGameHtml = (source: string): { start: number; end: number
   return null;
 };
 
-// Extracts an HTML block that appears after a paragraph break in a mixed text+HTML response.
-// Requires <script> or <style> as a strong signal that the block is a scripted artifact.
-const extractInlineHtmlBlock = (source: string): { start: number; end: number; html: string } | null => {
-  if (!SCRIPTED_HTML_SIGNAL_REGEX.test(source)) return null;
-
-  const paragraphBreakRegex = /\n{2,}/g;
-  let paragraphBreakMatch: RegExpExecArray | null;
-  while ((paragraphBreakMatch = paragraphBreakRegex.exec(source)) !== null) {
-    const after = source.slice(paragraphBreakMatch.index + paragraphBreakMatch[0].length);
-    const trimmedAfter = after.trimStart();
-    if (trimmedAfter.startsWith('<')) {
-      const leadingWhitespace = after.length - trimmedAfter.length;
-      const htmlStart = paragraphBreakMatch.index + paragraphBreakMatch[0].length + leadingWhitespace;
-      return { start: htmlStart, end: source.length, html: trimmedAfter };
-    }
-  }
-  return null;
-};
-
 const stripRangeFromText = (source: string, start: number, end: number): string => {
   const before = source.slice(0, start).trimEnd();
   const after = source.slice(end).trimStart();
@@ -866,21 +883,6 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
           start: miniGameHtml.start,
           end: miniGameHtml.end,
           priority: 92,
-          attachment,
-        });
-      }
-    }
-  }
-
-  if (candidates.length === 0) {
-    const inlineHtmlBlock = extractInlineHtmlBlock(source);
-    if (inlineHtmlBlock) {
-      const attachment = createCodeAttachment('html', inlineHtmlBlock.html, 'generated.html');
-      if (attachment) {
-        candidates.push({
-          start: inlineHtmlBlock.start,
-          end: inlineHtmlBlock.end,
-          priority: 88,
           attachment,
         });
       }
