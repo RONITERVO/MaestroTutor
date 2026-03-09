@@ -21,6 +21,11 @@ export interface ParsedAssistantResponse {
   attachment?: ParsedAssistantAttachment;
 }
 
+interface SourceVariant {
+  label: string;
+  source: string;
+}
+
 const MAX_ATTACHMENT_TEXT_CHARS = 180_000;
 
 const FENCE_REGEX = /```([^\n`]*)\n?([\s\S]*?)```/g;
@@ -192,6 +197,98 @@ const unwrapLoggedResponseText = (value: string): string => {
   } catch {
     return value;
   }
+};
+
+const extractTopLevelTextField = (value: string): string | null => {
+  const trimmed = (value || '').trim();
+  if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return null;
+  if (!/"text"\s*:/i.test(trimmed)) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const text = (parsed as { text?: unknown }).text;
+    return typeof text === 'string' ? text : null;
+  } catch {
+    return null;
+  }
+};
+
+const toJsonStringLiteral = (value: string): string => {
+  let out = '"';
+  for (let i = 0; i < value.length; i++) {
+    const ch = value.charAt(i);
+    if (ch === '"') {
+      out += '\\"';
+    } else if (ch === '\n') {
+      out += '\\n';
+    } else if (ch === '\r') {
+      out += '\\r';
+    } else if (ch === '\t') {
+      out += '\\t';
+    } else if (ch === '\u2028') {
+      out += '\\u2028';
+    } else if (ch === '\u2029') {
+      out += '\\u2029';
+    } else {
+      out += ch;
+    }
+  }
+  out += '"';
+  return out;
+};
+
+const tryDecodeEscapedTextLayer = (value: string): string | null => {
+  if (!value) return null;
+  const escapedTokenCount = (value.match(/\\(?:n|r|t|u000a|u000d|u0009|")/gi) || []).length;
+  if (escapedTokenCount < 2) return null;
+
+  const wrapped = toJsonStringLiteral(value);
+  try {
+    const decoded = JSON.parse(wrapped);
+    if (typeof decoded !== 'string') return null;
+    if (decoded === value) return null;
+    return decoded;
+  } catch {
+    return null;
+  }
+};
+
+const collectSourceVariants = (rawSource: string): SourceVariant[] => {
+  const variants: SourceVariant[] = [];
+  const seen = new Set<string>();
+
+  const pushVariant = (label: string, source: string | null | undefined) => {
+    const normalized = (source || '').toString();
+    if (!normalized.trim()) return;
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    variants.push({ label, source: normalized });
+  };
+
+  const primary = unwrapLoggedResponseText(rawSource);
+  pushVariant('primary', primary);
+  if (rawSource !== primary) {
+    pushVariant('raw', rawSource);
+  }
+
+  const textFromRawJson = extractTopLevelTextField(rawSource);
+  if (textFromRawJson && textFromRawJson !== primary) {
+    pushVariant('json-text', textFromRawJson);
+  }
+
+  const seeds = variants.slice(0, 3);
+  for (const seed of seeds) {
+    let current = seed.source;
+    for (let depth = 1; depth <= 2; depth++) {
+      const decoded = tryDecodeEscapedTextLayer(current);
+      if (!decoded || decoded === current) break;
+      pushVariant(`${seed.label}-decoded-${depth}`, decoded);
+      current = decoded;
+    }
+  }
+
+  return variants;
 };
 
 const getExtensionFromFileName = (fileName?: string): string => {
@@ -691,9 +788,7 @@ const stripRangeFromText = (source: string, start: number, end: number): string 
   return `${before}\n\n${after}`.replace(/\n{3,}/g, '\n\n').trim();
 };
 
-export const parseAssistantResponseForAttachment = (responseText?: string | null): ParsedAssistantResponse => {
-  const rawSource = (responseText || '').toString();
-  const source = unwrapLoggedResponseText(rawSource);
+const parseAttachmentFromSingleSource = (source: string): ParsedAssistantResponse => {
   if (!source.trim()) return { cleanedText: '' };
 
   const candidates: AttachmentCandidate[] = [];
@@ -796,4 +891,83 @@ export const parseAssistantResponseForAttachment = (responseText?: string | null
     cleanedText: cleaned,
     attachment: selected.attachment,
   };
+};
+
+const decodeAttachmentTextDataUrl = (dataUrl: string): string => {
+  if (!dataUrl || typeof dataUrl !== 'string') return '';
+  const comma = dataUrl.indexOf(',');
+  if (comma < 0) return '';
+
+  const header = dataUrl.slice(0, comma).toLowerCase();
+  const payload = dataUrl.slice(comma + 1);
+  if (!payload) return '';
+
+  try {
+    if (header.includes(';base64')) {
+      const binary = atob(payload);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+    return decodeURIComponent(payload);
+  } catch {
+    return '';
+  }
+};
+
+const scoreAttachmentParse = (parsed: ParsedAssistantResponse): number => {
+  if (!parsed.attachment) return Number.NEGATIVE_INFINITY;
+
+  const attachment = parsed.attachment;
+  const cleaned = (parsed.cleanedText || '').trim();
+
+  let score = 10_000;
+  if (attachment.kind === 'svg') score += 700;
+  else if (attachment.kind === 'image') score += 650;
+  else if (attachment.kind === 'chart') score += 550;
+  else score += 450;
+
+  score -= Math.min(cleaned.length, 1_200);
+
+  if (attachment.kind === 'code') {
+    const attachmentText = decodeAttachmentTextDataUrl(attachment.dataUrl);
+    const hasMiniGameMarker = INLINE_MINI_GAME_MARKER_REGEX.test(attachmentText);
+    const hasScriptInAttachment = /<script[\s>]/i.test(attachmentText) && /<\/script>/i.test(attachmentText);
+    const leakedScriptInCleaned = /<script[\s>]/i.test(cleaned);
+    const leakedMiniGameInCleaned = INLINE_MINI_GAME_MARKER_REGEX.test(cleaned);
+
+    if (hasMiniGameMarker) score += 900;
+    if (hasScriptInAttachment) score += 250;
+    if (hasMiniGameMarker && leakedScriptInCleaned) score -= 1_400;
+    if (hasMiniGameMarker && leakedMiniGameInCleaned) score -= 1_100;
+  }
+
+  return score;
+};
+
+export const parseAssistantResponseForAttachment = (responseText?: string | null): ParsedAssistantResponse => {
+  const rawSource = (responseText || '').toString();
+  const variants = collectSourceVariants(rawSource);
+  if (variants.length === 0) return { cleanedText: '' };
+
+  const parsedByVariant = variants.map((variant, variantIndex) => ({
+    variantIndex,
+    variant,
+    parsed: parseAttachmentFromSingleSource(variant.source),
+  }));
+
+  const attachmentParses = parsedByVariant.filter((entry) => Boolean(entry.parsed.attachment));
+  if (attachmentParses.length === 0) {
+    return parsedByVariant[0].parsed;
+  }
+
+  attachmentParses.sort((a, b) => {
+    const scoreDiff = scoreAttachmentParse(b.parsed) - scoreAttachmentParse(a.parsed);
+    if (scoreDiff !== 0) return scoreDiff;
+    return a.variantIndex - b.variantIndex;
+  });
+
+  return attachmentParses[0].parsed;
 };

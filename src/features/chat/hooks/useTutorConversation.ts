@@ -205,7 +205,6 @@ export interface UseTutorConversationReturn {
   parseGeminiResponse: (responseText: string | undefined) => Array<{ target: string; native: string }>;
   
   // Utilities
-  stripBracketedContent: (input: string | undefined | null) => string;
   resolveBookmarkContextSummary: () => string | null;
   ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, MediaPayloadOverride>>;
   computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
@@ -353,13 +352,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const handler = () => { invalidateMaestroAvatarCache(); };
     window.addEventListener('maestro-avatar-updated', handler);
     return () => window.removeEventListener('maestro-avatar-updated', handler);
-  }, []);
-
-  // Utility functions
-  const stripBracketedContent = useCallback((input: string | undefined | null): string => {
-    if (typeof input !== 'string') return '';
-    const without = input.replace(/\[[^\]]*\]/g, ' ');
-    return without.replace(/\s+/g, ' ').trim();
   }, []);
 
   const parseGeminiResponse = useCallback((responseText: string | undefined): Array<{ target: string; native: string }> => {
@@ -875,8 +867,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   ]);
 
   const handleCreateSuggestion = useCallback(async (textToTranslate: string) => {
-    const sanitized = stripBracketedContent(textToTranslate);
-    if (!sanitized || !selectedLanguagePairRef.current) return;
+
+    if (!textToTranslate || !selectedLanguagePairRef.current) return;
 
     // Add token for creating suggestion
     createSuggestionTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.CREATE_SUGGESTION);
@@ -900,11 +892,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     try {
-      const { translatedText, usageMetadata } = await translateText(sanitized, fromLangName, toLangName);
+      const { translatedText, usageMetadata } = await translateText(textToTranslate, fromLangName, toLangName);
       trackTokenUsage(getGeminiModels().text.translation, usageMetadata);
       const newSuggestion: ReplySuggestion = {
-        target: originalTextIsTarget ? sanitized : translatedText,
-        native: originalTextIsTarget ? translatedText : sanitized,
+        target: originalTextIsTarget ? textToTranslate : translatedText,
+        native: originalTextIsTarget ? translatedText : textToTranslate,
       };
 
       const isDuplicate = (s: ReplySuggestion) => s.target === newSuggestion.target && s.native === newSuggestion.native;
@@ -945,7 +937,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         handleToggleSuggestionModeRef.current(false);
       }
     }
-  }, [addMessage, t, stripBracketedContent, selectedLanguagePairRef, settingsRef, lastFetchedSuggestionsForRef, messagesRef, setMessages, setReplySuggestions, handleToggleSuggestionModeRef, addActivityToken, removeActivityToken]);
+  }, [addMessage, t, selectedLanguagePairRef, settingsRef, lastFetchedSuggestionsForRef, messagesRef, setMessages, setReplySuggestions, handleToggleSuggestionModeRef, addActivityToken, removeActivityToken]);
 
   const handleSuggestionInteraction = useCallback((suggestion: ReplySuggestion, langType: 'target' | 'native') => {
     if (!selectedLanguagePairRef.current) return;
@@ -982,7 +974,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   }, [t, setSendPrep]);
 
   const createUserMessage = useCallback(async (params: {
-    sanitizedText: string;
+    text: string;
     passedImageBase64?: string;
     passedImageMimeType?: string;
     messageType: 'user' | 'conversational-reengagement' | 'image-reengagement';
@@ -990,7 +982,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     currentSettingsVal: AppSettings;
   }) => {
     let userMessageId: string | null = null;
-    let userMessageText = params.sanitizedText;
+    let userMessageText = params.text;
     let recordedSpeechForMessage: RecordedUtterance | null = null;
     let userImageToProcessBase64: string | undefined = (typeof params.passedImageBase64 === 'string' && params.passedImageBase64)
       ? params.passedImageBase64
@@ -1496,8 +1488,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     messageType: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user'
   ): Promise<boolean> => {
     if (isLoadingHistoryRef.current) return false;
-    const sanitizedText = stripBracketedContent(text);
-    if (!sanitizedText && !passedImageBase64 && messageType === 'user') return false;
+    if (!text && !passedImageBase64 && messageType === 'user') return false;
     if (!selectedLanguagePairRef.current) {
       console.error("No language pair selected, cannot send message.");
       addMessage({ role: 'error', text: t('error.noLanguagePair') });
@@ -1536,7 +1527,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const currentSettingsVal = settingsRef.current;
     const shouldGenerateUserImage = currentSettingsVal.selectedCameraId === IMAGE_GEN_CAMERA_ID;
     const userMessageContext = await createUserMessage({
-      sanitizedText,
+      text,
       passedImageBase64,
       passedImageMimeType,
       messageType,
@@ -1833,7 +1824,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
       if (messageType === 'user') {
         setAttachedImage(null, null);
-        if (sanitizedText === stripBracketedContent(transcript || '') && (transcript || '').length > 0) {
+        if (text === (transcript || '') && (transcript || '').length > 0) {
           clearTranscript();
         }
       }
@@ -1966,7 +1957,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     runUserImageGeneration,
     runAssistantImageGeneration,
     requestReplySuggestions,
-    stripBracketedContent,
     speakMessage,
     isSpeechSynthesisSupported,
     isListening,
@@ -2014,7 +2004,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     setMaestroActivityStage,
     
     parseGeminiResponse,
-    stripBracketedContent,
     resolveBookmarkContextSummary,
     ensureUrisForHistoryForSend,
     computeHistorySubsetForMedia,
