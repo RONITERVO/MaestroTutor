@@ -398,6 +398,9 @@ export const isRunnableMiniGameAttachment = (candidate: MiniGameAttachmentCandid
     return hasGameplayHint && BROWSER_SCRIPT_HINT.test(source);
   }
 
+  // Allow any HTML document with markup to render (not just interactive games).
+  if (kind === 'html' && HTML_MARKUP_HINT.test(source)) return true;
+
   return hasGameplayHint && (HTML_MARKUP_HINT.test(source) || /<script\b/i.test(source));
 };
 
