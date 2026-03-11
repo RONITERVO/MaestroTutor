@@ -80,6 +80,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isAssistant = message.role === 'assistant';
   const isError = message.role === 'error';
   const isStatus = message.role === 'status';
+  const isAttachmentLoading = Boolean(message.isGeneratingImage || message.isLoadingArtifact);
   
   const [remainingTimeDisplay, setRemainingTimeDisplay] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -605,14 +606,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     isTextLikeAttachment(displayMime, message.attachmentName);
   const hasAttachmentSource = !!displayUrl || !!message.uploadedFileUri;
 
-  const isImageSuccessfullyDisplayed = isAttachmentAnImage && displayUrl && !message.isGeneratingImage && !message.imageGenError;
-  const isVideoSuccessfullyDisplayed = isAttachmentAVideo && displayUrl;
-  const isAudioSuccessfullyDisplayed = isAttachmentAAudio && displayUrl && !message.isGeneratingImage && !message.imageGenError;
-  const isPdfSuccessfullyDisplayed = isAttachmentAPdf && displayUrl && !message.isGeneratingImage && !message.imageGenError;
-  const isOfficeFileSuccessfullyDisplayed = isAttachmentAOffice && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
-  const isTextFileSuccessfullyDisplayed = isAttachmentAText && !!displayUrl && !message.isGeneratingImage && !message.imageGenError;
-  const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && !!message.uploadedFileUri && !message.isGeneratingImage && !message.imageGenError;
-  const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAOffice && !isAttachmentAText && hasAttachmentSource && !message.isGeneratingImage && !message.imageGenError;
+  const isImageSuccessfullyDisplayed = isAttachmentAnImage && displayUrl && !isAttachmentLoading && !message.imageGenError;
+  const isVideoSuccessfullyDisplayed = isAttachmentAVideo && displayUrl && !isAttachmentLoading;
+  const isAudioSuccessfullyDisplayed = isAttachmentAAudio && displayUrl && !isAttachmentLoading && !message.imageGenError;
+  const isPdfSuccessfullyDisplayed = isAttachmentAPdf && displayUrl && !isAttachmentLoading && !message.imageGenError;
+  const isOfficeFileSuccessfullyDisplayed = isAttachmentAOffice && hasAttachmentSource && !isAttachmentLoading && !message.imageGenError;
+  const isTextFileSuccessfullyDisplayed = isAttachmentAText && !!displayUrl && !isAttachmentLoading && !message.imageGenError;
+  const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && !!message.uploadedFileUri && !isAttachmentLoading && !message.imageGenError;
+  const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAOffice && !isAttachmentAText && hasAttachmentSource && !isAttachmentLoading && !message.imageGenError;
   const isScrollableFileAttachment = isTextFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileRemoteOnly;
   const svgSourceCode = useMemo(() => {
     if (!isAttachmentSvg || !displayUrl) return null;
@@ -621,8 +622,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
-    if (!message.isGeneratingImage || source.length === 0) return null;
-    const seedStr = `${message.id || ''}|${message.imageGenerationStartTime || 0}`;
+    if (!isAttachmentLoading || source.length === 0) return null;
+    const seedStr = `${message.id || ''}|${message.imageGenerationStartTime || message.artifactLoadStartTime || 0}`;
     let h = 0;
     for (let i = 0; i < seedStr.length; i++) {
       h = ((h << 5) - h) + seedStr.charCodeAt(i);
@@ -630,13 +631,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     }
     const idx = Math.abs(h) % source.length;
     return source[idx];
-  }, [message.id, message.imageGenerationStartTime, message.isGeneratingImage, loadingAnimations]);
+  }, [isAttachmentLoading, loadingAnimations, message.artifactLoadStartTime, message.id, message.imageGenerationStartTime]);
 
   const [loadingAnimationError, setLoadingAnimationError] = useState(false);
 
   useEffect(() => {
     setLoadingAnimationError(false);
-  }, [selectedLoadingAnimation, message.id, message.isGeneratingImage]);
+  }, [isAttachmentLoading, message.id, selectedLoadingAnimation]);
 
   useEffect(() => {
     setShowSvgCodeView(false);
@@ -645,8 +646,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
 
-  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || message.isGeneratingImage || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
-  const hasVisibleAttachment = message.isGeneratingImage || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
+  const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || isAttachmentLoading || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const hasVisibleAttachment = isAttachmentLoading || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !isAudioSuccessfullyDisplayed;
   const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment;
   const shouldInsetScrollableAttachmentForOverlay = shouldUseScrollableTextOverlay && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
@@ -702,7 +703,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   // When new trace lines arrive, they seamlessly extend the ticker stream
   useEffect(() => {
-    if (!message.thinking || message.isGeneratingImage) return; // only for thinking state
+    if (!message.thinking || isAttachmentLoading) return; // only for thinking state
     // If we have streamed response text, stop the ticker animation - the draft text
     // is displayed via its own mechanism
     if (thinkingDraftCondensed) {
@@ -758,7 +759,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         tickerRafRef.current = null;
       }
     };
-  }, [message.thinking, message.isGeneratingImage, thinkingTickerText, thinkingDraftCondensed]);
+  }, [isAttachmentLoading, message.thinking, thinkingDraftCondensed, thinkingTickerText]);
 
   // Phase label for the upper line
   const thinkingPhaseLabel = message.thinkingPhase || t('chat.thinking');
@@ -800,7 +801,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     };
   }, [shouldUseScrollableTextOverlay, message.text, message.rawAssistantResponse, message.translations]);
 
-  if (message.thinking && !message.isGeneratingImage) {
+  if (message.thinking && !isAttachmentLoading) {
     return (
       <div className="flex justify-start mb-4">
         <div className="relative max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]" style={{ width: '100%' }}>
@@ -840,7 +841,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   let tapeWrapperMaxWidth = '';
    if (applyFocusedImageStyles) {
       bubbleWrapperClasses += " w-full overflow-hidden";
-      if (!isImageSuccessfullyDisplayed && !message.isGeneratingImage && !isFileSuccessfullyDisplayed && !isOfficeFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isTextFileRemoteOnly && !isVideoSuccessfullyDisplayed) {
+      if (!isImageSuccessfullyDisplayed && !isAttachmentLoading && !isFileSuccessfullyDisplayed && !isOfficeFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isTextFileRemoteOnly && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
            if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
            else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
@@ -863,7 +864,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   if (applyFocusedImageStyles) {
       imageContainerSizeClasses = "w-full max-h-[75vh]"; 
-      if (message.isGeneratingImage || isFileSuccessfullyDisplayed) {
+      if (isAttachmentLoading || isFileSuccessfullyDisplayed) {
           imageContainerAspectClasses = "aspect-square"; 
       } else if (isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed) {
           if (isAnnotationActive) {
@@ -881,7 +882,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       }
   }
   
-  const imageContainerDynamicBg = message.isGeneratingImage ? 
+  const imageContainerDynamicBg = isAttachmentLoading ? 
       (applyFocusedImageStyles ? (isUser ? 'bg-user-msg-bg/40' : 'bg-ai-msg-placeholder/50') : (isUser ? 'bg-user-msg-bg/30' : 'bg-status-msg-bg/50')) 
       : '';
 
@@ -933,7 +934,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   onPointerCancel={isAnnotationActive ? handleModalPointerUp : undefined}
                   onWheel={isAnnotationActive ? handleAnnotationAreaWheel : undefined}
                 >
-                  {message.isGeneratingImage && (
+                  {isAttachmentLoading && (
                       <div className="absolute top-2 right-2 flex flex-col items-end z-20">
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-black/30 drop-shadow-md flex items-center justify-center">
                           {selectedLoadingAnimation && !loadingAnimationError ? (
@@ -1224,7 +1225,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
               </div>
           )}
           
-          {message.imageGenError && !message.isGeneratingImage && (
+          {message.imageGenError && !isAttachmentLoading && (
                <div className={`flex flex-col items-center justify-center p-2 rounded-lg 
                   ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-user-msg-bg/60' : 'bg-status-msg-bg/60'}`}
                `}>
@@ -1479,7 +1480,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        )}
                      </div>
                    )}
-                   {isAssistant && !message.translations?.length && !message.rawAssistantResponse && !message.imageUrl && !message.isGeneratingImage && message.text && (
+                   {isAssistant && !message.translations?.length && !message.rawAssistantResponse && !message.imageUrl && !isAttachmentLoading && message.text && (
                      <p className={`whitespace-pre-wrap ${applyFocusedImageStyles ? 'text-white' : 'text-ai-msg-text'}`} style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>{message.text}</p>
                    )}
                </>

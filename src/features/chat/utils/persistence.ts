@@ -111,6 +111,10 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
     out.rawAssistantResponse = out.rawAssistantResponse.slice(0, 200_000);
   }
 
+  if (typeof out.llmRawResponse === 'string' && out.llmRawResponse.length > 250_000) {
+    out.llmRawResponse = out.llmRawResponse.slice(0, 250_000);
+  }
+
   if (Array.isArray(out.ttsAudioCache)) {
     const sanitizedCache = sanitizeTtsCache(out.ttsAudioCache);
     if (sanitizedCache && sanitizedCache.length) {

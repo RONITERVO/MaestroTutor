@@ -14,6 +14,8 @@ export interface ChatMessage {
     native: string; 
   }>;
   rawAssistantResponse?: string;
+  /** Full raw LLM output before local artifact parsing. */
+  llmRawResponse?: string;
   chatSummary?: string;
   replySuggestions?: ReplySuggestion[];
   ttsAudioCache?: TtsAudioCacheEntry[];
@@ -39,6 +41,8 @@ export interface ChatMessage {
   isGeneratingImage?: boolean;
   imageGenError?: string | null;
   imageGenerationStartTime?: number;
+  isLoadingArtifact?: boolean;
+  artifactLoadStartTime?: number;
   tempSelectedNativeLangCode?: string;
   tempSelectedTargetLangCode?: string;
   /** Optional action hint for error messages (e.g. 'quota') to render contextual action buttons */
