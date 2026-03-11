@@ -23,7 +23,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   bottomInset = 0,
 }) => {
   const [showCode, setShowCode] = useState(false);
-  const [controlsExpanded, setControlsExpanded] = useState(false);
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
   const [reloadToken, setReloadToken] = useState(0);
@@ -103,6 +102,9 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const padBtnBg = isUser ? 'bg-user-msg-bg/50 hover:bg-user-msg-bg/65' : 'bg-ai-msg-bg/55 hover:bg-ai-msg-bg/70';
   const statusBubbleBg = runtimeState === 'error' ? 'bg-red-900/80' : 'bg-black/70';
   const effectiveBottomInset = Math.max(0, Math.round(bottomInset));
+  const controlsUnderOverlay = effectiveBottomInset > 0;
+  const controlsBottomOffset = controlsUnderOverlay ? -effectiveBottomInset : 0;
+  const controlsBasePaddingBottom = 16;
 
   return (
     <div
@@ -138,60 +140,147 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
         {/* Controls: outside overflow-hidden so the bottom peek is always visible */}
         <div
-          className="absolute left-2 right-2 z-20 pointer-events-none"
-          style={{ bottom: '0' }}
+          className={`absolute left-2 right-2 pointer-events-none ${controlsUnderOverlay ? 'z-0' : 'z-20'}`}
+          style={{ bottom: `${controlsBottomOffset}px` }}
         >
-          {controlsExpanded ? (
+          <div
+            className={`relative w-full overflow-hidden rounded-[28px] ${controlsUnderOverlay ? 'pointer-events-none' : 'pointer-events-auto'}`}
+            style={{
+              border: '2px solid hsl(var(--pencil-stroke) / 0.28)',
+              background: 'linear-gradient(180deg, hsl(var(--ai-msg-bg)) 0%, hsl(var(--ai-file-bg)) 100%)',
+              boxShadow: '0 14px 30px hsl(var(--sketch-shadow) / 0.2), inset 0 1px 0 hsl(var(--paper-surface) / 0.55)',
+            }}
+            aria-hidden={controlsUnderOverlay || undefined}
+          >
             <div
-              className={`w-full rounded-xl border ${lineColor} ${containerBg} px-3 py-1.5 backdrop-blur-sm pointer-events-auto`}
+              className="absolute inset-x-0 top-0"
+              style={{
+                height: '34px',
+                background: 'linear-gradient(180deg, hsl(var(--paper-surface) / 0.42), transparent)',
+              }}
+            />
+            <div
+              className="relative px-5 pt-3"
+              style={{ paddingBottom: `${controlsBasePaddingBottom + effectiveBottomInset}px` }}
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <p className={`text-[10px] uppercase tracking-[0.18em] whitespace-nowrap ${subtleText}`}>Tap Gamepad</p>
-                  <button
-                    type="button"
-                    onClick={() => setControlsExpanded(false)}
-                    className={`inline-flex items-center justify-center rounded-full border ${lineColor} w-6 h-6 shrink-0 ${textColor} ${padBtnBg}`}
-                    aria-label="Collapse gamepad controls"
-                    title="Collapse controls"
-                  >
-                    <span className="text-[10px] leading-none">v</span>
-                  </button>
+              <div className="px-4 pb-1.5 flex items-center justify-center select-none">
+                <span
+                  className="text-[10px] uppercase tracking-[0.25em] font-bold"
+                  style={{
+                    color: 'hsl(var(--sketch-line))',
+                    fontFamily: "'Patrick Hand', cursive",
+                  }}
+                >
+                  MAESTRO
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between px-2 mb-4">
+                <div className="relative" style={{ width: '52px', height: '52px' }}>
+                  <div
+                    className="absolute top-1/2 left-0 w-full"
+                    style={{
+                      height: '16px',
+                      transform: 'translateY(-50%)',
+                      borderRadius: '2px',
+                      backgroundColor: 'hsl(var(--sketch-line) / 0.2)',
+                      border: '1px solid hsl(var(--sketch-line) / 0.15)',
+                    }}
+                  />
+                  <div
+                    className="absolute left-1/2 top-0 h-full"
+                    style={{
+                      width: '16px',
+                      transform: 'translateX(-50%)',
+                      borderRadius: '2px',
+                      backgroundColor: 'hsl(var(--sketch-line) / 0.2)',
+                      border: '1px solid hsl(var(--sketch-line) / 0.15)',
+                    }}
+                  />
+                  <div
+                    className="absolute top-1/2 left-1/2 rounded-full"
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      transform: 'translate(-50%, -50%)',
+                      backgroundColor: 'hsl(var(--sketch-line) / 0.35)',
+                    }}
+                  />
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleReload}
-                    className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] whitespace-nowrap ${textColor} ${padBtnBg}`}
-                  >
-                    <IconUndo className="w-3 h-3 shrink-0" />
-                    <span className="whitespace-nowrap">Restart</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCode((prev) => !prev)}
-                    className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2 py-1 text-[11px] whitespace-nowrap ${textColor} ${padBtnBg}`}
-                  >
-                    <IconTerminal className="w-3 h-3 shrink-0" />
-                    <span className="whitespace-nowrap">{showCode ? 'Hide code' : 'Show code'}</span>
-                  </button>
+
+                <div
+                  className="flex items-center gap-3"
+                  style={{ transform: 'rotate(-20deg)' }}
+                >
+                  <div className="flex flex-col items-center gap-0.5">
+                    <div
+                      className="rounded-full"
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)',
+                        border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)',
+                        boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)',
+                      }}
+                    />
+                    <span
+                      className="text-[8px] font-bold select-none"
+                      style={{
+                        color: 'hsl(var(--sketch-line) / 0.6)',
+                        fontFamily: "'Patrick Hand', cursive",
+                      }}
+                    >
+                      B
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5" style={{ marginTop: '-8px' }}>
+                    <div
+                      className="rounded-full"
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)',
+                        border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)',
+                        boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)',
+                      }}
+                    />
+                    <span
+                      className="text-[8px] font-bold select-none"
+                      style={{
+                        color: 'hsl(var(--sketch-line) / 0.6)',
+                        fontFamily: "'Patrick Hand', cursive",
+                      }}
+                    >
+                      A
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              <div className="flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={handleReload}
+                  disabled={controlsUnderOverlay}
+                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2.5 py-0.5 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg} ${controlsUnderOverlay ? 'opacity-80' : ''}`}
+                  title="Restart"
+                >
+                  <IconUndo className="w-2.5 h-2.5 shrink-0" />
+                  <span>restart</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCode((prev) => !prev)}
+                  disabled={controlsUnderOverlay}
+                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2.5 py-0.5 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg} ${controlsUnderOverlay ? 'opacity-80' : ''}`}
+                  title={showCode ? 'Hide code' : 'Show code'}
+                >
+                  <IconTerminal className="w-2.5 h-2.5 shrink-0" />
+                  <span>{showCode ? 'hide code' : 'show code'}</span>
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={() => setControlsExpanded(true)}
-                className={`pointer-events-auto inline-flex items-center justify-center rounded-full border ${lineColor} w-9 h-6 ${textColor} ${padBtnBg} backdrop-blur-sm shadow-[0_4px_12px_rgba(2,6,23,0.25)]`}
-                aria-label="Expand gamepad controls"
-                aria-expanded={false}
-                title="Expand controls"
-              >
-                <span className="text-[10px] leading-none">^</span>
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 

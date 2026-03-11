@@ -146,7 +146,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
             'linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0) 75%, rgba(0,0,0,0) 100%)',
           height: '33cqw',
           // @ts-ignore
-          containerType: 'inline-size'
+          containerType: 'inline-size',
         }}
         aria-label={t('chat.maestroTranscriptScrollwheel')}
       >
