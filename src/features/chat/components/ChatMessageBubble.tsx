@@ -1242,7 +1242,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                     ? `absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10`
                     : 'relative z-10 mt-1'
                 }
-                ${shouldUseScrollableTextOverlay ? 'pointer-events-auto' : ''}
+                ${shouldUseScrollableTextOverlay ? 'pointer-events-none' : ''}
                 ${isAnnotationActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}
             style={textOverlayScrollStyle}

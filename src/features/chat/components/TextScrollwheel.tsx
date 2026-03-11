@@ -138,12 +138,15 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="overflow-y-auto relative scrollbar-hide"
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        className="overflow-y-auto relative scrollbar-hide pointer-events-none"
         style={{
           WebkitMaskImage:
             'linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0) 75%, rgba(0,0,0,0) 100%)',
           maskImage:
             'linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0) 75%, rgba(0,0,0,0) 100%)',
+          clipPath: 'inset(25% 0 0 0)',
           height: '33cqw',
           // @ts-ignore
           containerType: 'inline-size',
@@ -182,11 +185,12 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                 <div 
                   key={index} 
                   ref={el => { itemRefs.current[index] = el; }} 
-                  className={`text-center p-1 w-full transition-all duration-300 transform-gpu cursor-pointer ${ index === activeIndex ? 'opacity-100 scale-105' : 'opacity-70 scale-100'}`}
+                  className={`text-center p-1 w-full transition-all duration-300 transform-gpu cursor-pointer pointer-events-auto ${ index === activeIndex ? 'opacity-100 scale-105' : 'opacity-70 scale-100'}`}
                   onPointerDown={handleLinePointerDown}
                   onPointerUp={(e) => handleLinePointerUp(e, line, index)}
                   onPointerLeave={handlePointerLeave}
                   onContextMenu={(e) => e.preventDefault()}
+                  style={{ touchAction: 'pan-y' }}
                 > 
                   <p 
                     className={`${line.type === 'target' ? 'font-semibold text-white' : 'italic text-white/50'} pointer-events-none`}
