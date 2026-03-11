@@ -96,6 +96,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
+  const bubbleSurfaceBg = isUser ? 'bg-user-msg-bg/95' : 'bg-ai-msg-bg/95';
   const textColor = isUser ? 'text-user-msg-text' : 'text-ai-file-text';
   const subtleText = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text/70';
   const lineColor = isUser ? 'border-user-msg-text/25' : 'border-ai-file-text/25';
@@ -103,21 +104,25 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const statusBubbleBg = runtimeState === 'error' ? 'bg-red-900/80' : 'bg-black/70';
   const effectiveBottomInset = Math.max(0, Math.round(bottomInset));
   const controlsUnderOverlay = effectiveBottomInset > 0;
-  const controlsBottomOffset = controlsUnderOverlay ? -effectiveBottomInset : 0;
-  const overlayShellHeight = effectiveBottomInset + 52;
-  const overlayButtonRowTop = 14;
-  const overlayControlAccentBottom = Math.max(10, Math.min(effectiveBottomInset - 12, 26));
+  const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
+  const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
+  const focusedAccentBottom = Math.max(14, Math.min(Math.round(focusedShellHeight * 0.28), 28));
+  const shellBackground = isUser
+    ? 'linear-gradient(180deg, hsl(var(--user-msg-bg) / 0.95) 0%, hsl(var(--user-msg-bg) / 0.88) 100%)'
+    : 'linear-gradient(180deg, hsl(var(--ai-msg-bg)) 0%, hsl(var(--ai-msg-bg) / 0.94) 100%)';
+  const shellHighlight = isUser
+    ? 'linear-gradient(180deg, hsl(var(--user-msg-text) / 0.08), transparent)'
+    : 'linear-gradient(180deg, hsl(var(--paper-surface) / 0.45), transparent)';
+
+  const actionButtonClass = 'p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors';
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full flex flex-col items-center"
-      style={effectiveBottomInset > 0 ? { paddingBottom: `${effectiveBottomInset}px` } : undefined}
-    >
-      {/* Wrapper: pb-2 gives room for the 8px peek below the game frame */}
-      <div className="relative w-full max-w-[560px]" style={{ paddingBottom: '8px' }}>
+    <div ref={containerRef} className="w-full flex flex-col items-center">
+      <div className="relative w-full max-w-[560px]" style={{ paddingBottom: `${wrapperBottomPadding}px` }}>
+
+        {/* GAME SCREEN */}
         <div
-          className={`relative w-full min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)]`}
+          className={`relative w-full min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)] ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
           style={{ height: 'min(62vh, 480px)' }}
         >
           {isNearViewport ? (
@@ -138,170 +143,135 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               {runtimeState === 'error' ? `Mini-game error: ${runtimeError}` : 'Launching mini-game...'}
             </div>
           )}
-        </div>
 
-        {/* Controls: outside overflow-hidden so the bottom peek is always visible */}
-        <div
-          className={`absolute left-2 right-2 pointer-events-none ${controlsUnderOverlay ? 'z-0' : 'z-20'}`}
-          style={{ bottom: `${controlsBottomOffset}px` }}
-        >
-          {controlsUnderOverlay ? (
-            <div
-              className="relative w-full overflow-hidden rounded-[28px] pointer-events-none"
-              style={{
-                height: `${overlayShellHeight}px`,
-                border: '2px solid hsl(var(--pencil-stroke) / 0.28)',
-                background: 'linear-gradient(180deg, hsl(var(--ai-msg-bg)) 0%, hsl(var(--ai-file-bg)) 100%)',
-                boxShadow: '0 14px 30px hsl(var(--sketch-shadow) / 0.2), inset 0 1px 0 hsl(var(--paper-surface) / 0.55)',
-              }}
-            >
-              <div
-                className="absolute inset-x-0 top-0"
-                style={{
-                  height: '30px',
-                  background: 'linear-gradient(180deg, hsl(var(--paper-surface) / 0.42), transparent)',
-                }}
-              />
-              <div
-                className="absolute left-1/2 z-30 flex -translate-x-1/2 items-center justify-center gap-4 pointer-events-auto"
-                style={{ top: `${overlayButtonRowTop}px` }}
+          {controlsUnderOverlay && (
+            <div className="absolute top-2 right-2 z-30 flex flex-col gap-2 pointer-events-auto">
+              <button
+                type="button"
+                onClick={handleReload}
+                className={actionButtonClass}
+                title="Restart"
+                aria-label="Restart mini-game"
               >
-                <button
-                  type="button"
-                  onClick={handleReload}
-                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2.5 py-0.5 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}
-                  title="Restart"
-                >
-                  <IconUndo className="w-2.5 h-2.5 shrink-0" />
-                  <span>restart</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCode((prev) => !prev)}
-                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2.5 py-0.5 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}
-                  title={showCode ? 'Hide code' : 'Show code'}
-                >
-                  <IconTerminal className="w-2.5 h-2.5 shrink-0" />
-                  <span>{showCode ? 'hide code' : 'show code'}</span>
-                </button>
-              </div>
-
-              <div
-                className="absolute left-6 right-6 flex items-end justify-between"
-                style={{ bottom: `${overlayControlAccentBottom}px` }}
-                aria-hidden
+                <IconUndo className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCode((prev) => !prev)}
+                className={actionButtonClass}
+                title={showCode ? 'Hide code' : 'Show code'}
+                aria-label={showCode ? 'Hide mini-game code' : 'Show mini-game code'}
               >
-                <div className="relative" style={{ width: '52px', height: '52px', opacity: 0.72 }}>
-                  <div
-                    className="absolute top-1/2 left-0 w-full"
-                    style={{
-                      height: '16px',
-                      transform: 'translateY(-50%)',
-                      borderRadius: '2px',
-                      backgroundColor: 'hsl(var(--sketch-line) / 0.2)',
-                      border: '1px solid hsl(var(--sketch-line) / 0.15)',
-                    }}
-                  />
-                  <div
-                    className="absolute left-1/2 top-0 h-full"
-                    style={{
-                      width: '16px',
-                      transform: 'translateX(-50%)',
-                      borderRadius: '2px',
-                      backgroundColor: 'hsl(var(--sketch-line) / 0.2)',
-                      border: '1px solid hsl(var(--sketch-line) / 0.15)',
-                    }}
-                  />
-                  <div
-                    className="absolute top-1/2 left-1/2 rounded-full"
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      transform: 'translate(-50%, -50%)',
-                      backgroundColor: 'hsl(var(--sketch-line) / 0.35)',
-                    }}
-                  />
-                </div>
-
-                <div
-                  className="flex items-center gap-3"
-                  style={{ transform: 'rotate(-20deg)', opacity: 0.75 }}
-                >
-                  <div className="flex flex-col items-center gap-0.5">
-                    <div
-                      className="rounded-full"
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)',
-                        border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)',
-                        boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)',
-                      }}
-                    />
-                    <span
-                      className="text-[8px] font-bold select-none"
-                      style={{
-                        color: 'hsl(var(--sketch-line) / 0.6)',
-                        fontFamily: "'Patrick Hand', cursive",
-                      }}
-                    >
-                      B
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center gap-0.5" style={{ marginTop: '-8px' }}>
-                    <div
-                      className="rounded-full"
-                      style={{
-                        width: '28px',
-                        height: '28px',
-                        backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)',
-                        border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)',
-                        boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)',
-                      }}
-                    />
-                    <span
-                      className="text-[8px] font-bold select-none"
-                      style={{
-                        color: 'hsl(var(--sketch-line) / 0.6)',
-                        fontFamily: "'Patrick Hand', cursive",
-                      }}
-                    >
-                      A
-                    </span>
-                  </div>
-                </div>
-              </div>
+                <IconTerminal className="w-4 h-4" />
+              </button>
             </div>
-          ) : (
-            <div
-              className={`w-full rounded-xl border ${lineColor} ${containerBg} px-3 py-1.5 backdrop-blur-sm pointer-events-auto`}
-            >
-              <div className="flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  onClick={handleReload}
-                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2.5 py-0.5 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}
-                  title="Restart"
-                >
-                  <IconUndo className="w-2.5 h-2.5 shrink-0" />
-                  <span>restart</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCode((prev) => !prev)}
-                  className={`inline-flex items-center gap-1 rounded-full border ${lineColor} px-2.5 py-0.5 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}
-                  title={showCode ? 'Hide code' : 'Show code'}
-                >
-                  <IconTerminal className="w-2.5 h-2.5 shrink-0" />
-                  <span>{showCode ? 'hide code' : 'show code'}</span>
-                </button>
+          )}
+
+          {controlsUnderOverlay && showCode && (
+            <div className={`absolute inset-2 z-20 rounded-xl border ${lineColor} ${bubbleSurfaceBg} overflow-hidden shadow-[0_12px_28px_rgba(2,6,23,0.28)] backdrop-blur-sm`}>
+              <div className={`px-3 py-1.5 pr-12 text-[11px] font-mono truncate border-b ${lineColor} ${textColor}`}>
+                {fileName || mimeType || 'mini-game source'}
+              </div>
+              <div
+                className="max-h-full overflow-auto"
+                style={{ height: 'calc(100% - 32px)', overscrollBehavior: 'contain', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' as any }}
+              >
+                <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
+                  {sourceCode}
+                </pre>
               </div>
             </div>
           )}
         </div>
+
+        {/* Controls: outside overflow-hidden so the bottom peek is always visible */}
+        {controlsUnderOverlay ? (
+          <div
+            className="absolute left-2 right-2 z-0 pointer-events-none overflow-hidden rounded-[28px]"
+            style={{
+              bottom: '0',
+              height: `${focusedShellHeight}px`,
+              border: '2px solid hsl(var(--pencil-stroke) / 0.28)',
+              borderTop: 'none',
+              background: shellBackground,
+              boxShadow: '0 14px 30px hsl(var(--sketch-shadow) / 0.2), inset 0 1px 0 hsl(var(--paper-surface) / 0.55)',
+            }}
+            aria-hidden
+          >
+            <div
+              className="absolute inset-x-0 top-0"
+              style={{
+                height: '34px',
+                background: shellHighlight,
+              }}
+            />
+
+            <div className="absolute left-1/2 top-4 -translate-x-1/2">
+              <span
+                className="text-[10px] uppercase tracking-[0.22em] font-bold select-none"
+                style={{
+                  color: 'hsl(var(--sketch-line) / 0.7)',
+                  fontFamily: "'Patrick Hand', cursive",
+                }}
+              >
+                MAESTRO
+              </span>
+            </div>
+
+            <div
+              className="absolute left-6 right-6 flex items-end justify-between"
+              style={{ bottom: `${focusedAccentBottom}px` }}
+            >
+              <div className="relative shrink-0" style={{ width: '48px', height: '48px', opacity: 0.7 }}>
+                <div className="absolute top-1/2 left-0 w-full" style={{ height: '14px', transform: 'translateY(-50%)', borderRadius: '2px', backgroundColor: 'hsl(var(--sketch-line) / 0.2)', border: '1px solid hsl(var(--sketch-line) / 0.15)' }} />
+                <div className="absolute left-1/2 top-0 h-full" style={{ width: '14px', transform: 'translateX(-50%)', borderRadius: '2px', backgroundColor: 'hsl(var(--sketch-line) / 0.2)', border: '1px solid hsl(var(--sketch-line) / 0.15)' }} />
+                <div className="absolute top-1/2 left-1/2 rounded-full" style={{ width: '8px', height: '8px', transform: 'translate(-50%, -50%)', backgroundColor: 'hsl(var(--sketch-line) / 0.35)' }} />
+              </div>
+
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 opacity-45" style={{ bottom: '-2px' }}>
+                <div className="rounded-full" style={{ width: '28px', height: '8px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.16)', border: '1px solid hsl(var(--pencil-stroke) / 0.18)' }} />
+                <div className="rounded-full" style={{ width: '28px', height: '8px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.16)', border: '1px solid hsl(var(--pencil-stroke) / 0.18)' }} />
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0" style={{ transform: 'rotate(-20deg)', opacity: 0.74 }}>
+                <div className="flex flex-col items-center gap-0.5 mt-2">
+                  <div className="rounded-full" style={{ width: '26px', height: '26px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)', border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)', boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)' }} />
+                  <span className="text-[8px] font-bold select-none" style={{ color: 'hsl(var(--sketch-line) / 0.6)', fontFamily: "'Patrick Hand', cursive" }}>B</span>
+                </div>
+                <div className="flex flex-col items-center gap-0.5" style={{ marginTop: '-8px' }}>
+                  <div className="rounded-full" style={{ width: '26px', height: '26px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)', border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)', boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)' }} />
+                  <span className="text-[8px] font-bold select-none" style={{ color: 'hsl(var(--sketch-line) / 0.6)', fontFamily: "'Patrick Hand', cursive" }}>A</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full mt-3 flex justify-center z-10 pointer-events-auto">
+            <div className={`rounded-xl border ${lineColor} ${containerBg} px-4 py-2 backdrop-blur-sm pointer-events-auto shadow-sm flex items-center gap-4`}>
+              <button
+                type="button"
+                onClick={handleReload}
+                className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg} transition-transform active:scale-95`}
+                title="Restart"
+              >
+                <IconUndo className="w-3 h-3 shrink-0" />
+                <span className="font-semibold">Restart</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCode((prev) => !prev)}
+                className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg} transition-transform active:scale-95`}
+                title={showCode ? 'Hide code' : 'Show code'}
+              >
+                <IconTerminal className="w-3 h-3 shrink-0" />
+                <span className="font-semibold">{showCode ? 'Hide Code' : 'Show Code'}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {showCode && (
+      {!controlsUnderOverlay && showCode && (
         <div className={`mt-2 w-full max-w-[560px] rounded-xl border ${lineColor} ${containerBg} overflow-hidden`}>
           <div className={`px-3 py-1.5 text-[11px] font-mono truncate border-b ${lineColor} ${textColor}`}>
             {fileName || mimeType || 'mini-game source'}
