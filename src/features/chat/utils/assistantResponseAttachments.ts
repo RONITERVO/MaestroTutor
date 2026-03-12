@@ -7,6 +7,7 @@ interface AttachmentCandidate {
   end: number;
   priority: number;
   attachment: ParsedAssistantAttachment;
+  bodyLength: number;
 }
 
 export interface ParsedAssistantAttachment {
@@ -28,7 +29,63 @@ interface SourceVariant {
 
 const MAX_ATTACHMENT_TEXT_CHARS = 180_000;
 
-const FENCE_REGEX = /```([^\n`]*)\n?([\s\S]*?)```/g;
+interface FencedBlock {
+  start: number;
+  end: number;
+  info: string;
+  body: string;
+}
+
+const extractFencedBlocks = (source: string): FencedBlock[] => {
+  const blocks: FencedBlock[] = [];
+  const lines = source.split('\n');
+  let cursor = 0;
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const openMatch = /^(\s{0,3})(`{3,})([^\n`]*)$/.exec(line);
+    if (!openMatch) {
+      cursor += line.length + 1;
+      i++;
+      continue;
+    }
+
+    const fenceLen = openMatch[2].length;
+    const rawInfo = openMatch[3];
+    const blockStart = cursor;
+    const bodyLines: string[] = [];
+
+    cursor += line.length + 1;
+    i++;
+
+    let closed = false;
+    const closePattern = new RegExp('^\\s{0,3}`{' + fenceLen + ',}\\s*$');
+    while (i < lines.length) {
+      const bodyLine = lines[i];
+      if (closePattern.test(bodyLine)) {
+        cursor += bodyLine.length + 1;
+        i++;
+        closed = true;
+        break;
+      }
+      bodyLines.push(bodyLine);
+      cursor += bodyLine.length + 1;
+      i++;
+    }
+
+    const body = bodyLines.join('\n');
+    blocks.push({
+      start: blockStart,
+      end: closed ? cursor : source.length,
+      info: rawInfo,
+      body,
+    });
+  }
+
+  return blocks;
+};
+
 const INLINE_SVG_REGEX = /<svg[\s\S]*?<\/svg>/i;
 const STANDALONE_SVG_REGEX = /^\s*(?:<\?xml[\s\S]*?\?>\s*)?<svg[\s\S]*<\/svg>\s*$/i;
 const RAW_HTML_DOCUMENT_REGEX = /<!doctype\s+html|<html[\s>]|<body[\s>]|<head[\s>]|<\/html>/i;
@@ -386,7 +443,7 @@ const inferCodeExtension = (lang: string, fileNameHint?: string): string => {
   return fallback || 'txt';
 };
 
-const parseFenceInfo = (rawInfo: string): { lang: string; fileNameHint?: string } => {
+const parseFenceInfo = (rawInfo: string): { lang: string; fileNameHint?: string; descriptiveName?: string; inlineContent?: string } => {
   const info = (rawInfo || '').trim();
   if (!info) return { lang: '' };
 
@@ -395,14 +452,49 @@ const parseFenceInfo = (rawInfo: string): { lang: string; fileNameHint?: string 
 
   const tokens = info.split(/\s+/).filter(Boolean);
   const firstToken = (tokens[0] || '').replace(/^["'`]+|["'`,;:]+$/g, '');
-  const lang = (firstToken.includes('=') || firstToken.includes(':')) ? '' : firstToken.toLowerCase();
+
+  let lang = '';
+  let inlineContent: string | undefined;
+
+  if (firstToken.includes('=') || firstToken.includes(':')) {
+    lang = '';
+  } else {
+    const langBoundary = /^([a-z][a-z0-9_+#.-]*)/i.exec(firstToken);
+    if (langBoundary) {
+      lang = langBoundary[1].toLowerCase();
+      const remainder = firstToken.slice(langBoundary[1].length);
+      if (remainder) {
+        inlineContent = remainder;
+      }
+    } else {
+      lang = firstToken.toLowerCase();
+    }
+  }
+
   const tokenFileName = tokens
     .map((token) => token.replace(/^["'`]+|["'`,;:]+$/g, ''))
     .find((token) => token.includes('.') && !token.includes('='));
 
+  const fileNameHint = explicitFileName || tokenFileName;
+
+  const filenameMatchIndex = filenameMatch?.index ?? -1;
+  const descriptiveTokens = tokens.slice(1).filter((t) => {
+    const cleaned = t.replace(/^["'`]+|["'`,;:]+$/g, '');
+    if (cleaned === tokenFileName) return false;
+    if (/^(?:file(?:name)?|name)\s*[:=]/i.test(t)) return false;
+    if (filenameMatchIndex >= 0 && info.indexOf(t) >= filenameMatchIndex) return false;
+    return true;
+  });
+
+  const descriptiveName = descriptiveTokens.length > 0
+    ? descriptiveTokens.join(' ').replace(/[\\/:*?"<>|]/g, '').trim() || undefined
+    : undefined;
+
   return {
     lang,
-    fileNameHint: explicitFileName || tokenFileName,
+    fileNameHint,
+    descriptiveName,
+    inlineContent,
   };
 };
 
@@ -788,32 +880,70 @@ const stripRangeFromText = (source: string, start: number, end: number): string 
   return `${before}\n\n${after}`.replace(/\n{3,}/g, '\n\n').trim();
 };
 
+const computeCandidateScore = (
+  attachment: ParsedAssistantAttachment,
+  bodyLength: number,
+  positionIndex: number,
+  totalCandidates: number,
+): number => {
+  let score = 0;
+  switch (attachment.kind) {
+    case 'image': score = 500; break;
+    case 'chart': score = 400; break;
+    case 'svg':   score = 350; break;
+    case 'code':  score = 300; break;
+  }
+
+  score += Math.min(Math.log2(Math.max(bodyLength, 1)) * 25, 300);
+
+  if (totalCandidates > 1) {
+    score += (positionIndex / (totalCandidates - 1)) * 200;
+  }
+
+  if (attachment.kind === 'code') {
+    const ext = attachment.fileName.split('.').pop() || '';
+    if ((ext === 'html' || ext === 'htm') && bodyLength > 500) {
+      score += 150;
+    }
+  }
+
+  return score;
+};
+
 const parseAttachmentFromSingleSource = (source: string): ParsedAssistantResponse => {
   if (!source.trim()) return { cleanedText: '' };
 
   const candidates: AttachmentCandidate[] = [];
-  FENCE_REGEX.lastIndex = 0;
-  let match: RegExpExecArray | null;
-  while ((match = FENCE_REGEX.exec(source)) !== null) {
-    const rawInfo = match[1] || '';
-    const content = match[2] || '';
-    const { lang, fileNameHint } = parseFenceInfo(rawInfo);
-    const attachment = parseFenceAttachment(lang, content, fileNameHint);
+  const fencedBlocks = extractFencedBlocks(source);
+  for (const block of fencedBlocks) {
+    const { lang, fileNameHint, descriptiveName, inlineContent } = parseFenceInfo(block.info);
+    const effectiveBody = inlineContent ? inlineContent + '\n' + block.body : block.body;
+    const attachment = parseFenceAttachment(lang, effectiveBody, fileNameHint);
     if (!attachment) continue;
 
-    const priority = attachment.kind === 'svg'
-      ? 100
-      : attachment.kind === 'image'
-        ? 98
-      : attachment.kind === 'chart'
-        ? 90
-        : 70;
+    if (descriptiveName && !fileNameHint) {
+      const dotIdx = attachment.fileName.lastIndexOf('.');
+      const ext = dotIdx >= 0 ? attachment.fileName.slice(dotIdx) : '.txt';
+      attachment.fileName = sanitizeFileName(descriptiveName) + ext;
+    }
+
     candidates.push({
-      start: match.index,
-      end: match.index + match[0].length,
-      priority,
+      start: block.start,
+      end: block.end,
+      priority: 0,
       attachment,
+      bodyLength: effectiveBody.length,
     });
+  }
+
+  // Compute position-aware scores for fenced candidates
+  for (let c = 0; c < candidates.length; c++) {
+    candidates[c].priority = computeCandidateScore(
+      candidates[c].attachment,
+      candidates[c].bodyLength,
+      c,
+      candidates.length,
+    );
   }
 
   if (candidates.length === 0) {
@@ -840,6 +970,7 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
           end: miniGameHtml.end,
           priority: 92,
           attachment,
+          bodyLength: miniGameHtml.html.length,
         });
       }
     }
@@ -859,6 +990,7 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
           end: rawMatch.index + rawMatch[0].length,
           priority: 94,
           attachment,
+          bodyLength: rawMatch[0].length,
         });
       }
     }
@@ -874,6 +1006,7 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
           end: inlineSvg.index + inlineSvg[0].length,
           priority: 95,
           attachment,
+          bodyLength: inlineSvg[0].length,
         });
       }
     }

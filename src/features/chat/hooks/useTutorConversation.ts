@@ -29,9 +29,8 @@ import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../
 import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../session';
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
-import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
 import { getOfficePreview } from '../utils/officePreview';
-import { isGoogleWorkspaceShortcutMimeType, isMicrosoftOfficeMimeType } from '../utils/fileAttachments';
+import { isGoogleWorkspaceShortcutMimeType, isMicrosoftOfficeMimeType, normalizeAttachmentMimeType } from '../utils/fileAttachments';
 import { 
   IMAGE_GEN_CAMERA_ID,
   MAX_MEDIA_TO_KEEP 
@@ -111,12 +110,53 @@ const toUtf8Base64DataUrl = (mimeType: string, text: string): string => {
   return `data:${mimeType};charset=utf-8;base64,${btoa(binary)}`;
 };
 
+const DEFAULT_ARTIFACT_FILE_NAMES: Record<string, string> = {
+  'image/svg+xml': 'artifact.svg',
+  'text/html': 'artifact.html',
+  'text/markdown': 'artifact.md',
+  'text/csv': 'artifact.csv',
+  'text/tab-separated-values': 'artifact.tsv',
+  'application/json': 'artifact.json',
+  'application/xml': 'artifact.xml',
+  'text/xml': 'artifact.xml',
+  'text/css': 'artifact.css',
+  'text/javascript': 'artifact.js',
+  'application/javascript': 'artifact.js',
+  'text/typescript': 'artifact.ts',
+  'text/plain': 'artifact.txt',
+};
+
+const sanitizeArtifactFileName = (value?: string | null, mimeType?: string | null): string => {
+  const raw = (value || '').trim();
+  const fallback = DEFAULT_ARTIFACT_FILE_NAMES[(mimeType || '').trim().toLowerCase()] || 'artifact.txt';
+  const normalized = (raw || fallback).replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '_');
+  return normalized || fallback;
+};
+
+const inferMimeTypeFromDataUrl = (value?: string | null): string | null => {
+  const match = typeof value === 'string' ? value.match(/^data:([^;,]+)(?:;[^,]*)?,/i) : null;
+  return match?.[1]?.trim().toLowerCase() || null;
+};
+
 type MediaPayloadOverride = {
   oldUri?: string;
   newUri?: string;
   newMimeType?: string;
   transient?: boolean;
   omitFromPayload?: boolean;
+};
+
+type StrictParsedTutorResponse = {
+  translations: Array<{ target: string; native: string }>;
+  visibleText: string;
+  hasSkippedNonLanguageContent: boolean;
+};
+
+type SuggestionCreatorArtifact = {
+  mimeType?: string;
+  fileName?: string;
+  encoding?: string;
+  content?: string;
 };
 
 export interface UseTutorConversationConfig {
@@ -354,34 +394,116 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     return () => window.removeEventListener('maestro-avatar-updated', handler);
   }, []);
 
-  const parseGeminiResponse = useCallback((responseText: string | undefined): Array<{ target: string; native: string }> => {
+  const parseStrictTutorResponse = useCallback((responseText: string | undefined): StrictParsedTutorResponse => {
     if (typeof responseText !== 'string' || !responseText.trim() || !selectedLanguagePairRef.current) {
-      return [];
+      return { translations: [], visibleText: '', hasSkippedNonLanguageContent: false };
     }
-    const lines = responseText.split('\n').map(line => line.trim()).filter(line => line);
-    const translations: Array<{ target: string; native: string }> = [];
+
+    const lines = responseText
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split('\n')
+      .map(line => line.trim());
     const nativeLangPrefix = `[${getShortLangCodeForPrompt(selectedLanguagePairRef.current.nativeLanguageCode)}]`;
+    const translations: Array<{ target: string; native: string }> = [];
+    let hasSkippedNonLanguageContent = false;
 
     for (let i = 0; i < lines.length; i++) {
       const currentLine = lines[i];
-      if (!currentLine.startsWith(nativeLangPrefix)) {
-        let targetContent = currentLine;
-        let nativeContent = "";
-        if (i + 1 < lines.length && lines[i + 1].startsWith(nativeLangPrefix)) {
-          nativeContent = lines[i + 1].substring(nativeLangPrefix.length).trim();
-          i++;
-        }
-        translations.push({ target: targetContent, native: nativeContent });
-      } else {
-        translations.push({ target: "", native: currentLine.substring(nativeLangPrefix.length).trim() });
+      if (!currentLine) continue;
+
+      if (currentLine.startsWith(nativeLangPrefix)) {
+        hasSkippedNonLanguageContent = true;
+        continue;
       }
+
+      let nextIndex = i + 1;
+      while (nextIndex < lines.length && !lines[nextIndex].trim()) {
+        nextIndex++;
+      }
+
+      const nextLine = nextIndex < lines.length ? lines[nextIndex].trim() : '';
+      if (nextLine && nextLine.startsWith(nativeLangPrefix)) {
+        translations.push({
+          target: currentLine,
+          native: nextLine.substring(nativeLangPrefix.length).trim(),
+        });
+        i = nextIndex;
+        continue;
+      }
+
+      hasSkippedNonLanguageContent = true;
     }
 
-    if (translations.length === 0 && responseText.trim()) {
-      translations.push({ target: responseText.trim(), native: "" });
-    }
-    return translations;
+    const visibleLines = translations.flatMap(pair => [
+      pair.target,
+      pair.native ? `${nativeLangPrefix} ${pair.native}` : '',
+    ].filter(Boolean));
+
+    return {
+      translations,
+      visibleText: visibleLines.join('\n').trim(),
+      hasSkippedNonLanguageContent,
+    };
   }, [selectedLanguagePairRef]);
+
+  const parseGeminiResponse = useCallback((responseText: string | undefined): Array<{ target: string; native: string }> => {
+    return parseStrictTutorResponse(responseText).translations;
+  }, [parseStrictTutorResponse]);
+
+  const normalizeSuggestionCreatorArtifact = useCallback((artifact: unknown) => {
+    if (!artifact || typeof artifact !== 'object') return null;
+
+    const candidate = artifact as SuggestionCreatorArtifact;
+    const rawContent = typeof candidate.content === 'string' ? candidate.content : '';
+    const rawEncoding = typeof candidate.encoding === 'string' ? candidate.encoding.trim().toLowerCase() : 'text';
+    const isDataUrlEncoding = rawEncoding === 'data-url' || rawEncoding === 'dataurl' || rawEncoding === 'data_url';
+    if (!rawContent.trim()) return null;
+
+    let mimeType = typeof candidate.mimeType === 'string' ? candidate.mimeType.trim().toLowerCase() : '';
+    let dataUrl: string;
+
+    if (isDataUrlEncoding) {
+      dataUrl = rawContent.trim();
+      if (!/^data:[^,]+,/i.test(dataUrl)) return null;
+      mimeType = mimeType || inferMimeTypeFromDataUrl(dataUrl) || '';
+    } else {
+      mimeType = mimeType || normalizeAttachmentMimeType({ name: candidate.fileName || 'artifact.txt', type: 'text/plain' });
+      const normalizedContent = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+      if (!normalizedContent) return null;
+      if (mimeType.startsWith('image/') && mimeType !== 'image/svg+xml') {
+        return null;
+      }
+      dataUrl = toUtf8Base64DataUrl(mimeType || 'text/plain', normalizedContent);
+    }
+
+    const fileName = sanitizeArtifactFileName(candidate.fileName, mimeType);
+    return {
+      dataUrl,
+      mimeType: mimeType || 'text/plain',
+      fileName,
+    };
+  }, []);
+
+  const finalizeAssistantArtifact = useCallback((assistantMessageId: string, artifact: unknown) => {
+    const normalized = normalizeSuggestionCreatorArtifact(artifact);
+    const updates: Partial<ChatMessage> = {
+      isLoadingArtifact: false,
+      artifactLoadStartTime: undefined,
+    };
+
+    if (normalized) {
+      updates.imageUrl = normalized.dataUrl;
+      updates.imageMimeType = normalized.mimeType;
+      updates.attachmentName = normalized.fileName;
+      updates.storageOptimizedImageUrl = undefined;
+      updates.storageOptimizedImageMimeType = undefined;
+      updates.uploadedFileUri = undefined;
+      updates.uploadedFileMimeType = undefined;
+    }
+
+    updateMessage(assistantMessageId, updates);
+  }, [normalizeSuggestionCreatorArtifact, updateMessage]);
 
   const appendThinkingTrace = useCallback((messageId: string, line: string) => {
     const cleanedLine = line.trim();
@@ -653,19 +775,24 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     lastTutorMessage: string, 
     history: ChatMessage[]
   ) => {
-    // Check if already loading using token state
-    if (isLoadingSuggestions) {
-      setReplySuggestions([]);
+    let resolvedArtifact: unknown = null;
+
+    const finishReplySuggestionsRequest = () => {
       setSuggestionsLoadingStreamText('');
       if (suggestionsTokenRef.current) {
         removeActivityToken(suggestionsTokenRef.current);
         suggestionsTokenRef.current = null;
       }
+      finalizeAssistantArtifact(assistantMessageId, resolvedArtifact);
+    };
+
+    // Check if already loading using token state
+    if (isLoadingSuggestions) {
       return;
     }
     if (!lastTutorMessage.trim() || !selectedLanguagePairRef.current) {
       setReplySuggestions([]);
-      setSuggestionsLoadingStreamText('');
+      finishReplySuggestionsRequest();
       return;
     }
 
@@ -677,11 +804,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         const target = allMsgs[targetIdx];
         if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
           setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
-          setSuggestionsLoadingStreamText('');
-          if (suggestionsTokenRef.current) {
-            removeActivityToken(suggestionsTokenRef.current);
-            suggestionsTokenRef.current = null;
-          }
+          finishReplySuggestionsRequest();
           return;
         }
       }
@@ -795,6 +918,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         }
 
         const parsedResponse = JSON.parse(jsonStr);
+        resolvedArtifact = parsedResponse?.artifact ?? null;
 
         if (Array.isArray(parsedResponse.suggestions) &&
           parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
@@ -843,15 +967,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         }
       }
     }
-
-    setSuggestionsLoadingStreamText('');
-    // Remove suggestions loading token
-    if (suggestionsTokenRef.current) {
-      removeActivityToken(suggestionsTokenRef.current);
-      suggestionsTokenRef.current = null;
-    }
+    finishReplySuggestionsRequest();
   }, [
     currentReplySuggestionsPromptText, 
+    finalizeAssistantArtifact,
     handleReengagementThresholdChange, 
     getHistoryRespectingBookmark,
     messagesRef,
@@ -1204,9 +1323,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
 
     const accumulatedFullText = response.text || "";
-    const parsedAttachment = parseAssistantResponseForAttachment(accumulatedFullText);
-    const responseTextForConversation = parsedAttachment.cleanedText;
-    const parsedTranslationsOnComplete = parseGeminiResponse(responseTextForConversation);
+    const strictParsedResponse = parseStrictTutorResponse(accumulatedFullText);
+    const responseTextForConversation = strictParsedResponse.visibleText;
+    const parsedTranslationsOnComplete = strictParsedResponse.translations;
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
     if (groundingChunks?.length) {
       setLatestGroundingChunks(groundingChunks);
@@ -1218,26 +1337,20 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       thinkingDraftText: undefined,
       thinkingPhase: undefined,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
-      rawAssistantResponse: responseTextForConversation,
-      text: parsedTranslationsOnComplete.length === 0 ? responseTextForConversation : undefined,
+      llmRawResponse: accumulatedFullText,
+      rawAssistantResponse: responseTextForConversation || undefined,
+      text: parsedTranslationsOnComplete.length === 0 ? (responseTextForConversation || undefined) : undefined,
+      isLoadingArtifact: strictParsedResponse.hasSkippedNonLanguageContent,
+      artifactLoadStartTime: strictParsedResponse.hasSkippedNonLanguageContent ? Date.now() : undefined,
     };
-    if (parsedAttachment.attachment) {
-      finalMessageUpdates.imageUrl = parsedAttachment.attachment.dataUrl;
-      finalMessageUpdates.imageMimeType = parsedAttachment.attachment.mimeType;
-      finalMessageUpdates.attachmentName = parsedAttachment.attachment.fileName;
-      finalMessageUpdates.storageOptimizedImageUrl = undefined;
-      finalMessageUpdates.storageOptimizedImageMimeType = undefined;
-      finalMessageUpdates.uploadedFileUri = undefined;
-      finalMessageUpdates.uploadedFileMimeType = undefined;
-    }
     updateMessage(params.thinkingMessageId, finalMessageUpdates);
 
     return {
       accumulatedFullText: responseTextForConversation,
       finalMessageUpdates,
-      hasParsedAttachment: Boolean(parsedAttachment.attachment),
+      hasAttachmentCandidate: strictParsedResponse.hasSkippedNonLanguageContent,
     };
-  }, [appendThinkingTrace, formatGeminiProgressLine, messagesRef, parseGeminiResponse, setLatestGroundingChunks, updateMessage]);
+  }, [appendThinkingTrace, formatGeminiProgressLine, parseStrictTutorResponse, setLatestGroundingChunks, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
     shouldGenerateUserImage: boolean;
@@ -1791,7 +1904,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         imageForGeminiContextMimeType = userImageContext.imageForGeminiContextMimeType;
       }
 
-      const { accumulatedFullText, finalMessageUpdates, hasParsedAttachment } = await handleGeminiResponse({
+      const { accumulatedFullText, finalMessageUpdates, hasAttachmentCandidate } = await handleGeminiResponse({
         thinkingMessageId,
         geminiPromptText,
         sanitizedDerivedHistory,
@@ -1803,7 +1916,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
       // Early suggestion fetch
       try {
-        const textForSuggestionsEarly = finalMessageUpdates.rawAssistantResponse || (finalMessageUpdates.translations?.find(tr => tr.target)?.target) || "";
+        const textForSuggestionsEarly = finalMessageUpdates.llmRawResponse || finalMessageUpdates.rawAssistantResponse || (finalMessageUpdates.translations?.find(tr => tr.target)?.target) || "";
         // Check if already loading suggestions via token
         if (!suggestionsTokenRef.current && textForSuggestionsEarly.trim()) {
           const historyWithFinalAssistant = messagesRef.current.map(m =>
@@ -1832,7 +1945,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       await new Promise(resolve => setTimeout(resolve, 0));
 
       // Image generation for assistant response
-      if (!hasParsedAttachment) {
+      if (!hasAttachmentCandidate) {
         await runAssistantImageGeneration({
           thinkingMessageId,
           accumulatedFullText,
@@ -1865,10 +1978,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (!isSpeechSynthesisSupported) {
         const finalAssistantMessage = messagesRef.current.find(m => m.id === thinkingMessageId);
         if (finalAssistantMessage && finalAssistantMessage.role === 'assistant' &&
-          (finalAssistantMessage.rawAssistantResponse || (finalAssistantMessage.translations && finalAssistantMessage.translations.length > 0)) &&
+          (finalAssistantMessage.llmRawResponse || finalAssistantMessage.rawAssistantResponse || (finalAssistantMessage.translations && finalAssistantMessage.translations.length > 0)) &&
           !suggestionsTokenRef.current &&
           finalAssistantMessage.id !== lastFetchedSuggestionsForRef.current) {
-          const textForSuggestions = finalAssistantMessage.rawAssistantResponse ||
+          const textForSuggestions = finalAssistantMessage.llmRawResponse ||
+            finalAssistantMessage.rawAssistantResponse ||
             (finalAssistantMessage.translations?.find(tr => tr.target)?.target) || "";
           if (textForSuggestions.trim()) {
             requestReplySuggestions(finalAssistantMessage.id, textForSuggestions, getHistoryRespectingBookmark(messagesRef.current));
@@ -1905,8 +2019,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         thinkingPhase: undefined,
         role: 'error',
         text: errorMessage,
+        llmRawResponse: undefined,
         rawAssistantResponse: undefined,
         translations: undefined,
+        isLoadingArtifact: false,
+        artifactLoadStartTime: undefined,
         ...(isQuota ? { errorAction: 'quota' } : {}),
       });
       // Remove sending token on error (replaces setIsSending(false))

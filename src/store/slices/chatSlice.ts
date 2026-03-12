@@ -16,7 +16,7 @@
 
 import type { StateCreator } from 'zustand';
 import type { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, GroundingChunk } from '../../core/types';
-import { 
+import {
   getChatHistoryDB, 
   safeSaveChatHistoryDB, 
   getChatMetaDB,
@@ -121,11 +121,12 @@ export const createChatSlice: StateCreator<
       
       // Clean up interrupted states
       const cleanedHistory = (history || []).map(msg => {
-        if (msg.isGeneratingImage || msg.thinking) {
+        if (msg.isGeneratingImage || msg.thinking || msg.isLoadingArtifact) {
           const newMsg = { ...msg };
           if (newMsg.isGeneratingImage) {
             newMsg.isGeneratingImage = false;
             newMsg.imageGenError = t('chat.error.imageGenInterrupted');
+            newMsg.imageGenerationStartTime = undefined;
           }
           if (newMsg.thinking) {
             newMsg.thinking = false;
@@ -133,6 +134,10 @@ export const createChatSlice: StateCreator<
               newMsg.role = 'error';
               newMsg.text = t('chat.error.thinkingInterrupted');
             }
+          }
+          if (newMsg.isLoadingArtifact) {
+            newMsg.isLoadingArtifact = false;
+            newMsg.artifactLoadStartTime = undefined;
           }
           return newMsg;
         }

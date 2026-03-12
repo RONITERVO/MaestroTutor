@@ -142,7 +142,9 @@ You also receive the learner's "existingGlobalProfile" which is their cross-sess
 "{tutor_message_placeholder}"
 
 **Your Task:**
-Generate a single JSON object with four keys: "suggestions", "reengagementSeconds", "chatSummary", and "globalProfile".
+Generate a single JSON object with five keys: "suggestions", "reengagementSeconds", "chatSummary", "globalProfile", and "artifact".
+
+Before you do that, parse the tutor's latest message yourself. It may contain a normal tutor reply plus a trailing raw artifact block such as code, SVG, chart data, CSV/TSV, HTML, markdown, or some other fenced payload. Do not assume a fixed artifact type or a fixed fence label.
 
 1.  "suggestions": An array of reply suggestion objects. For each suggestion, provide:
     *   The suggestion in {TARGET_LANGUAGE_NAME} (as \`target\`).
@@ -150,12 +152,14 @@ Generate a single JSON object with four keys: "suggestions", "reengagementSecond
     *   Suggestions should be relevant, beginner-intermediate friendly, and encourage conversation.
     *   The number of suggestions is up to you; cover a small, useful range.
     *   Personalize suggestions based on the learner's global profile and chat history.
+    *   If the latest tutor message contains an artifact, base suggestions on the human-readable tutor message, not on copying or reacting to raw artifact syntax.
 
 2.  "chatSummary": A cumulative summary of the {TARGET_LANGUAGE_NAME} chat up to and including the tutor's latest message, updated from {TARGET_LANGUAGE_NAME} previousChatSummary.
     - Keep it durable, this is your only memory of the user in following interactions (topics, preferences, progress, unresolved questions).
     - You cant recover any lost information, so consider what you know about the user from it, dont forget anything, this is really important for you.
     - You will need to remember everything about the user as they develop over time in {TARGET_LANGUAGE_NAME} this is really important for successful teaching.
     - Reply suggestions should be personalized. This will be evaluated.
+    - If an artifact is present, summarize only the meaningful teaching context it adds. Do not store raw code or raw artifact payload unless it is essential for future tutoring continuity.
 
 3.  "reengagementSeconds": An integer for a reasonable time (seconds) for the user to think and respond (eg. from 90 seconds up to user requested time in seconds).
 
@@ -164,6 +168,22 @@ Generate a single JSON object with four keys: "suggestions", "reengagementSecond
     - Deduplicate and prefer newer details when there are conflicts.
     - Remove session-specific details that won't be relevant later.
     - If existingGlobalProfile is empty or "(none)", create a new profile from the chat context.
+
+5.  "artifact": Either \`null\` or a normalized artifact object for the latest tutor message.
+    - If there is no artifact, return \`null\`.
+    - If there is an artifact, return:
+      {
+        "mimeType": "...",
+        "fileName": "...",
+        "encoding": "text" | "data-url",
+        "content": "..."
+      }
+    - Remove markdown fences and return only the artifact payload in \`content\`.
+    - Choose a concrete renderable MIME type. Examples: \`text/html\`, \`image/svg+xml\`, \`text/csv\`, \`text/tab-separated-values\`, \`application/json\`, \`text/markdown\`, \`text/plain\`.
+    - Prefer \`text/html\` for playable mini-games or HTML artifacts.
+    - Prefer \`text/csv\` or \`text/tab-separated-values\` for chart/table style data when possible.
+    - Use \`encoding: "data-url"\` only when the artifact already is a full \`data:\` URL or must stay that way for rendering.
+    - For SVG, return raw SVG markup with \`mimeType: "image/svg+xml"\` and \`encoding: "text"\`.
 
 Example JSON Output:
 {
@@ -174,7 +194,8 @@ Example JSON Output:
   ],
   "chatSummary": "x",
   "reengagementSeconds": y,
-  "globalProfile": "z"
+  "globalProfile": "z",
+  "artifact": null
 }
 
 Important:
