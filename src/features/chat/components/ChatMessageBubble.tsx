@@ -695,6 +695,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     return draftText.replace(/\s+/g, ' ').trim();
   }, [message.thinkingDraftText]);
 
+  const thinkingStatusCondensed = useMemo(() => {
+    const statusText = typeof message.thinkingStatusLine === 'string' ? message.thinkingStatusLine : '';
+    if (!statusText) return '';
+    return statusText.replace(/\s+/g, ' ').trim();
+  }, [message.thinkingStatusLine]);
+
   // Ticker offset for the scrolling "train window" effect on thought signatures
   const tickerOffsetRef = useRef(0);
   const tickerRafRef = useRef<number | null>(null);
@@ -772,9 +778,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         ? `\u2026${thinkingDraftCondensed.slice(-42)}`
         : thinkingDraftCondensed;
     }
-    // For thought signatures we use the ticker ref, so return null to signal ref usage
-    return null;
-  }, [thinkingDraftCondensed]);
+    if (thinkingTickerText) {
+      // For thought signatures we use the ticker ref, so return null to signal ref usage
+      return null;
+    }
+    return thinkingStatusCondensed || thinkingPhaseLabel;
+  }, [thinkingDraftCondensed, thinkingPhaseLabel, thinkingStatusCondensed, thinkingTickerText]);
 
   useEffect(() => {
     if (!shouldUseScrollableTextOverlay) {
@@ -822,7 +831,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
             </p>
             {/* Lower line (native position): thought ticker or streamed text */}
             <p
-              className="italic mt-0.5 whitespace-nowrap overflow-hidden pl-2 border-l-2 text-ai-file-text border-line-border"
+              className="italic mt-0.5 truncate pl-2 border-l-2 text-ai-file-text border-line-border"
               style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
             >
               {thinkingContentLine !== null ? (

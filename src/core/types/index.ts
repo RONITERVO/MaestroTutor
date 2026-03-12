@@ -34,10 +34,13 @@ export interface ChatMessage {
   uploadedFileMimeType?: string;
   timestamp: number;
   thinking?: boolean;
+  /** Model-authored thought summaries only; status text is tracked separately. */
   thinkingTrace?: string[];
   thinkingDraftText?: string;
   /** Human-readable phase label displayed on the upper line of the thinking bubble */
   thinkingPhase?: string;
+  /** One-off status line for the lower line until model-authored output arrives. */
+  thinkingStatusLine?: string;
   isGeneratingImage?: boolean;
   imageGenError?: string | null;
   imageGenerationStartTime?: number;
