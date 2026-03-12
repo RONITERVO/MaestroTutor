@@ -62,10 +62,11 @@ const buildRuntimeBridge = (frameId: string): string => {
   var FRAME_ID = ${escapedFrameId};
   var EVENT_TYPE = 'maestro-mini-game-status';
   var fitScheduleTimer = null;
-  var fitResizeObserver = null;
   var lastMetricsWidth = 0;
   var lastMetricsHeight = 0;
-  var GAME_ROOT_SELECTOR = '[data-mini-game-root], #mini-game-root, .mini-game-root';
+  
+  // FIXED: Added data-maestro-mini-game to the selector to catch your specific wrapper
+  var GAME_ROOT_SELECTOR = '[data-maestro-mini-game], [data-mini-game-root], #mini-game-root, .mini-game-root';
   var FIT_TRANSFORM_VAR = '--maestro-fit-transform';
   var FIT_TRANSFORM_REF = 'var(' + FIT_TRANSFORM_VAR + ')';
 
@@ -115,58 +116,39 @@ const buildRuntimeBridge = (frameId: string): string => {
     body.style.transform = current + ' ' + FIT_TRANSFORM_REF;
   };
 
-  var getContentBounds = function () {
-    var fallbackWidth = Math.max(window.innerWidth || 0, 1);
-    var fallbackHeight = Math.max(window.innerHeight || 0, 1);
-    var fallback = { minLeft: 0, minTop: 0, width: fallbackWidth, height: fallbackHeight };
+  var getObservedRoot = function() {
+    var declared = document.querySelector(GAME_ROOT_SELECTOR);
+    if (declared) return declared;
     
     var body = document.body;
-    if (!body) return fallback;
+    if (!body) return null;
+    
+    // Fallback: Use the very first meaningful wrapper div as the root
+    for (var i = 0; i < body.children.length; i++) {
+      var node = body.children[i];
+      if (!shouldIgnoreNode(node)) return node;
+    }
+    return null;
+  };
 
-    var declaredRoot = document.querySelector(GAME_ROOT_SELECTOR);
-    if (declaredRoot) {
-      var rootRect = declaredRoot.getBoundingClientRect();
-      if (rootRect && isFinite(rootRect.width) && rootRect.width > 0) {
+  var getContentBounds = function () {
+    var fallback = { minLeft: 0, minTop: 0, width: Math.max(window.innerWidth || 0, 1), height: Math.max(window.innerHeight || 0, 1) };
+    
+    var root = getObservedRoot();
+    if (root) {
+      var rect = root.getBoundingClientRect();
+      // If we found a wrapper, we immediately use its size and stop scanning
+      if (rect && isFinite(rect.width) && rect.width > 0 && rect.height > 0) {
         return {
-          minLeft: rootRect.left,
-          minTop: rootRect.top,
-          width: Math.max(rootRect.width, 1),
-          height: Math.max(rootRect.height, 1),
+          minLeft: rect.left,
+          minTop: rect.top,
+          width: rect.width,
+          height: rect.height,
         };
       }
     }
-
-    // Passively scan elements for their bounding box
-    var nodes = body.querySelectorAll('*');
-    var hasBounds = false;
-    var minLeft = 0, minTop = 0, maxRight = 0, maxBottom = 0;
-
-    for (var i = 0; i < nodes.length; i += 1) {
-      var node = nodes[i];
-      if (shouldIgnoreNode(node)) continue;
-      var rect = node.getBoundingClientRect();
-      if (!rect || (!isFinite(rect.width) && !isFinite(rect.height)) || (rect.width === 0 && rect.height === 0)) continue;
-
-      if (!hasBounds) {
-        minLeft = rect.left; minTop = rect.top;
-        maxRight = rect.right; maxBottom = rect.bottom;
-        hasBounds = true;
-        continue;
-      }
-      if (rect.left < minLeft) minLeft = rect.left;
-      if (rect.top < minTop) minTop = rect.top;
-      if (rect.right > maxRight) maxRight = rect.right;
-      if (rect.bottom > maxBottom) maxBottom = rect.bottom;
-    }
-
-    if (!hasBounds) return fallback;
-
-    return {
-      minLeft: minLeft,
-      minTop: minTop,
-      width: Math.max(maxRight - minLeft, 1),
-      height: Math.max(maxBottom - minTop, 1),
-    };
+    
+    return fallback;
   };
 
   var fitToViewport = function () {
@@ -180,6 +162,7 @@ const buildRuntimeBridge = (frameId: string): string => {
     var viewportWidth = Math.max(window.innerWidth || 0, docEl.clientWidth || 0, 1);
     var viewportHeight = Math.max(window.innerHeight || 0, docEl.clientHeight || 0, 1);
     var bounds = getContentBounds();
+    
     var contentWidth = Math.max(bounds.width, 1);
     var contentHeight = Math.max(bounds.height, 1);
     var scale = Math.min(viewportWidth / contentWidth, viewportHeight / contentHeight, 1);
@@ -214,16 +197,6 @@ const buildRuntimeBridge = (frameId: string): string => {
     }, 150);
   };
 
-  var startFitObservers = function () {
-    if (typeof ResizeObserver === 'function') {
-      fitResizeObserver = new ResizeObserver(scheduleFitToViewport);
-      if (document.body) fitResizeObserver.observe(document.body);
-      if (document.documentElement) fitResizeObserver.observe(document.documentElement);
-    }
-    window.addEventListener('resize', scheduleFitToViewport);
-    window.addEventListener('orientationchange', scheduleFitToViewport);
-  };
-
   window.addEventListener('error', function (event) {
     var msg = (event && event.message) ? String(event.message) : 'Runtime error';
     sendStatus('error', msg);
@@ -236,11 +209,14 @@ const buildRuntimeBridge = (frameId: string): string => {
 
   window.addEventListener('DOMContentLoaded', function () {
     lockToClickAndTap();
-    startFitObservers();
+    // SAFEST APPROACH: Only rely on window resizing, NEVER DOM observing to prevent infinite loops on Android
+    window.addEventListener('resize', scheduleFitToViewport);
+    window.addEventListener('orientationchange', scheduleFitToViewport);
+    
     scheduleFitToViewport();
     window.setTimeout(scheduleFitToViewport, 100);
     window.setTimeout(scheduleFitToViewport, 500);
-    window.setTimeout(scheduleFitToViewport, 2000); // Catch late-rendering canvas engines
+    window.setTimeout(scheduleFitToViewport, 2000); 
     sendStatus('ready', 'ok');
   });
 })();

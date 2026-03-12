@@ -33,8 +33,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const [contentMetrics, setContentMetrics] = useState<MiniGameContentMetrics | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
-  // Lazy Loading: Only boot up when first scrolled into view, but NEVER unmount.
-  // Browsers automatically throttle background/hidden iframes to 1fps to save battery.
   const [hasIntersected, setHasIntersected] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -71,7 +69,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   );
 
   const handleReload = useCallback(() => {
-    setRuntimeState('booting'); // Immediately trigger UI loading state
+    setRuntimeState('booting');
     setReloadToken((n) => n + 1);
   }, []);
 
@@ -150,15 +148,17 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const hasContentMetrics = Boolean(contentMetrics && contentMetrics.width > 0 && contentMetrics.height > 0);
   const contentAspectRatio = hasContentMetrics && contentMetrics ? `${contentMetrics.width} / ${contentMetrics.height}` : undefined;
 
+  // FIXED: Changed width from 'w-full' to dynamic styles to let mobile shrink it
   const gameScreenStyle: React.CSSProperties = hasContentMetrics
     ? {
       aspectRatio: contentAspectRatio,
-      height: 'auto',
-      minHeight: '220px',
+      maxWidth: '100%',
       maxHeight: controlsUnderOverlay ? 'min(68vh, 520px)' : 'none',
       resize: controlsUnderOverlay ? 'none' : 'both',
+      margin: '0 auto',
     }
     : {
+      width: '100%',
       height: 'min(62vh, 480px)',
       resize: controlsUnderOverlay ? 'none' : 'both',
     };
@@ -170,16 +170,16 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       <div className="relative w-full max-w-[560px]" style={{ paddingBottom: `${wrapperBottomPadding}px` }}>
 
         <div
-          className={`relative w-full min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)] ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
+          // REMOVED w-full from class to allow maxWidth and aspect-ratio to control sizing
+          className={`relative min-h-[220px] min-w-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)] ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
           style={gameScreenStyle}
         >
           {hasIntersected ? (
             <iframe
               ref={iframeRef}
-              /* NO key={frameId} HERE! Destroying DOM nodes leaks WebGL contexts. */
               title={fileName ? `Mini game ${fileName}` : 'Mini game'}
               srcDoc={srcDoc}
-              className="w-full h-full border-0 bg-black"
+              className="w-full h-full border-0 bg-black block"
               sandbox="allow-scripts allow-same-origin"
               allow="fullscreen"
               referrerPolicy="no-referrer"
