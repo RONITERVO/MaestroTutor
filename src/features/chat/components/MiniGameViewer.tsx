@@ -7,11 +7,6 @@ import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 
-interface MiniGameContentMetrics {
-  width: number;
-  height: number;
-}
-
 interface MiniGameViewerProps {
   sourceCode: string;
   variant: 'user' | 'assistant' | 'preview';
@@ -30,7 +25,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const [showCode, setShowCode] = useState(false);
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
-  const [contentMetrics, setContentMetrics] = useState<MiniGameContentMetrics | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   const [hasIntersected, setHasIntersected] = useState(false);
@@ -59,12 +53,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   );
 
   const srcDoc = useMemo(
-    () => buildMiniGameSrcDoc({
-      sourceCode,
-      fileName,
-      mimeType,
-      frameId,
-    }),
+    () => buildMiniGameSrcDoc({ sourceCode, fileName, mimeType, frameId }),
     [sourceCode, fileName, mimeType, frameId]
   );
 
@@ -88,7 +77,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
     setRuntimeState('booting');
     setRuntimeError('');
-    setContentMetrics(null);
 
     const timeout = window.setTimeout(() => {
       setRuntimeState((prev) => (prev === 'booting' ? 'ready' : prev));
@@ -96,23 +84,12 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
     const onMessage = (event: MessageEvent) => {
       const payload = event.data;
-      if (!payload || payload.type !== 'maestro-mini-game-status' || payload.frameId !== frameId) {
-        return;
-      }
-      if (
-        payload.status === 'metrics' &&
-        typeof payload.width === 'number' && payload.width > 0 &&
-        typeof payload.height === 'number' && payload.height > 0
-      ) {
-        setContentMetrics({ width: payload.width, height: payload.height });
-        return;
-      }
+      if (!payload || payload.type !== 'maestro-mini-game-status' || payload.frameId !== frameId) return;
+
       if (payload.status === 'error') {
         setRuntimeState('error');
         setRuntimeError((payload.detail || 'Runtime error').slice(0, 220));
-        return;
-      }
-      if (payload.status === 'ready') {
+      } else if (payload.status === 'ready') {
         setRuntimeState('ready');
       }
     };
@@ -145,23 +122,14 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     ? 'linear-gradient(180deg, hsl(var(--user-msg-text) / 0.08), transparent)'
     : 'linear-gradient(180deg, hsl(var(--paper-surface) / 0.45), transparent)';
 
-  const hasContentMetrics = Boolean(contentMetrics && contentMetrics.width > 0 && contentMetrics.height > 0);
-  const contentAspectRatio = hasContentMetrics && contentMetrics ? `${contentMetrics.width} / ${contentMetrics.height}` : undefined;
-
-  // FIXED: Changed width from 'w-full' to dynamic styles to let mobile shrink it
-  const gameScreenStyle: React.CSSProperties = hasContentMetrics
-    ? {
-      aspectRatio: contentAspectRatio,
-      maxWidth: '100%',
-      maxHeight: controlsUnderOverlay ? 'min(68vh, 520px)' : 'none',
-      resize: controlsUnderOverlay ? 'none' : 'both',
-      margin: '0 auto',
-    }
-    : {
-      width: '100%',
-      height: 'min(62vh, 480px)',
-      resize: controlsUnderOverlay ? 'none' : 'both',
-    };
+  // Vastly simplified standard responsive block. 
+  // LLM handles making the game fit these dimensions.
+  const gameScreenStyle: React.CSSProperties = {
+    width: '100%',
+    height: controlsUnderOverlay ? 'min(68vh, 520px)' : '480px',
+    minHeight: '260px',
+    resize: controlsUnderOverlay ? 'none' : 'vertical', // Allow user to make it taller if they want
+  };
 
   const actionButtonClass = 'p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors';
 
@@ -170,8 +138,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       <div className="relative w-full max-w-[560px]" style={{ paddingBottom: `${wrapperBottomPadding}px` }}>
 
         <div
-          // REMOVED w-full from class to allow maxWidth and aspect-ratio to control sizing
-          className={`relative min-h-[220px] min-w-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)] ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
+          className={`relative rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)] ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
           style={gameScreenStyle}
         >
           {hasIntersected ? (

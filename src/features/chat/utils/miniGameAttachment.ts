@@ -13,19 +13,13 @@ interface MiniGameDocumentOptions extends MiniGameAttachmentCandidate {
 }
 
 const WEB_RUNTIME_EXTENSIONS = new Set(['html', 'htm', 'js', 'mjs', 'cjs']);
-const WEB_RUNTIME_MIME_HINTS = [
-  'text/html',
-  'application/xhtml+xml',
-  'text/javascript',
-  'application/javascript',
-];
+const WEB_RUNTIME_MIME_HINTS = ['text/html', 'application/xhtml+xml', 'text/javascript', 'application/javascript'];
 
 const HTML_MARKUP_HINT = /<(!doctype\s+html|html|body|script|canvas|button|style|main|section|div)\b/i;
 const GAMEPLAY_HINT = /data-maestro-mini-game|@maestro-mini-game|<canvas\b|<button\b|onclick\s*=|onpointerdown\s*=|addEventListener\(\s*["'](?:click|pointerdown|touchstart)|requestAnimationFrame|flashcard|vocab(?:ulary)?\s*quiz|word\s*match/i;
 const BROWSER_SCRIPT_HINT = /\b(document|window)\.|getContext\(|querySelector\(|createElement\(|addEventListener\(/i;
 
-const escapeForInlineScript = (value: string): string =>
-  value.replace(/<\/script/gi, '<\\/script');
+const escapeForInlineScript = (value: string): string => value.replace(/<\/script/gi, '<\\/script');
 
 const getFileExtension = (fileName?: string | null): string => {
   const normalized = (fileName || '').trim().toLowerCase();
@@ -34,191 +28,36 @@ const getFileExtension = (fileName?: string | null): string => {
   return normalized.slice(dot + 1);
 };
 
-const isLikelyModuleScript = (code: string): boolean =>
-  /^\s*import\s+/m.test(code) || /^\s*export\s+/m.test(code);
+const isLikelyModuleScript = (code: string): boolean => /^\s*import\s+/m.test(code) || /^\s*export\s+/m.test(code);
 
 const detectDocumentKind = (candidate: MiniGameAttachmentCandidate): 'html' | 'script' | 'unknown' => {
   const source = (candidate.sourceCode || '').trim();
   if (!source) return 'unknown';
-
   const ext = getFileExtension(candidate.fileName);
   if (ext === 'js' || ext === 'mjs' || ext === 'cjs') return 'script';
   if (ext === 'html' || ext === 'htm') return 'html';
-
   const mime = (candidate.mimeType || '').trim().toLowerCase();
   if (mime.includes('javascript')) return 'script';
   if (mime.includes('html') || mime.includes('xhtml')) return 'html';
-
   if (HTML_MARKUP_HINT.test(source)) return 'html';
   if (BROWSER_SCRIPT_HINT.test(source)) return 'script';
   return 'unknown';
 };
 
 const buildRuntimeBridge = (frameId: string): string => {
-  const escapedFrameId = JSON.stringify(frameId);
   return `
 <script data-maestro-runtime="bridge">
 (function () {
-  var FRAME_ID = ${escapedFrameId};
+  var FRAME_ID = ${JSON.stringify(frameId)};
   var EVENT_TYPE = 'maestro-mini-game-status';
-  var fitScheduleTimer = null;
-  var lastMetricsWidth = 0;
-  var lastMetricsHeight = 0;
-  
-  // FIXED: Added data-maestro-mini-game to the selector to catch your specific wrapper
-  var GAME_ROOT_SELECTOR = '[data-maestro-mini-game], [data-mini-game-root], #mini-game-root, .mini-game-root';
-  var FIT_TRANSFORM_VAR = '--maestro-fit-transform';
-  var FIT_TRANSFORM_REF = 'var(' + FIT_TRANSFORM_VAR + ')';
 
   var sendStatus = function (status, detail) {
-    try {
-      parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '' }, '*');
-    } catch (_err) {}
+    try { parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '' }, '*'); } catch (e) {}
   };
 
-  var sendMetrics = function (width, height) {
-    try {
-      parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: 'metrics', width: width, height: height }, '*');
-    } catch (_err) {}
-  };
-
-  var lockToClickAndTap = function () {
-    window.addEventListener('keydown', function (event) {
-      if (event.key === 'F11' || event.key === 'Escape') return;
-      event.preventDefault();
-      event.stopPropagation();
-    }, true);
-    window.addEventListener('contextmenu', function (event) {
-      event.preventDefault();
-    });
-    window.addEventListener('dragstart', function (event) {
-      event.preventDefault();
-    });
-  };
-
-  var shouldIgnoreNode = function (node) {
-    if (!node || node.nodeType !== 1) return true;
-    var tagName = String(node.tagName || '').toUpperCase();
-    return (
-      tagName === 'SCRIPT' || tagName === 'STYLE' || tagName === 'LINK' ||
-      tagName === 'META' || tagName === 'NOSCRIPT' || tagName === 'TITLE'
-    );
-  };
-
-  var ensureBodyFitTransformRef = function (body) {
-    if (!body) return;
-    var current = String(body.style.transform || '').trim();
-    if (!current || current === 'none') {
-      body.style.transform = FIT_TRANSFORM_REF;
-      return;
-    }
-    if (current.indexOf(FIT_TRANSFORM_REF) >= 0) return;
-    body.style.transform = current + ' ' + FIT_TRANSFORM_REF;
-  };
-
-  var getObservedRoot = function() {
-    var declared = document.querySelector(GAME_ROOT_SELECTOR);
-    if (declared) return declared;
-    
-    var body = document.body;
-    if (!body) return null;
-    
-    // Fallback: Use the very first meaningful wrapper div as the root
-    for (var i = 0; i < body.children.length; i++) {
-      var node = body.children[i];
-      if (!shouldIgnoreNode(node)) return node;
-    }
-    return null;
-  };
-
-  var getContentBounds = function () {
-    var fallback = { minLeft: 0, minTop: 0, width: Math.max(window.innerWidth || 0, 1), height: Math.max(window.innerHeight || 0, 1) };
-    
-    var root = getObservedRoot();
-    if (root) {
-      var rect = root.getBoundingClientRect();
-      // If we found a wrapper, we immediately use its size and stop scanning
-      if (rect && isFinite(rect.width) && rect.width > 0 && rect.height > 0) {
-        return {
-          minLeft: rect.left,
-          minTop: rect.top,
-          width: rect.width,
-          height: rect.height,
-        };
-      }
-    }
-    
-    return fallback;
-  };
-
-  var fitToViewport = function () {
-    var body = document.body;
-    var docEl = document.documentElement;
-    if (!body || !docEl) return;
-
-    ensureBodyFitTransformRef(body);
-    body.style.setProperty(FIT_TRANSFORM_VAR, 'translate(0px, 0px) scale(1)');
-
-    var viewportWidth = Math.max(window.innerWidth || 0, docEl.clientWidth || 0, 1);
-    var viewportHeight = Math.max(window.innerHeight || 0, docEl.clientHeight || 0, 1);
-    var bounds = getContentBounds();
-    
-    var contentWidth = Math.max(bounds.width, 1);
-    var contentHeight = Math.max(bounds.height, 1);
-    var scale = Math.min(viewportWidth / contentWidth, viewportHeight / contentHeight, 1);
-
-    if (!isFinite(scale) || scale <= 0) scale = 1;
-
-    var leftoverHeight = Math.max(viewportHeight - (contentHeight * scale), 0);
-    var topPadding = Math.min(Math.max(leftoverHeight * 0.12, 0), 18);
-    var offsetX = ((viewportWidth - (contentWidth * scale)) / 2) - (bounds.minLeft * scale);
-    var offsetY = topPadding - (bounds.minTop * scale);
-
-    body.style.transformOrigin = '0 0';
-    body.style.setProperty(
-      FIT_TRANSFORM_VAR,
-      'translate(' + offsetX.toFixed(2) + 'px, ' + offsetY.toFixed(2) + 'px) scale(' + scale.toFixed(6) + ')'
-    );
-
-    var roundedWidth = Math.max(Math.round(contentWidth), 1);
-    var roundedHeight = Math.max(Math.round(contentHeight), 1);
-    if (roundedWidth !== lastMetricsWidth || roundedHeight !== lastMetricsHeight) {
-      lastMetricsWidth = roundedWidth;
-      lastMetricsHeight = roundedHeight;
-      sendMetrics(roundedWidth, roundedHeight);
-    }
-  };
-
-  var scheduleFitToViewport = function () {
-    if (fitScheduleTimer !== null) return;
-    fitScheduleTimer = window.setTimeout(function () {
-      fitScheduleTimer = null;
-      fitToViewport();
-    }, 150);
-  };
-
-  window.addEventListener('error', function (event) {
-    var msg = (event && event.message) ? String(event.message) : 'Runtime error';
-    sendStatus('error', msg);
-  });
-  window.addEventListener('unhandledrejection', function (event) {
-    var reason = event && event.reason;
-    var msg = reason && reason.message ? String(reason.message) : String(reason || 'Unhandled promise rejection');
-    sendStatus('error', msg);
-  });
-
-  window.addEventListener('DOMContentLoaded', function () {
-    lockToClickAndTap();
-    // SAFEST APPROACH: Only rely on window resizing, NEVER DOM observing to prevent infinite loops on Android
-    window.addEventListener('resize', scheduleFitToViewport);
-    window.addEventListener('orientationchange', scheduleFitToViewport);
-    
-    scheduleFitToViewport();
-    window.setTimeout(scheduleFitToViewport, 100);
-    window.setTimeout(scheduleFitToViewport, 500);
-    window.setTimeout(scheduleFitToViewport, 2000); 
-    sendStatus('ready', 'ok');
-  });
+  window.addEventListener('error', function (e) { sendStatus('error', e.message); });
+  window.addEventListener('unhandledrejection', function (e) { sendStatus('error', String(e.reason)); });
+  window.addEventListener('DOMContentLoaded', function () { sendStatus('ready', 'ok'); });
 })();
 </script>`;
 };
@@ -227,14 +66,15 @@ const buildRuntimeStyle = (): string => `
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://esm.sh; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src data: blob: https://www.transparenttextures.com https://upload.wikimedia.org https://images.unsplash.com https://picsum.photos https://fastly.picsum.photos https://api.dicebear.com; media-src data: blob: https://commons.wikimedia.org https://cdn.freesound.org; connect-src https://opentdb.com https://api.datamuse.com blob: data:; worker-src blob: data: 'self'; child-src blob: data: 'self';">
 <style>
   :root { color-scheme: light dark; }
+  /* Enforce 100% width/height so LLM responsive games fit the iframe perfectly */
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    overflow: hidden; transform-origin: 0 0; touch-action: none;
+    overflow: hidden; touch-action: none;
     -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
     background: #000; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
-  canvas { display: block; outline: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+  canvas { display: block; outline: none; -webkit-tap-highlight-color: transparent; touch-action: none; max-width: 100%; max-height: 100%; }
 </style>`;
 
 const ensureHtmlDocument = (sourceCode: string): string => {
