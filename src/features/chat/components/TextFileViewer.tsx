@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { decodeTextFromDataUrl } from '../utils/fileAttachments';
 import TabularPreview from './TabularPreview';
-import { deriveChartSeriesListFromRows, parseDelimitedText } from '../utils/tabularPreview';
+import { deriveChartSeriesListFromRows, deriveChartSheetFromJsonText, isJsonChartFile, parseDelimitedText } from '../utils/tabularPreview';
 import MiniGameViewer from './MiniGameViewer';
 import MiniGameErrorBoundary from './MiniGameErrorBoundary';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
@@ -42,6 +42,10 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
       fileExt === 'tsv'
     );
   }, [mimeType, fileExt]);
+  const isJsonChartTextFile = useMemo(
+    () => isJsonChartFile(mimeType, fileName),
+    [fileName, mimeType]
+  );
   const shouldRenderMiniGame = useMemo(() => {
     if (compact || !decodedText) return false;
     return isRunnableMiniGameAttachment({
@@ -54,15 +58,20 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
     if (!decodedText || !isTabularTextFile) return [];
     return parseDelimitedText(decodedText, fileExt === 'tsv' ? '\t' : undefined);
   }, [decodedText, isTabularTextFile, fileExt]);
+  const jsonChartSheet = useMemo(() => {
+    if (!decodedText || !isJsonChartTextFile) return null;
+    return deriveChartSheetFromJsonText(decodedText, fileName || 'Chart data');
+  }, [decodedText, fileName, isJsonChartTextFile]);
   const chartSeriesList = useMemo(() => deriveChartSeriesListFromRows(tabularRows), [tabularRows]);
   const tabularSheets = useMemo(() => {
+    if (jsonChartSheet) return [jsonChartSheet];
     if (!isTabularTextFile || tabularRows.length <= 1) return [];
     return [{
       name: fileName || 'Sheet 1',
       rows: tabularRows,
       chartSeriesList,
     }];
-  }, [isTabularTextFile, tabularRows, chartSeriesList, fileName]);
+  }, [jsonChartSheet, isTabularTextFile, tabularRows, chartSeriesList, fileName]);
   const previewSnippet = useMemo(() => {
     if (!decodedText) return '';
     if (decodedText.length <= 3200) return decodedText;

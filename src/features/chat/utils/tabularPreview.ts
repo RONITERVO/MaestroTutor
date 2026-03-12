@@ -15,6 +15,8 @@ export interface TabularSheetPreview {
   chartSeriesList: TabularChartSeries[];
 }
 
+const JSON_CHART_EXTENSIONS = new Set(['json', 'json5', 'jsonc']);
+
 const parseDelimitedLine = (line: string, delimiter: string): string[] => {
   const out: string[] = [];
   let current = '';
@@ -136,6 +138,168 @@ const normalizeNumericCell = (value: string): number | null => {
   if (negative) out = -Math.abs(out);
   if (isPercent) out = out / 100;
   return out;
+};
+
+const tryParseJson = (text: string): any | null => {
+  const normalized = (text || '').trim();
+  if (!normalized) return null;
+
+  try {
+    return JSON.parse(normalized);
+  } catch {
+    return null;
+  }
+};
+
+const getChartJsonRoot = (input: any): any => {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return input;
+
+  const nestedData = input.data;
+  if (!nestedData || typeof nestedData !== 'object' || Array.isArray(nestedData)) {
+    return input;
+  }
+
+  const hasChartShape =
+    Array.isArray(nestedData.labels) ||
+    Array.isArray(nestedData.datasets) ||
+    Array.isArray(nestedData.series) ||
+    Array.isArray(nestedData.values) ||
+    Array.isArray(nestedData.data);
+
+  return hasChartShape ? nestedData : input;
+};
+
+const normalizeChartJsonNumber = (value: unknown): number | null => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === 'string') {
+    return normalizeNumericCell(value);
+  }
+  return null;
+};
+
+const buildRowsFromSeriesList = (labels: string[], seriesList: TabularChartSeries[]): string[][] => {
+  if (!seriesList.length) return [];
+
+  const maxLen = Math.max(
+    labels.length,
+    ...seriesList.map((series) => series.values.length)
+  );
+  if (maxLen < 1) return [];
+
+  const header = ['label', ...seriesList.map((series, index) => series.label || `Series ${index + 1}`)];
+  const rows: string[][] = [header];
+
+  for (let i = 0; i < maxLen; i++) {
+    const row = [labels[i] || String(i + 1)];
+    for (const series of seriesList) {
+      const value = series.values[i];
+      row.push(typeof value === 'number' && Number.isFinite(value) ? String(value) : '');
+    }
+    rows.push(row);
+  }
+
+  return rows;
+};
+
+export const deriveChartSheetFromJsonText = (
+  text: string,
+  name = 'Chart data'
+): TabularSheetPreview | null => {
+  const parsed = tryParseJson(text);
+  const root = getChartJsonRoot(parsed);
+  if (!root || typeof root !== 'object' || Array.isArray(root)) return null;
+
+  const labels = Array.isArray(root.labels)
+    ? root.labels.map((value: unknown, index: number) => {
+        const normalized = String(value ?? '').trim();
+        return normalized || String(index + 1);
+      })
+    : [];
+
+  const datasetList = Array.isArray(root.datasets)
+    ? root.datasets
+    : (Array.isArray(root.series) ? root.series : null);
+
+  if (Array.isArray(datasetList)) {
+    const seriesList = datasetList
+      .map((dataset: any, index: number): TabularChartSeries | null => {
+        const rawData = Array.isArray(dataset?.data) ? dataset.data : [];
+        if (!rawData.length) return null;
+
+        const normalizedValues: number[] = [];
+        const normalizedLabels: string[] = [];
+        for (let valueIndex = 0; valueIndex < rawData.length; valueIndex++) {
+          const numericValue = normalizeChartJsonNumber(rawData[valueIndex]);
+          if (numericValue === null) continue;
+          normalizedValues.push(numericValue);
+          normalizedLabels.push(labels[valueIndex] || String(valueIndex + 1));
+        }
+
+        if (!normalizedValues.length) return null;
+
+        return {
+          labels: normalizedLabels,
+          values: normalizedValues,
+          label: String(dataset?.label || dataset?.name || `Series ${index + 1}`).trim() || `Series ${index + 1}`,
+          sourceColumnIndex: index + 1,
+        };
+      })
+      .filter(Boolean) as TabularChartSeries[];
+
+    if (!seriesList.length) return null;
+
+    return {
+      name,
+      rows: buildRowsFromSeriesList(labels, seriesList),
+      chartSeriesList: seriesList,
+    };
+  }
+
+  const flatValues = Array.isArray(root.values)
+    ? root.values
+    : (Array.isArray(root.data) ? root.data : null);
+
+  if (Array.isArray(flatValues)) {
+    const normalizedValues: number[] = [];
+    const normalizedLabels: string[] = [];
+
+    for (let i = 0; i < flatValues.length; i++) {
+      const numericValue = normalizeChartJsonNumber(flatValues[i]);
+      if (numericValue === null) continue;
+      normalizedValues.push(numericValue);
+      normalizedLabels.push(labels[i] || String(i + 1));
+    }
+
+    if (!normalizedValues.length) return null;
+
+    const seriesList: TabularChartSeries[] = [{
+      labels: normalizedLabels,
+      values: normalizedValues,
+      label: String(root.label || 'Value').trim() || 'Value',
+      sourceColumnIndex: 1,
+    }];
+
+    return {
+      name,
+      rows: buildRowsFromSeriesList(labels, seriesList),
+      chartSeriesList: seriesList,
+    };
+  }
+
+  return null;
+};
+
+export const isJsonChartFile = (mimeType?: string | null, fileName?: string | null): boolean => {
+  const normalizedMime = (mimeType || '').trim().toLowerCase();
+  if (normalizedMime.includes('json')) return true;
+
+  const normalizedName = (fileName || '').trim().toLowerCase();
+  const dotIndex = normalizedName.lastIndexOf('.');
+  if (dotIndex < 0 || dotIndex >= normalizedName.length - 1) return false;
+
+  return JSON_CHART_EXTENSIONS.has(normalizedName.slice(dotIndex + 1));
 };
 
 const deriveBestLabelColumn = (rows: string[][], dataStart: number, numericColumns: number[]): number => {
