@@ -521,7 +521,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     updateMessage(messageId, { thinkingTrace: nextTrace });
   }, [messagesRef, updateMessage]);
 
-  const formatGeminiProgressLine = useCallback((event: GeminiProgressEvent): string | undefined => {
+  const setThinkingStatusLine = useCallback((messageId: string, line?: string) => {
+    const cleanedLine = typeof line === 'string' ? line.trim() : '';
+    const current = messagesRef.current.find(m => m.id === messageId);
+    if (!current || !current.thinking) return;
+
+    const nextValue = cleanedLine || undefined;
+    if ((current.thinkingStatusLine || undefined) === nextValue) return;
+    updateMessage(messageId, { thinkingStatusLine: nextValue });
+  }, [messagesRef, updateMessage]);
+
+  const formatGeminiStatusLine = useCallback((event: GeminiProgressEvent): string | undefined => {
     const elapsedSeconds = typeof event.elapsedMs === 'number'
       ? Math.max(0, Math.floor(event.elapsedMs / 1000))
       : undefined;
@@ -531,18 +541,37 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         return `Connecting to ${event.model} (attempt ${event.attempt}/${event.totalAttempts})...`;
       case 'attempt-processing':
         if (typeof elapsedSeconds !== 'number') return undefined;
-        return `Model is processing... ${elapsedSeconds}s elapsed.`;
+        return `Waiting for model output... ${elapsedSeconds}s elapsed.`;
       case 'high-demand':
+        if (event.reason === 'no-output-timeout' && typeof elapsedSeconds === 'number' && elapsedSeconds > 0) {
+          return `No model output after ${elapsedSeconds}s. Request is likely queued on Google servers.`;
+        }
         return 'High demand detected. Request is queued on Google servers.';
       case 'fallback-switch':
         return `Switching to fallback model ${event.model}.`;
       case 'retry-scheduled':
         return `Retrying in ${Math.ceil((event.retryInMs || 0) / 1000)}s...`;
       case 'success':
-        if (typeof elapsedSeconds === 'number' && elapsedSeconds > 0) {
-          return `Response received after ${elapsedSeconds}s.`;
-        }
-        return 'Response received.';
+        return undefined;
+      default:
+        return undefined;
+    }
+  }, []);
+
+  const formatGeminiPhaseLabel = useCallback((event: GeminiProgressEvent): string | undefined => {
+    switch (event.phase) {
+      case 'attempt-start':
+        return 'Connecting';
+      case 'attempt-processing':
+        return 'Processing';
+      case 'high-demand':
+        return 'High demand';
+      case 'fallback-switch':
+        return 'Switching model';
+      case 'retry-scheduled':
+        return 'Retrying';
+      case 'success':
+        return 'Finalizing';
       default:
         return undefined;
     }
@@ -885,7 +914,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           undefined,
           {
             onProgress: (event) => {
-              const progressLine = formatGeminiProgressLine(event);
+              const progressLine = formatGeminiStatusLine(event);
               if (progressLine && !thoughtText.trim() && !outputText.trim()) {
                 setSuggestionsLoadingStreamText(progressLine);
               }
@@ -981,7 +1010,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     removeActivityToken,
     setReplySuggestions,
     setSuggestionsLoadingStreamText,
-    formatGeminiProgressLine,
+    formatGeminiStatusLine,
     updateMessage
   ]);
 
@@ -1249,6 +1278,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     let thoughtBuffer = '';
     let lastThoughtFlushAt = 0;
     let currentPhaseLabel = '';
+    let hasVisibleModelOutput = false;
 
     const flushThinkingDraft = (force = false) => {
       const now = Date.now();
@@ -1266,7 +1296,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (!condensed) return;
       const now = Date.now();
       if (!force && condensed.length < 80 && now - lastThoughtFlushAt < 2000) return;
-      appendThinkingTrace(params.thinkingMessageId, `Model thought: ${condensed.slice(0, 220)}`);
+      appendThinkingTrace(params.thinkingMessageId, condensed.slice(0, 220));
       thoughtBuffer = '';
       lastThoughtFlushAt = now;
     };
@@ -1289,17 +1319,22 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             if (bucket <= 0 || bucket === lastProcessingBucket) return;
             lastProcessingBucket = bucket;
           }
-          const line = formatGeminiProgressLine(event);
-          if (line) {
-            appendThinkingTrace(params.thinkingMessageId, line);
-            if (line !== currentPhaseLabel) {
-              currentPhaseLabel = line;
-              updateMessage(params.thinkingMessageId, { thinkingPhase: line });
+          const phaseLabel = formatGeminiPhaseLabel(event);
+          if (phaseLabel && phaseLabel !== currentPhaseLabel) {
+            currentPhaseLabel = phaseLabel;
+            updateMessage(params.thinkingMessageId, { thinkingPhase: phaseLabel });
+          }
+          if (!hasVisibleModelOutput) {
+            const line = formatGeminiStatusLine(event);
+            if (line) {
+              setThinkingStatusLine(params.thinkingMessageId, line);
             }
           }
         },
         onTextDelta: (_deltaText, fullText) => {
+          hasVisibleModelOutput = true;
           streamingDraftText = fullText || streamingDraftText;
+          setThinkingStatusLine(params.thinkingMessageId, undefined);
           if (currentPhaseLabel !== 'Final response') {
             currentPhaseLabel = 'Final response';
             updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
@@ -1307,7 +1342,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           flushThinkingDraft(false);
         },
         onThoughtDelta: (deltaThought) => {
+          hasVisibleModelOutput = true;
           thoughtBuffer += deltaThought;
+          setThinkingStatusLine(params.thinkingMessageId, undefined);
           if (currentPhaseLabel !== 'Thinking') {
             currentPhaseLabel = 'Thinking';
             updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
@@ -1336,6 +1373,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       thinkingTrace: undefined,
       thinkingDraftText: undefined,
       thinkingPhase: undefined,
+      thinkingStatusLine: undefined,
       translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
       llmRawResponse: accumulatedFullText,
       rawAssistantResponse: responseTextForConversation || undefined,
@@ -1350,7 +1388,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       finalMessageUpdates,
       hasAttachmentCandidate: strictParsedResponse.hasSkippedNonLanguageContent,
     };
-  }, [appendThinkingTrace, formatGeminiProgressLine, parseStrictTutorResponse, setLatestGroundingChunks, updateMessage]);
+  }, [appendThinkingTrace, formatGeminiPhaseLabel, formatGeminiStatusLine, parseStrictTutorResponse, setLatestGroundingChunks, setThinkingStatusLine, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
     shouldGenerateUserImage: boolean;
@@ -1659,8 +1697,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const thinkingMessageId = addMessage({
       role: 'assistant',
       thinking: true,
-      thinkingTrace: ['Preparing request context...'],
+      thinkingTrace: [],
       thinkingDraftText: '',
+      thinkingPhase: 'Preparing request',
+      thinkingStatusLine: 'Preparing request context...',
     });
 
     cancelReengagementRef.current();
@@ -2017,6 +2057,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         thinkingTrace: undefined,
         thinkingDraftText: undefined,
         thinkingPhase: undefined,
+        thinkingStatusLine: undefined,
         role: 'error',
         text: errorMessage,
         llmRawResponse: undefined,

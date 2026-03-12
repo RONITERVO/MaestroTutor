@@ -10,6 +10,9 @@ const HIGH_DEMAND_MAX_RETRIES = 10;
 const HIGH_DEMAND_RETRY_BASE_DELAY_MS = 1_000;
 const HIGH_DEMAND_RETRY_MAX_DELAY_MS = 8_000;
 const PROCESSING_PROGRESS_INTERVAL_MS = 4_000;
+const NO_MODEL_OUTPUT_FALLBACK_AFTER_MS = 24_000;
+
+export type GeminiRetryReason = 'server-high-demand' | 'no-output-timeout';
 
 export type GeminiProgressPhase =
   | 'attempt-start'
@@ -27,6 +30,7 @@ export interface GeminiProgressEvent {
   totalAttempts: number;
   retryInMs?: number;
   elapsedMs?: number;
+  reason?: GeminiRetryReason;
 }
 
 export interface GeminiRequestLifecycleHooks {
@@ -163,6 +167,24 @@ const resolveFallbackTextModel = (primaryModel: string): string | undefined => {
   return fallback;
 };
 
+const createNoOutputHighDemandError = (model: string, elapsedMs: number): Error & {
+  status: number;
+  code: string;
+  syntheticHighDemandReason: GeminiRetryReason;
+} => {
+  const error = new Error(
+    `No model output after ${Math.max(1, Math.floor(elapsedMs / 1000))}s on ${model}; likely queued due to high demand.`
+  ) as Error & {
+    status: number;
+    code: string;
+    syntheticHighDemandReason: GeminiRetryReason;
+  };
+  error.status = 503;
+  error.code = 'UNAVAILABLE';
+  error.syntheticHighDemandReason = 'no-output-timeout';
+  return error;
+};
+
 const buildRetryMeta = (attempt: number, retryInMs?: number) => ({
   attempt,
   totalAttempts: HIGH_DEMAND_MAX_RETRIES + 1,
@@ -236,6 +258,10 @@ const withHighDemandRetry = async <T>(opts: {
       lastError = error;
 
       const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && isHighDemandError(error);
+      const retryReason: GeminiRetryReason =
+        error?.syntheticHighDemandReason === 'no-output-timeout'
+          ? 'no-output-timeout'
+          : 'server-high-demand';
       let retryInMs: number | undefined;
       let switchedToFallbackForRetry = false;
       if (canRetry) {
@@ -246,6 +272,7 @@ const withHighDemandRetry = async <T>(opts: {
           attempt: attemptNumber,
           totalAttempts,
           elapsedMs: Date.now() - attemptStartedAt,
+          reason: retryReason,
         });
         if (canUseFallback && !hasSwitchedToFallback) {
           hasSwitchedToFallback = true;
@@ -259,6 +286,7 @@ const withHighDemandRetry = async <T>(opts: {
             attempt: attemptNumber,
             totalAttempts,
             elapsedMs: Date.now() - attemptStartedAt,
+            reason: retryReason,
           });
         } else {
           retryInMs = Math.min(
@@ -273,6 +301,7 @@ const withHighDemandRetry = async <T>(opts: {
             totalAttempts,
             retryInMs,
             elapsedMs: Date.now() - attemptStartedAt,
+            reason: retryReason,
           });
         }
       }
@@ -401,47 +430,83 @@ export const generateGeminiResponse = async (
         requestPayload: { contents: redactedContents, config },
         run: activeModel => withTimeout(
           (async () => {
-            const stream = await ai.models.generateContentStream({
-              model: activeModel,
-              contents,
-              config,
-            });
-
+            const abortController = new AbortController();
             let latestChunk: any | undefined;
             let accumulatedText = '';
             let previousChunkText = '';
             let accumulatedThought = '';
             let previousChunkThought = '';
-
-            for await (const chunk of stream) {
-              latestChunk = chunk;
-
-              const chunkText = typeof chunk?.text === 'string' ? chunk.text : '';
-              if (chunkText) {
-                const appended = appendChunkWithPrefixDiff(accumulatedText, previousChunkText, chunkText);
-                accumulatedText = appended.nextAccumulated;
-                previousChunkText = appended.nextPreviousChunk;
-                if (appended.delta) {
-                  lifecycleHooks?.onTextDelta?.(appended.delta, accumulatedText);
+            let hasVisibleModelOutput = false;
+            const attemptStartedAt = Date.now();
+            const clearNoOutputTimer = (() => {
+              let timerId: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+                if (!hasVisibleModelOutput) {
+                  abortController.abort();
                 }
-              }
-
-              const chunkThought = extractThoughtText(chunk);
-              if (chunkThought) {
-                const appendedThought = appendChunkWithPrefixDiff(accumulatedThought, previousChunkThought, chunkThought);
-                accumulatedThought = appendedThought.nextAccumulated;
-                previousChunkThought = appendedThought.nextPreviousChunk;
-                if (appendedThought.delta) {
-                  lifecycleHooks?.onThoughtDelta?.(appendedThought.delta, accumulatedThought);
+              }, NO_MODEL_OUTPUT_FALLBACK_AFTER_MS);
+              return () => {
+                if (timerId !== null) {
+                  clearTimeout(timerId);
+                  timerId = null;
                 }
-              }
-            }
+              };
+            })();
 
-            return {
-              text: accumulatedText || latestChunk?.text || '',
-              candidates: latestChunk?.candidates,
-              usageMetadata: latestChunk?.usageMetadata,
+            const markVisibleModelOutput = () => {
+              if (hasVisibleModelOutput) return;
+              hasVisibleModelOutput = true;
+              clearNoOutputTimer();
             };
+
+            try {
+              const stream = await ai.models.generateContentStream({
+                model: activeModel,
+                contents,
+                config: {
+                  ...config,
+                  abortSignal: abortController.signal,
+                },
+              });
+
+              for await (const chunk of stream) {
+                latestChunk = chunk;
+
+                const chunkText = typeof chunk?.text === 'string' ? chunk.text : '';
+                if (chunkText) {
+                  markVisibleModelOutput();
+                  const appended = appendChunkWithPrefixDiff(accumulatedText, previousChunkText, chunkText);
+                  accumulatedText = appended.nextAccumulated;
+                  previousChunkText = appended.nextPreviousChunk;
+                  if (appended.delta) {
+                    lifecycleHooks?.onTextDelta?.(appended.delta, accumulatedText);
+                  }
+                }
+
+                const chunkThought = extractThoughtText(chunk);
+                if (chunkThought) {
+                  markVisibleModelOutput();
+                  const appendedThought = appendChunkWithPrefixDiff(accumulatedThought, previousChunkThought, chunkThought);
+                  accumulatedThought = appendedThought.nextAccumulated;
+                  previousChunkThought = appendedThought.nextPreviousChunk;
+                  if (appendedThought.delta) {
+                    lifecycleHooks?.onThoughtDelta?.(appendedThought.delta, accumulatedThought);
+                  }
+                }
+              }
+
+              return {
+                text: accumulatedText || latestChunk?.text || '',
+                candidates: latestChunk?.candidates,
+                usageMetadata: latestChunk?.usageMetadata,
+              };
+            } catch (error: any) {
+              if (!hasVisibleModelOutput && abortController.signal.aborted) {
+                throw createNoOutputHighDemandError(activeModel, Date.now() - attemptStartedAt);
+              }
+              throw error;
+            } finally {
+              clearNoOutputTimer();
+            }
           })(),
           timeoutMs
         ),

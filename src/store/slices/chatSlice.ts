@@ -130,6 +130,10 @@ export const createChatSlice: StateCreator<
           }
           if (newMsg.thinking) {
             newMsg.thinking = false;
+            newMsg.thinkingTrace = undefined;
+            newMsg.thinkingDraftText = undefined;
+            newMsg.thinkingPhase = undefined;
+            newMsg.thinkingStatusLine = undefined;
             if (!newMsg.text && !newMsg.translations?.length && !newMsg.rawAssistantResponse) {
               newMsg.role = 'error';
               newMsg.text = t('chat.error.thinkingInterrupted');
