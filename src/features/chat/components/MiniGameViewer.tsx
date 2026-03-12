@@ -7,6 +7,11 @@ import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 
+interface MiniGameContentMetrics {
+  width: number;
+  height: number;
+}
+
 interface MiniGameViewerProps {
   sourceCode: string;
   variant: 'user' | 'assistant' | 'preview';
@@ -25,6 +30,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const [showCode, setShowCode] = useState(false);
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
+  const [contentMetrics, setContentMetrics] = useState<MiniGameContentMetrics | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const [isNearViewport, setIsNearViewport] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -64,6 +70,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
     setRuntimeState('booting');
     setRuntimeError('');
+    setContentMetrics(null);
 
     const timeout = window.setTimeout(() => {
       setRuntimeState((prev) => (prev === 'booting' ? 'ready' : prev));
@@ -71,10 +78,22 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
     const onMessage = (event: MessageEvent) => {
       const payload = event.data as
-        | { type?: string; frameId?: string; status?: string; detail?: string }
+        | { type?: string; frameId?: string; status?: string; detail?: string; width?: number; height?: number }
         | null
         | undefined;
       if (!payload || payload.type !== 'maestro-mini-game-status' || payload.frameId !== frameId) {
+        return;
+      }
+      if (
+        payload.status === 'metrics' &&
+        typeof payload.width === 'number' &&
+        Number.isFinite(payload.width) &&
+        payload.width > 0 &&
+        typeof payload.height === 'number' &&
+        Number.isFinite(payload.height) &&
+        payload.height > 0
+      ) {
+        setContentMetrics({ width: payload.width, height: payload.height });
         return;
       }
       if (payload.status === 'error') {
@@ -113,6 +132,18 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const shellHighlight = isUser
     ? 'linear-gradient(180deg, hsl(var(--user-msg-text) / 0.08), transparent)'
     : 'linear-gradient(180deg, hsl(var(--paper-surface) / 0.45), transparent)';
+  const hasContentMetrics = Boolean(contentMetrics && contentMetrics.width > 0 && contentMetrics.height > 0);
+  const contentAspectRatio = hasContentMetrics && contentMetrics
+    ? `${contentMetrics.width} / ${contentMetrics.height}`
+    : undefined;
+  const gameScreenStyle: React.CSSProperties = hasContentMetrics
+    ? {
+        aspectRatio: contentAspectRatio,
+        height: 'auto',
+        minHeight: '220px',
+        maxHeight: controlsUnderOverlay ? 'min(68vh, 520px)' : 'min(74vh, 560px)',
+      }
+    : { height: 'min(62vh, 480px)' };
 
   const actionButtonClass = 'p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors';
 
@@ -123,7 +154,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
         {/* GAME SCREEN */}
         <div
           className={`relative w-full min-h-[220px] rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)] ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
-          style={{ height: 'min(62vh, 480px)' }}
+          style={gameScreenStyle}
         >
           {isNearViewport ? (
             <iframe

@@ -64,9 +64,13 @@ const buildRuntimeBridge = (frameId: string): string => {
   var fitScheduleTimer = null;
   var fitMutationObserver = null;
   var fitResizeObserver = null;
+  var lastMetricsWidth = 0;
+  var lastMetricsHeight = 0;
   var GAME_ROOT_SELECTOR = '[data-mini-game-root], #mini-game-root, .mini-game-root';
   var FIT_TRANSFORM_VAR = '--maestro-fit-transform';
   var FIT_TRANSFORM_REF = 'var(' + FIT_TRANSFORM_VAR + ')';
+  var ROOT_INLINE_HEIGHT_ATTR = 'data-maestro-inline-height';
+  var ROOT_INLINE_WIDTH_ATTR = 'data-maestro-inline-width';
 
   var sendStatus = function (status, detail) {
     try {
@@ -74,8 +78,16 @@ const buildRuntimeBridge = (frameId: string): string => {
     } catch (_err) {}
   };
 
+  var sendMetrics = function (width, height) {
+    try {
+      parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: 'metrics', width: width, height: height }, '*');
+    } catch (_err) {}
+  };
+
   var lockToClickAndTap = function () {
     window.addEventListener('keydown', function (event) {
+      // Allow F11 or Esc for fullscreen handling
+      if (event.key === 'F11' || event.key === 'Escape') return;
       event.preventDefault();
       event.stopPropagation();
     }, true);
@@ -100,6 +112,22 @@ const buildRuntimeBridge = (frameId: string): string => {
     );
   };
 
+  var rememberInlineStyle = function (node, attrName, value) {
+    if (!node || node.nodeType !== 1 || node.hasAttribute(attrName)) return;
+    node.setAttribute(attrName, value || '');
+  };
+
+  var restoreInlineStyle = function (node, attrName, propName) {
+    if (!node || node.nodeType !== 1 || !node.hasAttribute(attrName)) return;
+    var previous = node.getAttribute(attrName);
+    node.style[propName] = previous || '';
+    node.removeAttribute(attrName);
+  };
+
+  var rootContainsRuntimeSurface = function (root) {
+    return !!(root && root.querySelector && root.querySelector('canvas, video, iframe'));
+  };
+
   var findDeclaredGameRoot = function () {
     var root = document.querySelector(GAME_ROOT_SELECTOR);
     if (!root || root.nodeType !== 1) return null;
@@ -121,6 +149,72 @@ const buildRuntimeBridge = (frameId: string): string => {
     }
 
     return null;
+  };
+
+  var normalizeObservedGameRoot = function () {
+    var root = findObservedGameRoot();
+    if (!root || root.nodeType !== 1 || !window.getComputedStyle) return root;
+
+    var storedInlineWidth = root.hasAttribute(ROOT_INLINE_WIDTH_ATTR)
+      ? root.getAttribute(ROOT_INLINE_WIDTH_ATTR)
+      : null;
+    var storedInlineHeight = root.hasAttribute(ROOT_INLINE_HEIGHT_ATTR)
+      ? root.getAttribute(ROOT_INLINE_HEIGHT_ATTR)
+      : null;
+
+    if (storedInlineWidth !== null) {
+      root.style.width = storedInlineWidth || '';
+    }
+    if (storedInlineHeight !== null) {
+      root.style.height = storedInlineHeight || '';
+    }
+
+    var computed = window.getComputedStyle(root);
+    var overflowX = String(computed.overflowX || computed.overflow || '').toLowerCase();
+    var overflowY = String(computed.overflowY || computed.overflow || '').toLowerCase();
+    var clientWidth = Math.max(root.clientWidth || 0, 0);
+    var clientHeight = Math.max(root.clientHeight || 0, 0);
+    var scrollWidth = Math.max(root.scrollWidth || 0, 0);
+    var scrollHeight = Math.max(root.scrollHeight || 0, 0);
+    var widthOverflow = scrollWidth - clientWidth;
+    var heightOverflow = scrollHeight - clientHeight;
+    var hasRuntimeSurface = rootContainsRuntimeSurface(root);
+    var shouldExpandWidth = (
+      !hasRuntimeSurface &&
+      clientWidth > 120 &&
+      widthOverflow > 18 &&
+      widthOverflow < Math.max(96, clientWidth * 0.22) &&
+      (overflowX === 'hidden' || overflowX === 'clip')
+    );
+    var shouldExpandHeight = (
+      !hasRuntimeSurface &&
+      clientHeight > 120 &&
+      heightOverflow > 18 &&
+      heightOverflow < Math.max(160, clientHeight * 0.35) &&
+      (overflowY === 'hidden' || overflowY === 'clip')
+    );
+
+    if (shouldExpandWidth) {
+      rememberInlineStyle(root, ROOT_INLINE_WIDTH_ATTR, root.style.width || '');
+      var expandedWidth = scrollWidth + 'px';
+      if (root.style.width !== expandedWidth) {
+        root.style.width = expandedWidth;
+      }
+    } else {
+      restoreInlineStyle(root, ROOT_INLINE_WIDTH_ATTR, 'width');
+    }
+
+    if (shouldExpandHeight) {
+      rememberInlineStyle(root, ROOT_INLINE_HEIGHT_ATTR, root.style.height || '');
+      var expandedHeight = scrollHeight + 'px';
+      if (root.style.height !== expandedHeight) {
+        root.style.height = expandedHeight;
+      }
+    } else {
+      restoreInlineStyle(root, ROOT_INLINE_HEIGHT_ATTR, 'height');
+    }
+
+    return root;
   };
 
   var ensureBodyFitTransformRef = function (body) {
@@ -147,6 +241,8 @@ const buildRuntimeBridge = (frameId: string): string => {
     };
     var body = document.body;
     if (!body) return fallback;
+
+    normalizeObservedGameRoot();
 
     var declaredRoot = findDeclaredGameRoot();
     if (declaredRoot) {
@@ -237,6 +333,7 @@ const buildRuntimeBridge = (frameId: string): string => {
     var docEl = document.documentElement;
     if (!body || !docEl) return;
 
+    normalizeObservedGameRoot();
     ensureBodyFitTransformRef(body);
     body.style.setProperty(FIT_TRANSFORM_VAR, 'translate(0px, 0px) scale(1)');
 
@@ -251,14 +348,24 @@ const buildRuntimeBridge = (frameId: string): string => {
       scale = 1;
     }
 
+    var leftoverHeight = Math.max(viewportHeight - (contentHeight * scale), 0);
+    var topPadding = Math.min(Math.max(leftoverHeight * 0.12, 0), 18);
     var offsetX = ((viewportWidth - (contentWidth * scale)) / 2) - (bounds.minLeft * scale);
-    var offsetY = ((viewportHeight - (contentHeight * scale)) / 2) - (bounds.minTop * scale);
+    var offsetY = topPadding - (bounds.minTop * scale);
 
     body.style.transformOrigin = '0 0';
     body.style.setProperty(
       FIT_TRANSFORM_VAR,
       'translate(' + offsetX.toFixed(2) + 'px, ' + offsetY.toFixed(2) + 'px) scale(' + scale.toFixed(6) + ')'
     );
+
+    var roundedWidth = Math.max(Math.round(contentWidth), 1);
+    var roundedHeight = Math.max(Math.round(contentHeight), 1);
+    if (roundedWidth !== lastMetricsWidth || roundedHeight !== lastMetricsHeight) {
+      lastMetricsWidth = roundedWidth;
+      lastMetricsHeight = roundedHeight;
+      sendMetrics(roundedWidth, roundedHeight);
+    }
   };
 
   var scheduleFitToViewport = function () {
@@ -270,15 +377,20 @@ const buildRuntimeBridge = (frameId: string): string => {
   };
 
   var startFitObservers = function () {
+    normalizeObservedGameRoot();
     var gameRoot = findObservedGameRoot();
     if (!gameRoot) return;
 
     if (typeof MutationObserver === 'function') {
       fitMutationObserver = new MutationObserver(function () {
+        normalizeObservedGameRoot();
         scheduleFitToViewport();
       });
       fitMutationObserver.observe(gameRoot, {
+        attributes: true,
+        characterData: true,
         childList: true,
+        subtree: true,
       });
     }
 
@@ -317,25 +429,36 @@ const buildRuntimeBridge = (frameId: string): string => {
 </script>`;
 };
 
+// RELAXED CSP: Added worker-src, child-src, and 'unsafe-eval' for modern HTML5 Game Engines
 const buildRuntimeStyle = (): string => `
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://esm.sh; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob: https://www.transparenttextures.com https://upload.wikimedia.org https://images.unsplash.com https://picsum.photos https://fastly.picsum.photos https://api.dicebear.com; media-src data: blob: https://commons.wikimedia.org https://cdn.freesound.org; connect-src https://opentdb.com https://api.datamuse.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://esm.sh; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src data: blob: https://www.transparenttextures.com https://upload.wikimedia.org https://images.unsplash.com https://picsum.photos https://fastly.picsum.photos https://api.dicebear.com; media-src data: blob: https://commons.wikimedia.org https://cdn.freesound.org; connect-src https://opentdb.com https://api.datamuse.com blob: data:; worker-src blob: data: 'self'; child-src blob: data: 'self';">
 <style>
   :root { color-scheme: light dark; }
   html, body {
     margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    overflow: hidden; /* Prevents double scrollbars */
     transform-origin: 0 0;
-    touch-action: manipulation;
+    touch-action: none; /* Crucial: Prevents mobile browser pull-to-refresh & swipe navigation */
     -webkit-user-select: none;
     user-select: none;
-    background: #0f172a;
+    -webkit-touch-callout: none;
+    background: #000; /* Industry standard for game containers to hide letterboxing */
     color: #e2e8f0;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
   }
   * { box-sizing: border-box; }
-  button, [role="button"], a, canvas, svg, input, textarea {
+  
+  canvas {
+    display: block; /* Removes baseline ghost padding underneath the canvas */
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none; /* Explicitly disable touch scrolling on the canvas itself */
+  }
+  
+  button, [role="button"], a, input, textarea {
     touch-action: manipulation;
   }
 </style>`;
@@ -354,7 +477,7 @@ const ensureHtmlDocument = (sourceCode: string): string => {
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
   </head>
   <body>${source}</body>
 </html>`;
@@ -416,7 +539,7 @@ export const buildMiniGameSrcDoc = (options: MiniGameDocumentOptions): string =>
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
     ${runtimeStyle}
   </head>
   <body>
