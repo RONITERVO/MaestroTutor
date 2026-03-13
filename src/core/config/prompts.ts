@@ -121,17 +121,24 @@ Your Response: "[laughing] Oh no! [chuckles] That is both terrible and absolutel
 User: "Do you think AI will ever be truly creative?"
 Your Response: "[contemplative] Hmm... that's a really deep question. I think it depends on how you define 'creative.' [short pause] In some ways, we can create new things, but that spark of human experience... that's something else entirely, isn't it?"`;
 
-export const MAESTRO_TOOL_GUIDELINES = `You can enrich tutoring with three app-level tools: image, audio note, and music.
-Use them only when they meaningfully help the learner, and keep the plain text tutor reply useful on its own.
+export const MAESTRO_TOOL_GUIDELINES = `If helpful, append exactly one \`\`\`maestro-tool\`\`\` JSON block after the normal reply.
+Use only one tool: image, audio-note, or music.
+Use either one artifact block or one maestro-tool block, not both.
+Do not overuse one tool; vary them naturally.
+Skip the block if no tool helps.
 
-Tool usage rules:
-- Do not overuse any single tool or artifact format.
-- Rotate naturally across image, audio note, and music over time instead of repeating the same one.
-- Prefer image when a visual scene, object, gesture, or spatial context would help vocabulary or comprehension.
-- Prefer audio note when pronunciation, rhythm, intonation, or hearing a short phrase matters most.
-- Prefer music when instrumental mood, rhythm, cultural atmosphere, or memorization support would help. Keep music instrumental and avoid lyrics unless the user explicitly asks otherwise.
-- Use at most one tool per response unless the user clearly asks for more than one.
-- If a tool would not add value, skip it instead of forcing it.`;
+Shapes:
+\`\`\`maestro-tool
+{"tool":"image","prompt":"..."}
+\`\`\`
+\`\`\`maestro-tool
+{"tool":"audio-note","text":"..."}
+\`\`\`
+\`\`\`maestro-tool
+{"tool":"music","prompt":"...", "durationSeconds": 12}
+\`\`\`
+
+Keep it minimal. Music should be instrumental unless the user explicitly asks otherwise.`;
 
 export const DEFAULT_REPLY_SUGGESTIONS_PROMPT_CONTENT = `You are an AI assistant that provides reply suggestions and a recommended response time to a {TARGET_LANGUAGE_NAME} language learner.
 The learner has just received the following message from their {TARGET_LANGUAGE_NAME} tutor. You also have the recent {TARGET_LANGUAGE_NAME} conversation history for context.
@@ -154,9 +161,9 @@ You also receive the learner's "existingGlobalProfile" which is their cross-sess
 "{tutor_message_placeholder}"
 
 **Your Task:**
-Generate a single JSON object with five keys: "suggestions", "reengagementSeconds", "chatSummary", "globalProfile", and "artifact".
+Generate a single JSON object with six keys: "suggestions", "reengagementSeconds", "chatSummary", "globalProfile", "artifact", and "toolRequest".
 
-Before you do that, parse the tutor's latest message yourself. It may contain a normal tutor reply plus a trailing raw artifact block such as code, SVG, chart data, CSV/TSV, HTML, markdown, or some other fenced payload. Do not assume a fixed artifact type or a fixed fence label.
+Before you do that, parse the tutor's latest message yourself. It may contain a normal tutor reply plus a trailing raw artifact block such as code, SVG, chart data, CSV/TSV, HTML, markdown, or some other fenced payload. It may also contain a trailing \`maestro-tool\` fenced JSON block. Do not assume a fixed artifact type or a fixed fence label.
 
 1.  "suggestions": An array of reply suggestion objects. For each suggestion, provide:
     *   The suggestion in {TARGET_LANGUAGE_NAME} (as \`target\`).
@@ -164,7 +171,7 @@ Before you do that, parse the tutor's latest message yourself. It may contain a 
     *   Suggestions should be relevant, beginner-intermediate friendly, and encourage conversation.
     *   The number of suggestions is up to you; cover a small, useful range.
     *   Personalize suggestions based on the learner's global profile and chat history.
-    *   If the latest tutor message contains an artifact, base suggestions on the human-readable tutor message, not on copying or reacting to raw artifact syntax.
+    *   If the latest tutor message contains an artifact or tool block, base suggestions on the human-readable tutor message, not on copying or reacting to raw block syntax.
 
 2.  "chatSummary": A cumulative summary of the {TARGET_LANGUAGE_NAME} chat up to and including the tutor's latest message, updated from {TARGET_LANGUAGE_NAME} previousChatSummary.
     - Keep it durable, this is your only memory of the user in following interactions (topics, preferences, progress, unresolved questions).
@@ -198,6 +205,17 @@ Before you do that, parse the tutor's latest message yourself. It may contain a 
     - Use \`encoding: "data-url"\` only when the artifact already is a full \`data:\` URL or must stay that way for rendering.
     - For SVG, return raw SVG markup with \`mimeType: "image/svg+xml"\` and \`encoding: "text"\`.
 
+6.  "toolRequest": Either \`null\` or a normalized Maestro tool request object for the latest tutor message.
+    - If there is no \`maestro-tool\` block, return \`null\`.
+    - If there is a tool block, return one of:
+      { "tool": "image", "prompt": "..." }
+      { "tool": "audio-note", "text": "..." }
+      { "tool": "music", "prompt": "...", "durationSeconds": 8-20 }
+    - Remove markdown fences and return only normalized fields.
+    - Keep it minimal but usable.
+    - For music, keep it instrumental unless the tutor explicitly asked for vocals.
+    - If both an artifact block and a \`maestro-tool\` block appear, prefer the \`maestro-tool\` block and return \`artifact: null\` unless the artifact is essential.
+
 Example JSON Output:
 {
   "suggestions": [
@@ -208,7 +226,8 @@ Example JSON Output:
   "chatSummary": "x",
   "reengagementSeconds": y,
   "globalProfile": "z",
-  "artifact": null
+  "artifact": null,
+  "toolRequest": null
 }
 
 Important:

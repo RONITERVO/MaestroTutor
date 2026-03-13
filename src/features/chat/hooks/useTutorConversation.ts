@@ -163,38 +163,13 @@ type SuggestionCreatorArtifact = {
 
 type MaestroToolKind = NonNullable<ChatMessage['maestroToolKind']>;
 
-type MaestroToolDecision = {
-  tool: MaestroToolKind | 'none';
-  audioNoteText?: string;
-  musicPrompt?: string;
+type SuggestionCreatorToolRequest = {
+  tool?: string;
+  prompt?: string;
+  text?: string;
+  durationSeconds?: number;
   musicDurationSeconds?: number;
 };
-
-const MAESTRO_TOOL_SELECTOR_PROMPT = `You decide whether Maestro should attach one extra learning tool output to the latest tutor reply.
-Available tools:
-- image
-- audio-note
-- music
-- none
-
-Rules:
-- Choose at most one tool.
-- Do not overuse one tool. Prefer underused tools from recent history when they still fit naturally.
-- Use image for visual grounding, objects, scenes, gestures, or spatial explanations.
-- Use audio-note for pronunciation, rhythm, intonation, or a short spoken example.
-- Use music only for instrumental atmosphere, rhythm, memorization support, or cultural mood. No lyrics, no vocals.
-- If no tool adds clear value, choose none.
-- If image generation is disabled, never choose image.
-- The learner still receives the plain text tutor reply, so the tool should add something new rather than duplicate it exactly.
-
-Return only a single JSON object:
-{
-  "tool": "image" | "audio-note" | "music" | "none",
-  "audioNoteText": "optional short spoken text",
-  "musicPrompt": "optional instrumental music prompt",
-  "musicDurationSeconds": 8-20,
-  "reason": "short internal reason"
-}`;
 
 const SUPPORTED_MAESTRO_TOOLS: MaestroToolKind[] = ['image', 'audio-note', 'music'];
 
@@ -203,126 +178,21 @@ const isSupportedMaestroTool = (value: unknown): value is MaestroToolKind => (
   SUPPORTED_MAESTRO_TOOLS.includes(value as MaestroToolKind)
 );
 
-const parseJsonObjectFromResponseText = (value: string): any | null => {
-  const trimmed = (value || '').trim();
-  if (!trimmed) return null;
-
-  const fenceMatch = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i);
-  const candidate = fenceMatch?.[1]?.trim() || trimmed;
-  try {
-    return JSON.parse(candidate);
-  } catch {}
-
-  const firstBrace = candidate.indexOf('{');
-  const lastBrace = candidate.lastIndexOf('}');
-  if (firstBrace >= 0 && lastBrace > firstBrace) {
-    try {
-      return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
-    } catch {}
-  }
-
-  return null;
-};
-
 const truncateForToolPrompt = (value: string, maxChars: number = 420): string => {
   const normalized = (value || '').replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   return normalized.length > maxChars ? `${normalized.slice(0, maxChars - 1)}…` : normalized;
 };
 
-const describeMessageForToolSelection = (message: ChatMessage): string => {
+const getVisibleAssistantMessageText = (message?: ChatMessage | null): string => {
+  if (!message) return '';
   if (message.translations?.length) {
-    const targetOnly = message.translations
-      .map(pair => (pair?.target || '').trim())
+    return message.translations
+      .map(pair => [pair?.target?.trim(), pair?.native?.trim()].filter(Boolean).join('\n'))
       .filter(Boolean)
-      .join(' ');
-    if (targetOnly) return targetOnly;
+      .join('\n');
   }
   return message.rawAssistantResponse || message.text || '';
-};
-
-const summarizeRecentConversationForToolSelection = (messages: ChatMessage[]): string => {
-  const relevant = messages
-    .filter(m => (m.role === 'user' || m.role === 'assistant') && !m.thinking)
-    .slice(-8);
-
-  if (!relevant.length) return '(none)';
-
-  return relevant.map((message, index) => {
-    const roleLabel = message.role === 'assistant' ? 'Assistant' : 'User';
-    const toolLabel = message.role === 'assistant' && message.maestroToolKind
-      ? ` [tool=${message.maestroToolKind}]`
-      : '';
-    const body = truncateForToolPrompt(describeMessageForToolSelection(message));
-    return `${index + 1}. ${roleLabel}${toolLabel}: ${body || '(empty)'}`;
-  }).join('\n');
-};
-
-const summarizeRecentToolUsage = (messages: ChatMessage[]): string => {
-  const recentAssistantMessages = messages
-    .filter(m => m.role === 'assistant' && !m.thinking)
-    .slice(-10);
-
-  const counts: Record<MaestroToolKind, number> = {
-    image: 0,
-    'audio-note': 0,
-    music: 0,
-  };
-
-  const timeline = recentAssistantMessages.map(message => {
-    const tool = message.maestroToolKind || 'none';
-    if (isSupportedMaestroTool(message.maestroToolKind)) {
-      counts[message.maestroToolKind] += 1;
-    }
-    return tool;
-  });
-
-  return [
-    `counts=image:${counts.image}, audio-note:${counts['audio-note']}, music:${counts.music}`,
-    `timeline=${timeline.length ? timeline.join(' -> ') : '(none)'}`,
-  ].join('\n');
-};
-
-const normalizeToolDecision = (
-  candidate: any,
-  options: { imageAllowed: boolean; assistantVisibleText: string }
-): MaestroToolDecision => {
-  const toolValue = typeof candidate?.tool === 'string' ? candidate.tool.trim().toLowerCase() : 'none';
-  const tool = isSupportedMaestroTool(toolValue)
-    ? toolValue
-    : 'none';
-
-  if (tool === 'image' && !options.imageAllowed) {
-    return { tool: 'none' };
-  }
-
-  const audioNoteText = typeof candidate?.audioNoteText === 'string'
-    ? candidate.audioNoteText.trim()
-    : '';
-  const musicPrompt = typeof candidate?.musicPrompt === 'string'
-    ? candidate.musicPrompt.trim()
-    : '';
-  const rawDuration = Number(candidate?.musicDurationSeconds);
-  const musicDurationSeconds = Number.isFinite(rawDuration)
-    ? Math.max(8, Math.min(20, Math.round(rawDuration)))
-    : undefined;
-
-  if (tool === 'audio-note') {
-    return {
-      tool,
-      audioNoteText: audioNoteText || options.assistantVisibleText,
-    };
-  }
-
-  if (tool === 'music') {
-    return {
-      tool,
-      musicPrompt: musicPrompt || truncateForToolPrompt(options.assistantVisibleText, 280),
-      musicDurationSeconds,
-    };
-  }
-
-  return { tool };
 };
 
 export interface UseTutorConversationConfig {
@@ -651,6 +521,47 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     };
   }, []);
 
+  const normalizeSuggestionCreatorToolRequest = useCallback((toolRequest: unknown, assistantMessageId: string) => {
+    if (!toolRequest || typeof toolRequest !== 'object') return null;
+
+    const candidate = toolRequest as SuggestionCreatorToolRequest;
+    const toolValue = typeof candidate.tool === 'string' ? candidate.tool.trim().toLowerCase() : '';
+    if (!isSupportedMaestroTool(toolValue)) return null;
+
+    if (toolValue === 'image' && !settingsRef.current.imageGenerationModeEnabled) {
+      return null;
+    }
+
+    const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
+    const fallbackText = truncateForToolPrompt(getVisibleAssistantMessageText(assistantMessage), 500);
+    const prompt = typeof candidate.prompt === 'string' ? candidate.prompt.trim() : '';
+    const text = typeof candidate.text === 'string' ? candidate.text.trim() : '';
+    const rawDuration = Number(candidate.durationSeconds ?? candidate.musicDurationSeconds);
+    const durationSeconds = Number.isFinite(rawDuration)
+      ? Math.max(8, Math.min(20, Math.round(rawDuration)))
+      : undefined;
+
+    if (toolValue === 'audio-note') {
+      return {
+        tool: toolValue,
+        text: text || prompt || fallbackText,
+      } as const;
+    }
+
+    if (toolValue === 'music') {
+      return {
+        tool: toolValue,
+        prompt: prompt || text || truncateForToolPrompt(fallbackText, 280),
+        durationSeconds,
+      } as const;
+    }
+
+    return {
+      tool: toolValue,
+      prompt: prompt || text || truncateForToolPrompt(fallbackText, 280),
+    } as const;
+  }, [messagesRef, settingsRef]);
+
   const finalizeAssistantArtifact = useCallback((assistantMessageId: string, artifact: unknown) => {
     const normalized = normalizeSuggestionCreatorArtifact(artifact);
     const updates: Partial<ChatMessage> = {
@@ -971,14 +882,19 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     history: ChatMessage[]
   ) => {
     let resolvedArtifact: unknown = null;
+    let resolvedToolRequest: ReturnType<typeof normalizeSuggestionCreatorToolRequest> = null;
 
-    const finishReplySuggestionsRequest = () => {
+    const finishReplySuggestionsRequest = async () => {
       setSuggestionsLoadingStreamText('');
       if (suggestionsTokenRef.current) {
         removeActivityToken(suggestionsTokenRef.current);
         suggestionsTokenRef.current = null;
       }
-      finalizeAssistantArtifact(assistantMessageId, resolvedArtifact);
+      if (resolvedToolRequest) {
+        await executeAssistantToolRequest(assistantMessageId, resolvedToolRequest);
+      } else {
+        finalizeAssistantArtifact(assistantMessageId, resolvedArtifact);
+      }
     };
 
     // Check if already loading using token state
@@ -987,7 +903,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
     if (!lastTutorMessage.trim() || !selectedLanguagePairRef.current) {
       setReplySuggestions([]);
-      finishReplySuggestionsRequest();
+      await finishReplySuggestionsRequest();
       return;
     }
 
@@ -998,9 +914,21 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (targetIdx !== -1) {
         const target = allMsgs[targetIdx];
         if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
-          setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
-          finishReplySuggestionsRequest();
-          return;
+          const hasExistingAttachment = !!(
+            (target.imageUrl && target.imageMimeType) ||
+            (target.uploadedFileUri && target.uploadedFileMimeType)
+          );
+          const visibleText = getVisibleAssistantMessageText(target).trim();
+          const hasStructuredTail = !!(
+            target.llmRawResponse &&
+            target.llmRawResponse.trim() &&
+            target.llmRawResponse.trim() !== visibleText
+          );
+          if (hasExistingAttachment || !hasStructuredTail) {
+            setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
+            await finishReplySuggestionsRequest();
+            return;
+          }
         }
       }
     }
@@ -1114,6 +1042,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
         const parsedResponse = JSON.parse(jsonStr);
         resolvedArtifact = parsedResponse?.artifact ?? null;
+        resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
+        if (resolvedToolRequest) {
+          resolvedArtifact = null;
+        }
 
         if (Array.isArray(parsedResponse.suggestions) &&
           parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
@@ -1162,13 +1094,15 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         }
       }
     }
-    finishReplySuggestionsRequest();
+    await finishReplySuggestionsRequest();
   }, [
     currentReplySuggestionsPromptText, 
+    executeAssistantToolRequest,
     finalizeAssistantArtifact,
     handleReengagementThresholdChange, 
     getHistoryRespectingBookmark,
     messagesRef,
+    normalizeSuggestionCreatorToolRequest,
     selectedLanguagePairRef,
     settingsRef,
     isLoadingSuggestions,
@@ -1287,49 +1221,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     return { optimized, upload };
   }, [t, setSendPrep]);
 
-  const selectAssistantTool = useCallback(async (params: {
-    thinkingMessageId: string;
-    userMessageText: string;
-    assistantVisibleText: string;
-    currentSettingsVal: AppSettings;
-  }): Promise<MaestroToolDecision> => {
-    const history = getHistoryRespectingBookmark(messagesRef.current)
-      .filter(m => !m.thinking && m.id !== params.thinkingMessageId);
-    const selectedLanguagePair = selectedLanguagePairRef.current;
-
-    const prompt = [
-      MAESTRO_TOOL_SELECTOR_PROMPT,
-      `Image generation enabled: ${params.currentSettingsVal.imageGenerationModeEnabled ? 'yes' : 'no'}`,
-      selectedLanguagePair
-        ? `Target language: ${selectedLanguagePair.targetLanguageName}\nNative language: ${selectedLanguagePair.nativeLanguageName}`
-        : '',
-      `Latest user message:\n${params.userMessageText.trim() || '(none)'}`,
-      `Latest assistant reply:\n${params.assistantVisibleText.trim() || '(none)'}`,
-      `Recent conversation:\n${summarizeRecentConversationForToolSelection(history)}`,
-      `Recent tool usage:\n${summarizeRecentToolUsage(history)}`,
-    ].filter(Boolean).join('\n\n');
-
-    const response = await generateGeminiResponse(
-      getGeminiModels().text.aux,
-      prompt,
-      [],
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      false,
-      { responseMimeType: 'application/json' }
-    );
-
-    trackTokenUsage(getGeminiModels().text.aux, response.usageMetadata);
-
-    const parsed = parseJsonObjectFromResponseText(response.text || '');
-    return normalizeToolDecision(parsed, {
-      imageAllowed: params.currentSettingsVal.imageGenerationModeEnabled,
-      assistantVisibleText: params.assistantVisibleText,
-    });
-  }, [getHistoryRespectingBookmark, messagesRef, selectedLanguagePairRef]);
-
   const attachGeneratedToolMedia = useCallback(async (params: {
     messageId: string;
     toolKind: MaestroToolKind;
@@ -1369,6 +1260,82 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       });
     }
   }, [optimizeAndUploadMedia, updateMessage]);
+
+  async function executeAssistantToolRequest(
+    assistantMessageId: string,
+    toolRequest: ReturnType<typeof normalizeSuggestionCreatorToolRequest>
+  ) {
+    const existing = messagesRef.current.find(message => message.id === assistantMessageId);
+    updateMessage(assistantMessageId, {
+      isLoadingArtifact: false,
+      artifactLoadStartTime: undefined,
+    });
+
+    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileUri && existing.uploadedFileMimeType))) {
+      return;
+    }
+
+    if (!toolRequest) {
+      return;
+    }
+
+    if (toolRequest.tool === 'image') {
+      await runAssistantImageGeneration({
+        thinkingMessageId: assistantMessageId,
+        accumulatedFullText: toolRequest.prompt || getVisibleAssistantMessageText(messagesRef.current.find(m => m.id === assistantMessageId)),
+        currentSettingsVal: settingsRef.current,
+      });
+      return;
+    }
+
+    updateMessage(assistantMessageId, {
+      isGeneratingToolAttachment: true,
+      toolAttachmentStartTime: Date.now(),
+      maestroToolKind: toolRequest.tool,
+    });
+
+    try {
+      if (toolRequest.tool === 'audio-note') {
+        const selectedLanguagePair = selectedLanguagePairRef.current;
+        const langCode = getPrimarySubtag(selectedLanguagePair?.targetLanguageCode || settingsRef.current.stt.language || 'en');
+        const audioNote = await synthesizeGeminiAudioNote({
+          text: truncateForToolPrompt(toolRequest.text || getVisibleAssistantMessageText(messagesRef.current.find(m => m.id === assistantMessageId)), 500),
+          langCode,
+          voiceName: settingsRef.current.tts.voiceName || 'Kore',
+        });
+
+        await attachGeneratedToolMedia({
+          messageId: assistantMessageId,
+          toolKind: 'audio-note',
+          dataUrl: audioNote.dataUrl,
+          mimeType: audioNote.mimeType,
+          attachmentName: 'maestro-audio-note.wav',
+        });
+        return;
+      }
+
+      if (toolRequest.tool === 'music') {
+        const music = await generateMusic({
+          prompt: (toolRequest.prompt || getVisibleAssistantMessageText(messagesRef.current.find(m => m.id === assistantMessageId))).trim(),
+          durationSeconds: toolRequest.durationSeconds,
+        });
+
+        await attachGeneratedToolMedia({
+          messageId: assistantMessageId,
+          toolKind: 'music',
+          dataUrl: music.dataUrl,
+          mimeType: music.mimeType,
+          attachmentName: 'maestro-music.wav',
+        });
+      }
+    } catch (error) {
+      console.warn(`[MaestroTool] ${toolRequest.tool} generation failed.`, error);
+      updateMessage(assistantMessageId, {
+        isGeneratingToolAttachment: false,
+        toolAttachmentStartTime: undefined,
+      });
+    }
+  }
 
   const createUserMessage = useCallback(async (params: {
     text: string;
@@ -1883,119 +1850,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     updateMessage,
   ]);
 
-  const runAssistantToolGeneration = useCallback(async (params: {
-    thinkingMessageId: string;
-    accumulatedFullText: string;
-    currentSettingsVal: AppSettings;
-    userMessageText: string;
-  }) => {
-    const visibleAssistantText = params.accumulatedFullText.trim();
-    if (!visibleAssistantText) return;
-
-    const existing = messagesRef.current.find(m => m.id === params.thinkingMessageId);
-    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileUri && existing.uploadedFileMimeType))) {
-      return;
-    }
-
-    let decision: MaestroToolDecision;
-    try {
-      decision = await selectAssistantTool({
-        thinkingMessageId: params.thinkingMessageId,
-        userMessageText: params.userMessageText,
-        assistantVisibleText: visibleAssistantText,
-        currentSettingsVal: params.currentSettingsVal,
-      });
-    } catch (error) {
-      console.warn('[MaestroTool] Tool selection failed.', error);
-      if (params.currentSettingsVal.imageGenerationModeEnabled) {
-        await runAssistantImageGeneration({
-          thinkingMessageId: params.thinkingMessageId,
-          accumulatedFullText: visibleAssistantText,
-          currentSettingsVal: params.currentSettingsVal,
-        });
-      }
-      return;
-    }
-
-    if (decision.tool === 'none') {
-      return;
-    }
-
-    if (decision.tool === 'image') {
-      await runAssistantImageGeneration({
-        thinkingMessageId: params.thinkingMessageId,
-        accumulatedFullText: visibleAssistantText,
-        currentSettingsVal: params.currentSettingsVal,
-      });
-      return;
-    }
-
-    updateMessage(params.thinkingMessageId, {
-      isGeneratingToolAttachment: true,
-      toolAttachmentStartTime: Date.now(),
-    });
-
-    try {
-      if (decision.tool === 'audio-note') {
-        const noteText = truncateForToolPrompt(decision.audioNoteText || visibleAssistantText, 500);
-        const selectedLanguagePair = selectedLanguagePairRef.current;
-        const langCode = getPrimarySubtag(selectedLanguagePair?.targetLanguageCode || settingsRef.current.stt.language || 'en');
-        const audioNote = await synthesizeGeminiAudioNote({
-          text: noteText,
-          langCode,
-          voiceName: settingsRef.current.tts.voiceName || 'Kore',
-        });
-
-        await attachGeneratedToolMedia({
-          messageId: params.thinkingMessageId,
-          toolKind: 'audio-note',
-          dataUrl: audioNote.dataUrl,
-          mimeType: audioNote.mimeType,
-          attachmentName: 'maestro-audio-note.wav',
-        });
-        return;
-      }
-
-      if (decision.tool === 'music') {
-        const musicPrompt = (decision.musicPrompt || visibleAssistantText).trim();
-        const music = await generateMusic({
-          prompt: musicPrompt,
-          durationSeconds: decision.musicDurationSeconds,
-        });
-
-        await attachGeneratedToolMedia({
-          messageId: params.thinkingMessageId,
-          toolKind: 'music',
-          dataUrl: music.dataUrl,
-          mimeType: music.mimeType,
-          attachmentName: 'maestro-music.wav',
-        });
-      }
-    } catch (error) {
-      console.warn(`[MaestroTool] ${decision.tool} generation failed.`, error);
-      updateMessage(params.thinkingMessageId, {
-        isGeneratingToolAttachment: false,
-        toolAttachmentStartTime: undefined,
-      });
-      if (params.currentSettingsVal.imageGenerationModeEnabled) {
-        await runAssistantImageGeneration({
-          thinkingMessageId: params.thinkingMessageId,
-          accumulatedFullText: visibleAssistantText,
-          currentSettingsVal: params.currentSettingsVal,
-        });
-      }
-    }
-  }, [
-    attachGeneratedToolMedia,
-    messagesRef,
-    runAssistantImageGeneration,
-    selectAssistantTool,
-    selectedLanguagePairRef,
-    settingsRef,
-    updateMessage,
-  ]);
-
-
   // Main send message handler
   const handleSendMessageInternal = useCallback(async (
     text: string,
@@ -2309,7 +2163,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         imageForGeminiContextMimeType = userImageContext.imageForGeminiContextMimeType;
       }
 
-      const { accumulatedFullText, finalMessageUpdates, hasAttachmentCandidate } = await handleGeminiResponse({
+      const { finalMessageUpdates } = await handleGeminiResponse({
         thinkingMessageId,
         geminiPromptText,
         sanitizedDerivedHistory,
@@ -2348,16 +2202,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
 
       await new Promise(resolve => setTimeout(resolve, 0));
-
-      // Tool generation for assistant response
-      if (!hasAttachmentCandidate) {
-        await runAssistantToolGeneration({
-          thinkingMessageId,
-          accumulatedFullText,
-          currentSettingsVal,
-          userMessageText,
-        });
-      }
 
       try {
         sendWithFileUploadInProgressRef.current = false;
@@ -2480,7 +2324,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     handleGeminiResponse,
     runUserImageGeneration,
     runAssistantImageGeneration,
-    runAssistantToolGeneration,
     requestReplySuggestions,
     speakMessage,
     isSpeechSynthesisSupported,
