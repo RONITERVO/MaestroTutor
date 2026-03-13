@@ -13,6 +13,17 @@ const MIN_DURATION_SECONDS = 8;
 const MAX_DURATION_SECONDS = 20;
 const SETUP_TIMEOUT_MS = 12000;
 const GENERATION_TIMEOUT_MS = 90000;
+const SETUP_FALLBACK_START_MS = 1500;
+const STREAM_PLAYBACK_GAIN = 0.22;
+
+type ActiveMusicPlayback = {
+  audioContext: AudioContext;
+  gainNode: GainNode;
+  nextStartTime: number;
+  activeSources: Set<AudioBufferSourceNode>;
+};
+
+let activeMusicPlayback: ActiveMusicPlayback | null = null;
 
 const base64ToUint8 = (base64: string): Uint8Array => {
   const binaryString = atob(base64);
@@ -26,6 +37,97 @@ const base64ToUint8 = (base64: string): Uint8Array => {
 const base64ToInt16 = (base64: string): Int16Array => {
   const bytes = base64ToUint8(base64);
   return new Int16Array(bytes.buffer);
+};
+
+const pcmToAudioBuffer = (
+  pcmData: Uint8Array,
+  audioContext: AudioContext,
+  sampleRate: number,
+  numChannels: number
+): AudioBuffer => {
+  const dataInt16 = new Int16Array(pcmData.buffer, pcmData.byteOffset, Math.floor(pcmData.byteLength / 2));
+  const frameCount = Math.max(1, Math.floor(dataInt16.length / Math.max(1, numChannels)));
+  const buffer = audioContext.createBuffer(numChannels, frameCount, sampleRate);
+
+  for (let channel = 0; channel < numChannels; channel++) {
+    const channelData = buffer.getChannelData(channel);
+    for (let i = 0; i < frameCount; i++) {
+      const sampleIndex = i * numChannels + channel;
+      channelData[i] = (dataInt16[sampleIndex] || 0) / 32768;
+    }
+  }
+
+  return buffer;
+};
+
+const stopActiveMusicPlayback = async () => {
+  const playback = activeMusicPlayback;
+  activeMusicPlayback = null;
+  if (!playback) return;
+
+  for (const source of playback.activeSources) {
+    try { source.stop(); } catch {}
+    try { source.disconnect(); } catch {}
+  }
+  playback.activeSources.clear();
+
+  try { playback.gainNode.disconnect(); } catch {}
+  try { await playback.audioContext.close(); } catch {}
+};
+
+const ensureMusicPlayback = async (): Promise<ActiveMusicPlayback | null> => {
+  if (typeof window === 'undefined') return null;
+
+  const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextCtor) return null;
+
+  if (activeMusicPlayback && activeMusicPlayback.audioContext.state !== 'closed') {
+    if (activeMusicPlayback.audioContext.state === 'suspended') {
+      try { await activeMusicPlayback.audioContext.resume(); } catch {}
+    }
+    return activeMusicPlayback;
+  }
+
+  const audioContext = new AudioContextCtor({ sampleRate: DEFAULT_SAMPLE_RATE });
+  if (audioContext.state === 'suspended') {
+    try { await audioContext.resume(); } catch {}
+  }
+  const gainNode = audioContext.createGain();
+  gainNode.gain.value = STREAM_PLAYBACK_GAIN;
+  gainNode.connect(audioContext.destination);
+
+  activeMusicPlayback = {
+    audioContext,
+    gainNode,
+    nextStartTime: audioContext.currentTime,
+    activeSources: new Set(),
+  };
+  return activeMusicPlayback;
+};
+
+const queueMusicChunkForPlayback = async (
+  base64Chunk: string,
+  sampleRate: number,
+  channels: number
+): Promise<boolean> => {
+  const playback = await ensureMusicPlayback();
+  if (!playback) return false;
+
+  const chunkBytes = base64ToUint8(base64Chunk);
+  const audioBuffer = pcmToAudioBuffer(chunkBytes, playback.audioContext, sampleRate, channels);
+  const source = playback.audioContext.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(playback.gainNode);
+  playback.activeSources.add(source);
+  source.onended = () => {
+    playback.activeSources.delete(source);
+    try { source.disconnect(); } catch {}
+  };
+
+  playback.nextStartTime = Math.max(playback.audioContext.currentTime, playback.nextStartTime);
+  source.start(playback.nextStartTime);
+  playback.nextStartTime += audioBuffer.duration;
+  return true;
 };
 
 const clampDuration = (value?: number): number => {
@@ -58,6 +160,8 @@ export const generateMusic = async (params: {
   prompt: string;
   durationSeconds?: number;
   abortSignal?: AbortSignal;
+  streamPlayback?: boolean;
+  onStreamPlaybackStart?: () => void;
 }): Promise<GeminiMusicResult> => {
   const prompt = (params.prompt || '').trim();
   if (!prompt) {
@@ -67,6 +171,10 @@ export const generateMusic = async (params: {
   const ai = await getAi({ apiVersion: 'v1alpha' });
   const model = normalizeMusicModel(getGeminiModels().music.generation);
   const targetDurationSeconds = clampDuration(params.durationSeconds);
+  const shouldStreamPlayback = params.streamPlayback !== false;
+  if (shouldStreamPlayback) {
+    await stopActiveMusicPlayback();
+  }
   const weightedPrompts: WeightedPrompt[] = [
     {
       text: `${prompt}. Instrumental only. No vocals, no lyrics, no copyrighted melodies. Original educational backing track.`,
@@ -87,15 +195,20 @@ export const generateMusic = async (params: {
     let totalSamples = 0;
     let setupTimer: ReturnType<typeof setTimeout> | null = null;
     let generationTimer: ReturnType<typeof setTimeout> | null = null;
+    let setupFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let isStartingPlayback = false;
     let startedPlayback = false;
     let pausedForEnoughAudio = false;
+    let hasStartedStreamingPlayback = false;
     const pcmChunks: Int16Array[] = [];
 
     const cleanup = () => {
       if (setupTimer) clearTimeout(setupTimer);
       if (generationTimer) clearTimeout(generationTimer);
+      if (setupFallbackTimer) clearTimeout(setupFallbackTimer);
       setupTimer = null;
       generationTimer = null;
+      setupFallbackTimer = null;
     };
 
     const resolveOnce = (result: GeminiMusicResult) => {
@@ -140,6 +253,9 @@ export const generateMusic = async (params: {
     const abort = (reason: string) => {
       cleanup();
       try { session?.close(); } catch {}
+      if (shouldStreamPlayback) {
+        void stopActiveMusicPlayback();
+      }
       rejectOnce(new Error(reason));
     };
 
@@ -155,9 +271,9 @@ export const generateMusic = async (params: {
       }
     };
 
-    const startPlayback = async () => {
-      if (startedPlayback || isSettled) return;
-      startedPlayback = true;
+    const startPlayback = async (strict: boolean) => {
+      if (startedPlayback || isStartingPlayback || isSettled || !session) return;
+      isStartingPlayback = true;
       try {
         await session.setWeightedPrompts({ weightedPrompts });
         await session.setMusicGenerationConfig({
@@ -170,8 +286,13 @@ export const generateMusic = async (params: {
           } as any,
         });
         session.play();
+        startedPlayback = true;
       } catch (error: any) {
-        abort(error?.message || 'Music playback could not be started.');
+        if (strict) {
+          abort(error?.message || 'Music playback could not be started.');
+        }
+      } finally {
+        isStartingPlayback = false;
       }
     };
 
@@ -198,7 +319,11 @@ export const generateMusic = async (params: {
               clearTimeout(setupTimer);
               setupTimer = null;
             }
-            void startPlayback();
+            if (setupFallbackTimer) {
+              clearTimeout(setupFallbackTimer);
+              setupFallbackTimer = null;
+            }
+            void startPlayback(true);
           }
 
           const filteredReason = message?.filteredPrompt?.filteredReason;
@@ -212,11 +337,22 @@ export const generateMusic = async (params: {
             : [];
           for (const chunk of audioChunks) {
             if (!chunk?.data) continue;
+            if (setupTimer) {
+              clearTimeout(setupTimer);
+              setupTimer = null;
+            }
             sampleRate = parseIntParam(chunk.mimeType, 'rate') || parseIntParam(chunk.mimeType, 'sampleRate') || sampleRate;
             channels = parseIntParam(chunk.mimeType, 'channels') || channels;
             const pcm = base64ToInt16(chunk.data);
             pcmChunks.push(pcm);
             totalSamples += pcm.length;
+            if (shouldStreamPlayback) {
+              void queueMusicChunkForPlayback(chunk.data, sampleRate, channels).then((didStartPlayback) => {
+                if (isSettled || !didStartPlayback || hasStartedStreamingPlayback) return;
+                hasStartedStreamingPlayback = true;
+                params.onStreamPlaybackStart?.();
+              }).catch(() => {});
+            }
             maybeStopAfterEnoughAudio();
           }
         },
@@ -229,11 +365,20 @@ export const generateMusic = async (params: {
         onerror: (error: any) => {
           const message = error?.message || 'Music generation failed.';
           log.error({ message });
+          if (shouldStreamPlayback) {
+            void stopActiveMusicPlayback();
+          }
           rejectOnce(new Error(message));
         },
       },
     }).then((connectedSession: any) => {
       session = connectedSession;
+      void startPlayback(false);
+      setupFallbackTimer = setTimeout(() => {
+        if (!startedPlayback && !isSettled) {
+          void startPlayback(false);
+        }
+      }, SETUP_FALLBACK_START_MS);
       if (params.abortSignal) {
         if (params.abortSignal.aborted) {
           abort('Music generation aborted.');

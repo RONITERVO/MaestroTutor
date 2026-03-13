@@ -323,13 +323,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           };
           updateRemainingTime(); 
           intervalId = window.setInterval(updateRemainingTime, 1000);
+      } else if (message.maestroToolKind === 'music' && message.toolAttachmentPhase === 'pending') {
+          setRemainingTimeDisplay(t('chat.music.starting'));
       } else {
           setRemainingTimeDisplay(null);
       }
       return () => {
           if (intervalId) clearInterval(intervalId);
       };
-  }, [message.isGeneratingImage, message.imageGenerationStartTime, estimatedLoadTime, t]);
+  }, [estimatedLoadTime, message.imageGenerationStartTime, message.isGeneratingImage, message.maestroToolKind, message.toolAttachmentPhase, t]);
 
   useEffect(() => {
     return () => {
@@ -605,6 +607,19 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     !isAttachmentAPdf &&
     isTextLikeAttachment(displayMime, message.attachmentName);
   const hasAttachmentSource = !!displayUrl || !!message.uploadedFileUri;
+  const toolAttachmentStatusText = useMemo(() => {
+    if (message.maestroToolKind !== 'music') return null;
+    switch (message.toolAttachmentPhase) {
+      case 'pending':
+        return t('chat.music.starting');
+      case 'streaming':
+        return t('chat.music.streaming');
+      case 'finalizing':
+        return t('chat.music.finalizing');
+      default:
+        return null;
+    }
+  }, [message.maestroToolKind, message.toolAttachmentPhase, t]);
 
   const isImageSuccessfullyDisplayed = isAttachmentAnImage && displayUrl && !isAttachmentLoading && !message.imageGenError;
   const isVideoSuccessfullyDisplayed = isAttachmentAVideo && displayUrl && !isAttachmentLoading;
@@ -1244,6 +1259,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   </p>
               </div>
           )}
+
+        {isAssistant && toolAttachmentStatusText && !isAttachmentLoading && !hasAttachmentSource && (
+          <div className="mb-2">
+            <p className="inline-flex items-center rounded-full bg-status-msg-bg/70 px-2.5 py-1 text-xs text-thinking-bubble-text">
+              {toolAttachmentStatusText}
+            </p>
+          </div>
+        )}
 
         {hasTextContent && (
            <div className={`transition-opacity duration-300

@@ -132,6 +132,9 @@ export const createChatSlice: StateCreator<
             newMsg.isGeneratingToolAttachment = false;
             newMsg.toolAttachmentStartTime = undefined;
           }
+          if (newMsg.toolAttachmentPhase) {
+            newMsg.toolAttachmentPhase = undefined;
+          }
           if (newMsg.thinking) {
             newMsg.thinking = false;
             newMsg.thinkingTrace = undefined;

@@ -44,6 +44,7 @@ export interface ChatMessage {
   thinkingStatusLine?: string;
   isGeneratingImage?: boolean;
   isGeneratingToolAttachment?: boolean;
+  toolAttachmentPhase?: 'pending' | 'streaming' | 'finalizing';
   imageGenError?: string | null;
   imageGenerationStartTime?: number;
   toolAttachmentStartTime?: number;

@@ -162,6 +162,7 @@ type SuggestionCreatorArtifact = {
 };
 
 type MaestroToolKind = NonNullable<ChatMessage['maestroToolKind']>;
+type ToolAttachmentPhase = NonNullable<ChatMessage['toolAttachmentPhase']>;
 
 type SuggestionCreatorToolRequest = {
   tool?: string;
@@ -1246,6 +1247,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         uploadedFileMimeType: upload.mimeType,
         isGeneratingToolAttachment: false,
         toolAttachmentStartTime: undefined,
+        toolAttachmentPhase: undefined,
         maestroToolKind: params.toolKind,
       });
     } catch (error) {
@@ -1256,6 +1258,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         attachmentName: params.attachmentName,
         isGeneratingToolAttachment: false,
         toolAttachmentStartTime: undefined,
+        toolAttachmentPhase: undefined,
         maestroToolKind: params.toolKind,
       });
     }
@@ -1291,6 +1294,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     updateMessage(assistantMessageId, {
       isGeneratingToolAttachment: true,
       toolAttachmentStartTime: Date.now(),
+      toolAttachmentPhase: 'pending' as ToolAttachmentPhase,
       maestroToolKind: toolRequest.tool,
     });
 
@@ -1318,6 +1322,21 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         const music = await generateMusic({
           prompt: (toolRequest.prompt || getVisibleAssistantMessageText(messagesRef.current.find(m => m.id === assistantMessageId))).trim(),
           durationSeconds: toolRequest.durationSeconds,
+          onStreamPlaybackStart: () => {
+            updateMessage(assistantMessageId, {
+              isGeneratingToolAttachment: false,
+              toolAttachmentStartTime: undefined,
+              toolAttachmentPhase: 'streaming' as ToolAttachmentPhase,
+              maestroToolKind: 'music',
+            });
+          },
+        });
+
+        updateMessage(assistantMessageId, {
+          isGeneratingToolAttachment: false,
+          toolAttachmentStartTime: undefined,
+          toolAttachmentPhase: 'finalizing' as ToolAttachmentPhase,
+          maestroToolKind: 'music',
         });
 
         await attachGeneratedToolMedia({
@@ -1333,6 +1352,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       updateMessage(assistantMessageId, {
         isGeneratingToolAttachment: false,
         toolAttachmentStartTime: undefined,
+        toolAttachmentPhase: undefined,
       });
     }
   }
