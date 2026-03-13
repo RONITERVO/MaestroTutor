@@ -15,6 +15,9 @@ export interface GeminiModelRegistry {
   audio: {
     live: string;
   };
+  music: {
+    generation: string;
+  };
 }
 
 export interface GeminiModelRegistryInput {
@@ -29,6 +32,9 @@ export interface GeminiModelRegistryInput {
   };
   audio?: {
     live?: string;
+  };
+  music?: {
+    generation?: string;
   };
 }
 
@@ -50,6 +56,9 @@ const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   audio: {
     live: 'gemini-2.5-flash-native-audio-preview-12-2025',
   },
+  music: {
+    generation: 'lyria-realtime-exp',
+  },
 };
 
 let currentModels: GeminiModelRegistry = { ...DEFAULT_GEMINI_MODELS };
@@ -65,6 +74,7 @@ const isValidRegistry = (value: any): value is {
   text: { default: string; aux: string; translation: string; fallback?: string };
   image: { generation: string };
   audio: { live: string };
+  music: { generation: string };
 } => {
   if (!value || typeof value !== 'object') return false;
   return (
@@ -73,7 +83,8 @@ const isValidRegistry = (value: any): value is {
     isNonEmptyString(value?.text?.translation) &&
     (value?.text?.fallback === undefined || isNonEmptyString(value?.text?.fallback)) &&
     isNonEmptyString(value?.image?.generation) &&
-    isNonEmptyString(value?.audio?.live)
+    isNonEmptyString(value?.audio?.live) &&
+    isNonEmptyString(value?.music?.generation)
   );
 };
 
@@ -89,6 +100,9 @@ const mergeWithDefaults = (value: GeminiModelRegistryInput): GeminiModelRegistry
   },
   audio: {
     live: value?.audio?.live ?? DEFAULT_GEMINI_MODELS.audio.live,
+  },
+  music: {
+    generation: value?.music?.generation ?? DEFAULT_GEMINI_MODELS.music.generation,
   },
 });
 

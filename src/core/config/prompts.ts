@@ -121,6 +121,18 @@ Your Response: "[laughing] Oh no! [chuckles] That is both terrible and absolutel
 User: "Do you think AI will ever be truly creative?"
 Your Response: "[contemplative] Hmm... that's a really deep question. I think it depends on how you define 'creative.' [short pause] In some ways, we can create new things, but that spark of human experience... that's something else entirely, isn't it?"`;
 
+export const MAESTRO_TOOL_GUIDELINES = `You can enrich tutoring with three app-level tools: image, audio note, and music.
+Use them only when they meaningfully help the learner, and keep the plain text tutor reply useful on its own.
+
+Tool usage rules:
+- Do not overuse any single tool or artifact format.
+- Rotate naturally across image, audio note, and music over time instead of repeating the same one.
+- Prefer image when a visual scene, object, gesture, or spatial context would help vocabulary or comprehension.
+- Prefer audio note when pronunciation, rhythm, intonation, or hearing a short phrase matters most.
+- Prefer music when instrumental mood, rhythm, cultural atmosphere, or memorization support would help. Keep music instrumental and avoid lyrics unless the user explicitly asks otherwise.
+- Use at most one tool per response unless the user clearly asks for more than one.
+- If a tool would not add value, skip it instead of forcing it.`;
+
 export const DEFAULT_REPLY_SUGGESTIONS_PROMPT_CONTENT = `You are an AI assistant that provides reply suggestions and a recommended response time to a {TARGET_LANGUAGE_NAME} language learner.
 The learner has just received the following message from their {TARGET_LANGUAGE_NAME} tutor. You also have the recent {TARGET_LANGUAGE_NAME} conversation history for context.
 
@@ -272,6 +284,7 @@ export const IMAGE_GEN_USER_PROMPT_TEMPLATE = `I dont want to see the same or ev
 export function composeMaestroSystemInstruction(base: string): string {
   let sys = base || "";
   sys += `\n\n${VOICE_TAG_PERSONA_GUIDELINES}`;
+  sys += `\n\n${MAESTRO_TOOL_GUIDELINES}`;
   return sys;
 }
 

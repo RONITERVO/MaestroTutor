@@ -52,10 +52,13 @@ export const validateApiKey = async (apiKey: string): Promise<{ valid: boolean }
   }
 };
 
-export const getAi = async () => {
+export const getAi = async (options?: { apiVersion?: string }) => {
   try {
     const apiKey = await getApiKeyOrThrow();
-    return new GoogleGenAI({ apiKey });
+    return new GoogleGenAI({
+      apiKey,
+      ...(options?.apiVersion ? { apiVersion: options.apiVersion } : {}),
+    });
   } catch (e: any) {
     const message = e?.message || 'Missing API key';
     throw new ApiError(message, { code: 'MISSING_API_KEY' });

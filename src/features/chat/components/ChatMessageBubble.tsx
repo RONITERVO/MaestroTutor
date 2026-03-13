@@ -80,7 +80,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isAssistant = message.role === 'assistant';
   const isError = message.role === 'error';
   const isStatus = message.role === 'status';
-  const isAttachmentLoading = Boolean(message.isGeneratingImage || message.isLoadingArtifact);
+  const isAttachmentLoading = Boolean(message.isGeneratingImage || message.isGeneratingToolAttachment || message.isLoadingArtifact);
   
   const [remainingTimeDisplay, setRemainingTimeDisplay] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -623,7 +623,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
     if (!isAttachmentLoading || source.length === 0) return null;
-    const seedStr = `${message.id || ''}|${message.imageGenerationStartTime || message.artifactLoadStartTime || 0}`;
+    const seedStr = `${message.id || ''}|${message.imageGenerationStartTime || message.toolAttachmentStartTime || message.artifactLoadStartTime || 0}`;
     let h = 0;
     for (let i = 0; i < seedStr.length; i++) {
       h = ((h << 5) - h) + seedStr.charCodeAt(i);
@@ -631,7 +631,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     }
     const idx = Math.abs(h) % source.length;
     return source[idx];
-  }, [isAttachmentLoading, loadingAnimations, message.artifactLoadStartTime, message.id, message.imageGenerationStartTime]);
+  }, [isAttachmentLoading, loadingAnimations, message.artifactLoadStartTime, message.id, message.imageGenerationStartTime, message.toolAttachmentStartTime]);
 
   const [loadingAnimationError, setLoadingAnimationError] = useState(false);
 

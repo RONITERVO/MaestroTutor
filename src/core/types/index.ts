@@ -4,6 +4,7 @@
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';
+  maestroToolKind?: 'image' | 'audio-note' | 'music';
   text?: string;
   recordedUtterance?: RecordedUtterance;
   /** Translation pairs using generic field names to support all language combinations */
@@ -42,8 +43,10 @@ export interface ChatMessage {
   /** One-off status line for the lower line until model-authored output arrives. */
   thinkingStatusLine?: string;
   isGeneratingImage?: boolean;
+  isGeneratingToolAttachment?: boolean;
   imageGenError?: string | null;
   imageGenerationStartTime?: number;
+  toolAttachmentStartTime?: number;
   isLoadingArtifact?: boolean;
   artifactLoadStartTime?: number;
   tempSelectedNativeLangCode?: string;

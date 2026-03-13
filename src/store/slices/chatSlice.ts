@@ -121,12 +121,16 @@ export const createChatSlice: StateCreator<
       
       // Clean up interrupted states
       const cleanedHistory = (history || []).map(msg => {
-        if (msg.isGeneratingImage || msg.thinking || msg.isLoadingArtifact) {
+        if (msg.isGeneratingImage || msg.isGeneratingToolAttachment || msg.thinking || msg.isLoadingArtifact) {
           const newMsg = { ...msg };
           if (newMsg.isGeneratingImage) {
             newMsg.isGeneratingImage = false;
             newMsg.imageGenError = t('chat.error.imageGenInterrupted');
             newMsg.imageGenerationStartTime = undefined;
+          }
+          if (newMsg.isGeneratingToolAttachment) {
+            newMsg.isGeneratingToolAttachment = false;
+            newMsg.toolAttachmentStartTime = undefined;
           }
           if (newMsg.thinking) {
             newMsg.thinking = false;
