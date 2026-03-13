@@ -13,7 +13,6 @@ const MIN_DURATION_SECONDS = 8;
 const MAX_DURATION_SECONDS = 20;
 const SETUP_TIMEOUT_MS = 12000;
 const GENERATION_TIMEOUT_MS = 90000;
-const SETUP_FALLBACK_START_MS = 1500;
 const STREAM_PLAYBACK_GAIN = 0.22;
 
 type ActiveMusicPlayback = {
@@ -92,6 +91,7 @@ const ensureMusicPlayback = async (): Promise<ActiveMusicPlayback | null> => {
   if (audioContext.state === 'suspended') {
     try { await audioContext.resume(); } catch {}
   }
+
   const gainNode = audioContext.createGain();
   gainNode.gain.value = STREAM_PLAYBACK_GAIN;
   gainNode.connect(audioContext.destination);
@@ -102,6 +102,7 @@ const ensureMusicPlayback = async (): Promise<ActiveMusicPlayback | null> => {
     nextStartTime: audioContext.currentTime,
     activeSources: new Set(),
   };
+
   return activeMusicPlayback;
 };
 
@@ -119,6 +120,7 @@ const queueMusicChunkForPlayback = async (
   source.buffer = audioBuffer;
   source.connect(playback.gainNode);
   playback.activeSources.add(source);
+
   source.onended = () => {
     playback.activeSources.delete(source);
     try { source.disconnect(); } catch {}
@@ -172,9 +174,11 @@ export const generateMusic = async (params: {
   const model = normalizeMusicModel(getGeminiModels().music.generation);
   const targetDurationSeconds = clampDuration(params.durationSeconds);
   const shouldStreamPlayback = params.streamPlayback !== false;
+
   if (shouldStreamPlayback) {
     await stopActiveMusicPlayback();
   }
+
   const weightedPrompts: WeightedPrompt[] = [
     {
       text: `${prompt}. Instrumental only. No vocals, no lyrics, no copyrighted melodies. Original educational backing track.`,
@@ -195,20 +199,19 @@ export const generateMusic = async (params: {
     let totalSamples = 0;
     let setupTimer: ReturnType<typeof setTimeout> | null = null;
     let generationTimer: ReturnType<typeof setTimeout> | null = null;
-    let setupFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let hasSetupComplete = false;
     let isStartingPlayback = false;
     let startedPlayback = false;
-    let pausedForEnoughAudio = false;
     let hasStartedStreamingPlayback = false;
+    let hasReachedTargetDuration = false;
+    let lastWarning = '';
     const pcmChunks: Int16Array[] = [];
 
     const cleanup = () => {
       if (setupTimer) clearTimeout(setupTimer);
       if (generationTimer) clearTimeout(generationTimer);
-      if (setupFallbackTimer) clearTimeout(setupFallbackTimer);
       setupTimer = null;
       generationTimer = null;
-      setupFallbackTimer = null;
     };
 
     const resolveOnce = (result: GeminiMusicResult) => {
@@ -241,6 +244,7 @@ export const generateMusic = async (params: {
         channels,
         sampleCount: merged.length,
       });
+
       resolveOnce({
         dataUrl: pcmToWav(merged, sampleRate, channels),
         mimeType: 'audio/wav',
@@ -259,20 +263,8 @@ export const generateMusic = async (params: {
       rejectOnce(new Error(reason));
     };
 
-    const maybeStopAfterEnoughAudio = () => {
-      const durationSeconds = totalSamples / Math.max(1, sampleRate * channels);
-      if (!pausedForEnoughAudio && durationSeconds >= targetDurationSeconds) {
-        pausedForEnoughAudio = true;
-        try { session?.pause(); } catch {}
-        window.setTimeout(() => {
-          try { session?.close(); } catch {}
-          finalize();
-        }, 250);
-      }
-    };
-
-    const startPlayback = async (strict: boolean) => {
-      if (startedPlayback || isStartingPlayback || isSettled || !session) return;
+    const startPlayback = async () => {
+      if (startedPlayback || isStartingPlayback || isSettled || !session || !hasSetupComplete) return;
       isStartingPlayback = true;
       try {
         await session.setWeightedPrompts({ weightedPrompts });
@@ -281,23 +273,19 @@ export const generateMusic = async (params: {
             musicGenerationMode: 'QUALITY',
             temperature: 1.1,
             guidance: 4,
-            sampleRateHz: DEFAULT_SAMPLE_RATE,
-            audioFormat: 'pcm16',
           } as any,
         });
         session.play();
         startedPlayback = true;
       } catch (error: any) {
-        if (strict) {
-          abort(error?.message || 'Music playback could not be started.');
-        }
+        abort(error?.message || 'Music playback could not be started.');
       } finally {
         isStartingPlayback = false;
       }
     };
 
     setupTimer = setTimeout(() => {
-      abort('Music generation setup timed out.');
+      abort('Music generation setup timed out before setupComplete.');
     }, SETUP_TIMEOUT_MS);
 
     generationTimer = setTimeout(() => {
@@ -310,20 +298,29 @@ export const generateMusic = async (params: {
       abort('Music generation timed out.');
     }, GENERATION_TIMEOUT_MS);
 
+    if (params.abortSignal) {
+      if (params.abortSignal.aborted) {
+        abort('Music generation aborted.');
+        return;
+      }
+      params.abortSignal.addEventListener('abort', () => abort('Music generation aborted.'), { once: true });
+    }
+
     ai.live.music.connect({
       model,
       callbacks: {
         onmessage: (message: any) => {
+          if (typeof message?.warning === 'string' && message.warning.trim()) {
+            lastWarning = message.warning.trim();
+          }
+
           if (message?.setupComplete) {
+            hasSetupComplete = true;
             if (setupTimer) {
               clearTimeout(setupTimer);
               setupTimer = null;
             }
-            if (setupFallbackTimer) {
-              clearTimeout(setupFallbackTimer);
-              setupFallbackTimer = null;
-            }
-            void startPlayback(true);
+            void startPlayback();
           }
 
           const filteredReason = message?.filteredPrompt?.filteredReason;
@@ -335,17 +332,24 @@ export const generateMusic = async (params: {
           const audioChunks = Array.isArray(message?.serverContent?.audioChunks)
             ? message.serverContent.audioChunks
             : [];
+
           for (const chunk of audioChunks) {
             if (!chunk?.data) continue;
+
             if (setupTimer) {
               clearTimeout(setupTimer);
               setupTimer = null;
             }
-            sampleRate = parseIntParam(chunk.mimeType, 'rate') || parseIntParam(chunk.mimeType, 'sampleRate') || sampleRate;
+
+            sampleRate = parseIntParam(chunk.mimeType, 'rate')
+              || parseIntParam(chunk.mimeType, 'sampleRate')
+              || sampleRate;
             channels = parseIntParam(chunk.mimeType, 'channels') || channels;
+
             const pcm = base64ToInt16(chunk.data);
             pcmChunks.push(pcm);
             totalSamples += pcm.length;
+
             if (shouldStreamPlayback) {
               void queueMusicChunkForPlayback(chunk.data, sampleRate, channels).then((didStartPlayback) => {
                 if (isSettled || !didStartPlayback || hasStartedStreamingPlayback) return;
@@ -353,17 +357,40 @@ export const generateMusic = async (params: {
                 params.onStreamPlaybackStart?.();
               }).catch(() => {});
             }
-            maybeStopAfterEnoughAudio();
+
+            const durationSeconds = totalSamples / Math.max(1, sampleRate * channels);
+            if (!hasReachedTargetDuration && durationSeconds >= targetDurationSeconds) {
+              hasReachedTargetDuration = true;
+              try { session?.pause(); } catch {}
+              window.setTimeout(() => {
+                try { session?.close(); } catch {}
+                finalize();
+              }, 250);
+            }
           }
         },
         onclose: () => {
           cleanup();
-          if (!isSettled && pcmChunks.length > 0) {
+          if (isSettled) return;
+
+          if (pcmChunks.length > 0) {
             finalize();
+            return;
           }
+
+          if (shouldStreamPlayback) {
+            void stopActiveMusicPlayback();
+          }
+
+          if (!hasSetupComplete) {
+            rejectOnce(new Error(lastWarning || 'Lyria RealTime closed before setup completed.'));
+            return;
+          }
+
+          rejectOnce(new Error(lastWarning || 'Lyria RealTime stream closed before generating audio.'));
         },
         onerror: (error: any) => {
-          const message = error?.message || 'Music generation failed.';
+          const message = error?.message || lastWarning || 'Music generation failed.';
           log.error({ message });
           if (shouldStreamPlayback) {
             void stopActiveMusicPlayback();
@@ -372,20 +399,11 @@ export const generateMusic = async (params: {
         },
       },
     }).then((connectedSession: any) => {
-      session = connectedSession;
-      void startPlayback(false);
-      setupFallbackTimer = setTimeout(() => {
-        if (!startedPlayback && !isSettled) {
-          void startPlayback(false);
-        }
-      }, SETUP_FALLBACK_START_MS);
-      if (params.abortSignal) {
-        if (params.abortSignal.aborted) {
-          abort('Music generation aborted.');
-          return;
-        }
-        params.abortSignal.addEventListener('abort', () => abort('Music generation aborted.'), { once: true });
+      if (isSettled) {
+        try { connectedSession?.close(); } catch {}
+        return;
       }
+      session = connectedSession;
     }).catch((error: any) => {
       const message = error?.message || 'Music session failed.';
       log.error({ message });
