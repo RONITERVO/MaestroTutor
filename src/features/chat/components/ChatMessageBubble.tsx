@@ -664,6 +664,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || isAttachmentLoading || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   const hasVisibleAttachment = isAttachmentLoading || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !isAudioSuccessfullyDisplayed;
+  const useOverlayTextColors = shouldOverlayTextOnAttachment;
   const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment;
   const shouldInsetScrollableAttachmentForOverlay = shouldUseScrollableTextOverlay && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
@@ -865,7 +866,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   let tapeWrapperMaxWidth = '';
    if (applyFocusedImageStyles) {
       bubbleWrapperClasses += " w-full overflow-hidden";
-      if (!isImageSuccessfullyDisplayed && !isAttachmentLoading && !isFileSuccessfullyDisplayed && !isOfficeFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isTextFileRemoteOnly && !isVideoSuccessfullyDisplayed) {
+      if (isAudioSuccessfullyDisplayed) {
+           bubbleWrapperClasses += " p-3";
+           if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
+           else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
+           else if (isStatus) bubbleWrapperClasses += " msg-depth bg-status-msg-bg bg-opacity-90 text-status-msg-text";
+           else bubbleWrapperClasses += " msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text";
+      } else if (!isImageSuccessfullyDisplayed && !isAttachmentLoading && !isFileSuccessfullyDisplayed && !isOfficeFileSuccessfullyDisplayed && !isTextFileSuccessfullyDisplayed && !isTextFileRemoteOnly && !isVideoSuccessfullyDisplayed) {
            bubbleWrapperClasses += " p-3";
            if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
            else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
@@ -887,22 +894,33 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   let imageContainerFlexCenteringClasses = "flex items-center justify-center";
 
   if (applyFocusedImageStyles) {
-      imageContainerSizeClasses = "w-full max-h-[75vh]"; 
-      if (isAttachmentLoading || isFileSuccessfullyDisplayed) {
-          imageContainerAspectClasses = "aspect-square"; 
+      imageContainerSizeClasses = "w-full max-h-[75vh]";
+      if (isAudioSuccessfullyDisplayed) {
+          imageContainerSizeClasses = "w-full";
+          imageContainerAspectClasses = "";
+          imageContainerFlexCenteringClasses = "";
+      } else if (isAttachmentLoading || isFileSuccessfullyDisplayed) {
+          imageContainerAspectClasses = "aspect-square";
       } else if (isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed) {
           if (isAnnotationActive) {
-              imageContainerAspectClasses = "bg-user-msg-bg"; 
-              imageContainerFlexCenteringClasses = ""; 
+              imageContainerAspectClasses = "bg-user-msg-bg";
+              imageContainerFlexCenteringClasses = "";
           } else {
               imageContainerAspectClasses = "";
           }
       }
-  } else { 
-      imageContainerSizeClasses = isScrollableFileAttachment ? "w-full max-w-[320px] mx-auto my-2" : "w-full max-w-[250px] mx-auto my-2";
-      imageContainerAspectClasses = isScrollableFileAttachment ? "" : "aspect-square";
-      if (isScrollableFileAttachment) {
+  } else {
+      if (isAudioSuccessfullyDisplayed) {
+        imageContainerSizeClasses = "w-full my-2";
+        imageContainerAspectClasses = "";
         imageContainerFlexCenteringClasses = "";
+      } else if (isScrollableFileAttachment) {
+        imageContainerSizeClasses = "w-full max-w-[320px] mx-auto my-2";
+        imageContainerAspectClasses = "";
+        imageContainerFlexCenteringClasses = "";
+      } else {
+        imageContainerSizeClasses = "w-full max-w-[250px] mx-auto my-2";
+        imageContainerAspectClasses = "aspect-square";
       }
   }
   
@@ -1288,8 +1306,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         `}</style>
                {isAssistant && applyFocusedImageStyles && message.translations && message.translations.length > 0 ? (
                    <>
-             <TextScrollwheel 
-                           translations={message.translations} 
+             <TextScrollwheel
+                           translations={message.translations}
                            speakingUtteranceText={speakingUtteranceText}
                            currentTargetLangCode={currentTargetLangCode}
                            currentNativeLangCode={currentNativeLangCode}
@@ -1301,13 +1319,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                speakNativeLang={speakNativeLang}
                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                messageId={message.id}
+               colorMode={useOverlayTextColors ? 'overlay' : 'themed'}
                        />
                    </>
                ) : (
                  <>
                   {isUser && message.text && (
                     <p
-                      className={`mb-1 whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors ${applyFocusedImageStyles ? 'text-white' : 'text-white'} ${isUserLineSpeaking ? 'bg-white/20 text-white' : 'hover:bg-white/10'}`}
+                      className={`mb-1 whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors ${useOverlayTextColors ? 'text-white' : 'text-user-msg-text'} ${isUserLineSpeaking ? (useOverlayTextColors ? 'bg-white/20 text-white' : 'bg-user-msg-text/10 text-user-msg-text') : (useOverlayTextColors ? 'hover:bg-white/10' : 'hover:bg-user-msg-text/5')}`}
                       style={{ fontSize: '3.8cqw', lineHeight: 1.35 }}
                       onPointerDown={handleLinePointerDown}
                       onPointerUp={handleUserMessagePointerUp}
@@ -1342,7 +1361,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        {pair.target && (
                          <p
                              className={`font-semibold whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
-                                 applyFocusedImageStyles
+                                 useOverlayTextColors
                                  ? (isCurrentLineSpeaking ? 'bg-marker-bg text-marker-text' : 'hover:text-paper-stripe text-white')
                                  : (isCurrentLineSpeaking ? 'bg-marker-bg text-marker-text' : 'hover:text-ai-msg-text text-ai-msg-text')
                              }`}
@@ -1392,7 +1411,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        )}
                        {pair.native && (
                         <p className={`italic mt-0.5 whitespace-pre-wrap pl-2 border-l-2 rounded-sm px-1 -mx-1 ${
-                             applyFocusedImageStyles
+                             useOverlayTextColors
                              ? (isCurrentLineSpeaking ? 'bg-user-msg-bg/60 text-user-msg-text/80' : 'text-user-msg-text/50 border-user-msg-text/30')
                              : (isCurrentLineSpeaking ? 'bg-status-msg-bg text-status-msg-text' : 'text-ai-file-text border-line-border')
                          }`} style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
@@ -1431,7 +1450,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        return (
                          <p
                              className={`whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
-                                 applyFocusedImageStyles
+                                 useOverlayTextColors
                                  ? (isCurrentlySpeakingRaw ? 'bg-marker-bg text-marker-text' : 'hover:text-paper-stripe text-white')
                                  : (isCurrentlySpeakingRaw ? 'bg-marker-bg text-marker-text' : 'hover:text-ai-msg-text text-ai-msg-text')
                              }`} style={{ fontSize: '4cqw', lineHeight: 1.3 }}
@@ -1459,7 +1478,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                      })()
                    )}
                    {(isError || isStatus) && message.text && (
-                     <p className={`${ applyFocusedImageStyles ? (isError ? 'text-img-error-text font-semibold' : 'text-status-msg-text font-semibold') : ''}`}
+                     <p className={`${ useOverlayTextColors ? (isError ? 'text-img-error-text font-semibold' : 'text-status-msg-text font-semibold') : ''}`}
                         style={{ fontSize: '3.2cqw', lineHeight: 1.25 }}>
                          {message.text}
                      </p>
@@ -1513,7 +1532,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                      </div>
                    )}
                    {isAssistant && !message.translations?.length && !message.rawAssistantResponse && !message.imageUrl && !isAttachmentLoading && message.text && (
-                     <p className={`whitespace-pre-wrap ${applyFocusedImageStyles ? 'text-white' : 'text-ai-msg-text'}`} style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>{message.text}</p>
+                     <p className={`whitespace-pre-wrap ${useOverlayTextColors ? 'text-white' : 'text-ai-msg-text'}`} style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>{message.text}</p>
                    )}
                </>
              )}
