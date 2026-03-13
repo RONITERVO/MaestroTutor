@@ -1283,9 +1283,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     if (toolRequest.tool === 'image') {
+      const assistantMessage = messagesRef.current.find(m => m.id === assistantMessageId);
+
+      // Prefer to use the full raw LLM response (or fallback to prompt only and then visible text. Why?: More context is useful for image generator.) 
+      const fullRawText = assistantMessage?.llmRawResponse
+        || toolRequest.prompt
+        || assistantMessage?.rawAssistantResponse
+        || getVisibleAssistantMessageText(assistantMessage);
+
       await runAssistantImageGeneration({
         thinkingMessageId: assistantMessageId,
-        accumulatedFullText: toolRequest.prompt || getVisibleAssistantMessageText(messagesRef.current.find(m => m.id === assistantMessageId)),
+        accumulatedFullText: fullRawText,
         currentSettingsVal: settingsRef.current,
       });
       return;
