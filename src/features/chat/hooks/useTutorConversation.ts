@@ -1010,6 +1010,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     } catch { cachedStatuses = {}; }
 
     let totalToEnsure = 0;
+    const indicesNeedingUpload = new Set<number>();
     for (let i = 0; i < candidates.length; i++) {
       if (!keepMediaIdx.has(i)) continue;
       const message = candidates[i];
@@ -1024,7 +1025,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         return !!cachedStatuses[existingVariant.uri]?.deleted;
       });
 
-      if (needsUpload) totalToEnsure++;
+      if (needsUpload) {
+        totalToEnsure++;
+        indicesNeedingUpload.add(i);
+      }
     }
 
     let doneCount = 0;
@@ -1037,6 +1041,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const eta = avg !== undefined ? Math.round(avg * remaining) : undefined;
       onProgress(doneCount, totalToEnsure, eta);
     };
+    if (totalToEnsure > 0) tick();
 
     const updatedUriMap: Record<string, MediaPayloadOverride> = {};
     for (let idx = 0; idx < candidates.length; idx++) {
@@ -1063,7 +1068,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           newVariants: nextState.uploadedFileVariants,
         };
       }
-      try { doneCount++; tick(); } catch {}
+      if (indicesNeedingUpload.has(idx)) {
+        try { doneCount++; tick(); } catch {}
+      }
       await new Promise(r => setTimeout(r, 0));
     }
     return updatedUriMap;
@@ -1968,10 +1975,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     let historyForAssistantImageGen: ChatMessage[] | undefined = undefined;
     try {
       sendWithFileUploadInProgressRef.current = true;
-      setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done: 0, total: 0 });
-      const ensuredUpdates = await ensureUrisForHistoryForSend(baseForEnsure, (done, total, etaMs) => {
-        setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
-      });
+      const ensuredUpdates = await ensureUrisForHistoryForSend(baseForEnsure);
       historyForAssistantImageGen = baseForEnsure.map(m => {
         const upd = ensuredUpdates[m.id];
         if (!upd) return m;
@@ -2095,7 +2099,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     optimizeAndUploadMedia,
     resolveBookmarkContextSummary,
     addImageLoadDuration,
-    setSendPrep,
     t,
     updateMessage,
   ]);
@@ -2300,8 +2303,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
     try {
       const historySubsetForSend: ChatMessage[] = getHistoryRespectingBookmark(historyForGemini);
-      setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done: 0, total: 0 });
-      
+
       let ensuredUpdates: Record<string, MediaPayloadOverride> = {};
       try {
         ensuredUpdates = await ensureUrisForHistoryForSend(historySubsetForSend, (done, total, etaMs) => {
@@ -2384,6 +2386,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         imageForGeminiContextFileUri = userImageContext.imageForGeminiContextFileUri;
         imageForGeminiContextMimeType = userImageContext.imageForGeminiContextMimeType;
       }
+
+      setSendPrep(null);
 
       const { finalMessageUpdates } = await handleGeminiResponse({
         thinkingMessageId,
