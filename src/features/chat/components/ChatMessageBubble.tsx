@@ -1534,7 +1534,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        )}
                      </div>
                    )}
-                   {isAssistant && !message.translations?.length && !message.rawAssistantResponse && !message.imageUrl && !isAttachmentLoading && message.text && (
+                  {isAssistant && !message.translations?.length && !message.rawAssistantResponse && !displayUrl && !isAttachmentLoading && message.text && (
                      <p className={`whitespace-pre-wrap ${useOverlayTextColors ? 'text-white' : 'text-ai-msg-text'}`} style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}>{message.text}</p>
                    )}
                </>

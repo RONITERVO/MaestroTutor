@@ -878,11 +878,21 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         .filter(variant => plannedVariantIds.has(variant.id))
         .map(variant => variant.uri);
 
-      if (!knownStatuses && existingUris.length > 0) {
+      const urisNeedingStatusCheck = !knownStatuses
+        ? Array.from(new Set(existingUris))
+        : Array.from(new Set(existingUris.filter(uri => !cachedStatuses[uri])));
+
+      if (urisNeedingStatusCheck.length > 0) {
         try {
-          cachedStatuses = await checkFileStatuses(Array.from(new Set(existingUris)));
+          const refreshedStatuses = await checkFileStatuses(urisNeedingStatusCheck);
+          cachedStatuses = {
+            ...cachedStatuses,
+            ...refreshedStatuses,
+          };
         } catch {
-          cachedStatuses = {};
+          if (!knownStatuses) {
+            cachedStatuses = {};
+          }
         }
       }
 
@@ -938,6 +948,37 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       payloadFiles: selectUploadedAttachmentParts(normalizedState, 'chat'),
     };
   }, [t, updateMessage]);
+
+  const uploadAttachmentVariantsForSource = useCallback(async (
+    source: { dataUrl: string; mimeType: string; attachmentName?: string },
+    fallbackDisplayName: string
+  ): Promise<Array<{ fileUri: string; mimeType: string }>> => {
+    const plans = buildAttachmentUploadPlans(source, t);
+    const uploadedVariants: UploadedAttachmentVariant[] = [];
+
+    for (const plan of plans) {
+      try {
+        const uploadSource = await plan.build();
+        const upload = await uploadMediaToFiles(
+          uploadSource.dataUrl,
+          uploadSource.mimeType,
+          uploadSource.displayName || source.attachmentName || fallbackDisplayName
+        );
+        uploadedVariants.push({
+          id: plan.id,
+          uri: upload.uri,
+          mimeType: upload.mimeType,
+          targets: plan.targets,
+          source: plan.source,
+          order: plan.order,
+        });
+      } catch (error) {
+        console.warn(`[uploadAttachmentVariantsForSource] Failed to upload ${plan.id} for ${fallbackDisplayName}.`, error);
+      }
+    }
+
+    return selectUploadedAttachmentParts(buildUploadedAttachmentState(uploadedVariants), 'chat');
+  }, [t]);
 
   const ensureUrisForHistoryForSend = useCallback(async (
     arr: ChatMessage[], 
@@ -1002,27 +1043,25 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (!keepMediaIdx.has(idx)) continue;
       const m = candidates[idx];
       const previousVariants = normalizeUploadedAttachmentVariants(m.uploadedFileVariants);
-      try {
-        const ensured = await ensureUploadedAttachmentVariantsForMessage(m, cachedStatuses);
-        const nextState = buildUploadedAttachmentState(ensured.variants);
-        const payloadFiles = ensured.payloadFiles;
+      const localSource = getMessageAttachmentSource(m);
+      const ensured = await ensureUploadedAttachmentVariantsForMessage(m, cachedStatuses);
+      const nextState = buildUploadedAttachmentState(ensured.variants);
+      const payloadFiles = ensured.payloadFiles;
 
-        if (
-          payloadFiles.length === 0 &&
-          (getMessageAttachmentSource(m) || previousVariants.length > 0)
-        ) {
-          console.warn(`[ensureUris] Message ${m.id} has no valid uploaded payload variants and will be omitted from this payload.`);
-          updatedUriMap[m.id] = {
-            transient: true,
-            omitFromPayload: true,
-          };
-        } else if (JSON.stringify(previousVariants) !== JSON.stringify(nextState.uploadedFileVariants || [])) {
-          updatedUriMap[m.id] = {
-            newVariants: nextState.uploadedFileVariants,
-          };
-        }
-      } catch (e) {
-        console.warn('Pre-send URI ensure failed for message', m.id, e);
+      if (payloadFiles.length === 0 && localSource) {
+        throw new Error(`Failed to prepare recent attachment "${m.attachmentName || 'attachment'}" for send. Try again or reattach the file.`);
+      }
+
+      if (payloadFiles.length === 0 && previousVariants.length > 0) {
+        console.warn(`[ensureUris] Message ${m.id} has no valid uploaded payload variants and will be omitted from this payload.`);
+        updatedUriMap[m.id] = {
+          transient: true,
+          omitFromPayload: true,
+        };
+      } else if (JSON.stringify(previousVariants) !== JSON.stringify(nextState.uploadedFileVariants || [])) {
+        updatedUriMap[m.id] = {
+          newVariants: nextState.uploadedFileVariants,
+        };
       }
       try { doneCount++; tick(); } catch {}
       await new Promise(r => setTimeout(r, 0));
@@ -2214,64 +2253,40 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     if (messageType === 'user' && userMessageId) {
       const currentUserMessage = messagesRef.current.find(m => m.id === userMessageId);
       if (currentUserMessage && getMessageAttachmentSource(currentUserMessage)) {
+        if (!sendWithFileUploadInProgressRef.current) {
+          sendWithFileUploadInProgressRef.current = true;
+        }
+        setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
         try {
-          if (!sendWithFileUploadInProgressRef.current) {
-            sendWithFileUploadInProgressRef.current = true;
-          }
-          setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
           const ensured = await ensureUploadedAttachmentVariantsForMessage(currentUserMessage);
-          if (ensured.payloadFiles.length > 0) {
-            imageForGeminiContextFileUri = ensured.payloadFiles;
-            imageForGeminiContextMimeType = ensured.payloadFiles[0]?.mimeType;
+          if (ensured.payloadFiles.length === 0) {
+            throw new Error(`Failed to prepare attached media "${currentUserMessage.attachmentName || 'attachment'}" for Gemini. Try again or reattach the file.`);
           }
-        } catch (e) {
-          console.warn('Failed to upload current media to Files API; will send without media', e);
-          imageForGeminiContextFileUri = undefined;
+          imageForGeminiContextFileUri = ensured.payloadFiles;
+          imageForGeminiContextMimeType = ensured.payloadFiles[0]?.mimeType;
         } finally {
           setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
         }
       }
     } else if (imageForGeminiContextBase64 && imageForGeminiContextMimeType) {
+      if (!sendWithFileUploadInProgressRef.current) {
+        sendWithFileUploadInProgressRef.current = true;
+      }
+      setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
       try {
-        if (!sendWithFileUploadInProgressRef.current) {
-          sendWithFileUploadInProgressRef.current = true;
-        }
-        setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
-        let uploadSource = {
-          dataUrl: imageForGeminiContextBase64,
-          mimeType: imageForGeminiContextMimeType,
-        };
-        if (isOfficeMimeUnsupportedByGemini(uploadSource.mimeType)) {
-          const officePreview = await getOfficePreview(uploadSource.dataUrl, uploadSource.mimeType, attachedFileName);
-          const extracted = (officePreview.text || '').trim();
-          if (!extracted) {
-            throw new Error(`Failed to extract Office text for Gemini context upload. ${officePreview.note || ''}`.trim());
-          }
-          uploadSource = {
-            dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
-            mimeType: 'text/plain',
-          };
-        }
-        if (isSvgMimeType(uploadSource.mimeType)) {
-          const rasterized = await processMediaForUpload(uploadSource.dataUrl, uploadSource.mimeType, { t });
-          if (!rasterized.dataUrl || !rasterized.mimeType || !rasterized.mimeType.startsWith('image/') || isSvgMimeType(rasterized.mimeType)) {
-            throw new Error(`Failed to rasterize SVG upload for Gemini context. Result MIME: ${rasterized.mimeType}`);
-          }
-          uploadSource = {
-            dataUrl: rasterized.dataUrl,
-            mimeType: rasterized.mimeType,
-          };
-        }
-        const up = await uploadMediaToFiles(
-          uploadSource.dataUrl,
-          uploadSource.mimeType,
+        const payloadFiles = await uploadAttachmentVariantsForSource(
+          {
+            dataUrl: imageForGeminiContextBase64,
+            mimeType: imageForGeminiContextMimeType,
+            attachmentName: attachedFileName || undefined,
+          },
           attachedFileName || 'current-user-media'
         );
-        imageForGeminiContextMimeType = up.mimeType;
-        imageForGeminiContextFileUri = [{ fileUri: up.uri, mimeType: up.mimeType }];
-      } catch (e) {
-        console.warn('Failed to upload current media to Files API; will send without media');
-        imageForGeminiContextFileUri = undefined;
+        if (payloadFiles.length === 0) {
+          throw new Error(`Failed to prepare attached media "${attachedFileName || 'attachment'}" for Gemini. Try again or reattach the file.`);
+        }
+        imageForGeminiContextMimeType = payloadFiles[0]?.mimeType;
+        imageForGeminiContextFileUri = payloadFiles;
       } finally {
         setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
       }
@@ -2524,6 +2539,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     computeMaxMessagesForArray,
     ensureUrisForHistoryForSend,
     ensureUploadedAttachmentVariantsForMessage,
+    uploadAttachmentVariantsForSource,
     resolveBookmarkContextSummary,
     handleGeminiResponse,
     runUserImageGeneration,

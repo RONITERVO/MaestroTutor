@@ -25,9 +25,32 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
 
   const capForMime = (mime?: string | null): number => {
     const t = (mime || '').toLowerCase();
+    if (t === 'image/svg+xml') return INLINE_CAP_OTHER;
     if (t.startsWith('video/')) return INLINE_CAP_VIDEO;
     if (t.startsWith('image/')) return INLINE_CAP_IMAGE;
     return INLINE_CAP_OTHER;
+  };
+
+  const getEffectiveMime = (explicitMime?: string | null, dataUrl?: string | null): string | undefined => (
+    explicitMime || inferMimeFromDataUrl(dataUrl)
+  );
+
+  const clearOriginalAttachmentSource = () => {
+    out.imageUrl = undefined;
+    out.imageMimeType = undefined;
+  };
+
+  const clearOptimizedAttachmentSource = () => {
+    delete (out as any).storageOptimizedImageUrl;
+    delete (out as any).storageOptimizedImageMimeType;
+  };
+
+  const hasUploadedVariants = Array.isArray(out.uploadedFileVariants) && out.uploadedFileVariants.length > 0;
+
+  const warnPersistenceDrop = (reason: string) => {
+    console.warn(
+      `[sanitizeForPersistence] ${reason}.${hasUploadedVariants ? ' uploaded attachment variants exist (remote only).' : ' WARNING: No uploaded attachment variants - media will be lost!'}`
+    );
   };
 
   const sanitizeTtsCache = (entries?: TtsAudioCacheEntry[] | null): TtsAudioCacheEntry[] | undefined => {
@@ -72,45 +95,69 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
     return next;
   };
 
-  // Optimization: If an optimized LLM image/media exists, promote it to the main display slot for storage.
-  // This discards the full-resolution 'imageUrl' to save significant space in IndexedDB,
-  // while ensuring the message history remains visually complete (albeit at lower quality) upon reload.
-  if (typeof (out as any).storageOptimizedImageUrl === 'string' && (out as any).storageOptimizedImageUrl) {
-    const originalMime = (out.imageMimeType || '').toLowerCase();
-    const keepOriginalSvg =
-      originalMime === 'image/svg+xml' &&
-      typeof out.imageUrl === 'string' &&
-      /^data:image\/svg\+xml/i.test(out.imageUrl);
+  const originalDataUrl = typeof out.imageUrl === 'string' && out.imageUrl ? out.imageUrl : undefined;
+  const originalMime = getEffectiveMime(out.imageMimeType, originalDataUrl);
+  const optimizedDataUrl =
+    typeof (out as any).storageOptimizedImageUrl === 'string' && (out as any).storageOptimizedImageUrl
+      ? (out as any).storageOptimizedImageUrl as string
+      : undefined;
+  const optimizedMime = getEffectiveMime((out as any).storageOptimizedImageMimeType, optimizedDataUrl) || originalMime;
+  const keepOriginalSvg =
+    originalMime === 'image/svg+xml' &&
+    typeof originalDataUrl === 'string' &&
+    /^data:image\/svg\+xml/i.test(originalDataUrl);
+  const originalFitsCap = !!(originalDataUrl && originalMime && originalDataUrl.length <= capForMime(originalMime));
+  const optimizedFitsCap = !!(optimizedDataUrl && optimizedMime && optimizedDataUrl.length <= capForMime(optimizedMime));
 
-    if (!keepOriginalSvg) {
-      out.imageUrl = (out as any).storageOptimizedImageUrl;
-      out.imageMimeType = (out as any).storageOptimizedImageMimeType || out.imageMimeType;
+  // Keep exactly one local attachment source for persistence so later sends can re-upload if remote URIs expire.
+  // For normal media we prefer the optimized copy. For SVG we prefer the original source so the SVG text can be reconstructed.
+  if (optimizedDataUrl) {
+    if (keepOriginalSvg) {
+      if (originalFitsCap) {
+        clearOptimizedAttachmentSource();
+        out.imageMimeType = originalMime;
+      } else if (optimizedFitsCap) {
+        warnPersistenceDrop(
+          `SVG source exceeds ${Math.round(capForMime(originalMime) / 1000)}KB cap (${Math.round(originalDataUrl!.length / 1000)}KB). Keeping raster fallback only`
+        );
+        clearOriginalAttachmentSource();
+        (out as any).storageOptimizedImageMimeType = optimizedMime;
+      } else {
+        warnPersistenceDrop(
+          `Both SVG source (${Math.round(originalDataUrl!.length / 1000)}KB) and raster fallback (${Math.round(optimizedDataUrl.length / 1000)}KB) exceed persistence caps`
+        );
+        clearOriginalAttachmentSource();
+        clearOptimizedAttachmentSource();
+      }
+    } else if (optimizedFitsCap) {
+      clearOriginalAttachmentSource();
+      (out as any).storageOptimizedImageMimeType = optimizedMime;
+    } else if (originalFitsCap) {
+      clearOptimizedAttachmentSource();
+      out.imageMimeType = originalMime;
+    } else {
+      const preferredMime = optimizedMime || originalMime || 'attachment/*';
+      warnPersistenceDrop(
+        `${preferredMime} local attachment source exceeds persistence cap (${Math.round(Math.max(originalDataUrl?.length || 0, optimizedDataUrl.length) / 1000)}KB)`
+      );
+      clearOriginalAttachmentSource();
+      clearOptimizedAttachmentSource();
     }
-    // Remove the specific LLM fields after persistence normalization.
-    delete (out as any).storageOptimizedImageUrl;
-    delete (out as any).storageOptimizedImageMimeType;
+  } else if (originalDataUrl) {
+    if (!originalFitsCap) {
+      warnPersistenceDrop(
+        `${originalMime || 'attachment/*'} local attachment source exceeds ${Math.round(capForMime(originalMime) / 1000)}KB cap (${Math.round(originalDataUrl.length / 1000)}KB)`
+      );
+      clearOriginalAttachmentSource();
+    } else {
+      out.imageMimeType = originalMime;
+    }
+  } else {
+    clearOptimizedAttachmentSource();
   }
 
-  // Cap the size of the image (whether original or promoted optimized version)
-  // CRITICAL: If imageUrl is deleted due to size AND uploaded variants expire later, media will be permanently lost
-  if (typeof out.imageUrl === 'string') {
-    const effMime = out.imageMimeType || inferMimeFromDataUrl(out.imageUrl) || 'image/*';
-    const cap = capForMime(effMime);
-    if (out.imageUrl.length > cap) {
-      // Log warning so developers know media may be lost after remote upload expiration
-      const hasUploadedVariants = Array.isArray(out.uploadedFileVariants) && out.uploadedFileVariants.length > 0;
-      console.warn(`[sanitizeForPersistence] Image exceeds ${Math.round(cap/1000)}KB cap (${Math.round(out.imageUrl.length/1000)}KB). Deleting from persistence.${hasUploadedVariants ? ' uploaded attachment variants exist (remote only).' : ' WARNING: No uploaded attachment variants - media will be lost!'}`);
-      out.imageUrl = undefined;
-      out.imageMimeType = undefined;
-    }
-  }
-
-  // Ensure any lingering LLM-specific media fields are removed from the persisted object
-  if ('storageOptimizedImageUrl' in out) delete (out as any).storageOptimizedImageUrl;
-  if ('storageOptimizedImageMimeType' in out) delete (out as any).storageOptimizedImageMimeType;
   // Keep uploadedFileVariants - they are validated on send via checkFileStatuses.
-  // If user returns within 48 hours, the remote uploads are still valid and avoid re-upload.
-  // If expired (404), ensureUrisForHistoryForSend will re-upload from imageUrl.
+  // If a remote upload expires, resend will recover from the persisted local source kept above whenever possible.
 
   if (typeof out.rawAssistantResponse === 'string' && out.rawAssistantResponse.length > 200_000) {
     out.rawAssistantResponse = out.rawAssistantResponse.slice(0, 200_000);
