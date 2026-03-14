@@ -140,6 +140,46 @@ export const COLOR_RENAME_MAP: Record<string, string[]> = {
 
 const LEGACY_KEYS = new Set(Object.keys(COLOR_RENAME_MAP));
 
+const DERIVED_COLOR_FALLBACKS: Array<{ source: string; targets: string[] }> = [
+  {
+    source: 'ai-msg-text',
+    targets: ['attachment-inline-target-text', 'attachment-game-target-text'],
+  },
+  {
+    source: 'ai-file-text',
+    targets: ['attachment-inline-native-text', 'attachment-game-native-text'],
+  },
+  {
+    source: 'user-msg-text',
+    targets: ['attachment-overlay-target-text', 'attachment-overlay-native-text'],
+  },
+];
+
+const expandDerivedColorTokens = (colors: Record<string, string>): Record<string, string> => {
+  const expanded = { ...colors };
+
+  for (const { source, targets } of DERIVED_COLOR_FALLBACKS) {
+    const sourceValue = expanded[source];
+    if (typeof sourceValue !== 'string' || !sourceValue.trim()) continue;
+
+    for (const target of targets) {
+      if (!(target in expanded)) {
+        expanded[target] = sourceValue;
+      }
+    }
+  }
+
+  return expanded;
+};
+
+const hasSameEntries = (left: Record<string, string>, right?: Record<string, string>): boolean => {
+  if (!right) return false;
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) return false;
+  return leftKeys.every((key) => left[key] === right[key]);
+};
+
 export const hasLegacyColorKeys = (colors?: Record<string, string>): boolean => {
   if (!colors) return false;
   return Object.keys(colors).some((key) => LEGACY_KEYS.has(key));
@@ -170,5 +210,6 @@ export const migrateLegacyColorMap = (colors?: Record<string, string>): Record<s
     }
   }
 
-  return migrated;
+  const expanded = expandDerivedColorTokens(migrated);
+  return hasSameEntries(expanded, colors) ? colors : expanded;
 };
