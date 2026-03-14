@@ -50,14 +50,137 @@ const buildRuntimeBridge = (frameId: string): string => {
 (function () {
   var FRAME_ID = ${JSON.stringify(frameId)};
   var EVENT_TYPE = 'maestro-mini-game-status';
+  var backgroundSyncTimer = 0;
 
   var sendStatus = function (status, detail) {
     try { parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '' }, '*'); } catch (e) {}
   };
 
+  var clearShellBackground = function (element) {
+    if (!element || !element.style) return;
+    element.style.setProperty('background', 'transparent', 'important');
+    element.style.setProperty('background-color', 'transparent', 'important');
+    element.style.setProperty('background-image', 'none', 'important');
+  };
+
+  var parseAlpha = function (color) {
+    if (!color || color === 'transparent') return 0;
+    var rgbaMatch = color.match(/rgba\\(([^)]+)\\)/i);
+    if (rgbaMatch) {
+      var rgbaParts = rgbaMatch[1].split(',');
+      if (rgbaParts.length >= 4) {
+        var alpha = parseFloat(rgbaParts[3].trim());
+        return Number.isFinite(alpha) ? alpha : 1;
+      }
+      return 1;
+    }
+    if (/^rgb\\(/i.test(color) || /^hsl\\(/i.test(color) || /^hsla\\(/i.test(color) || color[0] === '#') return 1;
+    return 0;
+  };
+
+  var hasVisibleBackground = function (element) {
+    if (!element || !window.getComputedStyle) return false;
+    var style = window.getComputedStyle(element);
+    if (!style) return false;
+    if (style.backgroundImage && style.backgroundImage !== 'none') return true;
+    return parseAlpha(style.backgroundColor) > 0.04;
+  };
+
+  var rectArea = function (rect) {
+    if (!rect) return 0;
+    return Math.max(0, rect.width) * Math.max(0, rect.height);
+  };
+
+  var fillsViewport = function (rect) {
+    var viewportWidth = Math.max(document.documentElement ? document.documentElement.clientWidth : 0, window.innerWidth || 0);
+    var viewportHeight = Math.max(document.documentElement ? document.documentElement.clientHeight : 0, window.innerHeight || 0);
+    if (!viewportWidth || !viewportHeight) return false;
+    return rect.width >= viewportWidth * 0.92 && rect.height >= viewportHeight * 0.92;
+  };
+
+  var getElementChildren = function (element) {
+    var children = [];
+    if (!element || !element.children) return children;
+    for (var i = 0; i < element.children.length; i += 1) {
+      var child = element.children[i];
+      if (child && child.nodeType === 1) children.push(child);
+    }
+    return children;
+  };
+
+  var isCenteringShell = function (element, rect) {
+    if (!element || !window.getComputedStyle) return false;
+    var style = window.getComputedStyle(element);
+    var display = (style.display || '').toLowerCase();
+    var justifyContent = (style.justifyContent || '').toLowerCase();
+    var alignItems = (style.alignItems || '').toLowerCase();
+    var placeContent = (style.placeContent || '').toLowerCase();
+    var placeItems = (style.placeItems || '').toLowerCase();
+    var centersChildren =
+      (((display === 'flex' || display === 'inline-flex') && (justifyContent.indexOf('center') >= 0 || alignItems.indexOf('center') >= 0))) ||
+      (((display === 'grid' || display === 'inline-grid') && (placeContent.indexOf('center') >= 0 || placeItems.indexOf('center') >= 0 || alignItems.indexOf('center') >= 0 || justifyContent.indexOf('center') >= 0)));
+    if (centersChildren) return true;
+
+    var children = getElementChildren(element);
+    if (children.length !== 1) return false;
+    var childRect = children[0].getBoundingClientRect();
+    if (!rectArea(rect) || !rectArea(childRect)) return false;
+    return childRect.width <= rect.width * 0.94 || childRect.height <= rect.height * 0.94;
+  };
+
+  var syncShellBackgrounds = function () {
+    try {
+      clearShellBackground(document.documentElement);
+      if (!document.body) return;
+      clearShellBackground(document.body);
+
+      var bodyChildren = getElementChildren(document.body);
+      for (var i = 0; i < bodyChildren.length; i += 1) {
+        var child = bodyChildren[i];
+        if (!child || !hasVisibleBackground(child)) continue;
+        var rect = child.getBoundingClientRect();
+        if (!fillsViewport(rect)) continue;
+        if (!isCenteringShell(child, rect)) continue;
+        clearShellBackground(child);
+      }
+    } catch (e) {}
+  };
+
+  var scheduleShellSync = function () {
+    if (backgroundSyncTimer) {
+      window.clearTimeout(backgroundSyncTimer);
+    }
+    backgroundSyncTimer = window.setTimeout(function () {
+      backgroundSyncTimer = 0;
+      syncShellBackgrounds();
+    }, 40);
+  };
+
   window.addEventListener('error', function (e) { sendStatus('error', e.message); });
   window.addEventListener('unhandledrejection', function (e) { sendStatus('error', String(e.reason)); });
-  window.addEventListener('DOMContentLoaded', function () { sendStatus('ready', 'ok'); });
+  window.addEventListener('DOMContentLoaded', function () {
+    syncShellBackgrounds();
+    window.requestAnimationFrame(syncShellBackgrounds);
+    window.setTimeout(syncShellBackgrounds, 140);
+    sendStatus('ready', 'ok');
+  });
+  window.addEventListener('load', function () {
+    syncShellBackgrounds();
+    window.setTimeout(syncShellBackgrounds, 220);
+  });
+  window.addEventListener('resize', scheduleShellSync);
+
+  if (typeof MutationObserver !== 'undefined' && document.documentElement) {
+    try {
+      var observer = new MutationObserver(scheduleShellSync);
+      observer.observe(document.documentElement, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+    } catch (e) {}
+  }
 })();
 </script>`;
 };

@@ -113,10 +113,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const controlsUnderOverlay = effectiveBottomInset > 0;
   const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
   const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
-  const frameSurfaceColor = isUser
-    ? 'hsl(var(--user-msg-bg) / 0.12)'
-    : 'hsl(var(--paper-surface) / 0.96)';
-
   // Vastly simplified standard responsive block. 
   // LLM handles making the game fit these dimensions.
   const gameScreenStyle: React.CSSProperties = {
@@ -124,7 +120,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     height: controlsUnderOverlay ? 'min(68vh, 520px)' : '480px',
     minHeight: '260px',
     resize: controlsUnderOverlay ? 'none' : 'vertical', // Allow user to make it taller if they want
-    backgroundColor: frameSurfaceColor,
+    backgroundColor: 'transparent',
   };
 
   const actionButtonClass = 'p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors';
