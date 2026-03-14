@@ -254,6 +254,12 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
   const panelWidthClass = isTwoUp
     ? 'w-[calc(50%-0.25rem)] max-w-[calc(50%-0.25rem)]'
     : 'w-[min(50%,22rem)] max-w-[50%]';
+  const overlayIconShadowStyle: React.CSSProperties = {
+    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
+  };
+  const overlayIconButtonBaseClasses = 'rounded-full opacity-85 transition-all duration-200 hover:opacity-100 focus:outline-none focus:ring-2 active:scale-95 disabled:opacity-40 disabled:cursor-default';
+  const neutralOverlayIconButtonClasses = `${overlayIconButtonBaseClasses} text-white/90 hover:text-white focus:ring-white/40`;
+  const removeOverlayIconButtonClasses = `${overlayIconButtonBaseClasses} text-remove-attach-icon focus:ring-white/40`;
 
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
@@ -265,10 +271,12 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               <button
                 type="button"
                 onClick={onAnnotateImage}
-                className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-black"
+                className={`absolute top-1.5 right-1.5 p-1.5 ${neutralOverlayIconButtonClasses}`}
                 title={t('chat.annotateImage')}
               >
-                <IconPencil className="w-4 h-4" />
+                <span style={overlayIconShadowStyle}>
+                  <IconPencil className="w-4 h-4" />
+                </span>
               </button>
             </div>
           ) : attachedImageMimeType?.startsWith('video/') ? (
@@ -303,10 +311,12 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 type="button"
                 onClick={onAnnotateVideo}
                 disabled={attachedVideoPlaying}
-                className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-black disabled:opacity-50"
+                className={`absolute top-1.5 right-1.5 p-1.5 ${neutralOverlayIconButtonClasses}`}
                 title={attachedVideoPlaying ? t('chat.error.pauseVideoToAnnotate') : t('chat.annotateVideoFrame')}
               >
-                <IconPencil className="w-4 h-4" />
+                <span style={overlayIconShadowStyle}>
+                  <IconPencil className="w-4 h-4" />
+                </span>
               </button>
             </div>
           ) : attachedImageMimeType?.startsWith('audio/') ? (
@@ -319,10 +329,12 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               <button
                 type="button"
                 onClick={onAnnotatePdf}
-                className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-black"
+                className={`absolute top-1.5 right-1.5 p-1.5 ${neutralOverlayIconButtonClasses}`}
                 title={t('chat.annotateImage')}
               >
-                <IconPencil className="w-4 h-4" />
+                <span style={overlayIconShadowStyle}>
+                  <IconPencil className="w-4 h-4" />
+                </span>
               </button>
             </div>
           ) : isOfficeAttachmentFile ? (
@@ -351,10 +363,12 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             <button
               type="button"
               onClick={onRemoveAttachment}
-              className="p-1 bg-remove-attach-bg text-remove-attach-icon rounded-full hover:bg-remove-attach-hover"
+              className={`p-1.5 ${removeOverlayIconButtonClasses}`}
               aria-label={t('chat.removeAttachedImage')}
             >
-              <IconXMark className="w-4 h-4" />
+              <span style={overlayIconShadowStyle}>
+                <IconXMark className="w-4 h-4" />
+              </span>
             </button>
           </div>
         </div>
@@ -387,10 +401,10 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                   <button
                     type="button"
                     onClick={onStopLiveSession}
-                    className="p-2 rounded-full bg-live-stop-bg text-live-stop-text group-hover:bg-live-stop-hover transition-colors"
+                    className={`p-2 ${overlayIconButtonBaseClasses} focus:ring-white/40`}
                     aria-label={t('chat.camera.stopRecording')}
                   >
-                    <div className="w-4 h-4 bg-live-stop-icon rounded-sm" />
+                    <div className="w-4 h-4 bg-live-stop-icon rounded-sm" style={overlayIconShadowStyle} />
                   </button>
                 </div>
               ) : liveSessionConnecting ? (
@@ -402,28 +416,32 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 <button
                   type="button"
                   onClick={handleStopRecording}
-                  className="p-2 rounded-full bg-vid-stop-bg text-vid-stop-text group-hover:bg-vid-stop-hover transition-colors"
+                  className={`p-2 ${overlayIconButtonBaseClasses} focus:ring-white/40`}
                   aria-label={t('chat.camera.stopRecording')}
                 >
-                  <div className="w-4 h-4 bg-vid-stop-icon rounded-sm" />
+                  <div className="w-4 h-4 bg-vid-stop-icon rounded-sm" style={overlayIconShadowStyle} />
                 </button>
               ) : (
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={handleCaptureImage}
-                    className="p-2 rounded-full bg-white/30 text-white hover:bg-white/50 transition-colors"
+                    className={`p-2 ${neutralOverlayIconButtonClasses}`}
                     aria-label={t('chat.camera.capturePhoto')}
                   >
-                    <IconCamera className="w-6 h-6" />
+                    <span style={overlayIconShadowStyle}>
+                      <IconCamera className="w-6 h-6" />
+                    </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleStartRecording()}
-                    className="p-2 rounded-full bg-white/30 text-white hover:bg-white/50 transition-colors"
+                    className={`p-2 ${neutralOverlayIconButtonClasses}`}
                     aria-label={t('chat.camera.startRecording')}
                   >
-                    <IconVideoCamera className="w-6 h-6" />
+                    <span style={overlayIconShadowStyle}>
+                      <IconVideoCamera className="w-6 h-6" />
+                    </span>
                   </button>
                   <button
                     type="button"

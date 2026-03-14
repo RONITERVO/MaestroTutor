@@ -87,7 +87,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [remainingTimeDisplay, setRemainingTimeDisplay] = useState<string | null>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const videoPlayTokenRef = useRef<string | null>(null);
-  const resizerRef = useRef<HTMLDivElement>(null);
+  const resizerRef = useRef<HTMLButtonElement>(null);
   const [showSvgCodeView, setShowSvgCodeView] = useState(false);
 
   const pointerDownPosRef = useRef<{x: number, y: number} | null>(null);
@@ -988,6 +988,16 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const cornerLiftClasses = tapeLayout.liftedCorners.length > 0
     ? `msg-corner-lift msg-corner-lift-${tapeLayout.liftedCorners[0]}`
     : '';
+  const overlayIconShadowStyle: React.CSSProperties = {
+    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
+  };
+  const overlayIconButtonBaseClasses = 'rounded-full opacity-85 transition-all duration-200 hover:opacity-100 focus:outline-none focus:ring-2 active:scale-95 disabled:opacity-40 disabled:cursor-default';
+  const overlayNeutralIconButtonClasses = `${overlayIconButtonBaseClasses} text-white/90 hover:text-white focus:ring-white/40`;
+  const overlayAccentIconButtonClasses = `${overlayIconButtonBaseClasses} text-annotation-btn-text focus:ring-annotation-btn-focus`;
+  const focusToggleLabel = isFocusedMode ? t('chat.focusedMode.exit') : t('chat.focusedMode.enter');
+  const shouldShowFocusedModeToggle = hasVisibleAttachment && !isAnnotationActive;
+  const focusTogglePlacementClasses = isPdfSuccessfullyDisplayed ? 'bottom-2 left-2' : 'bottom-2 right-2';
+  const focusToggleButtonClasses = `absolute ${focusTogglePlacementClasses} z-30 flex h-8 w-8 items-center justify-center ${overlayNeutralIconButtonClasses} touch-none`;
 
   return (
     <div className={`flex mb-4 ${bubbleAlignClass}`}>
@@ -1092,21 +1102,25 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       {!isAnnotationActive && isImageSuccessfullyDisplayed && isAttachmentSvg && (
                             <button
         onClick={() => setShowSvgCodeView((prev) => !prev)}
-                                className="absolute top-2 left-2 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
+                                className={`absolute top-2 left-2 z-20 p-2 ${overlayNeutralIconButtonClasses}`}
                                 title={showSvgCodeView ? 'Show SVG preview' : 'Show SVG code'}
                                 aria-label={showSvgCodeView ? 'Show SVG preview' : 'Show SVG code'}
                             >
-                                {showSvgCodeView ? <IconChevronLeft className="w-5 h-5" /> : <IconChevronRight className="w-5 h-5" />}
+                                <span style={overlayIconShadowStyle}>
+                                  {showSvgCodeView ? <IconChevronLeft className="w-5 h-5" /> : <IconChevronRight className="w-5 h-5" />}
+                                </span>
                             </button>
                         )}
       {!isAnnotationActive && isFocusedMode && isImageSuccessfullyDisplayed && !(isAttachmentSvg && showSvgCodeView) && (
                             <button
         onClick={() => handleStartAnnotation(displayUrl!)}
-                                className="absolute top-2 right-2 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
+                                className={`absolute top-2 right-2 z-20 p-2 ${overlayNeutralIconButtonClasses}`}
                                 title={t('chat.annotateImage')}
                                 aria-label={t('chat.annotateImage')}
                             >
-                                <IconPencil className="w-5 h-5" />
+                                <span style={overlayIconShadowStyle}>
+                                  <IconPencil className="w-5 h-5" />
+                                </span>
                             </button>
                         )}
                         {isAnnotationActive && (
@@ -1122,9 +1136,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                                 <button
                                   onClick={() => handlePdfPageChange(-1)}
                                   disabled={pdfPageNum <= 1}
-                                  className="p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80 disabled:opacity-40 disabled:cursor-default focus:outline-none transition-colors"
+                                  className={`p-1.5 ${overlayNeutralIconButtonClasses}`}
                                 >
-                                  <IconChevronLeft className="w-4 h-4" />
+                                  <span style={overlayIconShadowStyle}>
+                                    <IconChevronLeft className="w-4 h-4" />
+                                  </span>
                                 </button>
                                 <span className="text-white text-xs font-medium tabular-nums bg-black/60 rounded px-1.5 py-0.5 select-none">
                                   {pdfPageNum}/{pdfPageCount}
@@ -1132,9 +1148,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                                 <button
                                   onClick={() => handlePdfPageChange(1)}
                                   disabled={pdfPageNum >= pdfPageCount}
-                                  className="p-1.5 bg-black/60 text-white rounded-full hover:bg-black/80 disabled:opacity-40 disabled:cursor-default focus:outline-none transition-colors"
+                                  className={`p-1.5 ${overlayNeutralIconButtonClasses}`}
                                 >
-                                  <IconChevronRight className="w-4 h-4" />
+                                  <span style={overlayIconShadowStyle}>
+                                    <IconChevronRight className="w-4 h-4" />
+                                  </span>
                                 </button>
                               </div>
                             )}
@@ -1147,11 +1165,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                             >
                               <button
                                 onClick={handleCancelAnnotation}
-                                className="p-2 bg-black/60 text-white rounded-full hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
+                                className={`p-2 ${overlayNeutralIconButtonClasses}`}
                                 title={t('chat.annotateModal.cancel')}
                                 aria-label={t('chat.annotateModal.cancel')}
                               >
-                                <IconXMark className="w-5 h-5" />
+                                <span style={overlayIconShadowStyle}>
+                                  <IconXMark className="w-5 h-5" />
+                                </span>
                               </button>
                             </div>
                             <div
@@ -1164,12 +1184,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                               <button
                                 onClick={handleUndo}
                                 disabled={undoStack.length === 0}
-                                className="p-2 bg-black/60 text-white rounded-full hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`p-2 ${overlayNeutralIconButtonClasses} disabled:cursor-not-allowed`}
                                 title={t('chat.annotateModal.undo')}
                                 aria-label={t('chat.annotateModal.undo')}
                                 aria-disabled={undoStack.length === 0}
                               >
-                                <IconUndo className="w-5 h-5" />
+                                <span style={overlayIconShadowStyle}>
+                                  <IconUndo className="w-5 h-5" />
+                                </span>
                               </button>
                             </div>
                             <div
@@ -1181,11 +1203,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                             >
                               <button
                                 onClick={handleSaveAnnotation}
-                                className="p-2 bg-annotation-btn-bg text-annotation-btn-text rounded-full hover:bg-annotation-btn-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-annotation-btn-focus transition-colors"
+                                className={`p-2 ${overlayAccentIconButtonClasses}`}
                                 title={t('chat.annotateModal.saveAndAttach')}
                                 aria-label={t('chat.annotateModal.saveAndAttach')}
                               >
-                                <IconCheck className="w-5 h-5" />
+                                <span style={overlayIconShadowStyle}>
+                                  <IconCheck className="w-5 h-5" />
+                                </span>
                               </button>
                             </div>
                           </>
@@ -1226,26 +1250,37 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                           <button
                             onClick={handleAnnotateVideo}
                             disabled={isVideoPlaying}
-                            className="absolute top-2 right-2 z-20 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`absolute top-2 right-2 z-20 p-1.5 ${overlayNeutralIconButtonClasses} disabled:cursor-not-allowed`}
                             title={isVideoPlaying ? t('chat.error.pauseVideoToAnnotate') : t('chat.annotateVideoFrame')}
                             aria-label={isVideoPlaying ? t('chat.error.pauseVideoToAnnotate') : t('chat.annotateVideoFrame')}
                           >
-                              <IconPencil className="w-4 h-4" />
+                              <span style={overlayIconShadowStyle}>
+                                <IconPencil className="w-4 h-4" />
+                              </span>
                           </button>
                       </div>
                   )}
 
-                  {(isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed || isPdfSuccessfullyDisplayed) && !isAnnotationActive && (
-                      <div
-                          ref={resizerRef}
-                          onPointerDown={handleResizePointerDown}
-                          className={`absolute bottom-0 right-0 cursor-se-resize p-2 touch-none z-30 opacity-100`}
-                          title={isFocusedMode ? t('chat.image.dragToShrink') : t('chat.image.dragToEnlarge')}
-                      >
-                          <div style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.7))' }}>
-                            <IconGripCorner className="w-4 h-4 text-white" />
-                          </div>
+                  {shouldShowFocusedModeToggle && (
+                    <button
+                      ref={resizerRef}
+                      type="button"
+                      onPointerDown={handleResizePointerDown}
+                      onClick={(e) => {
+                        if ((e.detail ?? 1) !== 0) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onToggleImageFocusedMode();
+                      }}
+                      className={focusToggleButtonClasses}
+                      title={focusToggleLabel}
+                      aria-label={focusToggleLabel}
+                      aria-pressed={isFocusedMode}
+                    >
+                      <div style={overlayIconShadowStyle}>
+                        <IconGripCorner className="w-4 h-4" />
                       </div>
+                    </button>
                   )}
                   {isTextFileSuccessfullyDisplayed && (
                     <TextFileViewer
@@ -1293,11 +1328,13 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       {isFocusedMode && !isAnnotationActive && (
                         <button
                           onClick={handleAnnotatePdf}
-                          className="absolute top-2 right-2 z-20 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors"
+                          className={`absolute top-2 right-2 z-20 p-1.5 ${overlayNeutralIconButtonClasses}`}
                           title={t('chat.annotateImage')}
                           aria-label={t('chat.annotateImage')}
                         >
-                          <IconPencil className="w-4 h-4" />
+                          <span style={overlayIconShadowStyle}>
+                            <IconPencil className="w-4 h-4" />
+                          </span>
                         </button>
                       )}
                     </div>
