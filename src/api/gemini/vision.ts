@@ -38,25 +38,34 @@ export const generateImage = async (params: {
 
   let processedHistory = history ? history.map(h => ({ ...h })) : [];
 
+  const getImageFileParts = (item: any): Array<{ fileUri: string; mimeType: string }> => {
+    const rawParts = Array.isArray(item?.fileParts) ? item.fileParts : [];
+    return rawParts.filter((part: any) => {
+      const fileUri = typeof part?.fileUri === 'string' ? part.fileUri.trim() : '';
+      const mimeType = typeof part?.mimeType === 'string' ? part.mimeType.trim().toLowerCase() : '';
+      return !!fileUri && mimeType.startsWith('image/');
+    });
+  };
+
   // Track the index of the first kept image (3rd from the end with an image)
   // Image generation expects strict alternation: user (text only) -> model (image only)
   let firstKeptImageIndex = -1;
   let imageCount = 0;
   for (let i = processedHistory.length - 1; i >= 0; i--) {
     const h = processedHistory[i];
-    const mime = (h.imageMimeType || '').toLowerCase();
-    const isImage = mime.startsWith('image/');
+    const imageParts = getImageFileParts(h);
 
-    if (h.imageFileUri) {
-      if (!isImage) {
-        h.imageFileUri = undefined;
-        const type = mime.split('/')[0] || 'File';
+    if (Array.isArray(h.fileParts) && h.fileParts.length > 0) {
+      if (imageParts.length === 0) {
+        const firstMime = typeof h.fileParts[0]?.mimeType === 'string' ? h.fileParts[0].mimeType.toLowerCase() : '';
+        h.fileParts = undefined;
+        const type = firstMime.split('/')[0] || 'File';
         const note = ` [${type} context omitted]`;
         if (h.rawAssistantResponse) h.rawAssistantResponse += note;
         else h.text = (h.text || '') + note;
       } else {
         if (imageCount >= 3) {
-          h.imageFileUri = undefined;
+          h.fileParts = undefined;
           const note = ' [Previous image context omitted]';
           if (h.rawAssistantResponse) h.rawAssistantResponse += note;
           else h.text = (h.text || '') + note;
@@ -91,7 +100,9 @@ export const generateImage = async (params: {
   if (processedHistory.length > 0) {
     processedHistory.forEach((h, idx) => {
       let textContent = h.rawAssistantResponse || h.text;
-      const hasImage = h.imageFileUri && (h.imageMimeType || '').toLowerCase().startsWith('image/');
+      const imageParts = getImageFileParts(h);
+      const firstImagePart = imageParts[0];
+      const hasImage = !!firstImagePart;
 
       // Prepend contextSummary to the first user message when history was trimmed
       if (contextSummary && idx === 0 && h.role === 'user') {
@@ -106,7 +117,7 @@ export const generateImage = async (params: {
         }
         // If user had an image, add it as a separate model turn after
         if (hasImage) {
-          contents.push({ role: 'model', parts: [{ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } }] });
+          contents.push({ role: 'model', parts: [{ fileData: { fileUri: firstImagePart.fileUri, mimeType: firstImagePart.mimeType } }] });
         }
       } else if (h.role === 'assistant') {
         // Assistant turn: if has text, add as user turn first
@@ -115,7 +126,7 @@ export const generateImage = async (params: {
         }
         // Assistant image goes as model turn (image only)
         if (hasImage) {
-          contents.push({ role: 'model', parts: [{ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } }] });
+          contents.push({ role: 'model', parts: [{ fileData: { fileUri: firstImagePart.fileUri, mimeType: firstImagePart.mimeType } }] });
         }
       }
     });

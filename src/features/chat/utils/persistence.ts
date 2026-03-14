@@ -13,11 +13,9 @@ export const MAX_TTS_CACHE_ENTRIES_PER_PARENT = 80;
 export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   const out: ChatMessage = { ...m };
   const normalizedUploadedAttachmentState = buildUploadedAttachmentState(
-    normalizeUploadedAttachmentVariants(out)
+    normalizeUploadedAttachmentVariants(out.uploadedFileVariants)
   );
   out.uploadedFileVariants = normalizedUploadedAttachmentState.uploadedFileVariants;
-  out.uploadedFileUri = normalizedUploadedAttachmentState.uploadedFileUri;
-  out.uploadedFileMimeType = normalizedUploadedAttachmentState.uploadedFileMimeType;
 
   const inferMimeFromDataUrl = (dataUrl?: string | null): string | undefined => {
     if (!dataUrl || typeof dataUrl !== 'string') return undefined;
@@ -94,14 +92,14 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   }
 
   // Cap the size of the image (whether original or promoted optimized version)
-  // CRITICAL: If imageUrl is deleted due to size AND uploadedFileUri expires later, media will be permanently lost
+  // CRITICAL: If imageUrl is deleted due to size AND uploaded variants expire later, media will be permanently lost
   if (typeof out.imageUrl === 'string') {
     const effMime = out.imageMimeType || inferMimeFromDataUrl(out.imageUrl) || 'image/*';
     const cap = capForMime(effMime);
     if (out.imageUrl.length > cap) {
-      // Log warning so developers know media may be lost after URI expiration
-      const hasUploadedUri = !!(out as any).uploadedFileUri;
-      console.warn(`[sanitizeForPersistence] Image exceeds ${Math.round(cap/1000)}KB cap (${Math.round(out.imageUrl.length/1000)}KB). Deleting from persistence.${hasUploadedUri ? ' uploadedFileUri exists (valid for 48h).' : ' WARNING: No uploadedFileUri - media will be lost!'}`);
+      // Log warning so developers know media may be lost after remote upload expiration
+      const hasUploadedVariants = Array.isArray(out.uploadedFileVariants) && out.uploadedFileVariants.length > 0;
+      console.warn(`[sanitizeForPersistence] Image exceeds ${Math.round(cap/1000)}KB cap (${Math.round(out.imageUrl.length/1000)}KB). Deleting from persistence.${hasUploadedVariants ? ' uploaded attachment variants exist (remote only).' : ' WARNING: No uploaded attachment variants - media will be lost!'}`);
       out.imageUrl = undefined;
       out.imageMimeType = undefined;
     }
@@ -110,8 +108,8 @@ export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   // Ensure any lingering LLM-specific media fields are removed from the persisted object
   if ('storageOptimizedImageUrl' in out) delete (out as any).storageOptimizedImageUrl;
   if ('storageOptimizedImageMimeType' in out) delete (out as any).storageOptimizedImageMimeType;
-  // Keep uploadedFileUri - it's validated on send via checkFileStatuses.
-  // If user returns within 48 hours, the URI is still valid and avoids re-upload.
+  // Keep uploadedFileVariants - they are validated on send via checkFileStatuses.
+  // If user returns within 48 hours, the remote uploads are still valid and avoid re-upload.
   // If expired (404), ensureUrisForHistoryForSend will re-upload from imageUrl.
 
   if (typeof out.rawAssistantResponse === 'string' && out.rawAssistantResponse.length > 200_000) {

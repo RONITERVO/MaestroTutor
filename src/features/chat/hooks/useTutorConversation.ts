@@ -153,9 +153,6 @@ const inferMimeTypeFromDataUrl = (value?: string | null): string | null => {
 };
 
 type MediaPayloadOverride = {
-  oldUri?: string;
-  newUri?: string;
-  newMimeType?: string;
   newVariants?: UploadedAttachmentVariant[];
   transient?: boolean;
   omitFromPayload?: boolean;
@@ -732,8 +729,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       updates.storageOptimizedImageUrl = undefined;
       updates.storageOptimizedImageMimeType = undefined;
       updates.uploadedFileVariants = undefined;
-      updates.uploadedFileUri = undefined;
-      updates.uploadedFileMimeType = undefined;
     }
 
     updateMessage(assistantMessageId, updates);
@@ -846,7 +841,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     message: ChatMessage,
     knownStatuses?: Record<string, { deleted: boolean; active: boolean }>
   ): Promise<{ variants: UploadedAttachmentVariant[]; payloadFiles: Array<{ fileUri: string; mimeType: string }> }> => {
-    let nextVariants = normalizeUploadedAttachmentVariants(message);
+    let nextVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
     if (knownStatuses) {
       nextVariants = nextVariants.filter(variant => !knownStatuses[variant.uri]?.deleted);
     }
@@ -907,29 +902,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     const normalizedState = buildUploadedAttachmentState(nextVariants);
-    const normalizedCurrentVariants = normalizeUploadedAttachmentVariants(message);
-    const variantsChanged = JSON.stringify(normalizedCurrentVariants) !== JSON.stringify(nextVariants);
-    const primaryChanged =
-      message.uploadedFileUri !== normalizedState.uploadedFileUri ||
-      message.uploadedFileMimeType !== normalizedState.uploadedFileMimeType;
+    const normalizedCurrentVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
+    const variantsChanged = JSON.stringify(normalizedCurrentVariants) !== JSON.stringify(normalizedState.uploadedFileVariants || []);
 
-    if (variantsChanged || primaryChanged) {
+    if (variantsChanged) {
       updateMessage(message.id, normalizedState);
       message.uploadedFileVariants = normalizedState.uploadedFileVariants;
-      message.uploadedFileUri = normalizedState.uploadedFileUri;
-      message.uploadedFileMimeType = normalizedState.uploadedFileMimeType;
     }
 
     return {
       variants: normalizedState.uploadedFileVariants || [],
-      payloadFiles: selectUploadedAttachmentParts(
-        {
-          uploadedFileUri: normalizedState.uploadedFileUri,
-          uploadedFileMimeType: normalizedState.uploadedFileMimeType,
-          uploadedFileVariants: normalizedState.uploadedFileVariants,
-        },
-        'chat'
-      ),
+      payloadFiles: selectUploadedAttachmentParts(normalizedState, 'chat'),
     };
   }, [t, updateMessage]);
 
@@ -942,7 +925,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const mediaIndices: number[] = [];
     for (let i = 0; i < candidates.length; i++) {
       const m = candidates[i];
-      const hasMedia = !!getMessageAttachmentSource(m) || normalizeUploadedAttachmentVariants(m).length > 0;
+      const hasMedia = !!getMessageAttachmentSource(m) || normalizeUploadedAttachmentVariants(m.uploadedFileVariants).length > 0;
       if (hasMedia) mediaIndices.push(i);
     }
     const maxMedia = MAX_MEDIA_TO_KEEP;
@@ -952,7 +935,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     for (let i = 0; i < candidates.length; i++) {
       if (!keepMediaIdx.has(i)) continue;
       const m0 = candidates[i];
-      normalizeUploadedAttachmentVariants(m0).forEach((variant) => {
+      normalizeUploadedAttachmentVariants(m0.uploadedFileVariants).forEach((variant) => {
         if (variant.uri) cachedUrisToCheck.push(variant.uri);
       });
     }
@@ -970,7 +953,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (!source) continue;
 
       const plans = buildAttachmentUploadPlans(source, t);
-      const existingVariants = normalizeUploadedAttachmentVariants(message);
+      const existingVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
       const needsUpload = plans.some((plan) => {
         const existingVariant = existingVariants.find(variant => variant.id === plan.id);
         if (!existingVariant) return true;
@@ -995,7 +978,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     for (let idx = 0; idx < candidates.length; idx++) {
       if (!keepMediaIdx.has(idx)) continue;
       const m = candidates[idx];
-      const previousPrimary = buildUploadedAttachmentState(normalizeUploadedAttachmentVariants(m));
+      const previousVariants = normalizeUploadedAttachmentVariants(m.uploadedFileVariants);
       try {
         const ensured = await ensureUploadedAttachmentVariantsForMessage(m, cachedStatuses);
         const nextState = buildUploadedAttachmentState(ensured.variants);
@@ -1003,23 +986,15 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
         if (
           payloadFiles.length === 0 &&
-          (getMessageAttachmentSource(m) || previousPrimary.uploadedFileUri || (previousPrimary.uploadedFileVariants && previousPrimary.uploadedFileVariants.length > 0))
+          (getMessageAttachmentSource(m) || previousVariants.length > 0)
         ) {
           console.warn(`[ensureUris] Message ${m.id} has no valid uploaded payload variants and will be omitted from this payload.`);
           updatedUriMap[m.id] = {
-            oldUri: previousPrimary.uploadedFileUri,
             transient: true,
             omitFromPayload: true,
           };
-        } else if (
-          previousPrimary.uploadedFileUri !== nextState.uploadedFileUri ||
-          previousPrimary.uploadedFileMimeType !== nextState.uploadedFileMimeType ||
-          JSON.stringify(previousPrimary.uploadedFileVariants || []) !== JSON.stringify(nextState.uploadedFileVariants || [])
-        ) {
+        } else if (JSON.stringify(previousVariants) !== JSON.stringify(nextState.uploadedFileVariants || [])) {
           updatedUriMap[m.id] = {
-            oldUri: previousPrimary.uploadedFileUri,
-            newUri: nextState.uploadedFileUri,
-            newMimeType: nextState.uploadedFileMimeType,
             newVariants: nextState.uploadedFileVariants,
           };
         }
@@ -1095,7 +1070,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
           const hasExistingAttachment = !!(
             (target.imageUrl && target.imageMimeType) ||
-            (target.uploadedFileUri && target.uploadedFileMimeType)
+            (Array.isArray(target.uploadedFileVariants) && target.uploadedFileVariants.length > 0)
           );
           const visibleText = getVisibleAssistantMessageText(target).trim();
           const hasStructuredTail = !!(
@@ -1461,7 +1436,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       artifactLoadStartTime: undefined,
     });
 
-    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileUri && existing.uploadedFileMimeType))) {
+    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileVariants && existing.uploadedFileVariants.length > 0))) {
       return;
     }
 
@@ -1671,7 +1646,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     sanitizedDerivedHistory: any[];
     systemInstructionForGemini: string;
     imageForGeminiContextMimeType?: string;
-    imageForGeminiContextFileUri?: string | Array<{ fileUri: string; mimeType: string }>;
+    imageForGeminiContextFileUri?: Array<{ fileUri: string; mimeType: string }>;
     currentSettingsVal: AppSettings;
   }) => {
     let lastProcessingBucket = -1;
@@ -1910,7 +1885,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   }) => {
     if (!params.currentSettingsVal.imageGenerationModeEnabled || !params.accumulatedFullText.trim()) return;
     const existing = messagesRef.current.find((m) => m.id === params.thinkingMessageId);
-    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileUri && existing.uploadedFileMimeType))) {
+    if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileVariants && existing.uploadedFileVariants.length > 0))) {
       return;
     }
 
@@ -1937,25 +1912,16 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         if (upd.omitFromPayload) {
           return {
             ...m,
-            uploadedFileUri: undefined,
-            uploadedFileMimeType: undefined,
             uploadedFileVariants: undefined,
-            imageFileUri: undefined,
-            imageMimeType: undefined,
           } as ChatMessage;
         }
-        if (upd.newUri || upd.newVariants) {
-          const nextMime = upd.newMimeType || m.uploadedFileMimeType;
+        if (upd.newVariants) {
           const nextVariants = upd.newVariants || m.uploadedFileVariants;
           if (
-            m.uploadedFileUri !== upd.newUri ||
-            (upd.newMimeType && m.uploadedFileMimeType !== upd.newMimeType) ||
             (upd.newVariants && JSON.stringify(m.uploadedFileVariants || []) !== JSON.stringify(upd.newVariants || []))
           ) {
             return {
               ...m,
-              uploadedFileUri: upd.newUri,
-              uploadedFileMimeType: nextMime,
               uploadedFileVariants: nextVariants,
             } as ChatMessage;
           }
@@ -2196,7 +2162,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       imageForGeminiContextMimeType = (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : undefined;
     }
 
-    let imageForGeminiContextFileUri: string | Array<{ fileUri: string; mimeType: string }> | undefined = undefined;
+    let imageForGeminiContextFileUri: Array<{ fileUri: string; mimeType: string }> | undefined = undefined;
 
     switch (messageType) {
       case 'image-reengagement':
@@ -2314,25 +2280,16 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           if (upd.omitFromPayload) {
             return {
               ...m,
-              uploadedFileUri: undefined,
-              uploadedFileMimeType: undefined,
               uploadedFileVariants: undefined,
-              imageFileUri: undefined,
-              imageMimeType: undefined,
             } as ChatMessage;
           }
-          if (upd.newUri || upd.newVariants) {
-            const nextMime = upd.newMimeType || m.uploadedFileMimeType;
+          if (upd.newVariants) {
             const nextVariants = upd.newVariants || m.uploadedFileVariants;
             if (
-              m.uploadedFileUri !== upd.newUri ||
-              (upd.newMimeType && m.uploadedFileMimeType !== upd.newMimeType) ||
               (upd.newVariants && JSON.stringify(m.uploadedFileVariants || []) !== JSON.stringify(upd.newVariants || []))
             ) {
               return {
                 ...m,
-                uploadedFileUri: upd.newUri,
-                uploadedFileMimeType: nextMime,
                 uploadedFileVariants: nextVariants,
               } as ChatMessage;
             }

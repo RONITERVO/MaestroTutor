@@ -269,8 +269,6 @@ type DerivedHistoryItem = {
   role: 'user' | 'assistant';
   text?: string;
   rawAssistantResponse?: string;
-  imageFileUri?: string;
-  imageMimeType?: string;
   fileParts?: Array<{ fileUri: string; mimeType: string }>;
   chatSummary?: string;
   avatarFileUri?: string;
@@ -296,14 +294,10 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
     // 3. Map to simple API objects
     const history: DerivedHistoryItem[] = filtered.map(m => {
       const fileParts = selectUploadedAttachmentParts(m, 'chat');
-      const firstImagePart = selectUploadedAttachmentParts(m, 'image-generation')
-        .find(part => (part.mimeType || '').toLowerCase().startsWith('image/'));
       return {
         role: (m.role === 'user' || m.role === 'assistant') ? m.role : 'user',
         text: m.text,
         rawAssistantResponse: m.rawAssistantResponse,
-        imageFileUri: firstImagePart?.fileUri,
-        imageMimeType: firstImagePart?.mimeType,
         fileParts: fileParts.length ? fileParts : undefined,
         chatSummary: m.chatSummary,
       };
@@ -313,13 +307,11 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
     if (history.length > 0 && Number.isFinite(maxMediaToKeep) && (maxMediaToKeep as number) >= 0) {
       const mediaIdx: number[] = [];
       for (let i = 0; i < history.length; i++) {
-        if ((history[i].fileParts && history[i].fileParts!.length > 0) || history[i].imageFileUri) mediaIdx.push(i);
+        if (history[i].fileParts && history[i].fileParts!.length > 0) mediaIdx.push(i);
       }
       const toKeep = new Set<number>(mediaIdx.slice(-(maxMediaToKeep as number)));
       for (let i = 0; i < history.length; i++) {
-          if (((history[i].fileParts && history[i].fileParts!.length > 0) || history[i].imageFileUri) && !toKeep.has(i)) {
-              history[i].imageFileUri = undefined;
-              history[i].imageMimeType = undefined;
+          if ((history[i].fileParts && history[i].fileParts!.length > 0) && !toKeep.has(i)) {
               history[i].fileParts = undefined;
           }
       }

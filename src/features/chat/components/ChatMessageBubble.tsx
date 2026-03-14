@@ -20,6 +20,7 @@ import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messag
 import TextFileViewer from './TextFileViewer';
 import OfficeFileViewer from './OfficeFileViewer';
 import { decodeTextFromDataUrl, isOfficeAttachment, isTextLikeAttachment } from '../utils/fileAttachments';
+import { selectPrimaryUploadedAttachmentVariant } from '../utils/uploadedAttachmentVariants';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -591,7 +592,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   const displayUrlRaw = message.imageUrl || message.storageOptimizedImageUrl;
   const displayUrl = typeof displayUrlRaw === 'string' ? displayUrlRaw : undefined;
-  const displayMimeRaw = message.imageMimeType || message.storageOptimizedImageMimeType || message.uploadedFileMimeType;
+  const primaryUploadedVariant = selectPrimaryUploadedAttachmentVariant(message);
+  const displayMimeRaw = message.imageMimeType || message.storageOptimizedImageMimeType || primaryUploadedVariant?.mimeType;
   const displayMime = typeof displayMimeRaw === 'string' ? displayMimeRaw : '';
   const normalizedDisplayMime = (displayMime || '').trim().toLowerCase();
   const isAttachmentAnImage = !!displayMime?.startsWith('image/');
@@ -606,7 +608,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     !isAttachmentAAudio &&
     !isAttachmentAPdf &&
     isTextLikeAttachment(displayMime, message.attachmentName);
-  const hasAttachmentSource = !!displayUrl || !!message.uploadedFileUri;
+  const hasRemoteAttachment = !!primaryUploadedVariant;
+  const hasAttachmentSource = !!displayUrl || hasRemoteAttachment;
   const toolAttachmentStatusText = useMemo(() => {
     if (message.maestroToolKind !== 'music') return null;
     switch (message.toolAttachmentPhase) {
@@ -627,7 +630,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isPdfSuccessfullyDisplayed = isAttachmentAPdf && displayUrl && !isAttachmentLoading && !message.imageGenError;
   const isOfficeFileSuccessfullyDisplayed = isAttachmentAOffice && hasAttachmentSource && !isAttachmentLoading && !message.imageGenError;
   const isTextFileSuccessfullyDisplayed = isAttachmentAText && !!displayUrl && !isAttachmentLoading && !message.imageGenError;
-  const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && !!message.uploadedFileUri && !isAttachmentLoading && !message.imageGenError;
+  const isTextFileRemoteOnly = isAttachmentAText && !displayUrl && hasRemoteAttachment && !isAttachmentLoading && !message.imageGenError;
   const isFileSuccessfullyDisplayed = !isAttachmentAnImage && !isAttachmentAVideo && !isAttachmentAAudio && !isAttachmentAPdf && !isAttachmentAOffice && !isAttachmentAText && hasAttachmentSource && !isAttachmentLoading && !message.imageGenError;
   const isScrollableFileAttachment = isTextFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileRemoteOnly;
   const svgSourceCode = useMemo(() => {
@@ -1211,12 +1214,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                     />
                   )}
                   {isOfficeFileSuccessfullyDisplayed && (
-                    <OfficeFileViewer
+                      <OfficeFileViewer
                       src={displayUrl}
                       variant={isUser ? 'user' : 'assistant'}
                       fileName={message.attachmentName}
                       mimeType={displayMime}
-                      hasRemoteUri={Boolean(message.uploadedFileUri)}
+                      hasRemoteUri={hasRemoteAttachment}
                     />
                   )}
                   {isTextFileRemoteOnly && (

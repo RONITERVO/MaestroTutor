@@ -82,30 +82,17 @@ const dedupeVariants = (variants: UploadedAttachmentVariant[]): UploadedAttachme
 };
 
 export const normalizeUploadedAttachmentVariants = (
-  message: Pick<ChatMessage, 'uploadedFileUri' | 'uploadedFileMimeType' | 'uploadedFileVariants'>
+  inputVariants: UploadedAttachmentVariant[] | null | undefined
 ): UploadedAttachmentVariant[] => {
-  const variants: UploadedAttachmentVariant[] = [];
+  const normalizedVariants: UploadedAttachmentVariant[] = [];
 
-  if (Array.isArray(message.uploadedFileVariants)) {
-    message.uploadedFileVariants.forEach((variant) => {
+  if (Array.isArray(inputVariants)) {
+    inputVariants.forEach((variant) => {
       const normalized = normalizeVariant(variant);
-      if (normalized) variants.push(normalized);
+      if (normalized) normalizedVariants.push(normalized);
     });
   }
-
-  const legacyVariant = normalizeVariant({
-    id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
-    uri: message.uploadedFileUri,
-    mimeType: message.uploadedFileMimeType,
-    targets: normalizeTargets(undefined, message.uploadedFileMimeType),
-    source: 'original',
-    order: DEFAULT_ORDER_BY_VARIANT_ID[PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID],
-  });
-  if (legacyVariant) {
-    variants.push(legacyVariant);
-  }
-
-  return dedupeVariants(variants);
+  return dedupeVariants(normalizedVariants);
 };
 
 export const upsertUploadedAttachmentVariant = (
@@ -123,11 +110,11 @@ export const upsertUploadedAttachmentVariant = (
 };
 
 export const selectPrimaryUploadedAttachmentVariant = (
-  message: Pick<ChatMessage, 'uploadedFileUri' | 'uploadedFileMimeType' | 'uploadedFileVariants'> | UploadedAttachmentVariant[] | undefined
+  message: Pick<ChatMessage, 'uploadedFileVariants'> | UploadedAttachmentVariant[] | undefined
 ): UploadedAttachmentVariant | undefined => {
   const variants = Array.isArray(message)
     ? dedupeVariants(message.map(variant => normalizeVariant(variant)).filter((variant): variant is UploadedAttachmentVariant => Boolean(variant)))
-    : normalizeUploadedAttachmentVariants(message || {});
+    : normalizeUploadedAttachmentVariants(message?.uploadedFileVariants);
 
   return (
     variants.find(variant => variant.id === PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID) ||
@@ -137,10 +124,10 @@ export const selectPrimaryUploadedAttachmentVariant = (
 };
 
 export const selectUploadedAttachmentParts = (
-  message: Pick<ChatMessage, 'uploadedFileUri' | 'uploadedFileMimeType' | 'uploadedFileVariants'>,
+  message: Pick<ChatMessage, 'uploadedFileVariants'>,
   target: UploadedAttachmentTarget
 ): Array<{ fileUri: string; mimeType: string }> => {
-  const variants = normalizeUploadedAttachmentVariants(message);
+  const variants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
   const parts = variants
     .filter(variant => variant.targets.includes(target))
     .map(variant => ({ fileUri: variant.uri, mimeType: variant.mimeType }));
@@ -156,14 +143,11 @@ export const selectUploadedAttachmentParts = (
   return Array.from(deduped.values());
 };
 
-export const buildUploadedAttachmentState = (variants: UploadedAttachmentVariant[] | undefined): Pick<ChatMessage, 'uploadedFileUri' | 'uploadedFileMimeType' | 'uploadedFileVariants'> => {
+export const buildUploadedAttachmentState = (variants: UploadedAttachmentVariant[] | undefined): Pick<ChatMessage, 'uploadedFileVariants'> => {
   const normalized = Array.isArray(variants)
     ? dedupeVariants(variants.map(variant => normalizeVariant(variant)).filter((variant): variant is UploadedAttachmentVariant => Boolean(variant)))
     : [];
-  const primary = selectPrimaryUploadedAttachmentVariant(normalized);
   return {
     uploadedFileVariants: normalized.length ? normalized : undefined,
-    uploadedFileUri: primary?.uri,
-    uploadedFileMimeType: primary?.mimeType,
   };
 };

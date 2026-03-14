@@ -24,15 +24,10 @@ export interface ChatMessage {
   imageMimeType?: string;
   /** Original attachment file name if available (e.g. README.md, app.tsx) */
   attachmentName?: string;
-  imageFileUri?: string;
   /** Optimized (lower res) image for local storage to reduce DB size */
   storageOptimizedImageUrl?: string;
   /** MIME type of the storage-optimized image */
   storageOptimizedImageMimeType?: string;
-  /** Uploaded file URI (for sending to API after reload - note: expires after 48h) */
-  uploadedFileUri?: string;
-  /** MIME type of the uploaded file */
-  uploadedFileMimeType?: string;
   /** Expandable uploaded payload variants for model-specific attachment handling. */
   uploadedFileVariants?: UploadedAttachmentVariant[];
   timestamp: number;
