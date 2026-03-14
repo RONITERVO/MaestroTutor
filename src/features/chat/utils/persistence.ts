@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, TtsProvider, SttProvider } from '../../../core/types';
+import { normalizeUploadedAttachmentVariants, buildUploadedAttachmentState } from './uploadedAttachmentVariants';
 
 export const INLINE_CAP_IMAGE = 2_000_000; // ~2MB (increased from 1MB to reduce data loss from large images)
 export const INLINE_CAP_VIDEO = 4_000_000; // ~4MB
@@ -11,6 +12,12 @@ export const MAX_TTS_CACHE_ENTRIES_PER_PARENT = 80;
 
 export const sanitizeForPersistence = (m: ChatMessage): ChatMessage => {
   const out: ChatMessage = { ...m };
+  const normalizedUploadedAttachmentState = buildUploadedAttachmentState(
+    normalizeUploadedAttachmentVariants(out)
+  );
+  out.uploadedFileVariants = normalizedUploadedAttachmentState.uploadedFileVariants;
+  out.uploadedFileUri = normalizedUploadedAttachmentState.uploadedFileUri;
+  out.uploadedFileMimeType = normalizedUploadedAttachmentState.uploadedFileMimeType;
 
   const inferMimeFromDataUrl = (dataUrl?: string | null): string | undefined => {
     if (!dataUrl || typeof dataUrl !== 'string') return undefined;

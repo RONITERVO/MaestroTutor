@@ -345,7 +345,7 @@ export const generateGeminiResponse = async (
   systemInstruction?: string,
   imageBase64?: string,
   imageMimeType?: string,
-  imageFileUri?: string,
+  imageFileUri?: string | Array<{ fileUri: string; mimeType: string }>,
   useGoogleSearch?: boolean,
   configOverrides?: any,
   timeoutMs: number = DEFAULT_TIMEOUT_MS,
@@ -354,12 +354,30 @@ export const generateGeminiResponse = async (
   const ai = await getAi();
   const contents: any[] = [];
 
+  const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
+    if (!Array.isArray(parts)) return [];
+    return parts
+      .map((part) => {
+        const candidate = part as { fileUri?: string; mimeType?: string } | null | undefined;
+        const fileUri = typeof candidate?.fileUri === 'string' ? candidate.fileUri.trim() : '';
+        const mimeType = typeof candidate?.mimeType === 'string' ? candidate.mimeType.trim() : '';
+        if (!fileUri || !mimeType) return null;
+        return { fileUri, mimeType };
+      })
+      .filter((part): part is { fileUri: string; mimeType: string } => Boolean(part));
+  };
+
   history.forEach(h => {
     const parts: any[] = [];
     const textContent = h.rawAssistantResponse || h.text;
     if (textContent) parts.push({ text: textContent });
 
-    if (h.imageFileUri) {
+    const historyFileParts = normalizeFileParts(h.fileParts);
+    if (historyFileParts.length > 0) {
+      historyFileParts.forEach((part) => {
+        parts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
+      });
+    } else if (h.imageFileUri) {
       parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
     } else if (h.imageUrl && h.imageMimeType) {
       const b64 = h.imageUrl.substring(h.imageUrl.indexOf(',') + 1);
@@ -377,8 +395,15 @@ export const generateGeminiResponse = async (
   });
 
   const currentParts: any[] = [{ text: userPrompt }];
-  if (imageFileUri) {
-    currentParts.push({ fileData: { fileUri: imageFileUri, mimeType: imageMimeType || 'image/jpeg' } });
+  const currentFileParts = Array.isArray(imageFileUri)
+    ? normalizeFileParts(imageFileUri)
+    : (imageFileUri
+      ? normalizeFileParts([{ fileUri: imageFileUri, mimeType: imageMimeType || 'image/jpeg' }])
+      : []);
+  if (currentFileParts.length > 0) {
+    currentFileParts.forEach((part) => {
+      currentParts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
+    });
   } else if (imageBase64 && imageMimeType) {
     const b64 = imageBase64.substring(imageBase64.indexOf(',') + 1);
     if (b64) currentParts.push({ inlineData: { data: b64, mimeType: imageMimeType } });

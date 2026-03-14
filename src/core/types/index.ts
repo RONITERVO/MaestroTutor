@@ -33,6 +33,8 @@ export interface ChatMessage {
   uploadedFileUri?: string;
   /** MIME type of the uploaded file */
   uploadedFileMimeType?: string;
+  /** Expandable uploaded payload variants for model-specific attachment handling. */
+  uploadedFileVariants?: UploadedAttachmentVariant[];
   timestamp: number;
   thinking?: boolean;
   /** Model-authored thought summaries only; status text is tracked separately. */
@@ -54,6 +56,25 @@ export interface ChatMessage {
   tempSelectedTargetLangCode?: string;
   /** Optional action hint for error messages (e.g. 'quota') to render contextual action buttons */
   errorAction?: string;
+}
+
+export type UploadedAttachmentTarget = 'chat' | 'image-generation';
+
+export type UploadedAttachmentSource =
+  | 'original'
+  | 'video-keyframe'
+  | 'office-text'
+  | 'svg-rasterized'
+  | 'derived';
+
+export interface UploadedAttachmentVariant {
+  /** Stable variant key so callers can upsert a specific surrogate. */
+  id: string;
+  uri: string;
+  mimeType: string;
+  targets: UploadedAttachmentTarget[];
+  source: UploadedAttachmentSource;
+  order?: number;
 }
 
 export interface SpeechPart {

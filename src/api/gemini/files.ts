@@ -138,18 +138,50 @@ export const checkFileStatuses = async (uris: string[]): Promise<Record<string, 
 };
 
 export const sanitizeHistoryWithVerifiedUris = async (history: any[]) => {
-  const uris = history.map(h => h.imageFileUri).filter(u => u);
+  const uris = history.flatMap((item) => {
+    const parts = Array.isArray(item?.fileParts) ? item.fileParts : [];
+    const partUris = parts
+      .map((part: any) => (typeof part?.fileUri === 'string' ? part.fileUri : ''))
+      .filter(Boolean);
+    const imageUri = typeof item?.imageFileUri === 'string' ? item.imageFileUri : '';
+    return imageUri ? [...partUris, imageUri] : partUris;
+  });
   if (uris.length === 0) return history;
 
   const statuses = await checkFileStatuses(uris);
   let strippedCount = 0;
   const result = history.map((h, idx) => {
+    const fileParts = Array.isArray(h.fileParts)
+      ? h.fileParts.filter((part: any) => {
+          const uri = typeof part?.fileUri === 'string' ? part.fileUri : '';
+          if (!uri) return false;
+          const status = statuses[uri];
+          const keep = !status?.deleted && !!status?.active;
+          if (!keep) {
+            strippedCount++;
+            console.warn(`[sanitizeHistory] Stripping expired/invalid media URI from history item ${idx}:`, uri.slice(0, 80));
+          }
+          return keep;
+        })
+      : undefined;
+
+    if (fileParts && fileParts.length > 0) {
+      const firstImagePart = fileParts.find((part: any) => (part?.mimeType || '').toLowerCase().startsWith('image/'));
+      return {
+        ...h,
+        fileParts,
+        imageFileUri: firstImagePart?.fileUri,
+        imageMimeType: firstImagePart?.mimeType,
+      };
+    }
+
     if (h.imageFileUri) {
       const status = statuses[h.imageFileUri];
       if (status?.deleted || !status?.active) {
         strippedCount++;
         console.warn(`[sanitizeHistory] Stripping expired/invalid media URI from history item ${idx}:`, h.imageFileUri?.slice(0, 80));
         const { imageFileUri, imageMimeType, ...rest } = h;
+        delete (rest as any).fileParts;
         return rest;
       }
     }

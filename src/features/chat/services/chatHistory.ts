@@ -4,6 +4,7 @@
 import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
 import { ChatMessage, ChatMeta, UserProfile } from '../../../core/types';
 import { sanitizeForPersistence } from '../utils/persistence';
+import { selectUploadedAttachmentParts } from '../utils/uploadedAttachmentVariants';
 import { MAX_MEDIA_TO_KEEP } from '../../../core/config/app';
 
 export const getChatHistoryDB = async (pairId: string): Promise<ChatMessage[]> => {
@@ -264,7 +265,17 @@ export const setChatMetaDB = async (pairId: string, meta: ChatMeta | null): Prom
   });
 };
 
-type DerivedHistoryItem = { role: 'user' | 'assistant'; text?: string; rawAssistantResponse?: string; imageFileUri?: string; imageMimeType?: string; chatSummary?: string; avatarFileUri?: string; avatarMimeType?: string };
+type DerivedHistoryItem = {
+  role: 'user' | 'assistant';
+  text?: string;
+  rawAssistantResponse?: string;
+  imageFileUri?: string;
+  imageMimeType?: string;
+  fileParts?: Array<{ fileUri: string; mimeType: string }>;
+  chatSummary?: string;
+  avatarFileUri?: string;
+  avatarMimeType?: string;
+};
 
 export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?: Array<'user' | 'assistant' | 'system'>; maxMessages?: number; maxMediaToKeep?: number; contextSummary?: string; globalProfileText?: string; placeholderLatestUserMessage?: string; avatarOverlayFileUri?: string; avatarOverlayMimeType?: string; }) => {
     const { roles = ['user','assistant'], maxMessages, maxMediaToKeep = MAX_MEDIA_TO_KEEP, contextSummary, globalProfileText, placeholderLatestUserMessage, avatarOverlayFileUri, avatarOverlayMimeType } = opts || {};
@@ -284,14 +295,16 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
 
     // 3. Map to simple API objects
     const history: DerivedHistoryItem[] = filtered.map(m => {
-      const uri = (m as any).uploadedFileUri || m.imageFileUri || undefined;
-      const mime = uri ? ((m as any).uploadedFileMimeType || m.imageMimeType || undefined) : undefined;
+      const fileParts = selectUploadedAttachmentParts(m, 'chat');
+      const firstImagePart = selectUploadedAttachmentParts(m, 'image-generation')
+        .find(part => (part.mimeType || '').toLowerCase().startsWith('image/'));
       return {
         role: (m.role === 'user' || m.role === 'assistant') ? m.role : 'user',
         text: m.text,
         rawAssistantResponse: m.rawAssistantResponse,
-        imageFileUri: uri,
-        imageMimeType: mime,
+        imageFileUri: firstImagePart?.fileUri,
+        imageMimeType: firstImagePart?.mimeType,
+        fileParts: fileParts.length ? fileParts : undefined,
         chatSummary: m.chatSummary,
       };
     });
@@ -299,12 +312,15 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
     // 4. Enforce media limits
     if (history.length > 0 && Number.isFinite(maxMediaToKeep) && (maxMediaToKeep as number) >= 0) {
       const mediaIdx: number[] = [];
-      for (let i = 0; i < history.length; i++) if (history[i].imageFileUri) mediaIdx.push(i);
+      for (let i = 0; i < history.length; i++) {
+        if ((history[i].fileParts && history[i].fileParts!.length > 0) || history[i].imageFileUri) mediaIdx.push(i);
+      }
       const toKeep = new Set<number>(mediaIdx.slice(-(maxMediaToKeep as number)));
       for (let i = 0; i < history.length; i++) {
-          if (history[i].imageFileUri && !toKeep.has(i)) {
-              history[i].imageFileUri = undefined; 
-              history[i].imageMimeType = undefined; 
+          if (((history[i].fileParts && history[i].fileParts!.length > 0) || history[i].imageFileUri) && !toKeep.has(i)) {
+              history[i].imageFileUri = undefined;
+              history[i].imageMimeType = undefined;
+              history[i].fileParts = undefined;
           }
       }
     }
