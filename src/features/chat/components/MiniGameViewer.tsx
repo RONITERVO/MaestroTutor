@@ -113,15 +113,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const controlsUnderOverlay = effectiveBottomInset > 0;
   const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
   const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
-  const focusedAccentBottom = Math.max(14, Math.min(Math.round(focusedShellHeight * 0.28), 28));
-
-  const shellBackground = isUser
-    ? 'linear-gradient(180deg, hsl(var(--user-msg-bg) / 0.95) 0%, hsl(var(--user-msg-bg) / 0.88) 100%)'
-    : 'linear-gradient(180deg, hsl(var(--ai-msg-bg)) 0%, hsl(var(--ai-msg-bg) / 0.94) 100%)';
-  const shellHighlight = isUser
-    ? 'linear-gradient(180deg, hsl(var(--user-msg-text) / 0.08), transparent)'
-    : 'linear-gradient(180deg, hsl(var(--paper-surface) / 0.45), transparent)';
-
   // Vastly simplified standard responsive block. 
   // LLM handles making the game fit these dimensions.
   const gameScreenStyle: React.CSSProperties = {
@@ -129,6 +120,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     height: controlsUnderOverlay ? 'min(68vh, 520px)' : '480px',
     minHeight: '260px',
     resize: controlsUnderOverlay ? 'none' : 'vertical', // Allow user to make it taller if they want
+    backgroundColor: 'transparent',
   };
 
   const actionButtonClass = 'p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors';
@@ -138,7 +130,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       <div className="relative w-full max-w-[560px]" style={{ paddingBottom: `${wrapperBottomPadding}px` }}>
 
         <div
-          className={`relative rounded-2xl overflow-hidden border ${lineColor} bg-black shadow-[0_14px_30px_rgba(2,6,23,0.38)] ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
+          className={`relative rounded-2xl overflow-hidden border ${lineColor} shadow-none ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
           style={gameScreenStyle}
         >
           {hasIntersected ? (
@@ -146,14 +138,15 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               ref={iframeRef}
               title={fileName ? `Mini game ${fileName}` : 'Mini game'}
               srcDoc={srcDoc}
-              className="w-full h-full border-0 bg-black block"
+              className="w-full h-full border-0 bg-transparent block"
               sandbox="allow-scripts allow-same-origin"
               allow="fullscreen"
               referrerPolicy="no-referrer"
               loading="lazy"
+              style={{ backgroundColor: 'transparent' }}
             />
           ) : (
-            <div className="w-full h-full bg-black" />
+            <div className="w-full h-full" />
           )}
 
           {runtimeState !== 'ready' && hasIntersected && (
@@ -195,45 +188,12 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
         {controlsUnderOverlay ? (
           <div
-            className="absolute left-2 right-2 z-0 pointer-events-none overflow-hidden rounded-[28px]"
+            className="absolute left-2 right-2 bottom-0 z-0 pointer-events-none bg-transparent"
             style={{
-              bottom: '0',
               height: `${focusedShellHeight}px`,
-              border: '2px solid hsl(var(--pencil-stroke) / 0.28)',
-              borderTop: 'none',
-              background: shellBackground,
-              boxShadow: '0 14px 30px hsl(var(--sketch-shadow) / 0.2), inset 0 1px 0 hsl(var(--paper-surface) / 0.55)',
             }}
             aria-hidden
-          >
-            <div className="absolute inset-x-0 top-0" style={{ height: '34px', background: shellHighlight }} />
-            <div className="absolute left-1/2 top-4 -translate-x-1/2">
-              <span className="text-[10px] uppercase tracking-[0.22em] font-bold select-none" style={{ color: 'hsl(var(--sketch-line) / 0.7)', fontFamily: "'Patrick Hand', cursive" }}>
-                MAESTRO
-              </span>
-            </div>
-            <div className="absolute left-6 right-6 flex items-end justify-between" style={{ bottom: `${focusedAccentBottom}px` }}>
-              <div className="relative shrink-0" style={{ width: '48px', height: '48px', opacity: 0.7 }}>
-                <div className="absolute top-1/2 left-0 w-full" style={{ height: '14px', transform: 'translateY(-50%)', borderRadius: '2px', backgroundColor: 'hsl(var(--sketch-line) / 0.2)', border: '1px solid hsl(var(--sketch-line) / 0.15)' }} />
-                <div className="absolute left-1/2 top-0 h-full" style={{ width: '14px', transform: 'translateX(-50%)', borderRadius: '2px', backgroundColor: 'hsl(var(--sketch-line) / 0.2)', border: '1px solid hsl(var(--sketch-line) / 0.15)' }} />
-                <div className="absolute top-1/2 left-1/2 rounded-full" style={{ width: '8px', height: '8px', transform: 'translate(-50%, -50%)', backgroundColor: 'hsl(var(--sketch-line) / 0.35)' }} />
-              </div>
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 opacity-45" style={{ bottom: '-2px' }}>
-                <div className="rounded-full" style={{ width: '28px', height: '8px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.16)', border: '1px solid hsl(var(--pencil-stroke) / 0.18)' }} />
-                <div className="rounded-full" style={{ width: '28px', height: '8px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.16)', border: '1px solid hsl(var(--pencil-stroke) / 0.18)' }} />
-              </div>
-              <div className="flex items-center gap-3 shrink-0" style={{ transform: 'rotate(-20deg)', opacity: 0.74 }}>
-                <div className="flex flex-col items-center gap-0.5 mt-2">
-                  <div className="rounded-full" style={{ width: '26px', height: '26px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)', border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)', boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)' }} />
-                  <span className="text-[8px] font-bold select-none" style={{ color: 'hsl(var(--sketch-line) / 0.6)', fontFamily: "'Patrick Hand', cursive" }}>B</span>
-                </div>
-                <div className="flex flex-col items-center gap-0.5" style={{ marginTop: '-8px' }}>
-                  <div className="rounded-full" style={{ width: '26px', height: '26px', backgroundColor: 'hsl(var(--pencil-stroke) / 0.15)', border: '1.5px solid hsl(var(--pencil-stroke) / 0.2)', boxShadow: 'inset 0 2px 4px hsl(var(--pencil-stroke) / 0.1)' }} />
-                  <span className="text-[8px] font-bold select-none" style={{ color: 'hsl(var(--sketch-line) / 0.6)', fontFamily: "'Patrick Hand', cursive" }}>A</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          />
         ) : (
           <div className="w-full mt-3 flex justify-center z-10 pointer-events-auto">
             <div className={`rounded-xl border ${lineColor} ${containerBg} px-4 py-2 backdrop-blur-sm pointer-events-auto shadow-sm flex items-center gap-4`}>

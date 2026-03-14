@@ -27,6 +27,14 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'ai-file-bg': '210 15% 90%',
   'ai-file-text': '220 15% 45%',
   'img-error-text': '350 70% 50%',
+  'attachment-inline-target-text': '220 30% 20%',
+  'attachment-inline-native-text': '220 15% 45%',
+  'attachment-audio-target-text': '0 0% 0%',
+  'attachment-audio-native-text': '0 0% 0%',
+  'attachment-overlay-target-text': '210 20% 98%',
+  'attachment-overlay-native-text': '210 20% 98%',
+  'attachment-game-target-text': '220 30% 20%',
+  'attachment-game-native-text': '220 15% 45%',
 
   // Chat Input Area
   'chat-input-bg': '220 30% 20%',
