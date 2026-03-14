@@ -19,9 +19,11 @@ interface TextScrollwheelProps {
   speakNativeLang: boolean;
   onToggleSpeakNativeLang: () => void;
   messageId?: string;
+  /** When 'themed', uses AI message text colors instead of white overlay colors. */
+  colorMode?: 'overlay' | 'themed';
 }
 
-const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translations, speakingUtteranceText, currentTargetLangCode, currentNativeLangCode, t, isSpeaking, isSending, speakText, stopSpeaking, speakNativeLang, onToggleSpeakNativeLang, messageId }) => {
+const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translations, speakingUtteranceText, currentTargetLangCode, currentNativeLangCode, t, isSpeaking, isSending, speakText, stopSpeaking, speakNativeLang, onToggleSpeakNativeLang, messageId, colorMode = 'overlay' }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const isUserScrollingRef = useRef(false);
@@ -134,6 +136,11 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
   };
 
 
+  const themed = colorMode === 'themed';
+  const targetTextClass = themed ? 'text-ai-msg-text' : 'text-white';
+  const nativeTextClass = themed ? 'text-ai-file-text' : 'text-white/50';
+  const spacerTextClass = themed ? 'text-ai-file-text/40' : 'text-white/40';
+
   return (
       <div
         ref={scrollContainerRef}
@@ -175,7 +182,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                 className="text-center p-1 w-full opacity-0 select-none pointer-events-none"
               >
                 <p
-                  className="italic text-white/40"
+                  className={`italic ${spacerTextClass}`}
                   style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                 >
                   \u00A0
@@ -193,7 +200,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                   style={{ touchAction: 'pan-y' }}
                 > 
                   <p 
-                    className={`${line.type === 'target' ? 'font-semibold text-white' : 'italic text-white/50'} pointer-events-none`}
+                    className={`${line.type === 'target' ? `font-semibold ${targetTextClass}` : `italic ${nativeTextClass}`} pointer-events-none`}
                     style={{
                       fontSize: line.type === 'target' ? '4cqw' : '3.55cqw',
                       lineHeight: 1.3
@@ -214,7 +221,7 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                 className="text-center p-1 w-full opacity-0 select-none pointer-events-none"
               >
                 <p
-                  className="italic text-white/40"
+                  className={`italic ${spacerTextClass}`}
                   style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                 >
                   \u00A0

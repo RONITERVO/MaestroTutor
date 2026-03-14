@@ -40,6 +40,11 @@ import { useMaestroStore } from '../../../store';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
+import {
+  buildUploadedAttachmentState,
+  inferUploadedAttachmentTargetsForMimeType,
+  PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
+} from '../../chat/utils/uploadedAttachmentVariants';
 
 export interface UseLiveSessionControllerConfig {
   // Translation function
@@ -286,13 +291,22 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             try {
               // 2. Upload FULL resolution to Files API for model context
               const up = await uploadMediaToFiles(snapshotData.base64, snapshotData.mimeType, 'live-user-snapshot');
+              const uploadedAttachmentState = buildUploadedAttachmentState([
+                {
+                  id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
+                  uri: up.uri,
+                  mimeType: up.mimeType,
+                  targets: inferUploadedAttachmentTargetsForMimeType(up.mimeType),
+                  source: 'original',
+                  order: 10,
+                },
+              ]);
               
               // 3. Update message with both low-res (local) and URI (remote)
               updateMessage(userMessageId, {
                 storageOptimizedImageUrl: optimizedDataUrl,
                 storageOptimizedImageMimeType: optimizedMime,
-                uploadedFileUri: up.uri,
-                uploadedFileMimeType: up.mimeType
+                ...uploadedAttachmentState,
               });
               return { uri: up.uri, mimeType: up.mimeType };
             } catch (e) {
@@ -452,10 +466,17 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           const reverseIndex = [...apiHistory].reverse().findIndex(h => h.role === 'user' && h.text === userText);
           if (reverseIndex >= 0) {
             const idx = apiHistory.length - 1 - reverseIndex;
-            apiHistory[idx].imageFileUri = latestSnapshotUri;
-            apiHistory[idx].imageMimeType = latestSnapshotMime;
+            apiHistory[idx].fileParts = latestSnapshotMime
+              ? [{ fileUri: latestSnapshotUri, mimeType: latestSnapshotMime }]
+              : undefined;
           } else {
-            apiHistory.push({ role: 'user', text: userText, imageFileUri: latestSnapshotUri, imageMimeType: latestSnapshotMime });
+            apiHistory.push({
+              role: 'user',
+              text: userText,
+              fileParts: latestSnapshotMime
+                ? [{ fileUri: latestSnapshotUri, mimeType: latestSnapshotMime }]
+                : undefined,
+            });
           }
         }
         // Append camera instructions as the final User message, matching standard flow context
@@ -484,14 +505,23 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
               if (res.base64Image) {
                 const optimized = await processMediaForUpload(res.base64Image, res.mimeType, { t });
                 const up = await uploadMediaToFiles(res.base64Image, res.mimeType, 'live-gen');
+                const uploadedAttachmentState = buildUploadedAttachmentState([
+                  {
+                    id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
+                    uri: up.uri,
+                    mimeType: up.mimeType,
+                    targets: inferUploadedAttachmentTargetsForMimeType(up.mimeType),
+                    source: 'original',
+                    order: 10,
+                  },
+                ]);
 
                 updateMessage(assistantId, {
                   imageUrl: res.base64Image,
                   imageMimeType: res.mimeType,
                   storageOptimizedImageUrl: optimized.dataUrl,
                   storageOptimizedImageMimeType: optimized.mimeType,
-                  uploadedFileUri: up.uri,
-                  uploadedFileMimeType: up.mimeType,
+                  ...uploadedAttachmentState,
                   isGeneratingImage: false,
                   imageGenerationStartTime: undefined
                 });

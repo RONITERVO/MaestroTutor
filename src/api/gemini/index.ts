@@ -4,6 +4,7 @@
 export { ApiError, getAi } from './client';
 export { generateGeminiResponse, translateText } from './generative';
 export {
+  clearAllGeminiFiles,
   uploadMediaToFiles,
   checkFileStatuses,
   deleteFileByNameOrUri,

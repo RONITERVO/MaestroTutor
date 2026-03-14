@@ -138,20 +138,42 @@ export const checkFileStatuses = async (uris: string[]): Promise<Record<string, 
 };
 
 export const sanitizeHistoryWithVerifiedUris = async (history: any[]) => {
-  const uris = history.map(h => h.imageFileUri).filter(u => u);
+  const uris = history.flatMap((item) => {
+    const parts = Array.isArray(item?.fileParts) ? item.fileParts : [];
+    return parts
+      .map((part: any) => (typeof part?.fileUri === 'string' ? part.fileUri : ''))
+      .filter(Boolean);
+  });
   if (uris.length === 0) return history;
 
   const statuses = await checkFileStatuses(uris);
   let strippedCount = 0;
   const result = history.map((h, idx) => {
-    if (h.imageFileUri) {
-      const status = statuses[h.imageFileUri];
-      if (status?.deleted || !status?.active) {
-        strippedCount++;
-        console.warn(`[sanitizeHistory] Stripping expired/invalid media URI from history item ${idx}:`, h.imageFileUri?.slice(0, 80));
-        const { imageFileUri, imageMimeType, ...rest } = h;
-        return rest;
-      }
+    const hadFileParts = Array.isArray(h.fileParts);
+    const fileParts = hadFileParts
+      ? h.fileParts.filter((part: any) => {
+          const uri = typeof part?.fileUri === 'string' ? part.fileUri : '';
+          if (!uri) return false;
+          const status = statuses[uri];
+          const keep = !status?.deleted && !!status?.active;
+          if (!keep) {
+            strippedCount++;
+            console.warn(`[sanitizeHistory] Stripping expired/invalid media URI from history item ${idx}:`, uri.slice(0, 80));
+          }
+          return keep;
+        })
+      : undefined;
+
+    if (fileParts && fileParts.length > 0) {
+      return {
+        ...h,
+        fileParts,
+      };
+    }
+
+    if (hadFileParts) {
+      const { fileParts: _removedFileParts, ...rest } = h;
+      return rest;
     }
     return h;
   });
@@ -207,6 +229,48 @@ export const uploadMediaToFiles = async (
 
     log.complete(uploadResult);
     return { uri: uploadResult.uri, mimeType: uploadResult.mimeType };
+  } catch (e) {
+    log.error(e);
+    throw e;
+  }
+};
+
+export const clearAllGeminiFiles = async (): Promise<{
+  deletedCount: number;
+  failedCount: number;
+  failedNames: string[];
+}> => {
+  const ai = await getAi();
+  const log = debugLogService.logRequest('files.clearAll', 'Files API', {
+    pageSize: 100,
+  });
+  let deletedCount = 0;
+  let failedCount = 0;
+  const failedNames: string[] = [];
+
+  try {
+    const pager = await ai.files.list({ config: { pageSize: 100 } });
+
+    for await (const file of pager) {
+      const name = typeof file?.name === 'string' ? file.name.trim() : '';
+      if (!name) continue;
+
+      try {
+        await ai.files.delete({ name });
+        deletedCount++;
+
+        if (typeof file?.uri === 'string' && file.uri) {
+          knownExpiredUris.add(file.uri);
+        }
+      } catch {
+        failedCount++;
+        failedNames.push(name);
+      }
+    }
+
+    const summary = { deletedCount, failedCount, failedNames };
+    log.complete(summary);
+    return summary;
   } catch (e) {
     log.error(e);
     throw e;

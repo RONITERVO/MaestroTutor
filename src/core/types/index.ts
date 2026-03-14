@@ -4,6 +4,7 @@
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';
+  maestroToolKind?: 'image' | 'audio-note' | 'music';
   text?: string;
   recordedUtterance?: RecordedUtterance;
   /** Translation pairs using generic field names to support all language combinations */
@@ -23,15 +24,12 @@ export interface ChatMessage {
   imageMimeType?: string;
   /** Original attachment file name if available (e.g. README.md, app.tsx) */
   attachmentName?: string;
-  imageFileUri?: string;
   /** Optimized (lower res) image for local storage to reduce DB size */
   storageOptimizedImageUrl?: string;
   /** MIME type of the storage-optimized image */
   storageOptimizedImageMimeType?: string;
-  /** Uploaded file URI (for sending to API after reload - note: expires after 48h) */
-  uploadedFileUri?: string;
-  /** MIME type of the uploaded file */
-  uploadedFileMimeType?: string;
+  /** Expandable uploaded payload variants for model-specific attachment handling. */
+  uploadedFileVariants?: UploadedAttachmentVariant[];
   timestamp: number;
   thinking?: boolean;
   /** Model-authored thought summaries only; status text is tracked separately. */
@@ -42,14 +40,37 @@ export interface ChatMessage {
   /** One-off status line for the lower line until model-authored output arrives. */
   thinkingStatusLine?: string;
   isGeneratingImage?: boolean;
+  isGeneratingToolAttachment?: boolean;
+  toolAttachmentPhase?: 'pending' | 'streaming' | 'finalizing';
   imageGenError?: string | null;
   imageGenerationStartTime?: number;
+  toolAttachmentStartTime?: number;
   isLoadingArtifact?: boolean;
   artifactLoadStartTime?: number;
   tempSelectedNativeLangCode?: string;
   tempSelectedTargetLangCode?: string;
   /** Optional action hint for error messages (e.g. 'quota') to render contextual action buttons */
   errorAction?: string;
+}
+
+export type UploadedAttachmentTarget = 'chat' | 'image-generation';
+
+export type UploadedAttachmentSource =
+  | 'original'
+  | 'video-keyframe'
+  | 'office-text'
+  | 'svg-source'
+  | 'svg-rasterized'
+  | 'derived';
+
+export interface UploadedAttachmentVariant {
+  /** Stable variant key so callers can upsert a specific surrogate. */
+  id: string;
+  uri: string;
+  mimeType: string;
+  targets: UploadedAttachmentTarget[];
+  source: UploadedAttachmentSource;
+  order?: number;
 }
 
 export interface SpeechPart {

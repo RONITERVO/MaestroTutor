@@ -343,9 +343,9 @@ export const generateGeminiResponse = async (
   userPrompt: string,
   history: any[],
   systemInstruction?: string,
-  imageBase64?: string,
-  imageMimeType?: string,
-  imageFileUri?: string,
+  _imageBase64?: string,
+  _imageMimeType?: string,
+  currentFileParts?: Array<{ fileUri: string; mimeType: string }>,
   useGoogleSearch?: boolean,
   configOverrides?: any,
   timeoutMs: number = DEFAULT_TIMEOUT_MS,
@@ -354,17 +354,28 @@ export const generateGeminiResponse = async (
   const ai = await getAi();
   const contents: any[] = [];
 
+  const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
+    if (!Array.isArray(parts)) return [];
+    return parts
+      .map((part) => {
+        const candidate = part as { fileUri?: string; mimeType?: string } | null | undefined;
+        const fileUri = typeof candidate?.fileUri === 'string' ? candidate.fileUri.trim() : '';
+        const mimeType = typeof candidate?.mimeType === 'string' ? candidate.mimeType.trim() : '';
+        if (!fileUri || !mimeType) return null;
+        return { fileUri, mimeType };
+      })
+      .filter((part): part is { fileUri: string; mimeType: string } => Boolean(part));
+  };
+
   history.forEach(h => {
     const parts: any[] = [];
     const textContent = h.rawAssistantResponse || h.text;
     if (textContent) parts.push({ text: textContent });
 
-    if (h.imageFileUri) {
-      parts.push({ fileData: { fileUri: h.imageFileUri, mimeType: h.imageMimeType || 'image/jpeg' } });
-    } else if (h.imageUrl && h.imageMimeType) {
-      const b64 = h.imageUrl.substring(h.imageUrl.indexOf(',') + 1);
-      if (b64) parts.push({ inlineData: { data: b64, mimeType: h.imageMimeType } });
-    }
+    const historyFileParts = normalizeFileParts(h.fileParts);
+    historyFileParts.forEach((part) => {
+      parts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
+    });
 
     if (h.avatarFileUri) {
       parts.push({ fileData: { fileUri: h.avatarFileUri, mimeType: h.avatarMimeType || 'image/jpeg' } });
@@ -377,12 +388,10 @@ export const generateGeminiResponse = async (
   });
 
   const currentParts: any[] = [{ text: userPrompt }];
-  if (imageFileUri) {
-    currentParts.push({ fileData: { fileUri: imageFileUri, mimeType: imageMimeType || 'image/jpeg' } });
-  } else if (imageBase64 && imageMimeType) {
-    const b64 = imageBase64.substring(imageBase64.indexOf(',') + 1);
-    if (b64) currentParts.push({ inlineData: { data: b64, mimeType: imageMimeType } });
-  }
+  const normalizedCurrentFileParts = normalizeFileParts(currentFileParts);
+  normalizedCurrentFileParts.forEach((part) => {
+    currentParts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
+  });
 
   contents.push({ role: 'user', parts: currentParts });
 
