@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect } from 'react';
 import { debugLogService, LogEntry } from '../services/debugLogService';
-import { IconXMark, IconTrash } from '../../../shared/ui/Icons';
+import { clearAllGeminiFiles } from '../../../api/gemini';
+import { IconCloudSlash, IconXMark, IconTrash } from '../../../shared/ui/Icons';
 
 interface DebugLogPanelProps {
   onClose: () => void;
@@ -12,6 +13,7 @@ interface DebugLogPanelProps {
 const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isClearingUploads, setIsClearingUploads] = useState(false);
 
   useEffect(() => {
     return debugLogService.subscribe((updatedLogs) => {
@@ -21,6 +23,16 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
 
   const handleClear = () => {
     debugLogService.clear();
+  };
+
+  const handleClearUploads = async () => {
+    if (isClearingUploads) return;
+    setIsClearingUploads(true);
+    try {
+      await clearAllGeminiFiles();
+    } finally {
+      setIsClearingUploads(false);
+    }
   };
 
   const toggleExpand = (id: string) => {
@@ -38,6 +50,15 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           <span className="text-green-400">➜</span> Traffic Log
         </h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleClearUploads}
+            disabled={isClearingUploads}
+            className="p-1.5 text-debug-btn-muted hover:text-red-300 hover:bg-debug-btn-bg/70 rounded transition-colors disabled:cursor-wait disabled:opacity-50"
+            title="Delete all Gemini uploads for the current API key"
+            aria-label="Delete all Gemini uploads for the current API key"
+          >
+            <IconCloudSlash className={`w-4 h-4 ${isClearingUploads ? 'animate-pulse' : ''}`} />
+          </button>
           <button
             onClick={handleClear}
             className="p-1.5 text-debug-btn-muted hover:text-correction-pen hover:bg-debug-btn-bg/70 rounded transition-colors"

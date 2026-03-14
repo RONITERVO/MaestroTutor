@@ -235,6 +235,48 @@ export const uploadMediaToFiles = async (
   }
 };
 
+export const clearAllGeminiFiles = async (): Promise<{
+  deletedCount: number;
+  failedCount: number;
+  failedNames: string[];
+}> => {
+  const ai = await getAi();
+  const log = debugLogService.logRequest('files.clearAll', 'Files API', {
+    pageSize: 100,
+  });
+  let deletedCount = 0;
+  let failedCount = 0;
+  const failedNames: string[] = [];
+
+  try {
+    const pager = await ai.files.list({ config: { pageSize: 100 } });
+
+    for await (const file of pager) {
+      const name = typeof file?.name === 'string' ? file.name.trim() : '';
+      if (!name) continue;
+
+      try {
+        await ai.files.delete({ name });
+        deletedCount++;
+
+        if (typeof file?.uri === 'string' && file.uri) {
+          knownExpiredUris.add(file.uri);
+        }
+      } catch {
+        failedCount++;
+        failedNames.push(name);
+      }
+    }
+
+    const summary = { deletedCount, failedCount, failedNames };
+    log.complete(summary);
+    return summary;
+  } catch (e) {
+    log.error(e);
+    throw e;
+  }
+};
+
 export const deleteFileByNameOrUri = async (nameOrUri: string) => {
   const ai = await getAi();
   let name = nameOrUri;
