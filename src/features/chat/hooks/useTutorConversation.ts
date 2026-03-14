@@ -1106,10 +1106,15 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         removeActivityToken(suggestionsTokenRef.current);
         suggestionsTokenRef.current = null;
       }
-      if (resolvedToolRequest) {
-        await executeAssistantToolRequest(assistantMessageId, resolvedToolRequest);
-      } else {
+      const hasRenderableArtifact = Boolean(normalizeSuggestionCreatorArtifact(resolvedArtifact));
+      if (hasRenderableArtifact || !resolvedToolRequest) {
         finalizeAssistantArtifact(assistantMessageId, resolvedArtifact);
+      }
+      if (resolvedToolRequest) {
+        const toolMessageId = hasRenderableArtifact
+          ? addMessage({ role: 'assistant' })
+          : assistantMessageId;
+        await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
       }
     };
 
@@ -1259,9 +1264,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         const parsedResponse = JSON.parse(jsonStr);
         resolvedArtifact = parsedResponse?.artifact ?? null;
         resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
-        if (resolvedToolRequest) {
-          resolvedArtifact = null;
-        }
 
         if (Array.isArray(parsedResponse.suggestions) &&
           parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
@@ -1319,9 +1321,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     getHistoryRespectingBookmark,
     messagesRef,
     normalizeSuggestionCreatorToolRequest,
+    normalizeSuggestionCreatorArtifact,
     selectedLanguagePairRef,
     settingsRef,
     isLoadingSuggestions,
+    addMessage,
     addActivityToken,
     removeActivityToken,
     setReplySuggestions,
