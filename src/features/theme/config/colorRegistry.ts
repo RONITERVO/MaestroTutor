@@ -63,6 +63,8 @@ export const COLOR_GROUPS: ColorGroup[] = [
     colors: [
       { cssVar: 'attachment-inline-target-text', friendlyName: 'Inline Target Text', description: 'Main attachment transcript text shown under attachments, including music replies' },
       { cssVar: 'attachment-inline-native-text', friendlyName: 'Inline Native Text', description: 'Secondary or native attachment transcript text shown under attachments, including music replies' },
+      { cssVar: 'attachment-audio-target-text', friendlyName: 'Audio Target Text', description: 'Main text in the focused assistant audio scroll wheel' },
+      { cssVar: 'attachment-audio-native-text', friendlyName: 'Audio Native Text', description: 'Secondary or native text in the focused assistant audio scroll wheel' },
       { cssVar: 'attachment-overlay-target-text', friendlyName: 'Overlay Target Text', description: 'Main transcript text shown over images, PDFs, and focused attachments' },
       { cssVar: 'attachment-overlay-native-text', friendlyName: 'Overlay Native Text', description: 'Secondary or native transcript text shown over images, PDFs, and focused attachments' },
       { cssVar: 'attachment-game-target-text', friendlyName: 'Game Target Text', description: 'Main transcript text when the transcript overlaps a mini-game' },

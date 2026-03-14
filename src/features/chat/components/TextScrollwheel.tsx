@@ -19,8 +19,8 @@ interface TextScrollwheelProps {
   speakNativeLang: boolean;
   onToggleSpeakNativeLang: () => void;
   messageId?: string;
-  /** `overlay` is for image/PDF overlays, `game` is for mini-game overlays. */
-  colorMode?: 'overlay' | 'game';
+  /** `overlay` is for image/PDF overlays, `game` is for mini-game overlays, `audio` is for focused audio bubbles. */
+  colorMode?: 'overlay' | 'game' | 'audio';
 }
 
 const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translations, speakingUtteranceText, currentTargetLangCode, currentNativeLangCode, t, isSpeaking, isSending, speakText, stopSpeaking, speakNativeLang, onToggleSpeakNativeLang, messageId, colorMode = 'overlay' }) => {
@@ -135,9 +135,21 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
     pointerDownPosRef.current = null;
   };
 
-  const targetTextClass = colorMode === 'game' ? 'text-attachment-game-target-text' : 'text-attachment-overlay-target-text';
-  const nativeTextClass = colorMode === 'game' ? 'text-attachment-game-native-text' : 'text-attachment-overlay-native-text/70';
-  const spacerTextClass = colorMode === 'game' ? 'text-attachment-game-native-text/40' : 'text-attachment-overlay-native-text/40';
+  const targetTextClass = colorMode === 'game'
+    ? 'text-attachment-game-target-text'
+    : colorMode === 'audio'
+      ? 'text-attachment-audio-target-text'
+      : 'text-attachment-overlay-target-text';
+  const nativeTextClass = colorMode === 'game'
+    ? 'text-attachment-game-native-text'
+    : colorMode === 'audio'
+      ? 'text-attachment-audio-native-text'
+      : 'text-attachment-overlay-native-text/70';
+  const spacerTextClass = colorMode === 'game'
+    ? 'text-attachment-game-native-text/40'
+    : colorMode === 'audio'
+      ? 'text-attachment-audio-native-text/40'
+      : 'text-attachment-overlay-native-text/40';
 
   return (
       <div
