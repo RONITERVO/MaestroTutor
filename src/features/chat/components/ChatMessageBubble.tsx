@@ -20,6 +20,7 @@ import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messag
 import TextFileViewer from './TextFileViewer';
 import OfficeFileViewer from './OfficeFileViewer';
 import { decodeTextFromDataUrl, isOfficeAttachment, isTextLikeAttachment } from '../utils/fileAttachments';
+import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
 import { selectPrimaryUploadedAttachmentVariant } from '../utils/uploadedAttachmentVariants';
 
 interface ChatMessageBubbleProps {
@@ -637,6 +638,18 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     if (!isAttachmentSvg || !displayUrl) return null;
     return decodeTextFromDataUrl(displayUrl);
   }, [isAttachmentSvg, displayUrl]);
+  const textAttachmentSourceCode = useMemo(() => {
+    if (!isAttachmentAText || !displayUrl) return null;
+    return decodeTextFromDataUrl(displayUrl);
+  }, [isAttachmentAText, displayUrl]);
+  const isMiniGameAttachment = useMemo(() => {
+    if (!textAttachmentSourceCode) return false;
+    return isRunnableMiniGameAttachment({
+      sourceCode: textAttachmentSourceCode,
+      fileName: message.attachmentName,
+      mimeType: displayMime,
+    });
+  }, [displayMime, message.attachmentName, textAttachmentSourceCode]);
 
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
@@ -667,7 +680,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || isAttachmentLoading || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   const hasVisibleAttachment = isAttachmentLoading || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !isAudioSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed;
-  const useOverlayTextColors = shouldOverlayTextOnAttachment;
+  const useOverlayTextColors = shouldOverlayTextOnAttachment && !isMiniGameAttachment;
   const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment;
   const shouldInsetScrollableAttachmentForOverlay = shouldUseScrollableTextOverlay && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
@@ -679,8 +692,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch' as any,
         scrollbarGutter: 'stable',
+        ...(isMiniGameAttachment ? { textShadow: 'none' } : null),
       }
     : undefined;
+  const textOverlayClasses = shouldOverlayTextOnAttachment
+    ? (isMiniGameAttachment
+        ? 'absolute inset-x-0 bottom-0 p-3 bg-transparent rounded-b-lg z-10'
+        : 'absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10')
+    : 'relative z-10 mt-1';
   const handleAttachmentImageLoad = useCallback((img: HTMLImageElement) => {
     if (img.naturalWidth > 0 && img.naturalHeight > 0) {
       setImageAspectRatio(img.naturalWidth / img.naturalHeight);
@@ -1291,10 +1310,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
         {hasTextContent && (
            <div className={`transition-opacity duration-300
-                ${shouldOverlayTextOnAttachment
-                    ? `absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10`
-                    : 'relative z-10 mt-1'
-                }
+                ${textOverlayClasses}
                 ${shouldUseScrollableTextOverlay ? 'pointer-events-none' : ''}
                 ${isAnnotationActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}

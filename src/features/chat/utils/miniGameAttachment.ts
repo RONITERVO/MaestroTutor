@@ -65,13 +65,13 @@ const buildRuntimeBridge = (frameId: string): string => {
 const buildRuntimeStyle = (): string => `
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com https://esm.sh; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src data: blob: https://www.transparenttextures.com https://upload.wikimedia.org https://images.unsplash.com https://picsum.photos https://fastly.picsum.photos https://api.dicebear.com; media-src data: blob: https://commons.wikimedia.org https://cdn.freesound.org; connect-src https://opentdb.com https://api.datamuse.com blob: data:; worker-src blob: data: 'self'; child-src blob: data: 'self';">
 <style>
-  :root { color-scheme: light dark; }
+  :root { color-scheme: light dark; background: transparent !important; }
   /* Enforce 100% width/height so LLM responsive games fit the iframe perfectly */
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
     overflow: hidden; touch-action: none;
     -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
-    background: #000; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif;
+    background: transparent !important; color: CanvasText; font-family: ui-sans-serif, system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
   canvas { display: block; outline: none; -webkit-tap-highlight-color: transparent; touch-action: none; max-width: 100%; max-height: 100%; }
