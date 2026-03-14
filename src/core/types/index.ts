@@ -59,6 +59,7 @@ export type UploadedAttachmentSource =
   | 'original'
   | 'video-keyframe'
   | 'office-text'
+  | 'svg-source'
   | 'svg-rasterized'
   | 'derived';
 

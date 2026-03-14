@@ -10,6 +10,7 @@ import type {
 export const PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID = 'primary';
 export const VIDEO_KEYFRAME_UPLOADED_ATTACHMENT_VARIANT_ID = 'video-keyframe';
 export const OFFICE_TEXT_UPLOADED_ATTACHMENT_VARIANT_ID = 'office-text';
+export const SVG_SOURCE_UPLOADED_ATTACHMENT_VARIANT_ID = 'svg-source';
 export const SVG_RASTER_UPLOADED_ATTACHMENT_VARIANT_ID = 'svg-rasterized';
 
 const VALID_UPLOAD_TARGETS: UploadedAttachmentTarget[] = ['chat', 'image-generation'];
@@ -17,7 +18,8 @@ const VALID_UPLOAD_TARGETS: UploadedAttachmentTarget[] = ['chat', 'image-generat
 const DEFAULT_ORDER_BY_VARIANT_ID: Record<string, number> = {
   [VIDEO_KEYFRAME_UPLOADED_ATTACHMENT_VARIANT_ID]: 0,
   [OFFICE_TEXT_UPLOADED_ATTACHMENT_VARIANT_ID]: 0,
-  [SVG_RASTER_UPLOADED_ATTACHMENT_VARIANT_ID]: 0,
+  [SVG_SOURCE_UPLOADED_ATTACHMENT_VARIANT_ID]: 0,
+  [SVG_RASTER_UPLOADED_ATTACHMENT_VARIANT_ID]: 5,
   [PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID]: 10,
 };
 
@@ -119,6 +121,7 @@ export const selectPrimaryUploadedAttachmentVariant = (
   return (
     variants.find(variant => variant.id === PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID) ||
     variants.find(variant => variant.source === 'original') ||
+    variants.find(variant => variant.mimeType.startsWith('image/')) ||
     variants[0]
   );
 };

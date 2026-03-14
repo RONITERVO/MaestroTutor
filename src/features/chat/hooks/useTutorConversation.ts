@@ -32,7 +32,12 @@ import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
 import { getOfficePreview } from '../utils/officePreview';
-import { isGoogleWorkspaceShortcutMimeType, isMicrosoftOfficeMimeType, normalizeAttachmentMimeType } from '../utils/fileAttachments';
+import {
+  decodeTextFromDataUrl,
+  isGoogleWorkspaceShortcutMimeType,
+  isMicrosoftOfficeMimeType,
+  normalizeAttachmentMimeType,
+} from '../utils/fileAttachments';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -41,6 +46,7 @@ import {
   PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
   selectUploadedAttachmentParts,
   SVG_RASTER_UPLOADED_ATTACHMENT_VARIANT_ID,
+  SVG_SOURCE_UPLOADED_ATTACHMENT_VARIANT_ID,
   upsertUploadedAttachmentVariant,
   VIDEO_KEYFRAME_UPLOADED_ATTACHMENT_VARIANT_ID,
 } from '../utils/uploadedAttachmentVariants';
@@ -261,10 +267,27 @@ const buildAttachmentUploadPlans = (
   if (isSvgMimeType(mimeType)) {
     return [
       {
+        id: SVG_SOURCE_UPLOADED_ATTACHMENT_VARIANT_ID,
+        source: 'svg-source',
+        targets: ['chat'],
+        order: 0,
+        build: async () => {
+          const extracted = decodeTextFromDataUrl(source.dataUrl)?.trim();
+          if (!extracted) {
+            throw new Error('SVG source could not be decoded for Gemini upload conversion.');
+          }
+          return {
+            dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
+            mimeType: 'text/plain',
+            displayName: `${displayName}.txt`,
+          };
+        },
+      },
+      {
         id: SVG_RASTER_UPLOADED_ATTACHMENT_VARIANT_ID,
         source: 'svg-rasterized',
         targets: ['chat', 'image-generation'],
-        order: 0,
+        order: 5,
         build: async () => {
           const rasterized = await processMediaForUpload(source.dataUrl, source.mimeType, { t });
           if (
