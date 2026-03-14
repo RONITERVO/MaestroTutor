@@ -123,7 +123,10 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     backgroundColor: 'transparent',
   };
 
-  const actionButtonClass = 'p-2 bg-black/50 text-white rounded-full hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black/50 focus:ring-white transition-colors';
+  const overlayIconShadowStyle: React.CSSProperties = {
+    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
+  };
+  const actionButtonClass = 'p-2 rounded-full text-white/90 opacity-85 transition-all duration-200 hover:text-white hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/40 active:scale-95';
 
   return (
     <div ref={containerRef} className="w-full flex flex-col items-center">
@@ -158,13 +161,19 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
           {controlsUnderOverlay && (
             <div className="absolute top-2 right-2 z-30 flex flex-col gap-2 pointer-events-auto">
               <button onClick={handleFullscreen} className={actionButtonClass} title="Fullscreen">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                <span style={overlayIconShadowStyle}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                </span>
               </button>
               <button onClick={handleReload} className={actionButtonClass} title="Restart">
-                <IconUndo className="w-4 h-4" />
+                <span style={overlayIconShadowStyle}>
+                  <IconUndo className="w-4 h-4" />
+                </span>
               </button>
               <button onClick={() => setShowCode((prev) => !prev)} className={actionButtonClass} title="Code">
-                <IconTerminal className="w-4 h-4" />
+                <span style={overlayIconShadowStyle}>
+                  <IconTerminal className="w-4 h-4" />
+                </span>
               </button>
             </div>
           )}
