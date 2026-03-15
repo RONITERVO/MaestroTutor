@@ -6,6 +6,7 @@ import { ChatMessage, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck, IconChevronLeft, IconChevronRight, IconSpeaker, IconVolumeOff } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
+import AttachmentTextScrollContainer from './AttachmentTextScrollContainer';
 import TextScrollwheel from './TextScrollwheel';
 import AudioPlayer from './AudioPlayer';
 import PdfViewer from './PdfViewer';
@@ -702,7 +703,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || isAttachmentLoading || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || usesAudioAttachmentShell || isPdfSuccessfullyDisplayed);
   const hasVisibleAttachment = shouldShowAudioAttachmentPlaceholder || isAttachmentLoading || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !usesAudioAttachmentShell && !isVideoSuccessfullyDisplayed;
-  const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment && !!hasTextContent;
+  const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && hasVisibleAttachment && !!hasTextContent;
   const overlayTranscriptBottomInset = shouldUseScrollableTextOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
   const usesDetachedTranscriptShell = shouldUseScrollableTextOverlay && (isMiniGameAttachment || isAttachmentSvg);
   const detachedTranscriptShellHeight = usesDetachedTranscriptShell && overlayTranscriptBottomInset > 0
@@ -826,6 +827,32 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const bubbleAlignClass = isUser ? 'justify-end' : 'justify-start';
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
+  const shouldUseScrollableUserTextShell = isUser && !!message.text && applyFocusedImageStyles && shouldUseScrollableTextOverlay;
+  const userMessageTextNode = isUser && message.text ? (
+    <p
+      className={`${shouldUseScrollableUserTextShell ? '' : 'mb-1 '}whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors pointer-events-auto ${userAttachmentTextClass} ${isUserLineSpeaking ? userAttachmentSpeakingSurfaceClass : userAttachmentHoverSurfaceClass}`.trim()}
+      style={{ fontSize: '3.8cqw', lineHeight: 1.35 }}
+      onPointerDown={handleLinePointerDown}
+      onPointerUp={handleUserMessagePointerUp}
+      onPointerLeave={handleLinePointerLeave}
+      role="button"
+      tabIndex={isSending && !isSpeaking ? -1 : 0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (isSpeaking) {
+            stopSpeaking();
+          } else if (!isSending) {
+            handlePlayUserMessage(message);
+          }
+        }
+      }}
+      aria-label={isUserLineSpeaking ? (t('chat.stopSpeaking') || 'Stop playback') : (t('chat.speakThisLine') ? `${t('chat.speakThisLine')}: ${sanitizedUserText}` : 'Play message audio')}
+      aria-disabled={isSending && !isSpeaking}
+    >
+      {message.text}
+    </p>
+  ) : null;
   // --- Thinking bubble: content line for the "native" position ---
   // Concatenate all trace lines into a single ticker string for scrolling effect.
   // When thinkingDraftText (streamed response) arrives, prioritize that instead.
@@ -1497,30 +1524,18 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                    </>
                ) : (
                  <>
-                  {isUser && message.text && (
-                    <p
-                      className={`mb-1 whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors ${userAttachmentTextClass} ${isUserLineSpeaking ? userAttachmentSpeakingSurfaceClass : userAttachmentHoverSurfaceClass}`}
-                      style={{ fontSize: '3.8cqw', lineHeight: 1.35 }}
-                      onPointerDown={handleLinePointerDown}
-                      onPointerUp={handleUserMessagePointerUp}
-                      onPointerLeave={handleLinePointerLeave}
-                      role="button"
-                      tabIndex={isSending && !isSpeaking ? -1 : 0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          if (isSpeaking) {
-                            stopSpeaking();
-                          } else if (!isSending) {
-                            handlePlayUserMessage(message);
-                          }
-                        }
-                      }}
-                      aria-label={isUserLineSpeaking ? (t('chat.stopSpeaking') || 'Stop playback') : (t('chat.speakThisLine') ? `${t('chat.speakThisLine')}: ${sanitizedUserText}` : 'Play message audio')}
-                      aria-disabled={isSending && !isSpeaking}
-                    >
-                      {message.text}
-                    </p>
+                  {userMessageTextNode && (
+                    shouldUseScrollableUserTextShell ? (
+                      <AttachmentTextScrollContainer
+                        spacerClassName={userAttachmentSubtleTextClass}
+                        onWheel={(e) => e.stopPropagation()}
+                        onTouchMove={(e) => e.stopPropagation()}
+                      >
+                        <div className="text-center p-1 w-full transition-all duration-300 transform-gpu opacity-100 scale-105">
+                          {userMessageTextNode}
+                        </div>
+                      </AttachmentTextScrollContainer>
+                    ) : userMessageTextNode
                   )}
  
                    {isAssistant && message.translations && message.translations.length > 0 && message.translations.map((pair, index) => {
