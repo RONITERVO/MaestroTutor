@@ -1535,7 +1535,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`font-semibold whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  isCurrentLineSpeaking
-                                   ? 'bg-marker-bg text-marker-text'
+                                   ? 'bg-marker-target-bg text-marker-target-text'
                                    : `${assistantTargetHoverTextClass} ${assistantTargetTextClass}`
                              }`}
                              style={{ fontSize: '4cqw', lineHeight: 1.3 }}
@@ -1585,7 +1585,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        {pair.native && (
                         <p className={`italic mt-0.5 whitespace-pre-wrap pl-2 border-l-2 rounded-sm px-1 -mx-1 ${
                              isCurrentLineSpeaking
-                               ? 'bg-marker-bg text-marker-text border-marker-text/40'
+                               ? 'bg-marker-native-bg text-marker-native-text border-marker-native-text/40'
                                : assistantNativeTextClass
                          }`} style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                          onPointerDown={handleLinePointerDown}
@@ -1624,7 +1624,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  isCurrentlySpeakingRaw
-                                   ? 'bg-marker-bg text-marker-text'
+                                   ? 'bg-marker-target-bg text-marker-target-text'
                                    : `${assistantTargetHoverTextClass} ${assistantTargetTextClass}`
                              }`} style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}

@@ -164,8 +164,10 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'annotation-btn-focus': '220 25% 30%',
 
   // Translation Highlight
-  'marker-bg': '60 85% 80%',
-  'marker-text': '220 30% 20%',
+  'marker-target-bg': '60 85% 80%',
+  'marker-target-text': '220 30% 20%',
+  'marker-native-bg': '190 80% 84%',
+  'marker-native-text': '220 30% 20%',
 
   // Notebook Marks
   'pencil-stroke': '220 25% 30%',

@@ -267,8 +267,10 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupDescription: 'Active word highlighting during audio playback',
     collapsedByDefault: true,
     colors: [
-      { cssVar: 'marker-bg', friendlyName: 'Highlighter Background', description: 'Background for actively spoken translation words' },
-      { cssVar: 'marker-text', friendlyName: 'Highlighter Text', description: 'Text color for actively spoken words' },
+      { cssVar: 'marker-target-bg', friendlyName: 'Target Highlight Background', description: 'Background for actively spoken target-language text' },
+      { cssVar: 'marker-target-text', friendlyName: 'Target Highlight Text', description: 'Text color for actively spoken target-language text' },
+      { cssVar: 'marker-native-bg', friendlyName: 'Native Highlight Background', description: 'Background for actively spoken native-language text' },
+      { cssVar: 'marker-native-text', friendlyName: 'Native Highlight Text', description: 'Text color for actively spoken native-language text' },
     ],
   },
   {

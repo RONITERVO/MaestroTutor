@@ -5,9 +5,9 @@ This is the canonical color and UI styling reference for contributors.
 ## Overview
 
 - Last updated: 2026-03-15
-- Active color tokens: 220
+- Active color tokens: 222
 - Token groups: 28
-- Legacy migration keys supported: 89
+- Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
 - Source of truth files: `src/app/index.css`, `index.html`, `src/features/theme/config/colorRegistry.ts`, `src/features/theme/config/defaultColors.ts`, `src/features/theme/config/presetThemes.ts`
 
@@ -45,6 +45,7 @@ When adding or changing a colorized element:
 
 ## Recent Token Isolation Updates (2026-03-15)
 
+- Assistant playback highlight split: `marker-target-bg`, `marker-target-text`, `marker-native-bg`, `marker-native-text`.
 - User attachment text parity: `user-attachment-inline-text`, `user-attachment-audio-text`, `user-attachment-overlay-text`, `user-attachment-svg-text`, `user-attachment-game-text`.
 - Annotation save button state isolation: `annotation-btn-hover`, `annotation-btn-focus`.
 - Live idle mode isolation: `live-idle-sugg-btn-bg`, `live-idle-sugg-btn-text`, `live-idle-spinner`.
@@ -336,8 +337,10 @@ Active word highlighting during audio playback
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--marker-bg` | `60 85% 80%` | Highlighter Background | Background for actively spoken translation words |
-| `--marker-text` | `220 30% 20%` | Highlighter Text | Text color for actively spoken words |
+| `--marker-target-bg` | `60 85% 80%` | Target Highlight Background | Background for actively spoken target-language text |
+| `--marker-target-text` | `220 30% 20%` | Target Highlight Text | Text color for actively spoken target-language text |
+| `--marker-native-bg` | `190 80% 84%` | Native Highlight Background | Background for actively spoken native-language text |
+| `--marker-native-text` | `220 30% 20%` | Native Highlight Text | Text color for actively spoken native-language text |
 
 ### Notebook Marks
 
