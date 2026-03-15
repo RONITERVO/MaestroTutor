@@ -24,6 +24,35 @@ export interface EnsuredAvatarResult {
 
 const NULL_RESULT: EnsuredAvatarResult = { rawUri: null, rawMimeType: null, overlayUri: null, overlayMimeType: null };
 
+const isActiveGeminiFileUri = async (uri: string | null | undefined): Promise<boolean> => {
+  const candidate = typeof uri === 'string' ? uri.trim() : '';
+  if (!candidate) return false;
+
+  try {
+    const statuses = await checkFileStatuses([candidate]);
+    const status = statuses[candidate];
+    return !!status && !status.deleted && status.active;
+  } catch {
+    return false;
+  }
+};
+
+const findFirstActiveGeminiFileUri = async (candidates: Array<string | null | undefined>): Promise<string | null> => {
+  const seen = new Set<string>();
+
+  for (const candidate of candidates) {
+    const trimmed = typeof candidate === 'string' ? candidate.trim() : '';
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+
+    if (await isActiveGeminiFileUri(trimmed)) {
+      return trimmed;
+    }
+  }
+
+  return null;
+};
+
 export const invalidateMaestroAvatarCache = (): void => {
   cachedRawUri = null;
   cachedRawMimeType = null;
@@ -40,26 +69,22 @@ export const ensureMaestroAvatarUris = async (): Promise<EnsuredAvatarResult> =>
   const mimeType = asset.mimeType || 'image/png';
 
   // --- Ensure raw URI (for image generation) ---
-  let rawUri = cachedRawUri;
-  let rawMimeType = cachedRawMimeType;
+  let rawUri: string | null = cachedRawUri;
+  let rawMimeType: string | null = cachedRawMimeType || mimeType;
 
   const rawAge = cachedRawUpdatedAt > 0 ? Date.now() - cachedRawUpdatedAt : Number.POSITIVE_INFINITY;
-  if (!rawUri || rawAge > MAESTRO_URI_REFRESH_MS) {
-    // Check if the stored URI is still valid
-    let needsUpload = true;
-    if (asset.uri) {
-      try {
-        const statuses = await checkFileStatuses([asset.uri]);
-        const st = statuses[asset.uri];
-        if (st && !st.deleted && st.active) {
-          rawUri = asset.uri;
-          rawMimeType = mimeType;
-          needsUpload = false;
-        }
-      } catch { /* assume needs upload */ }
-    }
+  if (rawUri && !(await isActiveGeminiFileUri(rawUri))) {
+    rawUri = null;
+    rawMimeType = null;
+  }
 
-    if (needsUpload) {
+  if (!rawUri || rawAge > MAESTRO_URI_REFRESH_MS) {
+    const existingRawUri = await findFirstActiveGeminiFileUri([rawUri, asset.uri]);
+
+    if (existingRawUri) {
+      rawUri = existingRawUri;
+      rawMimeType = mimeType;
+    } else {
       const uploaded = await uploadMediaToFiles(asset.dataUrl, mimeType, 'maestro-avatar');
       rawUri = uploaded.uri;
       rawMimeType = uploaded.mimeType || mimeType;
@@ -82,10 +107,15 @@ export const ensureMaestroAvatarUris = async (): Promise<EnsuredAvatarResult> =>
   }
 
   // --- Ensure overlay URI (for chat LLM context) ---
-  let overlayUri = cachedOverlayUri;
-  let overlayMimeType = cachedOverlayMimeType;
+  let overlayUri: string | null = cachedOverlayUri;
+  let overlayMimeType: string | null = cachedOverlayMimeType;
 
   const overlayAge = cachedOverlayUpdatedAt > 0 ? Date.now() - cachedOverlayUpdatedAt : Number.POSITIVE_INFINITY;
+  if (overlayUri && !(await isActiveGeminiFileUri(overlayUri))) {
+    overlayUri = null;
+    overlayMimeType = null;
+  }
+
   if (!overlayUri || overlayAge > MAESTRO_URI_REFRESH_MS) {
     const overlay = await createAvatarWithOverlay(asset.dataUrl);
     const uploaded = await uploadMediaToFiles(overlay.dataUrl, overlay.mimeType, 'maestro-avatar-overlay');
