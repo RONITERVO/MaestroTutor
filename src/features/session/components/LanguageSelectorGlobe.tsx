@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { LanguageDefinition, ALL_LANGUAGES, hasSharedFlag } from '../../../core/config/languages';
-import { TranslationReplacements } from '../../../core/i18n/index';
 import LanguageScrollWheel from './LanguageScrollWheel';
 
 interface LanguageSelectorGlobeProps {
@@ -11,9 +10,7 @@ interface LanguageSelectorGlobeProps {
     targetLangCode: string | null;
     onSelectNative: (code: string | null) => void;
     onSelectTarget: (code: string | null) => void;
-    onConfirm: () => void;
     onCancel?: () => void;
-    t: (key: string, replacements?: TranslationReplacements) => string;
     onInteract: () => void;
 }
 
@@ -36,9 +33,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     targetLangCode,
     onSelectNative,
     onSelectTarget,
-    onConfirm: _onConfirm,
     onCancel,
-    t: _t,
     onInteract
 }) => {
     const nativeLang = ALL_LANGUAGES.find(l => l.langCode === nativeLangCode) || null;

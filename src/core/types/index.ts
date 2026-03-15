@@ -28,7 +28,7 @@ export interface ChatMessage {
   storageOptimizedImageUrl?: string;
   /** MIME type of the storage-optimized image */
   storageOptimizedImageMimeType?: string;
-  /** Expandable uploaded payload variants for model-specific attachment handling. */
+  /** Expandable uploaded file variants for model-specific attachment handling. */
   uploadedFileVariants?: UploadedAttachmentVariant[];
   timestamp: number;
   thinking?: boolean;
@@ -210,9 +210,6 @@ export interface UserProfile {
   likes?: string[];
   dislikes?: string[];
   keyFeatures?: string[];
-  _likeCounts?: Record<string, number>;
-  _dislikeCounts?: Record<string, number>;
-  _featureCounts?: Record<string, number>;
   schemaVersion?: 1 | 2;
 }
 

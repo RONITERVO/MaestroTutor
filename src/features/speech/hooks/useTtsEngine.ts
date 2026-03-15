@@ -160,7 +160,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
         audioContext,
         voiceName: geminiLiveItems[0]?.voiceName,
         abortSignal: abortController.signal,
-        onLineStart: (_lineIndex, text) => {
+        onLineStart: (_, text) => {
           setSpeakingUtteranceText(text);
         },
         onLineComplete: (lineIndex, audioPcm) => {

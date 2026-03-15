@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
-import { ChatMessage, ChatMeta, UserProfile } from '../../../core/types';
+import { ChatMessage, ChatMeta } from '../../../core/types';
 import { sanitizeForPersistence } from '../utils/persistence';
 import { selectUploadedAttachmentParts } from '../utils/uploadedAttachmentVariants';
 import { MAX_MEDIA_TO_KEEP } from '../../../core/config/app';
@@ -70,7 +70,7 @@ export const getAllChatHistoriesDB = async (): Promise<Record<string, ChatMessag
     const allChats: Record<string, ChatMessage[]> = {};
     rows.forEach((item: any) => { allChats[item.pairId] = item.messages; });
     return allChats;
-  } catch (_) {
+  } catch {
     return await new Promise((resolve, reject) => {
       const transaction = db.transaction(STORE_NAME, "readonly");
       const store = transaction.objectStore(STORE_NAME);
@@ -146,7 +146,6 @@ export const iterateChatHistoriesDB = async (
 export const clearAndSaveAllHistoriesDB = async (
   allChats: Record<string, ChatMessage[]>,
   allMetas?: Record<string, ChatMeta> | null,
-  _userProfile?: UserProfile | null,
   globalProfileText?: string | null
 ): Promise<void> => {
     const db = await openDB();
@@ -219,7 +218,7 @@ export const getAllChatMetasDB = async (): Promise<Record<string, ChatMeta>> => 
     const metas: Record<string, ChatMeta> = {};
     (rows || []).forEach((row: any) => { metas[row.pairId] = row.meta as ChatMeta; });
     return metas;
-  } catch (_) {
+  } catch {
     return await new Promise((resolve, reject) => {
       const tx = db.transaction(META_STORE, 'readonly');
       const st = tx.objectStore(META_STORE);

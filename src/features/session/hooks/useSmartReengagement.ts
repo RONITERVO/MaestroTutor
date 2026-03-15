@@ -278,8 +278,6 @@ export const useSmartReengagement = ({
     reengagementPhase,
     scheduleReengagement,
     cancelReengagement,
-    isReengagementToken,
     handleUserActivity,
-    setReengagementPhase
   };
 };

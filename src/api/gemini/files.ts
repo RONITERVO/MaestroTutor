@@ -172,8 +172,9 @@ export const sanitizeHistoryWithVerifiedUris = async (history: any[]) => {
     }
 
     if (hadFileParts) {
-      const { fileParts: _removedFileParts, ...rest } = h;
-      return rest;
+      const nextHistoryItem = { ...h };
+      delete nextHistoryItem.fileParts;
+      return nextHistoryItem;
     }
     return h;
   });

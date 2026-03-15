@@ -392,7 +392,7 @@ export const useDataBackup = ({ t }: UseDataBackupConfig): UseDataBackupReturn =
     let currentMessages: ChatMessage[] = [];
     let loadedCount = 0;
 
-    await clearAndSaveAllHistoriesDB({}, null, null, null);
+    await clearAndSaveAllHistoriesDB({}, null, null);
 
     const flushPair = async (pairId: string) => {
       if (!pairId) return;

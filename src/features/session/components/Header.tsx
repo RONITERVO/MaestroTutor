@@ -49,7 +49,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
     };
   }, [isOpen]);
 
-  const handleLanguageSelectorClick = useCallback((_e: React.MouseEvent) => {
+  const handleLanguageSelectorClick = useCallback(() => {
     const state = useMaestroStore.getState();
     if (selectIsSending(state)) return;
     setIsLanguageSelectionOpen(true);
@@ -83,7 +83,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
       setIsOpen(true);
     } else {
       // Second click (while open): Trigger the actual action (Language Selector)
-      handleLanguageSelectorClick(e);
+      handleLanguageSelectorClick();
     }
   };
 
@@ -97,7 +97,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
     }
   }, [addActivityToken, removeActivityToken]);
 
-  const handlePointerDown = (_e: React.PointerEvent) => {
+  const handlePointerDown = () => {
       isLongPressRef.current = false;
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = window.setTimeout(() => {
