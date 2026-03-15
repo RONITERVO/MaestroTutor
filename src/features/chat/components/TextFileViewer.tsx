@@ -81,8 +81,8 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
   const headerBg = isUser ? 'bg-user-msg-bg/40' : 'bg-ai-msg-bg/60';
-  const textColor = isUser ? 'text-user-msg-text' : 'text-ai-file-text';
-  const subtleText = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text';
+  const textColor = isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text';
+  const subtleText = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
   const metaLabel = fileName || mimeType || 'text attachment';
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
 

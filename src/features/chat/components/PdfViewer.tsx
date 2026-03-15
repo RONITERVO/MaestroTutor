@@ -171,14 +171,14 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
 
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
   const indicatorBg = 'bg-black/60 text-white';
-  const errorTextColor = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text';
-  const iconColor = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text';
+  const errorTextColor = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
+  const iconColor = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
 
   if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center rounded-lg ${containerBg} ${compact ? 'h-24 w-full' : 'h-48 w-full'}`}>
-        <SmallSpinner className={`w-6 h-6 ${isUser ? 'text-user-msg-text' : 'text-ai-file-text'}`} />
+        <SmallSpinner className={`w-6 h-6 ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`} />
         <p className={`mt-2 text-xs ${errorTextColor}`}>Loading PDF...</p>
       </div>
     );

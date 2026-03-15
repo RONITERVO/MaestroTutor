@@ -43,6 +43,11 @@ export const PRESET_THEMES: PresetTheme[] = [
       'ai-file-bg': '210 15% 90%',
       'ai-file-text': '220 15% 45%',
       'img-error-text': '350 70% 50%',
+      'user-attachment-inline-text': '210 20% 98%',
+      'user-attachment-audio-text': '210 20% 98%',
+      'user-attachment-overlay-text': '210 20% 98%',
+      'user-attachment-svg-text': '0 0% 0%',
+      'user-attachment-game-text': '0 0% 0%',
       'attachment-inline-target-text': '220 30% 20%',
       'attachment-inline-native-text': '220 15% 45%',
       'attachment-audio-target-text': '0 0% 0%',
@@ -175,8 +180,10 @@ export const PRESET_THEMES: PresetTheme[] = [
       'annotation-btn-focus': '220 25% 30%',
 
       // Translation Highlight
-      'marker-bg': '60 85% 80%',
-      'marker-text': '220 30% 20%',
+      'marker-target-bg': '60 85% 80%',
+      'marker-target-text': '220 30% 20%',
+      'marker-native-bg': '190 80% 84%',
+      'marker-native-text': '220 30% 20%',
 
       // Notebook Marks
       'pencil-stroke': '220 25% 30%',

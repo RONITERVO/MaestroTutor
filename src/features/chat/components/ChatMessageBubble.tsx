@@ -730,6 +730,57 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         ? 'absolute inset-x-0 bottom-0 p-3 bg-transparent rounded-b-lg z-10'
         : 'absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10')
     : 'relative z-10 mt-1';
+  const userAttachmentTextMode: 'plain' | 'inline' | 'audio' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
+    ? (shouldOverlayTextOnAttachment
+        ? (isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : 'overlay')
+        : usesAudioAttachmentShell
+          ? 'audio'
+          : 'inline')
+    : 'plain';
+  const userAttachmentTextClass = userAttachmentTextMode === 'overlay'
+    ? 'text-user-attachment-overlay-text'
+    : userAttachmentTextMode === 'svg'
+      ? 'text-user-attachment-svg-text'
+    : userAttachmentTextMode === 'game'
+      ? 'text-user-attachment-game-text'
+    : userAttachmentTextMode === 'audio'
+      ? 'text-user-attachment-audio-text'
+    : userAttachmentTextMode === 'inline'
+      ? 'text-user-attachment-inline-text'
+      : 'text-user-msg-text';
+  const userAttachmentSubtleTextClass = userAttachmentTextMode === 'overlay'
+    ? 'text-user-attachment-overlay-text/70'
+    : userAttachmentTextMode === 'svg'
+      ? 'text-user-attachment-svg-text/70'
+    : userAttachmentTextMode === 'game'
+      ? 'text-user-attachment-game-text/70'
+    : userAttachmentTextMode === 'audio'
+      ? 'text-user-attachment-audio-text/70'
+    : userAttachmentTextMode === 'inline'
+      ? 'text-user-attachment-inline-text/70'
+      : 'text-user-msg-text/70';
+  const userAttachmentHoverSurfaceClass = userAttachmentTextMode === 'overlay'
+    ? 'hover:bg-user-attachment-overlay-text/10'
+    : userAttachmentTextMode === 'svg'
+      ? 'hover:bg-user-attachment-svg-text/10'
+    : userAttachmentTextMode === 'game'
+      ? 'hover:bg-user-attachment-game-text/10'
+    : userAttachmentTextMode === 'audio'
+      ? 'hover:bg-user-attachment-audio-text/10'
+    : userAttachmentTextMode === 'inline'
+      ? 'hover:bg-user-attachment-inline-text/5'
+      : 'hover:bg-user-msg-text/5';
+  const userAttachmentSpeakingSurfaceClass = userAttachmentTextMode === 'overlay'
+    ? 'bg-user-attachment-overlay-text/20'
+    : userAttachmentTextMode === 'svg'
+      ? 'bg-user-attachment-svg-text/20'
+    : userAttachmentTextMode === 'game'
+      ? 'bg-user-attachment-game-text/20'
+    : userAttachmentTextMode === 'audio'
+      ? 'bg-user-attachment-audio-text/20'
+    : userAttachmentTextMode === 'inline'
+      ? 'bg-user-attachment-inline-text/10'
+      : 'bg-user-msg-text/10';
   const assistantAttachmentTextMode: 'plain' | 'inline' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
     ? (shouldOverlayTextOnAttachment ? (isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : 'overlay') : 'inline')
     : 'plain';
@@ -1085,11 +1136,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                               onError={() => setLoadingAnimationError(true)}
                             />
                           ) : (
-                            <SmallSpinner className="w-full h-full text-user-msg-text" />
+                            <SmallSpinner className={`w-full h-full ${userAttachmentTextClass}`} />
                           )}
                         </div>
                         {remainingTimeDisplay && (
-                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? 'text-user-msg-text/70 bg-user-msg-bg/60' : 'text-thinking-bubble-text bg-status-msg-bg/70'}`}>
+                          <p className={`mt-1 text-right text-xs px-1.5 py-0.5 rounded ${applyFocusedImageStyles ? `${userAttachmentSubtleTextClass} bg-user-msg-bg/60` : 'text-thinking-bubble-text bg-status-msg-bg/70'}`}>
                             {remainingTimeDisplay}
                           </p>
                         )}
@@ -1107,7 +1158,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                               WebkitOverflowScrolling: 'touch' as any,
                             }}
                           >
-                            <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${isUser ? 'text-user-msg-text' : 'text-ai-file-text'}`}>
+                            <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`}>
                               {svgSourceCode || 'SVG source unavailable for this attachment.'}
                             </pre>
                           </div>
@@ -1341,20 +1392,20 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   )}
                   {isTextFileRemoteOnly && (
                     <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg ${isUser ? 'bg-user-msg-bg/80' : 'bg-ai-file-bg'}`}>
-                      <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-msg-text/70' : 'text-ai-file-text'}`} />
-                      <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-user-msg-text' : 'text-ai-file-text'}`}>
+                      <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text'}`} />
+                      <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`}>
                         {message.attachmentName || displayMime || 'text file'}
                       </p>
-                      <p className={`mt-1 text-xs ${isUser ? 'text-user-msg-text/70' : 'text-ai-file-text'}`}>
+                      <p className={`mt-1 text-xs ${isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text'}`}>
                         Local text preview unavailable.
                       </p>
                     </div>
                   )}
                   {isFileSuccessfullyDisplayed && (
                       <div className={`p-4 flex flex-col items-center justify-center text-center rounded-lg h-full ${isUser ? 'bg-user-msg-bg/80' : 'bg-ai-file-bg'}`}>
-                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-msg-text/70' : 'text-ai-file-text'}`} />
-                          <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-user-msg-text' : 'text-ai-file-text'}`}>{message.attachmentName || displayMime}</p>
-                          <p className={`mt-1 text-xs ${isUser ? 'text-user-msg-text/70' : 'text-ai-file-text'}`}>{t('chat.fileAttachment')}</p>
+                          <IconPaperclip className={`w-10 h-10 ${isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text'}`} />
+                          <p className={`mt-2 text-xs font-mono break-all ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`}>{message.attachmentName || displayMime}</p>
+                          <p className={`mt-1 text-xs ${isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text'}`}>{t('chat.fileAttachment')}</p>
                       </div>
                   )}
                   {isPdfSuccessfullyDisplayed && (
@@ -1448,7 +1499,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                  <>
                   {isUser && message.text && (
                     <p
-                      className={`mb-1 whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors ${useOverlayTextColors ? 'text-white' : 'text-user-msg-text'} ${isUserLineSpeaking ? (useOverlayTextColors ? 'bg-white/20 text-white' : 'bg-user-msg-text/10 text-user-msg-text') : (useOverlayTextColors ? 'hover:bg-white/10' : 'hover:bg-user-msg-text/5')}`}
+                      className={`mb-1 whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors ${userAttachmentTextClass} ${isUserLineSpeaking ? userAttachmentSpeakingSurfaceClass : userAttachmentHoverSurfaceClass}`}
                       style={{ fontSize: '3.8cqw', lineHeight: 1.35 }}
                       onPointerDown={handleLinePointerDown}
                       onPointerUp={handleUserMessagePointerUp}
@@ -1484,7 +1535,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`font-semibold whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  isCurrentLineSpeaking
-                                   ? 'bg-marker-bg text-marker-text'
+                                   ? 'bg-marker-target-bg text-marker-target-text'
                                    : `${assistantTargetHoverTextClass} ${assistantTargetTextClass}`
                              }`}
                              style={{ fontSize: '4cqw', lineHeight: 1.3 }}
@@ -1534,7 +1585,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                        {pair.native && (
                         <p className={`italic mt-0.5 whitespace-pre-wrap pl-2 border-l-2 rounded-sm px-1 -mx-1 ${
                              isCurrentLineSpeaking
-                               ? 'bg-marker-bg text-marker-text border-marker-text/40'
+                               ? 'bg-marker-native-bg text-marker-native-text border-marker-native-text/40'
                                : assistantNativeTextClass
                          }`} style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                          onPointerDown={handleLinePointerDown}
@@ -1573,7 +1624,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          <p
                              className={`whitespace-pre-wrap cursor-pointer transition-colors rounded-sm px-1 -mx-1 ${
                                  isCurrentlySpeakingRaw
-                                   ? 'bg-marker-bg text-marker-text'
+                                   ? 'bg-marker-target-bg text-marker-target-text'
                                    : `${assistantTargetHoverTextClass} ${assistantTargetTextClass}`
                              }`} style={{ fontSize: '4cqw', lineHeight: 1.3 }}
                              onPointerDown={handleLinePointerDown}

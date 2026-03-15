@@ -58,9 +58,14 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     groupName: 'Attachment Transcript Text',
-    groupDescription: 'Separate text colors for inline attachment text, audio bubbles, media overlays, SVG shells, and mini-game overlays',
+    groupDescription: 'Separate text colors for user and assistant attachment text across inline, audio, overlay, SVG, and mini-game placements',
     collapsedByDefault: true,
     colors: [
+      { cssVar: 'user-attachment-inline-text', friendlyName: 'User Inline Attachment Text', description: 'Your message text and inline attachment labels next to standard attachments' },
+      { cssVar: 'user-attachment-audio-text', friendlyName: 'User Audio Attachment Text', description: 'Your message text when an audio attachment is shown in the audio shell' },
+      { cssVar: 'user-attachment-overlay-text', friendlyName: 'User Overlay Attachment Text', description: 'Your message text shown over focused images, PDFs, and other media overlays' },
+      { cssVar: 'user-attachment-svg-text', friendlyName: 'User SVG Attachment Text', description: 'Your message text shown in the detached SVG attachment shell' },
+      { cssVar: 'user-attachment-game-text', friendlyName: 'User Game Attachment Text', description: 'Your message text shown with mini-game attachment shells and controls' },
       { cssVar: 'attachment-inline-target-text', friendlyName: 'Inline Target Text', description: 'Main attachment transcript text shown under attachments, including music replies' },
       { cssVar: 'attachment-inline-native-text', friendlyName: 'Inline Native Text', description: 'Secondary or native attachment transcript text shown under attachments, including music replies' },
       { cssVar: 'attachment-audio-target-text', friendlyName: 'Audio Target Text', description: 'Main text in the focused assistant audio scroll wheel' },
@@ -262,8 +267,10 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupDescription: 'Active word highlighting during audio playback',
     collapsedByDefault: true,
     colors: [
-      { cssVar: 'marker-bg', friendlyName: 'Highlighter Background', description: 'Background for actively spoken translation words' },
-      { cssVar: 'marker-text', friendlyName: 'Highlighter Text', description: 'Text color for actively spoken words' },
+      { cssVar: 'marker-target-bg', friendlyName: 'Target Highlight Background', description: 'Background for actively spoken target-language text' },
+      { cssVar: 'marker-target-text', friendlyName: 'Target Highlight Text', description: 'Text color for actively spoken target-language text' },
+      { cssVar: 'marker-native-bg', friendlyName: 'Native Highlight Background', description: 'Background for actively spoken native-language text' },
+      { cssVar: 'marker-native-text', friendlyName: 'Native Highlight Text', description: 'Text color for actively spoken native-language text' },
     ],
   },
   {

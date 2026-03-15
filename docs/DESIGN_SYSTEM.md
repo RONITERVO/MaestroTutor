@@ -4,10 +4,10 @@ This is the canonical color and UI styling reference for contributors.
 
 ## Overview
 
-- Last updated: 2026-03-05
-- Active color tokens: 215
+- Last updated: 2026-03-15
+- Active color tokens: 222
 - Token groups: 28
-- Legacy migration keys supported: 89
+- Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
 - Source of truth files: `src/app/index.css`, `index.html`, `src/features/theme/config/colorRegistry.ts`, `src/features/theme/config/defaultColors.ts`, `src/features/theme/config/presetThemes.ts`
 
@@ -43,8 +43,10 @@ When adding or changing a colorized element:
 7. If replacing legacy token keys, add mapping to `src/features/theme/config/colorRenameMap.ts`.
 8. Validate with build + visual pass + Theme Customizer coverage.
 
-## Recent Token Isolation Updates (2026-03-05)
+## Recent Token Isolation Updates (2026-03-15)
 
+- Assistant playback highlight split: `marker-target-bg`, `marker-target-text`, `marker-native-bg`, `marker-native-text`.
+- User attachment text parity: `user-attachment-inline-text`, `user-attachment-audio-text`, `user-attachment-overlay-text`, `user-attachment-svg-text`, `user-attachment-game-text`.
 - Annotation save button state isolation: `annotation-btn-hover`, `annotation-btn-focus`.
 - Live idle mode isolation: `live-idle-sugg-btn-bg`, `live-idle-sugg-btn-text`, `live-idle-spinner`.
 - Composer send and icon state isolation: `send-sugg-btn-bg`, `send-sugg-btn-text`, `chat-input-icon-hover-bg`, `snapshot-error-bg`.
@@ -121,6 +123,28 @@ File attachments, image placeholders, and error indicators within messages
 | `--ai-file-bg` | `210 15% 90%` | AI File Attachment | Background of file attachments in assistant messages |
 | `--ai-file-text` | `220 15% 45%` | AI File Text | Text and icon color in assistant file attachments |
 | `--img-error-text` | `350 70% 50%` | Image Error Text | Error text color for image generation failures |
+
+### Attachment Transcript Text
+
+Separate text colors for user and assistant attachment text across inline, audio, overlay, SVG, and mini-game placements
+
+| CSS Variable | Default HSL | Friendly Name | Description |
+|---|---|---|---|
+| `--user-attachment-inline-text` | `210 20% 98%` | User Inline Attachment Text | Your message text and inline attachment labels next to standard attachments |
+| `--user-attachment-audio-text` | `210 20% 98%` | User Audio Attachment Text | Your message text when an audio attachment is shown in the audio shell |
+| `--user-attachment-overlay-text` | `210 20% 98%` | User Overlay Attachment Text | Your message text shown over focused images, PDFs, and other media overlays |
+| `--user-attachment-svg-text` | `0 0% 0%` | User SVG Attachment Text | Your message text shown in the detached SVG attachment shell |
+| `--user-attachment-game-text` | `0 0% 0%` | User Game Attachment Text | Your message text shown with mini-game attachment shells and controls |
+| `--attachment-inline-target-text` | `220 30% 20%` | Inline Target Text | Main attachment transcript text shown under attachments, including music replies |
+| `--attachment-inline-native-text` | `220 15% 45%` | Inline Native Text | Secondary or native attachment transcript text shown under attachments, including music replies |
+| `--attachment-audio-target-text` | `0 0% 0%` | Audio Target Text | Main text in the focused assistant audio scroll wheel |
+| `--attachment-audio-native-text` | `0 0% 0%` | Audio Native Text | Secondary or native text in the focused assistant audio scroll wheel |
+| `--attachment-overlay-target-text` | `210 20% 98%` | Overlay Target Text | Main transcript text shown over images, PDFs, and focused attachments |
+| `--attachment-overlay-native-text` | `210 20% 98%` | Overlay Native Text | Secondary or native transcript text shown over images, PDFs, and focused attachments |
+| `--attachment-svg-target-text` | `220 30% 20%` | SVG Target Text | Main transcript text in the focused SVG shell layout |
+| `--attachment-svg-native-text` | `220 15% 45%` | SVG Native Text | Secondary or native transcript text in the focused SVG shell layout |
+| `--attachment-game-target-text` | `220 30% 20%` | Game Target Text | Main transcript text when the transcript overlaps a mini-game |
+| `--attachment-game-native-text` | `220 15% 45%` | Game Native Text | Secondary or native transcript text when the transcript overlaps a mini-game |
 
 ### Chat Input Area
 
@@ -313,8 +337,10 @@ Active word highlighting during audio playback
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--marker-bg` | `60 85% 80%` | Highlighter Background | Background for actively spoken translation words |
-| `--marker-text` | `220 30% 20%` | Highlighter Text | Text color for actively spoken words |
+| `--marker-target-bg` | `60 85% 80%` | Target Highlight Background | Background for actively spoken target-language text |
+| `--marker-target-text` | `220 30% 20%` | Target Highlight Text | Text color for actively spoken target-language text |
+| `--marker-native-bg` | `190 80% 84%` | Native Highlight Background | Background for actively spoken native-language text |
+| `--marker-native-text` | `220 30% 20%` | Native Highlight Text | Text color for actively spoken native-language text |
 
 ### Notebook Marks
 

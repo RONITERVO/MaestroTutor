@@ -43,8 +43,10 @@ export const COLOR_RENAME_MAP: Record<string, string[]> = {
   'pencil-light': ['sketch-line', 'input-focus-ring', 'history-peek-icon', 'bookmark-divider', 'loading-spinner', 'theme-input-border'],
   'pencil-mark': ['pencil-emphasis'],
   watercolor: ['watercolor-wash', 'web-results-link', 'profile-label-text', 'profile-input-accent'],
-  highlight: ['marker-bg'],
-  'highlight-text': ['marker-text'],
+  highlight: ['marker-target-bg', 'marker-native-bg'],
+  'highlight-text': ['marker-target-text', 'marker-native-text'],
+  'marker-bg': ['marker-target-bg', 'marker-native-bg'],
+  'marker-text': ['marker-target-text', 'marker-native-text'],
   correction: ['correction-pen', 'img-error-text', 'input-error-bg'],
   eraser: ['clear-sugg-bg'],
   'sketch-shadow': ['sketch-shadow'],
@@ -167,7 +169,15 @@ const DERIVED_COLOR_FALLBACKS: Array<{ source: string; targets: string[] }> = [
   },
   {
     source: 'user-msg-text',
-    targets: ['attachment-overlay-target-text', 'attachment-overlay-native-text'],
+    targets: [
+      'user-attachment-inline-text',
+      'user-attachment-audio-text',
+      'user-attachment-overlay-text',
+      'user-attachment-svg-text',
+      'user-attachment-game-text',
+      'attachment-overlay-target-text',
+      'attachment-overlay-native-text',
+    ],
   },
 ];
 
