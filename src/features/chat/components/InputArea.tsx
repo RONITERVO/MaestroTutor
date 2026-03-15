@@ -20,6 +20,7 @@ import SessionControls from '../../session/components/SessionControls';
 import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 import { normalizeAttachmentMimeType } from '../utils/fileAttachments';
 import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
+import { createSmartRef } from '../../../shared/utils/smartRef';
 
 interface InputAreaProps {
   onSttToggle: () => void;
@@ -197,29 +198,18 @@ const InputArea: React.FC<InputAreaProps> = ({
   const microphoneApiAvailable = useMaestroStore(state => state.microphoneApiAvailable);
   const isCreatingSuggestion = useMaestroStore(selectIsCreatingSuggestion);
 
-  // Read-only live store-backed ref to avoid stale closures; setter intentionally no-op
-  const settingsRef = useMemo<React.MutableRefObject<typeof settings>>(() => ({
-    get current() {
-      return useMaestroStore.getState().settings;
-    },
-    set current(_value) {},
-  }), []);
-
-  // Read-only live store-backed ref to avoid stale closures; setter intentionally no-op
-  const messagesRef = useMemo<React.MutableRefObject<any[]>>(() => ({
-    get current() {
-      return useMaestroStore.getState().messages;
-    },
-    set current(_value) {},
-  }), []);
-
-  // Read-only live store-backed ref to avoid stale closures; setter intentionally no-op
-  const isSendingRef = useMemo<React.MutableRefObject<boolean>>(() => ({
-    get current() {
-      return selectIsSending(useMaestroStore.getState());
-    },
-    set current(_value) {},
-  }), []);
+  const settingsRef = useMemo(
+    () => createSmartRef(useMaestroStore.getState, state => state.settings),
+    []
+  );
+  const messagesRef = useMemo(
+    () => createSmartRef(useMaestroStore.getState, state => state.messages),
+    []
+  );
+  const isSendingRef = useMemo(
+    () => createSmartRef(useMaestroStore.getState, selectIsSending),
+    []
+  );
 
   const isSuggestionMode = settings.isSuggestionMode;
   const isSttGloballyEnabled = settings.stt.enabled;

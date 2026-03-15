@@ -32,7 +32,6 @@ interface ChatMessageBubbleProps {
   loadingAnimations?: string[] | null;
   t: (key: string, replacements?: TranslationReplacements) => string;
   onToggleSpeakNativeLang: () => void;
-  handleSpeakWholeMessage: (message: ChatMessage) => void;
   handleSpeakLine: (targetText: string, targetLangCode: string, nativeText?: string, nativeLangCode?: string, sourceMessageId?: string) => void;
   handlePlayUserMessage: (message: ChatMessage) => void;
   speakText: (textOrParts: SpeechPart[], defaultLang: string) => void;
@@ -51,7 +50,7 @@ interface ChatMessageBubbleProps {
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   message, messageIndex, isFocusedMode, speakingUtteranceText, estimatedLoadTime, loadingAnimations,
   t,
-  onToggleSpeakNativeLang, handleSpeakWholeMessage: _handleSpeakWholeMessage, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
+  onToggleSpeakNativeLang, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
   onQuotaSetupBilling, onQuotaStartLive,
   onImageGenDisable, onImageGenViewCost,

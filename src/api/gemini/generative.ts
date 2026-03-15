@@ -39,6 +39,15 @@ export interface GeminiRequestLifecycleHooks {
   onThoughtDelta?: (deltaThought: string, fullThought: string) => void;
 }
 
+export interface GenerateGeminiResponseOptions {
+  systemInstruction?: string;
+  currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
+  useGoogleSearch?: boolean;
+  configOverrides?: any;
+  timeoutMs?: number;
+  lifecycleHooks?: GeminiRequestLifecycleHooks;
+}
+
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
@@ -342,15 +351,16 @@ export const generateGeminiResponse = async (
   modelName: string,
   userPrompt: string,
   history: any[],
-  systemInstruction?: string,
-  _imageBase64?: string,
-  _imageMimeType?: string,
-  currentFileParts?: Array<{ fileUri: string; mimeType: string }>,
-  useGoogleSearch?: boolean,
-  configOverrides?: any,
-  timeoutMs: number = DEFAULT_TIMEOUT_MS,
-  lifecycleHooks?: GeminiRequestLifecycleHooks
+  options: GenerateGeminiResponseOptions = {}
 ) => {
+  const {
+    systemInstruction,
+    currentFileParts,
+    useGoogleSearch,
+    configOverrides,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    lifecycleHooks,
+  } = options;
   const ai = await getAi();
   const contents: any[] = [];
 

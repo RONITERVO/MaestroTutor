@@ -6,11 +6,10 @@ import { ChatMessage } from '../../../core/types';
 import { getGlobalProfileDB } from '../services/globalProfile';
 
 interface GlobalProfileSummaryProps {
-  t: (key: string, replacements?: any) => string;
   messages: ChatMessage[];
 }
 
-const GlobalProfileSummary: React.FC<GlobalProfileSummaryProps> = ({ t: _t, messages }) => {
+const GlobalProfileSummary: React.FC<GlobalProfileSummaryProps> = ({ messages }) => {
   const [summary, setSummary] = React.useState<string>('Loading profile...');
   useEffect(() => {
     const fetchAndSummarize = async () => {

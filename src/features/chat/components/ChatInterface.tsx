@@ -518,6 +518,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
        return;
      }
   }, [isSpeaking, stopSpeaking, speakNativeLang, currentTargetLangCode, currentNativeLangCode, speakText]);
+
+  void handleSpeakWholeMessage;
  
   const handleSpeakLine = useCallback((
     targetText: string,
@@ -776,7 +778,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 loadingAnimations={loadingAnimations}
                 t={t}
                 onToggleSpeakNativeLang={onToggleSpeakNativeLang}
-                handleSpeakWholeMessage={handleSpeakWholeMessage}
                 handleSpeakLine={handleSpeakLine}
                 handlePlayUserMessage={handlePlayUserMessage}
                 speakText={speakText}
@@ -903,9 +904,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                         targetLangCode={tempTargetLangCode || null}
                         onSelectNative={handleGlobeNativeSelect}
                         onSelectTarget={handleGlobeTargetSelect}
-                        onConfirm={() => {}}
                         onCancel={() => setTempTargetLangCode(null)}
-                        t={t}
                         onInteract={updateLanguageSelectorInteraction}
                     />
                 </div>

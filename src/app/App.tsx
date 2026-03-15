@@ -315,9 +315,6 @@ const App: React.FC = () => {
     scheduleReengagement,
     cancelReengagement,
     handleUserActivity,
-    // Intentionally unused - destructured to prevent "unused export" warnings in hook
-    isReengagementToken: _unusedIsReengagementToken,
-    setReengagementPhase: _unusedSetReengagementPhase,
   } = useSmartReengagement({
     isLoadingHistory,
     selectedLanguagePairId: settings.selectedLanguagePairId,
@@ -470,14 +467,14 @@ const App: React.FC = () => {
     }
   }, [handleSettingsChange, settingsRef, availableCamerasRef]);
 
-  const _toggleFocusedModeState = useCallback(() => {
+  const toggleFocusedModeState = useCallback(() => {
     handleSettingsChange('imageFocusedModeEnabled', !settingsRef.current.imageFocusedModeEnabled);
   }, [handleSettingsChange, settingsRef]);
 
   const handleToggleImageFocusedMode = useCallback((messageId: string) => {
     // @ts-ignore
     if (!document.startViewTransition) {
-      _toggleFocusedModeState();
+      toggleFocusedModeState();
       return;
     }
 
@@ -485,13 +482,13 @@ const App: React.FC = () => {
 
     // @ts-ignore
     const transition = document.startViewTransition(() => {
-      _toggleFocusedModeState();
+      toggleFocusedModeState();
     });
 
     transition.finished.finally(() => {
       setTransitioningImageId(null);
     });
-  }, [_toggleFocusedModeState]);
+  }, [toggleFocusedModeState]);
 
   // ============================================================
   // GEMINI LIVE SESSION HANDLING

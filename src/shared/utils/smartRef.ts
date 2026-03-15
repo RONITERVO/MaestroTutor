@@ -32,7 +32,8 @@ export const createSmartRef = <TStore, T>(
   get current() {
     return selector(getState());
   },
-  set current(_value: T) {
+  set current(value: T) {
+    void value;
     if (!hasWarnedOnWrite && typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
       hasWarnedOnWrite = true;
       console.warn('[createSmartRef] Writes to .current are ignored. Use store actions to update state.');

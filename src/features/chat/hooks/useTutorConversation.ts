@@ -158,10 +158,10 @@ const inferMimeTypeFromDataUrl = (value?: string | null): string | null => {
   return match?.[1]?.trim().toLowerCase() || null;
 };
 
-type MediaPayloadOverride = {
+type HistoryMediaOverride = {
   newVariants?: UploadedAttachmentVariant[];
   transient?: boolean;
-  omitFromPayload?: boolean;
+  omitFromHistory?: boolean;
 };
 
 type AttachmentUploadPlan = {
@@ -458,7 +458,7 @@ export interface UseTutorConversationReturn {
   
   // Utilities
   resolveBookmarkContextSummary: () => string | null;
-  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, MediaPayloadOverride>>;
+  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, HistoryMediaOverride>>;
   computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
   handleReengagementThresholdChange: (newThreshold: number) => void;
   calculateEstimatedImageLoadTime: () => number;
@@ -863,7 +863,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const ensureUploadedAttachmentVariantsForMessage = useCallback(async (
     message: ChatMessage,
     knownStatuses?: Record<string, { deleted: boolean; active: boolean }>
-  ): Promise<{ variants: UploadedAttachmentVariant[]; payloadFiles: Array<{ fileUri: string; mimeType: string }> }> => {
+  ): Promise<{ variants: UploadedAttachmentVariant[]; chatFileParts: Array<{ fileUri: string; mimeType: string }> }> => {
     let nextVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
     if (knownStatuses) {
       nextVariants = nextVariants.filter(variant => !knownStatuses[variant.uri]?.deleted);
@@ -945,7 +945,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
     return {
       variants: normalizedState.uploadedFileVariants || [],
-      payloadFiles: selectUploadedAttachmentParts(normalizedState, 'chat'),
+      chatFileParts: selectUploadedAttachmentParts(normalizedState, 'chat'),
     };
   }, [t, updateMessage]);
 
@@ -983,7 +983,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const ensureUrisForHistoryForSend = useCallback(async (
     arr: ChatMessage[], 
     onProgress?: (done: number, total: number, etaMs?: number) => void
-  ): Promise<Record<string, MediaPayloadOverride>> => {
+  ): Promise<Record<string, HistoryMediaOverride>> => {
     const candidates = computeHistorySubsetForMedia(arr);
 
     const mediaIndices: number[] = [];
@@ -1043,7 +1043,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     };
     if (totalToEnsure > 0) tick();
 
-    const updatedUriMap: Record<string, MediaPayloadOverride> = {};
+    const updatedUriMap: Record<string, HistoryMediaOverride> = {};
     for (let idx = 0; idx < candidates.length; idx++) {
       if (!keepMediaIdx.has(idx)) continue;
       const m = candidates[idx];
@@ -1051,17 +1051,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const localSource = getMessageAttachmentSource(m);
       const ensured = await ensureUploadedAttachmentVariantsForMessage(m, cachedStatuses);
       const nextState = buildUploadedAttachmentState(ensured.variants);
-      const payloadFiles = ensured.payloadFiles;
+      const chatFileParts = ensured.chatFileParts;
 
-      if (payloadFiles.length === 0 && localSource) {
+      if (chatFileParts.length === 0 && localSource) {
         throw new Error(`Failed to prepare recent attachment "${m.attachmentName || 'attachment'}" for send. Try again or reattach the file.`);
       }
 
-      if (payloadFiles.length === 0 && previousVariants.length > 0) {
-        console.warn(`[ensureUris] Message ${m.id} has no valid uploaded payload variants and will be omitted from this payload.`);
+      if (chatFileParts.length === 0 && previousVariants.length > 0) {
+        console.warn(`[ensureUris] Message ${m.id} has no valid uploaded file variants and will be omitted from request history.`);
         updatedUriMap[m.id] = {
           transient: true,
-          omitFromPayload: true,
+          omitFromHistory: true,
         };
       } else if (JSON.stringify(previousVariants) !== JSON.stringify(nextState.uploadedFileVariants || [])) {
         updatedUriMap[m.id] = {
@@ -1227,27 +1227,23 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           getGeminiModels().text.aux,
           suggestionPrompt,
           [],
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          false,
-          { responseMimeType: "application/json" },
-          undefined,
           {
-            onProgress: (event) => {
-              const progressLine = formatGeminiStatusLine(event);
-              if (progressLine && !thoughtText.trim() && !outputText.trim()) {
-                setSuggestionsLoadingStreamText(progressLine);
-              }
-            },
-            onThoughtDelta: (_deltaThought, fullThought) => {
-              thoughtText = fullThought || thoughtText;
-              flushSuggestionsLoadingText();
-            },
-            onTextDelta: (_deltaText, fullText) => {
-              outputText = fullText || outputText;
-              flushSuggestionsLoadingText();
+            configOverrides: { responseMimeType: "application/json" },
+            lifecycleHooks: {
+              onProgress: (event) => {
+                const progressLine = formatGeminiStatusLine(event);
+                if (progressLine && !thoughtText.trim() && !outputText.trim()) {
+                  setSuggestionsLoadingStreamText(progressLine);
+                }
+              },
+              onThoughtDelta: (_, fullThought) => {
+                thoughtText = fullThought || thoughtText;
+                flushSuggestionsLoadingText();
+              },
+              onTextDelta: (_, fullText) => {
+                outputText = fullText || outputText;
+                flushSuggestionsLoadingText();
+              },
             },
           }
         );
@@ -1718,7 +1714,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     geminiPromptText: string;
     sanitizedDerivedHistory: any[];
     systemInstructionForGemini: string;
-    imageForGeminiContextMimeType?: string;
     imageForGeminiContextFileUri?: Array<{ fileUri: string; mimeType: string }>;
     currentSettingsVal: AppSettings;
   }) => {
@@ -1755,51 +1750,49 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       getGeminiModels().text.default,
       params.geminiPromptText,
       params.sanitizedDerivedHistory,
-      params.systemInstructionForGemini,
-      undefined,
-      params.imageForGeminiContextMimeType,
-      params.imageForGeminiContextFileUri,
-      params.currentSettingsVal.enableGoogleSearch,
-      undefined,
-      undefined,
       {
-        onProgress: (event) => {
-          if (event.phase === 'attempt-processing') {
-            const bucket = Math.floor((event.elapsedMs || 0) / 12000);
-            if (bucket <= 0 || bucket === lastProcessingBucket) return;
-            lastProcessingBucket = bucket;
-          }
-          const phaseLabel = formatGeminiPhaseLabel(event);
-          if (phaseLabel && phaseLabel !== currentPhaseLabel) {
-            currentPhaseLabel = phaseLabel;
-            updateMessage(params.thinkingMessageId, { thinkingPhase: phaseLabel });
-          }
-          if (!hasVisibleModelOutput) {
-            const line = formatGeminiStatusLine(event);
-            if (line) {
-              setThinkingStatusLine(params.thinkingMessageId, line);
+        systemInstruction: params.systemInstructionForGemini,
+        currentFileParts: params.imageForGeminiContextFileUri,
+        useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
+        lifecycleHooks: {
+          onProgress: (event) => {
+            if (event.phase === 'attempt-processing') {
+              const bucket = Math.floor((event.elapsedMs || 0) / 12000);
+              if (bucket <= 0 || bucket === lastProcessingBucket) return;
+              lastProcessingBucket = bucket;
             }
-          }
-        },
-        onTextDelta: (_deltaText, fullText) => {
-          hasVisibleModelOutput = true;
-          streamingDraftText = fullText || streamingDraftText;
-          setThinkingStatusLine(params.thinkingMessageId, undefined);
-          if (currentPhaseLabel !== 'Final response') {
-            currentPhaseLabel = 'Final response';
-            updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
-          }
-          flushThinkingDraft(false);
-        },
-        onThoughtDelta: (deltaThought) => {
-          hasVisibleModelOutput = true;
-          thoughtBuffer += deltaThought;
-          setThinkingStatusLine(params.thinkingMessageId, undefined);
-          if (currentPhaseLabel !== 'Thinking') {
-            currentPhaseLabel = 'Thinking';
-            updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
-          }
-          flushThoughtTrace(false);
+            const phaseLabel = formatGeminiPhaseLabel(event);
+            if (phaseLabel && phaseLabel !== currentPhaseLabel) {
+              currentPhaseLabel = phaseLabel;
+              updateMessage(params.thinkingMessageId, { thinkingPhase: phaseLabel });
+            }
+            if (!hasVisibleModelOutput) {
+              const line = formatGeminiStatusLine(event);
+              if (line) {
+                setThinkingStatusLine(params.thinkingMessageId, line);
+              }
+            }
+          },
+          onTextDelta: (_, fullText) => {
+            hasVisibleModelOutput = true;
+            streamingDraftText = fullText || streamingDraftText;
+            setThinkingStatusLine(params.thinkingMessageId, undefined);
+            if (currentPhaseLabel !== 'Final response') {
+              currentPhaseLabel = 'Final response';
+              updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
+            }
+            flushThinkingDraft(false);
+          },
+          onThoughtDelta: (deltaThought) => {
+            hasVisibleModelOutput = true;
+            thoughtBuffer += deltaThought;
+            setThinkingStatusLine(params.thinkingMessageId, undefined);
+            if (currentPhaseLabel !== 'Thinking') {
+              currentPhaseLabel = 'Thinking';
+              updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
+            }
+            flushThoughtTrace(false);
+          },
         },
       }
     );
@@ -1918,7 +1911,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         });
         return {
           imageForGeminiContextFileUri: [{ fileUri: upload.uri, mimeType: upload.mimeType }],
-          imageForGeminiContextMimeType: upload.mimeType,
         };
       } catch (e) {
         updateMessage(params.userMessageId, {
@@ -1979,7 +1971,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       historyForAssistantImageGen = baseForEnsure.map(m => {
         const upd = ensuredUpdates[m.id];
         if (!upd) return m;
-        if (upd.omitFromPayload) {
+        if (upd.omitFromHistory) {
           return {
             ...m,
             uploadedFileVariants: undefined,
@@ -2266,11 +2258,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
         try {
           const ensured = await ensureUploadedAttachmentVariantsForMessage(currentUserMessage);
-          if (ensured.payloadFiles.length === 0) {
+          if (ensured.chatFileParts.length === 0) {
             throw new Error(`Failed to prepare attached media "${currentUserMessage.attachmentName || 'attachment'}" for Gemini. Try again or reattach the file.`);
           }
-          imageForGeminiContextFileUri = ensured.payloadFiles;
-          imageForGeminiContextMimeType = ensured.payloadFiles[0]?.mimeType;
+          imageForGeminiContextFileUri = ensured.chatFileParts;
         } finally {
           setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
         }
@@ -2281,7 +2272,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
       try {
-        const payloadFiles = await uploadAttachmentVariantsForSource(
+        const chatFileParts = await uploadAttachmentVariantsForSource(
           {
             dataUrl: imageForGeminiContextBase64,
             mimeType: imageForGeminiContextMimeType,
@@ -2289,11 +2280,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           },
           attachedFileName || 'current-user-media'
         );
-        if (payloadFiles.length === 0) {
+        if (chatFileParts.length === 0) {
           throw new Error(`Failed to prepare attached media "${attachedFileName || 'attachment'}" for Gemini. Try again or reattach the file.`);
         }
-        imageForGeminiContextMimeType = payloadFiles[0]?.mimeType;
-        imageForGeminiContextFileUri = payloadFiles;
+        imageForGeminiContextFileUri = chatFileParts;
       } finally {
         setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
       }
@@ -2304,7 +2294,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     try {
       const historySubsetForSend: ChatMessage[] = getHistoryRespectingBookmark(historyForGemini);
 
-      let ensuredUpdates: Record<string, MediaPayloadOverride> = {};
+      let ensuredUpdates: Record<string, HistoryMediaOverride> = {};
       try {
         ensuredUpdates = await ensureUrisForHistoryForSend(historySubsetForSend, (done, total, etaMs) => {
           setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
@@ -2321,7 +2311,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         .map((m: ChatMessage) => {
           const upd = ensuredUpdates[m.id];
           if (!upd) return m;
-          if (upd.omitFromPayload) {
+          if (upd.omitFromHistory) {
             return {
               ...m,
               uploadedFileVariants: undefined,
@@ -2384,7 +2374,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       });
       if (userImageContext.imageForGeminiContextFileUri) {
         imageForGeminiContextFileUri = userImageContext.imageForGeminiContextFileUri;
-        imageForGeminiContextMimeType = userImageContext.imageForGeminiContextMimeType;
       }
 
       setSendPrep(null);
@@ -2394,7 +2383,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         geminiPromptText,
         sanitizedDerivedHistory,
         systemInstructionForGemini,
-        imageForGeminiContextMimeType,
         imageForGeminiContextFileUri,
         currentSettingsVal,
       });
