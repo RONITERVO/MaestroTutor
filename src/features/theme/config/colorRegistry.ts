@@ -58,7 +58,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     groupName: 'Attachment Transcript Text',
-    groupDescription: 'Separate text colors for inline attachment text, media overlays, and mini-game overlays',
+    groupDescription: 'Separate text colors for inline attachment text, audio bubbles, media overlays, SVG shells, and mini-game overlays',
     collapsedByDefault: true,
     colors: [
       { cssVar: 'attachment-inline-target-text', friendlyName: 'Inline Target Text', description: 'Main attachment transcript text shown under attachments, including music replies' },
@@ -67,6 +67,8 @@ export const COLOR_GROUPS: ColorGroup[] = [
       { cssVar: 'attachment-audio-native-text', friendlyName: 'Audio Native Text', description: 'Secondary or native text in the focused assistant audio scroll wheel' },
       { cssVar: 'attachment-overlay-target-text', friendlyName: 'Overlay Target Text', description: 'Main transcript text shown over images, PDFs, and focused attachments' },
       { cssVar: 'attachment-overlay-native-text', friendlyName: 'Overlay Native Text', description: 'Secondary or native transcript text shown over images, PDFs, and focused attachments' },
+      { cssVar: 'attachment-svg-target-text', friendlyName: 'SVG Target Text', description: 'Main transcript text in the focused SVG shell layout' },
+      { cssVar: 'attachment-svg-native-text', friendlyName: 'SVG Native Text', description: 'Secondary or native transcript text in the focused SVG shell layout' },
       { cssVar: 'attachment-game-target-text', friendlyName: 'Game Target Text', description: 'Main transcript text when the transcript overlaps a mini-game' },
       { cssVar: 'attachment-game-native-text', friendlyName: 'Game Native Text', description: 'Secondary or native transcript text when the transcript overlaps a mini-game' },
     ],
