@@ -158,6 +158,14 @@ const DERIVED_COLOR_FALLBACKS: Array<{ source: string; targets: string[] }> = [
     targets: ['attachment-audio-native-text'],
   },
   {
+    source: 'attachment-game-target-text',
+    targets: ['attachment-svg-target-text'],
+  },
+  {
+    source: 'attachment-game-native-text',
+    targets: ['attachment-svg-native-text'],
+  },
+  {
     source: 'user-msg-text',
     targets: ['attachment-overlay-target-text', 'attachment-overlay-native-text'],
   },

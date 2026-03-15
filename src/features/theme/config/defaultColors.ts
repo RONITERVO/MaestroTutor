@@ -33,6 +33,8 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'attachment-audio-native-text': '0 0% 0%',
   'attachment-overlay-target-text': '210 20% 98%',
   'attachment-overlay-native-text': '210 20% 98%',
+  'attachment-svg-target-text': '220 30% 20%',
+  'attachment-svg-native-text': '220 15% 45%',
   'attachment-game-target-text': '220 30% 20%',
   'attachment-game-native-text': '220 15% 45%',
 

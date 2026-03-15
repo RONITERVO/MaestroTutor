@@ -675,14 +675,23 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
+  const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
 
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || isAttachmentLoading || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   const hasVisibleAttachment = isAttachmentLoading || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !isAudioSuccessfullyDisplayed && !isVideoSuccessfullyDisplayed;
-  const useOverlayTextColors = shouldOverlayTextOnAttachment && !isMiniGameAttachment;
-  const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment;
-  const shouldInsetScrollableAttachmentForOverlay = shouldUseScrollableTextOverlay && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
-  const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
+  const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && isAssistant && hasVisibleAttachment && !!hasTextContent;
+  const overlayTranscriptBottomInset = shouldUseScrollableTextOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
+  const usesDetachedTranscriptShell = shouldUseScrollableTextOverlay && (isMiniGameAttachment || isAttachmentSvg);
+  const detachedTranscriptShellHeight = usesDetachedTranscriptShell && overlayTranscriptBottomInset > 0
+    ? Math.max(92, Math.min(Math.round(overlayTranscriptBottomInset * 0.45) + 32, 122))
+    : 0;
+  const detachedTranscriptBottomPadding = detachedTranscriptShellHeight > 0
+    ? Math.max(72, detachedTranscriptShellHeight - 10)
+    : 0;
+  const useOverlayTextColors = shouldOverlayTextOnAttachment && !usesDetachedTranscriptShell;
+  const shouldInsetScrollableAttachmentForOverlay = overlayTranscriptBottomInset > 0 && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForOverlay ? overlayTranscriptBottomInset : 0;
   const textOverlayScrollStyle: React.CSSProperties | undefined = shouldUseScrollableTextOverlay
     ? {
         maxHeight: '40vh',
@@ -691,19 +700,21 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch' as any,
         scrollbarGutter: 'stable',
-        ...(isMiniGameAttachment ? { textShadow: 'none' } : null),
+        ...(usesDetachedTranscriptShell ? { textShadow: 'none' } : null),
       }
     : undefined;
   const textOverlayClasses = shouldOverlayTextOnAttachment
-    ? (isMiniGameAttachment
+    ? (usesDetachedTranscriptShell
         ? 'absolute inset-x-0 bottom-0 p-3 bg-transparent rounded-b-lg z-10'
         : 'absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10')
     : 'relative z-10 mt-1';
-  const assistantAttachmentTextMode: 'plain' | 'inline' | 'overlay' | 'game' = hasVisibleAttachment
-    ? (shouldOverlayTextOnAttachment ? (isMiniGameAttachment ? 'game' : 'overlay') : 'inline')
+  const assistantAttachmentTextMode: 'plain' | 'inline' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
+    ? (shouldOverlayTextOnAttachment ? (isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : 'overlay') : 'inline')
     : 'plain';
   const assistantTargetTextClass = assistantAttachmentTextMode === 'overlay'
     ? 'text-attachment-overlay-target-text'
+    : assistantAttachmentTextMode === 'svg'
+      ? 'text-attachment-svg-target-text'
     : assistantAttachmentTextMode === 'game'
       ? 'text-attachment-game-target-text'
       : assistantAttachmentTextMode === 'inline'
@@ -711,6 +722,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         : 'text-ai-msg-text';
   const assistantTargetHoverTextClass = assistantAttachmentTextMode === 'overlay'
     ? 'hover:text-attachment-overlay-target-text'
+    : assistantAttachmentTextMode === 'svg'
+      ? 'hover:text-attachment-svg-target-text'
     : assistantAttachmentTextMode === 'game'
       ? 'hover:text-attachment-game-target-text'
       : assistantAttachmentTextMode === 'inline'
@@ -718,6 +731,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         : 'hover:text-ai-msg-text';
   const assistantNativeTextClass = assistantAttachmentTextMode === 'overlay'
     ? 'text-attachment-overlay-native-text/70 border-attachment-overlay-native-text/30'
+    : assistantAttachmentTextMode === 'svg'
+      ? 'text-attachment-svg-native-text border-attachment-svg-native-text/25'
     : assistantAttachmentTextMode === 'game'
       ? 'text-attachment-game-native-text border-attachment-game-native-text/25'
       : assistantAttachmentTextMode === 'inline'
@@ -736,7 +751,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   }, [isAnnotationActive]);
   
   const bubbleAlignClass = isUser ? 'justify-end' : 'justify-start';
-  const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
   // --- Thinking bubble: content line for the "native" position ---
@@ -981,6 +995,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   
   if ((isAnnotationActive || (isFocusedMode && isImageSuccessfullyDisplayed)) && imageAspectRatio) {
     imageContainerStyle.aspectRatio = `${imageAspectRatio}`;
+  }
+  if (isAttachmentSvg && detachedTranscriptBottomPadding > 0 && !isAnnotationActive) {
+    imageContainerStyle.paddingBottom = `${detachedTranscriptBottomPadding}px`;
   }
 
   // Build corner-lift class list for un-taped corners
@@ -1398,7 +1415,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                speakNativeLang={speakNativeLang}
                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                messageId={message.id}
-               colorMode={isMiniGameAttachment ? 'game' : isAudioSuccessfullyDisplayed ? 'audio' : 'overlay'}
+               colorMode={isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : isAudioSuccessfullyDisplayed ? 'audio' : 'overlay'}
                        />
                    </>
                ) : (
