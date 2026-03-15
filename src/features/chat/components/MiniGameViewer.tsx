@@ -104,9 +104,9 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
   const bubbleSurfaceBg = isUser ? 'bg-user-msg-bg/95' : 'bg-ai-msg-bg/95';
-  const textColor = isUser ? 'text-user-msg-text' : 'text-ai-file-text';
-  const subtleText = isUser ? 'text-user-msg-text/70' : 'text-ai-file-text/70';
-  const lineColor = isUser ? 'border-user-msg-text/25' : 'border-ai-file-text/25';
+  const textColor = isUser ? 'text-user-attachment-game-text' : 'text-ai-file-text';
+  const subtleText = isUser ? 'text-user-attachment-game-text/70' : 'text-ai-file-text/70';
+  const lineColor = isUser ? 'border-user-attachment-game-text/25' : 'border-ai-file-text/25';
   const padBtnBg = isUser ? 'bg-user-msg-bg/50 hover:bg-user-msg-bg/65' : 'bg-ai-msg-bg/55 hover:bg-ai-msg-bg/70';
   const statusBubbleBg = runtimeState === 'error' ? 'bg-red-900/80' : 'bg-black/70';
   const effectiveBottomInset = Math.max(0, Math.round(bottomInset));

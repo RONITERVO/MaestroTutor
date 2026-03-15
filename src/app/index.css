@@ -33,6 +33,11 @@
     --ai-file-bg: 210 15% 90%;
     --ai-file-text: 220 15% 45%;
     --img-error-text: 350 70% 50%;
+    --user-attachment-inline-text: 210 20% 98%;
+    --user-attachment-audio-text: 210 20% 98%;
+    --user-attachment-overlay-text: 210 20% 98%;
+    --user-attachment-svg-text: 210 20% 98%;
+    --user-attachment-game-text: 210 20% 98%;
     --attachment-inline-target-text: 220 30% 20%;
     --attachment-inline-native-text: 220 15% 45%;
     --attachment-audio-target-text: 0 0% 0%;
