@@ -1441,7 +1441,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                speakNativeLang={speakNativeLang}
                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                messageId={message.id}
-               colorMode={isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : isAudioSuccessfullyDisplayed ? 'audio' : 'overlay'}
+               colorMode={isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : usesAudioAttachmentShell ? 'audio' : 'overlay'}
                        />
                    </>
                ) : (
