@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 interface AudioPlayerProps {
-  src: string;
+  src?: string | null;
   variant: 'user' | 'assistant' | 'preview';
   compact?: boolean;
+  statusText?: string | null;
+  waveformSeed?: string;
+  placeholderProgress?: number;
 }
 
 const BAR_COUNT = 32;
@@ -62,7 +65,14 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, compact = false }) => {
+const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({
+  src,
+  variant,
+  compact = false,
+  statusText = null,
+  waveformSeed,
+  placeholderProgress = 0,
+}) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -70,23 +80,33 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
   const [isLoaded, setIsLoaded] = useState(false);
   const animFrameRef = useRef<number>(0);
   const waveContainerRef = useRef<HTMLDivElement>(null);
+  const resolvedSrc = typeof src === 'string' && src.trim() ? src : null;
+  const isPlaceholder = !resolvedSrc;
 
   const barCount = compact ? BAR_COUNT_COMPACT : BAR_COUNT;
-  const fallbackWaveform = useMemo(() => generateFallbackWaveform(src, barCount), [src, barCount]);
+  const fallbackSeed = waveformSeed || resolvedSrc || `${variant}-${compact ? 'compact' : 'full'}-audio-placeholder`;
+  const fallbackWaveform = useMemo(() => generateFallbackWaveform(fallbackSeed, barCount), [fallbackSeed, barCount]);
   const [waveform, setWaveform] = useState<number[]>(fallbackWaveform);
+
+  useEffect(() => {
+    setWaveform(fallbackWaveform);
+  }, [fallbackWaveform]);
 
   // Decode real waveform from audio data
   useEffect(() => {
+    if (!resolvedSrc) return;
     let cancelled = false;
-    decodeWaveform(src, barCount).then(bars => {
+    decodeWaveform(resolvedSrc, barCount).then(bars => {
       if (!cancelled) setWaveform(bars);
     }).catch(() => {
       // keep fallback
     });
     return () => { cancelled = true; };
-  }, [src, barCount]);
+  }, [resolvedSrc, barCount]);
 
-  const progress = duration > 0 ? currentTime / duration : 0;
+  const progress = resolvedSrc && duration > 0
+    ? currentTime / duration
+    : Math.max(0, Math.min(1, placeholderProgress));
 
   // Variant is kept for API stability across caller sites.
   void variant;
@@ -102,6 +122,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
   }, []);
 
   useEffect(() => {
+    if (!resolvedSrc) {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
+      setIsLoaded(false);
+      return;
+    }
+
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -177,9 +205,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnded);
     };
-  }, [updateTime]);
+  }, [resolvedSrc, updateTime]);
 
   const togglePlay = useCallback(() => {
+    if (!resolvedSrc) return;
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
@@ -187,9 +216,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
     } else {
       audio.pause();
     }
-  }, []);
+  }, [resolvedSrc]);
 
   const handleWaveClick = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!resolvedSrc) return;
     const audio = audioRef.current;
     const container = waveContainerRef.current;
     if (!audio || !container || !duration) return;
@@ -204,7 +234,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     audio.currentTime = ratio * duration;
     setCurrentTime(audio.currentTime);
-  }, [duration]);
+  }, [duration, resolvedSrc]);
 
   // Keep audio controls visually consistent across all message variants.
   const containerClasses = 'bg-audio-player-bg';
@@ -218,17 +248,20 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
   const iconScale = compact ? 'w-4 h-4' : 'w-5 h-5';
   const barHeight = compact ? 'h-6' : 'h-8';
   const containerPad = compact ? 'p-1.5 gap-2' : 'p-2 gap-2.5';
+  const currentTimeLabel = resolvedSrc ? formatTime(currentTime) : '0:00';
+  const durationLabel = resolvedSrc ? (isLoaded ? formatTime(duration) : '--:--') : (statusText || '--:--');
 
   return (
     <div className={`flex items-center ${containerPad} ${containerClasses} w-full select-none sketchy-border-thin`}>
-      <audio ref={audioRef} src={src} preload="metadata" />
+      {resolvedSrc ? <audio ref={audioRef} src={resolvedSrc} preload="metadata" /> : null}
 
       {/* Play / Pause */}
       <button
         type="button"
         onClick={togglePlay}
-        className={`flex-shrink-0 ${btnSize} flex items-center justify-center transition-colors ${playBtnClasses} sketchy-border-thin`}
-        aria-label={isPlaying ? 'Pause' : 'Play'}
+        className={`flex-shrink-0 ${btnSize} flex items-center justify-center transition-colors ${playBtnClasses} sketchy-border-thin ${isPlaceholder ? 'cursor-default' : ''}`}
+        aria-label={isPlaceholder ? (statusText || 'Audio loading') : (isPlaying ? 'Pause' : 'Play')}
+        aria-disabled={isPlaceholder}
       >
         {isPlaying ? (
           <svg className={iconScale} viewBox="0 0 20 20" fill="currentColor">
@@ -246,14 +279,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <div
           ref={waveContainerRef}
-          className={`flex items-end gap-[2px] ${barHeight} cursor-pointer`}
+          className={`flex items-end gap-[2px] ${barHeight} ${resolvedSrc ? 'cursor-pointer' : 'cursor-default'}`}
           onClick={handleWaveClick}
           role="slider"
-          aria-label="Audio progress"
+          aria-label={isPlaceholder ? (statusText || 'Audio loading') : 'Audio progress'}
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
-          tabIndex={0}
+          tabIndex={resolvedSrc ? 0 : -1}
         >
           {waveform.map((h, i) => {
             const barProgress = i / barCount;
@@ -261,7 +294,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
             return (
               <div
                 key={i}
-                className={`flex-1 rounded-full transition-colors duration-150 ${played ? barPlayedColor : barUnplayedColor}`}
+                className={`flex-1 rounded-full transition-colors duration-150 ${played ? barPlayedColor : barUnplayedColor} ${isPlaceholder ? 'animate-pulse' : ''}`}
                 style={{
                   height: `${h * 100}%`,
                   minHeight: '3px',
@@ -272,8 +305,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({ src, variant, comp
         </div>
 
         <div className={`flex justify-between text-[10px] ${timeColor} font-medium leading-none`}>
-          <span>{formatTime(currentTime)}</span>
-          <span>{isLoaded ? formatTime(duration) : '--:--'}</span>
+          <span>{currentTimeLabel}</span>
+          <span className={statusText && isPlaceholder ? 'truncate text-right max-w-[10rem]' : undefined} title={statusText || undefined}>
+            {durationLabel}
+          </span>
         </div>
       </div>
     </div>
