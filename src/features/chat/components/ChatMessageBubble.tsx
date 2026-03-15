@@ -1054,7 +1054,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   if (applyFocusedImageStyles) {
       imageContainerSizeClasses = "w-full max-h-[75vh]";
-      if (usesAudioAttachmentShell) {
+      if (isMiniGameAttachment) {
+          imageContainerSizeClasses = "w-full";
+          imageContainerAspectClasses = "";
+          imageContainerFlexCenteringClasses = "";
+      } else if (usesAudioAttachmentShell) {
           imageContainerSizeClasses = "w-full";
           imageContainerAspectClasses = "";
           imageContainerFlexCenteringClasses = "";

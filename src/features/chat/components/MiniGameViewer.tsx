@@ -7,6 +7,12 @@ import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 
+interface MiniGameFrameMetrics {
+  width: number;
+  height: number;
+  aspectRatio: number;
+}
+
 interface MiniGameViewerProps {
   sourceCode: string;
   variant: 'user' | 'assistant' | 'preview';
@@ -26,6 +32,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
   const [reloadToken, setReloadToken] = useState(0);
+  const [frameMetrics, setFrameMetrics] = useState<MiniGameFrameMetrics | null>(null);
 
   const [hasIntersected, setHasIntersected] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -77,6 +84,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
     setRuntimeState('booting');
     setRuntimeError('');
+    setFrameMetrics(null);
 
     const timeout = window.setTimeout(() => {
       setRuntimeState((prev) => (prev === 'booting' ? 'ready' : prev));
@@ -85,6 +93,32 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     const onMessage = (event: MessageEvent) => {
       const payload = event.data;
       if (!payload || payload.type !== 'maestro-mini-game-status' || payload.frameId !== frameId) return;
+
+      if (payload.status === 'metrics' && payload.metrics) {
+        const nextWidth = typeof payload.metrics.width === 'number' && Number.isFinite(payload.metrics.width) ? payload.metrics.width : 0;
+        const nextHeight = typeof payload.metrics.height === 'number' && Number.isFinite(payload.metrics.height) ? payload.metrics.height : 0;
+        const nextAspectRatio = typeof payload.metrics.aspectRatio === 'number' && Number.isFinite(payload.metrics.aspectRatio) ? payload.metrics.aspectRatio : 0;
+
+        if (nextWidth >= 16 && nextHeight >= 16) {
+          setFrameMetrics((prev) => {
+            if (
+              prev &&
+              Math.abs(prev.width - nextWidth) < 2 &&
+              Math.abs(prev.height - nextHeight) < 2 &&
+              Math.abs(prev.aspectRatio - nextAspectRatio) < 0.02
+            ) {
+              return prev;
+            }
+
+            return {
+              width: nextWidth,
+              height: nextHeight,
+              aspectRatio: nextAspectRatio > 0 ? nextAspectRatio : nextWidth / nextHeight,
+            };
+          });
+        }
+        return;
+      }
 
       if (payload.status === 'error') {
         setRuntimeState('error');
@@ -113,13 +147,18 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const controlsUnderOverlay = effectiveBottomInset > 0;
   const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
   const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
-  // Vastly simplified standard responsive block. 
-  // LLM handles making the game fit these dimensions.
+  const fallbackFrameHeight = controlsUnderOverlay ? 520 : 480;
+  const resolvedFrameHeight = Math.max(
+    220,
+    Math.min(
+      Math.round(frameMetrics?.height || fallbackFrameHeight),
+      960,
+    ),
+  );
   const gameScreenStyle: React.CSSProperties = {
     width: '100%',
-    height: controlsUnderOverlay ? 'min(68vh, 520px)' : '480px',
-    minHeight: '260px',
-    resize: controlsUnderOverlay ? 'none' : 'vertical', // Allow user to make it taller if they want
+    height: `${resolvedFrameHeight}px`,
+    minHeight: '220px',
     backgroundColor: 'transparent',
   };
 

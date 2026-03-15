@@ -51,9 +51,14 @@ const buildRuntimeBridge = (frameId: string): string => {
   var FRAME_ID = ${JSON.stringify(frameId)};
   var EVENT_TYPE = 'maestro-mini-game-status';
   var backgroundSyncTimer = 0;
+  var metricsSyncTimer = 0;
+  var metricsAnimationFrame = 0;
+  var lastReportedHeight = 0;
+  var lastReportedWidth = 0;
+  var lastReportedAspectRatio = 0;
 
-  var sendStatus = function (status, detail) {
-    try { parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '' }, '*'); } catch (e) {}
+  var sendStatus = function (status, detail, metrics) {
+    try { parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '', metrics: metrics || null }, '*'); } catch (e) {}
   };
 
   var clearShellBackground = function (element) {
@@ -108,6 +113,200 @@ const buildRuntimeBridge = (frameId: string): string => {
     return children;
   };
 
+  var roundMetric = function (value) {
+    if (!Number.isFinite(value)) return 0;
+    return Math.round(value * 100) / 100;
+  };
+
+  var parseAspectRatio = function (value) {
+    if (!value) return 0;
+    var normalized = String(value).trim().toLowerCase();
+    if (!normalized || normalized === 'auto') return 0;
+
+    var slashMatch = normalized.match(/^([0-9]*\\.?[0-9]+)\\s*\\/\\s*([0-9]*\\.?[0-9]+)$/);
+    if (slashMatch) {
+      var width = parseFloat(slashMatch[1]);
+      var height = parseFloat(slashMatch[2]);
+      if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+        return width / height;
+      }
+      return 0;
+    }
+
+    var numeric = parseFloat(normalized);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : 0;
+  };
+
+  var getIntrinsicAspectRatio = function (element) {
+    if (!element) return 0;
+    var tagName = (element.tagName || '').toLowerCase();
+    if (tagName === 'canvas') {
+      var canvasWidth = Number(element.width) || 0;
+      var canvasHeight = Number(element.height) || 0;
+      if (canvasWidth > 0 && canvasHeight > 0) return canvasWidth / canvasHeight;
+    }
+
+    if (tagName === 'svg') {
+      var viewBox = element.getAttribute('viewBox') || '';
+      var viewBoxParts = viewBox.trim().split(/\\s+/);
+      if (viewBoxParts.length === 4) {
+        var vbWidth = parseFloat(viewBoxParts[2]);
+        var vbHeight = parseFloat(viewBoxParts[3]);
+        if (Number.isFinite(vbWidth) && Number.isFinite(vbHeight) && vbWidth > 0 && vbHeight > 0) {
+          return vbWidth / vbHeight;
+        }
+      }
+
+      var svgWidth = parseFloat(element.getAttribute('width') || '');
+      var svgHeight = parseFloat(element.getAttribute('height') || '');
+      if (Number.isFinite(svgWidth) && Number.isFinite(svgHeight) && svgWidth > 0 && svgHeight > 0) {
+        return svgWidth / svgHeight;
+      }
+    }
+
+    return 0;
+  };
+
+  var getRenderableBodyChildren = function () {
+    var nodes = [];
+    if (!document.body || !window.getComputedStyle) return nodes;
+
+    var children = getElementChildren(document.body);
+    for (var i = 0; i < children.length; i += 1) {
+      var child = children[i];
+      var tagName = (child.tagName || '').toLowerCase();
+      if (tagName === 'script' || tagName === 'style' || tagName === 'link' || tagName === 'meta' || tagName === 'template') {
+        continue;
+      }
+
+      var style = window.getComputedStyle(child);
+      if (!style || style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity || '1') <= 0.01) {
+        continue;
+      }
+
+      var rect = child.getBoundingClientRect();
+      if (rect.width < 2 && rect.height < 2) continue;
+      nodes.push({ element: child, rect: rect });
+    }
+
+    return nodes;
+  };
+
+  var measureContentMetrics = function () {
+    if (!document.body) return null;
+
+    var viewportWidth = Math.max(document.documentElement ? document.documentElement.clientWidth : 0, window.innerWidth || 0);
+    if (!viewportWidth) return null;
+
+    var renderableChildren = getRenderableBodyChildren();
+    var primary = null;
+    var minLeft = 0;
+    var minTop = 0;
+    var maxRight = 0;
+    var maxBottom = 0;
+
+    if (renderableChildren.length > 0) {
+      var largestArea = 0;
+      for (var i = 0; i < renderableChildren.length; i += 1) {
+        var item = renderableChildren[i];
+        var rect = item.rect;
+        var area = rectArea(rect);
+
+        if (!primary || area >= largestArea) {
+          primary = item.element;
+          largestArea = area;
+        }
+
+        if (i === 0) {
+          minLeft = rect.left;
+          minTop = rect.top;
+          maxRight = rect.right;
+          maxBottom = rect.bottom;
+        } else {
+          minLeft = Math.min(minLeft, rect.left);
+          minTop = Math.min(minTop, rect.top);
+          maxRight = Math.max(maxRight, rect.right);
+          maxBottom = Math.max(maxBottom, rect.bottom);
+        }
+      }
+    } else {
+      primary = document.body;
+      var bodyRect = document.body.getBoundingClientRect();
+      minLeft = bodyRect.left;
+      minTop = bodyRect.top;
+      maxRight = bodyRect.right;
+      maxBottom = bodyRect.bottom;
+    }
+
+    var measuredWidth = Math.max(0, maxRight - minLeft);
+    var measuredHeight = Math.max(0, maxBottom - minTop);
+    var preferredWidth = measuredWidth > 0 ? measuredWidth : viewportWidth;
+    var aspectRatio = 0;
+
+    if (primary && window.getComputedStyle) {
+      var primaryRect = primary.getBoundingClientRect();
+      if (primaryRect.width > 0) preferredWidth = primaryRect.width;
+
+      var primaryStyle = window.getComputedStyle(primary);
+      if (primaryStyle) {
+        aspectRatio = parseAspectRatio(primaryStyle.aspectRatio);
+      }
+
+      if (!aspectRatio) aspectRatio = getIntrinsicAspectRatio(primary);
+      if (!aspectRatio && primaryRect.width > 0 && primaryRect.height > 0) {
+        aspectRatio = primaryRect.width / primaryRect.height;
+      }
+    }
+
+    var preferredHeight = measuredHeight;
+    if (aspectRatio > 0 && preferredWidth > 0) {
+      preferredHeight = preferredWidth / aspectRatio;
+    }
+
+    preferredWidth = roundMetric(preferredWidth);
+    preferredHeight = roundMetric(preferredHeight);
+    aspectRatio = aspectRatio > 0 ? roundMetric(aspectRatio) : 0;
+
+    if (preferredWidth < 16 || preferredHeight < 16) return null;
+    return {
+      width: preferredWidth,
+      height: preferredHeight,
+      aspectRatio: aspectRatio,
+    };
+  };
+
+  var syncContentMetrics = function (force) {
+    var metrics = measureContentMetrics();
+    if (!metrics) return;
+
+    var sameHeight = Math.abs(metrics.height - lastReportedHeight) < 2;
+    var sameWidth = Math.abs(metrics.width - lastReportedWidth) < 2;
+    var sameAspectRatio = Math.abs(metrics.aspectRatio - lastReportedAspectRatio) < 0.02;
+    if (!force && sameHeight && sameWidth && sameAspectRatio) return;
+
+    lastReportedHeight = metrics.height;
+    lastReportedWidth = metrics.width;
+    lastReportedAspectRatio = metrics.aspectRatio;
+    sendStatus('metrics', '', metrics);
+  };
+
+  var scheduleMetricsSync = function (delay, force) {
+    if (metricsSyncTimer) {
+      window.clearTimeout(metricsSyncTimer);
+    }
+
+    metricsSyncTimer = window.setTimeout(function () {
+      metricsSyncTimer = 0;
+      if (metricsAnimationFrame) {
+        window.cancelAnimationFrame(metricsAnimationFrame);
+      }
+      metricsAnimationFrame = window.requestAnimationFrame(function () {
+        metricsAnimationFrame = 0;
+        syncContentMetrics(!!force);
+      });
+    }, delay || 0);
+  };
+
   var isCenteringShell = function (element, rect) {
     if (!element || !window.getComputedStyle) return false;
     var style = window.getComputedStyle(element);
@@ -160,24 +359,42 @@ const buildRuntimeBridge = (frameId: string): string => {
   window.addEventListener('unhandledrejection', function (e) { sendStatus('error', String(e.reason)); });
   window.addEventListener('DOMContentLoaded', function () {
     syncShellBackgrounds();
+    syncContentMetrics(true);
     window.requestAnimationFrame(syncShellBackgrounds);
+    window.requestAnimationFrame(function () { syncContentMetrics(false); });
     window.setTimeout(syncShellBackgrounds, 140);
+    window.setTimeout(function () { syncContentMetrics(false); }, 140);
     sendStatus('ready', 'ok');
   });
   window.addEventListener('load', function () {
     syncShellBackgrounds();
     window.setTimeout(syncShellBackgrounds, 220);
+    syncContentMetrics(false);
+    window.setTimeout(function () { syncContentMetrics(false); }, 220);
   });
-  window.addEventListener('resize', scheduleShellSync);
+  window.addEventListener('resize', function () {
+    scheduleShellSync();
+    scheduleMetricsSync(40, false);
+  });
+
+  if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+    document.fonts.ready.then(function () {
+      scheduleMetricsSync(0, false);
+    }).catch(function () {});
+  }
 
   if (typeof MutationObserver !== 'undefined' && document.documentElement) {
     try {
-      var observer = new MutationObserver(scheduleShellSync);
+      var observer = new MutationObserver(function () {
+        scheduleShellSync();
+        scheduleMetricsSync(40, false);
+      });
       observer.observe(document.documentElement, {
         subtree: true,
         childList: true,
+        characterData: true,
         attributes: true,
-        attributeFilter: ['style', 'class']
+        attributeFilter: ['style', 'class', 'width', 'height', 'hidden']
       });
     } catch (e) {}
   }
