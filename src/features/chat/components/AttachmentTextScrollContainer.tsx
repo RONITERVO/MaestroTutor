@@ -7,8 +7,6 @@ interface AttachmentTextScrollContainerProps extends React.HTMLAttributes<HTMLDi
   children: React.ReactNode;
   ariaLabel?: string;
   spacerClassName?: string;
-  contentClassName?: string;
-  contentStyle?: React.CSSProperties;
 }
 
 const baseScrollStyle: React.CSSProperties = {
@@ -28,8 +26,6 @@ const AttachmentTextScrollContainer = React.forwardRef<HTMLDivElement, Attachmen
   style,
   ariaLabel,
   spacerClassName = 'text-attachment-overlay-native-text/40',
-  contentClassName = 'flex flex-col items-center justify-start',
-  contentStyle,
   ...rest
 }, ref) => (
   <div
@@ -40,11 +36,10 @@ const AttachmentTextScrollContainer = React.forwardRef<HTMLDivElement, Attachmen
     {...rest}
   >
     <div
-      className={contentClassName}
+      className="flex flex-col items-center justify-start"
       style={{
         paddingTop: '8cqw',
         paddingBottom: '8cqw',
-        ...contentStyle,
       }}
     >
       <div

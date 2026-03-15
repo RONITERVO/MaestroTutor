@@ -95,8 +95,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const [nativeFlashIsOn, setNativeFlashIsOn] = useState<boolean>(false);
   const nativeFlashTimeoutRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const textOverlayRef = useRef<HTMLDivElement>(null);
-  const [textOverlayHeight, setTextOverlayHeight] = useState(0);
+  const attachmentTranscriptShellRef = useRef<HTMLDivElement>(null);
+  const [attachmentTranscriptShellHeight, setAttachmentTranscriptShellHeight] = useState(0);
 
   const imageForAnnotationRef = useRef<HTMLImageElement | null>(null);
   const editCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -703,19 +703,19 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || isAttachmentLoading || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || usesAudioAttachmentShell || isPdfSuccessfullyDisplayed);
   const hasVisibleAttachment = shouldShowAudioAttachmentPlaceholder || isAttachmentLoading || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !usesAudioAttachmentShell && !isVideoSuccessfullyDisplayed;
-  const shouldUseScrollableTextOverlay = shouldOverlayTextOnAttachment && hasVisibleAttachment && !!hasTextContent;
-  const overlayTranscriptBottomInset = shouldUseScrollableTextOverlay ? Math.max(0, textOverlayHeight + 8) : 0;
-  const usesDetachedTranscriptShell = shouldUseScrollableTextOverlay && (isMiniGameAttachment || isAttachmentSvg);
-  const detachedTranscriptShellHeight = usesDetachedTranscriptShell && overlayTranscriptBottomInset > 0
-    ? Math.max(92, Math.min(Math.round(overlayTranscriptBottomInset * 0.45) + 32, 122))
+  const shouldUseAttachmentTranscriptShell = shouldOverlayTextOnAttachment && hasVisibleAttachment && !!hasTextContent;
+  const attachmentTranscriptShellBottomInset = shouldUseAttachmentTranscriptShell ? Math.max(0, attachmentTranscriptShellHeight + 8) : 0;
+  const usesDetachedTranscriptShell = shouldUseAttachmentTranscriptShell && (isMiniGameAttachment || isAttachmentSvg);
+  const detachedAttachmentTranscriptShellHeight = usesDetachedTranscriptShell && attachmentTranscriptShellBottomInset > 0
+    ? Math.max(92, Math.min(Math.round(attachmentTranscriptShellBottomInset * 0.45) + 32, 122))
     : 0;
-  const detachedTranscriptBottomPadding = detachedTranscriptShellHeight > 0
-    ? Math.max(72, detachedTranscriptShellHeight - 10)
+  const detachedAttachmentTranscriptBottomPadding = detachedAttachmentTranscriptShellHeight > 0
+    ? Math.max(72, detachedAttachmentTranscriptShellHeight - 10)
     : 0;
   const useOverlayTextColors = shouldOverlayTextOnAttachment && !usesDetachedTranscriptShell;
-  const shouldInsetScrollableAttachmentForOverlay = overlayTranscriptBottomInset > 0 && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
-  const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForOverlay ? overlayTranscriptBottomInset : 0;
-  const textOverlayScrollStyle: React.CSSProperties | undefined = shouldUseScrollableTextOverlay
+  const shouldInsetScrollableAttachmentForTranscriptShell = attachmentTranscriptShellBottomInset > 0 && (isTextFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
+  const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForTranscriptShell ? attachmentTranscriptShellBottomInset : 0;
+  const attachmentTranscriptShellStyle: React.CSSProperties | undefined = shouldUseAttachmentTranscriptShell
     ? {
         maxHeight: '40vh',
         overflowY: 'auto',
@@ -726,7 +726,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         ...(usesDetachedTranscriptShell ? { textShadow: 'none' } : null),
       }
     : undefined;
-  const textOverlayClasses = shouldOverlayTextOnAttachment
+  const attachmentTranscriptShellClasses = shouldOverlayTextOnAttachment
     ? (usesDetachedTranscriptShell
         ? 'absolute inset-x-0 bottom-0 p-3 bg-transparent rounded-b-lg z-10'
         : 'absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10')
@@ -827,10 +827,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const bubbleAlignClass = isUser ? 'justify-end' : 'justify-start';
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
-  const shouldUseScrollableUserTextShell = isUser && !!message.text && applyFocusedImageStyles && shouldUseScrollableTextOverlay;
+  const shouldUseUserTranscriptShell = isUser && !!message.text && applyFocusedImageStyles && shouldUseAttachmentTranscriptShell;
   const userMessageTextNode = isUser && message.text ? (
     <p
-      className={`${shouldUseScrollableUserTextShell ? '' : 'mb-1 '}whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors pointer-events-auto ${userAttachmentTextClass} ${isUserLineSpeaking ? userAttachmentSpeakingSurfaceClass : userAttachmentHoverSurfaceClass}`.trim()}
+      className={`${shouldUseUserTranscriptShell ? '' : 'mb-1 '}whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors pointer-events-auto ${userAttachmentTextClass} ${isUserLineSpeaking ? userAttachmentSpeakingSurfaceClass : userAttachmentHoverSurfaceClass}`.trim()}
       style={{ fontSize: '3.8cqw', lineHeight: 1.35 }}
       onPointerDown={handleLinePointerDown}
       onPointerUp={handleUserMessagePointerUp}
@@ -961,29 +961,29 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   }, [thinkingDraftCondensed, thinkingPhaseLabel, thinkingStatusCondensed, thinkingTickerText]);
 
   useEffect(() => {
-    if (!shouldUseScrollableTextOverlay) {
-      setTextOverlayHeight(0);
+    if (!shouldUseAttachmentTranscriptShell) {
+      setAttachmentTranscriptShellHeight(0);
       return;
     }
 
-    const overlayEl = textOverlayRef.current;
-    if (!overlayEl) return;
+    const transcriptShellEl = attachmentTranscriptShellRef.current;
+    if (!transcriptShellEl) return;
 
     const updateHeight = () => {
-      setTextOverlayHeight(overlayEl.clientHeight);
+      setAttachmentTranscriptShellHeight(transcriptShellEl.clientHeight);
     };
     updateHeight();
 
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(updateHeight);
-      resizeObserver.observe(overlayEl);
+      resizeObserver.observe(transcriptShellEl);
     }
 
     return () => {
       resizeObserver?.disconnect();
     };
-  }, [shouldUseScrollableTextOverlay, message.text, message.rawAssistantResponse, message.translations]);
+  }, [shouldUseAttachmentTranscriptShell, message.text, message.rawAssistantResponse, message.translations]);
 
   if (message.thinking && !isAttachmentLoading) {
     return (
@@ -1101,8 +1101,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     // @ts-ignore
     containerType: 'inline-size',
     width: '100%',
-    ...(isAttachmentSvg && detachedTranscriptBottomPadding > 0 && !isAnnotationActive
-      ? { paddingBottom: `${detachedTranscriptBottomPadding}px` }
+    ...(isAttachmentSvg && detachedAttachmentTranscriptBottomPadding > 0 && !isAnnotationActive
+      ? { paddingBottom: `${detachedAttachmentTranscriptBottomPadding}px` }
       : null),
     ...bubbleShapeStyle,
   };
@@ -1491,19 +1491,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
         {hasTextContent && (
            <div className={`transition-opacity duration-300
-                ${textOverlayClasses}
-                ${shouldUseScrollableTextOverlay ? 'pointer-events-none' : ''}
+                ${attachmentTranscriptShellClasses}
+                ${shouldUseAttachmentTranscriptShell ? 'pointer-events-none' : ''}
                 ${isAnnotationActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}
             `}
-            style={textOverlayScrollStyle}
-            onWheel={shouldUseScrollableTextOverlay ? (e) => e.stopPropagation() : undefined}
-            onTouchMove={shouldUseScrollableTextOverlay ? (e) => e.stopPropagation() : undefined}
-            ref={textOverlayRef}
+            style={attachmentTranscriptShellStyle}
+            onWheel={shouldUseAttachmentTranscriptShell ? (e) => e.stopPropagation() : undefined}
+            onTouchMove={shouldUseAttachmentTranscriptShell ? (e) => e.stopPropagation() : undefined}
+            ref={attachmentTranscriptShellRef}
            >
-        <style>{`
-        @keyframes pop-fade-speak { 0% { transform: scale(0.85); opacity: 0; } 20% { transform: scale(1.15); opacity: 1; } 80% { transform: scale(1.0); opacity: 1; } 100% { transform: scale(0.95); opacity: 0; } }
-        .animate-speak-flash { animation: pop-fade-speak 900ms ease-out both; }
-        `}</style>
                {isAssistant && applyFocusedImageStyles && message.translations && message.translations.length > 0 ? (
                    <>
              <TextScrollwheel
@@ -1525,7 +1521,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                ) : (
                  <>
                   {userMessageTextNode && (
-                    shouldUseScrollableUserTextShell ? (
+                    shouldUseUserTranscriptShell ? (
                       <AttachmentTextScrollContainer
                         spacerClassName={userAttachmentSubtleTextClass}
                         onWheel={(e) => e.stopPropagation()}

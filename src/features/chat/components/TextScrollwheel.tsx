@@ -29,7 +29,6 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<number | null>(null);
-  const longPressTimerRef = useRef<number | null>(null);
   const pointerDownPosRef = useRef<{x: number; y: number} | null>(null);
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
   const [flashIsOn, setFlashIsOn] = useState<boolean>(false);
@@ -80,13 +79,10 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
   useEffect(() => () => { if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current) }, []);
   
   const handleLinePointerDown = (e: React.PointerEvent) => {
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
     pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
   };
 
   const handleLinePointerUp = (e: React.PointerEvent, line: (typeof allLinePairs)[0], flatIndex: number) => {
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-
     if (pointerDownPosRef.current) {
         const deltaX = Math.abs(e.clientX - pointerDownPosRef.current.x);
         const deltaY = Math.abs(e.clientY - pointerDownPosRef.current.y);
@@ -129,10 +125,6 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
   };
 
   const handlePointerLeave = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
     pointerDownPosRef.current = null;
   };
 
@@ -167,15 +159,6 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
         ariaLabel={t('chat.maestroTranscriptScrollwheel')}
         spacerClassName={spacerTextClass}
       >
-          <style>{`
-            @keyframes pop-fade-speak {
-              0% { transform: scale(0.85); opacity: 0; }
-              20% { transform: scale(1.15); opacity: 1; }
-              80% { transform: scale(1.0); opacity: 1; }
-              100% { transform: scale(0.95); opacity: 0; }
-            }
-            .animate-speak-flash { animation: pop-fade-speak 900ms ease-out both; }
-          `}</style>
               {allLinePairs.map((line, index) => ( 
                 <div 
                   key={index} 
