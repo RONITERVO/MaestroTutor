@@ -996,9 +996,16 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   if ((isAnnotationActive || (isFocusedMode && isImageSuccessfullyDisplayed)) && imageAspectRatio) {
     imageContainerStyle.aspectRatio = `${imageAspectRatio}`;
   }
-  if (isAttachmentSvg && detachedTranscriptBottomPadding > 0 && !isAnnotationActive) {
-    imageContainerStyle.paddingBottom = `${detachedTranscriptBottomPadding}px`;
-  }
+  const bubbleWrapperStyle: React.CSSProperties = {
+    touchAction: 'pan-y',
+    // @ts-ignore
+    containerType: 'inline-size',
+    width: '100%',
+    ...(isAttachmentSvg && detachedTranscriptBottomPadding > 0 && !isAnnotationActive
+      ? { paddingBottom: `${detachedTranscriptBottomPadding}px` }
+      : null),
+    ...bubbleShapeStyle,
+  };
 
   // Build corner-lift class list for un-taped corners
   const cornerLiftClasses = tapeLayout.liftedCorners.length > 0
@@ -1028,13 +1035,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         ))}
       <div
         className={`${bubbleWrapperClasses} ${cornerLiftClasses}`}
-        style={{
-          touchAction: 'pan-y',
-          // @ts-ignore
-          containerType: 'inline-size',
-          width: '100%',
-          ...bubbleShapeStyle
-        }}
+        style={bubbleWrapperStyle}
         ref={registerBubbleEl}
       >
           {hasVisibleAttachment && (
