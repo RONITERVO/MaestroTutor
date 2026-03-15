@@ -28,7 +28,7 @@ export const DEFAULT_COLORS: Record<string, string> = {
   'ai-file-text': '220 15% 45%',
   'img-error-text': '350 70% 50%',
   'user-attachment-inline-text': '210 20% 98%',
-  'user-attachment-audio-text': '0 0% 0%',
+  'user-attachment-audio-text': '210 20% 98%',
   'user-attachment-overlay-text': '210 20% 98%',
   'user-attachment-svg-text': '0 0% 0%',
   'user-attachment-game-text': '0 0% 0%',

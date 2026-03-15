@@ -132,8 +132,8 @@ Separate text colors for user and assistant attachment text across inline, audio
 | `--user-attachment-inline-text` | `210 20% 98%` | User Inline Attachment Text | Your message text and inline attachment labels next to standard attachments |
 | `--user-attachment-audio-text` | `210 20% 98%` | User Audio Attachment Text | Your message text when an audio attachment is shown in the audio shell |
 | `--user-attachment-overlay-text` | `210 20% 98%` | User Overlay Attachment Text | Your message text shown over focused images, PDFs, and other media overlays |
-| `--user-attachment-svg-text` | `210 20% 98%` | User SVG Attachment Text | Your message text shown in the detached SVG attachment shell |
-| `--user-attachment-game-text` | `210 20% 98%` | User Game Attachment Text | Your message text shown with mini-game attachment shells and controls |
+| `--user-attachment-svg-text` | `0 0% 0%` | User SVG Attachment Text | Your message text shown in the detached SVG attachment shell |
+| `--user-attachment-game-text` | `0 0% 0%` | User Game Attachment Text | Your message text shown with mini-game attachment shells and controls |
 | `--attachment-inline-target-text` | `220 30% 20%` | Inline Target Text | Main attachment transcript text shown under attachments, including music replies |
 | `--attachment-inline-native-text` | `220 15% 45%` | Inline Native Text | Secondary or native attachment transcript text shown under attachments, including music replies |
 | `--attachment-audio-target-text` | `0 0% 0%` | Audio Target Text | Main text in the focused assistant audio scroll wheel |
