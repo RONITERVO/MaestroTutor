@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { sanitizeSvgAnimationStructure } from './sanitizeSvgAnimationStructure';
+
 interface AttachmentCandidate {
   start: number;
   end: number;
@@ -571,9 +573,10 @@ const chartJsonToCsv = (input: any): string | null => {
 const createSvgAttachment = (svgText: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
   const normalized = normalizeAttachmentText(svgText);
   if (!normalized || !STANDALONE_SVG_REGEX.test(normalized)) return null;
+  const sanitized = sanitizeSvgAnimationStructure(normalized);
   return {
     kind: 'svg',
-    dataUrl: toUtf8DataUrl('image/svg+xml', normalized),
+    dataUrl: toUtf8DataUrl('image/svg+xml', sanitized),
     mimeType: 'image/svg+xml',
     fileName: sanitizeFileName(fileNameHint || 'generated.svg'),
   };

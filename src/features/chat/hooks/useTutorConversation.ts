@@ -38,6 +38,7 @@ import {
   isMicrosoftOfficeMimeType,
   normalizeAttachmentMimeType,
 } from '../utils/fileAttachments';
+import { sanitizeSvgAnimationStructure } from '../utils/sanitizeSvgAnimationStructure';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -679,12 +680,21 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       dataUrl = rawContent.trim();
       if (!/^data:[^,]+,/i.test(dataUrl)) return null;
       mimeType = mimeType || inferMimeTypeFromDataUrl(dataUrl) || '';
+      if (mimeType === 'image/svg+xml') {
+        const decodedSvg = decodeTextFromDataUrl(dataUrl);
+        if (decodedSvg) {
+          dataUrl = toUtf8Base64DataUrl(mimeType, sanitizeSvgAnimationStructure(decodedSvg));
+        }
+      }
     } else {
       mimeType = mimeType || normalizeAttachmentMimeType({ name: candidate.fileName || 'artifact.txt', type: 'text/plain' });
-      const normalizedContent = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+      let normalizedContent = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
       if (!normalizedContent) return null;
       if (mimeType.startsWith('image/') && mimeType !== 'image/svg+xml') {
         return null;
+      }
+      if (mimeType === 'image/svg+xml') {
+        normalizedContent = sanitizeSvgAnimationStructure(normalizedContent);
       }
       dataUrl = toUtf8Base64DataUrl(mimeType || 'text/plain', normalizedContent);
     }
@@ -738,24 +748,26 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     } as const;
   }, [messagesRef, settingsRef]);
 
-  const finalizeAssistantArtifact = useCallback((assistantMessageId: string, artifact: unknown) => {
-    const normalized = normalizeSuggestionCreatorArtifact(artifact);
+  const finalizeAssistantArtifact = useCallback((
+    assistantMessageId: string,
+    normalizedArtifact: ReturnType<typeof normalizeSuggestionCreatorArtifact>
+  ) => {
     const updates: Partial<ChatMessage> = {
       isLoadingArtifact: false,
       artifactLoadStartTime: undefined,
     };
 
-    if (normalized) {
-      updates.imageUrl = normalized.dataUrl;
-      updates.imageMimeType = normalized.mimeType;
-      updates.attachmentName = normalized.fileName;
+    if (normalizedArtifact) {
+      updates.imageUrl = normalizedArtifact.dataUrl;
+      updates.imageMimeType = normalizedArtifact.mimeType;
+      updates.attachmentName = normalizedArtifact.fileName;
       updates.storageOptimizedImageUrl = undefined;
       updates.storageOptimizedImageMimeType = undefined;
       updates.uploadedFileVariants = undefined;
     }
 
     updateMessage(assistantMessageId, updates);
-  }, [normalizeSuggestionCreatorArtifact, updateMessage]);
+  }, [updateMessage]);
 
   const appendThinkingTrace = useCallback((messageId: string, line: string) => {
     const cleanedLine = line.trim();
@@ -1113,9 +1125,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         removeActivityToken(suggestionsTokenRef.current);
         suggestionsTokenRef.current = null;
       }
-      const hasRenderableArtifact = Boolean(normalizeSuggestionCreatorArtifact(resolvedArtifact));
+      const normalizedArtifact = normalizeSuggestionCreatorArtifact(resolvedArtifact);
+      const hasRenderableArtifact = Boolean(normalizedArtifact);
       if (hasRenderableArtifact || !resolvedToolRequest) {
-        finalizeAssistantArtifact(assistantMessageId, resolvedArtifact);
+        finalizeAssistantArtifact(assistantMessageId, normalizedArtifact);
       }
       if (resolvedToolRequest) {
         const toolMessageId = hasRenderableArtifact
