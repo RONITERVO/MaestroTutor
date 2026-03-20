@@ -142,7 +142,6 @@ export interface AppSettings {
   stt: STTSettings;
   smartReengagement: SmartReengagementSettings;
   enableGoogleSearch: boolean;
-  imageGenerationModeEnabled: boolean;
   imageFocusedModeEnabled: boolean;
   isSuggestionMode: boolean;
   historyBookmarkMessageId?: string | null;

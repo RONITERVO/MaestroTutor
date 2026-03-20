@@ -43,7 +43,6 @@ interface ChatInterfaceProps {
   onToggleSendWithSnapshot: () => void;
   onToggleUseVisualContextForReengagement: () => void;
   onSuggestionClick: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
-  onToggleImageGenerationMode: () => void;
   onToggleImageFocusedMode: (messageId: string) => void;
   onStartLiveSession: () => Promise<void> | void;
   onStopLiveSession: () => void;
@@ -53,7 +52,6 @@ interface ChatInterfaceProps {
   onCreateSuggestion: (text: string) => Promise<void>;
   onQuotaSetupBilling?: () => void;
   onQuotaStartLive?: () => void;
-  onImageGenDisable?: () => void;
   onImageGenViewCost?: () => void;
 }
 
@@ -71,7 +69,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onToggleSendWithSnapshot,
     onToggleUseVisualContextForReengagement,
     onSuggestionClick,
-    onToggleImageGenerationMode,
     onToggleImageFocusedMode,
     onStartLiveSession,
     onStopLiveSession,
@@ -82,7 +79,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onSendMessage,
     onQuotaSetupBilling,
     onQuotaStartLive,
-    onImageGenDisable,
     onImageGenViewCost
   } = props;
 
@@ -788,7 +784,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 onUserInputActivity={onUserInputActivity}
                 onQuotaSetupBilling={onQuotaSetupBilling}
                 onQuotaStartLive={onQuotaStartLive}
-                onImageGenDisable={onImageGenDisable}
                 onImageGenViewCost={onImageGenViewCost}
                 registerBubbleEl={(el) => {
                   if (el) bubbleWrapperRefs.current.set(msg.id, el);
@@ -894,7 +889,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     onCreateSuggestion={onCreateSuggestion}
                     onToggleSendWithSnapshot={onToggleSendWithSnapshot}
                     onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
-                    onToggleImageGenerationMode={onToggleImageGenerationMode}
                     onScrollToBottom={scrollToBottom}
                 />
             {isLanguageSelectionOpen && (

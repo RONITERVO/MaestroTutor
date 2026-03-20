@@ -33,7 +33,6 @@ interface InputAreaProps {
   onCreateSuggestion: (text: string) => Promise<void>;
   onToggleSendWithSnapshot: () => void;
   onToggleUseVisualContextForReengagement: () => void;
-  onToggleImageGenerationMode: () => void;
   onScrollToBottom?: () => void;
 }
 
@@ -163,7 +162,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   onCreateSuggestion,
   onToggleSendWithSnapshot,
   onToggleUseVisualContextForReengagement,
-  onToggleImageGenerationMode,
   onScrollToBottom,
 }) => {
   const { t } = useAppTranslations();
@@ -217,7 +215,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   const isSttSupported = microphoneApiAvailable;
   const sendWithSnapshotEnabled = settings.sendWithSnapshotEnabled;
   const useVisualContextForReengagementEnabled = settings.smartReengagement.useVisualContext;
-  const imageGenerationModeEnabled = settings.imageGenerationModeEnabled;
   const selectedCameraId = settings.selectedCameraId;
   const isImageGenCameraSelected = selectedCameraId === IMAGE_GEN_CAMERA_ID;
 
@@ -929,11 +926,9 @@ const InputArea: React.FC<InputAreaProps> = ({
                 isImageGenCameraSelected={isImageGenCameraSelected}
                 sendWithSnapshotEnabled={sendWithSnapshotEnabled}
                 useVisualContextForReengagementEnabled={useVisualContextForReengagementEnabled}
-                imageGenerationModeEnabled={imageGenerationModeEnabled}
                 onSelectCamera={handleSelectCamera}
                 onToggleSendWithSnapshot={onToggleSendWithSnapshot}
                 onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
-                onToggleImageGenerationMode={onToggleImageGenerationMode}
                 iconButtonStyle={iconButtonStyle}
                 isLive={isLive}
               />

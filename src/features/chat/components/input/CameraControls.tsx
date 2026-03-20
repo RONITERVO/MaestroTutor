@@ -5,7 +5,7 @@ import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { CameraDevice } from '../../../../core/types';
 import { TranslationReplacements } from '../../../../core/i18n/index';
 import { IMAGE_GEN_CAMERA_ID } from '../../../../core/config/app';
-import { IconPaperclip, IconCameraOff, IconCameraFront, IconCamera, IconUserImageGen, IconAssistantImageGen } from '../../../../shared/ui/Icons';
+import { IconPaperclip, IconCameraOff, IconCameraFront, IconCamera, IconUserImageGen } from '../../../../shared/ui/Icons';
 
 // Data attribute for identifying interactive elements
 const DATA_ACTION = 'data-camera-action';
@@ -24,11 +24,9 @@ interface CameraControlsProps {
   isImageGenCameraSelected: boolean;
   sendWithSnapshotEnabled: boolean;
   useVisualContextForReengagementEnabled: boolean;
-  imageGenerationModeEnabled: boolean;
   onSelectCamera: (deviceId: string) => void;
   onToggleSendWithSnapshot: () => void;
   onToggleUseVisualContextForReengagement: () => void;
-  onToggleImageGenerationMode: () => void;
   iconButtonStyle: string;
   isLive?: boolean;
 }
@@ -173,11 +171,9 @@ const CameraControls: React.FC<CameraControlsProps> = ({
   isImageGenCameraSelected,
   sendWithSnapshotEnabled,
   useVisualContextForReengagementEnabled,
-  imageGenerationModeEnabled,
   onSelectCamera,
   onToggleSendWithSnapshot,
   onToggleUseVisualContextForReengagement,
-  onToggleImageGenerationMode,
   iconButtonStyle,
   isLive,
 }) => {
@@ -273,11 +269,6 @@ const CameraControls: React.FC<CameraControlsProps> = ({
         startAutoCollapseTimer();
         break;
         
-      case 'book-toggle':
-        onToggleImageGenerationMode();
-        triggerFlashAndCollapse();
-        break;
-        
       case 'camera-select':
         if (deviceId === CAMERA_OFF_ID) {
           // Turn off camera
@@ -298,7 +289,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
     }
   }, [
     clearCollapseTimers, startAutoCollapseTimer, triggerFlashAndCollapse,
-    onToggleImageGenerationMode, onSelectCamera, selectedCameraId,
+    onSelectCamera, selectedCameraId,
     sendWithSnapshotEnabled, useVisualContextForReengagementEnabled,
     onToggleSendWithSnapshot, onToggleUseVisualContextForReengagement
   ]);
@@ -454,13 +445,13 @@ const CameraControls: React.FC<CameraControlsProps> = ({
     }
     // Add available cameras
     cameraOptions.push(...availableCameras);
-    // Add image gen camera if enabled, but not during live sessions
+    // Add image gen camera when not during live sessions.
     // (selecting it during live hides the feed and confuses users)
-    if (imageGenerationModeEnabled && !isLive) {
+    if (!isLive) {
       cameraOptions.push({ deviceId: IMAGE_GEN_CAMERA_ID, label: t('chat.camera.imageGenCameraLabel'), facingMode: 'unknown' });
     }
     return cameraOptions;
-  }, [availableCameras, imageGenerationModeEnabled, isLive, t]);
+  }, [availableCameras, isLive, t]);
 
   // Get the current camera icon based on selection and facing mode
   const CurrentCameraIcon = useMemo(() => {
@@ -520,26 +511,6 @@ const CameraControls: React.FC<CameraControlsProps> = ({
             onMouseLeave={handleMouseLeave}
             style={{ touchAction: 'none' }} // Prevent browser handling of touch gestures
           >
-            {/* Book Toggle (Left Wing) */}
-            <button
-              type="button"
-              {...{ [DATA_ACTION]: 'book-toggle' }}
-              className={`absolute right-full top-1/2 -translate-y-1/2 p-2 rounded-full flex items-center justify-center shadow-md z-0 transition-all duration-200 ${
-                isExpanded 
-                  ? 'opacity-100 -translate-x-0 pointer-events-auto' 
-                  : 'opacity-0 translate-x-6 scale-75 pointer-events-none'
-              } ${
-                imageGenerationModeEnabled
-                  ? `${selectorColors.activeBg} text-purple-600`
-                  : `${selectorColors.bg} ${selectorColors.inactiveText}`
-              } ${
-                isHighlighted('book-toggle') ? 'scale-125 z-20 ring-2 ring-purple-400' : 'hover:scale-110'
-              }`}
-              title={t('chat.bookIcon.toggleImageGen')}
-            >
-              <IconAssistantImageGen className="w-5 h-5" />
-            </button>
-
             {/* Central Camera Icon - click/tap to expand selector */}
             <button
               type="button"

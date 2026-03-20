@@ -70,7 +70,6 @@ export const initialSettings: AppSettings = {
     useVisualContext: true,
   },
   enableGoogleSearch: true,
-  imageGenerationModeEnabled: true,
   imageFocusedModeEnabled: true,
   isSuggestionMode: false,
   historyBookmarkMessageId: null,

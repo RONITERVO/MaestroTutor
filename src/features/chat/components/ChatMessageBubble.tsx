@@ -43,7 +43,6 @@ interface ChatMessageBubbleProps {
   onUserInputActivity: () => void;
   onQuotaSetupBilling?: () => void;
   onQuotaStartLive?: () => void;
-  onImageGenDisable?: () => void;
   onImageGenViewCost?: () => void;
   registerBubbleEl?: (el: HTMLDivElement | null) => void;
 }
@@ -54,7 +53,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   onToggleSpeakNativeLang, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
   onQuotaSetupBilling, onQuotaStartLive,
-  onImageGenDisable, onImageGenViewCost,
+  onImageGenViewCost,
   registerBubbleEl
 }) => {
   const isUser = message.role === 'user';
@@ -1694,19 +1693,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                          </button>
                        )}
                      </div>
-                   )}
-                   {isError && message.errorAction === 'imageGenCost' && (
+                  )}
+                  {isError && message.errorAction === 'imageGenCost' && (
                      <div className="flex flex-wrap gap-2 mt-2">
-                       {onImageGenDisable && (
-                         <button
-                           type="button"
-                           onClick={onImageGenDisable}
-                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-cta-btn-text bg-cta-btn-bg hover:bg-cta-btn-bg/80 sketchy-border-thin"
-                           style={{ fontSize: '2.8cqw', lineHeight: 1.25 }}
-                         >
-                           {t('error.imageGenDisable')}
-                         </button>
-                       )}
                        {onImageGenViewCost && (
                          <button
                            type="button"

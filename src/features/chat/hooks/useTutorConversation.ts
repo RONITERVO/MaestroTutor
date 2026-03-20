@@ -719,10 +719,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const toolValue = typeof candidate.tool === 'string' ? candidate.tool.trim().toLowerCase() : '';
     if (!isSupportedMaestroTool(toolValue)) return null;
 
-    if (toolValue === 'image' && !settingsRef.current.imageGenerationModeEnabled) {
-      return null;
-    }
-
     const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
     const fallbackText = truncateForToolPrompt(getVisibleAssistantMessageText(assistantMessage), 500);
     const prompt = typeof candidate.prompt === 'string' ? candidate.prompt.trim() : '';
@@ -1229,9 +1225,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const { liveSessionState: liveState, silentObserverState: observerState } = useMaestroStore.getState();
     const isLiveSuggestionSource = options?.responseSource === 'live' || liveState === 'active' || observerState === 'active';
     if (isLiveSuggestionSource) {
-      const liveAvailabilityInstruction = settingsRef.current.imageGenerationModeEnabled
-        ? 'Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images.'
-        : 'Image generation is currently disabled, so choose only among artifact, audio-note, music, or null.';
+      const liveAvailabilityInstruction = 'Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images.';
       suggestionPrompt +=
         `\n\nIMPORTANT: This latest tutor message came from the live audio model. Its transcript will not contain fenced artifact blocks or maestro-tool JSON even when an artifact or tool would improve the turn. For this live turn, decide yourself whether to synthesize an "artifact" object and/or a "toolRequest" object from the tutor transcript using the same quality bar as the main chat path. ${liveAvailabilityInstruction} If artifact or tool does not materially improve the response, return null for them.`;
     }
@@ -1556,7 +1550,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       await runAssistantImageGeneration({
         thinkingMessageId: assistantMessageId,
         accumulatedFullText: fullRawText,
-        currentSettingsVal: settingsRef.current,
       });
       return;
     }
@@ -1873,8 +1866,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     userImageToProcessBase64?: string;
     sanitizedDerivedHistory: any[];
   }) => {
-    if (!params.shouldGenerateUserImage || !params.currentSettingsVal.imageGenerationModeEnabled ||
-      !params.currentSettingsVal.sendWithSnapshotEnabled || params.messageType !== 'user' ||
+    if (!params.shouldGenerateUserImage || !params.currentSettingsVal.sendWithSnapshotEnabled || params.messageType !== 'user' ||
       !params.userMessageText.trim() || !params.userMessageId || params.userImageToProcessBase64) {
       return {};
     }
@@ -1977,9 +1969,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const runAssistantImageGeneration = useCallback(async (params: {
     thinkingMessageId: string;
     accumulatedFullText: string;
-    currentSettingsVal: AppSettings;
   }) => {
-    if (!params.currentSettingsVal.imageGenerationModeEnabled || !params.accumulatedFullText.trim()) return;
+    if (!params.accumulatedFullText.trim()) return;
     const existing = messagesRef.current.find((m) => m.id === params.thinkingMessageId);
     if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileVariants && existing.uploadedFileVariants.length > 0))) {
       return;
