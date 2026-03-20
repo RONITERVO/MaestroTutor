@@ -35,7 +35,7 @@ export type CompactAssistantToolRequest = {
   source?: string;
 };
 
-const TOOL_BLOCK_REGEX = /```maestro-tool\b([\s\S]*?)```/ig;
+const TOOL_BLOCK_REGEX = /(`{3,})maestro-tool\b([\s\S]*?)\1/ig;
 const COMPACT_HISTORY_MARKER_REGEX = /compactHistory"\s*:\s*true|compact history/i;
 const MAX_TOOL_TEXT_CHARS = 280;
 const MAX_ARTIFACT_PREVIEW_CHARS = 900;
@@ -93,6 +93,13 @@ const truncateMultiline = (value: string, maxChars: number): string => {
   if (!normalized) return '';
   if (normalized.length <= maxChars) return normalized;
   return `${normalized.slice(0, maxChars).trimEnd()}\n... [truncated for compact history]`;
+};
+
+const truncatePlainSegment = (value: string, maxChars: number): string => {
+  const normalized = normalizeMultiline(value);
+  if (!normalized || maxChars <= 0) return '';
+  if (normalized.length <= maxChars) return normalized;
+  return normalized.slice(0, maxChars).trimEnd();
 };
 
 const getExtension = (fileName?: string | null): string => {
@@ -155,7 +162,7 @@ const extractLastToolRequestFromRaw = (rawText?: string | null): CompactAssistan
   let match: RegExpExecArray | null;
   TOOL_BLOCK_REGEX.lastIndex = 0;
   while ((match = TOOL_BLOCK_REGEX.exec(source)) !== null) {
-    lastPayload = match[1] || '';
+    lastPayload = match[2] || '';
   }
 
   if (!lastPayload) return null;
@@ -225,14 +232,61 @@ const buildArtifactPreviewBody = (artifact: CompactAssistantArtifact): string =>
   return lines.join('\n');
 };
 
+const containsFenceBlock = (value: string): boolean => /(^|\n)`{3,}[^\n]*\n/.test(value);
+
+const computeJoinedSegmentsLength = (segments: Array<{ text: string }>): number => (
+  segments.reduce((total, segment) => total + segment.text.length, 0) + Math.max(0, segments.length - 1) * 2
+);
+
 const joinAssistantContextParts = (visibleText: string, extraParts: Array<string | null | undefined>): string => {
   const segments = [normalizeMultiline(visibleText), ...extraParts.map(part => normalizeMultiline(part || ''))]
     .filter(Boolean);
   if (!segments.length) return '';
 
-  const combined = segments.join('\n\n').trim();
-  if (combined.length <= MAX_HISTORY_TEXT_CHARS) return combined;
-  return `${combined.slice(0, MAX_HISTORY_TEXT_CHARS).trimEnd()}\n... [truncated for compact history]`;
+  const appended: Array<{ text: string; hasFence: boolean }> = [];
+  let wasTruncated = false;
+
+  for (const segment of segments) {
+    const separatorLen = appended.length ? 2 : 0;
+    const nextLength = computeJoinedSegmentsLength(appended) + separatorLen + segment.length;
+    if (nextLength <= MAX_HISTORY_TEXT_CHARS) {
+      appended.push({ text: segment, hasFence: containsFenceBlock(segment) });
+      continue;
+    }
+
+    wasTruncated = true;
+    const remaining = MAX_HISTORY_TEXT_CHARS - computeJoinedSegmentsLength(appended) - separatorLen;
+    const hasFence = containsFenceBlock(segment);
+    if (!hasFence && remaining > 0) {
+      const fitted = truncatePlainSegment(segment, remaining);
+      if (fitted) {
+        appended.push({ text: fitted, hasFence: false });
+      }
+    }
+    break;
+  }
+
+  const truncationSuffix = '\n... [truncated for compact history]';
+  if (!wasTruncated) {
+    return appended.map(segment => segment.text).join('\n\n').trim();
+  }
+
+  while (appended.length > 0 && computeJoinedSegmentsLength(appended) + truncationSuffix.length > MAX_HISTORY_TEXT_CHARS) {
+    const lastSegment = appended[appended.length - 1];
+    if (!lastSegment.hasFence) {
+      const overflow = computeJoinedSegmentsLength(appended) + truncationSuffix.length - MAX_HISTORY_TEXT_CHARS;
+      const shrunk = truncatePlainSegment(lastSegment.text, Math.max(0, lastSegment.text.length - overflow));
+      if (shrunk) {
+        appended[appended.length - 1] = { text: shrunk, hasFence: false };
+        continue;
+      }
+    }
+    appended.pop();
+  }
+
+  const combined = appended.map(segment => segment.text).join('\n\n').trim();
+  if (!combined) return truncationSuffix.trimStart();
+  return `${combined}${truncationSuffix}`;
 };
 
 export const getVisibleAssistantMessageText = (
@@ -285,11 +339,14 @@ export const serializeCompactAssistantToolBlock = (toolRequest: CompactAssistant
     compactPayload.source = toolRequest.source;
   }
 
+  const payload = JSON.stringify(compactPayload);
+  const fence = getFenceToken(payload);
+
   return [
     '[Earlier assistant turn used this tool; compact history only]',
-    '```maestro-tool',
-    JSON.stringify(compactPayload),
-    '```',
+    `${fence}maestro-tool`,
+    payload,
+    fence,
   ].join('\n');
 };
 
