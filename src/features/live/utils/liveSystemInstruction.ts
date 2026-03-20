@@ -4,6 +4,7 @@
 import { ChatMessage } from '../../../core/types';
 import { deriveHistoryForApi } from '../../chat';
 import { getGlobalProfileDB } from '../../session';
+import { buildCompactAssistantHistoryText } from '../../chat/utils/assistantMessageContext';
 
 export interface BuildLiveSystemInstructionParams {
   basePrompt: string;
@@ -30,11 +31,15 @@ export const buildLiveSystemInstruction = async ({
     contextSummary: resolveBookmarkContextSummary() || undefined,
     globalProfileText: (await getGlobalProfileDB())?.text || undefined,
   });
+  const sourceMessagesById = new Map(historySubset.map(message => [message.id, message]));
 
   let historyContext = '';
   apiHistory.forEach((entry) => {
     const role = entry.role === 'user' ? 'User' : 'Maestro';
-    const text = entry.rawAssistantResponse || entry.text || '(image)';
+    const sourceMessage = entry.messageId ? sourceMessagesById.get(entry.messageId) : undefined;
+    const text = entry.role === 'assistant'
+      ? (buildCompactAssistantHistoryText(sourceMessage) || entry.rawAssistantResponse || entry.text || '(assistant attachment)')
+      : (entry.rawAssistantResponse || entry.text || '(image)');
     historyContext += `${role}: ${text}\n`;
   });
 
@@ -44,4 +49,3 @@ export const buildLiveSystemInstruction = async ({
 
   return prompt;
 };
-

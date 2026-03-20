@@ -9,7 +9,7 @@
  * - Turn completion handling (user/model text + audio)
  * - Camera stream management for live sessions
  * - STT state preservation across session
- * - Image generation during live turns
+ * - Attachment generation via the shared suggestion-creator path
  * - Reply suggestion generation
  */
 
@@ -21,19 +21,10 @@ import {
   TtsAudioCacheEntry 
 } from '../../../core/types';
 import { useGeminiLiveConversation, LiveSessionState, pcmToWav, mapAudioSegmentsToTextLines } from '../../speech';
-import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles } from '../../../api/gemini/files';
-import { generateImage } from '../../../api/gemini/vision';
-import { getGlobalProfileDB } from '../../session';
-import { deriveHistoryForApi, computeTtsCacheKey } from '../../chat';
+import { uploadMediaToFiles } from '../../../api/gemini/files';
+import { computeTtsCacheKey } from '../../chat';
 import { processMediaForUpload } from '../../vision';
-import { MAX_MEDIA_TO_KEEP } from '../../../core/config/app';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../../core/config/activityTokens';
-import {
-  DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
-  IMAGE_GEN_SYSTEM_INSTRUCTION,
-  IMAGE_GEN_USER_PROMPT_TEMPLATE,
-  IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION
-} from '../../../core/config/prompts';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { useMaestroStore } from '../../../store';
@@ -58,7 +49,12 @@ export interface UseLiveSessionControllerConfig {
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   getHistoryRespectingBookmark: (arr: ChatMessage[]) => ChatMessage[];
   computeMaxMessagesForArray: (arr: ChatMessage[]) => number | undefined;
-  fetchAndSetReplySuggestions: (assistantMessageId: string, lastTutorMessage: string, history: ChatMessage[]) => Promise<void>;
+  fetchAndSetReplySuggestions: (
+    assistantMessageId: string,
+    lastTutorMessage: string,
+    history: ChatMessage[],
+    options?: { responseSource?: 'chat' | 'live' }
+  ) => Promise<void>;
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
   
   // Hardware
@@ -123,7 +119,6 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     addMessage,
     updateMessage,
     getHistoryRespectingBookmark,
-    computeMaxMessagesForArray,
     fetchAndSetReplySuggestions,
     upsertMessageTtsCache,
     liveVideoStream,
@@ -144,8 +139,6 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     parseGeminiResponse,
     resolveBookmarkContextSummary,
     computeHistorySubsetForMedia,
-    maestroAvatarUriRef,
-    maestroAvatarMimeTypeRef,
   } = config;
 
   const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
@@ -242,7 +235,6 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     try {
       let userMessageId = '';
       let snapshotData: any = null;
-      let snapshotUploadPromise: Promise<{ uri: string; mimeType: string } | null> | null = null;
       
       // 1. Add User Message with Snapshot & Audio
       if (userText) {
@@ -275,7 +267,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
         // Background optimization and upload for live snapshots
         if (snapshotData && userMessageId) {
-          snapshotUploadPromise = (async () => {
+          void (async () => {
             let optimizedDataUrl = snapshotData.storageOptimizedBase64;
             let optimizedMime = snapshotData.storageOptimizedMimeType;
             
@@ -308,7 +300,6 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
                 storageOptimizedImageMimeType: optimizedMime,
                 ...uploadedAttachmentState,
               });
-              return { uri: up.uri, mimeType: up.mimeType };
             } catch (e) {
               console.warn('Upload failed', e);
               // Still update persistence image
@@ -316,7 +307,6 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
                 storageOptimizedImageUrl: optimizedDataUrl,
                 storageOptimizedImageMimeType: optimizedMime
               });
-              return null;
             }
           })();
         }
@@ -406,7 +396,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
                 updatedAt: Date.now(),
                 voiceName,
               });
-            }
+          }
           }
 
           updateMessage(assistantId, {
@@ -414,131 +404,24 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             translations: translations
           });
 
-          // 4. Generate Suggestions Immediately
-          void fetchAndSetReplySuggestions(assistantId, structuredText, getHistoryRespectingBookmark(completeHistory))
+          // 4. Generate Suggestions Immediately. Live turns rely on this shared
+          // path to decide whether to attach an artifact or run a tool request.
+          void fetchAndSetReplySuggestions(assistantId, structuredText, getHistoryRespectingBookmark(completeHistory), {
+            responseSource: 'live',
+          })
             .catch((error) => {
               console.warn('Failed to fetch live reply suggestions', error);
             });
           lastFetchedSuggestionsForRef.current = assistantId;
         }
+ 
+
+ 
 
 
-      // 5. Background Image Generation (Full Context)
-      if (settingsRef.current.imageGenerationModeEnabled) {
-        const assistantStartTime = Date.now();
-        updateMessage(assistantId, {
-          isGeneratingImage: true,
-          imageGenerationStartTime: assistantStartTime
-        });
 
-        // Use FULL history context logic
-        // Exclude the latest assistant turn since it's injected into the image-gen prompt as a user turn.
-        const historySubsetForImg = computeHistorySubsetForMedia(messagesRef.current)
-          .filter(m => m.id !== assistantId);
-        let gpText: string | undefined = undefined;
-        try { gpText = (await getGlobalProfileDB())?.text || undefined; } catch {}
-
-        const apiHistory = deriveHistoryForApi(historySubsetForImg, {
-          maxMessages: computeMaxMessagesForArray(getHistoryRespectingBookmark(messagesRef.current)),
-          maxMediaToKeep: MAX_MEDIA_TO_KEEP,
-          contextSummary: resolveBookmarkContextSummary() || undefined,
-          globalProfileText: gpText,
-        });
-        
-        let latestSnapshotUri: string | undefined;
-        let latestSnapshotMime: string | undefined;
-        if (snapshotUploadPromise) {
-          try {
-            const up = await snapshotUploadPromise;
-            if (up?.uri) {
-              latestSnapshotUri = up.uri;
-              latestSnapshotMime = up.mimeType;
-            }
-          } catch { /* ignore */ }
-        }
-
-        // Add current turn if not in history subset yet
-        if (userText && !apiHistory.some(h => h.role === 'user' && h.text === userText)) {
-          apiHistory.push({ role: 'user', text: userText });
-        }
-
-        if (userText && latestSnapshotUri) {
-          const reverseIndex = [...apiHistory].reverse().findIndex(h => h.role === 'user' && h.text === userText);
-          if (reverseIndex >= 0) {
-            const idx = apiHistory.length - 1 - reverseIndex;
-            apiHistory[idx].fileParts = latestSnapshotMime
-              ? [{ fileUri: latestSnapshotUri, mimeType: latestSnapshotMime }]
-              : undefined;
-          } else {
-            apiHistory.push({
-              role: 'user',
-              text: userText,
-              fileParts: latestSnapshotMime
-                ? [{ fileUri: latestSnapshotUri, mimeType: latestSnapshotMime }]
-                : undefined,
-            });
-          }
-        }
-        // Append camera instructions as the final User message, matching standard flow context
-        apiHistory.push({ role: 'user', text: DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE });
-
-        // Construct prompt asking for "Next Image" based on this context
-        const sanitizedHistory = await sanitizeHistoryWithVerifiedUris(apiHistory as any);
-
-        // Retry flow: 1st attempt normal, retry with copyright avoidance if needed
-        (async () => {
-          for (let attempt = 0; attempt < 7; attempt++) {
-            try {
-              const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}",
-                modelText + (attempt !== 0 ? IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION : "")
-              );
-
-              const res: any = await generateImage({
-                history: sanitizedHistory,
-                latestMessageText: prompt,
-                latestMessageRole: 'user',
-                systemInstruction: IMAGE_GEN_SYSTEM_INSTRUCTION,
-                maestroAvatarUri: maestroAvatarUriRef.current || undefined,
-                maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
-              });
-
-              if (res.base64Image) {
-                const optimized = await processMediaForUpload(res.base64Image, res.mimeType, { t });
-                const up = await uploadMediaToFiles(res.base64Image, res.mimeType, 'live-gen');
-                const uploadedAttachmentState = buildUploadedAttachmentState([
-                  {
-                    id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
-                    uri: up.uri,
-                    mimeType: up.mimeType,
-                    targets: inferUploadedAttachmentTargetsForMimeType(up.mimeType),
-                    source: 'original',
-                    order: 10,
-                  },
-                ]);
-
-                updateMessage(assistantId, {
-                  imageUrl: res.base64Image,
-                  imageMimeType: res.mimeType,
-                  storageOptimizedImageUrl: optimized.dataUrl,
-                  storageOptimizedImageMimeType: optimized.mimeType,
-                  ...uploadedAttachmentState,
-                  isGeneratingImage: false,
-                  imageGenerationStartTime: undefined
-                });
-                break;
-              }
               // No base64Image returned — retry if attempts remain
-            } catch {
               // Generation threw — retry if attempts remain
-            }
-          }
-          // If all attempts failed, clear the generating state
-          const msg = messagesRef.current.find(m => m.id === assistantId);
-          if (msg && msg.isGeneratingImage) {
-            updateMessage(assistantId, { isGeneratingImage: false, imageGenerationStartTime: undefined });
-          }
-        })();
-      }
       }
     } catch (error) {
       console.error('Failed to process live turn completion:', error);
@@ -550,13 +433,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     parseGeminiResponse, 
     fetchAndSetReplySuggestions, 
     getHistoryRespectingBookmark, 
-    computeHistorySubsetForMedia, 
-    resolveBookmarkContextSummary, 
     upsertMessageTtsCache, 
-    computeMaxMessagesForArray, 
     updateMessage, 
-    maestroAvatarUriRef,
-    maestroAvatarMimeTypeRef
   ]);
 
   // --- Initialize useGeminiLiveConversation ---

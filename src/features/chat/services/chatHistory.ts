@@ -265,6 +265,7 @@ export const setChatMetaDB = async (pairId: string, meta: ChatMeta | null): Prom
 };
 
 type DerivedHistoryItem = {
+  messageId?: string;
   role: 'user' | 'assistant';
   text?: string;
   rawAssistantResponse?: string;
@@ -294,6 +295,7 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
     const history: DerivedHistoryItem[] = filtered.map(m => {
       const fileParts = selectUploadedAttachmentParts(m, 'chat');
       return {
+        messageId: m.id,
         role: (m.role === 'user' || m.role === 'assistant') ? m.role : 'user',
         text: m.text,
         rawAssistantResponse: m.rawAssistantResponse,

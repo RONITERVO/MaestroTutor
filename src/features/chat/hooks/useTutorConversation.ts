@@ -40,6 +40,11 @@ import {
 } from '../utils/fileAttachments';
 import { sanitizeSvgAnimationStructure } from '../utils/sanitizeSvgAnimationStructure';
 import {
+  buildCompactAssistantHistoryText,
+  buildCompactAssistantRawText,
+  getVisibleAssistantMessageText,
+} from '../utils/assistantMessageContext';
+import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
   normalizeUploadedAttachmentVariants,
@@ -361,17 +366,6 @@ const truncateForToolPrompt = (value: string, maxChars: number = 420): string =>
   return normalized.length > maxChars ? `${normalized.slice(0, maxChars - 1)}…` : normalized;
 };
 
-const getVisibleAssistantMessageText = (message?: ChatMessage | null): string => {
-  if (!message) return '';
-  if (message.translations?.length) {
-    return message.translations
-      .map(pair => [pair?.target?.trim(), pair?.native?.trim()].filter(Boolean).join('\n'))
-      .filter(Boolean)
-      .join('\n');
-  }
-  return message.rawAssistantResponse || message.text || '';
-};
-
 export interface UseTutorConversationConfig {
   // Translation function
   t: TranslationFunction;
@@ -447,7 +441,12 @@ export interface UseTutorConversationReturn {
   handleSendMessageInternalRef: React.MutableRefObject<any>;
   
   // Suggestion handlers
-  fetchAndSetReplySuggestions: (assistantMessageId: string, lastTutorMessage: string, history: ChatMessage[]) => Promise<void>;
+  fetchAndSetReplySuggestions: (
+    assistantMessageId: string,
+    lastTutorMessage: string,
+    history: ChatMessage[],
+    options?: { responseSource?: 'chat' | 'live' }
+  ) => Promise<void>;
   handleCreateSuggestion: (textToTranslate: string) => Promise<void>;
   handleSuggestionInteraction: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
   
@@ -713,10 +712,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const candidate = toolRequest as SuggestionCreatorToolRequest;
     const toolValue = typeof candidate.tool === 'string' ? candidate.tool.trim().toLowerCase() : '';
     if (!isSupportedMaestroTool(toolValue)) return null;
-
-    if (toolValue === 'image' && !settingsRef.current.imageGenerationModeEnabled) {
-      return null;
-    }
 
     const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
     const fallbackText = truncateForToolPrompt(getVisibleAssistantMessageText(assistantMessage), 500);
@@ -1114,7 +1109,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const fetchAndSetReplySuggestions = useCallback(async (
     assistantMessageId: string, 
     lastTutorMessage: string, 
-    history: ChatMessage[]
+    history: ChatMessage[],
+    options?: { responseSource?: 'chat' | 'live' }
   ) => {
     let resolvedArtifact: unknown = null;
     let resolvedToolRequest: ReturnType<typeof normalizeSuggestionCreatorToolRequest> = null;
@@ -1127,12 +1123,61 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       const normalizedArtifact = normalizeSuggestionCreatorArtifact(resolvedArtifact);
       const hasRenderableArtifact = Boolean(normalizedArtifact);
+      const isLiveSuggestionSource = options?.responseSource === 'live';
+      const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
+      const visibleAssistantText = getVisibleAssistantMessageText(assistantMessage) || lastTutorMessage;
+      const buildLiveToolRawText = (
+        baseText: string,
+        toolRequest: NonNullable<ReturnType<typeof normalizeSuggestionCreatorToolRequest>>
+      ) => {
+        const normalizedBaseText = baseText.trim();
+        const promptText = toolRequest.tool === 'image'
+          ? (toolRequest.prompt || '').trim()
+          : '';
+        const rawSegments = [normalizedBaseText];
+        if (promptText && !rawSegments.includes(promptText)) {
+          rawSegments.push(promptText);
+        }
+        return buildCompactAssistantRawText(rawSegments.filter(Boolean).join('\n\n'), {
+          toolRequest: {
+            ...toolRequest,
+            source: 'live-suggestion-creator',
+          },
+        });
+      };
+
+      if (isLiveSuggestionSource && (hasRenderableArtifact || resolvedToolRequest)) {
+        const compactLiveRawText = hasRenderableArtifact
+          ? buildCompactAssistantRawText(visibleAssistantText, {
+              artifact: normalizedArtifact
+                ? {
+                    mimeType: normalizedArtifact.mimeType,
+                    fileName: normalizedArtifact.fileName,
+                    dataUrl: normalizedArtifact.dataUrl,
+                    source: 'live-suggestion-creator',
+                  }
+                : null,
+            })
+          : (resolvedToolRequest
+              ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
+              : '');
+
+        if (compactLiveRawText) {
+          updateMessage(assistantMessageId, { llmRawResponse: compactLiveRawText });
+        }
+      }
+
       if (hasRenderableArtifact || !resolvedToolRequest) {
         finalizeAssistantArtifact(assistantMessageId, normalizedArtifact);
       }
       if (resolvedToolRequest) {
         const toolMessageId = hasRenderableArtifact
-          ? addMessage({ role: 'assistant' })
+          ? addMessage({
+              role: 'assistant',
+              llmRawResponse: isLiveSuggestionSource
+                ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
+                : undefined,
+            })
           : assistantMessageId;
         await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
       }
@@ -1186,7 +1231,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         if (msg.role === 'user') {
           return `User: ${msg.text || '(sent an image)'}`;
         }
-        return `Tutor: ${msg.translations?.[0]?.target || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
+        return `Tutor: ${buildCompactAssistantHistoryText(msg) || msg.translations?.[0]?.target || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
       })
       .join('\n');
 
@@ -1217,6 +1262,14 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       .replace("{conversation_history_placeholder}", historyForPrompt || "No history yet.")
       .replace("{previous_chat_summary_placeholder}", previousChatSummary || "")
       .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
+
+    // Live sessions use the audio model transcript, so the tutor turn will not
+    // contain fenced artifact/tool blocks even when an attachment would help.
+    const isLiveSuggestionSource = options?.responseSource === 'live';
+    if (isLiveSuggestionSource) {
+      suggestionPrompt +=
+        `\n\nIMPORTANT: This latest tutor message came from the live audio model. Its transcript will not contain fenced artifact blocks or maestro-tool JSON even when an artifact or tool would improve the turn. For this live turn, decide yourself whether to synthesize an "artifact" object and/or a "toolRequest" object from the tutor transcript using the same quality bar as the main chat path. Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images or audio-note. Do consider creating different artifact, not repeating same that is already in the ui, if this is likely a followup to already created artifact on previous message. If artifact or tool does not materially improve the response, return null for them.`;
+    }
 
     const MAX_RETRIES = 2;
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -1538,7 +1591,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       await runAssistantImageGeneration({
         thinkingMessageId: assistantMessageId,
         accumulatedFullText: fullRawText,
-        currentSettingsVal: settingsRef.current,
       });
       return;
     }
@@ -1855,8 +1907,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     userImageToProcessBase64?: string;
     sanitizedDerivedHistory: any[];
   }) => {
-    if (!params.shouldGenerateUserImage || !params.currentSettingsVal.imageGenerationModeEnabled ||
-      !params.currentSettingsVal.sendWithSnapshotEnabled || params.messageType !== 'user' ||
+    if (!params.shouldGenerateUserImage || !params.currentSettingsVal.sendWithSnapshotEnabled || params.messageType !== 'user' ||
       !params.userMessageText.trim() || !params.userMessageId || params.userImageToProcessBase64) {
       return {};
     }
@@ -1959,9 +2010,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const runAssistantImageGeneration = useCallback(async (params: {
     thinkingMessageId: string;
     accumulatedFullText: string;
-    currentSettingsVal: AppSettings;
   }) => {
-    if (!params.currentSettingsVal.imageGenerationModeEnabled || !params.accumulatedFullText.trim()) return;
+    if (!params.accumulatedFullText.trim()) return;
     const existing = messagesRef.current.find((m) => m.id === params.thinkingMessageId);
     if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileVariants && existing.uploadedFileVariants.length > 0))) {
       return;

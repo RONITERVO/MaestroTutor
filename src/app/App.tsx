@@ -458,15 +458,6 @@ const App: React.FC = () => {
     });
   }, [handleSettingsChange, settingsRef]);
 
-  const handleToggleImageGenerationMode = useCallback(() => {
-    const willBeEnabled = !settingsRef.current.imageGenerationModeEnabled;
-    handleSettingsChange('imageGenerationModeEnabled', willBeEnabled);
-    if (!willBeEnabled && settingsRef.current.selectedCameraId === IMAGE_GEN_CAMERA_ID) {
-      const firstPhysicalCamera = availableCamerasRef.current[0];
-      handleSettingsChange('selectedCameraId', firstPhysicalCamera ? firstPhysicalCamera.deviceId : null);
-    }
-  }, [handleSettingsChange, settingsRef, availableCamerasRef]);
-
   const toggleFocusedModeState = useCallback(() => {
     handleSettingsChange('imageFocusedModeEnabled', !settingsRef.current.imageFocusedModeEnabled);
   }, [handleSettingsChange, settingsRef]);
@@ -565,8 +556,9 @@ const App: React.FC = () => {
     const currentPairId = settings.selectedLanguagePairId;
     const previousPairId = previousLanguagePairIdRef.current;
 
-    if (!currentPairId || !previousPairId || currentPairId === previousPairId) {
-      previousLanguagePairIdRef.current = currentPairId;
+    // Any pair transition, including first-time selection from null, changes the
+    // system prompt context for live and silent-observer sessions.
+    if (currentPairId === previousPairId) {
       return;
     }
     previousLanguagePairIdRef.current = currentPairId;
@@ -626,8 +618,6 @@ const App: React.FC = () => {
   }, [handleApiKeyGateOpen]);
 
   const handleQuotaStartLive = useCallback(async () => {
-    // Disable image generation - live is free, image gen costs money
-    handleSettingsChange('imageGenerationModeEnabled', false);
     // Select the first available physical camera if none is selected
     const currentCameraId = settingsRef.current.selectedCameraId;
     if (!currentCameraId || currentCameraId === IMAGE_GEN_CAMERA_ID) {
@@ -660,14 +650,6 @@ const App: React.FC = () => {
       // handleStartLiveSession already handles its own errors
     }
   }, [settingsRef, availableCamerasRef, handleSettingsChange, handleStartLiveSessionWithObserverStop, visualContextStreamRef]);
-
-  const handleImageGenDisable = useCallback(() => {
-    handleSettingsChange('imageGenerationModeEnabled', false);
-    if (settingsRef.current.selectedCameraId === IMAGE_GEN_CAMERA_ID) {
-      const firstPhysicalCamera = availableCamerasRef.current[0];
-      handleSettingsChange('selectedCameraId', firstPhysicalCamera ? firstPhysicalCamera.deviceId : null);
-    }
-  }, [handleSettingsChange, settingsRef, availableCamerasRef]);
 
   const handleImageGenViewCost = useCallback(() => {
     handleApiKeyGateOpen();
@@ -793,7 +775,6 @@ const App: React.FC = () => {
               }
               handleUserInputActivity();
             }}
-            onToggleImageGenerationMode={handleToggleImageGenerationMode}
             onToggleImageFocusedMode={handleToggleImageFocusedMode}
             onStartLiveSession={handleStartLiveSessionWithObserverStop}
             onStopLiveSession={handleStopLiveSession}
@@ -802,7 +783,6 @@ const App: React.FC = () => {
             onCreateSuggestion={handleCreateSuggestion}
             onQuotaSetupBilling={handleQuotaSetupBilling}
             onQuotaStartLive={handleQuotaStartLive}
-            onImageGenDisable={handleImageGenDisable}
             onImageGenViewCost={handleImageGenViewCost}
           />
         </main>
