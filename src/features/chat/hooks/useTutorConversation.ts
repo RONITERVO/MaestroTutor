@@ -447,7 +447,12 @@ export interface UseTutorConversationReturn {
   handleSendMessageInternalRef: React.MutableRefObject<any>;
   
   // Suggestion handlers
-  fetchAndSetReplySuggestions: (assistantMessageId: string, lastTutorMessage: string, history: ChatMessage[]) => Promise<void>;
+  fetchAndSetReplySuggestions: (
+    assistantMessageId: string,
+    lastTutorMessage: string,
+    history: ChatMessage[],
+    options?: { responseSource?: 'chat' | 'live' }
+  ) => Promise<void>;
   handleCreateSuggestion: (textToTranslate: string) => Promise<void>;
   handleSuggestionInteraction: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
   
@@ -1114,7 +1119,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const fetchAndSetReplySuggestions = useCallback(async (
     assistantMessageId: string, 
     lastTutorMessage: string, 
-    history: ChatMessage[]
+    history: ChatMessage[],
+    options?: { responseSource?: 'chat' | 'live' }
   ) => {
     let resolvedArtifact: unknown = null;
     let resolvedToolRequest: ReturnType<typeof normalizeSuggestionCreatorToolRequest> = null;
@@ -1217,6 +1223,18 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       .replace("{conversation_history_placeholder}", historyForPrompt || "No history yet.")
       .replace("{previous_chat_summary_placeholder}", previousChatSummary || "")
       .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
+
+    // Live sessions use the audio model transcript, so the tutor turn will not
+    // contain fenced artifact/tool blocks even when an attachment would help.
+    const { liveSessionState: liveState, silentObserverState: observerState } = useMaestroStore.getState();
+    const isLiveSuggestionSource = options?.responseSource === 'live' || liveState === 'active' || observerState === 'active';
+    if (isLiveSuggestionSource) {
+      const liveAvailabilityInstruction = settingsRef.current.imageGenerationModeEnabled
+        ? 'Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images.'
+        : 'Image generation is currently disabled, so choose only among artifact, audio-note, music, or null.';
+      suggestionPrompt +=
+        `\n\nIMPORTANT: This latest tutor message came from the live audio model. Its transcript will not contain fenced artifact blocks or maestro-tool JSON even when an artifact or tool would improve the turn. For this live turn, decide yourself whether to synthesize an "artifact" object and/or a "toolRequest" object from the tutor transcript using the same quality bar as the main chat path. ${liveAvailabilityInstruction} If artifact or tool does not materially improve the response, return null for them.`;
+    }
 
     const MAX_RETRIES = 2;
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
