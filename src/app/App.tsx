@@ -556,8 +556,9 @@ const App: React.FC = () => {
     const currentPairId = settings.selectedLanguagePairId;
     const previousPairId = previousLanguagePairIdRef.current;
 
-    if (!currentPairId || !previousPairId || currentPairId === previousPairId) {
-      previousLanguagePairIdRef.current = currentPairId;
+    // Any pair transition, including first-time selection from null, changes the
+    // system prompt context for live and silent-observer sessions.
+    if (currentPairId === previousPairId) {
       return;
     }
     previousLanguagePairIdRef.current = currentPairId;
