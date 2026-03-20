@@ -1126,24 +1126,41 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const isLiveSuggestionSource = options?.responseSource === 'live';
       const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
       const visibleAssistantText = getVisibleAssistantMessageText(assistantMessage) || lastTutorMessage;
+      const buildLiveToolRawText = (
+        baseText: string,
+        toolRequest: NonNullable<ReturnType<typeof normalizeSuggestionCreatorToolRequest>>
+      ) => {
+        const normalizedBaseText = baseText.trim();
+        const promptText = toolRequest.tool === 'image'
+          ? (toolRequest.prompt || '').trim()
+          : '';
+        const rawSegments = [normalizedBaseText];
+        if (promptText && !rawSegments.includes(promptText)) {
+          rawSegments.push(promptText);
+        }
+        return buildCompactAssistantRawText(rawSegments.filter(Boolean).join('\n\n'), {
+          toolRequest: {
+            ...toolRequest,
+            source: 'live-suggestion-creator',
+          },
+        });
+      };
 
       if (isLiveSuggestionSource && (hasRenderableArtifact || resolvedToolRequest)) {
-        const compactLiveRawText = buildCompactAssistantRawText(visibleAssistantText, {
-          artifact: normalizedArtifact
-            ? {
-                mimeType: normalizedArtifact.mimeType,
-                fileName: normalizedArtifact.fileName,
-                dataUrl: normalizedArtifact.dataUrl,
-                source: 'live-suggestion-creator',
-              }
-            : null,
-          toolRequest: !hasRenderableArtifact && resolvedToolRequest
-            ? {
-                ...resolvedToolRequest,
-                source: 'live-suggestion-creator',
-              }
-            : null,
-        });
+        const compactLiveRawText = hasRenderableArtifact
+          ? buildCompactAssistantRawText(visibleAssistantText, {
+              artifact: normalizedArtifact
+                ? {
+                    mimeType: normalizedArtifact.mimeType,
+                    fileName: normalizedArtifact.fileName,
+                    dataUrl: normalizedArtifact.dataUrl,
+                    source: 'live-suggestion-creator',
+                  }
+                : null,
+            })
+          : (resolvedToolRequest
+              ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
+              : '');
 
         if (compactLiveRawText) {
           updateMessage(assistantMessageId, { llmRawResponse: compactLiveRawText });
@@ -1158,12 +1175,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           ? addMessage({
               role: 'assistant',
               llmRawResponse: isLiveSuggestionSource
-                ? buildCompactAssistantRawText('', {
-                    toolRequest: {
-                      ...resolvedToolRequest,
-                      source: 'live-suggestion-creator',
-                    },
-                  })
+                ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
                 : undefined,
             })
           : assistantMessageId;
