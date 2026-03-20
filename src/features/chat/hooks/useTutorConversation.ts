@@ -40,6 +40,11 @@ import {
 } from '../utils/fileAttachments';
 import { sanitizeSvgAnimationStructure } from '../utils/sanitizeSvgAnimationStructure';
 import {
+  buildCompactAssistantHistoryText,
+  buildCompactAssistantRawText,
+  getVisibleAssistantMessageText,
+} from '../utils/assistantMessageContext';
+import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
   normalizeUploadedAttachmentVariants,
@@ -359,17 +364,6 @@ const truncateForToolPrompt = (value: string, maxChars: number = 420): string =>
   const normalized = (value || '').replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   return normalized.length > maxChars ? `${normalized.slice(0, maxChars - 1)}…` : normalized;
-};
-
-const getVisibleAssistantMessageText = (message?: ChatMessage | null): string => {
-  if (!message) return '';
-  if (message.translations?.length) {
-    return message.translations
-      .map(pair => [pair?.target?.trim(), pair?.native?.trim()].filter(Boolean).join('\n'))
-      .filter(Boolean)
-      .join('\n');
-  }
-  return message.rawAssistantResponse || message.text || '';
 };
 
 export interface UseTutorConversationConfig {
@@ -1129,12 +1123,49 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       const normalizedArtifact = normalizeSuggestionCreatorArtifact(resolvedArtifact);
       const hasRenderableArtifact = Boolean(normalizedArtifact);
+      const isLiveSuggestionSource = options?.responseSource === 'live';
+      const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
+      const visibleAssistantText = getVisibleAssistantMessageText(assistantMessage) || lastTutorMessage;
+
+      if (isLiveSuggestionSource && (hasRenderableArtifact || resolvedToolRequest)) {
+        const compactLiveRawText = buildCompactAssistantRawText(visibleAssistantText, {
+          artifact: normalizedArtifact
+            ? {
+                mimeType: normalizedArtifact.mimeType,
+                fileName: normalizedArtifact.fileName,
+                dataUrl: normalizedArtifact.dataUrl,
+                source: 'live-suggestion-creator',
+              }
+            : null,
+          toolRequest: !hasRenderableArtifact && resolvedToolRequest
+            ? {
+                ...resolvedToolRequest,
+                source: 'live-suggestion-creator',
+              }
+            : null,
+        });
+
+        if (compactLiveRawText) {
+          updateMessage(assistantMessageId, { llmRawResponse: compactLiveRawText });
+        }
+      }
+
       if (hasRenderableArtifact || !resolvedToolRequest) {
         finalizeAssistantArtifact(assistantMessageId, normalizedArtifact);
       }
       if (resolvedToolRequest) {
         const toolMessageId = hasRenderableArtifact
-          ? addMessage({ role: 'assistant' })
+          ? addMessage({
+              role: 'assistant',
+              llmRawResponse: isLiveSuggestionSource
+                ? buildCompactAssistantRawText('', {
+                    toolRequest: {
+                      ...resolvedToolRequest,
+                      source: 'live-suggestion-creator',
+                    },
+                  })
+                : undefined,
+            })
           : assistantMessageId;
         await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
       }
@@ -1188,7 +1219,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         if (msg.role === 'user') {
           return `User: ${msg.text || '(sent an image)'}`;
         }
-        return `Tutor: ${msg.translations?.[0]?.target || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
+        return `Tutor: ${buildCompactAssistantHistoryText(msg) || msg.translations?.[0]?.target || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
       })
       .join('\n');
 
@@ -1225,9 +1256,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const { liveSessionState: liveState, silentObserverState: observerState } = useMaestroStore.getState();
     const isLiveSuggestionSource = options?.responseSource === 'live' || liveState === 'active' || observerState === 'active';
     if (isLiveSuggestionSource) {
-      const liveAvailabilityInstruction = 'Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images.';
       suggestionPrompt +=
-        `\n\nIMPORTANT: This latest tutor message came from the live audio model. Its transcript will not contain fenced artifact blocks or maestro-tool JSON even when an artifact or tool would improve the turn. For this live turn, decide yourself whether to synthesize an "artifact" object and/or a "toolRequest" object from the tutor transcript using the same quality bar as the main chat path. ${liveAvailabilityInstruction} If artifact or tool does not materially improve the response, return null for them.`;
+        `\n\nIMPORTANT: This latest tutor message came from the live audio model. Its transcript will not contain fenced artifact blocks or maestro-tool JSON even when an artifact or tool would improve the turn. For this live turn, decide yourself whether to synthesize an "artifact" object and/or a "toolRequest" object from the tutor transcript using the same quality bar as the main chat path. Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images or audio-note. Do consider creating different artifact, not repeating same that is already in the ui, if this is likely a followup to already created artifact on previous message. If artifact or tool does not materially improve the response, return null for them.`;
     }
 
     const MAX_RETRIES = 2;
