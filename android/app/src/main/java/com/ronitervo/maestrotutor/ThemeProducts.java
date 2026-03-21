@@ -3,7 +3,6 @@
 
 package com.ronitervo.maestrotutor;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -25,7 +24,7 @@ public final class ThemeProducts {
     public static final String THEME_DARK_NEON = "theme_dark_neon";
 
     /** All purchasable theme product IDs. */
-    public static final List<String> ALL_PRODUCT_IDS = Arrays.asList(
+    public static final List<String> ALL_PRODUCT_IDS = List.of(
             THEME_OCEAN_BLUE,
             THEME_SUNSET_GOLD,
             THEME_DARK_NEON

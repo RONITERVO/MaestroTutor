@@ -75,6 +75,7 @@ public class ThemeBillingManager {
 
     private final Context applicationContext;
     private BillingClient billingClient;
+    private boolean isConnecting;
 
     /** Cached product details indexed by productId. */
     private final Map<String, ProductDetails> productDetailsCache = new HashMap<>();
@@ -117,7 +118,7 @@ public class ThemeBillingManager {
      * Safe to call multiple times; if a client is already connected it no-ops.
      */
     public void startConnection() {
-        if (billingClient != null && billingClient.isReady()) {
+        if (isConnecting || (billingClient != null && billingClient.isReady())) {
             return;
         }
 
@@ -126,9 +127,11 @@ public class ThemeBillingManager {
                 .enablePendingPurchases()
                 .build();
 
+        isConnecting = true;
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                isConnecting = false;
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     Log.d(TAG, "BillingClient connected.");
                     restorePurchases();
@@ -142,6 +145,7 @@ public class ThemeBillingManager {
             @Override
             public void onBillingServiceDisconnected() {
                 Log.w(TAG, "BillingClient disconnected. Will reconnect on next operation.");
+                isConnecting = false;
                 // Do NOT retry infinitely; reconnect lazily on next method call.
                 billingClient = null;
             }
@@ -150,6 +154,7 @@ public class ThemeBillingManager {
 
     /** Releases the billing client. Call from your plugin's {@code handleOnDestroy()}. */
     public void endConnection() {
+        isConnecting = false;
         if (billingClient != null) {
             billingClient.endConnection();
             billingClient = null;
@@ -210,7 +215,13 @@ public class ThemeBillingManager {
      * @param productId  One of the IDs defined in {@link ThemeProducts}.
      */
     public void launchBillingFlow(@NonNull Activity activity, @NonNull String productId) {
-        if (!ensureConnected()) return;
+        if (!ensureConnected()) {
+            notifyError(buildBillingResult(
+                    BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+                    "BillingClient is not ready yet. Retry after setup finishes."
+            ));
+            return;
+        }
 
         ProductDetails productDetails = productDetailsCache.get(productId);
         if (productDetails == null) {
@@ -235,6 +246,14 @@ public class ThemeBillingManager {
 
     /** Helper: query product details then immediately launch the billing flow. */
     private void queryProductDetailsAndThen(@NonNull Activity activity, @NonNull String productId) {
+        if (!ensureConnected()) {
+            notifyError(buildBillingResult(
+                    BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+                    "BillingClient is not ready yet. Retry after setup finishes."
+            ));
+            return;
+        }
+
         List<QueryProductDetailsParams.Product> productList = List.of(
                 QueryProductDetailsParams.Product.newBuilder()
                         .setProductId(productId)
@@ -268,6 +287,7 @@ public class ThemeBillingManager {
             }
         } else if (code == BillingClient.BillingResponseCode.USER_CANCELED) {
             Log.d(TAG, "User cancelled purchase.");
+            notifyPurchasesUpdated();
         } else {
             Log.w(TAG, "Purchase update error " + code + ": " + billingResult.getDebugMessage());
             notifyError(billingResult);
@@ -287,6 +307,7 @@ public class ThemeBillingManager {
         if (purchase.getPurchaseState() != Purchase.PurchaseState.PURCHASED) {
             // PENDING or UNSPECIFIED — do not unlock yet.
             Log.d(TAG, "Purchase pending for: " + purchase.getProducts());
+            notifyPurchasesUpdated();
             return;
         }
 
@@ -388,12 +409,18 @@ public class ThemeBillingManager {
      * and returns {@code false} so the caller can retry after the callback fires.
      */
     private boolean ensureConnected() {
-        if (billingClient == null || !billingClient.isReady()) {
-            Log.d(TAG, "BillingClient not ready. Starting connection.");
-            startConnection();
+        if (billingClient != null && billingClient.isReady()) {
+            return true;
+        }
+
+        if (isConnecting) {
+            Log.d(TAG, "BillingClient connection already in progress.");
             return false;
         }
-        return true;
+
+        Log.d(TAG, "BillingClient not ready. Starting connection.");
+        startConnection();
+        return false;
     }
 
     private void notifyPurchasesUpdated() {
@@ -412,5 +439,13 @@ public class ThemeBillingManager {
         if (billingErrorCallback != null) {
             billingErrorCallback.onBillingError(result.getResponseCode(), result.getDebugMessage());
         }
+    }
+
+    @NonNull
+    private BillingResult buildBillingResult(int responseCode, @NonNull String debugMessage) {
+        return BillingResult.newBuilder()
+                .setResponseCode(responseCode)
+                .setDebugMessage(debugMessage)
+                .build();
     }
 }
