@@ -30,6 +30,7 @@ export const THEME_PRODUCT_IDS = {
   FOREST: 'theme_forest',
   LAVENDER: 'theme_lavender',
   SPECTRUM: 'theme_spectrum',
+  GRAPHITE: 'theme_graphite',
 } as const;
 
 export type ThemeProductId = (typeof THEME_PRODUCT_IDS)[keyof typeof THEME_PRODUCT_IDS];
@@ -98,5 +99,12 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
     description: 'The four iconic primaries — blue, red, yellow, and green — each given a dedicated role across the entire UI.',
     icon: '🌈',
     previewColors: ['214 89% 55%', '5 70% 52%', '45 96% 48%', '153 76% 38%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.GRAPHITE,
+    displayName: 'Graphite',
+    description: 'Pure black on white — every element expressed in graphite grays, like a masterful pencil sketch with no color to distract.',
+    icon: '✏️',
+    previewColors: ['40 8% 97%', '220 8% 14%', '220 6% 28%', '220 5% 60%'],
   },
 ];
