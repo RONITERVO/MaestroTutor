@@ -83,14 +83,16 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
     const scheduleScrollEnd = useCallback(() => {
         if (isScrollingProgrammatically.current) return;
         if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        // Use longer timeout for better mobile scroll momentum handling
+        // Keep a timer-based fallback even when scrollend exists because
+        // some mobile browsers report support but do not fire it reliably.
         scrollTimeoutRef.current = window.setTimeout(handleScrollEnd, 250);
     }, [handleScrollEnd]);
 
     const handleTouchStart = useCallback(() => {
         isTouchingRef.current = true;
         if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    }, []);
+        onInteract?.();
+    }, [onInteract]);
 
     const handleTouchEnd = useCallback(() => {
         isTouchingRef.current = false;
@@ -102,7 +104,6 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
         const container = scrollContainerRef.current;
         if (!container) return;
 
-        // Use scrollend event if supported (modern browsers)
         const supportsScrollEnd = 'onscrollend' in window;
         
         const onScroll = () => {
@@ -112,12 +113,14 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                 if (scrollingTimeoutRef.current) clearTimeout(scrollingTimeoutRef.current);
                 scrollingTimeoutRef.current = window.setTimeout(() => setIsScrolling(false), 300);
             }
-            if (!supportsScrollEnd) {
-                scheduleScrollEnd();
-            }
+            scheduleScrollEnd();
         };
         
         const onScrollEnd = () => {
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+                scrollTimeoutRef.current = null;
+            }
             if (!isTouchingRef.current) {
                 handleScrollEnd();
             }
