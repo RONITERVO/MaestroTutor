@@ -128,7 +128,7 @@ public class ThemeBillingManager {
 
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
-            public void onBillingSetup(@NonNull BillingResult billingResult) {
+            public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     Log.d(TAG, "BillingClient connected.");
                     restorePurchases();
