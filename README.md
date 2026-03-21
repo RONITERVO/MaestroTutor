@@ -6,7 +6,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Try%20It%20Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chatwithmaestro.com)
 &nbsp;
-[![Android](https://img.shields.io/badge/Android%20App-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#getting-started)
+[![Android](https://img.shields.io/badge/Android%20App-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#getting-started-developer)
 &nbsp;
 [![Gemini API](https://img.shields.io/badge/Gemini%20API-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
@@ -27,9 +27,9 @@
 >
 > The globe dissolves. A **notebook** opens. Your tutor is ready.
 >
-> You type a sentence in English. Maestro replies in Japanese — then below it, in English — each phrase highlighted in soft yellow, each translation in light blue. You tap a line. It **speaks**. You hold the mic and reply. Maestro listens. You stumble. You look at the **Suggestios**  — three Japanese phrases appear, each one exactly right for this moment. You tap one and it expands: the English meaning slides open. It speaks out loud. You speak, and the conversation moves on.
+> You type a sentence in English. Maestro replies in Japanese — then below it, in English — each phrase highlighted in soft yellow, each translation in light blue. You tap a line. It **speaks**. You hold the mic and reply. Maestro listens. You stumble. You look at the **Suggestions**  — three Japanese phrases appear, each one exactly right for this moment. You tap one and it expands: the English meaning slides open. It speaks out loud. You speak, and the conversation moves on.
 >
-> You flip on the camera. You hold up your coffee cup. You don't know the word. You draw a circle on the photo. Maestro names it, explains it, uses it in a sentence, and **generates an visual or auditory aid, could be a game, or an image, or even music** of a coffee shop to anchor the memory. You tap the red button. Now you're in a **live duplex call** — no turns, no long waiting — you speak, Maestro speaks, you interrupt, it pauses. Natural. You hold your phone up. It sees your room and weaves it into the lesson. 
+> You flip on the camera. You hold up your coffee cup. You don't know the word. You draw a circle on the photo. Maestro names it, explains it, uses it in a sentence, and **generates a visual or auditory aid—such as a game, an image, or even music** of a coffee shop to anchor the memory. You tap the red button. Now you're in a **live duplex call** — no turns, no long waiting — you speak, Maestro speaks, you interrupt, it pauses. Natural. You hold your phone up. It sees your room and weaves it into the lesson. 
 
 You see how the conversation builds on paper — with text, audio, and extra elements to aid teaching with images, minigames, charts, music in the same chat message you see on the chat page paper.
 >
@@ -88,7 +88,7 @@ Maestro doesn't just remember text. Every message preserves a full picture of th
 
 | Attachment type | What's preserved |
 |---|---|
-| 🎤 **Voice recording** | Your or Maestros raw audio, stored with the message — playable in-line |
+| 🎤 **Voice recording** | Your or Maestro's raw audio, stored with the message — playable in-line |
 | 📸 **Camera snapshot** | A photo taken at the moment you spoke or by you using the camera manually, stored with the turn |
 | 🖼️ **Images** | Generated images bring the text to life with visual content tuned to the context. Some look hand drawn, others realistic.|
 | 📄 **PDFs** | Inline viewer with annotation support — draw directly on the page, same as draw in images. |
@@ -106,7 +106,7 @@ Maestro doesn't just remember text. Every message preserves a full picture of th
 
 ## Gemini Live: the full-duplex call
 
-The **red button** on the camera view starts a live, bidirectional audio + video session. Exacly same Maestro features as normal chat, but No turns. No waiting. Just conversation. Every verbal exchange saved normally in chat, with possible teaching aid in form of image, game, chart or music. Only drawback is that you cant send files yourself, other than your camera feed and voice that are captured automatically as you speak.
+The **red button** on the camera view starts a live, bidirectional audio + video session. Exactly the same Maestro features as normal chat, but No turns. No waiting. Just conversation. Every verbal exchange saved normally in chat, with possible teaching aid in form of image, game, chart or music. The only drawback is that you can't send files yourself, other than your camera feed and voice that are captured automatically as you speak.
 
 ```
           ┌──────────────────────┐
@@ -226,7 +226,7 @@ Upload any image as Maestro's avatar. It's more than cosmetic — the avatar is 
 
 ### 👤 Your profile
 
-You can always tap the pencil icon in session controls to add or modify your name, background, or learning goals. — You dont have to write any it yourself. Maestro will personalize this profile as you speak to get to know who you are.
+You can always tap the pencil icon in session controls to add or modify your name, background, or learning goals. — You don't have to write any of it yourself. Maestro will personalize this profile as you speak to get to know who you are.
 
 ---
 
