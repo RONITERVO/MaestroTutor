@@ -4,7 +4,7 @@
 
 **The AI tutor that hears you, sees your world, and thinks in two languages at once.**
 
-[![Live Demo](https://img.shields.io/badge/Try%20It%20Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://ronitervo.github.io/MaestroTutor/)
+[![Live Demo](https://img.shields.io/badge/Try%20It%20Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chatwithmaestro.com)
 &nbsp;
 [![Android](https://img.shields.io/badge/Android%20App-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#getting-started)
 &nbsp;
