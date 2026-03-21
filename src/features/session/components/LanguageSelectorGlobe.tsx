@@ -39,8 +39,10 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     const nativeLang = ALL_LANGUAGES.find(l => l.langCode === nativeLangCode) || null;
     const targetLang = ALL_LANGUAGES.find(l => l.langCode === targetLangCode) || null;
     const [hoveredLang, setHoveredLang] = useState<LanguageDefinition | null>(null);
+    const [isWheelOverlayActive, setIsWheelOverlayActive] = useState(false);
     const globeRef = useRef<HTMLDivElement>(null);
     const globeContainerRef = useRef<HTMLDivElement>(null);
+    const wheelOverlayTimeoutRef = useRef<number | null>(null);
 
     // Time-driven realism: day/night terminator + sun glint
     const [timeAngleDeg, setTimeAngleDeg] = useState(0);
@@ -57,6 +59,18 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
     // Pre-compute flag positions on the unit sphere (stable unless language list changes)
     const spherePositions = useMemo(() => fibonacciSphere(ALL_LANGUAGES.length), []);
+
+    const handleInteraction = useCallback(() => {
+        onInteract();
+        setIsWheelOverlayActive(true);
+        if (wheelOverlayTimeoutRef.current !== null) {
+            window.clearTimeout(wheelOverlayTimeoutRef.current);
+        }
+        wheelOverlayTimeoutRef.current = window.setTimeout(() => {
+            setIsWheelOverlayActive(false);
+            wheelOverlayTimeoutRef.current = null;
+        }, 1200);
+    }, [onInteract]);
 
     // Update day/night and sun glint by local time (subtle, realistic)
     useEffect(() => {
@@ -118,9 +132,9 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
             cancelAnimationFrame(animationFrameRef.current);
             animationFrameRef.current = null;
         }
-        onInteract();
+        handleInteraction();
         (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    }, [onInteract]);
+    }, [handleInteraction]);
 
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
         if (!isDraggingRef.current) return;
@@ -166,21 +180,24 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     // Wheel → horizontal rotation
     const handleWheel = useCallback((e: React.WheelEvent) => {
         e.preventDefault();
-        onInteract();
+        handleInteraction();
         const delta = e.deltaY > 0 ? 0.08 : -0.08;
         setRotLng(prev => prev + delta);
-    }, [onInteract]);
+    }, [handleInteraction]);
 
     // Cleanup animation frame on unmount
     useEffect(() => {
         return () => {
             if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+            if (wheelOverlayTimeoutRef.current !== null) {
+                window.clearTimeout(wheelOverlayTimeoutRef.current);
+            }
         };
     }, []);
 
     // ── Flag click ──
     const handleFlagClick = (lang: LanguageDefinition) => {
-        onInteract();
+        handleInteraction();
         if (!nativeLang) {
             onSelectNative(lang.langCode);
         } else if (!targetLang && lang.langCode !== nativeLang.langCode) {
@@ -288,7 +305,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         {/* Scroll wheel overlay (always on top, always blocks input) */}
                         <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 100, pointerEvents: 'none' }}>
                             <div
-                                className="w-[70%] max-w-[10rem] backdrop-blur-md px-3 py-2 transition-opacity duration-200 opacity-50 hover:opacity-100 focus-within:opacity-100 active:opacity-100 shadow-lg border border-white/10 sketchy-border-thin"
+                                className={`w-[70%] max-w-[10rem] backdrop-blur-md px-3 py-2 transition-opacity duration-200 shadow-lg border border-white/10 sketchy-border-thin ${isWheelOverlayActive ? 'opacity-100' : 'opacity-50 hover:opacity-100 focus-within:opacity-100 active:opacity-100'}`}
                                 style={{ background: 'rgba(12, 30, 48, 0.38)', pointerEvents: 'auto', position: 'relative', zIndex: 100 }}
                             >
                                 <div className="flex justify-center items-start gap-3">
@@ -296,7 +313,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                         languages={ALL_LANGUAGES}
                                         selectedValue={nativeLang}
                                         onSelect={(l) => handleScrollWheelSelect(l, true)}
-                                        onInteract={onInteract}
+                                        onInteract={handleInteraction}
                                         title=""
                                         variant="native"
                                     />
@@ -306,7 +323,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                         selectedValue={targetLang}
                                         onSelect={(l) => handleScrollWheelSelect(l, false)}
                                         disabled={!nativeLang}
-                                        onInteract={onInteract}
+                                        onInteract={handleInteraction}
                                         title=""
                                         variant="target"
                                     />
