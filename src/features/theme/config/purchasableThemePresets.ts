@@ -10,6 +10,8 @@ import {
   SCHOLAR_COLORS,
   PURE_LIGHT_COLORS,
   OBSIDIAN_COLORS,
+  FOREST_COLORS,
+  LAVENDER_COLORS,
 } from './themeColors';
 
 export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
@@ -42,6 +44,16 @@ export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
     name: 'Obsidian',
     description: 'Premium theme',
     colors: OBSIDIAN_COLORS,
+  },
+  [THEME_PRODUCT_IDS.FOREST]: {
+    name: 'Forest',
+    description: 'Premium theme',
+    colors: FOREST_COLORS,
+  },
+  [THEME_PRODUCT_IDS.LAVENDER]: {
+    name: 'Lavender',
+    description: 'Premium theme',
+    colors: LAVENDER_COLORS,
   },
 };
 

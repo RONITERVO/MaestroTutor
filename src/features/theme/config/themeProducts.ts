@@ -27,6 +27,8 @@ export const THEME_PRODUCT_IDS = {
   SCHOLAR: 'theme_scholar',
   PURE_LIGHT: 'theme_pure_light',
   OBSIDIAN: 'theme_obsidian',
+  FOREST: 'theme_forest',
+  LAVENDER: 'theme_lavender',
 } as const;
 
 export type ThemeProductId = (typeof THEME_PRODUCT_IDS)[keyof typeof THEME_PRODUCT_IDS];
@@ -74,5 +76,19 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
     description: 'Deep navy-black with refined blue and teal — sophisticated darkness.',
     icon: '🌑',
     previewColors: ['222 38% 8%', '214 80% 46%', '174 68% 44%', '222 28% 17%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.FOREST,
+    displayName: 'Forest',
+    description: 'Warm sage paper with deep woodland green ink and moss accents.',
+    icon: '🌿',
+    previewColors: ['80 15% 95%', '90 25% 20%', '140 55% 38%', '160 45% 45%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.LAVENDER,
+    displayName: 'Lavender',
+    description: 'Soft lavender-white paper with deep plum ink and violet accents.',
+    icon: '💜',
+    previewColors: ['267 35% 97%', '262 52% 24%', '270 58% 56%', '255 48% 66%'],
   },
 ];
