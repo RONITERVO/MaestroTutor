@@ -3,14 +3,18 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
-import { IconXMark, IconUndo, IconBookmark, IconDownload, IconUpload, IconCheck } from '../../../shared/ui/Icons';
+import { IconXMark, IconUndo, IconBookmark, IconDownload, IconUpload, IconCheck, IconSparkles } from '../../../shared/ui/Icons';
 import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
 import { DEFAULT_COLORS } from '../config/defaultColors';
 import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
+import { getPurchasableThemePreset } from '../config/purchasableThemePresets';
+import { THEME_PRODUCTS } from '../config/themeProducts';
+import { useThemeBilling } from '../hooks/useThemeBilling';
 import { hslStringToHex, hexToHslString } from '../utils/colorConversion';
 import { exportThemeToFile, importThemeFromFile } from '../utils/themeFileIO';
+import ThemeStorePanel from './ThemeStorePanel';
 
 interface ThemeCustomizerPanelProps {
   onClose: () => void;
@@ -150,6 +154,55 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
   );
 };
 
+interface QuickThemeButtonProps {
+  name: string;
+  description: string;
+  previewColors: string[];
+  onClick: () => void;
+  accentIcon?: React.ReactNode;
+  className?: string;
+}
+
+const getPresetPreviewColors = (preset: PresetTheme): string[] => [
+  preset.colors['page-bg'] || DEFAULT_COLORS['page-bg'],
+  preset.colors['chat-outer-bg'] || DEFAULT_COLORS['chat-outer-bg'],
+  preset.colors['page-text'] || DEFAULT_COLORS['page-text'],
+];
+
+const QuickThemeButton: React.FC<QuickThemeButtonProps> = ({
+  name,
+  description,
+  previewColors,
+  onClick,
+  accentIcon,
+  className = '',
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex items-center gap-2 px-3 py-2 rounded-lg border border-line-border/60 hover:border-theme-input-border/50 bg-theme-preset-btn/60 hover:bg-theme-panel-bg/50 transition-all active:scale-95 ${className}`.trim()}
+  >
+    <div className="flex gap-0.5">
+      {previewColors.slice(0, 3).map((color, index) => (
+        <div
+          key={`${name}-${index}`}
+          className="w-3 h-3 rounded-full border border-line-border/40"
+          style={{ backgroundColor: hslStringToHex(color) }}
+        />
+      ))}
+    </div>
+    <div className="text-left min-w-0">
+      <div className="text-xs font-semibold text-theme-panel-text leading-tight flex items-center gap-1">
+        <span className="truncate">{name}</span>
+        {accentIcon}
+      </div>
+      <div className="text-[9px] text-theme-muted-text leading-tight">
+        {description}
+      </div>
+    </div>
+  </button>
+);
+
 /* ------------------------------------------------------------------ */
 /*  Main Panel                                                        */
 /* ------------------------------------------------------------------ */
@@ -160,6 +213,8 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const customColors = settings.customColors || {};
 
   const [activeColorVar, setActiveColorVar] = useState<string | null>(null);
+  const [isThemeStoreOpen, setIsThemeStoreOpen] = useState(false);
+  const { ownedProductIds } = useThemeBilling();
 
   // Debounce timer for IndexedDB persistence
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -242,6 +297,14 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const isModified = (cssVar: string) => cssVar in customColors;
   const hasAnyCustomization = Object.keys(customColors).length > 0;
   const savedPresets = settings.savedThemePresets || [];
+  const ownedPurchasedThemes = THEME_PRODUCTS.flatMap(product => {
+    if (!ownedProductIds.has(product.productId)) return [];
+
+    const preset = getPurchasableThemePreset(product.productId);
+    if (!preset) return [];
+
+    return [{ productId: product.productId, preset }];
+  });
 
   // Inline naming state: 'save' or 'export' mode, or null when idle
   const [namingMode, setNamingMode] = useState<'save' | 'export' | null>(null);
@@ -449,61 +512,37 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
             </h3>
             <div className="flex flex-wrap gap-2">
               {PRESET_THEMES.map(preset => {
-                // Show a small preview swatch of the preset's main canvas and accent.
-                const previewBg = preset.colors['page-bg'] || DEFAULT_COLORS['page-bg'];
-                const previewAccent = preset.colors['chat-outer-bg'] || DEFAULT_COLORS['chat-outer-bg'];
-                const previewFg = preset.colors['page-text'] || DEFAULT_COLORS['page-text'];
-
                 return (
-                  <button
+                  <QuickThemeButton
                     key={preset.name}
-                    type="button"
+                    name={preset.name}
+                    description={preset.description}
+                    previewColors={getPresetPreviewColors(preset)}
                     onClick={() => applyPreset(preset)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-line-border/60 hover:border-theme-input-border/50 bg-theme-preset-btn/60 hover:bg-theme-panel-bg/50 transition-all active:scale-95"
-                  >
-                    {/* 3-dot preview swatch */}
-                    <div className="flex gap-0.5">
-                      <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewBg) }} />
-                      <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewAccent) }} />
-                      <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewFg) }} />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-xs font-semibold text-theme-panel-text leading-tight">
-                        {preset.name}
-                      </div>
-                      <div className="text-[9px] text-theme-muted-text leading-tight">
-                        {preset.description}
-                      </div>
-                    </div>
-                  </button>
+                  />
                 );
               })}
+              {ownedPurchasedThemes.map(({ productId, preset }) => (
+                <QuickThemeButton
+                  key={productId}
+                  name={preset.name}
+                  description={preset.description}
+                  previewColors={getPresetPreviewColors(preset)}
+                  onClick={() => applyPreset(preset)}
+                  accentIcon={<IconCheck className="w-3 h-3 text-flag-busy-text shrink-0" />}
+                  className="border-theme-input-border/30"
+                />
+              ))}
               {savedPresets.map((preset, idx) => {
-                const previewBg = preset.colors['page-bg'] || DEFAULT_COLORS['page-bg'];
-                const previewAccent = preset.colors['chat-outer-bg'] || DEFAULT_COLORS['chat-outer-bg'];
-                const previewFg = preset.colors['page-text'] || DEFAULT_COLORS['page-text'];
-
                 return (
                   <div key={`saved-${idx}`} className="relative group/saved">
-                    <button
-                      type="button"
+                    <QuickThemeButton
+                      name={preset.name}
+                      description={preset.description}
+                      previewColors={getPresetPreviewColors(preset)}
                       onClick={() => applyPreset(preset)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-theme-input-border/30 hover:border-theme-input-border/50 bg-theme-preset-btn/60 hover:bg-theme-panel-bg/50 transition-all active:scale-95"
-                    >
-                      <div className="flex gap-0.5">
-                        <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewBg) }} />
-                        <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewAccent) }} />
-                        <div className="w-3 h-3 rounded-full border border-line-border/40" style={{ backgroundColor: hslStringToHex(previewFg) }} />
-                      </div>
-                      <div className="text-left">
-                        <div className="text-xs font-semibold text-theme-panel-text leading-tight">
-                          {preset.name}
-                        </div>
-                        <div className="text-[9px] text-theme-muted-text leading-tight">
-                          {preset.description}
-                        </div>
-                      </div>
-                    </button>
+                      className="border-theme-input-border/30"
+                    />
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleDeleteSavedPreset(idx); }}
@@ -515,6 +554,17 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                   </div>
                 );
               })}
+              <QuickThemeButton
+                name="Theme Store"
+                description="Browse and buy more themes"
+                previewColors={[
+                  '210 70% 45%',
+                  '38 90% 55%',
+                  '280 100% 65%',
+                ]}
+                onClick={() => setIsThemeStoreOpen(true)}
+                accentIcon={<IconSparkles className="w-3 h-3 text-theme-input-border shrink-0" />}
+              />
             </div>
           </div>
 
@@ -537,6 +587,9 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
           ))}
         </div>
       </div>
+      {isThemeStoreOpen && (
+        <ThemeStorePanel onClose={() => setIsThemeStoreOpen(false)} />
+      )}
     </>
   );
 };

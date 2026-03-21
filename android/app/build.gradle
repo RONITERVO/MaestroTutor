@@ -17,8 +17,8 @@ android {
         applicationId "com.ronitervo.maestrotutor"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 42
-        versionName "1.9.3"
+        versionCode 43
+        versionName "1.9.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     androidResources {
@@ -64,6 +64,7 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation 'com.android.billingclient:billing:7.1.1'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

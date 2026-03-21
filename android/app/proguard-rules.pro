@@ -19,3 +19,12 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# ---- Google Play Billing Library ----------------------------------------
+# Keep all public Billing API classes so R8 does not strip them.
+-keep class com.android.billingclient.api.** { *; }
+-keepnames class com.android.billingclient.** { *; }
+# Keep Purchase and ProductDetails data classes intact (accessed via reflection
+# internally by the Billing library).
+-keepclassmembers class com.android.billingclient.api.Purchase { *; }
+-keepclassmembers class com.android.billingclient.api.ProductDetails { *; }
