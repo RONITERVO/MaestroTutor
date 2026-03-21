@@ -24,6 +24,7 @@ export const THEME_PRODUCT_IDS = {
   OCEAN_BLUE: 'theme_ocean_blue',
   SUNSET_GOLD: 'theme_sunset_gold',
   DARK_NEON: 'theme_dark_neon',
+  SCHOLAR: 'theme_scholar',
 } as const;
 
 export type ThemeProductId = (typeof THEME_PRODUCT_IDS)[keyof typeof THEME_PRODUCT_IDS];
@@ -50,5 +51,12 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
     description: 'High-contrast dark background with vibrant neon accents.',
     icon: '🌆',
     previewColors: ['0 0% 8%', '280 100% 65%', '165 100% 55%', '60 100% 60%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.SCHOLAR,
+    displayName: 'Scholar',
+    description: 'Warm parchment with deep indigo ink and sky-blue accents.',
+    icon: '📜',
+    previewColors: ['39 37% 94%', '248 41% 27%', '199 84% 58%', '261 75% 63%'],
   },
 ];
