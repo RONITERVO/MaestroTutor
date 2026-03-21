@@ -116,7 +116,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
               key={product.productId}
               className="flex items-stretch gap-3 p-3 rounded-xl bg-theme-input-bg border border-theme-input-border"
             >
-              {/* Colour swatches */}
+              {/* Color swatches */}
               <div className="flex flex-col gap-1 shrink-0 justify-center">
                 {product.previewColors.map((hsl, i) => (
                   <div
