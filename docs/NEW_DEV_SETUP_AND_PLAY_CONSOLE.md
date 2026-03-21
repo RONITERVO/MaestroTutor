@@ -300,6 +300,13 @@ For each product ID below, create a one-time product in Play Console:
 | `theme_ocean_blue` | Ocean Blue |
 | `theme_sunset_gold` | Sunset Gold |
 | `theme_dark_neon` | Dark Neon |
+| `theme_scholar` | Scholar |
+| `theme_pure_light` | Pure Light |
+| `theme_obsidian` | Obsidian |
+| `theme_forest` | Forest |
+| `theme_lavender` | Lavender |
+| `theme_spectrum` | Spectrum |
+| `theme_graphite` | Graphite |
 
 ### Recommended setup for each product
 
