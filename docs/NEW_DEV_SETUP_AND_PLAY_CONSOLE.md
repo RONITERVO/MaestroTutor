@@ -224,7 +224,9 @@ Before review, make sure the following are filled in:
 - support email
 - privacy policy URL
 
-This repo already contains a privacy policy page at [`public/privacy.html`](../public/privacy.html), but Play Console needs a hosted public URL, not just the file in the repo.
+This repo already contains a privacy policy page at [`public/privacy.html`](../public/privacy.html), but Play Console needs a hosted public URL, not just the file in the repo. 
+
+Run "npm run deploy" to host on github pages and make sure the custom domain stays set at https://chatwithmaestro.com on github pages so that /privacy.html can be accessed alongside the /gemini-models.json both of those must exist in the custom deployment https://chatwithmaestro.com so that a. User in the app can open the privacy policy and b. The app can fetch the latest models from the json.
 
 ## 7. App review setup for the Gemini API key gate
 
