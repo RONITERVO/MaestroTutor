@@ -5,11 +5,11 @@ import { useEffect } from 'react';
 import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { ALL_COLOR_VARS } from '../config/colorRegistry';
-
+import { ORIGINAL_COLORS } from '../config/themeColors';
 /**
  * Syncs customColors from settings to CSS custom properties on <html>.
- * Inline style properties override the :root defaults from index.css.
- * Removing the property resets to the CSS default.
+ * Falls back to ORIGINAL_COLORS when no custom value is set, so new tokens
+ * added to themeColors.ts take effect immediately via HMR without a restart.
  */
 export function useApplyCustomColors() {
   const customColors = useMaestroStore(state => selectSettings(state).customColors);
@@ -22,9 +22,9 @@ export function useApplyCustomColors() {
     ]);
 
     for (const cssVar of managedVars) {
-      const customValue = customColors?.[cssVar];
-      if (customValue) {
-        root.style.setProperty(`--${cssVar}`, customValue);
+      const value = customColors?.[cssVar] || ORIGINAL_COLORS[cssVar];
+      if (value) {
+        root.style.setProperty(`--${cssVar}`, value);
       } else {
         root.style.removeProperty(`--${cssVar}`);
       }

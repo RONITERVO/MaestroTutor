@@ -6,7 +6,6 @@ It is based on the current app theme system in:
 
 - `src/app/index.css`
 - `src/features/theme/config/colorRegistry.ts`
-- `src/features/theme/config/defaultColors.ts`
 - `src/features/theme/config/colorRenameMap.ts`
 - `src/features/theme/utils/themeFileIO.ts`
 - `src/app/App.tsx`
