@@ -257,6 +257,8 @@ const PAID_THEME_FINGERPRINTS: Record<ThemeProductId, readonly [string, string][
   theme_sunset_gold: [['page-bg', '36 67% 95%'],  ['user-msg-bg', '24 70% 46%']],
   theme_dark_neon:   [['page-bg', '230 24% 9%'],  ['user-msg-bg', '282 78% 56%']],
   theme_scholar:     [['page-bg', '39 37% 94%'],  ['user-msg-bg', '248 41% 27%']],
+  theme_pure_light:  [['page-bg', '210 25% 98%'], ['user-msg-bg', '222 47% 20%']],
+  theme_obsidian:    [['page-bg', '222 38% 8%'],  ['user-msg-bg', '214 80% 46%']],
 };
 
 const detectPaidThemeId = (colors: Record<string, string>): ThemeProductId | null => {

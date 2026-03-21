@@ -8,6 +8,8 @@ import {
   SUNSET_GOLD_COLORS,
   DARK_NEON_COLORS,
   SCHOLAR_COLORS,
+  PURE_LIGHT_COLORS,
+  OBSIDIAN_COLORS,
 } from './themeColors';
 
 export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
@@ -30,6 +32,16 @@ export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
     name: 'Scholar',
     description: 'Premium theme',
     colors: SCHOLAR_COLORS,
+  },
+  [THEME_PRODUCT_IDS.PURE_LIGHT]: {
+    name: 'Pure Light',
+    description: 'Premium theme',
+    colors: PURE_LIGHT_COLORS,
+  },
+  [THEME_PRODUCT_IDS.OBSIDIAN]: {
+    name: 'Obsidian',
+    description: 'Premium theme',
+    colors: OBSIDIAN_COLORS,
   },
 };
 

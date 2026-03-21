@@ -25,6 +25,8 @@ export const THEME_PRODUCT_IDS = {
   SUNSET_GOLD: 'theme_sunset_gold',
   DARK_NEON: 'theme_dark_neon',
   SCHOLAR: 'theme_scholar',
+  PURE_LIGHT: 'theme_pure_light',
+  OBSIDIAN: 'theme_obsidian',
 } as const;
 
 export type ThemeProductId = (typeof THEME_PRODUCT_IDS)[keyof typeof THEME_PRODUCT_IDS];
@@ -58,5 +60,19 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
     description: 'Warm parchment with deep indigo ink and sky-blue accents.',
     icon: '📜',
     previewColors: ['39 37% 94%', '248 41% 27%', '199 84% 58%', '261 75% 63%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.PURE_LIGHT,
+    displayName: 'Pure Light',
+    description: 'Crisp white with deep navy and premium blue — elegant and timeless.',
+    icon: '☀️',
+    previewColors: ['210 25% 98%', '222 47% 20%', '214 87% 51%', '199 89% 40%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.OBSIDIAN,
+    displayName: 'Obsidian',
+    description: 'Deep navy-black with refined blue and teal — sophisticated darkness.',
+    icon: '🌑',
+    previewColors: ['222 38% 8%', '214 80% 46%', '174 68% 44%', '222 28% 17%'],
   },
 ];
