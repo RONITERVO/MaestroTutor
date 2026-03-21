@@ -35,6 +35,9 @@
     <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Google Play Billing -->
+    <uses-permission android:name="com.android.vending.BILLING" />
+
     <!-- Camera & Mic (Runtime permissions required) -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
