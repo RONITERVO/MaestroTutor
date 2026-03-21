@@ -29,6 +29,7 @@ export const THEME_PRODUCT_IDS = {
   OBSIDIAN: 'theme_obsidian',
   FOREST: 'theme_forest',
   LAVENDER: 'theme_lavender',
+  SPECTRUM: 'theme_spectrum',
 } as const;
 
 export type ThemeProductId = (typeof THEME_PRODUCT_IDS)[keyof typeof THEME_PRODUCT_IDS];
@@ -90,5 +91,12 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
     description: 'Soft lavender-white paper with deep plum ink and violet accents.',
     icon: '💜',
     previewColors: ['267 35% 97%', '262 52% 24%', '270 58% 56%', '255 48% 66%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.SPECTRUM,
+    displayName: 'Spectrum',
+    description: 'The four iconic primaries — blue, red, yellow, and green — each given a dedicated role across the entire UI.',
+    icon: '🌈',
+    previewColors: ['214 89% 55%', '5 70% 52%', '45 96% 48%', '153 76% 38%'],
   },
 ];

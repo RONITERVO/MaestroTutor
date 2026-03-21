@@ -12,6 +12,7 @@ import {
   OBSIDIAN_COLORS,
   FOREST_COLORS,
   LAVENDER_COLORS,
+  SPECTRUM_COLORS,
 } from './themeColors';
 
 export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
@@ -54,6 +55,11 @@ export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
     name: 'Lavender',
     description: 'Premium theme',
     colors: LAVENDER_COLORS,
+  },
+  [THEME_PRODUCT_IDS.SPECTRUM]: {
+    name: 'Spectrum',
+    description: 'Premium theme',
+    colors: SPECTRUM_COLORS,
   },
 };
 
