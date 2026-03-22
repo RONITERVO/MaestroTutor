@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { SpeechPart, RecordedUtterance } from '../../../core/types';
 import { useTtsEngine } from './useTtsEngine';
-import { useGeminiLiveStt } from './useGeminiLiveStt';
+import { type GeminiLiveSttTurnComplete, useGeminiLiveStt } from './useGeminiLiveStt';
 import { pcmToWav } from '../utils/audioProcessing';
 
 interface UseBrowserSpeechProps {
@@ -14,6 +14,7 @@ interface UseBrowserSpeechProps {
   getGlobalSttLanguage?: () => string;
   onSpeechQueueCompleted?: () => void;
   onRecordedUtteranceReady?: (utterance: RecordedUtterance) => void;
+  onTranscriptionTurnComplete?: (turn: GeminiLiveSttTurnComplete) => void | Promise<void>;
 }
 
 interface UseBrowserSpeechReturn {
@@ -24,7 +25,7 @@ interface UseBrowserSpeechReturn {
   isListening: boolean;
   transcript: string;
     startListening: (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => void;
-  stopListening: () => void;
+  stopListening: () => Promise<void>;
   sttError: string | null;
   isSpeechRecognitionSupported: boolean;
   clearTranscript: () => void;
@@ -47,7 +48,9 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
   useEffect(() => { onEngineCycleEndRef.current = onEngineCycleEnd; }, [onEngineCycleEnd]);
 
   // Gemini Live STT Hook
-  const geminiStt = useGeminiLiveStt();
+  const geminiStt = useGeminiLiveStt({
+    onTurnComplete: props?.onTranscriptionTurnComplete,
+  });
   
   // Sync local transcript with Gemini transcript when active
     useEffect(() => {
@@ -64,13 +67,11 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
 
 
   const pauseSttForPlayback = useCallback(() => {
-    const shouldBeListening = props?.isGlobalSttEnabled?.() ?? false;
-
-    if (isListening || shouldBeListening) {
+    if (isListening) {
         sttInterruptedByTTS.current = true;
-        geminiStt.stop();
+        void geminiStt.stop();
     }
-  }, [isListening, geminiStt, props]);
+  }, [isListening, geminiStt]);
 
     const { isSpeaking, speak, stopSpeaking, speakingUtteranceText, isSpeechSynthesisSupported, hasPendingQueueItems } = useTtsEngine({
         pauseSttForPlayback,
@@ -116,7 +117,7 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
 
   const stopListening = useCallback(() => {
       sttInterruptedByTTS.current = false;
-      geminiStt.stop();
+      return geminiStt.stop();
   }, [geminiStt]);
 
   const clearTranscript = useCallback(() => {

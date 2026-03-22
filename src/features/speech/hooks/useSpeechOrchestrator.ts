@@ -15,11 +15,12 @@
 import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { 
   ChatMessage, 
+  RecordedUtterance,
   SpeechPart, 
-  TtsAudioCacheEntry, 
-  RecordedUtterance 
+  TtsAudioCacheEntry,
 } from '../../../core/types';
 import useBrowserSpeech from './useBrowserSpeech';
+import type { GeminiLiveSttTurnComplete } from './useGeminiLiveStt';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { INLINE_CAP_AUDIO, computeTtsCacheKey, getCachedAudioForKey } from '../../chat';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
@@ -32,6 +33,7 @@ export interface UseSpeechOrchestratorConfig {
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
   upsertSuggestionTtsCache: (messageId: string, suggestionIndex: number, entry: TtsAudioCacheEntry) => void;
   setMessages?: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  onSttTurnComplete?: (turn: GeminiLiveSttTurnComplete) => void | Promise<void>;
 }
 
 export interface UseSpeechOrchestratorReturn {
@@ -47,7 +49,7 @@ export interface UseSpeechOrchestratorReturn {
   isListening: boolean;
   transcript: string;
   startListening: (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => void;
-  stopListening: () => void;
+  stopListening: () => Promise<void>;
   sttError: string | null;
   isSpeechRecognitionSupported: boolean;
   clearTranscript: () => void;
@@ -75,6 +77,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
     upsertMessageTtsCache,
     upsertSuggestionTtsCache,
     setMessages,
+    onSttTurnComplete,
   } = config;
 
   // Get store actions for activity token management
@@ -156,19 +159,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
     hasPendingQueueItems,
   } = useBrowserSpeech({
     onEngineCycleEnd: (errorOccurred: boolean) => {
-      if (
-        settingsRef.current.stt.enabled &&
-        !errorOccurred &&
-        !settingsRef.current.isSuggestionMode &&
-        !isSendingRef.current &&
-        !speechIsSpeakingRef.current
-      ) {
-        setTimeout(() => {
-          if (settingsRef.current.stt.enabled) {
-            startListeningWithContext(settingsRef.current.stt.language);
-          }
-        }, 100);
-      } else if (errorOccurred) {
+      if (errorOccurred) {
         console.warn("STT cycle ended with error. STT will not automatically restart unless manually toggled.");
       }
     },
@@ -207,7 +198,8 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         applySetMessages((prev) => prev.map((m) => (m.id === pendingId ? { ...m, recordedUtterance: utterance } : m)));
         recordedUtterancePendingRef.current = null;
       }
-    }, [applySetMessages])
+    }, [applySetMessages]),
+    onTranscriptionTurnComplete: onSttTurnComplete,
   });
 
   const getSttContext = useCallback(() => {

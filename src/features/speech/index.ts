@@ -21,7 +21,11 @@ export {
   type LiveTurnTranscriptUpdate,
   type LiveTurnTranscriptUpdateReason,
 } from './hooks/useGeminiLiveConversation';
-export { useGeminiLiveStt } from './hooks/useGeminiLiveStt';
+export {
+  useGeminiLiveStt,
+  type GeminiLiveSttTurnComplete,
+  type UseGeminiLiveSttOptions,
+} from './hooks/useGeminiLiveStt';
 export { useSpeechOrchestrator } from './hooks/useSpeechOrchestrator';
 export { useAutoSendOnSilence } from './hooks/useAutoSendOnSilence';
 export { useSuggestionModeAutoRestart } from './hooks/useSuggestionModeAutoRestart';

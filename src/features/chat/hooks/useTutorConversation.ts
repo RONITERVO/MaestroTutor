@@ -2180,7 +2180,15 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     // Add sending token for unified busy state tracking (replaces setIsSending(true))
     sendingTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.RESPONSE);
     if (settingsRef.current.stt.enabled && isListening) {
-      try { stopListening(); } catch { /* ignore */ }
+      const claimedUtterance = typeof claimRecordedUtterance === 'function' ? claimRecordedUtterance() : null;
+      if (claimedUtterance) {
+        recordedUtterancePendingRef.current = claimedUtterance;
+      }
+      try {
+        await Promise.resolve(stopListening());
+      } catch {
+        /* ignore */
+      }
       sttInterruptedBySendRef.current = true;
       clearTranscript();
     } else {
@@ -2201,160 +2209,235 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (setSnapshotUserError) setSnapshotUserError(null);
     }
     pendingRecordedAudioMessageRef.current = null;
-
-    const currentSettingsVal = settingsRef.current;
-    const shouldGenerateUserImage = currentSettingsVal.selectedCameraId === IMAGE_GEN_CAMERA_ID;
-    const userMessageContext = await createUserMessage({
-      text,
-      passedImageBase64,
-      passedImageMimeType,
-      messageType,
-      shouldGenerateUserImage,
-      currentSettingsVal,
-    });
-    let {
-      userMessageId,
-      userMessageText,
-      userImageToProcessBase64,
-      userImageToProcessMimeType,
-      userImageToProcessStorageOptimizedBase64,
-      userImageToProcessStorageOptimizedMimeType,
-    } = userMessageContext;
-
-    const thinkingMessageId = addMessage({
-      role: 'assistant',
-      thinking: true,
-      thinkingTrace: [],
-      thinkingDraftText: '',
-      thinkingPhase: 'Preparing request',
-      thinkingStatusLine: 'Preparing request context...',
-    });
-
-    cancelReengagementRef.current();
-
-    let historyForGemini = messagesRef.current.filter(m => m.id !== thinkingMessageId);
-    if (messageType === 'user' && userMessageId) {
-      historyForGemini = historyForGemini.filter(m => m.id !== userMessageId);
-    }
-
-    let geminiPromptText: string;
-    let systemInstructionForGemini: string = currentSystemPromptText;
-    try {
-      await getGlobalProfileDB();
-    } finally {
-      systemInstructionForGemini = composeMaestroSystemInstruction(systemInstructionForGemini);
-    }
-
-    // Optimize user image if needed
-    if (messageType === 'user' && userImageToProcessBase64 && !userImageToProcessStorageOptimizedBase64 && userImageToProcessMimeType) {
-      if (!sendWithFileUploadInProgressRef.current) {
-        sendWithFileUploadInProgressRef.current = true;
-      }
-      try {
-        setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' });
-        const optimized = await processMediaForUpload(userImageToProcessBase64, userImageToProcessMimeType, {
-          t,
-          onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs })
-        });
-        userImageToProcessStorageOptimizedBase64 = optimized.dataUrl;
-        userImageToProcessStorageOptimizedMimeType = optimized.mimeType;
-
-        if (messageType === 'user' && userMessageId) {
-          updateMessage(userMessageId, { storageOptimizedImageUrl: optimized.dataUrl, storageOptimizedImageMimeType: optimized.mimeType });
+    let thinkingMessageId: string | null = null;
+    const handleSendFailure = (error: unknown): false => {
+      console.error("Error sending message (stream consumer):", error);
+      let errorMessage = t('general.error');
+      if (error instanceof ApiError) {
+        if (error.code === 'MISSING_API_KEY') {
+          errorMessage = t('error.apiKeyMissing');
+          onApiKeyGateOpen?.({ reason: 'missing', instructionIndex: 0 });
+        } else if (isInvalidApiKeyError(error)) {
+          errorMessage = t('error.apiKeyInvalid');
+          onApiKeyGateOpen?.({ reason: 'invalid', instructionIndex: 0 });
+        } else if (isQuotaError(error)) {
+          errorMessage = t('error.apiQuotaExceeded');
+        } else {
+          const parsedMessage = parseApiErrorMessage(error.message);
+          errorMessage = parsedMessage || error.code || `HTTP ${error.status}`;
         }
-      } catch (e) { 
-        console.warn('Failed to derive low-res for current user media, will omit persistence media', e); 
-      } finally { 
-        setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev)); 
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
-    }
+      const isQuota = error instanceof ApiError && isQuotaError(error);
 
-    // Decide which image to upload to Gemini
-    let imageForGeminiContextBase64: string | undefined;
-    let imageForGeminiContextMimeType: string | undefined;
-
-    if (messageType === 'user') {
-      if (userImageToProcessBase64) {
-        imageForGeminiContextBase64 = userImageToProcessBase64;
-        imageForGeminiContextMimeType = userImageToProcessMimeType;
+      if (thinkingMessageId) {
+        updateMessage(thinkingMessageId, {
+          thinking: false,
+          thinkingTrace: undefined,
+          thinkingDraftText: undefined,
+          thinkingPhase: undefined,
+          thinkingStatusLine: undefined,
+          role: 'error',
+          text: errorMessage,
+          llmRawResponse: undefined,
+          rawAssistantResponse: undefined,
+          translations: undefined,
+          isLoadingArtifact: false,
+          artifactLoadStartTime: undefined,
+          ...(isQuota ? { errorAction: 'quota' } : {}),
+        });
       } else {
-        imageForGeminiContextBase64 = userImageToProcessStorageOptimizedBase64;
-        imageForGeminiContextMimeType = userImageToProcessStorageOptimizedMimeType;
+        addMessage({
+          role: 'error',
+          text: errorMessage,
+          ...(isQuota ? { errorAction: 'quota' as const } : {}),
+        });
       }
-    } else {
-      imageForGeminiContextBase64 = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : undefined;
-      imageForGeminiContextMimeType = (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : undefined;
-    }
 
-    let imageForGeminiContextFileUri: Array<{ fileUri: string; mimeType: string }> | undefined = undefined;
-
-    switch (messageType) {
-      case 'image-reengagement':
-        geminiPromptText = "...";
-        break;
-      case 'conversational-reengagement':
-        geminiPromptText = "...";
-        imageForGeminiContextBase64 = undefined;
-        imageForGeminiContextMimeType = undefined;
-        break;
-      case 'user':
-      default:
-        geminiPromptText = userMessageText;
-        break;
-    }
-
-    // For image-reengagement, use original image for API (full quality)
-    // Note: re-engagement images are transient (not persisted in chat), so no storage optimization needed
-    if (messageType === 'image-reengagement') {
-      if (typeof passedImageBase64 === 'string' && passedImageBase64 && typeof passedImageMimeType === 'string' && passedImageMimeType) {
-        imageForGeminiContextBase64 = passedImageBase64;
-        imageForGeminiContextMimeType = passedImageMimeType;
+      if (sendingTokenRef.current) {
+        removeActivityToken(sendingTokenRef.current);
+        sendingTokenRef.current = null;
       }
-    }
+      setSendPrep(null);
+      try {
+        sendWithFileUploadInProgressRef.current = false;
+      } catch { /* ignore */ }
 
-    if (messageType === 'user' && userMessageId) {
-      const currentUserMessage = messagesRef.current.find(m => m.id === userMessageId);
-      if (currentUserMessage && getMessageAttachmentSource(currentUserMessage)) {
+      if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !speechIsSpeakingRef.current) {
+        try {
+          startListening(settingsRef.current.stt.language);
+        } finally {
+          sttInterruptedBySendRef.current = false;
+        }
+      }
+
+      scheduleReengagementRef.current('send-error');
+
+      if (messageType === 'user') {
+        setAttachedImage(null, null);
+      }
+      setReplySuggestions([]);
+      setSuggestionsLoadingStreamText('');
+      if (suggestionsTokenRef.current) {
+        removeActivityToken(suggestionsTokenRef.current);
+        suggestionsTokenRef.current = null;
+      }
+      return false;
+    };
+
+    try {
+      const currentSettingsVal = settingsRef.current;
+      const shouldGenerateUserImage = currentSettingsVal.selectedCameraId === IMAGE_GEN_CAMERA_ID;
+      const userMessageContext = await createUserMessage({
+        text,
+        passedImageBase64,
+        passedImageMimeType,
+        messageType,
+        shouldGenerateUserImage,
+        currentSettingsVal,
+      });
+      let {
+        userMessageId,
+        userMessageText,
+        userImageToProcessBase64,
+        userImageToProcessMimeType,
+        userImageToProcessStorageOptimizedBase64,
+        userImageToProcessStorageOptimizedMimeType,
+      } = userMessageContext;
+
+      thinkingMessageId = addMessage({
+        role: 'assistant',
+        thinking: true,
+        thinkingTrace: [],
+        thinkingDraftText: '',
+        thinkingPhase: 'Preparing request',
+        thinkingStatusLine: 'Preparing request context...',
+      });
+
+      cancelReengagementRef.current();
+
+      let historyForGemini = messagesRef.current.filter(m => m.id !== thinkingMessageId);
+      if (messageType === 'user' && userMessageId) {
+        historyForGemini = historyForGemini.filter(m => m.id !== userMessageId);
+      }
+
+      let geminiPromptText: string;
+      let systemInstructionForGemini: string = currentSystemPromptText;
+      try {
+        await getGlobalProfileDB();
+      } finally {
+        systemInstructionForGemini = composeMaestroSystemInstruction(systemInstructionForGemini);
+      }
+
+      // Optimize user image if needed
+      if (messageType === 'user' && userImageToProcessBase64 && !userImageToProcessStorageOptimizedBase64 && userImageToProcessMimeType) {
+        if (!sendWithFileUploadInProgressRef.current) {
+          sendWithFileUploadInProgressRef.current = true;
+        }
+        try {
+          setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' });
+          const optimized = await processMediaForUpload(userImageToProcessBase64, userImageToProcessMimeType, {
+            t,
+            onProgress: (label, done, total, etaMs) => setSendPrep({ active: true, label, done, total, etaMs })
+          });
+          userImageToProcessStorageOptimizedBase64 = optimized.dataUrl;
+          userImageToProcessStorageOptimizedMimeType = optimized.mimeType;
+
+          if (messageType === 'user' && userMessageId) {
+            updateMessage(userMessageId, { storageOptimizedImageUrl: optimized.dataUrl, storageOptimizedImageMimeType: optimized.mimeType });
+          }
+        } catch (e) { 
+          console.warn('Failed to derive low-res for current user media, will omit persistence media', e); 
+        } finally { 
+          setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev)); 
+        }
+      }
+
+      // Decide which image to upload to Gemini
+      let imageForGeminiContextBase64: string | undefined;
+      let imageForGeminiContextMimeType: string | undefined;
+
+      if (messageType === 'user') {
+        if (userImageToProcessBase64) {
+          imageForGeminiContextBase64 = userImageToProcessBase64;
+          imageForGeminiContextMimeType = userImageToProcessMimeType;
+        } else {
+          imageForGeminiContextBase64 = userImageToProcessStorageOptimizedBase64;
+          imageForGeminiContextMimeType = userImageToProcessStorageOptimizedMimeType;
+        }
+      } else {
+        imageForGeminiContextBase64 = (typeof passedImageBase64 === 'string' && passedImageBase64) ? passedImageBase64 : undefined;
+        imageForGeminiContextMimeType = (typeof passedImageMimeType === 'string' && passedImageMimeType) ? passedImageMimeType : undefined;
+      }
+
+      let imageForGeminiContextFileUri: Array<{ fileUri: string; mimeType: string }> | undefined = undefined;
+
+      switch (messageType) {
+        case 'image-reengagement':
+          geminiPromptText = "...";
+          break;
+        case 'conversational-reengagement':
+          geminiPromptText = "...";
+          imageForGeminiContextBase64 = undefined;
+          imageForGeminiContextMimeType = undefined;
+          break;
+        case 'user':
+        default:
+          geminiPromptText = userMessageText;
+          break;
+      }
+
+      if (messageType === 'image-reengagement') {
+        if (typeof passedImageBase64 === 'string' && passedImageBase64 && typeof passedImageMimeType === 'string' && passedImageMimeType) {
+          imageForGeminiContextBase64 = passedImageBase64;
+          imageForGeminiContextMimeType = passedImageMimeType;
+        }
+      }
+
+      if (messageType === 'user' && userMessageId) {
+        const currentUserMessage = messagesRef.current.find(m => m.id === userMessageId);
+        if (currentUserMessage && getMessageAttachmentSource(currentUserMessage)) {
+          if (!sendWithFileUploadInProgressRef.current) {
+            sendWithFileUploadInProgressRef.current = true;
+          }
+          setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
+          try {
+            const ensured = await ensureUploadedAttachmentVariantsForMessage(currentUserMessage);
+            if (ensured.chatFileParts.length === 0) {
+              throw new Error(`Failed to prepare attached media "${currentUserMessage.attachmentName || 'attachment'}" for Gemini. Try again or reattach the file.`);
+            }
+            imageForGeminiContextFileUri = ensured.chatFileParts;
+          } finally {
+            setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
+          }
+        }
+      } else if (imageForGeminiContextBase64 && imageForGeminiContextMimeType) {
         if (!sendWithFileUploadInProgressRef.current) {
           sendWithFileUploadInProgressRef.current = true;
         }
         setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
         try {
-          const ensured = await ensureUploadedAttachmentVariantsForMessage(currentUserMessage);
-          if (ensured.chatFileParts.length === 0) {
-            throw new Error(`Failed to prepare attached media "${currentUserMessage.attachmentName || 'attachment'}" for Gemini. Try again or reattach the file.`);
+          const chatFileParts = await uploadAttachmentVariantsForSource(
+            {
+              dataUrl: imageForGeminiContextBase64,
+              mimeType: imageForGeminiContextMimeType,
+              attachmentName: attachedFileName || undefined,
+            },
+            attachedFileName || 'current-user-media'
+          );
+          if (chatFileParts.length === 0) {
+            throw new Error(`Failed to prepare attached media "${attachedFileName || 'attachment'}" for Gemini. Try again or reattach the file.`);
           }
-          imageForGeminiContextFileUri = ensured.chatFileParts;
+          imageForGeminiContextFileUri = chatFileParts;
         } finally {
           setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
         }
       }
-    } else if (imageForGeminiContextBase64 && imageForGeminiContextMimeType) {
-      if (!sendWithFileUploadInProgressRef.current) {
-        sendWithFileUploadInProgressRef.current = true;
-      }
-      setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
+
+      setLatestGroundingChunks(undefined);
+
       try {
-        const chatFileParts = await uploadAttachmentVariantsForSource(
-          {
-            dataUrl: imageForGeminiContextBase64,
-            mimeType: imageForGeminiContextMimeType,
-            attachmentName: attachedFileName || undefined,
-          },
-          attachedFileName || 'current-user-media'
-        );
-        if (chatFileParts.length === 0) {
-          throw new Error(`Failed to prepare attached media "${attachedFileName || 'attachment'}" for Gemini. Try again or reattach the file.`);
-        }
-        imageForGeminiContextFileUri = chatFileParts;
-      } finally {
-        setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
-      }
-    }
-
-    setLatestGroundingChunks(undefined);
-
-    try {
       const historySubsetForSend: ChatMessage[] = getHistoryRespectingBookmark(historyForGemini);
 
       let ensuredUpdates: Record<string, HistoryMediaOverride> = {};
@@ -2519,73 +2602,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
       return true;
 
+      } catch (error) {
+        return handleSendFailure(error);
+      }
     } catch (error) {
-      console.error("Error sending message (stream consumer):", error);
-      let errorMessage = t('general.error');
-      if (error instanceof ApiError) {
-        if (error.code === 'MISSING_API_KEY') {
-          errorMessage = t('error.apiKeyMissing');
-          onApiKeyGateOpen?.({ reason: 'missing', instructionIndex: 0 });
-        } else if (isInvalidApiKeyError(error)) {
-          errorMessage = t('error.apiKeyInvalid');
-          onApiKeyGateOpen?.({ reason: 'invalid', instructionIndex: 0 });
-        } else if (isQuotaError(error)) {
-          errorMessage = t('error.apiQuotaExceeded');
-        } else {
-          const parsedMessage = parseApiErrorMessage(error.message);
-          errorMessage = parsedMessage || error.code || `HTTP ${error.status}`;
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      const isQuota = error instanceof ApiError && isQuotaError(error);
-      updateMessage(thinkingMessageId, {
-        thinking: false,
-        thinkingTrace: undefined,
-        thinkingDraftText: undefined,
-        thinkingPhase: undefined,
-        thinkingStatusLine: undefined,
-        role: 'error',
-        text: errorMessage,
-        llmRawResponse: undefined,
-        rawAssistantResponse: undefined,
-        translations: undefined,
-        isLoadingArtifact: false,
-        artifactLoadStartTime: undefined,
-        ...(isQuota ? { errorAction: 'quota' } : {}),
-      });
-      // Remove sending token on error (replaces setIsSending(false))
-      if (sendingTokenRef.current) {
-        removeActivityToken(sendingTokenRef.current);
-        sendingTokenRef.current = null;
-      }
-      setSendPrep(null);
-      try {
-        sendWithFileUploadInProgressRef.current = false;
-      } catch { /* ignore */ }
-
-      // Resume STT on error
-      if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !speechIsSpeakingRef.current) {
-        try {
-          startListening(settingsRef.current.stt.language);
-        } finally {
-          sttInterruptedBySendRef.current = false;
-        }
-      }
-
-      scheduleReengagementRef.current('send-error');
-
-      if (messageType === 'user') {
-        setAttachedImage(null, null);
-      }
-      setReplySuggestions([]);
-      setSuggestionsLoadingStreamText('');
-      // Clear any suggestions token on error
-      if (suggestionsTokenRef.current) {
-        removeActivityToken(suggestionsTokenRef.current);
-        suggestionsTokenRef.current = null;
-      }
-      return false;
+      return handleSendFailure(error);
     }
   }, [
     t,

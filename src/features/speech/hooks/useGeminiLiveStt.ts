@@ -12,6 +12,19 @@ import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 
+export interface GeminiLiveSttTurnComplete {
+  turnId: number;
+  turnTranscript: string;
+  committedTranscript: string;
+  inputTranscript: string;
+  outputTranscript: string;
+  audioSamples: number;
+}
+
+export interface UseGeminiLiveSttOptions {
+  onTurnComplete?: (turn: GeminiLiveSttTurnComplete) => void | Promise<void>;
+}
+
 export interface UseGeminiLiveSttReturn {
   start: (
     languageOrOptions?:
@@ -22,7 +35,7 @@ export interface UseGeminiLiveSttReturn {
           replySuggestions?: string[];
         }
   ) => Promise<void>;
-  stop: () => void;
+  stop: () => Promise<void>;
   transcript: string;
   isListening: boolean;
   error: string | null;
@@ -51,7 +64,7 @@ const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
  *
  * @returns An object exposing control methods and state for the live STT session: `start` to begin listening, `stop` to end the session, `transcript` containing the current combined transcript, `isListening` indicating active listening, `error` containing any error message, and `getRecordedAudio` which returns the merged recorded audio `Int16Array` or `null`.
  */
-export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
+export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLiveSttReturn {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +84,8 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
+  const onTurnCompleteRef = useRef(options?.onTurnComplete);
+  const turnIdRef = useRef(0);
   
   // Flag to track if cleanup is in progress to prevent race conditions
   const isCleaningUpRef = useRef<boolean>(false);
@@ -79,6 +94,10 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
   const committedTranscriptRef = useRef('');
   const interimInputRef = useRef('');
   const interimParrotRef = useRef('');
+
+  useEffect(() => {
+    onTurnCompleteRef.current = options?.onTurnComplete;
+  }, [options?.onTurnComplete]);
 
   const getRecordedAudio = useCallback(() => {
     if (audioChunksRef.current.length === 0) return null;
@@ -161,8 +180,8 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     isCleaningUpRef.current = false;
   }, [clearTranscriptUpdateTimer]);
 
-  const stop = useCallback(() => {
-    cleanup();
+  const stop = useCallback(async () => {
+    await cleanup();
     setIsListening(false);
   }, [cleanup]);
 
@@ -216,6 +235,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     committedTranscriptRef.current = '';
     interimInputRef.current = '';
     interimParrotRef.current = '';
+    turnIdRef.current = 0;
     totalAudioSamplesRef.current = 0;
     turnAudioSamplesRef.current = 0;
     // audioChunksRef is already cleared in cleanup(), but ensure it's empty
@@ -378,6 +398,20 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
                interimInputRef.current = '';
                interimParrotRef.current = '';
                scheduleTranscriptStateUpdate(true);
+
+               if (finalSegment) {
+                 const turnPayload: GeminiLiveSttTurnComplete = {
+                   turnId: ++turnIdRef.current,
+                   turnTranscript: finalSegment,
+                   committedTranscript: committedTranscriptRef.current,
+                   inputTranscript,
+                   outputTranscript,
+                   audioSamples: turnSamples,
+                 };
+                 void Promise.resolve(onTurnCompleteRef.current?.(turnPayload)).catch((callbackError) => {
+                   console.error('STT turn-complete handler failed', callbackError);
+                 });
+               }
             }
           },
           onclose: (event: any) => {
