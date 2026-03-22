@@ -27,6 +27,9 @@ declare function registerProcessor(
 
 const PCM_CHUNK_SIZE = 512;
 
+type CaptureWorkletCommand = { type: 'flush' };
+type CaptureWorkletResponse = { type: 'flush-complete' };
+
 /**
  * Processor that converts float32 audio to int16 PCM and sends via MessagePort.
  * 
@@ -42,6 +45,26 @@ const PCM_CHUNK_SIZE = 512;
 class FloatToInt16Processor extends AudioWorkletProcessor {
   private buffer = new Int16Array(PCM_CHUNK_SIZE);
   private bufferedSamples = 0;
+
+  constructor() {
+    super();
+
+    this.port.onmessage = (event: MessageEvent<CaptureWorkletCommand>) => {
+      if (event.data?.type === 'flush') {
+        this.flushBufferedSamples();
+        this.port.postMessage({ type: 'flush-complete' } satisfies CaptureWorkletResponse);
+      }
+    };
+  }
+
+  private flushBufferedSamples() {
+    if (this.bufferedSamples === 0) return;
+
+    const chunk = this.buffer.slice(0, this.bufferedSamples);
+    this.port.postMessage(chunk, [chunk.buffer]);
+    this.buffer = new Int16Array(PCM_CHUNK_SIZE);
+    this.bufferedSamples = 0;
+  }
 
   process(inputs: Float32Array[][]): boolean {
     const input = inputs?.[0];

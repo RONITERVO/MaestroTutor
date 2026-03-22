@@ -22,6 +22,7 @@ import {
 } from '../worklets';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
+import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -102,6 +103,20 @@ const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
   return pcm.slice().buffer;
 };
 
+interface ModelAudioDecodeJob {
+  jobId: number;
+  sessionId: number;
+  turnId: number;
+  cancelled: boolean;
+  promise: Promise<void>;
+}
+
+interface ModelAudioDecodeCheckpoint {
+  sessionId: number;
+  turnId: number;
+  lastJobId: number;
+}
+
 /**
  * Manage a live Gemini conversation with real-time microphone capture, periodic video frames, model audio playback, transcription accumulation, and turn-level callbacks.
  *
@@ -135,6 +150,7 @@ export function useGeminiLiveConversation(
   const videoFrameInFlightRef = useRef(false);
   const transcriptUpdateTimerRef = useRef<number | null>(null);
   const pendingTranscriptUpdateRef = useRef<LiveTurnTranscriptUpdate | null>(null);
+  const serverMessageQueueRef = useRef<Promise<void>>(Promise.resolve());
   const inputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const outputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   
@@ -157,6 +173,10 @@ export function useGeminiLiveConversation(
   const modelAudioSplitPointsRef = useRef<number[]>([]);
   const lastNewlineCountRef = useRef<number>(0);
   const lastTranscriptUpdateRef = useRef<LiveTurnTranscriptUpdate | null>(null);
+  const currentModelAudioTurnIdRef = useRef<number>(0);
+  const nextModelAudioTurnIdRef = useRef<number>(1);
+  const nextModelAudioDecodeJobIdRef = useRef<number>(1);
+  const pendingModelAudioDecodeJobsRef = useRef<Map<number, ModelAudioDecodeJob>>(new Map());
 
   const callbacksRef = useRef(callbacks);
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
@@ -228,6 +248,48 @@ export function useGeminiLiveConversation(
     });
   }, [clearTranscriptUpdateTimer]);
 
+  const startNextModelAudioTurn = useCallback((sessionId: number) => {
+    currentModelAudioTurnIdRef.current = sessionId > 0 ? nextModelAudioTurnIdRef.current++ : 0;
+  }, []);
+
+  const getModelAudioDecodeCheckpoint = useCallback((): ModelAudioDecodeCheckpoint => ({
+    sessionId: currentSessionIdRef.current,
+    turnId: currentModelAudioTurnIdRef.current,
+    lastJobId: nextModelAudioDecodeJobIdRef.current - 1,
+  }), []);
+
+  const cancelModelAudioDecodeJobs = useCallback((sessionId?: number, turnId?: number) => {
+    for (const [jobId, job] of pendingModelAudioDecodeJobsRef.current.entries()) {
+      if (
+        (sessionId === undefined || job.sessionId === sessionId)
+        && (turnId === undefined || job.turnId === turnId)
+      ) {
+        job.cancelled = true;
+        pendingModelAudioDecodeJobsRef.current.delete(jobId);
+      }
+    }
+  }, []);
+
+  const waitForModelAudioDecodeCheckpoint = useCallback(async (
+    checkpoint: ModelAudioDecodeCheckpoint
+  ) => {
+    if (checkpoint.turnId === 0 || checkpoint.lastJobId <= 0) {
+      return;
+    }
+
+    const pendingJobs = Array.from(pendingModelAudioDecodeJobsRef.current.values())
+      .filter((job) => (
+        job.sessionId === checkpoint.sessionId
+        && job.turnId === checkpoint.turnId
+        && job.jobId <= checkpoint.lastJobId
+      ))
+      .map((job) => job.promise);
+
+    if (pendingJobs.length > 0) {
+      await Promise.allSettled(pendingJobs);
+    }
+  }, []);
+
   const stopAllAudio = useCallback(() => {
     if (playbackNodeRef.current) {
       try {
@@ -264,18 +326,26 @@ export function useGeminiLiveConversation(
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
-    
+
+    const activeCaptureNode = workletNodeRef.current;
+    if (activeCaptureNode) {
+      await flushCaptureWorkletNode(activeCaptureNode);
+    }
+
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
-    
+    cancelModelAudioDecodeJobs();
+    startNextModelAudioTurn(0);
+
     stopVideoFrameLoop();
     clearTranscriptUpdateTimer();
+    serverMessageQueueRef.current = Promise.resolve();
     pendingTranscriptUpdateRef.current = null;
     videoFrameInFlightRef.current = false;
     
     // Clear worklet message handler FIRST to stop new audio from accumulating
-    if (workletNodeRef.current) {
-        try { workletNodeRef.current.port.onmessage = null; workletNodeRef.current.disconnect(); } catch { }
+    if (activeCaptureNode) {
+        try { activeCaptureNode.port.onmessage = null; activeCaptureNode.disconnect(); } catch { }
         workletNodeRef.current = null;
     }
     if (playbackNodeRef.current) {
@@ -343,7 +413,15 @@ export function useGeminiLiveConversation(
     pendingUserTurnRef.current = null;
     
     isCleaningUpRef.current = false;
-  }, [clearTranscriptUpdateTimer, detachCaptureVideo, emitTurnTranscriptReset, stopAllAudio, stopVideoFrameLoop]);
+  }, [
+    cancelModelAudioDecodeJobs,
+    clearTranscriptUpdateTimer,
+    detachCaptureVideo,
+    emitTurnTranscriptReset,
+    startNextModelAudioTurn,
+    stopAllAudio,
+    stopVideoFrameLoop,
+  ]);
 
   // Load the AudioWorklet module (only needs to happen once per AudioContext)
   const ensureCaptureWorklet = useCallback(async (ctx: AudioContext) => {
@@ -499,6 +577,8 @@ export function useGeminiLiveConversation(
     // Generate a new session ID for this start call
     const sessionId = ++liveConversationSessionCounter;
     currentSessionIdRef.current = sessionId;
+    startNextModelAudioTurn(sessionId);
+    serverMessageQueueRef.current = Promise.resolve();
 
     const abortIfInvalidated = async () => {
       if (currentSessionIdRef.current !== sessionId) {
@@ -539,7 +619,27 @@ export function useGeminiLiveConversation(
       workletNodeRef.current = workletNode;
 
       if (playModelAudio) {
-        const outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
+        let outputCtx: AudioContext;
+        try {
+          outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
+        } catch (error) {
+          console.error('Failed to create playback AudioContext', error);
+          throw new Error('Failed to initialize model audio playback');
+        }
+
+        if (await abortIfInvalidated()) {
+          try { await outputCtx.close(); } catch { }
+          return;
+        }
+
+        if (outputCtx.sampleRate !== OUTPUT_SAMPLE_RATE) {
+          console.error(
+            `Playback AudioContext sample rate mismatch: expected ${OUTPUT_SAMPLE_RATE}, got ${outputCtx.sampleRate}`
+          );
+          try { await outputCtx.close(); } catch { }
+          throw new Error(`Model audio playback requires a ${OUTPUT_SAMPLE_RATE}Hz output context`);
+        }
+
         outputAudioContextRef.current = outputCtx;
         await ensurePlaybackWorklet(outputCtx);
         if (await abortIfInvalidated()) return;
@@ -582,141 +682,169 @@ export function useGeminiLiveConversation(
             if (currentSessionIdRef.current !== sessionId) return;
             updateState('active');
           },
-          onmessage: async (msg: LiveServerMessage) => {
-             // Check session is still valid before processing message
-             if (currentSessionIdRef.current !== sessionId) return;
+          onmessage: (msg: LiveServerMessage) => {
+            serverMessageQueueRef.current = serverMessageQueueRef.current
+              .catch(() => undefined)
+              .then(async () => {
+                // Check session is still valid before processing message
+                if (currentSessionIdRef.current !== sessionId) return;
 
-             if (msg.goAway) {
-               callbacksRef.current.onGoAway?.(msg.goAway);
-             }
-             if (msg.sessionResumptionUpdate) {
-               callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate);
-             }
-
-             // 1. Handle Audio Output
-             const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-             if (inlineAudio) {
-                 const activeSessionId = sessionId;
-                 void ensureOutputCodecWorker().decodeBase64ToPcmBuffer(inlineAudio)
-                   .then((buffer) => {
-                     if (currentSessionIdRef.current !== activeSessionId) return;
-                     const pcm16 = new Int16Array(buffer);
-                     if (!pcm16.length) return;
-
-                     // Accumulate raw PCM16 for turn handling
-                     currentModelAudioChunksRef.current.push(pcm16);
-                     currentModelAudioTotalLengthRef.current += pcm16.length;
-
-                     if (playModelAudio && playbackNodeRef.current) {
-                       try {
-                         playbackNodeRef.current.port.postMessage({
-                           type: 'push',
-                           pcm: pcm16,
-                         });
-                       } catch (error) {
-                         console.warn('Playback worklet queue failed', error);
-                       }
-                     }
-                   })
-                   .catch((error) => {
-                     if (currentSessionIdRef.current !== activeSessionId) return;
-                     console.warn('Audio decode failed', error);
-                   });
-             }
-
-             // 2. Handle Transcript Accumulation & Split Point Detection
-             if (msg.serverContent?.inputTranscription?.text) {
-               currentInputTranscriptionRef.current += msg.serverContent.inputTranscription.text;
-               emitTurnTranscriptUpdate('input');
-             }
-             if (msg.serverContent?.outputTranscription?.text) {
-               const textPart = msg.serverContent.outputTranscription.text;
-               currentOutputTranscriptionRef.current += textPart;
-               
-               // Detect new newlines to mark audio split points
-               // Transcripts arrive with delay after audio, so we record the current
-               // accumulated audio length as the split boundary when a newline appears.
-               // This naturally accounts for the audio-ahead-of-transcript timing.
-               // Use transcript parsing utility to handle language codes [xx-XX] as newlines
-               // This ensures consistent splitting even when model doesn't add actual newlines
-               const currentText = currentOutputTranscriptionRef.current;
-               const newlineCount = countTranscriptNewlines(currentText);
-               
-               if (newlineCount > lastNewlineCountRef.current) {
-                 const diff = newlineCount - lastNewlineCountRef.current;
-                 for (let i = 0; i < diff; i++) {
-                   // Mark split point at current audio accumulation position
-                   modelAudioSplitPointsRef.current.push(currentModelAudioTotalLengthRef.current);
-                 }
-                 lastNewlineCountRef.current = newlineCount;
-               }
-               emitTurnTranscriptUpdate('output');
-             }
-
-             // 3. Handle Turn Completion (Exchange Finished)
-             if (msg.serverContent?.turnComplete) {
-                const userText = currentInputTranscriptionRef.current.trim();
-                const modelText = currentOutputTranscriptionRef.current.trim();
-                
-                // Consolidate User Audio
-                let userAudioFull = mergeInt16Arrays(currentUserAudioChunksRef.current);
-                
-                // Trim silence from user audio to avoid saving dead air
-                if (userAudioFull.length > 0) {
-                    userAudioFull = trimSilence(userAudioFull, INPUT_SAMPLE_RATE);
+                if (msg.goAway) {
+                  callbacksRef.current.onGoAway?.(msg.goAway);
+                }
+                if (msg.sessionResumptionUpdate) {
+                  callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate);
                 }
 
-                // Consolidate and Split Model Audio by transcript newlines
-                const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
-                const modelAudioLines: Int16Array[] = [];
-                
-                if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
+                // 1. Handle Audio Output
+                const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                if (inlineAudio) {
+                  const turnId = currentModelAudioTurnIdRef.current;
+                  const jobId = nextModelAudioDecodeJobIdRef.current++;
+                  const job: ModelAudioDecodeJob = {
+                    jobId,
+                    sessionId,
+                    turnId,
+                    cancelled: false,
+                    promise: Promise.resolve(),
+                  };
+
+                  const isJobActive = () => (
+                    !job.cancelled
+                    && currentSessionIdRef.current === sessionId
+                    && currentModelAudioTurnIdRef.current === turnId
+                  );
+
+                  job.promise = ensureOutputCodecWorker().decodeBase64ToPcmBuffer(inlineAudio)
+                    .then((buffer) => {
+                      if (!isJobActive()) return;
+
+                      const pcm16 = new Int16Array(buffer);
+                      if (!pcm16.length) return;
+
+                      currentModelAudioChunksRef.current.push(pcm16);
+                      currentModelAudioTotalLengthRef.current += pcm16.length;
+
+                      if (playModelAudio && playbackNodeRef.current) {
+                        try {
+                          playbackNodeRef.current.port.postMessage({
+                            type: 'push',
+                            pcm: pcm16,
+                          });
+                        } catch (error) {
+                          console.warn('Playback worklet queue failed', error);
+                        }
+                      }
+                    })
+                    .catch((error) => {
+                      if (!isJobActive()) return;
+                      console.warn('Audio decode failed', error);
+                    })
+                    .finally(() => {
+                      pendingModelAudioDecodeJobsRef.current.delete(jobId);
+                    });
+
+                  pendingModelAudioDecodeJobsRef.current.set(jobId, job);
+                }
+
+                // 2. Handle Transcript Accumulation & Split Point Detection
+                if (msg.serverContent?.inputTranscription?.text) {
+                  currentInputTranscriptionRef.current += msg.serverContent.inputTranscription.text;
+                  emitTurnTranscriptUpdate('input');
+                }
+                if (msg.serverContent?.outputTranscription?.text) {
+                  const textPart = msg.serverContent.outputTranscription.text;
+                  currentOutputTranscriptionRef.current += textPart;
+
+                  const currentText = currentOutputTranscriptionRef.current;
+                  const newlineCount = countTranscriptNewlines(currentText);
+
+                  if (newlineCount > lastNewlineCountRef.current) {
+                    const decodeCheckpoint = getModelAudioDecodeCheckpoint();
+                    await waitForModelAudioDecodeCheckpoint(decodeCheckpoint);
+                    if (
+                      currentSessionIdRef.current !== sessionId
+                      || currentModelAudioTurnIdRef.current !== decodeCheckpoint.turnId
+                    ) {
+                      return;
+                    }
+
+                    const committedNewlineCount = lastNewlineCountRef.current;
+                    if (newlineCount > committedNewlineCount) {
+                      const diff = newlineCount - committedNewlineCount;
+                      for (let i = 0; i < diff; i++) {
+                        modelAudioSplitPointsRef.current.push(currentModelAudioTotalLengthRef.current);
+                      }
+                      lastNewlineCountRef.current = newlineCount;
+                    }
+                  }
+                  emitTurnTranscriptUpdate('output');
+                }
+
+                // 3. Handle Turn Completion (Exchange Finished)
+                if (msg.serverContent?.turnComplete) {
+                  const modelAudioCheckpoint = getModelAudioDecodeCheckpoint();
+                  await waitForModelAudioDecodeCheckpoint(modelAudioCheckpoint);
+                  if (
+                    currentSessionIdRef.current !== sessionId
+                    || currentModelAudioTurnIdRef.current !== modelAudioCheckpoint.turnId
+                  ) {
+                    return;
+                  }
+
+                  const completedTurnId = modelAudioCheckpoint.turnId;
+                  const userText = currentInputTranscriptionRef.current.trim();
+                  const modelText = currentOutputTranscriptionRef.current.trim();
+
+                  let userAudioFull = mergeInt16Arrays(currentUserAudioChunksRef.current);
+                  if (userAudioFull.length > 0) {
+                    userAudioFull = trimSilence(userAudioFull, INPUT_SAMPLE_RATE);
+                  }
+
+                  const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
+                  const modelAudioLines: Int16Array[] = [];
+
+                  if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
                     let startSample = 0;
-                    // Sort split points but do NOT deduplicate.
-                    // Duplicate split points (same audio position for consecutive newlines)
-                    // mean a transcript line had no audio - we must create an empty segment
-                    // to maintain 1:1 alignment between audio segments and transcript lines.
                     const points = modelAudioSplitPointsRef.current
-                        .slice()
-                        .sort((a, b) => a - b)
-                        .filter(p => p < modelAudioFull.length);
+                      .slice()
+                      .sort((a, b) => a - b)
+                      .filter((point) => point < modelAudioFull.length);
 
                     for (const point of points) {
-                        if (point > startSample) {
-                            modelAudioLines.push(modelAudioFull.slice(startSample, point));
-                            startSample = point;
-                        } else {
-                            // Duplicate split point: transcript line with no audio
-                            modelAudioLines.push(new Int16Array(0));
-                        }
+                      if (point > startSample) {
+                        modelAudioLines.push(modelAudioFull.slice(startSample, point));
+                        startSample = point;
+                      } else {
+                        modelAudioLines.push(new Int16Array(0));
+                      }
                     }
-                    // Add remainder as final segment
+
                     if (startSample < modelAudioFull.length) {
-                        modelAudioLines.push(modelAudioFull.slice(startSample));
+                      modelAudioLines.push(modelAudioFull.slice(startSample));
                     }
-                } else if (modelAudioFull.length > 0) {
-                    // No newlines detected, one single audio block
+                  } else if (modelAudioFull.length > 0) {
                     modelAudioLines.push(modelAudioFull);
-                }
+                  }
 
-                const inputTranscript = currentInputTranscriptionRef.current;
-                const outputTranscript = currentOutputTranscriptionRef.current;
+                  const inputTranscript = currentInputTranscriptionRef.current;
+                  const outputTranscript = currentOutputTranscriptionRef.current;
 
-                if (!modelText) {
+                  if (!modelText) {
                     if (userText || userAudioFull.length > 0 || inputTranscript) {
-                        if (pendingUserTurnRef.current) {
-                            const prev = pendingUserTurnRef.current;
-                            const mergedText = [prev.text, userText].filter(Boolean).join('\n').trim();
-                            const mergedTranscript = [prev.transcript, inputTranscript].filter(Boolean).join(' ').trim();
-                            const mergedAudio = mergeInt16Arrays([prev.audio, userAudioFull]);
-                            pendingUserTurnRef.current = { text: mergedText, transcript: mergedTranscript, audio: mergedAudio };
-                        } else {
-                            pendingUserTurnRef.current = {
-                                text: userText,
-                                transcript: inputTranscript,
-                                audio: userAudioFull,
-                            };
-                        }
+                      if (pendingUserTurnRef.current) {
+                        const prev = pendingUserTurnRef.current;
+                        const mergedText = [prev.text, userText].filter(Boolean).join('\n').trim();
+                        const mergedTranscript = [prev.transcript, inputTranscript].filter(Boolean).join(' ').trim();
+                        const mergedAudio = mergeInt16Arrays([prev.audio, userAudioFull]);
+                        pendingUserTurnRef.current = { text: mergedText, transcript: mergedTranscript, audio: mergedAudio };
+                      } else {
+                        pendingUserTurnRef.current = {
+                          text: userText,
+                          transcript: inputTranscript,
+                          audio: userAudioFull,
+                        };
+                      }
                     }
                     if (logRef.current && !logFinalizedRef.current) {
                       logRef.current.complete({
@@ -727,20 +855,20 @@ export function useGeminiLiveConversation(
                         userAudioSamples: userAudioFull.length,
                       });
                     }
-                } else {
+                  } else {
                     let finalUserText = userText;
                     let finalUserAudio = userAudioFull;
                     let finalInputTranscript = inputTranscript;
                     const pending = pendingUserTurnRef.current;
                     if (pending) {
-                        finalUserText = pending.text || userText;
-                        finalInputTranscript = pending.transcript || inputTranscript;
-                        if (pending.audio.length > 0 && userAudioFull.length > 0) {
-                            finalUserAudio = mergeInt16Arrays([pending.audio, userAudioFull]);
-                        } else if (pending.audio.length > 0) {
-                            finalUserAudio = pending.audio;
-                        }
-                        pendingUserTurnRef.current = null;
+                      finalUserText = pending.text || userText;
+                      finalInputTranscript = pending.transcript || inputTranscript;
+                      if (pending.audio.length > 0 && userAudioFull.length > 0) {
+                        finalUserAudio = mergeInt16Arrays([pending.audio, userAudioFull]);
+                      } else if (pending.audio.length > 0) {
+                        finalUserAudio = pending.audio;
+                      }
+                      pendingUserTurnRef.current = null;
                     }
 
                     if (emitTurns) {
@@ -784,34 +912,44 @@ export function useGeminiLiveConversation(
                       modelAudioLinesCount: modelAudioLines.length,
                       userAudioSamples: finalUserAudio.length,
                     });
-                }
-                // Reset all accumulators for next turn
-                currentInputTranscriptionRef.current = '';
-                currentOutputTranscriptionRef.current = '';
-                currentUserAudioChunksRef.current = [];
-                currentModelAudioChunksRef.current = [];
-                currentModelAudioTotalLengthRef.current = 0;
-                modelAudioSplitPointsRef.current = [];
-                lastNewlineCountRef.current = 0;
-                lastTranscriptUpdateRef.current = null;
-                if (!modelText) {
-                  emitTurnTranscriptUpdate('pending-user');
-                }
-             }
+                  }
 
-             // 4. Handle Interruption
-             if (msg.serverContent?.interrupted) {
-                 if (playModelAudio) {
-                   stopAllAudio();
-                 }
-                 // Reset model output accumulators and sync tracking
-                 currentOutputTranscriptionRef.current = '';
-                 currentModelAudioChunksRef.current = [];
-                 currentModelAudioTotalLengthRef.current = 0;
-                 modelAudioSplitPointsRef.current = [];
-                 lastNewlineCountRef.current = 0;
-                 emitTurnTranscriptUpdate('interrupted');
-             }
+                  cancelModelAudioDecodeJobs(sessionId, completedTurnId);
+                  currentInputTranscriptionRef.current = '';
+                  currentOutputTranscriptionRef.current = '';
+                  currentUserAudioChunksRef.current = [];
+                  currentModelAudioChunksRef.current = [];
+                  currentModelAudioTotalLengthRef.current = 0;
+                  modelAudioSplitPointsRef.current = [];
+                  lastNewlineCountRef.current = 0;
+                  lastTranscriptUpdateRef.current = null;
+                  startNextModelAudioTurn(sessionId);
+
+                  if (!modelText) {
+                    emitTurnTranscriptUpdate('pending-user');
+                  }
+                }
+
+                // 4. Handle Interruption
+                if (msg.serverContent?.interrupted) {
+                  const interruptedTurnId = currentModelAudioTurnIdRef.current;
+                  cancelModelAudioDecodeJobs(sessionId, interruptedTurnId);
+                  if (playModelAudio) {
+                    stopAllAudio();
+                  }
+                  currentOutputTranscriptionRef.current = '';
+                  currentModelAudioChunksRef.current = [];
+                  currentModelAudioTotalLengthRef.current = 0;
+                  modelAudioSplitPointsRef.current = [];
+                  lastNewlineCountRef.current = 0;
+                  startNextModelAudioTurn(sessionId);
+                  emitTurnTranscriptUpdate('interrupted');
+                }
+              })
+              .catch((error) => {
+                if (currentSessionIdRef.current !== sessionId) return;
+                console.warn('Live server message processing failed', error);
+              });
           },
           onclose: () => {
             // Check session is still valid before updating state
@@ -871,7 +1009,7 @@ export function useGeminiLiveConversation(
       }
 
       // Audio Streaming Loop (Worklet) with session validation
-      workletNode.port.onmessage = (event: MessageEvent<Int16Array>) => {
+      workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
           // CRITICAL: Check session is still valid before processing audio
           if (currentSessionIdRef.current !== sessionId) return;
           
@@ -922,15 +1060,19 @@ export function useGeminiLiveConversation(
       await cleanup();
     }
   }, [
+    cancelModelAudioDecodeJobs,
     updateState,
     cleanup,
+    getModelAudioDecodeCheckpoint,
     stopAllAudio,
+    startNextModelAudioTurn,
     ensureCaptureWorklet,
     ensureInputCodecWorker,
     ensureOutputCodecWorker,
     ensurePlaybackWorklet,
     ensureVideoElementReady,
     startVideoFrameLoop,
+    waitForModelAudioDecodeCheckpoint,
   ]);
 
   const stop = useCallback(async () => {

@@ -94,7 +94,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
   const isSpeaking = useMaestroStore(selectIsSpeaking);
   const latestGroundingChunks = useMaestroStore(selectLatestGroundingChunks);
-  const messages = useMemo(() => {
+  const combinedMessages = useMemo(() => {
     if (liveTranscriptMessages.length === 0) return persistedMessages;
     const persistedIds = new Set(persistedMessages.map(message => message.id));
     const liveOnlyMessages = liveTranscriptMessages.filter(message => !persistedIds.has(message.id));
@@ -172,8 +172,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const bookmarkEligibleAssistantIds = useMemo(() => {
     const eligible = new Set<string>();
     let runningCount = 0;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i];
+    for (let i = combinedMessages.length - 1; i >= 0; i--) {
+      const m = combinedMessages[i];
       if (isRealChatMessage(m)) {
         runningCount++;
         if (m.role === 'assistant' && !m.thinking && runningCount <= maxVisibleBookmarkBudget) {
@@ -182,7 +182,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
       }
     }
     return eligible;
-  }, [messages, maxVisibleBookmarkBudget]);
+  }, [combinedMessages, maxVisibleBookmarkBudget]);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -199,7 +199,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     if (shouldAutoScrollRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [persistedMessages]);
+
+  useEffect(() => {
+    if (!shouldAutoScrollRef.current || liveTranscriptMessages.length === 0) {
+      return;
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+  }, [liveTranscriptMessages]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -394,22 +401,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
         hasBookmark: false,
         bookmarkIdx: -1,
         pre: [] as ChatMessage[],
-        post: messages,
+        post: combinedMessages,
         hiddenCount: 0,
       };
     }
-    const idx = messages.findIndex(m => m.id === bookmarkedMessageId);
+    const idx = combinedMessages.findIndex(m => m.id === bookmarkedMessageId);
     if (idx === -1) {
       return {
         hasBookmark: false,
         bookmarkIdx: -1,
         pre: [] as ChatMessage[],
-        post: messages,
+        post: combinedMessages,
         hiddenCount: 0,
       };
     }
-    const pre = messages.slice(0, idx);
-    const post = messages.slice(idx);
+    const pre = combinedMessages.slice(0, idx);
+    const post = combinedMessages.slice(idx);
     return {
       hasBookmark: true,
       bookmarkIdx: idx,
@@ -417,7 +424,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
       post,
       hiddenCount: pre.length,
     };
-  }, [messages, bookmarkedMessageId]);
+  }, [combinedMessages, bookmarkedMessageId]);
 
   useEffect(() => {
     if (bookmarkViewMode !== 'above') return;
@@ -433,7 +440,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     }
   }, [bookmarkViewMode, bookmarkAboveChunkIndex, bookmarkInfo.hiddenCount]);
 
-  let messagesToRender = messages;
+  let messagesToRender = combinedMessages;
   let hiddenCount = bookmarkInfo.hiddenCount;
   let bookmarkChunkMeta: {
     chunkCount: number;

@@ -35,6 +35,8 @@ const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
 
 self.onmessage = (event: MessageEvent<AudioCodecWorkerRequest>) => {
   const request = event.data;
+  const fallbackRequestId = (request as { requestId?: number }).requestId ?? -1;
+  const fallbackRequestKind = (request as { kind?: unknown }).kind;
 
   try {
     if (request.kind === 'encode-pcm-base64') {
@@ -55,7 +57,16 @@ self.onmessage = (event: MessageEvent<AudioCodecWorkerRequest>) => {
         buffer,
       };
       self.postMessage(response, [buffer]);
+      return;
     }
+
+    const response: AudioCodecWorkerResponse = {
+      kind: 'error',
+      requestId: fallbackRequestId,
+      message: `Unknown audio codec worker request kind: ${String(fallbackRequestKind)}`,
+    };
+    self.postMessage(response);
+    return;
   } catch (error) {
     const response: AudioCodecWorkerResponse = {
       kind: 'error',

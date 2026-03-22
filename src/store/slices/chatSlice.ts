@@ -42,7 +42,11 @@ export interface ChatSlice {
   attachedFileName: string | null;
   
   // Actions
-  loadHistoryForPair: (pairId: string, t: (key: string) => string) => Promise<void>;
+  loadHistoryForPair: (
+    pairId: string,
+    t: (key: string) => string,
+    options?: { waitForIdle?: () => Promise<void> }
+  ) => Promise<void>;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'> & Partial<Pick<ChatMessage, 'id' | 'timestamp'>>) => string;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   deleteMessage: (messageId: string) => void;
@@ -103,7 +107,10 @@ export const createChatSlice: StateCreator<
   [['zustand/subscribeWithSelector', never], ['zustand/devtools', never]],
   [],
   ChatSlice
-> = (set, get) => ({
+> = (set, get) => {
+  let historyLoadRequestId = 0;
+
+  return ({
   // Initial state
   messages: [],
   liveTranscriptMessages: [],
@@ -119,11 +126,25 @@ export const createChatSlice: StateCreator<
   attachedFileName: null,
   
   // Actions
-  loadHistoryForPair: async (pairId: string, t: (key: string) => string) => {
+  loadHistoryForPair: async (
+    pairId: string,
+    t: (key: string) => string,
+    options?: { waitForIdle?: () => Promise<void> }
+  ) => {
+    const requestId = ++historyLoadRequestId;
+
+    await options?.waitForIdle?.();
+    if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+      return;
+    }
+
     set({ isLoadingHistory: true, messages: [], liveTranscriptMessages: [], replySuggestions: [], suggestionsLoadingStreamText: '' });
     
     try {
       const history = await getChatHistoryDB(pairId);
+      if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+        return;
+      }
       
       // Clean up interrupted states
       const cleanedHistory = (history || []).map(msg => {
@@ -167,7 +188,13 @@ export const createChatSlice: StateCreator<
       
       // Load chat meta for bookmark
       try {
+        if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+          return;
+        }
         const meta = await getChatMetaDB(pairId);
+        if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+          return;
+        }
         if (meta && meta.bookmarkMessageId) {
           get().updateSetting('historyBookmarkMessageId', meta.bookmarkMessageId);
         } else {
@@ -178,9 +205,13 @@ export const createChatSlice: StateCreator<
       }
     } catch (error) {
       console.error("Failed to load history from IndexedDB", error);
-      set({ messages: [] });
+      if (requestId === historyLoadRequestId && get().settings.selectedLanguagePairId === pairId) {
+        set({ messages: [] });
+      }
     } finally {
-      set({ isLoadingHistory: false });
+      if (requestId === historyLoadRequestId && get().settings.selectedLanguagePairId === pairId) {
+        set({ isLoadingHistory: false });
+      }
     }
   },
   
@@ -363,4 +394,5 @@ export const createChatSlice: StateCreator<
   },
   
   getMessages: () => get().messages,
-});
+  });
+};

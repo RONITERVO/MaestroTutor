@@ -62,6 +62,19 @@ const App: React.FC = () => {
   const bubbleWrapperRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const maestroAvatarUriRef = useRef<string | null>(null);
   const maestroAvatarMimeTypeRef = useRef<string | null>(null);
+  const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
+  const cancelReengagementRef = useRef<() => void>(() => {});
+  const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
+  const resetSilentObserverRef = useRef<() => Promise<void>>(async () => {});
+  const stopLiveSessionForHistoryLoadRef = useRef<() => Promise<void>>(async () => {});
+  const handleToggleSuggestionModeRef = useRef<((forceState?: boolean) => void) | undefined>(undefined);
+
+  const waitForConversationSystemsIdle = useCallback(async () => {
+    await Promise.allSettled([
+      Promise.resolve(resetSilentObserverRef.current()),
+      Promise.resolve(stopLiveSessionForHistoryLoadRef.current()),
+    ]);
+  }, []);
 
   // ============================================================
   // HOOK COMPOSITION - The Controller Layer
@@ -99,6 +112,7 @@ const App: React.FC = () => {
   } = useAppInitialization({
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
+    waitForConversationSystemsIdle,
   });
 
   const {
@@ -177,14 +191,6 @@ const App: React.FC = () => {
   const attachedImageBase64 = useMaestroStore(state => state.attachedImageBase64);
   const attachedImageMimeType = useMaestroStore(state => state.attachedImageMimeType);
   
-  // Re-engagement callbacks refs - will be populated after useSmartReengagement
-  const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
-  const cancelReengagementRef = useRef<() => void>(() => {});
-  const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
-  
-  // Toggle suggestion mode callback ref - will be populated after handleToggleSuggestionMode is defined
-  const handleToggleSuggestionModeRef = useRef<((forceState?: boolean) => void) | undefined>(undefined);
-
   // --- Speech Controller ---
   // NOTE: Moved before useSmartReengagement to provide speechIsSpeakingRef
   const {
@@ -526,6 +532,7 @@ const App: React.FC = () => {
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
   });
+  stopLiveSessionForHistoryLoadRef.current = () => handleStopLiveSession({ scheduleReengagement: false });
 
   const handleSilentObserverTurnComplete = useCallback(async (
     userText: string,
@@ -549,10 +556,8 @@ const App: React.FC = () => {
     onTurnTranscriptUpdate: handleLiveTurnTranscriptUpdate,
     onTurnComplete: handleSilentObserverTurnComplete,
   });
-
-  useEffect(() => {
-    stopSilentObserverRef.current = stopSilentObserver;
-  }, [stopSilentObserver]);
+  stopSilentObserverRef.current = stopSilentObserver;
+  resetSilentObserverRef.current = resetSilentObserver;
 
   const handleStartLiveSessionWithObserverStop = useCallback(async () => {
     await stopSilentObserver();

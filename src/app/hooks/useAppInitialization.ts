@@ -23,11 +23,13 @@ import { refreshGeminiModelsFromRemote, resolveModelRegistryUrl, setModelRegistr
 export interface UseAppInitializationConfig {
   maestroAvatarUriRef: MutableRefObject<string | null>;
   maestroAvatarMimeTypeRef: MutableRefObject<string | null>;
+  waitForConversationSystemsIdle?: () => Promise<void>;
 }
 
 export const useAppInitialization = ({
   maestroAvatarUriRef,
   maestroAvatarMimeTypeRef,
+  waitForConversationSystemsIdle,
 }: UseAppInitializationConfig) => {
   const { t } = useAppTranslations();
 
@@ -89,9 +91,9 @@ export const useAppInitialization = ({
     const pairId = settings.selectedLanguagePairId;
     if (pairId && pairId !== prevPairIdRef.current) {
       prevPairIdRef.current = pairId;
-      loadHistoryForPair(pairId, t);
+      void loadHistoryForPair(pairId, t, { waitForIdle: waitForConversationSystemsIdle });
     }
-  }, [settings.selectedLanguagePairId, loadHistoryForPair, t]);
+  }, [settings.selectedLanguagePairId, loadHistoryForPair, t, waitForConversationSystemsIdle]);
 
   return {
     t,

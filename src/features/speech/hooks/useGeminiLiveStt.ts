@@ -10,6 +10,7 @@ import { getGeminiModels } from '../../../core/config/models';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
+import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 
 export interface UseGeminiLiveSttReturn {
   start: (
@@ -108,15 +109,20 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
-    
+
+    const activeCaptureNode = workletNodeRef.current;
+    if (activeCaptureNode) {
+      await flushCaptureWorkletNode(activeCaptureNode);
+    }
+
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
     clearTranscriptUpdateTimer();
     
     // Clear worklet message handler FIRST to stop new audio from accumulating
-    if (workletNodeRef.current) {
-      workletNodeRef.current.port.onmessage = null;
-      try { workletNodeRef.current.disconnect(); } catch { /* ignore */ }
+    if (activeCaptureNode) {
+      activeCaptureNode.port.onmessage = null;
+      try { activeCaptureNode.disconnect(); } catch { /* ignore */ }
       workletNodeRef.current = null;
     }
     
@@ -424,12 +430,12 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
       workletNodeRef.current = workletNode;
 
       // Handle audio chunks from the worklet with session validation
-      workletNode.port.onmessage = (event: MessageEvent<Int16Array>) => {
+      workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
         // CRITICAL: Check session is still valid before processing audio
         if (currentSessionIdRef.current !== sessionId) return;
         
         const pcm = event.data;
-        if (pcm && pcm.length > 0) {
+        if (pcm instanceof Int16Array && pcm.length > 0) {
            audioChunksRef.current.push(pcm);
            totalAudioSamplesRef.current += pcm.length;
            turnAudioSamplesRef.current += pcm.length;
