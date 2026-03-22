@@ -51,9 +51,11 @@ export interface UseLiveSessionControllerConfig {
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
   
   // Chat store
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => string;
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'> & Partial<Pick<ChatMessage, 'id' | 'timestamp'>>) => string;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
-  deleteMessage: (messageId: string) => void;
+  upsertLiveTranscriptMessage: (message: ChatMessage) => void;
+  removeLiveTranscriptMessage: (messageId: string) => void;
+  clearLiveTranscriptMessages: () => void;
   getHistoryRespectingBookmark: (arr: ChatMessage[]) => ChatMessage[];
   computeMaxMessagesForArray: (arr: ChatMessage[]) => number | undefined;
   fetchAndSetReplySuggestions: (
@@ -126,7 +128,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     setSettings,
     addMessage,
     updateMessage,
-    deleteMessage,
+    upsertLiveTranscriptMessage,
+    removeLiveTranscriptMessage,
+    clearLiveTranscriptMessages,
     getHistoryRespectingBookmark,
     fetchAndSetReplySuggestions,
     upsertMessageTtsCache,
@@ -178,9 +182,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   const liveSessionCaptureRef = useRef<{ stream: MediaStream; created: boolean } | null>(null);
   const liveUiTokenRef = useRef<string | null>(null);
   const isFinalizingLiveTurnRef = useRef(false);
-  const liveDraftMessageIdsRef = useRef<{ userMessageId: string | null; assistantMessageId: string | null }>({
-    userMessageId: null,
-    assistantMessageId: null,
+  const liveDraftMessageMetaRef = useRef<{
+    user: { id: string | null; timestamp: number | null };
+    assistant: { id: string | null; timestamp: number | null };
+  }>({
+    user: { id: null, timestamp: null },
+    assistant: { id: null, timestamp: null },
   });
 
   // --- Helper Functions ---
@@ -191,19 +198,34 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   }, [messagesRef]);
 
   const clearLiveDraftRefs = useCallback(() => {
-    liveDraftMessageIdsRef.current = {
-      userMessageId: null,
-      assistantMessageId: null,
+    liveDraftMessageMetaRef.current = {
+      user: { id: null, timestamp: null },
+      assistant: { id: null, timestamp: null },
     };
   }, []);
 
-  const dropAssistantDraftMessage = useCallback(() => {
-    const assistantMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.assistantMessageId);
-    if (assistantMessageId) {
-      deleteMessage(assistantMessageId);
+  const ensureLiveDraftMeta = useCallback((role: 'user' | 'assistant') => {
+    const current = liveDraftMessageMetaRef.current[role];
+    if (current.id && current.timestamp) {
+      return { id: current.id, timestamp: current.timestamp };
     }
-    liveDraftMessageIdsRef.current.assistantMessageId = null;
-  }, [deleteMessage, findExistingMessageId]);
+    const next = { id: crypto.randomUUID(), timestamp: Date.now() };
+    liveDraftMessageMetaRef.current[role] = next;
+    return next;
+  }, []);
+
+  const clearAllLiveDraftMessages = useCallback(() => {
+    clearLiveTranscriptMessages();
+    clearLiveDraftRefs();
+  }, [clearLiveDraftRefs, clearLiveTranscriptMessages]);
+
+  const dropAssistantDraftMessage = useCallback(() => {
+    const assistantMessageId = liveDraftMessageMetaRef.current.assistant.id;
+    if (assistantMessageId) {
+      removeLiveTranscriptMessage(assistantMessageId);
+    }
+    liveDraftMessageMetaRef.current.assistant = { id: null, timestamp: null };
+  }, [removeLiveTranscriptMessage]);
 
   /**
    * Release the camera stream captured for live session
@@ -268,8 +290,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   ) => {
     isFinalizingLiveTurnRef.current = true;
     try {
-      let userMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.userMessageId) || '';
-      let assistantId = findExistingMessageId(liveDraftMessageIdsRef.current.assistantMessageId) || '';
+      const userDraftMeta = liveDraftMessageMetaRef.current.user;
+      let userMessageId = userDraftMeta.id || '';
+      let userMessageTimestamp = userDraftMeta.timestamp || Date.now();
+      const assistantDraftMeta = liveDraftMessageMetaRef.current.assistant;
+      let assistantId = assistantDraftMeta.id || '';
+      let assistantTimestamp = assistantDraftMeta.timestamp || Date.now();
       let snapshotData: any = null;
       
       // 1. Add User Message with Snapshot & Audio
@@ -300,15 +326,21 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           recordedUtterance,
         };
 
-        if (userMessageId) {
+        if (findExistingMessageId(userMessageId)) {
           updateMessage(userMessageId, userMessageUpdates);
         } else {
+          if (!userMessageId) {
+            const draftMeta = ensureLiveDraftMeta('user');
+            userMessageId = draftMeta.id;
+            userMessageTimestamp = draftMeta.timestamp;
+          }
           userMessageId = addMessage({
+            id: userMessageId,
+            timestamp: userMessageTimestamp,
             role: 'user',
             ...userMessageUpdates,
           });
         }
-        liveDraftMessageIdsRef.current.userMessageId = userMessageId;
 
         // Background optimization and upload for live snapshots
         if (snapshotData && userMessageId) {
@@ -359,18 +391,24 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
       // 2. Add Model Message
       if (modelText) {
-        if (assistantId) {
+        if (findExistingMessageId(assistantId)) {
           updateMessage(assistantId, {
             rawAssistantResponse: modelText,
             translations: undefined,
           });
         } else {
+          if (!assistantId) {
+            const draftMeta = ensureLiveDraftMeta('assistant');
+            assistantId = draftMeta.id;
+            assistantTimestamp = draftMeta.timestamp;
+          }
           assistantId = addMessage({
+            id: assistantId,
+            timestamp: assistantTimestamp,
             role: 'assistant',
             rawAssistantResponse: modelText
           });
         }
-        liveDraftMessageIdsRef.current.assistantMessageId = assistantId;
 
         // 3. Post-processing: Formatting Transcript & Translations
         if (selectedLanguagePairRef.current) {
@@ -480,13 +518,14 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     } finally {
       isFinalizingLiveTurnRef.current = false;
       if (modelText.trim()) {
-        clearLiveDraftRefs();
+        clearAllLiveDraftMessages();
       }
     }
   }, [
     addMessage, 
     captureSnapshot, 
-    clearLiveDraftRefs,
+    clearAllLiveDraftMessages,
+    ensureLiveDraftMeta,
     findExistingMessageId,
     t, 
     parseGeminiResponse, 
@@ -501,54 +540,42 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       if (isFinalizingLiveTurnRef.current) {
         return;
       }
-      dropAssistantDraftMessage();
-      clearLiveDraftRefs();
+      clearAllLiveDraftMessages();
       return;
     }
 
     const userText = update.userText.trim();
     const modelText = update.modelText.trim();
 
-    const existingUserMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.userMessageId);
     if (userText) {
-      if (existingUserMessageId) {
-        updateMessage(existingUserMessageId, { text: update.userText });
-      } else {
-        liveDraftMessageIdsRef.current.userMessageId = addMessage({
-          role: 'user',
-          text: update.userText,
-        });
-      }
-    } else {
-      liveDraftMessageIdsRef.current.userMessageId = existingUserMessageId;
+      const meta = ensureLiveDraftMeta('user');
+      upsertLiveTranscriptMessage({
+        id: meta.id,
+        timestamp: meta.timestamp,
+        role: 'user',
+        text: update.userText,
+      } as ChatMessage);
     }
 
-    const existingAssistantMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.assistantMessageId);
     if (modelText) {
-      if (existingAssistantMessageId) {
-        updateMessage(existingAssistantMessageId, {
-          rawAssistantResponse: update.modelText,
-          translations: undefined,
-        });
-      } else {
-        liveDraftMessageIdsRef.current.assistantMessageId = addMessage({
-          role: 'assistant',
-          rawAssistantResponse: update.modelText,
-        });
-      }
+      const meta = ensureLiveDraftMeta('assistant');
+      upsertLiveTranscriptMessage({
+        id: meta.id,
+        timestamp: meta.timestamp,
+        role: 'assistant',
+        rawAssistantResponse: update.modelText,
+      } as ChatMessage);
       return;
     }
 
-    liveDraftMessageIdsRef.current.assistantMessageId = existingAssistantMessageId;
     if (update.reason === 'interrupted') {
       dropAssistantDraftMessage();
     }
   }, [
-    addMessage,
-    clearLiveDraftRefs,
+    clearAllLiveDraftMessages,
     dropAssistantDraftMessage,
-    findExistingMessageId,
-    updateMessage,
+    ensureLiveDraftMeta,
+    upsertLiveTranscriptMessage,
   ]);
 
   // --- Initialize useGeminiLiveConversation ---

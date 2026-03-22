@@ -12,7 +12,12 @@ import InputArea from './InputArea';
 import { LanguageSelectorGlobe } from '../../session';
 import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT } from '../../../store';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
-import { selectMessages, selectReplySuggestions, selectLatestGroundingChunks } from '../../../store/slices/chatSlice';
+import {
+  selectMessages,
+  selectLiveTranscriptMessages,
+  selectReplySuggestions,
+  selectLatestGroundingChunks,
+} from '../../../store/slices/chatSlice';
 import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
 import { selectSpeakingUtteranceText } from '../../../store/slices/speechSlice';
 import { selectIsLoadingSuggestions, selectIsSpeaking } from '../../../store/slices/uiSlice';
@@ -83,11 +88,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   } = props;
 
   const { t } = useAppTranslations();
-  const messages = useMaestroStore(selectMessages);
+  const persistedMessages = useMaestroStore(selectMessages);
+  const liveTranscriptMessages = useMaestroStore(selectLiveTranscriptMessages);
   const replySuggestions = useMaestroStore(selectReplySuggestions);
   const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
   const isSpeaking = useMaestroStore(selectIsSpeaking);
   const latestGroundingChunks = useMaestroStore(selectLatestGroundingChunks);
+  const messages = useMemo(() => {
+    if (liveTranscriptMessages.length === 0) return persistedMessages;
+    const persistedIds = new Set(persistedMessages.map(message => message.id));
+    const liveOnlyMessages = liveTranscriptMessages.filter(message => !persistedIds.has(message.id));
+    if (liveOnlyMessages.length === 0) return persistedMessages;
+    return [...persistedMessages, ...liveOnlyMessages];
+  }, [liveTranscriptMessages, persistedMessages]);
+  const liveTranscriptMessageIds = useMemo(() => (
+    new Set(
+      liveTranscriptMessages
+        .filter(message => !persistedMessages.some(persisted => persisted.id === message.id))
+        .map(message => message.id)
+    )
+  ), [liveTranscriptMessages, persistedMessages]);
   const settings = useMaestroStore(selectSettings);
   const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
   const targetLanguageDef = useMaestroStore(selectTargetLanguageDef) || ALL_LANGUAGES[0];
@@ -682,7 +702,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
           const isUser = msg.role === 'user';
           const isAssistant = msg.role === 'assistant';
           const isError = msg.role === 'error';
-          const canBeDeleted = (isUser || isAssistant || isError || isStatus) && !msg.thinking && !msg.isGeneratingImage;
+          const canBeDeleted = (isUser || isAssistant || isError || isStatus)
+            && !msg.thinking
+            && !msg.isGeneratingImage
+            && !liveTranscriptMessageIds.has(msg.id);
 
           return (
              <div

@@ -374,7 +374,7 @@ export interface UseTutorConversationConfig {
   setSettings: (settings: AppSettings | ((prev: AppSettings) => AppSettings)) => void;
   
   // Chat store
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => string;
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'> & Partial<Pick<ChatMessage, 'id' | 'timestamp'>>) => string;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   setMessages: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
   getHistoryRespectingBookmark: (arr: ChatMessage[]) => ChatMessage[];

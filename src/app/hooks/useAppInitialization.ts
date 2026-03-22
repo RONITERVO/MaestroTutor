@@ -55,6 +55,9 @@ export const useAppInitialization = ({
   const addMessage = useMaestroStore(state => state.addMessage);
   const updateMessage = useMaestroStore(state => state.updateMessage);
   const deleteMessage = useMaestroStore(state => state.deleteMessage);
+  const upsertLiveTranscriptMessage = useMaestroStore(state => state.upsertLiveTranscriptMessage);
+  const removeLiveTranscriptMessage = useMaestroStore(state => state.removeLiveTranscriptMessage);
+  const clearLiveTranscriptMessages = useMaestroStore(state => state.clearLiveTranscriptMessages);
   const setMessages = useMaestroStore(state => state.setMessages);
   const getHistoryRespectingBookmark = useMaestroStore(state => state.getHistoryRespectingBookmark);
   const computeMaxMessagesForArray = useMaestroStore(state => state.computeMaxMessagesForArray);
@@ -100,6 +103,9 @@ export const useAppInitialization = ({
     addMessage,
     updateMessage,
     deleteMessage,
+    upsertLiveTranscriptMessage,
+    removeLiveTranscriptMessage,
+    clearLiveTranscriptMessages,
     setMessages,
     getHistoryRespectingBookmark,
     computeMaxMessagesForArray,
