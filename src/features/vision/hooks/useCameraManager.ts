@@ -14,6 +14,7 @@ import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
 import { getFacingModeFromLabel, isAuxiliaryCameraSensor } from '../utils/mediaUtils';
 import { useMaestroStore } from '../../../store';
+import { errorSttFlow, logSttFlow, warnSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 export interface UseCameraManagerConfig {
   t: TranslationFunction;
@@ -45,7 +46,10 @@ export interface UseCameraManagerReturn {
   snapshotUserError: string | null;
   setSnapshotUserError: React.Dispatch<React.SetStateAction<string | null>>;
   /** Capture a snapshot from the camera */
-  captureSnapshot: (isForReengagement?: boolean) => Promise<{
+  captureSnapshot: (options?: boolean | {
+    isForReengagement?: boolean;
+    requireReadyFrame?: boolean;
+  }) => Promise<{
     base64: string;
     mimeType: string;
     storageOptimizedBase64: string;
@@ -344,17 +348,39 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
     t
   ]);
 
-  const captureSnapshot = useCallback(async (isForReengagement = false): Promise<{
+  const captureSnapshot = useCallback(async (options?: boolean | {
+    isForReengagement?: boolean;
+    requireReadyFrame?: boolean;
+  }): Promise<{
     base64: string;
     mimeType: string;
     storageOptimizedBase64: string;
     storageOptimizedMimeType: string;
   } | null> => {
+    const isForReengagement = typeof options === 'boolean'
+      ? options
+      : (options?.isForReengagement ?? false);
+    const requireReadyFrame = typeof options === 'object' && options?.requireReadyFrame === true;
     const errorSetter = isForReengagement ? setVisualContextCameraError : setSnapshotUserError;
     errorSetter(null);
 
     const videoElement = visualContextVideoRef.current;
+    logSttFlow('camera.capture.start', {
+      isForReengagement,
+      requireReadyFrame,
+      selectedCameraId: selectedCameraId || 'none',
+      hasLiveVideoStream: Boolean(liveVideoStream?.active),
+      hasVisualContextStream: Boolean(visualContextStreamRef.current?.active),
+      hasVideoElement: Boolean(videoElement),
+      readyState: videoElement?.readyState ?? -1,
+      videoWidth: videoElement?.videoWidth ?? 0,
+      videoHeight: videoElement?.videoHeight ?? 0,
+    });
     if (!videoElement) {
+      warnSttFlow('camera.capture.skip.noVideoElement', {
+        isForReengagement,
+        requireReadyFrame,
+      });
       errorSetter(isForReengagement ? t('error.visualContextVideoElementNotReady') : t('error.snapshotVideoElementNotReady'));
       return null;
     }
@@ -373,8 +399,25 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         videoElement.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA &&
         videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
         streamForCapture = activeLiveStream;
+        logSttFlow('camera.capture.reuseLiveFrame', {
+          requireReadyFrame,
+          videoWidth: videoElement.videoWidth,
+          videoHeight: videoElement.videoHeight,
+        });
       } else {
+        if (requireReadyFrame) {
+          warnSttFlow('camera.capture.skip.frameNotReady', {
+            selectedCameraId: selectedCameraId || 'none',
+            readyState: videoElement.readyState,
+            videoWidth: videoElement.videoWidth,
+            videoHeight: videoElement.videoHeight,
+          });
+          return null;
+        }
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          warnSttFlow('camera.capture.skip.mediaDevicesUnavailable', {
+            isForReengagement,
+          });
           errorSetter(isForReengagement ? t('error.visualContextCameraAccessNotSupported') : t('error.snapshotCameraAccessNotSupported'));
           return null;
         }
@@ -382,12 +425,18 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           ? { deviceId: { exact: selectedCameraId } }
           : true;
 
+        logSttFlow('camera.capture.tempStream.start', {
+          selectedCameraId: selectedCameraId || 'none',
+        });
         streamForCapture = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
         streamWasTemporarilyStarted = true;
         videoElement.srcObject = streamForCapture;
         videoElement.muted = true;
         videoElement.playsInline = true;
         await videoElement.play();
+        logSttFlow('camera.capture.tempStream.playing', {
+          selectedCameraId: selectedCameraId || 'none',
+        });
 
         await new Promise((resolve, reject) => {
           const timeoutErrorKey = isForReengagement ? "error.visualContextTimeout" : "error.snapshotTimeout";
@@ -414,6 +463,10 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
             resolve(undefined);
           }
         });
+        logSttFlow('camera.capture.tempStream.ready', {
+          videoWidth: videoElement.videoWidth,
+          videoHeight: videoElement.videoHeight,
+        });
       }
 
       const canvas = document.createElement('canvas');
@@ -424,11 +477,23 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
       context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
       const imageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+      logSttFlow('camera.capture.success', {
+        isForReengagement,
+        requireReadyFrame,
+        temporaryStream: streamWasTemporarilyStarted,
+        videoWidth: videoElement.videoWidth,
+        videoHeight: videoElement.videoHeight,
+      });
       return { base64: imageBase64, mimeType: 'image/jpeg', storageOptimizedBase64: imageBase64, storageOptimizedMimeType: 'image/jpeg' };
 
     } catch (err) {
       console.error(`Error capturing image (${isForReengagement ? 're-engagement' : 'snapshot'}):`, err);
       const message = err instanceof Error ? err.message : t("error.imageCaptureGeneric");
+      errorSttFlow('camera.capture.error', {
+        isForReengagement,
+        requireReadyFrame,
+        message,
+      });
       const prefixKey = isForReengagement ? "error.visualContextCaptureFailed" : "error.snapshotCaptureFailed";
 
       if (message.includes("Permission") || message.includes("NotAllowedError")) {

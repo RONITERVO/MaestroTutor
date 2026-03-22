@@ -25,7 +25,7 @@ import { getPrimaryCode } from '../../../shared/utils/languageUtils';
 import { INLINE_CAP_AUDIO, computeTtsCacheKey, getCachedAudioForKey } from '../../chat';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 import { useMaestroStore } from '../../../store';
-import { selectIsSending } from '../../../store/slices/uiSlice';
+import { selectIsResponsePending } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { createSmartRef, createWritableSmartRef } from '../../../shared/utils/smartRef';
 
@@ -98,7 +98,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
   const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
   const messagesRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.messages), []);
   const selectedLanguagePairRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectSelectedLanguagePair), []);
-  const isSendingRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectIsSending), []);
+  const isSendingRef = useMemo(() => createSmartRef(useMaestroStore.getState, selectIsResponsePending), []);
   const replySuggestionsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.replySuggestions), []);
 
   // Smart refs with setters - store-backed read/write access

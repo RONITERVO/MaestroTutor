@@ -11,6 +11,7 @@ import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -48,13 +49,9 @@ let sttSessionCounter = 0;
 const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
 
 const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
-  if (
-    pcm.buffer instanceof ArrayBuffer
-    && pcm.byteOffset === 0
-    && pcm.byteLength === pcm.buffer.byteLength
-  ) {
-    return pcm.buffer;
-  }
+  // Keep the original chunk intact because we also retain it for recorded-audio
+  // assembly after the turn completes. Transferring the original buffer would
+  // detach it and break later WAV creation in the send path.
   return pcm.slice().buffer;
 };
 
@@ -396,6 +393,17 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                const inputTranscript = interimInputRef.current.trim();
                const outputTranscript = interimParrotRef.current.trim();
                const turnSamples = turnAudioSamplesRef.current;
+               const nextTurnId = turnIdRef.current + 1;
+               logSttFlow('stt.turnComplete.received', {
+                 sessionId,
+                 turnId: nextTurnId,
+                 finalLength: finalSegment.length,
+                 committedLength: committedTranscriptRef.current.length,
+                 inputLength: inputTranscript.length,
+                 outputLength: outputTranscript.length,
+                 audioSamples: turnSamples,
+                 autoStop: autoStopAfterTurnCompleteRef.current,
+               });
                if (inputTranscript || outputTranscript || turnSamples > 0) {
                  const turnLog = debugLogService.logRequest('useGeminiLiveStt.turn', model, {
                    inputTranscript,
@@ -426,15 +434,39 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                    outputTranscript,
                    audioSamples: turnSamples,
                  };
-                 void Promise.resolve(onTurnCompleteRef.current?.(turnPayload)).catch((callbackError) => {
-                   console.error('STT turn-complete handler failed', callbackError);
+                 logSttFlow('stt.turnComplete.callback.start', {
+                   sessionId,
+                   turnId: turnPayload.turnId,
                  });
+                 void Promise.resolve(onTurnCompleteRef.current?.(turnPayload))
+                   .then(() => {
+                     logSttFlow('stt.turnComplete.callback.done', {
+                       sessionId,
+                       turnId: turnPayload.turnId,
+                     });
+                   })
+                   .catch((callbackError) => {
+                     errorSttFlow('stt.turnComplete.callback.error', {
+                       sessionId,
+                       turnId: turnPayload.turnId,
+                       message: callbackError instanceof Error ? callbackError.message : String(callbackError),
+                     });
+                     console.error('STT turn-complete handler failed', callbackError);
+                   });
                }
 
                if (autoStopAfterTurnCompleteRef.current) {
                  void (async () => {
                    try {
+                     logSttFlow('stt.turnComplete.cleanup.start', {
+                       sessionId,
+                       turnId: turnIdRef.current,
+                     });
                      await cleanup({ preserveRecordedAudio: true, status: 'turn-complete' });
+                     logSttFlow('stt.turnComplete.cleanup.done', {
+                       sessionId,
+                       turnId: turnIdRef.current,
+                     });
                    } finally {
                      setIsListening(false);
                    }

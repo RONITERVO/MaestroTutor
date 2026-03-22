@@ -77,8 +77,9 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityToke
 import { synthesizeGeminiAudioNote } from '../../speech/services/geminiLiveAudioNote';
 import { useMaestroStore } from '../../../store';
 import { useShallow } from 'zustand/shallow';
-import { selectIsListening, selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
+import { selectIsListening, selectIsResponsePending, selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
+import { errorSttFlow, logSttFlow, warnSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 const parseApiErrorMessage = (message?: string): string => {
   if (!message) return '';
@@ -381,7 +382,10 @@ export interface UseTutorConversationConfig {
   computeMaxMessagesForArray: (arr: ChatMessage[]) => number | undefined;
   
   // Hardware
-  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string } | null>;
+  captureSnapshot: (options?: boolean | {
+    isForReengagement?: boolean;
+    requireReadyFrame?: boolean;
+  }) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string } | null>;
   
   // Speech
   speakMessage: (message: ChatMessage) => void;
@@ -566,7 +570,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   })));
 
   // Derive activity states from tokens using selectors
-  const isSending = useMaestroStore(selectIsSending);
+  const isSending = useMaestroStore(selectIsResponsePending);
   // Note: isSpeaking derived from tokens is available via speechIsSpeakingRef passed from props
   const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
   const isCreatingSuggestion = useMaestroStore(selectIsCreatingSuggestion);
@@ -584,6 +588,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
   // Refs
   const isSendingRef = useRef(false);
+  const isResponsePendingRef = useRef(false);
   const sendWithFileUploadInProgressRef = useRef(false);
   // maestroAvatarUriRef and maestroAvatarMimeTypeRef are now passed via config
   const handleSendMessageInternalRef = useRef<any>(null);
@@ -595,6 +600,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
   // Sync refs with state (derive isSending from tokens)
   useEffect(() => { isSendingRef.current = isSending; }, [isSending]);
+  useEffect(() => { isResponsePendingRef.current = isSending; }, [isSending]);
   useEffect(() => { sendPrepRef.current = sendPrep; }, [sendPrep]);
   useEffect(() => () => { isMountedRef.current = false; }, []);
 
@@ -1667,6 +1673,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     messageType: 'user' | 'conversational-reengagement' | 'image-reengagement';
     shouldGenerateUserImage: boolean;
     currentSettingsVal: AppSettings;
+    triggeredByStt?: boolean;
   }) => {
     let userMessageId: string | null = null;
     let userMessageText = params.text;
@@ -1679,8 +1686,19 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       : undefined;
     let userImageToProcessStorageOptimizedBase64: string | undefined = undefined;
     let userImageToProcessStorageOptimizedMimeType: string | undefined = undefined;
+    logSttFlow('send.createUserMessage.start', {
+      messageType: params.messageType,
+      textLength: params.text.length,
+      triggeredByStt: params.triggeredByStt === true,
+      hasPassedImage: Boolean(userImageToProcessBase64),
+      sendWithSnapshotEnabled: params.currentSettingsVal.sendWithSnapshotEnabled,
+      shouldGenerateUserImage: params.shouldGenerateUserImage,
+    });
 
     if (params.messageType !== 'user') {
+      logSttFlow('send.createUserMessage.skip.nonUser', {
+        messageType: params.messageType,
+      });
       return {
         userMessageId,
         userMessageText,
@@ -1713,7 +1731,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     if (params.currentSettingsVal.sendWithSnapshotEnabled && !userImageToProcessBase64 && !params.shouldGenerateUserImage) {
-      const snapshotResult = await captureSnapshot(false);
+      logSttFlow('send.createUserMessage.snapshot.start', {
+        triggeredByStt: params.triggeredByStt === true,
+      });
+      const snapshotResult = await captureSnapshot({
+        isForReengagement: false,
+        requireReadyFrame: params.triggeredByStt === true,
+      });
+      logSttFlow('send.createUserMessage.snapshot.done', {
+        triggeredByStt: params.triggeredByStt === true,
+        capturedImage: Boolean(snapshotResult),
+      });
       if (snapshotResult) {
         userImageToProcessBase64 = snapshotResult.base64;
         userImageToProcessMimeType = snapshotResult.mimeType;
@@ -1749,6 +1777,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       storageOptimizedImageUrl: userImageToProcessStorageOptimizedBase64,
       storageOptimizedImageMimeType: userImageToProcessStorageOptimizedMimeType,
     });
+    logSttFlow('send.createUserMessage.done', {
+      userMessageId,
+      hasRecordedAudio: Boolean(recordedSpeechForMessage),
+      hasImage: Boolean(userImageToProcessBase64),
+      hasStorageOptimizedImage: Boolean(userImageToProcessStorageOptimizedBase64),
+    });
 
     return {
       userMessageId,
@@ -1781,6 +1815,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     imageForGeminiContextFileUri?: Array<{ fileUri: string; mimeType: string }>;
     currentSettingsVal: AppSettings;
   }) => {
+    let geminiStage = 'gemini.prepare.start';
+    const markGeminiStage = (stage: string, details?: Record<string, unknown>) => {
+      geminiStage = stage;
+      logSttFlow(stage, details);
+    };
     let lastProcessingBucket = -1;
     let streamingDraftText = '';
     let lastDraftFlushAt = 0;
@@ -1810,91 +1849,122 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       lastThoughtFlushAt = now;
     };
 
-    const response = await generateGeminiResponse(
-      getGeminiModels().text.default,
-      params.geminiPromptText,
-      params.sanitizedDerivedHistory,
-      {
-        systemInstruction: params.systemInstructionForGemini,
-        currentFileParts: params.imageForGeminiContextFileUri,
+    try {
+      markGeminiStage('gemini.request.start', {
+        thinkingMessageId: params.thinkingMessageId,
+        promptLength: params.geminiPromptText.length,
+        historyCount: params.sanitizedDerivedHistory.length,
+        filePartCount: params.imageForGeminiContextFileUri?.length || 0,
         useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
-        lifecycleHooks: {
-          onProgress: (event) => {
-            if (event.phase === 'attempt-processing') {
-              const bucket = Math.floor((event.elapsedMs || 0) / 12000);
-              if (bucket <= 0 || bucket === lastProcessingBucket) return;
-              lastProcessingBucket = bucket;
-            }
-            const phaseLabel = formatGeminiPhaseLabel(event);
-            if (phaseLabel && phaseLabel !== currentPhaseLabel) {
-              currentPhaseLabel = phaseLabel;
-              updateMessage(params.thinkingMessageId, { thinkingPhase: phaseLabel });
-            }
-            if (!hasVisibleModelOutput) {
-              const line = formatGeminiStatusLine(event);
-              if (line) {
-                setThinkingStatusLine(params.thinkingMessageId, line);
+      });
+      const response = await generateGeminiResponse(
+        getGeminiModels().text.default,
+        params.geminiPromptText,
+        params.sanitizedDerivedHistory,
+        {
+          systemInstruction: params.systemInstructionForGemini,
+          currentFileParts: params.imageForGeminiContextFileUri,
+          useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
+          lifecycleHooks: {
+            onProgress: (event) => {
+              if (event.phase === 'attempt-processing') {
+                const bucket = Math.floor((event.elapsedMs || 0) / 12000);
+                if (bucket > 0 && bucket !== lastProcessingBucket) {
+                  lastProcessingBucket = bucket;
+                  markGeminiStage('gemini.request.processing', {
+                    thinkingMessageId: params.thinkingMessageId,
+                    elapsedMs: event.elapsedMs || 0,
+                    bucket,
+                  });
+                }
               }
-            }
+              const phaseLabel = formatGeminiPhaseLabel(event);
+              if (phaseLabel && phaseLabel !== currentPhaseLabel) {
+                currentPhaseLabel = phaseLabel;
+                updateMessage(params.thinkingMessageId, { thinkingPhase: phaseLabel });
+              }
+              if (!hasVisibleModelOutput) {
+                const line = formatGeminiStatusLine(event);
+                if (line) {
+                  setThinkingStatusLine(params.thinkingMessageId, line);
+                }
+              }
+            },
+            onTextDelta: (_, fullText) => {
+              hasVisibleModelOutput = true;
+              streamingDraftText = fullText || streamingDraftText;
+              setThinkingStatusLine(params.thinkingMessageId, undefined);
+              if (currentPhaseLabel !== 'Final response') {
+                currentPhaseLabel = 'Final response';
+                updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
+              }
+              flushThinkingDraft(false);
+            },
+            onThoughtDelta: (deltaThought) => {
+              hasVisibleModelOutput = true;
+              thoughtBuffer += deltaThought;
+              setThinkingStatusLine(params.thinkingMessageId, undefined);
+              if (currentPhaseLabel !== 'Thinking') {
+                currentPhaseLabel = 'Thinking';
+                updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
+              }
+              flushThoughtTrace(false);
+            },
           },
-          onTextDelta: (_, fullText) => {
-            hasVisibleModelOutput = true;
-            streamingDraftText = fullText || streamingDraftText;
-            setThinkingStatusLine(params.thinkingMessageId, undefined);
-            if (currentPhaseLabel !== 'Final response') {
-              currentPhaseLabel = 'Final response';
-              updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
-            }
-            flushThinkingDraft(false);
-          },
-          onThoughtDelta: (deltaThought) => {
-            hasVisibleModelOutput = true;
-            thoughtBuffer += deltaThought;
-            setThinkingStatusLine(params.thinkingMessageId, undefined);
-            if (currentPhaseLabel !== 'Thinking') {
-              currentPhaseLabel = 'Thinking';
-              updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
-            }
-            flushThoughtTrace(false);
-          },
-        },
+        }
+      );
+
+      markGeminiStage('gemini.request.done', {
+        thinkingMessageId: params.thinkingMessageId,
+        responseTextLength: response.text?.length || 0,
+      });
+      flushThinkingDraft(true);
+      flushThoughtTrace(true);
+
+      trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
+
+      const accumulatedFullText = response.text || "";
+      const strictParsedResponse = parseStrictTutorResponse(accumulatedFullText);
+      const responseTextForConversation = strictParsedResponse.visibleText;
+      const parsedTranslationsOnComplete = strictParsedResponse.translations;
+      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
+      if (groundingChunks?.length) {
+        setLatestGroundingChunks(groundingChunks);
       }
-    );
 
-    flushThinkingDraft(true);
-    flushThoughtTrace(true);
+      const finalMessageUpdates: Partial<ChatMessage> = {
+        thinking: false,
+        thinkingTrace: undefined,
+        thinkingDraftText: undefined,
+        thinkingPhase: undefined,
+        thinkingStatusLine: undefined,
+        translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
+        llmRawResponse: accumulatedFullText,
+        rawAssistantResponse: responseTextForConversation || undefined,
+        text: parsedTranslationsOnComplete.length === 0 ? (responseTextForConversation || undefined) : undefined,
+        isLoadingArtifact: strictParsedResponse.hasSkippedNonLanguageContent,
+        artifactLoadStartTime: strictParsedResponse.hasSkippedNonLanguageContent ? Date.now() : undefined,
+      };
+      updateMessage(params.thinkingMessageId, finalMessageUpdates);
+      markGeminiStage('gemini.response.applied', {
+        thinkingMessageId: params.thinkingMessageId,
+        hasAttachmentCandidate: strictParsedResponse.hasSkippedNonLanguageContent,
+        translationCount: parsedTranslationsOnComplete.length,
+      });
 
-    trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
-
-    const accumulatedFullText = response.text || "";
-    const strictParsedResponse = parseStrictTutorResponse(accumulatedFullText);
-    const responseTextForConversation = strictParsedResponse.visibleText;
-    const parsedTranslationsOnComplete = strictParsedResponse.translations;
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
-    if (groundingChunks?.length) {
-      setLatestGroundingChunks(groundingChunks);
+      return {
+        accumulatedFullText: responseTextForConversation,
+        finalMessageUpdates,
+        hasAttachmentCandidate: strictParsedResponse.hasSkippedNonLanguageContent,
+      };
+    } catch (error) {
+      errorSttFlow('gemini.request.error', {
+        stage: geminiStage,
+        thinkingMessageId: params.thinkingMessageId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
     }
-
-    const finalMessageUpdates: Partial<ChatMessage> = {
-      thinking: false,
-      thinkingTrace: undefined,
-      thinkingDraftText: undefined,
-      thinkingPhase: undefined,
-      thinkingStatusLine: undefined,
-      translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
-      llmRawResponse: accumulatedFullText,
-      rawAssistantResponse: responseTextForConversation || undefined,
-      text: parsedTranslationsOnComplete.length === 0 ? (responseTextForConversation || undefined) : undefined,
-      isLoadingArtifact: strictParsedResponse.hasSkippedNonLanguageContent,
-      artifactLoadStartTime: strictParsedResponse.hasSkippedNonLanguageContent ? Date.now() : undefined,
-    };
-    updateMessage(params.thinkingMessageId, finalMessageUpdates);
-
-    return {
-      accumulatedFullText: responseTextForConversation,
-      finalMessageUpdates,
-      hasAttachmentCandidate: strictParsedResponse.hasSkippedNonLanguageContent,
-    };
   }, [appendThinkingTrace, formatGeminiPhaseLabel, formatGeminiStatusLine, parseStrictTutorResponse, setLatestGroundingChunks, setThinkingStatusLine, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
@@ -2165,15 +2235,46 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     messageType: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user',
     options?: { triggeredByStt?: boolean }
   ): Promise<boolean> => {
-    if (isLoadingHistoryRef.current) return false;
-    if (!text && !passedImageBase64 && messageType === 'user') return false;
+    let sendStage = 'send.enter';
+    const markSendStage = (stage: string, details?: Record<string, unknown>) => {
+      sendStage = stage;
+      logSttFlow(stage, details);
+    };
+    markSendStage('send.start', {
+      messageType,
+      textLength: text.length,
+      triggeredByStt: options?.triggeredByStt === true,
+      hasPassedImage: Boolean(passedImageBase64),
+      isLoadingHistory: isLoadingHistoryRef.current,
+      responsePending: isResponsePendingRef.current,
+      speaking: speechIsSpeakingRef.current,
+    });
+    if (isLoadingHistoryRef.current) {
+      warnSttFlow('send.skip.loadingHistory', {
+        messageType,
+      });
+      return false;
+    }
+    if (!text && !passedImageBase64 && messageType === 'user') {
+      warnSttFlow('send.skip.emptyUserMessage', {
+        triggeredByStt: options?.triggeredByStt === true,
+      });
+      return false;
+    }
     if (!selectedLanguagePairRef.current) {
+      errorSttFlow('send.skip.noLanguagePair', {
+        messageType,
+      });
       console.error("No language pair selected, cannot send message.");
       addMessage({ role: 'error', text: t('error.noLanguagePair') });
       return false;
     }
 
-    if (isSendingRef.current || speechIsSpeakingRef.current) {
+    if (isResponsePendingRef.current || speechIsSpeakingRef.current) {
+      warnSttFlow('send.skip.busy', {
+        responsePending: isResponsePendingRef.current,
+        speaking: speechIsSpeakingRef.current,
+      });
       return false;
     }
 
@@ -2181,19 +2282,32 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     sendingTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.RESPONSE);
     const isListeningNow = selectIsListening(useMaestroStore.getState());
     const shouldResumeSttAfterSend = settingsRef.current.stt.enabled && (isListeningNow || options?.triggeredByStt === true);
+    markSendStage('send.token.added', {
+      isListeningNow,
+      shouldResumeSttAfterSend,
+    });
     if (settingsRef.current.stt.enabled && isListeningNow) {
       const claimedUtterance = typeof claimRecordedUtterance === 'function' ? claimRecordedUtterance() : null;
       if (claimedUtterance) {
         recordedUtterancePendingRef.current = claimedUtterance;
       }
       try {
+        markSendStage('send.stopListening.start', {
+          hadClaimedUtterance: Boolean(claimedUtterance),
+        });
         await Promise.resolve(stopListening());
+        markSendStage('send.stopListening.done');
       } catch {
+        warnSttFlow('send.stopListening.error', {
+          stage: sendStage,
+        });
         /* ignore */
       }
       clearTranscript();
+      markSendStage('send.clearTranscript.afterStop');
     } else if (options?.triggeredByStt) {
       clearTranscript();
+      markSendStage('send.clearTranscript.sttTriggered');
     }
 
     if (shouldResumeSttAfterSend) {
@@ -2218,6 +2332,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     pendingRecordedAudioMessageRef.current = null;
     let thinkingMessageId: string | null = null;
     const handleSendFailure = (error: unknown): false => {
+      errorSttFlow('send.failure', {
+        stage: sendStage,
+        messageType,
+        triggeredByStt: options?.triggeredByStt === true,
+        message: error instanceof Error ? error.message : String(error),
+      });
       console.error("Error sending message (stream consumer):", error);
       let errorMessage = t('general.error');
       if (error instanceof ApiError) {
@@ -2296,6 +2416,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     try {
       const currentSettingsVal = settingsRef.current;
       const shouldGenerateUserImage = currentSettingsVal.selectedCameraId === IMAGE_GEN_CAMERA_ID;
+      markSendStage('send.createUserMessage.await', {
+        shouldGenerateUserImage,
+      });
       const userMessageContext = await createUserMessage({
         text,
         passedImageBase64,
@@ -2303,6 +2426,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         messageType,
         shouldGenerateUserImage,
         currentSettingsVal,
+        triggeredByStt: options?.triggeredByStt === true,
+      });
+      markSendStage('send.createUserMessage.done', {
+        userMessageId: userMessageContext.userMessageId,
+        hasRecordedAudio: Boolean(userMessageContext.recordedSpeechForMessage),
+        hasImage: Boolean(userMessageContext.userImageToProcessBase64),
       });
       let {
         userMessageId,
@@ -2321,6 +2450,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         thinkingPhase: 'Preparing request',
         thinkingStatusLine: 'Preparing request context...',
       });
+      markSendStage('send.thinkingMessage.created', {
+        thinkingMessageId,
+      });
 
       cancelReengagementRef.current();
 
@@ -2332,9 +2464,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       let geminiPromptText: string;
       let systemInstructionForGemini: string = currentSystemPromptText;
       try {
+        markSendStage('send.systemInstruction.globalProfile.start');
         await getGlobalProfileDB();
       } finally {
         systemInstructionForGemini = composeMaestroSystemInstruction(systemInstructionForGemini);
+        markSendStage('send.systemInstruction.globalProfile.done', {
+          systemInstructionLength: systemInstructionForGemini.length,
+        });
       }
 
       // Optimize user image if needed
@@ -2343,6 +2479,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           sendWithFileUploadInProgressRef.current = true;
         }
         try {
+          markSendStage('send.currentMedia.optimize.start', {
+            userMessageId,
+          });
           setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' });
           const optimized = await processMediaForUpload(userImageToProcessBase64, userImageToProcessMimeType, {
             t,
@@ -2354,6 +2493,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           if (messageType === 'user' && userMessageId) {
             updateMessage(userMessageId, { storageOptimizedImageUrl: optimized.dataUrl, storageOptimizedImageMimeType: optimized.mimeType });
           }
+          markSendStage('send.currentMedia.optimize.done', {
+            userMessageId,
+          });
         } catch (e) { 
           console.warn('Failed to derive low-res for current user media, will omit persistence media', e); 
         } finally { 
@@ -2410,11 +2552,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           }
           setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
           try {
+            markSendStage('send.currentAttachment.upload.start', {
+              userMessageId,
+            });
             const ensured = await ensureUploadedAttachmentVariantsForMessage(currentUserMessage);
             if (ensured.chatFileParts.length === 0) {
               throw new Error(`Failed to prepare attached media "${currentUserMessage.attachmentName || 'attachment'}" for Gemini. Try again or reattach the file.`);
             }
             imageForGeminiContextFileUri = ensured.chatFileParts;
+            markSendStage('send.currentAttachment.upload.done', {
+              filePartCount: ensured.chatFileParts.length,
+            });
           } finally {
             setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
           }
@@ -2425,6 +2573,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         }
         setSendPrep({ active: true, label: t('chat.sendPrep.uploadingMedia') || 'Uploading media...' });
         try {
+          markSendStage('send.inlineMedia.upload.start', {
+            mimeType: imageForGeminiContextMimeType,
+          });
           const chatFileParts = await uploadAttachmentVariantsForSource(
             {
               dataUrl: imageForGeminiContextBase64,
@@ -2437,6 +2588,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             throw new Error(`Failed to prepare attached media "${attachedFileName || 'attachment'}" for Gemini. Try again or reattach the file.`);
           }
           imageForGeminiContextFileUri = chatFileParts;
+          markSendStage('send.inlineMedia.upload.done', {
+            filePartCount: chatFileParts.length,
+          });
         } finally {
           setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...' } : prev));
         }
@@ -2449,8 +2603,14 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
       let ensuredUpdates: Record<string, HistoryMediaOverride> = {};
       try {
+        markSendStage('send.history.ensureUris.start', {
+          historyCount: historySubsetForSend.length,
+        });
         ensuredUpdates = await ensureUrisForHistoryForSend(historySubsetForSend, (done, total, etaMs) => {
           setSendPrep({ active: true, label: t('chat.sendPrep.preparingMedia') || 'Preparing media...', done, total, etaMs });
+        });
+        markSendStage('send.history.ensureUris.done', {
+          updatedMessageCount: Object.keys(ensuredUpdates).length,
         });
       } finally {
         setSendPrep(prev => (prev && prev.active ? { ...prev, label: t('chat.sendPrep.finalizing') || 'Finalizing...' } : prev));
@@ -2486,14 +2646,19 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
       let globalProfileText: string | undefined = undefined;
       try {
+        markSendStage('send.globalProfile.start');
         const gp2 = await getGlobalProfileDB();
         globalProfileText = gp2?.text || undefined;
+        markSendStage('send.globalProfile.done', {
+          hasGlobalProfile: Boolean(globalProfileText),
+        });
       } catch {}
 
       // Ensure Maestro avatar URIs are valid before sending
       let avatarOverlayFileUri: string | undefined = undefined;
       let avatarOverlayMimeType: string | undefined = undefined;
       try {
+        markSendStage('send.avatar.ensure.start');
         const avatarResult = await ensureMaestroAvatarUris();
         if (avatarResult.rawUri) {
           maestroAvatarUriRef.current = avatarResult.rawUri;
@@ -2501,6 +2666,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         }
         avatarOverlayFileUri = avatarResult.overlayUri || undefined;
         avatarOverlayMimeType = avatarResult.overlayMimeType || undefined;
+        markSendStage('send.avatar.ensure.done', {
+          hasAvatarOverlay: Boolean(avatarOverlayFileUri),
+        });
       } catch (e) {
         console.warn('Failed to ensure Maestro avatar URIs:', e);
       }
@@ -2513,9 +2681,18 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         avatarOverlayFileUri,
         avatarOverlayMimeType,
       });
+      markSendStage('send.history.sanitize.start', {
+        derivedHistoryCount: derivedHistory.length,
+      });
       const sanitizedDerivedHistory = await sanitizeHistoryWithVerifiedUris(derivedHistory as any);
+      markSendStage('send.history.sanitize.done', {
+        sanitizedHistoryCount: sanitizedDerivedHistory.length,
+      });
 
       // User image generation for AI Camera mode
+      markSendStage('send.userImageGeneration.start', {
+        shouldGenerateUserImage,
+      });
       const userImageContext = await runUserImageGeneration({
         shouldGenerateUserImage,
         currentSettingsVal,
@@ -2528,9 +2705,16 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if (userImageContext.imageForGeminiContextFileUri) {
         imageForGeminiContextFileUri = userImageContext.imageForGeminiContextFileUri;
       }
+      markSendStage('send.userImageGeneration.done', {
+        filePartCount: imageForGeminiContextFileUri?.length || 0,
+      });
 
       setSendPrep(null);
 
+      markSendStage('send.gemini.await', {
+        historyCount: sanitizedDerivedHistory.length,
+        filePartCount: imageForGeminiContextFileUri?.length || 0,
+      });
       const { finalMessageUpdates } = await handleGeminiResponse({
         thinkingMessageId,
         geminiPromptText,
@@ -2538,6 +2722,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         systemInstructionForGemini,
         imageForGeminiContextFileUri,
         currentSettingsVal,
+      });
+      markSendStage('send.gemini.done', {
+        thinkingMessageId,
+        hasRawResponse: Boolean(finalMessageUpdates.llmRawResponse || finalMessageUpdates.rawAssistantResponse),
       });
 
       // Early suggestion fetch
@@ -2580,12 +2768,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       }
       setSendPrep(null);
       scheduleReengagementRef.current('send-complete');
+      markSendStage('send.complete', {
+        thinkingMessageId,
+      });
 
       // Resume STT if needed
       const isSpeechActive = speechIsSpeakingRef.current || (typeof hasPendingQueueItems === 'function' && hasPendingQueueItems());
       if (sttInterruptedBySendRef.current && settingsRef.current.stt.enabled && !isSpeechActive) {
         try {
+          markSendStage('send.resumeStt.start');
           startListening(settingsRef.current.stt.language);
+          markSendStage('send.resumeStt.done');
         } finally {
           sttInterruptedBySendRef.current = false;
         }

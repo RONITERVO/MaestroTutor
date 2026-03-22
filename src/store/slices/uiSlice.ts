@@ -114,6 +114,12 @@ export const selectIsSending = (state: { activityTokens: Set<string> }): boolean
   [...state.activityTokens].some(t => t.startsWith(`${TOKEN_CATEGORY.GEN}:`));
 
 /**
+ * Check if a response-generation request is actively in flight.
+ */
+export const selectIsResponsePending = (state: { activityTokens: Set<string> }): boolean =>
+  state.activityTokens.has(buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.RESPONSE));
+
+/**
  * Check if loading suggestions specifically
  */
 export const selectIsLoadingSuggestions = (state: { activityTokens: Set<string> }): boolean =>

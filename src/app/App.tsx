@@ -37,7 +37,7 @@ import { setChatMetaDB } from '../features/chat';
 
 // --- Config ---
 import { IMAGE_GEN_CAMERA_ID } from '../core/config/app';
-import { selectIsListening, selectIsSending, selectIsSpeaking, selectNonReengagementBusy } from '../store/slices/uiSlice';
+import { selectIsListening, selectIsResponsePending, selectIsSpeaking, selectNonReengagementBusy } from '../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 
 // --- Types ---
@@ -47,6 +47,7 @@ import { SpeechPart } from '../core/types';
 import { getPrimaryCode } from '../shared/utils/languageUtils';
 import { createSmartRef } from '../shared/utils/smartRef';
 import { useApiKey } from '../shared/hooks/useApiKey';
+import { logSttFlow, warnSttFlow } from '../shared/utils/sttFlowDebug';
 import { SmallSpinner } from '../shared/ui/SmallSpinner';
 
 /** Delay in ms before restarting STT after language change */
@@ -260,19 +261,41 @@ const App: React.FC = () => {
   
   const handleSttTurnComplete = useCallback(async (turn: GeminiLiveSttTurnComplete) => {
     const turnText = (turn.turnTranscript || turn.committedTranscript || '').trim();
+    logSttFlow('app.turnComplete.received', {
+      turnId: turn.turnId,
+      textLength: turnText.length,
+      committedLength: turn.committedTranscript.length,
+      audioSamples: turn.audioSamples,
+    });
     if (turnText.length < 2) {
+      warnSttFlow('app.turnComplete.skip.short', {
+        turnId: turn.turnId,
+        textLength: turnText.length,
+      });
       return;
     }
 
     const state = useMaestroStore.getState();
     if (!state.settings.stt.enabled) {
+      warnSttFlow('app.turnComplete.skip.sttDisabled', {
+        turnId: turn.turnId,
+      });
       return;
     }
-    if (selectIsSending(state) || selectIsSpeaking(state)) {
+    if (selectIsResponsePending(state) || selectIsSpeaking(state)) {
+      warnSttFlow('app.turnComplete.skip.busy', {
+        turnId: turn.turnId,
+        responsePending: selectIsResponsePending(state),
+        speaking: selectIsSpeaking(state),
+      });
       return;
     }
 
     if (state.settings.isSuggestionMode) {
+      logSttFlow('app.turnComplete.suggestionMode.start', {
+        turnId: turn.turnId,
+        textLength: turnText.length,
+      });
       try {
         await Promise.resolve(stopListening());
       } catch (error) {
@@ -285,22 +308,37 @@ const App: React.FC = () => {
       const nextState = useMaestroStore.getState();
       if (
         nextState.settings.stt.enabled &&
-        !selectIsSending(nextState) &&
+        !selectIsResponsePending(nextState) &&
         !selectIsSpeaking(nextState) &&
         !selectIsListening(nextState)
       ) {
+        logSttFlow('app.turnComplete.suggestionMode.restartStt', {
+          turnId: turn.turnId,
+        });
         startListening(nextState.settings.stt.language);
       }
+      logSttFlow('app.turnComplete.suggestionMode.done', {
+        turnId: turn.turnId,
+      });
       return;
     }
 
-    await handleSendMessageInternal(
+    logSttFlow('app.turnComplete.send.start', {
+      turnId: turn.turnId,
+      textLength: turnText.length,
+      hasAttachedImage: Boolean(state.attachedImageBase64),
+    });
+    const sendResult = await handleSendMessageInternal(
       turnText,
       state.attachedImageBase64 || undefined,
       state.attachedImageMimeType || undefined,
       'user',
       { triggeredByStt: true }
     );
+    logSttFlow('app.turnComplete.send.done', {
+      turnId: turn.turnId,
+      sendResult,
+    });
   }, [clearTranscript, handleCreateSuggestion, handleSendMessageInternal, startListening, stopListening]);
 
   useEffect(() => {
