@@ -29,6 +29,7 @@ import type { MaestroStore } from '../maestroStore';
 export interface ChatSlice {
   // State
   messages: ChatMessage[];
+  liveTranscriptMessages: ChatMessage[];
   isLoadingHistory: boolean;
   replySuggestions: ReplySuggestion[];
   suggestionsLoadingStreamText: string;
@@ -41,10 +42,17 @@ export interface ChatSlice {
   attachedFileName: string | null;
   
   // Actions
-  loadHistoryForPair: (pairId: string, t: (key: string) => string) => Promise<void>;
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => string;
+  loadHistoryForPair: (
+    pairId: string,
+    t: (key: string) => string,
+    options?: { waitForIdle?: () => Promise<void> }
+  ) => Promise<void>;
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'> & Partial<Pick<ChatMessage, 'id' | 'timestamp'>>) => string;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
   deleteMessage: (messageId: string) => void;
+  upsertLiveTranscriptMessage: (message: ChatMessage) => void;
+  removeLiveTranscriptMessage: (messageId: string) => void;
+  clearLiveTranscriptMessages: () => void;
   setMessages: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
   setReplySuggestions: (suggestions: ReplySuggestion[] | ((prev: ReplySuggestion[]) => ReplySuggestion[])) => void;
   setSuggestionsLoadingStreamText: (text: string) => void;
@@ -68,6 +76,7 @@ export interface ChatSlice {
 // ============================================================
 
 export const selectMessages = (state: Pick<ChatSlice, 'messages'>) => state.messages;
+export const selectLiveTranscriptMessages = (state: Pick<ChatSlice, 'liveTranscriptMessages'>) => state.liveTranscriptMessages;
 
 export const selectReplySuggestions = (state: Pick<ChatSlice, 'replySuggestions'>) => state.replySuggestions;
 
@@ -98,9 +107,13 @@ export const createChatSlice: StateCreator<
   [['zustand/subscribeWithSelector', never], ['zustand/devtools', never]],
   [],
   ChatSlice
-> = (set, get) => ({
+> = (set, get) => {
+  let historyLoadRequestId = 0;
+
+  return ({
   // Initial state
   messages: [],
+  liveTranscriptMessages: [],
   isLoadingHistory: true,
   replySuggestions: [],
   suggestionsLoadingStreamText: '',
@@ -113,11 +126,25 @@ export const createChatSlice: StateCreator<
   attachedFileName: null,
   
   // Actions
-  loadHistoryForPair: async (pairId: string, t: (key: string) => string) => {
-    set({ isLoadingHistory: true, messages: [], replySuggestions: [], suggestionsLoadingStreamText: '' });
+  loadHistoryForPair: async (
+    pairId: string,
+    t: (key: string) => string,
+    options?: { waitForIdle?: () => Promise<void> }
+  ) => {
+    const requestId = ++historyLoadRequestId;
+
+    await options?.waitForIdle?.();
+    if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+      return;
+    }
+
+    set({ isLoadingHistory: true, messages: [], liveTranscriptMessages: [], replySuggestions: [], suggestionsLoadingStreamText: '' });
     
     try {
       const history = await getChatHistoryDB(pairId);
+      if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+        return;
+      }
       
       // Clean up interrupted states
       const cleanedHistory = (history || []).map(msg => {
@@ -161,7 +188,13 @@ export const createChatSlice: StateCreator<
       
       // Load chat meta for bookmark
       try {
+        if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+          return;
+        }
         const meta = await getChatMetaDB(pairId);
+        if (requestId !== historyLoadRequestId || get().settings.selectedLanguagePairId !== pairId) {
+          return;
+        }
         if (meta && meta.bookmarkMessageId) {
           get().updateSetting('historyBookmarkMessageId', meta.bookmarkMessageId);
         } else {
@@ -172,14 +205,22 @@ export const createChatSlice: StateCreator<
       }
     } catch (error) {
       console.error("Failed to load history from IndexedDB", error);
-      set({ messages: [] });
+      if (requestId === historyLoadRequestId && get().settings.selectedLanguagePairId === pairId) {
+        set({ messages: [] });
+      }
     } finally {
-      set({ isLoadingHistory: false });
+      if (requestId === historyLoadRequestId && get().settings.selectedLanguagePairId === pairId) {
+        set({ isLoadingHistory: false });
+      }
     }
   },
   
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>): string => {
-    const newMessage = { ...message, id: crypto.randomUUID(), timestamp: Date.now() } as ChatMessage;
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'> & Partial<Pick<ChatMessage, 'id' | 'timestamp'>>): string => {
+    const newMessage = {
+      ...message,
+      id: message.id || crypto.randomUUID(),
+      timestamp: message.timestamp || Date.now(),
+    } as ChatMessage;
     set(state => ({ messages: [...state.messages, newMessage] }));
     return newMessage.id;
   },
@@ -196,6 +237,32 @@ export const createChatSlice: StateCreator<
     set(state => ({
       messages: state.messages.filter(m => m.id !== messageId)
     }));
+  },
+
+  upsertLiveTranscriptMessage: (message: ChatMessage) => {
+    set(state => {
+      const idx = state.liveTranscriptMessages.findIndex(m => m.id === message.id);
+      if (idx === -1) {
+        return { liveTranscriptMessages: [...state.liveTranscriptMessages, message] };
+      }
+      const nextMessages = state.liveTranscriptMessages.slice();
+      nextMessages[idx] = {
+        ...nextMessages[idx],
+        ...message,
+        timestamp: nextMessages[idx].timestamp,
+      };
+      return { liveTranscriptMessages: nextMessages };
+    });
+  },
+
+  removeLiveTranscriptMessage: (messageId: string) => {
+    set(state => ({
+      liveTranscriptMessages: state.liveTranscriptMessages.filter(m => m.id !== messageId)
+    }));
+  },
+
+  clearLiveTranscriptMessages: () => {
+    set({ liveTranscriptMessages: [] });
   },
   
   setMessages: (messagesOrUpdater) => {
@@ -327,4 +394,5 @@ export const createChatSlice: StateCreator<
   },
   
   getMessages: () => get().messages,
-});
+  });
+};

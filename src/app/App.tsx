@@ -25,7 +25,7 @@ import { VisualContextVideo } from '../features/vision';
 import { useAppInitialization, useMaestroActivityStage, useIdleReengagement } from './hooks';
 
 import { useTutorConversation, useSuggestions, useChatPersistence } from '../features/chat';
-import { useSpeechOrchestrator, useAutoSendOnSilence, useSuggestionModeAutoRestart } from '../features/speech';
+import { useSpeechOrchestrator, type GeminiLiveSttTurnComplete } from '../features/speech';
 import { useCameraManager } from '../features/vision';
 import { useLiveSessionController, useSilentObserverController } from '../features/live';
 import { useApplyCustomColors } from '../features/theme';
@@ -37,7 +37,7 @@ import { setChatMetaDB } from '../features/chat';
 
 // --- Config ---
 import { IMAGE_GEN_CAMERA_ID } from '../core/config/app';
-import { selectNonReengagementBusy } from '../store/slices/uiSlice';
+import { selectIsListening, selectIsResponsePending, selectIsSpeaking, selectNonReengagementBusy } from '../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 
 // --- Types ---
@@ -47,6 +47,7 @@ import { SpeechPart } from '../core/types';
 import { getPrimaryCode } from '../shared/utils/languageUtils';
 import { createSmartRef } from '../shared/utils/smartRef';
 import { useApiKey } from '../shared/hooks/useApiKey';
+import { logSttFlow, warnSttFlow } from '../shared/utils/sttFlowDebug';
 import { SmallSpinner } from '../shared/ui/SmallSpinner';
 
 /** Delay in ms before restarting STT after language change */
@@ -62,6 +63,20 @@ const App: React.FC = () => {
   const bubbleWrapperRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const maestroAvatarUriRef = useRef<string | null>(null);
   const maestroAvatarMimeTypeRef = useRef<string | null>(null);
+  const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
+  const cancelReengagementRef = useRef<() => void>(() => {});
+  const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
+  const resetSilentObserverRef = useRef<() => Promise<void>>(async () => {});
+  const stopLiveSessionForHistoryLoadRef = useRef<() => Promise<void>>(async () => {});
+  const handleToggleSuggestionModeRef = useRef<((forceState?: boolean) => void) | undefined>(undefined);
+  const handleSttTurnCompleteRef = useRef<(turn: GeminiLiveSttTurnComplete) => void | Promise<void>>(() => {});
+
+  const waitForConversationSystemsIdle = useCallback(async () => {
+    await Promise.allSettled([
+      Promise.resolve(resetSilentObserverRef.current()),
+      Promise.resolve(stopLiveSessionForHistoryLoadRef.current()),
+    ]);
+  }, []);
 
   // ============================================================
   // HOOK COMPOSITION - The Controller Layer
@@ -86,6 +101,9 @@ const App: React.FC = () => {
     addMessage,
     updateMessage,
     deleteMessage,
+    upsertLiveTranscriptMessage,
+    removeLiveTranscriptMessage,
+    clearLiveTranscriptMessages,
     setMessages,
     getHistoryRespectingBookmark,
     computeMaxMessagesForArray,
@@ -96,6 +114,7 @@ const App: React.FC = () => {
   } = useAppInitialization({
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
+    waitForConversationSystemsIdle,
   });
 
   const {
@@ -169,19 +188,6 @@ const App: React.FC = () => {
   const setAttachedImage = useMaestroStore(state => state.setAttachedImage);
 
   // --- Refs ---
-  const STT_STABLE_NO_TEXT_MS = 4000;
-
-  const attachedImageBase64 = useMaestroStore(state => state.attachedImageBase64);
-  const attachedImageMimeType = useMaestroStore(state => state.attachedImageMimeType);
-  
-  // Re-engagement callbacks refs - will be populated after useSmartReengagement
-  const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
-  const cancelReengagementRef = useRef<() => void>(() => {});
-  const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
-  
-  // Toggle suggestion mode callback ref - will be populated after handleToggleSuggestionMode is defined
-  const handleToggleSuggestionModeRef = useRef<((forceState?: boolean) => void) | undefined>(undefined);
-
   // --- Speech Controller ---
   // NOTE: Moved before useSmartReengagement to provide speechIsSpeakingRef
   const {
@@ -202,6 +208,7 @@ const App: React.FC = () => {
     upsertMessageTtsCache,
     upsertSuggestionTtsCache,
     setMessages,
+    onSttTurnComplete: (turn) => handleSttTurnCompleteRef.current(turn),
   });
   
   // --- Maestro Controller ---
@@ -228,7 +235,6 @@ const App: React.FC = () => {
     captureSnapshot,
     speakMessage,
     isSpeechSynthesisSupported,
-    isListening,
     stopListening,
     startListening,
     clearTranscript,
@@ -247,27 +253,97 @@ const App: React.FC = () => {
     onApiKeyGateOpen: handleApiKeyGateOpen,
   });
 
-
-  const { clearAutoSend } = useAutoSendOnSilence({
-    transcript,
-    attachedImageBase64,
-    attachedImageMimeType,
-    clearTranscript,
-    handleCreateSuggestion,
-    handleSendMessageInternal,
-    stableMs: STT_STABLE_NO_TEXT_MS,
-  });
-
   useSuggestions({
     isSpeaking,
     fetchAndSetReplySuggestions,
     getHistoryRespectingBookmark,
   });
+  
+  const handleSttTurnComplete = useCallback(async (turn: GeminiLiveSttTurnComplete) => {
+    const turnText = (turn.turnTranscript || turn.committedTranscript || '').trim();
+    logSttFlow('app.turnComplete.received', {
+      turnId: turn.turnId,
+      textLength: turnText.length,
+      committedLength: turn.committedTranscript.length,
+      audioSamples: turn.audioSamples,
+    });
+    if (turnText.length < 2) {
+      warnSttFlow('app.turnComplete.skip.short', {
+        turnId: turn.turnId,
+        textLength: turnText.length,
+      });
+      return;
+    }
 
-  useSuggestionModeAutoRestart({
-    isListening,
-    startListening,
-  });
+    const state = useMaestroStore.getState();
+    if (!state.settings.stt.enabled) {
+      warnSttFlow('app.turnComplete.skip.sttDisabled', {
+        turnId: turn.turnId,
+      });
+      return;
+    }
+    if (selectIsResponsePending(state) || selectIsSpeaking(state)) {
+      warnSttFlow('app.turnComplete.skip.busy', {
+        turnId: turn.turnId,
+        responsePending: selectIsResponsePending(state),
+        speaking: selectIsSpeaking(state),
+      });
+      return;
+    }
+
+    if (state.settings.isSuggestionMode) {
+      logSttFlow('app.turnComplete.suggestionMode.start', {
+        turnId: turn.turnId,
+        textLength: turnText.length,
+      });
+      try {
+        await Promise.resolve(stopListening());
+      } catch (error) {
+        console.warn('Failed to stop STT before creating suggestion', error);
+      }
+
+      clearTranscript();
+      await handleCreateSuggestion(turnText);
+
+      const nextState = useMaestroStore.getState();
+      if (
+        nextState.settings.stt.enabled &&
+        !selectIsResponsePending(nextState) &&
+        !selectIsSpeaking(nextState) &&
+        !selectIsListening(nextState)
+      ) {
+        logSttFlow('app.turnComplete.suggestionMode.restartStt', {
+          turnId: turn.turnId,
+        });
+        startListening(nextState.settings.stt.language);
+      }
+      logSttFlow('app.turnComplete.suggestionMode.done', {
+        turnId: turn.turnId,
+      });
+      return;
+    }
+
+    logSttFlow('app.turnComplete.send.start', {
+      turnId: turn.turnId,
+      textLength: turnText.length,
+      hasAttachedImage: Boolean(state.attachedImageBase64),
+    });
+    const sendResult = await handleSendMessageInternal(
+      turnText,
+      state.attachedImageBase64 || undefined,
+      state.attachedImageMimeType || undefined,
+      'user',
+      { triggeredByStt: true }
+    );
+    logSttFlow('app.turnComplete.send.done', {
+      turnId: turn.turnId,
+      sendResult,
+    });
+  }, [clearTranscript, handleCreateSuggestion, handleSendMessageInternal, startListening, stopListening]);
+
+  useEffect(() => {
+    handleSttTurnCompleteRef.current = handleSttTurnComplete;
+  }, [handleSttTurnComplete]);
   
   // --- Smart Reengagement ---
   // NOTE: Moved AFTER useMaestroController to have access to isSending, isSpeaking
@@ -353,9 +429,8 @@ const App: React.FC = () => {
   // ============================================================
 
   const handleUserInputActivity = useCallback(() => {
-    clearAutoSend();
     handleUserActivity();
-  }, [clearAutoSend, handleUserActivity]);
+  }, [handleUserActivity]);
 
 
   const handleSetAttachedImage = useCallback((base64: string | null, mimeType: string | null) => {
@@ -418,7 +493,6 @@ const App: React.FC = () => {
       // Also clear any STT Error when manually turning off
       useMaestroStore.getState().setSttError(null);
 
-      clearAutoSend();
       stopListening();
       return;
     }
@@ -438,7 +512,7 @@ const App: React.FC = () => {
     clearTranscript();
     startListening(currentSttSettings.language);
 
-  }, [clearAutoSend, clearTranscript, startListening, stopListening, settingsRef, setSettings]);
+  }, [clearTranscript, startListening, stopListening, settingsRef, setSettings]);
 
   const handleToggleSendWithSnapshot = useCallback(() => {
     handleSettingsChange('sendWithSnapshotEnabled', !settingsRef.current.sendWithSnapshotEnabled);
@@ -489,11 +563,15 @@ const App: React.FC = () => {
     handleStartLiveSession,
     handleStopLiveSession,
     handleLiveTurnComplete,
+    handleLiveTurnTranscriptUpdate,
   } = useLiveSessionController({
     t,
     setSettings,
     addMessage,
     updateMessage,
+    upsertLiveTranscriptMessage,
+    removeLiveTranscriptMessage,
+    clearLiveTranscriptMessages,
     getHistoryRespectingBookmark,
     computeMaxMessagesForArray,
     fetchAndSetReplySuggestions,
@@ -519,6 +597,7 @@ const App: React.FC = () => {
     maestroAvatarUriRef,
     maestroAvatarMimeTypeRef,
   });
+  stopLiveSessionForHistoryLoadRef.current = () => handleStopLiveSession({ scheduleReengagement: false });
 
   const handleSilentObserverTurnComplete = useCallback(async (
     userText: string,
@@ -539,12 +618,11 @@ const App: React.FC = () => {
     currentSystemPromptText,
     resolveBookmarkContextSummary,
     computeHistorySubsetForMedia,
+    onTurnTranscriptUpdate: handleLiveTurnTranscriptUpdate,
     onTurnComplete: handleSilentObserverTurnComplete,
   });
-
-  useEffect(() => {
-    stopSilentObserverRef.current = stopSilentObserver;
-  }, [stopSilentObserver]);
+  stopSilentObserverRef.current = stopSilentObserver;
+  resetSilentObserverRef.current = resetSilentObserver;
 
   const handleStartLiveSessionWithObserverStop = useCallback(async () => {
     await stopSilentObserver();

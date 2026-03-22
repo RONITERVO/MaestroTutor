@@ -6,7 +6,6 @@ import {
   GoogleGenAI,
   LiveServerMessage,
   Modality,
-  Blob as GenAIBlob,
   LiveServerGoAway,
   LiveServerSessionResumptionUpdate,
   SessionResumptionConfig,
@@ -15,16 +14,37 @@ import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { countTranscriptNewlines } from '../utils/transcriptParsing';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
+import {
+  FLOAT_TO_INT16_PROCESSOR_URL,
+  FLOAT_TO_INT16_PROCESSOR_NAME,
+  PCM_PLAYBACK_PROCESSOR_URL,
+  PCM_PLAYBACK_PROCESSOR_NAME,
+} from '../worklets';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
+import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
+
+export type LiveTurnTranscriptUpdateReason =
+  | 'input'
+  | 'output'
+  | 'pending-user'
+  | 'interrupted'
+  | 'session-reset';
+
+export interface LiveTurnTranscriptUpdate {
+  userText: string;
+  modelText: string;
+  reason: LiveTurnTranscriptUpdateReason;
+}
 
 export interface UseGeminiLiveConversationCallbacks {
   onStateChange?: (state: LiveSessionState) => void;
   onError?: (message: string) => void;
   onGoAway?: (goAway: LiveServerGoAway) => void;
   onSessionResumptionUpdate?: (update: LiveServerSessionResumptionUpdate) => void;
+  onTurnTranscriptUpdate?: (update: LiveTurnTranscriptUpdate) => void;
   /**
    * Called when a turn completes with consolidated transcripts and audio.
    * @param userText - The user's transcribed speech
@@ -55,60 +75,11 @@ export interface StartLiveConversationOptions {
 
 const INPUT_SAMPLE_RATE = 16000;
 const OUTPUT_SAMPLE_RATE = 24000;
+const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
+const MAX_LIVE_FRAME_DIMENSION = 640;
 
 // Session counter to prevent stale callback execution after cleanup
 let liveConversationSessionCounter = 0;
-
-function toBase64(bytes: Uint8Array) {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function encodeInt16ToBlob(pcm: Int16Array): GenAIBlob {
-  const bytes = new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength);
-  return {
-    data: toBase64(bytes),
-    mimeType: 'audio/pcm;rate=16000',
-  };
-}
-
-function base64ToUint8(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-
-function base64ToInt16(base64: string): Int16Array {
-    const bytes = base64ToUint8(base64);
-    return new Int16Array(bytes.buffer);
-}
-
-async function decodePcm16ToAudioBuffer(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const int16 = new Int16Array(data.buffer, data.byteOffset, Math.floor(data.byteLength / 2));
-  const frameCount = Math.floor(int16.length / numChannels);
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      const sample = int16[i * numChannels + channel];
-      channelData[i] = sample / 32768;
-    }
-  }
-  return buffer;
-}
 
 const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -120,6 +91,31 @@ const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reje
   reader.onerror = reject;
   reader.readAsDataURL(blob);
 });
+
+const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
+  if (
+    pcm.buffer instanceof ArrayBuffer
+    && pcm.byteOffset === 0
+    && pcm.byteLength === pcm.buffer.byteLength
+  ) {
+    return pcm.buffer;
+  }
+  return pcm.slice().buffer;
+};
+
+interface ModelAudioDecodeJob {
+  jobId: number;
+  sessionId: number;
+  turnId: number;
+  cancelled: boolean;
+  promise: Promise<void>;
+}
+
+interface ModelAudioDecodeCheckpoint {
+  sessionId: number;
+  turnId: number;
+  lastJobId: number;
+}
 
 /**
  * Manage a live Gemini conversation with real-time microphone capture, periodic video frames, model audio playback, transcription accumulation, and turn-level callbacks.
@@ -145,13 +141,18 @@ export function useGeminiLiveConversation(
   const captureVideoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
-  const nextAudioStartTimeRef = useRef<number>(0);
-  const audioSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const playbackNodeRef = useRef<AudioWorkletNode | null>(null);
   const logRef = useRef<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = useRef<boolean>(false);
   const modelRef = useRef<string>('');
   const pendingUserTurnRef = useRef<{ text: string; transcript: string; audio: Int16Array } | null>(null);
   const videoUpdateVersionRef = useRef<number>(0);
+  const videoFrameInFlightRef = useRef(false);
+  const transcriptUpdateTimerRef = useRef<number | null>(null);
+  const pendingTranscriptUpdateRef = useRef<LiveTurnTranscriptUpdate | null>(null);
+  const serverMessageQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const inputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
+  const outputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -171,6 +172,11 @@ export function useGeminiLiveConversation(
   const currentModelAudioTotalLengthRef = useRef<number>(0);
   const modelAudioSplitPointsRef = useRef<number[]>([]);
   const lastNewlineCountRef = useRef<number>(0);
+  const lastTranscriptUpdateRef = useRef<LiveTurnTranscriptUpdate | null>(null);
+  const currentModelAudioTurnIdRef = useRef<number>(0);
+  const nextModelAudioTurnIdRef = useRef<number>(1);
+  const nextModelAudioDecodeJobIdRef = useRef<number>(1);
+  const pendingModelAudioDecodeJobsRef = useRef<Map<number, ModelAudioDecodeJob>>(new Map());
 
   const callbacksRef = useRef(callbacks);
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
@@ -180,12 +186,118 @@ export function useGeminiLiveConversation(
     callbacksRef.current.onStateChange?.(s);
   }, []);
 
-  const stopAllAudio = useCallback(() => {
-    audioSourcesRef.current.forEach((source) => {
-      try { source.stop(); } catch { /* ignore */ }
+  const clearTranscriptUpdateTimer = useCallback(() => {
+    if (transcriptUpdateTimerRef.current !== null) {
+      window.clearTimeout(transcriptUpdateTimerRef.current);
+      transcriptUpdateTimerRef.current = null;
+    }
+  }, []);
+
+  const flushPendingTranscriptUpdate = useCallback(() => {
+    clearTranscriptUpdateTimer();
+    const pendingUpdate = pendingTranscriptUpdateRef.current;
+    if (!pendingUpdate) return;
+    pendingTranscriptUpdateRef.current = null;
+    lastTranscriptUpdateRef.current = pendingUpdate;
+    callbacksRef.current.onTurnTranscriptUpdate?.(pendingUpdate);
+  }, [clearTranscriptUpdateTimer]);
+
+  const emitTurnTranscriptUpdate = useCallback((reason: LiveTurnTranscriptUpdateReason) => {
+    const pendingUserText = pendingUserTurnRef.current?.text?.trim() ?? '';
+    const currentUserText = currentInputTranscriptionRef.current.trim();
+    const nextUpdate: LiveTurnTranscriptUpdate = {
+      userText: [pendingUserText, currentUserText].filter(Boolean).join('\n').trim(),
+      modelText: currentOutputTranscriptionRef.current.trim(),
+      reason,
+    };
+    const previousUpdate = pendingTranscriptUpdateRef.current || lastTranscriptUpdateRef.current;
+    if (
+      previousUpdate
+      && previousUpdate.userText === nextUpdate.userText
+      && previousUpdate.modelText === nextUpdate.modelText
+      && previousUpdate.reason === nextUpdate.reason
+    ) {
+      return;
+    }
+    pendingTranscriptUpdateRef.current = nextUpdate;
+    if (
+      reason === 'session-reset'
+      || reason === 'interrupted'
+      || reason === 'pending-user'
+    ) {
+      flushPendingTranscriptUpdate();
+      return;
+    }
+    if (transcriptUpdateTimerRef.current !== null) {
+      return;
+    }
+    transcriptUpdateTimerRef.current = window.setTimeout(() => {
+      transcriptUpdateTimerRef.current = null;
+      flushPendingTranscriptUpdate();
+    }, TRANSCRIPT_UPDATE_INTERVAL_MS);
+  }, [flushPendingTranscriptUpdate]);
+
+  const emitTurnTranscriptReset = useCallback(() => {
+    clearTranscriptUpdateTimer();
+    pendingTranscriptUpdateRef.current = null;
+    lastTranscriptUpdateRef.current = null;
+    callbacksRef.current.onTurnTranscriptUpdate?.({
+      userText: '',
+      modelText: '',
+      reason: 'session-reset',
     });
-    audioSourcesRef.current.clear();
-    nextAudioStartTimeRef.current = 0;
+  }, [clearTranscriptUpdateTimer]);
+
+  const startNextModelAudioTurn = useCallback((sessionId: number) => {
+    currentModelAudioTurnIdRef.current = sessionId > 0 ? nextModelAudioTurnIdRef.current++ : 0;
+  }, []);
+
+  const getModelAudioDecodeCheckpoint = useCallback((): ModelAudioDecodeCheckpoint => ({
+    sessionId: currentSessionIdRef.current,
+    turnId: currentModelAudioTurnIdRef.current,
+    lastJobId: nextModelAudioDecodeJobIdRef.current - 1,
+  }), []);
+
+  const cancelModelAudioDecodeJobs = useCallback((sessionId?: number, turnId?: number) => {
+    for (const [jobId, job] of pendingModelAudioDecodeJobsRef.current.entries()) {
+      if (
+        (sessionId === undefined || job.sessionId === sessionId)
+        && (turnId === undefined || job.turnId === turnId)
+      ) {
+        job.cancelled = true;
+        pendingModelAudioDecodeJobsRef.current.delete(jobId);
+      }
+    }
+  }, []);
+
+  const waitForModelAudioDecodeCheckpoint = useCallback(async (
+    checkpoint: ModelAudioDecodeCheckpoint
+  ) => {
+    if (checkpoint.turnId === 0 || checkpoint.lastJobId <= 0) {
+      return;
+    }
+
+    const pendingJobs = Array.from(pendingModelAudioDecodeJobsRef.current.values())
+      .filter((job) => (
+        job.sessionId === checkpoint.sessionId
+        && job.turnId === checkpoint.turnId
+        && job.jobId <= checkpoint.lastJobId
+      ))
+      .map((job) => job.promise);
+
+    if (pendingJobs.length > 0) {
+      await Promise.allSettled(pendingJobs);
+    }
+  }, []);
+
+  const stopAllAudio = useCallback(() => {
+    if (playbackNodeRef.current) {
+      try {
+        playbackNodeRef.current.port.postMessage({ type: 'reset' });
+      } catch {
+        // Ignore reset failures during teardown/interruption.
+      }
+    }
   }, []);
 
   const stopVideoFrameLoop = useCallback(() => {
@@ -214,16 +326,32 @@ export function useGeminiLiveConversation(
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
-    
+
+    const activeCaptureNode = workletNodeRef.current;
+    if (activeCaptureNode) {
+      await flushCaptureWorkletNode(activeCaptureNode);
+    }
+
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
-    
+    cancelModelAudioDecodeJobs();
+    startNextModelAudioTurn(0);
+
     stopVideoFrameLoop();
+    clearTranscriptUpdateTimer();
+    serverMessageQueueRef.current = Promise.resolve();
+    pendingTranscriptUpdateRef.current = null;
+    videoFrameInFlightRef.current = false;
     
     // Clear worklet message handler FIRST to stop new audio from accumulating
-    if (workletNodeRef.current) {
-        try { workletNodeRef.current.port.onmessage = null; workletNodeRef.current.disconnect(); } catch { }
+    if (activeCaptureNode) {
+        try { activeCaptureNode.port.onmessage = null; activeCaptureNode.disconnect(); } catch { }
         workletNodeRef.current = null;
+    }
+    if (playbackNodeRef.current) {
+      try { playbackNodeRef.current.port.postMessage({ type: 'reset' }); } catch { }
+      try { playbackNodeRef.current.disconnect(); } catch { }
+      playbackNodeRef.current = null;
     }
     if (microphoneStreamRef.current) {
       microphoneStreamRef.current.getTracks().forEach(t => {
@@ -261,6 +389,17 @@ export function useGeminiLiveConversation(
         sessionRef.current = null;
         try { if (typeof session.close === 'function') session.close(); } catch {}
     }
+
+    if (inputCodecWorkerRef.current) {
+      inputCodecWorkerRef.current.dispose();
+      inputCodecWorkerRef.current = null;
+    }
+    if (outputCodecWorkerRef.current) {
+      outputCodecWorkerRef.current.dispose();
+      outputCodecWorkerRef.current = null;
+    }
+
+    emitTurnTranscriptReset();
     
     // Clear all accumulators to free memory
     currentInputTranscriptionRef.current = '';
@@ -270,10 +409,19 @@ export function useGeminiLiveConversation(
     currentModelAudioTotalLengthRef.current = 0;
     modelAudioSplitPointsRef.current = [];
     lastNewlineCountRef.current = 0;
+    lastTranscriptUpdateRef.current = null;
     pendingUserTurnRef.current = null;
     
     isCleaningUpRef.current = false;
-  }, [detachCaptureVideo, stopAllAudio, stopVideoFrameLoop]);
+  }, [
+    cancelModelAudioDecodeJobs,
+    clearTranscriptUpdateTimer,
+    detachCaptureVideo,
+    emitTurnTranscriptReset,
+    startNextModelAudioTurn,
+    stopAllAudio,
+    stopVideoFrameLoop,
+  ]);
 
   // Load the AudioWorklet module (only needs to happen once per AudioContext)
   const ensureCaptureWorklet = useCallback(async (ctx: AudioContext) => {
@@ -281,6 +429,27 @@ export function useGeminiLiveConversation(
       throw new Error('AudioWorklet is not supported');
     }
     await ctx.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
+  }, []);
+
+  const ensurePlaybackWorklet = useCallback(async (ctx: AudioContext) => {
+    if (!ctx.audioWorklet || typeof ctx.audioWorklet.addModule !== 'function') {
+      throw new Error('AudioWorklet is not supported');
+    }
+    await ctx.audioWorklet.addModule(PCM_PLAYBACK_PROCESSOR_URL);
+  }, []);
+
+  const ensureInputCodecWorker = useCallback(() => {
+    if (!inputCodecWorkerRef.current) {
+      inputCodecWorkerRef.current = new AudioCodecWorkerClient();
+    }
+    return inputCodecWorkerRef.current;
+  }, []);
+
+  const ensureOutputCodecWorker = useCallback(() => {
+    if (!outputCodecWorkerRef.current) {
+      outputCodecWorkerRef.current = new AudioCodecWorkerClient();
+    }
+    return outputCodecWorkerRef.current;
   }, []);
 
   const ensureVideoElementReady = useCallback(async (stream: MediaStream, providedElement?: HTMLVideoElement | null) => {
@@ -327,19 +496,30 @@ export function useGeminiLiveConversation(
       const activeCanvas = canvasRef.current;
       if (!activeSession || !activeVideo || !activeCanvas) return;
       if (activeVideo.videoWidth === 0) return;
+      if (videoFrameInFlightRef.current) return;
 
       const ctx = activeCanvas.getContext('2d');
       if (!ctx) return;
-      activeCanvas.width = activeVideo.videoWidth;
-      activeCanvas.height = activeVideo.videoHeight;
-      ctx.drawImage(activeVideo, 0, 0);
+      const scale = Math.min(1, MAX_LIVE_FRAME_DIMENSION / Math.max(activeVideo.videoWidth, activeVideo.videoHeight));
+      activeCanvas.width = Math.max(1, Math.round(activeVideo.videoWidth * scale));
+      activeCanvas.height = Math.max(1, Math.round(activeVideo.videoHeight * scale));
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'medium';
+      ctx.drawImage(activeVideo, 0, 0, activeCanvas.width, activeCanvas.height);
 
-      activeCanvas.toBlob(async (blob) => {
-        if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
-          const b64 = await blobToBase64(blob);
-          if (currentSessionIdRef.current !== sessionId) return;
-          sessionRef.current.sendRealtimeInput({ media: { data: b64, mimeType: 'image/jpeg' } });
-        }
+      videoFrameInFlightRef.current = true;
+      activeCanvas.toBlob((blob) => {
+        void (async () => {
+          try {
+            if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
+              const b64 = await blobToBase64(blob);
+              if (currentSessionIdRef.current !== sessionId) return;
+              sessionRef.current.sendRealtimeInput({ media: { data: b64, mimeType: 'image/jpeg' } });
+            }
+          } finally {
+            videoFrameInFlightRef.current = false;
+          }
+        })();
       }, 'image/jpeg', 0.5);
     }, 1000);
   }, [stopVideoFrameLoop]);
@@ -397,6 +577,8 @@ export function useGeminiLiveConversation(
     // Generate a new session ID for this start call
     const sessionId = ++liveConversationSessionCounter;
     currentSessionIdRef.current = sessionId;
+    startNextModelAudioTurn(sessionId);
+    serverMessageQueueRef.current = Promise.resolve();
 
     const abortIfInvalidated = async () => {
       if (currentSessionIdRef.current !== sessionId) {
@@ -437,8 +619,37 @@ export function useGeminiLiveConversation(
       workletNodeRef.current = workletNode;
 
       if (playModelAudio) {
-        const outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
+        let outputCtx: AudioContext;
+        try {
+          outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
+        } catch (error) {
+          console.error('Failed to create playback AudioContext', error);
+          throw new Error('Failed to initialize model audio playback');
+        }
+
+        if (await abortIfInvalidated()) {
+          try { await outputCtx.close(); } catch { }
+          return;
+        }
+
+        if (outputCtx.sampleRate !== OUTPUT_SAMPLE_RATE) {
+          console.error(
+            `Playback AudioContext sample rate mismatch: expected ${OUTPUT_SAMPLE_RATE}, got ${outputCtx.sampleRate}`
+          );
+          try { await outputCtx.close(); } catch { }
+          throw new Error(`Model audio playback requires a ${OUTPUT_SAMPLE_RATE}Hz output context`);
+        }
+
         outputAudioContextRef.current = outputCtx;
+        await ensurePlaybackWorklet(outputCtx);
+        if (await abortIfInvalidated()) return;
+        const playbackNode = new AudioWorkletNode(outputCtx, PCM_PLAYBACK_PROCESSOR_NAME, {
+          numberOfInputs: 0,
+          numberOfOutputs: 1,
+          outputChannelCount: [1],
+        });
+        playbackNode.connect(outputCtx.destination);
+        playbackNodeRef.current = playbackNode;
       }
 
       const model = getGeminiModels().audio.live;
@@ -471,135 +682,169 @@ export function useGeminiLiveConversation(
             if (currentSessionIdRef.current !== sessionId) return;
             updateState('active');
           },
-          onmessage: async (msg: LiveServerMessage) => {
-             // Check session is still valid before processing message
-             if (currentSessionIdRef.current !== sessionId) return;
+          onmessage: (msg: LiveServerMessage) => {
+            serverMessageQueueRef.current = serverMessageQueueRef.current
+              .catch(() => undefined)
+              .then(async () => {
+                // Check session is still valid before processing message
+                if (currentSessionIdRef.current !== sessionId) return;
 
-             if (msg.goAway) {
-               callbacksRef.current.onGoAway?.(msg.goAway);
-             }
-             if (msg.sessionResumptionUpdate) {
-               callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate);
-             }
-
-             // 1. Handle Audio Output
-             const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-             if (inlineAudio) {
-                 try {
-                    // Accumulate raw PCM16 for turn handling
-                    const pcm16 = base64ToInt16(inlineAudio);
-                    currentModelAudioChunksRef.current.push(pcm16);
-                    // Track total audio sample count for transcript-synchronized splitting
-                    currentModelAudioTotalLengthRef.current += pcm16.length;
-
-                    if (playModelAudio && outputAudioContextRef.current) {
-                      const ctx = outputAudioContextRef.current;
-                      const buffer = await decodePcm16ToAudioBuffer(base64ToUint8(inlineAudio), ctx, OUTPUT_SAMPLE_RATE, 1);
-                      const source = ctx.createBufferSource();
-                      source.buffer = buffer;
-                      source.connect(ctx.destination);
-                      const next = Math.max(nextAudioStartTimeRef.current, ctx.currentTime);
-                      source.start(next);
-                      nextAudioStartTimeRef.current = next + buffer.duration;
-                      audioSourcesRef.current.add(source);
-                      source.addEventListener('ended', () => audioSourcesRef.current.delete(source));
-                    }
-                 } catch (e) {
-                     console.warn('Audio decode failed', e);
-                 }
-             }
-
-             // 2. Handle Transcript Accumulation & Split Point Detection
-             if (msg.serverContent?.inputTranscription?.text) {
-               currentInputTranscriptionRef.current += msg.serverContent.inputTranscription.text;
-             }
-             if (msg.serverContent?.outputTranscription?.text) {
-               const textPart = msg.serverContent.outputTranscription.text;
-               currentOutputTranscriptionRef.current += textPart;
-               
-               // Detect new newlines to mark audio split points
-               // Transcripts arrive with delay after audio, so we record the current
-               // accumulated audio length as the split boundary when a newline appears.
-               // This naturally accounts for the audio-ahead-of-transcript timing.
-               // Use transcript parsing utility to handle language codes [xx-XX] as newlines
-               // This ensures consistent splitting even when model doesn't add actual newlines
-               const currentText = currentOutputTranscriptionRef.current;
-               const newlineCount = countTranscriptNewlines(currentText);
-               
-               if (newlineCount > lastNewlineCountRef.current) {
-                 const diff = newlineCount - lastNewlineCountRef.current;
-                 for (let i = 0; i < diff; i++) {
-                   // Mark split point at current audio accumulation position
-                   modelAudioSplitPointsRef.current.push(currentModelAudioTotalLengthRef.current);
-                 }
-                 lastNewlineCountRef.current = newlineCount;
-               }
-             }
-
-             // 3. Handle Turn Completion (Exchange Finished)
-             if (msg.serverContent?.turnComplete) {
-                const userText = currentInputTranscriptionRef.current.trim();
-                const modelText = currentOutputTranscriptionRef.current.trim();
-                
-                // Consolidate User Audio
-                let userAudioFull = mergeInt16Arrays(currentUserAudioChunksRef.current);
-                
-                // Trim silence from user audio to avoid saving dead air
-                if (userAudioFull.length > 0) {
-                    userAudioFull = trimSilence(userAudioFull, INPUT_SAMPLE_RATE);
+                if (msg.goAway) {
+                  callbacksRef.current.onGoAway?.(msg.goAway);
+                }
+                if (msg.sessionResumptionUpdate) {
+                  callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate);
                 }
 
-                // Consolidate and Split Model Audio by transcript newlines
-                const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
-                const modelAudioLines: Int16Array[] = [];
-                
-                if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
+                // 1. Handle Audio Output
+                const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                if (inlineAudio) {
+                  const turnId = currentModelAudioTurnIdRef.current;
+                  const jobId = nextModelAudioDecodeJobIdRef.current++;
+                  const job: ModelAudioDecodeJob = {
+                    jobId,
+                    sessionId,
+                    turnId,
+                    cancelled: false,
+                    promise: Promise.resolve(),
+                  };
+
+                  const isJobActive = () => (
+                    !job.cancelled
+                    && currentSessionIdRef.current === sessionId
+                    && currentModelAudioTurnIdRef.current === turnId
+                  );
+
+                  job.promise = ensureOutputCodecWorker().decodeBase64ToPcmBuffer(inlineAudio)
+                    .then((buffer) => {
+                      if (!isJobActive()) return;
+
+                      const pcm16 = new Int16Array(buffer);
+                      if (!pcm16.length) return;
+
+                      currentModelAudioChunksRef.current.push(pcm16);
+                      currentModelAudioTotalLengthRef.current += pcm16.length;
+
+                      if (playModelAudio && playbackNodeRef.current) {
+                        try {
+                          playbackNodeRef.current.port.postMessage({
+                            type: 'push',
+                            pcm: pcm16,
+                          });
+                        } catch (error) {
+                          console.warn('Playback worklet queue failed', error);
+                        }
+                      }
+                    })
+                    .catch((error) => {
+                      if (!isJobActive()) return;
+                      console.warn('Audio decode failed', error);
+                    })
+                    .finally(() => {
+                      pendingModelAudioDecodeJobsRef.current.delete(jobId);
+                    });
+
+                  pendingModelAudioDecodeJobsRef.current.set(jobId, job);
+                }
+
+                // 2. Handle Transcript Accumulation & Split Point Detection
+                if (msg.serverContent?.inputTranscription?.text) {
+                  currentInputTranscriptionRef.current += msg.serverContent.inputTranscription.text;
+                  emitTurnTranscriptUpdate('input');
+                }
+                if (msg.serverContent?.outputTranscription?.text) {
+                  const textPart = msg.serverContent.outputTranscription.text;
+                  currentOutputTranscriptionRef.current += textPart;
+
+                  const currentText = currentOutputTranscriptionRef.current;
+                  const newlineCount = countTranscriptNewlines(currentText);
+
+                  if (newlineCount > lastNewlineCountRef.current) {
+                    const decodeCheckpoint = getModelAudioDecodeCheckpoint();
+                    await waitForModelAudioDecodeCheckpoint(decodeCheckpoint);
+                    if (
+                      currentSessionIdRef.current !== sessionId
+                      || currentModelAudioTurnIdRef.current !== decodeCheckpoint.turnId
+                    ) {
+                      return;
+                    }
+
+                    const committedNewlineCount = lastNewlineCountRef.current;
+                    if (newlineCount > committedNewlineCount) {
+                      const diff = newlineCount - committedNewlineCount;
+                      for (let i = 0; i < diff; i++) {
+                        modelAudioSplitPointsRef.current.push(currentModelAudioTotalLengthRef.current);
+                      }
+                      lastNewlineCountRef.current = newlineCount;
+                    }
+                  }
+                  emitTurnTranscriptUpdate('output');
+                }
+
+                // 3. Handle Turn Completion (Exchange Finished)
+                if (msg.serverContent?.turnComplete) {
+                  const modelAudioCheckpoint = getModelAudioDecodeCheckpoint();
+                  await waitForModelAudioDecodeCheckpoint(modelAudioCheckpoint);
+                  if (
+                    currentSessionIdRef.current !== sessionId
+                    || currentModelAudioTurnIdRef.current !== modelAudioCheckpoint.turnId
+                  ) {
+                    return;
+                  }
+
+                  const completedTurnId = modelAudioCheckpoint.turnId;
+                  const userText = currentInputTranscriptionRef.current.trim();
+                  const modelText = currentOutputTranscriptionRef.current.trim();
+
+                  let userAudioFull = mergeInt16Arrays(currentUserAudioChunksRef.current);
+                  if (userAudioFull.length > 0) {
+                    userAudioFull = trimSilence(userAudioFull, INPUT_SAMPLE_RATE);
+                  }
+
+                  const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
+                  const modelAudioLines: Int16Array[] = [];
+
+                  if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
                     let startSample = 0;
-                    // Sort split points but do NOT deduplicate.
-                    // Duplicate split points (same audio position for consecutive newlines)
-                    // mean a transcript line had no audio - we must create an empty segment
-                    // to maintain 1:1 alignment between audio segments and transcript lines.
                     const points = modelAudioSplitPointsRef.current
-                        .slice()
-                        .sort((a, b) => a - b)
-                        .filter(p => p < modelAudioFull.length);
+                      .slice()
+                      .sort((a, b) => a - b)
+                      .filter((point) => point < modelAudioFull.length);
 
                     for (const point of points) {
-                        if (point > startSample) {
-                            modelAudioLines.push(modelAudioFull.slice(startSample, point));
-                            startSample = point;
-                        } else {
-                            // Duplicate split point: transcript line with no audio
-                            modelAudioLines.push(new Int16Array(0));
-                        }
+                      if (point > startSample) {
+                        modelAudioLines.push(modelAudioFull.slice(startSample, point));
+                        startSample = point;
+                      } else {
+                        modelAudioLines.push(new Int16Array(0));
+                      }
                     }
-                    // Add remainder as final segment
+
                     if (startSample < modelAudioFull.length) {
-                        modelAudioLines.push(modelAudioFull.slice(startSample));
+                      modelAudioLines.push(modelAudioFull.slice(startSample));
                     }
-                } else if (modelAudioFull.length > 0) {
-                    // No newlines detected, one single audio block
+                  } else if (modelAudioFull.length > 0) {
                     modelAudioLines.push(modelAudioFull);
-                }
+                  }
 
-                const inputTranscript = currentInputTranscriptionRef.current;
-                const outputTranscript = currentOutputTranscriptionRef.current;
+                  const inputTranscript = currentInputTranscriptionRef.current;
+                  const outputTranscript = currentOutputTranscriptionRef.current;
 
-                if (!modelText) {
+                  if (!modelText) {
                     if (userText || userAudioFull.length > 0 || inputTranscript) {
-                        if (pendingUserTurnRef.current) {
-                            const prev = pendingUserTurnRef.current;
-                            const mergedText = [prev.text, userText].filter(Boolean).join('\n').trim();
-                            const mergedTranscript = [prev.transcript, inputTranscript].filter(Boolean).join(' ').trim();
-                            const mergedAudio = mergeInt16Arrays([prev.audio, userAudioFull]);
-                            pendingUserTurnRef.current = { text: mergedText, transcript: mergedTranscript, audio: mergedAudio };
-                        } else {
-                            pendingUserTurnRef.current = {
-                                text: userText,
-                                transcript: inputTranscript,
-                                audio: userAudioFull,
-                            };
-                        }
+                      if (pendingUserTurnRef.current) {
+                        const prev = pendingUserTurnRef.current;
+                        const mergedText = [prev.text, userText].filter(Boolean).join('\n').trim();
+                        const mergedTranscript = [prev.transcript, inputTranscript].filter(Boolean).join(' ').trim();
+                        const mergedAudio = mergeInt16Arrays([prev.audio, userAudioFull]);
+                        pendingUserTurnRef.current = { text: mergedText, transcript: mergedTranscript, audio: mergedAudio };
+                      } else {
+                        pendingUserTurnRef.current = {
+                          text: userText,
+                          transcript: inputTranscript,
+                          audio: userAudioFull,
+                        };
+                      }
                     }
                     if (logRef.current && !logFinalizedRef.current) {
                       logRef.current.complete({
@@ -610,20 +855,20 @@ export function useGeminiLiveConversation(
                         userAudioSamples: userAudioFull.length,
                       });
                     }
-                } else {
+                  } else {
                     let finalUserText = userText;
                     let finalUserAudio = userAudioFull;
                     let finalInputTranscript = inputTranscript;
                     const pending = pendingUserTurnRef.current;
                     if (pending) {
-                        finalUserText = pending.text || userText;
-                        finalInputTranscript = pending.transcript || inputTranscript;
-                        if (pending.audio.length > 0 && userAudioFull.length > 0) {
-                            finalUserAudio = mergeInt16Arrays([pending.audio, userAudioFull]);
-                        } else if (pending.audio.length > 0) {
-                            finalUserAudio = pending.audio;
-                        }
-                        pendingUserTurnRef.current = null;
+                      finalUserText = pending.text || userText;
+                      finalInputTranscript = pending.transcript || inputTranscript;
+                      if (pending.audio.length > 0 && userAudioFull.length > 0) {
+                        finalUserAudio = mergeInt16Arrays([pending.audio, userAudioFull]);
+                      } else if (pending.audio.length > 0) {
+                        finalUserAudio = pending.audio;
+                      }
+                      pendingUserTurnRef.current = null;
                     }
 
                     if (emitTurns) {
@@ -667,29 +912,44 @@ export function useGeminiLiveConversation(
                       modelAudioLinesCount: modelAudioLines.length,
                       userAudioSamples: finalUserAudio.length,
                     });
-                }
-                // Reset all accumulators for next turn
-                currentInputTranscriptionRef.current = '';
-                currentOutputTranscriptionRef.current = '';
-                currentUserAudioChunksRef.current = [];
-                currentModelAudioChunksRef.current = [];
-                currentModelAudioTotalLengthRef.current = 0;
-                modelAudioSplitPointsRef.current = [];
-                lastNewlineCountRef.current = 0;
-             }
+                  }
 
-             // 4. Handle Interruption
-             if (msg.serverContent?.interrupted) {
-                 if (playModelAudio) {
-                   stopAllAudio();
-                 }
-                 // Reset model output accumulators and sync tracking
-                 currentOutputTranscriptionRef.current = '';
-                 currentModelAudioChunksRef.current = [];
-                 currentModelAudioTotalLengthRef.current = 0;
-                 modelAudioSplitPointsRef.current = [];
-                 lastNewlineCountRef.current = 0;
-             }
+                  cancelModelAudioDecodeJobs(sessionId, completedTurnId);
+                  currentInputTranscriptionRef.current = '';
+                  currentOutputTranscriptionRef.current = '';
+                  currentUserAudioChunksRef.current = [];
+                  currentModelAudioChunksRef.current = [];
+                  currentModelAudioTotalLengthRef.current = 0;
+                  modelAudioSplitPointsRef.current = [];
+                  lastNewlineCountRef.current = 0;
+                  lastTranscriptUpdateRef.current = null;
+                  startNextModelAudioTurn(sessionId);
+
+                  if (!modelText) {
+                    emitTurnTranscriptUpdate('pending-user');
+                  }
+                }
+
+                // 4. Handle Interruption
+                if (msg.serverContent?.interrupted) {
+                  const interruptedTurnId = currentModelAudioTurnIdRef.current;
+                  cancelModelAudioDecodeJobs(sessionId, interruptedTurnId);
+                  if (playModelAudio) {
+                    stopAllAudio();
+                  }
+                  currentOutputTranscriptionRef.current = '';
+                  currentModelAudioChunksRef.current = [];
+                  currentModelAudioTotalLengthRef.current = 0;
+                  modelAudioSplitPointsRef.current = [];
+                  lastNewlineCountRef.current = 0;
+                  startNextModelAudioTurn(sessionId);
+                  emitTurnTranscriptUpdate('interrupted');
+                }
+              })
+              .catch((error) => {
+                if (currentSessionIdRef.current !== sessionId) return;
+                console.warn('Live server message processing failed', error);
+              });
           },
           onclose: () => {
             // Check session is still valid before updating state
@@ -749,7 +1009,7 @@ export function useGeminiLiveConversation(
       }
 
       // Audio Streaming Loop (Worklet) with session validation
-      workletNode.port.onmessage = (event: MessageEvent<Int16Array>) => {
+      workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
           // CRITICAL: Check session is still valid before processing audio
           if (currentSessionIdRef.current !== sessionId) return;
           
@@ -758,12 +1018,27 @@ export function useGeminiLiveConversation(
           
           // Accumulate User Audio for history saving
           currentUserAudioChunksRef.current.push(pcm.slice()); // Slice to copy for accumulation
-          
-          try {
-              sessionRef.current?.sendRealtimeInput({ media: encodeInt16ToBlob(pcm) });
-          } catch {
-              // Session may have been closed, ignore send errors
-          }
+
+          const transferBuffer = toTransferableArrayBuffer(pcm);
+
+          void ensureInputCodecWorker().encodePcmToBase64(transferBuffer)
+            .then((base64) => {
+              if (currentSessionIdRef.current !== sessionId) return;
+              try {
+                sessionRef.current?.sendRealtimeInput({
+                  media: {
+                    data: base64,
+                    mimeType: 'audio/pcm;rate=16000',
+                  },
+                });
+              } catch {
+                // Session may have been closed, ignore send errors
+              }
+            })
+            .catch((error) => {
+              if (currentSessionIdRef.current !== sessionId) return;
+              console.warn('Audio encode failed', error);
+            });
       };
       source.connect(workletNode);
 
@@ -784,7 +1059,21 @@ export function useGeminiLiveConversation(
       callbacksRef.current.onError?.(e instanceof Error ? e.message : String(e));
       await cleanup();
     }
-  }, [updateState, cleanup, stopAllAudio, ensureCaptureWorklet, ensureVideoElementReady, startVideoFrameLoop]);
+  }, [
+    cancelModelAudioDecodeJobs,
+    updateState,
+    cleanup,
+    getModelAudioDecodeCheckpoint,
+    stopAllAudio,
+    startNextModelAudioTurn,
+    ensureCaptureWorklet,
+    ensureInputCodecWorker,
+    ensureOutputCodecWorker,
+    ensurePlaybackWorklet,
+    ensureVideoElementReady,
+    startVideoFrameLoop,
+    waitForModelAudioDecodeCheckpoint,
+  ]);
 
   const stop = useCallback(async () => {
     updateState('idle');

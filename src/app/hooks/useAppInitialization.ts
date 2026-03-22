@@ -23,11 +23,13 @@ import { refreshGeminiModelsFromRemote, resolveModelRegistryUrl, setModelRegistr
 export interface UseAppInitializationConfig {
   maestroAvatarUriRef: MutableRefObject<string | null>;
   maestroAvatarMimeTypeRef: MutableRefObject<string | null>;
+  waitForConversationSystemsIdle?: () => Promise<void>;
 }
 
 export const useAppInitialization = ({
   maestroAvatarUriRef,
   maestroAvatarMimeTypeRef,
+  waitForConversationSystemsIdle,
 }: UseAppInitializationConfig) => {
   const { t } = useAppTranslations();
 
@@ -55,6 +57,9 @@ export const useAppInitialization = ({
   const addMessage = useMaestroStore(state => state.addMessage);
   const updateMessage = useMaestroStore(state => state.updateMessage);
   const deleteMessage = useMaestroStore(state => state.deleteMessage);
+  const upsertLiveTranscriptMessage = useMaestroStore(state => state.upsertLiveTranscriptMessage);
+  const removeLiveTranscriptMessage = useMaestroStore(state => state.removeLiveTranscriptMessage);
+  const clearLiveTranscriptMessages = useMaestroStore(state => state.clearLiveTranscriptMessages);
   const setMessages = useMaestroStore(state => state.setMessages);
   const getHistoryRespectingBookmark = useMaestroStore(state => state.getHistoryRespectingBookmark);
   const computeMaxMessagesForArray = useMaestroStore(state => state.computeMaxMessagesForArray);
@@ -86,9 +91,9 @@ export const useAppInitialization = ({
     const pairId = settings.selectedLanguagePairId;
     if (pairId && pairId !== prevPairIdRef.current) {
       prevPairIdRef.current = pairId;
-      loadHistoryForPair(pairId, t);
+      void loadHistoryForPair(pairId, t, { waitForIdle: waitForConversationSystemsIdle });
     }
-  }, [settings.selectedLanguagePairId, loadHistoryForPair, t]);
+  }, [settings.selectedLanguagePairId, loadHistoryForPair, t, waitForConversationSystemsIdle]);
 
   return {
     t,
@@ -100,6 +105,9 @@ export const useAppInitialization = ({
     addMessage,
     updateMessage,
     deleteMessage,
+    upsertLiveTranscriptMessage,
+    removeLiveTranscriptMessage,
+    clearLiveTranscriptMessages,
     setMessages,
     getHistoryRespectingBookmark,
     computeMaxMessagesForArray,

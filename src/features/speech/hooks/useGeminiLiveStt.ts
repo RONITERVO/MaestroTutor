@@ -9,6 +9,23 @@ import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
+import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
+import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
+
+export interface GeminiLiveSttTurnComplete {
+  turnId: number;
+  turnTranscript: string;
+  committedTranscript: string;
+  inputTranscript: string;
+  outputTranscript: string;
+  audioSamples: number;
+}
+
+export interface UseGeminiLiveSttOptions {
+  onTurnComplete?: (turn: GeminiLiveSttTurnComplete) => void | Promise<void>;
+  autoStopAfterTurnComplete?: boolean;
+}
 
 export interface UseGeminiLiveSttReturn {
   start: (
@@ -20,7 +37,7 @@ export interface UseGeminiLiveSttReturn {
           replySuggestions?: string[];
         }
   ) => Promise<void>;
-  stop: () => void;
+  stop: () => Promise<void>;
   transcript: string;
   isListening: boolean;
   error: string | null;
@@ -29,16 +46,14 @@ export interface UseGeminiLiveSttReturn {
 
 // Session counter to prevent stale callback execution after cleanup
 let sttSessionCounter = 0;
+const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
 
-// Helper to convert Uint8Array to Base64
-function toBase64(bytes: Uint8Array) {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
+  // Keep the original chunk intact because we also retain it for recorded-audio
+  // assembly after the turn completes. Transferring the original buffer would
+  // detach it and break later WAV creation in the send path.
+  return pcm.slice().buffer;
+};
 
 /**
  * Provides a React hook that manages a live Gemini-based speech-to-text session with real-time audio capture, streaming, and transcription state.
@@ -47,7 +62,7 @@ function toBase64(bytes: Uint8Array) {
  *
  * @returns An object exposing control methods and state for the live STT session: `start` to begin listening, `stop` to end the session, `transcript` containing the current combined transcript, `isListening` indicating active listening, `error` containing any error message, and `getRecordedAudio` which returns the merged recorded audio `Int16Array` or `null`.
  */
-export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
+export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLiveSttReturn {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +76,15 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
   const turnAudioSamplesRef = useRef(0);
   const logRef = useRef<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = useRef(false);
+  const codecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
+  const transcriptUpdateTimerRef = useRef<number | null>(null);
+  const lastRenderedTranscriptRef = useRef('');
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
+  const onTurnCompleteRef = useRef(options?.onTurnComplete);
+  const autoStopAfterTurnCompleteRef = useRef(options?.autoStopAfterTurnComplete !== false);
+  const turnIdRef = useRef(0);
   
   // Flag to track if cleanup is in progress to prevent race conditions
   const isCleaningUpRef = useRef<boolean>(false);
@@ -72,6 +93,14 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
   const committedTranscriptRef = useRef('');
   const interimInputRef = useRef('');
   const interimParrotRef = useRef('');
+
+  useEffect(() => {
+    onTurnCompleteRef.current = options?.onTurnComplete;
+  }, [options?.onTurnComplete]);
+
+  useEffect(() => {
+    autoStopAfterTurnCompleteRef.current = options?.autoStopAfterTurnComplete !== false;
+  }, [options?.autoStopAfterTurnComplete]);
 
   const getRecordedAudio = useCallback(() => {
     if (audioChunksRef.current.length === 0) return null;
@@ -84,18 +113,40 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     return full;
   }, []);
 
-  const cleanup = useCallback(async () => {
+  const clearTranscriptUpdateTimer = useCallback(() => {
+    if (transcriptUpdateTimerRef.current !== null) {
+      window.clearTimeout(transcriptUpdateTimerRef.current);
+      transcriptUpdateTimerRef.current = null;
+    }
+  }, []);
+
+  const ensureCodecWorker = useCallback(() => {
+    if (!codecWorkerRef.current) {
+      codecWorkerRef.current = new AudioCodecWorkerClient();
+    }
+    return codecWorkerRef.current;
+  }, []);
+
+  const cleanup = useCallback(async (options?: { preserveRecordedAudio?: boolean; status?: string }) => {
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
-    
+    const preserveRecordedAudio = options?.preserveRecordedAudio === true;
+    const status = options?.status || 'stopped';
+
+    const activeCaptureNode = workletNodeRef.current;
+    if (activeCaptureNode) {
+      await flushCaptureWorkletNode(activeCaptureNode);
+    }
+
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
+    clearTranscriptUpdateTimer();
     
     // Clear worklet message handler FIRST to stop new audio from accumulating
-    if (workletNodeRef.current) {
-      workletNodeRef.current.port.onmessage = null;
-      try { workletNodeRef.current.disconnect(); } catch { /* ignore */ }
+    if (activeCaptureNode) {
+      activeCaptureNode.port.onmessage = null;
+      try { activeCaptureNode.disconnect(); } catch { /* ignore */ }
       workletNodeRef.current = null;
     }
     
@@ -122,25 +173,56 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
       sessionRef.current = null;
       try { if (typeof session.close === 'function') session.close(); } catch { /* ignore */ }
     }
+
+    if (codecWorkerRef.current) {
+      codecWorkerRef.current.dispose();
+      codecWorkerRef.current = null;
+    }
     
-    // Clear accumulated audio chunks to free memory
-    audioChunksRef.current = [];
+    if (logRef.current && !logFinalizedRef.current) {
+      logFinalizedRef.current = true;
+      logRef.current.complete({
+        status,
+        committedTranscript: committedTranscriptRef.current,
+        audioSamples: totalAudioSamplesRef.current,
+      });
+    }
+
+    if (!preserveRecordedAudio) {
+      audioChunksRef.current = [];
+    }
     
     isCleaningUpRef.current = false;
-  }, []);
+  }, [clearTranscriptUpdateTimer]);
 
-  const stop = useCallback(() => {
-    cleanup();
+  const stop = useCallback(async () => {
+    await cleanup({ status: 'stopped' });
     setIsListening(false);
   }, [cleanup]);
 
-  const updateTranscriptState = useCallback(() => {
+  const flushTranscriptState = useCallback(() => {
+    clearTranscriptUpdateTimer();
     const committed = committedTranscriptRef.current;
     // Prefer parrot if available (it's the corrected version), otherwise show input ASR
     const currentSegment = interimParrotRef.current.trim() || interimInputRef.current.trim();
     const separator = (committed && currentSegment) ? ' ' : '';
-    setTranscript(committed + separator + currentSegment);
-  }, []);
+    const nextTranscript = committed + separator + currentSegment;
+    if (nextTranscript === lastRenderedTranscriptRef.current) return;
+    lastRenderedTranscriptRef.current = nextTranscript;
+    setTranscript(nextTranscript);
+  }, [clearTranscriptUpdateTimer]);
+
+  const scheduleTranscriptStateUpdate = useCallback((immediate = false) => {
+    if (immediate) {
+      flushTranscriptState();
+      return;
+    }
+    if (transcriptUpdateTimerRef.current !== null) return;
+    transcriptUpdateTimerRef.current = window.setTimeout(() => {
+      transcriptUpdateTimerRef.current = null;
+      flushTranscriptState();
+    }, TRANSCRIPT_UPDATE_INTERVAL_MS);
+  }, [flushTranscriptState]);
 
   // Load the AudioWorklet module (only needs to happen once per AudioContext)
   const ensureSttWorklet = useCallback(async (ctx: AudioContext) => {
@@ -154,10 +236,11 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
       await new Promise(resolve => setTimeout(resolve, 10));
     }
     
-    await cleanup();
+    await cleanup({ status: 'restarted' });
     
     setError(null);
     setTranscript('');
+    lastRenderedTranscriptRef.current = '';
     
     // Generate a new session ID for this start call
     const sessionId = ++sttSessionCounter;
@@ -167,6 +250,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
     committedTranscriptRef.current = '';
     interimInputRef.current = '';
     interimParrotRef.current = '';
+    turnIdRef.current = 0;
     totalAudioSamplesRef.current = 0;
     turnAudioSamplesRef.current = 0;
     // audioChunksRef is already cleared in cleanup(), but ensure it's empty
@@ -284,7 +368,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
               const text = msg.serverContent.inputTranscription.text;
               if (text) {
                  interimInputRef.current += text;
-                 updateTranscriptState();
+                 scheduleTranscriptStateUpdate();
               }
             }
             
@@ -293,7 +377,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
               const text = msg.serverContent.outputTranscription.text;
               if (text) {
                  interimParrotRef.current += text;
-                 updateTranscriptState();
+                 scheduleTranscriptStateUpdate();
               }
             }
 
@@ -309,6 +393,17 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
                const inputTranscript = interimInputRef.current.trim();
                const outputTranscript = interimParrotRef.current.trim();
                const turnSamples = turnAudioSamplesRef.current;
+               const nextTurnId = turnIdRef.current + 1;
+               logSttFlow('stt.turnComplete.received', {
+                 sessionId,
+                 turnId: nextTurnId,
+                 finalLength: finalSegment.length,
+                 committedLength: committedTranscriptRef.current.length,
+                 inputLength: inputTranscript.length,
+                 outputLength: outputTranscript.length,
+                 audioSamples: turnSamples,
+                 autoStop: autoStopAfterTurnCompleteRef.current,
+               });
                if (inputTranscript || outputTranscript || turnSamples > 0) {
                  const turnLog = debugLogService.logRequest('useGeminiLiveStt.turn', model, {
                    inputTranscript,
@@ -328,7 +423,55 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
                // Reset interim buffers for next turn
                interimInputRef.current = '';
                interimParrotRef.current = '';
-               updateTranscriptState();
+               scheduleTranscriptStateUpdate(true);
+
+               if (finalSegment) {
+                 const turnPayload: GeminiLiveSttTurnComplete = {
+                   turnId: ++turnIdRef.current,
+                   turnTranscript: finalSegment,
+                   committedTranscript: committedTranscriptRef.current,
+                   inputTranscript,
+                   outputTranscript,
+                   audioSamples: turnSamples,
+                 };
+                 logSttFlow('stt.turnComplete.callback.start', {
+                   sessionId,
+                   turnId: turnPayload.turnId,
+                 });
+                 void Promise.resolve(onTurnCompleteRef.current?.(turnPayload))
+                   .then(() => {
+                     logSttFlow('stt.turnComplete.callback.done', {
+                       sessionId,
+                       turnId: turnPayload.turnId,
+                     });
+                   })
+                   .catch((callbackError) => {
+                     errorSttFlow('stt.turnComplete.callback.error', {
+                       sessionId,
+                       turnId: turnPayload.turnId,
+                       message: callbackError instanceof Error ? callbackError.message : String(callbackError),
+                     });
+                     console.error('STT turn-complete handler failed', callbackError);
+                   });
+               }
+
+               if (autoStopAfterTurnCompleteRef.current) {
+                 void (async () => {
+                   try {
+                     logSttFlow('stt.turnComplete.cleanup.start', {
+                       sessionId,
+                       turnId: turnIdRef.current,
+                     });
+                     await cleanup({ preserveRecordedAudio: true, status: 'turn-complete' });
+                     logSttFlow('stt.turnComplete.cleanup.done', {
+                       sessionId,
+                       turnId: turnIdRef.current,
+                     });
+                   } finally {
+                     setIsListening(false);
+                   }
+                 })();
+               }
             }
           },
           onclose: (event: any) => {
@@ -381,28 +524,36 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
       workletNodeRef.current = workletNode;
 
       // Handle audio chunks from the worklet with session validation
-      workletNode.port.onmessage = (event: MessageEvent<Int16Array>) => {
+      workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
         // CRITICAL: Check session is still valid before processing audio
         if (currentSessionIdRef.current !== sessionId) return;
         
         const pcm = event.data;
-        if (pcm && pcm.length > 0) {
+        if (pcm instanceof Int16Array && pcm.length > 0) {
            audioChunksRef.current.push(pcm);
            totalAudioSamplesRef.current += pcm.length;
            turnAudioSamplesRef.current += pcm.length;
 
-           if (sessionRef.current) {
-               const bytes = new Uint8Array(pcm.buffer);
-               const blob = {
-                  data: toBase64(bytes),
-                  mimeType: 'audio/pcm;rate=16000',
-               };
+           const transferBuffer = toTransferableArrayBuffer(pcm);
+           void ensureCodecWorker().encodePcmToBase64(transferBuffer)
+             .then((base64) => {
+               if (currentSessionIdRef.current !== sessionId) return;
+               if (!sessionRef.current) return;
                try {
-                 sessionRef.current.sendRealtimeInput({ media: blob });
-               } catch { 
+                 sessionRef.current.sendRealtimeInput({
+                   media: {
+                     data: base64,
+                     mimeType: 'audio/pcm;rate=16000',
+                   },
+                 });
+               } catch {
                  // Session may have been closed, ignore send errors
                }
-           }
+             })
+             .catch((error) => {
+               if (currentSessionIdRef.current !== sessionId) return;
+               console.warn('STT audio encode failed', error);
+             });
         }
       };
 
@@ -424,7 +575,7 @@ export function useGeminiLiveStt(): UseGeminiLiveSttReturn {
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureSttWorklet, updateTranscriptState]);
+  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
