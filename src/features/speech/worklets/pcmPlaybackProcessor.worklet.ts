@@ -20,7 +20,7 @@ declare function registerProcessor(
   processorCtor: new () => AudioWorkletProcessor
 ): void;
 
-const MAX_QUEUED_SAMPLES = 24000 * 8;
+const HARD_MAX_QUEUED_SAMPLES = 24000 * 180;
 
 type PlaybackMessage =
   | { type: 'push'; pcm: Int16Array }
@@ -48,11 +48,11 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
       }
 
       if (data.type === 'push' && data.pcm instanceof Int16Array && data.pcm.length > 0) {
-        if (this.queuedSamples >= MAX_QUEUED_SAMPLES) {
-          this.queue = [];
-          this.currentChunk = null;
-          this.currentOffset = 0;
-          this.queuedSamples = 0;
+        // Preserve already-buffered speech. If backlog ever becomes truly
+        // pathological, refuse only the newest chunk instead of discarding the
+        // queue and audibly jumping ahead in the transcript.
+        if (this.queuedSamples + data.pcm.length > HARD_MAX_QUEUED_SAMPLES) {
+          return;
         }
         this.queue.push(data.pcm);
         this.queuedSamples += data.pcm.length;
