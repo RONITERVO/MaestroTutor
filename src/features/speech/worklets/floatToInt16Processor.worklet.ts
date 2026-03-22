@@ -81,3 +81,5 @@ class FloatToInt16Processor extends AudioWorkletProcessor {
 
 // Register the processor with a generic name that can be used by both STT and conversation hooks
 registerProcessor('float-to-int16-processor', FloatToInt16Processor);
+
+export {};

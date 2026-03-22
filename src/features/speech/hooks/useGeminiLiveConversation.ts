@@ -6,7 +6,6 @@ import {
   GoogleGenAI,
   LiveServerMessage,
   Modality,
-  Blob as GenAIBlob,
   LiveServerGoAway,
   LiveServerSessionResumptionUpdate,
   SessionResumptionConfig,
@@ -15,8 +14,14 @@ import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { countTranscriptNewlines } from '../utils/transcriptParsing';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
+import {
+  FLOAT_TO_INT16_PROCESSOR_URL,
+  FLOAT_TO_INT16_PROCESSOR_NAME,
+  PCM_PLAYBACK_PROCESSOR_URL,
+  PCM_PLAYBACK_PROCESSOR_NAME,
+} from '../worklets';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -69,60 +74,11 @@ export interface StartLiveConversationOptions {
 
 const INPUT_SAMPLE_RATE = 16000;
 const OUTPUT_SAMPLE_RATE = 24000;
+const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
+const MAX_LIVE_FRAME_DIMENSION = 640;
 
 // Session counter to prevent stale callback execution after cleanup
 let liveConversationSessionCounter = 0;
-
-function toBase64(bytes: Uint8Array) {
-  let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function encodeInt16ToBlob(pcm: Int16Array): GenAIBlob {
-  const bytes = new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength);
-  return {
-    data: toBase64(bytes),
-    mimeType: 'audio/pcm;rate=16000',
-  };
-}
-
-function base64ToUint8(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-
-function base64ToInt16(base64: string): Int16Array {
-    const bytes = base64ToUint8(base64);
-    return new Int16Array(bytes.buffer);
-}
-
-async function decodePcm16ToAudioBuffer(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const int16 = new Int16Array(data.buffer, data.byteOffset, Math.floor(data.byteLength / 2));
-  const frameCount = Math.floor(int16.length / numChannels);
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      const sample = int16[i * numChannels + channel];
-      channelData[i] = sample / 32768;
-    }
-  }
-  return buffer;
-}
 
 const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
   const reader = new FileReader();
@@ -134,6 +90,17 @@ const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reje
   reader.onerror = reject;
   reader.readAsDataURL(blob);
 });
+
+const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
+  if (
+    pcm.buffer instanceof ArrayBuffer
+    && pcm.byteOffset === 0
+    && pcm.byteLength === pcm.buffer.byteLength
+  ) {
+    return pcm.buffer;
+  }
+  return pcm.slice().buffer;
+};
 
 /**
  * Manage a live Gemini conversation with real-time microphone capture, periodic video frames, model audio playback, transcription accumulation, and turn-level callbacks.
@@ -159,13 +126,17 @@ export function useGeminiLiveConversation(
   const captureVideoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
-  const nextAudioStartTimeRef = useRef<number>(0);
-  const audioSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+  const playbackNodeRef = useRef<AudioWorkletNode | null>(null);
   const logRef = useRef<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = useRef<boolean>(false);
   const modelRef = useRef<string>('');
   const pendingUserTurnRef = useRef<{ text: string; transcript: string; audio: Int16Array } | null>(null);
   const videoUpdateVersionRef = useRef<number>(0);
+  const videoFrameInFlightRef = useRef(false);
+  const transcriptUpdateTimerRef = useRef<number | null>(null);
+  const pendingTranscriptUpdateRef = useRef<LiveTurnTranscriptUpdate | null>(null);
+  const inputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
+  const outputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -195,6 +166,22 @@ export function useGeminiLiveConversation(
     callbacksRef.current.onStateChange?.(s);
   }, []);
 
+  const clearTranscriptUpdateTimer = useCallback(() => {
+    if (transcriptUpdateTimerRef.current !== null) {
+      window.clearTimeout(transcriptUpdateTimerRef.current);
+      transcriptUpdateTimerRef.current = null;
+    }
+  }, []);
+
+  const flushPendingTranscriptUpdate = useCallback(() => {
+    clearTranscriptUpdateTimer();
+    const pendingUpdate = pendingTranscriptUpdateRef.current;
+    if (!pendingUpdate) return;
+    pendingTranscriptUpdateRef.current = null;
+    lastTranscriptUpdateRef.current = pendingUpdate;
+    callbacksRef.current.onTurnTranscriptUpdate?.(pendingUpdate);
+  }, [clearTranscriptUpdateTimer]);
+
   const emitTurnTranscriptUpdate = useCallback((reason: LiveTurnTranscriptUpdateReason) => {
     const pendingUserText = pendingUserTurnRef.current?.text?.trim() ?? '';
     const currentUserText = currentInputTranscriptionRef.current.trim();
@@ -203,7 +190,7 @@ export function useGeminiLiveConversation(
       modelText: currentOutputTranscriptionRef.current.trim(),
       reason,
     };
-    const previousUpdate = lastTranscriptUpdateRef.current;
+    const previousUpdate = pendingTranscriptUpdateRef.current || lastTranscriptUpdateRef.current;
     if (
       previousUpdate
       && previousUpdate.userText === nextUpdate.userText
@@ -212,25 +199,43 @@ export function useGeminiLiveConversation(
     ) {
       return;
     }
-    lastTranscriptUpdateRef.current = nextUpdate;
-    callbacksRef.current.onTurnTranscriptUpdate?.(nextUpdate);
-  }, []);
+    pendingTranscriptUpdateRef.current = nextUpdate;
+    if (
+      reason === 'session-reset'
+      || reason === 'interrupted'
+      || reason === 'pending-user'
+    ) {
+      flushPendingTranscriptUpdate();
+      return;
+    }
+    if (transcriptUpdateTimerRef.current !== null) {
+      return;
+    }
+    transcriptUpdateTimerRef.current = window.setTimeout(() => {
+      transcriptUpdateTimerRef.current = null;
+      flushPendingTranscriptUpdate();
+    }, TRANSCRIPT_UPDATE_INTERVAL_MS);
+  }, [flushPendingTranscriptUpdate]);
 
   const emitTurnTranscriptReset = useCallback(() => {
+    clearTranscriptUpdateTimer();
+    pendingTranscriptUpdateRef.current = null;
     lastTranscriptUpdateRef.current = null;
     callbacksRef.current.onTurnTranscriptUpdate?.({
       userText: '',
       modelText: '',
       reason: 'session-reset',
     });
-  }, []);
+  }, [clearTranscriptUpdateTimer]);
 
   const stopAllAudio = useCallback(() => {
-    audioSourcesRef.current.forEach((source) => {
-      try { source.stop(); } catch { /* ignore */ }
-    });
-    audioSourcesRef.current.clear();
-    nextAudioStartTimeRef.current = 0;
+    if (playbackNodeRef.current) {
+      try {
+        playbackNodeRef.current.port.postMessage({ type: 'reset' });
+      } catch {
+        // Ignore reset failures during teardown/interruption.
+      }
+    }
   }, []);
 
   const stopVideoFrameLoop = useCallback(() => {
@@ -264,11 +269,19 @@ export function useGeminiLiveConversation(
     currentSessionIdRef.current = 0;
     
     stopVideoFrameLoop();
+    clearTranscriptUpdateTimer();
+    pendingTranscriptUpdateRef.current = null;
+    videoFrameInFlightRef.current = false;
     
     // Clear worklet message handler FIRST to stop new audio from accumulating
     if (workletNodeRef.current) {
         try { workletNodeRef.current.port.onmessage = null; workletNodeRef.current.disconnect(); } catch { }
         workletNodeRef.current = null;
+    }
+    if (playbackNodeRef.current) {
+      try { playbackNodeRef.current.port.postMessage({ type: 'reset' }); } catch { }
+      try { playbackNodeRef.current.disconnect(); } catch { }
+      playbackNodeRef.current = null;
     }
     if (microphoneStreamRef.current) {
       microphoneStreamRef.current.getTracks().forEach(t => {
@@ -307,6 +320,15 @@ export function useGeminiLiveConversation(
         try { if (typeof session.close === 'function') session.close(); } catch {}
     }
 
+    if (inputCodecWorkerRef.current) {
+      inputCodecWorkerRef.current.dispose();
+      inputCodecWorkerRef.current = null;
+    }
+    if (outputCodecWorkerRef.current) {
+      outputCodecWorkerRef.current.dispose();
+      outputCodecWorkerRef.current = null;
+    }
+
     emitTurnTranscriptReset();
     
     // Clear all accumulators to free memory
@@ -321,7 +343,7 @@ export function useGeminiLiveConversation(
     pendingUserTurnRef.current = null;
     
     isCleaningUpRef.current = false;
-  }, [detachCaptureVideo, emitTurnTranscriptReset, stopAllAudio, stopVideoFrameLoop]);
+  }, [clearTranscriptUpdateTimer, detachCaptureVideo, emitTurnTranscriptReset, stopAllAudio, stopVideoFrameLoop]);
 
   // Load the AudioWorklet module (only needs to happen once per AudioContext)
   const ensureCaptureWorklet = useCallback(async (ctx: AudioContext) => {
@@ -329,6 +351,27 @@ export function useGeminiLiveConversation(
       throw new Error('AudioWorklet is not supported');
     }
     await ctx.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
+  }, []);
+
+  const ensurePlaybackWorklet = useCallback(async (ctx: AudioContext) => {
+    if (!ctx.audioWorklet || typeof ctx.audioWorklet.addModule !== 'function') {
+      throw new Error('AudioWorklet is not supported');
+    }
+    await ctx.audioWorklet.addModule(PCM_PLAYBACK_PROCESSOR_URL);
+  }, []);
+
+  const ensureInputCodecWorker = useCallback(() => {
+    if (!inputCodecWorkerRef.current) {
+      inputCodecWorkerRef.current = new AudioCodecWorkerClient();
+    }
+    return inputCodecWorkerRef.current;
+  }, []);
+
+  const ensureOutputCodecWorker = useCallback(() => {
+    if (!outputCodecWorkerRef.current) {
+      outputCodecWorkerRef.current = new AudioCodecWorkerClient();
+    }
+    return outputCodecWorkerRef.current;
   }, []);
 
   const ensureVideoElementReady = useCallback(async (stream: MediaStream, providedElement?: HTMLVideoElement | null) => {
@@ -375,19 +418,30 @@ export function useGeminiLiveConversation(
       const activeCanvas = canvasRef.current;
       if (!activeSession || !activeVideo || !activeCanvas) return;
       if (activeVideo.videoWidth === 0) return;
+      if (videoFrameInFlightRef.current) return;
 
       const ctx = activeCanvas.getContext('2d');
       if (!ctx) return;
-      activeCanvas.width = activeVideo.videoWidth;
-      activeCanvas.height = activeVideo.videoHeight;
-      ctx.drawImage(activeVideo, 0, 0);
+      const scale = Math.min(1, MAX_LIVE_FRAME_DIMENSION / Math.max(activeVideo.videoWidth, activeVideo.videoHeight));
+      activeCanvas.width = Math.max(1, Math.round(activeVideo.videoWidth * scale));
+      activeCanvas.height = Math.max(1, Math.round(activeVideo.videoHeight * scale));
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'medium';
+      ctx.drawImage(activeVideo, 0, 0, activeCanvas.width, activeCanvas.height);
 
-      activeCanvas.toBlob(async (blob) => {
-        if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
-          const b64 = await blobToBase64(blob);
-          if (currentSessionIdRef.current !== sessionId) return;
-          sessionRef.current.sendRealtimeInput({ media: { data: b64, mimeType: 'image/jpeg' } });
-        }
+      videoFrameInFlightRef.current = true;
+      activeCanvas.toBlob((blob) => {
+        void (async () => {
+          try {
+            if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
+              const b64 = await blobToBase64(blob);
+              if (currentSessionIdRef.current !== sessionId) return;
+              sessionRef.current.sendRealtimeInput({ media: { data: b64, mimeType: 'image/jpeg' } });
+            }
+          } finally {
+            videoFrameInFlightRef.current = false;
+          }
+        })();
       }, 'image/jpeg', 0.5);
     }, 1000);
   }, [stopVideoFrameLoop]);
@@ -487,6 +541,15 @@ export function useGeminiLiveConversation(
       if (playModelAudio) {
         const outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
         outputAudioContextRef.current = outputCtx;
+        await ensurePlaybackWorklet(outputCtx);
+        if (await abortIfInvalidated()) return;
+        const playbackNode = new AudioWorkletNode(outputCtx, PCM_PLAYBACK_PROCESSOR_NAME, {
+          numberOfInputs: 0,
+          numberOfOutputs: 1,
+          outputChannelCount: [1],
+        });
+        playbackNode.connect(outputCtx.destination);
+        playbackNodeRef.current = playbackNode;
       }
 
       const model = getGeminiModels().audio.live;
@@ -533,28 +596,32 @@ export function useGeminiLiveConversation(
              // 1. Handle Audio Output
              const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
              if (inlineAudio) {
-                 try {
-                    // Accumulate raw PCM16 for turn handling
-                    const pcm16 = base64ToInt16(inlineAudio);
-                    currentModelAudioChunksRef.current.push(pcm16);
-                    // Track total audio sample count for transcript-synchronized splitting
-                    currentModelAudioTotalLengthRef.current += pcm16.length;
+                 const activeSessionId = sessionId;
+                 void ensureOutputCodecWorker().decodeBase64ToPcmBuffer(inlineAudio)
+                   .then((buffer) => {
+                     if (currentSessionIdRef.current !== activeSessionId) return;
+                     const pcm16 = new Int16Array(buffer);
+                     if (!pcm16.length) return;
 
-                    if (playModelAudio && outputAudioContextRef.current) {
-                      const ctx = outputAudioContextRef.current;
-                      const buffer = await decodePcm16ToAudioBuffer(base64ToUint8(inlineAudio), ctx, OUTPUT_SAMPLE_RATE, 1);
-                      const source = ctx.createBufferSource();
-                      source.buffer = buffer;
-                      source.connect(ctx.destination);
-                      const next = Math.max(nextAudioStartTimeRef.current, ctx.currentTime);
-                      source.start(next);
-                      nextAudioStartTimeRef.current = next + buffer.duration;
-                      audioSourcesRef.current.add(source);
-                      source.addEventListener('ended', () => audioSourcesRef.current.delete(source));
-                    }
-                 } catch (e) {
-                     console.warn('Audio decode failed', e);
-                 }
+                     // Accumulate raw PCM16 for turn handling
+                     currentModelAudioChunksRef.current.push(pcm16);
+                     currentModelAudioTotalLengthRef.current += pcm16.length;
+
+                     if (playModelAudio && playbackNodeRef.current) {
+                       try {
+                         playbackNodeRef.current.port.postMessage({
+                           type: 'push',
+                           pcm: pcm16,
+                         });
+                       } catch (error) {
+                         console.warn('Playback worklet queue failed', error);
+                       }
+                     }
+                   })
+                   .catch((error) => {
+                     if (currentSessionIdRef.current !== activeSessionId) return;
+                     console.warn('Audio decode failed', error);
+                   });
              }
 
              // 2. Handle Transcript Accumulation & Split Point Detection
@@ -813,12 +880,27 @@ export function useGeminiLiveConversation(
           
           // Accumulate User Audio for history saving
           currentUserAudioChunksRef.current.push(pcm.slice()); // Slice to copy for accumulation
-          
-          try {
-              sessionRef.current?.sendRealtimeInput({ media: encodeInt16ToBlob(pcm) });
-          } catch {
-              // Session may have been closed, ignore send errors
-          }
+
+          const transferBuffer = toTransferableArrayBuffer(pcm);
+
+          void ensureInputCodecWorker().encodePcmToBase64(transferBuffer)
+            .then((base64) => {
+              if (currentSessionIdRef.current !== sessionId) return;
+              try {
+                sessionRef.current?.sendRealtimeInput({
+                  media: {
+                    data: base64,
+                    mimeType: 'audio/pcm;rate=16000',
+                  },
+                });
+              } catch {
+                // Session may have been closed, ignore send errors
+              }
+            })
+            .catch((error) => {
+              if (currentSessionIdRef.current !== sessionId) return;
+              console.warn('Audio encode failed', error);
+            });
       };
       source.connect(workletNode);
 
@@ -839,7 +921,17 @@ export function useGeminiLiveConversation(
       callbacksRef.current.onError?.(e instanceof Error ? e.message : String(e));
       await cleanup();
     }
-  }, [updateState, cleanup, stopAllAudio, ensureCaptureWorklet, ensureVideoElementReady, startVideoFrameLoop]);
+  }, [
+    updateState,
+    cleanup,
+    stopAllAudio,
+    ensureCaptureWorklet,
+    ensureInputCodecWorker,
+    ensureOutputCodecWorker,
+    ensurePlaybackWorklet,
+    ensureVideoElementReady,
+    startVideoFrameLoop,
+  ]);
 
   const stop = useCallback(async () => {
     updateState('idle');
