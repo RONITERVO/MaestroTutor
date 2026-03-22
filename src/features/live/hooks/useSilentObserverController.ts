@@ -4,7 +4,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modality } from '@google/genai';
 import { ChatMessage } from '../../../core/types';
-import { useGeminiLiveConversation, LiveSessionState } from '../../speech';
+import {
+  useGeminiLiveConversation,
+  LiveSessionState,
+  type LiveTurnTranscriptUpdate,
+} from '../../speech';
 import { useMaestroStore } from '../../../store';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
@@ -27,6 +31,7 @@ export interface UseSilentObserverControllerConfig {
     userAudioPcm?: Int16Array,
     modelAudioLines?: Int16Array[]
   ) => void | Promise<void>;
+  onTurnTranscriptUpdate?: (update: LiveTurnTranscriptUpdate) => void;
 }
 
 export interface UseSilentObserverControllerReturn {
@@ -53,6 +58,7 @@ export const useSilentObserverController = ({
   resolveBookmarkContextSummary,
   computeHistorySubsetForMedia,
   onTurnComplete,
+  onTurnTranscriptUpdate,
 }: UseSilentObserverControllerConfig): UseSilentObserverControllerReturn => {
   const [isForeground, setIsForeground] = useState<boolean>(() => readForegroundState());
   const [lifecycleTick, setLifecycleTick] = useState(0);
@@ -103,6 +109,9 @@ export const useSilentObserverController = ({
     },
     onError: (message) => {
       setSilentObserverError(message);
+    },
+    onTurnTranscriptUpdate: (update) => {
+      onTurnTranscriptUpdate?.(update);
     },
     onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines) => {
       if (!onTurnComplete) return;
@@ -167,6 +176,7 @@ export const useSilentObserverController = ({
     clearRetryTimer,
     liveVideoStream,
     onTurnComplete,
+    onTurnTranscriptUpdate,
     settingsRef,
     setSilentObserverError,
     setSilentObserverState,

@@ -489,11 +489,13 @@ const App: React.FC = () => {
     handleStartLiveSession,
     handleStopLiveSession,
     handleLiveTurnComplete,
+    handleLiveTurnTranscriptUpdate,
   } = useLiveSessionController({
     t,
     setSettings,
     addMessage,
     updateMessage,
+    deleteMessage,
     getHistoryRespectingBookmark,
     computeMaxMessagesForArray,
     fetchAndSetReplySuggestions,
@@ -539,6 +541,7 @@ const App: React.FC = () => {
     currentSystemPromptText,
     resolveBookmarkContextSummary,
     computeHistorySubsetForMedia,
+    onTurnTranscriptUpdate: handleLiveTurnTranscriptUpdate,
     onTurnComplete: handleSilentObserverTurnComplete,
   });
 

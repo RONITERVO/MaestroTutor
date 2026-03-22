@@ -20,7 +20,13 @@ import {
   RecordedUtterance,
   TtsAudioCacheEntry 
 } from '../../../core/types';
-import { useGeminiLiveConversation, LiveSessionState, pcmToWav, mapAudioSegmentsToTextLines } from '../../speech';
+import {
+  useGeminiLiveConversation,
+  LiveSessionState,
+  type LiveTurnTranscriptUpdate,
+  pcmToWav,
+  mapAudioSegmentsToTextLines,
+} from '../../speech';
 import { uploadMediaToFiles } from '../../../api/gemini/files';
 import { computeTtsCacheKey } from '../../chat';
 import { processMediaForUpload } from '../../vision';
@@ -47,6 +53,7 @@ export interface UseLiveSessionControllerConfig {
   // Chat store
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => string;
   updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
+  deleteMessage: (messageId: string) => void;
   getHistoryRespectingBookmark: (arr: ChatMessage[]) => ChatMessage[];
   computeMaxMessagesForArray: (arr: ChatMessage[]) => number | undefined;
   fetchAndSetReplySuggestions: (
@@ -106,6 +113,7 @@ export interface UseLiveSessionControllerReturn {
     userAudioPcm?: Int16Array,
     modelAudioLines?: Int16Array[]
   ) => Promise<void>;
+  handleLiveTurnTranscriptUpdate: (update: LiveTurnTranscriptUpdate) => void;
 }
 
 /**
@@ -118,6 +126,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     setSettings,
     addMessage,
     updateMessage,
+    deleteMessage,
     getHistoryRespectingBookmark,
     fetchAndSetReplySuggestions,
     upsertMessageTtsCache,
@@ -168,8 +177,33 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   const liveSessionShouldRestoreSttRef = useRef(false);
   const liveSessionCaptureRef = useRef<{ stream: MediaStream; created: boolean } | null>(null);
   const liveUiTokenRef = useRef<string | null>(null);
+  const isFinalizingLiveTurnRef = useRef(false);
+  const liveDraftMessageIdsRef = useRef<{ userMessageId: string | null; assistantMessageId: string | null }>({
+    userMessageId: null,
+    assistantMessageId: null,
+  });
 
   // --- Helper Functions ---
+
+  const findExistingMessageId = useCallback((messageId: string | null): string | null => {
+    if (!messageId) return null;
+    return messagesRef.current.some(message => message.id === messageId) ? messageId : null;
+  }, [messagesRef]);
+
+  const clearLiveDraftRefs = useCallback(() => {
+    liveDraftMessageIdsRef.current = {
+      userMessageId: null,
+      assistantMessageId: null,
+    };
+  }, []);
+
+  const dropAssistantDraftMessage = useCallback(() => {
+    const assistantMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.assistantMessageId);
+    if (assistantMessageId) {
+      deleteMessage(assistantMessageId);
+    }
+    liveDraftMessageIdsRef.current.assistantMessageId = null;
+  }, [deleteMessage, findExistingMessageId]);
 
   /**
    * Release the camera stream captured for live session
@@ -232,8 +266,10 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     userAudioPcm?: Int16Array, 
     modelAudioLines?: Int16Array[]
   ) => {
+    isFinalizingLiveTurnRef.current = true;
     try {
-      let userMessageId = '';
+      let userMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.userMessageId) || '';
+      let assistantId = findExistingMessageId(liveDraftMessageIdsRef.current.assistantMessageId) || '';
       let snapshotData: any = null;
       
       // 1. Add User Message with Snapshot & Audio
@@ -255,15 +291,24 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           };
         }
 
-        userMessageId = addMessage({
-          role: 'user',
+        const userMessageUpdates = {
           text: userText,
           imageUrl: snapshotData?.base64,
           imageMimeType: snapshotData?.mimeType,
           storageOptimizedImageUrl: snapshotData?.storageOptimizedBase64,
           storageOptimizedImageMimeType: snapshotData?.storageOptimizedMimeType,
-          recordedUtterance
-        });
+          recordedUtterance,
+        };
+
+        if (userMessageId) {
+          updateMessage(userMessageId, userMessageUpdates);
+        } else {
+          userMessageId = addMessage({
+            role: 'user',
+            ...userMessageUpdates,
+          });
+        }
+        liveDraftMessageIdsRef.current.userMessageId = userMessageId;
 
         // Background optimization and upload for live snapshots
         if (snapshotData && userMessageId) {
@@ -314,11 +359,18 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
       // 2. Add Model Message
       if (modelText) {
-        const assistantId = addMessage({
-          role: 'assistant',
-          text: modelText,
-          rawAssistantResponse: modelText
-        });
+        if (assistantId) {
+          updateMessage(assistantId, {
+            rawAssistantResponse: modelText,
+            translations: undefined,
+          });
+        } else {
+          assistantId = addMessage({
+            role: 'assistant',
+            rawAssistantResponse: modelText
+          });
+        }
+        liveDraftMessageIdsRef.current.assistantMessageId = assistantId;
 
         // 3. Post-processing: Formatting Transcript & Translations
         if (selectedLanguagePairRef.current) {
@@ -425,16 +477,78 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       }
     } catch (error) {
       console.error('Failed to process live turn completion:', error);
+    } finally {
+      isFinalizingLiveTurnRef.current = false;
+      if (modelText.trim()) {
+        clearLiveDraftRefs();
+      }
     }
   }, [
     addMessage, 
     captureSnapshot, 
+    clearLiveDraftRefs,
+    findExistingMessageId,
     t, 
     parseGeminiResponse, 
     fetchAndSetReplySuggestions, 
     getHistoryRespectingBookmark, 
     upsertMessageTtsCache, 
     updateMessage, 
+  ]);
+
+  const handleLiveTurnTranscriptUpdate = useCallback((update: LiveTurnTranscriptUpdate) => {
+    if (update.reason === 'session-reset') {
+      if (isFinalizingLiveTurnRef.current) {
+        return;
+      }
+      dropAssistantDraftMessage();
+      clearLiveDraftRefs();
+      return;
+    }
+
+    const userText = update.userText.trim();
+    const modelText = update.modelText.trim();
+
+    const existingUserMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.userMessageId);
+    if (userText) {
+      if (existingUserMessageId) {
+        updateMessage(existingUserMessageId, { text: update.userText });
+      } else {
+        liveDraftMessageIdsRef.current.userMessageId = addMessage({
+          role: 'user',
+          text: update.userText,
+        });
+      }
+    } else {
+      liveDraftMessageIdsRef.current.userMessageId = existingUserMessageId;
+    }
+
+    const existingAssistantMessageId = findExistingMessageId(liveDraftMessageIdsRef.current.assistantMessageId);
+    if (modelText) {
+      if (existingAssistantMessageId) {
+        updateMessage(existingAssistantMessageId, {
+          rawAssistantResponse: update.modelText,
+          translations: undefined,
+        });
+      } else {
+        liveDraftMessageIdsRef.current.assistantMessageId = addMessage({
+          role: 'assistant',
+          rawAssistantResponse: update.modelText,
+        });
+      }
+      return;
+    }
+
+    liveDraftMessageIdsRef.current.assistantMessageId = existingAssistantMessageId;
+    if (update.reason === 'interrupted') {
+      dropAssistantDraftMessage();
+    }
+  }, [
+    addMessage,
+    clearLiveDraftRefs,
+    dropAssistantDraftMessage,
+    findExistingMessageId,
+    updateMessage,
   ]);
 
   // --- Initialize useGeminiLiveConversation ---
@@ -464,6 +578,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       setLiveSessionError(message);
       restoreSttAfterLiveSession();
     },
+    onTurnTranscriptUpdate: handleLiveTurnTranscriptUpdate,
     onTurnComplete: handleLiveTurnComplete
   });
 
@@ -592,6 +707,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     handleStartLiveSession,
     handleStopLiveSession,
     handleLiveTurnComplete,
+    handleLiveTurnTranscriptUpdate,
   };
 };
 

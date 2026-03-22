@@ -20,11 +20,25 @@ import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
+export type LiveTurnTranscriptUpdateReason =
+  | 'input'
+  | 'output'
+  | 'pending-user'
+  | 'interrupted'
+  | 'session-reset';
+
+export interface LiveTurnTranscriptUpdate {
+  userText: string;
+  modelText: string;
+  reason: LiveTurnTranscriptUpdateReason;
+}
+
 export interface UseGeminiLiveConversationCallbacks {
   onStateChange?: (state: LiveSessionState) => void;
   onError?: (message: string) => void;
   onGoAway?: (goAway: LiveServerGoAway) => void;
   onSessionResumptionUpdate?: (update: LiveServerSessionResumptionUpdate) => void;
+  onTurnTranscriptUpdate?: (update: LiveTurnTranscriptUpdate) => void;
   /**
    * Called when a turn completes with consolidated transcripts and audio.
    * @param userText - The user's transcribed speech
@@ -171,6 +185,7 @@ export function useGeminiLiveConversation(
   const currentModelAudioTotalLengthRef = useRef<number>(0);
   const modelAudioSplitPointsRef = useRef<number[]>([]);
   const lastNewlineCountRef = useRef<number>(0);
+  const lastTranscriptUpdateRef = useRef<LiveTurnTranscriptUpdate | null>(null);
 
   const callbacksRef = useRef(callbacks);
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
@@ -178,6 +193,36 @@ export function useGeminiLiveConversation(
   const updateState = useCallback((s: LiveSessionState) => {
     setState(s);
     callbacksRef.current.onStateChange?.(s);
+  }, []);
+
+  const emitTurnTranscriptUpdate = useCallback((reason: LiveTurnTranscriptUpdateReason) => {
+    const pendingUserText = pendingUserTurnRef.current?.text?.trim() ?? '';
+    const currentUserText = currentInputTranscriptionRef.current.trim();
+    const nextUpdate: LiveTurnTranscriptUpdate = {
+      userText: [pendingUserText, currentUserText].filter(Boolean).join('\n').trim(),
+      modelText: currentOutputTranscriptionRef.current.trim(),
+      reason,
+    };
+    const previousUpdate = lastTranscriptUpdateRef.current;
+    if (
+      previousUpdate
+      && previousUpdate.userText === nextUpdate.userText
+      && previousUpdate.modelText === nextUpdate.modelText
+      && previousUpdate.reason === nextUpdate.reason
+    ) {
+      return;
+    }
+    lastTranscriptUpdateRef.current = nextUpdate;
+    callbacksRef.current.onTurnTranscriptUpdate?.(nextUpdate);
+  }, []);
+
+  const emitTurnTranscriptReset = useCallback(() => {
+    lastTranscriptUpdateRef.current = null;
+    callbacksRef.current.onTurnTranscriptUpdate?.({
+      userText: '',
+      modelText: '',
+      reason: 'session-reset',
+    });
   }, []);
 
   const stopAllAudio = useCallback(() => {
@@ -261,6 +306,8 @@ export function useGeminiLiveConversation(
         sessionRef.current = null;
         try { if (typeof session.close === 'function') session.close(); } catch {}
     }
+
+    emitTurnTranscriptReset();
     
     // Clear all accumulators to free memory
     currentInputTranscriptionRef.current = '';
@@ -270,10 +317,11 @@ export function useGeminiLiveConversation(
     currentModelAudioTotalLengthRef.current = 0;
     modelAudioSplitPointsRef.current = [];
     lastNewlineCountRef.current = 0;
+    lastTranscriptUpdateRef.current = null;
     pendingUserTurnRef.current = null;
     
     isCleaningUpRef.current = false;
-  }, [detachCaptureVideo, stopAllAudio, stopVideoFrameLoop]);
+  }, [detachCaptureVideo, emitTurnTranscriptReset, stopAllAudio, stopVideoFrameLoop]);
 
   // Load the AudioWorklet module (only needs to happen once per AudioContext)
   const ensureCaptureWorklet = useCallback(async (ctx: AudioContext) => {
@@ -512,6 +560,7 @@ export function useGeminiLiveConversation(
              // 2. Handle Transcript Accumulation & Split Point Detection
              if (msg.serverContent?.inputTranscription?.text) {
                currentInputTranscriptionRef.current += msg.serverContent.inputTranscription.text;
+               emitTurnTranscriptUpdate('input');
              }
              if (msg.serverContent?.outputTranscription?.text) {
                const textPart = msg.serverContent.outputTranscription.text;
@@ -534,6 +583,7 @@ export function useGeminiLiveConversation(
                  }
                  lastNewlineCountRef.current = newlineCount;
                }
+               emitTurnTranscriptUpdate('output');
              }
 
              // 3. Handle Turn Completion (Exchange Finished)
@@ -676,6 +726,10 @@ export function useGeminiLiveConversation(
                 currentModelAudioTotalLengthRef.current = 0;
                 modelAudioSplitPointsRef.current = [];
                 lastNewlineCountRef.current = 0;
+                lastTranscriptUpdateRef.current = null;
+                if (!modelText) {
+                  emitTurnTranscriptUpdate('pending-user');
+                }
              }
 
              // 4. Handle Interruption
@@ -689,6 +743,7 @@ export function useGeminiLiveConversation(
                  currentModelAudioTotalLengthRef.current = 0;
                  modelAudioSplitPointsRef.current = [];
                  lastNewlineCountRef.current = 0;
+                 emitTurnTranscriptUpdate('interrupted');
              }
           },
           onclose: () => {

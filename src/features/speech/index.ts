@@ -15,7 +15,12 @@ export { default as SttLanguageSelector } from './components/SttLanguageSelector
 // Hooks
 export { default as useBrowserSpeech } from './hooks/useBrowserSpeech';
 export { useTtsEngine } from './hooks/useTtsEngine';
-export { useGeminiLiveConversation, type LiveSessionState } from './hooks/useGeminiLiveConversation';
+export {
+  useGeminiLiveConversation,
+  type LiveSessionState,
+  type LiveTurnTranscriptUpdate,
+  type LiveTurnTranscriptUpdateReason,
+} from './hooks/useGeminiLiveConversation';
 export { useGeminiLiveStt } from './hooks/useGeminiLiveStt';
 export { useSpeechOrchestrator } from './hooks/useSpeechOrchestrator';
 export { useAutoSendOnSilence } from './hooks/useAutoSendOnSilence';
