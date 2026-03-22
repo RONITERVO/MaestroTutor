@@ -25,6 +25,7 @@ Before touching anything, understand the split between code and external systems
 - Android package ID and release version: [`android/app/build.gradle`](../android/app/build.gradle)
 - TypeScript billing product IDs: [`src/features/theme/config/themeProducts.ts`](../src/features/theme/config/themeProducts.ts)
 - Java billing product IDs: [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java)
+- Raw theme color palettes: [`src/features/theme/config/themeColors.ts`](../src/features/theme/config/themeColors.ts)
 - Purchased theme color mappings: [`src/features/theme/config/purchasableThemePresets.ts`](../src/features/theme/config/purchasableThemePresets.ts)
 - Billing runtime code: [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java)
 - Store UI: [`src/features/theme/components/ThemeStorePanel.tsx`](../src/features/theme/components/ThemeStorePanel.tsx)
@@ -170,9 +171,17 @@ Do not casually change the package ID after Play Console setup. In practice, tha
 
 The current paid theme IDs are:
 
-- `theme_ocean_blue`
-- `theme_sunset_gold`
-- `theme_dark_neon`
+* theme_ocean_blue
+* theme_sunset_gold
+* theme_dark_neon
+* theme_scholar
+* theme_pure_light
+* theme_obsidian
+* theme_forest
+* theme_lavender
+* theme_spectrum
+* theme_graphite
+
 
 They must match in both:
 
@@ -300,6 +309,13 @@ For each product ID below, create a one-time product in Play Console:
 | `theme_ocean_blue` | Ocean Blue |
 | `theme_sunset_gold` | Sunset Gold |
 | `theme_dark_neon` | Dark Neon |
+| `theme_scholar` | Scholar |
+| `theme_pure_light` | Pure Light |
+| `theme_obsidian` | Obsidian |
+| `theme_forest` | Forest |
+| `theme_lavender` | Lavender |
+| `theme_spectrum` | Spectrum |
+| `theme_graphite` | Graphite |
 
 ### Recommended setup for each product
 

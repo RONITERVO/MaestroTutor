@@ -24,6 +24,13 @@ export const THEME_PRODUCT_IDS = {
   OCEAN_BLUE: 'theme_ocean_blue',
   SUNSET_GOLD: 'theme_sunset_gold',
   DARK_NEON: 'theme_dark_neon',
+  SCHOLAR: 'theme_scholar',
+  PURE_LIGHT: 'theme_pure_light',
+  OBSIDIAN: 'theme_obsidian',
+  FOREST: 'theme_forest',
+  LAVENDER: 'theme_lavender',
+  SPECTRUM: 'theme_spectrum',
+  GRAPHITE: 'theme_graphite',
 } as const;
 
 export type ThemeProductId = (typeof THEME_PRODUCT_IDS)[keyof typeof THEME_PRODUCT_IDS];
@@ -50,5 +57,54 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
     description: 'High-contrast dark background with vibrant neon accents.',
     icon: '🌆',
     previewColors: ['0 0% 8%', '280 100% 65%', '165 100% 55%', '60 100% 60%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.SCHOLAR,
+    displayName: 'Scholar',
+    description: 'Warm parchment with deep indigo ink and sky-blue accents.',
+    icon: '📜',
+    previewColors: ['39 37% 94%', '248 41% 27%', '199 84% 58%', '261 75% 63%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.PURE_LIGHT,
+    displayName: 'Pure Light',
+    description: 'Crisp white with deep navy and premium blue — elegant and timeless.',
+    icon: '☀️',
+    previewColors: ['210 25% 98%', '222 47% 20%', '214 87% 51%', '199 89% 40%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.OBSIDIAN,
+    displayName: 'Obsidian',
+    description: 'Deep navy-black with refined blue and teal — sophisticated darkness.',
+    icon: '🌑',
+    previewColors: ['222 38% 8%', '214 80% 46%', '174 68% 44%', '222 28% 17%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.FOREST,
+    displayName: 'Forest',
+    description: 'Warm sage paper with deep woodland green ink and moss accents.',
+    icon: '🌿',
+    previewColors: ['80 15% 95%', '90 25% 20%', '140 55% 38%', '160 45% 45%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.LAVENDER,
+    displayName: 'Lavender',
+    description: 'Soft lavender-white paper with deep plum ink and violet accents.',
+    icon: '💜',
+    previewColors: ['267 35% 97%', '262 52% 24%', '270 58% 56%', '255 48% 66%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.SPECTRUM,
+    displayName: 'Spectrum',
+    description: 'The four iconic primaries — blue, red, yellow, and green — each given a dedicated role across the entire UI.',
+    icon: '🌈',
+    previewColors: ['214 89% 55%', '5 70% 52%', '45 96% 48%', '153 76% 38%'],
+  },
+  {
+    productId: THEME_PRODUCT_IDS.GRAPHITE,
+    displayName: 'Graphite',
+    description: 'Pure black on white — every element expressed in graphite grays, like a masterful pencil sketch with no color to distract.',
+    icon: '✏️',
+    previewColors: ['40 8% 97%', '220 8% 14%', '220 6% 28%', '220 5% 60%'],
   },
 ];

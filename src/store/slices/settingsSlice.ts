@@ -15,7 +15,7 @@ import { getAppSettingsDB, setAppSettingsDB } from '../../features/session';
 import { ALL_LANGUAGES, STT_LANGUAGES, DEFAULT_NATIVE_LANG_CODE, DEFAULT_TARGET_LANG_CODE, type LanguageDefinition } from '../../core/config/languages';
 import { generateAllLanguagePairs, getPrimaryCode, parseLanguagePairId } from '../../shared/utils/languageUtils';
 import { IMAGE_GEN_CAMERA_ID } from '../../core/config/app';
-import { migrateLegacyColorMap } from '../../features/theme/config/colorRenameMap';
+import { migrateLegacyColorMap, forwardFillThemeTokens } from '../../features/theme/config/colorRenameMap';
 import type { MaestroStore } from '../maestroStore';
 
 // Generate language pairs once
@@ -25,7 +25,7 @@ const MAX_VISIBLE_MESSAGES_DEFAULT = 50;
 
 const migrateLegacyThemeSettings = (settings: AppSettings): AppSettings => {
   const migratedCustomColors = settings.customColors
-    ? migrateLegacyColorMap(settings.customColors)
+    ? forwardFillThemeTokens(migrateLegacyColorMap(settings.customColors))
     : settings.customColors;
 
   const migratedSavedPresets = settings.savedThemePresets?.map((preset) => ({

@@ -12,21 +12,31 @@ import java.util.List;
  */
 public final class ThemeProducts {
 
-    private ThemeProducts() {}
+    private ThemeProducts() {
+    }
 
-    /** Calm ocean blues and aqua tones. */
     public static final String THEME_OCEAN_BLUE = "theme_ocean_blue";
-
-    /** Warm sunset golds and amber hues. */
     public static final String THEME_SUNSET_GOLD = "theme_sunset_gold";
-
-    /** High-contrast dark background with neon accents. */
     public static final String THEME_DARK_NEON = "theme_dark_neon";
 
-    /** All purchasable theme product IDs. */
+    // Add your 7 new themes here:
+    public static final String THEME_SCHOLAR = "theme_scholar";
+    public static final String THEME_PURE_LIGHT = "theme_pure_light";
+    public static final String THEME_OBSIDIAN = "theme_obsidian";
+    public static final String THEME_FOREST = "theme_forest";
+    public static final String THEME_LAVENDER = "theme_lavender";
+    public static final String THEME_SPECTRUM = "theme_spectrum";
+    public static final String THEME_GRAPHITE = "theme_graphite";
+
     public static final List<String> ALL_PRODUCT_IDS = List.of(
             THEME_OCEAN_BLUE,
             THEME_SUNSET_GOLD,
-            THEME_DARK_NEON
-    );
+            THEME_DARK_NEON,
+            THEME_SCHOLAR,
+            THEME_PURE_LIGHT,
+            THEME_OBSIDIAN,
+            THEME_FOREST,
+            THEME_LAVENDER,
+            THEME_SPECTRUM,
+            THEME_GRAPHITE);
 }
