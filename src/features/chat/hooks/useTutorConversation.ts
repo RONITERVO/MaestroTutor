@@ -77,7 +77,7 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityToke
 import { synthesizeGeminiAudioNote } from '../../speech/services/geminiLiveAudioNote';
 import { useMaestroStore } from '../../../store';
 import { useShallow } from 'zustand/shallow';
-import { selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
+import { selectIsListening, selectIsSending, selectIsLoadingSuggestions, selectIsCreatingSuggestion, selectIsSpeaking } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 
 const parseApiErrorMessage = (message?: string): string => {
@@ -386,8 +386,7 @@ export interface UseTutorConversationConfig {
   // Speech
   speakMessage: (message: ChatMessage) => void;
   isSpeechSynthesisSupported: boolean;
-  isListening: boolean;
-  stopListening: () => void;
+  stopListening: () => Promise<void>;
   startListening: (lang: string) => void;
   clearTranscript: () => void;
   hasPendingQueueItems: () => boolean;
@@ -436,7 +435,8 @@ export interface UseTutorConversationReturn {
     text: string,
     passedImageBase64?: string,
     passedImageMimeType?: string,
-    messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement'
+    messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement',
+    options?: { triggeredByStt?: boolean }
   ) => Promise<boolean>;
   handleSendMessageInternalRef: React.MutableRefObject<any>;
   
@@ -480,7 +480,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     captureSnapshot,
     speakMessage,
     isSpeechSynthesisSupported,
-    isListening,
     stopListening,
     startListening,
     clearTranscript,
@@ -2163,7 +2162,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     text: string,
     passedImageBase64?: string,
     passedImageMimeType?: string,
-    messageType: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user'
+    messageType: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user',
+    options?: { triggeredByStt?: boolean }
   ): Promise<boolean> => {
     if (isLoadingHistoryRef.current) return false;
     if (!text && !passedImageBase64 && messageType === 'user') return false;
@@ -2179,7 +2179,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
     // Add sending token for unified busy state tracking (replaces setIsSending(true))
     sendingTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.RESPONSE);
-    if (settingsRef.current.stt.enabled && isListening) {
+    const isListeningNow = selectIsListening(useMaestroStore.getState());
+    const shouldResumeSttAfterSend = settingsRef.current.stt.enabled && (isListeningNow || options?.triggeredByStt === true);
+    if (settingsRef.current.stt.enabled && isListeningNow) {
       const claimedUtterance = typeof claimRecordedUtterance === 'function' ? claimRecordedUtterance() : null;
       if (claimedUtterance) {
         recordedUtterancePendingRef.current = claimedUtterance;
@@ -2189,8 +2191,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       } catch {
         /* ignore */
       }
-      sttInterruptedBySendRef.current = true;
       clearTranscript();
+    } else if (options?.triggeredByStt) {
+      clearTranscript();
+    }
+
+    if (shouldResumeSttAfterSend) {
+      sttInterruptedBySendRef.current = true;
     } else {
       sttInterruptedBySendRef.current = false;
     }
@@ -2627,7 +2634,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     requestReplySuggestions,
     speakMessage,
     isSpeechSynthesisSupported,
-    isListening,
     stopListening,
     startListening,
     clearTranscript,

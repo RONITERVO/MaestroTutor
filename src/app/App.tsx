@@ -234,7 +234,6 @@ const App: React.FC = () => {
     captureSnapshot,
     speakMessage,
     isSpeechSynthesisSupported,
-    isListening,
     stopListening,
     startListening,
     clearTranscript,
@@ -299,7 +298,8 @@ const App: React.FC = () => {
       turnText,
       state.attachedImageBase64 || undefined,
       state.attachedImageMimeType || undefined,
-      'user'
+      'user',
+      { triggeredByStt: true }
     );
   }, [clearTranscript, handleCreateSuggestion, handleSendMessageInternal, startListening, stopListening]);
 

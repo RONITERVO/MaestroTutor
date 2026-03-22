@@ -23,6 +23,7 @@ export interface GeminiLiveSttTurnComplete {
 
 export interface UseGeminiLiveSttOptions {
   onTurnComplete?: (turn: GeminiLiveSttTurnComplete) => void | Promise<void>;
+  autoStopAfterTurnComplete?: boolean;
 }
 
 export interface UseGeminiLiveSttReturn {
@@ -85,6 +86,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
   const onTurnCompleteRef = useRef(options?.onTurnComplete);
+  const autoStopAfterTurnCompleteRef = useRef(options?.autoStopAfterTurnComplete !== false);
   const turnIdRef = useRef(0);
   
   // Flag to track if cleanup is in progress to prevent race conditions
@@ -98,6 +100,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   useEffect(() => {
     onTurnCompleteRef.current = options?.onTurnComplete;
   }, [options?.onTurnComplete]);
+
+  useEffect(() => {
+    autoStopAfterTurnCompleteRef.current = options?.autoStopAfterTurnComplete !== false;
+  }, [options?.autoStopAfterTurnComplete]);
 
   const getRecordedAudio = useCallback(() => {
     if (audioChunksRef.current.length === 0) return null;
@@ -124,10 +130,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     return codecWorkerRef.current;
   }, []);
 
-  const cleanup = useCallback(async () => {
+  const cleanup = useCallback(async (options?: { preserveRecordedAudio?: boolean; status?: string }) => {
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
+    const preserveRecordedAudio = options?.preserveRecordedAudio === true;
+    const status = options?.status || 'stopped';
 
     const activeCaptureNode = workletNodeRef.current;
     if (activeCaptureNode) {
@@ -174,14 +182,24 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       codecWorkerRef.current = null;
     }
     
-    // Clear accumulated audio chunks to free memory
-    audioChunksRef.current = [];
+    if (logRef.current && !logFinalizedRef.current) {
+      logFinalizedRef.current = true;
+      logRef.current.complete({
+        status,
+        committedTranscript: committedTranscriptRef.current,
+        audioSamples: totalAudioSamplesRef.current,
+      });
+    }
+
+    if (!preserveRecordedAudio) {
+      audioChunksRef.current = [];
+    }
     
     isCleaningUpRef.current = false;
   }, [clearTranscriptUpdateTimer]);
 
   const stop = useCallback(async () => {
-    await cleanup();
+    await cleanup({ status: 'stopped' });
     setIsListening(false);
   }, [cleanup]);
 
@@ -221,7 +239,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       await new Promise(resolve => setTimeout(resolve, 10));
     }
     
-    await cleanup();
+    await cleanup({ status: 'restarted' });
     
     setError(null);
     setTranscript('');
@@ -411,6 +429,16 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                  void Promise.resolve(onTurnCompleteRef.current?.(turnPayload)).catch((callbackError) => {
                    console.error('STT turn-complete handler failed', callbackError);
                  });
+               }
+
+               if (autoStopAfterTurnCompleteRef.current) {
+                 void (async () => {
+                   try {
+                     await cleanup({ preserveRecordedAudio: true, status: 'turn-complete' });
+                   } finally {
+                     setIsListening(false);
+                   }
+                 })();
                }
             }
           },
