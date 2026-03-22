@@ -1,4 +1,5 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { useMaestroStore } from '../../store';
 
 type SttFlowLogLevel = 'debug' | 'info' | 'warn' | 'error';
 type SttFlowDetails = Record<string, unknown> | undefined;
@@ -15,6 +16,27 @@ const AndroidDebugLogNative = registerPlugin<AndroidDebugLogPluginInterface>('An
 const isNativeAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
 export const STT_FLOW_LOG_TAG = 'MaestroSttFlow';
+export const STT_FLOW_DEBUG_STORAGE_KEY = 'maestro.sttFlowDebug';
+
+const isSttFlowDebugEnabled = (): boolean => {
+  try {
+    if (useMaestroStore.getState().showDebugLogs) {
+      return true;
+    }
+  } catch {
+    // Ignore store access failures during early bootstrap.
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      return window.localStorage.getItem(STT_FLOW_DEBUG_STORAGE_KEY) === '1';
+    } catch {
+      // Ignore localStorage access failures.
+    }
+  }
+
+  return false;
+};
 
 const formatMessage = (stage: string, details?: SttFlowDetails): string => {
   if (!details || Object.keys(details).length === 0) {
@@ -48,6 +70,9 @@ const logToConsole = (level: SttFlowLogLevel, message: string) => {
 };
 
 const emitLog = (level: SttFlowLogLevel, stage: string, details?: SttFlowDetails) => {
+  if (!isSttFlowDebugEnabled()) {
+    return;
+  }
   const message = formatMessage(stage, details);
   if (isNativeAndroid) {
     void AndroidDebugLogNative.log({

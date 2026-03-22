@@ -38,6 +38,13 @@ import {
 
 - `debugLogService.ts`: Log capture and retrieval
 
+## STT Flow Logging
+
+- Android STT/send pipeline tracing uses the native Logcat tag `MaestroSttFlow`.
+- It is enabled while the in-app debug panel is open.
+- It can also be forced on by setting `localStorage['maestro.sttFlowDebug'] = '1'`.
+- This keeps the trace available for device-only audio bugs without leaving always-on production noise.
+
 ## Usage
 
 The debug panel can be toggled from the Header component.
