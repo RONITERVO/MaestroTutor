@@ -32,13 +32,20 @@ export const buildLiveSystemInstruction = async ({
     globalProfileText: (await getGlobalProfileDB())?.text || undefined,
   });
   const sourceMessagesById = new Map(historySubset.map(message => [message.id, message]));
+  const latestAssistantEntryId = [...apiHistory]
+    .reverse()
+    .find(entry => entry.role === 'assistant')
+    ?.messageId;
 
   let historyContext = '';
   apiHistory.forEach((entry) => {
     const role = entry.role === 'user' ? 'User' : 'Maestro';
     const sourceMessage = entry.messageId ? sourceMessagesById.get(entry.messageId) : undefined;
     const text = entry.role === 'assistant'
-      ? (buildCompactAssistantHistoryText(sourceMessage) || entry.rawAssistantResponse || entry.text || '(assistant attachment)')
+      ? (buildCompactAssistantHistoryText(sourceMessage, {
+          includeArtifact: entry.messageId === latestAssistantEntryId,
+          includeToolRequest: entry.messageId === latestAssistantEntryId,
+        }) || entry.rawAssistantResponse || entry.text || '(assistant attachment)')
       : (entry.rawAssistantResponse || entry.text || '(image)');
     historyContext += `${role}: ${text}\n`;
   });
