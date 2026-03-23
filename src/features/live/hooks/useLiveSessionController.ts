@@ -559,11 +559,15 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
     if (modelText) {
       const meta = ensureLiveDraftMeta('assistant');
+      const translations = selectedLanguagePairRef.current
+        ? parseGeminiResponse(update.modelText)
+        : [];
       upsertLiveTranscriptMessage({
         id: meta.id,
         timestamp: meta.timestamp,
         role: 'assistant',
         rawAssistantResponse: update.modelText,
+        translations: translations.length > 0 ? translations : undefined,
       } as ChatMessage);
       return;
     }
@@ -575,6 +579,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     clearAllLiveDraftMessages,
     dropAssistantDraftMessage,
     ensureLiveDraftMeta,
+    parseGeminiResponse,
+    selectedLanguagePairRef,
     upsertLiveTranscriptMessage,
   ]);
 
