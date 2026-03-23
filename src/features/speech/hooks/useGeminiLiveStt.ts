@@ -11,6 +11,10 @@ import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import {
+  RealtimePcmPacketizer,
+  type RealtimePcmPacketizerStats,
+} from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 export interface GeminiLiveSttTurnComplete {
@@ -47,6 +51,19 @@ export interface UseGeminiLiveSttReturn {
 // Session counter to prevent stale callback execution after cleanup
 let sttSessionCounter = 0;
 const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
+const INPUT_SAMPLE_RATE = 16000;
+const LIVE_INPUT_PACKET_DURATION_MS = 100;
+const LIVE_INPUT_PACKET_MAX_WAIT_MS = 120;
+
+interface SttAudioTelemetry {
+  encodeErrors: number;
+  transcriptLinkedSamples: number;
+}
+
+const createEmptySttAudioTelemetry = (): SttAudioTelemetry => ({
+  encodeErrors: 0,
+  transcriptLinkedSamples: 0,
+});
 
 const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
   // Keep the original chunk intact because we also retain it for recorded-audio
@@ -74,9 +91,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const audioChunksRef = useRef<Int16Array[]>([]);
   const totalAudioSamplesRef = useRef(0);
   const turnAudioSamplesRef = useRef(0);
+  const transcribedAudioSamplesRef = useRef(0);
   const logRef = useRef<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = useRef(false);
   const codecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
+  const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
+  const audioTelemetryRef = useRef<SttAudioTelemetry>(createEmptySttAudioTelemetry());
   const transcriptUpdateTimerRef = useRef<number | null>(null);
   const lastRenderedTranscriptRef = useRef('');
   
@@ -102,14 +122,41 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     autoStopAfterTurnCompleteRef.current = options?.autoStopAfterTurnComplete !== false;
   }, [options?.autoStopAfterTurnComplete]);
 
+  const getInputPacketizerStats = useCallback((): RealtimePcmPacketizerStats => (
+    inputPacketizerRef.current?.getStats() ?? {
+      totalInputSamples: 0,
+      totalOutputSamples: 0,
+      packetsSent: 0,
+      partialPacketsSent: 0,
+      timerFlushes: 0,
+      explicitFlushes: 0,
+      maxBufferedSamples: 0,
+    }
+  ), []);
+
+  const getAudioTelemetrySnapshot = useCallback(() => ({
+    packetizer: getInputPacketizerStats(),
+    ...audioTelemetryRef.current,
+  }), [getInputPacketizerStats]);
+
   const getRecordedAudio = useCallback(() => {
     if (audioChunksRef.current.length === 0) return null;
     let full = mergeInt16Arrays(audioChunksRef.current);
+    const transcriptLinkedSamples = Math.min(transcribedAudioSamplesRef.current, full.length);
+    if (transcriptLinkedSamples <= 0) {
+      audioChunksRef.current = [];
+      transcribedAudioSamplesRef.current = 0;
+      audioTelemetryRef.current.transcriptLinkedSamples = 0;
+      return null;
+    }
+    full = full.slice(0, transcriptLinkedSamples);
     if (full.length > 0) {
-        full = trimSilence(full, 16000);
+        full = trimSilence(full, INPUT_SAMPLE_RATE);
     }
     // Clear the array to free memory
     audioChunksRef.current = [];
+    transcribedAudioSamplesRef.current = 0;
+    audioTelemetryRef.current.transcriptLinkedSamples = 0;
     return full;
   }, []);
 
@@ -137,6 +184,11 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     const activeCaptureNode = workletNodeRef.current;
     if (activeCaptureNode) {
       await flushCaptureWorkletNode(activeCaptureNode);
+    }
+    if (inputPacketizerRef.current) {
+      await inputPacketizerRef.current.flushPending();
+      inputPacketizerRef.current.dispose();
+      inputPacketizerRef.current = null;
     }
 
     // Invalidate current session to prevent stale callbacks from processing
@@ -185,15 +237,18 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         status,
         committedTranscript: committedTranscriptRef.current,
         audioSamples: totalAudioSamplesRef.current,
+        audioTelemetry: getAudioTelemetrySnapshot(),
       });
     }
 
     if (!preserveRecordedAudio) {
       audioChunksRef.current = [];
+      transcribedAudioSamplesRef.current = 0;
+      audioTelemetryRef.current.transcriptLinkedSamples = 0;
     }
     
     isCleaningUpRef.current = false;
-  }, [clearTranscriptUpdateTimer]);
+  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot]);
 
   const stop = useCallback(async () => {
     await cleanup({ status: 'stopped' });
@@ -253,6 +308,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     turnIdRef.current = 0;
     totalAudioSamplesRef.current = 0;
     turnAudioSamplesRef.current = 0;
+    transcribedAudioSamplesRef.current = 0;
+    audioTelemetryRef.current = createEmptySttAudioTelemetry();
     // audioChunksRef is already cleared in cleanup(), but ensure it's empty
     audioChunksRef.current = [];
 
@@ -262,7 +319,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       // It also fixes the UX issue where the app asks for permission "late".
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 16000,
+          sampleRate: INPUT_SAMPLE_RATE,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -279,7 +336,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
       // --- 2. Initialize Audio Context & Worklet ---
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtx({ sampleRate: 16000 });
+      const ctx = new AudioCtx({ sampleRate: INPUT_SAMPLE_RATE });
       audioContextRef.current = ctx;
 
       await ensureSttWorklet(ctx);
@@ -368,6 +425,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               const text = msg.serverContent.inputTranscription.text;
               if (text) {
                  interimInputRef.current += text;
+                 transcribedAudioSamplesRef.current = totalAudioSamplesRef.current;
+                 audioTelemetryRef.current.transcriptLinkedSamples = transcribedAudioSamplesRef.current;
                  scheduleTranscriptStateUpdate();
               }
             }
@@ -377,6 +436,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               const text = msg.serverContent.outputTranscription.text;
               if (text) {
                  interimParrotRef.current += text;
+                 transcribedAudioSamplesRef.current = totalAudioSamplesRef.current;
+                 audioTelemetryRef.current.transcriptLinkedSamples = transcribedAudioSamplesRef.current;
                  scheduleTranscriptStateUpdate();
               }
             }
@@ -416,6 +477,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                    outputTranscript,
                    audioSamples: turnSamples,
                    committedTranscript: committedTranscriptRef.current,
+                   audioTelemetry: getAudioTelemetrySnapshot(),
                  });
                }
                turnAudioSamplesRef.current = 0;
@@ -489,6 +551,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 status: 'closed',
                 committedTranscript: committedTranscriptRef.current,
                 audioSamples: totalAudioSamplesRef.current,
+                audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
             setIsListening(false);
@@ -503,6 +566,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 message: err?.message || 'Connection error',
                 committedTranscript: committedTranscriptRef.current,
                 audioSamples: totalAudioSamplesRef.current,
+                audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
             setError(err.message || "Connection error");
@@ -517,6 +581,30 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         try { session.close(); } catch { /* ignore */ }
         return;
       }
+
+      inputPacketizerRef.current = new RealtimePcmPacketizer({
+        sampleRate: INPUT_SAMPLE_RATE,
+        packetDurationMs: LIVE_INPUT_PACKET_DURATION_MS,
+        maxWaitMs: LIVE_INPUT_PACKET_MAX_WAIT_MS,
+        onPacket: async (packet) => {
+          try {
+            const transferBuffer = toTransferableArrayBuffer(packet);
+            const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
+            if (currentSessionIdRef.current !== sessionId) return;
+            if (!sessionRef.current) return;
+            sessionRef.current.sendRealtimeInput({
+              media: {
+                data: base64,
+                mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+              },
+            });
+          } catch (error) {
+            if (currentSessionIdRef.current !== sessionId) return;
+            audioTelemetryRef.current.encodeErrors += 1;
+            console.warn('STT audio encode failed', error);
+          }
+        },
+      });
 
       // --- 4. Connect Audio Graph ---
       const source = ctx.createMediaStreamSource(stream);
@@ -533,27 +621,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
            audioChunksRef.current.push(pcm);
            totalAudioSamplesRef.current += pcm.length;
            turnAudioSamplesRef.current += pcm.length;
-
-           const transferBuffer = toTransferableArrayBuffer(pcm);
-           void ensureCodecWorker().encodePcmToBase64(transferBuffer)
-             .then((base64) => {
-               if (currentSessionIdRef.current !== sessionId) return;
-               if (!sessionRef.current) return;
-               try {
-                 sessionRef.current.sendRealtimeInput({
-                   media: {
-                     data: base64,
-                     mimeType: 'audio/pcm;rate=16000',
-                   },
-                 });
-               } catch {
-                 // Session may have been closed, ignore send errors
-               }
-             })
-             .catch((error) => {
-               if (currentSessionIdRef.current !== sessionId) return;
-               console.warn('STT audio encode failed', error);
-             });
+           inputPacketizerRef.current?.push(pcm);
         }
       };
 
@@ -569,13 +637,14 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           message: e?.message || 'Failed to start Gemini Live STT',
           committedTranscript: committedTranscriptRef.current,
           audioSamples: totalAudioSamplesRef.current,
+          audioTelemetry: getAudioTelemetrySnapshot(),
         });
       }
       setError(e.message || "Failed to start Gemini Live STT");
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate]);
+  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
