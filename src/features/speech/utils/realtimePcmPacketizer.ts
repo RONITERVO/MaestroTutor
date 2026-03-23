@@ -9,6 +9,16 @@ export interface RealtimePcmPacketizerOptions {
   onPacket: (packet: Int16Array) => void | Promise<void>;
 }
 
+export interface RealtimePcmPacketizerStats {
+  totalInputSamples: number;
+  totalOutputSamples: number;
+  packetsSent: number;
+  partialPacketsSent: number;
+  timerFlushes: number;
+  explicitFlushes: number;
+  maxBufferedSamples: number;
+}
+
 /**
  * Coalesces incoming PCM chunks into steadier packets before they are encoded
  * and sent to the live API. This reduces message churn, keeps packet ordering
@@ -24,6 +34,15 @@ export class RealtimePcmPacketizer {
   private bufferedSamples = 0;
   private flushTimer: number | null = null;
   private sendQueue: Promise<void> = Promise.resolve();
+  private stats: RealtimePcmPacketizerStats = {
+    totalInputSamples: 0,
+    totalOutputSamples: 0,
+    packetsSent: 0,
+    partialPacketsSent: 0,
+    timerFlushes: 0,
+    explicitFlushes: 0,
+    maxBufferedSamples: 0,
+  };
 
   constructor(options: RealtimePcmPacketizerOptions) {
     const packetDurationMs = Math.max(20, options.packetDurationMs ?? 100);
@@ -41,6 +60,8 @@ export class RealtimePcmPacketizer {
     // Isolate the live-send buffer from any other retention of the same chunk.
     this.bufferedChunks.push(chunk.slice());
     this.bufferedSamples += chunk.length;
+    this.stats.totalInputSamples += chunk.length;
+    this.stats.maxBufferedSamples = Math.max(this.stats.maxBufferedSamples, this.bufferedSamples);
 
     this.flushWholePackets();
     if (this.bufferedSamples > 0) {
@@ -53,10 +74,17 @@ export class RealtimePcmPacketizer {
     this.flushWholePackets();
 
     if (this.bufferedSamples > 0) {
-      this.enqueuePacket(this.takeSamples(this.bufferedSamples));
+      this.enqueuePacket(this.takeSamples(this.bufferedSamples), 'flush');
     }
 
     await this.sendQueue.catch(() => undefined);
+  }
+
+  getStats(): RealtimePcmPacketizerStats {
+    return {
+      ...this.stats,
+      maxBufferedSamples: Math.max(this.stats.maxBufferedSamples, this.bufferedSamples),
+    };
   }
 
   dispose() {
@@ -70,7 +98,7 @@ export class RealtimePcmPacketizer {
     this.flushTimer = window.setTimeout(() => {
       this.flushTimer = null;
       if (this.bufferedSamples === 0) return;
-      this.enqueuePacket(this.takeSamples(this.bufferedSamples));
+      this.enqueuePacket(this.takeSamples(this.bufferedSamples), 'timer');
     }, this.maxWaitMs);
   }
 
@@ -82,7 +110,7 @@ export class RealtimePcmPacketizer {
 
   private flushWholePackets() {
     while (this.bufferedSamples >= this.targetPacketSamples) {
-      this.enqueuePacket(this.takeSamples(this.targetPacketSamples));
+      this.enqueuePacket(this.takeSamples(this.targetPacketSamples), 'full');
     }
 
     if (this.bufferedSamples === 0) {
@@ -90,8 +118,19 @@ export class RealtimePcmPacketizer {
     }
   }
 
-  private enqueuePacket(packet: Int16Array) {
+  private enqueuePacket(packet: Int16Array, reason: 'full' | 'timer' | 'flush') {
     if (packet.length === 0) return;
+    this.stats.packetsSent += 1;
+    this.stats.totalOutputSamples += packet.length;
+    if (packet.length < this.targetPacketSamples) {
+      this.stats.partialPacketsSent += 1;
+    }
+    if (reason === 'timer') {
+      this.stats.timerFlushes += 1;
+    }
+    if (reason === 'flush') {
+      this.stats.explicitFlushes += 1;
+    }
     this.sendQueue = this.sendQueue
       .catch(() => undefined)
       .then(async () => {

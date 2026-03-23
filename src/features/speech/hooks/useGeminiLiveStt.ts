@@ -11,7 +11,10 @@ import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
-import { RealtimePcmPacketizer } from '../utils/realtimePcmPacketizer';
+import {
+  RealtimePcmPacketizer,
+  type RealtimePcmPacketizerStats,
+} from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 export interface GeminiLiveSttTurnComplete {
@@ -52,6 +55,16 @@ const INPUT_SAMPLE_RATE = 16000;
 const LIVE_INPUT_PACKET_DURATION_MS = 100;
 const LIVE_INPUT_PACKET_MAX_WAIT_MS = 120;
 
+interface SttAudioTelemetry {
+  encodeErrors: number;
+  transcriptLinkedSamples: number;
+}
+
+const createEmptySttAudioTelemetry = (): SttAudioTelemetry => ({
+  encodeErrors: 0,
+  transcriptLinkedSamples: 0,
+});
+
 const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
   // Keep the original chunk intact because we also retain it for recorded-audio
   // assembly after the turn completes. Transferring the original buffer would
@@ -78,10 +91,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const audioChunksRef = useRef<Int16Array[]>([]);
   const totalAudioSamplesRef = useRef(0);
   const turnAudioSamplesRef = useRef(0);
+  const transcribedAudioSamplesRef = useRef(0);
   const logRef = useRef<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = useRef(false);
   const codecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
+  const audioTelemetryRef = useRef<SttAudioTelemetry>(createEmptySttAudioTelemetry());
   const transcriptUpdateTimerRef = useRef<number | null>(null);
   const lastRenderedTranscriptRef = useRef('');
   
@@ -107,14 +122,41 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     autoStopAfterTurnCompleteRef.current = options?.autoStopAfterTurnComplete !== false;
   }, [options?.autoStopAfterTurnComplete]);
 
+  const getInputPacketizerStats = useCallback((): RealtimePcmPacketizerStats => (
+    inputPacketizerRef.current?.getStats() ?? {
+      totalInputSamples: 0,
+      totalOutputSamples: 0,
+      packetsSent: 0,
+      partialPacketsSent: 0,
+      timerFlushes: 0,
+      explicitFlushes: 0,
+      maxBufferedSamples: 0,
+    }
+  ), []);
+
+  const getAudioTelemetrySnapshot = useCallback(() => ({
+    packetizer: getInputPacketizerStats(),
+    ...audioTelemetryRef.current,
+  }), [getInputPacketizerStats]);
+
   const getRecordedAudio = useCallback(() => {
     if (audioChunksRef.current.length === 0) return null;
     let full = mergeInt16Arrays(audioChunksRef.current);
+    const transcriptLinkedSamples = Math.min(transcribedAudioSamplesRef.current, full.length);
+    if (transcriptLinkedSamples <= 0) {
+      audioChunksRef.current = [];
+      transcribedAudioSamplesRef.current = 0;
+      audioTelemetryRef.current.transcriptLinkedSamples = 0;
+      return null;
+    }
+    full = full.slice(0, transcriptLinkedSamples);
     if (full.length > 0) {
-        full = trimSilence(full, 16000);
+        full = trimSilence(full, INPUT_SAMPLE_RATE);
     }
     // Clear the array to free memory
     audioChunksRef.current = [];
+    transcribedAudioSamplesRef.current = 0;
+    audioTelemetryRef.current.transcriptLinkedSamples = 0;
     return full;
   }, []);
 
@@ -195,15 +237,18 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         status,
         committedTranscript: committedTranscriptRef.current,
         audioSamples: totalAudioSamplesRef.current,
+        audioTelemetry: getAudioTelemetrySnapshot(),
       });
     }
 
     if (!preserveRecordedAudio) {
       audioChunksRef.current = [];
+      transcribedAudioSamplesRef.current = 0;
+      audioTelemetryRef.current.transcriptLinkedSamples = 0;
     }
     
     isCleaningUpRef.current = false;
-  }, [clearTranscriptUpdateTimer]);
+  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot]);
 
   const stop = useCallback(async () => {
     await cleanup({ status: 'stopped' });
@@ -263,6 +308,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     turnIdRef.current = 0;
     totalAudioSamplesRef.current = 0;
     turnAudioSamplesRef.current = 0;
+    transcribedAudioSamplesRef.current = 0;
+    audioTelemetryRef.current = createEmptySttAudioTelemetry();
     // audioChunksRef is already cleared in cleanup(), but ensure it's empty
     audioChunksRef.current = [];
 
@@ -378,6 +425,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               const text = msg.serverContent.inputTranscription.text;
               if (text) {
                  interimInputRef.current += text;
+                 transcribedAudioSamplesRef.current = totalAudioSamplesRef.current;
+                 audioTelemetryRef.current.transcriptLinkedSamples = transcribedAudioSamplesRef.current;
                  scheduleTranscriptStateUpdate();
               }
             }
@@ -387,6 +436,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               const text = msg.serverContent.outputTranscription.text;
               if (text) {
                  interimParrotRef.current += text;
+                 transcribedAudioSamplesRef.current = totalAudioSamplesRef.current;
+                 audioTelemetryRef.current.transcriptLinkedSamples = transcribedAudioSamplesRef.current;
                  scheduleTranscriptStateUpdate();
               }
             }
@@ -426,6 +477,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                    outputTranscript,
                    audioSamples: turnSamples,
                    committedTranscript: committedTranscriptRef.current,
+                   audioTelemetry: getAudioTelemetrySnapshot(),
                  });
                }
                turnAudioSamplesRef.current = 0;
@@ -499,6 +551,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 status: 'closed',
                 committedTranscript: committedTranscriptRef.current,
                 audioSamples: totalAudioSamplesRef.current,
+                audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
             setIsListening(false);
@@ -513,6 +566,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 message: err?.message || 'Connection error',
                 committedTranscript: committedTranscriptRef.current,
                 audioSamples: totalAudioSamplesRef.current,
+                audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
             setError(err.message || "Connection error");
@@ -546,6 +600,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             });
           } catch (error) {
             if (currentSessionIdRef.current !== sessionId) return;
+            audioTelemetryRef.current.encodeErrors += 1;
             console.warn('STT audio encode failed', error);
           }
         },
@@ -582,13 +637,14 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           message: e?.message || 'Failed to start Gemini Live STT',
           committedTranscript: committedTranscriptRef.current,
           audioSamples: totalAudioSamplesRef.current,
+          audioTelemetry: getAudioTelemetrySnapshot(),
         });
       }
       setError(e.message || "Failed to start Gemini Live STT");
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate]);
+  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);

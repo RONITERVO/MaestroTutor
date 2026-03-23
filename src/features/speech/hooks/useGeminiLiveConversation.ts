@@ -23,7 +23,10 @@ import {
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
-import { RealtimePcmPacketizer } from '../utils/realtimePcmPacketizer';
+import {
+  RealtimePcmPacketizer,
+  type RealtimePcmPacketizerStats,
+} from '../utils/realtimePcmPacketizer';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -120,6 +123,36 @@ interface ModelAudioDecodeCheckpoint {
   lastJobId: number;
 }
 
+interface LiveInputAudioTelemetry {
+  encodeErrors: number;
+}
+
+interface LivePlaybackTelemetry {
+  decodeErrors: number;
+  queueErrors: number;
+  underruns: number;
+  starts: number;
+  resumes: number;
+  outputSampleRate: number | null;
+  resampledOutput: boolean;
+  contextFallbackToDefaultRate: boolean;
+}
+
+const createEmptyInputAudioTelemetry = (): LiveInputAudioTelemetry => ({
+  encodeErrors: 0,
+});
+
+const createEmptyPlaybackTelemetry = (): LivePlaybackTelemetry => ({
+  decodeErrors: 0,
+  queueErrors: 0,
+  underruns: 0,
+  starts: 0,
+  resumes: 0,
+  outputSampleRate: null,
+  resampledOutput: false,
+  contextFallbackToDefaultRate: false,
+});
+
 /**
  * Manage a live Gemini conversation with real-time microphone capture, periodic video frames, model audio playback, transcription accumulation, and turn-level callbacks.
  *
@@ -169,6 +202,8 @@ export function useGeminiLiveConversation(
   const currentOutputTranscriptionRef = useRef<string>('');
   const currentUserAudioChunksRef = useRef<Int16Array[]>([]);
   const currentModelAudioChunksRef = useRef<Int16Array[]>([]);
+  const currentUserAudioTotalLengthRef = useRef<number>(0);
+  const currentUserTranscriptAudioLengthRef = useRef<number>(0);
   
   // Audio-Transcript Synchronization Tracking
   // These track the correlation between streaming audio and delayed transcripts
@@ -181,6 +216,8 @@ export function useGeminiLiveConversation(
   const nextModelAudioTurnIdRef = useRef<number>(1);
   const nextModelAudioDecodeJobIdRef = useRef<number>(1);
   const pendingModelAudioDecodeJobsRef = useRef<Map<number, ModelAudioDecodeJob>>(new Map());
+  const inputAudioTelemetryRef = useRef<LiveInputAudioTelemetry>(createEmptyInputAudioTelemetry());
+  const playbackTelemetryRef = useRef<LivePlaybackTelemetry>(createEmptyPlaybackTelemetry());
 
   const callbacksRef = useRef(callbacks);
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
@@ -188,6 +225,51 @@ export function useGeminiLiveConversation(
   const updateState = useCallback((s: LiveSessionState) => {
     setState(s);
     callbacksRef.current.onStateChange?.(s);
+  }, []);
+
+  const resetAudioTelemetry = useCallback(() => {
+    inputAudioTelemetryRef.current = createEmptyInputAudioTelemetry();
+    playbackTelemetryRef.current = createEmptyPlaybackTelemetry();
+  }, []);
+
+  const getInputPacketizerStats = useCallback((): RealtimePcmPacketizerStats => (
+    inputPacketizerRef.current?.getStats() ?? {
+      totalInputSamples: 0,
+      totalOutputSamples: 0,
+      packetsSent: 0,
+      partialPacketsSent: 0,
+      timerFlushes: 0,
+      explicitFlushes: 0,
+      maxBufferedSamples: 0,
+    }
+  ), []);
+
+  const getAudioTelemetrySnapshot = useCallback(() => ({
+    input: {
+      packetizer: getInputPacketizerStats(),
+      ...inputAudioTelemetryRef.current,
+    },
+    playback: {
+      ...playbackTelemetryRef.current,
+    },
+  }), [getInputPacketizerStats]);
+
+  const getTranscriptLinkedUserAudio = useCallback(() => {
+    const merged = mergeInt16Arrays(currentUserAudioChunksRef.current);
+    if (merged.length === 0) {
+      return new Int16Array(0);
+    }
+
+    const transcriptLinkedSamples = Math.min(
+      currentUserTranscriptAudioLengthRef.current,
+      merged.length
+    );
+    if (transcriptLinkedSamples <= 0) {
+      return new Int16Array(0);
+    }
+
+    const transcriptLinkedAudio = merged.slice(0, transcriptLinkedSamples);
+    return trimSilence(transcriptLinkedAudio, INPUT_SAMPLE_RATE);
   }, []);
 
   const clearTranscriptUpdateTimer = useCallback(() => {
@@ -414,6 +496,8 @@ export function useGeminiLiveConversation(
     currentInputTranscriptionRef.current = '';
     currentOutputTranscriptionRef.current = '';
     currentUserAudioChunksRef.current = [];
+    currentUserAudioTotalLengthRef.current = 0;
+    currentUserTranscriptAudioLengthRef.current = 0;
     currentModelAudioChunksRef.current = [];
     currentModelAudioTotalLengthRef.current = 0;
     modelAudioSplitPointsRef.current = [];
@@ -588,6 +672,7 @@ export function useGeminiLiveConversation(
     currentSessionIdRef.current = sessionId;
     startNextModelAudioTurn(sessionId);
     serverMessageQueueRef.current = Promise.resolve();
+    resetAudioTelemetry();
 
     const abortIfInvalidated = async () => {
       if (currentSessionIdRef.current !== sessionId) {
@@ -632,8 +717,14 @@ export function useGeminiLiveConversation(
         try {
           outputCtx = new AudioContextCtor({ sampleRate: OUTPUT_SAMPLE_RATE });
         } catch (error) {
-          console.error('Failed to create playback AudioContext', error);
-          throw new Error('Failed to initialize model audio playback');
+          console.warn('Failed to create 24kHz playback AudioContext, retrying with default device rate', error);
+          playbackTelemetryRef.current.contextFallbackToDefaultRate = true;
+          try {
+            outputCtx = new AudioContextCtor();
+          } catch (fallbackError) {
+            console.error('Failed to create playback AudioContext', fallbackError);
+            throw new Error('Failed to initialize model audio playback');
+          }
         }
 
         if (await abortIfInvalidated()) {
@@ -641,12 +732,12 @@ export function useGeminiLiveConversation(
           return;
         }
 
+        playbackTelemetryRef.current.outputSampleRate = outputCtx.sampleRate;
         if (outputCtx.sampleRate !== OUTPUT_SAMPLE_RATE) {
-          console.error(
-            `Playback AudioContext sample rate mismatch: expected ${OUTPUT_SAMPLE_RATE}, got ${outputCtx.sampleRate}`
+          playbackTelemetryRef.current.resampledOutput = true;
+          console.warn(
+            `Playback AudioContext sample rate mismatch: expected ${OUTPUT_SAMPLE_RATE}, got ${outputCtx.sampleRate}. Falling back to worklet resampling.`
           );
-          try { await outputCtx.close(); } catch { }
-          throw new Error(`Model audio playback requires a ${OUTPUT_SAMPLE_RATE}Hz output context`);
         }
 
         outputAudioContextRef.current = outputCtx;
@@ -657,6 +748,24 @@ export function useGeminiLiveConversation(
           numberOfOutputs: 1,
           outputChannelCount: [1],
         });
+        playbackNode.port.onmessage = (event: MessageEvent<{
+          type?: string;
+          event?: 'started' | 'resumed' | 'underrun';
+        }>) => {
+          const telemetryMessage = event.data;
+          if (!telemetryMessage || telemetryMessage.type !== 'telemetry') return;
+          if (telemetryMessage.event === 'started') {
+            playbackTelemetryRef.current.starts += 1;
+            return;
+          }
+          if (telemetryMessage.event === 'resumed') {
+            playbackTelemetryRef.current.resumes += 1;
+            return;
+          }
+          if (telemetryMessage.event === 'underrun') {
+            playbackTelemetryRef.current.underruns += 1;
+          }
+        };
         playbackNode.connect(outputCtx.destination);
         playbackNodeRef.current = playbackNode;
       }
@@ -743,14 +852,17 @@ export function useGeminiLiveConversation(
                           playbackNodeRef.current.port.postMessage({
                             type: 'push',
                             pcm: pcm16,
+                            inputSampleRate: OUTPUT_SAMPLE_RATE,
                           });
                         } catch (error) {
+                          playbackTelemetryRef.current.queueErrors += 1;
                           console.warn('Playback worklet queue failed', error);
                         }
                       }
                     })
                     .catch((error) => {
                       if (!isJobActive()) return;
+                      playbackTelemetryRef.current.decodeErrors += 1;
                       console.warn('Audio decode failed', error);
                     })
                     .finally(() => {
@@ -763,6 +875,7 @@ export function useGeminiLiveConversation(
                 // 2. Handle Transcript Accumulation & Split Point Detection
                 if (msg.serverContent?.inputTranscription?.text) {
                   currentInputTranscriptionRef.current += msg.serverContent.inputTranscription.text;
+                  currentUserTranscriptAudioLengthRef.current = currentUserAudioTotalLengthRef.current;
                   emitTurnTranscriptUpdate('input');
                 }
                 if (msg.serverContent?.outputTranscription?.text) {
@@ -809,10 +922,7 @@ export function useGeminiLiveConversation(
                   const userText = currentInputTranscriptionRef.current.trim();
                   const modelText = currentOutputTranscriptionRef.current.trim();
 
-                  let userAudioFull = mergeInt16Arrays(currentUserAudioChunksRef.current);
-                  if (userAudioFull.length > 0) {
-                    userAudioFull = trimSilence(userAudioFull, INPUT_SAMPLE_RATE);
-                  }
+                  const userAudioFull = getTranscriptLinkedUserAudio();
 
                   const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
                   const modelAudioLines: Int16Array[] = [];
@@ -866,6 +976,7 @@ export function useGeminiLiveConversation(
                         inputTranscript,
                         modelAudioLinesCount: modelAudioLines.length,
                         userAudioSamples: userAudioFull.length,
+                        audioTelemetry: getAudioTelemetrySnapshot(),
                       });
                     }
                   } else {
@@ -910,6 +1021,7 @@ export function useGeminiLiveConversation(
                         outputTranscript,
                         modelAudioLinesCount: modelAudioLines.length,
                         userAudioSamples: finalUserAudio.length,
+                        audioTelemetry: getAudioTelemetrySnapshot(),
                       });
                     }
                     const turnLog = debugLogService.logRequest('useGeminiLiveConversation.turn', modelRef.current || 'gemini-live', {
@@ -924,6 +1036,7 @@ export function useGeminiLiveConversation(
                       outputTranscript,
                       modelAudioLinesCount: modelAudioLines.length,
                       userAudioSamples: finalUserAudio.length,
+                      audioTelemetry: getAudioTelemetrySnapshot(),
                     });
                   }
 
@@ -931,6 +1044,8 @@ export function useGeminiLiveConversation(
                   currentInputTranscriptionRef.current = '';
                   currentOutputTranscriptionRef.current = '';
                   currentUserAudioChunksRef.current = [];
+                  currentUserAudioTotalLengthRef.current = 0;
+                  currentUserTranscriptAudioLengthRef.current = 0;
                   currentModelAudioChunksRef.current = [];
                   currentModelAudioTotalLengthRef.current = 0;
                   modelAudioSplitPointsRef.current = [];
@@ -974,6 +1089,7 @@ export function useGeminiLiveConversation(
                 status: 'closed',
                 inputTranscript: currentInputTranscriptionRef.current,
                 outputTranscript: currentOutputTranscriptionRef.current,
+                audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
             updateState('idle');
@@ -1003,6 +1119,7 @@ export function useGeminiLiveConversation(
                 message,
                 inputTranscript: currentInputTranscriptionRef.current,
                 outputTranscript: currentOutputTranscriptionRef.current,
+                audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
             callbacksRef.current.onError?.(message);
@@ -1038,6 +1155,7 @@ export function useGeminiLiveConversation(
             });
           } catch (error) {
             if (currentSessionIdRef.current !== sessionId) return;
+            inputAudioTelemetryRef.current.encodeErrors += 1;
             console.warn('Audio encode failed', error);
           }
         },
@@ -1053,6 +1171,7 @@ export function useGeminiLiveConversation(
           
           // Accumulate User Audio for history saving
           currentUserAudioChunksRef.current.push(pcm);
+          currentUserAudioTotalLengthRef.current += pcm.length;
           inputPacketizerRef.current?.push(pcm);
       };
       source.connect(workletNode);
@@ -1069,6 +1188,7 @@ export function useGeminiLiveConversation(
           message: e instanceof Error ? e.message : String(e),
           inputTranscript: currentInputTranscriptionRef.current,
           outputTranscript: currentOutputTranscriptionRef.current,
+          audioTelemetry: getAudioTelemetrySnapshot(),
         });
       }
       callbacksRef.current.onError?.(e instanceof Error ? e.message : String(e));
@@ -1078,7 +1198,10 @@ export function useGeminiLiveConversation(
     cancelModelAudioDecodeJobs,
     updateState,
     cleanup,
+    getAudioTelemetrySnapshot,
     getModelAudioDecodeCheckpoint,
+    getTranscriptLinkedUserAudio,
+    resetAudioTelemetry,
     stopAllAudio,
     startNextModelAudioTurn,
     ensureCaptureWorklet,
@@ -1092,16 +1215,20 @@ export function useGeminiLiveConversation(
 
   const stop = useCallback(async () => {
     updateState('idle');
+    if (inputPacketizerRef.current) {
+      await inputPacketizerRef.current.flushPending();
+    }
     if (logRef.current && !logFinalizedRef.current) {
       logFinalizedRef.current = true;
       logRef.current.complete({
         status: 'stopped',
         inputTranscript: currentInputTranscriptionRef.current,
         outputTranscript: currentOutputTranscriptionRef.current,
+        audioTelemetry: getAudioTelemetrySnapshot(),
       });
     }
     await cleanup();
-  }, [cleanup, updateState]);
+  }, [cleanup, getAudioTelemetrySnapshot, updateState]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
