@@ -25,7 +25,10 @@ declare function registerProcessor(
   processorCtor: new () => AudioWorkletProcessor
 ): void;
 
-const PCM_CHUNK_SIZE = 512;
+// 100 ms at 16 kHz. Larger packets materially reduce postMessage churn and
+// live-API websocket fragmentation on mobile without making turn latency feel
+// sluggish. Partial trailing audio is still flushed explicitly on teardown.
+const PCM_CHUNK_SIZE = 1600;
 
 type CaptureWorkletCommand = { type: 'flush' };
 type CaptureWorkletResponse = { type: 'flush-complete' };

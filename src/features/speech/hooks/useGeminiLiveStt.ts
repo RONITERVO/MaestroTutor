@@ -11,6 +11,7 @@ import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import { RealtimePcmPacketizer } from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 export interface GeminiLiveSttTurnComplete {
@@ -47,6 +48,9 @@ export interface UseGeminiLiveSttReturn {
 // Session counter to prevent stale callback execution after cleanup
 let sttSessionCounter = 0;
 const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
+const INPUT_SAMPLE_RATE = 16000;
+const LIVE_INPUT_PACKET_DURATION_MS = 100;
+const LIVE_INPUT_PACKET_MAX_WAIT_MS = 120;
 
 const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
   // Keep the original chunk intact because we also retain it for recorded-audio
@@ -77,6 +81,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const logRef = useRef<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = useRef(false);
   const codecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
+  const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
   const transcriptUpdateTimerRef = useRef<number | null>(null);
   const lastRenderedTranscriptRef = useRef('');
   
@@ -137,6 +142,11 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     const activeCaptureNode = workletNodeRef.current;
     if (activeCaptureNode) {
       await flushCaptureWorkletNode(activeCaptureNode);
+    }
+    if (inputPacketizerRef.current) {
+      await inputPacketizerRef.current.flushPending();
+      inputPacketizerRef.current.dispose();
+      inputPacketizerRef.current = null;
     }
 
     // Invalidate current session to prevent stale callbacks from processing
@@ -262,7 +272,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       // It also fixes the UX issue where the app asks for permission "late".
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 16000,
+          sampleRate: INPUT_SAMPLE_RATE,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -279,7 +289,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
       // --- 2. Initialize Audio Context & Worklet ---
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtx({ sampleRate: 16000 });
+      const ctx = new AudioCtx({ sampleRate: INPUT_SAMPLE_RATE });
       audioContextRef.current = ctx;
 
       await ensureSttWorklet(ctx);
@@ -518,6 +528,29 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         return;
       }
 
+      inputPacketizerRef.current = new RealtimePcmPacketizer({
+        sampleRate: INPUT_SAMPLE_RATE,
+        packetDurationMs: LIVE_INPUT_PACKET_DURATION_MS,
+        maxWaitMs: LIVE_INPUT_PACKET_MAX_WAIT_MS,
+        onPacket: async (packet) => {
+          try {
+            const transferBuffer = toTransferableArrayBuffer(packet);
+            const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
+            if (currentSessionIdRef.current !== sessionId) return;
+            if (!sessionRef.current) return;
+            sessionRef.current.sendRealtimeInput({
+              media: {
+                data: base64,
+                mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+              },
+            });
+          } catch (error) {
+            if (currentSessionIdRef.current !== sessionId) return;
+            console.warn('STT audio encode failed', error);
+          }
+        },
+      });
+
       // --- 4. Connect Audio Graph ---
       const source = ctx.createMediaStreamSource(stream);
       const workletNode = new AudioWorkletNode(ctx, FLOAT_TO_INT16_PROCESSOR_NAME);
@@ -533,27 +566,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
            audioChunksRef.current.push(pcm);
            totalAudioSamplesRef.current += pcm.length;
            turnAudioSamplesRef.current += pcm.length;
-
-           const transferBuffer = toTransferableArrayBuffer(pcm);
-           void ensureCodecWorker().encodePcmToBase64(transferBuffer)
-             .then((base64) => {
-               if (currentSessionIdRef.current !== sessionId) return;
-               if (!sessionRef.current) return;
-               try {
-                 sessionRef.current.sendRealtimeInput({
-                   media: {
-                     data: base64,
-                     mimeType: 'audio/pcm;rate=16000',
-                   },
-                 });
-               } catch {
-                 // Session may have been closed, ignore send errors
-               }
-             })
-             .catch((error) => {
-               if (currentSessionIdRef.current !== sessionId) return;
-               console.warn('STT audio encode failed', error);
-             });
+           inputPacketizerRef.current?.push(pcm);
         }
       };
 

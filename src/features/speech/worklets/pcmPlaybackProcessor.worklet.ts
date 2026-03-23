@@ -21,16 +21,21 @@ declare function registerProcessor(
 ): void;
 
 const HARD_MAX_QUEUED_SAMPLES = 24000 * 180;
+const STARTUP_BUFFER_SAMPLES = Math.floor(24000 * 0.12);
+const REFILL_BUFFER_SAMPLES = Math.floor(24000 * 0.06);
 
 type PlaybackMessage =
   | { type: 'push'; pcm: Int16Array }
   | { type: 'reset' };
+
+type PlaybackState = 'startup' | 'playing' | 'refill';
 
 class PcmPlaybackProcessor extends AudioWorkletProcessor {
   private queue: Int16Array[] = [];
   private currentChunk: Int16Array | null = null;
   private currentOffset = 0;
   private queuedSamples = 0;
+  private playbackState: PlaybackState = 'startup';
 
   constructor() {
     super();
@@ -44,6 +49,7 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
         this.currentChunk = null;
         this.currentOffset = 0;
         this.queuedSamples = 0;
+        this.playbackState = 'startup';
         return;
       }
 
@@ -64,12 +70,27 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
     const output = outputs?.[0]?.[0];
     if (!output) return true;
 
+    const requiredBufferedSamples =
+      this.playbackState === 'startup'
+        ? STARTUP_BUFFER_SAMPLES
+        : this.playbackState === 'refill'
+          ? REFILL_BUFFER_SAMPLES
+          : 0;
+
+    if (requiredBufferedSamples > 0 && this.queuedSamples < requiredBufferedSamples) {
+      output.fill(0);
+      return true;
+    }
+
+    this.playbackState = 'playing';
+
     let writeIndex = 0;
     while (writeIndex < output.length) {
       if (!this.currentChunk || this.currentOffset >= this.currentChunk.length) {
         this.currentChunk = this.queue.shift() || null;
         this.currentOffset = 0;
         if (!this.currentChunk) {
+          this.playbackState = 'refill';
           break;
         }
       }

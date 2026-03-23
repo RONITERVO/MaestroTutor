@@ -23,6 +23,7 @@ import {
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import { RealtimePcmPacketizer } from '../utils/realtimePcmPacketizer';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -77,6 +78,8 @@ const INPUT_SAMPLE_RATE = 16000;
 const OUTPUT_SAMPLE_RATE = 24000;
 const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
 const MAX_LIVE_FRAME_DIMENSION = 640;
+const LIVE_INPUT_PACKET_DURATION_MS = 100;
+const LIVE_INPUT_PACKET_MAX_WAIT_MS = 120;
 
 // Session counter to prevent stale callback execution after cleanup
 let liveConversationSessionCounter = 0;
@@ -153,6 +156,7 @@ export function useGeminiLiveConversation(
   const serverMessageQueueRef = useRef<Promise<void>>(Promise.resolve());
   const inputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const outputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
+  const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -330,6 +334,11 @@ export function useGeminiLiveConversation(
     const activeCaptureNode = workletNodeRef.current;
     if (activeCaptureNode) {
       await flushCaptureWorkletNode(activeCaptureNode);
+    }
+    if (inputPacketizerRef.current) {
+      await inputPacketizerRef.current.flushPending();
+      inputPacketizerRef.current.dispose();
+      inputPacketizerRef.current = null;
     }
 
     // Invalidate current session to prevent stale callbacks from processing
@@ -697,8 +706,12 @@ export function useGeminiLiveConversation(
                 }
 
                 // 1. Handle Audio Output
-                const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-                if (inlineAudio) {
+                const inlineAudioParts = msg.serverContent?.modelTurn?.parts
+                  ?.map((part) => part.inlineData?.data)
+                  .filter((data): data is string => typeof data === 'string' && data.length > 0)
+                  ?? [];
+
+                for (const inlineAudio of inlineAudioParts) {
                   const turnId = currentModelAudioTurnIdRef.current;
                   const jobId = nextModelAudioDecodeJobIdRef.current++;
                   const job: ModelAudioDecodeJob = {
@@ -1008,6 +1021,28 @@ export function useGeminiLiveConversation(
         return;
       }
 
+      inputPacketizerRef.current = new RealtimePcmPacketizer({
+        sampleRate: INPUT_SAMPLE_RATE,
+        packetDurationMs: LIVE_INPUT_PACKET_DURATION_MS,
+        maxWaitMs: LIVE_INPUT_PACKET_MAX_WAIT_MS,
+        onPacket: async (packet) => {
+          try {
+            const transferBuffer = toTransferableArrayBuffer(packet);
+            const base64 = await ensureInputCodecWorker().encodePcmToBase64(transferBuffer);
+            if (currentSessionIdRef.current !== sessionId) return;
+            sessionRef.current?.sendRealtimeInput({
+              media: {
+                data: base64,
+                mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+              },
+            });
+          } catch (error) {
+            if (currentSessionIdRef.current !== sessionId) return;
+            console.warn('Audio encode failed', error);
+          }
+        },
+      });
+
       // Audio Streaming Loop (Worklet) with session validation
       workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
           // CRITICAL: Check session is still valid before processing audio
@@ -1017,28 +1052,8 @@ export function useGeminiLiveConversation(
           if (!(pcm instanceof Int16Array) || !pcm.length) return;
           
           // Accumulate User Audio for history saving
-          currentUserAudioChunksRef.current.push(pcm.slice()); // Slice to copy for accumulation
-
-          const transferBuffer = toTransferableArrayBuffer(pcm);
-
-          void ensureInputCodecWorker().encodePcmToBase64(transferBuffer)
-            .then((base64) => {
-              if (currentSessionIdRef.current !== sessionId) return;
-              try {
-                sessionRef.current?.sendRealtimeInput({
-                  media: {
-                    data: base64,
-                    mimeType: 'audio/pcm;rate=16000',
-                  },
-                });
-              } catch {
-                // Session may have been closed, ignore send errors
-              }
-            })
-            .catch((error) => {
-              if (currentSessionIdRef.current !== sessionId) return;
-              console.warn('Audio encode failed', error);
-            });
+          currentUserAudioChunksRef.current.push(pcm);
+          inputPacketizerRef.current?.push(pcm);
       };
       source.connect(workletNode);
 
