@@ -41,6 +41,9 @@ export interface LiveTurnTranscriptUpdate {
   userText: string;
   modelText: string;
   reason: LiveTurnTranscriptUpdateReason;
+  thinkingTrace?: string[];
+  thinkingPhase?: string;
+  thinkingStatusLine?: string;
 }
 
 export interface UseGeminiLiveConversationCallbacks {
@@ -204,6 +207,9 @@ export function useGeminiLiveConversation(
   const currentModelAudioChunksRef = useRef<Int16Array[]>([]);
   const currentUserAudioTotalLengthRef = useRef<number>(0);
   const currentUserTranscriptAudioLengthRef = useRef<number>(0);
+  const currentModelThinkingTraceRef = useRef<string[]>([]);
+  const currentModelThinkingPhaseRef = useRef<string | undefined>(undefined);
+  const currentModelThinkingStatusLineRef = useRef<string | undefined>(undefined);
   
   // Audio-Transcript Synchronization Tracking
   // These track the correlation between streaming audio and delayed transcripts
@@ -291,10 +297,16 @@ export function useGeminiLiveConversation(
   const emitTurnTranscriptUpdate = useCallback((reason: LiveTurnTranscriptUpdateReason) => {
     const pendingUserText = pendingUserTurnRef.current?.text?.trim() ?? '';
     const currentUserText = currentInputTranscriptionRef.current.trim();
+    const thinkingTrace = currentModelThinkingTraceRef.current.length > 0
+      ? [...currentModelThinkingTraceRef.current]
+      : undefined;
     const nextUpdate: LiveTurnTranscriptUpdate = {
       userText: [pendingUserText, currentUserText].filter(Boolean).join('\n').trim(),
       modelText: currentOutputTranscriptionRef.current.trim(),
       reason,
+      thinkingTrace,
+      thinkingPhase: currentModelThinkingPhaseRef.current,
+      thinkingStatusLine: currentModelThinkingStatusLineRef.current,
     };
     const previousUpdate = pendingTranscriptUpdateRef.current || lastTranscriptUpdateRef.current;
     if (
@@ -302,6 +314,9 @@ export function useGeminiLiveConversation(
       && previousUpdate.userText === nextUpdate.userText
       && previousUpdate.modelText === nextUpdate.modelText
       && previousUpdate.reason === nextUpdate.reason
+      && (previousUpdate.thinkingPhase || '') === (nextUpdate.thinkingPhase || '')
+      && (previousUpdate.thinkingStatusLine || '') === (nextUpdate.thinkingStatusLine || '')
+      && (previousUpdate.thinkingTrace || []).join('\n') === (nextUpdate.thinkingTrace || []).join('\n')
     ) {
       return;
     }
@@ -331,6 +346,9 @@ export function useGeminiLiveConversation(
       userText: '',
       modelText: '',
       reason: 'session-reset',
+      thinkingTrace: undefined,
+      thinkingPhase: undefined,
+      thinkingStatusLine: undefined,
     });
   }, [clearTranscriptUpdateTimer]);
 
@@ -498,6 +516,9 @@ export function useGeminiLiveConversation(
     currentUserAudioChunksRef.current = [];
     currentUserAudioTotalLengthRef.current = 0;
     currentUserTranscriptAudioLengthRef.current = 0;
+    currentModelThinkingTraceRef.current = [];
+    currentModelThinkingPhaseRef.current = undefined;
+    currentModelThinkingStatusLineRef.current = undefined;
     currentModelAudioChunksRef.current = [];
     currentModelAudioTotalLengthRef.current = 0;
     modelAudioSplitPointsRef.current = [];
@@ -790,6 +811,9 @@ export function useGeminiLiveConversation(
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          thinkingConfig: {
+            includeThoughts: true,
+          },
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
           sessionResumption,
@@ -815,6 +839,37 @@ export function useGeminiLiveConversation(
                 }
 
                 // 1. Handle Audio Output
+                const modelTurnParts = msg.serverContent?.modelTurn?.parts ?? [];
+                const thoughtTexts = modelTurnParts
+                  .map((part) => (
+                    part?.thought && typeof part.text === 'string'
+                      ? part.text.trim()
+                      : ''
+                  ))
+                  .filter((text): text is string => text.length > 0);
+
+                if (thoughtTexts.length > 0) {
+                  let thoughtTraceChanged = false;
+                  for (const thoughtText of thoughtTexts) {
+                    const previousThought = currentModelThinkingTraceRef.current[
+                      currentModelThinkingTraceRef.current.length - 1
+                    ];
+                    if (previousThought === thoughtText) {
+                      continue;
+                    }
+                    currentModelThinkingTraceRef.current = [
+                      ...currentModelThinkingTraceRef.current,
+                      thoughtText,
+                    ].slice(-8);
+                    thoughtTraceChanged = true;
+                  }
+                  currentModelThinkingPhaseRef.current = 'Thinking';
+                  currentModelThinkingStatusLineRef.current = undefined;
+                  if (thoughtTraceChanged) {
+                    emitTurnTranscriptUpdate('output');
+                  }
+                }
+
                 const inlineAudioParts = msg.serverContent?.modelTurn?.parts
                   ?.map((part) => part.inlineData?.data)
                   .filter((data): data is string => typeof data === 'string' && data.length > 0)
@@ -881,6 +936,8 @@ export function useGeminiLiveConversation(
                 if (msg.serverContent?.outputTranscription?.text) {
                   const textPart = msg.serverContent.outputTranscription.text;
                   currentOutputTranscriptionRef.current += textPart;
+                  currentModelThinkingPhaseRef.current = 'Final response';
+                  currentModelThinkingStatusLineRef.current = undefined;
 
                   const currentText = currentOutputTranscriptionRef.current;
                   const newlineCount = countTranscriptNewlines(currentText);
@@ -969,6 +1026,8 @@ export function useGeminiLiveConversation(
                         };
                       }
                     }
+                    currentModelThinkingPhaseRef.current = 'Thinking';
+                    currentModelThinkingStatusLineRef.current = 'Thinking...';
                     if (logRef.current && !logFinalizedRef.current) {
                       logRef.current.complete({
                         status: 'no-model-response',
@@ -1055,6 +1114,10 @@ export function useGeminiLiveConversation(
 
                   if (!modelText) {
                     emitTurnTranscriptUpdate('pending-user');
+                  } else {
+                    currentModelThinkingTraceRef.current = [];
+                    currentModelThinkingPhaseRef.current = undefined;
+                    currentModelThinkingStatusLineRef.current = undefined;
                   }
                 }
 
@@ -1066,6 +1129,9 @@ export function useGeminiLiveConversation(
                     stopAllAudio();
                   }
                   currentOutputTranscriptionRef.current = '';
+                  currentModelThinkingTraceRef.current = [];
+                  currentModelThinkingPhaseRef.current = undefined;
+                  currentModelThinkingStatusLineRef.current = undefined;
                   currentModelAudioChunksRef.current = [];
                   currentModelAudioTotalLengthRef.current = 0;
                   modelAudioSplitPointsRef.current = [];

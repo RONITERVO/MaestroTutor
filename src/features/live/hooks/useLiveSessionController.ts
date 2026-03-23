@@ -31,7 +31,7 @@ import { uploadMediaToFiles } from '../../../api/gemini/files';
 import { computeTtsCacheKey } from '../../chat';
 import { processMediaForUpload } from '../../vision';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../../core/config/activityTokens';
-import { getPrimaryCode } from '../../../shared/utils/languageUtils';
+import { getPrimaryCode, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { useMaestroStore } from '../../../store';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
@@ -226,6 +226,29 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     }
     liveDraftMessageMetaRef.current.assistant = { id: null, timestamp: null };
   }, [removeLiveTranscriptMessage]);
+
+  const buildLiveThinkingDraftText = useCallback((modelText: string): string => {
+    const trimmed = modelText.trim();
+    if (!trimmed || !selectedLanguagePairRef.current) return trimmed;
+
+    const translations = parseGeminiResponse(modelText);
+    if (translations.length === 0) {
+      return trimmed;
+    }
+
+    const nativePrefix = `[${getShortLangCodeForPrompt(selectedLanguagePairRef.current.nativeLanguageCode)}]`;
+    return translations
+      .flatMap(pair => {
+        const target = pair.target.trim();
+        const native = pair.native.trim();
+        return [
+          target,
+          native ? `${nativePrefix} ${native}` : '',
+        ].filter(Boolean);
+      })
+      .join('\n')
+      .trim();
+  }, [parseGeminiResponse, selectedLanguagePairRef]);
 
   /**
    * Release the camera stream captured for live session
@@ -557,30 +580,36 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       } as ChatMessage);
     }
 
-    if (modelText) {
+    const hasThinkingTrace = Array.isArray(update.thinkingTrace) && update.thinkingTrace.length > 0;
+    const shouldShowAssistantThinking = update.reason === 'pending-user' || hasThinkingTrace || Boolean(modelText);
+
+    if (shouldShowAssistantThinking) {
       const meta = ensureLiveDraftMeta('assistant');
-      const translations = selectedLanguagePairRef.current
-        ? parseGeminiResponse(update.modelText)
-        : [];
       upsertLiveTranscriptMessage({
         id: meta.id,
         timestamp: meta.timestamp,
         role: 'assistant',
-        rawAssistantResponse: update.modelText,
-        translations: translations.length > 0 ? translations : undefined,
+        thinking: true,
+        thinkingTrace: hasThinkingTrace ? update.thinkingTrace : [],
+        thinkingDraftText: modelText ? buildLiveThinkingDraftText(update.modelText) : '',
+        thinkingPhase: update.thinkingPhase || (modelText ? 'Final response' : 'Thinking'),
+        thinkingStatusLine: modelText ? undefined : (update.thinkingStatusLine || `${t('chat.thinking') || 'Thinking'}...`),
+        rawAssistantResponse: undefined,
+        translations: undefined,
       } as ChatMessage);
-      return;
     }
 
     if (update.reason === 'interrupted') {
       dropAssistantDraftMessage();
     }
   }, [
+    buildLiveThinkingDraftText,
     clearAllLiveDraftMessages,
     dropAssistantDraftMessage,
     ensureLiveDraftMeta,
     parseGeminiResponse,
     selectedLanguagePairRef,
+    t,
     upsertLiveTranscriptMessage,
   ]);
 
