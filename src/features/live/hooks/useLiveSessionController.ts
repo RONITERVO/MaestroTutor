@@ -227,6 +227,14 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     liveDraftMessageMetaRef.current.assistant = { id: null, timestamp: null };
   }, [removeLiveTranscriptMessage]);
 
+  const dropUserDraftMessage = useCallback(() => {
+    const userMessageId = liveDraftMessageMetaRef.current.user.id;
+    if (userMessageId) {
+      removeLiveTranscriptMessage(userMessageId);
+    }
+    liveDraftMessageMetaRef.current.user = { id: null, timestamp: null };
+  }, [removeLiveTranscriptMessage]);
+
   const buildLiveThinkingDraftText = useCallback((modelText: string): string => {
     const trimmed = modelText.trim();
     if (!trimmed || !selectedLanguagePairRef.current) return trimmed;
@@ -569,8 +577,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
 
     const userText = update.userText.trim();
     const modelText = update.modelText.trim();
+    const shouldKeepUserDraft = update.reason !== 'no-model-response';
 
-    if (userText) {
+    if (userText && shouldKeepUserDraft) {
       const meta = ensureLiveDraftMeta('user');
       upsertLiveTranscriptMessage({
         id: meta.id,
@@ -578,10 +587,15 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         role: 'user',
         text: update.userText,
       } as ChatMessage);
+    } else if (update.reason === 'no-model-response') {
+      dropUserDraftMessage();
     }
 
     const hasThinkingTrace = Array.isArray(update.thinkingTrace) && update.thinkingTrace.length > 0;
-    const shouldShowAssistantThinking = update.reason === 'pending-user' || hasThinkingTrace || Boolean(modelText);
+    const shouldShowAssistantThinking =
+      update.reason !== 'waiting-for-input'
+      && update.reason !== 'no-model-response'
+      && (update.reason === 'pending-user' || hasThinkingTrace || Boolean(modelText));
 
     if (shouldShowAssistantThinking) {
       const meta = ensureLiveDraftMeta('assistant');
@@ -597,6 +611,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         rawAssistantResponse: undefined,
         translations: undefined,
       } as ChatMessage);
+    } else if (update.reason === 'waiting-for-input' || update.reason === 'no-model-response') {
+      dropAssistantDraftMessage();
     }
 
     if (update.reason === 'interrupted') {
@@ -606,6 +622,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     buildLiveThinkingDraftText,
     clearAllLiveDraftMessages,
     dropAssistantDraftMessage,
+    dropUserDraftMessage,
     ensureLiveDraftMeta,
     parseGeminiResponse,
     selectedLanguagePairRef,

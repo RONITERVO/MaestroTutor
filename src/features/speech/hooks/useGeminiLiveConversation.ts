@@ -34,6 +34,8 @@ export type LiveTurnTranscriptUpdateReason =
   | 'input'
   | 'output'
   | 'pending-user'
+  | 'waiting-for-input'
+  | 'no-model-response'
   | 'interrupted'
   | 'session-reset';
 
@@ -210,6 +212,7 @@ export function useGeminiLiveConversation(
   const currentModelThinkingTraceRef = useRef<string[]>([]);
   const currentModelThinkingPhaseRef = useRef<string | undefined>(undefined);
   const currentModelThinkingStatusLineRef = useRef<string | undefined>(undefined);
+  const currentTurnWaitingForInputRef = useRef<boolean>(false);
   
   // Audio-Transcript Synchronization Tracking
   // These track the correlation between streaming audio and delayed transcripts
@@ -325,6 +328,8 @@ export function useGeminiLiveConversation(
       reason === 'session-reset'
       || reason === 'interrupted'
       || reason === 'pending-user'
+      || reason === 'waiting-for-input'
+      || reason === 'no-model-response'
     ) {
       flushPendingTranscriptUpdate();
       return;
@@ -519,6 +524,7 @@ export function useGeminiLiveConversation(
     currentModelThinkingTraceRef.current = [];
     currentModelThinkingPhaseRef.current = undefined;
     currentModelThinkingStatusLineRef.current = undefined;
+    currentTurnWaitingForInputRef.current = false;
     currentModelAudioChunksRef.current = [];
     currentModelAudioTotalLengthRef.current = 0;
     modelAudioSplitPointsRef.current = [];
@@ -849,6 +855,7 @@ export function useGeminiLiveConversation(
                   .filter((text): text is string => text.length > 0);
 
                 if (thoughtTexts.length > 0) {
+                  currentTurnWaitingForInputRef.current = false;
                   let thoughtTraceChanged = false;
                   for (const thoughtText of thoughtTexts) {
                     const previousThought = currentModelThinkingTraceRef.current[
@@ -933,9 +940,13 @@ export function useGeminiLiveConversation(
                   currentUserTranscriptAudioLengthRef.current = currentUserAudioTotalLengthRef.current;
                   emitTurnTranscriptUpdate('input');
                 }
+                if (msg.serverContent?.waitingForInput === true) {
+                  currentTurnWaitingForInputRef.current = true;
+                }
                 if (msg.serverContent?.outputTranscription?.text) {
                   const textPart = msg.serverContent.outputTranscription.text;
                   currentOutputTranscriptionRef.current += textPart;
+                  currentTurnWaitingForInputRef.current = false;
                   currentModelThinkingPhaseRef.current = 'Final response';
                   currentModelThinkingStatusLineRef.current = undefined;
 
@@ -1011,6 +1022,9 @@ export function useGeminiLiveConversation(
                   const outputTranscript = currentOutputTranscriptionRef.current;
 
                   if (!modelText) {
+                    const completionReason: LiveTurnTranscriptUpdateReason = currentTurnWaitingForInputRef.current
+                      ? 'waiting-for-input'
+                      : 'no-model-response';
                     if (userText || userAudioFull.length > 0 || inputTranscript) {
                       if (pendingUserTurnRef.current) {
                         const prev = pendingUserTurnRef.current;
@@ -1026,11 +1040,9 @@ export function useGeminiLiveConversation(
                         };
                       }
                     }
-                    currentModelThinkingPhaseRef.current = 'Thinking';
-                    currentModelThinkingStatusLineRef.current = 'Thinking...';
                     if (logRef.current && !logFinalizedRef.current) {
                       logRef.current.complete({
-                        status: 'no-model-response',
+                        status: completionReason,
                         userText,
                         inputTranscript,
                         modelAudioLinesCount: modelAudioLines.length,
@@ -1113,11 +1125,19 @@ export function useGeminiLiveConversation(
                   startNextModelAudioTurn(sessionId);
 
                   if (!modelText) {
-                    emitTurnTranscriptUpdate('pending-user');
+                    const completionReason: LiveTurnTranscriptUpdateReason = currentTurnWaitingForInputRef.current
+                      ? 'waiting-for-input'
+                      : 'no-model-response';
+                    emitTurnTranscriptUpdate(completionReason);
+                    currentModelThinkingTraceRef.current = [];
+                    currentModelThinkingPhaseRef.current = undefined;
+                    currentModelThinkingStatusLineRef.current = undefined;
+                    currentTurnWaitingForInputRef.current = false;
                   } else {
                     currentModelThinkingTraceRef.current = [];
                     currentModelThinkingPhaseRef.current = undefined;
                     currentModelThinkingStatusLineRef.current = undefined;
+                    currentTurnWaitingForInputRef.current = false;
                   }
                 }
 
@@ -1136,6 +1156,7 @@ export function useGeminiLiveConversation(
                   currentModelAudioTotalLengthRef.current = 0;
                   modelAudioSplitPointsRef.current = [];
                   lastNewlineCountRef.current = 0;
+                  currentTurnWaitingForInputRef.current = false;
                   startNextModelAudioTurn(sessionId);
                   emitTurnTranscriptUpdate('interrupted');
                 }
