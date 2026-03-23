@@ -1906,7 +1906,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const now = Date.now();
       if (!force && now - lastDraftFlushAt < THINKING_DRAFT_FLUSH_INTERVAL_MS) return;
       lastDraftFlushAt = now;
-      const draftToShow = streamingDraftText.slice(-MAX_THINKING_DRAFT_CHARS);
+      const parsedDraft = parseStrictTutorResponse(streamingDraftText);
+      const formattedDraft = parsedDraft.visibleText.trim();
+      const fallbackDraft = parsedDraft.hasSkippedNonLanguageContent ? '' : streamingDraftText.trim();
+      const draftSource = formattedDraft || fallbackDraft;
+      const draftLines = draftSource
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+      const draftToShow = draftLines.length > 6
+        ? draftLines.slice(-6).join('\n')
+        : draftSource.slice(-MAX_THINKING_DRAFT_CHARS);
       const current = messagesRef.current.find(m => m.id === params.thinkingMessageId);
       if (!current || !current.thinking) return;
       if ((current.thinkingDraftText || '') === draftToShow) return;
