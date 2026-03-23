@@ -362,11 +362,20 @@ export const buildCompactAssistantRawText = (
   return joinAssistantContextParts(visibleText, [artifactBlock, toolBlock]);
 };
 
-export const buildCompactAssistantHistoryText = (message?: AssistantMessageLike | null): string => {
+export const buildCompactAssistantHistoryText = (
+  message?: AssistantMessageLike | null,
+  options?: {
+    includeArtifact?: boolean;
+    includeToolRequest?: boolean;
+  }
+): string => {
   if (!message) return '';
 
   const rawText = normalizeMultiline(message.llmRawResponse || '');
-  if (rawText && COMPACT_HISTORY_MARKER_REGEX.test(rawText)) {
+  const includeArtifact = options?.includeArtifact !== false;
+  const includeToolRequest = options?.includeToolRequest !== false;
+
+  if (rawText && COMPACT_HISTORY_MARKER_REGEX.test(rawText) && includeArtifact && includeToolRequest) {
     return joinAssistantContextParts(rawText, []);
   }
 
@@ -400,7 +409,7 @@ export const buildCompactAssistantHistoryText = (message?: AssistantMessageLike 
         : null);
 
   return buildCompactAssistantRawText(effectiveVisibleText, {
-    artifact: artifactFromRaw || artifactFromMessage,
-    toolRequest: fallbackToolRequest,
+    artifact: includeArtifact ? (artifactFromRaw || artifactFromMessage) : null,
+    toolRequest: includeToolRequest ? fallbackToolRequest : null,
   });
 };

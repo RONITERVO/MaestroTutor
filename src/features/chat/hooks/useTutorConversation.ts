@@ -336,6 +336,127 @@ type StrictParsedTutorResponse = {
   hasSkippedNonLanguageContent: boolean;
 };
 
+const TUTOR_FENCE_OPEN_REGEX = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/;
+
+const isMatchingTutorFenceClose = (
+  rawLine: string,
+  activeFence: { char: '`' | '~'; length: number }
+): boolean => {
+  const trimmed = rawLine.trim();
+  if (!trimmed || trimmed[0] !== activeFence.char) return false;
+
+  let count = 0;
+  while (count < trimmed.length && trimmed[count] === activeFence.char) {
+    count++;
+  }
+
+  return count >= activeFence.length && trimmed.slice(count).trim().length === 0;
+};
+
+const stripTutorVisibleLines = (responseText: string): {
+  lines: string[];
+  hasSkippedNonLanguageContent: boolean;
+} => {
+  const normalizedLines = responseText
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .split('\n');
+
+  const lines: string[] = [];
+  let hasSkippedNonLanguageContent = false;
+  let activeFence: { char: '`' | '~'; length: number } | null = null;
+
+  for (const rawLine of normalizedLines) {
+    if (activeFence) {
+      hasSkippedNonLanguageContent = true;
+      if (isMatchingTutorFenceClose(rawLine, activeFence)) {
+        activeFence = null;
+      }
+      continue;
+    }
+
+    const openMatch = TUTOR_FENCE_OPEN_REGEX.exec(rawLine);
+    if (openMatch) {
+      activeFence = {
+        char: openMatch[2][0] as '`' | '~',
+        length: openMatch[2].length,
+      };
+      hasSkippedNonLanguageContent = true;
+      continue;
+    }
+
+    const trimmed = rawLine.trim();
+    if (trimmed) {
+      lines.push(trimmed);
+    }
+  }
+
+  if (activeFence) {
+    hasSkippedNonLanguageContent = true;
+  }
+
+  return { lines, hasSkippedNonLanguageContent };
+};
+
+const extractNativeTutorText = (line: string, nativeLangPrefix: string): string | null => {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+  if (!trimmed.toLowerCase().startsWith(nativeLangPrefix.toLowerCase())) return null;
+  return trimmed.slice(nativeLangPrefix.length).trim();
+};
+
+const parseStrictTutorResponseText = (
+  responseText: string | undefined,
+  nativeLanguageCode: string | undefined
+): StrictParsedTutorResponse => {
+  if (typeof responseText !== 'string' || !responseText.trim() || !nativeLanguageCode) {
+    return { translations: [], visibleText: '', hasSkippedNonLanguageContent: false };
+  }
+
+  const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
+  const stripped = stripTutorVisibleLines(responseText);
+  const translations: Array<{ target: string; native: string }> = [];
+  const visibleLines: string[] = [];
+  let hasSkippedNonLanguageContent = stripped.hasSkippedNonLanguageContent;
+
+  for (let i = 0; i < stripped.lines.length; i++) {
+    const currentLine = stripped.lines[i];
+    if (!currentLine) continue;
+
+    const orphanNative = extractNativeTutorText(currentLine, nativeLangPrefix);
+    if (orphanNative !== null) {
+      hasSkippedNonLanguageContent = true;
+      continue;
+    }
+
+    const nextLine = stripped.lines[i + 1] || '';
+    if (!nextLine) {
+      translations.push({ target: currentLine, native: '' });
+      visibleLines.push(currentLine);
+      continue;
+    }
+
+    const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
+    const nativeText = taggedNative !== null ? taggedNative : nextLine;
+
+    translations.push({
+      target: currentLine,
+      native: nativeText,
+    });
+    visibleLines.push(currentLine);
+    if (nativeText) {
+      visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
+    }
+    i++;
+  }
+
+  return {
+    translations,
+    visibleText: visibleLines.join('\n').trim(),
+    hasSkippedNonLanguageContent,
+  };
+};
+
 type SuggestionCreatorArtifact = {
   mimeType?: string;
   fileName?: string;
@@ -612,56 +733,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   }, []);
 
   const parseStrictTutorResponse = useCallback((responseText: string | undefined): StrictParsedTutorResponse => {
-    if (typeof responseText !== 'string' || !responseText.trim() || !selectedLanguagePairRef.current) {
-      return { translations: [], visibleText: '', hasSkippedNonLanguageContent: false };
-    }
-
-    const lines = responseText
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
-      .split('\n')
-      .map(line => line.trim());
-    const nativeLangPrefix = `[${getShortLangCodeForPrompt(selectedLanguagePairRef.current.nativeLanguageCode)}]`;
-    const translations: Array<{ target: string; native: string }> = [];
-    let hasSkippedNonLanguageContent = false;
-
-    for (let i = 0; i < lines.length; i++) {
-      const currentLine = lines[i];
-      if (!currentLine) continue;
-
-      if (currentLine.startsWith(nativeLangPrefix)) {
-        hasSkippedNonLanguageContent = true;
-        continue;
-      }
-
-      let nextIndex = i + 1;
-      while (nextIndex < lines.length && !lines[nextIndex].trim()) {
-        nextIndex++;
-      }
-
-      const nextLine = nextIndex < lines.length ? lines[nextIndex].trim() : '';
-      if (nextLine && nextLine.startsWith(nativeLangPrefix)) {
-        translations.push({
-          target: currentLine,
-          native: nextLine.substring(nativeLangPrefix.length).trim(),
-        });
-        i = nextIndex;
-        continue;
-      }
-
-      hasSkippedNonLanguageContent = true;
-    }
-
-    const visibleLines = translations.flatMap(pair => [
-      pair.target,
-      pair.native ? `${nativeLangPrefix} ${pair.native}` : '',
-    ].filter(Boolean));
-
-    return {
-      translations,
-      visibleText: visibleLines.join('\n').trim(),
-      hasSkippedNonLanguageContent,
-    };
+    return parseStrictTutorResponseText(
+      responseText,
+      selectedLanguagePairRef.current?.nativeLanguageCode
+    );
   }, [selectedLanguagePairRef]);
 
   const parseGeminiResponse = useCallback((responseText: string | undefined): Array<{ target: string; native: string }> => {
@@ -1268,8 +1343,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       .replace("{previous_chat_summary_placeholder}", previousChatSummary || "")
       .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
 
-    // Live sessions use the audio model transcript, so the tutor turn will not
-    // contain fenced artifact/tool blocks even when an attachment would help.
+    // Live sessions mostly produce transcript text
     const isLiveSuggestionSource = options?.responseSource === 'live';
     if (isLiveSuggestionSource) {
       suggestionPrompt +=
@@ -1832,7 +1906,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const now = Date.now();
       if (!force && now - lastDraftFlushAt < THINKING_DRAFT_FLUSH_INTERVAL_MS) return;
       lastDraftFlushAt = now;
-      const draftToShow = streamingDraftText.slice(-MAX_THINKING_DRAFT_CHARS);
+      const parsedDraft = parseStrictTutorResponse(streamingDraftText);
+      const formattedDraft = parsedDraft.visibleText.trim();
+      const fallbackDraft = parsedDraft.hasSkippedNonLanguageContent ? '' : streamingDraftText.trim();
+      const draftSource = formattedDraft || fallbackDraft;
+      const draftLines = draftSource
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+      const draftToShow = draftLines.length > 6
+        ? draftLines.slice(-6).join('\n')
+        : draftSource.slice(-MAX_THINKING_DRAFT_CHARS);
       const current = messagesRef.current.find(m => m.id === params.thinkingMessageId);
       if (!current || !current.thinking) return;
       if ((current.thinkingDraftText || '') === draftToShow) return;

@@ -14,7 +14,7 @@ import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 import { useMaestroStore } from '../../../store';
 import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
 import { selectIsSpeaking, selectIsSending } from '../../../store/slices/uiSlice';
-import { getPrimaryCode } from '../../../shared/utils/languageUtils';
+import { getPrimaryCode, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 import { sketchShapeStyle } from '../../../shared/utils/sketchyShape';
 import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
@@ -869,6 +869,26 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     return draftText.replace(/\s+/g, ' ').trim();
   }, [message.thinkingDraftText]);
 
+  const thinkingDraftLines = useMemo(() => {
+    const draftText = typeof message.thinkingDraftText === 'string' ? message.thinkingDraftText : '';
+    if (!draftText.trim()) return [];
+
+    const nativePrefix = `[${getShortLangCodeForPrompt(selectedLanguagePair?.nativeLanguageCode || nativeLanguageDef?.code || 'en')}]`;
+
+    return draftText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        const isNative = line.toLowerCase().startsWith(nativePrefix.toLowerCase());
+        return {
+          isNative,
+          text: isNative ? line.slice(nativePrefix.length).trim() : line,
+        };
+      })
+      .filter(line => line.text.length > 0);
+  }, [message.thinkingDraftText, nativeLanguageDef?.code, selectedLanguagePair?.nativeLanguageCode]);
+
   const thinkingStatusCondensed = useMemo(() => {
     const statusText = typeof message.thinkingStatusLine === 'string' ? message.thinkingStatusLine : '';
     if (!statusText) return '';
@@ -886,7 +906,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     if (!message.thinking || isAttachmentLoading) return; // only for thinking state
     // If we have streamed response text, stop the ticker animation - the draft text
     // is displayed via its own mechanism
-    if (thinkingDraftCondensed) {
+    if (thinkingDraftLines.length > 0) {
       if (tickerRafRef.current !== null) {
         cancelAnimationFrame(tickerRafRef.current);
         tickerRafRef.current = null;
@@ -939,7 +959,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         tickerRafRef.current = null;
       }
     };
-  }, [isAttachmentLoading, message.thinking, thinkingDraftCondensed, thinkingTickerText]);
+  }, [isAttachmentLoading, message.thinking, thinkingDraftLines.length, thinkingTickerText]);
 
   // Phase label for the upper line
   const thinkingPhaseLabel = message.thinkingPhase || t('chat.thinking');
@@ -1003,17 +1023,33 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
             >
               {thinkingPhaseLabel}
             </p>
-            {/* Lower line (native position): thought ticker or streamed text */}
-            <p
-              className="italic mt-0.5 truncate pl-2 border-l-2 text-ai-file-text border-line-border"
-              style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
-            >
-              {thinkingContentLine !== null ? (
-                thinkingContentLine
-              ) : (
-                <span ref={tickerDisplayRef} className="inline-block font-mono">{'\u00A0'}</span>
-              )}
-            </p>
+            {thinkingDraftLines.length > 0 ? (
+              <div className="mt-1 space-y-1">
+                {thinkingDraftLines.map((line, index) => (
+                  <p
+                    key={`${index}-${line.isNative ? 'native' : 'target'}`}
+                    className={line.isNative
+                      ? 'italic whitespace-pre-wrap pl-2 border-l-2 text-ai-file-text border-line-border'
+                      : 'font-semibold whitespace-pre-wrap text-ai-msg-text'}
+                    style={{ fontSize: line.isNative ? '3.55cqw' : '4cqw', lineHeight: 1.3 }}
+                  >
+                    {line.text}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              /* Lower line (native position): thought ticker or streamed text */
+              <p
+                className="italic mt-0.5 truncate pl-2 border-l-2 text-ai-file-text border-line-border"
+                style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
+              >
+                {thinkingContentLine !== null ? (
+                  thinkingContentLine
+                ) : (
+                  <span ref={tickerDisplayRef} className="inline-block font-mono">{'\u00A0'}</span>
+                )}
+              </p>
+            )}
           </div>
         </div>
       </div>
