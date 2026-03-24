@@ -76,6 +76,7 @@ export const useSilentObserverController = ({
   const retryTimerRef = useRef<number | null>(null);
   const suspendWakeTimerRef = useRef<number | null>(null);
   const lastStartAttemptRef = useRef<number>(0);
+  const startInFlightRef = useRef(false);
   const resumptionHandleRef = useRef<string | undefined>(undefined);
   const stopObserverInternalRef = useRef<((reason: string, holdMs?: number) => Promise<void>) | null>(null);
 
@@ -139,12 +140,41 @@ export const useSilentObserverController = ({
     });
   }, [computeHistorySubsetForMedia, currentSystemPromptText, messagesRef, resolveBookmarkContextSummary]);
 
+  const primeObserverMicrophonePermission = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error('Microphone access is not supported on this device.');
+    }
+
+    // Silent observer is auto-started. Prime the mic permission before opening
+    // the live session so Android/WebView cannot leave us in a "connected but
+    // silent" state after the user accepts the permission prompt.
+    const permissionStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+      },
+    });
+
+    permissionStream.getTracks().forEach(track => {
+      try {
+        track.stop();
+      } catch {
+        // Ignore track stop failures during permission priming.
+      }
+    });
+  }, []);
+
   const startObserverInternal = useCallback(async () => {
+    if (startInFlightRef.current) return;
+    startInFlightRef.current = true;
     clearRetryTimer();
     const startAttempt = Date.now();
     lastStartAttemptRef.current = startAttempt;
 
     try {
+      await primeObserverMicrophonePermission();
+      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
+
       const liveSystemInstruction = await buildObserverInstruction();
       if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
 
@@ -170,6 +200,8 @@ export const useSilentObserverController = ({
       const message = error instanceof Error ? error.message : String(error);
       setSilentObserverError(message);
       setSilentObserverState('error');
+    } finally {
+      startInFlightRef.current = false;
     }
   }, [
     buildObserverInstruction,
@@ -177,6 +209,7 @@ export const useSilentObserverController = ({
     liveVideoStream,
     onTurnComplete,
     onTurnTranscriptUpdate,
+    primeObserverMicrophonePermission,
     settingsRef,
     setSilentObserverError,
     setSilentObserverState,
