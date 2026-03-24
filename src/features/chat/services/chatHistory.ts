@@ -328,22 +328,28 @@ export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?:
       contextParts.push(`Conversation Summary:\n${contextSummary.trim().slice(0, 10000)}`);
     }
 
-    // 6. Insert context. 
-    // Optimization: If the first history message is 'user', prepend to it to avoid double-user turn.
-    // Otherwise, insert as a separate system/user turn at the start.
-    if (contextParts.length > 0) {
-      const prefaceText = contextParts.join('\n\n');
-      if (history.length > 0 && history[0].role === 'user') {
-          history[0].text = `${prefaceText}\n\n${history[0].text || ''}`;
-      } else {
-          history.unshift({ role: 'user', text: prefaceText });
-      }
-    }
+    const prefaceText = contextParts.length > 0 ? contextParts.join('\n\n') : '';
+    const hasAvatarOverlay = Boolean(avatarOverlayFileUri && avatarOverlayMimeType);
 
-    // 6b. Attach avatar overlay to the context message (first user message)
-    if (avatarOverlayFileUri && avatarOverlayMimeType && history.length > 0 && history[0].role === 'user') {
-      history[0].avatarFileUri = avatarOverlayFileUri;
-      history[0].avatarMimeType = avatarOverlayMimeType;
+    // 6. Insert context.
+    // Optimization: If the first history message is 'user', prepend text/avatar to it
+    // to avoid an extra user turn. Otherwise create a synthetic leading user context
+    // turn so avatar guidance survives even when there is no profile/summary text yet.
+    if (history.length > 0 && history[0].role === 'user') {
+      if (prefaceText) {
+        history[0].text = `${prefaceText}\n\n${history[0].text || ''}`;
+      }
+      if (hasAvatarOverlay) {
+        history[0].avatarFileUri = avatarOverlayFileUri;
+        history[0].avatarMimeType = avatarOverlayMimeType;
+      }
+    } else if (prefaceText || hasAvatarOverlay) {
+      history.unshift({
+        role: 'user',
+        text: prefaceText || undefined,
+        avatarFileUri: hasAvatarOverlay ? avatarOverlayFileUri : undefined,
+        avatarMimeType: hasAvatarOverlay ? avatarOverlayMimeType : undefined,
+      });
     }
 
     // 7. Append placeholder latest message if provided (e.g. for Image Gen context)
