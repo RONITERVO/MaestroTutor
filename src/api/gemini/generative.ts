@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
+import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
 import { ApiError, getAi } from './client';
 
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
@@ -362,7 +363,7 @@ export const generateGeminiResponse = async (
     lifecycleHooks,
   } = options;
   const ai = await getAi();
-  const contents: any[] = [];
+  const rawContents: any[] = [];
 
   const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
     if (!Array.isArray(parts)) return [];
@@ -377,6 +378,9 @@ export const generateGeminiResponse = async (
       .filter((part): part is { fileUri: string; mimeType: string } => Boolean(part));
   };
 
+  // Build a lossless "raw" payload first, then collapse adjacent user/model
+  // turns right before send. Keeping the pre-collapse form here makes it easier
+  // to attach all text/files/avatar parts without accidentally dropping context.
   history.forEach(h => {
     const parts: any[] = [];
     const textContent = h.rawAssistantResponse || h.text;
@@ -393,7 +397,7 @@ export const generateGeminiResponse = async (
 
     if (parts.length > 0) {
       const role = h.role === 'assistant' ? 'model' : 'user';
-      contents.push({ role, parts });
+      rawContents.push({ role, parts });
     }
   });
 
@@ -403,7 +407,10 @@ export const generateGeminiResponse = async (
     currentParts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
   });
 
-  contents.push({ role: 'user', parts: currentParts });
+  rawContents.push({ role: 'user', parts: currentParts });
+  // Collapse only for this request. We do not mutate the source history because
+  // the UI/persistence layer still needs the original message granularity.
+  const contents = collapseGeminiContents(rawContents);
 
   const config: any = { ...configOverrides };
   const existingThinkingConfig =
