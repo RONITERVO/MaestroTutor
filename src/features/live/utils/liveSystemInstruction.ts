@@ -5,6 +5,7 @@ import { ChatMessage } from '../../../core/types';
 import { deriveHistoryForApi } from '../../chat';
 import { getGlobalProfileDB } from '../../session';
 import { buildCompactAssistantHistoryText } from '../../chat/utils/assistantMessageContext';
+import { groupAdjacentRoleItems } from '../../../shared/utils/conversationTurns';
 
 export interface BuildLiveSystemInstructionParams {
   basePrompt: string;
@@ -37,18 +38,27 @@ export const buildLiveSystemInstruction = async ({
     .find(entry => entry.role === 'assistant')
     ?.messageId;
 
-  let historyContext = '';
-  apiHistory.forEach((entry) => {
-    const role = entry.role === 'user' ? 'User' : 'Maestro';
-    const sourceMessage = entry.messageId ? sourceMessagesById.get(entry.messageId) : undefined;
-    const text = entry.role === 'assistant'
-      ? (buildCompactAssistantHistoryText(sourceMessage, {
-          includeArtifact: entry.messageId === latestAssistantEntryId,
-          includeToolRequest: entry.messageId === latestAssistantEntryId,
-        }) || entry.rawAssistantResponse || entry.text || '(assistant attachment)')
-      : (entry.rawAssistantResponse || entry.text || '(image)');
-    historyContext += `${role}: ${text}\n`;
-  });
+  const historyContext = groupAdjacentRoleItems(apiHistory)
+    .map((group) => {
+      const role = group.role === 'user' ? 'User' : 'Maestro';
+      const text = group.items
+        .map((entry) => {
+          const sourceMessage = entry.messageId ? sourceMessagesById.get(entry.messageId) : undefined;
+          return entry.role === 'assistant'
+            ? (buildCompactAssistantHistoryText(sourceMessage, {
+                includeArtifact: entry.messageId === latestAssistantEntryId,
+                includeToolRequest: entry.messageId === latestAssistantEntryId,
+              }) || entry.rawAssistantResponse || entry.text || '(assistant attachment)')
+            : (entry.rawAssistantResponse || entry.text || '(image)');
+        })
+        .filter((value): value is string => Boolean(value && value.trim()))
+        .join('\n\n')
+        .trim();
+
+      return text ? `${role}: ${text}` : '';
+    })
+    .filter(Boolean)
+    .join('\n');
 
   if (historyContext) {
     prompt += `\n\n--- CURRENT CONVERSATION CONTEXT (History) ---\n${historyContext}\n--- END CONTEXT ---`;

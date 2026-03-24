@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
+import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
 import { getAi } from './client';
 
 const TIMEOUT_MS = 600_000; // 10 minutes
@@ -34,7 +35,7 @@ export const generateImage = async (params: {
   const ai = await getAi();
   const { prompt, latestMessageText, history, systemInstruction, maestroAvatarUri, maestroAvatarMimeType } = params;
 
-  const contents: any[] = [];
+  const rawContents: any[] = [];
 
   let processedHistory = history ? history.map(h => ({ ...h })) : [];
 
@@ -113,20 +114,20 @@ export const generateImage = async (params: {
       if (h.role === 'user') {
         // User turn: text only (no image)
         if (textContent) {
-          contents.push({ role: 'user', parts: [{ text: textContent }] });
+          rawContents.push({ role: 'user', parts: [{ text: textContent }] });
         }
         // If user had an image, add it as a separate model turn after
         if (hasImage) {
-          contents.push({ role: 'model', parts: [{ fileData: { fileUri: firstImagePart.fileUri, mimeType: firstImagePart.mimeType } }] });
+          rawContents.push({ role: 'model', parts: [{ fileData: { fileUri: firstImagePart.fileUri, mimeType: firstImagePart.mimeType } }] });
         }
       } else if (h.role === 'assistant') {
         // Assistant turn: if has text, add as user turn first
         if (textContent) {
-          contents.push({ role: 'user', parts: [{ text: textContent }] });
+          rawContents.push({ role: 'user', parts: [{ text: textContent }] });
         }
         // Assistant image goes as model turn (image only)
         if (hasImage) {
-          contents.push({ role: 'model', parts: [{ fileData: { fileUri: firstImagePart.fileUri, mimeType: firstImagePart.mimeType } }] });
+          rawContents.push({ role: 'model', parts: [{ fileData: { fileUri: firstImagePart.fileUri, mimeType: firstImagePart.mimeType } }] });
         }
       }
     });
@@ -135,7 +136,7 @@ export const generateImage = async (params: {
   // If history was trimmed and contextSummary exists but first message wasn't user, prepend summary as separate turn
   if (contextSummary && processedHistory.length > 0 && processedHistory[0]?.role !== 'user') {
     const summaryText = `[Conversation Summary from earlier context]\n${contextSummary}`;
-    contents.unshift({ role: 'user', parts: [{ text: summaryText }] });
+    rawContents.unshift({ role: 'user', parts: [{ text: summaryText }] });
   }
 
   const currentParts: any[] = [];
@@ -154,8 +155,10 @@ export const generateImage = async (params: {
 
   if (currentParts.length) {
     // Always add the latest message as user turn (image gen thinks it's the assistant replying)
-    contents.push({ role: 'user', parts: currentParts });
+    rawContents.push({ role: 'user', parts: currentParts });
   }
+
+  const contents = collapseGeminiContents(rawContents);
 
   const model = getGeminiModels().image.generation;
   const config = { responseModalities: ['IMAGE'], systemInstruction };

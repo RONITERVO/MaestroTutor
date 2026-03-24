@@ -69,6 +69,7 @@ import {
   composeMaestroSystemInstruction 
 } from '../../../core/config/prompts';
 import { isRealChatMessage } from '../../../shared/utils/common';
+import { groupAdjacentRoleItems } from '../../../shared/utils/conversationTurns';
 import { trackTokenUsage, trackImageGeneration, hasShownCostWarning, setCostWarningShown } from '../../../shared/utils/costTracker';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { getPrimarySubtag, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
@@ -1273,6 +1274,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       return;
     }
 
+    const hasStoredReplySuggestions = (message?: ChatMessage | null): boolean => (
+      Boolean(message && Array.isArray(message.replySuggestions) && message.replySuggestions.length > 0)
+    );
+
     // Check if suggestions already exist on message
     {
       const allMsgs = messagesRef.current;
@@ -1291,10 +1296,46 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             target.llmRawResponse.trim() !== visibleText
           );
           if (hasExistingAttachment || !hasStructuredTail) {
+            lastFetchedSuggestionsForRef.current = target.id;
             setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
             await finishReplySuggestionsRequest();
             return;
           }
+        }
+
+        let previousUserIdx = -1;
+        for (let i = targetIdx - 1; i >= 0; i--) {
+          if (allMsgs[i].role === 'user') {
+            previousUserIdx = i;
+            break;
+          }
+        }
+        let nextUserIdx = allMsgs.length;
+        for (let i = targetIdx + 1; i < allMsgs.length; i++) {
+          if (allMsgs[i].role === 'user') {
+            nextUserIdx = i;
+            break;
+          }
+        }
+
+        let blockSuggestionOwner: ChatMessage | null = null;
+        for (let i = nextUserIdx - 1; i > previousUserIdx; i--) {
+          const candidate = allMsgs[i];
+          if (
+            i !== targetIdx
+            && candidate.role === 'assistant'
+            && hasStoredReplySuggestions(candidate)
+          ) {
+            blockSuggestionOwner = candidate;
+            break;
+          }
+        }
+
+        if (blockSuggestionOwner?.replySuggestions) {
+          lastFetchedSuggestionsForRef.current = blockSuggestionOwner.id;
+          setReplySuggestions(blockSuggestionOwner.replySuggestions);
+          await finishReplySuggestionsRequest();
+          return;
         }
       }
     }
@@ -1304,15 +1345,36 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     setReplySuggestions([]);
     setSuggestionsLoadingStreamText('');
 
-    const historyForPrompt = getHistoryRespectingBookmark(history)
-      .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+    const historyForPrompt = groupAdjacentRoleItems(
+      getHistoryRespectingBookmark(history)
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+    )
       .slice(-6)
-      .map(msg => {
-        if (msg.role === 'user') {
-          return `User: ${msg.text || '(sent an image)'}`;
+      .map(group => {
+        if (group.role === 'user') {
+          const userText = group.items
+            .map(msg => msg.text?.trim() || '(sent an image)')
+            .filter(Boolean)
+            .join('\n\n')
+            .trim();
+          return userText ? `User: ${userText}` : '';
         }
-        return `Tutor: ${buildCompactAssistantHistoryText(msg) || msg.translations?.[0]?.target || msg.rawAssistantResponse || msg.text || '(sent an image)'}`;
+
+        const tutorText = group.items
+          .map(msg => (
+            buildCompactAssistantHistoryText(msg)
+            || msg.translations?.[0]?.target
+            || msg.rawAssistantResponse
+            || msg.text
+            || '(sent an image)'
+          ))
+          .filter(Boolean)
+          .join('\n\n')
+          .trim();
+
+        return tutorText ? `Tutor: ${tutorText}` : '';
       })
+      .filter(Boolean)
       .join('\n');
 
     const allMsgs = messagesRef.current;
@@ -1479,6 +1541,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     setReplySuggestions,
     setSuggestionsLoadingStreamText,
     formatGeminiStatusLine,
+    lastFetchedSuggestionsForRef,
     updateMessage
   ]);
 
