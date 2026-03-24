@@ -378,6 +378,9 @@ export const generateGeminiResponse = async (
       .filter((part): part is { fileUri: string; mimeType: string } => Boolean(part));
   };
 
+  // Build a lossless "raw" payload first, then collapse adjacent user/model
+  // turns right before send. Keeping the pre-collapse form here makes it easier
+  // to attach all text/files/avatar parts without accidentally dropping context.
   history.forEach(h => {
     const parts: any[] = [];
     const textContent = h.rawAssistantResponse || h.text;
@@ -405,6 +408,8 @@ export const generateGeminiResponse = async (
   });
 
   rawContents.push({ role: 'user', parts: currentParts });
+  // Collapse only for this request. We do not mutate the source history because
+  // the UI/persistence layer still needs the original message granularity.
   const contents = collapseGeminiContents(rawContents);
 
   const config: any = { ...configOverrides };

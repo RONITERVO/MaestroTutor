@@ -93,6 +93,10 @@ export const generateImage = async (params: {
     processedHistory = processedHistory.slice(firstKeptImageIndex);
   }
 
+  // Build the image-model payload in its stricter text/image alternation shape
+  // first, then do one final same-role collapse at the end. This lets us keep
+  // the image-specific transformation logic readable while still protecting
+  // Gemini from adjacent same-side turns in the final payload.
   // Build contents array from processed history
   // Image generation payload must be: user (text only) -> model (image only) -> user (text only) -> model (image only) ...
   // Transform:
@@ -158,6 +162,9 @@ export const generateImage = async (params: {
     rawContents.push({ role: 'user', parts: currentParts });
   }
 
+  // The image path also needs the same send-time collapse as text generation
+  // because trimmed summaries, imported chats, or split assistant updates can
+  // otherwise leave repeated user/model turns in the final request.
   const contents = collapseGeminiContents(rawContents);
 
   const model = getGeminiModels().image.generation;

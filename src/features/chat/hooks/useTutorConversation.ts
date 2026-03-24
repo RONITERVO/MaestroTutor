@@ -1303,6 +1303,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           }
         }
 
+        // Suggestions are owned by a whole assistant-only block, not just one
+        // message object. The assistant can emit multiple adjacent messages when
+        // tools/artifacts are split out, and we must not regenerate suggestions
+        // for every sibling in that block once one already has them.
         let previousUserIdx = -1;
         for (let i = targetIdx - 1; i >= 0; i--) {
           if (allMsgs[i].role === 'user') {
@@ -1345,6 +1349,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     setReplySuggestions([]);
     setSuggestionsLoadingStreamText('');
 
+    // The suggestion model should see conversational turns, not raw UI message
+    // fragments. Adjacent same-role messages are merged here so deleted/imported
+    // chats and tool/artifact sidecars read as one coherent turn.
     const historyForPrompt = groupAdjacentRoleItems(
       getHistoryRespectingBookmark(history)
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')

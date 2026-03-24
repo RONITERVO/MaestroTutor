@@ -11,6 +11,11 @@ export interface RoleGroupedItems<T extends RoleTaggedItem> {
   items: T[];
 }
 
+// The app's persisted/UI message list can legitimately contain consecutive
+// messages from the same side due to deletes, imports, tools, artifacts, or
+// multi-step assistant updates. Gemini, however, is more reliable when the
+// outbound payload alternates by side. We therefore group only at request-build
+// time so the stored history stays lossless while the API payload becomes stable.
 export const groupAdjacentRoleItems = <T extends RoleTaggedItem>(
   items: readonly T[]
 ): RoleGroupedItems<T>[] => {
@@ -36,6 +41,10 @@ type GeminiContentTurn = {
   parts?: unknown[];
 };
 
+// Collapse adjacent Gemini turns by concatenating all parts into a single turn.
+// This preserves everything we intended to send, including invisible context
+// parts such as files or compact assistant metadata, while avoiding multiple
+// same-role turns in one payload.
 export const collapseGeminiContents = <T extends GeminiContentTurn>(
   contents: readonly T[]
 ): T[] => (

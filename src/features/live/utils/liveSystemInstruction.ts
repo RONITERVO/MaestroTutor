@@ -38,6 +38,10 @@ export const buildLiveSystemInstruction = async ({
     .find(entry => entry.role === 'assistant')
     ?.messageId;
 
+  // Live mode bakes history into one large instruction string. Grouping adjacent
+  // entries here keeps that context aligned with the same turn-collapse rule used
+  // by direct Gemini payloads, so imported/deleted/tool-split chats still read
+  // like normal back-and-forth conversation to the model.
   const historyContext = groupAdjacentRoleItems(apiHistory)
     .map((group) => {
       const role = group.role === 'user' ? 'User' : 'Maestro';
