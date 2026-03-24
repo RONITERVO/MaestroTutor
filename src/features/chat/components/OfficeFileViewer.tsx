@@ -12,6 +12,7 @@ import {
 } from '../utils/fileAttachments';
 import { getOfficePreview } from '../utils/officePreview';
 import type { TabularChartSeries, TabularSheetPreview } from '../utils/tabularPreview';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 interface OfficeFileViewerProps {
   src?: string | null;
@@ -87,6 +88,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   mimeType,
   hasRemoteUri = false,
 }) => {
+  const { t } = useAppTranslations();
   const [previewText, setPreviewText] = React.useState<string | null>(null);
   const [previewNote, setPreviewNote] = React.useState<string | null>(null);
   const [previewSheets, setPreviewSheets] = React.useState<TabularSheetPreview[]>([]);
@@ -108,7 +110,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   }, [fileName, mimeType, src]);
 
   const openHref = googleWorkspaceLink || src || null;
-  const openLabel = googleWorkspaceLink ? 'Open in Google Workspace' : 'Open file';
+  const openLabel = googleWorkspaceLink ? t('officeFile.openInGoogleWorkspace') || 'Open in Google Workspace' : t('officeFile.openFile') || 'Open file';
   const shouldUseDownload = Boolean(src && !googleWorkspaceLink && /^data:|^blob:/i.test(src));
   const downloadName = fileName || 'office-attachment';
 
@@ -117,7 +119,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
 
     if (!src) {
       setPreviewText(null);
-      setPreviewNote(hasRemoteUri ? 'Local preview unavailable. Reattach to open locally.' : 'Preview unavailable for this file.');
+      setPreviewNote(hasRemoteUri ? t('officeFile.localPreviewUnavailable') || 'Local preview unavailable. Reattach to open locally.' : t('officeFile.previewUnavailable') || 'Preview unavailable for this file.');
       setPreviewSheets([]);
       setIsParsingPreview(false);
       return () => { cancelled = true; };
@@ -142,7 +144,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
       .catch((error) => {
         if (cancelled) return;
         setPreviewText(null);
-        setPreviewNote(error instanceof Error ? error.message : 'Failed to parse inline preview.');
+        setPreviewNote(error instanceof Error ? error.message : t('officeFile.failedToParse') || 'Failed to parse inline preview.');
         setPreviewSheets([]);
       })
       .finally(() => {
@@ -161,7 +163,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   }, [previewText]);
 
   const statusText = previewNote || (!openHref
-    ? (hasRemoteUri ? 'Local preview unavailable. Reattach to open locally.' : 'Preview unavailable for this file.')
+    ? (hasRemoteUri ? t('officeFile.localPreviewUnavailable') || 'Local preview unavailable. Reattach to open locally.' : t('officeFile.previewUnavailable') || 'Preview unavailable for this file.')
     : null);
 
   if (compact) {
@@ -177,7 +179,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
             {isParsingPreview ? (
               <div className={`mt-1 inline-flex items-center gap-1 text-[10px] ${subtleText}`}>
                 <SmallSpinner className="w-3 h-3" />
-                Parsing preview...
+                {t('officeFile.parsingPreview') || 'Parsing preview...'}
               </div>
             ) : previewSheets.length > 0 ? (
               <TabularPreview
@@ -222,7 +224,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
           {isParsingPreview ? (
             <div className={`mt-2 inline-flex items-center gap-1.5 text-xs ${subtleText}`}>
               <SmallSpinner className="w-3.5 h-3.5" />
-              Parsing inline preview...
+              {t('officeFile.parsingInlinePreview') || 'Parsing inline preview...'}
             </div>
           ) : previewSheets.length > 0 ? (
             <>
@@ -233,7 +235,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
               />
               {previewText ? (
                 <details className="mt-2">
-                  <summary className={`text-xs cursor-pointer ${subtleText}`}>Raw extracted text</summary>
+                  <summary className={`text-xs cursor-pointer ${subtleText}`}>{t('officeFile.rawExtractedText') || 'Raw extracted text'}</summary>
                   <div
                     className="mt-1 rounded border border-black/10 bg-black/5 max-h-72 overflow-auto"
                     style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}

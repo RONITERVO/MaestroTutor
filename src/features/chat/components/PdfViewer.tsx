@@ -5,6 +5,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
 
@@ -73,6 +74,7 @@ interface PdfViewerProps {
 }
 
 const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact = false, bottomInset = 0 }) => {
+  const { t } = useAppTranslations();
   const [pages, setPages] = useState<string[]>([]);
   const [pageCount, setPageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,7 +128,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load PDF');
+          setError(err instanceof Error ? err.message : t('chat.pdf.loadFailed') || 'Failed to load PDF');
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -179,7 +181,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
     return (
       <div className={`flex flex-col items-center justify-center rounded-lg ${containerBg} ${compact ? 'h-24 w-full' : 'h-48 w-full'}`}>
         <SmallSpinner className={`w-6 h-6 ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`} />
-        <p className={`mt-2 text-xs ${errorTextColor}`}>Loading PDF...</p>
+        <p className={`mt-2 text-xs ${errorTextColor}`}>{t('chat.pdf.loading') || 'Loading PDF...'}</p>
       </div>
     );
   }
@@ -188,7 +190,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
     return (
       <div className={`flex flex-col items-center justify-center rounded-lg ${containerBg} ${compact ? 'h-24 w-full' : 'h-48 w-full'}`}>
         <IconPaperclip className={`w-10 h-10 ${iconColor}`} />
-        <p className={`mt-2 text-xs ${errorTextColor}`}>{error || 'Unable to display PDF'}</p>
+        <p className={`mt-2 text-xs ${errorTextColor}`}>{error || t('chat.pdf.error') || 'Unable to display PDF'}</p>
       </div>
     );
   }

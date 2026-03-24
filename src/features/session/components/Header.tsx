@@ -161,7 +161,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
           onContextMenu={(e) => e.preventDefault()}
           role="status"
           aria-live="polite"
-          title={!isOpen ? "Click to view status" : undefined}
+          title={!isOpen ? t('header.clickToViewStatus') || 'Click to view status' : undefined}
         >
           <div className={`transition-opacity duration-300`}>
             <CollapsedMaestroStatus
@@ -182,7 +182,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
               }}
               onPointerDown={(e) => e.stopPropagation()}
               className="ml-2 pl-2 border-l border-current opacity-70 hover:opacity-100 transition-opacity duration-200"
-              aria-label={isHolding ? 'Resume Maestro' : 'Pause Maestro'}
+              aria-label={isHolding ? t('header.resumeMaestro') || 'Resume Maestro' : t('header.pauseMaestro') || 'Pause Maestro'}
             >
               {isHolding ? (
                 <IconPlay className="w-4 h-4" />
@@ -221,17 +221,17 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
              className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm transition-all text-xs sm:text-sm sketchy-border-thin btn-depth
                ${hasApiKey ? 'bg-apikey-ok-bg text-apikey-ok-text hover:bg-apikey-ok-hover' : 'bg-apikey-missing-bg text-apikey-missing-text hover:bg-apikey-missing-hover'}
              `}
-             title={hasApiKey ? 'Manage API Key' : 'API Key Required'}
+             title={hasApiKey ? t('header.manageApiKey') || 'Manage API Key' : t('header.apiKeyRequired') || 'API Key Required'}
            >
              <IconKey className="w-4 h-4" />
-             <span className="hidden sm:inline">{hasApiKey ? 'API Key' : 'API Key Required'}</span>
+             <span className="hidden sm:inline">{hasApiKey ? t('header.apiKey') || 'API Key' : t('header.apiKeyRequired') || 'API Key Required'}</span>
            </button>
          )}
 
          <button
            onClick={toggleDebugLogs}
            className="p-2 bg-debug-btn-bg/80 hover:bg-debug-btn-bg text-debug-btn-muted hover:text-debug-btn-text backdrop-blur-sm transition-all sketchy-border-thin btn-depth"
-           title="View Traffic Logs"
+           title={t('header.viewTrafficLogs') || 'View Traffic Logs'}
          >
            <IconTerminal className="w-4 h-4" />
          </button>

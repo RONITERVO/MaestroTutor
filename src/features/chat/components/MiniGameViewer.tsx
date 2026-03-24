@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconPaperclip, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
 import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 
@@ -28,6 +29,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   mimeType,
   bottomInset = 0,
 }) => {
+  const { t } = useAppTranslations();
   const [showCode, setShowCode] = useState(false);
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
@@ -178,7 +180,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
           {hasIntersected ? (
             <iframe
               ref={iframeRef}
-              title={fileName ? `Mini game ${fileName}` : 'Mini game'}
+              title={fileName ? t('miniGame.titleWithFile', { fileName }) || `Mini game ${fileName}` : t('miniGame.title') || 'Mini game'}
               srcDoc={srcDoc}
               className="w-full h-full border-0 bg-transparent block"
               sandbox="allow-scripts allow-same-origin"
@@ -193,23 +195,23 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
           {runtimeState !== 'ready' && hasIntersected && (
             <div className={`absolute left-2 right-2 top-2 z-10 rounded-lg px-2 py-1 text-[11px] ${statusBubbleBg} text-white`}>
-              {runtimeState === 'error' ? `Mini-game error: ${runtimeError}` : 'Launching mini-game...'}
+              {runtimeState === 'error' ? t('miniGame.runtimeError', { error: runtimeError }) || `Mini-game error: ${runtimeError}` : t('miniGame.launching') || 'Launching mini-game...'}
             </div>
           )}
 
           {controlsUnderOverlay && (
             <div className="absolute top-2 right-2 z-30 flex flex-col gap-2 pointer-events-auto">
-              <button onClick={handleFullscreen} className={actionButtonClass} title="Fullscreen">
+              <button onClick={handleFullscreen} className={actionButtonClass} title={t('miniGame.fullscreen') || 'Fullscreen'}>
                 <span style={overlayIconShadowStyle}>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                 </span>
               </button>
-              <button onClick={handleReload} className={actionButtonClass} title="Restart">
+              <button onClick={handleReload} className={actionButtonClass} title={t('miniGame.restart') || 'Restart'}>
                 <span style={overlayIconShadowStyle}>
                   <IconUndo className="w-4 h-4" />
                 </span>
               </button>
-              <button onClick={() => setShowCode((prev) => !prev)} className={actionButtonClass} title="Code">
+              <button onClick={() => setShowCode((prev) => !prev)} className={actionButtonClass} title={showCode ? t('miniGame.hideCode') || 'Hide Code' : t('miniGame.showCode') || 'Show Code'}>
                 <span style={overlayIconShadowStyle}>
                   <IconTerminal className="w-4 h-4" />
                 </span>
@@ -247,15 +249,15 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
             <div className={`rounded-xl border ${lineColor} ${containerBg} px-4 py-2 backdrop-blur-sm pointer-events-auto shadow-sm flex items-center gap-4`}>
               <button onClick={handleFullscreen} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
                 <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-                <span className="font-semibold">Fullscreen</span>
+                <span className="font-semibold">{t('miniGame.fullscreen') || 'Fullscreen'}</span>
               </button>
               <button onClick={handleReload} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
                 <IconUndo className="w-3 h-3 shrink-0" />
-                <span className="font-semibold">Restart</span>
+                <span className="font-semibold">{t('miniGame.restart') || 'Restart'}</span>
               </button>
               <button onClick={() => setShowCode((prev) => !prev)} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
                 <IconTerminal className="w-3 h-3 shrink-0" />
-                <span className="font-semibold">{showCode ? 'Hide Code' : 'Show Code'}</span>
+                <span className="font-semibold">{showCode ? t('miniGame.hideCode') || 'Hide Code' : t('miniGame.showCode') || 'Show Code'}</span>
               </button>
             </div>
           </div>
@@ -278,7 +280,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       {!sourceCode.trim() && (
         <div className={`mt-2 w-full max-w-[560px] rounded-lg border ${lineColor} ${containerBg} p-3 text-center`}>
           <IconPaperclip className={`w-6 h-6 mx-auto ${textColor}`} />
-          <p className={`mt-1 text-xs ${subtleText}`}>Mini-game code is empty.</p>
+          <p className={`mt-1 text-xs ${subtleText}`}>{t('miniGame.codeEmpty') || 'Mini-game code is empty.'}</p>
         </div>
       )}
     </div>

@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const enTranslations: Record<string, string> = {
+  // App loading
+  "app.loading": "Loading app...",
   // App title
   "app.title": "Maestro",
   // Language selector (used in SttLanguageSelector)
@@ -10,6 +12,13 @@ export const enTranslations: Record<string, string> = {
   
   // Header
   "header.targetLanguageTitle": "Current Target Language: {language}",
+  "header.clickToViewStatus": "Click to view status",
+  "header.resumeMaestro": "Resume Maestro",
+  "header.pauseMaestro": "Pause Maestro",
+  "header.manageApiKey": "Manage API Key",
+  "header.apiKeyRequired": "API Key Required",
+  "header.apiKey": "API Key",
+  "header.viewTrafficLogs": "View Traffic Logs",
   
   // Start page (used)
   "startPage.clickToStart": "Click the plane",
@@ -62,6 +71,7 @@ export const enTranslations: Record<string, string> = {
   "sessionControls.backupAndReset": "Backup & Reset",
   "sessionControls.typeToConfirm": "Type \"{keyword}\" to confirm",
   "sessionControls.changeAvatar": "Change Avatar",
+  "sessionControls.customizeColors": "Customize Colors",
 
   // General
   "general.clear": "Clear",
@@ -145,6 +155,7 @@ export const enTranslations: Record<string, string> = {
   "chat.speakThisLine": "Speak this line",
   "chat.languageSelector.openGlobe": "Change languages",
   "chat.maestroTranscriptScrollwheel": "Maestro transcript scroll view",
+  "chat.deleteMessage": "Delete message",
   
   // Chat - mic/STT
   "chat.mic.listening": "STT Active: Listening...",
@@ -230,6 +241,10 @@ export const enTranslations: Record<string, string> = {
   "chat.bookmark.incrementAria": "Show one more",
   "chat.bookmark.incrementTitle": "More",
   "chat.bookmark.hiddenBelowHeaderAria": "Hidden messages below",
+  "chat.bookmark.editAria": "Edit bookmark summary",
+  "chat.bookmark.summaryPlaceholder": "Summary...",
+  "chat.bookmark.save": "Save",
+  "chat.bookmark.cancel": "Cancel",
   
   // Chat - send preparation
   "chat.sendPrep.optimizingVideo": "Optimizing video...",
@@ -309,4 +324,110 @@ export const enTranslations: Record<string, string> = {
   "error.snapshotCaptureFailedNotReady": "Snapshot failed: Camera not ready or problem with the feed. {details}",
   "error.visualContextCaptureFailedGeneric": "Visual Context failed: {details}",
   "error.snapshotCaptureFailedGeneric": "Snapshot failed: {details}",
+
+  // Global profile summary
+  "globalProfile.loading": "Loading profile...",
+  "globalProfile.noProfile": "No profile yet.",
+  "globalProfile.ariaLabel": "Global profile summary",
+
+  // Mini game viewer
+  "miniGame.titleWithFile": "Mini game {fileName}",
+  "miniGame.title": "Mini game",
+  "miniGame.launching": "Launching mini-game...",
+  "miniGame.runtimeError": "Mini-game error: {error}",
+  "miniGame.fullscreen": "Fullscreen",
+  "miniGame.restart": "Restart",
+  "miniGame.showCode": "Show Code",
+  "miniGame.hideCode": "Hide Code",
+  "miniGame.codeEmpty": "Mini-game code is empty.",
+  "miniGame.failedToRender": "Mini-game failed to render.",
+  "miniGame.retry": "Retry",
+
+  // PDF viewer
+  "chat.pdf.loadFailed": "Failed to load PDF",
+
+  // Text file viewer
+  "textFile.unableToDecode": "Unable to decode text attachment.",
+  "textFile.rawText": "Raw text",
+
+  // Office file viewer
+  "officeFile.openInGoogleWorkspace": "Open in Google Workspace",
+  "officeFile.openFile": "Open file",
+  "officeFile.localPreviewUnavailable": "Local preview unavailable. Reattach to open locally.",
+  "officeFile.previewUnavailable": "Preview unavailable for this file.",
+  "officeFile.failedToParse": "Failed to parse inline preview.",
+  "officeFile.parsingPreview": "Parsing preview...",
+  "officeFile.parsingInlinePreview": "Parsing inline preview...",
+  "officeFile.rawExtractedText": "Raw extracted text",
+
+  // Audio player
+  "audio.loading": "Audio loading",
+  "audio.pause": "Pause",
+  "audio.play": "Play",
+  "audio.progress": "Audio progress",
+
+  // Camera / observer
+  "camera.observerActive": "Observer active",
+
+  // Theme store
+  "themeStore.title": "Theme Store",
+  "themeStore.restorePurchases": "Restore Purchases",
+  "themeStore.close": "Close",
+  "themeStore.purchaseFailed": "Purchase failed. Please check your connection and try again.",
+  "themeStore.notAvailable": "Theme purchases are only available on Android via Google Play.",
+  "themeStore.owned": "Owned",
+  "themeStore.buy": "Buy",
+  "themeStore.loading": "Loading themes…",
+  "themeStore.footerNote": "Purchases are managed by Google Play and tied to your Google account. Tap the restore button (↩) to recover past purchases on reinstall.",
+
+  // Theme customizer
+  "themeCustomizer.title": "Paint Colors",
+  "themeCustomizer.saveAsPreset": "Save as preset",
+  "themeCustomizer.exportToFile": "Export to file",
+  "themeCustomizer.importFromFile": "Import from file",
+  "themeCustomizer.resetAll": "Reset All",
+  "themeCustomizer.instruction": "Tap a color circle, then drag in the picker. Changes apply instantly.",
+  "themeCustomizer.saveAs": "Save as",
+  "themeCustomizer.exportAs": "Export as",
+  "themeCustomizer.namePlaceholder": "Theme name...",
+  "themeCustomizer.confirm": "Confirm",
+  "themeCustomizer.cancel": "Cancel",
+  "themeCustomizer.quickThemes": "Quick Themes",
+  "themeCustomizer.deletePreset": "Delete saved preset",
+  "themeCustomizer.storeTitle": "Theme Store",
+  "themeCustomizer.storeDescription": "Browse and buy more themes",
+
+  // Debug log panel
+  "debugLog.title": "Traffic Log",
+  "debugLog.clearUploads": "Delete all Gemini uploads for the current API key",
+  "debugLog.clearLogs": "Clear logs",
+  "debugLog.close": "Close",
+  "debugLog.noTraffic": "No traffic recorded yet.",
+  "debugLog.requestPayload": "Request Payload",
+  "debugLog.error": "Error",
+  "debugLog.response": "Response",
+
+  // Streaming state - status lines
+  "streaming.connectingTo": "Connecting to {model} (attempt {attempt}/{total})...",
+  "streaming.waitingForOutput": "Waiting for model output... {seconds}s elapsed.",
+  "streaming.noOutputAfter": "No model output after {seconds}s. Request is likely queued on Google servers.",
+  "streaming.highDemand": "High demand detected. Request is queued on Google servers.",
+  "streaming.switchingFallback": "Switching to fallback model {model}.",
+  "streaming.retryingIn": "Retrying in {seconds}s...",
+
+  // Streaming state - phase labels
+  "streaming.phaseConnecting": "Connecting",
+  "streaming.phaseProcessing": "Processing",
+  "streaming.phaseHighDemand": "High demand",
+  "streaming.phaseSwitchingModel": "Switching model",
+  "streaming.phaseRetrying": "Retrying",
+  "streaming.phaseFinalizing": "Finalizing",
+  "streaming.phaseFinalResponse": "Final response",
+  "streaming.phaseThinking": "Thinking",
+  "streaming.phasePreparingRequest": "Preparing request",
+  "streaming.preparingRequestContext": "Preparing request context...",
+
+  // Media upload error messages (shown to users)
+  "streaming.failedToPrepareAttachment": "Failed to prepare recent attachment \"{name}\" for send. Try again or reattach the file.",
+  "streaming.failedToPrepareCurrent": "Failed to prepare attached media \"{name}\" for Gemini. Try again or reattach the file.",
 };

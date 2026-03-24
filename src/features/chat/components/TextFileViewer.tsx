@@ -9,6 +9,7 @@ import { deriveChartSeriesListFromRows, deriveChartSheetFromJsonText, isJsonChar
 import MiniGameViewer from './MiniGameViewer';
 import MiniGameErrorBoundary from './MiniGameErrorBoundary';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 interface TextFileViewerProps {
   src: string;
@@ -27,6 +28,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   mimeType,
   bottomInset = 0,
 }) => {
+  const { t } = useAppTranslations();
   const decodedText = useMemo(() => decodeTextFromDataUrl(src), [src]);
   const fileExt = useMemo(() => {
     const name = (fileName || '').trim().toLowerCase();
@@ -90,14 +92,17 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
     return (
       <div className={`flex flex-col items-center justify-center rounded-lg ${containerBg} ${compact ? 'h-24 w-full' : 'h-48 w-full'}`}>
         <IconPaperclip className={`w-8 h-8 ${textColor}`} />
-        <p className={`mt-2 text-xs ${textColor}`}>Unable to decode text attachment.</p>
+        <p className={`mt-2 text-xs ${textColor}`}>{t('textFile.unableToDecode') || 'Unable to decode text attachment.'}</p>
       </div>
     );
   }
 
   if (shouldRenderMiniGame) {
     return (
-      <MiniGameErrorBoundary>
+      <MiniGameErrorBoundary
+        failedText={t('miniGame.failedToRender') || 'Mini-game failed to render.'}
+        retryText={t('miniGame.retry') || 'Retry'}
+      >
         <MiniGameViewer
           sourceCode={decodedText}
           variant={variant}
@@ -172,7 +177,7 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
                 subtleTextClass={subtleText}
               />
               <details className="mt-3">
-                <summary className={`text-xs cursor-pointer ${subtleText}`}>Raw text</summary>
+                <summary className={`text-xs cursor-pointer ${subtleText}`}>{t('textFile.rawText') || 'Raw text'}</summary>
                 <div
                   className="mt-1 max-h-72 overflow-auto rounded border border-black/10 bg-black/5"
                   style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}

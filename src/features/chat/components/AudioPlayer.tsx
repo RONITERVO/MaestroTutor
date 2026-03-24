@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 interface AudioPlayerProps {
   src?: string | null;
@@ -73,6 +74,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({
   waveformSeed,
   placeholderProgress = 0,
 }) => {
+  const { t } = useAppTranslations();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -260,7 +262,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({
         type="button"
         onClick={togglePlay}
         className={`flex-shrink-0 ${btnSize} flex items-center justify-center transition-colors ${playBtnClasses} sketchy-border-thin ${isPlaceholder ? 'cursor-default' : ''}`}
-        aria-label={isPlaceholder ? (statusText || 'Audio loading') : (isPlaying ? 'Pause' : 'Play')}
+        aria-label={isPlaceholder ? (statusText || t('audio.loading') || 'Audio loading') : (isPlaying ? t('audio.pause') || 'Pause' : t('audio.play') || 'Play')}
         aria-disabled={isPlaceholder}
       >
         {isPlaying ? (
@@ -282,7 +284,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = React.memo(({
           className={`flex items-end gap-[2px] ${barHeight} ${resolvedSrc ? 'cursor-pointer' : 'cursor-default'}`}
           onClick={handleWaveClick}
           role="slider"
-          aria-label={isPlaceholder ? (statusText || 'Audio loading') : 'Audio progress'}
+          aria-label={isPlaceholder ? (statusText || t('audio.loading') || 'Audio loading') : t('audio.progress') || 'Audio progress'}
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}

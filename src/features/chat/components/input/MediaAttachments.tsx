@@ -387,8 +387,8 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             {isSilentObserverActive && !liveSessionActive && !liveSessionConnecting && (
               <div
                 className="absolute top-1 right-1 z-20 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-black/40"
-                title="Observer active"
-                aria-label="Observer active"
+                title={t('camera.observerActive') || 'Observer active'}
+                aria-label={t('camera.observerActive') || 'Observer active'}
               />
             )}
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
@@ -396,7 +396,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 <div className="flex flex-col items-center gap-2">
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-live-badge-bg text-live-badge-text uppercase text-xs font-semibold tracking-wide">
                     <span className="inline-flex h-2 w-2 rounded-full bg-live-badge-dot animate-pulse" aria-hidden />
-                    Live
+                    {t('chat.liveSession.liveBadge') || 'Live'}
                   </div>
                   <button
                     type="button"
@@ -410,7 +410,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               ) : liveSessionConnecting ? (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 text-white text-xs">
                   <SmallSpinner className="w-4 h-4 text-white" />
-                  <span>Connecting</span>
+                  <span>{t('chat.liveSession.connecting') || 'Connecting'}</span>
                 </div>
               ) : isRecording ? (
                 <button
@@ -451,7 +451,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                         ? 'bg-overlay-live-error-bg text-overlay-live-error-text hover:bg-overlay-live-error-hover'
                         : 'bg-live-idle-btn-bg text-live-idle-btn-text hover:bg-live-idle-btn-bg/80'
                     }`}
-                    aria-label="LIVE"
+                    aria-label={t('chat.liveSession.liveBadge') || 'LIVE'}
                   >
                     <span className="w-6 h-6 flex items-center justify-center text-[10px] font-bold leading-none">LIVE</span>
                   </button>

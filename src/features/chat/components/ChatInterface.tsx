@@ -787,7 +787,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                    className={`p-2 bg-delete-msg-bg text-delete-msg-text shadow sketchy-border-thin`}
                    onPointerDown={(e) => { e.stopPropagation(); }}
                    onClick={(e) => { e.stopPropagation(); onDeleteMessage(msg.id); }}
-                   title="Delete message"
+                   title={t('chat.deleteMessage') || 'Delete message'}
                  >
                    <IconTrash className="w-5 h-5" />
                  </button>

@@ -8,6 +8,7 @@ import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
 import { ORIGINAL_COLORS } from '../config/themeColors';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
 import { getPurchasableThemePreset } from '../config/purchasableThemePresets';
 import { THEME_PRODUCTS } from '../config/themeProducts';
@@ -208,6 +209,7 @@ const QuickThemeButton: React.FC<QuickThemeButtonProps> = ({
 /* ------------------------------------------------------------------ */
 
 const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) => {
+  const { t } = useAppTranslations();
   const settings = useMaestroStore(selectSettings);
   const setSettings = useMaestroStore(state => state.setSettings);
   const customColors = settings.customColors || {};
@@ -409,14 +411,14 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
         <div className="flex flex-col items-center pt-2 pb-1 px-4 shrink-0">
           <div className="w-10 h-1 bg-theme-muted-text/30 rounded-full mb-2" />
           <div className="flex w-full items-center justify-between">
-            <h2 className="text-lg font-sketch text-theme-panel-text">Paint Colors</h2>
+            <h2 className="text-lg font-sketch text-theme-panel-text">{t('themeCustomizer.title') || 'Paint Colors'}</h2>
             <div className="flex items-center gap-1">
               {hasAnyCustomization && (
                 <button
                   type="button"
                   onClick={() => startNaming('save')}
                   className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
-                  title="Save as preset"
+                  title={t('themeCustomizer.saveAsPreset') || 'Save as preset'}
                 >
                   <IconBookmark className="w-3.5 h-3.5" />
                 </button>
@@ -426,7 +428,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                   type="button"
                   onClick={() => startNaming('export')}
                   className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
-                  title="Export to file"
+                  title={t('themeCustomizer.exportToFile') || 'Export to file'}
                 >
                   <IconDownload className="w-3.5 h-3.5" />
                 </button>
@@ -435,7 +437,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 type="button"
                 onClick={handleImport}
                 className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
-                title="Import from file"
+                title={t('themeCustomizer.importFromFile') || 'Import from file'}
               >
                 <IconUpload className="w-3.5 h-3.5" />
               </button>
@@ -446,7 +448,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                   className="flex items-center gap-1 text-xs text-theme-muted-text hover:text-theme-panel-text px-2 py-1 rounded transition-colors"
                 >
                   <IconUndo className="w-3 h-3" />
-                  Reset All
+                  {t('themeCustomizer.resetAll') || 'Reset All'}
                 </button>
               )}
               <button
@@ -459,14 +461,14 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
             </div>
           </div>
           <p className="w-full text-[11px] text-theme-muted-text/85 mt-0.5">
-            Tap a color circle, then drag in the picker. Changes apply instantly.
+            {t('themeCustomizer.instruction') || 'Tap a color circle, then drag in the picker. Changes apply instantly.'}
           </p>
 
           {/* Inline naming row */}
           {namingMode && (
             <div className="flex w-full items-center gap-1.5 mt-1.5 animate-fade-up">
               <span className="text-[10px] font-hand text-theme-muted-text uppercase tracking-wider shrink-0">
-                {namingMode === 'save' ? 'Save as' : 'Export as'}
+                {namingMode === 'save' ? t('themeCustomizer.saveAs') || 'Save as' : t('themeCustomizer.exportAs') || 'Export as'}
               </span>
               <input
                 ref={nameInputRef}
@@ -478,7 +480,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                   if (e.key === 'Escape') cancelNaming();
                 }}
                 className="flex-1 bg-theme-input-bg/80 border border-theme-input-border/30 sketchy-border-thin px-2 py-0.5 text-xs text-theme-panel-text placeholder-theme-muted-text/60 focus:outline-none focus:border-theme-input-border transition-colors font-hand"
-                placeholder="Theme name..."
+                placeholder={t('themeCustomizer.namePlaceholder') || 'Theme name...'}
                 autoFocus
               />
               <button
@@ -486,7 +488,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 onClick={confirmNaming}
                 disabled={!nameInput.trim()}
                 className="p-1 text-theme-input-border hover:text-theme-panel-text disabled:opacity-30 transition-colors"
-                title="Confirm"
+                title={t('themeCustomizer.confirm') || 'Confirm'}
               >
                 <IconCheck className="w-4 h-4" />
               </button>
@@ -494,7 +496,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 type="button"
                 onClick={cancelNaming}
                 className="p-1 text-theme-muted-text hover:text-theme-panel-text transition-colors"
-                title="Cancel"
+                title={t('themeCustomizer.cancel') || 'Cancel'}
               >
                 <IconXMark className="w-4 h-4" />
               </button>
@@ -508,7 +510,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
           {/* ── Quick Themes ────────────────────────── */}
           <div>
             <h3 className="text-xs font-hand text-theme-muted-text uppercase tracking-wider mb-2">
-              Quick Themes
+              {t('themeCustomizer.quickThemes') || 'Quick Themes'}
             </h3>
             <div className="flex flex-wrap gap-2">
               {PRESET_THEMES.map(preset => {
@@ -547,7 +549,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleDeleteSavedPreset(idx); }}
                       className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gate-error-text text-gate-btn-text flex items-center justify-center text-[10px] leading-none opacity-0 group-hover/saved:opacity-100 transition-opacity"
-                      title="Delete saved preset"
+                      title={t('themeCustomizer.deletePreset') || 'Delete saved preset'}
                     >
                       &times;
                     </button>
@@ -555,8 +557,8 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 );
               })}
               <QuickThemeButton
-                name="Theme Store"
-                description="Browse and buy more themes"
+                name={t('themeCustomizer.storeTitle') || 'Theme Store'}
+                description={t('themeCustomizer.storeDescription') || 'Browse and buy more themes'}
                 previewColors={[
                   '210 70% 45%',
                   '38 90% 55%',

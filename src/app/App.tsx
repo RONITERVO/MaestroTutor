@@ -743,7 +743,7 @@ const App: React.FC = () => {
       <div className="flex h-screen w-full items-center justify-center bg-page-bg paper-texture">
         <div className="text-center relative z-10">
           <SmallSpinner className="w-8 h-8 text-loading-spinner block mx-auto" />
-          <p className="mt-2 text-page-text/70 font-hand">Loading app...</p>
+          <p className="mt-2 text-page-text/70 font-hand">{t('app.loading') || 'Loading app...'}</p>
         </div>
       </div>
     );
