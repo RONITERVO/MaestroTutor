@@ -2802,7 +2802,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       try {
         markSendStage('send.globalProfile.start');
         const gp2 = await getGlobalProfileDB();
-        globalProfileText = gp2?.text || undefined;
+        globalProfileText = gp2?.text || `null`;
         markSendStage('send.globalProfile.done', {
           hasGlobalProfile: Boolean(globalProfileText),
         });
