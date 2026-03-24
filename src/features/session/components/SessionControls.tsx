@@ -659,7 +659,7 @@ const SessionControls: React.FC = () => {
               type="button"
               onClick={() => setIsThemeCustomizerOpen(true)}
               className="group p-2.5 rounded-full text-ctrl-muted-text hover:text-profile-btn-text hover:bg-profile-btn-text/10 transition-all"
-              title="Customize Colors"
+              title={t('sessionControls.customizeColors') || 'Customize Colors'}
             >
               <IconPalette className="w-4 h-4 opacity-70 group-hover:opacity-100" />
             </button>

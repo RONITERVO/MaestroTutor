@@ -65,21 +65,21 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
 
   if (isEditing) {
     return (
-      <div className={containerClasses} role="region" aria-label="Edit bookmark summary" onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+      <div className={containerClasses} role="region" aria-label={t('chat.bookmark.editAria') || 'Edit bookmark summary'} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
         <input
           type="text"
           value={summaryText}
           onChange={(e) => setSummaryText(e.target.value)}
           onKeyDown={handleKeyDown}
           className="bg-bookmark-input-bg/80 border border-bookmark-divider/30 sketch-shape-0 px-2 py-0.5 text-xs text-bookmark-input-text placeholder-bookmark-text/60 focus:outline-none focus:border-bookmark-bg focus:bg-bookmark-input-bg w-48 transition-colors font-hand"
-          placeholder="Summary..."
+          placeholder={t('chat.bookmark.summaryPlaceholder') || 'Summary...'}
           autoFocus
         />
         <button
           type="button"
           onClick={save}
           className="p-1 sketch-shape-2 hover:bg-bookmark-bg/70 text-bookmark-text transition-colors"
-          title="Save"
+          title={t('chat.bookmark.save') || 'Save'}
         >
           <IconCheck className="w-3.5 h-3.5" />
         </button>
@@ -87,7 +87,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
           type="button"
           onClick={cancel}
           className="p-1 sketch-shape-4 hover:bg-bookmark-bg/70 text-bookmark-text transition-colors"
-          title="Cancel"
+          title={t('chat.bookmark.cancel') || 'Cancel'}
         >
           <IconXMark className="w-3.5 h-3.5" />
         </button>
@@ -135,8 +135,8 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
         type="button"
         onClick={startEditing}
         className="px-1.5 py-0.5 sketch-shape-10 hover:bg-bookmark-bg/50"
-        title="Edit bookmark summary"
-        aria-label="Edit bookmark summary"
+        title={t('chat.bookmark.editAria') || 'Edit bookmark summary'}
+        aria-label={t('chat.bookmark.editAria') || 'Edit bookmark summary'}
       >
         <IconPencil className="w-3.5 h-3.5" />
       </button>

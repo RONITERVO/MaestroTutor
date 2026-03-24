@@ -5,12 +5,14 @@ import React, { useState, useEffect } from 'react';
 import { debugLogService, LogEntry } from '../services/debugLogService';
 import { clearAllGeminiFiles } from '../../../api/gemini';
 import { IconCloudSlash, IconXMark, IconTrash } from '../../../shared/ui/Icons';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 interface DebugLogPanelProps {
   onClose: () => void;
 }
 
 const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
+  const { t } = useAppTranslations();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isClearingUploads, setIsClearingUploads] = useState(false);
@@ -47,29 +49,29 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
         style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
       >
         <h2 className="text-debug-btn-text font-semibold flex items-center gap-2">
-          <span className="text-green-400">➜</span> Traffic Log
+          <span className="text-green-400">➜</span> {t('debugLog.title') || 'Traffic Log'}
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={handleClearUploads}
             disabled={isClearingUploads}
             className="p-1.5 text-debug-btn-muted hover:text-red-300 hover:bg-debug-btn-bg/70 rounded transition-colors disabled:cursor-wait disabled:opacity-50"
-            title="Delete all Gemini uploads for the current API key"
-            aria-label="Delete all Gemini uploads for the current API key"
+            title={t('debugLog.clearUploads') || 'Delete all Gemini uploads for the current API key'}
+            aria-label={t('debugLog.clearUploads') || 'Delete all Gemini uploads for the current API key'}
           >
             <IconCloudSlash className={`w-4 h-4 ${isClearingUploads ? 'animate-pulse' : ''}`} />
           </button>
           <button
             onClick={handleClear}
             className="p-1.5 text-debug-btn-muted hover:text-correction-pen hover:bg-debug-btn-bg/70 rounded transition-colors"
-            title="Clear logs"
+            title={t('debugLog.clearLogs') || 'Clear logs'}
           >
             <IconTrash className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
             className="p-1.5 text-debug-btn-muted hover:text-debug-btn-text hover:bg-debug-btn-bg/70 rounded transition-colors"
-            title="Close"
+            title={t('debugLog.close') || 'Close'}
           >
             <IconXMark className="w-5 h-5" />
           </button>
@@ -80,7 +82,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
       <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-debug-btn-bg">
         {logs.length === 0 && (
           <div className="text-debug-btn-muted text-center py-10 italic">
-            No traffic recorded yet.
+            {t('debugLog.noTraffic') || 'No traffic recorded yet.'}
           </div>
         )}
         {logs.map((log) => {
@@ -113,7 +115,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
                 <div className="border-t border-line-border/50">
                   {/* Request Section */}
                   <div className="bg-black/20 p-2">
-                    <div className="text-xs text-debug-btn-muted uppercase font-bold mb-1 px-1">Request Payload</div>
+                    <div className="text-xs text-debug-btn-muted uppercase font-bold mb-1 px-1">{t('debugLog.requestPayload') || 'Request Payload'}</div>
                     <pre className="text-xs text-debug-btn-text/70 overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
                       {JSON.stringify(log.request, null, 2)}
                     </pre>
@@ -123,7 +125,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
                   {(log.response || log.error) && (
                     <div className="bg-black/10 p-2 border-t border-line-border/30">
                       <div className={`text-xs uppercase font-bold mb-1 px-1 ${isError ? 'text-red-400' : 'text-green-400'}`}>
-                        {isError ? 'Error' : 'Response'}
+                        {isError ? t('debugLog.error') || 'Error' : t('debugLog.response') || 'Response'}
                       </div>
                       <pre className={`text-xs overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar ${isError ? 'text-red-300' : 'text-green-300'}`}>
                         {JSON.stringify(log.error || log.response, null, 2)}

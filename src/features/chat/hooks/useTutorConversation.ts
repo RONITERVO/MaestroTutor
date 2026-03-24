@@ -878,44 +878,44 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
     switch (event.phase) {
       case 'attempt-start':
-        return `Connecting to ${event.model} (attempt ${event.attempt}/${event.totalAttempts})...`;
+        return t('streaming.connectingTo', { model: event.model, attempt: event.attempt, total: event.totalAttempts }) || `Connecting to ${event.model} (attempt ${event.attempt}/${event.totalAttempts})...`;
       case 'attempt-processing':
         if (typeof elapsedSeconds !== 'number') return undefined;
-        return `Waiting for model output... ${elapsedSeconds}s elapsed.`;
+        return t('streaming.waitingForOutput', { seconds: elapsedSeconds }) || `Waiting for model output... ${elapsedSeconds}s elapsed.`;
       case 'high-demand':
         if (event.reason === 'no-output-timeout' && typeof elapsedSeconds === 'number' && elapsedSeconds > 0) {
-          return `No model output after ${elapsedSeconds}s. Request is likely queued on Google servers.`;
+          return t('streaming.noOutputAfter', { seconds: elapsedSeconds }) || `No model output after ${elapsedSeconds}s. Request is likely queued on Google servers.`;
         }
-        return 'High demand detected. Request is queued on Google servers.';
+        return t('streaming.highDemand') || 'High demand detected. Request is queued on Google servers.';
       case 'fallback-switch':
-        return `Switching to fallback model ${event.model}.`;
+        return t('streaming.switchingFallback', { model: event.model }) || `Switching to fallback model ${event.model}.`;
       case 'retry-scheduled':
-        return `Retrying in ${Math.ceil((event.retryInMs || 0) / 1000)}s...`;
+        return t('streaming.retryingIn', { seconds: Math.ceil((event.retryInMs || 0) / 1000) }) || `Retrying in ${Math.ceil((event.retryInMs || 0) / 1000)}s...`;
       case 'success':
         return undefined;
       default:
         return undefined;
     }
-  }, []);
+  }, [t]);
 
   const formatGeminiPhaseLabel = useCallback((event: GeminiProgressEvent): string | undefined => {
     switch (event.phase) {
       case 'attempt-start':
-        return 'Connecting';
+        return t('streaming.phaseConnecting') || 'Connecting';
       case 'attempt-processing':
-        return 'Processing';
+        return t('streaming.phaseProcessing') || 'Processing';
       case 'high-demand':
-        return 'High demand';
+        return t('streaming.phaseHighDemand') || 'High demand';
       case 'fallback-switch':
-        return 'Switching model';
+        return t('streaming.phaseSwitchingModel') || 'Switching model';
       case 'retry-scheduled':
-        return 'Retrying';
+        return t('streaming.phaseRetrying') || 'Retrying';
       case 'success':
-        return 'Finalizing';
+        return t('streaming.phaseFinalizing') || 'Finalizing';
       default:
         return undefined;
     }
-  }, []);
+  }, [t]);
 
   const resolveBookmarkContextSummary = useCallback((): string | null => {
     const bm = settingsRef.current.historyBookmarkMessageId;
@@ -1142,7 +1142,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const chatFileParts = ensured.chatFileParts;
 
       if (chatFileParts.length === 0 && localSource) {
-        throw new Error(`Failed to prepare recent attachment "${m.attachmentName || 'attachment'}" for send. Try again or reattach the file.`);
+        throw new Error(t('streaming.failedToPrepareAttachment', { name: m.attachmentName || 'attachment' }) || `Failed to prepare recent attachment "${m.attachmentName || 'attachment'}" for send. Try again or reattach the file.`);
       }
 
       if (chatFileParts.length === 0 && previousVariants.length > 0) {
@@ -2050,7 +2050,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
               setThinkingStatusLine(params.thinkingMessageId, undefined);
               if (currentPhaseLabel !== 'Final response') {
                 currentPhaseLabel = 'Final response';
-                updateMessage(params.thinkingMessageId, { thinkingPhase: 'Final response' });
+                updateMessage(params.thinkingMessageId, { thinkingPhase: t('streaming.phaseFinalResponse') || 'Final response' });
               }
               flushThinkingDraft(false);
             },
@@ -2060,7 +2060,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
               setThinkingStatusLine(params.thinkingMessageId, undefined);
               if (currentPhaseLabel !== 'Thinking') {
                 currentPhaseLabel = 'Thinking';
-                updateMessage(params.thinkingMessageId, { thinkingPhase: 'Thinking' });
+                updateMessage(params.thinkingMessageId, { thinkingPhase: t('streaming.phaseThinking') || 'Thinking' });
               }
               flushThoughtTrace(false);
             },
@@ -2601,8 +2601,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         thinking: true,
         thinkingTrace: [],
         thinkingDraftText: '',
-        thinkingPhase: 'Preparing request',
-        thinkingStatusLine: 'Preparing request context...',
+        thinkingPhase: t('streaming.phasePreparingRequest') || 'Preparing request',
+        thinkingStatusLine: t('streaming.preparingRequestContext') || 'Preparing request context...',
       });
       markSendStage('send.thinkingMessage.created', {
         thinkingMessageId,
@@ -2711,7 +2711,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             });
             const ensured = await ensureUploadedAttachmentVariantsForMessage(currentUserMessage);
             if (ensured.chatFileParts.length === 0) {
-              throw new Error(`Failed to prepare attached media "${currentUserMessage.attachmentName || 'attachment'}" for Gemini. Try again or reattach the file.`);
+              throw new Error(t('streaming.failedToPrepareCurrent', { name: currentUserMessage.attachmentName || 'attachment' }) || `Failed to prepare attached media "${currentUserMessage.attachmentName || 'attachment'}" for Gemini. Try again or reattach the file.`);
             }
             imageForGeminiContextFileUri = ensured.chatFileParts;
             markSendStage('send.currentAttachment.upload.done', {
@@ -2739,7 +2739,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
             attachedFileName || 'current-user-media'
           );
           if (chatFileParts.length === 0) {
-            throw new Error(`Failed to prepare attached media "${attachedFileName || 'attachment'}" for Gemini. Try again or reattach the file.`);
+            throw new Error(t('streaming.failedToPrepareCurrent', { name: attachedFileName || 'attachment' }) || `Failed to prepare attached media "${attachedFileName || 'attachment'}" for Gemini. Try again or reattach the file.`);
           }
           imageForGeminiContextFileUri = chatFileParts;
           markSendStage('send.inlineMedia.upload.done', {

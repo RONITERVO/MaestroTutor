@@ -4,6 +4,7 @@
 import React, { useCallback } from 'react';
 import { IconXMark, IconCheck, IconUndo, IconSparkles } from '../../../shared/ui/Icons';
 import { useThemeBilling } from '../hooks/useThemeBilling';
+import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 interface ThemeStorePanelProps {
   onClose: () => void;
@@ -20,6 +21,7 @@ interface ThemeStorePanelProps {
  * - Not available on non-Android platforms (shows an informational message).
  */
 const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
+  const { t } = useAppTranslations();
   const {
     isPurchasing,
     billingError,
@@ -60,13 +62,13 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               <IconSparkles className="w-5 h-5 text-theme-panel-text" />
-              <h2 className="text-lg font-sketch text-theme-panel-text">Theme Store</h2>
+              <h2 className="text-lg font-sketch text-theme-panel-text">{t('themeStore.title') || 'Theme Store'}</h2>
             </div>
             <div className="flex items-center gap-2">
               {/* Restore purchases */}
               <button
                 type="button"
-                title="Restore Purchases"
+                title={t('themeStore.restorePurchases') || 'Restore Purchases'}
                 onClick={handleRestore}
                 disabled={isPurchasing}
                 className="p-1.5 rounded-lg text-theme-muted-text hover:text-theme-panel-text hover:bg-theme-input-bg transition-colors disabled:opacity-40"
@@ -76,7 +78,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
               {/* Close */}
               <button
                 type="button"
-                title="Close"
+                title={t('themeStore.close') || 'Close'}
                 onClick={onClose}
                 className="p-1.5 rounded-lg text-theme-muted-text hover:text-theme-panel-text hover:bg-theme-input-bg transition-colors"
               >
@@ -90,7 +92,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
         {billingError && (
           <div className="mx-4 mb-2 px-3 py-2 rounded-lg bg-input-error-bg/15 text-input-error-text text-xs flex items-start gap-2 shrink-0">
             <span className="flex-1">
-              Purchase failed. Please check your connection and try again.
+              {t('themeStore.purchaseFailed') || 'Purchase failed. Please check your connection and try again.'}
             </span>
             <button
               type="button"
@@ -105,7 +107,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
         {/* Non-Android notice */}
         {!isAvailable && (
           <div className="mx-4 mb-3 px-3 py-2 rounded-lg bg-theme-input-bg text-theme-muted-text text-xs text-center">
-            Theme purchases are only available on Android via Google Play.
+            {t('themeStore.notAvailable') || 'Theme purchases are only available on Android via Google Play.'}
           </div>
         )}
 
@@ -137,7 +139,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
                   {product.owned && (
                     <span className="ml-auto flex items-center gap-0.5 text-xs text-flag-busy-text bg-flag-busy-bg/20 px-1.5 py-0.5 rounded-full shrink-0">
                       <IconCheck className="w-3 h-3" />
-                      Owned
+                      {t('themeStore.owned') || 'Owned'}
                     </span>
                   )}
                 </div>
@@ -164,7 +166,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
                     onClick={() => handleBuy(product.productId)}
                     className="px-3 py-1.5 rounded-lg bg-gate-btn-bg text-gate-btn-text text-xs font-medium active:opacity-80 disabled:opacity-40 transition-opacity"
                   >
-                    {isPurchasing ? '…' : 'Buy'}
+                    {isPurchasing ? '…' : t('themeStore.buy') || 'Buy'}
                   </button>
                 )}
               </div>
@@ -173,7 +175,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
 
           {enrichedProducts.length === 0 && (
             <p className="text-center text-theme-muted-text text-sm py-6">
-              Loading themes…
+              {t('themeStore.loading') || 'Loading themes…'}
             </p>
           )}
         </div>
@@ -181,8 +183,7 @@ const ThemeStorePanel: React.FC<ThemeStorePanelProps> = ({ onClose }) => {
         {/* Footer note */}
         <div className="px-4 pb-4 pt-1 shrink-0">
           <p className="text-center text-theme-muted-text/60 text-[10px] leading-tight">
-            Purchases are managed by Google Play and tied to your Google account.{' '}
-            Tap the restore button (↩) to recover past purchases on reinstall.
+            {t('themeStore.footerNote') || 'Purchases are managed by Google Play and tied to your Google account. Tap the restore button (↩) to recover past purchases on reinstall.'}
           </p>
         </div>
       </div>
