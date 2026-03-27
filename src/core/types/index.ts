@@ -146,8 +146,6 @@ export interface AppSettings {
   enableGoogleSearch: boolean;
   imageFocusedModeEnabled: boolean;
   isSuggestionMode: boolean;
-  /** Show romanization (Latin-script pronunciation guide) for non-Latin target languages */
-  showRomanization?: boolean;
   historyBookmarkMessageId?: string | null;
   maxVisibleMessages?: number;
   customColors?: Record<string, string>;

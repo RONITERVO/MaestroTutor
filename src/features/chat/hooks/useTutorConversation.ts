@@ -416,6 +416,7 @@ const parseStrictTutorResponseText = (
 
   const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
   const romPrefix = '[ROM]';
+  const romPrefixUpper = romPrefix.toUpperCase();
   const stripped = stripTutorVisibleLines(responseText);
   const translations: Array<{ target: string; romanization?: string; native: string }> = [];
   const visibleLines: string[] = [];
@@ -432,7 +433,8 @@ const parseStrictTutorResponseText = (
     }
 
     // Skip orphan [ROM] lines
-    if (currentLine.trim().toUpperCase().startsWith(romPrefix)) {
+    const trimmedCurrentLine = currentLine.trim();
+    if (trimmedCurrentLine.substring(0, romPrefix.length).toUpperCase() === romPrefixUpper) {
       hasSkippedNonLanguageContent = true;
       continue;
     }
@@ -442,8 +444,9 @@ const parseStrictTutorResponseText = (
 
     // Check if next line is a [ROM] romanization line
     const potentialRomLine = stripped.lines[i + 1] || '';
-    if (potentialRomLine.trim().toUpperCase().startsWith(romPrefix)) {
-      const romText = potentialRomLine.trim().slice(romPrefix.length).trim();
+    const trimmedPotentialRomLine = potentialRomLine.trim();
+    if (trimmedPotentialRomLine.substring(0, romPrefix.length).toUpperCase() === romPrefixUpper) {
+      const romText = trimmedPotentialRomLine.slice(romPrefix.length).trim();
       if (romText) romanization = romText;
       extraSkip = 1;
     }

@@ -19,14 +19,12 @@ interface TextScrollwheelProps {
   stopSpeaking: () => void;
   speakNativeLang: boolean;
   onToggleSpeakNativeLang: () => void;
-  showRomanization?: boolean;
-  onToggleShowRomanization?: () => void;
   messageId?: string;
   /** `overlay` is for image/PDF overlays, `svg` is for focused SVG shells, `game` is for mini-game overlays, `audio` is for focused audio bubbles. */
   colorMode?: 'overlay' | 'svg' | 'game' | 'audio';
 }
 
-const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translations, speakingUtteranceText, currentTargetLangCode, currentNativeLangCode, t, isSpeaking, isSending, speakText, stopSpeaking, speakNativeLang, onToggleSpeakNativeLang, showRomanization = true, onToggleShowRomanization, messageId, colorMode = 'overlay' }) => {
+const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translations, speakingUtteranceText, currentTargetLangCode, currentNativeLangCode, t, isSpeaking, isSending, speakText, stopSpeaking, speakNativeLang, onToggleSpeakNativeLang, messageId, colorMode = 'overlay' }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const isUserScrollingRef = useRef(false);
@@ -158,12 +156,12 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
         spacerClassName={spacerTextClass}
       >
               {allLinePairs.map((line, index) => {
-                const hasRuby = line.type === 'target' && showRomanization && !!line.romanization;
+                const hasRuby = line.type === 'target' && !!line.romanization;
                 return (
                 <div 
                   key={index} 
                   ref={el => { itemRefs.current[index] = el; }} 
-                  className={`text-center p-1 w-full transition-all duration-300 transform-gpu cursor-pointer pointer-events-auto ${ line.type === 'target' && index === activeIndex ? 'opacity-100 scale-105' : 'opacity-70 scale-100'}`}
+                  className={`text-center p-1 w-full transition-all duration-300 transform-gpu cursor-pointer pointer-events-auto ${ index === activeIndex ? 'opacity-100 scale-105' : 'opacity-70 scale-100'}`}
                   onPointerDown={handleLinePointerDown}
                   onPointerUp={(e) => handleLinePointerUp(e, line, index)}
                   onPointerLeave={handlePointerLeave}

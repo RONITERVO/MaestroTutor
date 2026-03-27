@@ -532,10 +532,6 @@ const App: React.FC = () => {
     });
   }, [handleSettingsChange, settingsRef]);
 
-  const handleToggleShowRomanization = useCallback(() => {
-    handleSettingsChange('showRomanization', !(settingsRef.current.showRomanization !== false));
-  }, [handleSettingsChange, settingsRef]);
-
   const toggleFocusedModeState = useCallback(() => {
     handleSettingsChange('imageFocusedModeEnabled', !settingsRef.current.imageFocusedModeEnabled);
   }, [handleSettingsChange, settingsRef]);
@@ -824,7 +820,6 @@ const App: React.FC = () => {
             speakText={speakWrapper}
             stopSpeaking={stopSpeaking}
             onToggleSpeakNativeLang={handleToggleSpeakNativeLang}
-            onToggleShowRomanization={handleToggleShowRomanization}
             onUserInputActivity={handleUserInputActivity}
             onToggleSendWithSnapshot={handleToggleSendWithSnapshot}
             onToggleUseVisualContextForReengagement={handleToggleUseVisualContextForReengagement}
@@ -875,4 +870,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

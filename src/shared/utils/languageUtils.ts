@@ -39,6 +39,11 @@ const ROMANIZATION_INSTRUCTION_TEXT = `    *   After each {TARGET_LANGUAGE_NAME}
 const SUGGESTIONS_ROMANIZATION_INSTRUCTION_TEXT = `    *   Also include \`"romanization"\` (Latin-script pronunciation) for each \`target\` string.
 `;
 
+const SUGGESTIONS_ROMANIZATION_EXAMPLE_LINE = `    { "target": "こんにちは", "romanization": "Konnichiwa", "native": "Hello" }
+`;
+
+const DEFAULT_SUGGESTIONS_EXAMPLE_LINE = '    { "target": "mas n", "native": "more n" }\n';
+
 const LANGUAGE_CODE_SET = new Set(ALL_LANGUAGES.map(lang => lang.langCode));
 
 export const parseLanguagePairId = (pairId: string): { targetCode: string; nativeCode: string } | null => {
@@ -61,9 +66,13 @@ export const fillPromptTemplateForPair = (template: string, pairData: PromptTemp
     if (!pairData) return template;
     const romanizationInstruction = pairData.needsRomanization ? ROMANIZATION_INSTRUCTION_TEXT : '';
     const suggestionsRomanizationInstruction = pairData.needsRomanization ? SUGGESTIONS_ROMANIZATION_INSTRUCTION_TEXT : '';
+    const suggestionsRomanizationExampleLine = pairData.needsRomanization
+      ? SUGGESTIONS_ROMANIZATION_EXAMPLE_LINE
+      : DEFAULT_SUGGESTIONS_EXAMPLE_LINE;
     return template
         .replace(/{ROMANIZATION_INSTRUCTION}/g, romanizationInstruction)
         .replace(/{SUGGESTIONS_ROMANIZATION_INSTRUCTION}/g, suggestionsRomanizationInstruction)
+        .replace(/{SUGGESTIONS_ROMANIZATION_EXAMPLE_LINE}/g, suggestionsRomanizationExampleLine)
         .replace(/{TARGET_LANGUAGE_NAME}/g, pairData.targetLanguageName)
         .replace(/{NATIVE_LANGUAGE_NAME}/g, pairData.nativeLanguageName)
         .replace(/{NATIVE_LANGUAGE_CODE_SHORT}/g, getShortLangCodeForPrompt(pairData.nativeLanguageCode));

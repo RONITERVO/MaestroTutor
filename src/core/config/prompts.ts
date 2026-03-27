@@ -204,10 +204,9 @@ Before you do that, parse the tutor's latest message yourself. It may contain a 
 Example JSON Output:
 {
   "suggestions": [
-    { "target": "はい", "romanization": "Hai", "native": "Yes" },
-    { "target": "わかりました", "romanization": "Wakarimashita", "native": "I understand" },
-    { "target": "もう一度お願いします", "romanization": "Mō ichido onegaishimasu", "native": "Please say that again" }
-  ],
+    { "target": "Uno", "native": "One" },
+    { "target": "Dos", "native": "Two" },
+{SUGGESTIONS_ROMANIZATION_EXAMPLE_LINE}  ],
   "chatSummary": "x",
   "reengagementSeconds": y,
   "globalProfile": "z",
