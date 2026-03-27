@@ -72,6 +72,7 @@ export const initialSettings: AppSettings = {
   enableGoogleSearch: true,
   imageFocusedModeEnabled: true,
   isSuggestionMode: false,
+  showRomanization: true,
   historyBookmarkMessageId: null,
   maxVisibleMessages: undefined,
 };

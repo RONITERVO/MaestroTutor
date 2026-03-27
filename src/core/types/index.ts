@@ -11,6 +11,8 @@ export interface ChatMessage {
   translations?: Array<{
     /** Text in the target language (the language being learned) */
     target: string; 
+    /** Romanization (pronunciation in Latin script) for non-Latin scripts, e.g. romaji, pinyin */
+    romanization?: string;
     /** Text in the native language (the learner's native language) */
     native: string; 
   }>;
@@ -144,6 +146,8 @@ export interface AppSettings {
   enableGoogleSearch: boolean;
   imageFocusedModeEnabled: boolean;
   isSuggestionMode: boolean;
+  /** Show romanization (Latin-script pronunciation guide) for non-Latin target languages */
+  showRomanization?: boolean;
   historyBookmarkMessageId?: string | null;
   maxVisibleMessages?: number;
   customColors?: Record<string, string>;
@@ -163,6 +167,7 @@ export interface GroundingChunk {
 
 export interface ReplySuggestion {
   target: string;
+  romanization?: string;
   native: string;
   ttsAudioCache?: TtsAudioCacheEntry[];
 }

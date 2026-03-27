@@ -332,7 +332,7 @@ const buildAttachmentUploadPlans = (
 };
 
 type StrictParsedTutorResponse = {
-  translations: Array<{ target: string; native: string }>;
+  translations: Array<{ target: string; romanization?: string; native: string }>;
   visibleText: string;
   hasSkippedNonLanguageContent: boolean;
 };
@@ -415,8 +415,9 @@ const parseStrictTutorResponseText = (
   }
 
   const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
+  const romPrefix = '[ROM]';
   const stripped = stripTutorVisibleLines(responseText);
-  const translations: Array<{ target: string; native: string }> = [];
+  const translations: Array<{ target: string; romanization?: string; native: string }> = [];
   const visibleLines: string[] = [];
   let hasSkippedNonLanguageContent = stripped.hasSkippedNonLanguageContent;
 
@@ -430,8 +431,25 @@ const parseStrictTutorResponseText = (
       continue;
     }
 
-    const nextLine = stripped.lines[i + 1] || '';
-    if (!nextLine) {
+    // Skip orphan [ROM] lines
+    if (currentLine.trim().toUpperCase().startsWith(romPrefix)) {
+      hasSkippedNonLanguageContent = true;
+      continue;
+    }
+
+    let romanization: string | undefined;
+    let extraSkip = 0;
+
+    // Check if next line is a [ROM] romanization line
+    const potentialRomLine = stripped.lines[i + 1] || '';
+    if (potentialRomLine.trim().toUpperCase().startsWith(romPrefix)) {
+      const romText = potentialRomLine.trim().slice(romPrefix.length).trim();
+      if (romText) romanization = romText;
+      extraSkip = 1;
+    }
+
+    const nextLine = stripped.lines[i + 1 + extraSkip] || '';
+    if (!nextLine && !romanization) {
       translations.push({ target: currentLine, native: '' });
       visibleLines.push(currentLine);
       continue;
@@ -442,13 +460,15 @@ const parseStrictTutorResponseText = (
 
     translations.push({
       target: currentLine,
+      ...(romanization ? { romanization } : {}),
       native: nativeText,
     });
     visibleLines.push(currentLine);
+    if (romanization) visibleLines.push(`${romPrefix} ${romanization}`);
     if (nativeText) {
       visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
     }
-    i++;
+    i += 1 + extraSkip;
   }
 
   return {
@@ -580,7 +600,7 @@ export interface UseTutorConversationReturn {
   setMaestroActivityStage: (stage: MaestroActivityStage) => void;
   
   // Parsing
-  parseGeminiResponse: (responseText: string | undefined) => Array<{ target: string; native: string }>;
+  parseGeminiResponse: (responseText: string | undefined) => Array<{ target: string; romanization?: string; native: string }>;
   
   // Utilities
   resolveBookmarkContextSummary: () => string | null;

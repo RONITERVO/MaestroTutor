@@ -33,6 +33,7 @@ interface ChatMessageBubbleProps {
   loadingAnimations?: string[] | null;
   t: (key: string, replacements?: TranslationReplacements) => string;
   onToggleSpeakNativeLang: () => void;
+  onToggleShowRomanization: () => void;
   handleSpeakLine: (targetText: string, targetLangCode: string, nativeText?: string, nativeLangCode?: string, sourceMessageId?: string) => void;
   handlePlayUserMessage: (message: ChatMessage) => void;
   speakText: (textOrParts: SpeechPart[], defaultLang: string) => void;
@@ -51,6 +52,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   message, messageIndex, isFocusedMode, speakingUtteranceText, estimatedLoadTime, loadingAnimations,
   t,
   onToggleSpeakNativeLang, handleSpeakLine, handlePlayUserMessage, speakText, stopSpeaking,
+  onToggleShowRomanization,
   onToggleImageFocusedMode, transitioningImageId, onSetAttachedImage, onUserInputActivity,
   onQuotaSetupBilling, onQuotaStartLive,
   onImageGenViewCost,
@@ -64,6 +66,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isSpeaking = useMaestroStore(selectIsSpeaking);
   const isSending = useMaestroStore(selectIsSending);
   const speakNativeLang = settings.tts.speakNative;
+  const showRomanization = settings.showRomanization !== false;
   const currentTargetLangCode = useMemo(
     () => getPrimaryCode(selectedLanguagePair?.targetLanguageCode || targetLanguageDef?.code || 'es'),
     [selectedLanguagePair, targetLanguageDef]
@@ -1553,6 +1556,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                              stopSpeaking={stopSpeaking}
                speakNativeLang={speakNativeLang}
                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
+               showRomanization={showRomanization}
+               onToggleShowRomanization={onToggleShowRomanization}
                messageId={message.id}
                colorMode={isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : usesAudioAttachmentShell ? 'audio' : 'overlay'}
                        />

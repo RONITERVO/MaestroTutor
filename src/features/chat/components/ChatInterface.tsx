@@ -44,6 +44,7 @@ interface ChatInterfaceProps {
   stopSpeaking: () => void; 
 
   onToggleSpeakNativeLang: () => void;
+  onToggleShowRomanization: () => void;
   onUserInputActivity: () => void;
   onToggleSendWithSnapshot: () => void;
   onToggleUseVisualContextForReengagement: () => void;
@@ -70,6 +71,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     speakText,
     stopSpeaking,
     onToggleSpeakNativeLang,
+    onToggleShowRomanization,
     onUserInputActivity,
     onToggleSendWithSnapshot,
     onToggleUseVisualContextForReengagement,
@@ -804,6 +806,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 loadingAnimations={loadingAnimations}
                 t={t}
                 onToggleSpeakNativeLang={onToggleSpeakNativeLang}
+                onToggleShowRomanization={onToggleShowRomanization}
                 handleSpeakLine={handleSpeakLine}
                 handlePlayUserMessage={handlePlayUserMessage}
                 speakText={speakText}
