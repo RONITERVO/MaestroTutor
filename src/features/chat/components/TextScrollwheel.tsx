@@ -37,37 +37,27 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
   const flashTimeoutRef = useRef<number | null>(null);
 
   const { allLinePairs, pairIndexByFlatIndex } = useMemo(() => {
-    const pairs = translations.map(pair => ({
-      target: { type: 'target' as const, text: pair.target, lang: currentTargetLangCode },
-      romanization: pair.romanization ? { type: 'romanization' as const, text: pair.romanization, lang: currentTargetLangCode } : null,
-      native: { type: 'native' as const, text: pair.native, lang: currentNativeLangCode },
-    }));
-    const flat: Array<{ type: 'target'|'romanization'|'native'; text: string; lang: string; counterpart: { text: string; lang: string } | null }> = [];
+    const flat: Array<{ type: 'target'|'native'; text: string; romanization?: string; lang: string; counterpart: { text: string; lang: string } | null }> = [];
     const pairIdxByFlat: number[] = [];
-    pairs.forEach((p, idx) => {
-      const hasTarget = p.target.text && p.target.text.trim();
-      const hasRomanization = showRomanization && p.romanization && p.romanization.text && p.romanization.text.trim();
-      const hasNative = p.native.text && p.native.text.trim();
+    translations.forEach((pair, idx) => {
+      const hasTarget = pair.target && pair.target.trim();
+      const hasNative = pair.native && pair.native.trim();
       if (hasTarget) {
-        flat.push({ type: 'target', text: p.target.text, lang: p.target.lang, counterpart: hasNative ? { text: p.native.text, lang: p.native.lang } : null });
-        pairIdxByFlat.push(idx);
-      }
-      if (hasRomanization && p.romanization) {
-        flat.push({ type: 'romanization', text: p.romanization.text, lang: p.romanization.lang, counterpart: hasTarget ? { text: p.target.text, lang: p.target.lang } : null });
+        flat.push({ type: 'target', text: pair.target, romanization: pair.romanization, lang: currentTargetLangCode, counterpart: hasNative ? { text: pair.native, lang: currentNativeLangCode } : null });
         pairIdxByFlat.push(idx);
       }
       if (hasNative) {
-        flat.push({ type: 'native', text: p.native.text, lang: p.native.lang, counterpart: hasTarget ? { text: p.target.text, lang: p.target.lang } : null });
+        flat.push({ type: 'native', text: pair.native, lang: currentNativeLangCode, counterpart: hasTarget ? { text: pair.target, lang: currentTargetLangCode } : null });
         pairIdxByFlat.push(idx);
       }
     });
     return { allLinePairs: flat, pairIndexByFlatIndex: pairIdxByFlat };
-  }, [translations, currentTargetLangCode, currentNativeLangCode, showRomanization]);
+  }, [translations, currentTargetLangCode, currentNativeLangCode]);
 
   const activeIndex = useMemo(() => {
       if (!speakingUtteranceText) return -1;
       const cleanedUtterance = speakingUtteranceText.replace(/\*/g, '');
-      const index = allLinePairs.findIndex(line => line.type === 'target' && line.text.replace(/\*/g, '') === cleanedUtterance);
+      const index = allLinePairs.findIndex(line => line.text.replace(/\*/g, '') === cleanedUtterance);
       if (index !== -1) isUserScrollingRef.current = false;
       return index;
   }, [speakingUtteranceText, allLinePairs]);
@@ -105,18 +95,6 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                 setFlashIndex(null);
               }, 900);
               onToggleSpeakNativeLang();
-              return;
-            }
-            if (line.type === 'romanization') {
-              if (onToggleShowRomanization) {
-                setFlashIndex(flatIndex);
-                setFlashIsOn(false);
-                if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
-                flashTimeoutRef.current = window.setTimeout(() => {
-                  setFlashIndex(null);
-                }, 900);
-                onToggleShowRomanization();
-              }
               return;
             }
             if (isSpeaking) {
@@ -162,13 +140,6 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
     : colorMode === 'audio'
       ? 'text-attachment-audio-native-text'
       : 'text-attachment-overlay-native-text/70';
-  const romanizationTextClass = colorMode === 'game'
-    ? 'text-attachment-game-native-text/60'
-    : colorMode === 'svg'
-      ? 'text-attachment-svg-native-text/60'
-    : colorMode === 'audio'
-      ? 'text-attachment-audio-native-text/60'
-      : 'text-attachment-overlay-native-text/50';
   const spacerTextClass = colorMode === 'game'
     ? 'text-attachment-game-native-text/40'
     : colorMode === 'svg'
@@ -186,7 +157,9 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
         ariaLabel={t('chat.maestroTranscriptScrollwheel')}
         spacerClassName={spacerTextClass}
       >
-              {allLinePairs.map((line, index) => ( 
+              {allLinePairs.map((line, index) => {
+                const hasRuby = line.type === 'target' && showRomanization && !!line.romanization;
+                return (
                 <div 
                   key={index} 
                   ref={el => { itemRefs.current[index] = el; }} 
@@ -198,27 +171,27 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
                   style={{ touchAction: 'pan-y' }}
                 > 
                   <p 
-                    className={`${
-                      line.type === 'target'
-                        ? `font-semibold ${targetTextClass}`
-                        : line.type === 'romanization'
-                          ? `${romanizationTextClass}`
-                          : `italic ${nativeTextClass}`
-                    } pointer-events-none`}
+                    className={`${line.type === 'target' ? `font-semibold ${targetTextClass}` : `italic ${nativeTextClass}`} pointer-events-none`}
                     style={{
-                      fontSize: line.type === 'target' ? '4cqw' : line.type === 'romanization' ? '3.2cqw' : '3.55cqw',
-                      lineHeight: 1.3
+                      fontSize: line.type === 'target' ? '4cqw' : '3.55cqw',
+                      lineHeight: hasRuby ? 2 : 1.3,
                     }}
-                  > 
-                    {line.text}
+                  >
+                    {hasRuby ? (
+                      <ruby>
+                        {line.text}
+                        <rt style={{ fontSize: '0.55em', fontWeight: 'normal', opacity: 0.75 }}>{line.romanization}</rt>
+                      </ruby>
+                    ) : line.text}
                     {line.type === 'native' && index === flashIndex && (
                       <span className="ml-2 inline-block align-middle animate-speak-flash">
                         {flashIsOn ? <IconSpeaker className="w-3 h-3 inline" /> : <IconVolumeOff className="w-3 h-3 inline" />}
                       </span>
                     )}
                   </p> 
-                </div> 
-              ))}
+                </div>
+                );
+              })}
       </AttachmentTextScrollContainer>
   );
 });

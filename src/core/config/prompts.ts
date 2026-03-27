@@ -155,8 +155,7 @@ Before you do that, parse the tutor's latest message yourself. It may contain a 
 
 1.  "suggestions": An array of reply suggestion objects. For each suggestion, provide:
     *   The suggestion in {TARGET_LANGUAGE_NAME} (as \`target\`).
-    *   If {TARGET_LANGUAGE_NAME} uses a non-Latin script, provide a romanization (pronunciation in Latin script, e.g. romaji for Japanese, pinyin with tone marks for Chinese) as \`romanization\`. Omit this field for Latin-script languages.
-    *   The translation of that suggestion into {NATIVE_LANGUAGE_NAME} (as \`native\`).
+{SUGGESTIONS_ROMANIZATION_INSTRUCTION}    *   The translation of that suggestion into {NATIVE_LANGUAGE_NAME} (as \`native\`).
     *   Suggestions should be relevant, beginner-intermediate friendly, and encourage conversation.
     *   The number of suggestions is up to you; cover a small, useful range.
     *   Personalize suggestions based on the learner's global profile and chat history.
@@ -205,9 +204,9 @@ Before you do that, parse the tutor's latest message yourself. It may contain a 
 Example JSON Output:
 {
   "suggestions": [
-    { "target": "Uno", "native": "One" },
-    { "target": "Dos", "native": "Two" },
-    { "target": "こんにちは", "romanization": "Konnichiwa", "native": "Hello" }
+    { "target": "はい", "romanization": "Hai", "native": "Yes" },
+    { "target": "わかりました", "romanization": "Wakarimashita", "native": "I understand" },
+    { "target": "もう一度お願いします", "romanization": "Mō ichido onegaishimasu", "native": "Please say that again" }
   ],
   "chatSummary": "x",
   "reengagementSeconds": y,

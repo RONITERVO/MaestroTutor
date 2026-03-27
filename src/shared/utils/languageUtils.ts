@@ -33,15 +33,10 @@ interface PromptTemplateFillData {
   needsRomanization: boolean;
 }
 
-const ROMANIZATION_INSTRUCTION_TEXT = `    *   Between the {TARGET_LANGUAGE_NAME} sentence and its {NATIVE_LANGUAGE_NAME} translation, provide a **romanization** (pronunciation in Latin script, e.g. romaji for Japanese, pinyin with tone marks for Chinese, transliteration for Arabic/Indic scripts) on its own line, prefixed with \`[ROM]\`.
+const ROMANIZATION_INSTRUCTION_TEXT = `    *   After each {TARGET_LANGUAGE_NAME} sentence, add a \`[ROM] <romanization>\` line (Latin-script pronunciation) before the translation.
+`;
 
-    *Example (Target: Japanese, Native: English):*
-    こんにちは！
-    [ROM] Konnichiwa!
-    [EN] Hello!
-    今日はいい天気ですね。
-    [ROM] Kyō wa ii tenki desu ne.
-    [EN] The weather is nice today.
+const SUGGESTIONS_ROMANIZATION_INSTRUCTION_TEXT = `    *   Also include \`"romanization"\` (Latin-script pronunciation) for each \`target\` string.
 `;
 
 const LANGUAGE_CODE_SET = new Set(ALL_LANGUAGES.map(lang => lang.langCode));
@@ -64,13 +59,11 @@ export const parseLanguagePairId = (pairId: string): { targetCode: string; nativ
 
 export const fillPromptTemplateForPair = (template: string, pairData: PromptTemplateFillData): string => {
     if (!pairData) return template;
-    const romanizationInstruction = pairData.needsRomanization
-      ? ROMANIZATION_INSTRUCTION_TEXT
-          .replace(/{TARGET_LANGUAGE_NAME}/g, pairData.targetLanguageName)
-          .replace(/{NATIVE_LANGUAGE_NAME}/g, pairData.nativeLanguageName)
-      : '';
+    const romanizationInstruction = pairData.needsRomanization ? ROMANIZATION_INSTRUCTION_TEXT : '';
+    const suggestionsRomanizationInstruction = pairData.needsRomanization ? SUGGESTIONS_ROMANIZATION_INSTRUCTION_TEXT : '';
     return template
         .replace(/{ROMANIZATION_INSTRUCTION}/g, romanizationInstruction)
+        .replace(/{SUGGESTIONS_ROMANIZATION_INSTRUCTION}/g, suggestionsRomanizationInstruction)
         .replace(/{TARGET_LANGUAGE_NAME}/g, pairData.targetLanguageName)
         .replace(/{NATIVE_LANGUAGE_NAME}/g, pairData.nativeLanguageName)
         .replace(/{NATIVE_LANGUAGE_CODE_SHORT}/g, getShortLangCodeForPrompt(pairData.nativeLanguageCode));
