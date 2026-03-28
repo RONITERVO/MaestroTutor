@@ -3,7 +3,7 @@
 import { GoogleGenAI, Modality, type LiveServerMessage } from '@google/genai';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { resolveLiveConnectApiKey } from '../../../api/gemini/client';
 import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 
@@ -50,7 +50,7 @@ export const synthesizeGeminiAudioNote = async (params: {
     throw new Error('Audio note text is empty.');
   }
 
-  const apiKey = await getApiKeyOrThrow();
+  const apiKey = await resolveLiveConnectApiKey({ purpose: 'live' });
   const ai = new GoogleGenAI({ apiKey });
   const model = getGeminiModels().audio.live;
   const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';

@@ -5,13 +5,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ThemeBillingService,
   type BillingErrorEvent,
+  type PurchasesUpdatedEvent,
   type ProductDetailsResult,
 } from '../ThemeBillingService';
 import { THEME_PRODUCTS, type ThemeProduct } from '../config/themeProducts';
+import type { GooglePlayPurchaseRecord } from '../../../core/contracts/integrations';
 
 export interface ThemeBillingState {
   /** Product details fetched from Google Play (may be empty if unavailable). */
   products: ProductDetailsResult[];
+  /** Purchase records currently known to the billing layer. */
+  purchases: GooglePlayPurchaseRecord[];
   /** Set of owned product IDs according to the latest Google Play query. */
   ownedProductIds: Set<string>;
   /** True while a purchase or restore is in progress. */
@@ -44,6 +48,7 @@ export interface ThemeBillingActions {
  */
 export function useThemeBilling(): ThemeBillingState & ThemeBillingActions {
   const [products, setProducts] = useState<ProductDetailsResult[]>([]);
+  const [purchases, setPurchases] = useState<GooglePlayPurchaseRecord[]>([]);
   const [ownedProductIds, setOwnedProductIds] = useState<Set<string>>(new Set());
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [billingError, setBillingError] = useState<BillingErrorEvent | null>(null);
@@ -58,9 +63,10 @@ export function useThemeBilling(): ThemeBillingState & ThemeBillingActions {
 
     // --- subscriptions ------------------------------------------------ //
 
-    const purchasesHandle = ThemeBillingService.onPurchasesUpdated(event => {
+    const purchasesHandle = ThemeBillingService.onPurchasesUpdated((event: PurchasesUpdatedEvent) => {
       if (!mountedRef.current) return;
       setOwnedProductIds(new Set(event.ownedProductIds));
+      setPurchases(event.purchases || []);
       setIsPurchasing(false);
     });
 
@@ -82,11 +88,12 @@ export function useThemeBilling(): ThemeBillingState & ThemeBillingActions {
     ThemeBillingService.getOwnedThemes().then(result => {
       if (mountedRef.current) {
         setOwnedProductIds(new Set(result.ownedProductIds));
+        setPurchases(result.purchases || []);
       }
     });
 
     // Request product details (results arrive via event).
-    ThemeBillingService.getProductDetails();
+    ThemeBillingService.getProductDetails(THEME_PRODUCTS.map(product => product.productId));
 
     // Restore purchases from Google Play on mount (authoritative source).
     ThemeBillingService.restorePurchases();
@@ -139,6 +146,7 @@ export function useThemeBilling(): ThemeBillingState & ThemeBillingActions {
 
   return {
     products,
+    purchases,
     ownedProductIds,
     isPurchasing,
     billingError,

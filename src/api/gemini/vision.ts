@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
+import { loadManagedAccessSession, saveManagedAccessSession } from '../../core/security/managedAccessSessionStorage';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
 import { getAi } from './client';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
 const TIMEOUT_MS = 600_000; // 10 minutes
 
@@ -23,6 +26,17 @@ const addNoise = (text: string): string => {
   return `${text} <!-- ${timestamp}_${randomId} -->`;
 };
 
+const updateManagedBillingSummary = async (billingSummary: unknown): Promise<void> => {
+  if (!billingSummary || typeof billingSummary !== 'object') return;
+  const session = await loadManagedAccessSession();
+  if (!session) return;
+  await saveManagedAccessSession({
+    ...session,
+    billingSummary: billingSummary as typeof session.billingSummary,
+    lastSyncedAt: Date.now(),
+  });
+};
+
 export const generateImage = async (params: {
   prompt?: string;
   history?: any[];
@@ -32,7 +46,6 @@ export const generateImage = async (params: {
   maestroAvatarUri?: string;
   maestroAvatarMimeType?: string;
 }) => {
-  const ai = await getAi();
   const { prompt, latestMessageText, history, systemInstruction, maestroAvatarUri, maestroAvatarMimeType } = params;
 
   const rawContents: any[] = [];
@@ -172,20 +185,33 @@ export const generateImage = async (params: {
   const log = debugLogService.logRequest('generateImage', model, { contents, config });
 
   try {
-    const result = await withTimeout(
-      ai.models.generateContent({
-        model,
-        contents,
-        config: config as any,
-      }),
-      TIMEOUT_MS
-    );
+    const result = maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()
+      ? await withTimeout(
+          maestroBackendService.generateContent({
+            model,
+            contents,
+            config: config as unknown as Record<string, unknown>,
+            operation: 'generateImage',
+          }),
+          TIMEOUT_MS
+        )
+      : await withTimeout(
+          (await getAi()).models.generateContent({
+            model,
+            contents,
+            config: config as any,
+          }),
+          TIMEOUT_MS
+        );
+
+    await updateManagedBillingSummary((result as { billingSummary?: unknown }).billingSummary);
 
     log.complete({ candidates: result.candidates?.length });
 
-    const candidates = result.candidates || [];
+    const candidates = Array.isArray(result.candidates) ? result.candidates : [];
     for (const c of candidates) {
-      for (const part of c.content?.parts || []) {
+      const parts = Array.isArray((c as any)?.content?.parts) ? (c as any).content.parts : [];
+      for (const part of parts) {
         const inlineData = part.inlineData;
         if (inlineData && inlineData.mimeType?.startsWith('image/')) {
           if (typeof inlineData.data === 'string' && inlineData.data.trim() !== '') {
@@ -197,7 +223,8 @@ export const generateImage = async (params: {
     // No valid image found in response - extract any text response for debugging
     let textResponse = '';
     for (const c of candidates) {
-      for (const part of c.content?.parts || []) {
+      const parts = Array.isArray((c as any)?.content?.parts) ? (c as any).content.parts : [];
+      for (const part of parts) {
         if (part.text) textResponse += part.text;
       }
     }

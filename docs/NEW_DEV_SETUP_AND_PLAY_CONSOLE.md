@@ -1,216 +1,443 @@
-# Maestro Tutor - New Developer Setup and Play Console Guide
+# Maestro Tutor - Managed Android Release Guide
 
-This guide is for a developer who is new to this repository and needs to get the Android app, Google Play setup, and Google Play Billing setup working end to end.
+This guide is the release handoff for the current codebase.
 
-It focuses on the parts that cannot be solved only by editing code:
+The app now supports two access modes:
 
-- local machine setup
-- Android signing
-- Google Play Console setup
-- Google Play Billing catalog setup
-- review-time setup for the Gemini API key gate
-- release and maintenance work that must keep matching the codebase
+- `BYOK`: user pastes their own Gemini API key and talks directly to Gemini.
+- `Managed`: user signs in with Firebase Google auth, buys Maestro credits on Android through Google Play, and the app routes Gemini requests through the Firebase backend.
 
-If you only want the quick local commands, also see [DEV_CHEATSHEET.md](./DEV_CHEATSHEET.md). If you only want the short release checklist, also see [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md).
+From the user perspective, BYOK still works as before. Managed mode sits next to it inside the same API key gate and header access button.
 
-## 1. What lives where
+If you only want quick commands, also read [DEV_CHEATSHEET.md](./DEV_CHEATSHEET.md). If you only want the release checklist, also read [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md).
 
-Before touching anything, understand the split between code and external systems.
+## 1. Current Release Shape
 
-### In this repository
+- Package id: `com.ronitervo.maestrotutor`
+- Existing paid theme store remains in place and still uses permanent non-consumable unlocks.
+- Managed credits use one re-buyable Google Play one-time product for this release:
+  - `maestro_credits_1000`
+- One purchase of `maestro_credits_1000` grants `1000` Maestro credits.
+- Managed billing verifies Play purchases on the backend before credit grant.
+- Managed billing reserves credits before Gemini calls and settles from actual `usageMetadata` when available.
+- Failed or abandoned reservations are released automatically:
+  - immediately on request failure when possible
+  - periodically by a scheduled backend sweep
+- Managed remote file deletion is user-scoped. Clearing uploads in the debug panel only clears the signed-in user's managed uploads.
 
-- Web app and UI logic: `src/`
-- Android wrapper app: `android/`
-- Capacitor config: [`capacitor.config.ts`](../capacitor.config.ts)
-- Android package ID and release version: [`android/app/build.gradle`](../android/app/build.gradle)
-- TypeScript billing product IDs: [`src/features/theme/config/themeProducts.ts`](../src/features/theme/config/themeProducts.ts)
-- Java billing product IDs: [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java)
-- Raw theme color palettes: [`src/features/theme/config/themeColors.ts`](../src/features/theme/config/themeColors.ts)
-- Purchased theme color mappings: [`src/features/theme/config/purchasableThemePresets.ts`](../src/features/theme/config/purchasableThemePresets.ts)
-- Billing runtime code: [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java)
-- Store UI: [`src/features/theme/components/ThemeStorePanel.tsx`](../src/features/theme/components/ThemeStorePanel.tsx)
-- Privacy policy page that can be hosted: [`public/privacy.html`](../public/privacy.html)
+## 2. Repo Areas That Matter
 
-### Outside the repository
+### Frontend and Android
 
-- Google AI Studio account and Gemini API key
-- Google Play Console developer account
-- Google Play app entry for package `com.ronitervo.maestrotutor`
-- Google Play Billing product catalog
-- Google Play testers and license testers
-- Android signing keystore and passwords
-- Hosted privacy policy URL
+- App shell and access gate: `src/app/`, `src/features/session/`
+- Managed access UI: `src/features/session/components/ManagedAccessPanel.tsx`
+- Integration config: `src/core/config/integrations.ts`
+- Managed session storage: `src/core/security/managedAccessSessionStorage.ts`
+- Service hub: `src/services/maestroServices.ts`
+- Firebase client bridge: `src/services/firebase/maestroFirebaseService.ts`
+- Google auth bridge: `src/services/auth/`
+- Backend client: `src/services/backend/maestroBackendService.ts`
+- Google Play billing wrapper: `src/services/payments/`
+- Native billing manager/plugin:
+  - `android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java`
+  - `android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingPlugin.java`
 
-If one of those external pieces is missing, the code can compile and still not work correctly in production.
+### Backend
 
-## 2. Access you need before you start
+- Firebase Functions app: `functions/src/index.ts`
+- Auth and CORS: `functions/src/auth.ts`
+- Env/config parsing: `functions/src/config.ts`
+- Gemini proxy and managed files: `functions/src/gemini.ts`
+- Managed billing ledger/reservations: `functions/src/managedBilling.ts`
+- Google Play verification: `functions/src/playBilling.ts`
+- Pricing conversion: `functions/src/pricing.ts`
+- Firestore rules and indexes:
+  - `firestore.rules`
+  - `firestore.indexes.json`
+  - `firebase.json`
 
-Ask for these before doing any serious Android or release work:
+### Static public assets
+
+- Privacy policy: `public/privacy.html`
+- Public model manifest: `public/gemini-models.json`
+
+Those two public files still need to be reachable from the deployed site, normally:
+
+- `https://chatwithmaestro.com/privacy.html`
+- `https://chatwithmaestro.com/gemini-models.json`
+
+## 3. Access You Need Before Doing Release Work
 
 - Git access to this repository
+- Firebase project admin access
+- Google Cloud Console access for the same Firebase project
 - Google Play Console access for the app
-- Access to the Google account that owns the Play Console app, or at least release permissions
-- Access to the privacy policy hosting location, if policy text needs updating
-- A Gemini API key for local testing
-- A physical Android device or a working emulator
+- Permission to manage Play API access / service accounts
+- Access to the Android signing keystore and passwords
+- A real Android device for Play billing validation
 
-If you cannot access Play Console, you cannot finish billing setup, internal testing, or production releases.
+If you do not have Play Console access and Firebase project access, you cannot finish managed mode release work.
 
-## 3. Local machine setup
+## 4. Local Toolchain
 
-### Install required tools
+Required:
 
-1. Install Node.js 18 or newer.
-2. Install Android Studio.
-3. In Android Studio, install the Android SDK, platform tools, and build tools.
-4. Make sure Java 17 is available. This project compiles Android with Java 17, as defined in [`android/app/build.gradle`](../android/app/build.gradle).
-5. Optional but useful: `adb` on your PATH for device install and debugging.
+- Node.js 20.x
+- npm
+- Java 17
+- Android Studio with current SDK / platform tools
+- Firebase CLI
+- Git
 
-### Clone and install
+Verify:
+
+```bash
+node --version
+npm --version
+java -version
+firebase --version
+git --version
+```
+
+Important:
+
+- Root web app currently builds with the repo's normal frontend toolchain.
+- `functions/package.json` explicitly targets Node `20`.
+- Android release builds use Java 17.
+
+## 5. Clone and Install
 
 ```bash
 git clone <repo-url>
 cd maestrotutor
 npm install
+cd functions
+npm install
+cd ..
 ```
 
-### Start the web app once
+Useful first-pass checks:
 
 ```bash
-npm run dev
+npm run build
+cd functions
+npm run build
+cd ..
 ```
 
-Open `http://localhost:5173`.
+## 6. Local Secret and Config Files
 
-On first launch, the app asks for a Gemini API key unless you use a local `.env` file.
-
-### Optional: use a local `.env` during development only
-
-Create a root `.env` file like this:
-
-```env
-VITE_API_KEY=your_api_key_here
-```
-
-Use this only for local development. Do not ship a production build with a real API key embedded.
-
-### Start the Android app locally
-
-```bash
-npm run cap:android
-npx cap open android
-```
-
-Then run the app from Android Studio on a device or emulator.
-
-## 4. Local files and secrets that are not committed
-
-These files are expected locally and must not be committed.
-
-### Development-only secret
+These files are expected locally and must not be committed:
 
 - `.env`
-
-### Release signing secrets
-
+- `functions/.env`
+- `android/app/google-services.json`
 - `android/keystore.properties`
-- your `.jks` or `.keystore` file
+- your upload keystore file
 
-The example properties file is:
+### Root `.env`
 
-- [`android/keystore.properties.example`](../android/keystore.properties.example)
-
-It expects something like:
-
-```properties
-storeFile=../keystore/release.jks
-storePassword=YOUR_STORE_PASSWORD
-keyAlias=YOUR_KEY_ALIAS
-keyPassword=YOUR_KEY_PASSWORD
-```
-
-### One-time release keystore setup
-
-1. Create a keystore:
+Create it from the example:
 
 ```bash
-keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias maestro
+copy .env.example .env
 ```
 
-2. Move it to a safe local folder, for example `android/keystore/`.
-3. Create `android/keystore.properties` from the example file.
-4. Put the correct passwords and alias in that file.
-5. Back up the keystore and passwords outside your laptop.
+Fill these values:
 
-Important rules:
+```env
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MEASUREMENT_ID=
+VITE_FIREBASE_FUNCTIONS_REGION=europe-west1
+VITE_BACKEND_BASE_URL=https://europe-west1-your-project-id.cloudfunctions.net/api/
+VITE_GOOGLE_WEB_CLIENT_ID=
+VITE_GOOGLE_SERVER_CLIENT_ID=
+VITE_GOOGLE_PLAY_PACKAGE_NAME=com.ronitervo.maestrotutor
+VITE_MANAGED_BILLING_PRODUCT_IDS=maestro_credits_1000
+VITE_FIREBASE_APPCHECK_SITE_KEY=
+VITE_FIREBASE_APPCHECK_DEBUG_TOKEN=
+```
 
-- Never commit the keystore.
-- Never commit `android/keystore.properties`.
-- Never lose the keystore or its passwords.
+Notes:
 
-Losing signing credentials is not a code problem. It becomes a release-management problem.
+- `VITE_BACKEND_BASE_URL` must include the trailing `/api/`.
+- Leave App Check values empty unless web App Check is actually being enabled.
 
-## 5. Verify project constants before touching Play Console
+### `functions/.env`
 
-These values must stay aligned between code and Play Console.
+Create it from the example:
 
-### Package ID
+```bash
+copy functions\.env.example functions\.env
+```
 
-This app is configured as:
+Fill these values:
 
-- `com.ronitervo.maestrotutor`
+```env
+FUNCTION_REGION=europe-west1
+FIREBASE_PROJECT_ID=
+GEMINI_API_KEY=
+GOOGLE_PLAY_PACKAGE_NAME=com.ronitervo.maestrotutor
+ALLOWED_ORIGINS=https://chatwithmaestro.com,https://chatwithmaestro.web.app,https://localhost,http://localhost,capacitor://localhost
+MANAGED_CREDIT_PRODUCTS=maestro_credits_1000:1000
+MANAGED_CREDITS_PER_USD=1000
+REQUIRE_APPCHECK=false
+GEMINI_LIVE_TOKEN_USES=1
+RESERVATION_TTL_MINUTES=30
+MANAGED_LIVE_SESSION_CREDITS=40
+MANAGED_MUSIC_SESSION_CREDITS=120
+```
 
-Verify in:
+Notes:
 
-- [`capacitor.config.ts`](../capacitor.config.ts)
-- [`android/app/build.gradle`](../android/app/build.gradle)
+- `GEMINI_API_KEY` is the backend-managed Gemini key from Google AI Studio.
+- Keep the localhost origins. Android WebView requests go through localhost and will fail without them.
+- `REQUIRE_APPCHECK=false` is the safe default until web App Check is configured and verified.
+- Native localhost requests are intentionally exempted from backend App Check enforcement. That avoids breaking Android WebView traffic if web App Check is enabled later.
 
-Do not casually change the package ID after Play Console setup. In practice, that means a new app listing and a broken billing/test setup.
+## 7. Architecture Rules You Must Preserve
 
-### Billing product IDs
+### BYOK and managed must stay parallel
 
-The current paid theme IDs are:
+- If the user has a BYOK key, Gemini calls go direct from the client.
+- If the user has managed credits and no BYOK key, Gemini calls go through the backend.
+- The gate should not force one mode to overwrite the other.
 
-* theme_ocean_blue
-* theme_sunset_gold
-* theme_dark_neon
-* theme_scholar
-* theme_pure_light
-* theme_obsidian
-* theme_forest
-* theme_lavender
-* theme_spectrum
-* theme_graphite
+### Managed backend is a Gemini request proxy, not a second app-specific API
 
+The frontend now builds Gemini-shaped requests and sends the same `model`, `contents`, and `config` structures to the backend. Do not reintroduce a custom parallel request contract for managed mode.
 
-They must match in both:
+### Theme purchases and managed credits are different product classes
 
-- [`src/features/theme/config/themeProducts.ts`](../src/features/theme/config/themeProducts.ts)
-- [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java)
+- Themes:
+  - permanent unlocks
+  - acknowledged
+  - restored from Play
+  - never consumed
+- Managed credits:
+  - one-time product
+  - verified server-side
+  - consumed after successful verification so the same SKU can be bought again
 
-Never rename an already released product ID. Create a new product instead.
+Do not collapse these two behaviors into one purchase flow.
 
-## 6. Create or verify the Play Console app
+### Managed storage is shared infrastructure
 
-This is one-time per app, not per developer machine.
+The managed backend uses one backend Gemini key for all users. Because of that:
 
-### Create the app entry
+- file ownership must stay user-scoped
+- purchase verification must stay server-side
+- reservations must stay recoverable
 
-1. Sign in to Google Play Console.
-2. Create an app if one does not already exist.
-3. Make sure the app is for the same package ID used by this repo: `com.ronitervo.maestrotutor`.
-4. Accept Play App Signing during app creation or first release setup.
-5. Fill in the base store listing details.
+The current implementation already enforces those guardrails. Do not remove them.
 
-The Play Console UI changes over time. If the left-nav labels move, use the Play Console search bar instead of guessing the menu path.
+## 8. Firebase Setup
 
-### Upload a first build to establish the app
+Create or reuse the Firebase project that will host auth, Firestore, and functions.
 
-Build an app bundle:
+### Firebase console setup
+
+1. Enable `Authentication -> Google`.
+2. Create Firestore.
+3. Upgrade the project to Blaze.
+4. Add allowed auth domains at least for:
+   - `chatwithmaestro.com`
+   - `chatwithmaestro.web.app`
+   - `localhost`
+5. Add a web app and copy the Firebase web config into root `.env`.
+6. Add an Android app with package id `com.ronitervo.maestrotutor`.
+7. Download `google-services.json` and place it at:
+
+```text
+android/app/google-services.json
+```
+
+### Android SHA fingerprints
+
+Firebase Google sign-in requires both debug and release SHA fingerprints on the Android Firebase app.
+
+Get the debug SHA-1:
+
+```bash
+keytool -list -v -keystore "%USERPROFILE%\.android\debug.keystore" -alias androiddebugkey -storepass android
+```
+
+Get the release/upload SHA-1 from your upload keystore:
+
+```bash
+keytool -list -v -keystore <your-upload-keystore>.jks -alias <your-alias>
+```
+
+After adding new SHA fingerprints in Firebase Console, re-download `android/app/google-services.json`.
+
+## 9. Firebase App Check
+
+Current intended production default:
+
+- backend env: `REQUIRE_APPCHECK=false`
+- frontend env: App Check values empty
+
+If you later enable web App Check:
+
+1. Configure App Check in Firebase Console for the web app.
+2. Set `VITE_FIREBASE_APPCHECK_SITE_KEY`.
+3. Optionally set `VITE_FIREBASE_APPCHECK_DEBUG_TOKEN` for development.
+4. Set `REQUIRE_APPCHECK=true` only after web traffic is confirmed working.
+
+What is already implemented:
+
+- web frontend will attach `X-Firebase-AppCheck` automatically when configured
+- backend verifies the token when enforcement is enabled
+- localhost origins are exempted so Android WebView traffic does not hard-break
+
+What is not implemented:
+
+- native device attestation for Android WebView traffic
+
+So do not claim full native App Check coverage yet.
+
+## 10. Backend Deployment
+
+Login and select the right project:
+
+```bash
+firebase login
+firebase use --add
+```
+
+Deploy the backend:
+
+```bash
+firebase deploy --only functions,firestore:rules,firestore:indexes
+```
+
+Health check:
+
+```text
+GET https://<region>-<project-id>.cloudfunctions.net/api/health
+```
+
+Expected backend surface:
+
+- `GET /health`
+- `GET /auth/session`
+- `GET /account/summary`
+- `GET /account/usage-ledger`
+- `GET /account/billing-ledger`
+- `POST /billing/google-play/verify`
+- `POST /gemini/generate-content`
+- `POST /gemini/generate-content-stream`
+- `POST /gemini/upload-media`
+- `POST /gemini/file-statuses`
+- `POST /gemini/delete-file`
+- `POST /gemini/clear-files`
+- `POST /gemini/live-token`
+
+Important Firestore collections created by the backend:
+
+- `users/{uid}/account/summary`
+- `users/{uid}/billingLedger/{entryId}`
+- `users/{uid}/usageLedger/{entryId}`
+- `users/{uid}/entitlements/{entitlementId}`
+- `googlePlayPurchases/{purchaseToken}`
+- `managedReservations/{reservationId}`
+- `managedFiles/{fileId}`
+
+## 11. Google Play Purchase Verification Setup
+
+The backend uses Application Default Credentials on Firebase Functions. It does not load a local JSON key file.
+
+That means purchase verification will only work if the service account used by the deployed backend has Play Developer API access.
+
+### What to do
+
+1. Deploy the backend once.
+2. In Google Cloud Console, identify the service account used by the deployed `api` function.
+3. In Play Console `API access` / `Users and permissions`, link that service account.
+4. Grant it app access for `com.ronitervo.maestrotutor`.
+5. Give it the permissions needed to read one-time product purchases.
+
+If the wrong service account is linked, `/billing/google-play/verify` will fail even though the app build itself is fine.
+
+## 12. Google Play Console Setup
+
+### App entry
+
+Use or create the Play app for:
+
+```text
+com.ronitervo.maestrotutor
+```
+
+### Billing catalog
+
+This release has two billing families:
+
+#### Existing themes
+
+- Keep the existing theme SKUs exactly as defined in:
+  - `src/features/theme/config/themeProducts.ts`
+  - `android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java`
+- These remain permanent non-consumable unlocks.
+
+#### Managed credits
+
+Create exactly one Play one-time product for this release:
+
+| Product ID | Purpose | Credit grant |
+| --- | --- | --- |
+| `maestro_credits_1000` | Managed Maestro credits | `1000` |
+
+Important:
+
+- Do not rename the SKU after release.
+- Do not create subscriptions for this flow.
+- Do not convert theme SKUs into consumables.
+- The app consumes the managed credit purchase after backend verification, so users can rebuy the same SKU.
+
+## 13. Android Signing
+
+Release builds require `android/keystore.properties`.
+
+Create the upload keystore if it does not already exist:
 
 ```bash
 cd android
-./gradlew bundleRelease
+keytool -genkeypair -v -keystore release-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+cd ..
+```
+
+Create:
+
+```bash
+copy android\keystore.properties.example android\keystore.properties
+```
+
+Fill it with the real keystore path and passwords. Never commit the keystore or `android/keystore.properties`.
+
+## 14. Local Android Build Flow
+
+Build and sync Android:
+
+```bash
+npm run build:android
+```
+
+Open Android Studio if needed:
+
+```bash
+npm run cap:open:android
+```
+
+Build the release bundle:
+
+```bash
+npm run build:aab
 ```
 
 Output:
@@ -219,242 +446,12 @@ Output:
 android/app/build/outputs/bundle/release/app-release.aab
 ```
 
-Upload that `.aab` to an internal testing track first, not straight to production.
-
-### Store listing and policy basics
-
-Before review, make sure the following are filled in:
-
-- app title
-- short description
-- full description
-- screenshots
-- app icon
-- support email
-- privacy policy URL
-
-This repo already contains a privacy policy page at [`public/privacy.html`](../public/privacy.html), but Play Console needs a hosted public URL, not just the file in the repo. 
-
-Run "npm run deploy" to host on github pages and make sure the custom domain stays set at https://chatwithmaestro.com on github pages so that /privacy.html can be accessed alongside the /gemini-models.json both of those must exist in the custom deployment https://chatwithmaestro.com so that a. User in the app can open the privacy policy and b. The app can fetch the latest models from the json.
-
-## 7. App review setup for the Gemini API key gate
-
-This app is BYOK. Reviewers cannot use the app if they do not have a Gemini API key.
-
-That means app review setup is mandatory outside code.
-
-### What to do
-
-1. Generate a temporary Gemini API key for Google Play reviewers.
-2. In Play Console, open `Policy and programs > App content > App access`.
-3. Explain that the app requires a user-provided Gemini API key.
-4. Provide the temporary review key and exact steps to enter it.
-5. After approval, revoke that temporary key if you do not want to keep it active.
-
-Suggested wording:
-
-```text
-This app requires a Google Gemini API key before the main functionality is usable.
-For review, use this temporary test key: <paste key here>.
-Open the app, paste the key into the first screen, and continue.
-```
-
-If this is skipped, review can fail even when the app itself is technically fine.
-
-## 8. Data Safety and policy maintenance
-
-You must keep Play Console policy answers aligned with the current app behavior.
-
-At minimum, verify:
-
-- privacy policy URL is live
-- Data Safety answers still match the app
-- app access instructions still work
-- screenshots still match the app
-- store listing does not claim features that no longer exist
-
-Treat this as maintenance work, not one-time paperwork.
-
-## 9. Set up Google Play Billing for premium themes
-
-This repo already contains the in-app billing code. What code cannot do for you is create the Play-side catalog.
-
-### Understand the current billing model
-
-The premium themes are designed as:
-
-- Android-only Google Play purchases
-- one-time purchases
-- permanent unlocks
-- non-consumable entitlements
-
-This is visible from the code:
-
-- Java side queries `BillingClient.ProductType.INAPP`
-- purchases are acknowledged
-- purchases are restored on app launch
-- there is no consume flow
-
-Relevant files:
-
-- [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java)
-- [`src/features/theme/components/ThemeStorePanel.tsx`](../src/features/theme/components/ThemeStorePanel.tsx)
-
-### Create the products in Play Console
-
-For each product ID below, create a one-time product in Play Console:
-
-| Product ID | Display name in app |
-| --- | --- |
-| `theme_ocean_blue` | Ocean Blue |
-| `theme_sunset_gold` | Sunset Gold |
-| `theme_dark_neon` | Dark Neon |
-| `theme_scholar` | Scholar |
-| `theme_pure_light` | Pure Light |
-| `theme_obsidian` | Obsidian |
-| `theme_forest` | Forest |
-| `theme_lavender` | Lavender |
-| `theme_spectrum` | Spectrum |
-| `theme_graphite` | Graphite |
-
-### Recommended setup for each product
-
-1. Create a one-time product with the exact product ID.
-2. Set a clear title and description.
-3. Configure a normal buy purchase option.
-4. Set pricing.
-5. Activate the product so it is available to testers.
-
-Keep the catalog simple unless the code is updated:
-
-- use permanent theme unlocks
-- do not make these consumables
-- do not rely on multiple offers or complex purchase-option logic
-- do not introduce rent-style behavior
-
-Reason: the current app code expects one permanent entitlement per product and a straightforward product-details response.
-
-### Important product-ID rule
-
-Product IDs in Play Console must exactly match the IDs in code.
-
-If Play Console has `theme-ocean-blue` but the app requests `theme_ocean_blue`, the store will not return that product.
-
-## 10. Map purchased products to real theme presets
-
-Billing alone does not define the colors that users receive. The app also needs a preset mapping.
-
-Current mapping file:
-
-- [`src/features/theme/config/purchasableThemePresets.ts`](../src/features/theme/config/purchasableThemePresets.ts)
-
-Current behavior:
-
-- the user sees one `Theme Store` entry in Quick Themes
-- bought themes appear in Quick Themes after purchase
-- users do not see every locked paid theme all the time
-
-If you add a new paid theme and forget this mapping file, the purchase may succeed but the theme will not appear as a usable preset.
-
-## 11. Set up testing for billing
-
-This is where most first-time billing integrations fail.
-
-### Use internal testing and license testers
-
-You should set up both:
-
-- an internal testing track
-- license testers
-
-Why both:
-
-- internal testing lets testers install the app from Google Play
-- license testers can use Play test payment methods and can even test sideloaded builds
-
-### Internal testing setup
-
-1. In Play Console, create or open the internal testing track.
-2. Upload a new `.aab`.
-3. Add tester email addresses.
-4. Share the opt-in URL with those testers.
-5. Wait for Play propagation. It can take time.
-
-Important:
-
-- purchases on test tracks can be real charges unless the tester is also a license tester
-- tester accounts must actually opt in
-
-### License tester setup
-
-In Play Console, find the global license testing settings and add the Gmail addresses used for billing tests.
-
-If the menu path has moved, use the Play Console search bar and search for `License testing`.
-
-Why license testers matter:
-
-- they can test sideloaded builds
-- they see Play test payment methods
-- they avoid real charges for standard billing tests
-
-### Optional but useful: Play Billing Lab
-
-Install Google Play Billing Lab on the test device if you need to simulate more billing scenarios, regions, or response codes.
-
-This is optional for basic theme-purchase testing, but useful for serious QA.
-
-## 12. How to test the premium theme purchase flow
-
-Do not assume that building the app means billing is working.
-
-### Recommended test path
-
-1. Make sure the tester Gmail is:
-   - added to the internal test track
-   - added as a license tester
-2. Install the app either:
-   - from the Play internal testing link, or
-   - as a sideloaded APK while using a license tester account
-3. On the device, sign in to the Play Store with the tester account.
-4. Open the app.
-5. Enter a Gemini API key so the app is usable.
-6. Open `Paint Colors`.
-7. Tap `Theme Store`.
-8. Verify product titles and prices appear.
-9. Buy one product using the Play test payment method.
-10. Verify the bought theme appears in Quick Themes.
-11. Apply it and confirm the UI changes.
-12. Reopen the app and confirm the theme is still owned.
-13. Use `Restore Purchases` in the store panel and confirm ownership still resolves correctly.
-
-### Extra cases you should test
-
-- user cancels purchase
-- payment declines
-- pending payment finishes later
-- reinstall app and restore purchases
-- product already owned
-
-The current code acknowledges purchases and restores them on app launch, so those behaviors should always be validated after billing changes.
-
-## 13. Build and release workflow for Android
-
-### Development build
+For local release smoke testing:
 
 ```bash
-npm run build
-npx cap sync android
 cd android
-./gradlew assembleDebug
-```
-
-### Release APK for device smoke testing
-
-```bash
-npm run build
-npx cap sync android
-cd android
-./gradlew assembleRelease
+.\gradlew assembleRelease
+cd ..
 ```
 
 APK output:
@@ -463,128 +460,201 @@ APK output:
 android/app/build/outputs/apk/release/app-release.apk
 ```
 
-Use this to smoke-test the release build before uploading an `.aab`.
+## 15. Managed Smoke Test Matrix
 
-### Release AAB for Play Console
+Use a real Android device and an internal testing install from Google Play.
 
-```bash
-npm run build
-npx cap sync android
-cd android
-./gradlew bundleRelease
-```
+### BYOK regression
 
-AAB output:
+1. Fresh install.
+2. Enter a Gemini API key.
+3. Verify ordinary text chat still works.
+4. Verify image generation still works.
+5. Verify live mode still works.
+6. Verify existing theme store still works.
+
+### Managed access
+
+1. Fresh install with no BYOK key.
+2. Open the gate and sign in with Google.
+3. Verify the managed panel shows signed-in user info.
+4. Verify the `maestro_credits_1000` product loads with price.
+5. Buy the product.
+6. Verify backend credit grant happens.
+7. Verify the purchase is consumed and the same SKU can be bought again later.
+8. Kill and reopen the app.
+9. Verify managed session restores.
+10. Run a managed text request.
+11. Run a managed streaming text request.
+12. Run a managed translation request.
+13. Run a managed image generation request.
+14. Verify credit deductions appear in billing summary and ledgers.
+15. Trigger `Restore purchases` and verify nothing double-grants.
+
+### Theme regression after managed changes
+
+1. Buy an existing theme SKU.
+2. Verify it stays permanently unlocked.
+3. Verify restore still resolves ownership.
+4. Verify theme SKUs were not consumed.
+
+### Failure-path checks
+
+1. Cancel a Play purchase.
+2. Try a pending purchase flow if available.
+3. Verify failed managed requests release or later recover reserved credits.
+4. Verify debug-panel "clear uploads" only clears the current managed user's uploads.
+
+## 16. Play Internal Testing and License Testers
+
+Set up both:
+
+- internal testing track
+- license testers
+
+Why:
+
+- internal testing gives the real Play installation path
+- license testers give Play test payment methods
+
+Do not trust sideload-only billing tests for the final release decision.
+
+## 17. Play Review and Store Listing
+
+This app still supports BYOK and can still be gated on first launch if the reviewer has no managed credits.
+
+For review, the safest path is still to provide a temporary BYOK Gemini API key in Play Console `App access`.
+
+Suggested review text:
 
 ```text
-android/app/build/outputs/bundle/release/app-release.aab
+This app supports two modes:
+1. Bring-your-own Gemini API key
+2. Managed sign-in plus Google Play credit purchases
+
+For Play review, use this temporary Gemini API key to get through the access gate immediately:
+<paste temporary key here>
+
+Android managed purchases are also available in the signed-in managed access panel.
 ```
 
-Upload the `.aab` to the correct Play track.
+Keep Play Console metadata aligned with the current app behavior:
 
-## 14. What must be updated for every Android release
+- Firebase Google sign-in exists
+- server-side Gemini requests exist in managed mode
+- Firestore billing and usage ledgers exist
+- Google Play purchase verification exists
+- BYOK still exists
 
-Before each uploaded release:
+If privacy or data handling changes, update:
 
-1. Bump `versionCode` in [`android/app/build.gradle`](../android/app/build.gradle).
-2. Update `versionName` in the same file.
-3. Run:
+- Play Data Safety
+- hosted privacy policy
+- app access instructions
+
+## 18. Static Site Deployment
+
+If you change either of these files:
+
+- `public/privacy.html`
+- `public/gemini-models.json`
+
+redeploy the static site:
 
 ```bash
-npm run build
-npx cap sync android
-cd android
-./gradlew assembleRelease
-./gradlew bundleRelease
+npm run deploy
 ```
 
-4. Test the release APK on a real device.
-5. Upload the AAB to Play Console.
-6. Update release notes in Play Console if needed.
+Then verify:
 
-Never skip the release APK smoke test. Debug working is not enough.
+- `https://chatwithmaestro.com/privacy.html`
+- `https://chatwithmaestro.com/gemini-models.json`
 
-## 15. What must be updated when adding a new paid theme
+## 19. Maintenance Rules
 
-If you add another premium theme, update all of these together:
+- Do not change the package id casually.
+- Do not rename released Play product ids.
+- Do not remove localhost origins from `functions/.env`.
+- Do not replace server-side Play verification with client-side trust.
+- Do not remove reservation sweeping.
+- Do not make managed file deletion global.
+- Do not regress BYOK behavior while working on managed mode.
 
-1. Add the TypeScript product ID and store metadata in [`src/features/theme/config/themeProducts.ts`](../src/features/theme/config/themeProducts.ts).
-2. Add the Java product ID in [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java).
-3. Add the actual preset colors in [`src/features/theme/config/purchasableThemePresets.ts`](../src/features/theme/config/purchasableThemePresets.ts).
-4. Create the matching one-time product in Play Console.
-5. Price and activate it in Play Console.
-6. Test it with a license tester account.
+## 20. Troubleshooting
 
-If you miss one of those steps, the feature is incomplete.
-
-## 16. What must be reviewed when billing or policy behavior changes
-
-If you change app behavior in ways users or reviewers care about, update the external setup too.
-
-Examples:
-
-- If the onboarding or key gate changes, update app-access instructions in Play Console.
-- If privacy or data handling changes, update the privacy policy and Data Safety answers.
-- If product names or prices change, update Play Console catalog details.
-- If the package ID changes, expect a new Play app setup, not a simple code patch.
-- If the keystore changes, treat it as a release-management event and coordinate carefully.
-
-## 17. Troubleshooting
-
-### Store opens but no prices or products appear
+### Managed sign-in fails on Android
 
 Check:
 
-- products exist in Play Console
-- product IDs match code exactly
-- products are active
-- enough time has passed for Play propagation
-- tester is using the right Google account
-- app package ID matches the Play Console app
+- Firebase Google provider is enabled
+- debug SHA-1 is added
+- release SHA-1 is added
+- `android/app/google-services.json` is current
+- Firebase config values are filled in `.env`
 
-### Purchase dialog never opens in a locally installed APK
-
-Check:
-
-- the tester account is a license tester
-- the device Play Store account matches the tester account
-- the Play Console app uses package `com.ronitervo.maestrotutor`
-
-### Release build fails with `Missing keystore.properties`
-
-Create:
-
-- `android/keystore.properties`
-
-using:
-
-- [`android/keystore.properties.example`](../android/keystore.properties.example)
-
-### Theme was bought but does not appear in Quick Themes
+### Product price or product title does not load
 
 Check:
 
-- purchase succeeded and was acknowledged
-- product ID exists in `ThemeProducts.java`
-- product ID exists in `themeProducts.ts`
-- product is mapped in `purchasableThemePresets.ts`
+- Play app package id matches `com.ronitervo.maestrotutor`
+- SKU is active in Play Console
+- tester is installed through Play or is a license tester
+- `VITE_MANAGED_BILLING_PRODUCT_IDS` includes `maestro_credits_1000`
 
-## 18. Safe defaults for new developers
+### Purchase succeeds but credits do not appear
 
-- Do not commit secrets.
-- Do not change published product IDs.
-- Do not change the package ID casually.
-- Do not release without testing `assembleRelease`.
-- Do not assume Play Console metadata stays correct forever.
-- Do not assume a sideloaded APK is enough proof that billing works for real users.
+Check:
 
-## 19. External references
+- backend was deployed
+- backend service account has Play API access
+- `GOOGLE_PLAY_PACKAGE_NAME` matches the app
+- `MANAGED_CREDIT_PRODUCTS=maestro_credits_1000:1000`
+- purchase token is not already linked to another user
 
-These official docs were useful when writing this guide. They can change, so prefer searching the current official page if a menu label has moved.
+### User cannot rebuy the credit pack
 
-- Google Play Console app setup: https://support.google.com/googleplay/android-developer/answer/9859152
-- Google Play app review preparation and App access: https://support.google.com/googleplay/android-developer/answer/9859455
-- Google Play requirements for app-access credentials: https://support.google.com/googleplay/android-developer/answer/15748846
-- Google Play Billing testing: https://developer.android.com/google/play/billing/billing_testing
-- Google Play one-time products: https://developer.android.com/google/play/billing/one-time-products
-- Google Play billing overview: https://developer.android.com/google/play/billing/
+Check:
+
+- backend verification succeeded
+- the app consumed the purchase after verification
+- the managed purchase is not being treated like a theme SKU
+
+### Credits stay stuck in reserved state
+
+Check:
+
+- scheduled function `releaseExpiredReservations` deployed successfully
+- `RESERVATION_TTL_MINUTES` is sane
+- the backend has permission to write Firestore
+
+### Android backend calls fail with CORS
+
+Check:
+
+- `functions/.env` keeps:
+  - `http://localhost`
+  - `https://localhost`
+  - `capacitor://localhost`
+  in `ALLOWED_ORIGINS`
+
+## 21. Final Pre-Release Checklist
+
+Before promoting any build beyond internal testing, all of these should be true:
+
+- `.env` is filled correctly
+- `functions/.env` is filled correctly
+- `android/app/google-services.json` exists
+- `android/keystore.properties` exists
+- upload keystore is available
+- Firebase Google sign-in works
+- Firestore exists
+- Blaze is enabled
+- backend deploy succeeded
+- backend service account has Play API access
+- Play credit SKU is active
+- internal purchase verification works
+- credit pack can be rebought
+- theme purchases still behave as permanent unlocks
+- BYOK still behaves as before
+- privacy policy URL is live
+- `gemini-models.json` is live on the public site

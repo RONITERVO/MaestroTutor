@@ -6,7 +6,10 @@ package com.ronitervo.maestrotutor;
 import android.app.Activity;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.Purchase;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -14,27 +17,15 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Capacitor plugin that exposes {@link ThemeBillingManager} to the JavaScript layer.
+ * Capacitor plugin that exposes ThemeBillingManager to JavaScript.
  *
- * <h3>Exposed methods (callable from TypeScript via {@code Capacitor.Plugins.ThemeBilling}):</h3>
- * <ul>
- *   <li>{@code startConnection()} – Initialise the billing client and restore purchases.</li>
- *   <li>{@code getProductDetails()} – Return available theme product details (id, title, price).</li>
- *   <li>{@code purchaseTheme({ productId })} – Launch the billing flow for a theme.</li>
- *   <li>{@code restorePurchases()} – Re-query Google Play and refresh the local cache.</li>
- *   <li>{@code isThemeOwned({ productId })} – Check the local cache for a specific theme.</li>
- *   <li>{@code getOwnedThemes()} – Return all locally cached owned theme IDs.</li>
- * </ul>
- *
- * <h3>Emitted events (received via {@code addListener} in TypeScript):</h3>
- * <ul>
- *   <li>{@code purchasesUpdated} – Fired whenever owned themes change; payload: {@code { ownedProductIds: string[] }}.</li>
- *   <li>{@code billingError} – Fired on billing errors; payload: {@code { responseCode: number, debugMessage: string }}.</li>
- *   <li>{@code productDetailsAvailable} – Fired when product details are ready.</li>
- * </ul>
+ * <p>The native implementation remains backward compatible with the existing
+ * theme store while also surfacing generic purchase records for managed
+ * consumable products.
  */
 @CapacitorPlugin(name = "ThemeBilling")
 public class ThemeBillingPlugin extends Plugin {
@@ -43,28 +34,24 @@ public class ThemeBillingPlugin extends Plugin {
 
     private ThemeBillingManager billingManager;
 
-    // ------------------------------------------------------------------ //
-    //  Plugin lifecycle                                                     //
-    // ------------------------------------------------------------------ //
-
     @Override
     public void load() {
         billingManager = new ThemeBillingManager(getContext());
 
-        billingManager.setOnPurchasesUpdatedCallback(ownedProductIds -> {
+        billingManager.setOnPurchasesUpdatedCallback((ownedProductIds, purchases) -> {
             JSObject data = new JSObject();
-            JSArray arr = new JSArray();
-            for (String id : ownedProductIds) {
-                arr.put(id);
+            JSArray ownedIds = new JSArray();
+            for (String productId : ownedProductIds) {
+                ownedIds.put(productId);
             }
-            data.put("ownedProductIds", arr);
+            data.put("ownedProductIds", ownedIds);
+            data.put("purchases", purchasesToJson(purchases));
             notifyListeners("purchasesUpdated", data);
         });
 
         billingManager.setOnProductDetailsCallback(productDetailsList -> {
             JSObject data = new JSObject();
-            JSArray arr = productDetailsToJson(productDetailsList);
-            data.put("products", arr);
+            data.put("products", productDetailsToJson(productDetailsList));
             notifyListeners("productDetailsAvailable", data);
         });
 
@@ -75,7 +62,6 @@ public class ThemeBillingPlugin extends Plugin {
             notifyListeners("billingError", data);
         });
 
-        // Eagerly connect so purchases are restored as soon as the plugin loads.
         billingManager.startConnection();
     }
 
@@ -87,36 +73,18 @@ public class ThemeBillingPlugin extends Plugin {
         super.handleOnDestroy();
     }
 
-    // ------------------------------------------------------------------ //
-    //  Plugin methods                                                       //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Initialises the billing client. Safe to call multiple times.
-     * Automatically triggers purchase restoration on successful connection.
-     */
     @PluginMethod
     public void startConnection(PluginCall call) {
         billingManager.startConnection();
         call.resolve();
     }
 
-    /**
-     * Returns cached product details as a JSON array.
-     * If the cache is empty, triggers an async query; results arrive via the
-     * {@code productDetailsAvailable} event.
-     */
     @PluginMethod
     public void getProductDetails(PluginCall call) {
-        billingManager.queryProductDetails();
+        billingManager.queryProductDetails(readProductIds(call));
         call.resolve();
     }
 
-    /**
-     * Launches the Google Play purchase sheet for the given theme product.
-     *
-     * <p>Expected call data: {@code { productId: string }}
-     */
     @PluginMethod
     public void purchaseTheme(PluginCall call) {
         String productId = call.getString("productId");
@@ -135,22 +103,32 @@ public class ThemeBillingPlugin extends Plugin {
         call.resolve();
     }
 
-    /**
-     * Re-queries Google Play for all owned purchases and rebuilds the local cache.
-     * Results arrive via the {@code purchasesUpdated} event.
-     */
     @PluginMethod
     public void restorePurchases(PluginCall call) {
         billingManager.restorePurchases();
         call.resolve();
     }
 
-    /**
-     * Checks whether a specific theme is owned according to the local cache.
-     *
-     * <p>Expected call data: {@code { productId: string }}
-     * <p>Returns: {@code { owned: boolean }}
-     */
+    @PluginMethod
+    public void consumePurchase(PluginCall call) {
+        String purchaseToken = call.getString("purchaseToken");
+        if (purchaseToken == null || purchaseToken.isEmpty()) {
+            call.reject("purchaseToken is required");
+            return;
+        }
+
+        billingManager.consumePurchase(purchaseToken, (success, responseCode, debugMessage) -> {
+            if (success) {
+                call.resolve();
+                return;
+            }
+            call.reject(
+                    debugMessage != null && !debugMessage.isEmpty() ? debugMessage : "Consume failed",
+                    String.valueOf(responseCode)
+            );
+        });
+    }
+
     @PluginMethod
     public void isThemeOwned(PluginCall call) {
         String productId = call.getString("productId");
@@ -158,56 +136,124 @@ public class ThemeBillingPlugin extends Plugin {
             call.reject("productId is required");
             return;
         }
+
         JSObject result = new JSObject();
         result.put("owned", billingManager.isThemeOwned(productId));
         call.resolve(result);
     }
 
-    /**
-     * Returns all theme product IDs that are owned according to the local cache.
-     *
-     * <p>Returns: {@code { ownedProductIds: string[] }}
-     */
     @PluginMethod
     public void getOwnedThemes(PluginCall call) {
-        JSArray arr = new JSArray();
-        for (String productId : ThemeProducts.ALL_PRODUCT_IDS) {
-            if (billingManager.isThemeOwned(productId)) {
-                arr.put(productId);
-            }
-        }
-        JSObject result = new JSObject();
-        result.put("ownedProductIds", arr);
-        call.resolve(result);
+        call.resolve(buildOwnedPurchasesResult());
     }
 
-    // ------------------------------------------------------------------ //
-    //  Private helpers                                                      //
-    // ------------------------------------------------------------------ //
+    @PluginMethod
+    public void getOwnedPurchases(PluginCall call) {
+        call.resolve(buildOwnedPurchasesResult());
+    }
 
-    private JSArray productDetailsToJson(List<ProductDetails> products) {
-        JSArray arr = new JSArray();
-        if (products == null) return arr;
-        for (ProductDetails pd : products) {
-            JSObject obj = new JSObject();
-            obj.put("productId", pd.getProductId());
-            obj.put("title", pd.getTitle());
-            obj.put("description", pd.getDescription());
+    @NonNull
+    private JSObject buildOwnedPurchasesResult() {
+        JSArray ownedIds = new JSArray();
+        for (String productId : billingManager.getOwnedProductIds()) {
+            ownedIds.put(productId);
+        }
 
-            // One-time purchase offer details
-            ProductDetails.OneTimePurchaseOfferDetails offerDetails =
-                    pd.getOneTimePurchaseOfferDetails();
-            if (offerDetails != null) {
-                obj.put("formattedPrice", offerDetails.getFormattedPrice());
-                obj.put("priceAmountMicros", offerDetails.getPriceAmountMicros());
-                obj.put("priceCurrencyCode", offerDetails.getPriceCurrencyCode());
-            }
-            try {
-                arr.put(obj);
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to add product to JSON array", e);
+        JSObject result = new JSObject();
+        result.put("ownedProductIds", ownedIds);
+        result.put("purchases", purchasesToJson(billingManager.getLatestPurchases()));
+        return result;
+    }
+
+    @NonNull
+    private List<String> readProductIds(PluginCall call) {
+        JSArray rawProductIds = call.getArray("productIds");
+        if (rawProductIds == null || rawProductIds.length() == 0) {
+            return ThemeProducts.ALL_PRODUCT_IDS;
+        }
+
+        List<String> productIds = new ArrayList<>();
+        for (int index = 0; index < rawProductIds.length(); index++) {
+            String productId = rawProductIds.optString(index, "");
+            if (productId != null && !productId.isEmpty()) {
+                productIds.add(productId);
             }
         }
-        return arr;
+
+        if (productIds.isEmpty()) {
+            return ThemeProducts.ALL_PRODUCT_IDS;
+        }
+
+        return productIds;
+    }
+
+    private JSArray productDetailsToJson(List<ProductDetails> products) {
+        JSArray array = new JSArray();
+        if (products == null) return array;
+
+        for (ProductDetails productDetails : products) {
+            JSObject object = new JSObject();
+            object.put("productId", productDetails.getProductId());
+            object.put("title", productDetails.getTitle());
+            object.put("description", productDetails.getDescription());
+
+            ProductDetails.OneTimePurchaseOfferDetails offerDetails =
+                    productDetails.getOneTimePurchaseOfferDetails();
+            if (offerDetails != null) {
+                object.put("formattedPrice", offerDetails.getFormattedPrice());
+                object.put("priceAmountMicros", offerDetails.getPriceAmountMicros());
+                object.put("priceCurrencyCode", offerDetails.getPriceCurrencyCode());
+            }
+
+            try {
+                array.put(object);
+            } catch (Exception exception) {
+                Log.w(TAG, "Failed to add product to JSON array", exception);
+            }
+        }
+
+        return array;
+    }
+
+    private JSArray purchasesToJson(List<Purchase> purchases) {
+        JSArray array = new JSArray();
+        if (purchases == null) return array;
+
+        for (Purchase purchase : purchases) {
+            List<String> productIds = purchase.getProducts();
+            if (productIds == null || productIds.isEmpty()) {
+                continue;
+            }
+
+            for (String productId : productIds) {
+                JSObject object = new JSObject();
+                object.put("productId", productId);
+                object.put("purchaseToken", purchase.getPurchaseToken());
+                object.put("packageName", getContext() != null ? getContext().getPackageName() : "");
+                object.put("orderId", purchase.getOrderId());
+                object.put("purchaseTime", purchase.getPurchaseTime());
+                object.put("purchaseState", purchaseStateToString(purchase.getPurchaseState()));
+                object.put("acknowledged", purchase.isAcknowledged());
+
+                try {
+                    array.put(object);
+                } catch (Exception exception) {
+                    Log.w(TAG, "Failed to add purchase to JSON array", exception);
+                }
+            }
+        }
+
+        return array;
+    }
+
+    @NonNull
+    private String purchaseStateToString(int purchaseState) {
+        if (purchaseState == Purchase.PurchaseState.PURCHASED) {
+            return "purchased";
+        }
+        if (purchaseState == Purchase.PurchaseState.PENDING) {
+            return "pending";
+        }
+        return "unspecified";
     }
 }

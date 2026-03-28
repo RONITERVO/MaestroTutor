@@ -16,6 +16,7 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
@@ -25,77 +26,59 @@ import com.android.billingclient.api.QueryPurchasesParams;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Manages the full Google Play Billing lifecycle for color theme in-app purchases.
+ * Google Play Billing manager used by the Capacitor ThemeBilling plugin.
  *
- * <p>Responsibilities:
+ * <p>This manager preserves the existing theme unlock behavior while also
+ * supporting consumable managed-credit products:
  * <ul>
- *   <li>Initialize and maintain a {@link BillingClient} connection (with reconnection).</li>
- *   <li>Query available theme {@link ProductDetails} from Google Play.</li>
- *   <li>Launch the billing flow when the user wants to buy a theme.</li>
- *   <li>Handle {@link PurchasesUpdatedListener} callbacks (new purchases + errors).</li>
- *   <li>Acknowledge purchases so Google Play does not auto-refund after 3 days.</li>
- *   <li>Restore owned purchases on every app launch via {@link #restorePurchases()}.</li>
- *   <li>Cache ownership in {@link SharedPreferences} as a fast read-only hint; the cache
- *       is always overwritten by Google Play truth on restore.</li>
+ *   <li>Theme SKUs remain permanent non-consumables and are acknowledged.</li>
+ *   <li>Non-theme SKUs are treated as consumables and remain visible until
+ *       JavaScript verifies them server-side and calls {@link #consumePurchase}.</li>
  * </ul>
- *
- * <p>Usage: Instantiate in your Capacitor plugin, call {@link #startConnection()} once,
- * then use the remaining public methods as needed.
  */
 public class ThemeBillingManager {
 
     private static final String TAG = "ThemeBillingManager";
     private static final String PREFS_NAME = "theme_purchases";
 
-    // ------------------------------------------------------------------ //
-    //  Callbacks                                                           //
-    // ------------------------------------------------------------------ //
-
-    /** Called whenever the set of owned themes changes (purchase or restore). */
     public interface OnPurchasesUpdatedCallback {
-        void onPurchasesUpdated(List<String> ownedProductIds);
+        void onPurchasesUpdated(List<String> ownedProductIds, List<Purchase> purchases);
     }
 
-    /** Called with the product details list after a successful query. */
     public interface OnProductDetailsCallback {
         void onProductDetails(List<ProductDetails> productDetails);
     }
 
-    /** Called after a purchase or restore attempt with the result. */
     public interface OnBillingErrorCallback {
         void onBillingError(int responseCode, String debugMessage);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Fields                                                              //
-    // ------------------------------------------------------------------ //
+    public interface ConsumeCallback {
+        void onConsumeFinished(boolean success, int responseCode, String debugMessage);
+    }
 
     private final Context applicationContext;
     private BillingClient billingClient;
     private boolean isConnecting;
 
-    /** Cached product details indexed by productId. */
     private final Map<String, ProductDetails> productDetailsCache = new HashMap<>();
+    private final Map<String, Purchase> latestPurchasesByToken = new LinkedHashMap<>();
+    private final Set<String> pendingProductDetailsIds = new LinkedHashSet<>();
 
     @Nullable private OnPurchasesUpdatedCallback purchasesUpdatedCallback;
     @Nullable private OnProductDetailsCallback productDetailsCallback;
     @Nullable private OnBillingErrorCallback billingErrorCallback;
 
-    // ------------------------------------------------------------------ //
-    //  Constructor                                                          //
-    // ------------------------------------------------------------------ //
-
     public ThemeBillingManager(@NonNull Context context) {
         this.applicationContext = context.getApplicationContext();
     }
-
-    // ------------------------------------------------------------------ //
-    //  Callback setters                                                     //
-    // ------------------------------------------------------------------ //
 
     public void setOnPurchasesUpdatedCallback(@Nullable OnPurchasesUpdatedCallback cb) {
         this.purchasesUpdatedCallback = cb;
@@ -109,15 +92,6 @@ public class ThemeBillingManager {
         this.billingErrorCallback = cb;
     }
 
-    // ------------------------------------------------------------------ //
-    //  Connection lifecycle                                                 //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Builds the {@link BillingClient} and starts a connection to Google Play.
-     * On a successful connection, automatically restores existing purchases.
-     * Safe to call multiple times; if a client is already connected it no-ops.
-     */
     public void startConnection() {
         if (isConnecting || (billingClient != null && billingClient.isReady())) {
             return;
@@ -140,7 +114,13 @@ public class ThemeBillingManager {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     Log.d(TAG, "BillingClient connected.");
                     restorePurchases();
-                    queryProductDetails();
+                    if (pendingProductDetailsIds.isEmpty()) {
+                        queryProductDetails();
+                    } else {
+                        List<String> queuedProductIds = new ArrayList<>(pendingProductDetailsIds);
+                        pendingProductDetailsIds.clear();
+                        queryProductDetails(queuedProductIds);
+                    }
                 } else {
                     Log.w(TAG, "BillingClient setup failed: " + billingResult.getDebugMessage());
                     notifyError(billingResult);
@@ -151,13 +131,11 @@ public class ThemeBillingManager {
             public void onBillingServiceDisconnected() {
                 Log.w(TAG, "BillingClient disconnected. Will reconnect on next operation.");
                 isConnecting = false;
-                // Do NOT retry infinitely; reconnect lazily on next method call.
                 billingClient = null;
             }
         });
     }
 
-    /** Releases the billing client. Call from your plugin's {@code handleOnDestroy()}. */
     public void endConnection() {
         isConnecting = false;
         if (billingClient != null) {
@@ -166,19 +144,24 @@ public class ThemeBillingManager {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Product details                                                      //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Queries Google Play for {@link ProductDetails} of all theme products.
-     * Results are delivered to {@link #productDetailsCallback} and cached internally.
-     */
     public void queryProductDetails() {
-        if (!ensureConnected()) return;
+        queryProductDetails(ThemeProducts.ALL_PRODUCT_IDS);
+    }
+
+    public void queryProductDetails(@NonNull List<String> productIds) {
+        if (!ensureConnected()) {
+            pendingProductDetailsIds.addAll(productIds);
+            return;
+        }
+        if (productIds.isEmpty()) {
+            if (productDetailsCallback != null) {
+                productDetailsCallback.onProductDetails(new ArrayList<>());
+            }
+            return;
+        }
 
         List<QueryProductDetailsParams.Product> productList = new ArrayList<>();
-        for (String productId : ThemeProducts.ALL_PRODUCT_IDS) {
+        for (String productId : productIds) {
             productList.add(
                     QueryProductDetailsParams.Product.newBuilder()
                             .setProductId(productId)
@@ -197,28 +180,20 @@ public class ThemeBillingManager {
                 notifyError(billingResult);
                 return;
             }
+
             productDetailsCache.clear();
             if (productDetailsList != null) {
-                for (ProductDetails pd : productDetailsList) {
-                    productDetailsCache.put(pd.getProductId(), pd);
+                for (ProductDetails productDetails : productDetailsList) {
+                    productDetailsCache.put(productDetails.getProductId(), productDetails);
                 }
             }
+
             if (productDetailsCallback != null) {
                 productDetailsCallback.onProductDetails(new ArrayList<>(productDetailsCache.values()));
             }
         });
     }
 
-    // ------------------------------------------------------------------ //
-    //  Purchase flow                                                        //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Launches the Google Play purchase sheet for the given {@code productId}.
-     *
-     * @param activity   The foreground activity (required by Play Billing).
-     * @param productId  One of the IDs defined in {@link ThemeProducts}.
-     */
     public void launchBillingFlow(@NonNull Activity activity, @NonNull String productId) {
         if (!ensureConnected()) {
             notifyError(buildBillingResult(
@@ -230,7 +205,6 @@ public class ThemeBillingManager {
 
         ProductDetails productDetails = productDetailsCache.get(productId);
         if (productDetails == null) {
-            // Details not cached yet — re-query and retry.
             queryProductDetailsAndThen(activity, productId);
             return;
         }
@@ -240,7 +214,8 @@ public class ThemeBillingManager {
                         List.of(BillingFlowParams.ProductDetailsParams.newBuilder()
                                 .setProductDetails(productDetails)
                                 .build())
-                ).build();
+                )
+                .build();
 
         BillingResult result = billingClient.launchBillingFlow(activity, flowParams);
         if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
@@ -249,7 +224,6 @@ public class ThemeBillingManager {
         }
     }
 
-    /** Helper: query product details then immediately launch the billing flow. */
     private void queryProductDetailsAndThen(@NonNull Activity activity, @NonNull String productId) {
         if (!ensureConnected()) {
             notifyError(buildBillingResult(
@@ -265,30 +239,29 @@ public class ThemeBillingManager {
                         .setProductType(BillingClient.ProductType.INAPP)
                         .build()
         );
+
         billingClient.queryProductDetailsAsync(
                 QueryProductDetailsParams.newBuilder().setProductList(productList).build(),
                 (billingResult, productDetailsList) -> {
                     if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK
-                            || productDetailsList == null || productDetailsList.isEmpty()) {
+                            || productDetailsList == null
+                            || productDetailsList.isEmpty()) {
                         notifyError(billingResult);
                         return;
                     }
-                    ProductDetails pd = productDetailsList.get(0);
-                    productDetailsCache.put(pd.getProductId(), pd);
+
+                    ProductDetails productDetails = productDetailsList.get(0);
+                    productDetailsCache.put(productDetails.getProductId(), productDetails);
                     launchBillingFlow(activity, productId);
                 }
         );
     }
 
-    // ------------------------------------------------------------------ //
-    //  Purchases updated listener                                           //
-    // ------------------------------------------------------------------ //
-
     private final PurchasesUpdatedListener purchasesUpdatedListener = (billingResult, purchases) -> {
         int code = billingResult.getResponseCode();
         if (code == BillingClient.BillingResponseCode.OK && purchases != null) {
             for (Purchase purchase : purchases) {
-                handlePurchase(purchase);
+                handlePurchase(purchase, true);
             }
         } else if (code == BillingClient.BillingResponseCode.USER_CANCELED) {
             Log.d(TAG, "User cancelled purchase.");
@@ -299,30 +272,26 @@ public class ThemeBillingManager {
         }
     };
 
-    // ------------------------------------------------------------------ //
-    //  Handle / acknowledge purchase                                        //
-    // ------------------------------------------------------------------ //
+    private void handlePurchase(@NonNull Purchase purchase, boolean notify) {
+        latestPurchasesByToken.put(purchase.getPurchaseToken(), purchase);
 
-    /**
-     * Grants and acknowledges a purchase.
-     * Must be called for every purchase in {@link Purchase.PurchaseState#PURCHASED} state
-     * to prevent Google Play from automatically refunding after 3 days.
-     */
-    private void handlePurchase(@NonNull Purchase purchase) {
         if (purchase.getPurchaseState() != Purchase.PurchaseState.PURCHASED) {
-            // PENDING or UNSPECIFIED — do not unlock yet.
             Log.d(TAG, "Purchase pending for: " + purchase.getProducts());
-            notifyPurchasesUpdated();
+            if (notify) {
+                notifyPurchasesUpdated();
+            }
             return;
         }
 
-        // Unlock theme locally.
+        boolean hasThemePurchase = false;
         for (String productId : purchase.getProducts()) {
-            saveOwnedTheme(productId, true);
+            if (isThemeProduct(productId)) {
+                hasThemePurchase = true;
+                saveOwnedTheme(productId, true);
+            }
         }
 
-        // Acknowledge if not already acknowledged.
-        if (!purchase.isAcknowledged()) {
+        if (hasThemePurchase && !purchase.isAcknowledged()) {
             AcknowledgePurchaseParams ackParams = AcknowledgePurchaseParams.newBuilder()
                     .setPurchaseToken(purchase.getPurchaseToken())
                     .build();
@@ -335,19 +304,11 @@ public class ThemeBillingManager {
             });
         }
 
-        // Notify listeners about the updated set.
-        notifyPurchasesUpdated();
+        if (notify) {
+            notifyPurchasesUpdated();
+        }
     }
 
-    // ------------------------------------------------------------------ //
-    //  Restore purchases                                                    //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Queries Google Play for all currently owned (non-consumed) in-app purchases and
-     * rebuilds the local {@link SharedPreferences} cache. Always call this on app launch
-     * so the cache reflects the authoritative Google Play state.
-     */
     public void restorePurchases() {
         if (!ensureConnected()) return;
 
@@ -362,31 +323,69 @@ public class ThemeBillingManager {
                 return;
             }
 
-            // Reset all theme flags before re-applying from Play truth.
             clearAllOwnedThemes();
+            latestPurchasesByToken.clear();
 
             if (purchases != null) {
                 for (Purchase purchase : purchases) {
-                    handlePurchase(purchase);
+                    handlePurchase(purchase, false);
                 }
             }
 
-            // Notify even if list is empty (so UI can show "buy" buttons).
             notifyPurchasesUpdated();
         });
     }
 
-    // ------------------------------------------------------------------ //
-    //  SharedPreferences helpers (cache only — never sole source of truth)  //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Returns {@code true} if the local cache indicates the theme is owned.
-     * <strong>Do not rely on this alone</strong> — always call {@link #restorePurchases()}
-     * on app launch to keep the cache in sync with Google Play.
-     */
     public boolean isThemeOwned(@NonNull String productId) {
         return getPrefs().getBoolean(productId, false);
+    }
+
+    @NonNull
+    public List<String> getOwnedProductIds() {
+        List<String> ownedIds = new ArrayList<>();
+        for (String productId : ThemeProducts.ALL_PRODUCT_IDS) {
+            if (isThemeOwned(productId)) {
+                ownedIds.add(productId);
+            }
+        }
+        return ownedIds;
+    }
+
+    @NonNull
+    public List<Purchase> getLatestPurchases() {
+        return new ArrayList<>(latestPurchasesByToken.values());
+    }
+
+    public void consumePurchase(@NonNull String purchaseToken, @Nullable ConsumeCallback callback) {
+        if (!ensureConnected()) {
+            BillingResult result = buildBillingResult(
+                    BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
+                    "BillingClient is not ready yet. Retry after setup finishes."
+            );
+            notifyError(result);
+            if (callback != null) {
+                callback.onConsumeFinished(false, result.getResponseCode(), result.getDebugMessage());
+            }
+            return;
+        }
+
+        ConsumeParams params = ConsumeParams.newBuilder()
+                .setPurchaseToken(purchaseToken)
+                .build();
+
+        billingClient.consumeAsync(params, (billingResult, outToken) -> {
+            boolean success = billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK;
+            if (success) {
+                latestPurchasesByToken.remove(outToken);
+                notifyPurchasesUpdated();
+            } else {
+                notifyError(billingResult);
+            }
+
+            if (callback != null) {
+                callback.onConsumeFinished(success, billingResult.getResponseCode(), billingResult.getDebugMessage());
+            }
+        });
     }
 
     private void saveOwnedTheme(@NonNull String productId, boolean owned) {
@@ -405,14 +404,6 @@ public class ThemeBillingManager {
         return applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
 
-    // ------------------------------------------------------------------ //
-    //  Internal helpers                                                     //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Ensures the billing client is connected. If disconnected, starts the connection
-     * and returns {@code false} so the caller can retry after the callback fires.
-     */
     private boolean ensureConnected() {
         if (billingClient != null && billingClient.isReady()) {
             return true;
@@ -430,13 +421,7 @@ public class ThemeBillingManager {
 
     private void notifyPurchasesUpdated() {
         if (purchasesUpdatedCallback != null) {
-            List<String> ownedIds = new ArrayList<>();
-            for (String productId : ThemeProducts.ALL_PRODUCT_IDS) {
-                if (isThemeOwned(productId)) {
-                    ownedIds.add(productId);
-                }
-            }
-            purchasesUpdatedCallback.onPurchasesUpdated(ownedIds);
+            purchasesUpdatedCallback.onPurchasesUpdated(getOwnedProductIds(), getLatestPurchases());
         }
     }
 
@@ -444,6 +429,10 @@ public class ThemeBillingManager {
         if (billingErrorCallback != null) {
             billingErrorCallback.onBillingError(result.getResponseCode(), result.getDebugMessage());
         }
+    }
+
+    private boolean isThemeProduct(@NonNull String productId) {
+        return ThemeProducts.ALL_PRODUCT_IDS.contains(productId);
     }
 
     @NonNull

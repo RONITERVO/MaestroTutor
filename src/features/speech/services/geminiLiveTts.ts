@@ -25,7 +25,7 @@ import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { resolveLiveConnectApiKey } from '../../../api/gemini/client';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
 
 // ============================================================================
@@ -140,7 +140,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
   // Validate API key is available
   let apiKey: string;
   try {
-    apiKey = await getApiKeyOrThrow();
+    apiKey = await resolveLiveConnectApiKey({ purpose: 'live' });
   } catch (e: any) {
     const errorMsg = e?.message || 'Missing API key';
     onError?.(errorMsg);

@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { GoogleGenAI } from '@google/genai';
 import { getApiKeyOrThrow } from '../../core/security/apiKeyStorage';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
 export class ApiError extends Error {
   status?: number;
@@ -62,5 +64,35 @@ export const getAi = async (options?: { apiVersion?: string }) => {
   } catch (e: any) {
     const message = e?.message || 'Missing API key';
     throw new ApiError(message, { code: 'MISSING_API_KEY' });
+  }
+};
+
+export const resolveLiveConnectApiKey = async (options?: {
+  purpose?: 'live' | 'music';
+  durationSeconds?: number;
+}): Promise<string> => {
+  try {
+    return await getApiKeyOrThrow();
+  } catch (error: any) {
+    if (!maestroBackendService.isConfigured()) {
+      const message = error?.message || 'Missing API key';
+      throw new ApiError(message, { code: 'MISSING_API_KEY' });
+    }
+
+    const isManaged = await maestroAccessService.isUsingManagedAccess();
+    if (!isManaged) {
+      const message = error?.message || 'Missing API key';
+      throw new ApiError(message, { code: 'MISSING_API_KEY' });
+    }
+
+    try {
+      const token = await maestroBackendService.createLiveToken(options);
+      return token.token;
+    } catch (backendError: any) {
+      throw new ApiError(
+        backendError?.message || 'Managed live token request failed',
+        { code: 'MANAGED_LIVE_TOKEN_FAILED' }
+      );
+    }
   }
 };

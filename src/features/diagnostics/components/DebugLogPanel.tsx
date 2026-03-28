@@ -32,6 +32,8 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
     setIsClearingUploads(true);
     try {
       await clearAllGeminiFiles();
+    } catch (error) {
+      console.error('Failed to clear remote uploads', error);
     } finally {
       setIsClearingUploads(false);
     }

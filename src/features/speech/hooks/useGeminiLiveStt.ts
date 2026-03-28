@@ -7,7 +7,7 @@ import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { resolveLiveConnectApiKey } from '../../../api/gemini/client';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
@@ -399,7 +399,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         hasLastAssistantMessage: !!lastAssistantMessage,
       });
 
-      const apiKey = await getApiKeyOrThrow();
+      const apiKey = await resolveLiveConnectApiKey({ purpose: 'live' });
       const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
         model,

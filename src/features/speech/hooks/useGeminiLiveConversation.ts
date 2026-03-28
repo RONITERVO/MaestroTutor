@@ -20,7 +20,7 @@ import {
   PCM_PLAYBACK_PROCESSOR_URL,
   PCM_PLAYBACK_PROCESSOR_NAME,
 } from '../worklets';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { resolveLiveConnectApiKey } from '../../../api/gemini/client';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import {
@@ -807,7 +807,7 @@ export function useGeminiLiveConversation(
         outputAudioTranscription: {},
       });
 
-      const apiKey = await getApiKeyOrThrow();
+      const apiKey = await resolveLiveConnectApiKey({ purpose: 'live' });
       const ai = new GoogleGenAI({ apiKey });
       const session = await ai.live.connect({
         model,

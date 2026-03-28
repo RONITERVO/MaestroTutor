@@ -8,7 +8,10 @@ import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, I
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
+import type { ManagedAccessSession } from '../../../core/contracts/backend';
+import { isGoogleAuthConfigured } from '../../../core/config/integrations';
 import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTracker';
+import ManagedAccessPanel from './ManagedAccessPanel';
 
 // Hardcoded developer password to bypass the tester form. 
 // Password is: thedev
@@ -27,6 +30,7 @@ interface ApiKeyGateProps {
   isBlocking: boolean;
   hasKey: boolean;
   maskedKey?: string | null;
+  managedSession?: ManagedAccessSession | null;
   isSaving?: boolean;
   error?: string | null;
   keyInvalid?: boolean;
@@ -48,6 +52,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   isBlocking,
   hasKey,
   maskedKey,
+  managedSession = null,
   isSaving = false,
   error,
   keyInvalid = false,
@@ -94,6 +99,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
   const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
+  const showManagedAccess = isGoogleAuthConfigured();
 
   const canSave = useMemo(() => {
     return value.trim().length >= 20 && !isSaving;
@@ -532,7 +538,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // =========================================================================
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7">
+      <div className="w-full max-w-2xl bg-gate-bg shadow-xl sketchy-border sketch-shape-7">
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center bg-gate-accent/15 text-gate-accent sketchy-border-thin">
@@ -641,6 +647,18 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             </div>
           ) : (
             <>
+              {showManagedAccess && (
+                <>
+                  <ManagedAccessPanel session={managedSession} />
+
+                  <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-gate-muted-text/70">
+                    <span className="h-px flex-1 bg-line-border/50" />
+                    <span>{t('managedAccess.orByok')}</span>
+                    <span className="h-px flex-1 bg-line-border/50" />
+                  </div>
+                </>
+              )}
+
               <div className="bg-gate-input-bg/70 p-4 text-sm text-gate-text space-y-2 sketchy-border-thin">
                 <div className="font-medium text-gate-text font-sketch">{t('apiKeyGate.stepsTitle')}</div>
                 <ol className="list-decimal pl-5 space-y-1">
@@ -679,7 +697,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     setValue(next);
                     onValueChange?.(next);
                   }}
-                  onClick={attemptAutoPasteFromClipboard}
+                  onFocus={() => { void attemptAutoPasteFromClipboard(); }}
                   placeholder={t('apiKeyGate.placeholder')}
                   className="flex-1 px-3 py-2 text-sm bg-gate-bg text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
                   autoFocus

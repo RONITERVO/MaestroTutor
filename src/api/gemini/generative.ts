@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
+import { loadManagedAccessSession, saveManagedAccessSession } from '../../core/security/managedAccessSessionStorage';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
 import { ApiError, getAi } from './client';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 const HIGH_DEMAND_MAX_RETRIES = 10;
@@ -201,6 +204,108 @@ const buildRetryMeta = (attempt: number, retryInMs?: number) => ({
   ...(typeof retryInMs === 'number' ? { retryInMs } : {}),
 });
 
+const sanitizeManagedConfig = (config: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
+  if (!config) return undefined;
+  const nextConfig = { ...config };
+  delete (nextConfig as { abortSignal?: unknown }).abortSignal;
+  return nextConfig;
+};
+
+const updateManagedBillingSummary = async (billingSummary: unknown): Promise<void> => {
+  if (!billingSummary || typeof billingSummary !== 'object') return;
+  const session = await loadManagedAccessSession();
+  if (!session) return;
+  await saveManagedAccessSession({
+    ...session,
+    billingSummary: billingSummary as typeof session.billingSummary,
+    lastSyncedAt: Date.now(),
+  });
+};
+
+const streamManagedGenerateContent = async (params: {
+  model: string;
+  contents: unknown;
+  config?: Record<string, unknown>;
+  lifecycleHooks?: GeminiRequestLifecycleHooks;
+}): Promise<{ text?: string; candidates?: unknown[]; usageMetadata?: Record<string, unknown>; billingSummary?: unknown }> => {
+  const response = await maestroBackendService.requestManagedStream('gemini/generate-content-stream', {
+    model: params.model,
+    contents: params.contents,
+    config: sanitizeManagedConfig(params.config),
+    operation: 'generateContent',
+  });
+
+  if (!response.body) {
+    throw new Error('Managed stream returned no body.');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  type ManagedGenerateContentResult = {
+    text?: string;
+    candidates?: unknown[];
+    usageMetadata?: Record<string, unknown>;
+    billingSummary?: unknown;
+  };
+  let finalResult: ManagedGenerateContentResult | null = null;
+  let accumulatedText = '';
+  let previousChunkText = '';
+  let accumulatedThought = '';
+  let previousChunkThought = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const payload = tryParseJson(trimmed);
+      if (!payload || typeof payload !== 'object') continue;
+      const record = payload as Record<string, unknown>;
+
+      if (record.type === 'chunk') {
+        const chunk = record.chunk as any;
+        const chunkText = typeof chunk?.text === 'string' ? chunk.text : '';
+        if (chunkText) {
+          const appended = appendChunkWithPrefixDiff(accumulatedText, previousChunkText, chunkText);
+          accumulatedText = appended.nextAccumulated;
+          previousChunkText = appended.nextPreviousChunk;
+          if (appended.delta) {
+            params.lifecycleHooks?.onTextDelta?.(appended.delta, accumulatedText);
+          }
+        }
+
+        const chunkThought = extractThoughtText(chunk);
+        if (chunkThought) {
+          const appendedThought = appendChunkWithPrefixDiff(accumulatedThought, previousChunkThought, chunkThought);
+          accumulatedThought = appendedThought.nextAccumulated;
+          previousChunkThought = appendedThought.nextPreviousChunk;
+          if (appendedThought.delta) {
+            params.lifecycleHooks?.onThoughtDelta?.(appendedThought.delta, accumulatedThought);
+          }
+        }
+      } else if (record.type === 'final') {
+        finalResult = (record.result || {}) as ManagedGenerateContentResult;
+      } else if (record.type === 'error') {
+        throw new Error(typeof record.message === 'string' ? record.message : 'Managed stream failed.');
+      }
+    }
+  }
+
+  if (!finalResult) {
+    throw new Error('Managed stream ended without a final result.');
+  }
+
+  const resolvedResult = finalResult;
+  await updateManagedBillingSummary(resolvedResult.billingSummary);
+  return resolvedResult;
+};
+
 const withHighDemandRetry = async <T>(opts: {
   operation: string;
   model: string;
@@ -362,7 +467,6 @@ export const generateGeminiResponse = async (
     timeoutMs = DEFAULT_TIMEOUT_MS,
     lifecycleHooks,
   } = options;
-  const ai = await getAi();
   const rawContents: any[] = [];
 
   const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
@@ -445,6 +549,40 @@ export const generateGeminiResponse = async (
     return result;
   };
   const redactedContents = redactInlineData(contents);
+
+  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+    try {
+      const result = lifecycleHooks
+        ? await withTimeout(
+            streamManagedGenerateContent({
+              model: modelName,
+              contents,
+              config,
+              lifecycleHooks,
+            }),
+            timeoutMs,
+          )
+        : await maestroBackendService.generateContent({
+            model: modelName,
+            contents,
+            config: sanitizeManagedConfig(config),
+            operation: 'generateContent',
+          });
+      await updateManagedBillingSummary(result.billingSummary);
+      return {
+        text: result.text || '',
+        candidates: Array.isArray(result.candidates) ? result.candidates : undefined,
+        usageMetadata: result.usageMetadata,
+      };
+    } catch (error: any) {
+      throw new ApiError(error?.message || 'Managed Gemini API failed', {
+        status: 500,
+        code: 'MANAGED_BACKEND_ERROR',
+      });
+    }
+  }
+
+  const ai = await getAi();
 
   try {
     const fallbackModel = resolveFallbackTextModel(modelName);
@@ -552,10 +690,25 @@ export const generateGeminiResponse = async (
 };
 
 export const translateText = async (text: string, from: string, to: string) => {
-  const ai = await getAi();
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
   const model = getGeminiModels().text.translation;
   const fallbackModel = resolveFallbackTextModel(model);
+
+  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+    try {
+      const result = await maestroBackendService.generateContent({
+        model,
+        contents: prompt,
+        operation: 'translateText',
+      });
+      await updateManagedBillingSummary(result.billingSummary);
+      return { translatedText: result.text || '', usageMetadata: result.usageMetadata };
+    } catch (error: any) {
+      throw new ApiError(error?.message || 'Translation failed', { status: 500, code: 'MANAGED_BACKEND_ERROR' });
+    }
+  }
+
+  const ai = await getAi();
 
   try {
     const result = await withHighDemandRetry(
