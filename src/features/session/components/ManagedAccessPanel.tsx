@@ -6,6 +6,7 @@ import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { maestroPaymentsService } from '../../../services/payments/maestroPaymentsService';
 import { googleAuthService } from '../../../services/auth/googleAuthService';
 import { maestroAccountService } from '../../../services/account/maestroAccountService';
+import { maestroBackendService } from '../../../services/backend/maestroBackendService';
 import type { ManagedAccessSession } from '../../../core/contracts/backend';
 import type { GooglePlayPurchaseRecord } from '../../../core/contracts/integrations';
 import {
@@ -59,7 +60,11 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const activeProduct = products.find(product => product.productId === primaryProductId) || null;
 
@@ -67,6 +72,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     if (!session?.firebaseIdToken) return;
     setIsRefreshing(true);
     setErrorMessage(null);
+    setStatusMessage(null);
     try {
       await maestroAccountService.getManagedAccountSummary();
     } catch (error) {
@@ -165,6 +171,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const handleSignIn = useCallback(async () => {
     setIsSigningIn(true);
     setErrorMessage(null);
+    setStatusMessage(null);
     try {
       await googleAuthService.beginSignIn();
       await refreshAccount();
@@ -177,6 +184,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
 
   const handleSignOut = useCallback(async () => {
     setErrorMessage(null);
+    setStatusMessage(null);
     try {
       await googleAuthService.signOutManagedSession();
     } catch (error) {
@@ -195,6 +203,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     }
 
     setErrorMessage(null);
+    setStatusMessage(null);
     setIsPurchasing(true);
     try {
       await billingService.purchaseProduct(primaryProductId);
@@ -206,12 +215,39 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
 
   const handleRestore = useCallback(async () => {
     setErrorMessage(null);
+    setStatusMessage(null);
     try {
       await billingService.restorePurchases();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.restoreFailed'));
     }
   }, [billingService, t]);
+
+  const handleDeleteManagedAccount = useCallback(async () => {
+    if (!session?.firebaseIdToken) {
+      setErrorMessage(t('managedAccess.signInRequired'));
+      return;
+    }
+    if (deleteConfirmationText.trim().toUpperCase() !== 'DELETE') {
+      setErrorMessage(t('managedAccess.deleteNeedsConfirmation'));
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    setErrorMessage(null);
+    setStatusMessage(null);
+    try {
+      await maestroBackendService.deleteManagedAccount();
+      await googleAuthService.signOutManagedSession();
+      setDeleteConfirmationText('');
+      setIsDeleteConfirmOpen(false);
+      setStatusMessage(t('managedAccess.deleteSuccess'));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : t('managedAccess.deleteFailed'));
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  }, [deleteConfirmationText, session?.firebaseIdToken, t]);
 
   return (
     <section className="bg-gate-input-bg/70 p-4 text-sm text-gate-text space-y-3 sketchy-border-thin">
@@ -248,6 +284,12 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
             {t('managedAccess.packDescription')}
             {activeProduct.formattedPrice ? ` - ${activeProduct.formattedPrice}` : ''}
           </div>
+        </div>
+      )}
+
+      {statusMessage && (
+        <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+          {statusMessage}
         </div>
       )}
 
@@ -315,6 +357,61 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
         <p>{t('managedAccess.keepByok')}</p>
         <p>{t('managedAccess.billingNote')}</p>
       </div>
+
+      {session?.firebaseIdToken && (
+        <div className="rounded-md border border-red-300/80 bg-red-50/70 px-3 py-3 space-y-3">
+          <div className="space-y-1">
+            <div className="font-medium text-red-900">{t('managedAccess.deleteTitle')}</div>
+            <p className="text-xs text-red-900/80">{t('managedAccess.deleteDescription')}</p>
+          </div>
+
+          {!isDeleteConfirmOpen ? (
+            <button
+              type="button"
+              onClick={() => {
+                setStatusMessage(null);
+                setErrorMessage(null);
+                setIsDeleteConfirmOpen(true);
+              }}
+              className="px-3 py-2 text-red-900 hover:bg-red-100 sketchy-border-thin"
+            >
+              {t('managedAccess.deleteAction')}
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-red-900/80">{t('managedAccess.deleteConfirmHint')}</p>
+              <input
+                type="text"
+                value={deleteConfirmationText}
+                onChange={(event) => setDeleteConfirmationText(event.target.value)}
+                placeholder="DELETE"
+                className="w-full px-3 py-2 bg-white text-sm text-gate-text border border-red-300 rounded-none focus:outline-none focus:ring-1 focus:ring-red-400"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteConfirmationText('');
+                    setIsDeleteConfirmOpen(false);
+                    setErrorMessage(null);
+                  }}
+                  className="px-3 py-2 text-gate-text hover:bg-gate-bg sketchy-border-thin"
+                >
+                  {t('managedAccess.deleteCancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteManagedAccount()}
+                  disabled={isDeletingAccount || deleteConfirmationText.trim().toUpperCase() !== 'DELETE'}
+                  className="px-3 py-2 bg-red-700 text-white hover:bg-red-800 disabled:opacity-60 sketchy-border-thin"
+                >
+                  {isDeletingAccount ? t('managedAccess.deleting') : t('managedAccess.deleteConfirm')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 };

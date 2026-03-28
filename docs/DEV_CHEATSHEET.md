@@ -41,6 +41,8 @@ firebase deploy --only functions,firestore:rules,firestore:indexes
 
 - User pastes Gemini API key
 - Client talks directly to Gemini
+- API key gate shows a local usage metadata ledger for tracked requests
+- BYOK ledger still offers the Google Cloud billing shortcut
 - This path must stay intact
 
 ### Managed
@@ -50,8 +52,34 @@ firebase deploy --only functions,firestore:rules,firestore:indexes
 - Backend verifies purchase token with Play Developer API
 - Backend grants credits and records ledgers in Firestore
 - Gemini requests go through Firebase Functions
+- API key gate shows the same local usage metadata ledger for managed requests
 - Managed live tokens expire after 3 minutes and the client silently reconnects when needed
 - Managed mode allows at most 2 active live sockets per signed-in user
+
+## Play Metadata / Policy Claims
+
+Safe claims for the current build:
+
+- BYOK exists and keeps the user's Gemini key local to the device
+- Managed mode uses Firebase Google sign-in
+- Managed requests go through Firebase Functions and then Google Gemini
+- Firestore stores managed billing / usage / entitlement / purchase verification records
+- Google Play handles Android managed credit payments
+- No ads
+- No developer analytics SDK
+- No developer crash reporting SDK
+
+Do not claim these are already solved unless you implement them:
+
+- self-serve in-app managed account deletion
+- outside-app deletion request URL
+- in-app report / flag controls for offensive AI-generated output
+
+Current production blockers to remember:
+
+- Play account-deletion policy is relevant because managed sign-in creates an account path
+- Play AI-generated-content policy expects an in-app report / flag path for generated content
+- `public/privacy.html` is updated to describe current behavior, but Play Console declarations must stay equally honest
 
 ## Product Rules
 

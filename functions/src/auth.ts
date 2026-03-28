@@ -56,7 +56,7 @@ const getBearerToken = (req: Request): string | null => {
 
 const shouldEnforceAppCheck = (): boolean => appConfig.requireAppCheck;
 
-const verifyAppCheckIfNeeded = async (req: Request): Promise<void> => {
+export const verifyAppCheckIfNeeded = async (req: Request): Promise<void> => {
   if (!shouldEnforceAppCheck()) return;
   const appCheckToken = req.headers['x-firebase-appcheck'];
   if (typeof appCheckToken !== 'string' || !appCheckToken.trim()) {
@@ -69,13 +69,24 @@ const verifyAppCheckIfNeeded = async (req: Request): Promise<void> => {
   }
 };
 
-export const requireAuthContext = async (req: Request): Promise<AuthContext> => {
+const buildAuthContext = (decodedToken: DecodedIdToken): AuthContext => ({
+  uid: decodedToken.uid,
+  token: decodedToken,
+  user: {
+    id: decodedToken.uid,
+    email: typeof decodedToken.email === 'string' ? decodedToken.email : null,
+    displayName: typeof decodedToken.name === 'string' ? decodedToken.name : null,
+    photoUrl: typeof decodedToken.picture === 'string' ? decodedToken.picture : null,
+  },
+});
+
+export const getOptionalAuthContext = async (req: Request): Promise<AuthContext | null> => {
+  await verifyAppCheckIfNeeded(req);
   const bearerToken = getBearerToken(req);
   if (!bearerToken) {
-    throw createHttpError(401, 'Missing Authorization bearer token.');
+    return null;
   }
 
-  await verifyAppCheckIfNeeded(req);
   let decodedToken: DecodedIdToken;
   try {
     decodedToken = await adminAuth.verifyIdToken(bearerToken);
@@ -83,14 +94,13 @@ export const requireAuthContext = async (req: Request): Promise<AuthContext> => 
     throw createHttpError(401, 'Invalid Firebase Authentication token.');
   }
 
-  return {
-    uid: decodedToken.uid,
-    token: decodedToken,
-    user: {
-      id: decodedToken.uid,
-      email: typeof decodedToken.email === 'string' ? decodedToken.email : null,
-      displayName: typeof decodedToken.name === 'string' ? decodedToken.name : null,
-      photoUrl: typeof decodedToken.picture === 'string' ? decodedToken.picture : null,
-    },
-  };
+  return buildAuthContext(decodedToken);
+};
+
+export const requireAuthContext = async (req: Request): Promise<AuthContext> => {
+  const auth = await getOptionalAuthContext(req);
+  if (!auth) {
+    throw createHttpError(401, 'Missing Authorization bearer token.');
+  }
+  return auth;
 };

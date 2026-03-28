@@ -20,12 +20,20 @@ If you only want quick commands, also read [DEV_CHEATSHEET.md](./DEV_CHEATSHEET.
 - One purchase of `maestro_credits_1000` grants `1000` Maestro credits.
 - Managed billing verifies Play purchases on the backend before credit grant.
 - Managed billing reserves credits before Gemini calls and settles from actual `usageMetadata` when available.
+- The API key gate now includes a local usage metadata ledger for both BYOK and managed requests:
+  - text, translation, reply suggestions, and image generation record per-request token/image usage locally on-device
+  - the ledger is an estimate from Gemini response metadata plus current public Gemini list pricing
+  - BYOK users can still open Google Cloud billing from inside that ledger
 - Failed or abandoned reservations are released automatically:
   - immediately on request failure when possible
   - periodically by a scheduled backend sweep
 - Managed remote file deletion is user-scoped. Clearing uploads in the debug panel only clears the signed-in user's managed uploads.
 - Managed uploads no longer require routine manual cleanup during normal chatting. The backend keeps at most `20` active managed files per user and evicts the oldest files automatically before new uploads.
 - Managed live tokens are capped at `3` minutes and the backend allows at most `2` active managed live sockets per signed-in user at a time.
+- Managed account deletion is now implemented both:
+  - inside the app from the managed access panel
+  - outside the app from the hosted `delete-account.html` page
+- Generated AI output now has an in-app report / flag path on assistant messages.
 
 ## 2. Repo Areas That Matter
 
@@ -33,6 +41,7 @@ If you only want quick commands, also read [DEV_CHEATSHEET.md](./DEV_CHEATSHEET.
 
 - App shell and access gate: `src/app/`, `src/features/session/`
 - Managed access UI: `src/features/session/components/ManagedAccessPanel.tsx`
+- Outside-app deletion page: `delete-account.html`, `src/delete-account/`
 - Integration config: `src/core/config/integrations.ts`
 - Managed session storage: `src/core/security/managedAccessSessionStorage.ts`
 - Service hub: `src/services/maestroServices.ts`
@@ -47,6 +56,7 @@ If you only want quick commands, also read [DEV_CHEATSHEET.md](./DEV_CHEATSHEET.
 ### Backend
 
 - Firebase Functions app: `functions/src/index.ts`
+- Account deletion and AI-content reporting: `functions/src/account.ts`
 - Auth and CORS: `functions/src/auth.ts`
 - Env/config parsing: `functions/src/config.ts`
 - Gemini proxy and managed files: `functions/src/gemini.ts`
@@ -62,11 +72,13 @@ If you only want quick commands, also read [DEV_CHEATSHEET.md](./DEV_CHEATSHEET.
 
 - Privacy policy: `public/privacy.html`
 - Public model manifest: `public/gemini-models.json`
+- Hosted outside-app deletion entrypoint: `delete-account.html`
 
 Those two public files still need to be reachable from the deployed site, normally:
 
 - `https://chatwithmaestro.com/privacy.html`
 - `https://chatwithmaestro.com/gemini-models.json`
+- `https://chatwithmaestro.com/delete-account.html`
 
 ## 3. Access You Need Before Doing Release Work
 
@@ -482,9 +494,11 @@ Use a real Android device and an internal testing install from Google Play.
 2. Enter a Gemini API key.
 3. Verify ordinary text chat still works.
 4. Verify image generation still works.
-5. Verify live mode still works.
-6. Keep a managed live session open for more than 3 minutes and verify the app silently reconnects and continues without a manual retry.
-6. Verify existing theme store still works.
+5. Verify the API key gate usage chip opens the in-app usage ledger instead of jumping straight out of the app.
+6. Verify the ledger shows local rows for text / translation / image requests and still offers the Google Cloud billing link for BYOK.
+7. Verify live mode still works.
+8. Keep a managed live session open for more than 3 minutes and verify the app silently reconnects and continues without a manual retry.
+9. Verify existing theme store still works.
 
 ### Managed access
 
@@ -559,12 +573,54 @@ Keep Play Console metadata aligned with the current app behavior:
 - Firestore billing and usage ledgers exist
 - Google Play purchase verification exists
 - BYOK still exists
+- the API key gate also shows a local usage metadata ledger for client-visible spend inspection
 
 If privacy or data handling changes, update:
 
 - Play Data Safety
 - hosted privacy policy
 - app access instructions
+
+### Play Console claims that must match this build
+
+Safe claims for the current codebase:
+
+- BYOK still exists and sends the user's Gemini prompts and attachments directly from the device to Google Gemini.
+- Managed mode uses Firebase Google sign-in.
+- Managed mode routes prompts, replies, images, audio, video, and file uploads through your Firebase backend and then to Google Gemini.
+- Managed mode stores billing summaries, usage ledgers, entitlement records, reservation records, and Google Play purchase verification records in Firebase/Firestore.
+- Google Play handles Android managed credit payments.
+- The app processes Google Play purchase metadata such as purchase token, product id, order id, purchase time, purchase state, and package name for purchase verification.
+- The API key gate includes a local on-device usage metadata ledger for user-visible spend inspection.
+- Managed users can delete their account from inside the app.
+- A dedicated outside-app account deletion web resource exists at the hosted `delete-account.html` page.
+- Assistant-generated output has an in-app report / flag action.
+- No in-app ads are included in this release.
+- No developer-operated analytics SDK or crash reporting SDK is included in this release.
+
+Do not claim these things unless you actually implement them first:
+
+- ads, analytics, or crash reporting if those SDKs are still absent
+
+### Google Play policy areas that still require release-side verification
+
+The code now includes the required product behaviors, but you still need to verify them on the real shipped build before answering Play Console questions:
+
+- Managed sign-in creates an account path, so verify both deletion paths really work on the build you upload:
+  - in-app managed account deletion from the managed access panel
+  - outside-app deletion at the hosted `delete-account.html` page
+- The app generates AI content, so verify the in-app report / flag action is visible on assistant output and successfully submits a report through the backend.
+
+### What to update in Play Console for this release
+
+- App access: keep the BYOK review instructions current and provide a temporary reviewer key if you still want the reviewer to bypass the gate quickly.
+- Data Safety: answer based on the actual shipped build, including Firebase Google sign-in, managed backend Gemini processing, Firestore ledger storage, and Google Play purchase verification metadata.
+- Data deletion questions: answer based on the shipped deletion flows. This build now supports:
+  - in-app managed account deletion
+  - outside-app deletion at `https://chatwithmaestro.com/delete-account.html`
+- Privacy policy URL: point to the hosted `privacy.html` that matches the current BYOK plus managed behavior.
+- AI-generated content reporting: answer based on the in-app report / flag flow now present on assistant output.
+- Support contact: make sure the Play listing support contact is real and monitored as a fallback for deletion requests and offensive-content reports.
 
 ## 18. Static Site Deployment
 
@@ -583,6 +639,13 @@ Then verify:
 
 - `https://chatwithmaestro.com/privacy.html`
 - `https://chatwithmaestro.com/gemini-models.json`
+- `https://chatwithmaestro.com/delete-account.html`
+
+Official references used for this section:
+
+- Data Safety: https://support.google.com/googleplay/android-developer/answer/10787469?hl=en
+- Account deletion requirements: https://support.google.com/googleplay/android-developer/answer/13327111?hl=en
+- Developer Program Policy, AI-generated content: https://support.google.com/googleplay/android-developer/answer/16944162?hl=en
 
 ## 19. Maintenance Rules
 
@@ -641,6 +704,16 @@ Check:
 - `RESERVATION_TTL_MINUTES` is sane
 - the backend has permission to write Firestore
 
+### Account deletion or report flow fails
+
+Check:
+
+- the static site deploy includes `delete-account.html`
+- Firebase web config in `.env` is correct
+- backend is reachable from the hosted site
+- Google sign-in works on the hosted deletion page
+- the uploaded build still shows the report / flag action on assistant messages
+
 ### Android backend calls fail with CORS
 
 Check:
@@ -672,3 +745,7 @@ Before promoting any build beyond internal testing, all of these should be true:
 - BYOK still behaves as before
 - privacy policy URL is live
 - `gemini-models.json` is live on the public site
+- `delete-account.html` is live on the public site
+- managed account deletion works from inside the app
+- managed account deletion works from the hosted deletion page
+- generated AI output can be reported from inside the app

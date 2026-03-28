@@ -3,7 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { MAESTRO_INTEGRATION_CONFIG, isBackendConfigured } from '../../core/config/integrations';
 import type {
+  BackendAiContentReportRequest,
+  BackendAiContentReportResponse,
   BackendClearFilesResponse,
+  BackendDeleteManagedAccountResponse,
   BackendDeleteFileRequest,
   BackendDeleteFileResponse,
   BackendFileStatusesRequest,
@@ -97,6 +100,35 @@ const updateStoredSession = async (updates: {
   });
 };
 
+const getOptionalHeaders = async (): Promise<Record<string, string>> => {
+  const headers: Record<string, string> = {};
+  const session = await loadManagedAccessSession();
+
+  if (session) {
+    const identity = await firebaseAuthBridgeService.getCurrentIdentity(false);
+    const token = identity?.firebaseIdToken || session.firebaseIdToken;
+    headers.Authorization = `Bearer ${token}`;
+
+    if (identity && identity.firebaseIdToken !== session.firebaseIdToken) {
+      await saveManagedAccessSession({
+        ...session,
+        user: identity.user,
+        firebaseIdToken: identity.firebaseIdToken,
+        refreshToken: identity.refreshToken,
+        expiresAt: identity.expiresAt,
+        lastSyncedAt: Date.now(),
+      });
+    }
+  }
+
+  const appCheckToken = await maestroFirebaseService.getAppCheckToken(false);
+  if (appCheckToken) {
+    headers['X-Firebase-AppCheck'] = appCheckToken;
+  }
+
+  return headers;
+};
+
 const getManagedHeaders = async (): Promise<Record<string, string>> => {
   const session = await getManagedAccessSessionOrThrow();
   const identity = await firebaseAuthBridgeService.getCurrentIdentity(false);
@@ -144,6 +176,17 @@ const requestManagedJson = async <T>(path: string, init?: RequestInit): Promise<
     ...init,
     headers: {
       ...authHeaders,
+      ...(init?.headers || {}),
+    },
+  });
+};
+
+const requestOptionalAuthJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const headers = await getOptionalHeaders();
+  return requestJson<T>(path, {
+    ...init,
+    headers: {
+      ...headers,
       ...(init?.headers || {}),
     },
   });
@@ -204,6 +247,12 @@ export const maestroBackendService = {
   listBillingLedger: async (limit = 50): Promise<ManagedBillingLedgerResponse> => (
     requestManagedJson<ManagedBillingLedgerResponse>(`account/billing-ledger?limit=${Math.max(1, Math.min(200, Math.floor(limit)))}`, {
       method: 'GET',
+    })
+  ),
+
+  deleteManagedAccount: async (): Promise<BackendDeleteManagedAccountResponse> => (
+    requestManagedJson<BackendDeleteManagedAccountResponse>('account/delete', {
+      method: 'POST',
     })
   ),
 
@@ -282,6 +331,15 @@ export const maestroBackendService = {
     payload: BackendReleaseLiveTokenLeaseRequest
   ): Promise<BackendReleaseLiveTokenLeaseResponse> => (
     requestManagedJson<BackendReleaseLiveTokenLeaseResponse>('gemini/live-token/release', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  ),
+
+  submitAiContentReport: async (
+    payload: BackendAiContentReportRequest
+  ): Promise<BackendAiContentReportResponse> => (
+    requestOptionalAuthJson<BackendAiContentReportResponse>('reports/ai-content', {
       method: 'POST',
       body: JSON.stringify(payload),
     })

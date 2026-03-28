@@ -55,6 +55,12 @@ npm run deploy
 - [ ] Temporary BYOK review key prepared if needed
 - [ ] Privacy policy URL updated in listing
 - [ ] Data Safety answers still match current app behavior
+- [ ] Data Safety answers explicitly reflect Firebase Google sign-in, managed backend Gemini processing, Firestore ledgers, and Google Play purchase verification metadata
+- [ ] Do not claim ads / analytics / crash reporting unless those SDKs were actually added
+- [ ] Data deletion questions answered accurately
+- [ ] Do not claim self-serve in-app account deletion unless it was actually implemented
+- [ ] Outside-app account deletion URL added in Play Console if account creation remains in the shipped build
+- [ ] In-app offensive AI-content reporting / flagging is implemented and verified before production rollout
 
 ## 6. Build
 
@@ -92,6 +98,8 @@ npm run build:aab
 - [ ] Entering a Gemini API key works
 - [ ] Text chat works
 - [ ] Image generation works
+- [ ] API key gate usage chip opens the in-app usage metadata ledger
+- [ ] BYOK usage ledger shows request rows and still exposes the Google Cloud billing link
 - [ ] Live mode works
 
 ### Managed
@@ -109,6 +117,8 @@ npm run build:aab
 - [ ] Credits deduct correctly
 - [ ] Restore purchases does not double-grant
 - [ ] Managed live mode survives a session longer than 3 minutes without a manual retry
+- [ ] If this build is going to production, a user can initiate managed account deletion from inside the app
+- [ ] If this build is going to production, generated AI output has an in-app report / flag path that does not require leaving the app
 
 ### Theme regression
 

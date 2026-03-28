@@ -68,6 +68,45 @@ export interface ManagedBillingLedgerResponse {
   entries: ManagedBillingLedgerEntry[];
 }
 
+export interface BackendDeleteManagedAccountResponse {
+  ok: true;
+  deletedAt: number;
+  releasedReservationCount: number;
+  deletedReservationCount: number;
+  deletedManagedFileCount: number;
+  anonymizedPurchaseCount: number;
+  anonymizedReportCount: number;
+  remoteManagedFileFailures: number;
+}
+
+export type AiContentReportReason =
+  | 'sexual'
+  | 'hate'
+  | 'harassment'
+  | 'self-harm'
+  | 'violent'
+  | 'deceptive'
+  | 'spam'
+  | 'other';
+
+export interface BackendAiContentReportRequest {
+  accessMode: 'byok' | 'managed';
+  messageId: string;
+  reason: AiContentReportReason;
+  assistantText?: string;
+  rawAssistantResponse?: string;
+  notes?: string;
+  surface?: string;
+  model?: string;
+  createdAtClient?: number | null;
+}
+
+export interface BackendAiContentReportResponse {
+  ok: true;
+  reportId: string;
+  createdAt: number;
+}
+
 export interface BackendGenerateContentRequest {
   model: string;
   contents: unknown;

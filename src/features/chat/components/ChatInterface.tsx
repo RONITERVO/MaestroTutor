@@ -3,9 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, ReplySuggestion, SpeechPart } from '../../../core/types';
+import type { AiContentReportReason } from '../../../core/contracts/backend';
 import { TranslationReplacements } from '../../../core/i18n/index';
-import { IconEyeOpen, IconBookmark, IconTrash } from '../../../shared/ui/Icons';
+import { IconEyeOpen, IconBookmark, IconFlag, IconTrash } from '../../../shared/ui/Icons';
 import BookmarkActions from './BookmarkActions';
+import AiContentReportModal from './AiContentReportModal';
 import ChatMessageBubble from './ChatMessageBubble';
 import SuggestionsList from './SuggestionsList';
 import InputArea from './InputArea';
@@ -58,6 +60,7 @@ interface ChatInterfaceProps {
   onQuotaSetupBilling?: () => void;
   onQuotaStartLive?: () => void;
   onImageGenViewCost?: () => void;
+  onReportGeneratedContent?: (message: ChatMessage, reason: AiContentReportReason, notes: string) => Promise<void>;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
@@ -84,7 +87,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     onSendMessage,
     onQuotaSetupBilling,
     onQuotaStartLive,
-    onImageGenViewCost
+    onImageGenViewCost,
+    onReportGeneratedContent,
   } = props;
 
   const { t } = useAppTranslations();
@@ -262,6 +266,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const [openTrayForId, setOpenTrayForId] = useState<string | null>(null);
   const trayAutoCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [openBookmarkControlsForId, setOpenBookmarkControlsForId] = useState<string | null>(null);
+  const [reportingMessage, setReportingMessage] = useState<ChatMessage | null>(null);
+  const [reportErrorMessage, setReportErrorMessage] = useState<string | null>(null);
+  const [reportNotice, setReportNotice] = useState<string | null>(null);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   // Auto-close the swipe tray after 3 seconds
   useEffect(() => {
@@ -288,6 +296,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     };
   }, [openTrayForId]);
 
+  useEffect(() => {
+    if (!reportNotice) return undefined;
+    const timer = window.setTimeout(() => setReportNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [reportNotice]);
+
   const translateOrFallback = useCallback(
     (key: string, fallback: string, replacements?: TranslationReplacements) => {
       const result = t(key, replacements);
@@ -295,6 +309,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     },
     [t]
   );
+
+  const closeSwipeTray = useCallback((messageId?: string | null) => {
+    const targetId = messageId || openTrayForId;
+    if (!targetId) return;
+
+    const bubble = bubbleWrapperRefs.current.get(targetId);
+    if (bubble) {
+      bubble.style.transition = 'transform 0.2s ease-out';
+      bubble.style.transform = 'translateX(0px)';
+      bubble.style.touchAction = 'pan-y';
+      bubble.style.cursor = 'auto';
+    }
+    setOpenTrayForId(null);
+  }, [bubbleWrapperRefs, openTrayForId]);
 
   const handleSwipePointerDown = (e: React.PointerEvent<HTMLDivElement>, messageId: string, isUser: boolean) => {
     if (swipeRef.current.messageId || !e.isPrimary) return;
@@ -394,6 +422,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     setOpenTrayForId(null);
     swipeRef.current = { messageId: null, startX: 0, startY: 0, isUser: false, isSwiping: false, trayWidth: 0 };
   }
+
+  const handleSubmitGeneratedContentReport = useCallback(async (
+    payload: { reason: AiContentReportReason; notes: string }
+  ) => {
+    if (!reportingMessage || !onReportGeneratedContent) return;
+
+    setIsSubmittingReport(true);
+    setReportErrorMessage(null);
+    try {
+      await onReportGeneratedContent(reportingMessage, payload.reason, payload.notes);
+      setReportNotice(t('chat.report.success'));
+      setReportingMessage(null);
+    } catch (error) {
+      setReportErrorMessage(error instanceof Error ? error.message : t('chat.report.failed'));
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  }, [onReportGeneratedContent, reportingMessage, t]);
 
   const bookmarkInfo = useMemo(() => {
     if (!bookmarkedMessageId) {
@@ -626,6 +672,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
           aria-hidden 
         />
         <div className="space-y-2">
+       {reportNotice && (
+         <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+           {reportNotice}
+         </div>
+       )}
        {bookmarkInfo.hasBookmark && hiddenCount > 0 && (
          <div
            className="my-1 px-2 py-1 bg-history-peek-bg border border-line-border sketch-shape-2 flex items-center gap-2"
@@ -772,15 +823,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                  onPointerDown={(e) => { e.stopPropagation(); }}
                  aria-hidden={openTrayForId === msg.id ? undefined : true}
                >
-                 {isAssistant && (msg.id === bookmarkedMessageId || bookmarkEligibleAssistantIds.has(msg.id)) && (
-                   <button
-                     className={`p-2 bg-save-sugg-bg text-save-sugg-text shadow sketchy-border-thin`}
-                     onPointerDown={(e) => { e.stopPropagation(); }}
+                {isAssistant && (msg.id === bookmarkedMessageId || bookmarkEligibleAssistantIds.has(msg.id)) && (
+                  <button
+                    className={`p-2 bg-save-sugg-bg text-save-sugg-text shadow sketchy-border-thin`}
+                    onPointerDown={(e) => { e.stopPropagation(); }}
                          onClick={(e) => { e.stopPropagation(); if (msg.id !== bookmarkedMessageId) { onBookmarkAt(msg.id); } }}
                          title={msg.id === bookmarkedMessageId ? (t('chat.bookmark.isHere') || 'Bookmark is here') : (t('chat.bookmark.setHere') || 'Set bookmark here')}
                      aria-pressed={msg.id === bookmarkedMessageId}
-                   >
+                  >
                      <IconBookmark className={`w-5 h-5 ${msg.id === bookmarkedMessageId ? 'opacity-100' : 'opacity-90'}`} />
+                   </button>
+                 )}
+                 {isAssistant && onReportGeneratedContent && (
+                   <button
+                     className="p-2 bg-red-50 text-red-800 shadow sketchy-border-thin"
+                     onPointerDown={(e) => { e.stopPropagation(); }}
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       closeSwipeTray(msg.id);
+                       setReportErrorMessage(null);
+                       setReportingMessage(msg);
+                     }}
+                     title={t('chat.report.open')}
+                   >
+                     <IconFlag className="w-5 h-5" />
                    </button>
                  )}
                  <button
@@ -948,6 +1014,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
         </div>{/* End content container */}
       </div>
 
+      <AiContentReportModal
+        isOpen={Boolean(reportingMessage)}
+        message={reportingMessage}
+        isSubmitting={isSubmittingReport}
+        errorMessage={reportErrorMessage}
+        onClose={() => {
+          if (isSubmittingReport) return;
+          setReportErrorMessage(null);
+          setReportingMessage(null);
+        }}
+        onSubmit={handleSubmitGeneratedContentReport}
+      />
     </div>
   );
 };
