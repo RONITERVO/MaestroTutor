@@ -5,7 +5,7 @@ import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { loadManagedAccessSession, saveManagedAccessSession } from '../../core/security/managedAccessSessionStorage';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
-import { getAi } from './client';
+import { getAi, type GeminiAccessMode } from './client';
 import { maestroAccessService } from '../../services/access/maestroAccessService';
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
@@ -37,6 +37,19 @@ const updateManagedBillingSummary = async (billingSummary: unknown): Promise<voi
   });
 };
 
+export type GenerateImageResult =
+  | {
+      base64Image: string;
+      mimeType: string;
+      usageMetadata?: unknown;
+      accessMode: GeminiAccessMode;
+    }
+  | {
+      error: string;
+      usageMetadata?: unknown;
+      accessMode: GeminiAccessMode;
+    };
+
 export const generateImage = async (params: {
   prompt?: string;
   history?: any[];
@@ -45,7 +58,7 @@ export const generateImage = async (params: {
   systemInstruction?: string;
   maestroAvatarUri?: string;
   maestroAvatarMimeType?: string;
-}) => {
+}): Promise<GenerateImageResult> => {
   const { prompt, latestMessageText, history, systemInstruction, maestroAvatarUri, maestroAvatarMimeType } = params;
 
   const rawContents: any[] = [];
@@ -183,9 +196,11 @@ export const generateImage = async (params: {
   const model = getGeminiModels().image.generation;
   const config = { responseModalities: ['IMAGE'], systemInstruction };
   const log = debugLogService.logRequest('generateImage', model, { contents, config });
+  const useManagedAccess = maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess();
+  const accessMode: GeminiAccessMode = useManagedAccess ? 'managed' : 'byok';
 
   try {
-    const result = maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()
+    const result = useManagedAccess
       ? await withTimeout(
           maestroBackendService.generateContent({
             model,
@@ -215,7 +230,12 @@ export const generateImage = async (params: {
         const inlineData = part.inlineData;
         if (inlineData && inlineData.mimeType?.startsWith('image/')) {
           if (typeof inlineData.data === 'string' && inlineData.data.trim() !== '') {
-            return { base64Image: `data:${inlineData.mimeType};base64,${inlineData.data}`, mimeType: inlineData.mimeType };
+            return {
+              base64Image: `data:${inlineData.mimeType};base64,${inlineData.data}`,
+              mimeType: inlineData.mimeType,
+              usageMetadata: (result as { usageMetadata?: unknown }).usageMetadata,
+              accessMode,
+            };
           }
         }
       }
@@ -230,9 +250,16 @@ export const generateImage = async (params: {
     }
     const errorMsg = textResponse ? `No image generated. Model responded: ${textResponse}` : 'No image generated';
     log.error(new Error(errorMsg));
-    return { error: errorMsg };
+    return {
+      error: errorMsg,
+      usageMetadata: (result as { usageMetadata?: unknown }).usageMetadata,
+      accessMode,
+    };
   } catch (e: any) {
     log.error(e);
-    return { error: e.message };
+    return {
+      error: e.message,
+      accessMode,
+    };
   }
 };

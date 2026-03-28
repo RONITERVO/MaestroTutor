@@ -5,7 +5,7 @@ import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { loadManagedAccessSession, saveManagedAccessSession } from '../../core/security/managedAccessSessionStorage';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
-import { ApiError, getAi } from './client';
+import { ApiError, getAi, type GeminiAccessMode } from './client';
 import { maestroAccessService } from '../../services/access/maestroAccessService';
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
@@ -50,6 +50,19 @@ export interface GenerateGeminiResponseOptions {
   configOverrides?: any;
   timeoutMs?: number;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
+}
+
+export interface GenerateGeminiResponseResult {
+  text: string;
+  candidates?: unknown[];
+  usageMetadata?: unknown;
+  accessMode: GeminiAccessMode;
+}
+
+export interface TranslateTextResult {
+  translatedText: string;
+  usageMetadata?: unknown;
+  accessMode: GeminiAccessMode;
 }
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
@@ -227,7 +240,7 @@ const streamManagedGenerateContent = async (params: {
   contents: unknown;
   config?: Record<string, unknown>;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
-}): Promise<{ text?: string; candidates?: unknown[]; usageMetadata?: Record<string, unknown>; billingSummary?: unknown }> => {
+}): Promise<{ text?: string; candidates?: unknown[]; usageMetadata?: unknown; billingSummary?: unknown }> => {
   const response = await maestroBackendService.requestManagedStream('gemini/generate-content-stream', {
     model: params.model,
     contents: params.contents,
@@ -245,7 +258,7 @@ const streamManagedGenerateContent = async (params: {
   type ManagedGenerateContentResult = {
     text?: string;
     candidates?: unknown[];
-    usageMetadata?: Record<string, unknown>;
+    usageMetadata?: unknown;
     billingSummary?: unknown;
   };
   let finalResult: ManagedGenerateContentResult | null = null;
@@ -458,7 +471,7 @@ export const generateGeminiResponse = async (
   userPrompt: string,
   history: any[],
   options: GenerateGeminiResponseOptions = {}
-) => {
+): Promise<GenerateGeminiResponseResult> => {
   const {
     systemInstruction,
     currentFileParts,
@@ -550,7 +563,9 @@ export const generateGeminiResponse = async (
   };
   const redactedContents = redactInlineData(contents);
 
-  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+  const useManagedAccess = maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess();
+
+  if (useManagedAccess) {
     try {
       const result = lifecycleHooks
         ? await withTimeout(
@@ -573,6 +588,7 @@ export const generateGeminiResponse = async (
         text: result.text || '',
         candidates: Array.isArray(result.candidates) ? result.candidates : undefined,
         usageMetadata: result.usageMetadata,
+        accessMode: 'managed',
       };
     } catch (error: any) {
       throw new ApiError(error?.message || 'Managed Gemini API failed', {
@@ -682,6 +698,7 @@ export const generateGeminiResponse = async (
       text: result.text,
       candidates: result.candidates,
       usageMetadata: result.usageMetadata,
+      accessMode: 'byok',
     };
   } catch (e: any) {
     console.error('Gemini API Error:', e);
@@ -689,12 +706,18 @@ export const generateGeminiResponse = async (
   }
 };
 
-export const translateText = async (text: string, from: string, to: string) => {
+export const translateText = async (
+  text: string,
+  from: string,
+  to: string
+): Promise<TranslateTextResult> => {
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
   const model = getGeminiModels().text.translation;
   const fallbackModel = resolveFallbackTextModel(model);
 
-  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+  const useManagedAccess = maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess();
+
+  if (useManagedAccess) {
     try {
       const result = await maestroBackendService.generateContent({
         model,
@@ -702,7 +725,11 @@ export const translateText = async (text: string, from: string, to: string) => {
         operation: 'translateText',
       });
       await updateManagedBillingSummary(result.billingSummary);
-      return { translatedText: result.text || '', usageMetadata: result.usageMetadata };
+      return {
+        translatedText: result.text || '',
+        usageMetadata: result.usageMetadata,
+        accessMode: 'managed',
+      };
     } catch (error: any) {
       throw new ApiError(error?.message || 'Translation failed', { status: 500, code: 'MANAGED_BACKEND_ERROR' });
     }
@@ -727,7 +754,11 @@ export const translateText = async (text: string, from: string, to: string) => {
         mapSuccess: res => ({ text: res.text, usage: res.usageMetadata }),
       }
     );
-    return { translatedText: result.text || '', usageMetadata: result.usageMetadata };
+    return {
+      translatedText: result.text || '',
+      usageMetadata: result.usageMetadata,
+      accessMode: 'byok',
+    };
   } catch (e: any) {
     throw new ApiError(e.message || 'Translation failed', { status: getErrorStatus(e) || 500, code: getErrorCode(e) });
   }

@@ -6,6 +6,8 @@ import { getApiKeyOrThrow } from '../../core/security/apiKeyStorage';
 import { maestroAccessService } from '../../services/access/maestroAccessService';
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
+export type GeminiAccessMode = 'byok' | 'managed';
+
 export class ApiError extends Error {
   status?: number;
   code?: string;
