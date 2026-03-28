@@ -8,6 +8,12 @@ import { googleAuthService } from '../../../services/auth/googleAuthService';
 import { maestroAccountService } from '../../../services/account/maestroAccountService';
 import type { ManagedAccessSession } from '../../../core/contracts/backend';
 import type { GooglePlayPurchaseRecord } from '../../../core/contracts/integrations';
+import {
+  loadPendingManagedPurchases,
+  markPendingManagedPurchaseConsumed,
+  removePendingManagedPurchase,
+  upsertPendingManagedPurchase,
+} from '../../../core/security/pendingManagedPurchasesStorage';
 
 interface ManagedAccessPanelProps {
   session: ManagedAccessSession | null;
@@ -27,12 +33,22 @@ const formatUsd = (value: number): string => (
   })
 );
 
+const dedupePurchaseRecords = (purchaseRecords: GooglePlayPurchaseRecord[]): GooglePlayPurchaseRecord[] => {
+  const recordsByToken = new Map<string, GooglePlayPurchaseRecord>();
+  for (const purchase of purchaseRecords) {
+    if (!purchase.purchaseToken) continue;
+    recordsByToken.set(purchase.purchaseToken, purchase);
+  }
+  return [...recordsByToken.values()];
+};
+
 const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const { t } = useAppTranslations();
   const billingService = maestroPaymentsService.themeBilling;
   const managedProductIds = useMemo(() => maestroPaymentsService.getManagedBillingProductIds(), []);
   const primaryProductId = managedProductIds[0] || '';
-  const verifiedTokensRef = useRef<Set<string>>(new Set());
+  const processingTokensRef = useRef<Set<string>>(new Set());
+  const completedTokensRef = useRef<Set<string>>(new Set());
 
   const [products, setProducts] = useState<Array<{
     productId: string;
@@ -60,23 +76,43 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     }
   }, [session?.firebaseIdToken, t]);
 
-  const verifyAndConsumePurchases = useCallback(async (purchaseRecords: GooglePlayPurchaseRecord[]) => {
+  const processPendingPurchases = useCallback(async (purchaseRecords: GooglePlayPurchaseRecord[]) => {
     if (!session?.firebaseIdToken) return;
-    const relevantPurchases = purchaseRecords.filter(record => (
+    const pendingPurchases = await loadPendingManagedPurchases();
+    const relevantPurchases = dedupePurchaseRecords([
+      ...pendingPurchases.map(record => record.purchase),
+      ...purchaseRecords,
+    ]).filter(record => (
       record.purchaseState === 'purchased'
       && managedProductIds.includes(record.productId)
-      && !verifiedTokensRef.current.has(record.purchaseToken)
+      && !completedTokensRef.current.has(record.purchaseToken)
     ));
-    if (!relevantPurchases.length) return;
 
     for (const record of relevantPurchases) {
-      verifiedTokensRef.current.add(record.purchaseToken);
+      if (processingTokensRef.current.has(record.purchaseToken)) {
+        continue;
+      }
+      processingTokensRef.current.add(record.purchaseToken);
       try {
+        const pendingRecord = await upsertPendingManagedPurchase(record);
+        if (!pendingRecord.consumed) {
+          try {
+            await billingService.consumePurchase(record.purchaseToken);
+            await markPendingManagedPurchaseConsumed(record.purchaseToken);
+          } catch {
+            // Continue to backend verification anyway. If the purchase had already
+            // been consumed before a previous crash, the backend will now see the
+            // consumed token and grant credits exactly once.
+          }
+        }
+
         await maestroPaymentsService.verifyGooglePlayPurchase({ purchase: record });
-        await billingService.consumePurchase(record.purchaseToken);
+        completedTokensRef.current.add(record.purchaseToken);
+        await removePendingManagedPurchase(record.purchaseToken);
       } catch (error) {
-        verifiedTokensRef.current.delete(record.purchaseToken);
         throw error;
+      } finally {
+        processingTokensRef.current.delete(record.purchaseToken);
       }
     }
   }, [billingService, managedProductIds, session?.firebaseIdToken]);
@@ -95,7 +131,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       billingService.onPurchasesUpdated(event => {
         if (!mounted) return;
         setIsPurchasing(false);
-        void verifyAndConsumePurchases(event.purchases || [])
+        void processPendingPurchases(event.purchases || [])
           .then(() => refreshAccount())
           .catch(error => {
             setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseSyncFailed'));
@@ -110,8 +146,9 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
 
     void billingService.startConnection()
       .then(() => billingService.getProductDetails(managedProductIds))
+      .then(() => processPendingPurchases([]))
       .then(() => billingService.getOwnedPurchases())
-      .then(result => verifyAndConsumePurchases(result.purchases || []))
+      .then(result => processPendingPurchases(result.purchases || []))
       .catch(error => {
         if (!mounted) return;
         setErrorMessage(error instanceof Error ? error.message : t('managedAccess.billingUnavailable'));
@@ -123,7 +160,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
         handles.forEach(handle => handle.remove());
       });
     };
-  }, [billingService, managedProductIds, refreshAccount, t, verifyAndConsumePurchases]);
+  }, [billingService, managedProductIds, processPendingPurchases, refreshAccount, t]);
 
   const handleSignIn = useCallback(async () => {
     setIsSigningIn(true);

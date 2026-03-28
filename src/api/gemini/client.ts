@@ -89,9 +89,16 @@ export const resolveLiveConnectApiKey = async (options?: {
       const token = await maestroBackendService.createLiveToken(options);
       return token.token;
     } catch (backendError: any) {
+      const message = typeof backendError?.message === 'string'
+        ? backendError.message
+        : 'Managed live mode is unavailable until the secure live proxy is deployed. BYOK live access still works.';
       throw new ApiError(
-        backendError?.message || 'Managed live token request failed',
-        { code: 'MANAGED_LIVE_TOKEN_FAILED' }
+        message,
+        {
+          code: message.includes('secure live proxy')
+            ? 'MANAGED_LIVE_PROXY_REQUIRED'
+            : 'MANAGED_LIVE_TOKEN_FAILED',
+        }
       );
     }
   }

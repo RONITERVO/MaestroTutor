@@ -103,6 +103,7 @@ app.post('/gemini/generate-content-stream', asyncRoute(async (req, res, auth) =>
 app.post('/gemini/upload-media', asyncRoute(async (req, res, auth) => {
   const result = await uploadManagedMedia({
     uid: auth!.uid,
+    user: auth!.user,
     dataUrl: String(req.body?.dataUrl || ''),
     mimeType: String(req.body?.mimeType || ''),
     displayName: typeof req.body?.displayName === 'string' ? req.body.displayName : undefined,

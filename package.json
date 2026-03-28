@@ -18,11 +18,12 @@
   },
   "dependencies": {
     "@aparajita/capacitor-secure-storage": "^7.1.6",
+    "@capacitor-firebase/app-check": "^7.5.0",
+    "@capacitor-firebase/authentication": "^7.2.0",
     "@capacitor/android": "^8.0.2",
     "@capacitor/browser": "^8.0.0",
     "@capacitor/clipboard": "^8.0.0",
     "@capacitor/core": "^8.0.2",
-    "@capacitor-firebase/authentication": "^7.2.0",
     "@capacitor/filesystem": "^8.0.0",
     "@capacitor/preferences": "^8.0.0",
     "@capacitor/share": "^8.0.0",

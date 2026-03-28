@@ -188,6 +188,9 @@ MANAGED_CREDIT_PRODUCTS=maestro_credits_1000:1000
 MANAGED_CREDITS_PER_USD=1000
 REQUIRE_APPCHECK=false
 GEMINI_LIVE_TOKEN_USES=1
+MANAGED_MAX_ACTIVE_FILES_PER_USER=20
+MANAGED_UPLOAD_CREDITS_PER_MB=10
+MANAGED_MAX_UPLOAD_BYTES=52428800
 RESERVATION_TTL_MINUTES=30
 MANAGED_LIVE_SESSION_CREDITS=40
 MANAGED_MUSIC_SESSION_CREDITS=120
@@ -198,7 +201,8 @@ Notes:
 - `GEMINI_API_KEY` is the backend-managed Gemini key from Google AI Studio.
 - Keep the localhost origins. Android WebView requests go through localhost and will fail without them.
 - `REQUIRE_APPCHECK=false` is the safe default until web App Check is configured and verified.
-- Native localhost requests are intentionally exempted from backend App Check enforcement. That avoids breaking Android WebView traffic if web App Check is enabled later.
+- Once `REQUIRE_APPCHECK=true`, every authenticated backend request must send a valid App Check token.
+- The managed upload guardrails are controlled by `MANAGED_MAX_ACTIVE_FILES_PER_USER`, `MANAGED_UPLOAD_CREDITS_PER_MB`, and `MANAGED_MAX_UPLOAD_BYTES`.
 
 ## 7. Architecture Rules You Must Preserve
 
@@ -282,24 +286,26 @@ Current intended production default:
 - backend env: `REQUIRE_APPCHECK=false`
 - frontend env: App Check values empty
 
-If you later enable web App Check:
+If you later enable App Check:
 
-1. Configure App Check in Firebase Console for the web app.
-2. Set `VITE_FIREBASE_APPCHECK_SITE_KEY`.
-3. Optionally set `VITE_FIREBASE_APPCHECK_DEBUG_TOKEN` for development.
-4. Set `REQUIRE_APPCHECK=true` only after web traffic is confirmed working.
+1. Configure App Check in Firebase Console for the web app and Android app.
+2. For Android, enable the Play Integrity provider in Firebase App Check.
+3. Set `VITE_FIREBASE_APPCHECK_SITE_KEY` for web.
+4. Optionally set `VITE_FIREBASE_APPCHECK_DEBUG_TOKEN` for development.
+5. Set `REQUIRE_APPCHECK=true` only after both web and Android managed traffic are confirmed working.
 
 What is already implemented:
 
 - web frontend will attach `X-Firebase-AppCheck` automatically when configured
+- Android native builds initialize `@capacitor-firebase/app-check` and request native App Check tokens
 - backend verifies the token when enforcement is enabled
-- localhost origins are exempted so Android WebView traffic does not hard-break
 
 What is not implemented:
 
-- native device attestation for Android WebView traffic
+- Firebase Console setup for your production Android App Check provider
+- release validation that both web and Android managed traffic still pass once enforcement is on
 
-So do not claim full native App Check coverage yet.
+So do not enable backend enforcement until that Firebase-side setup has been completed and tested.
 
 ## 10. Backend Deployment
 

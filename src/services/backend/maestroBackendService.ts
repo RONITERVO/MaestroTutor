@@ -232,12 +232,14 @@ export const maestroBackendService = {
 
   uploadMedia: async (
     payload: BackendMediaUploadRequest
-  ): Promise<BackendMediaUploadResponse> => (
-    requestManagedJson<BackendMediaUploadResponse>('gemini/upload-media', {
+  ): Promise<BackendMediaUploadResponse> => {
+    const response = await requestManagedJson<BackendMediaUploadResponse>('gemini/upload-media', {
       method: 'POST',
       body: JSON.stringify(payload),
-    })
-  ),
+    });
+    await updateStoredSession({ billingSummary: response.billingSummary || null });
+    return response;
+  },
 
   checkFileStatuses: async (
     payload: BackendFileStatusesRequest

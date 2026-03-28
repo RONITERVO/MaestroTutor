@@ -1,15 +1,20 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAppCheck } from '@capacitor-firebase/app-check';
 import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
-import { initializeAppCheck, ReCaptchaV3Provider, getToken as getFirebaseAppCheckToken, type AppCheck } from 'firebase/app-check';
+import { ReCaptchaV3Provider } from 'firebase/app-check';
 import { getAuth, type Auth } from 'firebase/auth';
 import { MAESTRO_INTEGRATION_CONFIG, isFirebaseClientConfigured } from '../../core/config/integrations';
 import { ServiceNotConfiguredError } from '../shared/serviceErrors';
 
 let cachedFirebaseApp: FirebaseApp | null = null;
 let cachedFirebaseAuth: Auth | null = null;
-let cachedAppCheck: AppCheck | null | undefined;
+let appCheckInitializationPromise: Promise<boolean> | null = null;
+let hasInitializedAppCheck = false;
+
+const isNativeAppCheckPlatform = Capacitor.isNativePlatform() && Capacitor.getPlatform() !== 'web';
 
 const buildFirebaseConfig = () => {
   if (!isFirebaseClientConfigured()) {
@@ -36,27 +41,45 @@ const getFirebaseApp = (): FirebaseApp => {
   return cachedFirebaseApp;
 };
 
-const initializeOptionalAppCheck = (): AppCheck | null => {
-  if (cachedAppCheck !== undefined) return cachedAppCheck;
-  if (!MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckSiteKey) {
-    cachedAppCheck = null;
-    return cachedAppCheck;
-  }
+const initializeOptionalAppCheck = async (): Promise<boolean> => {
+  if (hasInitializedAppCheck) return true;
+  if (appCheckInitializationPromise) return appCheckInitializationPromise;
 
-  try {
-    const win = typeof window !== 'undefined' ? window as Window & { FIREBASE_APPCHECK_DEBUG_TOKEN?: string } : null;
-    if (win && MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckDebugToken) {
-      win.FIREBASE_APPCHECK_DEBUG_TOKEN = MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckDebugToken;
+  appCheckInitializationPromise = (async () => {
+    try {
+      getFirebaseApp();
+
+      if (isNativeAppCheckPlatform) {
+        await FirebaseAppCheck.initialize({
+          isTokenAutoRefreshEnabled: true,
+          ...(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckDebugToken
+            ? { debugToken: true }
+            : {}),
+        });
+        hasInitializedAppCheck = true;
+        return true;
+      }
+
+      if (!MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckSiteKey) {
+        return false;
+      }
+
+      await FirebaseAppCheck.initialize({
+        provider: new ReCaptchaV3Provider(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+        ...(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckDebugToken
+          ? { debugToken: MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckDebugToken }
+          : {}),
+      });
+      hasInitializedAppCheck = true;
+      return true;
+    } catch {
+      appCheckInitializationPromise = null;
+      return false;
     }
-    cachedAppCheck = initializeAppCheck(getFirebaseApp(), {
-      provider: new ReCaptchaV3Provider(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckSiteKey),
-      isTokenAutoRefreshEnabled: true,
-    });
-  } catch {
-    cachedAppCheck = null;
-  }
+  })();
 
-  return cachedAppCheck;
+  return appCheckInitializationPromise;
 };
 
 export const maestroFirebaseService = {
@@ -72,10 +95,10 @@ export const maestroFirebaseService = {
   },
 
   getAppCheckToken: async (forceRefresh = false): Promise<string | null> => {
-    const appCheck = initializeOptionalAppCheck();
-    if (!appCheck) return null;
+    const isReady = await initializeOptionalAppCheck();
+    if (!isReady) return null;
     try {
-      const tokenResult = await getFirebaseAppCheckToken(appCheck, forceRefresh);
+      const tokenResult = await FirebaseAppCheck.getToken({ forceRefresh });
       return tokenResult.token || null;
     } catch {
       return null;

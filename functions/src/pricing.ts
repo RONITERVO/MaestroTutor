@@ -37,6 +37,16 @@ export const usdToCredits = (usd: number): number => {
 
 export const creditsToUsd = (credits: number): number => roundUsd(credits / appConfig.managedCreditsPerUsd);
 
+export const uploadBytesToCredits = (bytes: number): number => {
+  if (bytes <= 0) return 0;
+  const megabytes = bytes / (1024 * 1024);
+  return Math.max(1, Math.ceil(megabytes * appConfig.managedUploadCreditsPerMb));
+};
+
+export const uploadBytesToUsd = (bytes: number): number => (
+  creditsToUsd(uploadBytesToCredits(bytes))
+);
+
 export const estimateReservationUsd = (params: {
   model: string;
   promptTokens: number;

@@ -55,16 +55,15 @@ export const appConfig = {
   reservationTtlMinutes: Math.max(5, parseInteger(process.env.RESERVATION_TTL_MINUTES, 30)),
   managedLiveSessionCredits: Math.max(1, parseInteger(process.env.MANAGED_LIVE_SESSION_CREDITS, 40)),
   managedMusicSessionCredits: Math.max(1, parseInteger(process.env.MANAGED_MUSIC_SESSION_CREDITS, 120)),
+  managedMaxActiveFilesPerUser: Math.max(1, parseInteger(process.env.MANAGED_MAX_ACTIVE_FILES_PER_USER, 20)),
+  managedUploadCreditsPerMb: Math.max(1, parseInteger(process.env.MANAGED_UPLOAD_CREDITS_PER_MB, 10)),
+  managedMaxUploadBytes: Math.max(1, parseInteger(process.env.MANAGED_MAX_UPLOAD_BYTES, 50 * 1024 * 1024)),
 } as const;
 
 export const isOriginAllowed = (origin: string | undefined): boolean => {
   if (!origin) return true;
   return appConfig.allowedOrigins.has(origin);
 };
-
-export const isTrustedLocalOrigin = (origin: string | undefined): boolean => (
-  Boolean(origin && trustedLocalOrigins.has(origin))
-);
 
 export const getCreditsForManagedProduct = (productId: string): number => (
   appConfig.managedCreditProducts[productId] || 0

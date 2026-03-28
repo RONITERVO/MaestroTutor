@@ -4,8 +4,9 @@
 
 import type { Request, Response } from 'express';
 import type { DecodedIdToken } from 'firebase-admin/auth';
-import { appConfig, isOriginAllowed, isTrustedLocalOrigin } from './config';
+import { appConfig, isOriginAllowed } from './config';
 import { adminAppCheck, adminAuth } from './firebase';
+import { createHttpError } from './http';
 
 export interface AppUser {
   id: string;
@@ -53,30 +54,34 @@ const getBearerToken = (req: Request): string | null => {
   return match?.[1] || null;
 };
 
-const shouldEnforceAppCheck = (req: Request): boolean => {
-  if (!appConfig.requireAppCheck) return false;
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
-  if (!origin) return false;
-  return !isTrustedLocalOrigin(origin);
-};
+const shouldEnforceAppCheck = (): boolean => appConfig.requireAppCheck;
 
 const verifyAppCheckIfNeeded = async (req: Request): Promise<void> => {
-  if (!shouldEnforceAppCheck(req)) return;
+  if (!shouldEnforceAppCheck()) return;
   const appCheckToken = req.headers['x-firebase-appcheck'];
   if (typeof appCheckToken !== 'string' || !appCheckToken.trim()) {
-    throw new Error('Missing Firebase App Check token.');
+    throw createHttpError(401, 'Missing Firebase App Check token.');
   }
-  await adminAppCheck.verifyToken(appCheckToken.trim());
+  try {
+    await adminAppCheck.verifyToken(appCheckToken.trim());
+  } catch {
+    throw createHttpError(401, 'Invalid Firebase App Check token.');
+  }
 };
 
 export const requireAuthContext = async (req: Request): Promise<AuthContext> => {
   const bearerToken = getBearerToken(req);
   if (!bearerToken) {
-    throw new Error('Missing Authorization bearer token.');
+    throw createHttpError(401, 'Missing Authorization bearer token.');
   }
 
   await verifyAppCheckIfNeeded(req);
-  const decodedToken = await adminAuth.verifyIdToken(bearerToken);
+  let decodedToken: DecodedIdToken;
+  try {
+    decodedToken = await adminAuth.verifyIdToken(bearerToken);
+  } catch {
+    throw createHttpError(401, 'Invalid Firebase Authentication token.');
+  }
 
   return {
     uid: decodedToken.uid,

@@ -91,6 +91,7 @@ export interface BackendMediaUploadRequest {
 export interface BackendMediaUploadResponse {
   uri: string;
   mimeType: string;
+  billingSummary?: ManagedBillingSummary;
 }
 
 export interface BackendFileStatus {
