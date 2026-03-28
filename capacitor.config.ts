@@ -1,3 +1,6 @@
+/// <reference types="@capacitor-firebase/app-check" />
+/// <reference types="@capacitor-firebase/authentication" />
+
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -10,6 +13,12 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
     webContentsDebuggingEnabled: false
+  },
+  plugins: {
+    FirebaseAuthentication: {
+      skipNativeAuth: false,
+      providers: ['google.com'],
+    },
   }
 };
 

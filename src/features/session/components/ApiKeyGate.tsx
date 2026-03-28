@@ -1,14 +1,27 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
 import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark, IconSparkles, IconEyeOpen, IconCreditCard, IconShield } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
-import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTracker';
+import type { ManagedAccessSession } from '../../../core/contracts/backend';
+import { isGoogleAuthConfigured } from '../../../core/config/integrations';
+import {
+  clearUsageHistory,
+  getCostSummary,
+  getUsageEntries,
+  GOOGLE_BILLING_URL,
+  hasLegacyUsageTotals,
+  type CostData,
+  type UsageEntry,
+  USAGE_TRACKING_CHANGED_EVENT,
+} from '../../../shared/utils/costTracker';
+import ManagedAccessPanel from './ManagedAccessPanel';
+import UsageLedgerPanel from './UsageLedgerPanel';
 
 // Hardcoded developer password to bypass the tester form. 
 // Password is: thedev
@@ -27,6 +40,7 @@ interface ApiKeyGateProps {
   isBlocking: boolean;
   hasKey: boolean;
   maskedKey?: string | null;
+  managedSession?: ManagedAccessSession | null;
   isSaving?: boolean;
   error?: string | null;
   keyInvalid?: boolean;
@@ -48,6 +62,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   isBlocking,
   hasKey,
   maskedKey,
+  managedSession = null,
   isSaving = false,
   error,
   keyInvalid = false,
@@ -61,9 +76,12 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const [value, setValue] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showUsageDetails, setShowUsageDetails] = useState(false);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [costSummary, setCostSummary] = useState({ inputTokens: 0, outputTokens: 0, imageGenCount: 0, totalCostUsd: 0 });
+  const [costSummary, setCostSummary] = useState<CostData>(() => getCostSummary());
+  const [usageEntries, setUsageEntries] = useState<UsageEntry[]>(() => getUsageEntries());
+  const [hasLegacyUsage, setHasLegacyUsage] = useState(() => hasLegacyUsageTotals());
 
   // --- TESTER FORM STATE ---
   const [showTesterForm, setShowTesterForm] = useState(() => !Capacitor.isNativePlatform() && !hasKey);
@@ -93,15 +111,36 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
-  const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
+  const isBillingHelp = showInstructions && instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
+  const showManagedAccess = isGoogleAuthConfigured();
+  const hasTrackedUsage = hasLegacyUsage || usageEntries.length > 0 || costSummary.totalCostUsd > 0;
+
+  const refreshUsageState = useCallback(() => {
+    setCostSummary(getCostSummary());
+    setUsageEntries(getUsageEntries());
+    setHasLegacyUsage(hasLegacyUsageTotals());
+  }, []);
 
   const canSave = useMemo(() => {
     return value.trim().length >= 20 && !isSaving;
   }, [value, isSaving]);
 
   useEffect(() => {
+    refreshUsageState();
+    if (typeof window === 'undefined') return undefined;
+    const handleUsageChanged = () => {
+      refreshUsageState();
+    };
+    window.addEventListener(USAGE_TRACKING_CHANGED_EVENT, handleUsageChanged);
+    return () => {
+      window.removeEventListener(USAGE_TRACKING_CHANGED_EVENT, handleUsageChanged);
+    };
+  }, [refreshUsageState]);
+
+  useEffect(() => {
     if (!isOpen) {
       setShowInstructions(false);
+      setShowUsageDetails(false);
       setInstructionIndex(0);
       setIsAutoPlaying(true);
 
@@ -112,9 +151,9 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
       setShowDevPassword(false);
       setDevPasswordInput('');
     } else {
-      setCostSummary(getCostSummary());
+      refreshUsageState();
     }
-  }, [isOpen]);
+  }, [isOpen, refreshUsageState]);
 
   // Check approval status on load if we have a saved email
   useEffect(() => {
@@ -163,6 +202,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
     const clamped = Math.max(0, Math.min(totalInstructions - 1, instructionFocusIndex));
     setInstructionIndex(clamped);
+    setShowUsageDetails(false);
     setShowInstructions(true);
     setIsAutoPlaying(false);
   }, [instructionFocusIndex, isOpen, totalInstructions]);
@@ -179,9 +219,23 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   }, [showInstructions, isAutoPlaying, totalInstructions, isBillingHelp]);
 
   const currentInstruction = INSTRUCTION_IMAGES[instructionIndex] || '';
-  const showHeaderClose = showInstructions || canClose;
-  const headerCloseLabel = showInstructions ? t('apiKeyGate.closeInstructions') : t('apiKeyGate.close');
-  const handleHeaderClose = showInstructions ? () => setShowInstructions(false) : onClose;
+  const isUsageView = showUsageDetails && !showInstructions;
+  const modalTitle = isBillingHelp
+    ? t('apiKeyGate.billingTitle')
+    : isUsageView
+      ? t('usageLedger.title')
+      : t('apiKeyGate.title');
+  const showHeaderClose = showInstructions || isUsageView || canClose;
+  const headerCloseLabel = showInstructions
+    ? t('apiKeyGate.closeInstructions')
+    : isUsageView
+      ? t('usageLedger.close')
+      : t('apiKeyGate.close');
+  const handleHeaderClose = showInstructions
+    ? () => setShowInstructions(false)
+    : isUsageView
+      ? () => setShowUsageDetails(false)
+      : onClose;
 
   const handleInstructionStep = (direction: number) => {
     if (totalInstructions === 0) return;
@@ -532,7 +586,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // =========================================================================
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7">
+      <div className="w-full max-w-2xl bg-gate-bg shadow-xl sketchy-border sketch-shape-7">
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center bg-gate-accent/15 text-gate-accent sketchy-border-thin">
@@ -540,36 +594,42 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gate-text font-sketch">
-                {isBillingHelp ? t('apiKeyGate.billingTitle') : t('apiKeyGate.title')}
+                {modalTitle}
               </h2>
-              <div className="mt-1 space-y-0.5 text-sm text-gate-muted-text">
-                <div className="flex items-center gap-1.5">
-                  <IconKey className="h-3.5 w-3.5 shrink-0" />
-                  <span>{t('apiKeyGate.infoLogin')}</span>
+              {isUsageView ? (
+                <p className="mt-1 text-sm text-gate-muted-text">
+                  {t('usageLedger.subtitle')}
+                </p>
+              ) : (
+                <div className="mt-1 space-y-0.5 text-sm text-gate-muted-text">
+                  <div className="flex items-center gap-1.5">
+                    <IconKey className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t('apiKeyGate.infoLogin')}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <IconEyeOpen className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t('apiKeyGate.infoVisibility')}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <IconCreditCard className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t('apiKeyGate.infoBilling')}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <IconSparkles className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t('apiKeyGate.infoCost')}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <IconShield className="h-3.5 w-3.5 shrink-0" />
+                    <span>{t('apiKeyGate.infoMore')}</span>
+                    <button
+                      onClick={() => openExternalUrl(PRIVACY_POLICY_URL)}
+                      className="text-gate-accent hover:underline"
+                    >
+                      {t('apiKeyGate.privacyPolicy')}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <IconEyeOpen className="h-3.5 w-3.5 shrink-0" />
-                  <span>{t('apiKeyGate.infoVisibility')}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <IconCreditCard className="h-3.5 w-3.5 shrink-0" />
-                  <span>{t('apiKeyGate.infoBilling')}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <IconSparkles className="h-3.5 w-3.5 shrink-0" />
-                  <span>{t('apiKeyGate.infoCost')}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <IconShield className="h-3.5 w-3.5 shrink-0" />
-                  <span>{t('apiKeyGate.infoMore')}</span>
-                  <button
-                    onClick={() => openExternalUrl(PRIVACY_POLICY_URL)}
-                    className="text-gate-accent hover:underline"
-                  >
-                    {t('apiKeyGate.privacyPolicy')}
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
           {showHeaderClose && (
@@ -639,8 +699,32 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 )}
               </div>
             </div>
+          ) : isUsageView ? (
+            <UsageLedgerPanel
+              summary={costSummary}
+              entries={usageEntries}
+              hasLegacyTotals={hasLegacyUsage}
+              hasSavedApiKey={hasKey}
+              onOpenGoogleBilling={() => openExternalUrl(GOOGLE_BILLING_URL)}
+              onClearHistory={() => {
+                clearUsageHistory();
+                refreshUsageState();
+              }}
+            />
           ) : (
             <>
+              {showManagedAccess && (
+                <>
+                  <ManagedAccessPanel session={managedSession} />
+
+                  <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-gate-muted-text/70">
+                    <span className="h-px flex-1 bg-line-border/50" />
+                    <span>{t('managedAccess.orByok')}</span>
+                    <span className="h-px flex-1 bg-line-border/50" />
+                  </div>
+                </>
+              )}
+
               <div className="bg-gate-input-bg/70 p-4 text-sm text-gate-text space-y-2 sketchy-border-thin">
                 <div className="font-medium text-gate-text font-sketch">{t('apiKeyGate.stepsTitle')}</div>
                 <ol className="list-decimal pl-5 space-y-1">
@@ -658,6 +742,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     type="button"
                     onClick={() => {
                       setInstructionIndex(0);
+                      setShowUsageDetails(false);
                       setShowInstructions(true);
                       setIsAutoPlaying(true);
                     }}
@@ -679,7 +764,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     setValue(next);
                     onValueChange?.(next);
                   }}
-                  onClick={attemptAutoPasteFromClipboard}
+                  onFocus={() => { void attemptAutoPasteFromClipboard(); }}
                   placeholder={t('apiKeyGate.placeholder')}
                   className="flex-1 px-3 py-2 text-sm bg-gate-bg text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
                   autoFocus
@@ -722,7 +807,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   {costSummary.totalCostUsd > 0 && (
                     <button
                       type="button"
-                      onClick={() => openExternalUrl(GOOGLE_BILLING_URL)}
+                      onClick={() => setShowUsageDetails(true)}
                       className="ml-auto shrink-0 flex items-center gap-1 text-xs opacity-70 hover:opacity-100"
                       aria-label={t('apiKeyGate.costLabel')}
                     >
@@ -732,11 +817,27 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   )}
                 </div>
               )}
+
+              {!hasKey && hasTrackedUsage && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowUsageDetails(true)}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-xs text-gate-text hover:bg-gate-input-bg sketchy-border-thin"
+                  >
+                    <IconSparkles className="h-3.5 w-3.5" />
+                    <span>
+                      {t('usageLedger.viewButton')}
+                      {costSummary.totalCostUsd > 0 ? ` ~${costSummary.totalCostUsd.toFixed(2)}` : ''}
+                    </span>
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
 
-        {!showInstructions && (
+        {!showInstructions && !isUsageView && (
           <div className="flex items-center justify-between px-6 pb-6">
             <button
               className="text-sm text-gate-muted-text hover:text-gate-text"

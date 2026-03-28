@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
 import { getAi } from './client';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
 /**
  * Set of URIs known to be expired/deleted (403/404).
@@ -84,6 +86,10 @@ const waitForFileActive = async (
 
 export const checkFileStatuses = async (uris: string[]): Promise<Record<string, { deleted: boolean; active: boolean }>> => {
   if (!uris || !uris.length) return {};
+  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+    const result = await maestroBackendService.checkFileStatuses({ uris });
+    return result.statuses;
+  }
   const ai = await getAi();
   const out: Record<string, { deleted: boolean; active: boolean }> = {};
 
@@ -220,6 +226,9 @@ export const uploadMediaToFiles = async (
   mimeType: string,
   displayName?: string
 ): Promise<{ uri: string; mimeType: string }> => {
+  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+    return maestroBackendService.uploadMedia({ dataUrl, mimeType, displayName });
+  }
   const ai = await getAi();
 
   const normalizedMimeType = normalizeMimeTypeForUpload(mimeType);
@@ -272,6 +281,9 @@ export const clearAllGeminiFiles = async (): Promise<{
   failedCount: number;
   failedNames: string[];
 }> => {
+  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+    return maestroBackendService.clearFiles();
+  }
   const ai = await getAi();
   const log = debugLogService.logRequest('files.clearAll', 'Files API', {
     pageSize: 100,
@@ -310,6 +322,9 @@ export const clearAllGeminiFiles = async (): Promise<{
 };
 
 export const deleteFileByNameOrUri = async (nameOrUri: string) => {
+  if (maestroBackendService.isConfigured() && await maestroAccessService.isUsingManagedAccess()) {
+    return maestroBackendService.deleteFile({ nameOrUri });
+  }
   const ai = await getAi();
   let name = nameOrUri;
   const m = /\/files\/([^?\s]+)/.exec(nameOrUri || '');

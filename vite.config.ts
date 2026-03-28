@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
@@ -45,5 +46,13 @@ export default defineConfig(({ }) => ({
     alias: {
       '@': '/src'
     }
-  }
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        deleteAccount: path.resolve(__dirname, 'delete-account.html'),
+      },
+    },
+  },
 }));

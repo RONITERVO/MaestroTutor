@@ -1462,7 +1462,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           }
         );
 
-        trackTokenUsage(getGeminiModels().text.aux, response.usageMetadata);
+        trackTokenUsage(getGeminiModels().text.aux, response.usageMetadata, {
+          accessMode: response.accessMode,
+          api: 'generate-content',
+          surface: 'reply-suggestions',
+        });
 
         let jsonStr = (response.text || '').trim();
         const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
@@ -1578,8 +1582,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     try {
-      const { translatedText, usageMetadata } = await translateText(textToTranslate, fromLangName, toLangName);
-      trackTokenUsage(getGeminiModels().text.translation, usageMetadata);
+      const { translatedText, usageMetadata, accessMode } = await translateText(textToTranslate, fromLangName, toLangName);
+      trackTokenUsage(getGeminiModels().text.translation, usageMetadata, {
+        accessMode,
+        api: 'translate-text',
+        surface: 'suggestion-translation',
+      });
       const newSuggestion: ReplySuggestion = {
         target: originalTextIsTarget ? textToTranslate : translatedText,
         native: originalTextIsTarget ? translatedText : textToTranslate,
@@ -2075,13 +2083,18 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       flushThinkingDraft(true);
       flushThoughtTrace(true);
 
-      trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
+      trackTokenUsage(getGeminiModels().text.default, response.usageMetadata, {
+        accessMode: response.accessMode,
+        api: 'generate-content',
+        surface: 'chat-response',
+      });
 
       const accumulatedFullText = response.text || "";
       const strictParsedResponse = parseStrictTutorResponse(accumulatedFullText);
       const responseTextForConversation = strictParsedResponse.visibleText;
       const parsedTranslationsOnComplete = strictParsedResponse.translations;
-      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
+      const groundingChunks = (response.candidates?.[0] as { groundingMetadata?: { groundingChunks?: GroundingChunk[] } } | undefined)
+        ?.groundingMetadata?.groundingChunks;
       if (groundingChunks?.length) {
         setLatestGroundingChunks(groundingChunks);
       }
@@ -2164,7 +2177,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     if (finalResult && 'base64Image' in finalResult) {
       const duration = Date.now() - userImageGenStartTime;
       addImageLoadDuration(duration);
-      trackImageGeneration();
+      trackImageGeneration({
+        model: getGeminiModels().image.generation,
+        usageMetadata: finalResult.usageMetadata,
+        accessMode: finalResult.accessMode,
+        api: 'generate-image',
+        surface: 'user-image-generation',
+      });
       if (!hasShownCostWarning()) {
         setCostWarningShown();
         addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
@@ -2309,7 +2328,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if ('base64Image' in assistantImgGenResult) {
         const duration = Date.now() - assistantStartTime;
         addImageLoadDuration(duration);
-        trackImageGeneration();
+        trackImageGeneration({
+          model: getGeminiModels().image.generation,
+          usageMetadata: assistantImgGenResult.usageMetadata,
+          accessMode: assistantImgGenResult.accessMode,
+          api: 'generate-image',
+          surface: 'assistant-image-generation',
+        });
         if (!hasShownCostWarning()) {
           setCostWarningShown();
           addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });

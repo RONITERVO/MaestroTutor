@@ -137,3 +137,4 @@ dist-ssr
 # Node modules
 
 node_modules/
+functions/lib/

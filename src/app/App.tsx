@@ -41,14 +41,16 @@ import { selectIsListening, selectIsResponsePending, selectIsSpeaking, selectNon
 import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 
 // --- Types ---
-import { SpeechPart } from '../core/types';
+import { ChatMessage, SpeechPart } from '../core/types';
 
 // --- Utils ---
 import { getPrimaryCode } from '../shared/utils/languageUtils';
 import { createSmartRef } from '../shared/utils/smartRef';
 import { useApiKey } from '../shared/hooks/useApiKey';
+import { useManagedAccess } from '../shared/hooks/useManagedAccess';
 import { logSttFlow, warnSttFlow } from '../shared/utils/sttFlowDebug';
 import { SmallSpinner } from '../shared/ui/SmallSpinner';
+import { maestroBackendService } from '../services/backend/maestroBackendService';
 
 /** Delay in ms before restarting STT after language change */
 const STT_RESTART_DELAY_MS = 250;
@@ -127,11 +129,18 @@ const App: React.FC = () => {
     saveApiKey,
     clearApiKey,
   } = useApiKey();
+  const {
+    session: managedSession,
+    hasManagedAccess,
+    isLoading: isManagedAccessLoading,
+  } = useManagedAccess();
 
   const [isApiKeyGateOpen, setIsApiKeyGateOpen] = useState(false);
   const [apiKeyGateInstructionIndex, setApiKeyGateInstructionIndex] = useState<number | null>(null);
   const [apiKeyInvalid, setApiKeyInvalid] = useState(false);
-  const showApiKeyGate = !hasApiKey || isApiKeyGateOpen;
+  const hasAccess = hasApiKey || hasManagedAccess;
+  const showApiKeyGate = !hasAccess || isApiKeyGateOpen;
+  const reportAccessMode = hasManagedAccess && !hasApiKey ? 'managed' : 'byok';
 
   const handleApiKeyGateOpen = useCallback((options?: { reason?: 'missing' | 'invalid' | 'quota'; instructionIndex?: number }) => {
     setApiKeyError(null);
@@ -441,6 +450,35 @@ const App: React.FC = () => {
     deleteMessage(messageId);
   }, [deleteMessage]);
 
+  const handleReportGeneratedContent = useCallback(async (
+    message: ChatMessage,
+    reason: 'sexual' | 'hate' | 'harassment' | 'self-harm' | 'violent' | 'deceptive' | 'spam' | 'other',
+    notes: string
+  ) => {
+    if (!maestroBackendService.isConfigured()) {
+      throw new Error(t('chat.report.unavailable'));
+    }
+
+    const assistantText = [
+      message.text?.trim() || '',
+      ...(message.translations || []).map((pair) => [pair.target, pair.native].filter(Boolean).join(' / ')),
+    ]
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .join('\n');
+
+    await maestroBackendService.submitAiContentReport({
+      accessMode: reportAccessMode,
+      messageId: message.id,
+      reason,
+      notes,
+      assistantText,
+      rawAssistantResponse: message.rawAssistantResponse || message.llmRawResponse || '',
+      surface: message.maestroToolKind ? `chat:${message.maestroToolKind}` : 'chat',
+      createdAtClient: Date.now(),
+    });
+  }, [reportAccessMode, t]);
+
   const handleToggleSuggestionMode = useCallback((forceState?: boolean) => {
     const newIsSuggestionMode = typeof forceState === 'boolean' ? forceState : !settingsRef.current.isSuggestionMode;
     if (newIsSuggestionMode === settingsRef.current.isSuggestionMode) return;
@@ -610,7 +648,7 @@ const App: React.FC = () => {
   }, [handleLiveTurnComplete, scheduleReengagement]);
 
   const { stopSilentObserver, resetSilentObserver } = useSilentObserverController({
-    enabled: hasApiKey && !showApiKeyGate,
+    enabled: hasAccess && !showApiKeyGate,
     isBlockingActivity,
     liveSessionState,
     liveVideoStream,
@@ -738,7 +776,7 @@ const App: React.FC = () => {
   // RENDER
   // ============================================================
 
-  if (isApiKeyLoading) {
+  if (isApiKeyLoading || isManagedAccessLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-page-bg paper-texture">
         <div className="text-center relative z-10">
@@ -769,14 +807,17 @@ const App: React.FC = () => {
           setIsApiKeyGateOpen(true);
         }}
         hasApiKey={hasApiKey}
+        hasAccess={hasAccess}
+        hasManagedAccess={hasManagedAccess}
       />
       {showDebugLogs && <DebugLogPanel onClose={() => setShowDebugLogs(false)} />}
       <VisualContextVideo videoRef={visualContextVideoRef} />
       <ApiKeyGate
         isOpen={showApiKeyGate}
-        isBlocking={!hasApiKey}
+        isBlocking={!hasAccess}
         hasKey={hasApiKey}
         maskedKey={maskedApiKey}
+        managedSession={managedSession}
         isSaving={isApiKeySaving}
         error={apiKeyError}
         keyInvalid={apiKeyInvalid}
@@ -862,6 +903,7 @@ const App: React.FC = () => {
             onQuotaSetupBilling={handleQuotaSetupBilling}
             onQuotaStartLive={handleQuotaStartLive}
             onImageGenViewCost={handleImageGenViewCost}
+            onReportGeneratedContent={handleReportGeneratedContent}
           />
         </main>
       </div>

@@ -1,10 +1,10 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import type { WeightedPrompt } from '@google/genai';
+import { GoogleGenAI, type WeightedPrompt } from '@google/genai';
 import { debugLogService } from '../../features/diagnostics';
 import { mergeInt16Arrays, pcmToWav } from '../../features/speech/utils/audioProcessing';
 import { getGeminiModels } from '../../core/config/models';
-import { getAi } from './client';
+import { resolveLiveConnectAccess } from './client';
 
 const DEFAULT_SAMPLE_RATE = 48000;
 const DEFAULT_CHANNELS = 2;
@@ -170,9 +170,13 @@ export const generateMusic = async (params: {
     throw new Error('Music prompt is empty.');
   }
 
-  const ai = await getAi({ apiVersion: 'v1alpha' });
   const model = normalizeMusicModel(getGeminiModels().music.generation);
   const targetDurationSeconds = clampDuration(params.durationSeconds);
+  const liveAccess = await resolveLiveConnectAccess({
+    purpose: 'music',
+    durationSeconds: targetDurationSeconds,
+  });
+  const ai = new GoogleGenAI({ apiKey: liveAccess.apiKey, apiVersion: 'v1alpha' });
   const shouldStreamPlayback = params.streamPlayback !== false;
 
   if (shouldStreamPlayback) {
@@ -193,6 +197,7 @@ export const generateMusic = async (params: {
 
   return new Promise<GeminiMusicResult>((resolve, reject) => {
     let session: any = null;
+    let releaseLiveAccess: (() => Promise<void>) | null = liveAccess.release;
     let isSettled = false;
     let sampleRate = DEFAULT_SAMPLE_RATE;
     let channels = DEFAULT_CHANNELS;
@@ -212,6 +217,10 @@ export const generateMusic = async (params: {
       if (generationTimer) clearTimeout(generationTimer);
       setupTimer = null;
       generationTimer = null;
+      if (releaseLiveAccess) {
+        void releaseLiveAccess().catch(() => undefined);
+        releaseLiveAccess = null;
+      }
     };
 
     const resolveOnce = (result: GeminiMusicResult) => {

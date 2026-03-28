@@ -3,6 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { GoogleGenAI } from '@google/genai';
 import { getApiKeyOrThrow } from '../../core/security/apiKeyStorage';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
+
+export type GeminiAccessMode = 'byok' | 'managed';
 
 export class ApiError extends Error {
   status?: number;
@@ -14,6 +18,12 @@ export class ApiError extends Error {
     this.code = opts?.code;
     this.cooldownSuggestSeconds = opts?.cooldownSuggestSeconds;
   }
+}
+
+export interface LiveConnectAccess {
+  apiKey: string;
+  isManaged: boolean;
+  release: () => Promise<void>;
 }
 
 /**
@@ -64,3 +74,61 @@ export const getAi = async (options?: { apiVersion?: string }) => {
     throw new ApiError(message, { code: 'MISSING_API_KEY' });
   }
 };
+
+export const resolveLiveConnectAccess = async (options?: {
+  purpose?: 'live' | 'music';
+  durationSeconds?: number;
+}): Promise<LiveConnectAccess> => {
+  try {
+    return {
+      apiKey: await getApiKeyOrThrow(),
+      isManaged: false,
+      release: async () => {},
+    };
+  } catch (error: any) {
+    if (!maestroBackendService.isConfigured()) {
+      const message = error?.message || 'Missing API key';
+      throw new ApiError(message, { code: 'MISSING_API_KEY' });
+    }
+
+    const isManaged = await maestroAccessService.isUsingManagedAccess();
+    if (!isManaged) {
+      const message = error?.message || 'Missing API key';
+      throw new ApiError(message, { code: 'MISSING_API_KEY' });
+    }
+
+    try {
+      const token = await maestroBackendService.createLiveToken(options);
+      let released = false;
+      return {
+        apiKey: token.token,
+        isManaged: true,
+        release: async () => {
+          if (released) return;
+          released = true;
+          if (!token.leaseId) return;
+          try {
+            await maestroBackendService.releaseLiveTokenLease({ leaseId: token.leaseId });
+          } catch {
+            // Ignore lease release failures; the backend expiry window remains the fallback.
+          }
+        },
+      };
+    } catch (backendError: any) {
+      const message = typeof backendError?.message === 'string'
+        ? backendError.message
+        : 'Managed live mode is temporarily unavailable.';
+      throw new ApiError(
+        message,
+        {
+          code: 'MANAGED_LIVE_TOKEN_FAILED',
+        }
+      );
+    }
+  }
+};
+
+export const resolveLiveConnectApiKey = async (options?: {
+  purpose?: 'live' | 'music';
+  durationSeconds?: number;
+}): Promise<string> => (await resolveLiveConnectAccess(options)).apiKey;

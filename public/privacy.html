@@ -5,39 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Privacy Policy - Maestro Tutor</title>
     <style>
-      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #0f172a; margin: 32px; line-height: 1.6; }
-      h1 { font-size: 24px; margin-bottom: 8px; }
-      h2 { font-size: 16px; margin-top: 20px; }
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #0f172a; margin: 32px; line-height: 1.6; max-width: 880px; }
+      h1 { font-size: 28px; margin-bottom: 8px; }
+      h2 { font-size: 18px; margin-top: 24px; }
       p { margin: 8px 0; }
       ul { margin: 8px 0 8px 20px; }
+      li { margin: 6px 0; }
       a { color: #2563eb; text-decoration: none; }
       a:hover { text-decoration: underline; }
-      .note { background: #fff1f2; border-left: 4px solid #e11d48; padding: 12px; margin: 16px 0; font-size: 0.9em; }
+      .note { background: #fff7ed; border-left: 4px solid #ea580c; padding: 12px; margin: 16px 0; font-size: 0.95em; }
+      .warning { background: #fff1f2; border-left: 4px solid #e11d48; padding: 12px; margin: 16px 0; font-size: 0.95em; }
+      code { background: #f8fafc; padding: 1px 4px; border-radius: 4px; }
     </style>
   </head>
   <body>
     <h1>Privacy Policy</h1>
-    <p><strong>Effective Date:</strong> January 24, 2025</p>
-    <p>Maestro Tutor operates as a client-side interface for the Google Gemini API.</p>
-
-    <h2>Data Collection and Usage</h2>
+    <p><strong>Effective Date:</strong> March 28, 2026</p>
+    <p>Maestro Tutor supports two access modes:</p>
     <ul>
-      <li><strong>API Key:</strong> If you choose to enter a Google AI Studio API key, it is stored locally on your device. We do not collect or transmit your key to our servers.</li>
-      <li><strong>Chat Content:</strong> Prompts and media you send are transmitted directly from your device to Google’s servers using the official Google GenAI SDK.</li>
-      <li><strong>Local Storage:</strong> The app does not use a developer-hosted backend. Chat history is stored locally on your device. <strong>Uninstalling the app permanently removes this local data.</strong></li>
+      <li><strong>BYOK:</strong> you provide your own Google Gemini API key and your device talks directly to Google.</li>
+      <li><strong>Managed:</strong> you sign in with Google, buy Maestro credits through Google Play on Android, and the app sends managed Gemini requests through our Firebase backend.</li>
+    </ul>
+
+    <h2>What We Process In BYOK Mode</h2>
+    <ul>
+      <li><strong>Gemini API key:</strong> if you paste a BYOK key, it is stored locally on your device. We do not send your BYOK key to our backend.</li>
+      <li><strong>Chat content and attachments:</strong> prompts, replies, images, audio, video, and files are sent directly from your device to Google Gemini when you use BYOK features.</li>
+      <li><strong>Local history and settings:</strong> chat history, settings, and the local usage metadata ledger are stored on your device.</li>
+      <li><strong>Usage ledger:</strong> the app stores a local on-device estimate of token/image usage for supported requests so you can inspect where usage came from. This ledger is not the same as Google Cloud billing and is not sent to our backend just because it exists locally.</li>
+    </ul>
+
+    <h2>What We Process In Managed Mode</h2>
+    <ul>
+      <li><strong>Google sign-in account data:</strong> when you sign in for managed mode, Firebase Authentication processes your Google account identifier and may expose your email address, display name, and profile photo to the app.</li>
+      <li><strong>Managed request content:</strong> prompts, replies, images, audio, video, and file uploads used for managed AI features pass through our Firebase backend and are then forwarded to Google Gemini.</li>
+      <li><strong>Managed billing records:</strong> our backend stores managed billing summaries, usage ledgers, reservation records, entitlement records, and Google Play purchase verification records in Firebase/Firestore so managed credits can function correctly.</li>
+      <li><strong>Managed remote files:</strong> files uploaded for managed requests may be stored temporarily through Gemini file handling. The backend automatically evicts old managed files and keeps per-user limits in place.</li>
+      <li><strong>Managed session cache:</strong> the app stores a local managed session cache on your device so sign-in state and billing summary can be restored more smoothly.</li>
+    </ul>
+
+    <h2>Google Play Purchases</h2>
+    <ul>
+      <li><strong>Payments:</strong> Google Play handles payment processing. We do not receive your full payment card details.</li>
+      <li><strong>Purchase metadata:</strong> to verify a managed credit purchase, the app and backend process purchase metadata such as product id, purchase token, order id, purchase time, purchase state, and package name.</li>
+      <li><strong>Theme purchases and managed credits:</strong> existing theme purchases remain permanent Google Play unlocks. Managed credit purchases are verified and then consumed so the same credit SKU can be bought again.</li>
+    </ul>
+
+    <h2>Third-Party Services</h2>
+    <p>This app uses Google and Firebase services, including Google Gemini, Firebase Authentication, Firebase/Firestore, and Google Play Billing. Your use of those services is also governed by their policies.</p>
+    <ul>
+      <li><a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Google Privacy Policy</a></li>
+      <li><a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer">Gemini API Terms</a></li>
+      <li><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noreferrer">Firebase Privacy and Security</a></li>
+    </ul>
+
+    <h2>What This Release Does Not Do</h2>
+    <ul>
+      <li>No in-app ads are included in this release.</li>
+      <li>No third-party analytics SDK or crash reporting SDK operated by the developer is included in this release.</li>
+      <li>We do not receive your BYOK Gemini API key on our backend.</li>
+      <li>We do not receive your full Google Play payment card details.</li>
+    </ul>
+
+    <h2>Retention and Deletion</h2>
+    <ul>
+      <li><strong>Local data:</strong> local chat history, local settings, and the local usage ledger remain on your device until you clear them or uninstall the app.</li>
+      <li><strong>Managed backend records:</strong> managed billing and usage records remain in Firebase/Firestore until you delete your managed account or they are otherwise removed through backend maintenance.</li>
+      <li><strong>Managed uploaded files:</strong> managed uploaded files are not meant to be permanent user storage. The backend automatically evicts older managed files.</li>
+      <li><strong>Google retention:</strong> data sent to Google Gemini, Firebase, or Google Play is also subject to Google's retention and policy rules.</li>
+      <li><strong>Deletion exceptions:</strong> if you delete your managed account, the app deletes user-scoped managed account records, but processed Google Play purchase token records and generated-content safety reports may remain in anonymized form where needed to prevent fraud or support policy enforcement.</li>
+    </ul>
+
+    <div class="warning">
+      <strong>Important:</strong><br />
+      AI prompts and attachments can contain sensitive information. Do not send passwords, payment card numbers, government identifiers, or other highly sensitive personal data unless you fully understand the risks and the policies of the underlying Google services you are using.
+    </div>
+
+    <h2>Requests and Reports</h2>
+    <ul>
+      <li><strong>In-app managed account deletion:</strong> signed-in managed users can delete their managed account from the managed access panel inside the app.</li>
+      <li><strong>Outside-app account deletion:</strong> the public deletion page is available at <a href="/delete-account.html">/delete-account.html</a>.</li>
+      <li><strong>In-app offensive AI-generated content reports:</strong> assistant messages include an in-app report / flag action so you can report unsafe, offensive, deceptive, or otherwise problematic generated output without leaving the app.</li>
+      <li><strong>Fallback support path:</strong> if you cannot use the in-app or hosted deletion/report paths, contact the developer using the support contact listed in Google Play or the GitHub repository below.</li>
     </ul>
 
     <div class="note">
-      <strong>Important Note on Google's Data Retention:</strong><br/>
-      While uninstalling the app deletes your local history, data sent to the Google Gemini API is subject to Google's data retention policies.
-      If you use a free API key, Google may retain prompts and responses to improve their products.
-      Please do not share sensitive personal information (PII), passwords, or confidential data in your chats.
+      <strong>Deletion scope notice:</strong><br />
+      The managed account deletion flows delete the managed Firebase-backed account path for this app. BYOK API keys, local chat history, and local usage metadata stored on a different device are not automatically removed by the hosted deletion page alone.
     </div>
 
-    <h2>Third-Party Services</h2>
-    <p>This app uses the Google Gemini API. Your interactions are governed by <a href="https://policies.google.com/privacy" target="_blank">Google’s Privacy Policy</a> and <a href="https://ai.google.dev/gemini-api/terms" target="_blank">Terms of Service</a>.</p>
-
     <h2>Contact</h2>
-    <p>If you have questions, please contact the developer via the <a href="https://github.com/ronitervo/maestrotutor/issues" target="_blank">GitHub repository</a>.</p>
+    <p>If you have questions, please contact the developer via the <a href="https://github.com/ronitervo/maestrotutor/issues" target="_blank" rel="noreferrer">GitHub repository</a> or the support contact listed in the Google Play store listing.</p>
   </body>
 </html>

@@ -1,109 +1,177 @@
-# Maestro Tutor – Dev Cheat Sheet
-
-Keyboard UX (The WebView curse)
-In chat apps specifically, a common Capacitor bug is that when the on-screen keyboard opens, 
-it covers the input field instead of pushing the view up.
-
-[X] Keyboard Check: Input field stays visible when typing on Android.
-
-Action: Open android/app/src/main/AndroidManifest.xml.
-
-Check: Look for the <activity> tag. Ensure android:windowSoftInputMode is set to "adjustResize" (recommended for chat) rather than "adjustPan".
-
-Why: adjustResize shrinks the webview so your CSS "flex-end" logic keeps the input bar visible on top of the keyboard.
-
-Summary Checklist Addition
+# Maestro Tutor - Dev Cheat Sheet
 
 ## Quick Commands
+
 ```bash
-# Web dev server
+# Web dev
 npm run dev
 
-# Production build
+# Production web build
 npm run build
 
-# Build + sync to Android
-npm run cap:android
+# Build and sync Android
+npm run build:android
 
 # Open Android Studio
 npm run cap:open:android
 
-# Sync only (after npm install or plugin changes)
-npx cap sync android
+# Build release AAB
+npm run build:aab
+
+# Functions build
+cd functions
+npm run build
+cd ..
+
+# Deploy backend
+firebase deploy --only functions,firestore:rules,firestore:indexes
 ```
 
-## Device Testing (USB)
-1) Enable Developer Options + USB Debugging on phone  
-2) Plug in, accept debugging prompt  
-3) Run:
+## Local Files You Need
+
+- `.env`
+- `functions/.env`
+- `android/app/google-services.json`
+- `android/keystore.properties`
+- upload keystore file
+
+## Access Modes
+
+### BYOK
+
+- User pastes Gemini API key
+- Client talks directly to Gemini
+- API key gate shows a local usage metadata ledger for tracked requests
+- BYOK ledger still offers the Google Cloud billing shortcut
+- This path must stay intact
+
+### Managed
+
+- User signs in with Firebase Google auth
+- User buys credits through Google Play on Android
+- Backend verifies purchase token with Play Developer API
+- Backend grants credits and records ledgers in Firestore
+- Gemini requests go through Firebase Functions
+- API key gate shows the same local usage metadata ledger for managed requests
+- Managed live tokens expire after 3 minutes and the client silently reconnects when needed
+- Managed mode allows at most 2 active live sockets per signed-in user
+
+## Play Metadata / Policy Claims
+
+Safe claims for the current build:
+
+- BYOK exists and keeps the user's Gemini key local to the device
+- Managed mode uses Firebase Google sign-in
+- Managed requests go through Firebase Functions and then Google Gemini
+- Firestore stores managed billing / usage / entitlement / purchase verification records
+- Google Play handles Android managed credit payments
+- No ads
+- No developer analytics SDK
+- No developer crash reporting SDK
+
+Do not claim these are already solved unless you implement them:
+
+- self-serve in-app managed account deletion
+- outside-app deletion request URL
+- in-app report / flag controls for offensive AI-generated output
+
+Current production blockers to remember:
+
+- Play account-deletion policy is relevant because managed sign-in creates an account path
+- Play AI-generated-content policy expects an in-app report / flag path for generated content
+- `public/privacy.html` is updated to describe current behavior, but Play Console declarations must stay equally honest
+
+## Product Rules
+
+### Themes
+
+- Existing theme SKUs remain permanent unlocks
+- They are acknowledged
+- They are not consumed
+
+### Managed credits
+
+- Current SKU: `maestro_credits_1000`
+- One purchase grants `1000` credits
+- Purchase is consumed after backend verification so it can be bought again
+
+### Managed uploads
+
+- Backend keeps at most `20` active managed files per user
+- Oldest managed files are auto-evicted before new uploads
+- Upload billing is size-based through `MANAGED_UPLOAD_CREDITS_PER_MB`
+
+## Important Paths
+
+- Managed access UI: `src/features/session/components/ManagedAccessPanel.tsx`
+- App gate: `src/features/session/components/ApiKeyGate.tsx`
+- Integration config: `src/core/config/integrations.ts`
+- Service hub: `src/services/maestroServices.ts`
+- Backend client: `src/services/backend/maestroBackendService.ts`
+- Native billing: `android/app/src/main/java/com/ronitervo/maestrotutor/ThemeBillingManager.java`
+- Backend entry: `functions/src/index.ts`
+- Play verification: `functions/src/playBilling.ts`
+- Reservation logic: `functions/src/managedBilling.ts`
+- Gemini proxy and managed files: `functions/src/gemini.ts`
+
+## Firestore Collections Written By Backend
+
+- `users/{uid}/account/summary`
+- `users/{uid}/billingLedger/{entryId}`
+- `users/{uid}/usageLedger/{entryId}`
+- `users/{uid}/entitlements/{entitlementId}`
+- `googlePlayPurchases/{purchaseToken}`
+- `managedReservations/{reservationId}`
+- `managedFiles/{fileId}`
+
+## Common Build / Release Flow
+
 ```bash
-npm run cap:android
-npm run cap:open:android
+npm run build
+cd functions
+npm run build
+cd ..
+npm run build:android
+npm run build:aab
 ```
 
-4) Click **Run** in Android Studio
+## Common Failure Checks
 
+### Android sign-in fails
 
-2. The "Minification" Crash Test
-   Configured release.jks. However, Android release builds often default to minifyEnabled true (using R8/Proguard) to shrink code. This frequently breaks Capacitor plugins or the Gemini SDK because it renames the variables that the JSON parser looks for.
+- SHA-1 fingerprints missing in Firebase
+- stale `google-services.json`
+- Firebase Google provider disabled
 
-Action: Test the Release Build locally. Do not assume that if "Debug" works, "Release" works.
+### Purchase succeeds but no credits appear
 
-How to test:
+- Backend not deployed
+- Wrong service account linked in Play Console
+- `MANAGED_CREDIT_PRODUCTS` mismatch
+- wrong package id
 
-Run cd android && ./gradlew assembleRelease (builds an APK, not AAB).
+### Android backend calls fail
 
-Locate the APK in android/app/build/outputs/apk/release/.
+- `functions/.env` missing localhost origins
+- wrong `VITE_BACKEND_BASE_URL`
 
-Install it on your phone: adb install app-release.apk.
+### Managed live disconnects too early or too late
 
-If it crashes on launch or when you save the key: You need to add Proguard rules or set minifyEnabled false in build.gradle (simplest fix for now).
+- `MANAGED_LIVE_TOKEN_LIFETIME_SECONDS` should stay `180`
+- `MANAGED_MAX_ACTIVE_LIVE_SOCKETS` should stay `2`
+- verify the app silently reconnects after the 3-minute lease rolls over
 
+### Credits stay reserved
 
-## API Key (BYOK) Flow
-- First launch shows the API key gate (blocking).
-- Top-right “API Key” button opens the key manager later.
-- Storage:
-  - Native: Capacitor Preferences
-  - Web: localStorage fallback
-- Key files:
-  - `src/core/security/apiKeyStorage.ts`
-  - `src/features/session/components/ApiKeyGate.tsx`
-
-## When Things Break
-**Symptoms → Quick Fix**
-- App shows blank WebView after changes  
-  → Run `npm run build` then `npx cap sync android`
-
-- API key errors in logs  
-  → Tap “API Key” in app and re‑paste key
-
-- Changes not reflected on device  
-  → Run `npm run cap:android` again and rebuild app
-
-- Android Studio doesn’t see device  
-  → Verify USB Debugging and accept device prompt
-
-[x] Release Build Verified: Installed app-release.apk locally to ensure Minification/R8 didn't break the Gemini SDK.
+- scheduled sweep not deployed
+- function crashed before release path completed
+- check `managedReservations`
 
 ## Safe Defaults
-- Do **not** ship `.env` keys in production  
-- Always run `npm run build` before syncing to Android  
-- Keep `android/` committed (required for Play builds)
 
-## File Map (Common)
-- Capacitor config: `capacitor.config.ts`
-- Android project: `android/`
-- Privacy policy: `public/privacy.html`
-- App settings: `src/store/slices/settingsSlice.ts`
-
-## Git / Repo Hygiene
-- Never commit:
-  - `.env*`
-  - `*.jks` / `*.keystore`
-  - `android/keystore.properties`
-- `.gitignore` already covers these.
-
-## Debugging Tips
-- Use the top-right terminal icon for request logs.
-- Use Chrome DevTools (chrome://inspect) for WebView debugging.
+- Do not commit secrets
+- Do not rename released product ids
+- Do not remove localhost origins from backend env
+- Do not trust Play purchases on the client without backend verification
+- Do not replace user-scoped file deletion with global deletion
+- Do not regress BYOK while editing managed mode

@@ -7,7 +7,7 @@ import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { resolveLiveConnectAccess } from '../../../api/gemini/client';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
@@ -99,6 +99,21 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const audioTelemetryRef = useRef<SttAudioTelemetry>(createEmptySttAudioTelemetry());
   const transcriptUpdateTimerRef = useRef<number | null>(null);
   const lastRenderedTranscriptRef = useRef('');
+  const releaseManagedLiveLeaseRef = useRef<(() => Promise<void>) | null>(null);
+  const managedLiveModeRef = useRef(false);
+  const shouldKeepListeningRef = useRef(false);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const reconnectInFlightRef = useRef(false);
+  const lastStartArgsRef = useRef<string | {
+    language?: string;
+    lastAssistantMessage?: string;
+    replySuggestions?: string[];
+  } | undefined>(undefined);
+  const startSessionRef = useRef<((languageOrOptions?: string | {
+    language?: string;
+    lastAssistantMessage?: string;
+    replySuggestions?: string[];
+  }, startMode?: 'fresh' | 'reconnect') => Promise<void>) | null>(null);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -121,6 +136,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   useEffect(() => {
     autoStopAfterTurnCompleteRef.current = options?.autoStopAfterTurnComplete !== false;
   }, [options?.autoStopAfterTurnComplete]);
+
+  const clearReconnectTimer = useCallback(() => {
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+  }, []);
 
   const getInputPacketizerStats = useCallback((): RealtimePcmPacketizerStats => (
     inputPacketizerRef.current?.getStats() ?? {
@@ -225,6 +247,11 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       sessionRef.current = null;
       try { if (typeof session.close === 'function') session.close(); } catch { /* ignore */ }
     }
+    if (releaseManagedLiveLeaseRef.current) {
+      const releaseLease = releaseManagedLiveLeaseRef.current;
+      releaseManagedLiveLeaseRef.current = null;
+      await releaseLease().catch(() => undefined);
+    }
 
     if (codecWorkerRef.current) {
       codecWorkerRef.current.dispose();
@@ -251,9 +278,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot]);
 
   const stop = useCallback(async () => {
+    shouldKeepListeningRef.current = false;
+    managedLiveModeRef.current = false;
+    reconnectInFlightRef.current = false;
+    clearReconnectTimer();
     await cleanup({ status: 'stopped' });
     setIsListening(false);
-  }, [cleanup]);
+  }, [cleanup, clearReconnectTimer]);
 
   const flushTranscriptState = useCallback(() => {
     clearTranscriptUpdateTimer();
@@ -279,39 +310,82 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     }, TRANSCRIPT_UPDATE_INTERVAL_MS);
   }, [flushTranscriptState]);
 
+  const scheduleReconnect = useCallback((reason: 'close' | 'error'): boolean => {
+    if (!shouldKeepListeningRef.current || !managedLiveModeRef.current) {
+      return false;
+    }
+    if (reconnectTimerRef.current !== null || reconnectInFlightRef.current) {
+      return false;
+    }
+
+    reconnectInFlightRef.current = true;
+    reconnectTimerRef.current = window.setTimeout(() => {
+      reconnectTimerRef.current = null;
+      const restartSession = startSessionRef.current;
+      if (!restartSession) {
+        reconnectInFlightRef.current = false;
+        return;
+      }
+      void restartSession(lastStartArgsRef.current, 'reconnect').catch((restartError) => {
+        reconnectInFlightRef.current = false;
+        const message = restartError instanceof Error
+          ? restartError.message
+          : `Managed live STT reconnect failed after ${reason}.`;
+        setError(message);
+        setIsListening(false);
+      });
+    }, 150);
+    return true;
+  }, []);
+
   // Load the AudioWorklet module (only needs to happen once per AudioContext)
   const ensureSttWorklet = useCallback(async (ctx: AudioContext) => {
     if (!ctx.audioWorklet) throw new Error("AudioWorklet not supported");
     await ctx.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
   }, []);
 
-  const start = useCallback(async (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
+  const startInternal = useCallback(async (
+    languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] },
+    startMode: 'fresh' | 'reconnect' = 'fresh'
+  ) => {
+    const reconnecting = startMode === 'reconnect';
+    if (!reconnecting) {
+      shouldKeepListeningRef.current = true;
+      lastStartArgsRef.current = languageOrOptions;
+    }
+    clearReconnectTimer();
+    reconnectInFlightRef.current = false;
+
     // If cleanup is in progress, wait for it to complete
     while (isCleaningUpRef.current) {
       await new Promise(resolve => setTimeout(resolve, 10));
     }
     
-    await cleanup({ status: 'restarted' });
-    
+    await cleanup({ status: reconnecting ? 'reconnecting' : 'restarted' });
+
     setError(null);
-    setTranscript('');
-    lastRenderedTranscriptRef.current = '';
+    if (!reconnecting) {
+      setTranscript('');
+      lastRenderedTranscriptRef.current = '';
+    }
     
     // Generate a new session ID for this start call
     const sessionId = ++sttSessionCounter;
     currentSessionIdRef.current = sessionId;
     logFinalizedRef.current = false;
-    
-    committedTranscriptRef.current = '';
+
+    if (!reconnecting) {
+      committedTranscriptRef.current = '';
+      turnIdRef.current = 0;
+    }
     interimInputRef.current = '';
     interimParrotRef.current = '';
-    turnIdRef.current = 0;
     totalAudioSamplesRef.current = 0;
     turnAudioSamplesRef.current = 0;
     transcribedAudioSamplesRef.current = 0;
     audioTelemetryRef.current = createEmptySttAudioTelemetry();
-    // audioChunksRef is already cleared in cleanup(), but ensure it's empty
     audioChunksRef.current = [];
+    flushTranscriptState();
 
     try {
       // --- 1. Request Microphone Permission FIRST ---
@@ -399,8 +473,11 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         hasLastAssistantMessage: !!lastAssistantMessage,
       });
 
-      const apiKey = await getApiKeyOrThrow();
-      const ai = new GoogleGenAI({ apiKey });
+      managedLiveModeRef.current = false;
+      const liveAccess = await resolveLiveConnectAccess({ purpose: 'live' });
+      managedLiveModeRef.current = liveAccess.isManaged;
+      releaseManagedLiveLeaseRef.current = liveAccess.release;
+      const ai = new GoogleGenAI({ apiKey: liveAccess.apiKey });
       const session = await ai.live.connect({
         model,
         config: {
@@ -414,6 +491,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           onopen: () => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
+            reconnectInFlightRef.current = false;
             setIsListening(true);
           },
           onmessage: (msg: LiveServerMessage) => {
@@ -520,6 +598,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                if (autoStopAfterTurnCompleteRef.current) {
                  void (async () => {
                    try {
+                     shouldKeepListeningRef.current = false;
+                     managedLiveModeRef.current = false;
+                     reconnectInFlightRef.current = false;
+                     clearReconnectTimer();
                      logSttFlow('stt.turnComplete.cleanup.start', {
                        sessionId,
                        turnId: turnIdRef.current,
@@ -540,6 +622,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
 
+            if (scheduleReconnect('close')) {
+              return;
+            }
+
             // Treat unexpected server closure as an error to prevent infinite restart loops
             // in useSpeechOrchestrator. If it was user-initiated, sessionId would have changed.
             const closeMsg = (event && event.reason) ? event.reason : "Connection closed by server";
@@ -559,6 +645,9 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           onerror: (err) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
+            if (scheduleReconnect('error')) {
+              return;
+            }
             console.error("Gemini Live STT error:", err);
             if (logRef.current && !logFinalizedRef.current) {
               logFinalizedRef.current = true;
@@ -630,6 +719,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       // not for audible output. The audio graph runs as long as source is connected.
 
     } catch (e: any) {
+      reconnectInFlightRef.current = false;
+      managedLiveModeRef.current = false;
       console.error("STT Start Error", e);
       if (logRef.current && !logFinalizedRef.current) {
         logFinalizedRef.current = true;
@@ -644,15 +735,27 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot]);
+  }, [cleanup, clearReconnectTimer, ensureCodecWorker, ensureSttWorklet, flushTranscriptState, getAudioTelemetrySnapshot, scheduleReconnect, scheduleTranscriptStateUpdate]);
+
+  startSessionRef.current = startInternal;
+
+  const start = useCallback(async (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
+    await startInternal(languageOrOptions, 'fresh');
+  }, [startInternal]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
   cleanupRef.current = cleanup;
 
   useEffect(() => {
-    return () => { cleanupRef.current(); };
-  }, []); // Empty deps - only runs on unmount
+    return () => {
+      shouldKeepListeningRef.current = false;
+      managedLiveModeRef.current = false;
+      reconnectInFlightRef.current = false;
+      clearReconnectTimer();
+      void cleanupRef.current();
+    };
+  }, [clearReconnectTimer]);
 
   return { start, stop, transcript, isListening, error, getRecordedAudio };
 }
