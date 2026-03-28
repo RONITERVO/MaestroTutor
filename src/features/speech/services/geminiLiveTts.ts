@@ -25,7 +25,7 @@ import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
-import { resolveLiveConnectApiKey } from '../../../api/gemini/client';
+import { resolveLiveConnectAccess } from '../../../api/gemini/client';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
 
 // ============================================================================
@@ -138,9 +138,9 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
   }
 
   // Validate API key is available
-  let apiKey: string;
+  let liveAccess: Awaited<ReturnType<typeof resolveLiveConnectAccess>>;
   try {
-    apiKey = await resolveLiveConnectApiKey({ purpose: 'live' });
+    liveAccess = await resolveLiveConnectAccess({ purpose: 'live' });
   } catch (e: any) {
     const errorMsg = e?.message || 'Missing API key';
     onError?.(errorMsg);
@@ -180,6 +180,7 @@ ${textBlock}`;
     let nextStartTime = audioContext.currentTime;
     let isStreaming = false;
     let streamCleanup: (() => void) | null = null;
+    let releaseLiveAccess: (() => Promise<void>) | null = liveAccess.release;
     let session: any = null;
     let isResolved = false;
     const activeSources: AudioBufferSourceNode[] = [];
@@ -235,6 +236,10 @@ ${textBlock}`;
     const cleanup = () => {
       isStreaming = false;
       if (streamCleanup) streamCleanup();
+      if (releaseLiveAccess) {
+        void releaseLiveAccess().catch(() => undefined);
+        releaseLiveAccess = null;
+      }
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
         rafId = null;
@@ -337,7 +342,7 @@ ${textBlock}`;
     };
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: liveAccess.apiKey });
       
       session = await ai.live.connect({
         model,

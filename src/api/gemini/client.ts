@@ -18,6 +18,12 @@ export class ApiError extends Error {
   }
 }
 
+export interface LiveConnectAccess {
+  apiKey: string;
+  isManaged: boolean;
+  release: () => Promise<void>;
+}
+
 /**
  * Validates an API key by making a lightweight models list call.
  * Returns `{ valid: true }` for valid keys or non-key-related errors (network, quota).
@@ -67,12 +73,16 @@ export const getAi = async (options?: { apiVersion?: string }) => {
   }
 };
 
-export const resolveLiveConnectApiKey = async (options?: {
+export const resolveLiveConnectAccess = async (options?: {
   purpose?: 'live' | 'music';
   durationSeconds?: number;
-}): Promise<string> => {
+}): Promise<LiveConnectAccess> => {
   try {
-    return await getApiKeyOrThrow();
+    return {
+      apiKey: await getApiKeyOrThrow(),
+      isManaged: false,
+      release: async () => {},
+    };
   } catch (error: any) {
     if (!maestroBackendService.isConfigured()) {
       const message = error?.message || 'Missing API key';
@@ -87,19 +97,36 @@ export const resolveLiveConnectApiKey = async (options?: {
 
     try {
       const token = await maestroBackendService.createLiveToken(options);
-      return token.token;
+      let released = false;
+      return {
+        apiKey: token.token,
+        isManaged: true,
+        release: async () => {
+          if (released) return;
+          released = true;
+          if (!token.leaseId) return;
+          try {
+            await maestroBackendService.releaseLiveTokenLease({ leaseId: token.leaseId });
+          } catch {
+            // Ignore lease release failures; the backend expiry window remains the fallback.
+          }
+        },
+      };
     } catch (backendError: any) {
       const message = typeof backendError?.message === 'string'
         ? backendError.message
-        : 'Managed live mode is unavailable until the secure live proxy is deployed. BYOK live access still works.';
+        : 'Managed live mode is temporarily unavailable.';
       throw new ApiError(
         message,
         {
-          code: message.includes('secure live proxy')
-            ? 'MANAGED_LIVE_PROXY_REQUIRED'
-            : 'MANAGED_LIVE_TOKEN_FAILED',
+          code: 'MANAGED_LIVE_TOKEN_FAILED',
         }
       );
     }
   }
 };
+
+export const resolveLiveConnectApiKey = async (options?: {
+  purpose?: 'live' | 'music';
+  durationSeconds?: number;
+}): Promise<string> => (await resolveLiveConnectAccess(options)).apiKey;

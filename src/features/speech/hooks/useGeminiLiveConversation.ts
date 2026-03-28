@@ -20,7 +20,7 @@ import {
   PCM_PLAYBACK_PROCESSOR_URL,
   PCM_PLAYBACK_PROCESSOR_NAME,
 } from '../worklets';
-import { resolveLiveConnectApiKey } from '../../../api/gemini/client';
+import { resolveLiveConnectAccess } from '../../../api/gemini/client';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import {
@@ -195,6 +195,14 @@ export function useGeminiLiveConversation(
   const inputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const outputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
+  const releaseManagedLiveLeaseRef = useRef<(() => Promise<void>) | null>(null);
+  const managedLiveModeRef = useRef(false);
+  const shouldMaintainSessionRef = useRef(false);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const reconnectInFlightRef = useRef(false);
+  const lastStartOptionsRef = useRef<StartLiveConversationOptions | null>(null);
+  const sessionResumptionHandleRef = useRef<string | undefined>(undefined);
+  const startSessionRef = useRef<((opts: StartLiveConversationOptions, startMode?: 'fresh' | 'reconnect') => Promise<void>) | null>(null);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -234,6 +242,25 @@ export function useGeminiLiveConversation(
   const updateState = useCallback((s: LiveSessionState) => {
     setState(s);
     callbacksRef.current.onStateChange?.(s);
+  }, []);
+
+  const clearReconnectTimer = useCallback(() => {
+    if (reconnectTimerRef.current !== null) {
+      window.clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = null;
+    }
+  }, []);
+
+  const buildReconnectOptions = useCallback((): StartLiveConversationOptions | null => {
+    const previousOptions = lastStartOptionsRef.current;
+    if (!previousOptions) return null;
+    const sessionResumption = sessionResumptionHandleRef.current
+      ? { handle: sessionResumptionHandleRef.current }
+      : previousOptions.sessionResumption;
+    return {
+      ...previousOptions,
+      sessionResumption,
+    };
   }, []);
 
   const resetAudioTelemetry = useCallback(() => {
@@ -431,7 +458,7 @@ export function useGeminiLiveConversation(
     captureVideoRef.current = null;
   }, []);
 
-  const cleanup = useCallback(async () => {
+  const cleanup = useCallback(async (options?: { preserveTurnTranscript?: boolean }) => {
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
@@ -503,6 +530,11 @@ export function useGeminiLiveConversation(
         sessionRef.current = null;
         try { if (typeof session.close === 'function') session.close(); } catch {}
     }
+    if (releaseManagedLiveLeaseRef.current) {
+      const releaseLease = releaseManagedLiveLeaseRef.current;
+      releaseManagedLiveLeaseRef.current = null;
+      await releaseLease().catch(() => undefined);
+    }
 
     if (inputCodecWorkerRef.current) {
       inputCodecWorkerRef.current.dispose();
@@ -513,7 +545,9 @@ export function useGeminiLiveConversation(
       outputCodecWorkerRef.current = null;
     }
 
-    emitTurnTranscriptReset();
+    if (!options?.preserveTurnTranscript) {
+      emitTurnTranscriptReset();
+    }
     
     // Clear all accumulators to free memory
     currentInputTranscriptionRef.current = '';
@@ -672,7 +706,41 @@ export function useGeminiLiveConversation(
     }
   }, [detachCaptureVideo, ensureVideoElementReady, startVideoFrameLoop, stopVideoFrameLoop]);
 
-  const start = useCallback(async (opts: StartLiveConversationOptions = {}) => {
+  const scheduleReconnect = useCallback((reason: 'close' | 'error'): boolean => {
+    if (!shouldMaintainSessionRef.current || !managedLiveModeRef.current) {
+      return false;
+    }
+    const reconnectOptions = buildReconnectOptions();
+    if (!reconnectOptions || reconnectTimerRef.current !== null || reconnectInFlightRef.current) {
+      return false;
+    }
+
+    reconnectInFlightRef.current = true;
+    updateState('connecting');
+    reconnectTimerRef.current = window.setTimeout(() => {
+      reconnectTimerRef.current = null;
+      const restartSession = startSessionRef.current;
+      if (!restartSession) {
+        reconnectInFlightRef.current = false;
+        return;
+      }
+      void restartSession(reconnectOptions, 'reconnect').catch((error) => {
+        reconnectInFlightRef.current = false;
+        updateState('error');
+        callbacksRef.current.onError?.(
+          error instanceof Error
+            ? error.message
+            : `Managed live reconnect failed after ${reason}.`
+        );
+      });
+    }, 150);
+    return true;
+  }, [buildReconnectOptions, updateState]);
+
+  const startInternal = useCallback(async (
+    opts: StartLiveConversationOptions = {},
+    startMode: 'fresh' | 'reconnect' = 'fresh'
+  ) => {
     const {
       stream,
       videoElement,
@@ -683,6 +751,18 @@ export function useGeminiLiveConversation(
       emitTurns = true,
       sessionResumption,
     } = opts;
+    const reconnecting = startMode === 'reconnect';
+
+    if (!reconnecting) {
+      shouldMaintainSessionRef.current = true;
+      lastStartOptionsRef.current = { ...opts };
+      const sessionResumptionHandle = typeof (opts.sessionResumption as { handle?: unknown } | undefined)?.handle === 'string'
+        ? (opts.sessionResumption as { handle: string }).handle
+        : undefined;
+      sessionResumptionHandleRef.current = sessionResumptionHandle;
+    }
+    clearReconnectTimer();
+    reconnectInFlightRef.current = false;
     
     // Wait for any in-progress cleanup to finish
     while (isCleaningUpRef.current) {
@@ -692,7 +772,7 @@ export function useGeminiLiveConversation(
     updateState('connecting');
     
     // Ensure previous session is fully cleaned
-    await cleanup();
+    await cleanup({ preserveTurnTranscript: reconnecting });
     
     // Generate a new session ID for this start call
     const sessionId = ++liveConversationSessionCounter;
@@ -807,8 +887,14 @@ export function useGeminiLiveConversation(
         outputAudioTranscription: {},
       });
 
-      const apiKey = await resolveLiveConnectApiKey({ purpose: 'live' });
-      const ai = new GoogleGenAI({ apiKey });
+      managedLiveModeRef.current = false;
+      const liveAccess = await resolveLiveConnectAccess({ purpose: 'live' });
+      managedLiveModeRef.current = liveAccess.isManaged;
+      releaseManagedLiveLeaseRef.current = liveAccess.release;
+      const activeSessionResumption = sessionResumptionHandleRef.current
+        ? { handle: sessionResumptionHandleRef.current }
+        : sessionResumption;
+      const ai = new GoogleGenAI({ apiKey: liveAccess.apiKey });
       const session = await ai.live.connect({
         model,
         config: {
@@ -822,12 +908,13 @@ export function useGeminiLiveConversation(
           },
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
-          sessionResumption,
+          sessionResumption: activeSessionResumption,
         },
         callbacks: {
           onopen: () => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
+            reconnectInFlightRef.current = false;
             updateState('active');
           },
           onmessage: (msg: LiveServerMessage) => {
@@ -841,6 +928,11 @@ export function useGeminiLiveConversation(
                   callbacksRef.current.onGoAway?.(msg.goAway);
                 }
                 if (msg.sessionResumptionUpdate) {
+                  if (msg.sessionResumptionUpdate.newHandle && msg.sessionResumptionUpdate.resumable !== false) {
+                    sessionResumptionHandleRef.current = msg.sessionResumptionUpdate.newHandle;
+                  } else if (msg.sessionResumptionUpdate.resumable === false) {
+                    sessionResumptionHandleRef.current = undefined;
+                  }
                   callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate);
                 }
 
@@ -1179,6 +1271,9 @@ export function useGeminiLiveConversation(
                 audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
+            if (scheduleReconnect('close')) {
+              return;
+            }
             updateState('idle');
             void cleanup().catch((error) => {
               console.warn('Live cleanup after close failed:', error);
@@ -1187,7 +1282,6 @@ export function useGeminiLiveConversation(
           onerror: (err: any) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
-            updateState('error');
             let message = "Connection error";
             try {
                 if (err instanceof Error) message = err.message;
@@ -1209,6 +1303,10 @@ export function useGeminiLiveConversation(
                 audioTelemetry: getAudioTelemetrySnapshot(),
               });
             }
+            if (scheduleReconnect('error')) {
+              return;
+            }
+            updateState('error');
             callbacksRef.current.onError?.(message);
             void cleanup().catch((error) => {
               console.warn('Live cleanup after error failed:', error);
@@ -1268,6 +1366,8 @@ export function useGeminiLiveConversation(
       }
 
     } catch (e) {
+      reconnectInFlightRef.current = false;
+      managedLiveModeRef.current = false;
       updateState('error');
       if (logRef.current && !logFinalizedRef.current) {
         logFinalizedRef.current = true;
@@ -1283,6 +1383,7 @@ export function useGeminiLiveConversation(
     }
   }, [
     cancelModelAudioDecodeJobs,
+    clearReconnectTimer,
     updateState,
     cleanup,
     getAudioTelemetrySnapshot,
@@ -1296,11 +1397,23 @@ export function useGeminiLiveConversation(
     ensureOutputCodecWorker,
     ensurePlaybackWorklet,
     ensureVideoElementReady,
+    scheduleReconnect,
     startVideoFrameLoop,
     waitForModelAudioDecodeCheckpoint,
   ]);
 
+  startSessionRef.current = startInternal;
+
+  const start = useCallback(async (opts: StartLiveConversationOptions = {}) => {
+    await startInternal(opts, 'fresh');
+  }, [startInternal]);
+
   const stop = useCallback(async () => {
+    shouldMaintainSessionRef.current = false;
+    managedLiveModeRef.current = false;
+    sessionResumptionHandleRef.current = undefined;
+    reconnectInFlightRef.current = false;
+    clearReconnectTimer();
     updateState('idle');
     if (inputPacketizerRef.current) {
       await inputPacketizerRef.current.flushPending();
@@ -1315,7 +1428,7 @@ export function useGeminiLiveConversation(
       });
     }
     await cleanup();
-  }, [cleanup, getAudioTelemetrySnapshot, updateState]);
+  }, [cleanup, clearReconnectTimer, getAudioTelemetrySnapshot, updateState]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
@@ -1323,11 +1436,16 @@ export function useGeminiLiveConversation(
 
   useEffect(() => {
       return () => {
+        shouldMaintainSessionRef.current = false;
+        managedLiveModeRef.current = false;
+        sessionResumptionHandleRef.current = undefined;
+        reconnectInFlightRef.current = false;
+        clearReconnectTimer();
         void cleanupRef.current().catch((error) => {
           console.warn('Live cleanup on unmount failed:', error);
         });
       };
-  }, []); // Empty deps - only runs on unmount
+  }, [clearReconnectTimer]); // Empty lifecycle intent; cleanup helper is stable enough for unmount
 
   return { start, stop, updateVideoInput };
 }

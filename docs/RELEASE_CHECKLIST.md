@@ -31,6 +31,7 @@ firebase deploy --only functions,firestore:rules,firestore:indexes
 - [ ] `MANAGED_CREDIT_PRODUCTS` matches the live Play SKU list
 - [ ] `ALLOWED_ORIGINS` still contains localhost and capacitor localhost values
 - [ ] Managed upload envs reviewed: `MANAGED_MAX_ACTIVE_FILES_PER_USER`, `MANAGED_UPLOAD_CREDITS_PER_MB`, `MANAGED_MAX_UPLOAD_BYTES`
+- [ ] Managed live envs reviewed: `MANAGED_LIVE_TOKEN_LIFETIME_SECONDS=180`, `MANAGED_MAX_ACTIVE_LIVE_SOCKETS=2`
 - [ ] If `REQUIRE_APPCHECK=true`, both web and Android managed traffic have been verified against the live backend
 
 ## 4. Static Public Assets
@@ -104,9 +105,10 @@ npm run build:aab
 - [ ] Managed streaming request works
 - [ ] Managed translation works
 - [ ] Managed image generation works
-- [ ] Managed uploads succeed and enforce per-user quota correctly
+- [ ] Managed uploads succeed, auto-evict oldest files, and enforce per-user quota correctly
 - [ ] Credits deduct correctly
 - [ ] Restore purchases does not double-grant
+- [ ] Managed live mode survives a session longer than 3 minutes without a manual retry
 
 ### Theme regression
 

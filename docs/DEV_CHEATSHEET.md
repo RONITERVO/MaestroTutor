@@ -50,6 +50,8 @@ firebase deploy --only functions,firestore:rules,firestore:indexes
 - Backend verifies purchase token with Play Developer API
 - Backend grants credits and records ledgers in Firestore
 - Gemini requests go through Firebase Functions
+- Managed live tokens expire after 3 minutes and the client silently reconnects when needed
+- Managed mode allows at most 2 active live sockets per signed-in user
 
 ## Product Rules
 
@@ -64,6 +66,12 @@ firebase deploy --only functions,firestore:rules,firestore:indexes
 - Current SKU: `maestro_credits_1000`
 - One purchase grants `1000` credits
 - Purchase is consumed after backend verification so it can be bought again
+
+### Managed uploads
+
+- Backend keeps at most `20` active managed files per user
+- Oldest managed files are auto-evicted before new uploads
+- Upload billing is size-based through `MANAGED_UPLOAD_CREDITS_PER_MB`
 
 ## Important Paths
 
@@ -118,6 +126,12 @@ npm run build:aab
 
 - `functions/.env` missing localhost origins
 - wrong `VITE_BACKEND_BASE_URL`
+
+### Managed live disconnects too early or too late
+
+- `MANAGED_LIVE_TOKEN_LIFETIME_SECONDS` should stay `180`
+- `MANAGED_MAX_ACTIVE_LIVE_SOCKETS` should stay `2`
+- verify the app silently reconnects after the 3-minute lease rolls over
 
 ### Credits stay reserved
 

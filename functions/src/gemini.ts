@@ -13,15 +13,16 @@ import { appConfig } from './config';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
 import {
-  chargeManagedCredits,
-  getManagedAccountState,
   releaseManagedReservation,
   reserveManagedCredits,
   settleManagedReservation,
   sweepExpiredReservationsForUser,
 } from './managedBilling';
 import {
+  calculateManagedLiveWindowCredits,
+  calculateManagedLiveWindowUsd,
   estimateReservationUsd,
+  getManagedLiveWindowTokenBudget,
   usageMetadataToUsd,
   uploadBytesToCredits,
   uploadBytesToUsd,
@@ -56,6 +57,8 @@ const fileDocId = (name: string): string => Buffer.from(name, 'utf8').toString('
 const managedFileRef = (name: string) => adminDb.collection('managedFiles').doc(fileDocId(name));
 const managedAccountSummaryRef = (uid: string) =>
   adminDb.collection('users').doc(uid).collection('account').doc('summary');
+const managedLiveLeaseRef = (uid: string, leaseId: string) =>
+  adminDb.collection('users').doc(uid).collection('managedLiveLeases').doc(leaseId);
 
 const isNotFoundError = (error: unknown): boolean => {
   const status = Number((error as { status?: unknown })?.status);
@@ -84,6 +87,99 @@ const readActiveManagedFileCount = (value: unknown): number => {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) return 0;
   return Math.floor(parsed);
+};
+
+interface ManagedLiveLeaseRecord {
+  leaseId: string;
+  purpose: 'live' | 'music';
+  expiresAt: number;
+}
+
+const readActiveManagedLiveLeases = (value: unknown, now = Date.now()): ManagedLiveLeaseRecord[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const leaseId = typeof (item as { leaseId?: unknown }).leaseId === 'string'
+        ? (item as { leaseId: string }).leaseId
+        : '';
+      const purpose = (item as { purpose?: unknown }).purpose === 'music' ? 'music' : 'live';
+      const expiresAt = Number((item as { expiresAt?: unknown }).expiresAt || 0);
+      if (!leaseId || !Number.isFinite(expiresAt) || expiresAt <= now) return null;
+      return { leaseId, purpose, expiresAt };
+    })
+    .filter((item): item is ManagedLiveLeaseRecord => Boolean(item));
+};
+
+const reserveManagedLiveLease = async (params: {
+  uid: string;
+  user: AppUser;
+  purpose: 'live' | 'music';
+  durationMs: number;
+}): Promise<ManagedLiveLeaseRecord> => {
+  const currentTime = Date.now();
+  const lease: ManagedLiveLeaseRecord = {
+    leaseId: randomUUID(),
+    purpose: params.purpose,
+    expiresAt: currentTime + params.durationMs,
+  };
+
+  await adminDb.runTransaction(async (transaction: any) => {
+    const summaryRef = managedAccountSummaryRef(params.uid);
+    const summarySnapshot = await transaction.get(summaryRef);
+    const currentLeases = readActiveManagedLiveLeases(summarySnapshot.data()?.activeManagedLiveLeases, currentTime);
+    if (currentLeases.length >= appConfig.managedMaxActiveLiveSockets) {
+      throw createHttpError(
+        429,
+        `Too many active managed live sockets. Close an existing live session and retry. Maximum active sockets per user: ${appConfig.managedMaxActiveLiveSockets}.`
+      );
+    }
+
+    transaction.set(summaryRef, {
+      user: params.user,
+      activeManagedLiveLeases: [...currentLeases, lease],
+    }, { merge: true });
+    transaction.set(managedLiveLeaseRef(params.uid, lease.leaseId), {
+      uid: params.uid,
+      purpose: params.purpose,
+      createdAt: currentTime,
+      expiresAt: lease.expiresAt,
+      releasedAt: null,
+    }, { merge: true });
+  });
+
+  return lease;
+};
+
+export const releaseManagedLiveLease = async (uid: string, leaseId: string): Promise<{ ok: boolean }> => {
+  if (!leaseId.trim()) return { ok: false };
+  const currentTime = Date.now();
+  await adminDb.runTransaction(async (transaction: any) => {
+    const summaryRef = managedAccountSummaryRef(uid);
+    const leaseRef = managedLiveLeaseRef(uid, leaseId);
+    const summarySnapshot = await transaction.get(summaryRef);
+    const currentLeases = readActiveManagedLiveLeases(summarySnapshot.data()?.activeManagedLiveLeases, currentTime);
+    transaction.set(summaryRef, {
+      activeManagedLiveLeases: currentLeases.filter((lease) => lease.leaseId !== leaseId),
+    }, { merge: true });
+    transaction.set(leaseRef, { releasedAt: currentTime }, { merge: true });
+  });
+  return { ok: true };
+};
+
+const listActiveManagedFilesForUser = async (uid: string) => {
+  const snapshot = await adminDb.collection('managedFiles')
+    .where('uid', '==', uid)
+    .where('deletedAt', '==', null)
+    .limit(appConfig.managedMaxActiveFilesPerUser + 5)
+    .get();
+
+  return snapshot.docs.map((doc) => ({
+    ref: doc.ref,
+    name: typeof doc.data().name === 'string' ? doc.data().name as string : '',
+    createdAt: Number(doc.data().createdAt || 0),
+    lastCheckedAt: Number(doc.data().lastCheckedAt || 0),
+  }));
 };
 
 const reserveManagedUploadSlot = async (uid: string, user?: AppUser): Promise<void> => {
@@ -142,6 +238,54 @@ const markManagedFileDeleted = async (uid: string, fileName: string): Promise<bo
     return true;
   })
 );
+
+const deleteManagedFileByName = async (uid: string, fileName: string): Promise<boolean> => {
+  const snapshot = await managedFileRef(fileName).get();
+  const data = snapshot.data();
+  if (!snapshot.exists || data?.uid !== uid) {
+    return false;
+  }
+  if (data?.deletedAt) {
+    return true;
+  }
+
+  try {
+    await getGeminiClient().files.delete({ name: fileName });
+  } catch (error) {
+    if (!isNotFoundError(error)) {
+      throw error;
+    }
+  }
+
+  await markManagedFileDeleted(uid, fileName);
+  return true;
+};
+
+const evictManagedFilesForUpload = async (uid: string, slotsNeeded = 1): Promise<number> => {
+  const activeFiles = await listActiveManagedFilesForUser(uid);
+  const overflow = activeFiles.length + Math.max(1, slotsNeeded) - appConfig.managedMaxActiveFilesPerUser;
+  if (overflow <= 0) {
+    return 0;
+  }
+
+  const evictionCandidates = activeFiles
+    .filter((file) => file.name)
+    .sort((left, right) => {
+      const leftKey = left.createdAt || left.lastCheckedAt || 0;
+      const rightKey = right.createdAt || right.lastCheckedAt || 0;
+      return leftKey - rightKey;
+    })
+    .slice(0, overflow);
+
+  let evictedCount = 0;
+  for (const file of evictionCandidates) {
+    if (await deleteManagedFileByName(uid, file.name)) {
+      evictedCount += 1;
+    }
+  }
+
+  return evictedCount;
+};
 
 const serializeGenerateContentResponse = (
   response: any,
@@ -444,7 +588,17 @@ export const uploadManagedMedia = async (params: {
   let slotReserved = false;
   let fileRecordCreated = false;
   try {
-    await reserveManagedUploadSlot(params.uid, actingUser);
+    await evictManagedFilesForUpload(params.uid, 1);
+    try {
+      await reserveManagedUploadSlot(params.uid, actingUser);
+    } catch (error) {
+      if (Number((error as { status?: unknown })?.status) === 403) {
+        await evictManagedFilesForUpload(params.uid, 1);
+        await reserveManagedUploadSlot(params.uid, actingUser);
+      } else {
+        throw error;
+      }
+    }
     slotReserved = true;
 
     const reservation = await reserveManagedCredits({
@@ -589,26 +743,7 @@ export const deleteManagedFile = async (uid: string, nameOrUri: string) => {
   if (!fileName) {
     return { ok: false };
   }
-
-  const snapshot = await managedFileRef(fileName).get();
-  const data = snapshot.data();
-  if (!snapshot.exists || data?.uid !== uid) {
-    return { ok: false };
-  }
-  if (data?.deletedAt) {
-    return { ok: true };
-  }
-
-  try {
-    await getGeminiClient().files.delete({ name: fileName });
-  } catch (error) {
-    if (!isNotFoundError(error)) {
-      throw error;
-    }
-  }
-
-  await markManagedFileDeleted(uid, fileName);
-  return { ok: true };
+  return { ok: await deleteManagedFileByName(uid, fileName) };
 };
 
 export const clearManagedFiles = async (uid: string) => {
@@ -628,17 +763,10 @@ export const clearManagedFiles = async (uid: string) => {
     if (!fileName) continue;
 
     try {
-      await getGeminiClient().files.delete({ name: fileName });
-      if (await markManagedFileDeleted(uid, fileName)) {
+      if (await deleteManagedFileByName(uid, fileName)) {
         deletedCount += 1;
       }
     } catch (error) {
-      if (isNotFoundError(error)) {
-        if (await markManagedFileDeleted(uid, fileName)) {
-          deletedCount += 1;
-        }
-        continue;
-      }
       failedCount += 1;
       failedNames.push(fileName);
     }
@@ -654,52 +782,89 @@ export const createManagedLiveToken = async (params: {
   durationSeconds?: number;
 }) => {
   const purpose = params.purpose === 'music' ? 'music' : 'live';
+  const liveWindowSeconds = appConfig.managedLiveTokenLifetimeSeconds;
   const fixedCredits = purpose === 'music'
     ? appConfig.managedMusicSessionCredits
-    : appConfig.managedLiveSessionCredits;
-  const accountState = await getManagedAccountState(params.uid, params.user);
-  if (accountState.billingSummary.availableCredits < fixedCredits) {
-    throw createHttpError(402, 'Not enough Maestro credits to start a live session.');
-  }
+    : calculateManagedLiveWindowCredits(liveWindowSeconds);
+  const billedUsd = purpose === 'music'
+    ? creditsToUsd(fixedCredits)
+    : calculateManagedLiveWindowUsd(liveWindowSeconds);
+  const liveTokenBudget = purpose === 'live'
+    ? getManagedLiveWindowTokenBudget(liveWindowSeconds)
+    : null;
 
-  const expireTime = new Date(Date.now() + 15 * 60_000).toISOString();
-  const tokenResponse = await getGeminiClient().authTokens.create({
-    config: {
-      uses: appConfig.geminiLiveTokenUses,
-      expireTime,
-      httpOptions: {
-        apiVersion: 'v1alpha',
-      },
-    },
-  } as any);
+  const lease = await reserveManagedLiveLease({
+    uid: params.uid,
+    user: params.user,
+    purpose,
+    durationMs: liveWindowSeconds * 1000,
+  });
 
-  const token = typeof (tokenResponse as any)?.name === 'string'
-    ? (tokenResponse as any).name
-    : (typeof (tokenResponse as any)?.token === 'string' ? (tokenResponse as any).token : '');
-  if (!token) {
-    throw createHttpError(500, 'Backend could not mint a Gemini live token.');
-  }
-
-  const billingSummary = await chargeManagedCredits({
+  const reservation = await reserveManagedCredits({
     uid: params.uid,
     user: params.user,
     operation: purpose === 'music' ? 'liveTokenMusic' : 'liveToken',
-    model: purpose === 'music' ? 'lyria-realtime-exp' : 'gemini-live',
-    billedCredits: fixedCredits,
-    billedUsd: creditsToUsd(fixedCredits),
+    model: purpose === 'music' ? 'lyria-realtime-exp' : 'gemini-2.5-flash-native-audio-preview-12-2025',
+    estimatedCredits: fixedCredits,
+    estimatedUsd: billedUsd,
     metadata: {
       purpose,
+      leaseId: lease.leaseId,
       requestedDurationSeconds: params.durationSeconds || null,
-      uses: appConfig.geminiLiveTokenUses,
+      maxWindowSeconds: liveWindowSeconds,
+      ...(liveTokenBudget || {}),
     },
   });
 
-  return {
-    token,
-    expiresAt: typeof (tokenResponse as any)?.expireTime === 'string'
-      ? (tokenResponse as any).expireTime
-      : expireTime,
-    uses: appConfig.geminiLiveTokenUses,
-    billingSummary,
-  };
+  const expireTime = new Date(Date.now() + liveWindowSeconds * 1000).toISOString();
+
+  try {
+    const tokenResponse = await getGeminiClient().authTokens.create({
+      config: {
+        uses: appConfig.geminiLiveTokenUses,
+        expireTime,
+        httpOptions: {
+          apiVersion: 'v1alpha',
+        },
+      },
+    } as any);
+
+    const token = typeof (tokenResponse as any)?.name === 'string'
+      ? (tokenResponse as any).name
+      : (typeof (tokenResponse as any)?.token === 'string' ? (tokenResponse as any).token : '');
+    if (!token) {
+      throw createHttpError(500, 'Backend could not mint a Gemini live token.');
+    }
+
+    const billingSummary = await settleManagedReservation({
+      uid: params.uid,
+      reservationId: reservation.reservationId,
+      billedCredits: fixedCredits,
+      billedUsd,
+      operation: purpose === 'music' ? 'liveTokenMusic' : 'liveToken',
+      model: purpose === 'music' ? 'lyria-realtime-exp' : 'gemini-2.5-flash-native-audio-preview-12-2025',
+      metadata: {
+        purpose,
+        leaseId: lease.leaseId,
+        uses: appConfig.geminiLiveTokenUses,
+        maxWindowSeconds: liveWindowSeconds,
+        ...(liveTokenBudget || {}),
+      },
+    });
+
+    return {
+      leaseId: lease.leaseId,
+      token,
+      expiresAt: typeof (tokenResponse as any)?.expireTime === 'string'
+        ? (tokenResponse as any).expireTime
+        : expireTime,
+      uses: appConfig.geminiLiveTokenUses,
+      billingSummary,
+    };
+  } catch (error) {
+    await releaseManagedReservation(params.uid, reservation.reservationId, 'live-token-mint-failed')
+      .catch(() => undefined);
+    await releaseManagedLiveLease(params.uid, lease.leaseId).catch(() => undefined);
+    throw error;
+  }
 };

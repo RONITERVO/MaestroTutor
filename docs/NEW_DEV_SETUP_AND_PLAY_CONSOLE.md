@@ -24,6 +24,8 @@ If you only want quick commands, also read [DEV_CHEATSHEET.md](./DEV_CHEATSHEET.
   - immediately on request failure when possible
   - periodically by a scheduled backend sweep
 - Managed remote file deletion is user-scoped. Clearing uploads in the debug panel only clears the signed-in user's managed uploads.
+- Managed uploads no longer require routine manual cleanup during normal chatting. The backend keeps at most `20` active managed files per user and evicts the oldest files automatically before new uploads.
+- Managed live tokens are capped at `3` minutes and the backend allows at most `2` active managed live sockets per signed-in user at a time.
 
 ## 2. Repo Areas That Matter
 
@@ -192,7 +194,8 @@ MANAGED_MAX_ACTIVE_FILES_PER_USER=20
 MANAGED_UPLOAD_CREDITS_PER_MB=10
 MANAGED_MAX_UPLOAD_BYTES=52428800
 RESERVATION_TTL_MINUTES=30
-MANAGED_LIVE_SESSION_CREDITS=40
+MANAGED_LIVE_TOKEN_LIFETIME_SECONDS=180
+MANAGED_MAX_ACTIVE_LIVE_SOCKETS=2
 MANAGED_MUSIC_SESSION_CREDITS=120
 ```
 
@@ -203,6 +206,8 @@ Notes:
 - `REQUIRE_APPCHECK=false` is the safe default until web App Check is configured and verified.
 - Once `REQUIRE_APPCHECK=true`, every authenticated backend request must send a valid App Check token.
 - The managed upload guardrails are controlled by `MANAGED_MAX_ACTIVE_FILES_PER_USER`, `MANAGED_UPLOAD_CREDITS_PER_MB`, and `MANAGED_MAX_UPLOAD_BYTES`.
+- The managed live guardrails are controlled by `MANAGED_LIVE_TOKEN_LIFETIME_SECONDS` and `MANAGED_MAX_ACTIVE_LIVE_SOCKETS`.
+- The current backend clamps managed live token lifetime to `180` seconds max and active managed live sockets to `2` max even if someone sets larger env values.
 
 ## 7. Architecture Rules You Must Preserve
 
@@ -343,6 +348,7 @@ Expected backend surface:
 - `POST /gemini/delete-file`
 - `POST /gemini/clear-files`
 - `POST /gemini/live-token`
+- `POST /gemini/live-token/release`
 
 Important Firestore collections created by the backend:
 
@@ -477,6 +483,7 @@ Use a real Android device and an internal testing install from Google Play.
 3. Verify ordinary text chat still works.
 4. Verify image generation still works.
 5. Verify live mode still works.
+6. Keep a managed live session open for more than 3 minutes and verify the app silently reconnects and continues without a manual retry.
 6. Verify existing theme store still works.
 
 ### Managed access
@@ -509,7 +516,8 @@ Use a real Android device and an internal testing install from Google Play.
 1. Cancel a Play purchase.
 2. Try a pending purchase flow if available.
 3. Verify failed managed requests release or later recover reserved credits.
-4. Verify debug-panel "clear uploads" only clears the current managed user's uploads.
+4. Verify ordinary chatting/upload flows do not require manual "clear uploads" usage because the backend evicts old managed files automatically.
+5. Verify debug-panel "clear uploads" only clears the current managed user's uploads when you intentionally use it.
 
 ## 16. Play Internal Testing and License Testers
 

@@ -127,8 +127,17 @@ export interface BackendLiveTokenRequest {
 }
 
 export interface BackendLiveTokenResponse {
+  leaseId: string;
   token: string;
   expiresAt: string | null;
   uses: number;
   billingSummary?: ManagedBillingSummary;
+}
+
+export interface BackendReleaseLiveTokenLeaseRequest {
+  leaseId: string;
+}
+
+export interface BackendReleaseLiveTokenLeaseResponse {
+  ok: boolean;
 }

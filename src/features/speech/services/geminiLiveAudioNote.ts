@@ -3,7 +3,7 @@
 import { GoogleGenAI, Modality, type LiveServerMessage } from '@google/genai';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { resolveLiveConnectApiKey } from '../../../api/gemini/client';
+import { resolveLiveConnectAccess } from '../../../api/gemini/client';
 import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 
@@ -50,8 +50,8 @@ export const synthesizeGeminiAudioNote = async (params: {
     throw new Error('Audio note text is empty.');
   }
 
-  const apiKey = await resolveLiveConnectApiKey({ purpose: 'live' });
-  const ai = new GoogleGenAI({ apiKey });
+  const liveAccess = await resolveLiveConnectAccess({ purpose: 'live' });
+  const ai = new GoogleGenAI({ apiKey: liveAccess.apiKey });
   const model = getGeminiModels().audio.live;
   const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';
 
@@ -73,6 +73,7 @@ export const synthesizeGeminiAudioNote = async (params: {
 
   return new Promise<GeminiAudioNoteResult>((resolve, reject) => {
     let session: any = null;
+    let releaseLiveAccess: (() => Promise<void>) | null = liveAccess.release;
     let isSettled = false;
     let isStreaming = false;
     let cleanupStream: (() => void) | null = null;
@@ -93,6 +94,10 @@ export const synthesizeGeminiAudioNote = async (params: {
     const cleanup = () => {
       isStreaming = false;
       if (cleanupStream) cleanupStream();
+      if (releaseLiveAccess) {
+        void releaseLiveAccess().catch(() => undefined);
+        releaseLiveAccess = null;
+      }
     };
 
     const finalize = () => {

@@ -10,6 +10,8 @@ import type {
   BackendFileStatusesResponse,
   BackendGenerateContentRequest,
   BackendGenerateContentResponse,
+  BackendReleaseLiveTokenLeaseRequest,
+  BackendReleaseLiveTokenLeaseResponse,
   BackendLiveTokenRequest,
   BackendLiveTokenResponse,
   BackendMediaUploadRequest,
@@ -275,4 +277,13 @@ export const maestroBackendService = {
     await updateStoredSession({ billingSummary: response.billingSummary || null });
     return response;
   },
+
+  releaseLiveTokenLease: async (
+    payload: BackendReleaseLiveTokenLeaseRequest
+  ): Promise<BackendReleaseLiveTokenLeaseResponse> => (
+    requestManagedJson<BackendReleaseLiveTokenLeaseResponse>('gemini/live-token/release', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  ),
 } as const;

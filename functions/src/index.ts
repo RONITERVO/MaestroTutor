@@ -8,7 +8,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { type AuthContext, applyCors, requireAuthContext } from './auth';
 import { appConfig } from './config';
 import { adminDb } from './firebase';
-import { generateManagedContent, streamManagedContent, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken } from './gemini';
+import { generateManagedContent, streamManagedContent, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease } from './gemini';
 import { getErrorMessage, getHttpStatus } from './http';
 import { getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
 import { verifyManagedGooglePlayPurchase } from './playBilling';
@@ -134,6 +134,12 @@ app.post('/gemini/live-token', asyncRoute(async (req, res, auth) => {
     purpose: req.body?.purpose === 'music' ? 'music' : 'live',
     durationSeconds: Number(req.body?.durationSeconds || 0) || undefined,
   });
+  res.json(result);
+}));
+
+app.post('/gemini/live-token/release', asyncRoute(async (req, res, auth) => {
+  const leaseId = typeof req.body?.leaseId === 'string' ? req.body.leaseId : '';
+  const result = await releaseManagedLiveLease(auth!.uid, leaseId);
   res.json(result);
 }));
 

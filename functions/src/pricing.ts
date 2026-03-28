@@ -17,6 +17,11 @@ const MODEL_PRICING: Array<{ pattern: string; pricing: ModelPricing }> = [
 
 const FALLBACK_PRICING: ModelPricing = { inputPerMillion: 0.50, outputPerMillion: 3.00 };
 const IMAGE_GENERATION_FALLBACK_USD = 0.039;
+const LIVE_AUDIO_TOKENS_PER_SECOND = 32;
+const MANAGED_LIVE_INPUT_AUDIO_PRICE_PER_MILLION = 3.00;
+const MANAGED_LIVE_OUTPUT_AUDIO_PRICE_PER_MILLION = 12.00;
+const MANAGED_LIVE_INPUT_TOKEN_LIMIT = 131_072;
+const MANAGED_LIVE_OUTPUT_TOKEN_LIMIT = 8_192;
 
 const getPricing = (model: string): ModelPricing => {
   const lower = model.toLowerCase();
@@ -45,6 +50,30 @@ export const uploadBytesToCredits = (bytes: number): number => {
 
 export const uploadBytesToUsd = (bytes: number): number => (
   creditsToUsd(uploadBytesToCredits(bytes))
+);
+
+export const getManagedLiveWindowTokenBudget = (durationSeconds: number): {
+  audioInputTokens: number;
+  audioOutputTokens: number;
+} => {
+  const safeDurationSeconds = Math.max(1, Math.floor(durationSeconds));
+  const audioTokenBudget = safeDurationSeconds * LIVE_AUDIO_TOKENS_PER_SECOND;
+  return {
+    audioInputTokens: Math.min(MANAGED_LIVE_INPUT_TOKEN_LIMIT, audioTokenBudget),
+    audioOutputTokens: Math.min(MANAGED_LIVE_OUTPUT_TOKEN_LIMIT, audioTokenBudget),
+  };
+};
+
+export const calculateManagedLiveWindowUsd = (durationSeconds: number): number => {
+  const budget = getManagedLiveWindowTokenBudget(durationSeconds);
+  const usd =
+    (budget.audioInputTokens / 1_000_000) * MANAGED_LIVE_INPUT_AUDIO_PRICE_PER_MILLION +
+    (budget.audioOutputTokens / 1_000_000) * MANAGED_LIVE_OUTPUT_AUDIO_PRICE_PER_MILLION;
+  return roundUsd(usd);
+};
+
+export const calculateManagedLiveWindowCredits = (durationSeconds: number): number => (
+  usdToCredits(calculateManagedLiveWindowUsd(durationSeconds))
 );
 
 export const estimateReservationUsd = (params: {
