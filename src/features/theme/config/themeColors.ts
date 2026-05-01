@@ -10,7 +10,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// Free themes
+// Legacy / core themes
 // ---------------------------------------------------------------------------
 
 export const ORIGINAL_COLORS: Record<string, string> = {
@@ -300,7 +300,7 @@ export const ORIGINAL_COLORS: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Paid themes
+// Premium catalog themes (the live app default may also come from this section)
 // ---------------------------------------------------------------------------
 
 export const OCEAN_BLUE_COLORS: Record<string, string> = {
@@ -2875,6 +2875,21 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '220 6% 36%',
   'overlay-live-error-hover': '220 7% 30%',
   'overlay-live-error-text': '40 8% 97%',
+  // Action confirmation panels
+  'action-load-bg': '40 6% 92%',
+  'action-load-text': '220 8% 14%',
+  'action-delete-bg': '220 6% 28%',
+  'action-delete-text': '40 8% 97%',
+  'action-export-bg': '40 8% 90%',
+  'action-export-text': '220 8% 14%',
+  'action-combine-bg': '220 7% 22%',
+  'action-combine-text': '40 8% 97%',
+  'action-trim-bg': '220 5% 50%',
+  'action-trim-text': '40 8% 97%',
+  'delete-shortcut-hover-bg': '220 6% 34%',
+  'delete-shortcut-hover-text': '40 8% 97%',
+  'trim-shortcut-hover-bg': '220 5% 56%',
+  'trim-shortcut-hover-text': '40 8% 97%',
   // API key buttons
   'apikey-ok-bg': '220 6% 28%',
   'apikey-ok-hover': '220 7% 22%',
@@ -2882,4 +2897,10 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'apikey-missing-bg': '220 5% 50%',
   'apikey-missing-hover': '220 5% 44%',
   'apikey-missing-text': '40 8% 97%',
+  // Voice identity
+  'voice-zephyr': '220 6% 28%',
+  'voice-puck': '40 6% 62%',
+  'voice-charon': '220 5% 50%',
+  'voice-kore': '40 8% 82%',
+  'voice-fenrir': '220 8% 16%',
 };

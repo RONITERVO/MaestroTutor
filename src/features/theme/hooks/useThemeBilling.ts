@@ -7,7 +7,7 @@ import {
   type BillingErrorEvent,
   type ProductDetailsResult,
 } from '../ThemeBillingService';
-import { THEME_PRODUCTS, type ThemeProduct } from '../config/themeProducts';
+import { STORE_THEME_PRODUCTS, type ThemeProduct } from '../config/themeProducts';
 
 export interface ThemeBillingState {
   /** Product details fetched from Google Play (may be empty if unavailable). */
@@ -127,7 +127,7 @@ export function useThemeBilling(): ThemeBillingState & ThemeBillingActions {
   const clearError = useCallback(() => setBillingError(null), []);
 
   const getEnrichedProducts = useCallback(() => {
-    return THEME_PRODUCTS.map(themeProduct => {
+    return STORE_THEME_PRODUCTS.map(themeProduct => {
       const liveDetails = products.find(p => p.productId === themeProduct.productId);
       return {
         ...themeProduct,

@@ -14,6 +14,7 @@ import {
   LAVENDER_COLORS,
   SPECTRUM_COLORS,
   GRAPHITE_COLORS,
+  ORIGINAL_COLORS,
 } from './themeColors';
 
 export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
@@ -66,6 +67,11 @@ export const PURCHASABLE_THEME_PRESETS: Record<ThemeProductId, PresetTheme> = {
     name: 'Graphite',
     description: 'Premium theme',
     colors: GRAPHITE_COLORS,
+  },
+  [THEME_PRODUCT_IDS.ORIGINAL]: {
+    name: 'Original',
+    description: 'Premium theme',
+    colors: ORIGINAL_COLORS,
   },
 };
 

@@ -181,12 +181,15 @@ The current paid theme IDs are:
 * theme_lavender
 * theme_spectrum
 * theme_graphite
+* theme_original
 
 
 They must match in both:
 
 - [`src/features/theme/config/themeProducts.ts`](../src/features/theme/config/themeProducts.ts)
 - [`android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java`](../android/app/src/main/java/com/ronitervo/maestrotutor/ThemeProducts.java)
+
+The app-wide live default theme is configured separately via `DEFAULT_THEME_PRODUCT_ID` in [`src/features/theme/config/themeProducts.ts`](../src/features/theme/config/themeProducts.ts). That product remains the free in-app default and is hidden from the purchase list while it is active.
 
 Never rename an already released product ID. Create a new product instead.
 
@@ -316,6 +319,7 @@ For each product ID below, create a one-time product in Play Console:
 | `theme_lavender` | Lavender |
 | `theme_spectrum` | Spectrum |
 | `theme_graphite` | Graphite |
+| `theme_original` | Original |
 
 ### Recommended setup for each product
 
