@@ -263,6 +263,7 @@ const PAID_THEME_FINGERPRINTS: Record<ThemeProductId, readonly [string, string][
   theme_lavender:    [['page-bg', '267 35% 97%'], ['user-msg-bg', '262 52% 24%']],
   theme_spectrum:    [['page-bg', '0 0% 98%'],    ['user-msg-bg', '217 60% 26%']],
   theme_graphite:    [['page-bg', '40 8% 97%'],   ['user-msg-bg', '220 8% 14%']],
+  theme_original:    [['page-bg', '210 20% 97%'], ['user-msg-bg', '220 30% 20%']],
 };
 
 const detectPaidThemeId = (colors: Record<string, string>): ThemeProductId | null => {

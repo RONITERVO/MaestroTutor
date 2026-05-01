@@ -7,11 +7,11 @@ import { IconXMark, IconUndo, IconBookmark, IconDownload, IconUpload, IconCheck,
 import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
-import { ORIGINAL_COLORS } from '../config/themeColors';
+import { DEFAULT_THEME_COLORS } from '../config/defaultTheme';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
 import { getPurchasableThemePreset } from '../config/purchasableThemePresets';
-import { THEME_PRODUCTS } from '../config/themeProducts';
+import { STORE_THEME_PRODUCTS } from '../config/themeProducts';
 import { useThemeBilling } from '../hooks/useThemeBilling';
 import { hslStringToHex, hexToHslString } from '../utils/colorConversion';
 import { exportThemeToFile, importThemeFromFile } from '../utils/themeFileIO';
@@ -165,9 +165,9 @@ interface QuickThemeButtonProps {
 }
 
 const getPresetPreviewColors = (preset: PresetTheme): string[] => [
-  preset.colors['page-bg'] || ORIGINAL_COLORS['page-bg'],
-  preset.colors['chat-outer-bg'] || ORIGINAL_COLORS['chat-outer-bg'],
-  preset.colors['page-text'] || ORIGINAL_COLORS['page-text'],
+  preset.colors['page-bg'] || DEFAULT_THEME_COLORS['page-bg'],
+  preset.colors['chat-outer-bg'] || DEFAULT_THEME_COLORS['chat-outer-bg'],
+  preset.colors['page-text'] || DEFAULT_THEME_COLORS['page-text'],
 ];
 
 const QuickThemeButton: React.FC<QuickThemeButtonProps> = ({
@@ -222,7 +222,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getEffectiveHsl = useCallback((cssVar: string): string => {
-    return customColors[cssVar] || ORIGINAL_COLORS[cssVar] || '0 0% 50%';
+    return customColors[cssVar] || DEFAULT_THEME_COLORS[cssVar] || '0 0% 50%';
   }, [customColors]);
 
   const getEffectiveHex = useCallback((cssVar: string): string => {
@@ -299,7 +299,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const isModified = (cssVar: string) => cssVar in customColors;
   const hasAnyCustomization = Object.keys(customColors).length > 0;
   const savedPresets = settings.savedThemePresets || [];
-  const ownedPurchasedThemes = THEME_PRODUCTS.flatMap(product => {
+  const ownedPurchasedThemes = STORE_THEME_PRODUCTS.flatMap(product => {
     if (!ownedProductIds.has(product.productId)) return [];
 
     const preset = getPurchasableThemePreset(product.productId);

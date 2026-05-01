@@ -10,7 +10,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// Free themes
+// Legacy / core themes
 // ---------------------------------------------------------------------------
 
 export const ORIGINAL_COLORS: Record<string, string> = {
@@ -300,7 +300,7 @@ export const ORIGINAL_COLORS: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Paid themes
+// Premium catalog themes (the live app default may also come from this section)
 // ---------------------------------------------------------------------------
 
 export const OCEAN_BLUE_COLORS: Record<string, string> = {

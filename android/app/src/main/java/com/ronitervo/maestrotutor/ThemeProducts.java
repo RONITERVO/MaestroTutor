@@ -18,8 +18,6 @@ public final class ThemeProducts {
     public static final String THEME_OCEAN_BLUE = "theme_ocean_blue";
     public static final String THEME_SUNSET_GOLD = "theme_sunset_gold";
     public static final String THEME_DARK_NEON = "theme_dark_neon";
-
-    // Add your 7 new themes here:
     public static final String THEME_SCHOLAR = "theme_scholar";
     public static final String THEME_PURE_LIGHT = "theme_pure_light";
     public static final String THEME_OBSIDIAN = "theme_obsidian";
@@ -27,6 +25,7 @@ public final class ThemeProducts {
     public static final String THEME_LAVENDER = "theme_lavender";
     public static final String THEME_SPECTRUM = "theme_spectrum";
     public static final String THEME_GRAPHITE = "theme_graphite";
+    public static final String THEME_ORIGINAL = "theme_original";
 
     public static final List<String> ALL_PRODUCT_IDS = List.of(
             THEME_OCEAN_BLUE,
@@ -38,5 +37,6 @@ public final class ThemeProducts {
             THEME_FOREST,
             THEME_LAVENDER,
             THEME_SPECTRUM,
-            THEME_GRAPHITE);
+            THEME_GRAPHITE,
+            THEME_ORIGINAL);
 }

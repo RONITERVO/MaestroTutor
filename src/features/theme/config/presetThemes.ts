@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { ORIGINAL_COLORS } from './themeColors';
+import { DEFAULT_THEME_PRESET } from './defaultTheme';
 
 export interface PresetTheme {
   name: string;
@@ -13,13 +13,8 @@ export interface PresetTheme {
 
 export const PRESET_THEMES: PresetTheme[] = [
   {
-    name: 'Notebook',
-    description: 'The original hand-drawn look',
+    name: DEFAULT_THEME_PRESET.name,
+    description: 'Current app default',
     colors: {},
-  },
-  {
-    name: 'Original',
-    description: 'The default',
-    colors: ORIGINAL_COLORS,
   },
 ];

@@ -2,24 +2,25 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import { COLOR_GROUPS } from './src/features/theme/config/colorRegistry';
-import { ORIGINAL_COLORS } from './src/features/theme/config/themeColors';
+import { DEFAULT_THEME_COLORS } from './src/features/theme/config/defaultTheme';
 
 /**
- * Generates the CSS custom-property block for :root from COLOR_GROUPS + ORIGINAL_COLORS.
+ * Generates the CSS custom-property block for :root from COLOR_GROUPS + the
+ * current default theme colors.
  * Replaces the /* __COLOR_TOKENS__ *\/ marker in index.css at build/dev time.
  *
  * To add a new token:
- *   1. Add the value to ORIGINAL_COLORS in themeColors.ts
+ *   1. Add the value to the active default theme palette in themeColors.ts
  *   2. Add the metadata entry to colorRegistry.ts (cssVar, friendlyName, description, group)
- *   — CSS regenerates automatically on next build or dev-server start.
- *   — JS fallback in useApplyCustomColors applies the new token immediately via HMR.
+ *   - CSS regenerates automatically on next build or dev-server start.
+ *   - JS fallback in useApplyCustomColors applies the new token immediately via HMR.
  */
 function colorTokensPlugin(): Plugin {
   const lines: string[] = [];
   for (const group of COLOR_GROUPS) {
-    lines.push(`    /* ── ${group.groupName} ── */`);
+    lines.push(`    /* -- ${group.groupName} -- */`);
     for (const color of group.colors) {
-      const val = ORIGINAL_COLORS[color.cssVar];
+      const val = DEFAULT_THEME_COLORS[color.cssVar];
       if (val !== undefined) lines.push(`    --${color.cssVar}: ${val};`);
     }
     lines.push('');
@@ -35,7 +36,7 @@ function colorTokensPlugin(): Plugin {
   };
 }
 
-export default defineConfig(({ }) => ({
+export default defineConfig(() => ({
   plugins: [colorTokensPlugin(), react()],
   // Using '/' as base path for custom domain (chatwithmaestro.com)
   // GitHub Pages serves from root when a custom domain is configured
@@ -43,7 +44,7 @@ export default defineConfig(({ }) => ({
   publicDir: 'public',
   resolve: {
     alias: {
-      '@': '/src'
-    }
-  }
+      '@': '/src',
+    },
+  },
 }));

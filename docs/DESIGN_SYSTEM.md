@@ -9,7 +9,7 @@ This is the canonical color and UI styling reference for contributors.
 - Token groups: 28
 - Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
-- Source of truth files: `src/app/index.css`, `index.html`, `src/features/theme/config/colorRegistry.ts`, `src/features/theme/config/presetThemes.ts`
+- Source of truth files: `src/app/index.css`, `index.html`, `src/features/theme/config/colorRegistry.ts`, `src/features/theme/config/defaultTheme.ts`, `src/features/theme/config/presetThemes.ts`
 
 ## Non-Negotiable Rules
 
@@ -37,7 +37,7 @@ When adding or changing a colorized element:
 1. Add or update CSS variable defaults in `src/app/index.css` (`:root`).
 2. Register token in Tailwind color map in `index.html` (`tailwind.config.theme.extend.colors`).
 3. Add token metadata to `src/features/theme/config/colorRegistry.ts` with friendly name and description.
-5. Add token to `src/features/theme/config/presetThemes.ts` (Original preset block).
+5. Add token to the active default palette in `src/features/theme/config/themeColors.ts` and keep `src/features/theme/config/defaultTheme.ts` aligned if the app default changes.
 6. Use the tokenized utility class in JSX/TSX; remove any direct hardcoded color utility or literal color.
 7. If replacing legacy token keys, add mapping to `src/features/theme/config/colorRenameMap.ts`.
 8. Validate with build + visual pass + Theme Customizer coverage.

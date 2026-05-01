@@ -4,7 +4,7 @@
 /**
  * Describes a purchasable color theme product.
  * Product IDs must match those configured in Google Play Console
- * under Monetize → Products → In-app products.
+ * under Monetize -> Products -> In-app products.
  */
 export interface ThemeProduct {
   /** Google Play product ID (e.g. "theme_ocean_blue"). */
@@ -15,11 +15,11 @@ export interface ThemeProduct {
   description: string;
   /** Emoji or icon identifier used in the store card. */
   icon: string;
-  /** HSL palette preview swatches (3–5 values) for the store UI. */
+  /** HSL palette preview swatches (3-5 values) for the store UI. */
   previewColors: string[];
 }
 
-/** Theme product IDs — must match Google Play Console. */
+/** Theme product IDs - must match Google Play Console. */
 export const THEME_PRODUCT_IDS = {
   OCEAN_BLUE: 'theme_ocean_blue',
   SUNSET_GOLD: 'theme_sunset_gold',
@@ -31,9 +31,16 @@ export const THEME_PRODUCT_IDS = {
   LAVENDER: 'theme_lavender',
   SPECTRUM: 'theme_spectrum',
   GRAPHITE: 'theme_graphite',
+  ORIGINAL: 'theme_original',
 } as const;
 
 export type ThemeProductId = (typeof THEME_PRODUCT_IDS)[keyof typeof THEME_PRODUCT_IDS];
+
+/**
+ * The app-wide default theme always points at a paid-theme entry so the
+ * default can be rotated later by changing one product ID.
+ */
+export const DEFAULT_THEME_PRODUCT_ID: ThemeProductId = THEME_PRODUCT_IDS.GRAPHITE;
 
 /** Catalogue of purchasable themes with display metadata. */
 export const THEME_PRODUCTS: ThemeProduct[] = [
@@ -68,14 +75,14 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
   {
     productId: THEME_PRODUCT_IDS.PURE_LIGHT,
     displayName: 'Pure Light',
-    description: 'Crisp white with deep navy and premium blue — elegant and timeless.',
+    description: 'Crisp white with deep navy and premium blue - elegant and timeless.',
     icon: '☀️',
     previewColors: ['210 25% 98%', '222 47% 20%', '214 87% 51%', '199 89% 40%'],
   },
   {
     productId: THEME_PRODUCT_IDS.OBSIDIAN,
     displayName: 'Obsidian',
-    description: 'Deep navy-black with refined blue and teal — sophisticated darkness.',
+    description: 'Deep navy-black with refined blue and teal - sophisticated darkness.',
     icon: '🌑',
     previewColors: ['222 38% 8%', '214 80% 46%', '174 68% 44%', '222 28% 17%'],
   },
@@ -96,15 +103,30 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
   {
     productId: THEME_PRODUCT_IDS.SPECTRUM,
     displayName: 'Spectrum',
-    description: 'The four iconic primaries — blue, red, yellow, and green — each given a dedicated role across the entire UI.',
+    description: 'The four iconic primaries - blue, red, yellow, and green - each given a dedicated role across the entire UI.',
     icon: '🌈',
     previewColors: ['214 89% 55%', '5 70% 52%', '45 96% 48%', '153 76% 38%'],
   },
   {
     productId: THEME_PRODUCT_IDS.GRAPHITE,
     displayName: 'Graphite',
-    description: 'Pure black on white — every element expressed in graphite grays, like a masterful pencil sketch with no color to distract.',
+    description: 'Pure black on white - every element expressed in graphite grays, like a masterful pencil sketch with no color to distract.',
     icon: '✏️',
     previewColors: ['40 8% 97%', '220 8% 14%', '220 6% 28%', '220 5% 60%'],
   },
+  {
+    productId: THEME_PRODUCT_IDS.ORIGINAL,
+    displayName: 'Original',
+    description: 'The long-running Maestro classic - bright paper, blue ink, watercolor accents, and the familiar notebook feel.',
+    icon: '📘',
+    previewColors: ['210 20% 97%', '220 30% 20%', '220 70% 55%', '190 60% 55%'],
+  },
 ];
+
+/**
+ * The active default stays available as the free reset state, so the store
+ * only sells the non-default paid themes.
+ */
+export const STORE_THEME_PRODUCTS: ThemeProduct[] = THEME_PRODUCTS.filter(
+  product => product.productId !== DEFAULT_THEME_PRODUCT_ID,
+);
