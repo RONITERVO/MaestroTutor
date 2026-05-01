@@ -8,7 +8,7 @@
  */
 export interface ThemeProduct {
   /** Google Play product ID (e.g. "theme_ocean_blue"). */
-  productId: string;
+  productId: ThemeProductId;
   /** User-facing display name. */
   displayName: string;
   /** Short description shown in the store. */

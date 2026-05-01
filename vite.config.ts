@@ -21,7 +21,10 @@ function colorTokensPlugin(): Plugin {
     lines.push(`    /* -- ${group.groupName} -- */`);
     for (const color of group.colors) {
       const val = DEFAULT_THEME_COLORS[color.cssVar];
-      if (val !== undefined) lines.push(`    --${color.cssVar}: ${val};`);
+      if (val === undefined) {
+        throw new Error(`Missing default color for token: ${color.cssVar}`);
+      }
+      lines.push(`    --${color.cssVar}: ${val};`);
     }
     lines.push('');
   }
