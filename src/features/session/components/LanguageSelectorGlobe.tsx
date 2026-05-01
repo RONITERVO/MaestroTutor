@@ -1,8 +1,9 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useRef, useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LanguageDefinition, ALL_LANGUAGES, hasSharedFlag } from '../../../core/config/languages';
+import { getLanguageGlobeLocation, type GlobeLocation } from '../config/languageGlobeLocations';
 import LanguageScrollWheel from './LanguageScrollWheel';
 
 interface LanguageSelectorGlobeProps {
@@ -14,19 +15,475 @@ interface LanguageSelectorGlobeProps {
     onInteract: () => void;
 }
 
-// ── Fibonacci sphere distribution ──
-// Returns evenly-spaced points on a unit sphere
-const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-
-function fibonacciSphere(count: number): { lat: number; lng: number }[] {
-    const points: { lat: number; lng: number }[] = [];
-    for (let i = 0; i < count; i++) {
-        const lat = Math.asin(1 - (2 * i) / (count - 1)); // +π/2 → -π/2
-        const lng = GOLDEN_ANGLE * i;
-        points.push({ lat, lng });
-    }
-    return points;
+interface Rotation {
+    lng: number;
+    lat: number;
 }
+
+interface Vector3 {
+    x: number;
+    y: number;
+    z: number;
+}
+
+interface GlobeLanguagePoint {
+    lang: LanguageDefinition;
+    location: GlobeLocation;
+    vector: Vector3;
+}
+
+interface ProjectedPoint {
+    x: number;
+    y: number;
+    z: number;
+    screenX: number;
+    screenY: number;
+    centerDistance: number;
+}
+
+interface RoutePaths {
+    pathD: string;
+    planePathD: string;
+}
+
+const DEG_TO_RAD = Math.PI / 180;
+const GLOBE_RADIUS_PERCENT = 43.5;
+const MAX_LAT_ROTATION = Math.PI * 0.47;
+const EARTH_TEXTURE_URL = '/globe-image-background/Flag_map_of_the_world-1024.webp';
+
+const VERTEX_SHADER_SOURCE = `
+attribute vec2 a_position;
+varying vec2 v_uv;
+
+void main() {
+  v_uv = (a_position + 1.0) * 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}
+`;
+
+const FRAGMENT_SHADER_SOURCE = `
+precision mediump float;
+
+varying vec2 v_uv;
+uniform sampler2D u_map;
+uniform vec2 u_rotation;
+uniform float u_time;
+uniform float u_hasTexture;
+
+const float PI = 3.141592653589793;
+
+float saturate(float value) {
+  return clamp(value, 0.0, 1.0);
+}
+
+vec3 rotateViewToWorld(vec3 normal) {
+  float cosLat = cos(u_rotation.y);
+  float sinLat = sin(u_rotation.y);
+  float cosLng = cos(u_rotation.x);
+  float sinLng = sin(u_rotation.x);
+
+  vec3 xUndone = vec3(
+    normal.x,
+    normal.y * cosLat + normal.z * sinLat,
+    -normal.y * sinLat + normal.z * cosLat
+  );
+
+  return vec3(
+    xUndone.x * cosLng - xUndone.z * sinLng,
+    xUndone.y,
+    xUndone.x * sinLng + xUndone.z * cosLng
+  );
+}
+
+float proceduralLand(vec2 geoUv, vec3 world) {
+  float lng = (geoUv.x - 0.5) * PI * 2.0;
+  float lat = (0.5 - geoUv.y) * PI;
+  float continentalNoise =
+    sin(lng * 2.0 + sin(lat * 3.0)) * 0.34 +
+    sin(lng * 4.5 - lat * 1.7) * 0.22 +
+    sin(lng * 8.0 + lat * 4.2) * 0.10;
+  float midLatitudeBias = cos(lat * 1.2) * 0.42;
+  float islands = smoothstep(0.78, 0.95, sin(lng * 13.0) * sin(lat * 9.0));
+  return saturate(smoothstep(0.10, 0.58, continentalNoise + midLatitudeBias) + islands * 0.16);
+}
+
+void main() {
+  vec2 disk = v_uv * 2.0 - 1.0;
+  float radiusSq = dot(disk, disk);
+
+  if (radiusSq > 1.0) {
+    discard;
+  }
+
+  vec3 viewNormal = normalize(vec3(disk.x, disk.y, sqrt(max(0.0, 1.0 - radiusSq))));
+  vec3 world = normalize(rotateViewToWorld(viewNormal));
+
+  float lat = asin(clamp(world.y, -1.0, 1.0));
+  float lng = atan(world.x, world.z);
+  vec2 geoUv = vec2(fract(0.5 + lng / (PI * 2.0)), 0.5 - lat / PI);
+
+  vec3 sampled = texture2D(u_map, geoUv).rgb;
+  float sampledBrightness = max(max(sampled.r, sampled.g), sampled.b);
+  float sampledLand = smoothstep(0.075, 0.18, sampledBrightness);
+  float fallbackLand = proceduralLand(geoUv, world);
+  float landMask = mix(fallbackLand, saturate(max(sampledLand, fallbackLand * 0.32)), u_hasTexture);
+
+  vec3 ocean = mix(vec3(0.010, 0.090, 0.170), vec3(0.020, 0.260, 0.420), 0.5 + world.y * 0.35);
+  vec3 landBase = vec3(0.125, 0.355, 0.205);
+  vec3 landTint = mix(landBase, vec3(sampledBrightness), 0.08);
+  vec3 color = mix(ocean, landTint, landMask);
+
+  float time = u_time * 0.00004;
+  float cloudBand =
+    sin((lng + time) * 8.0 + lat * 2.5) *
+    sin((lng - time * 1.7) * 4.0 - lat * 5.0);
+  float cloudMask = smoothstep(0.64, 0.96, cloudBand) * (1.0 - landMask * 0.35);
+  color = mix(color, vec3(0.82, 0.90, 0.94), cloudMask * 0.13);
+
+  vec3 keyLight = normalize(vec3(-0.42, 0.34, 0.84));
+  float directLight = saturate(dot(viewNormal, keyLight));
+  vec3 sunWorld = normalize(vec3(cos(u_time * 0.000018), 0.16, sin(u_time * 0.000018)));
+  float daySide = smoothstep(-0.35, 0.78, dot(world, sunWorld));
+  color *= 0.45 + directLight * 0.62;
+  color *= 0.56 + daySide * 0.44;
+
+  float rim = smoothstep(0.54, 1.0, radiusSq);
+  color += vec3(0.12, 0.42, 0.72) * rim * 0.32;
+
+  float glint = smoothstep(0.990, 1.0, dot(viewNormal, normalize(vec3(-0.36, 0.20, 0.91))));
+  color += vec3(0.65, 0.86, 1.0) * glint * 0.24;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
+
+function clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
+}
+
+function clamp01(value: number): number {
+    return clamp(value, 0, 1);
+}
+
+function smoothStep(edge0: number, edge1: number, value: number): number {
+    const t = clamp01((value - edge0) / (edge1 - edge0));
+    return t * t * (3 - 2 * t);
+}
+
+function normalizeAngle(angle: number): number {
+    const fullTurn = Math.PI * 2;
+    return ((angle + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+}
+
+function shortestAngleDelta(from: number, to: number): number {
+    return normalizeAngle(to - from);
+}
+
+function clampRotation(rotation: Rotation): Rotation {
+    return {
+        lng: normalizeAngle(rotation.lng),
+        lat: clamp(rotation.lat, -MAX_LAT_ROTATION, MAX_LAT_ROTATION),
+    };
+}
+
+function latLngToVector(location: GlobeLocation): Vector3 {
+    const lat = location.lat * DEG_TO_RAD;
+    const lng = location.lng * DEG_TO_RAD;
+    const cosLat = Math.cos(lat);
+
+    return {
+        x: cosLat * Math.sin(lng),
+        y: Math.sin(lat),
+        z: cosLat * Math.cos(lng),
+    };
+}
+
+function rotateVector(vector: Vector3, rotation: Rotation): Vector3 {
+    const cosLng = Math.cos(rotation.lng);
+    const sinLng = Math.sin(rotation.lng);
+    const cosLat = Math.cos(rotation.lat);
+    const sinLat = Math.sin(rotation.lat);
+
+    const x1 = vector.x * cosLng + vector.z * sinLng;
+    const y1 = vector.y;
+    const z1 = -vector.x * sinLng + vector.z * cosLng;
+
+    return {
+        x: x1,
+        y: y1 * cosLat - z1 * sinLat,
+        z: y1 * sinLat + z1 * cosLat,
+    };
+}
+
+function projectVector(vector: Vector3, rotation: Rotation): ProjectedPoint {
+    const rotated = rotateVector(vector, rotation);
+
+    return {
+        ...rotated,
+        screenX: 50 + rotated.x * GLOBE_RADIUS_PERCENT,
+        screenY: 50 - rotated.y * GLOBE_RADIUS_PERCENT,
+        centerDistance: Math.hypot(rotated.x, rotated.y),
+    };
+}
+
+function normalizeVector(vector: Vector3): Vector3 {
+    const length = Math.hypot(vector.x, vector.y, vector.z) || 1;
+    return {
+        x: vector.x / length,
+        y: vector.y / length,
+        z: vector.z / length,
+    };
+}
+
+function slerpVector(from: Vector3, to: Vector3, progress: number): Vector3 {
+    const dot = clamp(from.x * to.x + from.y * to.y + from.z * to.z, -1, 1);
+    const theta = Math.acos(dot);
+    const sinTheta = Math.sin(theta);
+
+    if (sinTheta < 0.0001) {
+        return normalizeVector({
+            x: from.x + (to.x - from.x) * progress,
+            y: from.y + (to.y - from.y) * progress,
+            z: from.z + (to.z - from.z) * progress,
+        });
+    }
+
+    const fromScale = Math.sin((1 - progress) * theta) / sinTheta;
+    const toScale = Math.sin(progress * theta) / sinTheta;
+
+    return {
+        x: from.x * fromScale + to.x * toScale,
+        y: from.y * fromScale + to.y * toScale,
+        z: from.z * fromScale + to.z * toScale,
+    };
+}
+
+function pathFromPoints(points: ProjectedPoint[]): string {
+    return points
+        .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.screenX.toFixed(2)} ${point.screenY.toFixed(2)}`)
+        .join(' ');
+}
+
+function buildRoutePaths(from: Vector3, to: Vector3, rotation: Rotation): RoutePaths | null {
+    const samples = 88;
+    const visibleSegments: ProjectedPoint[][] = [];
+    let currentSegment: ProjectedPoint[] = [];
+
+    for (let index = 0; index <= samples; index++) {
+        const vector = slerpVector(from, to, index / samples);
+        const projected = projectVector(vector, rotation);
+
+        if (projected.z > 0.025) {
+            currentSegment.push(projected);
+        } else if (currentSegment.length > 1) {
+            visibleSegments.push(currentSegment);
+            currentSegment = [];
+        } else {
+            currentSegment = [];
+        }
+    }
+
+    if (currentSegment.length > 1) {
+        visibleSegments.push(currentSegment);
+    }
+
+    if (visibleSegments.length === 0) {
+        return null;
+    }
+
+    const largestSegment = visibleSegments.reduce((largest, segment) => (
+        segment.length > largest.length ? segment : largest
+    ), visibleSegments[0]);
+
+    return {
+        pathD: visibleSegments.map(pathFromPoints).join(' '),
+        planePathD: pathFromPoints(largestSegment),
+    };
+}
+
+function createShader(
+    gl: WebGLRenderingContext,
+    type: number,
+    source: string,
+): WebGLShader | null {
+    const shader = gl.createShader(type);
+    if (!shader) return null;
+
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.warn('[LanguageSelectorGlobe] Shader compile failed:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+    }
+
+    return shader;
+}
+
+function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
+    if (!vertexShader || !fragmentShader) return null;
+
+    const program = gl.createProgram();
+    if (!program) return null;
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.warn('[LanguageSelectorGlobe] Program link failed:', gl.getProgramInfoLog(program));
+        gl.deleteProgram(program);
+        return null;
+    }
+
+    return program;
+}
+
+interface EarthCanvasProps {
+    rotation: Rotation;
+    textureUrl: string;
+}
+
+const EarthCanvas: React.FC<EarthCanvasProps> = ({ rotation, textureUrl }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const rotationRef = useRef(rotation);
+
+    useEffect(() => {
+        rotationRef.current = rotation;
+    }, [rotation]);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const gl = canvas.getContext('webgl', {
+            alpha: true,
+            antialias: true,
+            depth: false,
+            premultipliedAlpha: false,
+        });
+
+        if (!gl) {
+            console.warn('[LanguageSelectorGlobe] WebGL is unavailable; showing marker layer only.');
+            return;
+        }
+
+        const program = createProgram(gl);
+        if (!program) return;
+
+        const positionLocation = gl.getAttribLocation(program, 'a_position');
+        const rotationLocation = gl.getUniformLocation(program, 'u_rotation');
+        const timeLocation = gl.getUniformLocation(program, 'u_time');
+        const mapLocation = gl.getUniformLocation(program, 'u_map');
+        const hasTextureLocation = gl.getUniformLocation(program, 'u_hasTexture');
+        const positionBuffer = gl.createBuffer();
+        const texture = gl.createTexture();
+
+        if (!positionBuffer || !texture) {
+            gl.deleteProgram(program);
+            return;
+        }
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+            gl.STATIC_DRAW,
+        );
+
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            1,
+            1,
+            0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            new Uint8Array([5, 30, 55, 255]),
+        );
+
+        let textureReady = false;
+        let isDisposed = false;
+        let rafId = 0;
+
+        const image = new Image();
+        image.decoding = 'async';
+        image.onload = () => {
+            if (isDisposed) return;
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            textureReady = true;
+        };
+        image.src = textureUrl;
+
+        const resize = () => {
+            const rect = canvas.getBoundingClientRect();
+            const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+            const width = Math.max(1, Math.round(rect.width * pixelRatio));
+            const height = Math.max(1, Math.round(rect.height * pixelRatio));
+
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+                gl.viewport(0, 0, width, height);
+            }
+        };
+
+        const resizeObserver = new ResizeObserver(resize);
+        resizeObserver.observe(canvas);
+        resize();
+
+        const render = (time: number) => {
+            resize();
+
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.useProgram(program);
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.uniform1i(mapLocation, 0);
+            gl.uniform2f(rotationLocation, rotationRef.current.lng, rotationRef.current.lat);
+            gl.uniform1f(timeLocation, time);
+            gl.uniform1f(hasTextureLocation, textureReady ? 1 : 0);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+            rafId = requestAnimationFrame(render);
+        };
+
+        rafId = requestAnimationFrame(render);
+
+        return () => {
+            isDisposed = true;
+            cancelAnimationFrame(rafId);
+            resizeObserver.disconnect();
+            gl.deleteTexture(texture);
+            gl.deleteBuffer(positionBuffer);
+            gl.deleteProgram(program);
+        };
+    }, [textureUrl]);
+
+    return (
+        <>
+            <div className="maestro-earth-fallback" aria-hidden="true" />
+            <canvas ref={canvasRef} className="maestro-earth-canvas" aria-hidden="true" />
+        </>
+    );
+};
 
 const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     nativeLangCode,
@@ -38,27 +495,56 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 }) => {
     const nativeLang = ALL_LANGUAGES.find(l => l.langCode === nativeLangCode) || null;
     const targetLang = ALL_LANGUAGES.find(l => l.langCode === targetLangCode) || null;
-    const [hoveredLang, setHoveredLang] = useState<LanguageDefinition | null>(null);
+    const [hoveredLangCode, setHoveredLangCode] = useState<string | null>(null);
     const [isWheelOverlayActive, setIsWheelOverlayActive] = useState(false);
-    const globeRef = useRef<HTMLDivElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [rotation, setRotation] = useState<Rotation>(() => clampRotation({ lng: 0.45, lat: 0.18 }));
+
     const globeContainerRef = useRef<HTMLDivElement>(null);
     const wheelOverlayTimeoutRef = useRef<number | null>(null);
-
-    // Time-driven realism: day/night terminator + sun glint
-    const [timeAngleDeg, setTimeAngleDeg] = useState(0);
-    const [glintPos, setGlintPos] = useState<{ x: number; y: number }>({ x: 45, y: 35 });
-
-    // ── Sphere rotation state (two axes) ──
-    const [rotLng, setRotLng] = useState(0); // horizontal rotation (radians)
-    const [rotLat, setRotLat] = useState(0); // vertical rotation (radians)
-
+    const rotationRef = useRef(rotation);
     const isDraggingRef = useRef(false);
-    const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-    const velocityRef = useRef<{ lng: number; lat: number }>({ lng: 0, lat: 0 });
-    const animationFrameRef = useRef<number | null>(null);
+    const lastPointerRef = useRef({ x: 0, y: 0 });
+    const velocityRef = useRef<Rotation>({ lng: 0, lat: 0 });
+    const momentumFrameRef = useRef<number | null>(null);
+    const focusFrameRef = useRef<number | null>(null);
 
-    // Pre-compute flag positions on the unit sphere (stable unless language list changes)
-    const spherePositions = useMemo(() => fibonacciSphere(ALL_LANGUAGES.length), []);
+    const globePoints = useMemo<GlobeLanguagePoint[]>(() => (
+        ALL_LANGUAGES.map(lang => {
+            const location = getLanguageGlobeLocation(lang);
+            return {
+                lang,
+                location,
+                vector: latLngToVector(location),
+            };
+        })
+    ), []);
+
+    const globePointByCode = useMemo(() => {
+        const map = new Map<string, GlobeLanguagePoint>();
+        globePoints.forEach(point => map.set(point.lang.langCode, point));
+        return map;
+    }, [globePoints]);
+
+    const applyRotation = useCallback((updater: Rotation | ((previous: Rotation) => Rotation)) => {
+        setRotation(previous => {
+            const rawNext = typeof updater === 'function' ? updater(previous) : updater;
+            const next = clampRotation(rawNext);
+            rotationRef.current = next;
+            return next;
+        });
+    }, []);
+
+    const cancelMotion = useCallback(() => {
+        if (momentumFrameRef.current !== null) {
+            cancelAnimationFrame(momentumFrameRef.current);
+            momentumFrameRef.current = null;
+        }
+        if (focusFrameRef.current !== null) {
+            cancelAnimationFrame(focusFrameRef.current);
+            focusFrameRef.current = null;
+        }
+    }, []);
 
     const handleInteraction = useCallback(() => {
         onInteract();
@@ -69,135 +555,175 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         wheelOverlayTimeoutRef.current = window.setTimeout(() => {
             setIsWheelOverlayActive(false);
             wheelOverlayTimeoutRef.current = null;
-        }, 1200);
+        }, 1300);
     }, [onInteract]);
 
-    // Update day/night and sun glint by local time (subtle, realistic)
-    useEffect(() => {
-        const update = () => {
-            const now = new Date();
-            const fraction = (now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600) / 24;
-            const angle = fraction * 360;
-            setTimeAngleDeg(angle);
-            const theta = (angle - 90) * (Math.PI / 180);
-            const radius = 18;
-            setGlintPos({ x: 50 + radius * Math.cos(theta), y: 50 + radius * Math.sin(theta) });
+    const animateRotationToLocation = useCallback((location: GlobeLocation, durationMs = 680) => {
+        cancelMotion();
+
+        const start = rotationRef.current;
+        const targetLngBase = normalizeAngle(-location.lng * DEG_TO_RAD);
+        const target = {
+            lng: start.lng + shortestAngleDelta(start.lng, targetLngBase),
+            lat: clamp(location.lat * DEG_TO_RAD, -MAX_LAT_ROTATION, MAX_LAT_ROTATION),
         };
-        update();
-        const id = setInterval(update, 30000);
-        return () => clearInterval(id);
-    }, []);
+        const startedAt = performance.now();
 
-    // ── Project all flags through rotation → 2D ──
-    const projectedFlags = useMemo(() => {
-        const cosLng = Math.cos(rotLng);
-        const sinLng = Math.sin(rotLng);
-        const cosLat = Math.cos(rotLat);
-        const sinLat = Math.sin(rotLat);
+        const step = (now: number) => {
+            const progress = clamp01((now - startedAt) / durationMs);
+            const eased = 1 - Math.pow(1 - progress, 3);
 
-        return ALL_LANGUAGES.map((lang, i) => {
-            const { lat, lng } = spherePositions[i];
-
-            // Cartesian on unit sphere
-            const px = Math.cos(lat) * Math.sin(lng);
-            const py = Math.sin(lat);
-            const pz = Math.cos(lat) * Math.cos(lng);
-
-            // Y-axis rotation (horizontal drag → longitude)
-            const x1 = px * cosLng + pz * sinLng;
-            const y1 = py;
-            const z1 = -px * sinLng + pz * cosLng;
-
-            // X-axis rotation (vertical drag → latitude)
-            const x2 = x1;
-            const y2 = y1 * cosLat - z1 * sinLat;
-            const z2 = y1 * sinLat + z1 * cosLat;
-
-            // depth = z2 (positive = facing viewer)
-            const depth = z2;
-            // Screen position: center at (50,50), radius mapped to 42%
-            const screenX = 50 + x2 * 42;
-            const screenY = 50 - y2 * 42; // invert Y for screen coords
-
-            return { lang, screenX, screenY, depth };
-        });
-    }, [rotLng, rotLat, spherePositions]);
-
-    // ── Interaction: pointer drag (two-axis rotation) ──
-    const handlePointerDown = useCallback((e: React.PointerEvent) => {
-        isDraggingRef.current = true;
-        lastPointerRef.current = { x: e.clientX, y: e.clientY };
-        velocityRef.current = { lng: 0, lat: 0 };
-        if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current);
-            animationFrameRef.current = null;
-        }
-        handleInteraction();
-        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    }, [handleInteraction]);
-
-    const handlePointerMove = useCallback((e: React.PointerEvent) => {
-        if (!isDraggingRef.current) return;
-        const dx = e.clientX - lastPointerRef.current.x;
-        const dy = e.clientY - lastPointerRef.current.y;
-        lastPointerRef.current = { x: e.clientX, y: e.clientY };
-
-        const sensitivity = 0.006;
-        const vLng = -dx * sensitivity;
-        const vLat = dy * sensitivity;
-        velocityRef.current = { lng: vLng, lat: vLat };
-
-        setRotLng(prev => prev + vLng);
-        setRotLat(prev => {
-            const next = prev + vLat;
-            return Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, next));
-        });
-    }, []);
-
-    const handlePointerUp = useCallback((e: React.PointerEvent) => {
-        isDraggingRef.current = false;
-        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-
-        // Momentum / inertia
-        const applyMomentum = () => {
-            const v = velocityRef.current;
-            if (Math.abs(v.lng) < 0.0003 && Math.abs(v.lat) < 0.0003) return;
-
-            velocityRef.current = { lng: v.lng * 0.94, lat: v.lat * 0.94 };
-            setRotLng(prev => prev + velocityRef.current.lng);
-            setRotLat(prev => {
-                const next = prev + velocityRef.current.lat;
-                return Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, next));
+            applyRotation({
+                lng: start.lng + (target.lng - start.lng) * eased,
+                lat: start.lat + (target.lat - start.lat) * eased,
             });
-            animationFrameRef.current = requestAnimationFrame(applyMomentum);
+
+            if (progress < 1) {
+                focusFrameRef.current = requestAnimationFrame(step);
+            } else {
+                focusFrameRef.current = null;
+            }
         };
 
-        if (Math.abs(velocityRef.current.lng) > 0.0005 || Math.abs(velocityRef.current.lat) > 0.0005) {
-            animationFrameRef.current = requestAnimationFrame(applyMomentum);
-        }
-    }, []);
+        focusFrameRef.current = requestAnimationFrame(step);
+    }, [applyRotation, cancelMotion]);
 
-    // Wheel → horizontal rotation
-    const handleWheel = useCallback((e: React.WheelEvent) => {
-        e.preventDefault();
-        handleInteraction();
-        const delta = e.deltaY > 0 ? 0.08 : -0.08;
-        setRotLng(prev => prev + delta);
-    }, [handleInteraction]);
+    const focusLanguage = useCallback((lang: LanguageDefinition, durationMs?: number) => {
+        animateRotationToLocation(getLanguageGlobeLocation(lang), durationMs);
+    }, [animateRotationToLocation]);
 
-    // Cleanup animation frame on unmount
+    useEffect(() => {
+        rotationRef.current = rotation;
+    }, [rotation]);
+
+    useEffect(() => {
+        const langToFocus = targetLang ?? nativeLang;
+        if (!langToFocus) return;
+
+        const timer = window.setTimeout(() => focusLanguage(langToFocus, 560), 120);
+        return () => window.clearTimeout(timer);
+    }, [focusLanguage, nativeLang, targetLang]);
+
     useEffect(() => {
         return () => {
-            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+            cancelMotion();
             if (wheelOverlayTimeoutRef.current !== null) {
                 window.clearTimeout(wheelOverlayTimeoutRef.current);
             }
         };
-    }, []);
+    }, [cancelMotion]);
 
-    // ── Flag click ──
-    const handleFlagClick = (lang: LanguageDefinition) => {
+    useEffect(() => {
+        if (!onCancel) return;
+
+        const handler = (event: PointerEvent) => {
+            if (globeContainerRef.current && !globeContainerRef.current.contains(event.target as Node)) {
+                onCancel();
+            }
+        };
+
+        const timer = window.setTimeout(() => document.addEventListener('pointerdown', handler, true), 100);
+        return () => {
+            window.clearTimeout(timer);
+            document.removeEventListener('pointerdown', handler, true);
+        };
+    }, [onCancel]);
+
+    const startMomentum = useCallback(() => {
+        if (momentumFrameRef.current !== null) {
+            cancelAnimationFrame(momentumFrameRef.current);
+            momentumFrameRef.current = null;
+        }
+
+        const step = () => {
+            const velocity = velocityRef.current;
+            if (Math.abs(velocity.lng) < 0.00025 && Math.abs(velocity.lat) < 0.00025) {
+                momentumFrameRef.current = null;
+                return;
+            }
+
+            velocityRef.current = {
+                lng: velocity.lng * 0.93,
+                lat: velocity.lat * 0.93,
+            };
+
+            applyRotation(previous => ({
+                lng: previous.lng + velocityRef.current.lng,
+                lat: previous.lat + velocityRef.current.lat,
+            }));
+
+            momentumFrameRef.current = requestAnimationFrame(step);
+        };
+
+        momentumFrameRef.current = requestAnimationFrame(step);
+    }, [applyRotation]);
+
+    const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        if (!event.isPrimary) return;
+
+        cancelMotion();
         handleInteraction();
+        isDraggingRef.current = true;
+        setIsDragging(true);
+        lastPointerRef.current = { x: event.clientX, y: event.clientY };
+        velocityRef.current = { lng: 0, lat: 0 };
+        event.currentTarget.setPointerCapture(event.pointerId);
+    }, [cancelMotion, handleInteraction]);
+
+    const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDraggingRef.current || !event.isPrimary) return;
+
+        const dx = event.clientX - lastPointerRef.current.x;
+        const dy = event.clientY - lastPointerRef.current.y;
+        lastPointerRef.current = { x: event.clientX, y: event.clientY };
+
+        const sensitivity = 0.0062;
+        const nextVelocity = {
+            lng: -dx * sensitivity,
+            lat: dy * sensitivity,
+        };
+        velocityRef.current = nextVelocity;
+
+        applyRotation(previous => ({
+            lng: previous.lng + nextVelocity.lng,
+            lat: previous.lat + nextVelocity.lat,
+        }));
+    }, [applyRotation]);
+
+    const finishPointerDrag = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDraggingRef.current) return;
+
+        isDraggingRef.current = false;
+        setIsDragging(false);
+
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+
+        if (Math.abs(velocityRef.current.lng) > 0.0005 || Math.abs(velocityRef.current.lat) > 0.0005) {
+            startMomentum();
+        }
+    }, [startMomentum]);
+
+    const handleWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        cancelMotion();
+        handleInteraction();
+
+        const dominantDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        const delta = dominantDelta >= 0 ? 0.16 : -0.16;
+
+        applyRotation(previous => ({
+            lng: previous.lng + delta,
+            lat: previous.lat,
+        }));
+    }, [applyRotation, cancelMotion, handleInteraction]);
+
+    const handleFlagClick = useCallback((lang: LanguageDefinition) => {
+        handleInteraction();
+        focusLanguage(lang);
+
         if (!nativeLang) {
             onSelectNative(lang.langCode);
         } else if (!targetLang && lang.langCode !== nativeLang.langCode) {
@@ -209,311 +735,481 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         } else {
             onSelectTarget(lang.langCode);
         }
-    };
+    }, [focusLanguage, handleInteraction, nativeLang, onSelectNative, onSelectTarget, targetLang]);
 
-    // When scroll wheel selects a language, rotate globe to show it
     const handleScrollWheelSelect = useCallback((lang: LanguageDefinition, isNative: boolean) => {
-        const idx = ALL_LANGUAGES.findIndex(l => l.langCode === lang.langCode);
-        if (idx !== -1) {
-            const { lat, lng } = spherePositions[idx];
-            setRotLng(-lng);
-            setRotLat(-lat);
-        }
+        handleInteraction();
+        focusLanguage(lang);
+
         if (isNative) {
             onSelectNative(lang.langCode);
         } else {
             onSelectTarget(lang.langCode);
         }
-    }, [onSelectNative, onSelectTarget, spherePositions]);
+    }, [focusLanguage, handleInteraction, onSelectNative, onSelectTarget]);
 
-    // ── Flight-path arc between selected flags ──
-    const getScreenPos = (langCode: string) => {
-        const p = projectedFlags.find(f => f.lang.langCode === langCode);
-        return p ? { x: p.screenX, y: p.screenY } : null;
-    };
+    const projectedFlags = useMemo(() => (
+        globePoints.map(point => {
+            const projected = projectVector(point.vector, rotation);
+            const frontness = smoothStep(-0.05, 0.88, projected.z);
+            const centerFocus = clamp01((0.38 - projected.centerDistance) / 0.38);
 
-    const nativePos = nativeLang ? getScreenPos(nativeLang.langCode) : null;
-    const targetPos = targetLang ? getScreenPos(targetLang.langCode) : null;
-    const pathD = useMemo(() => {
-        if (!nativePos || !targetPos) return '';
-        return `M ${nativePos.x} ${nativePos.y} Q 50 50 ${targetPos.x} ${targetPos.y}`;
-    }, [nativePos, targetPos]);
+            return {
+                ...point,
+                ...projected,
+                visible: projected.z > -0.04,
+                focusScore: frontness * centerFocus,
+            };
+        })
+    ), [globePoints, rotation]);
 
-    // Sort by depth so front flags render on top
-    const sortedFlags = useMemo(
-        () => [...projectedFlags].sort((a, b) => a.depth - b.depth),
-        [projectedFlags],
-    );
+    const focusedLangCode = useMemo(() => {
+        const best = projectedFlags.reduce((winner, flag) => {
+            if (!flag.visible || flag.focusScore < 0.34) return winner;
+            if (!winner || flag.focusScore > winner.focusScore) return flag;
+            return winner;
+        }, null as (typeof projectedFlags)[number] | null);
 
-    // Backdrop click handler via useEffect on document
-    useEffect(() => {
-        if (!onCancel) return;
-        const handler = (e: MouseEvent) => {
-            // If click is outside the globe container, cancel
-            if (globeContainerRef.current && !globeContainerRef.current.contains(e.target as Node)) {
-                onCancel();
-            }
-        };
-        // Use capture phase + slight delay so the opening click doesn't immediately cancel
-        const timer = setTimeout(() => document.addEventListener('pointerdown', handler, true), 100);
-        return () => {
-            clearTimeout(timer);
-            document.removeEventListener('pointerdown', handler, true);
-        };
-    }, [onCancel]);
+        return best?.lang.langCode ?? null;
+    }, [projectedFlags]);
+
+    const sortedFlags = useMemo(() => (
+        projectedFlags
+            .filter(flag => flag.visible)
+            .sort((a, b) => a.z - b.z)
+    ), [projectedFlags]);
+
+    const route = useMemo<RoutePaths | null>(() => {
+        if (!nativeLang || !targetLang) return null;
+
+        const nativePoint = globePointByCode.get(nativeLang.langCode);
+        const targetPoint = globePointByCode.get(targetLang.langCode);
+        if (!nativePoint || !targetPoint) return null;
+
+        return buildRoutePaths(nativePoint.vector, targetPoint.vector, rotation);
+    }, [globePointByCode, nativeLang, rotation, targetLang]);
 
     return (
         <div ref={globeContainerRef} className="w-full flex justify-center py-2">
             <style>{`
-                @keyframes fly-in-bubble {
-                    from { offset-distance: 0%; }
-                    to { offset-distance: 100%; }
+                @keyframes maestro-globe-route-dash {
+                    from { stroke-dashoffset: 0; }
+                    to { stroke-dashoffset: -64; }
                 }
-                .animate-fly-in-bubble {
-                    animation: fly-in-bubble 2.5s ease-in-out forwards;
-                    offset-path: path(var(--flight-path));
+
+                @keyframes maestro-fallback-globe-spin {
+                    from { background-position: 0% center; }
+                    to { background-position: 200% center; }
                 }
-                .sphere-flag {
-                    transition: opacity 0.12s ease-out;
+
+                .maestro-globe-shell {
+                    position: relative;
+                    filter: drop-shadow(0 22px 30px rgba(6, 16, 30, 0.34));
+                }
+
+                .maestro-globe-window {
+                    position: relative;
+                    overflow: hidden;
+                    border-radius: 1.35rem;
+                    border: 1px solid rgba(255, 255, 255, 0.16);
+                    background:
+                        radial-gradient(circle at 50% 46%, rgba(51, 119, 171, 0.20) 0%, rgba(10, 20, 36, 0.18) 48%, rgba(2, 6, 16, 0.60) 100%),
+                        linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03));
+                    box-shadow:
+                        inset 0 1px 0 rgba(255,255,255,0.22),
+                        inset 0 -24px 55px rgba(2, 6, 16, 0.38);
+                }
+
+                .maestro-globe-stage {
+                    position: absolute;
+                    inset: 0;
+                    cursor: grab;
+                    touch-action: none;
+                    user-select: none;
+                    isolation: isolate;
+                }
+
+                .maestro-globe-stage.is-dragging {
+                    cursor: grabbing;
+                }
+
+                .maestro-globe-space {
+                    position: absolute;
+                    inset: 0;
+                    pointer-events: none;
+                    background:
+                        radial-gradient(circle at 18% 24%, rgba(255,255,255,0.78) 0 1px, transparent 1.5px),
+                        radial-gradient(circle at 78% 18%, rgba(255,255,255,0.58) 0 1px, transparent 1.4px),
+                        radial-gradient(circle at 66% 72%, rgba(255,255,255,0.42) 0 1px, transparent 1.5px),
+                        radial-gradient(circle at 35% 76%, rgba(255,255,255,0.32) 0 1px, transparent 1.3px),
+                        radial-gradient(circle at 50% 50%, rgba(21, 80, 130, 0.30), rgba(2, 6, 16, 0.56) 70%);
+                    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+                }
+
+                .maestro-earth-canvas {
+                    position: absolute;
+                    inset: 5%;
+                    width: 90%;
+                    height: 90%;
+                    border-radius: 9999px;
+                    pointer-events: none;
+                    filter:
+                        drop-shadow(0 0 18px rgba(84, 190, 255, 0.26))
+                        drop-shadow(0 15px 26px rgba(0, 0, 0, 0.32));
+                    z-index: 10;
+                }
+
+                .maestro-earth-fallback {
+                    position: absolute;
+                    inset: 5%;
+                    border-radius: 9999px;
+                    pointer-events: none;
+                    z-index: 9;
+                    background-image: url('/globe-image-background/Flag_map_of_the_world-1024.webp');
+                    background-size: 200% auto;
+                    background-position: center;
+                    animation: maestro-fallback-globe-spin 120s linear infinite;
+                    box-shadow:
+                        inset 0 0 32px rgba(0,0,0,0.56),
+                        0 0 18px rgba(84, 190, 255, 0.20);
+                }
+
+                .maestro-globe-vignette {
+                    position: absolute;
+                    inset: 0;
+                    pointer-events: none;
+                    z-index: 70;
+                    background:
+                        radial-gradient(circle at 50% 48%, transparent 55%, rgba(3, 8, 18, 0.28) 100%),
+                        linear-gradient(180deg, rgba(255,255,255,0.07), transparent 34%, rgba(0,0,0,0.18));
+                }
+
+                .maestro-globe-route-layer {
+                    position: absolute;
+                    inset: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: 42;
+                    overflow: visible;
+                }
+
+                .maestro-globe-route {
+                    animation: maestro-globe-route-dash 18s linear infinite;
+                    filter: drop-shadow(0 0 6px rgba(255,255,255,0.22));
+                }
+
+                .maestro-globe-plane {
+                    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
+                }
+
+                .maestro-globe-flag-layer {
+                    position: absolute;
+                    inset: 0;
+                    z-index: 60;
+                    pointer-events: none;
+                }
+
+                .maestro-globe-flag-pin {
+                    --pin-scale: 1;
+                    position: absolute;
+                    width: 3.4rem;
+                    height: 3.4rem;
+                    padding: 0;
+                    border: 0;
+                    background: transparent;
+                    color: inherit;
+                    pointer-events: auto;
+                    transform: translate(-50%, -100%) scale(var(--pin-scale));
+                    transform-origin: bottom center;
+                    transition:
+                        opacity 150ms ease-out,
+                        filter 150ms ease-out,
+                        transform 190ms cubic-bezier(.2,.8,.2,1);
+                }
+
+                .maestro-globe-flag-pin:focus-visible .maestro-globe-flag-card {
+                    outline: 2px solid hsl(var(--profile-input-accent));
+                    outline-offset: 2px;
+                }
+
+                .maestro-globe-pin-stem {
+                    position: absolute;
+                    left: 50%;
+                    bottom: 0.22rem;
+                    width: 2px;
+                    height: 1.1rem;
+                    transform: translateX(-50%);
+                    background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(90, 210, 255, 0.34));
+                    box-shadow: 0 0 8px rgba(120, 220, 255, 0.32);
+                }
+
+                .maestro-globe-pin-dot {
+                    position: absolute;
+                    left: 50%;
+                    bottom: 0.02rem;
+                    width: 0.38rem;
+                    height: 0.38rem;
+                    transform: translateX(-50%);
+                    border-radius: 9999px;
+                    background: rgba(212, 246, 255, 0.94);
+                    box-shadow: 0 0 10px rgba(111, 220, 255, 0.65);
+                }
+
+                .maestro-globe-flag-card {
+                    position: absolute;
+                    left: 50%;
+                    bottom: 1.16rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.18rem;
+                    transform: translateX(-50%);
+                    min-width: 2.2rem;
+                    min-height: 1.72rem;
+                    padding: 0.18rem 0.28rem;
+                    border: 1px solid rgba(255,255,255,0.50);
+                    border-radius: 0.58rem;
+                    background: rgba(6, 15, 28, 0.68);
+                    backdrop-filter: blur(8px) saturate(1.25);
+                    box-shadow:
+                        0 7px 15px rgba(0,0,0,0.28),
+                        inset 0 1px 0 rgba(255,255,255,0.22);
+                }
+
+                .maestro-globe-flag-glyph {
+                    font-size: 1.26rem;
+                    line-height: 1;
+                    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.30));
+                }
+
+                .maestro-globe-flag-code {
+                    font-size: 0.48rem;
+                    font-weight: 800;
+                    line-height: 1;
+                    color: rgba(255,255,255,0.86);
+                    letter-spacing: 0.02em;
+                }
+
+                .maestro-globe-flag-label {
+                    position: absolute;
+                    left: 50%;
+                    bottom: 2.98rem;
+                    max-width: 8.5rem;
+                    transform: translate(-50%, 0.25rem);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    border-radius: 9999px;
+                    padding: 0.16rem 0.46rem;
+                    background: rgba(6, 15, 28, 0.78);
+                    color: rgba(255,255,255,0.92);
+                    font-size: 0.62rem;
+                    font-weight: 700;
+                    opacity: 0;
+                    pointer-events: none;
+                    transition: opacity 160ms ease-out, transform 160ms ease-out;
+                    box-shadow: 0 5px 12px rgba(0,0,0,0.24);
+                }
+
+                .maestro-globe-flag-pin.is-expanded .maestro-globe-flag-label {
+                    opacity: 1;
+                    transform: translate(-50%, 0);
+                }
+
+                .maestro-globe-flag-pin.is-native .maestro-globe-flag-card {
+                    border-color: hsl(var(--globe-native-accent));
+                    box-shadow:
+                        0 0 0 1px hsl(var(--globe-native-accent) / 0.25),
+                        0 0 18px hsl(var(--globe-native-accent) / 0.42),
+                        0 7px 15px rgba(0,0,0,0.28);
+                }
+
+                .maestro-globe-flag-pin.is-target .maestro-globe-flag-card {
+                    border-color: hsl(var(--globe-target-accent));
+                    box-shadow:
+                        0 0 0 1px hsl(var(--globe-target-accent) / 0.25),
+                        0 0 18px hsl(var(--globe-target-accent) / 0.42),
+                        0 7px 15px rgba(0,0,0,0.28);
+                }
+
+                .maestro-globe-wheel-panel {
+                    position: absolute;
+                    left: 50%;
+                    bottom: 0.72rem;
+                    z-index: 90;
+                    width: min(74%, 12.5rem);
+                    transform: translateX(-50%);
+                    border: 1px solid rgba(255,255,255,0.13);
+                    border-radius: 0.86rem;
+                    background: rgba(7, 17, 31, 0.58);
+                    backdrop-filter: blur(13px) saturate(1.18);
+                    box-shadow:
+                        0 12px 28px rgba(0,0,0,0.25),
+                        inset 0 1px 0 rgba(255,255,255,0.13);
+                    padding: 0.48rem 0.55rem;
+                    transition: opacity 180ms ease-out, transform 180ms ease-out;
+                }
+
+                .maestro-globe-wheel-panel.is-idle {
+                    opacity: 0.62;
+                    transform: translateX(-50%) translateY(0.2rem) scale(0.98);
+                }
+
+                .maestro-globe-wheel-panel:hover,
+                .maestro-globe-wheel-panel:focus-within,
+                .maestro-globe-wheel-panel.is-active {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0) scale(1);
+                }
+
+                @media (prefers-reduced-motion: reduce) {
+                    .maestro-globe-route {
+                        animation: none;
+                    }
+                    .maestro-earth-fallback {
+                        animation: none;
+                    }
+                    .maestro-globe-flag-pin,
+                    .maestro-globe-flag-label,
+                    .maestro-globe-wheel-panel {
+                        transition: none;
+                    }
                 }
             `}</style>
 
-            <div className="glass-cube relative w-full max-w-[22rem] aspect-square">
-                {/* Front pane: square window that clips the globe */}
-                <div className="cube-front relative inset-0 w-full h-full overflow-hidden rounded-lg border border-white/10 z-10">
+            <div className="maestro-globe-shell w-full max-w-[27rem] aspect-square">
+                <div className="maestro-globe-window absolute inset-0">
                     <div
-                        ref={globeRef}
-                        className="globe-bg absolute inset-0 border-2 rounded-full flex items-center justify-center text-white overflow-hidden shadow-inner touch-none isolate"
-                        style={{ backgroundColor: '#0b3d66' }}
+                        className={`maestro-globe-stage ${isDragging ? 'is-dragging' : ''}`}
                         onPointerDown={handlePointerDown}
                         onPointerMove={handlePointerMove}
-                        onPointerUp={handlePointerUp}
-                        onPointerCancel={handlePointerUp}
-                        onPointerLeave={() => { if (isDraggingRef.current) handlePointerUp({} as React.PointerEvent); }}
+                        onPointerUp={finishPointerDrag}
+                        onPointerCancel={finishPointerDrag}
                         onWheel={handleWheel}
+                        role="application"
+                        aria-label="Interactive language globe"
                     >
-                        {/* Atmosphere & visual layers */}
-                        <div className="atmosphere-haze"></div>
-                        <div className="style-harmonizer"></div>
-                        <div className="rim-warmth"></div>
-                        <div className="day-night-shade" style={{ ['--terminator-angle' as any]: `${timeAngleDeg}deg` }}></div>
-                        <div className="sun-glint" style={{ ['--glint-x' as any]: `${glintPos.x}%`, ['--glint-y' as any]: `${glintPos.y}%` }}></div>
-                        <div className="cloud-layer cloud-layer-far"></div>
-                        <div className="cloud-layer cloud-layer-near"></div>
-                        <div className="cloud-layer cloud-layer-highlights"></div>
+                        <div className="maestro-globe-space" />
+                        <EarthCanvas rotation={rotation} textureUrl={EARTH_TEXTURE_URL} />
 
-                        {/* Scroll wheel overlay (always on top, always blocks input) */}
-                        <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 100, pointerEvents: 'none' }}>
-                            <div
-                                className={`w-[70%] max-w-[10rem] backdrop-blur-md px-3 py-2 transition-opacity duration-200 shadow-lg border border-white/10 sketchy-border-thin ${isWheelOverlayActive ? 'opacity-100' : 'opacity-50 hover:opacity-100 focus-within:opacity-100 active:opacity-100'}`}
-                                style={{ background: 'rgba(12, 30, 48, 0.38)', pointerEvents: 'auto', position: 'relative', zIndex: 100 }}
-                            >
-                                <div className="flex justify-center items-start gap-3">
-                                    <LanguageScrollWheel
-                                        languages={ALL_LANGUAGES}
-                                        selectedValue={nativeLang}
-                                        onSelect={(l) => handleScrollWheelSelect(l, true)}
-                                        onInteract={handleInteraction}
-                                        title=""
-                                        variant="native"
-                                    />
-                                    <div className="w-px h-24 bg-white/30 self-center"></div>
-                                    <LanguageScrollWheel
-                                        languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
-                                        selectedValue={targetLang}
-                                        onSelect={(l) => handleScrollWheelSelect(l, false)}
-                                        disabled={!nativeLang}
-                                        onInteract={handleInteraction}
-                                        title=""
-                                        variant="target"
-                                    />
-                                </div>
-                            </div>
+                        {route && (
+                            <svg viewBox="0 0 100 100" className="maestro-globe-route-layer" aria-hidden="true">
+                                <path
+                                    className="maestro-globe-route"
+                                    d={route.pathD}
+                                    stroke="rgba(255,255,255,0.46)"
+                                    strokeWidth="0.74"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeDasharray="2.8 2.6"
+                                    fill="none"
+                                />
+                                {route.planePathD && (
+                                    <g key={route.planePathD} className="maestro-globe-plane">
+                                        <path
+                                            d="M -1.1 -0.36 L 1.28 0 L -1.1 0.36 L -0.55 0 L -1.1 -0.36 Z"
+                                            fill="rgba(255,255,255,0.96)"
+                                            stroke="rgba(8,20,34,0.46)"
+                                            strokeWidth="0.12"
+                                            transform="scale(2.15)"
+                                        />
+                                        <animateMotion
+                                            dur="2.9s"
+                                            repeatCount="indefinite"
+                                            rotate="auto"
+                                            path={route.planePathD}
+                                        />
+                                    </g>
+                                )}
+                            </svg>
+                        )}
+
+                        <div className="maestro-globe-flag-layer">
+                            {sortedFlags.map(flag => {
+                                const isNative = nativeLang?.langCode === flag.lang.langCode;
+                                const isTarget = targetLang?.langCode === flag.lang.langCode;
+                                const isFocused = focusedLangCode === flag.lang.langCode;
+                                const isHovered = hoveredLangCode === flag.lang.langCode;
+                                const isExpanded = isFocused || isHovered || isNative || isTarget;
+                                const showShortCode = hasSharedFlag(flag.lang);
+                                const depthOpacity = clamp(0.24 + smoothStep(-0.04, 1, flag.z) * 0.76, 0.18, 1);
+                                const pinScale = isExpanded
+                                    ? 1.22 + flag.focusScore * 0.32
+                                    : 0.64 + smoothStep(0.02, 1, flag.z) * 0.20;
+                                const pinStyle = {
+                                    top: `${flag.screenY}%`,
+                                    left: `${flag.screenX}%`,
+                                    opacity: depthOpacity,
+                                    zIndex: 20 + Math.round((flag.z + 1) * 45),
+                                    filter: `saturate(${0.72 + smoothStep(-0.04, 1, flag.z) * 0.34})`,
+                                    '--pin-scale': pinScale.toFixed(3),
+                                } as React.CSSProperties;
+
+                                return (
+                                    <button
+                                        key={flag.lang.langCode}
+                                        className={[
+                                            'maestro-globe-flag-pin',
+                                            isExpanded ? 'is-expanded' : '',
+                                            isNative ? 'is-native' : '',
+                                            isTarget ? 'is-target' : '',
+                                        ].filter(Boolean).join(' ')}
+                                        style={pinStyle}
+                                        onPointerDown={event => event.stopPropagation()}
+                                        onClick={() => handleFlagClick(flag.lang)}
+                                        onMouseEnter={() => setHoveredLangCode(flag.lang.langCode)}
+                                        onMouseLeave={() => setHoveredLangCode(null)}
+                                        onFocus={() => setHoveredLangCode(flag.lang.langCode)}
+                                        onBlur={() => setHoveredLangCode(null)}
+                                        title={flag.lang.displayName}
+                                        aria-label={`Select ${flag.lang.displayName}`}
+                                    >
+                                        <span className="maestro-globe-pin-stem" />
+                                        <span className="maestro-globe-pin-dot" />
+                                        <span className="maestro-globe-flag-card">
+                                            <span className="maestro-globe-flag-glyph">{flag.lang.flag}</span>
+                                            {showShortCode && <span className="maestro-globe-flag-code">{flag.lang.shortCode}</span>}
+                                        </span>
+                                        <span className="maestro-globe-flag-label">{flag.lang.displayName}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
 
-                        {/* Projected 3D flags */}
-                        {sortedFlags.map(({ lang, screenX, screenY, depth }) => {
-                            // Cull back-hemisphere flags
-                            if (depth < 0.05) return null;
-
-                            const isNative = nativeLang?.langCode === lang.langCode;
-                            const isTarget = targetLang?.langCode === lang.langCode;
-                            const showShortCode = hasSharedFlag(lang);
-
-                            // Depth-based visual properties
-                            const scale = 0.45 + depth * 0.75;     // 0.45 → 1.2
-                            const scaleX = 0.3 + depth * 0.7;      // horizontal compression at edges
-                            const opacity = Math.pow(depth, 0.6);   // smooth fade
-                            const zIndex = Math.floor(depth * 20) + 10;
-
-                            return (
-                                <button
-                                    key={lang.langCode}
-                                    className="sphere-flag absolute flex flex-col items-center justify-center p-1 sketchy-border-thin"
-                                    style={{
-                                        top: `${screenY}%`,
-                                        left: `${screenX}%`,
-                                        transform: `translate(-50%, -50%) scale(${scale}) scaleX(${scaleX / scale})`,
-                                        opacity,
-                                        zIndex,
-                                    }}
-                                    onClick={() => handleFlagClick(lang)}
-                                    onMouseEnter={() => setHoveredLang(lang)}
-                                    onMouseLeave={() => setHoveredLang(null)}
-                                    title={lang.displayName}
-                                >
-                                    <span className={`text-lg leading-none transition-transform duration-200 ${hoveredLang?.langCode === lang.langCode || isNative || isTarget ? 'scale-125' : 'scale-100'}`}>
-                                        {lang.flag}
-                                    </span>
-                                    {showShortCode && (
-                                        <span className="text-[8px] font-bold text-white/90 leading-none mt-0.5 drop-shadow-sm">{lang.shortCode}</span>
-                                    )}
-                                    <div className={`absolute -inset-1 border-2 transition-all duration-300 pointer-events-none sketchy-border-thin ${
-                                        isNative ? 'border-globe-native-accent shadow-globe-native-accent/50 shadow-lg' :
-                                        isTarget ? 'border-globe-target-accent shadow-globe-target-accent/50 shadow-lg' :
-                                        'border-transparent'
-                                    }`}></div>
-                                </button>
-                            );
-                        })}
+                        <div className="maestro-globe-vignette" />
                     </div>
 
-                    {/* Glass cube inner overlays */}
-                    <div className="cube-inner-shadow pointer-events-none"></div>
-                    <div className="cube-ice-scratches pointer-events-none"></div>
-
-                    {/* Flight path and plane */}
-                    {pathD && (
-                        <svg key={pathD} viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible pointer-events-none z-50">
-                            <path d={pathD} stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="none" strokeDasharray="5,5" />
-                            <g
-                                style={{ '--flight-path': `"${pathD}"` } as React.CSSProperties}
-                                className="animate-fly-in-bubble"
-                            >
-                                <text
-                                    className={nativeLang && targetLang ? 'animate-pulse' : ''}
-                                    fontSize="10"
-                                    dominantBaseline="middle"
-                                    textAnchor="middle"
-                                >
-                                    ✈️
-                                </text>
-                            </g>
-                        </svg>
-                    )}
+                    <div
+                        className={`maestro-globe-wheel-panel ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
+                        data-globe-control="true"
+                        onPointerDown={event => event.stopPropagation()}
+                        onWheel={event => event.stopPropagation()}
+                    >
+                        <div className="flex justify-center items-start gap-3">
+                            <LanguageScrollWheel
+                                languages={ALL_LANGUAGES}
+                                selectedValue={nativeLang}
+                                onSelect={(lang) => handleScrollWheelSelect(lang, true)}
+                                onInteract={handleInteraction}
+                                title=""
+                                variant="native"
+                            />
+                            <div className="w-px h-24 bg-white/30 self-center" />
+                            <LanguageScrollWheel
+                                languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
+                                selectedValue={targetLang}
+                                onSelect={(lang) => handleScrollWheelSelect(lang, false)}
+                                disabled={!nativeLang}
+                                onInteract={handleInteraction}
+                                title=""
+                                variant="target"
+                            />
+                        </div>
+                    </div>
                 </div>
-
-                {/* Facet edges for 3D glass cube effect */}
-                <div className="cube-edge cube-edge-top pointer-events-none"></div>
-                <div className="cube-edge cube-edge-bottom pointer-events-none"></div>
-                <div className="cube-edge cube-edge-left pointer-events-none"></div>
-                <div className="cube-edge cube-edge-right pointer-events-none"></div>
             </div>
-
-            <style>{`
-                /* Theme-safe ocean base */
-                .globe-bg { background-color: #0b3d66; }
-
-                /* Glass cube container */
-                .glass-cube {
-                    position: relative;
-                    filter: drop-shadow(0 14px 22px rgba(0,0,0,0.35));
-                    perspective: 900px;
-                }
-                .cube-front {
-                    background:
-                        radial-gradient(circle at 50% 35%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 40%, transparent 70%),
-                        linear-gradient(180deg, rgba(20,40,60,0.32) 0%, rgba(12,24,36,0.36) 100%);
-                    backdrop-filter: saturate(1.1) contrast(1.02);
-                    box-shadow:
-                        inset 0 1px 0 rgba(255,255,255,0.18),
-                        inset 0 -10px 30px rgba(12,24,36,0.35);
-                }
-                .cube-inner-shadow {
-                    position: absolute; inset: 0; border-radius: 0.75rem;
-                    background: radial-gradient(closest-side, transparent 68%, rgba(0,0,0,0.25) 100%);
-                    mix-blend-mode: multiply; opacity: 0.75;
-                }
-                .cube-ice-scratches {
-                    position: absolute; inset: 0; border-radius: 0.75rem; opacity: 0.10;
-                    background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.14) 0px, rgba(255,255,255,0.14) 1px, transparent 3px, transparent 7px);
-                    mask-image: radial-gradient(circle at 50% 50%, black 45%, transparent 100%);
-                }
-                .cube-edge { position: absolute; }
-                .cube-edge-top { top:-6px;left:10px;right:10px;height:14px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.35)0%,rgba(255,255,255,0.08)100%);transform:rotateX(25deg); }
-                .cube-edge-bottom { bottom:-10px;left:10px;right:10px;height:18px;border-radius:12px;background:linear-gradient(0deg,rgba(12,24,36,0.45)0%,rgba(12,24,36,0.18)100%);transform:rotateX(-25deg); }
-                .cube-edge-left { left:-8px;top:12px;bottom:12px;width:16px;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,0.30)0%,rgba(255,255,255,0.08)100%);transform:rotateY(-25deg); }
-                .cube-edge-right { right:-8px;top:12px;bottom:12px;width:16px;border-radius:12px;background:linear-gradient(270deg,rgba(255,255,255,0.30)0%,rgba(255,255,255,0.08)100%);transform:rotateY(25deg); }
-
-                /* Atmosphere layers */
-                @keyframes sun-glint-drift {
-                    0% { transform:translate(-6%,-4%);opacity:0.35; }
-                    50% { transform:translate(4%,2%);opacity:0.5; }
-                    100% { transform:translate(-6%,-4%);opacity:0.35; }
-                }
-                @keyframes cloud-drift-far { 0%{transform:translateX(-10px)}100%{transform:translateX(10px)} }
-                @keyframes cloud-drift-near { 0%{transform:translateX(12px)}100%{transform:translateX(-12px)} }
-
-                .atmosphere-haze {
-                    position:absolute;inset:-2%;border-radius:50%;pointer-events:none;
-                    background:
-                        radial-gradient(circle at 50% 45%,rgba(255,255,255,0.08)0%,rgba(255,255,255,0.03)45%,transparent 70%),
-                        radial-gradient(circle at 50% 50%,transparent 60%,rgba(125,211,252,0.12)100%);
-                    box-shadow:inset 0 0 30px rgba(255,255,255,0.08),0 0 18px rgba(125,211,252,0.18);
-                }
-                .style-harmonizer {
-                    position:absolute;inset:0;border-radius:50%;pointer-events:none;
-                    mix-blend-mode:soft-light;opacity:0.18;
-                    background:
-                        radial-gradient(circle at 50% 55%,rgba(14,65,110,0.20)0%,rgba(14,65,110,0.08)55%,transparent 70%),
-                        linear-gradient(180deg,rgba(200,95,48,0.12)0%,rgba(0,0,0,0)40%);
-                }
-                .rim-warmth {
-                    position:absolute;inset:-1%;border-radius:50%;pointer-events:none;
-                    mix-blend-mode:soft-light;opacity:0.28;
-                    background:radial-gradient(closest-side,transparent 70%,rgba(200,95,48,0.22)100%);
-                }
-                .day-night-shade {
-                    position:absolute;inset:0;border-radius:50%;pointer-events:none;
-                    background:linear-gradient(var(--terminator-angle,120deg),rgba(255,255,255,0.10)0%,rgba(255,255,255,0.03)30%,rgba(0,0,0,0.10)64%,rgba(0,0,0,0.18)100%);
-                }
-                .sun-glint {
-                    position:absolute;inset:0;border-radius:50%;pointer-events:none;
-                    background:radial-gradient(circle at var(--glint-x,28%) var(--glint-y,22%),rgba(255,255,255,0.26)0%,rgba(255,255,255,0.08)22%,transparent 45%);
-                    animation:sun-glint-drift 48s ease-in-out infinite;
-                }
-                .cloud-layer {
-                    position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0.20;filter:blur(0.6px);
-                }
-                .cloud-layer-far {
-                    background:
-                        radial-gradient(ellipse 18% 9% at 24% 28%,rgba(255,255,255,0.54)0%,transparent 100%),
-                        radial-gradient(ellipse 14% 7% at 66% 34%,rgba(255,255,255,0.46)0%,transparent 100%),
-                        radial-gradient(ellipse 16% 8% at 52% 72%,rgba(255,255,255,0.40)0%,transparent 100%);
-                    animation:cloud-drift-far 160s linear infinite alternate;
-                }
-                .cloud-layer-near {
-                    background:
-                        radial-gradient(ellipse 22% 10% at 36% 48%,rgba(255,255,255,0.46)0%,transparent 100%),
-                        radial-gradient(ellipse 15% 8% at 74% 58%,rgba(255,255,255,0.40)0%,transparent 100%);
-                    animation:cloud-drift-near 115s linear infinite alternate;
-                }
-                .cloud-layer-highlights {
-                    opacity:0.14;mix-blend-mode:screen;
-                    background:
-                        radial-gradient(ellipse 16% 7% at 30% 40%,rgba(255,255,255,0.35)0%,transparent 100%),
-                        radial-gradient(ellipse 13% 6% at 70% 55%,rgba(255,255,255,0.28)0%,transparent 100%),
-                        radial-gradient(ellipse 18% 8% at 54% 72%,rgba(255,255,255,0.24)0%,transparent 100%);
-                    animation:cloud-drift-far 145s linear infinite alternate;
-                }
-
-                @media (prefers-reduced-motion:reduce) {
-                    .sun-glint,.cloud-layer-far,.cloud-layer-near,.cloud-layer-highlights { animation:none; }
-                }
-            `}</style>
         </div>
     );
 };
 
 export default LanguageSelectorGlobe;
-
