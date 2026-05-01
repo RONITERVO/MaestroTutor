@@ -679,7 +679,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
         const sensitivity = 0.0062;
         const nextVelocity = {
-            lng: -dx * sensitivity,
+            lng: dx * sensitivity,
             lat: dy * sensitivity,
         };
         velocityRef.current = nextVelocity;
