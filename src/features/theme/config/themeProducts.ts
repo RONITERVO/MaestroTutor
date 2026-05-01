@@ -75,16 +75,16 @@ export const THEME_PRODUCTS: ThemeProduct[] = [
   {
     productId: THEME_PRODUCT_IDS.PURE_LIGHT,
     displayName: 'Pure Light',
-    description: 'Crisp white with deep navy and premium blue - elegant and timeless.',
+    description: 'Minimal white and black with crisp electric-blue highlights for a clean studio feel.',
     icon: '☀️',
-    previewColors: ['210 25% 98%', '222 47% 20%', '214 87% 51%', '199 89% 40%'],
+    previewColors: ['0 0% 98%', '0 0% 12%', '215 100% 50%', '120 60% 40%'],
   },
   {
     productId: THEME_PRODUCT_IDS.OBSIDIAN,
     displayName: 'Obsidian',
-    description: 'Deep navy-black with refined blue and teal - sophisticated darkness.',
+    description: 'Velvety charcoal with warm ivory contrast and layered grayscale depth.',
     icon: '🌑',
-    previewColors: ['222 38% 8%', '214 80% 46%', '174 68% 44%', '222 28% 17%'],
+    previewColors: ['220 8% 12%', '40 8% 85%', '220 8% 26%', '40 8% 90%'],
   },
   {
     productId: THEME_PRODUCT_IDS.FOREST,
