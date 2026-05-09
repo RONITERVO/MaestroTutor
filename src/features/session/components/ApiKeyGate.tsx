@@ -8,6 +8,7 @@ import { IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, Ico
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
+import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTracker';
 
 // Hardcoded developer password to bypass the tester form. 
 // Password is: thedev
@@ -46,8 +47,10 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   isOpen,
   isBlocking,
   hasKey,
+  maskedKey,
   isSaving = false,
   error,
+  keyInvalid = false,
   instructionFocusIndex,
   onSave,
   onClear,
@@ -59,6 +62,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [costSummary, setCostSummary] = useState({ inputTokens: 0, outputTokens: 0, imageGenCount: 0, totalCostUsd: 0 });
 
   // --- TESTER FORM STATE ---
   const [showTesterForm, setShowTesterForm] = useState(() => !Capacitor.isNativePlatform() && !hasKey);
@@ -89,6 +93,22 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
   const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
+  const displayValue = value || (hasKey ? maskedKey || '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '');
+  const hasCostEstimate = costSummary.totalCostUsd > 0;
+  const showCostButton = hasKey && hasCostEstimate;
+  const inputRightPaddingClass = hasKey
+    ? showCostButton
+      ? 'pr-44'
+      : 'pr-24'
+    : 'pr-14';
+  const savedKeyBorderColor = keyInvalid ? 'hsl(0 60% 60%)' : hasKey ? 'hsl(120 40% 60%)' : undefined;
+  const closeCurrentView = () => {
+    if (showInstructions) {
+      setShowInstructions(false);
+    } else {
+      onClose();
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -102,6 +122,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
       setEmailErrorMsg('');
       setShowDevPassword(false);
       setDevPasswordInput('');
+    } else {
+      setCostSummary(getCostSummary());
     }
   }, [isOpen]);
 
@@ -209,7 +231,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   };
 
   const attemptAutoPasteFromClipboard = async () => {
-    if (value.trim()) return;
+    if (value.trim() || hasKey) return;
 
     let clipboardText = '';
 
@@ -245,6 +267,21 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const handleClearSavedKey = async () => {
     await onClear();
     setValue('');
+    setCostSummary(getCostSummary());
+  };
+
+  const handleApiKeyInputChange = (next: string) => {
+    let nextValue = next;
+    if (!value && hasKey && displayValue) {
+      if (next === displayValue) return;
+      if (next.startsWith(displayValue)) {
+        nextValue = next.slice(displayValue.length);
+      } else if (next.endsWith(displayValue)) {
+        nextValue = next.slice(0, -displayValue.length);
+      }
+    }
+    setValue(nextValue);
+    onValueChange?.(nextValue);
   };
 
   if (!isOpen) return null;
@@ -254,8 +291,13 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // =========================================================================
   if (showTesterForm) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-        <div className="w-full max-w-sm bg-gate-bg shadow-xl sketchy-border sketch-shape-3 p-8 relative">
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        onClick={() => {
+          if (canClose) onClose();
+        }}
+      >
+        <div className="w-full max-w-sm bg-gate-bg shadow-xl sketchy-border sketch-shape-3 p-8 relative" onClick={(e) => e.stopPropagation()}>
 
           {canClose && (
             <button
@@ -547,19 +589,29 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   if (!showInstructions) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        onClick={closeCurrentView}
+      >
         {canClose && (
           <button
             type="button"
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             aria-label={t('apiKeyGate.close')}
-            className="absolute left-4 top-4 inline-flex h-10 w-10 items-center justify-center bg-gate-bg text-gate-muted-text hover:bg-gate-input-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+            className="absolute inline-flex h-10 w-10 items-center justify-center bg-gate-bg text-gate-muted-text hover:bg-gate-input-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+            style={{
+              top: 'calc(1rem + env(safe-area-inset-top))',
+              left: 'calc(1rem + env(safe-area-inset-left))',
+            }}
           >
             <IconChevronLeft className="h-5 w-5" />
           </button>
         )}
 
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
           <div
             className="msg-tape msg-tape-wrinkled"
             style={{
@@ -582,20 +634,20 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
               <div className="relative">
                 <input
-                  type="password"
-                  value={value}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setValue(next);
-                    onValueChange?.(next);
-                  }}
+                  type={value ? 'password' : 'text'}
+                  value={displayValue}
+                  onChange={(e) => handleApiKeyInputChange(e.target.value)}
                   onClick={attemptAutoPasteFromClipboard}
+                  onFocus={(e) => {
+                    if (!value && hasKey) e.currentTarget.select();
+                  }}
                   onPaste={handleApiKeyPaste}
                   onKeyDown={handleApiKeyKeyDown}
                   placeholder={t('apiKeyGate.placeholder')}
                   aria-label={t('apiKeyGate.keyLabel')}
                   disabled={isSaving}
-                  className={`min-h-12 w-full bg-gate-input-bg/75 py-3 pl-4 text-sm text-gate-text placeholder:text-gate-muted-text focus:outline-none focus:ring-2 focus:ring-gate-accent disabled:opacity-70 sketchy-border-thin ${hasKey ? 'pr-24' : 'pr-14'}`}
+                  className={`min-h-12 w-full bg-gate-input-bg/75 py-3 pl-4 text-sm text-gate-text placeholder:text-gate-muted-text focus:outline-none focus:ring-2 focus:ring-gate-accent disabled:opacity-70 sketchy-border-thin ${inputRightPaddingClass}`}
+                  style={{ borderColor: savedKeyBorderColor }}
                   autoFocus
                 />
                 <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
@@ -607,6 +659,18 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                       className="inline-flex h-8 w-8 items-center justify-center text-gate-muted-text transition-colors hover:bg-gate-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
                     >
                       <IconTrash className="h-4 w-4" />
+                    </button>
+                  )}
+                  {showCostButton && (
+                    <button
+                      type="button"
+                      onClick={() => openExternalUrl(GOOGLE_BILLING_URL)}
+                      aria-label={t('apiKeyGate.costLabel')}
+                      title={t('apiKeyGate.costLabel')}
+                      className="inline-flex h-8 items-center justify-center gap-1 px-2 text-xs text-gate-muted-text transition-colors hover:bg-gate-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+                    >
+                      <IconSparkles className="h-3.5 w-3.5" />
+                      <span>~${costSummary.totalCostUsd.toFixed(2)}</span>
                     </button>
                   )}
                   <button
@@ -642,8 +706,11 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // INSTRUCTION VIEW
   // =========================================================================
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={closeCurrentView}
+    >
+      <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center bg-gate-accent/15 text-gate-accent sketchy-border-thin">
