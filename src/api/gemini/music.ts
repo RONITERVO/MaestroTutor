@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { WeightedPrompt } from '@google/genai';
 import { debugLogService } from '../../features/diagnostics';
-import { mergeInt16Arrays, pcmToWav } from '../../features/speech/utils/audioProcessing';
+import { mergeInt16Arrays, pcmToWav } from '../../features/speech';
 import { getGeminiModels } from '../../core/config/models';
 import { getAi } from './client';
 
