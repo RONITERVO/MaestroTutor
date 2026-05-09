@@ -1,10 +1,10 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
-import { IconCheck, IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark, IconSparkles, IconEyeOpen, IconCreditCard, IconShield } from '../../../shared/ui/Icons';
+import { IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconXMark, IconSparkles, IconEyeOpen, IconCreditCard, IconShield, IconTrash } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
@@ -59,7 +59,6 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 }) => {
   const { t } = useAppTranslations();
   const [value, setValue] = useState('');
-  const [showKey, setShowKey] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -94,10 +93,22 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
   const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
-
-  const canSave = useMemo(() => {
-    return value.trim().length >= 20 && !isSaving;
-  }, [value, isSaving]);
+  const displayValue = value || (hasKey ? maskedKey || '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '');
+  const hasCostEstimate = costSummary.totalCostUsd > 0;
+  const showCostButton = hasKey && hasCostEstimate;
+  const inputRightPaddingClass = hasKey
+    ? showCostButton
+      ? 'pr-44'
+      : 'pr-24'
+    : 'pr-14';
+  const savedKeyBorderColor = keyInvalid ? 'hsl(0 60% 60%)' : hasKey ? 'hsl(120 40% 60%)' : undefined;
+  const closeCurrentView = () => {
+    if (showInstructions) {
+      setShowInstructions(false);
+    } else {
+      onClose();
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -205,8 +216,22 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
     setIsAutoPlaying(false);
   };
 
+  const saveApiKeyFromRawValue = async (rawValue: string) => {
+    if (isSaving) return;
+
+    const normalized = normalizeApiKey(rawValue);
+    setValue(normalized);
+    onValueChange?.(normalized);
+
+    const ok = await onSave(normalized);
+    if (ok) {
+      setValue('');
+      if (canClose) onClose();
+    }
+  };
+
   const attemptAutoPasteFromClipboard = async () => {
-    if (value.trim()) return;
+    if (value.trim() || hasKey) return;
 
     let clipboardText = '';
 
@@ -225,8 +250,38 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
     const normalized = normalizeApiKey(clipboardText);
     if (!normalized || !isLikelyApiKey(normalized) || /\s/.test(normalized)) return;
-    setValue(normalized);
-    onValueChange?.(normalized);
+    await saveApiKeyFromRawValue(normalized);
+  };
+
+  const handleApiKeyPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    void saveApiKeyFromRawValue(e.clipboardData.getData('text'));
+  };
+
+  const handleApiKeyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    void saveApiKeyFromRawValue(value);
+  };
+
+  const handleClearSavedKey = async () => {
+    await onClear();
+    setValue('');
+    setCostSummary(getCostSummary());
+  };
+
+  const handleApiKeyInputChange = (next: string) => {
+    let nextValue = next;
+    if (!value && hasKey && displayValue) {
+      if (next === displayValue) return;
+      if (next.startsWith(displayValue)) {
+        nextValue = next.slice(displayValue.length);
+      } else if (next.endsWith(displayValue)) {
+        nextValue = next.slice(0, -displayValue.length);
+      }
+    }
+    setValue(nextValue);
+    onValueChange?.(nextValue);
   };
 
   if (!isOpen) return null;
@@ -236,8 +291,13 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // =========================================================================
   if (showTesterForm) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-        <div className="w-full max-w-sm bg-gate-bg shadow-xl sketchy-border sketch-shape-3 p-8 relative">
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        onClick={() => {
+          if (canClose) onClose();
+        }}
+      >
+        <div className="w-full max-w-sm bg-gate-bg shadow-xl sketchy-border sketch-shape-3 p-8 relative" onClick={(e) => e.stopPropagation()}>
 
           {canClose && (
             <button
@@ -527,12 +587,130 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
     );
   }
 
+  if (!showInstructions) {
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        onClick={closeCurrentView}
+      >
+        {canClose && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            aria-label={t('apiKeyGate.close')}
+            className="absolute inline-flex h-10 w-10 items-center justify-center bg-gate-bg text-gate-muted-text hover:bg-gate-input-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+            style={{
+              top: 'calc(1rem + env(safe-area-inset-top))',
+              left: 'calc(1rem + env(safe-area-inset-left))',
+            }}
+          >
+            <IconChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+
+        <div className="relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="msg-tape msg-tape-wrinkled"
+            style={{
+              top: '-14px',
+              left: '50%',
+              width: '104px',
+              height: '24px',
+              transform: 'translateX(-50%) rotate(-3deg)',
+            }}
+          />
+          <div className="relative overflow-visible bg-gate-bg p-4 text-sm text-gate-text msg-depth sketchy-border-thin sketch-shape-2">
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => openExternalUrl(AI_STUDIO_URL)}
+                className="w-full bg-gate-btn-bg px-4 py-3 text-left text-sm font-medium text-gate-btn-text hover:bg-gate-btn-bg/80 focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+              >
+                {t('apiKeyGate.stepOne')}
+              </button>
+
+              <div className="relative">
+                <input
+                  type={value ? 'password' : 'text'}
+                  value={displayValue}
+                  onChange={(e) => handleApiKeyInputChange(e.target.value)}
+                  onClick={attemptAutoPasteFromClipboard}
+                  onFocus={(e) => {
+                    if (!value && hasKey) e.currentTarget.select();
+                  }}
+                  onPaste={handleApiKeyPaste}
+                  onKeyDown={handleApiKeyKeyDown}
+                  placeholder={t('apiKeyGate.placeholder')}
+                  aria-label={t('apiKeyGate.keyLabel')}
+                  disabled={isSaving}
+                  className={`min-h-12 w-full bg-gate-input-bg/75 py-3 pl-4 text-sm text-gate-text placeholder:text-gate-muted-text focus:outline-none focus:ring-2 focus:ring-gate-accent disabled:opacity-70 sketchy-border-thin ${inputRightPaddingClass}`}
+                  style={{ borderColor: savedKeyBorderColor }}
+                  autoFocus
+                />
+                <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+                  {hasKey && (
+                    <button
+                      type="button"
+                      onClick={handleClearSavedKey}
+                      aria-label={t('apiKeyGate.clearSavedKey')}
+                      className="inline-flex h-8 w-8 items-center justify-center text-gate-muted-text transition-colors hover:bg-gate-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+                    >
+                      <IconTrash className="h-4 w-4" />
+                    </button>
+                  )}
+                  {showCostButton && (
+                    <button
+                      type="button"
+                      onClick={() => openExternalUrl(GOOGLE_BILLING_URL)}
+                      aria-label={t('apiKeyGate.costLabel')}
+                      title={t('apiKeyGate.costLabel')}
+                      className="inline-flex h-8 items-center justify-center gap-1 px-2 text-xs text-gate-muted-text transition-colors hover:bg-gate-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+                    >
+                      <IconSparkles className="h-3.5 w-3.5" />
+                      <span>~${costSummary.totalCostUsd.toFixed(2)}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInstructionIndex(0);
+                      setShowInstructions(true);
+                      setIsAutoPlaying(true);
+                    }}
+                    aria-label={t('apiKeyGate.viewInstructions')}
+                    className="inline-flex h-8 w-8 items-center justify-center bg-gate-bg text-gate-muted-text transition-colors hover:bg-gate-input-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+                  >
+                    <IconQuestionMarkCircle className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="text-sm text-gate-error-text">
+                  {error === 'apiKeyGate.keyInvalid'
+                    ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}\u2022\u2022\u2022\u2022${value.slice(-4)}` : '' })
+                    : error}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // =========================================================================
-  // ACTUAL API KEY GATE VIEW
+  // INSTRUCTION VIEW
   // =========================================================================
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={closeCurrentView}
+    >
+      <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between px-6 pt-6">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center bg-gate-accent/15 text-gate-accent sketchy-border-thin">
@@ -578,13 +756,13 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               className="text-gate-muted-text hover:text-gate-text"
               aria-label={headerCloseLabel}
             >
-              <IconXMark className="h-5 w-5" />
+              <IconChevronLeft className="h-5 w-5" />
             </button>
           )}
         </div>
 
         <div className="px-6 py-4 space-y-4">
-          {showInstructions ? (
+          {(
             <div className="flex flex-col items-center gap-4">
               <div className="relative w-full max-w-[360px] overflow-hidden bg-gate-bg shadow-sm sketchy-border-thin">
                 <div className="aspect-[9/16] w-full bg-gate-input-bg/70">
@@ -639,137 +817,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                 )}
               </div>
             </div>
-          ) : (
-            <>
-              <div className="bg-gate-input-bg/70 p-4 text-sm text-gate-text space-y-2 sketchy-border-thin">
-                <div className="font-medium text-gate-text font-sketch">{t('apiKeyGate.stepsTitle')}</div>
-                <ol className="list-decimal pl-5 space-y-1">
-                  <li>{t('apiKeyGate.stepOne')}</li>
-                  <li>{t('apiKeyGate.stepTwo')}</li>
-                </ol>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    className="inline-flex items-center gap-2 bg-gate-btn-bg px-3 py-2 text-gate-btn-text hover:bg-gate-btn-bg/80 sketchy-border-thin"
-                    onClick={() => openExternalUrl(AI_STUDIO_URL)}
-                  >
-                    {t('apiKeyGate.openAiStudio')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setInstructionIndex(0);
-                      setShowInstructions(true);
-                      setIsAutoPlaying(true);
-                    }}
-                    aria-label={t('apiKeyGate.viewInstructions')}
-                    className="inline-flex h-9 w-9 items-center justify-center bg-gate-bg text-gate-muted-text hover:bg-gate-input-bg sketchy-border-thin"
-                  >
-                    <IconQuestionMarkCircle className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-
-              <label className="block text-sm font-medium text-gate-text">{t('apiKeyGate.keyLabel')}</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  value={value}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setValue(next);
-                    onValueChange?.(next);
-                  }}
-                  onClick={attemptAutoPasteFromClipboard}
-                  placeholder={t('apiKeyGate.placeholder')}
-                  className="flex-1 px-3 py-2 text-sm bg-gate-bg text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
-                  autoFocus
-                />
-                <button
-                  className="px-3 py-2 text-sm text-gate-text hover:bg-gate-input-bg sketchy-border-thin"
-                  onClick={() => setShowKey(!showKey)}
-                  type="button"
-                >
-                  {showKey ? t('apiKeyGate.hide') : t('apiKeyGate.show')}
-                </button>
-              </div>
-
-              {error && (
-                <div className="text-sm text-gate-error-text">
-                  {error === 'apiKeyGate.keyInvalid'
-                      ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}····${value.slice(-4)}` : '' })
-                    : error}
-                </div>
-              )}
-
-              {hasKey && (
-                <div
-                  className={`p-3 text-sm flex items-center gap-2 sketchy-border-thin ${keyInvalid
-                    ? 'bg-red-50 text-red-800'
-                    : 'bg-gate-input-bg/70 text-gate-text'
-                    }`}
-                  style={{ borderColor: keyInvalid ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
-                >
-                  {keyInvalid ? (
-                    <IconXMark className="h-4 w-4 shrink-0" />
-                  ) : (
-                    <IconCheck className="h-4 w-4 shrink-0" />
-                  )}
-                  <span className="truncate">
-                    {keyInvalid
-                      ? t('apiKeyGate.keyInvalid', { maskedKey: maskedKey || '' })
-                      : t('apiKeyGate.currentKeySaved', { maskedKey: maskedKey ? `(${maskedKey})` : '' }).trim()}
-                  </span>
-                  {costSummary.totalCostUsd > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => openExternalUrl(GOOGLE_BILLING_URL)}
-                      className="ml-auto shrink-0 flex items-center gap-1 text-xs opacity-70 hover:opacity-100"
-                      aria-label={t('apiKeyGate.costLabel')}
-                    >
-                      <IconSparkles className="h-3 w-3" />
-                      <span>~${costSummary.totalCostUsd.toFixed(2)}</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
           )}
         </div>
-
-        {!showInstructions && (
-          <div className="flex items-center justify-between px-6 pb-6">
-            <button
-              className="text-sm text-gate-muted-text hover:text-gate-text"
-              onClick={onClear}
-              disabled={!hasKey}
-            >
-              {t('apiKeyGate.clearSavedKey')}
-            </button>
-            <div className="flex items-center gap-2">
-              {canClose && (
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-sm text-gate-text hover:bg-gate-input-bg sketchy-border-thin"
-                >
-                  {t('apiKeyGate.cancel')}
-                </button>
-              )}
-              <button
-                onClick={async () => {
-                  const ok = await onSave(value);
-                  if (ok) {
-                    setValue('');
-                    if (canClose) onClose();
-                  }
-                }}
-                disabled={!canSave}
-                className="bg-gate-btn-bg px-4 py-2 text-sm font-medium text-gate-btn-text hover:bg-gate-btn-bg/80 disabled:opacity-50 sketchy-border-thin"
-              >
-                {isSaving ? t('apiKeyGate.saving') : t('apiKeyGate.saveKey')}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
