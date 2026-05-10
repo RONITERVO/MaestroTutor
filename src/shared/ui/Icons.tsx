@@ -96,6 +96,80 @@ export const IconSwap = (props: any) => (
 	</svg>
 );
 
+export const IconEnableGameGestures = (props: any) => (
+	<svg fill="none" viewBox="0 0 48 48" stroke="currentColor" aria-label="Use game swipes" {...props}>
+		<defs>
+			<style>
+				{`
+          .maestro-game-gesture-trace {
+            animation: maestroSwipeGame 2.5s ease-in-out infinite;
+            transform-origin: 24px 24px;
+          }
+          @keyframes maestroSwipeGame {
+            0%   { transform: translate(-12px, 4px) rotate(-15deg); }
+            25%  { transform: translate(0px, 0px) rotate(0deg); }
+            50%  { transform: translate(12px, 4px) rotate(15deg); }
+            75%  { transform: translate(0px, 0px) rotate(0deg); }
+            100% { transform: translate(-12px, 4px) rotate(-15deg); }
+          }
+        `}
+			</style>
+		</defs>
+		<rect x="4" y="6" width="40" height="36" rx="6" strokeWidth="3" opacity="0.3" />
+		<circle cx="12" cy="34" r="3.5" opacity="0.25" fill="currentColor" stroke="none" />
+		<circle cx="36" cy="34" r="3.5" opacity="0.25" fill="currentColor" stroke="none" />
+		<path d="M 12 28 Q 24 16 36 28" strokeWidth="2.5" strokeDasharray="5 5" opacity="0.5" strokeLinecap="round" />
+		<path d="M 10 25 L 12 28 L 15 27" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+		<path d="M 33 27 L 36 28 L 38 25" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+		<g className="maestro-game-gesture-trace" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.35))' }}>
+			<g transform="translate(4.5, 17)">
+				<path
+					fill="currentColor"
+					stroke="currentColor"
+					strokeWidth="1"
+					d="M22 15V7a2.5 2.5 0 0 0-5 0v11.5c0 .6-.3 1.1-.8 1.4l-2.4 1A2.5 2.5 0 0 0 12 23.2V26a4.5 4.5 0 0 0 4.5 4.5h4a5.5 5.5 0 0 0 5.5-5.5v-5a2.5 2.5 0 0 0-2.5-2.5H22V15z"
+				/>
+			</g>
+		</g>
+	</svg>
+);
+
+export const IconReturnToChatScroll = (props: any) => (
+	<svg fill="none" viewBox="0 0 48 48" stroke="currentColor" aria-label="Return to chat scroll" {...props}>
+		<defs>
+			<style>
+				{`
+          .maestro-chat-scroll-trace {
+            animation: maestroScrollChat 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            transform-origin: 24px 24px;
+          }
+          @keyframes maestroScrollChat {
+            0%, 15%   { transform: translate(0px, 12px); }
+            45%, 65%  { transform: translate(0px, -12px); }
+            95%, 100% { transform: translate(0px, 12px); }
+          }
+        `}
+			</style>
+		</defs>
+		<rect x="8" y="8" width="22" height="8" rx="4" strokeWidth="0" fill="currentColor" opacity="0.2" />
+		<rect x="18" y="20" width="22" height="8" rx="4" strokeWidth="0" fill="currentColor" opacity="0.4" />
+		<rect x="8" y="32" width="26" height="8" rx="4" strokeWidth="0" fill="currentColor" opacity="0.2" />
+		<path d="M 24 10 L 24 38" strokeWidth="2.5" strokeDasharray="5 5" opacity="0.5" strokeLinecap="round" />
+		<path d="M 20 14 L 24 10 L 28 14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+		<path d="M 20 34 L 24 38 L 28 34" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+		<g className="maestro-chat-scroll-trace" style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.35))' }}>
+			<g transform="translate(4.5, 17)">
+				<path
+					fill="currentColor"
+					stroke="currentColor"
+					strokeWidth="1"
+					d="M22 15V7a2.5 2.5 0 0 0-5 0v11.5c0 .6-.3 1.1-.8 1.4l-2.4 1A2.5 2.5 0 0 0 12 23.2V26a4.5 4.5 0 0 0 4.5 4.5h4a5.5 5.5 0 0 0 5.5-5.5v-5a2.5 2.5 0 0 0-2.5-2.5H22V15z"
+				/>
+			</g>
+		</g>
+	</svg>
+);
+
 export const IconScissors = (props: any) => (
 	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 8.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5Zm9 0a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5ZM10.5 10l3 3m0 0 3-3m-3 3V3" />
