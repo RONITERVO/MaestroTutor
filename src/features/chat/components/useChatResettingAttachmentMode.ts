@@ -25,16 +25,18 @@ const useChatResettingAttachmentMode = <TElement extends HTMLElement = HTMLDivEl
   const [isAttachmentModeEnabled, setIsAttachmentModeEnabled] = useState(false);
 
   const resetAttachmentMode = useCallback(() => {
-    setIsAttachmentModeEnabled(false);
+    setIsAttachmentModeEnabled((current) => (current ? false : current));
   }, []);
 
   useEffect(() => {
+    if (!isAttachmentModeEnabled) return;
+
     const root = rootRef.current;
     if (!root || typeof window === 'undefined') return;
 
     const scrollContainer = getNearestScrollContainer(root);
     const handleChatSurfaceMove = () => {
-      setIsAttachmentModeEnabled(false);
+      resetAttachmentMode();
     };
 
     scrollContainer?.addEventListener('scroll', handleChatSurfaceMove, { passive: true });
@@ -46,7 +48,7 @@ const useChatResettingAttachmentMode = <TElement extends HTMLElement = HTMLDivEl
       window.removeEventListener('scroll', handleChatSurfaceMove);
       window.removeEventListener('resize', handleChatSurfaceMove);
     };
-  }, []);
+  }, [isAttachmentModeEnabled, resetAttachmentMode]);
 
   return {
     rootRef,

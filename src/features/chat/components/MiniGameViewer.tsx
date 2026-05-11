@@ -413,16 +413,9 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       });
     };
 
-    const handleScroll = () => {
-      setGameGesturesEnabled(false);
-      resetPointerGate();
-      scheduleAvailabilityUpdate();
-    };
-
     const scrollContainer = getNearestScrollContainer(frameShell);
-    scrollContainer?.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', scheduleAvailabilityUpdate, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleAvailabilityUpdate, { passive: true });
 
     const resizeObserver = typeof ResizeObserver !== 'undefined'
       ? new ResizeObserver(scheduleAvailabilityUpdate)
@@ -430,16 +423,52 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     resizeObserver?.observe(frameShell);
     if (scrollContainer) resizeObserver?.observe(scrollContainer);
 
+    const intersectionObserver = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver(
+          ([entry]) => {
+            if (!entry) return;
+            if (!entry.isIntersecting || entry.intersectionRatio < 0.995) {
+              setIsFrameFullyVisible((prev) => (prev ? false : prev));
+              return;
+            }
+            scheduleAvailabilityUpdate();
+          },
+          { root: scrollContainer, threshold: [0, 0.5, 0.995, 1] },
+        )
+      : null;
+    intersectionObserver?.observe(frameShell);
+
     scheduleAvailabilityUpdate();
 
     return () => {
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
-      scrollContainer?.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', scheduleAvailabilityUpdate);
+      window.visualViewport?.removeEventListener('resize', scheduleAvailabilityUpdate);
       resizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
     };
-  }, [hasIntersected, resetPointerGate, updateFrameAvailability]);
+  }, [hasIntersected, updateFrameAvailability]);
+
+  useEffect(() => {
+    if (!gameGesturesEnabled) return;
+
+    const frameShell = frameShellRef.current;
+    if (!frameShell || typeof window === 'undefined') return;
+
+    const handleChatSurfaceMove = () => {
+      setGameGesturesEnabled(false);
+      resetPointerGate();
+    };
+
+    const scrollContainer = getNearestScrollContainer(frameShell);
+    scrollContainer?.addEventListener('scroll', handleChatSurfaceMove, { passive: true });
+    window.addEventListener('scroll', handleChatSurfaceMove, { passive: true });
+
+    return () => {
+      scrollContainer?.removeEventListener('scroll', handleChatSurfaceMove);
+      window.removeEventListener('scroll', handleChatSurfaceMove);
+    };
+  }, [gameGesturesEnabled, resetPointerGate]);
 
   useEffect(() => {
     if (!canUseGameGestures && gameGesturesEnabled) {

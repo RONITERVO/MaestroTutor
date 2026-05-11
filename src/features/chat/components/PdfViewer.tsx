@@ -100,6 +100,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
       setPages([]);
       setPageCount(0);
       setVisiblePage(1);
+      setIsPdfScrollEnabled(false);
 
       try {
         const pdf = await getOrLoadPdf(src);
