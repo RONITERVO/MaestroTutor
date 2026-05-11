@@ -187,6 +187,8 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
                 textColorClass={textColor}
                 subtleTextClass={subtleText}
                 compact
+                surfaceClassName={containerBg}
+                panelSurfaceClassName={headerBg}
               />
             ) : compactPreviewSnippet ? (
               <pre className={`mt-1 text-[10px] leading-4 whitespace-pre-wrap break-words ${subtleText}`}>
@@ -232,6 +234,8 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
                 sheets={previewSheets}
                 textColorClass={textColor}
                 subtleTextClass={subtleText}
+                surfaceClassName={containerBg}
+                panelSurfaceClassName={headerBg}
               />
               {previewText ? (
                 <details className="mt-2">

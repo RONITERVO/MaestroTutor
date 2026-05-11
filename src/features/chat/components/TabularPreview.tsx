@@ -13,12 +13,16 @@ interface TabularPreviewProps {
   title?: string | null;
   standalone?: boolean;
   bottomInset?: number;
+  surfaceClassName?: string;
+  panelSurfaceClassName?: string;
 }
 
 interface TabularInteractionDeckToggleProps {
   isPanEnabled: boolean;
   textColorClass: string;
   subtleTextClass: string;
+  surfaceClassName: string;
+  panelSurfaceClassName: string;
   onToggle: () => void;
 }
 
@@ -56,6 +60,8 @@ const TabularInteractionDeckToggle: React.FC<TabularInteractionDeckToggleProps> 
   isPanEnabled,
   textColorClass,
   subtleTextClass,
+  surfaceClassName,
+  panelSurfaceClassName,
   onToggle,
 }) => {
   const modes = [
@@ -83,8 +89,8 @@ const TabularInteractionDeckToggle: React.FC<TabularInteractionDeckToggleProps> 
           ? 'left-0 top-0 z-20 -rotate-2 scale-100'
           : 'right-0 bottom-0 z-10 rotate-6 scale-95';
         const toneClass = isActive
-          ? `bg-paper-surface/95 ${textColorClass}`
-          : `bg-paper-stripe/80 ${subtleTextClass}`;
+          ? `${surfaceClassName} ${textColorClass}`
+          : `${panelSurfaceClassName} ${subtleTextClass}`;
         const contentClass = isActive ? 'justify-start pl-2 pr-1' : 'justify-end px-1.5';
 
         return (
@@ -124,6 +130,8 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
   title,
   standalone = false,
   bottomInset = 0,
+  surfaceClassName = 'bg-paper-surface/90',
+  panelSurfaceClassName = 'bg-paper-stripe/55',
 }) => {
   const [activeSheetIndex, setActiveSheetIndex] = useState(0);
   const [isPanEnabled, setIsPanEnabled] = useState(false);
@@ -156,15 +164,15 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
   if (!activeSheet) return null;
 
   const scrollStyle: React.CSSProperties = {
-    overscrollBehavior: 'contain',
+    overscrollBehavior: isPanEnabled ? 'contain' : 'auto',
     touchAction: isPanEnabled ? 'pan-x pan-y' : 'pan-y',
     WebkitOverflowScrolling: 'touch' as any,
   };
   const xScrollClass = isPanEnabled ? 'overflow-x-auto overflow-y-hidden' : 'overflow-hidden';
   const tableScrollClass = isPanEnabled ? 'overflow-auto' : 'overflow-hidden';
   const shellClass = standalone
-    ? `mt-2 w-full max-w-[560px] rounded-2xl border border-sketch-line/50 bg-paper-surface/90 paper-texture notebook-lines msg-depth isolate overflow-hidden ${textColorClass}`
-    : `mt-2 rounded-xl border border-sketch-line/35 bg-paper-surface/75 paper-texture notebook-lines overflow-hidden ${textColorClass}`;
+    ? `mt-2 w-full max-w-[560px] rounded-2xl border border-sketch-line/50 ${surfaceClassName} paper-texture notebook-lines msg-depth isolate overflow-hidden ${textColorClass}`
+    : `mt-2 rounded-xl border border-sketch-line/35 ${surfaceClassName} paper-texture notebook-lines overflow-hidden ${textColorClass}`;
   const contentPaddingStyle = effectiveBottomInset > 0
     ? { paddingBottom: `calc(0.75rem + ${effectiveBottomInset}px)` }
     : undefined;
@@ -172,7 +180,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
   return (
     <div className={compact ? 'mt-2 space-y-2' : shellClass}>
       {!compact && (
-        <div className="relative z-10 flex items-center justify-between gap-3 px-3 py-2 border-b border-sketch-line/25 bg-paper-surface/70">
+        <div className={`relative z-10 flex items-center justify-between gap-3 px-3 py-2 border-b border-sketch-line/25 ${panelSurfaceClassName}`}>
           <div className="min-w-0">
             <p className={`text-[11px] font-semibold uppercase tracking-wide truncate ${textColorClass}`}>
               {title || activeSheet.name || 'Chart data'}
@@ -186,6 +194,8 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
             isPanEnabled={isPanEnabled}
             textColorClass={textColorClass}
             subtleTextClass={subtleTextClass}
+            surfaceClassName={surfaceClassName}
+            panelSurfaceClassName={panelSurfaceClassName}
             onToggle={() => setIsPanEnabled((prev) => !prev)}
           />
         </div>
@@ -202,8 +212,8 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
                   onClick={() => setActiveSheetIndex(index)}
                   className={`sketch-shape-8 border px-2 py-1 text-[10px] transition-colors ${
                     index === safeIndex
-                      ? `border-pencil-stroke/35 bg-paper-surface/95 ${textColorClass}`
-                      : `border-sketch-line/30 bg-paper-stripe/60 ${subtleTextClass}`
+                      ? `border-pencil-stroke/35 ${surfaceClassName} ${textColorClass}`
+                      : `border-sketch-line/30 ${panelSurfaceClassName} ${subtleTextClass}`
                   }`}
                   title={sheet.name}
                 >
@@ -215,7 +225,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
         )}
 
         {chartList.length > 0 && (
-          <section className={compact ? 'rounded border border-sketch-line/25 bg-paper-surface/60 p-2' : 'sketchy-border-thin sketch-shape-4 bg-paper-surface/75 p-2 shadow-sm'}>
+          <section className={compact ? `rounded border border-sketch-line/25 ${panelSurfaceClassName} p-2` : `sketchy-border-thin sketch-shape-4 ${panelSurfaceClassName} p-2 shadow-sm`}>
             <div className={`mb-2 flex items-center justify-between text-[10px] ${subtleTextClass}`}>
               <span>{compact ? 'Chart preview' : 'Charts'}</span>
               {!compact && <span>{chartList.length} series</span>}
@@ -232,7 +242,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
                   return (
                     <figure
                       key={`${chart.label || 'series'}-${chart.sourceColumnIndex ?? chartIndex}`}
-                      className={`${compact ? 'w-full' : 'w-[18rem] shrink-0'} sketch-shape-5 border border-sketch-line/30 bg-paper-surface/85 p-2 shadow-sm`}
+                      className={`${compact ? 'w-full' : 'w-[18rem] shrink-0'} sketch-shape-5 border border-sketch-line/30 ${surfaceClassName} p-2 shadow-sm`}
                     >
                       <figcaption className={`mb-1 flex items-center justify-between gap-2 text-[10px] ${subtleTextClass}`}>
                         <span className={`truncate ${compact ? 'max-w-[58%]' : 'max-w-[64%]'} ${textColorClass}`}>
@@ -293,7 +303,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
         )}
 
         {sampleRows.length > 0 && (
-          <section className={compact ? 'rounded border border-sketch-line/25 bg-paper-surface/60' : 'sketchy-border-thin sketch-shape-1 bg-paper-surface/80 shadow-sm'}>
+          <section className={compact ? `rounded border border-sketch-line/25 ${panelSurfaceClassName}` : `sketchy-border-thin sketch-shape-1 ${panelSurfaceClassName} shadow-sm`}>
             <div className={`${tableScrollClass} max-h-80`} style={scrollStyle}>
               <table className="min-w-full border-collapse text-[10px]">
                 <tbody>
@@ -303,7 +313,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
                         <td
                           key={cellIndex}
                           className={`max-w-[12rem] whitespace-nowrap border-b border-sketch-line/15 px-2 py-1.5 truncate ${
-                            rowIndex === 0 ? 'bg-paper-stripe/45 font-semibold' : ''
+                            rowIndex === 0 ? `${surfaceClassName} font-semibold` : ''
                           }`}
                         >
                           {cell || '-'}

@@ -124,6 +124,8 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
           title={metaLabel}
           standalone
           bottomInset={effectiveBottomInset}
+          surfaceClassName={containerBg}
+          panelSurfaceClassName={headerBg}
         />
       </div>
     );
@@ -142,6 +144,8 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
               textColorClass={textColor}
               subtleTextClass={subtleText}
               compact
+              surfaceClassName={containerBg}
+              panelSurfaceClassName={headerBg}
             />
           </div>
         ) : (
@@ -190,6 +194,8 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
                 sheets={tabularSheets}
                 textColorClass={textColor}
                 subtleTextClass={subtleText}
+                surfaceClassName={containerBg}
+                panelSurfaceClassName={headerBg}
               />
               <details className="mt-3">
                 <summary className={`text-xs cursor-pointer ${subtleText}`}>{t('textFile.rawText') || 'Raw text'}</summary>
