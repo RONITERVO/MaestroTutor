@@ -25,7 +25,7 @@ const AttachmentTextScrollContainer = React.forwardRef<HTMLDivElement, Attachmen
   className = '',
   style,
   ariaLabel,
-  spacerClassName = 'text-attachment-overlay-native-text/40',
+  spacerClassName = 'text-attachment-svg-native-text/40',
   ...rest
 }, ref) => (
   <div

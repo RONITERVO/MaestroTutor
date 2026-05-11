@@ -7,6 +7,10 @@
  * To add a theme: write one `Record<string, string>` export here, then wire it
  * up with a single-line reference in presetThemes.ts or purchasableThemePresets.ts.
  * Values are bare HSL strings (no `hsl()` wrapper), e.g. '210 20% 97%'.
+ *
+ * Note: `*-overlay-*` attachment transcript keys are retained for backwards
+ * compatibility with imported/custom themes. Active attachment transcript UI
+ * now uses detached shell colors (`*-svg-*` and `*-game-*`).
  */
 
 // ---------------------------------------------------------------------------

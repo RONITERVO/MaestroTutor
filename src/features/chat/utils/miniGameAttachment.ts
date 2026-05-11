@@ -50,12 +50,16 @@ const buildRuntimeBridge = (frameId: string): string => {
 (function () {
   var FRAME_ID = ${JSON.stringify(frameId)};
   var EVENT_TYPE = 'maestro-mini-game-status';
+  var INPUT_EVENT_TYPE = 'maestro-mini-game-input';
+  var MODE_EVENT_TYPE = 'maestro-mini-game-mode';
   var backgroundSyncTimer = 0;
   var metricsSyncTimer = 0;
   var metricsAnimationFrame = 0;
   var lastReportedHeight = 0;
   var lastReportedWidth = 0;
   var lastReportedAspectRatio = 0;
+  var interactionMode = 'scroll';
+  var activePointerTargets = {};
 
   var sendStatus = function (status, detail, metrics) {
     try { parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '', metrics: metrics || null }, '*'); } catch (e) {}
@@ -355,9 +359,231 @@ const buildRuntimeBridge = (frameId: string): string => {
     }, 40);
   };
 
+  var toNumber = function (value, fallback) {
+    var numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : fallback;
+  };
+
+  var syncInteractionModeTouchAction = function () {
+    var touchAction = interactionMode === 'gestures' ? 'none' : 'pan-y';
+    var applyTouchAction = function (element) {
+      if (!element || !element.style) return;
+      try { element.style.setProperty('touch-action', touchAction, 'important'); } catch (e) {}
+    };
+
+    applyTouchAction(document.documentElement);
+    if (document.body) applyTouchAction(document.body);
+
+    try {
+      var canvases = document.querySelectorAll('canvas');
+      for (var i = 0; i < canvases.length; i += 1) {
+        applyTouchAction(canvases[i]);
+      }
+    } catch (e) {}
+  };
+
+  var setInteractionMode = function (mode) {
+    interactionMode = mode === 'gestures' ? 'gestures' : 'scroll';
+    try {
+      document.documentElement.setAttribute('data-maestro-interaction-mode', interactionMode);
+    } catch (e) {}
+    syncInteractionModeTouchAction();
+  };
+
+  var getPointerId = function (payload) {
+    return String(toNumber(payload && payload.pointerId, 1));
+  };
+
+  var getEventPoint = function (payload) {
+    return {
+      x: toNumber(payload && payload.x, 0),
+      y: toNumber(payload && payload.y, 0),
+    };
+  };
+
+  var resolveInputTarget = function (payload) {
+    var kind = payload && payload.kind;
+    var pointerId = getPointerId(payload);
+    var activeTarget = activePointerTargets[pointerId];
+    if (kind !== 'pointerdown' && kind !== 'click' && activeTarget && document.contains(activeTarget)) {
+      return activeTarget;
+    }
+
+    var point = getEventPoint(payload);
+    var target = null;
+    try { target = document.elementFromPoint(point.x, point.y); } catch (e) {}
+    return target || document.body || document.documentElement;
+  };
+
+  var buildPointerEventInit = function (payload) {
+    var point = getEventPoint(payload);
+    var kind = payload && payload.kind;
+    var pointerType = payload && payload.pointerType ? String(payload.pointerType) : 'mouse';
+    var buttons = toNumber(payload && payload.buttons, (kind === 'pointerup' || kind === 'pointercancel' || kind === 'click') ? 0 : 1);
+    var button = toNumber(payload && payload.button, 0);
+
+    return {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      clientX: point.x,
+      clientY: point.y,
+      screenX: point.x,
+      screenY: point.y,
+      pageX: point.x + (window.scrollX || 0),
+      pageY: point.y + (window.scrollY || 0),
+      button: button,
+      buttons: buttons,
+      pointerId: toNumber(payload && payload.pointerId, 1),
+      pointerType: pointerType,
+      isPrimary: payload && payload.isPrimary === false ? false : true,
+      pressure: buttons > 0 ? 0.5 : 0,
+      altKey: !!(payload && payload.altKey),
+      ctrlKey: !!(payload && payload.ctrlKey),
+      metaKey: !!(payload && payload.metaKey),
+      shiftKey: !!(payload && payload.shiftKey),
+    };
+  };
+
+  var dispatchPointerEvent = function (target, type, payload) {
+    if (!target) return true;
+    var init = buildPointerEventInit(payload);
+    try {
+      var EventConstructor = typeof PointerEvent === 'function' ? PointerEvent : MouseEvent;
+      return target.dispatchEvent(new EventConstructor(type, init));
+    } catch (e) {
+      return true;
+    }
+  };
+
+  var dispatchMouseEvent = function (target, type, payload) {
+    if (!target || typeof MouseEvent !== 'function') return true;
+    try {
+      return target.dispatchEvent(new MouseEvent(type, buildPointerEventInit(payload)));
+    } catch (e) {
+      return true;
+    }
+  };
+
+  var dispatchTouchEvent = function (target, type, payload) {
+    if (!target || typeof TouchEvent !== 'function') return true;
+    var point = getEventPoint(payload);
+    var pointerId = toNumber(payload && payload.pointerId, 1);
+    try {
+      var touchInit = {
+        identifier: pointerId,
+        target: target,
+        clientX: point.x,
+        clientY: point.y,
+        screenX: point.x,
+        screenY: point.y,
+        pageX: point.x + (window.scrollX || 0),
+        pageY: point.y + (window.scrollY || 0),
+        radiusX: 8,
+        radiusY: 8,
+        rotationAngle: 0,
+        force: type === 'touchend' || type === 'touchcancel' ? 0 : 0.5,
+      };
+      var touch = typeof Touch === 'function' ? new Touch(touchInit) : touchInit;
+      var activeTouches = type === 'touchend' || type === 'touchcancel' ? [] : [touch];
+      return target.dispatchEvent(new TouchEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        touches: activeTouches,
+        targetTouches: activeTouches,
+        changedTouches: [touch],
+        altKey: !!(payload && payload.altKey),
+        ctrlKey: !!(payload && payload.ctrlKey),
+        metaKey: !!(payload && payload.metaKey),
+        shiftKey: !!(payload && payload.shiftKey),
+      }));
+    } catch (e) {
+      return true;
+    }
+  };
+
+  var focusInputTarget = function (target) {
+    var element = target;
+    while (element && element !== document.body && element !== document.documentElement) {
+      if (typeof element.focus === 'function') {
+        var tagName = (element.tagName || '').toLowerCase();
+        var tabIndex = typeof element.tabIndex === 'number' ? element.tabIndex : -1;
+        if (tagName === 'button' || tagName === 'a' || tagName === 'input' || tagName === 'select' || tagName === 'textarea' || tabIndex >= 0) {
+          try { element.focus({ preventScroll: true }); } catch (e) { try { element.focus(); } catch (ignored) {} }
+          return;
+        }
+      }
+      element = element.parentElement;
+    }
+
+    try { window.focus(); } catch (e) {}
+  };
+
+  var dispatchForwardedInput = function (payload) {
+    if (!payload || !payload.kind) return;
+
+    var kind = String(payload.kind);
+    var target = resolveInputTarget(payload);
+    var pointerId = getPointerId(payload);
+    var pointerType = payload.pointerType ? String(payload.pointerType) : 'mouse';
+
+    if (kind === 'pointerdown') {
+      activePointerTargets[pointerId] = target;
+      focusInputTarget(target);
+      dispatchPointerEvent(target, 'pointerdown', payload);
+      if (pointerType === 'touch') dispatchTouchEvent(target, 'touchstart', payload);
+      if (pointerType !== 'touch') dispatchMouseEvent(target, 'mousedown', payload);
+      return;
+    }
+
+    if (kind === 'pointermove') {
+      dispatchPointerEvent(target, 'pointermove', payload);
+      if (pointerType === 'touch') dispatchTouchEvent(target, 'touchmove', payload);
+      if (pointerType !== 'touch') dispatchMouseEvent(target, 'mousemove', payload);
+      return;
+    }
+
+    if (kind === 'pointerup') {
+      dispatchPointerEvent(target, 'pointerup', payload);
+      if (pointerType === 'touch') dispatchTouchEvent(target, 'touchend', payload);
+      if (pointerType !== 'touch') dispatchMouseEvent(target, 'mouseup', payload);
+      delete activePointerTargets[pointerId];
+      return;
+    }
+
+    if (kind === 'pointercancel') {
+      dispatchPointerEvent(target, 'pointercancel', payload);
+      if (pointerType === 'touch') dispatchTouchEvent(target, 'touchcancel', payload);
+      delete activePointerTargets[pointerId];
+      return;
+    }
+
+    if (kind === 'click') {
+      focusInputTarget(target);
+      dispatchMouseEvent(target, 'click', payload);
+    }
+  };
+
+  window.addEventListener('message', function (event) {
+    var payload = event.data;
+    if (!payload || payload.frameId !== FRAME_ID) return;
+
+    if (payload.type === INPUT_EVENT_TYPE) {
+      dispatchForwardedInput(payload);
+      return;
+    }
+
+    if (payload.type === MODE_EVENT_TYPE) {
+      setInteractionMode(payload.mode);
+    }
+  });
+
   window.addEventListener('error', function (e) { sendStatus('error', e.message); });
   window.addEventListener('unhandledrejection', function (e) { sendStatus('error', String(e.reason)); });
   window.addEventListener('DOMContentLoaded', function () {
+    setInteractionMode(interactionMode);
     syncShellBackgrounds();
     syncContentMetrics(true);
     window.requestAnimationFrame(syncShellBackgrounds);
@@ -367,6 +593,7 @@ const buildRuntimeBridge = (frameId: string): string => {
     sendStatus('ready', 'ok');
   });
   window.addEventListener('load', function () {
+    setInteractionMode(interactionMode);
     syncShellBackgrounds();
     window.setTimeout(syncShellBackgrounds, 220);
     syncContentMetrics(false);
@@ -387,6 +614,7 @@ const buildRuntimeBridge = (frameId: string): string => {
     try {
       var observer = new MutationObserver(function () {
         scheduleShellSync();
+        syncInteractionModeTouchAction();
         scheduleMetricsSync(40, false);
       });
       observer.observe(document.documentElement, {
@@ -398,6 +626,8 @@ const buildRuntimeBridge = (frameId: string): string => {
       });
     } catch (e) {}
   }
+
+  setInteractionMode('scroll');
 })();
 </script>`;
 };
@@ -409,12 +639,17 @@ const buildRuntimeStyle = (): string => `
   /* Enforce 100% width/height so LLM responsive games fit the iframe perfectly */
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    overflow: hidden; touch-action: none;
+    overflow: hidden; touch-action: pan-y;
     -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
     background: transparent !important; color: CanvasText; font-family: ui-sans-serif, system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
-  canvas { display: block; outline: none; -webkit-tap-highlight-color: transparent; touch-action: none; max-width: 100%; max-height: 100%; }
+  canvas { display: block; outline: none; -webkit-tap-highlight-color: transparent; touch-action: pan-y; max-width: 100%; max-height: 100%; }
+  html[data-maestro-interaction-mode="gestures"],
+  html[data-maestro-interaction-mode="gestures"] body,
+  html[data-maestro-interaction-mode="gestures"] canvas {
+    touch-action: none;
+  }
 </style>`;
 
 const ensureHtmlDocument = (sourceCode: string): string => {

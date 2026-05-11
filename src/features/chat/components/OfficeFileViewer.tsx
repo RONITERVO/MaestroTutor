@@ -5,12 +5,14 @@ import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import TabularPreview from './TabularPreview';
+import NotebookTextPreview from './NotebookTextPreview';
 import {
   extractGoogleWorkspaceUrlFromDataUrl,
   isGoogleWorkspaceShortcutFileName,
   isGoogleWorkspaceShortcutMimeType,
 } from '../utils/fileAttachments';
 import { getOfficePreview } from '../utils/officePreview';
+import { isAttachmentOpenCancelError, openAttachmentFile } from '../utils/openAttachmentFile';
 import type { TabularChartSeries, TabularSheetPreview } from '../utils/tabularPreview';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
@@ -21,6 +23,7 @@ interface OfficeFileViewerProps {
   fileName?: string | null;
   mimeType?: string | null;
   hasRemoteUri?: boolean;
+  bottomInset?: number;
 }
 
 const WORD_EXTENSIONS = new Set(['doc', 'docx', 'docm', 'dot', 'dotx', 'dotm', 'rtf']);
@@ -82,26 +85,25 @@ const getOfficeLabel = (mimeType?: string | null, fileName?: string | null): str
 
 const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   src,
-  variant,
   compact = false,
   fileName,
   mimeType,
   hasRemoteUri = false,
+  bottomInset = 0,
 }) => {
   const { t } = useAppTranslations();
   const [previewText, setPreviewText] = React.useState<string | null>(null);
   const [previewNote, setPreviewNote] = React.useState<string | null>(null);
   const [previewSheets, setPreviewSheets] = React.useState<TabularSheetPreview[]>([]);
   const [isParsingPreview, setIsParsingPreview] = React.useState(false);
+  const [isOpeningFile, setIsOpeningFile] = React.useState(false);
 
-  const isUser = variant === 'user';
-  const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
-  const headerBg = isUser ? 'bg-user-msg-bg/40' : 'bg-ai-msg-bg/60';
-  const textColor = isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text';
-  const subtleText = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
+  const textColor = 'text-deep-ink';
+  const subtleText = 'text-sketch-line';
 
   const metaLabel = fileName || mimeType || 'office attachment';
   const attachmentLabel = getOfficeLabel(mimeType, fileName);
+  const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
 
   const googleWorkspaceLink = useMemo(() => {
     const isGoogleShortcut = isGoogleWorkspaceShortcutFileName(fileName) || isGoogleWorkspaceShortcutMimeType(mimeType);
@@ -111,7 +113,6 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
 
   const openHref = googleWorkspaceLink || src || null;
   const openLabel = googleWorkspaceLink ? t('officeFile.openInGoogleWorkspace') || 'Open in Google Workspace' : t('officeFile.openFile') || 'Open file';
-  const shouldUseDownload = Boolean(src && !googleWorkspaceLink && /^data:|^blob:/i.test(src));
   const downloadName = fileName || 'office-attachment';
 
   React.useEffect(() => {
@@ -166,110 +167,140 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
     ? (hasRemoteUri ? t('officeFile.localPreviewUnavailable') || 'Local preview unavailable. Reattach to open locally.' : t('officeFile.previewUnavailable') || 'Preview unavailable for this file.')
     : null);
 
-  if (compact) {
+  const handleOpenFile = React.useCallback(async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!openHref || isOpeningFile) return;
+
+    setIsOpeningFile(true);
+    try {
+      await openAttachmentFile({
+        url: openHref,
+        fileName: downloadName,
+        mimeType,
+      });
+    } catch (error) {
+      if (!isAttachmentOpenCancelError(error)) {
+        console.error('Failed to open office attachment:', error);
+        if (typeof window !== 'undefined') {
+          window.alert(t('officeFile.openFailed'));
+        }
+      }
+    } finally {
+      setIsOpeningFile(false);
+    }
+  }, [downloadName, isOpeningFile, mimeType, openHref, t]);
+
+  const renderOpenFileButton = (className: string) => openHref ? (
+    <button
+      type="button"
+      onPointerDown={(event) => event.stopPropagation()}
+      onPointerUp={(event) => event.stopPropagation()}
+      onPointerCancel={(event) => event.stopPropagation()}
+      onClick={handleOpenFile}
+      disabled={isOpeningFile}
+      className={`${className} bg-transparent p-0 text-left disabled:cursor-wait disabled:opacity-60`}
+      aria-busy={isOpeningFile}
+    >
+      {openLabel}
+    </button>
+  ) : null;
+
+  const openFileFooter = renderOpenFileButton('underline text-sketch-line');
+
+  if (!isParsingPreview && previewSheets.length > 0) {
     return (
-      <div className={`w-full max-w-full min-w-0 rounded-lg overflow-hidden ${containerBg}`}>
-        <div className={`px-2 py-1 text-[10px] font-mono truncate ${headerBg} ${textColor}`}>
-          {metaLabel}
-        </div>
-        <div className="px-2 py-1.5 flex items-start gap-2">
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden" style={compact ? { contain: 'inline-size' } : undefined}>
+        <TabularPreview
+          sheets={previewSheets}
+          textColorClass={textColor}
+          subtleTextClass={subtleText}
+          compact={compact}
+          title={metaLabel}
+          standalone={!compact}
+          bottomInset={effectiveBottomInset}
+          surfaceClassName="bg-paper-surface/85"
+          panelSurfaceClassName="bg-paper-stripe/35"
+        />
+        {openHref ? (
+          <div className={compact ? 'mt-1 px-2 text-[10px]' : 'mt-1 px-1 text-xs'}>
+            {renderOpenFileButton(`underline ${subtleText}`)}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (compact) {
+    if (!isParsingPreview && compactPreviewSnippet) {
+      return (
+        <NotebookTextPreview
+          title={metaLabel}
+          subtitle={attachmentLabel}
+          text={compactPreviewSnippet}
+          compact
+          wrapText
+          footer={openFileFooter}
+        />
+      );
+    }
+
+    return (
+      <div className="notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full max-w-full min-w-0 overflow-hidden px-2 py-1.5">
+        <div className="flex items-start gap-2">
           <IconPaperclip className={`w-4 h-4 shrink-0 mt-0.5 ${textColor}`} />
           <div className="min-w-0 flex-1">
+            <p className={`truncate font-architect text-[11px] font-semibold ${textColor}`}>{metaLabel}</p>
             <p className={`text-[11px] font-semibold truncate ${textColor}`}>{attachmentLabel}</p>
             {isParsingPreview ? (
               <div className={`mt-1 inline-flex items-center gap-1 text-[10px] ${subtleText}`}>
                 <SmallSpinner className="w-3 h-3" />
                 {t('officeFile.parsingPreview') || 'Parsing preview...'}
               </div>
-            ) : previewSheets.length > 0 ? (
-              <TabularPreview
-                sheets={previewSheets}
-                textColorClass={textColor}
-                subtleTextClass={subtleText}
-                compact
-              />
-            ) : compactPreviewSnippet ? (
-              <pre className={`mt-1 text-[10px] leading-4 whitespace-pre-wrap break-words ${subtleText}`}>
-                {compactPreviewSnippet}
-              </pre>
             ) : statusText ? (
               <p className={`mt-1 text-[10px] ${subtleText}`}>{statusText}</p>
             ) : null}
-            {openHref ? (
-              <a
-                href={openHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={shouldUseDownload ? downloadName : undefined}
-                className={`text-[10px] underline ${subtleText}`}
-              >
-                {openLabel}
-              </a>
-            ) : null}
+            {renderOpenFileButton(`text-[10px] underline ${subtleText}`)}
           </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className={`w-full rounded-lg overflow-hidden ${containerBg}`}>
-      <div className={`px-3 py-1.5 text-[11px] font-mono truncate ${headerBg} ${textColor}`}>
-        {metaLabel}
+  if (!isParsingPreview && previewText) {
+    return (
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden">
+        <NotebookTextPreview
+          title={metaLabel}
+          subtitle={attachmentLabel}
+          text={previewText}
+          bottomInset={effectiveBottomInset}
+          wrapText
+          footer={openFileFooter}
+        />
       </div>
-      <div className="p-3 flex items-start gap-3">
+    );
+  }
+
+  return (
+    <div
+      className="notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full overflow-hidden px-3 py-2"
+      style={effectiveBottomInset > 0 ? { paddingBottom: `calc(0.5rem + ${effectiveBottomInset}px)` } : undefined}
+    >
+      <div className="flex items-start gap-3">
         <IconPaperclip className={`w-6 h-6 shrink-0 mt-0.5 ${textColor}`} />
         <div className="min-w-0 flex-1">
+          <p className={`truncate font-architect text-[14px] font-semibold ${textColor}`}>{metaLabel}</p>
           <p className={`text-sm font-semibold ${textColor}`}>{attachmentLabel}</p>
           {isParsingPreview ? (
             <div className={`mt-2 inline-flex items-center gap-1.5 text-xs ${subtleText}`}>
               <SmallSpinner className="w-3.5 h-3.5" />
               {t('officeFile.parsingInlinePreview') || 'Parsing inline preview...'}
             </div>
-          ) : previewSheets.length > 0 ? (
-            <>
-              <TabularPreview
-                sheets={previewSheets}
-                textColorClass={textColor}
-                subtleTextClass={subtleText}
-              />
-              {previewText ? (
-                <details className="mt-2">
-                  <summary className={`text-xs cursor-pointer ${subtleText}`}>{t('officeFile.rawExtractedText') || 'Raw extracted text'}</summary>
-                  <div
-                    className="mt-1 rounded border border-black/10 bg-black/5 max-h-72 overflow-auto"
-                    style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
-                  >
-                    <pre className={`p-2 text-xs leading-5 whitespace-pre-wrap break-words ${subtleText}`}>
-                      {previewText}
-                    </pre>
-                  </div>
-                </details>
-              ) : null}
-            </>
-          ) : previewText ? (
-            <div
-              className="mt-2 max-h-64 overflow-auto rounded border border-black/10 bg-black/5"
-              style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
-            >
-              <pre className={`p-2 text-xs leading-5 whitespace-pre-wrap break-words ${subtleText}`}>
-                {previewText}
-              </pre>
-            </div>
           ) : (
             <p className={`mt-2 text-xs ${subtleText}`}>{statusText}</p>
           )}
-          {openHref ? (
-            <a
-              href={openHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              download={shouldUseDownload ? downloadName : undefined}
-              className={`mt-1 inline-block text-xs underline ${subtleText}`}
-            >
-              {openLabel}
-            </a>
-          ) : null}
+          {renderOpenFileButton(`mt-1 inline-block text-xs underline ${subtleText}`)}
         </div>
       </div>
     </div>

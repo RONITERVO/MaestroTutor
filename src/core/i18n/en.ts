@@ -353,6 +353,7 @@ export const enTranslations: Record<string, string> = {
   // Office file viewer
   "officeFile.openInGoogleWorkspace": "Open in Google Workspace",
   "officeFile.openFile": "Open file",
+  "officeFile.openFailed": "Could not open the file.",
   "officeFile.localPreviewUnavailable": "Local preview unavailable. Reattach to open locally.",
   "officeFile.previewUnavailable": "Preview unavailable for this file.",
   "officeFile.failedToParse": "Failed to parse inline preview.",

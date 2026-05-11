@@ -16,6 +16,14 @@ export interface TabularSheetPreview {
 }
 
 const JSON_CHART_EXTENSIONS = new Set(['json', 'json5', 'jsonc']);
+const TABULAR_TEXT_EXTENSIONS = new Set(['csv', 'tsv']);
+
+const getFileExtension = (fileName?: string | null): string => {
+  const normalizedName = (fileName || '').trim().toLowerCase();
+  const dotIndex = normalizedName.lastIndexOf('.');
+  if (dotIndex < 0 || dotIndex >= normalizedName.length - 1) return '';
+  return normalizedName.slice(dotIndex + 1);
+};
 
 const parseDelimitedLine = (line: string, delimiter: string): string[] => {
   const out: string[] = [];
@@ -295,11 +303,47 @@ export const isJsonChartFile = (mimeType?: string | null, fileName?: string | nu
   const normalizedMime = (mimeType || '').trim().toLowerCase();
   if (normalizedMime.includes('json')) return true;
 
-  const normalizedName = (fileName || '').trim().toLowerCase();
-  const dotIndex = normalizedName.lastIndexOf('.');
-  if (dotIndex < 0 || dotIndex >= normalizedName.length - 1) return false;
+  return JSON_CHART_EXTENSIONS.has(getFileExtension(fileName));
+};
 
-  return JSON_CHART_EXTENSIONS.has(normalizedName.slice(dotIndex + 1));
+export const isDelimitedTabularFile = (mimeType?: string | null, fileName?: string | null): boolean => {
+  const normalizedMime = (mimeType || '').trim().toLowerCase();
+  if (normalizedMime.includes('csv') || normalizedMime.includes('tab-separated-values')) return true;
+  return TABULAR_TEXT_EXTENSIONS.has(getFileExtension(fileName));
+};
+
+export const deriveTabularSheetsFromTextAttachment = (
+  text: string | null | undefined,
+  mimeType?: string | null,
+  fileName?: string | null
+): TabularSheetPreview[] => {
+  if (!text) return [];
+
+  if (isJsonChartFile(mimeType, fileName)) {
+    const jsonChartSheet = deriveChartSheetFromJsonText(text, fileName || 'Chart data');
+    return jsonChartSheet ? [jsonChartSheet] : [];
+  }
+
+  if (!isDelimitedTabularFile(mimeType, fileName)) return [];
+
+  const rows = parseDelimitedText(text, getFileExtension(fileName) === 'tsv' ? '\t' : undefined);
+  if (rows.length <= 1) return [];
+
+  return [{
+    name: fileName || 'Sheet 1',
+    rows,
+    chartSeriesList: deriveChartSeriesListFromRows(rows),
+  }];
+};
+
+export const textAttachmentHasChartSeries = (
+  text: string | null | undefined,
+  mimeType?: string | null,
+  fileName?: string | null
+): boolean => {
+  if (!text) return false;
+  return deriveTabularSheetsFromTextAttachment(text, mimeType, fileName)
+    .some((sheet) => sheet.chartSeriesList.length > 0);
 };
 
 const deriveBestLabelColumn = (rows: string[][], dataStart: number, numericColumns: number[]): number => {

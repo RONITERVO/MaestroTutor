@@ -2,16 +2,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IconPaperclip, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
+import { IconEnableGameGestures, IconPaperclip, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
+import AttachmentInteractionToggle from './AttachmentInteractionToggle';
 import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
+type MiniGameInteractionMode = 'scroll' | 'gestures';
+type MiniGameForwardedPointerKind = 'pointerdown' | 'pointerup' | 'click';
 
 interface MiniGameFrameMetrics {
   width: number;
   height: number;
   aspectRatio: number;
+}
+
+interface MiniGamePointerGateState {
+  pointerId: number | null;
+  startClientX: number;
+  startClientY: number;
+  button: number;
+  buttons: number;
+  canForward: boolean;
+  hasMoved: boolean;
 }
 
 interface MiniGameViewerProps {
@@ -21,6 +34,128 @@ interface MiniGameViewerProps {
   mimeType?: string | null;
   bottomInset?: number;
 }
+
+interface RectLike {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+interface MiniGameInteractionDeckToggleProps {
+  gameGesturesEnabled: boolean;
+  canUseGameGestures: boolean;
+  compact?: boolean;
+  groupLabel: string;
+  gameGesturesLabel: string;
+  gameGesturesTitle: string;
+  returnToChatScrollLabel: string;
+  gameGesturesUnavailableLabel: string;
+  textColor: string;
+  subtleText: string;
+  lineColor: string;
+  containerBg: string;
+  padBtnBg: string;
+  onSelectMode: (enabled: boolean, event: React.MouseEvent<HTMLButtonElement>) => void;
+}
+
+const FULL_VISIBILITY_TOLERANCE_PX = 3;
+const TAP_SLOP_PX = 9;
+
+const createEmptyPointerGateState = (): MiniGamePointerGateState => ({
+  pointerId: null,
+  startClientX: 0,
+  startClientY: 0,
+  button: 0,
+  buttons: 0,
+  canForward: false,
+  hasMoved: false,
+});
+
+const isScrollableOverflow = (value: string): boolean => /(auto|scroll)/i.test(value);
+
+const getNearestScrollContainer = (element: HTMLElement | null): HTMLElement | null => {
+  if (!element || typeof window === 'undefined') return null;
+
+  let parent = element.parentElement;
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    if (isScrollableOverflow(style.overflowY || '')) {
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+
+  return null;
+};
+
+const getViewportRect = (): RectLike => {
+  const visualViewport = typeof window !== 'undefined' ? window.visualViewport : null;
+  const width = visualViewport?.width ?? window.innerWidth;
+  const height = visualViewport?.height ?? window.innerHeight;
+  const left = visualViewport?.offsetLeft ?? 0;
+  const top = visualViewport?.offsetTop ?? 0;
+  return {
+    top,
+    left,
+    right: left + width,
+    bottom: top + height,
+    width,
+    height,
+  };
+};
+
+const getVisibilityRootRect = (element: HTMLElement): RectLike => {
+  const scrollContainer = getNearestScrollContainer(element);
+  return scrollContainer ? scrollContainer.getBoundingClientRect() : getViewportRect();
+};
+
+const isFullyInsideRect = (elementRect: DOMRect, rootRect: RectLike): boolean => (
+  elementRect.top >= rootRect.top - FULL_VISIBILITY_TOLERANCE_PX &&
+  elementRect.left >= rootRect.left - FULL_VISIBILITY_TOLERANCE_PX &&
+  elementRect.right <= rootRect.right + FULL_VISIBILITY_TOLERANCE_PX &&
+  elementRect.bottom <= rootRect.bottom + FULL_VISIBILITY_TOLERANCE_PX
+);
+
+const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps> = ({
+  gameGesturesEnabled,
+  canUseGameGestures,
+  compact = false,
+  groupLabel,
+  gameGesturesLabel,
+  gameGesturesTitle,
+  returnToChatScrollLabel,
+  gameGesturesUnavailableLabel,
+  textColor,
+  subtleText,
+  lineColor,
+  containerBg,
+  padBtnBg,
+  onSelectMode,
+}) => {
+  return (
+    <AttachmentInteractionToggle
+      compact={compact}
+      isAttachmentModeEnabled={gameGesturesEnabled}
+      isAttachmentModeAvailable={canUseGameGestures}
+      attachmentLabel={gameGesturesLabel}
+      attachmentTitle={gameGesturesTitle}
+      attachmentUnavailableTitle={gameGesturesUnavailableLabel}
+      chatLabel={returnToChatScrollLabel}
+      chatTitle={returnToChatScrollLabel}
+      groupLabel={groupLabel}
+      AttachmentIcon={IconEnableGameGestures}
+      activeTextClassName={textColor}
+      inactiveTextClassName={subtleText}
+      activeSurfaceClassName={containerBg}
+      inactiveSurfaceClassName={padBtnBg}
+      borderClassName={lineColor}
+      onSelectMode={onSelectMode}
+    />
+  );
+};
 
 const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   sourceCode,
@@ -37,8 +172,13 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const [frameMetrics, setFrameMetrics] = useState<MiniGameFrameMetrics | null>(null);
 
   const [hasIntersected, setHasIntersected] = useState(false);
+  const [isFrameFullyVisible, setIsFrameFullyVisible] = useState(false);
+  const [frameHeightCap, setFrameHeightCap] = useState<number | null>(null);
+  const [gameGesturesEnabled, setGameGesturesEnabled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const frameShellRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const pointerGateRef = useRef<MiniGamePointerGateState>(createEmptyPointerGateState());
 
   useEffect(() => {
     const el = containerRef.current;
@@ -66,20 +206,78 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     [sourceCode, fileName, mimeType, frameId]
   );
 
-  const handleReload = useCallback(() => {
-    setRuntimeState('booting');
-    setReloadToken((n) => n + 1);
+  const resetPointerGate = useCallback(() => {
+    pointerGateRef.current = createEmptyPointerGateState();
   }, []);
 
-  const handleFullscreen = useCallback(() => {
-    if (iframeRef.current) {
-      if (iframeRef.current.requestFullscreen) {
-        iframeRef.current.requestFullscreen();
-      } else if ((iframeRef.current as any).webkitRequestFullscreen) {
-        (iframeRef.current as any).webkitRequestFullscreen();
-      }
-    }
+  const postMiniGameMessage = useCallback((payload: Record<string, unknown>) => {
+    const targetWindow = iframeRef.current?.contentWindow;
+    if (!targetWindow) return;
+    targetWindow.postMessage({ ...payload, frameId }, '*');
+  }, [frameId]);
+
+  const postMiniGameMode = useCallback((mode: MiniGameInteractionMode) => {
+    postMiniGameMessage({ type: 'maestro-mini-game-mode', mode });
+  }, [postMiniGameMessage]);
+
+  const getIframePoint = useCallback((clientX: number, clientY: number) => {
+    const iframe = iframeRef.current;
+    if (!iframe) return null;
+    const rect = iframe.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+
+    return {
+      x: Math.max(0, Math.min(rect.width, clientX - rect.left)),
+      y: Math.max(0, Math.min(rect.height, clientY - rect.top)),
+    };
   }, []);
+
+  const postPointerInput = useCallback((
+    kind: MiniGameForwardedPointerKind,
+    event: React.PointerEvent<HTMLDivElement>,
+    clientX = event.clientX,
+    clientY = event.clientY,
+    overrides?: Partial<Pick<MiniGamePointerGateState, 'button' | 'buttons'>>,
+  ) => {
+    const point = getIframePoint(clientX, clientY);
+    if (!point) return;
+
+    postMiniGameMessage({
+      type: 'maestro-mini-game-input',
+      kind,
+      x: point.x,
+      y: point.y,
+      pointerId: event.pointerId,
+      pointerType: event.pointerType || 'mouse',
+      button: overrides?.button ?? event.button,
+      buttons: overrides?.buttons ?? event.buttons,
+      isPrimary: event.isPrimary,
+      altKey: event.altKey,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      shiftKey: event.shiftKey,
+    });
+  }, [getIframePoint, postMiniGameMessage]);
+
+  const handleReload = useCallback(() => {
+    setGameGesturesEnabled(false);
+    resetPointerGate();
+    setRuntimeState('booting');
+    setReloadToken((n) => n + 1);
+  }, [resetPointerGate]);
+
+  const handleToggleCode = useCallback(() => {
+    setGameGesturesEnabled(false);
+    resetPointerGate();
+    setShowCode((prev) => !prev);
+  }, [resetPointerGate]);
+
+  useEffect(() => {
+    setGameGesturesEnabled(false);
+    setIsFrameFullyVisible(false);
+    resetPointerGate();
+    postMiniGameMode('scroll');
+  }, [frameId, sourceCode, fileName, mimeType, resetPointerGate, postMiniGameMode]);
 
   useEffect(() => {
     if (!hasIntersected) return;
@@ -139,7 +337,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
-  const bubbleSurfaceBg = isUser ? 'bg-user-msg-bg/95' : 'bg-ai-msg-bg/95';
   const textColor = isUser ? 'text-user-attachment-game-text' : 'text-ai-file-text';
   const subtleText = isUser ? 'text-user-attachment-game-text/70' : 'text-ai-file-text/70';
   const lineColor = isUser ? 'border-user-attachment-game-text/25' : 'border-ai-file-text/25';
@@ -150,11 +347,26 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
   const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
   const fallbackFrameHeight = controlsUnderOverlay ? 520 : 480;
+  const updateFrameAvailability = useCallback(() => {
+    const frameShell = frameShellRef.current;
+    if (!frameShell || typeof window === 'undefined') return;
+
+    const rootRect = getVisibilityRootRect(frameShell);
+    const reservedHeight = controlsUnderOverlay ? 28 : 92;
+    const nextFrameHeightCap = Math.max(220, Math.floor(rootRect.height - reservedHeight));
+    setFrameHeightCap((prev) => (prev === nextFrameHeightCap ? prev : nextFrameHeightCap));
+
+    const frameRect = frameShell.getBoundingClientRect();
+    const nextIsFullyVisible = isFullyInsideRect(frameRect, rootRect);
+    setIsFrameFullyVisible((prev) => (prev === nextIsFullyVisible ? prev : nextIsFullyVisible));
+  }, [controlsUnderOverlay]);
+  const effectiveFrameHeightCap = frameHeightCap ?? 960;
   const resolvedFrameHeight = Math.max(
     220,
     Math.min(
       Math.round(frameMetrics?.height || fallbackFrameHeight),
       960,
+      effectiveFrameHeightCap,
     ),
   );
   const gameScreenStyle: React.CSSProperties = {
@@ -168,12 +380,211 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
   };
   const actionButtonClass = 'p-2 rounded-full text-white/90 opacity-85 transition-all duration-200 hover:text-white hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/40 active:scale-95';
+  const translateOrFallback = useCallback((key: string, fallback: string) => {
+    const result = t(key);
+    return result === key ? fallback : result;
+  }, [t]);
+  const canUseGameGestures = hasIntersected && runtimeState === 'ready' && isFrameFullyVisible && !showCode;
+  const useGameGesturesLabel = translateOrFallback('miniGame.useGameGestures', 'Game swipes');
+  const useGameGesturesTitle = translateOrFallback('miniGame.useGameGesturesTitle', 'Use game swipes');
+  const returnToChatScrollLabel = translateOrFallback('miniGame.returnToChatScroll', 'Chat scroll');
+  const gameGesturesUnavailableLabel = translateOrFallback('miniGame.gameGesturesUnavailable', 'Fully show game to use swipes');
+  const interactionModeGroupLabel = translateOrFallback('miniGame.interactionMode', 'Mini-game interaction mode');
+
+  useEffect(() => {
+    if (!hasIntersected) return;
+    const animationFrame = window.requestAnimationFrame(updateFrameAvailability);
+    return () => { window.cancelAnimationFrame(animationFrame); };
+  }, [hasIntersected, resolvedFrameHeight, showCode, updateFrameAvailability]);
+
+  useEffect(() => {
+    if (!hasIntersected) return;
+    const frameShell = frameShellRef.current;
+    if (!frameShell || typeof window === 'undefined') return;
+
+    let animationFrame = 0;
+    const scheduleAvailabilityUpdate = () => {
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+      animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = 0;
+        updateFrameAvailability();
+      });
+    };
+
+    const scrollContainer = getNearestScrollContainer(frameShell);
+    window.addEventListener('resize', scheduleAvailabilityUpdate, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleAvailabilityUpdate, { passive: true });
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(scheduleAvailabilityUpdate)
+      : null;
+    resizeObserver?.observe(frameShell);
+    if (scrollContainer) resizeObserver?.observe(scrollContainer);
+
+    const intersectionObserver = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver(
+          ([entry]) => {
+            if (!entry) return;
+            if (!entry.isIntersecting || entry.intersectionRatio < 0.995) {
+              setIsFrameFullyVisible((prev) => (prev ? false : prev));
+              return;
+            }
+            scheduleAvailabilityUpdate();
+          },
+          { root: scrollContainer, threshold: [0, 0.5, 0.995, 1] },
+        )
+      : null;
+    intersectionObserver?.observe(frameShell);
+
+    scheduleAvailabilityUpdate();
+
+    return () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', scheduleAvailabilityUpdate);
+      window.visualViewport?.removeEventListener('resize', scheduleAvailabilityUpdate);
+      resizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
+    };
+  }, [hasIntersected, updateFrameAvailability]);
+
+  useEffect(() => {
+    if (!gameGesturesEnabled) return;
+
+    const frameShell = frameShellRef.current;
+    if (!frameShell || typeof window === 'undefined') return;
+
+    const handleChatSurfaceMove = () => {
+      setGameGesturesEnabled(false);
+      resetPointerGate();
+    };
+
+    const scrollContainer = getNearestScrollContainer(frameShell);
+    scrollContainer?.addEventListener('scroll', handleChatSurfaceMove, { passive: true });
+    window.addEventListener('scroll', handleChatSurfaceMove, { passive: true });
+
+    return () => {
+      scrollContainer?.removeEventListener('scroll', handleChatSurfaceMove);
+      window.removeEventListener('scroll', handleChatSurfaceMove);
+    };
+  }, [gameGesturesEnabled, resetPointerGate]);
+
+  useEffect(() => {
+    if (!canUseGameGestures && gameGesturesEnabled) {
+      setGameGesturesEnabled(false);
+      resetPointerGate();
+    }
+  }, [canUseGameGestures, gameGesturesEnabled, resetPointerGate]);
+
+  useEffect(() => {
+    if (!hasIntersected) return;
+    postMiniGameMode(gameGesturesEnabled ? 'gestures' : 'scroll');
+  }, [gameGesturesEnabled, hasIntersected, postMiniGameMode]);
+
+  const handleSelectGameGestureMode = useCallback((nextEnabled: boolean, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    resetPointerGate();
+
+    if (nextEnabled === gameGesturesEnabled) {
+      return;
+    }
+
+    if (nextEnabled && !canUseGameGestures) return;
+
+    setGameGesturesEnabled(nextEnabled);
+    if (nextEnabled) {
+      window.setTimeout(() => {
+        iframeRef.current?.focus();
+      }, 0);
+    }
+  }, [canUseGameGestures, gameGesturesEnabled, resetPointerGate]);
+
+  const handleGatePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!event.isPrimary || event.button !== 0 || gameGesturesEnabled || showCode) return;
+
+    event.stopPropagation();
+    pointerGateRef.current = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      button: event.button,
+      buttons: event.buttons || 1,
+      canForward: canUseGameGestures,
+      hasMoved: false,
+    };
+  }, [canUseGameGestures, gameGesturesEnabled, showCode]);
+
+  const handleGatePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const state = pointerGateRef.current;
+    if (state.pointerId !== event.pointerId || !event.isPrimary) return;
+
+    event.stopPropagation();
+
+    const deltaX = event.clientX - state.startClientX;
+    const deltaY = event.clientY - state.startClientY;
+    if (Math.abs(deltaX) > TAP_SLOP_PX || Math.abs(deltaY) > TAP_SLOP_PX) {
+      state.hasMoved = true;
+    }
+  }, []);
+
+  const handleGatePointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const state = pointerGateRef.current;
+    if (state.pointerId !== event.pointerId || !event.isPrimary) return;
+
+    event.stopPropagation();
+
+    const deltaX = event.clientX - state.startClientX;
+    const deltaY = event.clientY - state.startClientY;
+    const isTap = Math.abs(deltaX) <= TAP_SLOP_PX && Math.abs(deltaY) <= TAP_SLOP_PX;
+
+    if (state.canForward && isTap && !state.hasMoved) {
+      event.preventDefault();
+      postPointerInput('pointerdown', event, state.startClientX, state.startClientY, {
+        button: state.button,
+        buttons: state.buttons || 1,
+      });
+      postPointerInput('pointerup', event, event.clientX, event.clientY, {
+        button: state.button,
+        buttons: 0,
+      });
+      postPointerInput('click', event, event.clientX, event.clientY, {
+        button: state.button,
+        buttons: 0,
+      });
+    }
+
+    try {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    } catch (e) {
+    }
+    resetPointerGate();
+  }, [resetPointerGate]);
+
+  const handleGatePointerCancel = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const state = pointerGateRef.current;
+    if (state.pointerId !== event.pointerId || !event.isPrimary) return;
+
+    event.stopPropagation();
+
+    try {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    } catch (e) {
+    }
+    resetPointerGate();
+  }, [postPointerInput, resetPointerGate]);
 
   return (
     <div ref={containerRef} className="w-full flex flex-col items-center">
       <div className="relative w-full max-w-[560px]" style={{ paddingBottom: `${wrapperBottomPadding}px` }}>
 
         <div
+          ref={frameShellRef}
           className={`relative rounded-2xl overflow-hidden border ${lineColor} shadow-none ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
           style={gameScreenStyle}
         >
@@ -184,13 +595,29 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               srcDoc={srcDoc}
               className="w-full h-full border-0 bg-transparent block"
               sandbox="allow-scripts allow-same-origin"
-              allow="fullscreen"
               referrerPolicy="no-referrer"
               loading="lazy"
-              style={{ backgroundColor: 'transparent' }}
+              style={{
+                backgroundColor: 'transparent',
+                pointerEvents: gameGesturesEnabled ? 'auto' : 'none',
+                touchAction: gameGesturesEnabled ? 'none' : 'pan-y',
+              }}
             />
           ) : (
             <div className="w-full h-full" />
+          )}
+
+          {hasIntersected && !showCode && !gameGesturesEnabled && (
+            <div
+              className="absolute inset-0 z-20 bg-transparent"
+              style={{ touchAction: 'pan-y' }}
+              onPointerDown={handleGatePointerDown}
+              onPointerMove={handleGatePointerMove}
+              onPointerUp={handleGatePointerUp}
+              onPointerCancel={handleGatePointerCancel}
+              onClick={(event) => { event.stopPropagation(); }}
+              aria-hidden
+            />
           )}
 
           {runtimeState !== 'ready' && hasIntersected && (
@@ -201,17 +628,28 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
           {controlsUnderOverlay && (
             <div className="absolute top-2 right-2 z-30 flex flex-col gap-2 pointer-events-auto">
-              <button onClick={handleFullscreen} className={actionButtonClass} title={t('miniGame.fullscreen') || 'Fullscreen'}>
-                <span style={overlayIconShadowStyle}>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-                </span>
-              </button>
+              <MiniGameInteractionDeckToggle
+                compact
+                gameGesturesEnabled={gameGesturesEnabled}
+                canUseGameGestures={canUseGameGestures}
+                groupLabel={interactionModeGroupLabel}
+                gameGesturesLabel={useGameGesturesLabel}
+                gameGesturesTitle={useGameGesturesTitle}
+                returnToChatScrollLabel={returnToChatScrollLabel}
+                gameGesturesUnavailableLabel={gameGesturesUnavailableLabel}
+                textColor="text-white"
+                subtleText="text-white/80"
+                lineColor="border-white/25"
+                containerBg="bg-black/55"
+                padBtnBg="bg-black/35 hover:bg-black/50"
+                onSelectMode={handleSelectGameGestureMode}
+              />
               <button onClick={handleReload} className={actionButtonClass} title={t('miniGame.restart') || 'Restart'}>
                 <span style={overlayIconShadowStyle}>
                   <IconUndo className="w-4 h-4" />
                 </span>
               </button>
-              <button onClick={() => setShowCode((prev) => !prev)} className={actionButtonClass} title={showCode ? t('miniGame.hideCode') || 'Hide Code' : t('miniGame.showCode') || 'Show Code'}>
+              <button onClick={handleToggleCode} className={actionButtonClass} title={showCode ? t('miniGame.hideCode') || 'Hide Code' : t('miniGame.showCode') || 'Show Code'}>
                 <span style={overlayIconShadowStyle}>
                   <IconTerminal className="w-4 h-4" />
                 </span>
@@ -220,15 +658,15 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
           )}
 
           {controlsUnderOverlay && showCode && (
-            <div className={`absolute inset-2 z-20 rounded-xl border ${lineColor} ${bubbleSurfaceBg} overflow-hidden shadow-[0_12px_28px_rgba(2,6,23,0.28)] backdrop-blur-sm`}>
-              <div className={`px-3 py-1.5 pr-12 text-[11px] font-mono truncate border-b ${lineColor} ${textColor}`}>
+            <div className="notebook-source-paper paper-texture notebook-lines sketch-shape-4 absolute inset-2 z-20 overflow-hidden border border-sketch-line/30 shadow-[0_12px_28px_rgba(2,6,23,0.18)]">
+              <div className="px-3 py-1.5 pr-12 font-architect text-[12px] font-semibold truncate text-deep-ink border-b border-sketch-line/20">
                 {fileName || mimeType || 'mini-game source'}
               </div>
               <div
                 className="max-h-full overflow-auto"
                 style={{ height: 'calc(100% - 32px)', overscrollBehavior: 'contain', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' as any }}
               >
-                <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
+                <pre className="notebook-source-pre p-3 text-[11px] leading-5 whitespace-pre w-max min-w-full">
                   {sourceCode}
                 </pre>
               </div>
@@ -247,15 +685,26 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
         ) : (
           <div className="w-full mt-3 flex justify-center z-10 pointer-events-auto">
             <div className={`rounded-xl border ${lineColor} ${containerBg} px-4 py-2 backdrop-blur-sm pointer-events-auto shadow-sm flex items-center gap-4`}>
-              <button onClick={handleFullscreen} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
-                <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
-                <span className="font-semibold">{t('miniGame.fullscreen') || 'Fullscreen'}</span>
-              </button>
+              <MiniGameInteractionDeckToggle
+                gameGesturesEnabled={gameGesturesEnabled}
+                canUseGameGestures={canUseGameGestures}
+                groupLabel={interactionModeGroupLabel}
+                gameGesturesLabel={useGameGesturesLabel}
+                gameGesturesTitle={useGameGesturesTitle}
+                returnToChatScrollLabel={returnToChatScrollLabel}
+                gameGesturesUnavailableLabel={gameGesturesUnavailableLabel}
+                textColor={textColor}
+                subtleText={subtleText}
+                lineColor={lineColor}
+                containerBg={containerBg}
+                padBtnBg={padBtnBg}
+                onSelectMode={handleSelectGameGestureMode}
+              />
               <button onClick={handleReload} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
                 <IconUndo className="w-3 h-3 shrink-0" />
                 <span className="font-semibold">{t('miniGame.restart') || 'Restart'}</span>
               </button>
-              <button onClick={() => setShowCode((prev) => !prev)} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
+              <button onClick={handleToggleCode} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
                 <IconTerminal className="w-3 h-3 shrink-0" />
                 <span className="font-semibold">{showCode ? t('miniGame.hideCode') || 'Hide Code' : t('miniGame.showCode') || 'Show Code'}</span>
               </button>
@@ -265,12 +714,12 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       </div>
 
       {!controlsUnderOverlay && showCode && (
-        <div className={`mt-2 w-full max-w-[560px] rounded-xl border ${lineColor} ${containerBg} overflow-hidden`}>
-          <div className={`px-3 py-1.5 text-[11px] font-mono truncate border-b ${lineColor} ${textColor}`}>
+        <div className="notebook-source-paper paper-texture notebook-lines sketch-shape-4 mt-2 w-full max-w-[560px] overflow-hidden border border-sketch-line/30">
+          <div className="px-3 py-1.5 font-architect text-[12px] font-semibold truncate border-b border-sketch-line/20 text-deep-ink">
             {fileName || mimeType || 'mini-game source'}
           </div>
           <div className="max-h-56 overflow-auto" style={{ overscrollBehavior: 'contain', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' as any }}>
-            <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
+            <pre className="notebook-source-pre p-3 text-[11px] leading-5 whitespace-pre w-max min-w-full">
               {sourceCode}
             </pre>
           </div>

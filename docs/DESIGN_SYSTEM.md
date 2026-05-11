@@ -125,23 +125,20 @@ File attachments, image placeholders, and error indicators within messages
 
 ### Attachment Transcript Text
 
-Separate text colors for user and assistant attachment text across inline, audio, overlay, SVG, and mini-game placements
+Separate text colors for user and assistant attachment text across inline, audio, detached attachment shells, and mini-game placements
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
 | `--user-attachment-inline-text` | `210 20% 98%` | User Inline Attachment Text | Your message text and inline attachment labels next to standard attachments |
 | `--user-attachment-audio-text` | `210 20% 98%` | User Audio Attachment Text | Your message text when an audio attachment is shown in the audio shell |
-| `--user-attachment-overlay-text` | `210 20% 98%` | User Overlay Attachment Text | Your message text shown over focused images, PDFs, and other media overlays |
-| `--user-attachment-svg-text` | `0 0% 0%` | User SVG Attachment Text | Your message text shown in the detached SVG attachment shell |
+| `--user-attachment-svg-text` | `0 0% 0%` | User Detached Attachment Text | Your message text shown in detached attachment transcript shells (images, PDFs, SVG, and notebooks) |
 | `--user-attachment-game-text` | `0 0% 0%` | User Game Attachment Text | Your message text shown with mini-game attachment shells and controls |
 | `--attachment-inline-target-text` | `220 30% 20%` | Inline Target Text | Main attachment transcript text shown under attachments, including music replies |
 | `--attachment-inline-native-text` | `220 15% 45%` | Inline Native Text | Secondary or native attachment transcript text shown under attachments, including music replies |
 | `--attachment-audio-target-text` | `0 0% 0%` | Audio Target Text | Main text in the focused assistant audio scroll wheel |
 | `--attachment-audio-native-text` | `0 0% 0%` | Audio Native Text | Secondary or native text in the focused assistant audio scroll wheel |
-| `--attachment-overlay-target-text` | `210 20% 98%` | Overlay Target Text | Main transcript text shown over images, PDFs, and focused attachments |
-| `--attachment-overlay-native-text` | `210 20% 98%` | Overlay Native Text | Secondary or native transcript text shown over images, PDFs, and focused attachments |
-| `--attachment-svg-target-text` | `220 30% 20%` | SVG Target Text | Main transcript text in the focused SVG shell layout |
-| `--attachment-svg-native-text` | `220 15% 45%` | SVG Native Text | Secondary or native transcript text in the focused SVG shell layout |
+| `--attachment-svg-target-text` | `220 30% 20%` | Detached Target Text | Main transcript text in detached attachment transcript shells |
+| `--attachment-svg-native-text` | `220 15% 45%` | Detached Native Text | Secondary or native transcript text in detached attachment transcript shells |
 | `--attachment-game-target-text` | `220 30% 20%` | Game Target Text | Main transcript text when the transcript overlaps a mini-game |
 | `--attachment-game-native-text` | `220 15% 45%` | Game Native Text | Secondary or native transcript text when the transcript overlaps a mini-game |
 

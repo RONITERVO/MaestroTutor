@@ -5,6 +5,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
+import AttachmentInteractionToggle from './AttachmentInteractionToggle';
+import useChatResettingAttachmentMode from './useChatResettingAttachmentMode';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
@@ -73,13 +75,18 @@ interface PdfViewerProps {
   bottomInset?: number;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact = false, bottomInset = 0 }) => {
+const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, bottomInset = 0 }) => {
   const { t } = useAppTranslations();
   const [pages, setPages] = useState<string[]>([]);
   const [pageCount, setPageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visiblePage, setVisiblePage] = useState(1);
+  const {
+    rootRef,
+    isAttachmentModeEnabled: isPdfScrollEnabled,
+    setIsAttachmentModeEnabled: setIsPdfScrollEnabled,
+  } = useChatResettingAttachmentMode<HTMLDivElement>();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefsMap = useRef<Map<number, HTMLImageElement>>(new Map());
@@ -93,6 +100,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
       setPages([]);
       setPageCount(0);
       setVisiblePage(1);
+      setIsPdfScrollEnabled(false);
 
       try {
         const pdf = await getOrLoadPdf(src);
@@ -125,6 +133,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
 
         if (!cancelled) {
           setPages(renderedPages);
+          setIsPdfScrollEnabled(false);
         }
       } catch (err) {
         if (!cancelled) {
@@ -169,18 +178,24 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
     }
   }, []);
 
-  const isUser = variant === 'user';
-
-  const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
+  const containerBg = 'notebook-native-paper sketch-shape-4';
   const indicatorBg = 'bg-black/60 text-white';
-  const errorTextColor = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
-  const iconColor = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
+  const errorTextColor = 'text-sketch-line';
+  const iconColor = 'text-deep-ink';
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
+  const pdfScrollStyle: React.CSSProperties = {
+    maxHeight: '60vh',
+    overflowY: isPdfScrollEnabled ? 'auto' : 'hidden',
+    overscrollBehavior: isPdfScrollEnabled ? 'contain' : 'auto',
+    touchAction: 'pan-y',
+    WebkitOverflowScrolling: 'touch' as any,
+    scrollPaddingBottom: `${effectiveBottomInset}px`,
+  };
 
   if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center rounded-lg ${containerBg} ${compact ? 'h-24 w-full' : 'h-48 w-full'}`}>
-        <SmallSpinner className={`w-6 h-6 ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`} />
+        <SmallSpinner className="w-6 h-6 text-deep-ink" />
         <p className={`mt-2 text-xs ${errorTextColor}`}>{t('chat.pdf.loading') || 'Loading PDF...'}</p>
       </div>
     );
@@ -213,17 +228,13 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
   }
 
   return (
-    <div className="relative w-full">
+    <div ref={rootRef} className="relative w-full">
       <div
         ref={scrollContainerRef}
-        className={`overflow-y-auto rounded-lg ${containerBg}`}
-        style={{
-          maxHeight: '60vh',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-          WebkitOverflowScrolling: 'touch' as any,
-          scrollPaddingBottom: `${effectiveBottomInset}px`,
-        }}
+        className={`rounded-lg ${containerBg}`}
+        style={pdfScrollStyle}
+        onWheel={isPdfScrollEnabled ? (event) => event.stopPropagation() : undefined}
+        onTouchMove={isPdfScrollEnabled ? (event) => event.stopPropagation() : undefined}
       >
         <div
           className="flex flex-col gap-1 p-1"
@@ -240,6 +251,15 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
             />
           ))}
         </div>
+      </div>
+      <div className="absolute left-2 top-2 z-20 pointer-events-auto">
+        <AttachmentInteractionToggle
+          isAttachmentModeEnabled={isPdfScrollEnabled}
+          attachmentLabel="PDF scroll"
+          attachmentTitle="Scroll PDF pages"
+          groupLabel="PDF interaction mode"
+          onToggle={() => setIsPdfScrollEnabled((prev) => !prev)}
+        />
       </div>
       {pageCount > 1 && (
         <div className={`absolute bottom-2 right-2 ${indicatorBg} text-xs px-2 py-0.5 rounded-full pointer-events-none`}>

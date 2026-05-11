@@ -175,6 +175,7 @@ const DERIVED_COLOR_FALLBACKS: Array<{ source: string; targets: string[] }> = [
     targets: [
       'user-attachment-inline-text',
       'user-attachment-audio-text',
+      // Legacy overlay keys are still populated so older custom themes remain valid.
       'user-attachment-overlay-text',
       'user-attachment-svg-text',
       'user-attachment-game-text',

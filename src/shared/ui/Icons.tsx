@@ -96,6 +96,104 @@ export const IconSwap = (props: any) => (
 	</svg>
 );
 
+export const IconEnableGameGestures = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Use game swipes">
+		<defs>
+			<style>
+				{`
+          .gamepad-wiggle {
+            animation: padWiggle 2.5s ease-in-out infinite;
+            transform-origin: 12px 12px;
+          }
+          @keyframes padWiggle {
+            0%, 15% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-6deg) scale(1.05); }
+            35% { transform: rotate(6deg) scale(1.05); }
+            45% { transform: rotate(-3deg) scale(1.05); }
+            55% { transform: rotate(0deg) scale(1); }
+            100% { transform: rotate(0deg) scale(1); }
+          }
+          .pad-btn { animation: btnFade 2.5s ease-in-out infinite; }
+          .pad-btn-2 { animation: btnFade 2.5s ease-in-out infinite 0.2s; }
+          .pad-btn-3 { animation: btnFade 2.5s ease-in-out infinite 0.4s; }
+          @keyframes btnFade {
+            0%, 100% { fill-opacity: 1; }
+            50% { fill-opacity: 0.3; }
+          }
+        `}
+			</style>
+		</defs>
+		<g className="gamepad-wiggle">
+			{/* Precision Apple-style Gamepad Shell */}
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={1.5}
+				d="M6 7h12a4 4 0 0 1 4 4v2a5 5 0 0 1-5 5 3 3 0 0 1-2.5-1.3l-1-1.4a2 2 0 0 0-3 0l-1 1.4A3 3 0 0 1 7 18a5 5 0 0 1-5-5v-2a4 4 0 0 1 4-4z"
+			/>
+			{/* D-Pad */}
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={1.5}
+				d="M8 9.5v4M6 11.5h4"
+			/>
+			{/* Animated Action Buttons */}
+			<circle cx="16" cy="9.5" r="1" fill="currentColor" stroke="none" className="pad-btn" />
+			<circle cx="14" cy="11.5" r="1" fill="currentColor" stroke="none" className="pad-btn-2" />
+			<circle cx="18" cy="11.5" r="1" fill="currentColor" stroke="none" className="pad-btn-3" />
+			<circle cx="16" cy="13.5" r="1" fill="currentColor" stroke="none" className="pad-btn" />
+		</g>
+	</svg>
+);
+
+export const IconReturnToChatScroll = (props: any) => (
+	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-label="Return to chat scroll">
+		<defs>
+			<style>
+				{`
+          .scroll-arrow-v {
+            animation: scrollBounce 2.5s ease-in-out infinite;
+          }
+          @keyframes scrollBounce {
+            0%, 20% { transform: translateY(0px); }
+            40% { transform: translateY(-3px); }
+            60% { transform: translateY(3px); }
+            80%, 100% { transform: translateY(0px); }
+          }
+        `}
+			</style>
+		</defs>
+
+		{/* Left Side: Chat Bubble Context */}
+		<g opacity="0.9">
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={1.5}
+				d="M14 11.5c0 3.038-2.462 5.5-5.5 5.5a5.47 5.47 0 0 1-2.9-.832L2 17.5l1.166-2.633A5.473 5.473 0 0 1 3 11.5c0-3.038 2.462-5.5 5.5-5.5s5.5 2.462 5.5 5.5z"
+			/>
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={1.5}
+				d="M5.5 9.5h6M5.5 13.5h3"
+			/>
+		</g>
+
+		{/* Right Side: Animated Vertical Scroll Track */}
+		<g className="scroll-arrow-v">
+			<path
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				strokeWidth={1.5}
+				d="M19 5v14M16 8l3-3 3 3M16 16l3 3 3-3"
+				opacity="0.8"
+			/>
+		</g>
+	</svg>
+);
+
 export const IconScissors = (props: any) => (
 	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 8.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5Zm9 0a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5ZM10.5 10l3 3m0 0 3-3m-3 3V3" />
