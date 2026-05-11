@@ -20,11 +20,11 @@ interface TextScrollwheelProps {
   speakNativeLang: boolean;
   onToggleSpeakNativeLang: () => void;
   messageId?: string;
-  /** `overlay` is for image/PDF overlays, `svg` is for focused SVG shells, `game` is for mini-game overlays, `audio` is for focused audio bubbles. */
-  colorMode?: 'overlay' | 'svg' | 'game' | 'audio';
+  /** Color theme for attachment transcript text. */
+  colorMode?: 'svg' | 'game' | 'audio';
 }
 
-const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translations, speakingUtteranceText, currentTargetLangCode, currentNativeLangCode, t, isSpeaking, isSending, speakText, stopSpeaking, speakNativeLang, onToggleSpeakNativeLang, messageId, colorMode = 'overlay' }) => {
+const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translations, speakingUtteranceText, currentTargetLangCode, currentNativeLangCode, t, isSpeaking, isSending, speakText, stopSpeaking, speakNativeLang, onToggleSpeakNativeLang, messageId, colorMode = 'svg' }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const isUserScrollingRef = useRef(false);
@@ -130,25 +130,19 @@ const TextScrollwheel: React.FC<TextScrollwheelProps> = React.memo(({ translatio
 
   const targetTextClass = colorMode === 'game'
     ? 'text-attachment-game-target-text'
-    : colorMode === 'svg'
-      ? 'text-attachment-svg-target-text'
     : colorMode === 'audio'
       ? 'text-attachment-audio-target-text'
-      : 'text-attachment-overlay-target-text';
+      : 'text-attachment-svg-target-text';
   const nativeTextClass = colorMode === 'game'
     ? 'text-attachment-game-native-text'
-    : colorMode === 'svg'
-      ? 'text-attachment-svg-native-text'
     : colorMode === 'audio'
       ? 'text-attachment-audio-native-text'
-      : 'text-attachment-overlay-native-text/70';
+      : 'text-attachment-svg-native-text/70';
   const spacerTextClass = colorMode === 'game'
     ? 'text-attachment-game-native-text/40'
-    : colorMode === 'svg'
-      ? 'text-attachment-svg-native-text/40'
     : colorMode === 'audio'
       ? 'text-attachment-audio-native-text/40'
-      : 'text-attachment-overlay-native-text/40';
+      : 'text-attachment-svg-native-text/40';
 
   return (
       <AttachmentTextScrollContainer

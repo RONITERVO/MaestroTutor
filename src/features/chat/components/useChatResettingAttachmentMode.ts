@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const isScrollableOverflow = (value: string): boolean => /(auto|scroll|overlay)/i.test(value);
+const isScrollableOverflow = (value: string): boolean => /(auto|scroll)/i.test(value);
 
 const getNearestScrollContainer = (element: HTMLElement | null): HTMLElement | null => {
   if (!element || typeof window === 'undefined') return null;

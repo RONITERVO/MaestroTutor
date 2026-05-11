@@ -706,16 +706,19 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !usesAudioAttachmentShell && !isVideoSuccessfullyDisplayed;
   const shouldUseAttachmentTranscriptShell = shouldOverlayTextOnAttachment && hasVisibleAttachment && !!hasTextContent;
   const attachmentTranscriptShellBottomInset = shouldUseAttachmentTranscriptShell ? Math.max(0, attachmentTranscriptShellHeight + 8) : 0;
-  const usesDetachedTranscriptShell = shouldUseAttachmentTranscriptShell && (isMiniGameAttachment || isAttachmentSvg || isNotebookTextAttachment);
+  const usesDetachedTranscriptShell = shouldUseAttachmentTranscriptShell;
   const detachedAttachmentTranscriptShellHeight = usesDetachedTranscriptShell && attachmentTranscriptShellBottomInset > 0
     ? Math.max(92, Math.min(Math.round(attachmentTranscriptShellBottomInset * 0.45) + 32, 122))
     : 0;
   const detachedAttachmentTranscriptBottomPadding = detachedAttachmentTranscriptShellHeight > 0
     ? Math.max(72, detachedAttachmentTranscriptShellHeight - 10)
     : 0;
-  const useOverlayTextColors = shouldOverlayTextOnAttachment && !usesDetachedTranscriptShell;
   const shouldInsetScrollableAttachmentForTranscriptShell = attachmentTranscriptShellBottomInset > 0 && (isTextFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isPdfSuccessfullyDisplayed);
   const scrollableAttachmentBottomInset = shouldInsetScrollableAttachmentForTranscriptShell ? attachmentTranscriptShellBottomInset : 0;
+  const shouldUseDetachedBubblePadding = usesDetachedTranscriptShell
+    && detachedAttachmentTranscriptBottomPadding > 0
+    && !isAnnotationActive
+    && !shouldInsetScrollableAttachmentForTranscriptShell;
   const attachmentTranscriptShellStyle: React.CSSProperties | undefined = shouldUseAttachmentTranscriptShell
     ? {
         maxHeight: '40vh',
@@ -724,26 +727,22 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         touchAction: 'pan-y',
         WebkitOverflowScrolling: 'touch' as any,
         scrollbarGutter: 'stable',
-        ...(usesDetachedTranscriptShell ? { textShadow: 'none' } : null),
+        textShadow: 'none',
       }
     : undefined;
-  const attachmentTranscriptShellClasses = shouldOverlayTextOnAttachment
-    ? (usesDetachedTranscriptShell
-        ? 'absolute inset-x-0 bottom-0 p-3 bg-transparent rounded-b-lg z-10'
-        : 'absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white rounded-b-lg z-10')
+  const attachmentTranscriptShellClasses = shouldUseAttachmentTranscriptShell
+    ? 'absolute inset-x-0 bottom-0 p-3 bg-transparent rounded-b-lg z-10'
     : 'relative z-10 mt-1';
-  const userAttachmentTextMode: 'plain' | 'inline' | 'audio' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
+  const userAttachmentTextMode: 'plain' | 'inline' | 'audio' | 'svg' | 'game' = hasVisibleAttachment
     ? (shouldOverlayTextOnAttachment
-        ? (isMiniGameAttachment ? 'game' : (isAttachmentSvg || isNotebookTextAttachment) ? 'svg' : 'overlay')
+        ? (isMiniGameAttachment ? 'game' : 'svg')
         : usesPaperNativeAttachmentSurface
           ? 'svg'
         : usesAudioAttachmentShell
           ? 'audio'
           : 'inline')
     : 'plain';
-  const userAttachmentTextClass = userAttachmentTextMode === 'overlay'
-    ? 'text-user-attachment-overlay-text'
-    : userAttachmentTextMode === 'svg'
+  const userAttachmentTextClass = userAttachmentTextMode === 'svg'
       ? 'text-user-attachment-svg-text'
     : userAttachmentTextMode === 'game'
       ? 'text-user-attachment-game-text'
@@ -752,9 +751,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     : userAttachmentTextMode === 'inline'
       ? 'text-user-attachment-inline-text'
       : 'text-user-msg-text';
-  const userAttachmentSubtleTextClass = userAttachmentTextMode === 'overlay'
-    ? 'text-user-attachment-overlay-text/70'
-    : userAttachmentTextMode === 'svg'
+  const userAttachmentSubtleTextClass = userAttachmentTextMode === 'svg'
       ? 'text-user-attachment-svg-text/70'
     : userAttachmentTextMode === 'game'
       ? 'text-user-attachment-game-text/70'
@@ -763,9 +760,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     : userAttachmentTextMode === 'inline'
       ? 'text-user-attachment-inline-text/70'
       : 'text-user-msg-text/70';
-  const userAttachmentHoverSurfaceClass = userAttachmentTextMode === 'overlay'
-    ? 'hover:bg-user-attachment-overlay-text/10'
-    : userAttachmentTextMode === 'svg'
+  const userAttachmentHoverSurfaceClass = userAttachmentTextMode === 'svg'
       ? 'hover:bg-user-attachment-svg-text/10'
     : userAttachmentTextMode === 'game'
       ? 'hover:bg-user-attachment-game-text/10'
@@ -774,9 +769,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     : userAttachmentTextMode === 'inline'
       ? 'hover:bg-user-attachment-inline-text/5'
       : 'hover:bg-user-msg-text/5';
-  const userAttachmentSpeakingSurfaceClass = userAttachmentTextMode === 'overlay'
-    ? 'bg-user-attachment-overlay-text/20'
-    : userAttachmentTextMode === 'svg'
+  const userAttachmentSpeakingSurfaceClass = userAttachmentTextMode === 'svg'
       ? 'bg-user-attachment-svg-text/20'
     : userAttachmentTextMode === 'game'
       ? 'bg-user-attachment-game-text/20'
@@ -785,34 +778,28 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     : userAttachmentTextMode === 'inline'
       ? 'bg-user-attachment-inline-text/10'
       : 'bg-user-msg-text/10';
-  const assistantAttachmentTextMode: 'plain' | 'inline' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
+  const assistantAttachmentTextMode: 'plain' | 'inline' | 'svg' | 'game' = hasVisibleAttachment
     ? (shouldOverlayTextOnAttachment
-        ? (isMiniGameAttachment ? 'game' : (isAttachmentSvg || isNotebookTextAttachment) ? 'svg' : 'overlay')
+        ? (isMiniGameAttachment ? 'game' : 'svg')
         : usesPaperNativeAttachmentSurface
           ? 'svg'
           : 'inline')
     : 'plain';
-  const assistantTargetTextClass = assistantAttachmentTextMode === 'overlay'
-    ? 'text-attachment-overlay-target-text'
-    : assistantAttachmentTextMode === 'svg'
+  const assistantTargetTextClass = assistantAttachmentTextMode === 'svg'
       ? 'text-attachment-svg-target-text'
     : assistantAttachmentTextMode === 'game'
       ? 'text-attachment-game-target-text'
       : assistantAttachmentTextMode === 'inline'
         ? 'text-attachment-inline-target-text'
         : 'text-ai-msg-text';
-  const assistantTargetHoverTextClass = assistantAttachmentTextMode === 'overlay'
-    ? 'hover:text-attachment-overlay-target-text'
-    : assistantAttachmentTextMode === 'svg'
+  const assistantTargetHoverTextClass = assistantAttachmentTextMode === 'svg'
       ? 'hover:text-attachment-svg-target-text'
     : assistantAttachmentTextMode === 'game'
       ? 'hover:text-attachment-game-target-text'
       : assistantAttachmentTextMode === 'inline'
         ? 'hover:text-attachment-inline-target-text'
         : 'hover:text-ai-msg-text';
-  const assistantNativeTextClass = assistantAttachmentTextMode === 'overlay'
-    ? 'text-attachment-overlay-native-text/70 border-attachment-overlay-native-text/30'
-    : assistantAttachmentTextMode === 'svg'
+  const assistantNativeTextClass = assistantAttachmentTextMode === 'svg'
       ? 'text-attachment-svg-native-text border-attachment-svg-native-text/25'
     : assistantAttachmentTextMode === 'game'
       ? 'text-attachment-game-native-text border-attachment-game-native-text/25'
@@ -1138,9 +1125,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       }
   }
   
-  const imageContainerDynamicBg = isAttachmentLoading && !shouldShowAudioAttachmentPlaceholder ? 
-      (applyFocusedImageStyles ? (isUser ? 'bg-user-msg-bg/40' : 'bg-ai-msg-placeholder/50') : (isUser ? 'bg-user-msg-bg/30' : 'bg-status-msg-bg/50')) 
-      : '';
+  const imageContainerDynamicBg = '';
 
   const imageContainerStyle: React.CSSProperties = {};
   if ((isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed) && message.id === transitioningImageId) {
@@ -1156,7 +1141,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     // @ts-ignore
     containerType: 'inline-size',
     width: '100%',
-    ...(isAttachmentSvg && detachedAttachmentTranscriptBottomPadding > 0 && !isAnnotationActive
+    ...(shouldUseDetachedBubblePadding
       ? { paddingBottom: `${detachedAttachmentTranscriptBottomPadding}px` }
       : null),
     ...bubbleShapeStyle,
@@ -1571,7 +1556,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                speakNativeLang={speakNativeLang}
                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                messageId={message.id}
-               colorMode={isMiniGameAttachment ? 'game' : (isAttachmentSvg || isNotebookTextAttachment) ? 'svg' : usesAudioAttachmentShell ? 'audio' : 'overlay'}
+                 colorMode={isMiniGameAttachment ? 'game' : usesAudioAttachmentShell ? 'audio' : 'svg'}
                        />
                    </>
                ) : (
@@ -1718,7 +1703,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                      })()
                    )}
                    {(isError || isStatus) && message.text && (
-                     <p className={`${ useOverlayTextColors ? (isError ? 'text-img-error-text font-semibold' : 'text-status-msg-text font-semibold') : ''}`}
+                     <p className={`${ shouldUseAttachmentTranscriptShell ? (isError ? 'text-img-error-text font-semibold' : 'text-status-msg-text font-semibold') : ''}`}
                         style={{ fontSize: '3.2cqw', lineHeight: 1.25 }}>
                          {message.text}
                      </p>
