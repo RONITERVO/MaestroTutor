@@ -138,18 +138,19 @@ const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps
     {
       enabled: false,
       label: returnToChatScrollLabel,
-      title: returnToChatScrollLabel,
       Icon: IconReturnToChatScroll,
       shapeClass: 'sketch-shape-2',
     },
     {
       enabled: true,
       label: gameGesturesLabel,
-      title: canUseGameGestures ? gameGesturesTitle : gameGesturesUnavailableLabel,
       Icon: IconEnableGameGestures,
       shapeClass: 'sketch-shape-3',
     },
   ];
+  const toggleTitle = gameGesturesEnabled
+    ? returnToChatScrollLabel
+    : (canUseGameGestures ? gameGesturesTitle : gameGesturesUnavailableLabel);
 
   return (
     <div
@@ -157,7 +158,7 @@ const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps
       role="group"
       aria-label={groupLabel}
     >
-      {modes.map(({ enabled, label, title, Icon, shapeClass }) => {
+      {modes.map(({ enabled, label, Icon, shapeClass }) => {
         const isActive = gameGesturesEnabled === enabled;
         const isUnavailable = enabled && !canUseGameGestures && !gameGesturesEnabled;
         const sizeClass = compact
@@ -181,10 +182,10 @@ const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps
           <button
             key={enabled ? 'gestures' : 'scroll'}
             type="button"
-            onClick={(event) => onSelectMode(enabled, event)}
+            onClick={(event) => onSelectMode(!gameGesturesEnabled, event)}
             className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} ${lineColor} border paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 ${compact ? 'shadow-[0_10px_22px_rgba(2,6,23,0.28)] backdrop-blur-sm' : 'btn-depth'}`}
-            title={title}
-            aria-label={title}
+            title={toggleTitle}
+            aria-label={toggleTitle}
             aria-pressed={isActive}
             disabled={isUnavailable}
           >
