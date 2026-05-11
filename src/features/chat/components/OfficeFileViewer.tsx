@@ -12,6 +12,7 @@ import {
   isGoogleWorkspaceShortcutMimeType,
 } from '../utils/fileAttachments';
 import { getOfficePreview } from '../utils/officePreview';
+import { isAttachmentOpenCancelError, openAttachmentFile } from '../utils/openAttachmentFile';
 import type { TabularChartSeries, TabularSheetPreview } from '../utils/tabularPreview';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
@@ -95,6 +96,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   const [previewNote, setPreviewNote] = React.useState<string | null>(null);
   const [previewSheets, setPreviewSheets] = React.useState<TabularSheetPreview[]>([]);
   const [isParsingPreview, setIsParsingPreview] = React.useState(false);
+  const [isOpeningFile, setIsOpeningFile] = React.useState(false);
 
   const textColor = 'text-deep-ink';
   const subtleText = 'text-sketch-line';
@@ -111,7 +113,6 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
 
   const openHref = googleWorkspaceLink || src || null;
   const openLabel = googleWorkspaceLink ? t('officeFile.openInGoogleWorkspace') || 'Open in Google Workspace' : t('officeFile.openFile') || 'Open file';
-  const shouldUseDownload = Boolean(src && !googleWorkspaceLink && /^data:|^blob:/i.test(src));
   const downloadName = fileName || 'office-attachment';
 
   React.useEffect(() => {
@@ -165,17 +166,47 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   const statusText = previewNote || (!openHref
     ? (hasRemoteUri ? t('officeFile.localPreviewUnavailable') || 'Local preview unavailable. Reattach to open locally.' : t('officeFile.previewUnavailable') || 'Preview unavailable for this file.')
     : null);
-  const openFileFooter = openHref ? (
-    <a
-      href={openHref}
-      target="_blank"
-      rel="noopener noreferrer"
-      download={shouldUseDownload ? downloadName : undefined}
-      className="underline text-sketch-line"
+
+  const handleOpenFile = React.useCallback(async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!openHref || isOpeningFile) return;
+
+    setIsOpeningFile(true);
+    try {
+      await openAttachmentFile({
+        url: openHref,
+        fileName: downloadName,
+        mimeType,
+      });
+    } catch (error) {
+      if (!isAttachmentOpenCancelError(error)) {
+        console.error('Failed to open office attachment:', error);
+        if (typeof window !== 'undefined') {
+          window.alert(t('officeFile.openFailed'));
+        }
+      }
+    } finally {
+      setIsOpeningFile(false);
+    }
+  }, [downloadName, isOpeningFile, mimeType, openHref, t]);
+
+  const renderOpenFileButton = (className: string) => openHref ? (
+    <button
+      type="button"
+      onPointerDown={(event) => event.stopPropagation()}
+      onPointerUp={(event) => event.stopPropagation()}
+      onPointerCancel={(event) => event.stopPropagation()}
+      onClick={handleOpenFile}
+      disabled={isOpeningFile}
+      className={`${className} bg-transparent p-0 text-left disabled:cursor-wait disabled:opacity-60`}
+      aria-busy={isOpeningFile}
     >
       {openLabel}
-    </a>
+    </button>
   ) : null;
+
+  const openFileFooter = renderOpenFileButton('underline text-sketch-line');
 
   if (!isParsingPreview && previewSheets.length > 0) {
     return (
@@ -191,6 +222,11 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
           surfaceClassName="bg-paper-surface/85"
           panelSurfaceClassName="bg-paper-stripe/35"
         />
+        {openHref ? (
+          <div className={compact ? 'mt-1 px-2 text-[10px]' : 'mt-1 px-1 text-xs'}>
+            {renderOpenFileButton(`underline ${subtleText}`)}
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -224,17 +260,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
             ) : statusText ? (
               <p className={`mt-1 text-[10px] ${subtleText}`}>{statusText}</p>
             ) : null}
-            {openHref ? (
-              <a
-                href={openHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={shouldUseDownload ? downloadName : undefined}
-                className={`text-[10px] underline ${subtleText}`}
-              >
-                {openLabel}
-              </a>
-            ) : null}
+            {renderOpenFileButton(`text-[10px] underline ${subtleText}`)}
           </div>
         </div>
       </div>
@@ -274,17 +300,7 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
           ) : (
             <p className={`mt-2 text-xs ${subtleText}`}>{statusText}</p>
           )}
-          {openHref ? (
-            <a
-              href={openHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              download={shouldUseDownload ? downloadName : undefined}
-              className={`mt-1 inline-block text-xs underline ${subtleText}`}
-            >
-              {openLabel}
-            </a>
-          ) : null}
+          {renderOpenFileButton(`mt-1 inline-block text-xs underline ${subtleText}`)}
         </div>
       </div>
     </div>
