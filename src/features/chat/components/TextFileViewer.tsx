@@ -8,6 +8,7 @@ import TabularPreview from './TabularPreview';
 import { deriveTabularSheetsFromTextAttachment } from '../utils/tabularPreview';
 import MiniGameViewer from './MiniGameViewer';
 import MiniGameErrorBoundary from './MiniGameErrorBoundary';
+import NotebookTextPreview from './NotebookTextPreview';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
@@ -42,12 +43,6 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
     () => deriveTabularSheetsFromTextAttachment(decodedText, mimeType, fileName),
     [decodedText, fileName, mimeType]
   );
-  const previewSnippet = useMemo(() => {
-    if (!decodedText) return '';
-    if (decodedText.length <= 3200) return decodedText;
-    return `${decodedText.slice(0, 3200)}\n...`;
-  }, [decodedText]);
-
   const textColor = 'text-deep-ink';
   const subtleText = 'text-sketch-line';
   const metaLabel = fileName || mimeType || 'text attachment';
@@ -114,72 +109,21 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
     }
 
     return (
-      <div className="notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full max-w-full min-w-0 overflow-hidden px-2 py-1.5" style={{ contain: 'inline-size' }}>
-        <div className={`truncate font-architect text-[11px] font-semibold ${textColor}`}>
-          {metaLabel}
-        </div>
-        <div
-          className="notebook-attachment-scroll w-full max-w-full min-w-0 overflow-x-auto overflow-y-scroll"
-          style={{
-            maxHeight: '5.25rem',
-          }}
-        >
-          <pre className="notebook-attachment-pre py-1 text-[11px] leading-4 whitespace-pre w-max min-w-full">
-            {decodedText}
-          </pre>
-        </div>
-      </div>
+      <NotebookTextPreview
+        title={metaLabel}
+        text={decodedText}
+        compact
+      />
     );
   }
 
   return (
     <div className="relative w-full max-w-full min-w-0 overflow-hidden">
-      <div
-        className="notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full max-w-full min-w-0 overflow-hidden px-3 py-2"
-        style={{
-          scrollPaddingBottom: `${effectiveBottomInset}px`,
-        }}
-      >
-        <div className={`truncate font-architect text-[14px] font-semibold ${textColor}`}>
-          {metaLabel}
-        </div>
-        <div
-          className="notebook-attachment-scroll w-full max-w-full min-w-0 overflow-x-auto overflow-y-scroll"
-          style={{
-            maxHeight: '60vh',
-          }}
-        >
-          {tabularSheets.length > 0 ? (
-            <>
-              <TabularPreview
-                sheets={tabularSheets}
-                textColorClass={textColor}
-                subtleTextClass={subtleText}
-                surfaceClassName="bg-paper-surface/85"
-                panelSurfaceClassName="bg-paper-stripe/35"
-              />
-              <details className="mt-3">
-                <summary className={`text-xs cursor-pointer ${subtleText}`}>{t('textFile.rawText') || 'Raw text'}</summary>
-                <div
-                  className="notebook-attachment-scroll mt-1 max-h-72 overflow-auto border-t border-sketch-line/20"
-                  style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
-                >
-                  <pre className="notebook-attachment-pre py-2 text-[11px] leading-5 whitespace-pre w-max min-w-full">
-                    {previewSnippet}
-                  </pre>
-                </div>
-              </details>
-            </>
-          ) : (
-            <pre
-              className="notebook-attachment-pre py-2 text-[12px] leading-5 whitespace-pre w-max min-w-full"
-              style={effectiveBottomInset > 0 ? { paddingBottom: `calc(0.5rem + ${effectiveBottomInset}px)` } : undefined}
-            >
-              {decodedText}
-            </pre>
-          )}
-        </div>
-      </div>
+      <NotebookTextPreview
+        title={metaLabel}
+        text={decodedText}
+        bottomInset={effectiveBottomInset}
+      />
     </div>
   );
 });

@@ -5,6 +5,7 @@ import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import TabularPreview from './TabularPreview';
+import NotebookTextPreview from './NotebookTextPreview';
 import {
   extractGoogleWorkspaceUrlFromDataUrl,
   isGoogleWorkspaceShortcutFileName,
@@ -164,6 +165,17 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   const statusText = previewNote || (!openHref
     ? (hasRemoteUri ? t('officeFile.localPreviewUnavailable') || 'Local preview unavailable. Reattach to open locally.' : t('officeFile.previewUnavailable') || 'Preview unavailable for this file.')
     : null);
+  const openFileFooter = openHref ? (
+    <a
+      href={openHref}
+      target="_blank"
+      rel="noopener noreferrer"
+      download={shouldUseDownload ? downloadName : undefined}
+      className="underline text-sketch-line"
+    >
+      {openLabel}
+    </a>
+  ) : null;
 
   if (!isParsingPreview && previewSheets.length > 0) {
     return (
@@ -184,6 +196,19 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
   }
 
   if (compact) {
+    if (!isParsingPreview && compactPreviewSnippet) {
+      return (
+        <NotebookTextPreview
+          title={metaLabel}
+          subtitle={attachmentLabel}
+          text={compactPreviewSnippet}
+          compact
+          wrapText
+          footer={openFileFooter}
+        />
+      );
+    }
+
     return (
       <div className="notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full max-w-full min-w-0 overflow-hidden px-2 py-1.5">
         <div className="flex items-start gap-2">
@@ -196,10 +221,6 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
                 <SmallSpinner className="w-3 h-3" />
                 {t('officeFile.parsingPreview') || 'Parsing preview...'}
               </div>
-            ) : compactPreviewSnippet ? (
-              <pre className="notebook-attachment-pre mt-1 text-[11px] leading-4 whitespace-pre-wrap break-words">
-                {compactPreviewSnippet}
-              </pre>
             ) : statusText ? (
               <p className={`mt-1 text-[10px] ${subtleText}`}>{statusText}</p>
             ) : null}
@@ -220,6 +241,21 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
     );
   }
 
+  if (!isParsingPreview && previewText) {
+    return (
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden">
+        <NotebookTextPreview
+          title={metaLabel}
+          subtitle={attachmentLabel}
+          text={previewText}
+          bottomInset={effectiveBottomInset}
+          wrapText
+          footer={openFileFooter}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full overflow-hidden px-3 py-2"
@@ -234,15 +270,6 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
             <div className={`mt-2 inline-flex items-center gap-1.5 text-xs ${subtleText}`}>
               <SmallSpinner className="w-3.5 h-3.5" />
               {t('officeFile.parsingInlinePreview') || 'Parsing inline preview...'}
-            </div>
-          ) : previewText ? (
-            <div
-              className="notebook-attachment-scroll mt-2 max-h-64 overflow-auto border-t border-sketch-line/20"
-              style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
-            >
-              <pre className="notebook-attachment-pre py-2 text-xs leading-5 whitespace-pre-wrap break-words">
-                {previewText}
-              </pre>
             </div>
           ) : (
             <p className={`mt-2 text-xs ${subtleText}`}>{statusText}</p>

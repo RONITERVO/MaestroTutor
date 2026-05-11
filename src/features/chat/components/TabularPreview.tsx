@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useMemo, useState } from 'react';
-import { IconHandRaised, IconReturnToChatScroll } from '../../../shared/ui/Icons';
+import AttachmentInteractionToggle from './AttachmentInteractionToggle';
 import type { TabularChartSeries, TabularSheetPreview } from '../utils/tabularPreview';
 
 interface TabularPreviewProps {
@@ -15,15 +15,6 @@ interface TabularPreviewProps {
   bottomInset?: number;
   surfaceClassName?: string;
   panelSurfaceClassName?: string;
-}
-
-interface TabularInteractionDeckToggleProps {
-  isPanEnabled: boolean;
-  textColorClass: string;
-  subtleTextClass: string;
-  surfaceClassName: string;
-  panelSurfaceClassName: string;
-  onToggle: () => void;
 }
 
 const SAMPLE_ROW_LIMIT_COMPACT = 4;
@@ -128,72 +119,6 @@ const truncateChartLabel = (value: string | undefined, maxLength: number): strin
   return `${normalized.slice(0, Math.max(1, maxLength - 1)).trimEnd()}...`;
 };
 
-const TabularInteractionDeckToggle: React.FC<TabularInteractionDeckToggleProps> = ({
-  isPanEnabled,
-  textColorClass,
-  subtleTextClass,
-  surfaceClassName,
-  panelSurfaceClassName,
-  onToggle,
-}) => {
-  const modes = [
-    {
-      enabled: false,
-      label: 'Chat scroll',
-      Icon: IconReturnToChatScroll,
-      shapeClass: 'sketch-shape-2',
-    },
-    {
-      enabled: true,
-      label: 'Table pan',
-      Icon: IconHandRaised,
-      shapeClass: 'sketch-shape-3',
-    },
-  ];
-  const actionLabel = isPanEnabled ? 'Use chat scroll' : 'Pan chart and table';
-
-  return (
-    <div className="relative h-7 w-[90px] shrink-0 select-none" role="group" aria-label="Artifact interaction mode">
-      {modes.map(({ enabled, label, Icon, shapeClass }) => {
-        const isActive = isPanEnabled === enabled;
-        const sizeClass = isActive ? 'h-6 w-[74px]' : 'h-[22px] w-[46px]';
-        const positionClass = isActive
-          ? 'left-0 top-0 z-20 -rotate-2 scale-100'
-          : 'right-0 bottom-0 z-10 rotate-6 scale-95';
-        const toneClass = isActive
-          ? `${surfaceClassName} ${textColorClass}`
-          : `${panelSurfaceClassName} ${subtleTextClass}`;
-        const contentClass = isActive ? 'justify-start pl-2 pr-1' : 'justify-end px-1.5';
-
-        return (
-          <button
-            key={enabled ? 'pan' : 'scroll'}
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onToggle();
-            }}
-            className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} border border-sketch-line/45 paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 btn-depth`}
-            title={actionLabel}
-            aria-label={actionLabel}
-            aria-pressed={isActive}
-          >
-            <span className={`relative z-10 flex h-full w-full items-center gap-1 ${contentClass}`} aria-hidden="true">
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              {isActive && (
-                <span className="max-w-[42px] truncate text-[9px] font-semibold uppercase tracking-wide">
-                  {label}
-                </span>
-              )}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-};
-
 const TabularPreview: React.FC<TabularPreviewProps> = ({
   sheets,
   textColorClass,
@@ -265,12 +190,15 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
               {chartList.length > 0 ? ` / ${chartList.length} chart ${chartList.length === 1 ? 'series' : 'series'}` : ''}
             </p>
           </div>
-          <TabularInteractionDeckToggle
-            isPanEnabled={isPanEnabled}
-            textColorClass={paperTextClass}
-            subtleTextClass={paperSubtleTextClass}
-            surfaceClassName={paperSurfaceClassName}
-            panelSurfaceClassName={paperPanelSurfaceClassName}
+          <AttachmentInteractionToggle
+            isAttachmentModeEnabled={isPanEnabled}
+            attachmentLabel="Table pan"
+            attachmentTitle="Pan chart and table"
+            groupLabel="Artifact interaction mode"
+            activeTextClassName={paperTextClass}
+            inactiveTextClassName={paperSubtleTextClass}
+            activeSurfaceClassName={paperSurfaceClassName}
+            inactiveSurfaceClassName={paperPanelSurfaceClassName}
             onToggle={() => setIsPanEnabled((prev) => !prev)}
           />
         </div>

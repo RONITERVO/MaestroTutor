@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { IconHandRaised, IconPaperclip, IconReturnToChatScroll } from '../../../shared/ui/Icons';
+import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
+import AttachmentInteractionToggle from './AttachmentInteractionToggle';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
@@ -72,73 +73,6 @@ interface PdfViewerProps {
   compact?: boolean;
   bottomInset?: number;
 }
-
-interface PdfInteractionDeckToggleProps {
-  isPdfScrollEnabled: boolean;
-  onToggle: () => void;
-}
-
-const PdfInteractionDeckToggle: React.FC<PdfInteractionDeckToggleProps> = ({
-  isPdfScrollEnabled,
-  onToggle,
-}) => {
-  const modes = [
-    {
-      enabled: false,
-      label: 'Chat scroll',
-      Icon: IconReturnToChatScroll,
-      shapeClass: 'sketch-shape-2',
-    },
-    {
-      enabled: true,
-      label: 'PDF scroll',
-      Icon: IconHandRaised,
-      shapeClass: 'sketch-shape-3',
-    },
-  ];
-  const actionLabel = isPdfScrollEnabled ? 'Use chat scroll' : 'Scroll PDF pages';
-
-  return (
-    <div className="relative h-7 w-[90px] shrink-0 select-none" role="group" aria-label="PDF interaction mode">
-      {modes.map(({ enabled, label, Icon, shapeClass }) => {
-        const isActive = isPdfScrollEnabled === enabled;
-        const sizeClass = isActive ? 'h-6 w-[74px]' : 'h-[22px] w-[46px]';
-        const positionClass = isActive
-          ? 'left-0 top-0 z-20 -rotate-2 scale-100'
-          : 'right-0 bottom-0 z-10 rotate-6 scale-95';
-        const toneClass = isActive
-          ? 'bg-paper-surface/90 text-deep-ink'
-          : 'bg-paper-stripe/55 text-sketch-line';
-        const contentClass = isActive ? 'justify-start pl-2 pr-1' : 'justify-end px-1.5';
-
-        return (
-          <button
-            key={enabled ? 'pdf' : 'chat'}
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onToggle();
-            }}
-            className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} border border-sketch-line/45 paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 btn-depth`}
-            title={actionLabel}
-            aria-label={actionLabel}
-            aria-pressed={isActive}
-          >
-            <span className={`relative z-10 flex h-full w-full items-center gap-1 ${contentClass}`} aria-hidden="true">
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              {isActive && (
-                <span className="max-w-[42px] truncate text-[9px] font-semibold uppercase tracking-wide">
-                  {label}
-                </span>
-              )}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-};
 
 const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, bottomInset = 0 }) => {
   const { t } = useAppTranslations();
@@ -313,8 +247,11 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
         </div>
       </div>
       <div className="absolute left-2 top-2 z-20 pointer-events-auto">
-        <PdfInteractionDeckToggle
-          isPdfScrollEnabled={isPdfScrollEnabled}
+        <AttachmentInteractionToggle
+          isAttachmentModeEnabled={isPdfScrollEnabled}
+          attachmentLabel="PDF scroll"
+          attachmentTitle="Scroll PDF pages"
+          groupLabel="PDF interaction mode"
           onToggle={() => setIsPdfScrollEnabled((prev) => !prev)}
         />
       </div>
