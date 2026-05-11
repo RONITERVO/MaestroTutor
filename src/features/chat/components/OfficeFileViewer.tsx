@@ -165,6 +165,24 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
     ? (hasRemoteUri ? t('officeFile.localPreviewUnavailable') || 'Local preview unavailable. Reattach to open locally.' : t('officeFile.previewUnavailable') || 'Preview unavailable for this file.')
     : null);
 
+  if (!isParsingPreview && previewSheets.length > 0) {
+    return (
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden" style={compact ? { contain: 'inline-size' } : undefined}>
+        <TabularPreview
+          sheets={previewSheets}
+          textColorClass={textColor}
+          subtleTextClass={subtleText}
+          compact={compact}
+          title={metaLabel}
+          standalone={!compact}
+          bottomInset={effectiveBottomInset}
+          surfaceClassName="bg-paper-surface/85"
+          panelSurfaceClassName="bg-paper-stripe/35"
+        />
+      </div>
+    );
+  }
+
   if (compact) {
     return (
       <div className="notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full max-w-full min-w-0 overflow-hidden px-2 py-1.5">
@@ -178,16 +196,6 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
                 <SmallSpinner className="w-3 h-3" />
                 {t('officeFile.parsingPreview') || 'Parsing preview...'}
               </div>
-            ) : previewSheets.length > 0 ? (
-              <TabularPreview
-                sheets={previewSheets}
-                textColorClass={textColor}
-                subtleTextClass={subtleText}
-                compact
-                title={metaLabel}
-                surfaceClassName="bg-paper-surface/85"
-                panelSurfaceClassName="bg-paper-stripe/35"
-              />
             ) : compactPreviewSnippet ? (
               <pre className="notebook-attachment-pre mt-1 text-[11px] leading-4 whitespace-pre-wrap break-words">
                 {compactPreviewSnippet}
@@ -227,30 +235,6 @@ const OfficeFileViewer: React.FC<OfficeFileViewerProps> = React.memo(({
               <SmallSpinner className="w-3.5 h-3.5" />
               {t('officeFile.parsingInlinePreview') || 'Parsing inline preview...'}
             </div>
-          ) : previewSheets.length > 0 ? (
-            <>
-              <TabularPreview
-                sheets={previewSheets}
-                textColorClass={textColor}
-                subtleTextClass={subtleText}
-                title={metaLabel}
-                surfaceClassName="bg-paper-surface/85"
-                panelSurfaceClassName="bg-paper-stripe/35"
-              />
-              {previewText ? (
-                <details className="mt-2">
-                  <summary className={`text-xs cursor-pointer ${subtleText}`}>{t('officeFile.rawExtractedText') || 'Raw extracted text'}</summary>
-                  <div
-                    className="notebook-attachment-scroll mt-1 max-h-72 overflow-auto border-t border-sketch-line/20"
-                    style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
-                  >
-                    <pre className="notebook-attachment-pre py-2 text-xs leading-5 whitespace-pre-wrap break-words">
-                      {previewText}
-                    </pre>
-                  </div>
-                </details>
-              ) : null}
-            </>
           ) : previewText ? (
             <div
               className="notebook-attachment-scroll mt-2 max-h-64 overflow-auto border-t border-sketch-line/20"

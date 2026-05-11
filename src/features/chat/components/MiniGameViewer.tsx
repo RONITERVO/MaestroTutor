@@ -387,7 +387,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
-  const bubbleSurfaceBg = isUser ? 'bg-user-msg-bg/95' : 'bg-ai-msg-bg/95';
   const textColor = isUser ? 'text-user-attachment-game-text' : 'text-ai-file-text';
   const subtleText = isUser ? 'text-user-attachment-game-text/70' : 'text-ai-file-text/70';
   const lineColor = isUser ? 'border-user-attachment-game-text/25' : 'border-ai-file-text/25';
@@ -680,15 +679,15 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
           )}
 
           {controlsUnderOverlay && showCode && (
-            <div className={`absolute inset-2 z-20 rounded-xl border ${lineColor} ${bubbleSurfaceBg} overflow-hidden shadow-[0_12px_28px_rgba(2,6,23,0.28)] backdrop-blur-sm`}>
-              <div className={`px-3 py-1.5 pr-12 text-[11px] font-mono truncate border-b ${lineColor} ${textColor}`}>
+            <div className="notebook-source-paper paper-texture notebook-lines sketch-shape-4 absolute inset-2 z-20 overflow-hidden border border-sketch-line/30 shadow-[0_12px_28px_rgba(2,6,23,0.18)]">
+              <div className="px-3 py-1.5 pr-12 font-architect text-[12px] font-semibold truncate text-deep-ink border-b border-sketch-line/20">
                 {fileName || mimeType || 'mini-game source'}
               </div>
               <div
                 className="max-h-full overflow-auto"
                 style={{ height: 'calc(100% - 32px)', overscrollBehavior: 'contain', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' as any }}
               >
-                <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
+                <pre className="notebook-source-pre p-3 text-[11px] leading-5 whitespace-pre w-max min-w-full">
                   {sourceCode}
                 </pre>
               </div>
@@ -736,12 +735,12 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       </div>
 
       {!controlsUnderOverlay && showCode && (
-        <div className={`mt-2 w-full max-w-[560px] rounded-xl border ${lineColor} ${containerBg} overflow-hidden`}>
-          <div className={`px-3 py-1.5 text-[11px] font-mono truncate border-b ${lineColor} ${textColor}`}>
+        <div className="notebook-source-paper paper-texture notebook-lines sketch-shape-4 mt-2 w-full max-w-[560px] overflow-hidden border border-sketch-line/30">
+          <div className="px-3 py-1.5 font-architect text-[12px] font-semibold truncate border-b border-sketch-line/20 text-deep-ink">
             {fileName || mimeType || 'mini-game source'}
           </div>
           <div className="max-h-56 overflow-auto" style={{ overscrollBehavior: 'contain', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' as any }}>
-            <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
+            <pre className="notebook-source-pre p-3 text-[11px] leading-5 whitespace-pre w-max min-w-full">
               {sourceCode}
             </pre>
           </div>

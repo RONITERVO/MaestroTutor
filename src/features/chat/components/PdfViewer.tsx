@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { IconPaperclip } from '../../../shared/ui/Icons';
+import { IconHandRaised, IconPaperclip, IconReturnToChatScroll } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
@@ -73,13 +73,81 @@ interface PdfViewerProps {
   bottomInset?: number;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact = false, bottomInset = 0 }) => {
+interface PdfInteractionDeckToggleProps {
+  isPdfScrollEnabled: boolean;
+  onToggle: () => void;
+}
+
+const PdfInteractionDeckToggle: React.FC<PdfInteractionDeckToggleProps> = ({
+  isPdfScrollEnabled,
+  onToggle,
+}) => {
+  const modes = [
+    {
+      enabled: false,
+      label: 'Chat scroll',
+      Icon: IconReturnToChatScroll,
+      shapeClass: 'sketch-shape-2',
+    },
+    {
+      enabled: true,
+      label: 'PDF scroll',
+      Icon: IconHandRaised,
+      shapeClass: 'sketch-shape-3',
+    },
+  ];
+  const actionLabel = isPdfScrollEnabled ? 'Use chat scroll' : 'Scroll PDF pages';
+
+  return (
+    <div className="relative h-7 w-[90px] shrink-0 select-none" role="group" aria-label="PDF interaction mode">
+      {modes.map(({ enabled, label, Icon, shapeClass }) => {
+        const isActive = isPdfScrollEnabled === enabled;
+        const sizeClass = isActive ? 'h-6 w-[74px]' : 'h-[22px] w-[46px]';
+        const positionClass = isActive
+          ? 'left-0 top-0 z-20 -rotate-2 scale-100'
+          : 'right-0 bottom-0 z-10 rotate-6 scale-95';
+        const toneClass = isActive
+          ? 'bg-paper-surface/90 text-deep-ink'
+          : 'bg-paper-stripe/55 text-sketch-line';
+        const contentClass = isActive ? 'justify-start pl-2 pr-1' : 'justify-end px-1.5';
+
+        return (
+          <button
+            key={enabled ? 'pdf' : 'chat'}
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onToggle();
+            }}
+            className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} border border-sketch-line/45 paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 btn-depth`}
+            title={actionLabel}
+            aria-label={actionLabel}
+            aria-pressed={isActive}
+          >
+            <span className={`relative z-10 flex h-full w-full items-center gap-1 ${contentClass}`} aria-hidden="true">
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              {isActive && (
+                <span className="max-w-[42px] truncate text-[9px] font-semibold uppercase tracking-wide">
+                  {label}
+                </span>
+              )}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, bottomInset = 0 }) => {
   const { t } = useAppTranslations();
   const [pages, setPages] = useState<string[]>([]);
   const [pageCount, setPageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visiblePage, setVisiblePage] = useState(1);
+  const [isPdfScrollEnabled, setIsPdfScrollEnabled] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefsMap = useRef<Map<number, HTMLImageElement>>(new Map());
@@ -125,6 +193,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
 
         if (!cancelled) {
           setPages(renderedPages);
+          setIsPdfScrollEnabled(false);
         }
       } catch (err) {
         if (!cancelled) {
@@ -169,18 +238,24 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
     }
   }, []);
 
-  const isUser = variant === 'user';
-
-  const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
+  const containerBg = 'notebook-attachment-paper paper-texture notebook-lines sketch-shape-4';
   const indicatorBg = 'bg-black/60 text-white';
-  const errorTextColor = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
-  const iconColor = isUser ? 'text-user-attachment-inline-text/70' : 'text-ai-file-text';
+  const errorTextColor = 'text-sketch-line';
+  const iconColor = 'text-deep-ink';
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
+  const pdfScrollStyle: React.CSSProperties = {
+    maxHeight: '60vh',
+    overflowY: isPdfScrollEnabled ? 'auto' : 'hidden',
+    overscrollBehavior: isPdfScrollEnabled ? 'contain' : 'auto',
+    touchAction: 'pan-y',
+    WebkitOverflowScrolling: 'touch' as any,
+    scrollPaddingBottom: `${effectiveBottomInset}px`,
+  };
 
   if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center rounded-lg ${containerBg} ${compact ? 'h-24 w-full' : 'h-48 w-full'}`}>
-        <SmallSpinner className={`w-6 h-6 ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`} />
+        <SmallSpinner className="w-6 h-6 text-deep-ink" />
         <p className={`mt-2 text-xs ${errorTextColor}`}>{t('chat.pdf.loading') || 'Loading PDF...'}</p>
       </div>
     );
@@ -216,14 +291,10 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
     <div className="relative w-full">
       <div
         ref={scrollContainerRef}
-        className={`overflow-y-auto rounded-lg ${containerBg}`}
-        style={{
-          maxHeight: '60vh',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-          WebkitOverflowScrolling: 'touch' as any,
-          scrollPaddingBottom: `${effectiveBottomInset}px`,
-        }}
+        className={`rounded-lg ${containerBg}`}
+        style={pdfScrollStyle}
+        onWheel={isPdfScrollEnabled ? (event) => event.stopPropagation() : undefined}
+        onTouchMove={isPdfScrollEnabled ? (event) => event.stopPropagation() : undefined}
       >
         <div
           className="flex flex-col gap-1 p-1"
@@ -240,6 +311,12 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, variant, compact 
             />
           ))}
         </div>
+      </div>
+      <div className="absolute left-2 top-2 z-20 pointer-events-auto">
+        <PdfInteractionDeckToggle
+          isPdfScrollEnabled={isPdfScrollEnabled}
+          onToggle={() => setIsPdfScrollEnabled((prev) => !prev)}
+        />
       </div>
       {pageCount > 1 && (
         <div className={`absolute bottom-2 right-2 ${indicatorBg} text-xs px-2 py-0.5 rounded-full pointer-events-none`}>

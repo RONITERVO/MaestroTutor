@@ -1218,14 +1218,14 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                     <>
                         {!isAnnotationActive && isAttachmentSvg && showSvgCodeView ? (
                           <div
-                            className={`relative w-full h-full overflow-auto rounded-lg ${isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg'}`}
+                            className="notebook-source-paper paper-texture notebook-lines sketch-shape-4 relative w-full h-full overflow-auto"
                             style={{
                               overscrollBehavior: 'contain',
                               touchAction: 'pan-x pan-y',
                               WebkitOverflowScrolling: 'touch' as any,
                             }}
                           >
-                            <pre className={`p-3 text-[11px] leading-5 font-mono whitespace-pre w-max min-w-full ${isUser ? 'text-user-attachment-inline-text' : 'text-ai-file-text'}`}>
+                            <pre className="notebook-source-pre p-3 text-[11px] leading-5 whitespace-pre w-max min-w-full">
                               {svgSourceCode || 'SVG source unavailable for this attachment.'}
                             </pre>
                           </div>

@@ -187,6 +187,35 @@
   letter-spacing: 0;
 }
 
+.notebook-source-paper {
+  position: relative;
+  background-color: hsl(var(--paper-surface) / 0.86);
+  color: hsl(var(--deep-ink));
+}
+
+.notebook-source-paper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: clamp(1.35rem, 6%, 2.4rem);
+  z-index: 0;
+  pointer-events: none;
+  border-left: 1px solid hsl(var(--correction-pen) / 0.12);
+}
+
+.notebook-source-paper > * {
+  position: relative;
+  z-index: 1;
+}
+
+.notebook-source-pre {
+  color: hsl(var(--deep-ink));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  letter-spacing: 0;
+  tab-size: 2;
+}
+
 /* ============================================================
    TAPE STRIP SYSTEM
    Individual tape strips that hold messages to the page.
