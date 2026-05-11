@@ -37,23 +37,95 @@ interface Point {
   y: number;
 }
 
-const computeLinePoints = (series: TabularChartSeries, width: number, height: number): Point[] => {
+interface ChartLayout {
+  leftPad: number;
+  rightPad: number;
+  topPad: number;
+  bottomPad: number;
+}
+
+const getChartLayout = (compact: boolean): ChartLayout => (
+  compact
+    ? { leftPad: 34, rightPad: 16, topPad: 28, bottomPad: 28 }
+    : { leftPad: 42, rightPad: 22, topPad: 34, bottomPad: 34 }
+);
+
+const computeLinePoints = (series: TabularChartSeries, width: number, height: number, layout: ChartLayout): Point[] => {
   if (!series.values.length) return [];
   const min = Math.min(...series.values);
   const max = Math.max(...series.values);
   const range = max - min || 1;
-  const leftPad = 14;
-  const rightPad = 10;
-  const topPad = 10;
-  const bottomPad = 14;
-  const drawableW = Math.max(1, width - leftPad - rightPad);
-  const drawableH = Math.max(1, height - topPad - bottomPad);
+  const drawableW = Math.max(1, width - layout.leftPad - layout.rightPad);
+  const drawableH = Math.max(1, height - layout.topPad - layout.bottomPad);
 
   return series.values.map((value, index) => {
-    const x = leftPad + (series.values.length === 1 ? drawableW / 2 : (index / (series.values.length - 1)) * drawableW);
-    const y = topPad + (1 - (value - min) / range) * drawableH;
+    const x = layout.leftPad + (series.values.length === 1 ? drawableW / 2 : (index / (series.values.length - 1)) * drawableW);
+    const y = layout.topPad + (1 - (value - min) / range) * drawableH;
     return { x, y };
   });
+};
+
+const hashString = (value: string): number => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) - hash) + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
+const jitter = (seed: number, index: number, axis: number, amount: number): number => {
+  const wave = Math.sin(seed * 0.017 + index * 1.713 + axis * 2.491);
+  const counterWave = Math.cos(seed * 0.011 + index * 0.937 + axis * 4.113);
+  return (wave * 0.68 + counterWave * 0.32) * amount;
+};
+
+const jitterPoints = (points: Point[], seed: number, amount: number): Point[] => (
+  points.map((point, index) => ({
+    x: point.x + jitter(seed, index, 0, amount),
+    y: point.y + jitter(seed, index, 1, amount),
+  }))
+);
+
+const buildLinePath = (points: Point[]): string => {
+  if (points.length === 0) return '';
+  return `M ${points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' L ')}`;
+};
+
+const buildClosedAreaPath = (points: Point[], baselineY: number): string => {
+  if (points.length < 2) return '';
+  const line = buildLinePath(points);
+  const first = points[0];
+  const last = points[points.length - 1];
+  return `${line} L ${last.x.toFixed(2)},${baselineY.toFixed(2)} L ${first.x.toFixed(2)},${baselineY.toFixed(2)} Z`;
+};
+
+const buildSketchLinePath = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  seed: number,
+  bow = 2.5
+): string => {
+  const midX = (x1 + x2) / 2 + jitter(seed, 0, 0, bow);
+  const midY = (y1 + y2) / 2 + jitter(seed, 0, 1, bow);
+  return `M ${x1.toFixed(2)},${y1.toFixed(2)} Q ${midX.toFixed(2)},${midY.toFixed(2)} ${x2.toFixed(2)},${y2.toFixed(2)}`;
+};
+
+const formatChartNumber = (value: number): string => {
+  const abs = Math.abs(value);
+  const options: Intl.NumberFormatOptions = abs >= 10_000
+    ? { notation: 'compact', maximumFractionDigits: 1 }
+    : { maximumFractionDigits: abs < 10 && !Number.isInteger(value) ? 2 : 1 };
+  return value.toLocaleString(undefined, options);
+};
+
+const truncateChartLabel = (value: string | undefined, maxLength: number): string => {
+  const normalized = (value || '').trim();
+  if (!normalized) return '';
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, Math.max(1, maxLength - 1)).trimEnd()}...`;
 };
 
 const TabularInteractionDeckToggle: React.FC<TabularInteractionDeckToggleProps> = ({
@@ -125,21 +197,19 @@ const TabularInteractionDeckToggle: React.FC<TabularInteractionDeckToggleProps> 
 const TabularPreview: React.FC<TabularPreviewProps> = ({
   sheets,
   textColorClass,
-  subtleTextClass,
   compact = false,
   title,
   standalone = false,
   bottomInset = 0,
-  surfaceClassName = 'bg-paper-surface/90',
-  panelSurfaceClassName = 'bg-paper-stripe/55',
 }) => {
   const [activeSheetIndex, setActiveSheetIndex] = useState(0);
   const [isPanEnabled, setIsPanEnabled] = useState(false);
 
   const maxRows = compact ? SAMPLE_ROW_LIMIT_COMPACT : SAMPLE_ROW_LIMIT_FULL;
   const maxCols = compact ? SAMPLE_COL_LIMIT_COMPACT : SAMPLE_COL_LIMIT_FULL;
-  const chartHeight = compact ? 76 : 132;
-  const chartWidth = compact ? 220 : 320;
+  const chartHeight = compact ? 126 : 176;
+  const chartWidth = compact ? 260 : 360;
+  const chartLayout = getChartLayout(compact);
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
 
   const normalizedSheets = useMemo(() => (
@@ -170,9 +240,14 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
   };
   const xScrollClass = isPanEnabled ? 'overflow-x-auto overflow-y-hidden' : 'overflow-hidden';
   const tableScrollClass = isPanEnabled ? 'overflow-auto' : 'overflow-hidden';
+  const useSingleFullChart = !compact && chartList.length === 1;
+  const paperTextClass = 'text-deep-ink';
+  const paperSubtleTextClass = 'text-sketch-line';
+  const paperSurfaceClassName = 'bg-paper-surface/85';
+  const paperPanelSurfaceClassName = 'bg-paper-stripe/35';
   const shellClass = standalone
-    ? `mt-2 w-full max-w-[560px] rounded-2xl border border-sketch-line/50 ${surfaceClassName} paper-texture notebook-lines msg-depth isolate overflow-hidden ${textColorClass}`
-    : `mt-2 rounded-xl border border-sketch-line/35 ${surfaceClassName} paper-texture notebook-lines overflow-hidden ${textColorClass}`;
+    ? `mt-2 mx-auto w-full max-w-[560px] overflow-hidden ${textColorClass}`
+    : `mt-2 w-full overflow-hidden ${textColorClass}`;
   const contentPaddingStyle = effectiveBottomInset > 0
     ? { paddingBottom: `calc(0.75rem + ${effectiveBottomInset}px)` }
     : undefined;
@@ -180,28 +255,28 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
   return (
     <div className={compact ? 'mt-2 space-y-2' : shellClass}>
       {!compact && (
-        <div className={`relative z-10 flex items-center justify-between gap-3 px-3 py-2 border-b border-sketch-line/25 ${panelSurfaceClassName}`}>
+        <div className="relative z-10 flex items-center justify-between gap-3 px-1 py-1.5">
           <div className="min-w-0">
-            <p className={`text-[11px] font-semibold uppercase tracking-wide truncate ${textColorClass}`}>
+            <p className={`truncate font-architect text-[14px] font-semibold ${paperTextClass}`}>
               {title || activeSheet.name || 'Chart data'}
             </p>
-            <p className={`text-[10px] truncate ${subtleTextClass}`}>
+            <p className={`truncate text-[11px] ${paperSubtleTextClass}`}>
               {activeSheet.rows.length.toLocaleString()} rows
               {chartList.length > 0 ? ` / ${chartList.length} chart ${chartList.length === 1 ? 'series' : 'series'}` : ''}
             </p>
           </div>
           <TabularInteractionDeckToggle
             isPanEnabled={isPanEnabled}
-            textColorClass={textColorClass}
-            subtleTextClass={subtleTextClass}
-            surfaceClassName={surfaceClassName}
-            panelSurfaceClassName={panelSurfaceClassName}
+            textColorClass={paperTextClass}
+            subtleTextClass={paperSubtleTextClass}
+            surfaceClassName={paperSurfaceClassName}
+            panelSurfaceClassName={paperPanelSurfaceClassName}
             onToggle={() => setIsPanEnabled((prev) => !prev)}
           />
         </div>
       )}
 
-      <div className={compact ? 'space-y-2' : 'relative z-10 space-y-3 p-3'} style={contentPaddingStyle}>
+      <div className={compact ? 'space-y-2' : 'relative z-10 space-y-3 px-1 pb-1 pt-0'} style={contentPaddingStyle}>
         {!compact && normalizedSheets.length > 1 && (
           <div className="overflow-x-auto pb-1" style={scrollStyle}>
             <div className="inline-flex min-w-max gap-1.5">
@@ -212,8 +287,8 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
                   onClick={() => setActiveSheetIndex(index)}
                   className={`sketch-shape-8 border px-2 py-1 text-[10px] transition-colors ${
                     index === safeIndex
-                      ? `border-pencil-stroke/35 ${surfaceClassName} ${textColorClass}`
-                      : `border-sketch-line/30 ${panelSurfaceClassName} ${subtleTextClass}`
+                      ? `border-pencil-stroke/35 ${paperSurfaceClassName} ${paperTextClass}`
+                      : `border-sketch-line/30 ${paperPanelSurfaceClassName} ${paperSubtleTextClass}`
                   }`}
                   title={sheet.name}
                 >
@@ -225,75 +300,185 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
         )}
 
         {chartList.length > 0 && (
-          <section className={compact ? `rounded border border-sketch-line/25 ${panelSurfaceClassName} p-2` : `sketchy-border-thin sketch-shape-4 ${panelSurfaceClassName} p-2 shadow-sm`}>
-            <div className={`mb-2 flex items-center justify-between text-[10px] ${subtleTextClass}`}>
-              <span>{compact ? 'Chart preview' : 'Charts'}</span>
-              {!compact && <span>{chartList.length} series</span>}
-            </div>
+          <section className={`notebook-chart-paper paper-texture notebook-lines isolate overflow-hidden ${compact ? 'sketch-shape-4 px-2 py-2' : 'sketch-shape-4 px-2 py-2.5'}`}>
             <div className={xScrollClass} style={scrollStyle}>
-              <div className={`flex gap-3 ${compact ? '' : 'min-w-max pr-1'}`}>
+              <div className={`flex gap-4 ${compact || useSingleFullChart ? 'w-full' : 'min-w-max pr-1'}`}>
                 {chartList.map((chart, chartIndex) => {
-                  const points = computeLinePoints(chart, chartWidth, chartHeight);
+                  const points = computeLinePoints(chart, chartWidth, chartHeight, chartLayout);
                   if (points.length < 2) return null;
-                  const path = `M ${points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' L ')}`;
+                  const seed = hashString(`${chart.label || ''}|${chart.sourceColumnIndex ?? chartIndex}|${chart.values.join('|')}`);
+                  const primaryPath = buildLinePath(jitterPoints(points, seed, compact ? 0.55 : 0.8));
+                  const secondaryPath = buildLinePath(jitterPoints(points, seed + 37, compact ? 0.35 : 0.6));
+                  const areaPath = buildClosedAreaPath(points, chartHeight - chartLayout.bottomPad);
                   const min = Math.min(...chart.values);
                   const max = Math.max(...chart.values);
+                  const minLabel = formatChartNumber(min);
+                  const maxLabel = formatChartNumber(max);
+                  const chartLabel = chart.label || title || `Series ${chartIndex + 1}`;
+                  const titleLabel = truncateChartLabel(chartLabel, compact ? 22 : 30);
+                  const startLabel = truncateChartLabel(chart.labels[0] || 'start', compact ? 14 : 20);
+                  const endLabel = truncateChartLabel(chart.labels[chart.labels.length - 1] || 'end', compact ? 14 : 20);
+                  const pointStep = points.length > 24 ? Math.ceil(points.length / 24) : 1;
+                  const visiblePoints = points
+                    .map((point, index) => ({ point, index }))
+                    .filter(({ index }) => index === 0 || index === points.length - 1 || index % pointStep === 0);
+                  const gridYs = [0.25, 0.5, 0.75].map((ratio) => (
+                    chartLayout.topPad + (chartHeight - chartLayout.topPad - chartLayout.bottomPad) * ratio
+                  ));
 
                   return (
                     <figure
                       key={`${chart.label || 'series'}-${chart.sourceColumnIndex ?? chartIndex}`}
-                      className={`${compact ? 'w-full' : 'w-[18rem] shrink-0'} sketch-shape-5 border border-sketch-line/30 ${surfaceClassName} p-2 shadow-sm`}
+                      className={`${compact || useSingleFullChart ? 'w-full' : 'w-[21.5rem] shrink-0'} notebook-chart-figure`}
                     >
-                      <figcaption className={`mb-1 flex items-center justify-between gap-2 text-[10px] ${subtleTextClass}`}>
-                        <span className={`truncate ${compact ? 'max-w-[58%]' : 'max-w-[64%]'} ${textColorClass}`}>
-                          {chart.label || `Series ${chartIndex + 1}`}
-                        </span>
-                        <span className="shrink-0">min {min.toLocaleString()} / max {max.toLocaleString()}</span>
-                      </figcaption>
                       <svg
                         viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                        className="block h-auto w-full"
+                        className="notebook-chart-svg block h-auto w-full text-pencil-stroke"
                         role="img"
-                        aria-label={chart.label || `Chart series ${chartIndex + 1}`}
+                        aria-label={`${chartLabel}: minimum ${minLabel}, maximum ${maxLabel}`}
                       >
                         <path
-                          d={`M 14 ${chartHeight - 14} H ${chartWidth - 10} M 14 10 V ${chartHeight - 14}`}
+                          d={areaPath}
+                          className="text-watercolor-wash"
+                          fill="currentColor"
+                          fillOpacity="0.07"
+                        />
+                        {gridYs.map((gridY, gridIndex) => (
+                          <path
+                            key={gridIndex}
+                            d={buildSketchLinePath(
+                              chartLayout.leftPad,
+                              gridY,
+                              chartWidth - chartLayout.rightPad,
+                              gridY + jitter(seed, gridIndex, 2, 0.7),
+                              seed + gridIndex + 11,
+                              1.1
+                            )}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeOpacity="0.2"
+                            strokeWidth="0.9"
+                            strokeDasharray="4 7"
+                            strokeLinecap="round"
+                            className="text-sketch-line"
+                          />
+                        ))}
+                        <path
+                          d={buildSketchLinePath(
+                            chartLayout.leftPad,
+                            chartHeight - chartLayout.bottomPad,
+                            chartWidth - chartLayout.rightPad,
+                            chartHeight - chartLayout.bottomPad,
+                            seed + 3
+                          )}
                           fill="none"
                           stroke="currentColor"
-                          strokeOpacity="0.26"
-                          strokeWidth="1.3"
+                          strokeOpacity="0.52"
+                          strokeWidth="1.35"
                           strokeLinecap="round"
-                          className={subtleTextClass}
+                          className="text-sketch-line"
                         />
                         <path
-                          d={`M 14 ${Math.round(chartHeight * 0.36)} C ${Math.round(chartWidth * 0.3)} ${Math.round(chartHeight * 0.33)}, ${Math.round(chartWidth * 0.62)} ${Math.round(chartHeight * 0.38)}, ${chartWidth - 10} ${Math.round(chartHeight * 0.34)}`}
+                          d={buildSketchLinePath(
+                            chartLayout.leftPad,
+                            chartLayout.topPad,
+                            chartLayout.leftPad,
+                            chartHeight - chartLayout.bottomPad,
+                            seed + 7
+                          )}
                           fill="none"
                           stroke="currentColor"
-                          strokeOpacity="0.1"
-                          strokeWidth="1.1"
-                          strokeDasharray="4 6"
+                          strokeOpacity="0.48"
+                          strokeWidth="1.25"
                           strokeLinecap="round"
-                          className={subtleTextClass}
+                          className="text-sketch-line"
                         />
                         <path
-                          d={path}
+                          d={secondaryPath}
                           fill="none"
                           stroke="currentColor"
-                          strokeWidth="2.3"
+                          strokeOpacity="0.28"
+                          strokeWidth={compact ? 2.4 : 3.2}
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          className={textColorClass}
+                          className="text-pencil-emphasis"
                         />
-                        {points.map((point, i) => (
-                          <circle key={i} cx={point.x} cy={point.y} r="2.35" className={textColorClass} fill="currentColor" />
+                        <path
+                          d={primaryPath}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeOpacity="0.92"
+                          strokeWidth={compact ? 2 : 2.45}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-pencil-stroke"
+                        />
+                        {visiblePoints.map(({ point, index }) => (
+                          <g key={index} transform={`translate(${point.x.toFixed(2)} ${point.y.toFixed(2)})`}>
+                            <circle r={compact ? 2.8 : 3.2} className="text-pencil-emphasis" fill="currentColor" fillOpacity="0.16" />
+                            <circle r={compact ? 1.65 : 1.9} className="text-pencil-stroke" fill="currentColor" fillOpacity="0.76" />
+                          </g>
                         ))}
+                        <text
+                          x={chartLayout.leftPad}
+                          y={compact ? 15 : 18}
+                          className="text-deep-ink"
+                          fill="currentColor"
+                          fontSize={compact ? 11 : 13}
+                          fontWeight={700}
+                        >
+                          {titleLabel}
+                        </text>
+                        <text
+                          x={chartWidth - chartLayout.rightPad}
+                          y={compact ? 15 : 18}
+                          className="text-sketch-line"
+                          fill="currentColor"
+                          fontSize={compact ? 9 : 10.5}
+                          textAnchor="end"
+                        >
+                          {minLabel} to {maxLabel}
+                        </text>
+                        <text
+                          x={chartLayout.leftPad - 5}
+                          y={chartLayout.topPad + 4}
+                          className="text-sketch-line"
+                          fill="currentColor"
+                          fontSize={compact ? 8.5 : 9.5}
+                          textAnchor="end"
+                        >
+                          {maxLabel}
+                        </text>
+                        <text
+                          x={chartLayout.leftPad - 5}
+                          y={chartHeight - chartLayout.bottomPad + 4}
+                          className="text-sketch-line"
+                          fill="currentColor"
+                          fontSize={compact ? 8.5 : 9.5}
+                          textAnchor="end"
+                        >
+                          {minLabel}
+                        </text>
+                        <text
+                          x={chartLayout.leftPad}
+                          y={chartHeight - 7}
+                          className="text-sketch-line"
+                          fill="currentColor"
+                          fontSize={compact ? 8.5 : 10}
+                        >
+                          {startLabel}
+                        </text>
+                        <text
+                          x={chartWidth - chartLayout.rightPad}
+                          y={chartHeight - 7}
+                          className="text-sketch-line"
+                          fill="currentColor"
+                          fontSize={compact ? 8.5 : 10}
+                          textAnchor="end"
+                        >
+                          {endLabel}
+                        </text>
                       </svg>
-                      <div className={`mt-1 flex justify-between gap-2 text-[10px] ${subtleTextClass}`}>
-                        <span className="max-w-[48%] truncate">{chart.labels[0] || 'start'}</span>
-                        <span className="max-w-[48%] truncate text-right">
-                          {chart.labels[chart.labels.length - 1] || 'end'}
-                        </span>
-                      </div>
                     </figure>
                   );
                 })}
@@ -303,17 +488,17 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
         )}
 
         {sampleRows.length > 0 && (
-          <section className={compact ? `rounded border border-sketch-line/25 ${panelSurfaceClassName}` : `sketchy-border-thin sketch-shape-1 ${panelSurfaceClassName} shadow-sm`}>
+          <section className={`notebook-chart-table ${compact ? 'px-1' : 'px-1 pb-1'}`}>
             <div className={`${tableScrollClass} max-h-80`} style={scrollStyle}>
-              <table className="min-w-full border-collapse text-[10px]">
+              <table className="min-w-full border-separate border-spacing-0 text-[11px]">
                 <tbody>
                   {sampleRows.map((row, rowIndex) => (
-                    <tr key={rowIndex} className={rowIndex === 0 ? `${textColorClass}` : `${subtleTextClass}`}>
+                    <tr key={rowIndex} className={rowIndex === 0 ? paperTextClass : paperSubtleTextClass}>
                       {row.map((cell, cellIndex) => (
                         <td
                           key={cellIndex}
                           className={`max-w-[12rem] whitespace-nowrap border-b border-sketch-line/15 px-2 py-1.5 truncate ${
-                            rowIndex === 0 ? `${surfaceClassName} font-semibold` : ''
+                            rowIndex === 0 ? 'font-semibold text-deep-ink' : cellIndex === 0 ? 'text-deep-ink/85' : ''
                           }`}
                         >
                           {cell || '-'}
@@ -328,7 +513,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
         )}
 
         {!compact && activeSheet.rows.length > sampleRows.length && (
-          <p className={`text-[10px] ${subtleTextClass}`}>
+          <p className={`px-1 text-[10px] ${paperSubtleTextClass}`}>
             Showing {sampleRows.length} of {activeSheet.rows.length} rows in table preview.
           </p>
         )}

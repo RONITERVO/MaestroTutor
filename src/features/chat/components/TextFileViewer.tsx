@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { decodeTextFromDataUrl } from '../utils/fileAttachments';
 import TabularPreview from './TabularPreview';
-import { deriveChartSeriesListFromRows, deriveChartSheetFromJsonText, isJsonChartFile, parseDelimitedText } from '../utils/tabularPreview';
+import { deriveTabularSheetsFromTextAttachment } from '../utils/tabularPreview';
 import MiniGameViewer from './MiniGameViewer';
 import MiniGameErrorBoundary from './MiniGameErrorBoundary';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
@@ -30,24 +30,6 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
 }) => {
   const { t } = useAppTranslations();
   const decodedText = useMemo(() => decodeTextFromDataUrl(src), [src]);
-  const fileExt = useMemo(() => {
-    const name = (fileName || '').trim().toLowerCase();
-    const dotIndex = name.lastIndexOf('.');
-    if (dotIndex < 0 || dotIndex >= name.length - 1) return '';
-    return name.slice(dotIndex + 1);
-  }, [fileName]);
-  const isTabularTextFile = useMemo(() => {
-    const normalizedMime = (mimeType || '').trim().toLowerCase();
-    return (
-      normalizedMime.includes('csv') ||
-      fileExt === 'csv' ||
-      fileExt === 'tsv'
-    );
-  }, [mimeType, fileExt]);
-  const isJsonChartTextFile = useMemo(
-    () => isJsonChartFile(mimeType, fileName),
-    [fileName, mimeType]
-  );
   const shouldRenderMiniGame = useMemo(() => {
     if (compact || !decodedText) return false;
     return isRunnableMiniGameAttachment({
@@ -56,24 +38,10 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
       mimeType,
     });
   }, [compact, decodedText, fileName, mimeType]);
-  const tabularRows = useMemo(() => {
-    if (!decodedText || !isTabularTextFile) return [];
-    return parseDelimitedText(decodedText, fileExt === 'tsv' ? '\t' : undefined);
-  }, [decodedText, isTabularTextFile, fileExt]);
-  const jsonChartSheet = useMemo(() => {
-    if (!decodedText || !isJsonChartTextFile) return null;
-    return deriveChartSheetFromJsonText(decodedText, fileName || 'Chart data');
-  }, [decodedText, fileName, isJsonChartTextFile]);
-  const chartSeriesList = useMemo(() => deriveChartSeriesListFromRows(tabularRows), [tabularRows]);
-  const tabularSheets = useMemo(() => {
-    if (jsonChartSheet) return [jsonChartSheet];
-    if (!isTabularTextFile || tabularRows.length <= 1) return [];
-    return [{
-      name: fileName || 'Sheet 1',
-      rows: tabularRows,
-      chartSeriesList,
-    }];
-  }, [jsonChartSheet, isTabularTextFile, tabularRows, chartSeriesList, fileName]);
+  const tabularSheets = useMemo(
+    () => deriveTabularSheetsFromTextAttachment(decodedText, mimeType, fileName),
+    [decodedText, fileName, mimeType]
+  );
   const previewSnippet = useMemo(() => {
     if (!decodedText) return '';
     if (decodedText.length <= 3200) return decodedText;
@@ -132,38 +100,41 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   }
 
   if (compact) {
+    if (tabularSheets.length > 0) {
+      return (
+        <div className="w-full max-w-full min-w-0 overflow-hidden" style={{ contain: 'inline-size' }}>
+          <TabularPreview
+            sheets={tabularSheets}
+            textColorClass={textColor}
+            subtleTextClass={subtleText}
+            compact
+            title={metaLabel}
+            surfaceClassName={containerBg}
+            panelSurfaceClassName={headerBg}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className={`w-full max-w-full min-w-0 rounded-lg overflow-hidden ${containerBg}`} style={{ contain: 'inline-size' }}>
         <div className={`px-2 py-1 text-[10px] font-mono truncate ${headerBg} ${textColor}`}>
           {metaLabel}
         </div>
-        {tabularSheets.length > 0 ? (
-          <div className="px-2 pb-2">
-            <TabularPreview
-              sheets={tabularSheets}
-              textColorClass={textColor}
-              subtleTextClass={subtleText}
-              compact
-              surfaceClassName={containerBg}
-              panelSurfaceClassName={headerBg}
-            />
-          </div>
-        ) : (
-          <div
-            className="w-full max-w-full min-w-0 overflow-x-auto overflow-y-scroll"
-            style={{
-              maxHeight: '5.25rem',
-              scrollbarGutter: 'stable',
-              overscrollBehavior: 'contain',
-              touchAction: 'pan-y',
-              WebkitOverflowScrolling: 'touch' as any,
-            }}
-          >
-            <pre className={`p-2 text-[10px] leading-4 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
-              {decodedText}
-            </pre>
-          </div>
-        )}
+        <div
+          className="w-full max-w-full min-w-0 overflow-x-auto overflow-y-scroll"
+          style={{
+            maxHeight: '5.25rem',
+            scrollbarGutter: 'stable',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch' as any,
+          }}
+        >
+          <pre className={`p-2 text-[10px] leading-4 font-mono whitespace-pre w-max min-w-full ${textColor}`}>
+            {decodedText}
+          </pre>
+        </div>
       </div>
     );
   }

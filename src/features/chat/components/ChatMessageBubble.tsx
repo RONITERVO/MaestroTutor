@@ -22,6 +22,7 @@ import TextFileViewer from './TextFileViewer';
 import OfficeFileViewer from './OfficeFileViewer';
 import { decodeTextFromDataUrl, isOfficeAttachment, isTextLikeAttachment } from '../utils/fileAttachments';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
+import { textAttachmentHasChartSeries } from '../utils/tabularPreview';
 import { selectPrimaryUploadedAttachmentVariant } from '../utils/uploadedAttachmentVariants';
 
 interface ChatMessageBubbleProps {
@@ -671,6 +672,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       mimeType: displayMime,
     });
   }, [displayMime, message.attachmentName, textAttachmentSourceCode]);
+  const isChartTextAttachment = useMemo(() => {
+    if (!textAttachmentSourceCode || isMiniGameAttachment) return false;
+    return textAttachmentHasChartSeries(textAttachmentSourceCode, displayMime, message.attachmentName);
+  }, [displayMime, isMiniGameAttachment, message.attachmentName, textAttachmentSourceCode]);
 
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
@@ -704,7 +709,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const shouldOverlayTextOnAttachment = applyFocusedImageStyles && !usesAudioAttachmentShell && !isVideoSuccessfullyDisplayed;
   const shouldUseAttachmentTranscriptShell = shouldOverlayTextOnAttachment && hasVisibleAttachment && !!hasTextContent;
   const attachmentTranscriptShellBottomInset = shouldUseAttachmentTranscriptShell ? Math.max(0, attachmentTranscriptShellHeight + 8) : 0;
-  const usesDetachedTranscriptShell = shouldUseAttachmentTranscriptShell && (isMiniGameAttachment || isAttachmentSvg);
+  const usesDetachedTranscriptShell = shouldUseAttachmentTranscriptShell && (isMiniGameAttachment || isAttachmentSvg || isChartTextAttachment);
   const detachedAttachmentTranscriptShellHeight = usesDetachedTranscriptShell && attachmentTranscriptShellBottomInset > 0
     ? Math.max(92, Math.min(Math.round(attachmentTranscriptShellBottomInset * 0.45) + 32, 122))
     : 0;
@@ -732,7 +737,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     : 'relative z-10 mt-1';
   const userAttachmentTextMode: 'plain' | 'inline' | 'audio' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
     ? (shouldOverlayTextOnAttachment
-        ? (isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : 'overlay')
+        ? (isMiniGameAttachment ? 'game' : (isAttachmentSvg || isChartTextAttachment) ? 'svg' : 'overlay')
         : usesAudioAttachmentShell
           ? 'audio'
           : 'inline')
@@ -782,7 +787,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       ? 'bg-user-attachment-inline-text/10'
       : 'bg-user-msg-text/10';
   const assistantAttachmentTextMode: 'plain' | 'inline' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
-    ? (shouldOverlayTextOnAttachment ? (isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : 'overlay') : 'inline')
+    ? (shouldOverlayTextOnAttachment ? (isMiniGameAttachment ? 'game' : (isAttachmentSvg || isChartTextAttachment) ? 'svg' : 'overlay') : 'inline')
     : 'plain';
   const assistantTargetTextClass = assistantAttachmentTextMode === 'overlay'
     ? 'text-attachment-overlay-target-text'
@@ -1554,7 +1559,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                speakNativeLang={speakNativeLang}
                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                messageId={message.id}
-               colorMode={isMiniGameAttachment ? 'game' : isAttachmentSvg ? 'svg' : usesAudioAttachmentShell ? 'audio' : 'overlay'}
+               colorMode={isMiniGameAttachment ? 'game' : (isAttachmentSvg || isChartTextAttachment) ? 'svg' : usesAudioAttachmentShell ? 'audio' : 'overlay'}
                        />
                    </>
                ) : (
