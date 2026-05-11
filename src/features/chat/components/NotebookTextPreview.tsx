@@ -1,8 +1,9 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import AttachmentInteractionToggle from './AttachmentInteractionToggle';
+import useChatResettingAttachmentMode from './useChatResettingAttachmentMode';
 
 interface NotebookTextPreviewProps {
   title: string;
@@ -23,7 +24,11 @@ const NotebookTextPreview: React.FC<NotebookTextPreviewProps> = React.memo(({
   wrapText = false,
   footer = null,
 }) => {
-  const [isAttachmentScrollEnabled, setIsAttachmentScrollEnabled] = useState(false);
+  const {
+    rootRef,
+    isAttachmentModeEnabled: isAttachmentScrollEnabled,
+    setIsAttachmentModeEnabled: setIsAttachmentScrollEnabled,
+  } = useChatResettingAttachmentMode<HTMLDivElement>();
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
 
   useEffect(() => {
@@ -46,10 +51,14 @@ const NotebookTextPreview: React.FC<NotebookTextPreviewProps> = React.memo(({
   const compactScrollClass = compact ? 'overflow-x-auto overflow-y-auto' : '';
   const textLayoutClass = wrapText ? 'whitespace-pre-wrap break-words' : 'whitespace-pre w-max min-w-full';
   const textSizeClass = compact ? 'text-[11px] leading-4' : 'text-[12px] leading-5';
+  const shellClass = compact
+    ? 'notebook-attachment-paper paper-texture notebook-lines sketch-shape-4'
+    : 'notebook-native-paper';
 
   return (
     <div
-      className={`notebook-attachment-paper paper-texture notebook-lines sketch-shape-4 w-full max-w-full min-w-0 overflow-hidden ${compact ? 'px-2 py-1.5' : 'px-3 py-2'}`}
+      ref={rootRef}
+      className={`${shellClass} w-full max-w-full min-w-0 overflow-hidden ${compact ? 'px-2 py-1.5' : 'px-3 py-2'}`}
       style={compact ? { contain: 'inline-size' } : undefined}
     >
       <div className={`flex items-start justify-between gap-3 ${compact ? '' : 'px-0.5'}`}>

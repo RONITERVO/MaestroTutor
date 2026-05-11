@@ -6,6 +6,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import AttachmentInteractionToggle from './AttachmentInteractionToggle';
+import useChatResettingAttachmentMode from './useChatResettingAttachmentMode';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
@@ -81,7 +82,11 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visiblePage, setVisiblePage] = useState(1);
-  const [isPdfScrollEnabled, setIsPdfScrollEnabled] = useState(false);
+  const {
+    rootRef,
+    isAttachmentModeEnabled: isPdfScrollEnabled,
+    setIsAttachmentModeEnabled: setIsPdfScrollEnabled,
+  } = useChatResettingAttachmentMode<HTMLDivElement>();
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefsMap = useRef<Map<number, HTMLImageElement>>(new Map());
@@ -172,7 +177,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
     }
   }, []);
 
-  const containerBg = 'notebook-attachment-paper paper-texture notebook-lines sketch-shape-4';
+  const containerBg = 'notebook-native-paper sketch-shape-4';
   const indicatorBg = 'bg-black/60 text-white';
   const errorTextColor = 'text-sketch-line';
   const iconColor = 'text-deep-ink';
@@ -222,7 +227,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   }
 
   return (
-    <div className="relative w-full">
+    <div ref={rootRef} className="relative w-full">
       <div
         ref={scrollContainerRef}
         className={`rounded-lg ${containerBg}`}

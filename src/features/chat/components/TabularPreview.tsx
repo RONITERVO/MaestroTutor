@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useMemo, useState } from 'react';
 import AttachmentInteractionToggle from './AttachmentInteractionToggle';
+import useChatResettingAttachmentMode from './useChatResettingAttachmentMode';
 import type { TabularChartSeries, TabularSheetPreview } from '../utils/tabularPreview';
 
 interface TabularPreviewProps {
@@ -128,7 +129,11 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
   bottomInset = 0,
 }) => {
   const [activeSheetIndex, setActiveSheetIndex] = useState(0);
-  const [isPanEnabled, setIsPanEnabled] = useState(false);
+  const {
+    rootRef,
+    isAttachmentModeEnabled: isPanEnabled,
+    setIsAttachmentModeEnabled: setIsPanEnabled,
+  } = useChatResettingAttachmentMode<HTMLDivElement>();
 
   const maxRows = compact ? SAMPLE_ROW_LIMIT_COMPACT : SAMPLE_ROW_LIMIT_FULL;
   const maxCols = compact ? SAMPLE_COL_LIMIT_COMPACT : SAMPLE_COL_LIMIT_FULL;
@@ -163,6 +168,12 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
     touchAction: isPanEnabled ? 'pan-x pan-y' : 'pan-y',
     WebkitOverflowScrolling: 'touch' as any,
   };
+  const panEventHandlers = isPanEnabled
+    ? {
+        onWheel: (event: React.WheelEvent) => event.stopPropagation(),
+        onTouchMove: (event: React.TouchEvent) => event.stopPropagation(),
+      }
+    : undefined;
   const xScrollClass = isPanEnabled ? 'overflow-x-auto overflow-y-hidden' : 'overflow-hidden';
   const tableScrollClass = isPanEnabled ? 'overflow-auto' : 'overflow-hidden';
   const useSingleFullChart = !compact && chartList.length === 1;
@@ -178,7 +189,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
     : undefined;
 
   return (
-    <div className={compact ? 'mt-2 space-y-2' : shellClass}>
+    <div ref={rootRef} className={compact ? 'mt-2 space-y-2' : shellClass}>
       {!compact && (
         <div className="relative z-10 flex items-center justify-between gap-3 px-1 py-1.5">
           <div className="min-w-0">
@@ -206,7 +217,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
 
       <div className={compact ? 'space-y-2' : 'relative z-10 space-y-3 px-1 pb-1 pt-0'} style={contentPaddingStyle}>
         {!compact && normalizedSheets.length > 1 && (
-          <div className="overflow-x-auto pb-1" style={scrollStyle}>
+          <div className="overflow-x-auto pb-1" style={scrollStyle} {...panEventHandlers}>
             <div className="inline-flex min-w-max gap-1.5">
               {normalizedSheets.map((sheet, index) => (
                 <button
@@ -229,7 +240,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
 
         {chartList.length > 0 && (
           <section className={`notebook-chart-paper paper-texture notebook-lines isolate overflow-hidden ${compact ? 'sketch-shape-4 px-2 py-2' : 'sketch-shape-4 px-2 py-2.5'}`}>
-            <div className={xScrollClass} style={scrollStyle}>
+            <div className={xScrollClass} style={scrollStyle} {...panEventHandlers}>
               <div className={`flex gap-4 ${compact || useSingleFullChart ? 'w-full' : 'min-w-max pr-1'}`}>
                 {chartList.map((chart, chartIndex) => {
                   const points = computeLinePoints(chart, chartWidth, chartHeight, chartLayout);
@@ -417,7 +428,7 @@ const TabularPreview: React.FC<TabularPreviewProps> = ({
 
         {sampleRows.length > 0 && (
           <section className={`notebook-chart-table ${compact ? 'px-1' : 'px-1 pb-1'}`}>
-            <div className={`${tableScrollClass} max-h-80`} style={scrollStyle}>
+            <div className={`${tableScrollClass} max-h-80`} style={scrollStyle} {...panEventHandlers}>
               <table className="min-w-full border-separate border-spacing-0 text-[11px]">
                 <tbody>
                   {sampleRows.map((row, rowIndex) => (

@@ -2,7 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IconEnableGameGestures, IconPaperclip, IconReturnToChatScroll, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
+import { IconEnableGameGestures, IconPaperclip, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
+import AttachmentInteractionToggle from './AttachmentInteractionToggle';
 import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 
@@ -134,76 +135,25 @@ const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps
   padBtnBg,
   onSelectMode,
 }) => {
-  const modes = [
-    {
-      enabled: false,
-      label: returnToChatScrollLabel,
-      Icon: IconReturnToChatScroll,
-      shapeClass: 'sketch-shape-2',
-    },
-    {
-      enabled: true,
-      label: gameGesturesLabel,
-      Icon: IconEnableGameGestures,
-      shapeClass: 'sketch-shape-3',
-    },
-  ];
-  const toggleTitle = gameGesturesEnabled
-    ? returnToChatScrollLabel
-    : (canUseGameGestures ? gameGesturesTitle : gameGesturesUnavailableLabel);
-
   return (
-    <div
-      className={`relative shrink-0 select-none ${compact ? 'h-10 w-10' : 'h-7 w-[90px]'}`}
-      role="group"
-      aria-label={groupLabel}
-    >
-      {modes.map(({ enabled, label, Icon, shapeClass }) => {
-        const isActive = gameGesturesEnabled === enabled;
-        const isUnavailable = enabled && !canUseGameGestures && !gameGesturesEnabled;
-        const sizeClass = compact
-          ? (isActive ? 'h-8 w-8' : 'h-7 w-7')
-          : (isActive ? 'h-6 w-[74px]' : 'h-[22px] w-[46px]');
-        const positionClass = compact
-          ? (isActive
-              ? 'left-0 top-0 z-20 -rotate-3 scale-100'
-              : 'right-0 bottom-0 z-10 rotate-6 scale-95')
-          : (isActive
-              ? 'left-0 top-0 z-20 -rotate-2 scale-100'
-              : 'right-0 bottom-0 z-10 rotate-6 scale-95');
-        const toneClass = isActive
-          ? `${containerBg} ${textColor}`
-          : `${padBtnBg} ${subtleText}`;
-        const contentClass = compact
-          ? (isActive ? 'justify-center px-1' : 'justify-end pl-0 pr-0.5')
-          : (isActive ? 'justify-start pl-2 pr-1' : 'justify-end px-1.5');
-
-        return (
-          <button
-            key={enabled ? 'gestures' : 'scroll'}
-            type="button"
-            onClick={(event) => onSelectMode(!gameGesturesEnabled, event)}
-            className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} ${lineColor} border paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 ${compact ? 'shadow-[0_10px_22px_rgba(2,6,23,0.28)] backdrop-blur-sm' : 'btn-depth'}`}
-            title={toggleTitle}
-            aria-label={toggleTitle}
-            aria-pressed={isActive}
-            disabled={isUnavailable}
-          >
-            <span
-              className={`relative z-10 flex h-full w-full items-center ${compact ? 'gap-0' : 'gap-1'} ${contentClass}`}
-              aria-hidden="true"
-            >
-              <Icon className={`${compact ? 'h-5 w-5' : 'h-3.5 w-3.5'} shrink-0`} />
-              {!compact && isActive && (
-                <span className="max-w-[42px] truncate text-[9px] font-semibold uppercase tracking-wide">
-                  {label}
-                </span>
-              )}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+    <AttachmentInteractionToggle
+      compact={compact}
+      isAttachmentModeEnabled={gameGesturesEnabled}
+      isAttachmentModeAvailable={canUseGameGestures}
+      attachmentLabel={gameGesturesLabel}
+      attachmentTitle={gameGesturesTitle}
+      attachmentUnavailableTitle={gameGesturesUnavailableLabel}
+      chatLabel={returnToChatScrollLabel}
+      chatTitle={returnToChatScrollLabel}
+      groupLabel={groupLabel}
+      AttachmentIcon={IconEnableGameGestures}
+      activeTextClassName={textColor}
+      inactiveTextClassName={subtleText}
+      activeSurfaceClassName={containerBg}
+      inactiveSurfaceClassName={padBtnBg}
+      borderClassName={lineColor}
+      onSelectMode={onSelectMode}
+    />
   );
 };
 

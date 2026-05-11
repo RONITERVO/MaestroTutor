@@ -672,6 +672,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     });
   }, [displayMime, message.attachmentName, textAttachmentSourceCode]);
   const isNotebookTextAttachment = ((isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly) && !isMiniGameAttachment) || isOfficeFileSuccessfullyDisplayed;
+  const usesPaperNativeAttachmentSurface = isNotebookTextAttachment || isPdfSuccessfullyDisplayed;
 
   const selectedLoadingAnimation = useMemo(() => {
     const source = (loadingAnimations && loadingAnimations.length > 0) ? loadingAnimations : [];
@@ -734,6 +735,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const userAttachmentTextMode: 'plain' | 'inline' | 'audio' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
     ? (shouldOverlayTextOnAttachment
         ? (isMiniGameAttachment ? 'game' : (isAttachmentSvg || isNotebookTextAttachment) ? 'svg' : 'overlay')
+        : usesPaperNativeAttachmentSurface
+          ? 'svg'
         : usesAudioAttachmentShell
           ? 'audio'
           : 'inline')
@@ -783,7 +786,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       ? 'bg-user-attachment-inline-text/10'
       : 'bg-user-msg-text/10';
   const assistantAttachmentTextMode: 'plain' | 'inline' | 'overlay' | 'svg' | 'game' = hasVisibleAttachment
-    ? (shouldOverlayTextOnAttachment ? (isMiniGameAttachment ? 'game' : (isAttachmentSvg || isNotebookTextAttachment) ? 'svg' : 'overlay') : 'inline')
+    ? (shouldOverlayTextOnAttachment
+        ? (isMiniGameAttachment ? 'game' : (isAttachmentSvg || isNotebookTextAttachment) ? 'svg' : 'overlay')
+        : usesPaperNativeAttachmentSurface
+          ? 'svg'
+          : 'inline')
     : 'plain';
   const assistantTargetTextClass = assistantAttachmentTextMode === 'overlay'
     ? 'text-attachment-overlay-target-text'
@@ -1076,11 +1083,15 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       }
   } else {
       tapeWrapperMaxWidth = "max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
-      bubbleWrapperClasses += " p-3 overflow-visible";
-      if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
-      else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
-      else if (isStatus) bubbleWrapperClasses += " msg-depth bg-status-msg-bg bg-opacity-90 text-status-msg-text";
-      else bubbleWrapperClasses += " msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin";
+      if (usesPaperNativeAttachmentSurface) {
+        bubbleWrapperClasses += " overflow-visible text-deep-ink";
+      } else {
+        bubbleWrapperClasses += " p-3 overflow-visible";
+        if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
+        else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";
+        else if (isStatus) bubbleWrapperClasses += " msg-depth bg-status-msg-bg bg-opacity-90 text-status-msg-text";
+        else bubbleWrapperClasses += " msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin";
+      }
   }
 
   const imageContainerBaseClasses = "relative rounded-lg group transition-all duration-300 ease-in-out";
@@ -1111,6 +1122,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   } else {
       if (usesAudioAttachmentShell) {
         imageContainerSizeClasses = "w-full my-2";
+        imageContainerAspectClasses = "";
+        imageContainerFlexCenteringClasses = "";
+      } else if (usesPaperNativeAttachmentSurface) {
+        imageContainerSizeClasses = "w-full max-w-[560px] mx-auto my-2";
         imageContainerAspectClasses = "";
         imageContainerFlexCenteringClasses = "";
       } else if (isScrollableFileAttachment) {

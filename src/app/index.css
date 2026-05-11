@@ -187,6 +187,27 @@
   letter-spacing: 0;
 }
 
+.notebook-native-paper {
+  position: relative;
+  background-color: transparent;
+}
+
+.notebook-native-paper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: clamp(1.25rem, 6%, 2.2rem);
+  z-index: 0;
+  pointer-events: none;
+  border-left: 1px solid hsl(var(--correction-pen) / 0.1);
+}
+
+.notebook-native-paper > * {
+  position: relative;
+  z-index: 1;
+}
+
 .notebook-source-paper {
   position: relative;
   background-color: hsl(var(--paper-surface) / 0.86);
