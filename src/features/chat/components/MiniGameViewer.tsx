@@ -43,6 +43,23 @@ interface RectLike {
   height: number;
 }
 
+interface MiniGameInteractionDeckToggleProps {
+  gameGesturesEnabled: boolean;
+  canUseGameGestures: boolean;
+  compact?: boolean;
+  groupLabel: string;
+  gameGesturesLabel: string;
+  gameGesturesTitle: string;
+  returnToChatScrollLabel: string;
+  gameGesturesUnavailableLabel: string;
+  textColor: string;
+  subtleText: string;
+  lineColor: string;
+  containerBg: string;
+  padBtnBg: string;
+  onSelectMode: (enabled: boolean, event: React.MouseEvent<HTMLButtonElement>) => void;
+}
+
 const FULL_VISIBILITY_TOLERANCE_PX = 3;
 const TAP_SLOP_PX = 9;
 
@@ -100,6 +117,94 @@ const isFullyInsideRect = (elementRect: DOMRect, rootRect: RectLike): boolean =>
   elementRect.right <= rootRect.right + FULL_VISIBILITY_TOLERANCE_PX &&
   elementRect.bottom <= rootRect.bottom + FULL_VISIBILITY_TOLERANCE_PX
 );
+
+const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps> = ({
+  gameGesturesEnabled,
+  canUseGameGestures,
+  compact = false,
+  groupLabel,
+  gameGesturesLabel,
+  gameGesturesTitle,
+  returnToChatScrollLabel,
+  gameGesturesUnavailableLabel,
+  textColor,
+  subtleText,
+  lineColor,
+  containerBg,
+  padBtnBg,
+  onSelectMode,
+}) => {
+  const modes = [
+    {
+      enabled: false,
+      label: returnToChatScrollLabel,
+      title: returnToChatScrollLabel,
+      Icon: IconReturnToChatScroll,
+      shapeClass: 'sketch-shape-2',
+    },
+    {
+      enabled: true,
+      label: gameGesturesLabel,
+      title: canUseGameGestures ? gameGesturesTitle : gameGesturesUnavailableLabel,
+      Icon: IconEnableGameGestures,
+      shapeClass: 'sketch-shape-3',
+    },
+  ];
+
+  return (
+    <div
+      className={`relative shrink-0 select-none ${compact ? 'h-10 w-10' : 'h-7 w-[90px]'}`}
+      role="group"
+      aria-label={groupLabel}
+    >
+      {modes.map(({ enabled, label, title, Icon, shapeClass }) => {
+        const isActive = gameGesturesEnabled === enabled;
+        const isUnavailable = enabled && !canUseGameGestures && !gameGesturesEnabled;
+        const sizeClass = compact
+          ? (isActive ? 'h-8 w-8' : 'h-7 w-7')
+          : (isActive ? 'h-6 w-[74px]' : 'h-[22px] w-[46px]');
+        const positionClass = compact
+          ? (isActive
+              ? 'left-0 top-0 z-20 -rotate-3 scale-100'
+              : 'right-0 bottom-0 z-10 rotate-6 scale-95')
+          : (isActive
+              ? 'left-0 top-0 z-20 -rotate-2 scale-100'
+              : 'right-0 bottom-0 z-10 rotate-6 scale-95');
+        const toneClass = isActive
+          ? `${containerBg} ${textColor}`
+          : `${padBtnBg} ${subtleText}`;
+        const contentClass = compact
+          ? (isActive ? 'justify-center px-1' : 'justify-end pl-0 pr-0.5')
+          : (isActive ? 'justify-start pl-2 pr-1' : 'justify-end px-1.5');
+
+        return (
+          <button
+            key={enabled ? 'gestures' : 'scroll'}
+            type="button"
+            onClick={(event) => onSelectMode(enabled, event)}
+            className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} ${lineColor} border paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 ${compact ? 'shadow-[0_10px_22px_rgba(2,6,23,0.28)] backdrop-blur-sm' : 'btn-depth'}`}
+            title={title}
+            aria-label={title}
+            aria-pressed={isActive}
+            disabled={isUnavailable}
+          >
+            <span
+              className={`relative z-10 flex h-full w-full items-center ${compact ? 'gap-0' : 'gap-1'} ${contentClass}`}
+              aria-hidden="true"
+            >
+              <Icon className={`${compact ? 'h-5 w-5' : 'h-3.5 w-3.5'} shrink-0`} />
+              {!compact && isActive && (
+                <span className="max-w-[42px] truncate text-[9px] font-semibold uppercase tracking-wide">
+                  {label}
+                </span>
+              )}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   sourceCode,
@@ -325,7 +430,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
   };
   const actionButtonClass = 'p-2 rounded-full text-white/90 opacity-85 transition-all duration-200 hover:text-white hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/40 active:scale-95';
-  const disabledActionButtonClass = 'disabled:opacity-35 disabled:cursor-default disabled:hover:opacity-35 disabled:active:scale-100';
   const translateOrFallback = useCallback((key: string, fallback: string) => {
     const result = t(key);
     return result === key ? fallback : result;
@@ -335,11 +439,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const useGameGesturesTitle = translateOrFallback('miniGame.useGameGesturesTitle', 'Use game swipes');
   const returnToChatScrollLabel = translateOrFallback('miniGame.returnToChatScroll', 'Chat scroll');
   const gameGesturesUnavailableLabel = translateOrFallback('miniGame.gameGesturesUnavailable', 'Fully show game to use swipes');
-  const gameGestureToggleTitle = gameGesturesEnabled
-    ? returnToChatScrollLabel
-    : (canUseGameGestures ? useGameGesturesTitle : gameGesturesUnavailableLabel);
-  const gameGestureToggleLabel = gameGesturesEnabled ? returnToChatScrollLabel : useGameGesturesLabel;
-  const GameGestureToggleIcon = gameGesturesEnabled ? IconReturnToChatScroll : IconEnableGameGestures;
+  const interactionModeGroupLabel = translateOrFallback('miniGame.interactionMode', 'Mini-game interaction mode');
 
   useEffect(() => {
     if (!hasIntersected) return;
@@ -403,21 +503,23 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     postMiniGameMode(gameGesturesEnabled ? 'gestures' : 'scroll');
   }, [gameGesturesEnabled, hasIntersected, postMiniGameMode]);
 
-  const handleToggleGameGestures = useCallback((event: React.PointerEvent<HTMLButtonElement> | React.MouseEvent<HTMLButtonElement>) => {
+  const handleSelectGameGestureMode = useCallback((nextEnabled: boolean, event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     resetPointerGate();
 
-    if (gameGesturesEnabled) {
-      setGameGesturesEnabled(false);
+    if (nextEnabled === gameGesturesEnabled) {
       return;
     }
 
-    if (!canUseGameGestures) return;
-    setGameGesturesEnabled(true);
-    window.setTimeout(() => {
-      iframeRef.current?.focus();
-    }, 0);
+    if (nextEnabled && !canUseGameGestures) return;
+
+    setGameGesturesEnabled(nextEnabled);
+    if (nextEnabled) {
+      window.setTimeout(() => {
+        iframeRef.current?.focus();
+      }, 0);
+    }
   }, [canUseGameGestures, gameGesturesEnabled, resetPointerGate]);
 
   const handleGatePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
@@ -547,19 +649,22 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
           {controlsUnderOverlay && (
             <div className="absolute top-2 right-2 z-30 flex flex-col gap-2 pointer-events-auto">
-              <button
-                type="button"
-                onClick={handleToggleGameGestures}
-                className={`${actionButtonClass} ${disabledActionButtonClass} ${gameGesturesEnabled ? 'bg-black/45' : ''}`}
-                title={gameGestureToggleTitle}
-                aria-label={gameGestureToggleTitle}
-                aria-pressed={gameGesturesEnabled}
-                disabled={!gameGesturesEnabled && !canUseGameGestures}
-              >
-                <span style={overlayIconShadowStyle}>
-                  <GameGestureToggleIcon className="h-8 w-8" aria-hidden="true" />
-                </span>
-              </button>
+              <MiniGameInteractionDeckToggle
+                compact
+                gameGesturesEnabled={gameGesturesEnabled}
+                canUseGameGestures={canUseGameGestures}
+                groupLabel={interactionModeGroupLabel}
+                gameGesturesLabel={useGameGesturesLabel}
+                gameGesturesTitle={useGameGesturesTitle}
+                returnToChatScrollLabel={returnToChatScrollLabel}
+                gameGesturesUnavailableLabel={gameGesturesUnavailableLabel}
+                textColor="text-white"
+                subtleText="text-white/80"
+                lineColor="border-white/25"
+                containerBg="bg-black/55"
+                padBtnBg="bg-black/35 hover:bg-black/50"
+                onSelectMode={handleSelectGameGestureMode}
+              />
               <button onClick={handleReload} className={actionButtonClass} title={t('miniGame.restart') || 'Restart'}>
                 <span style={overlayIconShadowStyle}>
                   <IconUndo className="w-4 h-4" />
@@ -601,18 +706,21 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
         ) : (
           <div className="w-full mt-3 flex justify-center z-10 pointer-events-auto">
             <div className={`rounded-xl border ${lineColor} ${containerBg} px-4 py-2 backdrop-blur-sm pointer-events-auto shadow-sm flex items-center gap-4`}>
-              <button
-                type="button"
-                onClick={handleToggleGameGestures}
-                className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg} ${disabledActionButtonClass}`}
-                title={gameGestureToggleTitle}
-                aria-label={gameGestureToggleTitle}
-                aria-pressed={gameGesturesEnabled}
-                disabled={!gameGesturesEnabled && !canUseGameGestures}
-              >
-                <GameGestureToggleIcon className="h-8 w-8 shrink-0" aria-hidden="true" />
-                <span className="font-semibold">{gameGestureToggleLabel}</span>
-              </button>
+              <MiniGameInteractionDeckToggle
+                gameGesturesEnabled={gameGesturesEnabled}
+                canUseGameGestures={canUseGameGestures}
+                groupLabel={interactionModeGroupLabel}
+                gameGesturesLabel={useGameGesturesLabel}
+                gameGesturesTitle={useGameGesturesTitle}
+                returnToChatScrollLabel={returnToChatScrollLabel}
+                gameGesturesUnavailableLabel={gameGesturesUnavailableLabel}
+                textColor={textColor}
+                subtleText={subtleText}
+                lineColor={lineColor}
+                containerBg={containerBg}
+                padBtnBg={padBtnBg}
+                onSelectMode={handleSelectGameGestureMode}
+              />
               <button onClick={handleReload} className={`inline-flex items-center gap-1.5 rounded-full border ${lineColor} px-3 py-1 text-[10px] uppercase tracking-wider ${textColor} ${padBtnBg}`}>
                 <IconUndo className="w-3 h-3 shrink-0" />
                 <span className="font-semibold">{t('miniGame.restart') || 'Restart'}</span>
