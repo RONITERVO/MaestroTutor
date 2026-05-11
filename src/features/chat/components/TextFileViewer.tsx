@@ -114,6 +114,21 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
     );
   }
 
+  if (!compact && tabularSheets.length > 0) {
+    return (
+      <div className="relative w-full max-w-full min-w-0">
+        <TabularPreview
+          sheets={tabularSheets}
+          textColorClass={textColor}
+          subtleTextClass={subtleText}
+          title={metaLabel}
+          standalone
+          bottomInset={effectiveBottomInset}
+        />
+      </div>
+    );
+  }
+
   if (compact) {
     return (
       <div className={`w-full max-w-full min-w-0 rounded-lg overflow-hidden ${containerBg}`} style={{ contain: 'inline-size' }}>
