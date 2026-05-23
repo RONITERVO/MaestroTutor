@@ -46,14 +46,16 @@ const extractFencedBlocks = (source: string): FencedBlock[] => {
 
   while (i < lines.length) {
     const line = lines[i];
-    const openMatch = /^(\s{0,3})(`{3,})([^\n`]*)$/.exec(line);
+    const openMatch = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/.exec(line);
     if (!openMatch) {
       cursor += line.length + 1;
       i++;
       continue;
     }
 
-    const fenceLen = openMatch[2].length;
+    const fenceToken = openMatch[2];
+    const fenceLen = fenceToken.length;
+    const fenceChar = fenceToken[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const rawInfo = openMatch[3];
     const blockStart = cursor;
     const bodyLines: string[] = [];
@@ -62,7 +64,7 @@ const extractFencedBlocks = (source: string): FencedBlock[] => {
     i++;
 
     let closed = false;
-    const closePattern = new RegExp('^\\s{0,3}`{' + fenceLen + ',}\\s*$');
+    const closePattern = new RegExp('^\\s{0,3}' + fenceChar + '{' + fenceLen + ',}\\s*$');
     while (i < lines.length) {
       const bodyLine = lines[i];
       if (closePattern.test(bodyLine)) {
@@ -88,12 +90,51 @@ const extractFencedBlocks = (source: string): FencedBlock[] => {
   return blocks;
 };
 
-const INLINE_SVG_REGEX = /<svg[\s\S]*?<\/svg>/i;
+const INLINE_SVG_REGEX = /(?:<\?xml[\s\S]*?\?>\s*)?<svg[\s\S]*?<\/svg>/i;
 const STANDALONE_SVG_REGEX = /^\s*(?:<\?xml[\s\S]*?\?>\s*)?<svg[\s\S]*<\/svg>\s*$/i;
 const RAW_HTML_DOCUMENT_REGEX = /<!doctype\s+html|<html[\s>]|<body[\s>]|<head[\s>]|<\/html>/i;
 const INLINE_IMAGE_DATA_URL_REGEX = /data:image\/[a-z0-9.+-]+(?:;[a-z0-9=._-]+)*,[a-z0-9+/%=._\-\s]+/i;
 const INLINE_MINI_GAME_MARKER_REGEX = /data-maestro-mini-game|@maestro-mini-game/i;
 const HTML_TAG_REGEX = /<\/?([a-z][\w:-]*)\b[^>]*>/ig;
+const HTML_ARTIFACT_HINT_REGEX = /<!doctype\s+html|<html[\s>]|<body[\s>]|<head[\s>]|<script[\s>]|<style[\s>]|<canvas[\s>]|<svg[\s>]|data-maestro-mini-game|@maestro-mini-game|on(?:click|pointer|touch|mouse|key)[a-z]*\s*=|addEventListener\s*\(/i;
+
+const HTML_VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
+
+const HTML_ARTIFACT_ROOT_TAGS = new Set([
+  'html',
+  'head',
+  'body',
+  'main',
+  'section',
+  'article',
+  'aside',
+  'nav',
+  'div',
+  'canvas',
+  'button',
+  'form',
+  'table',
+  'ul',
+  'ol',
+  'svg',
+]);
+
+const HTML_SUPPORT_TAGS = new Set(['style', 'script', 'template']);
 
 const CODE_LANGUAGE_TO_EXTENSION: Record<string, string> = {
   js: 'js',
@@ -582,6 +623,17 @@ const createSvgAttachment = (svgText: string, fileNameHint?: string): ParsedAssi
   };
 };
 
+const createHtmlAttachment = (htmlText: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
+  const normalized = normalizeAttachmentText(htmlText);
+  if (!normalized) return null;
+  return {
+    kind: 'code',
+    dataUrl: toUtf8DataUrl('text/html', normalized),
+    mimeType: 'text/html',
+    fileName: sanitizeFileName(fileNameHint || 'generated.html'),
+  };
+};
+
 const createImageAttachmentFromDataUrl = (
   dataUrl: string,
   mimeType: string,
@@ -656,6 +708,18 @@ const createCodeAttachment = (lang: string, content: string, fileNameHint?: stri
   };
 };
 
+const extractInlineSvgArtifact = (source: string): { start: number; end: number; svg: string } | null => {
+  const match = INLINE_SVG_REGEX.exec(source || '');
+  if (!match || typeof match.index !== 'number') return null;
+  const svg = (match[0] || '').trim();
+  if (!svg) return null;
+  return {
+    start: match.index,
+    end: match.index + match[0].length,
+    svg,
+  };
+};
+
 const parseFenceAttachment = (lang: string, content: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
   const normalizedLang = (lang || '').trim().toLowerCase();
   const mimeToken = normalizedLang.split(';')[0].trim();
@@ -675,7 +739,16 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
   // Important: HTML fences can include inline `data:image/...` snippets (e.g. CSS data URIs).
   // We must keep the full HTML as code instead of misclassifying/truncating it as an image.
   if (isExplicitHtmlLang || isLikelyHtmlDocument || isLikelyHtmlMiniGameSnippet) {
-    return createCodeAttachment('html', normalizedContent, fileNameHint || 'generated.html');
+    const htmlArtifact = extractInlineHtmlArtifact(normalizedContent);
+    return createHtmlAttachment(htmlArtifact?.html || normalizedContent, fileNameHint || 'generated.html');
+  }
+
+  if (!normalizedLang) {
+    const htmlArtifact = extractInlineHtmlArtifact(normalizedContent);
+    if (htmlArtifact) {
+      const htmlAttachment = createHtmlAttachment(htmlArtifact.html, fileNameHint || 'generated.html');
+      if (htmlAttachment) return htmlAttachment;
+    }
   }
 
   const inlineImageData = extractInlineImageDataUrl(normalizedContent);
@@ -689,7 +762,8 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
   }
 
   if (langToken === 'svg' || mimeToken === 'image/svg+xml' || /<svg[\s>]/i.test(normalizedContent)) {
-    const svgAttachment = createSvgAttachment(normalizedContent, fileNameHint);
+    const svgArtifact = extractInlineSvgArtifact(normalizedContent);
+    const svgAttachment = createSvgAttachment(svgArtifact?.svg || normalizedContent, fileNameHint);
     if (svgAttachment) return svgAttachment;
   }
 
@@ -718,8 +792,14 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
   if (CODE_EXCLUDED_LANG_TAGS.has(langToken)) return null;
 
   if (!langToken) {
+    const htmlArtifact = extractInlineHtmlArtifact(normalizedContent);
+    if (htmlArtifact) {
+      const htmlAttachment = createHtmlAttachment(htmlArtifact.html, fileNameHint || 'generated.html');
+      if (htmlAttachment) return htmlAttachment;
+    }
     if (/<svg[\s>]/i.test(normalizedContent)) {
-      const svgAttachment = createSvgAttachment(normalizedContent, fileNameHint);
+      const svgArtifact = extractInlineSvgArtifact(normalizedContent);
+      const svgAttachment = createSvgAttachment(svgArtifact?.svg || normalizedContent, fileNameHint);
       if (svgAttachment) return svgAttachment;
     }
     return createCodeAttachment('txt', normalizedContent, fileNameHint || 'generated.txt');
@@ -749,7 +829,7 @@ const findMatchingElementEnd = (source: string, startIndex: number, tagName: str
     if (name !== tagName) continue;
     const token = match[0];
     const isClosing = token.startsWith('</');
-    const isSelfClosing = /\/>$/.test(token);
+    const isSelfClosing = /\/>$/.test(token) || HTML_VOID_TAGS.has(name);
 
     if (isClosing) {
       depth -= 1;
@@ -817,6 +897,121 @@ const skipIgnorableHtmlBetweenTags = (source: string, fromIndex: number): number
     break;
   }
   return cursor;
+};
+
+interface HtmlArtifactCandidate {
+  start: number;
+  end: number;
+  tagName: string;
+  hasPrimary: boolean;
+  score: number;
+}
+
+const hasOnlyIgnorableHtmlBetween = (source: string, start: number, end: number): boolean => {
+  if (end <= start) return true;
+  return skipIgnorableHtmlBetweenTags(source, start) >= end;
+};
+
+const expandHtmlStartForDoctype = (source: string, start: number): number => {
+  const prefix = source.slice(0, start);
+  const doctypeMatch = /<!doctype\s+html[^>]*>\s*$/i.exec(prefix);
+  return doctypeMatch ? start - doctypeMatch[0].length : start;
+};
+
+const isPrimaryHtmlArtifactElement = (tagName: string, html: string): boolean => {
+  const tag = tagName.toLowerCase();
+  if (tag === 'svg') return false;
+  if (RAW_HTML_DOCUMENT_REGEX.test(html) || INLINE_MINI_GAME_MARKER_REGEX.test(html)) return true;
+  if (HTML_ARTIFACT_HINT_REGEX.test(html)) return true;
+  if (!HTML_ARTIFACT_ROOT_TAGS.has(tag)) return false;
+
+  const trimmed = html.trim();
+  if (trimmed.length >= 12 && /<\/[a-z][\w:-]*>\s*$/i.test(trimmed)) return true;
+  return trimmed.includes('\n') && /<[a-z][\w:-]*\b[^>]*>/i.test(trimmed);
+};
+
+const scoreHtmlArtifactCandidate = (source: string, candidate: Pick<HtmlArtifactCandidate, 'start' | 'end' | 'tagName'>): number => {
+  const html = source.slice(candidate.start, candidate.end);
+  let score = Math.min(html.length, MAX_ATTACHMENT_TEXT_CHARS);
+  if (RAW_HTML_DOCUMENT_REGEX.test(html)) score += 4_000;
+  if (INLINE_MINI_GAME_MARKER_REGEX.test(html)) score += 3_000;
+  if (/<script[\s>]/i.test(html)) score += 1_200;
+  if (/<style[\s>]/i.test(html)) score += 500;
+  if (/<canvas[\s>]/i.test(html)) score += 1_000;
+  if (candidate.tagName === 'div' || candidate.tagName === 'main' || candidate.tagName === 'section') score += 250;
+  score += Math.min(candidate.start / 100, 250);
+  return score;
+};
+
+const extractInlineHtmlArtifact = (source: string): { start: number; end: number; html: string } | null => {
+  if (!source || !/<[a-z!][\s\S]*>/i.test(source)) return null;
+
+  const rawCandidates: HtmlArtifactCandidate[] = [];
+  const openingTagRegex = /<([a-z][\w:-]*)\b[^>]*>/ig;
+  let match: RegExpExecArray | null;
+
+  while ((match = openingTagRegex.exec(source)) !== null) {
+    const tagName = (match[1] || '').toLowerCase();
+    if (tagName === 'svg') continue;
+
+    const elementEnd = findMatchingElementEnd(source, match.index, tagName);
+    if (typeof elementEnd !== 'number' || elementEnd <= match.index) continue;
+
+    const start = tagName === 'html' ? expandHtmlStartForDoctype(source, match.index) : match.index;
+    const html = source.slice(start, elementEnd);
+    const hasPrimary = isPrimaryHtmlArtifactElement(tagName, html);
+    const isSupport = HTML_SUPPORT_TAGS.has(tagName);
+    if (!hasPrimary && !isSupport) continue;
+
+    rawCandidates.push({
+      start,
+      end: elementEnd,
+      tagName,
+      hasPrimary,
+      score: 0,
+    });
+  }
+
+  if (rawCandidates.length === 0) return null;
+
+  rawCandidates.sort((a, b) => (a.start - b.start) || (b.end - a.end));
+  const mergedCandidates: HtmlArtifactCandidate[] = [];
+
+  for (const candidate of rawCandidates) {
+    const last = mergedCandidates[mergedCandidates.length - 1];
+    if (
+      last &&
+      (candidate.start <= last.end || hasOnlyIgnorableHtmlBetween(source, last.end, candidate.start))
+    ) {
+      last.end = Math.max(last.end, candidate.end);
+      last.hasPrimary = last.hasPrimary || candidate.hasPrimary;
+      last.score = scoreHtmlArtifactCandidate(source, last);
+      continue;
+    }
+
+    mergedCandidates.push({
+      ...candidate,
+      score: scoreHtmlArtifactCandidate(source, candidate),
+    });
+  }
+
+  const viable = mergedCandidates
+    .filter(candidate => candidate.hasPrimary)
+    .map(candidate => ({
+      ...candidate,
+      html: source.slice(candidate.start, candidate.end).trim(),
+    }))
+    .filter(candidate => candidate.html.length > 0);
+
+  if (viable.length === 0) return null;
+
+  viable.sort((a, b) => (b.score - a.score) || (b.start - a.start));
+  const best = viable[0];
+  return {
+    start: best.start,
+    end: best.end,
+    html: best.html,
+  };
 };
 
 const consumeTrailingScriptBlocks = (source: string, fromIndex: number): number => {
@@ -950,23 +1145,9 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
   }
 
   if (candidates.length === 0) {
-    const normalizedSource = normalizeAttachmentText(source);
-    const sourceStartsWithMarkup = normalizedSource.startsWith('<');
-    if (sourceStartsWithMarkup && RAW_HTML_DOCUMENT_REGEX.test(normalizedSource)) {
-      const htmlAttachment = createCodeAttachment('html', normalizedSource, 'generated.html');
-      if (htmlAttachment) {
-        return {
-          cleanedText: '',
-          attachment: htmlAttachment,
-        };
-      }
-    }
-  }
-
-  if (candidates.length === 0) {
     const miniGameHtml = extractInlineMiniGameHtml(source);
     if (miniGameHtml) {
-      const attachment = createCodeAttachment('html', miniGameHtml.html, 'generated.html');
+      const attachment = createHtmlAttachment(miniGameHtml.html, 'generated.html');
       if (attachment) {
         candidates.push({
           start: miniGameHtml.start,
@@ -974,6 +1155,22 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
           priority: 92,
           attachment,
           bodyLength: miniGameHtml.html.length,
+        });
+      }
+    }
+  }
+
+  if (candidates.length === 0) {
+    const htmlArtifact = extractInlineHtmlArtifact(source);
+    if (htmlArtifact) {
+      const attachment = createHtmlAttachment(htmlArtifact.html, 'generated.html');
+      if (attachment) {
+        candidates.push({
+          start: htmlArtifact.start,
+          end: htmlArtifact.end,
+          priority: 93,
+          attachment,
+          bodyLength: htmlArtifact.html.length,
         });
       }
     }
@@ -1000,16 +1197,16 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
   }
 
   if (candidates.length === 0) {
-    const inlineSvg = source.match(INLINE_SVG_REGEX);
-    if (inlineSvg && typeof inlineSvg.index === 'number') {
-      const attachment = createSvgAttachment(inlineSvg[0], 'generated.svg');
+    const inlineSvg = extractInlineSvgArtifact(source);
+    if (inlineSvg) {
+      const attachment = createSvgAttachment(inlineSvg.svg, 'generated.svg');
       if (attachment) {
         candidates.push({
-          start: inlineSvg.index,
-          end: inlineSvg.index + inlineSvg[0].length,
+          start: inlineSvg.start,
+          end: inlineSvg.end,
           priority: 95,
           attachment,
-          bodyLength: inlineSvg[0].length,
+          bodyLength: inlineSvg.svg.length,
         });
       }
     }

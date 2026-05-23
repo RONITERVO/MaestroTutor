@@ -44,6 +44,7 @@ import {
   buildCompactAssistantRawText,
   getVisibleAssistantMessageText,
 } from '../utils/assistantMessageContext';
+import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -406,6 +407,17 @@ const extractNativeTutorText = (line: string, nativeLangPrefix: string): string 
   return trimmed.slice(nativeLangPrefix.length).trim();
 };
 
+const isLikelyArtifactLeakTutorLine = (line: string): boolean => {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  if (/^(?:`{3,}|~{3,})/.test(trimmed)) return true;
+  if (/^<\/?[a-z][\w:-]*\b[^>]*>$/i.test(trimmed)) return true;
+  if (/^<\/?(?:html|head|body|main|section|article|div|svg|canvas|script|style|button|table|form)\b/i.test(trimmed)) return true;
+  if (/^[{}\[\](),.;:]+$/.test(trimmed)) return true;
+  if (/^(?:const|let|var|function|class|import|export|return|if|for|while|switch|document\.|window\.)\b/.test(trimmed)) return true;
+  return false;
+};
+
 const parseStrictTutorResponseText = (
   responseText: string | undefined,
   nativeLanguageCode: string | undefined
@@ -415,10 +427,12 @@ const parseStrictTutorResponseText = (
   }
 
   const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
-  const stripped = stripTutorVisibleLines(responseText);
+  const artifactParsed = parseAssistantResponseForAttachment(responseText);
+  const textWithoutArtifact = artifactParsed.attachment ? artifactParsed.cleanedText : responseText;
+  const stripped = stripTutorVisibleLines(textWithoutArtifact);
   const translations: Array<{ target: string; native: string }> = [];
   const visibleLines: string[] = [];
-  let hasSkippedNonLanguageContent = stripped.hasSkippedNonLanguageContent;
+  let hasSkippedNonLanguageContent = stripped.hasSkippedNonLanguageContent || Boolean(artifactParsed.attachment);
 
   for (let i = 0; i < stripped.lines.length; i++) {
     const currentLine = stripped.lines[i];
@@ -430,24 +444,24 @@ const parseStrictTutorResponseText = (
       continue;
     }
 
-    const nextLine = stripped.lines[i + 1] || '';
-    if (!nextLine) {
-      translations.push({ target: currentLine, native: '' });
-      visibleLines.push(currentLine);
+    if (isLikelyArtifactLeakTutorLine(currentLine)) {
+      hasSkippedNonLanguageContent = true;
       continue;
     }
 
+    const nextLine = stripped.lines[i + 1] || '';
     const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
-    const nativeText = taggedNative !== null ? taggedNative : nextLine;
+    if (taggedNative === null || !taggedNative) {
+      hasSkippedNonLanguageContent = true;
+      continue;
+    }
 
     translations.push({
       target: currentLine,
-      native: nativeText,
+      native: taggedNative,
     });
     visibleLines.push(currentLine);
-    if (nativeText) {
-      visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
-    }
+    visibleLines.push(`${nativeLangPrefix} ${taggedNative}`);
     i++;
   }
 
@@ -752,6 +766,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const rawEncoding = typeof candidate.encoding === 'string' ? candidate.encoding.trim().toLowerCase() : 'text';
     const isDataUrlEncoding = rawEncoding === 'data-url' || rawEncoding === 'dataurl' || rawEncoding === 'data_url';
     if (!rawContent.trim()) return null;
+
+    if (!isDataUrlEncoding) {
+      const parsedContent = parseAssistantResponseForAttachment(rawContent);
+      if (parsedContent.attachment) {
+        return {
+          dataUrl: parsedContent.attachment.dataUrl,
+          mimeType: parsedContent.attachment.mimeType,
+          fileName: sanitizeArtifactFileName(candidate.fileName || parsedContent.attachment.fileName, parsedContent.attachment.mimeType),
+        };
+      }
+    }
 
     let mimeType = typeof candidate.mimeType === 'string' ? candidate.mimeType.trim().toLowerCase() : '';
     let dataUrl: string;
