@@ -845,7 +845,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   ) : null;
   // --- Thinking bubble: content line for the "native" position ---
   // Concatenate all trace lines into a single ticker string for scrolling effect.
-  // When thinkingDraftText (streamed response) arrives, prioritize that instead.
+  // Once streamed response text arrives, render its parsed target/native lines directly.
   const thinkingTickerText = useMemo(() => {
     const traceLines = Array.isArray(message.thinkingTrace)
       ? message.thinkingTrace.filter(line => typeof line === 'string' && line.trim().length > 0)
@@ -853,12 +853,6 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     // Join all trace lines with a separator to create a continuous stream effect
     return traceLines.join('  \u00B7  '); // middot separator between entries
   }, [message.thinkingTrace]);
-
-  const thinkingDraftCondensed = useMemo(() => {
-    const draftText = typeof message.thinkingDraftText === 'string' ? message.thinkingDraftText : '';
-    if (!draftText) return '';
-    return draftText.replace(/\s+/g, ' ').trim();
-  }, [message.thinkingDraftText]);
 
   const thinkingDraftLines = useMemo(() => {
     const draftText = typeof message.thinkingDraftText === 'string' ? message.thinkingDraftText : '';
@@ -957,18 +951,12 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   // The content for the lower line (native position) of the thinking bubble
   const thinkingContentLine = useMemo(() => {
-    if (thinkingDraftCondensed) {
-      // Streamed response text - show tail like a train window
-      return thinkingDraftCondensed.length > 42
-        ? `\u2026${thinkingDraftCondensed.slice(-42)}`
-        : thinkingDraftCondensed;
-    }
     if (thinkingTickerText) {
       // For thought signatures we use the ticker ref, so return null to signal ref usage
       return null;
     }
     return thinkingStatusCondensed || thinkingPhaseLabel;
-  }, [thinkingDraftCondensed, thinkingPhaseLabel, thinkingStatusCondensed, thinkingTickerText]);
+  }, [thinkingPhaseLabel, thinkingStatusCondensed, thinkingTickerText]);
 
   useEffect(() => {
     if (!shouldUseAttachmentTranscriptShell) {
@@ -1000,22 +988,23 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
       <div className="flex justify-start mb-4">
         <div className="relative max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]" style={{ width: '100%' }}>
           <div
-            className="relative p-3 overflow-visible msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin animate-pulse"
+            className="relative p-3 overflow-visible msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin"
             style={{
               containerType: 'inline-size',
               width: '100%',
               ...bubbleShapeStyle,
             }}
           >
-            {/* Upper line (target position): phase label */}
-            <p
-              className="font-semibold whitespace-nowrap truncate text-ai-msg-text"
-              style={{ fontSize: '4cqw', lineHeight: 1.3 }}
-            >
-              {thinkingPhaseLabel}
-            </p>
+            {thinkingDraftLines.length === 0 && (
+              <p
+                className="font-semibold whitespace-nowrap truncate text-ai-msg-text"
+                style={{ fontSize: '4cqw', lineHeight: 1.3 }}
+              >
+                {thinkingPhaseLabel}
+              </p>
+            )}
             {thinkingDraftLines.length > 0 ? (
-              <div className="mt-1 space-y-1">
+              <div className="space-y-1">
                 {thinkingDraftLines.map((line, index) => (
                   <p
                     key={`${index}-${line.isNative ? 'native' : 'target'}`}

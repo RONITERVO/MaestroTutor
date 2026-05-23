@@ -123,7 +123,6 @@ const isSvgMimeType = (mimeType?: string | null): boolean => {
 };
 
 const MAX_THINKING_TRACE_LINES = 8;
-const MAX_THINKING_DRAFT_CHARS = 12000;
 const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
 
 const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
@@ -471,6 +470,45 @@ const parseStrictTutorResponseText = (
     visibleText: visibleLines.join('\n').trim(),
     hasSkippedNonLanguageContent,
   };
+};
+
+const formatStreamingTutorDraftText = (
+  responseText: string | undefined,
+  nativeLanguageCode: string | undefined
+): string => {
+  if (typeof responseText !== 'string' || !responseText.trim() || !nativeLanguageCode) {
+    return '';
+  }
+
+  const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
+  const artifactParsed = parseAssistantResponseForAttachment(responseText);
+  const textWithoutArtifact = artifactParsed.attachment ? artifactParsed.cleanedText : responseText;
+  const stripped = stripTutorVisibleLines(textWithoutArtifact);
+  const visibleLines: string[] = [];
+
+  for (let i = 0; i < stripped.lines.length; i++) {
+    const currentLine = stripped.lines[i];
+    if (!currentLine) continue;
+    if (extractNativeTutorText(currentLine, nativeLangPrefix) !== null) continue;
+    if (isLikelyArtifactLeakTutorLine(currentLine)) continue;
+
+    const nextLine = stripped.lines[i + 1] || '';
+    const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
+    const nativeText = taggedNative !== null ? taggedNative : nextLine.trim();
+
+    if (nativeText && !isLikelyArtifactLeakTutorLine(nextLine) && !isLikelyArtifactLeakTutorLine(nativeText)) {
+      visibleLines.push(currentLine);
+      visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
+      i++;
+      continue;
+    }
+
+    if (!nextLine) {
+      visibleLines.push(currentLine);
+    }
+  }
+
+  return visibleLines.join('\n').trim();
 };
 
 type SuggestionCreatorArtifact = {
@@ -2002,17 +2040,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const now = Date.now();
       if (!force && now - lastDraftFlushAt < THINKING_DRAFT_FLUSH_INTERVAL_MS) return;
       lastDraftFlushAt = now;
-      const parsedDraft = parseStrictTutorResponse(streamingDraftText);
-      const formattedDraft = parsedDraft.visibleText.trim();
-      const fallbackDraft = parsedDraft.hasSkippedNonLanguageContent ? '' : streamingDraftText.trim();
-      const draftSource = formattedDraft || fallbackDraft;
-      const draftLines = draftSource
-        .split('\n')
-        .map(line => line.trim())
-        .filter(Boolean);
-      const draftToShow = draftLines.length > 6
-        ? draftLines.slice(-6).join('\n')
-        : draftSource.slice(-MAX_THINKING_DRAFT_CHARS);
+      const draftToShow = formatStreamingTutorDraftText(
+        streamingDraftText,
+        selectedLanguagePairRef.current?.nativeLanguageCode
+      );
       const current = messagesRef.current.find(m => m.id === params.thinkingMessageId);
       if (!current || !current.thinking) return;
       if ((current.thinkingDraftText || '') === draftToShow) return;
@@ -2074,10 +2105,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
               hasVisibleModelOutput = true;
               streamingDraftText = fullText || streamingDraftText;
               setThinkingStatusLine(params.thinkingMessageId, undefined);
-              if (currentPhaseLabel !== 'Final response') {
-                currentPhaseLabel = 'Final response';
-                updateMessage(params.thinkingMessageId, { thinkingPhase: t('streaming.phaseFinalResponse') || 'Final response' });
-              }
               flushThinkingDraft(false);
             },
             onThoughtDelta: (deltaThought) => {
