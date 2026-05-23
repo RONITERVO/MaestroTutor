@@ -451,17 +451,18 @@ const parseStrictTutorResponseText = (
 
     const nextLine = stripped.lines[i + 1] || '';
     const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
-    if (taggedNative === null || !taggedNative) {
+    const nativeText = taggedNative !== null ? taggedNative : nextLine.trim();
+    if (!nativeText || isLikelyArtifactLeakTutorLine(nextLine) || isLikelyArtifactLeakTutorLine(nativeText)) {
       hasSkippedNonLanguageContent = true;
       continue;
     }
 
     translations.push({
       target: currentLine,
-      native: taggedNative,
+      native: nativeText,
     });
     visibleLines.push(currentLine);
-    visibleLines.push(`${nativeLangPrefix} ${taggedNative}`);
+    visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
     i++;
   }
 
