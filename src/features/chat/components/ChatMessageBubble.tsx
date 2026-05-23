@@ -10,6 +10,7 @@ import AttachmentTextScrollContainer from './AttachmentTextScrollContainer';
 import TextScrollwheel from './TextScrollwheel';
 import AudioPlayer from './AudioPlayer';
 import PdfViewer from './PdfViewer';
+import ArtifactLoadingScene from './ArtifactLoadingScene';
 import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 import { useMaestroStore } from '../../../store';
 import { selectSettings, selectSelectedLanguagePair, selectTargetLanguageDef, selectNativeLanguageDef } from '../../../store/slices/settingsSlice';
@@ -644,6 +645,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     if (message.toolAttachmentPhase === 'finalizing') return 0.84;
     return 0.24;
   }, [message.toolAttachmentPhase, shouldShowAudioAttachmentPlaceholder]);
+  const shouldShowArtifactLoadingScene = Boolean(message.isLoadingArtifact && isAttachmentLoading && !shouldShowAudioAttachmentPlaceholder);
 
   const isImageSuccessfullyDisplayed = isAttachmentAnImage && displayUrl && !isAttachmentLoading && !message.imageGenError;
   const isVideoSuccessfullyDisplayed = isAttachmentAVideo && displayUrl && !isAttachmentLoading;
@@ -1087,7 +1089,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           imageContainerAspectClasses = "";
           imageContainerFlexCenteringClasses = "";
       } else if (isAttachmentLoading || isFileSuccessfullyDisplayed) {
-          imageContainerAspectClasses = "aspect-square";
+          imageContainerAspectClasses = shouldShowArtifactLoadingScene ? "aspect-[10/7]" : "aspect-square";
       } else if (isImageSuccessfullyDisplayed || isVideoSuccessfullyDisplayed) {
           if (isAnnotationActive) {
               imageContainerAspectClasses = "bg-user-msg-bg";
@@ -1110,8 +1112,8 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         imageContainerAspectClasses = "";
         imageContainerFlexCenteringClasses = "";
       } else {
-        imageContainerSizeClasses = "w-full max-w-[250px] mx-auto my-2";
-        imageContainerAspectClasses = "aspect-square";
+        imageContainerSizeClasses = shouldShowArtifactLoadingScene ? "w-full max-w-[320px] mx-auto my-2" : "w-full max-w-[250px] mx-auto my-2";
+        imageContainerAspectClasses = shouldShowArtifactLoadingScene ? "aspect-[10/7]" : "aspect-square";
       }
   }
   
@@ -1179,7 +1181,11 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                   onPointerCancel={isAnnotationActive ? handleModalPointerUp : undefined}
                   onWheel={isAnnotationActive ? handleAnnotationAreaWheel : undefined}
                 >
-                  {isAttachmentLoading && !shouldShowAudioAttachmentPlaceholder && (
+                  {shouldShowArtifactLoadingScene && !isAnnotationActive && (
+                    <ArtifactLoadingScene />
+                  )}
+
+                  {isAttachmentLoading && !shouldShowAudioAttachmentPlaceholder && !shouldShowArtifactLoadingScene && (
                       <div className="absolute top-2 right-2 flex flex-col items-end z-20">
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-black/30 drop-shadow-md flex items-center justify-center">
                           {selectedLoadingAnimation && !loadingAnimationError ? (
