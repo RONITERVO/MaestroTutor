@@ -44,6 +44,7 @@ import {
   buildCompactAssistantRawText,
   getVisibleAssistantMessageText,
 } from '../utils/assistantMessageContext';
+import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -122,7 +123,6 @@ const isSvgMimeType = (mimeType?: string | null): boolean => {
 };
 
 const MAX_THINKING_TRACE_LINES = 8;
-const MAX_THINKING_DRAFT_CHARS = 12000;
 const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
 
 const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
@@ -338,6 +338,29 @@ type StrictParsedTutorResponse = {
 };
 
 const TUTOR_FENCE_OPEN_REGEX = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/;
+const MARKUP_LINE_TAG_REGEX = /<\/?[a-z][\w:-]*(?:\s+[^<>]*)?\/?>/i;
+const MARKUP_DECLARATION_OR_COMMENT_REGEX = /<!--|-->|^<!doctype\b|^<!\[CDATA\[|^\]\]>$|^<\?xml\b|^\?>$/i;
+const MARKUP_ATTRIBUTE_ONLY_LINE_REGEX = /^(?:[a-z_:][\w:.-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>/]+)\s*)+\/?>?$/i;
+const MARKUP_STYLE_DECLARATION_LINE_REGEX = /^[a-z-]+\s*:\s*[^;]+;?$/i;
+const MARKUP_STYLE_HINT_REGEX = /(?:#(?:[0-9a-f]{3}){1,2}\b|rgb[a]?\(|hsl[a]?\(|url\(|\b(?:px|em|rem|vh|vw|deg|ms|s)\b|font|fill|stroke|color|width|height|margin|padding|display|position|background|transform|animation)/i;
+const MARKUP_VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
+
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const isMatchingTutorFenceClose = (
   rawLine: string,
@@ -354,6 +377,20 @@ const isMatchingTutorFenceClose = (
   return count >= activeFence.length && trimmed.slice(count).trim().length === 0;
 };
 
+const getMarkupBlockFromLine = (trimmedLine: string): { tag: string; inOpeningTag: boolean } | null => {
+  const openMatch = /^<([a-z][\w:-]*)\b/i.exec(trimmedLine);
+  if (!openMatch) return null;
+
+  const tagName = openMatch[1].toLowerCase();
+  if (MARKUP_VOID_TAGS.has(tagName)) return null;
+  if (/\/>\s*$/.test(trimmedLine)) return null;
+  if (new RegExp(`<\\/${escapeRegExp(tagName)}\\s*>`, 'i').test(trimmedLine)) return null;
+  return {
+    tag: tagName,
+    inOpeningTag: !trimmedLine.includes('>'),
+  };
+};
+
 const stripTutorVisibleLines = (responseText: string): {
   lines: string[];
   hasSkippedNonLanguageContent: boolean;
@@ -366,12 +403,45 @@ const stripTutorVisibleLines = (responseText: string): {
   const lines: string[] = [];
   let hasSkippedNonLanguageContent = false;
   let activeFence: { char: '`' | '~'; length: number } | null = null;
+  let activeMarkupBlock: { tag: string; inOpeningTag: boolean } | null = null;
+  let activeMarkupComment = false;
 
   for (const rawLine of normalizedLines) {
     if (activeFence) {
       hasSkippedNonLanguageContent = true;
       if (isMatchingTutorFenceClose(rawLine, activeFence)) {
         activeFence = null;
+      }
+      continue;
+    }
+
+    const trimmed = rawLine.trim();
+
+    if (activeMarkupComment) {
+      hasSkippedNonLanguageContent = true;
+      if (trimmed.includes('-->')) {
+        activeMarkupComment = false;
+      }
+      continue;
+    }
+
+    if (activeMarkupBlock) {
+      hasSkippedNonLanguageContent = true;
+      if (
+        activeMarkupBlock.inOpeningTag &&
+        /\/>\s*$/.test(trimmed)
+      ) {
+        activeMarkupBlock = null;
+        continue;
+      }
+      if (activeMarkupBlock?.inOpeningTag && trimmed.includes('>')) {
+        activeMarkupBlock.inOpeningTag = false;
+      }
+      if (
+        activeMarkupBlock &&
+        new RegExp(`<\\/${escapeRegExp(activeMarkupBlock.tag)}\\s*>`, 'i').test(trimmed)
+      ) {
+        activeMarkupBlock = null;
       }
       continue;
     }
@@ -386,13 +456,25 @@ const stripTutorVisibleLines = (responseText: string): {
       continue;
     }
 
-    const trimmed = rawLine.trim();
+    if (trimmed.includes('<!--')) {
+      activeMarkupComment = !trimmed.includes('-->');
+      hasSkippedNonLanguageContent = true;
+      continue;
+    }
+
+    const markupBlock = getMarkupBlockFromLine(trimmed);
+    if (markupBlock) {
+      activeMarkupBlock = markupBlock;
+      hasSkippedNonLanguageContent = true;
+      continue;
+    }
+
     if (trimmed) {
       lines.push(trimmed);
     }
   }
 
-  if (activeFence) {
+  if (activeFence || activeMarkupBlock || activeMarkupComment) {
     hasSkippedNonLanguageContent = true;
   }
 
@@ -406,6 +488,37 @@ const extractNativeTutorText = (line: string, nativeLangPrefix: string): string 
   return trimmed.slice(nativeLangPrefix.length).trim();
 };
 
+const isLikelyArtifactLeakTutorLine = (line: string): boolean => {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  if (/^(?:`{3,}|~{3,})/.test(trimmed)) return true;
+  if (MARKUP_DECLARATION_OR_COMMENT_REGEX.test(trimmed)) return true;
+  if (MARKUP_LINE_TAG_REGEX.test(trimmed)) return true;
+  if (MARKUP_ATTRIBUTE_ONLY_LINE_REGEX.test(trimmed)) return true;
+  if (MARKUP_STYLE_DECLARATION_LINE_REGEX.test(trimmed) && MARKUP_STYLE_HINT_REGEX.test(trimmed)) return true;
+  if (/^<\/?(?:html|head|body|main|section|article|div|svg|canvas|script|style|button|table|form)\b/i.test(trimmed)) return true;
+  if (/^[{}\[\](),.;:]+$/.test(trimmed)) return true;
+  if (/^(?:const|let|var|function|class|import|export|return|if|for|while|switch|document\.|window\.)\b/.test(trimmed)) return true;
+  return false;
+};
+
+const filterTutorLanguageCandidateLines = (
+  lines: string[]
+): { lines: string[]; hasSkippedNonLanguageContent: boolean } => {
+  const languageLines: string[] = [];
+  let hasSkippedNonLanguageContent = false;
+
+  for (const line of lines) {
+    if (isLikelyArtifactLeakTutorLine(line)) {
+      hasSkippedNonLanguageContent = true;
+      continue;
+    }
+    languageLines.push(line);
+  }
+
+  return { lines: languageLines, hasSkippedNonLanguageContent };
+};
+
 const parseStrictTutorResponseText = (
   responseText: string | undefined,
   nativeLanguageCode: string | undefined
@@ -415,13 +528,19 @@ const parseStrictTutorResponseText = (
   }
 
   const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
-  const stripped = stripTutorVisibleLines(responseText);
+  const artifactParsed = parseAssistantResponseForAttachment(responseText);
+  const textWithoutArtifact = artifactParsed.attachment ? artifactParsed.cleanedText : responseText;
+  const stripped = stripTutorVisibleLines(textWithoutArtifact);
+  const candidates = filterTutorLanguageCandidateLines(stripped.lines);
   const translations: Array<{ target: string; native: string }> = [];
   const visibleLines: string[] = [];
-  let hasSkippedNonLanguageContent = stripped.hasSkippedNonLanguageContent;
+  let hasSkippedNonLanguageContent =
+    stripped.hasSkippedNonLanguageContent ||
+    candidates.hasSkippedNonLanguageContent ||
+    Boolean(artifactParsed.attachment);
 
-  for (let i = 0; i < stripped.lines.length; i++) {
-    const currentLine = stripped.lines[i];
+  for (let i = 0; i < candidates.lines.length; i++) {
+    const currentLine = candidates.lines[i];
     if (!currentLine) continue;
 
     const orphanNative = extractNativeTutorText(currentLine, nativeLangPrefix);
@@ -430,24 +549,20 @@ const parseStrictTutorResponseText = (
       continue;
     }
 
-    const nextLine = stripped.lines[i + 1] || '';
-    if (!nextLine) {
-      translations.push({ target: currentLine, native: '' });
-      visibleLines.push(currentLine);
+    const nextLine = candidates.lines[i + 1] || '';
+    const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
+    const nativeText = taggedNative !== null ? taggedNative : nextLine.trim();
+    if (!nativeText || isLikelyArtifactLeakTutorLine(nextLine) || isLikelyArtifactLeakTutorLine(nativeText)) {
+      hasSkippedNonLanguageContent = true;
       continue;
     }
-
-    const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
-    const nativeText = taggedNative !== null ? taggedNative : nextLine;
 
     translations.push({
       target: currentLine,
       native: nativeText,
     });
     visibleLines.push(currentLine);
-    if (nativeText) {
-      visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
-    }
+    visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
     i++;
   }
 
@@ -456,6 +571,45 @@ const parseStrictTutorResponseText = (
     visibleText: visibleLines.join('\n').trim(),
     hasSkippedNonLanguageContent,
   };
+};
+
+const formatStreamingTutorDraftText = (
+  responseText: string | undefined,
+  nativeLanguageCode: string | undefined
+): string => {
+  if (typeof responseText !== 'string' || !responseText.trim() || !nativeLanguageCode) {
+    return '';
+  }
+
+  const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
+  const artifactParsed = parseAssistantResponseForAttachment(responseText);
+  const textWithoutArtifact = artifactParsed.attachment ? artifactParsed.cleanedText : responseText;
+  const stripped = stripTutorVisibleLines(textWithoutArtifact);
+  const candidates = filterTutorLanguageCandidateLines(stripped.lines);
+  const visibleLines: string[] = [];
+
+  for (let i = 0; i < candidates.lines.length; i++) {
+    const currentLine = candidates.lines[i];
+    if (!currentLine) continue;
+    if (extractNativeTutorText(currentLine, nativeLangPrefix) !== null) continue;
+
+    const nextLine = candidates.lines[i + 1] || '';
+    const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
+    const nativeText = taggedNative !== null ? taggedNative : nextLine.trim();
+
+    if (nativeText && !isLikelyArtifactLeakTutorLine(nextLine) && !isLikelyArtifactLeakTutorLine(nativeText)) {
+      visibleLines.push(currentLine);
+      visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
+      i++;
+      continue;
+    }
+
+    if (!nextLine) {
+      visibleLines.push(currentLine);
+    }
+  }
+
+  return visibleLines.join('\n').trim();
 };
 
 type SuggestionCreatorArtifact = {
@@ -1976,17 +2130,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       const now = Date.now();
       if (!force && now - lastDraftFlushAt < THINKING_DRAFT_FLUSH_INTERVAL_MS) return;
       lastDraftFlushAt = now;
-      const parsedDraft = parseStrictTutorResponse(streamingDraftText);
-      const formattedDraft = parsedDraft.visibleText.trim();
-      const fallbackDraft = parsedDraft.hasSkippedNonLanguageContent ? '' : streamingDraftText.trim();
-      const draftSource = formattedDraft || fallbackDraft;
-      const draftLines = draftSource
-        .split('\n')
-        .map(line => line.trim())
-        .filter(Boolean);
-      const draftToShow = draftLines.length > 6
-        ? draftLines.slice(-6).join('\n')
-        : draftSource.slice(-MAX_THINKING_DRAFT_CHARS);
+      const draftToShow = formatStreamingTutorDraftText(
+        streamingDraftText,
+        selectedLanguagePairRef.current?.nativeLanguageCode
+      );
       const current = messagesRef.current.find(m => m.id === params.thinkingMessageId);
       if (!current || !current.thinking) return;
       if ((current.thinkingDraftText || '') === draftToShow) return;
@@ -2048,10 +2195,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
               hasVisibleModelOutput = true;
               streamingDraftText = fullText || streamingDraftText;
               setThinkingStatusLine(params.thinkingMessageId, undefined);
-              if (currentPhaseLabel !== 'Final response') {
-                currentPhaseLabel = 'Final response';
-                updateMessage(params.thinkingMessageId, { thinkingPhase: t('streaming.phaseFinalResponse') || 'Final response' });
-              }
               flushThinkingDraft(false);
             },
             onThoughtDelta: (deltaThought) => {
