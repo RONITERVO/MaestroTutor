@@ -907,17 +907,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const isDataUrlEncoding = rawEncoding === 'data-url' || rawEncoding === 'dataurl' || rawEncoding === 'data_url';
     if (!rawContent.trim()) return null;
 
-    if (!isDataUrlEncoding) {
-      const parsedContent = parseAssistantResponseForAttachment(rawContent);
-      if (parsedContent.attachment) {
-        return {
-          dataUrl: parsedContent.attachment.dataUrl,
-          mimeType: parsedContent.attachment.mimeType,
-          fileName: sanitizeArtifactFileName(candidate.fileName || parsedContent.attachment.fileName, parsedContent.attachment.mimeType),
-        };
-      }
-    }
-
     let mimeType = typeof candidate.mimeType === 'string' ? candidate.mimeType.trim().toLowerCase() : '';
     let dataUrl: string;
 
