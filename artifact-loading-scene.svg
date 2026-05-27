@@ -1,0 +1,881 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="100%" height="100%" style="background: transparent;">
+  <foreignObject x="0" y="0" width="1000" height="700">
+    <html xmlns="http://www.w3.org/1999/xhtml" style="width: 100%; height: 100%; background: transparent;">
+      <head>
+        <style>
+          html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: crosshair;
+            font-family: 'Marker Felt', 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+          }
+
+          .scene {
+            position: absolute;
+            inset: 0;
+            perspective: 1400px;
+            perspective-origin: 50% 40%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+          }
+
+          .world {
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-12deg) rotateY(8deg);
+          }
+
+          .pos, .rot {
+            position: absolute;
+            transform-style: preserve-3d;
+            will-change: transform;
+          }
+
+          .shadow {
+            position: absolute;
+            background: radial-gradient(ellipse at center, rgba(30, 20, 15, 0.35) 0%, transparent 65%);
+            pointer-events: none;
+            will-change: transform, opacity;
+          }
+
+          .die-shadow { width: 90px; height: 90px; left: -45px; top: -45px; }
+          .cat-shadow { width: 140px; height: 50px; left: -70px; top: -25px; }
+          .monkey-shadow { width: 150px; height: 60px; left: -75px; top: -30px; }
+          .hawk-shadow { width: 120px; height: 120px; left: -60px; top: -60px; }
+
+          .ripple {
+            position: absolute;
+            box-sizing: border-box;
+            border: 3px dashed hsl(25, 15%, 25%);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.5;
+            animation: ripple-out 0.5s ease-out forwards;
+          }
+
+          @keyframes ripple-out {
+            0% { width: 0; height: 0; margin-left: 0; margin-top: 0; opacity: 0.8; }
+            100% { width: 200px; height: 200px; margin-left: -100px; margin-top: -100px; opacity: 0; }
+          }
+
+          .face {
+            position: absolute;
+            left: -40px;
+            top: -40px;
+            width: 80px;
+            height: 80px;
+            box-sizing: border-box;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            border-style: solid;
+            border-color: hsl(25, 15%, 25%);
+          }
+
+          .front { border-width: 2px 3px 2px 3px; transform: rotateY(0deg) translateZ(40px); border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; }
+          .back { border-width: 3px 2px 3px 2px; transform: rotateY(180deg) translateZ(40px); border-radius: 15px 255px 15px 225px / 255px 15px 225px 15px; box-shadow: inset 0 0 50px 50px rgba(25, 15, 20, 0.08); }
+          .right { border-width: 2px 4px 2px 2px; transform: rotateY(90deg) translateZ(40px); border-radius: 225px 15px 255px 15px / 15px 255px 15px 225px; box-shadow: inset 0 0 50px 50px rgba(25, 15, 20, 0.05); }
+          .left { border-width: 3px 2px 2px 3px; transform: rotateY(-90deg) translateZ(40px); border-radius: 15px 225px 15px 255px / 225px 15px 255px 15px; box-shadow: inset 0 0 50px 50px rgba(25, 15, 20, 0.03); }
+          .top { border-width: 2px 2px 4px 2px; transform: rotateX(90deg) translateZ(40px); border-radius: 255px 20px 220px 10px / 10px 220px 20px 255px; box-shadow: inset 0 0 50px 50px rgba(255, 255, 255, 0.3); }
+          .bottom { border-width: 4px 2px 2px 2px; transform: rotateX(-90deg) translateZ(40px); border-radius: 10px 220px 20px 255px / 255px 20px 220px 10px; box-shadow: inset 0 0 50px 50px rgba(25, 15, 20, 0.15); }
+
+          .d-white .face { background: hsl(39, 40%, 96%); }
+          .d-red .face { background: hsl(15, 80%, 92%); }
+          .d-blue .face { background: hsl(200, 70%, 92%); }
+
+          .pip {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: hsl(25, 15%, 25%);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+          }
+
+          .d-red .pip, .d-blue .pip {
+            background: hsl(39, 40%, 96%);
+            border: 2px solid hsl(25, 15%, 25%);
+            box-sizing: border-box;
+          }
+
+          .d-white .pip.red { background: hsl(18, 60%, 55%); }
+
+          .tl { top: 12px; left: 12px; transform: translateZ(1px) rotate(-5deg); border-radius: 60% 40% 50% 50% / 40% 60% 50% 40%; }
+          .tr { top: 12px; right: 12px; transform: translateZ(1px) rotate(15deg); border-radius: 50% 50% 40% 60% / 60% 40% 50% 50%; }
+          .bl { bottom: 12px; left: 12px; transform: translateZ(1px) rotate(-10deg); border-radius: 40% 60% 60% 40% / 50% 50% 40% 60%; }
+          .br { bottom: 12px; right: 12px; transform: translateZ(1px) rotate(20deg); border-radius: 50% 40% 60% 40% / 40% 50% 40% 60%; }
+          .ml { top: 32px; left: 12px; transform: translateZ(1px) rotate(5deg); border-radius: 45% 55% 45% 55% / 55% 45% 55% 45%; }
+          .mr { top: 32px; right: 12px; transform: translateZ(1px) rotate(-15deg); border-radius: 55% 45% 55% 45% / 45% 55% 45% 55%; }
+          .mc { top: 32px; left: 32px; transform: translateZ(1px) rotate(45deg); border-radius: 60% 40% 50% 50% / 50% 50% 40% 60%; }
+
+          .cat-sprite {
+            width: 140px;
+            height: 120px;
+            transform: rotateX(12deg) rotateY(-8deg);
+            pointer-events: none;
+            margin-top: -120px;
+            margin-left: -70px;
+            overflow: visible;
+          }
+
+          #cat-flip-group { transform-origin: center; }
+
+          @keyframes walk { 0% { transform: rotate(15deg); } 50% { transform: rotate(-20deg); } 100% { transform: rotate(15deg); } }
+          @keyframes tail-wag { 0% { transform: rotate(-5deg); } 50% { transform: rotate(15deg); } 100% { transform: rotate(-5deg); } }
+          @keyframes body-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+          @keyframes head-bob { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(4deg); } }
+
+          .walking .leg-bl { animation: walk 0.5s infinite ease-in-out; }
+          .walking .leg-br { animation: walk 0.5s infinite ease-in-out -0.25s; }
+          .walking .leg-fl { animation: walk 0.5s infinite ease-in-out -0.25s; }
+          .walking .leg-fr { animation: walk 0.5s infinite ease-in-out; }
+          .walking .cat-tail { animation: tail-wag 0.8s infinite ease-in-out; }
+          .walking .cat-body-group { animation: body-bob 0.25s infinite ease-in-out; }
+          .walking .cat-head { animation: head-bob 0.5s infinite ease-in-out; }
+
+          @keyframes swipe-attack {
+            0% { transform: rotate(0deg) translateY(0); }
+            20% { transform: rotate(-80deg) translateY(-15px); }
+            35% { transform: rotate(-90deg) translateY(-15px); }
+            45% { transform: rotate(55deg) translateY(8px) scaleY(1.4); }
+            70% { transform: rotate(20deg) translateY(0); }
+            100% { transform: rotate(0deg) translateY(0); }
+          }
+
+          .swiping .leg-fr { animation: swipe-attack 0.4s ease-out forwards; }
+          .swiping .cat-tail { transform: rotate(25deg); transition: 0.2s; }
+          .swiping .cat-body-group { transform: translateX(-8px) translateY(3px); transition: transform 0.15s; }
+          .swiping .cat-head { transform: rotate(-10deg); transition: 0.1s; }
+
+          .leg-bl { transform-origin: 35px 65px; }
+          .leg-br { transform-origin: 50px 65px; }
+          .leg-fl { transform-origin: 65px 65px; }
+          .leg-fr { transform-origin: 80px 60px; }
+          .cat-tail { transform-origin: 25px 50px; }
+          .cat-head { transform-origin: 75px 40px; }
+
+          .monkey-sprite {
+            width: 260px;
+            height: 1200px;
+            pointer-events: none;
+            margin-top: 0;
+            margin-left: -130px;
+            overflow: visible;
+          }
+
+          @keyframes monkey-tail-swing { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(15deg); } }
+          @keyframes monkey-leg-swing { 0%, 100% { transform: rotate(5deg); } 50% { transform: rotate(-10deg); } }
+
+          .monkey-tail { transform-origin: 20px 80px; animation: monkey-tail-swing 1.5s infinite ease-in-out; }
+          .monkey-leg { transform-origin: 0 80px; animation: monkey-leg-swing 1.2s infinite ease-in-out; }
+          .monkey-leg.alt { animation-delay: -0.6s; }
+
+          .hawk-sprite {
+            width: 140px;
+            height: 140px;
+            margin-top: -70px;
+            margin-left: -70px;
+            pointer-events: none;
+            overflow: visible;
+          }
+
+          @keyframes flap-l { 0%, 100% { transform: scaleY(1) skewX(0deg); } 50% { transform: scaleY(0.2) skewX(-15deg); } }
+          @keyframes flap-r { 0%, 100% { transform: scaleY(1) skewX(0deg); } 50% { transform: scaleY(0.2) skewX(15deg); } }
+
+          .hawk-wing-l { transform-origin: 0 0; animation: flap-l 0.25s infinite ease-in-out; }
+          .hawk-wing-r { transform-origin: 0 0; animation: flap-r 0.25s infinite ease-in-out -0.1s; }
+
+          @keyframes pulse-text { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+          .loading-text {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 28px;
+            font-weight: bold;
+            color: hsl(25, 15%, 25%);
+            animation: pulse-text 2s infinite ease-in-out;
+            pointer-events: none;
+            transform: rotate(-3deg);
+          }
+
+          .loading-hint {
+            position: absolute;
+            bottom: 35px;
+            left: 40px;
+            font-size: 20px;
+            color: hsl(25, 15%, 25%);
+            opacity: 0.7;
+            pointer-events: none;
+            transform: rotate(2deg);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="loading-text">Loading...</div>
+        <div class="loading-hint">Click anywhere to interact with physics!</div>
+
+        <div class="scene" id="scene">
+          <div class="world" id="world">
+            <div class="shadow die-shadow" id="shadow-0"></div>
+            <div class="shadow die-shadow" id="shadow-1"></div>
+            <div class="shadow die-shadow" id="shadow-2"></div>
+            <div class="shadow cat-shadow" id="cat-shadow"></div>
+            <div class="shadow monkey-shadow" id="monkey-shadow"></div>
+            <div class="shadow hawk-shadow" id="hawk-shadow"></div>
+
+            <div class="pos d-white" id="pos-0">
+              <div class="rot" id="rot-0">
+                <div class="face front"><span class="pip mc red"></span></div>
+                <div class="face back"><span class="pip tl"></span><span class="pip ml"></span><span class="pip bl"></span><span class="pip tr"></span><span class="pip mr"></span><span class="pip br"></span></div>
+                <div class="face right"><span class="pip tl"></span><span class="pip bl"></span><span class="pip tr"></span><span class="pip br"></span></div>
+                <div class="face left"><span class="pip tr"></span><span class="pip mc"></span><span class="pip bl"></span></div>
+                <div class="face top"><span class="pip tl"></span><span class="pip tr"></span><span class="pip mc"></span><span class="pip bl"></span><span class="pip br"></span></div>
+                <div class="face bottom"><span class="pip tl"></span><span class="pip br"></span></div>
+              </div>
+            </div>
+
+            <div class="pos d-red" id="pos-1">
+              <div class="rot" id="rot-1">
+                <div class="face front"><span class="pip mc"></span></div>
+                <div class="face back"><span class="pip tl"></span><span class="pip ml"></span><span class="pip bl"></span><span class="pip tr"></span><span class="pip mr"></span><span class="pip br"></span></div>
+                <div class="face right"><span class="pip tl"></span><span class="pip bl"></span><span class="pip tr"></span><span class="pip br"></span></div>
+                <div class="face left"><span class="pip tr"></span><span class="pip mc"></span><span class="pip bl"></span></div>
+                <div class="face top"><span class="pip tl"></span><span class="pip tr"></span><span class="pip mc"></span><span class="pip bl"></span><span class="pip br"></span></div>
+                <div class="face bottom"><span class="pip tl"></span><span class="pip br"></span></div>
+              </div>
+            </div>
+
+            <div class="pos d-blue" id="pos-2">
+              <div class="rot" id="rot-2">
+                <div class="face front"><span class="pip mc"></span></div>
+                <div class="face back"><span class="pip tl"></span><span class="pip ml"></span><span class="pip bl"></span><span class="pip tr"></span><span class="pip mr"></span><span class="pip br"></span></div>
+                <div class="face right"><span class="pip tl"></span><span class="pip bl"></span><span class="pip tr"></span><span class="pip br"></span></div>
+                <div class="face left"><span class="pip tr"></span><span class="pip mc"></span><span class="pip bl"></span></div>
+                <div class="face top"><span class="pip tl"></span><span class="pip tr"></span><span class="pip mc"></span><span class="pip bl"></span><span class="pip br"></span></div>
+                <div class="face bottom"><span class="pip tl"></span><span class="pip br"></span></div>
+              </div>
+            </div>
+
+            <div class="pos" id="monkey-pivot" style="display: none;">
+              <div class="rot" id="monkey-rot">
+                <svg id="monkey-svg" class="monkey-sprite" viewBox="-130 0 260 1200">
+                  <g stroke="hsl(25, 15%, 25%)" stroke-width="3" fill="hsl(39, 40%, 96%)" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M 0 0 C 25 300, -20 600, 0 920" fill="none" stroke-width="5" stroke="hsl(120, 20%, 35%)" />
+                    <path d="M 5 150 C 20 180, 10 220, -2 180 Z" fill="hsl(120, 30%, 40%)" />
+                    <path d="M -5 450 C -30 480, -10 520, 3 480 Z" fill="hsl(120, 30%, 40%)" />
+                    <path d="M 8 700 C 30 730, 15 770, -2 730 Z" fill="hsl(120, 30%, 40%)" />
+                    <g transform="translate(0, 920)">
+                      <path class="monkey-tail" d="M 25 75 C 80 60, 130 130, 60 170 C 10 210, -20 150, 10 130" fill="none" stroke-width="4" />
+                      <path d="M -45 25 C -30 -15, -5 -25, 0 -10 C 5 15, -15 30, -45 25 Z" />
+                      <path d="M 45 25 C 30 -15, 5 -25, 0 -10 C -5 15, 15 30, 45 25 Z" />
+                      <path class="monkey-leg" d="M -20 85 C -50 130, -40 170, -20 160" fill="none" stroke-width="4.5" />
+                      <path class="monkey-leg alt" d="M 20 85 C 50 130, 40 170, 20 160" fill="none" stroke-width="4.5" />
+                      <path d="M 0 20 C 50 20, 55 85, 0 100 C -50 85, -55 20, 0 20 Z" />
+                      <path d="M 0 -15 C 38 -15, 38 40, 0 40 C -38 40, -38 -15, 0 -15 Z" />
+                      <path d="M -32 5 C -55 0, -55 30, -30 30" fill="none" stroke-width="3" />
+                      <path d="M 32 5 C 55 0, 55 30, 30 30" fill="none" stroke-width="3" />
+                      <circle cx="-12" cy="12" r="3" fill="hsl(25, 15%, 25%)" stroke="none" />
+                      <circle cx="12" cy="12" r="3" fill="hsl(25, 15%, 25%)" stroke="none" />
+                      <path d="M -15 25 Q 0 35 15 25 Q 0 38 -15 25" fill="hsl(15, 80%, 92%)" />
+                    </g>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <div class="pos" id="cat-pos" style="display: none;">
+              <div class="rot">
+                <svg id="cat-svg" class="cat-sprite" viewBox="0 0 140 120">
+                  <g id="cat-flip-group">
+                    <g stroke="hsl(25, 15%, 25%)" stroke-width="3" fill="hsl(39, 40%, 96%)" stroke-linecap="round" stroke-linejoin="round">
+                      <g class="leg-bl"><path d="M 35 65 L 28 100 L 35 100" /></g>
+                      <g class="leg-br"><path d="M 50 65 L 43 100 L 50 100" /></g>
+                      <path class="cat-tail" d="M 25 50 C 5 35, -15 10, 15 5 C 25 3, 30 15, 20 25" />
+                      <g class="cat-body-group">
+                        <path d="M 25 50 C 30 30, 70 25, 85 45 C 90 65, 75 75, 45 75 C 20 75, 15 65, 25 50 Z" />
+                        <g class="cat-head">
+                          <path d="M 75 30 C 65 45, 70 65, 85 65 C 100 65, 110 50, 100 30 C 95 25, 85 22, 75 30 Z" />
+                          <path d="M 74 35 L 65 12 L 84 28" />
+                          <path d="M 98 33 L 108 12 L 92 26" />
+                          <ellipse cx="82" cy="42" rx="3" ry="5" fill="hsl(39, 40%, 96%)" />
+                          <circle cx="82" cy="42" r="1.5" fill="hsl(25, 15%, 25%)" stroke="none" />
+                          <ellipse cx="94" cy="42" rx="3" ry="5" fill="hsl(39, 40%, 96%)" />
+                          <circle cx="94" cy="42" r="1.5" fill="hsl(25, 15%, 25%)" stroke="none" />
+                          <path d="M 86 50 L 88 53 L 90 50" fill="hsl(15, 80%, 92%)" stroke-width="1.5" />
+                          <path d="M 75 50 L 60 45 M 75 53 L 55 53 M 75 56 L 60 61" stroke-width="1.5" fill="none" />
+                          <path d="M 101 50 L 116 45 M 101 53 L 121 53 M 101 56 L 116 61" stroke-width="1.5" fill="none" />
+                        </g>
+                      </g>
+                      <g class="leg-fl"><path d="M 65 65 L 63 100 L 70 100" /></g>
+                      <g class="leg-fr"><path d="M 80 60 L 80 100 L 87 100" /></g>
+                    </g>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <div class="pos" id="hawk-pos" style="display: none;">
+              <div class="rot" id="hawk-rot">
+                <svg id="hawk-svg" class="hawk-sprite" viewBox="-70 -70 140 140">
+                  <g stroke="hsl(25, 15%, 25%)" stroke-width="3" fill="hsl(39, 40%, 96%)" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M -20 0 L -50 -20 L -45 0 L -50 20 Z" />
+                    <g class="hawk-wing-l">
+                      <path d="M -10 -10 C -20 -50, 10 -70, 30 -60 C 20 -40, 5 -20, 0 0 Z" fill="hsl(39, 40%, 96%)" />
+                      <path d="M 10 -45 L 5 -55 M 0 -35 L -10 -45 M 20 -55 L 15 -65" stroke-width="1.5" />
+                    </g>
+                    <g class="hawk-wing-r">
+                      <path d="M -10 10 C -20 50, 10 70, 30 60 C 20 40, 5 20, 0 0 Z" fill="hsl(39, 40%, 96%)" />
+                      <path d="M 10 45 L 5 55 M 0 35 L -10 45 M 20 55 L 15 65" stroke-width="1.5" />
+                    </g>
+                    <path d="M -25 0 C -15 -18, 25 -15, 35 0 C 25 15, -15 18, -25 0 Z" />
+                    <circle cx="35" cy="0" r="10" />
+                    <path d="M 42 3 C 50 5, 55 0, 50 -4 L 43 -2 Z" fill="hsl(25, 15%, 25%)" />
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  </foreignObject>
+  <script><![CDATA[
+    const GRAVITY = 1.3;
+    const BOUNCE = 0.55;
+    const FLOOR_Y = 160;
+    const SHADOW_Y = 195;
+    const XHTML_NS = 'http://www.w3.org/1999/xhtml';
+
+    class DiePhysics {
+      constructor(index) {
+        this.index = index;
+        this.posEl = document.getElementById(`pos-${index}`);
+        this.rotEl = document.getElementById(`rot-${index}`);
+        this.shadowEl = document.getElementById(`shadow-${index}`);
+        this.size = 80;
+        this.radius = 45;
+        this.isGrabbed = false;
+        this.roll(false);
+      }
+
+      roll(isClick) {
+        this.settling = false;
+        this.isGrabbed = false;
+        if (isClick) {
+          this.y -= 10;
+        } else {
+          this.x = (this.index - 1) * 120 + (Math.random() - 0.5) * 50;
+          this.y = -700 - Math.random() * 400;
+          this.z = (Math.random() - 0.5) * 100;
+          this.vx = (Math.random() - 0.5) * 15;
+          this.vy = Math.random() * 10;
+          this.vz = (Math.random() - 0.5) * 15;
+          this.rx = Math.random() * 360;
+          this.ry = Math.random() * 360;
+          this.rz = Math.random() * 360;
+          this.vrx = (Math.random() - 0.5) * 50;
+          this.vry = (Math.random() - 0.5) * 50;
+          this.vrz = (Math.random() - 0.5) * 50;
+        }
+      }
+
+      update() {
+        if (this.isGrabbed) return;
+        if (!this.settling) {
+          this.vy += GRAVITY;
+          this.x += this.vx;
+          this.y += this.vy;
+          this.z += this.vz;
+          this.rx += this.vrx;
+          this.ry += this.vry;
+          this.rz += this.vrz;
+          this.vx *= 0.995;
+          this.vz *= 0.995;
+
+          if (this.y > FLOOR_Y) {
+            this.y = FLOOR_Y;
+            this.vy *= -BOUNCE;
+            this.vx *= 0.82;
+            this.vz *= 0.82;
+            this.vrx *= 0.82;
+            this.vry *= 0.82;
+            this.vrz *= 0.82;
+            if (Math.abs(this.vy) > 2) {
+              this.vrx += (Math.random() - 0.5) * 25;
+              this.vry += (Math.random() - 0.5) * 25;
+            }
+          }
+
+          const boundsX = 400;
+          const boundsZ = 280;
+          if (this.x < -boundsX) { this.x = -boundsX; this.vx *= -BOUNCE; this.vry += 15; }
+          if (this.x > boundsX) { this.x = boundsX; this.vx *= -BOUNCE; this.vry -= 15; }
+          if (this.z < -boundsZ) { this.z = -boundsZ; this.vz *= -BOUNCE; this.vrx -= 15; }
+          if (this.z > boundsZ) { this.z = boundsZ; this.vz *= -BOUNCE; this.vrx += 15; }
+
+          const speed = Math.abs(this.vx) + Math.abs(this.vy) + Math.abs(this.vz) +
+            Math.abs(this.vrx) + Math.abs(this.vry) + Math.abs(this.vrz);
+
+          if (speed < 2.0 && Math.abs(this.y - FLOOR_Y) < 2) {
+            this.settling = true;
+            this.vx = this.vy = this.vz = 0;
+            this.vrx = this.vry = this.vrz = 0;
+            this.y = FLOOR_Y;
+          }
+        } else {
+          this.rx += (Math.round(this.rx / 90) * 90 - this.rx) * 0.15;
+          this.ry += (Math.round(this.ry / 90) * 90 - this.ry) * 0.15;
+          this.rz += (Math.round(this.rz / 90) * 90 - this.rz) * 0.15;
+        }
+      }
+
+      draw() {
+        this.posEl.style.transform = `translate3d(${this.x}px, ${this.y}px, ${this.z}px)`;
+        this.rotEl.style.transform = `rotateX(${this.rx}deg) rotateY(${this.ry}deg) rotateZ(${this.rz}deg)`;
+        const distFromFloor = Math.max(0, FLOOR_Y - this.y);
+        const scale = Math.max(0.1, 1 - distFromFloor / 300);
+        let opacity = Math.max(0, 0.7 - distFromFloor / 400);
+        if (this.isGrabbed) opacity = 0;
+        this.shadowEl.style.transform = `translate3d(${this.x}px, ${SHADOW_Y}px, ${this.z}px) rotateX(90deg) scale(${scale})`;
+        this.shadowEl.style.opacity = opacity;
+      }
+    }
+
+    class SketchMonkey {
+      constructor() {
+        this.pivotEl = document.getElementById('monkey-pivot');
+        this.rotEl = document.getElementById('monkey-rot');
+        this.shadowEl = document.getElementById('monkey-shadow');
+        this.state = 'IDLE';
+        this.radius = 920;
+        this.pivotY = -750;
+        this.z = 0;
+        this.swingAngle = 0;
+        this.speed = 0;
+      }
+
+      trigger() {
+        if (this.state !== 'IDLE') return;
+        this.state = 'SWINGING';
+        const fromRight = Math.random() > 0.5;
+        this.swingAngle = fromRight ? (Math.PI / 2.1) : -(Math.PI / 2.1);
+        this.speed = 0;
+        this.pivotEl.style.display = 'block';
+        this.hasHit = false;
+        this.z = (Math.random() - 0.5) * 80;
+        this.pivotEl.style.transform = `translate3d(0px, ${this.pivotY}px, ${this.z}px)`;
+      }
+
+      update(diceArr) {
+        if (this.state === 'SWINGING') {
+          const angularGravity = 0.0035;
+          const acceleration = -angularGravity * Math.sin(this.swingAngle);
+          this.speed += acceleration;
+          this.speed *= 0.995;
+          this.swingAngle += this.speed;
+          this.rotEl.style.transform = `rotateZ(${this.swingAngle}rad)`;
+
+          const monkeyX = Math.sin(this.swingAngle) * this.radius;
+          const monkeyY = this.pivotY + Math.cos(this.swingAngle) * this.radius;
+          const shadowOpacity = Math.max(0, 0.7 - Math.abs(monkeyX) / 500);
+          this.shadowEl.style.opacity = shadowOpacity;
+          this.shadowEl.style.transform = `translate3d(${monkeyX}px, ${SHADOW_Y}px, ${this.z}px) rotateX(90deg) scale(${1 - Math.abs(monkeyX) / 1000})`;
+
+          if (!this.hasHit && Math.abs(this.swingAngle) < 0.2) {
+            this.batDice(diceArr, monkeyX, monkeyY);
+            this.hasHit = true;
+          }
+
+          if (this.hasHit && Math.abs(this.speed) < 0.003 && Math.abs(this.swingAngle) > 1.2) {
+            this.state = 'IDLE';
+            this.pivotEl.style.display = 'none';
+            this.shadowEl.style.opacity = 0;
+          }
+        }
+      }
+
+      batDice(diceArr, mx, my) {
+        diceArr.forEach(d => {
+          const dx = d.x - mx;
+          const dz = d.z - this.z;
+          const dist = Math.max(1, Math.sqrt(dx * dx + dz * dz));
+          if (dist < 320 && d.y > FLOOR_Y - 100) {
+            d.settling = false;
+            d.isGrabbed = false;
+            d.y -= 15;
+            const force = 1200 / (dist + 20);
+            d.vx = (dx / dist) * force + (this.speed * 500) + (Math.random() - 0.5) * 20;
+            d.vy = -20 - Math.random() * 25;
+            d.vz = (dz / dist) * force + (Math.random() - 0.5) * 20;
+            d.vrx = (Math.random() - 0.5) * 150;
+            d.vry = (Math.random() - 0.5) * 150;
+            d.vrz = (Math.random() - 0.5) * 150;
+          }
+        });
+      }
+    }
+
+    class SketchCat {
+      constructor() {
+        this.posEl = document.getElementById('cat-pos');
+        this.svgEl = document.getElementById('cat-svg');
+        this.flipGroup = document.getElementById('cat-flip-group');
+        this.shadowEl = document.getElementById('cat-shadow');
+        this.state = 'IDLE';
+        this.timer = 0;
+        this.speed = 3.5;
+      }
+
+      trigger() {
+        if (this.state !== 'IDLE') return;
+        this.side = Math.random() > 0.5 ? 'left' : 'right';
+        this.startX = this.side === 'left' ? -650 : 650;
+        this.targetX = this.side === 'left' ? -90 - Math.random() * 40 : 90 + Math.random() * 40;
+        this.x = this.startX;
+        this.y = FLOOR_Y;
+        this.z = (Math.random() - 0.5) * 180;
+
+        if (this.side === 'right') {
+          this.flipGroup.setAttribute('transform', 'scale(-1, 1) translate(-140, 0)');
+        } else {
+          this.flipGroup.setAttribute('transform', 'scale(1, 1) translate(0, 0)');
+        }
+
+        this.state = 'WALKING_IN';
+        this.svgEl.classList.add('walking');
+        this.posEl.style.display = 'block';
+      }
+
+      update(diceArr) {
+        if (this.state === 'WALKING_IN') {
+          if (this.side === 'left') {
+            this.x += this.speed;
+            if (this.x >= this.targetX) this.startAttack();
+          } else {
+            this.x -= this.speed;
+            if (this.x <= this.targetX) this.startAttack();
+          }
+        } else if (this.state === 'SWIPING') {
+          this.timer--;
+          if (this.timer === 25) this.svgEl.classList.add('swiping');
+          if (this.timer === 12) this.batDice(diceArr);
+          if (this.timer <= 0) {
+            this.state = 'WALKING_OUT';
+            this.svgEl.classList.remove('swiping');
+            this.svgEl.classList.add('walking');
+            if (this.side === 'left') {
+              this.flipGroup.setAttribute('transform', 'scale(-1, 1) translate(-140, 0)');
+            } else {
+              this.flipGroup.setAttribute('transform', 'scale(1, 1) translate(0, 0)');
+            }
+          }
+        } else if (this.state === 'WALKING_OUT') {
+          if (this.side === 'left') {
+            this.x -= this.speed;
+            if (this.x < -650) this.reset();
+          } else {
+            this.x += this.speed;
+            if (this.x > 650) this.reset();
+          }
+        }
+      }
+
+      startAttack() {
+        this.state = 'SWIPING';
+        this.svgEl.classList.remove('walking');
+        this.timer = 40;
+      }
+
+      reset() {
+        this.state = 'IDLE';
+        this.posEl.style.display = 'none';
+        this.svgEl.classList.remove('walking');
+        this.shadowEl.style.opacity = 0;
+      }
+
+      batDice(diceArr) {
+        const pawX = this.side === 'left' ? this.x + 95 : this.x + 45;
+        diceArr.forEach(d => {
+          const dx = d.x - pawX;
+          const dz = d.z - this.z;
+          const dist = Math.max(1, Math.sqrt(dx * dx + dz * dz));
+          if (dist < 220 && !d.isGrabbed) {
+            d.settling = false;
+            d.y -= 8;
+            const force = 900 / (dist + 5);
+            const dirX = this.side === 'left' ? 1 : -1;
+            d.vx = (dx / dist) * force + (dirX * 12) + (Math.random() - 0.5) * 15;
+            d.vy = -12 - Math.random() * 20;
+            d.vz = (dz / dist) * force + (Math.random() - 0.5) * 20;
+            d.vrx = (Math.random() - 0.5) * 100;
+            d.vry = (Math.random() - 0.5) * 100;
+            d.vrz = (Math.random() - 0.5) * 100;
+          }
+        });
+      }
+
+      draw() {
+        if (this.state === 'IDLE') return;
+        this.posEl.style.transform = `translate3d(${this.x}px, ${this.y}px, ${this.z}px)`;
+        this.shadowEl.style.opacity = 0.6;
+        this.shadowEl.style.transform = `translate3d(${this.x + 60}px, ${SHADOW_Y}px, ${this.z}px) rotateX(90deg)`;
+      }
+    }
+
+    class SketchHawk {
+      constructor() {
+        this.posEl = document.getElementById('hawk-pos');
+        this.rotEl = document.getElementById('hawk-rot');
+        this.shadowEl = document.getElementById('hawk-shadow');
+        this.state = 'IDLE';
+        this.angle = 0;
+      }
+
+      trigger(diceArr) {
+        if (this.state !== 'IDLE') return;
+        const available = diceArr.filter(d => !d.isGrabbed && d.y >= FLOOR_Y - 5);
+        if (available.length === 0) return;
+        this.targetDie = available[Math.floor(Math.random() * available.length)];
+        this.targetDie.settling = false;
+        this.grabX = this.targetDie.x;
+        this.grabZ = this.targetDie.z;
+        this.y = -900;
+        this.r = 300 + Math.random() * 150;
+        this.angle = Math.random() * Math.PI * 2;
+        this.orbitSpeed = 0.05 + Math.random() * 0.02;
+        this.lastX = 0;
+        this.lastZ = 0;
+        this.state = 'CIRCLING_DOWN';
+        this.posEl.style.display = 'block';
+      }
+
+      update() {
+        if (this.state === 'IDLE') return;
+        this.angle += this.orbitSpeed;
+        if (this.state === 'CIRCLING_DOWN') {
+          this.y += 18;
+          this.r += (0 - this.r) * 0.04;
+          if (this.y >= FLOOR_Y - 50) {
+            this.y = FLOOR_Y - 50;
+            this.state = 'GRABBING';
+            this.targetDie.isGrabbed = true;
+            this.targetDie.settling = false;
+          }
+        } else if (this.state === 'GRABBING') {
+          this.state = 'LIFTING';
+        } else if (this.state === 'LIFTING') {
+          this.y -= 12;
+          this.r += 2.5;
+          this.orbitSpeed = 0.03;
+          if (this.targetDie && this.targetDie.isGrabbed) {
+            this.targetDie.x = this.x;
+            this.targetDie.y = this.y + 40;
+            this.targetDie.z = this.z;
+            this.targetDie.rx += 10;
+            this.targetDie.ry += 25;
+          }
+          if (this.y < -350 - Math.random() * 200) {
+            this.state = 'DROPPING';
+          }
+        } else if (this.state === 'DROPPING') {
+          if (this.targetDie && this.targetDie.isGrabbed) {
+            this.targetDie.isGrabbed = false;
+            const dx = this.x - this.lastX;
+            const dz = this.z - this.lastZ;
+            this.targetDie.vx = dx * 1.5;
+            this.targetDie.vz = dz * 1.5;
+            this.targetDie.vy = 5;
+          }
+          this.state = 'FLYING_AWAY';
+        } else if (this.state === 'FLYING_AWAY') {
+          this.y -= 25;
+          this.r += 8;
+          if (this.y < -1200) {
+            this.state = 'IDLE';
+            this.posEl.style.display = 'none';
+            this.shadowEl.style.opacity = 0;
+          }
+        }
+        this.lastX = this.x;
+        this.lastZ = this.z;
+        this.x = this.grabX + Math.cos(this.angle) * this.r;
+        this.z = this.grabZ + Math.sin(this.angle) * this.r;
+      }
+
+      draw() {
+        if (this.state === 'IDLE') return;
+        const dx = this.x - this.lastX;
+        const dz = this.z - this.lastZ;
+        const flightAngle = Math.atan2(dz, dx) * 180 / Math.PI;
+        this.posEl.style.transform = `translate3d(${this.x}px, ${this.y}px, ${this.z}px)`;
+        this.rotEl.style.transform = `rotateY(${-flightAngle}deg) rotateZ(12deg) rotateX(10deg)`;
+        const shadowOpacity = Math.max(0, 0.5 - (FLOOR_Y - this.y) / 1000);
+        const shadowScale = Math.max(0.1, 1 - (FLOOR_Y - this.y) / 800);
+        this.shadowEl.style.opacity = shadowOpacity;
+        this.shadowEl.style.transform = `translate3d(${this.x}px, ${SHADOW_Y}px, ${this.z}px) rotateX(90deg) scale(${shadowScale})`;
+      }
+    }
+
+    const dice = [new DiePhysics(0), new DiePhysics(1), new DiePhysics(2)];
+    const cat = new SketchCat();
+    const monkey = new SketchMonkey();
+    const hawk = new SketchHawk();
+
+    function resolveCollisions() {
+      for (let i = 0; i < dice.length; i++) {
+        for (let j = i + 1; j < dice.length; j++) {
+          const d1 = dice[i];
+          const d2 = dice[j];
+          if (d1.isGrabbed || d2.isGrabbed) continue;
+          const dx = d2.x - d1.x;
+          const dy = d2.y - d1.y;
+          const dz = d2.z - d1.z;
+          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          const minDist = d1.radius + d2.radius;
+          if (dist < minDist && dist > 0.1) {
+            const overlap = minDist - dist;
+            const nx = dx / dist;
+            const ny = dy / dist;
+            const nz = dz / dist;
+            d1.x -= nx * overlap * 0.5;
+            d1.y -= ny * overlap * 0.5;
+            d1.z -= nz * overlap * 0.5;
+            d2.x += nx * overlap * 0.5;
+            d2.y += ny * overlap * 0.5;
+            d2.z += nz * overlap * 0.5;
+            const dvx = d1.vx - d2.vx;
+            const dvy = d1.vy - d2.vy;
+            const dvz = d1.vz - d2.vz;
+            const p = (nx * dvx + ny * dvy + nz * dvz) * 1.2;
+            d1.vx -= p * nx;
+            d1.vy -= p * ny;
+            d1.vz -= p * nz;
+            d2.vx += p * nx;
+            d2.vy += p * ny;
+            d2.vz += p * nz;
+            d1.settling = false;
+            d2.settling = false;
+          }
+        }
+      }
+
+      if (cat.state !== 'IDLE') {
+        const catCX = cat.x + 70;
+        for (let i = 0; i < dice.length; i++) {
+          const d = dice[i];
+          if (d.isGrabbed) continue;
+          const dx = d.x - catCX;
+          const dz = d.z - cat.z;
+          const dist = Math.max(1, Math.sqrt(dx * dx + dz * dz));
+          const minDist = d.radius + 50;
+          if (dist < minDist && d.y > FLOOR_Y - 90) {
+            const overlap = minDist - dist;
+            const nx = dx / dist;
+            const nz = dz / dist;
+            d.x += nx * overlap;
+            d.z += nz * overlap;
+            d.vx += nx * 6;
+            d.vz += nz * 6;
+            d.settling = false;
+          }
+        }
+      }
+    }
+
+    let idleFrames = 0;
+    let frameCount = 0;
+
+    function runDirector() {
+      frameCount++;
+      const isSettled = dice.every(d => d.settling || d.isGrabbed);
+      idleFrames = isSettled ? idleFrames + 1 : 0;
+
+      if (idleFrames > 80) {
+        if (cat.state === 'IDLE' && monkey.state === 'IDLE' && hawk.state === 'IDLE') {
+          const r = Math.random();
+          if (r < 0.35) cat.trigger();
+          else if (r < 0.70) monkey.trigger();
+          else hawk.trigger(dice);
+          idleFrames = 0;
+        }
+      }
+
+      if (Math.random() < 0.0015 && cat.state === 'IDLE' && monkey.state === 'IDLE' && hawk.state === 'IDLE') {
+        const r = Math.random();
+        if (r < 0.33) cat.trigger();
+        else if (r < 0.66) monkey.trigger();
+        else hawk.trigger(dice);
+      }
+    }
+
+    function animate() {
+      runDirector();
+      hawk.update();
+      monkey.update(dice);
+      cat.update(dice);
+      dice.forEach(d => d.update());
+      resolveCollisions();
+
+      const renderables = [
+        { el: dice[0].posEl, z: dice[0].z },
+        { el: dice[1].posEl, z: dice[1].z },
+        { el: dice[2].posEl, z: dice[2].z },
+        { el: cat.posEl, z: cat.state !== 'IDLE' ? cat.z : -9999 },
+        { el: monkey.pivotEl, z: monkey.state !== 'IDLE' ? monkey.z : -9999 },
+        { el: hawk.posEl, z: hawk.state !== 'IDLE' ? hawk.z : -9999 }
+      ];
+
+      renderables.sort((a, b) => b.z - a.z);
+      renderables.forEach((obj, i) => {
+        if (obj.el) obj.el.style.zIndex = i + 10;
+      });
+
+      hawk.draw();
+      cat.draw();
+      dice.forEach(d => d.draw());
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+
+    window.addEventListener('pointerdown', e => {
+      const rectSource = document.body || document.documentElement;
+      const rect = rectSource.getBoundingClientRect();
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const clickX = (e.clientX - cx) * 1.1;
+      const clickZ = (e.clientY - cy - (FLOOR_Y * 0.3)) * 2.2;
+
+      const ripple = document.createElementNS(XHTML_NS, 'div');
+      ripple.className = 'ripple';
+      ripple.style.transform = `translate3d(${clickX}px, ${FLOOR_Y}px, ${clickZ}px) rotateX(90deg)`;
+      document.getElementById('world').appendChild(ripple);
+      setTimeout(() => ripple.remove(), 500);
+
+      dice.forEach(d => {
+        if (d.isGrabbed) return;
+        const dx = d.x - clickX;
+        const dz = d.z - clickZ;
+        const dist = Math.max(15, Math.sqrt(dx * dx + dz * dz));
+        const force = 2200 / dist;
+        d.vx += (dx / dist) * force + (Math.random() - 0.5) * 20;
+        d.vz += (dz / dist) * force + (Math.random() - 0.5) * 20;
+        d.vy = -10 - (1000 / dist) - Math.random() * 10;
+        d.vrx += (Math.random() - 0.5) * 120;
+        d.vry += (Math.random() - 0.5) * 120;
+        d.vrz += (Math.random() - 0.5) * 120;
+        d.settling = false;
+        if (d.y >= FLOOR_Y - 5) d.y -= 15;
+      });
+
+      idleFrames = 0;
+    });
+  ]]></script>
+</svg>
