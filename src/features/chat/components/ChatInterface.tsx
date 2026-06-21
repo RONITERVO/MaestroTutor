@@ -213,6 +213,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   }, []);
 
   const liveSessionState = useMaestroStore(state => state.liveSessionState);
+  const [suggestionPracticeTarget, setSuggestionPracticeTarget] = useState<string | null>(null);
+  const isLiveSession = liveSessionState === 'active' || liveSessionState === 'connecting';
+  const handleEndSuggestionPractice = useCallback(() => {
+    setSuggestionPracticeTarget(null);
+  }, []);
+  const handlePracticeSuggestion = useCallback((suggestion: ReplySuggestion) => {
+    if (isLiveSession) return;
+    if (isSpeaking) stopSpeaking();
+    if (settings.isSuggestionMode) onToggleSuggestionMode(false);
+    setSuggestionPracticeTarget(suggestion.target);
+    onUserInputActivity();
+  }, [
+    isLiveSession,
+    isSpeaking,
+    onToggleSuggestionMode,
+    onUserInputActivity,
+    settings.isSuggestionMode,
+    stopSpeaking,
+  ]);
+  useEffect(() => {
+    if (isLiveSession) setSuggestionPracticeTarget(null);
+  }, [isLiveSession]);
+  useEffect(() => {
+    setSuggestionPracticeTarget(null);
+  }, [selectedLanguagePair?.id]);
   const prevLiveStateRef = useRef(liveSessionState);
   useEffect(() => {
     if (liveSessionState === 'active' && prevLiveStateRef.current !== 'active') {
@@ -920,6 +945,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     onToggleSendWithSnapshot={onToggleSendWithSnapshot}
                     onToggleUseVisualContextForReengagement={onToggleUseVisualContextForReengagement}
                     onScrollToBottom={scrollToBottom}
+                    suggestionPracticeTarget={suggestionPracticeTarget}
+                    onEndSuggestionPractice={handleEndSuggestionPractice}
                 />
             {isLanguageSelectionOpen && (
                 <div className="mt-3 w-full max-w-2xl animate-fade-in-up">
@@ -941,6 +968,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     stopSpeaking={stopSpeaking}
                     onToggleSpeakNativeLang={onToggleSpeakNativeLang}
                     speakNativeLang={speakNativeLang}
+                    onPracticeSuggestion={handlePracticeSuggestion}
+                    isPracticeDisabled={isLiveSession}
                 />
             )}
         </div>

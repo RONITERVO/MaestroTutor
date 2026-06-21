@@ -21,6 +21,10 @@ import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 import { normalizeAttachmentMimeType } from '../utils/fileAttachments';
 import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
 import { createSmartRef } from '../../../shared/utils/smartRef';
+import {
+  getNextSuggestionPracticeStep,
+  getSuggestionPracticeProgress,
+} from '../utils/suggestionPractice';
 
 interface InputAreaProps {
   onSttToggle: () => void;
@@ -34,6 +38,8 @@ interface InputAreaProps {
   onToggleSendWithSnapshot: () => void;
   onToggleUseVisualContextForReengagement: () => void;
   onScrollToBottom?: () => void;
+  suggestionPracticeTarget: string | null;
+  onEndSuggestionPractice: () => void;
 }
 
 type ComposerAttachmentCandidate = {
@@ -163,6 +169,8 @@ const InputArea: React.FC<InputAreaProps> = ({
   onToggleSendWithSnapshot,
   onToggleUseVisualContextForReengagement,
   onScrollToBottom,
+  suggestionPracticeTarget,
+  onEndSuggestionPractice,
 }) => {
   const { t } = useAppTranslations();
   const settings = useMaestroStore(state => state.settings);
@@ -246,9 +254,18 @@ const InputArea: React.FC<InputAreaProps> = ({
   const bubbleTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevTranscriptRef = useRef('');
+  const activePracticeTargetRef = useRef<string | null>(null);
+  const draftBeforePracticeRef = useRef('');
   const attachedPreviewVideoRef = useRef<HTMLVideoElement>(null);
   const paperclipOpenTokenRef = useRef<string | null>(null);
   const languageSelectionOpen = Boolean(isLanguageSelectionOpen);
+
+  const suggestionPracticeProgress = suggestionPracticeTarget
+    ? getSuggestionPracticeProgress(suggestionPracticeTarget, inputText)
+    : null;
+  const suggestionPracticeStep = suggestionPracticeTarget
+    ? getNextSuggestionPracticeStep(suggestionPracticeTarget, inputText)
+    : null;
 
   const isSending = useMaestroStore(selectIsSending);
   const isSpeaking = useMaestroStore(selectIsSpeaking);
@@ -277,6 +294,20 @@ const InputArea: React.FC<InputAreaProps> = ({
   const [composerPan, setComposerPan] = useState({ x: 0, y: 0 });
   const [composerUndoStack, setComposerUndoStack] = useState<ImageData[]>([]);
   const [composerIsBlankCanvas, setComposerIsBlankCanvas] = useState(false);
+  const isDrawingSuggestionPractice = Boolean(
+    composerIsBlankCanvas
+      && suggestionPracticeProgress?.state === 'following'
+      && suggestionPracticeStep
+  );
+
+  const finishSuggestionPractice = useCallback((restoreDraft: boolean) => {
+    const draft = draftBeforePracticeRef.current;
+    activePracticeTargetRef.current = null;
+    draftBeforePracticeRef.current = '';
+    if (restoreDraft) setInputText(draft);
+    onEndSuggestionPractice();
+    requestAnimationFrame(() => bubbleTextAreaRef.current?.focus());
+  }, [onEndSuggestionPractice]);
 
   const composerViewportRef = useRef<HTMLDivElement>(null);
   const composerImageRef = useRef<HTMLImageElement | null>(null);
@@ -313,24 +344,55 @@ const InputArea: React.FC<InputAreaProps> = ({
   }, [isComposerAnnotating, onScrollToBottom]);
 
   useEffect(() => {
+    if (!suggestionPracticeTarget) {
+      if (activePracticeTargetRef.current !== null) {
+        const draft = draftBeforePracticeRef.current;
+        activePracticeTargetRef.current = null;
+        draftBeforePracticeRef.current = '';
+        setInputText(draft);
+        return;
+      }
+      activePracticeTargetRef.current = null;
+      draftBeforePracticeRef.current = '';
+      return;
+    }
+    if (activePracticeTargetRef.current === suggestionPracticeTarget) return;
+
+    if (activePracticeTargetRef.current === null) {
+      draftBeforePracticeRef.current = inputText;
+    }
+    activePracticeTargetRef.current = suggestionPracticeTarget;
+    setInputText('');
+    requestAnimationFrame(() => bubbleTextAreaRef.current?.focus());
+  }, [inputText, suggestionPracticeTarget]);
+
+  useEffect(() => {
     if (transcript === prevTranscriptRef.current) return;
     const shouldApply = isSttGloballyEnabled || isListening;
     if (shouldApply) {
       const raw = transcript || '';
+      if (suggestionPracticeTarget && raw.length === 0 && inputText.length > 0) {
+        prevTranscriptRef.current = transcript;
+        return;
+      }
       if (raw.length > 0 || isSttGloballyEnabled) {
         setInputText(raw);
         if (raw.trim().length >= 2) onUserInputActivity();
       }
     }
     prevTranscriptRef.current = transcript;
-  }, [transcript, isSttGloballyEnabled, isListening, onUserInputActivity]);
+  }, [transcript, isSttGloballyEnabled, isListening, onUserInputActivity, suggestionPracticeTarget, inputText]);
 
   useEffect(() => {
     if (bubbleTextAreaRef.current) {
+      if (suggestionPracticeTarget) {
+        bubbleTextAreaRef.current.style.height = '100%';
+        return;
+      }
       bubbleTextAreaRef.current.style.height = 'auto';
       bubbleTextAreaRef.current.style.height = `${bubbleTextAreaRef.current.scrollHeight}px`;
     }
-  }, [inputText]);
+  }, [inputText, suggestionPracticeTarget]);
 
   // On mount, the container query (3.6cqw font-size) may not be resolved yet,
   // causing scrollHeight to return an inflated value. Re-measure after layout settles.
@@ -413,6 +475,7 @@ const InputArea: React.FC<InputAreaProps> = ({
       }
       const textToSend = inputText.trim();
       setInputText('');
+      if (suggestionPracticeTarget) finishSuggestionPractice(false);
       await onCreateSuggestion(textToSend);
       return;
     }
@@ -421,19 +484,27 @@ const InputArea: React.FC<InputAreaProps> = ({
     setInputText('');
     const success = await onSendMessage(textToSend, attachedImageBase64 || undefined, attachedImageMimeType || undefined);
     if (success) {
+      if (suggestionPracticeTarget) finishSuggestionPractice(false);
       onSetAttachedImage(null, null);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    } else {
+      setInputText(textToSend);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape' && suggestionPracticeTarget) {
+      e.preventDefault();
+      finishSuggestionPractice(true);
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  const createDottedPaperDataUrl = useCallback((width: number, height: number) => {
+  const createDottedPaperDataUrl = useCallback((width: number, height: number, guideGrapheme?: string) => {
     const safeWidth = Math.max(640, Math.floor(width));
     const safeHeight = Math.max(480, Math.floor(height));
     const paper = document.createElement('canvas');
@@ -477,6 +548,28 @@ const InputArea: React.FC<InputAreaProps> = ({
       const x = Math.floor(Math.random() * safeWidth);
       const y = Math.floor(Math.random() * safeHeight);
       ctx.fillRect(x, y, 1, 1);
+    }
+
+    if (guideGrapheme) {
+      const fontFamily = '"Noto Sans", "Segoe UI", "Arial Unicode MS", sans-serif';
+      let fontSize = safeHeight * 0.58;
+      ctx.font = `600 ${fontSize}px ${fontFamily}`;
+      const maxGuideWidth = safeWidth * 0.72;
+      const measuredWidth = ctx.measureText(guideGrapheme).width;
+      if (measuredWidth > maxGuideWidth) {
+        fontSize *= maxGuideWidth / measuredWidth;
+        ctx.font = `600 ${fontSize}px ${fontFamily}`;
+      }
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'rgba(72, 61, 42, 0.1)';
+      ctx.strokeStyle = 'rgba(72, 61, 42, 0.28)';
+      ctx.lineWidth = Math.max(2, safeWidth / 500);
+      ctx.setLineDash([Math.max(5, safeWidth / 100), Math.max(4, safeWidth / 140)]);
+      ctx.fillText(guideGrapheme, safeWidth / 2, safeHeight / 2);
+      ctx.strokeText(guideGrapheme, safeWidth / 2, safeHeight / 2);
+      ctx.restore();
     }
 
     return paper.toDataURL('image/jpeg', 0.92);
@@ -557,10 +650,14 @@ const InputArea: React.FC<InputAreaProps> = ({
       ? Math.max(960, Math.min(1800, Math.round(window.innerWidth * 1.4)))
       : 1200;
     const baseHeight = Math.round(baseWidth * 0.75);
-    const paperDataUrl = createDottedPaperDataUrl(baseWidth, baseHeight);
+    const paperDataUrl = createDottedPaperDataUrl(
+      baseWidth,
+      baseHeight,
+      suggestionPracticeStep?.grapheme
+    );
     if (!paperDataUrl) return;
     startComposerAnnotationFromImage(paperDataUrl, { blankCanvas: true });
-  }, [createDottedPaperDataUrl, startComposerAnnotationFromImage]);
+  }, [createDottedPaperDataUrl, startComposerAnnotationFromImage, suggestionPracticeStep]);
 
   const composerGetPos = useCallback((e: React.PointerEvent<any>) => {
     const canvas = composerEditCanvasRef.current;
@@ -723,6 +820,32 @@ const InputArea: React.FC<InputAreaProps> = ({
   const handleComposerSave = useCallback(() => {
     if (!composerEditCanvasRef.current || !composerImageRef.current || !composerViewportRef.current) return;
 
+    if (isDrawingSuggestionPractice && suggestionPracticeTarget && suggestionPracticeStep) {
+      if (composerUndoStack.length === 0) return;
+
+      const nextText = `${inputText}${suggestionPracticeStep.appendText}`;
+      setInputText(nextText);
+      onUserInputActivity();
+
+      const nextStep = getNextSuggestionPracticeStep(suggestionPracticeTarget, nextText);
+      if (!nextStep) {
+        handleComposerCancel();
+        requestAnimationFrame(() => bubbleTextAreaRef.current?.focus());
+        return;
+      }
+
+      const drawingCanvas = composerEditCanvasRef.current;
+      const nextPaperDataUrl = createDottedPaperDataUrl(
+        drawingCanvas.width,
+        drawingCanvas.height,
+        nextStep.grapheme
+      );
+      if (nextPaperDataUrl) {
+        startComposerAnnotationFromImage(nextPaperDataUrl, { blankCanvas: true });
+      }
+      return;
+    }
+
     const baseImage = composerImageRef.current;
     const drawingCanvas = composerEditCanvasRef.current;
     const viewport = composerViewportRef.current;
@@ -745,7 +868,21 @@ const InputArea: React.FC<InputAreaProps> = ({
     onSetAttachedImage(dataUrl, 'image/jpeg');
     onUserInputActivity();
     handleComposerCancel();
-  }, [composerPan.x, composerPan.y, composerScale, onSetAttachedImage, onUserInputActivity, handleComposerCancel]);
+  }, [
+    composerPan.x,
+    composerPan.y,
+    composerScale,
+    composerUndoStack.length,
+    createDottedPaperDataUrl,
+    handleComposerCancel,
+    inputText,
+    isDrawingSuggestionPractice,
+    onSetAttachedImage,
+    onUserInputActivity,
+    startComposerAnnotationFromImage,
+    suggestionPracticeStep,
+    suggestionPracticeTarget,
+  ]);
 
   useEffect(() => {
     if (!isComposerAnnotating || !composerAnnotationSourceUrl) return;
@@ -898,6 +1035,7 @@ const InputArea: React.FC<InputAreaProps> = ({
               <Composer
                 t={t}
                 inputText={inputText}
+                suggestionPracticeTarget={suggestionPracticeTarget}
                 placeholder={getPlaceholderText()}
                 isDisabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
                 isDrawDisabled={isSending || isSpeaking || isComposerAnnotating || (isSuggestionMode && isCreatingSuggestion)}
@@ -905,9 +1043,12 @@ const InputArea: React.FC<InputAreaProps> = ({
                 onKeyDown={handleKeyDown}
                 onPaste={handleComposerPaste}
                 onOpenDrawCanvas={handleComposerStartBlankCanvas}
+                onCancelSuggestionPractice={() => finishSuggestionPractice(true)}
                 bubbleTextAreaRef={bubbleTextAreaRef}
                 prepDisplay={prepDisplay}
-                drawCanvasLabel={t('chat.drawMessage')}
+                drawCanvasLabel={suggestionPracticeStep
+                  ? t('chat.suggestion.drawNextCharacter', { character: suggestionPracticeStep.grapheme })
+                  : t('chat.drawMessage')}
                 drawButtonClassName={iconButtonStyle}
               />
             )}
@@ -1060,6 +1201,11 @@ const InputArea: React.FC<InputAreaProps> = ({
                   <canvas ref={composerEditCanvasRef} className="absolute top-0 left-0 w-full h-full cursor-crosshair" />
                 </div>
                 <div className="absolute inset-0 pointer-events-none">
+                  {isDrawingSuggestionPractice && suggestionPracticeStep && (
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 rounded bg-black/60 px-2 py-1 text-xs font-medium text-white select-none">
+                      {t('chat.suggestion.traceCharacter', { character: suggestionPracticeStep.grapheme })}
+                    </div>
+                  )}
                   {composerPdfPageCount > 1 && (
                     <div
                       className="absolute top-2 left-2 pointer-events-auto flex items-center space-x-1"
@@ -1146,9 +1292,14 @@ const InputArea: React.FC<InputAreaProps> = ({
                     <button
                       type="button"
                       onClick={handleComposerSave}
+                      disabled={isDrawingSuggestionPractice && composerUndoStack.length === 0}
                       className={`p-2 ${overlayAccentIconButtonClasses}`}
-                      title={t('chat.annotateModal.saveAndAttach')}
-                      aria-label={t('chat.annotateModal.saveAndAttach')}
+                      title={isDrawingSuggestionPractice
+                        ? t('chat.suggestion.completeDrawnCharacter')
+                        : t('chat.annotateModal.saveAndAttach')}
+                      aria-label={isDrawingSuggestionPractice
+                        ? t('chat.suggestion.completeDrawnCharacter')
+                        : t('chat.annotateModal.saveAndAttach')}
                     >
                       <span style={overlayIconShadowStyle}>
                         <IconCheck className="w-5 h-5" />
