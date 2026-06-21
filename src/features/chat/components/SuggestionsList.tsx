@@ -18,7 +18,12 @@ interface SuggestionsListProps {
   stopSpeaking: () => void;
   onToggleSpeakNativeLang: () => void;
   speakNativeLang: boolean;
+  onPracticeSuggestion: (suggestion: ReplySuggestion) => void;
+  isPracticeDisabled: boolean;
 }
+
+const LONG_PRESS_DURATION_MS = 550;
+const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
 
 const SuggestionsList: React.FC<SuggestionsListProps> = ({
   t,
@@ -26,7 +31,9 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
   onSuggestionClick,
   stopSpeaking,
   onToggleSpeakNativeLang,
-  speakNativeLang
+  speakNativeLang,
+  onPracticeSuggestion,
+  isPracticeDisabled,
 }) => {
   const replySuggestions = useMaestroStore(selectReplySuggestions);
   const suggestionsLoadingStreamText = useMaestroStore(selectSuggestionsLoadingStreamText);
@@ -43,6 +50,16 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
   const [nativeFlashIsOn, setNativeFlashIsOn] = useState<boolean>(false);
   const nativeFlashTimeoutRef = useRef<number | null>(null);
   const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
+  const suggestionPressRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    button: HTMLButtonElement;
+  } | null>(null);
+  const suggestionLongPressTimerRef = useRef<number | null>(null);
+  const suggestionLongPressTriggeredRef = useRef(false);
+  const suppressSuggestionClickRef = useRef(false);
+  const suppressSuggestionClickTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setExpandedSuggestionTarget(null);
@@ -52,8 +69,79 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
   useEffect(() => {
     return () => {
       if (nativeFlashTimeoutRef.current) clearTimeout(nativeFlashTimeoutRef.current);
+      if (suggestionLongPressTimerRef.current) clearTimeout(suggestionLongPressTimerRef.current);
+      if (suppressSuggestionClickTimerRef.current) clearTimeout(suppressSuggestionClickTimerRef.current);
     };
   }, []);
+
+  const clearSuggestionPress = (pointerId?: number) => {
+    const press = suggestionPressRef.current;
+    if (pointerId !== undefined && press?.pointerId !== pointerId) return;
+    if (suggestionLongPressTimerRef.current) {
+      clearTimeout(suggestionLongPressTimerRef.current);
+      suggestionLongPressTimerRef.current = null;
+    }
+    if (press?.button.hasPointerCapture(press.pointerId)) {
+      press.button.releasePointerCapture(press.pointerId);
+    }
+    suggestionPressRef.current = null;
+  };
+
+  const suppressNextSuggestionClick = () => {
+    suppressSuggestionClickRef.current = true;
+    if (suppressSuggestionClickTimerRef.current) clearTimeout(suppressSuggestionClickTimerRef.current);
+    suppressSuggestionClickTimerRef.current = window.setTimeout(() => {
+      suppressSuggestionClickRef.current = false;
+      suppressSuggestionClickTimerRef.current = null;
+    }, 1000);
+  };
+
+  const triggerSuggestionPractice = (suggestion: ReplySuggestion) => {
+    if (isPracticeDisabled) return;
+    onPracticeSuggestion(suggestion);
+  };
+
+  const handleSuggestionPointerDown = (
+    e: React.PointerEvent<HTMLButtonElement>,
+    suggestion: ReplySuggestion
+  ) => {
+    if (isPracticeDisabled || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    clearSuggestionPress();
+    suggestionLongPressTriggeredRef.current = false;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    suggestionPressRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      button: e.currentTarget,
+    };
+    suggestionLongPressTimerRef.current = window.setTimeout(() => {
+      suggestionLongPressTimerRef.current = null;
+      suggestionLongPressTriggeredRef.current = true;
+      triggerSuggestionPractice(suggestion);
+    }, LONG_PRESS_DURATION_MS);
+  };
+
+  const handleSuggestionPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const press = suggestionPressRef.current;
+    if (!press || press.pointerId !== e.pointerId) return;
+    const movedTooFar = Math.abs(e.clientX - press.startX) > LONG_PRESS_MOVE_TOLERANCE_PX
+      || Math.abs(e.clientY - press.startY) > LONG_PRESS_MOVE_TOLERANCE_PX;
+    if (movedTooFar) {
+      clearSuggestionPress(e.pointerId);
+      suggestionLongPressTriggeredRef.current = false;
+      suppressNextSuggestionClick();
+    }
+  };
+
+  const handleSuggestionPointerEnd = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const shouldSuppressClick = e.type === 'pointerup'
+      && suggestionPressRef.current?.pointerId === e.pointerId
+      && suggestionLongPressTriggeredRef.current;
+    clearSuggestionPress(e.pointerId);
+    suggestionLongPressTriggeredRef.current = false;
+    if (shouldSuppressClick) suppressNextSuggestionClick();
+  };
 
   const handleSuggestionBubbleClick = (suggestion: ReplySuggestion) => {
     if (isSpeaking) {
@@ -132,11 +220,45 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
               return (
                 <div key={index} className="inline-block">
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleSuggestionBubbleClick(suggestion); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (suppressSuggestionClickRef.current) {
+                        suppressSuggestionClickRef.current = false;
+                        if (suppressSuggestionClickTimerRef.current) {
+                          clearTimeout(suppressSuggestionClickTimerRef.current);
+                          suppressSuggestionClickTimerRef.current = null;
+                        }
+                        e.preventDefault();
+                        return;
+                      }
+                      handleSuggestionBubbleClick(suggestion);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.shiftKey && !isPracticeDisabled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        triggerSuggestionPractice(suggestion);
+                      }
+                    }}
+                    onPointerDown={(e) => handleSuggestionPointerDown(e, suggestion)}
+                    onPointerMove={handleSuggestionPointerMove}
+                    onPointerUp={handleSuggestionPointerEnd}
+                    onPointerCancel={handleSuggestionPointerEnd}
                     className="px-3 py-1.5 transition-colors text-page-text bg-suggestion-bg hover:bg-suggestion-hover sketchy-border-thin focus:outline-none focus:ring-2 focus:ring-suggestion-ring"
-                    style={{ fontSize: '3.1cqw' }}
-                    title={t('chat.suggestion.speak', { suggestion: suggestion.target })}
-                    aria-label={t('chat.suggestion.ariaLabel', { suggestion: suggestion.target })}
+                    style={{
+                      fontSize: '3.1cqw',
+                      userSelect: 'none',
+                      WebkitUserSelect: 'none',
+                      WebkitTouchCallout: 'none',
+                      touchAction: 'manipulation',
+                    }}
+                    title={isPracticeDisabled
+                      ? t('chat.suggestion.practiceUnavailableLive')
+                      : t('chat.suggestion.speakOrPractice', { suggestion: suggestion.target })}
+                    aria-label={isPracticeDisabled
+                      ? t('chat.suggestion.ariaLabel', { suggestion: suggestion.target })
+                      : t('chat.suggestion.speakOrPractice', { suggestion: suggestion.target })}
+                    aria-keyshortcuts={isPracticeDisabled ? undefined : 'Shift+Enter'}
                     tabIndex={0}
                   >
                     {suggestion.target}

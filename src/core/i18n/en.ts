@@ -204,6 +204,15 @@ export const enTranslations: Record<string, string> = {
   "chat.suggestion.toggleCreateMode": "Toggle suggestion creation mode",
   "chat.suggestion.createAction": "Create Suggestion",
   "chat.suggestion.creating": "Creating suggestion...",
+  "chat.suggestion.speakOrPractice": "Speak \"{suggestion}\". Press and hold to practice, or press Shift+Enter.",
+  "chat.suggestion.practiceHint": "Practice the suggestion by typing or speaking with the faint text as a guide. You can still send different text. Press Escape to restore your previous draft.",
+  "chat.suggestion.practiceActive": "Practicing suggestion: {suggestion}",
+  "chat.suggestion.practiceComplete": "Suggestion practice complete. You can send the message or keep editing.",
+  "chat.suggestion.cancelPractice": "Cancel practice and restore previous draft",
+  "chat.suggestion.drawNextCharacter": "Trace the next character: {character}",
+  "chat.suggestion.traceCharacter": "Trace {character}",
+  "chat.suggestion.completeDrawnCharacter": "Mark traced character complete",
+  "chat.suggestion.practiceUnavailableLive": "Suggestion practice is unavailable during a live session.",
   
   // Chat - maestro status (used via CollapsedMaestroStatus)
   "chat.maestro.idle": "Maestro is idle",
