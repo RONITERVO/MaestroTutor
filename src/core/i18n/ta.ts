@@ -96,7 +96,7 @@ export const taTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "சாவியைச் சேமி",
   "apiKeyGate.close": "மூடு",
   "apiKeyGate.costLabel": "மதிப்பிடப்பட்ட API செலவு",
-  
+  "apiKeyGate.disclaimer": "நேரடியாக Google மூலம் இயக்கப்படுகிறது (Maestro சேவையகங்கள்/கட்டணங்கள் இல்லை). {geminiTerms} மற்றும் {googlePrivacyPolicy} ஐப் பார்க்கவும்.",
   // Chat - general
   "chat.thinking": "யோசிக்கிறேன்...",
   "chat.loadingHistory": "அரட்டை வரலாற்றை ஏற்றுகிறது...",

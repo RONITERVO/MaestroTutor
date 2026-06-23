@@ -96,6 +96,7 @@ export const koTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "키 저장",
   "apiKeyGate.close": "닫기",
   "apiKeyGate.costLabel": "예상 API 비용",
+  "apiKeyGate.disclaimer": "Google에서 직접 제공(Maestro 서버/수수료 없음). {geminiTerms} 및 {googlePrivacyPolicy}를 참조하세요.",
   // Chat - general
   "chat.thinking": "생각 중...",
   "chat.loadingHistory": "채팅 기록 로드 중...",

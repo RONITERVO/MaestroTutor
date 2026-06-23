@@ -96,6 +96,7 @@ export const svTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Spara nyckel",
   "apiKeyGate.close": "Stäng",
   "apiKeyGate.costLabel": "Uppskattad API-kostnad",
+  "apiKeyGate.disclaimer": "Drivs direkt av Google (inga Maestro-servrar/avgifter). Se {geminiTerms} och {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Tänker...",
   "chat.loadingHistory": "Laddar chatthistorik...",

@@ -96,6 +96,7 @@ export const viTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Lưu khóa",
   "apiKeyGate.close": "Đóng",
   "apiKeyGate.costLabel": "Chi phí API ước tính",
+  "apiKeyGate.disclaimer": "Được cung cấp trực tiếp bởi Google (không có máy chủ/phí Maestro). Xem {geminiTerms} và {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Đang suy nghĩ...",
   "chat.loadingHistory": "Đang tải lịch sử trò chuyện...",

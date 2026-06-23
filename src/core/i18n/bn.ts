@@ -96,6 +96,7 @@ export const bnTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "কী সংরক্ষণ করুন",
   "apiKeyGate.close": "বন্ধ করুন",
   "apiKeyGate.costLabel": "আনুমানিক API খরচ",
+  "apiKeyGate.disclaimer": "সরাসরি Google দ্বারা পরিচালিত (কোনো Maestro সার্ভার/ফি নেই)। {geminiTerms} এবং {googlePrivacyPolicy} দেখুন।",
   // Chat - general
   "chat.thinking": "ভাবছি...",
   "chat.loadingHistory": "চ্যাট ইতিহাস লোড হচ্ছে...",

@@ -96,6 +96,7 @@ export const hiTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "कुंजी सहेजें",
   "apiKeyGate.close": "बंद करें",
   "apiKeyGate.costLabel": "अनुमानित API लागत",
+  "apiKeyGate.disclaimer": "सीधे Google द्वारा संचालित (कोई Maestro सर्वर/शुल्क नहीं)। {geminiTerms} और {googlePrivacyPolicy} देखें।",
   // Chat - general
   "chat.thinking": "सोच रहा हूँ...",
   "chat.loadingHistory": "चैट इतिहास लोड हो रहा है...",

@@ -96,6 +96,7 @@ export const jaTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "キーを保存",
   "apiKeyGate.close": "閉じる",
   "apiKeyGate.costLabel": "推定APIコスト",
+  "apiKeyGate.disclaimer": "Googleにより直接提供（Maestroのサーバー/手数料なし）。{geminiTerms} および {googlePrivacyPolicy} をご覧ください。",
   // Chat - general
   "chat.thinking": "考え中...",
   "chat.loadingHistory": "チャット履歴を読み込み中...",

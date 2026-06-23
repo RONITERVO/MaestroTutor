@@ -96,6 +96,7 @@ export const ruTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Сохранить ключ",
   "apiKeyGate.close": "Закрыть",
   "apiKeyGate.costLabel": "Ориентировочная стоимость API",
+  "apiKeyGate.disclaimer": "Работает напрямую через Google (без серверов/комиссий Maestro). См. {geminiTerms} и {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Думаю...",
   "chat.loadingHistory": "Загрузка истории чата...",

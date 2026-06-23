@@ -96,6 +96,7 @@ export const nlTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Sleutel opslaan",
   "apiKeyGate.close": "Sluiten",
   "apiKeyGate.costLabel": "Geschatte API-kosten",
+  "apiKeyGate.disclaimer": "Direct mogelijk gemaakt door Google (geen Maestro-servers/-kosten). Zie {geminiTerms} en {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Aan het denken...",
   "chat.loadingHistory": "Chatgeschiedenis laden...",

@@ -96,6 +96,7 @@ export const plTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Zapisz klucz",
   "apiKeyGate.close": "Zamknij",
   "apiKeyGate.costLabel": "Szacowany koszt API",
+  "apiKeyGate.disclaimer": "Obsługiwane bezpośrednio przez Google (brak serwerów/opłat Maestro). Zobacz {geminiTerms} i {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Myślę...",
   "chat.loadingHistory": "Wczytywanie historii czatu...",

@@ -96,6 +96,7 @@ export const itTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Salva chiave",
   "apiKeyGate.close": "Chiudi",
   "apiKeyGate.costLabel": "Costo stimato API",
+  "apiKeyGate.disclaimer": "Gestito direttamente da Google (nessun server/costo Maestro). Consulta {geminiTerms} e {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Sto pensando...",
   "chat.loadingHistory": "Caricamento cronologia chat...",

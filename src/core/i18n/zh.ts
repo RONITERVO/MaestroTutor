@@ -96,6 +96,7 @@ export const zhTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "保存密钥",
   "apiKeyGate.close": "关闭",
   "apiKeyGate.costLabel": "预估 API 成本",
+  "apiKeyGate.disclaimer": "由 Google 直接提供支持（无 Maestro 服务器/费用）。请参阅 {geminiTerms} 和 {googlePrivacyPolicy}。",
   // Chat - general
   "chat.thinking": "思考中...",
   "chat.loadingHistory": "加载聊天记录中...",

@@ -96,6 +96,7 @@ export const ptTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Salvar chave",
   "apiKeyGate.close": "Fechar",
   "apiKeyGate.costLabel": "Custo estimado da API",
+  "apiKeyGate.disclaimer": "Desenvolvido diretamente pelo Google (sem servidores/taxas do Maestro). Consulte {geminiTerms} e {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Pensando...",
   "chat.loadingHistory": "Carregando histórico do chat...",

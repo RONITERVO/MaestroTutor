@@ -96,6 +96,7 @@ export const teTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "కీని సేవ్ చేయండి",
   "apiKeyGate.close": "ముగించు",
   "apiKeyGate.costLabel": "అంచనా API ఖర్చు",
+  "apiKeyGate.disclaimer": "నేరుగా Google ద్వారా పవర్ చేయబడింది (Maestro సర్వర్లు/రుసుములు లేవు). {geminiTerms} మరియు {googlePrivacyPolicy} చూడండి.",
   // Chat - general
   "chat.thinking": "ఆలోచిస్తోంది...",
   "chat.loadingHistory": "చాట్ చరిత్రను లోడ్ చేస్తోంది...",

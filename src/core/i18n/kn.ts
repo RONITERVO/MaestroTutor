@@ -96,6 +96,7 @@ export const knTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "ಕೀಯನ್ನು ಉಳಿಸಿ",
   "apiKeyGate.close": "ಮುಚ್ಚಿ",
   "apiKeyGate.costLabel": "ಅಂದಾಜು API ವೆಚ್ಚ",
+  "apiKeyGate.disclaimer": "ನೇರವಾಗಿ Google ನಿಂದ ನಡೆಸಲ್ಪಡುತ್ತಿದೆ (ಯಾವುದೇ Maestro ಸರ್ವರ್‌ಗಳು/ಶುಲ್ಕಗಳಿಲ್ಲ). {geminiTerms} ಮತ್ತು {googlePrivacyPolicy} ನೋಡಿ.",
   // Chat - general
   "chat.thinking": "ಯೋಚಿಸುತ್ತಿದ್ದೇನೆ...",
   "chat.loadingHistory": "ಚಾಟ್ ಇತಿಹಾಸ ಲೋಡ್ ಆಗುತ್ತಿದೆ...",

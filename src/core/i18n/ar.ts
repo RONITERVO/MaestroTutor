@@ -94,6 +94,7 @@ export const arTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "حفظ المفتاح",
   "apiKeyGate.close": "إغلاق",
   "apiKeyGate.costLabel": "تكلفة API المقدرة",
+  "apiKeyGate.disclaimer": "مشغل مباشرة بواسطة Google (بدون خوادم/رسوم من Maestro). راجع {geminiTerms} و {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "جارٍ التفكير...",
   "chat.loadingHistory": "جارٍ تحميل سجل المحادثة...",

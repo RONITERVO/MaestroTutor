@@ -96,6 +96,7 @@ export const thTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "บันทึกคีย์",
   "apiKeyGate.close": "ปิด",
   "apiKeyGate.costLabel": "ค่าใช้จ่าย API โดยประมาณ",
+  "apiKeyGate.disclaimer": "ให้บริการโดยตรงจาก Google (ไม่มีเซิร์ฟเวอร์/ค่าธรรมเนียมของ Maestro) ดูที่ {geminiTerms} และ {googlePrivacyPolicy}",
   // Chat - general
   "chat.thinking": "กำลังคิด...",
   "chat.loadingHistory": "กำลังโหลดประวัติแชท...",

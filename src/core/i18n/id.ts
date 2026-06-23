@@ -96,6 +96,7 @@ export const idTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Simpan kunci",
   "apiKeyGate.close": "Tutup",
   "apiKeyGate.costLabel": "Perkiraan biaya API",
+  "apiKeyGate.disclaimer": "Didukung langsung oleh Google (tanpa server/biaya Maestro). Lihat {geminiTerms} dan {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Sedang berpikir...",
   "chat.loadingHistory": "Memuat riwayat obrolan...",

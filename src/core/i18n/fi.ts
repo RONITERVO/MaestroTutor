@@ -96,6 +96,7 @@ export const fiTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Tallenna avain",
   "apiKeyGate.close": "Sulje",
   "apiKeyGate.costLabel": "Arvioitu API-kustannus",
+  "apiKeyGate.disclaimer": "Toimii suoraan Googlen kautta (ei Maestron palvelimia/maksuja). Katso {geminiTerms} ja {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Ajattelen...",
   "chat.loadingHistory": "Ladataan keskusteluhistoriaa...",

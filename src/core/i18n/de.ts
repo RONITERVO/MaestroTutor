@@ -94,7 +94,7 @@ export const deTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Schlüssel speichern",
   "apiKeyGate.close": "Schließen",
   "apiKeyGate.costLabel": "Geschätzte API-Kosten",
-
+  "apiKeyGate.disclaimer": "Direkt von Google betrieben (keine Maestro-Server/-Gebühren). Siehe {geminiTerms} und {googlePrivacyPolicy}.",
   // Chat - general
   "chat.thinking": "Denke nach...",
   "chat.loadingHistory": "Lade Chatverlauf...",

@@ -96,6 +96,7 @@ export const mrTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "की जतन करा",
   "apiKeyGate.close": "बंद करा",
   "apiKeyGate.costLabel": "अंदाजित API खर्च",
+  "apiKeyGate.disclaimer": "थेट Google द्वारे समर्थित (कोणतेही Maestro सर्व्हर/शुल्क नाही). {geminiTerms} आणि {googlePrivacyPolicy} पहा.",
   // Chat - general
   "chat.thinking": "विचार करत आहे...",
   "chat.loadingHistory": "गप्पा इतिहास लोड करत आहे...",

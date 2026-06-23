@@ -96,6 +96,7 @@ export const guTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "કી સાચવો",
   "apiKeyGate.close": "બંધ કરો",
   "apiKeyGate.costLabel": "અંદાજિત API ખર્ચ",
+  "apiKeyGate.disclaimer": "સીધા Google દ્વારા સંચાલિત (કોઈ Maestro સર્વર્સ/ફી નથી). {geminiTerms} અને {googlePrivacyPolicy} જુઓ.",
   // Chat - general
   "chat.thinking": "વિચારું છું...",
   "chat.loadingHistory": "ચેટ ઇતિહાસ લોડ કરી રહ્યું છે...",

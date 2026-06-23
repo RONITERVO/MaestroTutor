@@ -96,6 +96,7 @@ export const trTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Anahtarı kaydet",
   "apiKeyGate.close": "Kapat",
   "apiKeyGate.costLabel": "Tahmini API maliyeti",
+  "apiKeyGate.disclaimer": "Doğrudan Google tarafından desteklenir (Maestro sunucusu/ücreti yoktur). {geminiTerms} ve {googlePrivacyPolicy}'ye bakın.",
   // Chat - general
   "chat.thinking": "Düşünüyor...",
   "chat.loadingHistory": "Sohbet geçmişi yükleniyor...",

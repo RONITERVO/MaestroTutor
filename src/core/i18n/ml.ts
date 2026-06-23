@@ -96,6 +96,7 @@ export const mlTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "കീ സേവ് ചെയ്യുക",
   "apiKeyGate.close": "അടയ്ക്കുക",
   "apiKeyGate.costLabel": "കണക്കാക്കിയ API ചെലവ്",
+  "apiKeyGate.disclaimer": "നേരിട്ട് Google നൽകുന്നത് (Maestro സെർവറുകളോ ഫീസുകളോ ഇല്ല). {geminiTerms}, {googlePrivacyPolicy} എന്നിവ കാണുക.",
   // Chat - general
   "chat.thinking": "ചിന്തിക്കുന്നു...",
   "chat.loadingHistory": "ചാറ്റ് ചരിത്രം ലോഡുചെയ്യുന്നു...",
