@@ -32,6 +32,56 @@ const GOOGLE_PRIVACY_POLICY_URL = 'https://policies.google.com/privacy';
 const INSTRUCTION_IMAGES = Array.from({ length: 12 }, (_, index) => `${import.meta.env.BASE_URL}api-key-instructions/step-${index + 1}.jpg`);
 const INSTRUCTION_AUTO_ADVANCE_MS = 3200;
 const REGULAR_INSTRUCTIONS_COUNT = 9;
+const DISCLAIMER_LINK_CLASS_NAME = 'underline decoration-white/25 underline-offset-2 transition-colors hover:text-white/75';
+const DISCLAIMER_LINKS = {
+  geminiTerms: {
+    url: GEMINI_API_TERMS_URL,
+    labelKey: 'apiKeyGate.geminiTerms',
+  },
+  googlePrivacyPolicy: {
+    url: GOOGLE_PRIVACY_POLICY_URL,
+    labelKey: 'apiKeyGate.googlePrivacyPolicy',
+  },
+} as const;
+type DisclaimerLinkToken = keyof typeof DISCLAIMER_LINKS;
+const DISCLAIMER_LINK_TOKEN_PATTERN = /\{(geminiTerms|googlePrivacyPolicy)\}/g;
+
+const renderApiKeyDisclaimer = (template: string, t: (key: string) => string): React.ReactNode[] => {
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  DISCLAIMER_LINK_TOKEN_PATTERN.lastIndex = 0;
+  while ((match = DISCLAIMER_LINK_TOKEN_PATTERN.exec(template)) !== null) {
+    const token = match[1] as DisclaimerLinkToken;
+    const link = DISCLAIMER_LINKS[token];
+    if (match.index > lastIndex) {
+      nodes.push(template.slice(lastIndex, match.index));
+    }
+    nodes.push(
+      <a
+        key={`${token}-${match.index}`}
+        href={link.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => {
+          e.preventDefault();
+          void openExternalUrl(link.url);
+        }}
+        className={DISCLAIMER_LINK_CLASS_NAME}
+      >
+        {t(link.labelKey)}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < template.length) {
+    nodes.push(template.slice(lastIndex));
+  }
+
+  return nodes.length ? nodes : [template];
+};
 
 const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   isOpen,
@@ -311,30 +361,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               )}
             </div>
           </div>
-          <p className="mt-3 px-1 text-center text-[10px] leading-snug text-white/45">
-            {t('apiKeyGate.disclaimerPrefix')}{' '}
-            <a
-              href={GEMINI_API_TERMS_URL}
-              onClick={(e) => {
-                e.preventDefault();
-                void openExternalUrl(GEMINI_API_TERMS_URL);
-              }}
-              className="underline decoration-white/25 underline-offset-2 transition-colors hover:text-white/70"
-            >
-              {t('apiKeyGate.geminiTerms')}
-            </a>
-            {' '}{t('apiKeyGate.disclaimerConnector')}{' '}
-            <a
-              href={GOOGLE_PRIVACY_POLICY_URL}
-              onClick={(e) => {
-                e.preventDefault();
-                void openExternalUrl(GOOGLE_PRIVACY_POLICY_URL);
-              }}
-              className="underline decoration-white/25 underline-offset-2 transition-colors hover:text-white/70"
-            >
-              {t('apiKeyGate.googlePrivacyPolicy')}
-            </a>
-            {t('apiKeyGate.disclaimerSuffix')}
+          <p className="mt-3 px-1 text-center text-[11px] leading-relaxed text-white/55">
+            {renderApiKeyDisclaimer(t('apiKeyGate.disclaimer'), t)}
           </p>
         </div>
       </div>
