@@ -107,7 +107,7 @@ export const enTranslations: Record<string, string> = {
   "apiKeyGate.saveKey": "Save key",
   "apiKeyGate.close": "Close",
   "apiKeyGate.costLabel": "Estimated API cost",
-  "apiKeyGate.disclaimer": "Gemini API use is provided and, when applicable, billed by Google through your Google account or Google Cloud project. Maestro does not process API charges or receive any share of them. Your API key is stored on this device; your messages and media are sent directly to Google, without a Maestro server in between. Use Maestro with Gemini only where you are permitted to use the Gemini API and under Google's {geminiTerms} and {googlePrivacyPolicy}.",
+  "apiKeyGate.disclaimer": "Powered directly by Google (no Maestro servers/fees). See {geminiTerms} and {googlePrivacyPolicy}.",
   "apiKeyGate.geminiTerms": "Gemini API Terms",
   "apiKeyGate.googlePrivacyPolicy": "Google Privacy Policy",
   
