@@ -265,7 +265,8 @@
 
             <div class="pos" id="monkey-pivot" style="display: none;">
               <div class="rot" id="monkey-rot">
-                <svg id="monkey-svg" class="monkey-sprite" viewBox="-130 0 260 1200">
+                <!-- ADDED xmlns="http://www.w3.org/2000/svg" to Monkey SVG -->
+                <svg id="monkey-svg" xmlns="http://www.w3.org/2000/svg" class="monkey-sprite" viewBox="-130 0 260 1200">
                   <g stroke="hsl(25, 15%, 25%)" stroke-width="3" fill="hsl(39, 40%, 96%)" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M 0 0 C 25 300, -20 600, 0 920" fill="none" stroke-width="5" stroke="hsl(120, 20%, 35%)" />
                     <path d="M 5 150 C 20 180, 10 220, -2 180 Z" fill="hsl(120, 30%, 40%)" />
@@ -292,7 +293,8 @@
 
             <div class="pos" id="cat-pos" style="display: none;">
               <div class="rot">
-                <svg id="cat-svg" class="cat-sprite" viewBox="0 0 140 120">
+                <!-- ADDED xmlns="http://www.w3.org/2000/svg" to Cat SVG -->
+                <svg id="cat-svg" xmlns="http://www.w3.org/2000/svg" class="cat-sprite" viewBox="0 0 140 120">
                   <g id="cat-flip-group">
                     <g stroke="hsl(25, 15%, 25%)" stroke-width="3" fill="hsl(39, 40%, 96%)" stroke-linecap="round" stroke-linejoin="round">
                       <g class="leg-bl"><path d="M 35 65 L 28 100 L 35 100" /></g>
@@ -323,7 +325,8 @@
 
             <div class="pos" id="hawk-pos" style="display: none;">
               <div class="rot" id="hawk-rot">
-                <svg id="hawk-svg" class="hawk-sprite" viewBox="-70 -70 140 140">
+                <!-- ADDED xmlns="http://www.w3.org/2000/svg" to Hawk SVG -->
+                <svg id="hawk-svg" xmlns="http://www.w3.org/2000/svg" class="hawk-sprite" viewBox="-70 -70 140 140">
                   <g stroke="hsl(25, 15%, 25%)" stroke-width="3" fill="hsl(39, 40%, 96%)" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M -20 0 L -50 -20 L -45 0 L -50 20 Z" />
                     <g class="hawk-wing-l">
