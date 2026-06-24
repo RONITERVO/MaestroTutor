@@ -805,13 +805,13 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 .maestro-globe-shell {
                     position: relative;
                     container-type: inline-size;
+                    overflow: visible;
                 }
 
                 .maestro-globe-window {
-                    position: absolute;
-                    inset: 0;
+                    position: relative;
                     width: 100%;
-                    height: 100%;
+                    aspect-ratio: 1 / 1;
                     overflow: visible;
                     border: 0;
                     background: transparent;
@@ -1023,14 +1023,14 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 }
 
                 .maestro-globe-transcript-shell {
-                    position: absolute;
-                    inset-inline: 0.35rem;
-                    bottom: 0;
+                    position: relative;
                     z-index: 90;
                     display: grid;
                     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
                     gap: 0.5rem;
+                    width: calc(100% - 0.7rem);
                     height: clamp(9.5rem, 33cqw, 12.75rem);
+                    margin: -0.625rem 0.35rem 0;
                     padding: 0.75rem;
                     border-radius: 0 0 0.5rem 0.5rem;
                     background: transparent;
@@ -1041,16 +1041,16 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 }
 
                 .maestro-globe-transcript-shell.is-idle {
-                    opacity: 0.74;
-                    transform: scale(0.992);
+                    opacity: 1;
+                    transform: none;
                 }
 
                 .maestro-globe-transcript-shell:hover,
                 .maestro-globe-transcript-shell:focus-within,
                 .maestro-globe-transcript-shell.is-active {
                     opacity: 1;
-                    transform: scale(1);
-                    filter: saturate(1.08);
+                    transform: none;
+                    filter: none;
                 }
 
                 .maestro-globe-transcript-column {
@@ -1072,7 +1072,8 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
                 @media (max-width: 420px) {
                     .maestro-globe-transcript-shell {
-                        inset-inline: 0;
+                        width: 100%;
+                        margin-inline: 0;
                         gap: 0.25rem;
                         padding-inline: 0.5rem;
                     }
@@ -1101,8 +1102,8 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 }
             `}</style>
 
-            <div className="maestro-globe-shell w-full max-w-[27rem] aspect-square">
-                <div className="maestro-globe-window absolute inset-0">
+            <div className="maestro-globe-shell w-full max-w-[27rem]">
+                <div className="maestro-globe-window">
                     <div
                         className={`maestro-globe-stage ${isDragging ? 'is-dragging' : ''}`}
                         onPointerDown={handlePointerDown}
@@ -1202,35 +1203,35 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
                         <div className="maestro-globe-vignette" />
                     </div>
+                </div>
 
-                    <div
-                        className={`maestro-globe-transcript-shell ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
-                        onPointerDown={event => event.stopPropagation()}
-                        onTouchMove={event => event.stopPropagation()}
-                        onWheel={event => event.stopPropagation()}
-                    >
-                        <div className="maestro-globe-transcript-column is-native" data-globe-control="native">
-                            <LanguageScrollWheel
-                                languages={ALL_LANGUAGES}
-                                selectedValue={nativeLang}
-                                onSelect={(lang) => handleScrollWheelSelect(lang, true)}
-                                onInteract={handleInteraction}
-                                title="Native language"
-                                variant="native"
-                            />
-                        </div>
+                <div
+                    className={`maestro-globe-transcript-shell ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
+                    onPointerDown={event => event.stopPropagation()}
+                    onTouchMove={event => event.stopPropagation()}
+                    onWheel={event => event.stopPropagation()}
+                >
+                    <div className="maestro-globe-transcript-column is-native" data-globe-control="native">
+                        <LanguageScrollWheel
+                            languages={ALL_LANGUAGES}
+                            selectedValue={nativeLang}
+                            onSelect={(lang) => handleScrollWheelSelect(lang, true)}
+                            onInteract={handleInteraction}
+                            title="Native language"
+                            variant="native"
+                        />
+                    </div>
 
-                        <div className="maestro-globe-transcript-column is-target" data-globe-control="target">
-                            <LanguageScrollWheel
-                                languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
-                                selectedValue={targetLang}
-                                onSelect={(lang) => handleScrollWheelSelect(lang, false)}
-                                disabled={!nativeLang}
-                                onInteract={handleInteraction}
-                                title="Target language"
-                                variant="target"
-                            />
-                        </div>
+                    <div className="maestro-globe-transcript-column is-target" data-globe-control="target">
+                        <LanguageScrollWheel
+                            languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
+                            selectedValue={targetLang}
+                            onSelect={(lang) => handleScrollWheelSelect(lang, false)}
+                            disabled={!nativeLang}
+                            onInteract={handleInteraction}
+                            title="Target language"
+                            variant="target"
+                        />
                     </div>
                 </div>
             </div>
