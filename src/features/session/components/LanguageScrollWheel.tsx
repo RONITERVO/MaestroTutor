@@ -20,9 +20,7 @@ const flagScrollStyle = {
     maskImage:
         'linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0) 75%, rgba(0,0,0,0) 100%)',
     clipPath: 'inset(25% 0 0 0)',
-    height: '33cqw',
-    minHeight: '9.5rem',
-    maxHeight: '12.75rem',
+    height: '100%',
     containerType: 'inline-size',
     overscrollBehavior: 'contain',
     WebkitOverflowScrolling: 'touch',
@@ -37,14 +35,16 @@ const getVariantClasses = (variant?: 'native' | 'target') => {
         return {
             selectedRing: 'ring-globe-native-accent/70',
             selectedGlow: 'drop-shadow-[0_0_12px_hsl(var(--globe-native-accent)/0.45)]',
-            code: 'text-globe-native-accent',
+            text: 'text-attachment-svg-native-text',
+            code: 'text-attachment-svg-native-text/75',
         };
     }
 
     return {
         selectedRing: 'ring-scroll-wheel-target-accent/70',
         selectedGlow: 'drop-shadow-[0_0_12px_hsl(var(--scroll-wheel-target-accent)/0.45)]',
-        code: 'text-scroll-wheel-target-accent',
+        text: 'text-attachment-svg-target-text',
+        code: 'text-attachment-svg-native-text/75',
     };
 };
 
@@ -220,8 +220,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
     return (
         <div
             className={[
-                'maestro-language-flag-wheel relative text-center',
-                'w-[4.8rem] sm:w-[5.35rem]',
+                'maestro-language-flag-wheel relative h-full min-h-0 w-full text-center',
                 disabled ? 'opacity-35' : '',
             ].filter(Boolean).join(' ')}
             data-variant={variant}
@@ -230,15 +229,18 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
             <div
                 ref={scrollContainerRef}
                 className={[
-                    'relative overflow-y-auto scrollbar-hide pointer-events-auto',
+                    'relative h-full min-h-0 overflow-y-auto scrollbar-hide pointer-events-auto',
                     'transition-[filter,opacity,transform] duration-200',
-                    isScrolling ? 'scale-[1.025]' : 'scale-100',
+                    isScrolling ? 'scale-[1.015]' : 'scale-100',
                     disabled ? 'pointer-events-none' : '',
                 ].filter(Boolean).join(' ')}
                 style={flagScrollStyle}
                 onPointerDown={() => onInteract?.()}
                 onWheel={(event) => {
                     event.stopPropagation();
+                    if (!disabled) {
+                        event.currentTarget.scrollTop += event.deltaY;
+                    }
                     onInteract?.();
                 }}
                 aria-label={title || (variant === 'native' ? 'Native language' : 'Target language')}
@@ -246,7 +248,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                 role="listbox"
             >
                 <div className="flex flex-col items-center justify-start">
-                <div aria-hidden className="h-20 shrink-0" />
+                <div aria-hidden className="h-[8cqw] min-h-8 shrink-0" />
                 {languages.map(lang => {
                     const isSelected = lang.langCode === selectedValue?.langCode;
                     const showShortCode = hasSharedFlag(lang);
@@ -262,10 +264,10 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                                 }
                             }}
                             className={[
-                                'group flex h-10 w-full items-center justify-center p-1',
+                                'group flex min-h-[2.55rem] w-full items-center justify-center px-1 py-1',
                                 'transition-all duration-300 transform-gpu outline-none',
                                 'cursor-pointer disabled:cursor-default',
-                                isSelected ? 'opacity-100 scale-110' : 'opacity-60 scale-95 hover:opacity-85 hover:scale-100',
+                                isSelected ? 'opacity-100 scale-105' : 'opacity-70 scale-100 hover:opacity-90',
                             ].join(' ')}
                             onClick={() => { if (!disabled) { onInteract?.(); onSelect(lang); } }}
                             disabled={disabled}
@@ -275,20 +277,20 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                         >
                             <span
                                 className={[
-                                    'inline-flex min-h-9 min-w-9 items-center justify-center gap-0.5',
-                                    'rounded-full ring-1 ring-transparent transition-all duration-300',
+                                    'inline-flex min-h-9 min-w-12 items-center justify-center gap-1 rounded-sm px-1',
+                                    'ring-1 ring-transparent transition-all duration-300',
                                     isSelected ? `${variantClasses.selectedRing} ${variantClasses.selectedGlow}` : '',
                                 ].filter(Boolean).join(' ')}
                             >
-                                <span className="text-[1.95rem] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
+                                <span className="text-[1.95rem] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.22)]">
                                     {lang.flag}
                                 </span>
                                 {showShortCode && (
                                     <span
                                         className={[
-                                            'ml-0.5 text-[0.55rem] font-bold leading-none',
-                                            'drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]',
-                                            isSelected ? variantClasses.code : 'text-white/65',
+                                            'text-[0.55rem] font-bold leading-none',
+                                            'drop-shadow-[0_1px_2px_rgba(255,255,255,0.22)]',
+                                            isSelected ? variantClasses.code : `${variantClasses.text}/55`,
                                         ].join(' ')}
                                     >
                                         {lang.shortCode}
@@ -298,7 +300,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                         </button>
                     );
                 })}
-                <div aria-hidden className="h-20 shrink-0" />
+                <div aria-hidden className="h-[8cqw] min-h-8 shrink-0" />
                 </div>
             </div>
         </div>

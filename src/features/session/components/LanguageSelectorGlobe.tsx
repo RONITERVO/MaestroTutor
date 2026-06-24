@@ -804,6 +804,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
                 .maestro-globe-shell {
                     position: relative;
+                    container-type: inline-size;
                 }
 
                 .maestro-globe-window {
@@ -1021,43 +1022,68 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         0 7px 15px rgba(0,0,0,0.28);
                 }
 
-                .maestro-globe-wheel-rail {
+                .maestro-globe-transcript-shell {
                     position: absolute;
-                    top: 50%;
+                    inset-inline: 0.35rem;
+                    bottom: 0;
                     z-index: 90;
-                    transform: translateY(-50%) scale(0.985);
-                    pointer-events: auto;
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                    gap: 0.5rem;
+                    height: clamp(9.5rem, 33cqw, 12.75rem);
+                    padding: 0.75rem;
+                    border-radius: 0 0 0.5rem 0.5rem;
+                    background: transparent;
+                    overflow: hidden;
+                    pointer-events: none;
+                    text-shadow: none;
                     transition: opacity 180ms ease-out, transform 180ms ease-out, filter 180ms ease-out;
                 }
 
-                .maestro-globe-wheel-rail.is-left {
-                    left: clamp(-4.6rem, -10vw, 0.15rem);
+                .maestro-globe-transcript-shell.is-idle {
+                    opacity: 0.74;
+                    transform: scale(0.992);
                 }
 
-                .maestro-globe-wheel-rail.is-right {
-                    right: clamp(-4.6rem, -10vw, 0.15rem);
-                }
-
-                @media (max-width: 480px) {
-                    .maestro-globe-wheel-rail.is-left {
-                        left: -0.5rem;
-                    }
-
-                    .maestro-globe-wheel-rail.is-right {
-                        right: -0.5rem;
-                    }
-                }
-
-                .maestro-globe-wheel-rail.is-idle {
-                    opacity: 0.72;
-                }
-
-                .maestro-globe-wheel-rail:hover,
-                .maestro-globe-wheel-rail:focus-within,
-                .maestro-globe-wheel-rail.is-active {
+                .maestro-globe-transcript-shell:hover,
+                .maestro-globe-transcript-shell:focus-within,
+                .maestro-globe-transcript-shell.is-active {
                     opacity: 1;
-                    transform: translateY(-50%) scale(1);
+                    transform: scale(1);
                     filter: saturate(1.08);
+                }
+
+                .maestro-globe-transcript-column {
+                    min-width: 0;
+                    min-height: 0;
+                    height: 100%;
+                    overflow: hidden;
+                    pointer-events: auto;
+                }
+
+                .maestro-globe-transcript-column.is-native {
+                    border-right: 1px solid hsl(var(--attachment-svg-native-text) / 0.18);
+                    padding-right: 0.45rem;
+                }
+
+                .maestro-globe-transcript-column.is-target {
+                    padding-left: 0.45rem;
+                }
+
+                @media (max-width: 420px) {
+                    .maestro-globe-transcript-shell {
+                        inset-inline: 0;
+                        gap: 0.25rem;
+                        padding-inline: 0.5rem;
+                    }
+
+                    .maestro-globe-transcript-column.is-native {
+                        padding-right: 0.25rem;
+                    }
+
+                    .maestro-globe-transcript-column.is-target {
+                        padding-left: 0.25rem;
+                    }
                 }
 
                 @media (prefers-reduced-motion: reduce) {
@@ -1069,7 +1095,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     }
                     .maestro-globe-flag-pin,
                     .maestro-globe-flag-label,
-                    .maestro-globe-wheel-rail {
+                    .maestro-globe-transcript-shell {
                         transition: none;
                     }
                 }
@@ -1178,36 +1204,33 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     </div>
 
                     <div
-                        className={`maestro-globe-wheel-rail is-left ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
-                        data-globe-control="native"
+                        className={`maestro-globe-transcript-shell ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
                         onPointerDown={event => event.stopPropagation()}
+                        onTouchMove={event => event.stopPropagation()}
                         onWheel={event => event.stopPropagation()}
                     >
-                        <LanguageScrollWheel
-                            languages={ALL_LANGUAGES}
-                            selectedValue={nativeLang}
-                            onSelect={(lang) => handleScrollWheelSelect(lang, true)}
-                            onInteract={handleInteraction}
-                            title="Native language"
-                            variant="native"
-                        />
-                    </div>
+                        <div className="maestro-globe-transcript-column is-native" data-globe-control="native">
+                            <LanguageScrollWheel
+                                languages={ALL_LANGUAGES}
+                                selectedValue={nativeLang}
+                                onSelect={(lang) => handleScrollWheelSelect(lang, true)}
+                                onInteract={handleInteraction}
+                                title="Native language"
+                                variant="native"
+                            />
+                        </div>
 
-                    <div
-                        className={`maestro-globe-wheel-rail is-right ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
-                        data-globe-control="target"
-                        onPointerDown={event => event.stopPropagation()}
-                        onWheel={event => event.stopPropagation()}
-                    >
-                        <LanguageScrollWheel
-                            languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
-                            selectedValue={targetLang}
-                            onSelect={(lang) => handleScrollWheelSelect(lang, false)}
-                            disabled={!nativeLang}
-                            onInteract={handleInteraction}
-                            title="Target language"
-                            variant="target"
-                        />
+                        <div className="maestro-globe-transcript-column is-target" data-globe-control="target">
+                            <LanguageScrollWheel
+                                languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
+                                selectedValue={targetLang}
+                                onSelect={(lang) => handleScrollWheelSelect(lang, false)}
+                                disabled={!nativeLang}
+                                onInteract={handleInteraction}
+                                title="Target language"
+                                variant="target"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
