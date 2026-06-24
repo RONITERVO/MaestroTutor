@@ -1030,13 +1030,14 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     gap: 0.5rem;
                     width: calc(100% - 0.7rem);
                     height: clamp(9.5rem, 33cqw, 12.75rem);
-                    margin: -0.625rem 0.35rem 0;
+                    margin: -5.6rem 0.35rem 0;
                     padding: 0.75rem;
                     border-radius: 0 0 0.5rem 0.5rem;
                     background: transparent;
                     overflow: hidden;
                     pointer-events: none;
                     text-shadow: none;
+                    container-type: inline-size;
                     transition: opacity 180ms ease-out, transform 180ms ease-out, filter 180ms ease-out;
                 }
 

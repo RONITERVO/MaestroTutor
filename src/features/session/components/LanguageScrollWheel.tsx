@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useRef, useEffect, useLayoutEffect, useCallback, useState } from 'react';
-import { LanguageDefinition, hasSharedFlag } from '../../../core/config/languages';
+import { LanguageDefinition } from '../../../core/config/languages';
 
 interface LanguageScrollWheelProps {
   languages: LanguageDefinition[];
@@ -21,7 +21,6 @@ const flagScrollStyle = {
         'linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0) 75%, rgba(0,0,0,0) 100%)',
     clipPath: 'inset(25% 0 0 0)',
     height: '100%',
-    containerType: 'inline-size',
     overscrollBehavior: 'contain',
     WebkitOverflowScrolling: 'touch',
 } as React.CSSProperties;
@@ -33,18 +32,12 @@ const getCenteredScrollTop = (container: HTMLElement, item: HTMLElement) => (
 const getVariantClasses = (variant?: 'native' | 'target') => {
     if (variant === 'native') {
         return {
-            selectedRing: 'ring-globe-native-accent/70',
-            selectedGlow: 'drop-shadow-[0_0_12px_hsl(var(--globe-native-accent)/0.45)]',
             text: 'text-attachment-svg-native-text',
-            code: 'text-attachment-svg-native-text/75',
         };
     }
 
     return {
-        selectedRing: 'ring-scroll-wheel-target-accent/70',
-        selectedGlow: 'drop-shadow-[0_0_12px_hsl(var(--scroll-wheel-target-accent)/0.45)]',
         text: 'text-attachment-svg-target-text',
-        code: 'text-attachment-svg-native-text/75',
     };
 };
 
@@ -230,8 +223,6 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                 ref={scrollContainerRef}
                 className={[
                     'relative h-full min-h-0 overflow-y-auto scrollbar-hide pointer-events-auto',
-                    'transition-[filter,opacity,transform] duration-200',
-                    isScrolling ? 'scale-[1.015]' : 'scale-100',
                     disabled ? 'pointer-events-none' : '',
                 ].filter(Boolean).join(' ')}
                 style={flagScrollStyle}
@@ -247,11 +238,27 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                 aria-disabled={disabled || undefined}
                 role="listbox"
             >
-                <div className="flex flex-col items-center justify-start">
-                <div aria-hidden className="h-[8cqw] min-h-8 shrink-0" />
+                <div
+                    className="flex flex-col items-center justify-start"
+                    style={{
+                        paddingTop: '8cqw',
+                        paddingBottom: '8cqw',
+                    }}
+                >
+                <div
+                    aria-hidden
+                    role="presentation"
+                    className="text-center p-1 w-full opacity-0 select-none pointer-events-none"
+                >
+                    <p
+                        className={variantClasses.text}
+                        style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
+                    >
+                        {'\u00A0'}
+                    </p>
+                </div>
                 {languages.map(lang => {
                     const isSelected = lang.langCode === selectedValue?.langCode;
-                    const showShortCode = hasSharedFlag(lang);
                     return (
                         <button
                             type="button"
@@ -264,10 +271,10 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                                 }
                             }}
                             className={[
-                                'group flex min-h-[2.55rem] w-full items-center justify-center px-1 py-1',
+                                'text-center p-1 w-full',
                                 'transition-all duration-300 transform-gpu outline-none',
                                 'cursor-pointer disabled:cursor-default',
-                                isSelected ? 'opacity-100 scale-105' : 'opacity-70 scale-100 hover:opacity-90',
+                                isSelected ? 'opacity-100 scale-105' : 'opacity-70 scale-100',
                             ].join(' ')}
                             onClick={() => { if (!disabled) { onInteract?.(); onSelect(lang); } }}
                             disabled={disabled}
@@ -275,32 +282,30 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                             aria-selected={isSelected}
                             aria-label={lang.displayName}
                         >
-                            <span
-                                className={[
-                                    'inline-flex min-h-9 min-w-12 items-center justify-center gap-1 rounded-sm px-1',
-                                    'ring-1 ring-transparent transition-all duration-300',
-                                    isSelected ? `${variantClasses.selectedRing} ${variantClasses.selectedGlow}` : '',
-                                ].filter(Boolean).join(' ')}
+                            <p
+                                className={`${variantClasses.text} pointer-events-none whitespace-normal`}
+                                style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                             >
-                                <span className="text-[1.95rem] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.22)]">
+                                <span className="mr-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.22)]">
                                     {lang.flag}
                                 </span>
-                                {showShortCode && (
-                                    <span
-                                        className={[
-                                            'text-[0.55rem] font-bold leading-none',
-                                            'drop-shadow-[0_1px_2px_rgba(255,255,255,0.22)]',
-                                            isSelected ? variantClasses.code : `${variantClasses.text}/55`,
-                                        ].join(' ')}
-                                    >
-                                        {lang.shortCode}
-                                    </span>
-                                )}
-                            </span>
+                                <span>{lang.displayName}</span>
+                            </p>
                         </button>
                     );
                 })}
-                <div aria-hidden className="h-[8cqw] min-h-8 shrink-0" />
+                <div
+                    aria-hidden
+                    role="presentation"
+                    className="text-center p-1 w-full opacity-0 select-none pointer-events-none"
+                >
+                    <p
+                        className={variantClasses.text}
+                        style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
+                    >
+                        {'\u00A0'}
+                    </p>
+                </div>
                 </div>
             </div>
         </div>
