@@ -804,23 +804,18 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
                 .maestro-globe-shell {
                     position: relative;
-                    filter: drop-shadow(0 22px 30px rgba(6, 16, 30, 0.34));
+                    container-type: inline-size;
+                    overflow: visible;
                 }
 
                 .maestro-globe-window {
-                    position: absolute;
-                    inset: 0;
+                    position: relative;
                     width: 100%;
-                    height: 100%;
-                    overflow: hidden;
-                    border-radius: 1.35rem;
-                    border: 1px solid rgba(255, 255, 255, 0.16);
-                    background:
-                        radial-gradient(circle at 50% 46%, rgba(51, 119, 171, 0.20) 0%, rgba(10, 20, 36, 0.18) 48%, rgba(2, 6, 16, 0.60) 100%),
-                        linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03));
-                    box-shadow:
-                        inset 0 1px 0 rgba(255,255,255,0.22),
-                        inset 0 -24px 55px rgba(2, 6, 16, 0.38);
+                    aspect-ratio: 1 / 1;
+                    overflow: visible;
+                    border: 0;
+                    background: transparent;
+                    box-shadow: none;
                 }
 
                 .maestro-globe-stage {
@@ -840,13 +835,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     position: absolute;
                     inset: 0;
                     pointer-events: none;
-                    background:
-                        radial-gradient(circle at 18% 24%, rgba(255,255,255,0.78) 0 1px, transparent 1.5px),
-                        radial-gradient(circle at 78% 18%, rgba(255,255,255,0.58) 0 1px, transparent 1.4px),
-                        radial-gradient(circle at 66% 72%, rgba(255,255,255,0.42) 0 1px, transparent 1.5px),
-                        radial-gradient(circle at 35% 76%, rgba(255,255,255,0.32) 0 1px, transparent 1.3px),
-                        radial-gradient(circle at 50% 50%, rgba(21, 80, 130, 0.30), rgba(2, 6, 16, 0.56) 70%);
-                    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+                    background: transparent;
                 }
 
                 .maestro-earth-canvas {
@@ -882,9 +871,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     inset: 0;
                     pointer-events: none;
                     z-index: 70;
-                    background:
-                        radial-gradient(circle at 50% 48%, transparent 55%, rgba(3, 8, 18, 0.28) 100%),
-                        linear-gradient(180deg, rgba(255,255,255,0.07), transparent 34%, rgba(0,0,0,0.18));
+                    display: none;
                 }
 
                 .maestro-globe-route-layer {
@@ -1035,34 +1022,70 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         0 7px 15px rgba(0,0,0,0.28);
                 }
 
-                .maestro-globe-wheel-panel {
-                    position: absolute;
-                    left: 50%;
-                    bottom: 0.72rem;
+                .maestro-globe-transcript-shell {
+                    position: relative;
                     z-index: 90;
-                    width: min(74%, 12.5rem);
-                    transform: translateX(-50%);
-                    border: 1px solid rgba(255,255,255,0.13);
-                    border-radius: 0.86rem;
-                    background: rgba(7, 17, 31, 0.58);
-                    backdrop-filter: blur(13px) saturate(1.18);
-                    box-shadow:
-                        0 12px 28px rgba(0,0,0,0.25),
-                        inset 0 1px 0 rgba(255,255,255,0.13);
-                    padding: 0.48rem 0.55rem;
-                    transition: opacity 180ms ease-out, transform 180ms ease-out;
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                    gap: 0.5rem;
+                    width: calc(100% - 0.7rem);
+                    height: clamp(9.5rem, 33cqw, 12.75rem);
+                    margin: -5.6rem 0.35rem 0;
+                    padding: 0.75rem;
+                    border-radius: 0 0 0.5rem 0.5rem;
+                    background: transparent;
+                    overflow: hidden;
+                    pointer-events: none;
+                    text-shadow: none;
+                    container-type: inline-size;
+                    transition: opacity 180ms ease-out, transform 180ms ease-out, filter 180ms ease-out;
                 }
 
-                .maestro-globe-wheel-panel.is-idle {
-                    opacity: 0.62;
-                    transform: translateX(-50%) translateY(0.2rem) scale(0.98);
-                }
-
-                .maestro-globe-wheel-panel:hover,
-                .maestro-globe-wheel-panel:focus-within,
-                .maestro-globe-wheel-panel.is-active {
+                .maestro-globe-transcript-shell.is-idle {
                     opacity: 1;
-                    transform: translateX(-50%) translateY(0) scale(1);
+                    transform: none;
+                }
+
+                .maestro-globe-transcript-shell:hover,
+                .maestro-globe-transcript-shell:focus-within,
+                .maestro-globe-transcript-shell.is-active {
+                    opacity: 1;
+                    transform: none;
+                    filter: none;
+                }
+
+                .maestro-globe-transcript-column {
+                    min-width: 0;
+                    min-height: 0;
+                    height: 100%;
+                    overflow: hidden;
+                    pointer-events: auto;
+                }
+
+                .maestro-globe-transcript-column.is-native {
+                    border-right: 1px solid hsl(var(--attachment-svg-native-text) / 0.18);
+                    padding-right: 0.45rem;
+                }
+
+                .maestro-globe-transcript-column.is-target {
+                    padding-left: 0.45rem;
+                }
+
+                @media (max-width: 420px) {
+                    .maestro-globe-transcript-shell {
+                        width: 100%;
+                        margin-inline: 0;
+                        gap: 0.25rem;
+                        padding-inline: 0.5rem;
+                    }
+
+                    .maestro-globe-transcript-column.is-native {
+                        padding-right: 0.25rem;
+                    }
+
+                    .maestro-globe-transcript-column.is-target {
+                        padding-left: 0.25rem;
+                    }
                 }
 
                 @media (prefers-reduced-motion: reduce) {
@@ -1074,14 +1097,14 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     }
                     .maestro-globe-flag-pin,
                     .maestro-globe-flag-label,
-                    .maestro-globe-wheel-panel {
+                    .maestro-globe-transcript-shell {
                         transition: none;
                     }
                 }
             `}</style>
 
-            <div className="maestro-globe-shell w-full max-w-[27rem] aspect-square">
-                <div className="maestro-globe-window absolute inset-0">
+            <div className="maestro-globe-shell w-full max-w-[27rem]">
+                <div className="maestro-globe-window">
                     <div
                         className={`maestro-globe-stage ${isDragging ? 'is-dragging' : ''}`}
                         onPointerDown={handlePointerDown}
@@ -1181,33 +1204,35 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
                         <div className="maestro-globe-vignette" />
                     </div>
+                </div>
 
-                    <div
-                        className={`maestro-globe-wheel-panel ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
-                        data-globe-control="true"
-                        onPointerDown={event => event.stopPropagation()}
-                        onWheel={event => event.stopPropagation()}
-                    >
-                        <div className="flex justify-center items-start gap-3">
-                            <LanguageScrollWheel
-                                languages={ALL_LANGUAGES}
-                                selectedValue={nativeLang}
-                                onSelect={(lang) => handleScrollWheelSelect(lang, true)}
-                                onInteract={handleInteraction}
-                                title=""
-                                variant="native"
-                            />
-                            <div className="w-px h-24 bg-white/30 self-center" />
-                            <LanguageScrollWheel
-                                languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
-                                selectedValue={targetLang}
-                                onSelect={(lang) => handleScrollWheelSelect(lang, false)}
-                                disabled={!nativeLang}
-                                onInteract={handleInteraction}
-                                title=""
-                                variant="target"
-                            />
-                        </div>
+                <div
+                    className={`maestro-globe-transcript-shell ${isWheelOverlayActive ? 'is-active' : 'is-idle'}`}
+                    onPointerDown={event => event.stopPropagation()}
+                    onTouchMove={event => event.stopPropagation()}
+                    onWheel={event => event.stopPropagation()}
+                >
+                    <div className="maestro-globe-transcript-column is-native" data-globe-control="native">
+                        <LanguageScrollWheel
+                            languages={ALL_LANGUAGES}
+                            selectedValue={nativeLang}
+                            onSelect={(lang) => handleScrollWheelSelect(lang, true)}
+                            onInteract={handleInteraction}
+                            title="Native language"
+                            variant="native"
+                        />
+                    </div>
+
+                    <div className="maestro-globe-transcript-column is-target" data-globe-control="target">
+                        <LanguageScrollWheel
+                            languages={ALL_LANGUAGES.filter(l => l.langCode !== nativeLang?.langCode)}
+                            selectedValue={targetLang}
+                            onSelect={(lang) => handleScrollWheelSelect(lang, false)}
+                            disabled={!nativeLang}
+                            onInteract={handleInteraction}
+                            title="Target language"
+                            variant="target"
+                        />
                     </div>
                 </div>
             </div>
