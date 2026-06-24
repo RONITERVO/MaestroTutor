@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useCallback, useState } from 'react';
 import { LanguageDefinition, hasSharedFlag } from '../../../core/config/languages';
 
 interface LanguageScrollWheelProps {
@@ -14,29 +14,95 @@ interface LanguageScrollWheelProps {
   variant?: 'native' | 'target';
 }
 
+const flagScrollStyle = {
+    WebkitMaskImage:
+        'linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0) 75%, rgba(0,0,0,0) 100%)',
+    maskImage:
+        'linear-gradient(to top, rgba(0,0,0,0.1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 60%, rgba(0,0,0,0.7) 65%, rgba(0,0,0,0) 75%, rgba(0,0,0,0) 100%)',
+    clipPath: 'inset(25% 0 0 0)',
+    height: '33cqw',
+    minHeight: '9.5rem',
+    maxHeight: '12.75rem',
+    containerType: 'inline-size',
+    overscrollBehavior: 'contain',
+    WebkitOverflowScrolling: 'touch',
+} as React.CSSProperties;
+
+const getCenteredScrollTop = (container: HTMLElement, item: HTMLElement) => (
+    item.offsetTop - (container.clientHeight / 2) + (item.offsetHeight / 2)
+);
+
+const getVariantClasses = (variant?: 'native' | 'target') => {
+    if (variant === 'native') {
+        return {
+            selectedRing: 'ring-globe-native-accent/70',
+            selectedGlow: 'drop-shadow-[0_0_12px_hsl(var(--globe-native-accent)/0.45)]',
+            code: 'text-globe-native-accent',
+        };
+    }
+
+    return {
+        selectedRing: 'ring-scroll-wheel-target-accent/70',
+        selectedGlow: 'drop-shadow-[0_0_12px_hsl(var(--scroll-wheel-target-accent)/0.45)]',
+        code: 'text-scroll-wheel-target-accent',
+    };
+};
+
 const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, selectedValue, onSelect, title, disabled, onInteract, variant }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+    const itemRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
     const scrollTimeoutRef = useRef<number | null>(null);
     const isScrollingProgrammatically = useRef(false);
     const isTouchingRef = useRef(false);
     const [isScrolling, setIsScrolling] = useState(false);
     const scrollingTimeoutRef = useRef<number | null>(null);
+    const programmaticResetTimeoutRef = useRef<number | null>(null);
+    const variantClasses = getVariantClasses(variant);
 
-    useEffect(() => {
-        if (selectedValue && scrollContainerRef.current) {
+    const releaseProgrammaticScrollSoon = useCallback(() => {
+        if (programmaticResetTimeoutRef.current !== null) {
+            window.clearTimeout(programmaticResetTimeoutRef.current);
+        }
+        programmaticResetTimeoutRef.current = window.setTimeout(() => {
+            isScrollingProgrammatically.current = false;
+            programmaticResetTimeoutRef.current = null;
+        }, 120);
+    }, []);
+
+    const centerElement = useCallback((container: HTMLDivElement, element: HTMLElement) => {
+        const nextScrollTop = Math.max(0, getCenteredScrollTop(container, element));
+        if (Math.abs(container.scrollTop - nextScrollTop) <= 1) return;
+
+        isScrollingProgrammatically.current = true;
+        container.scrollTop = nextScrollTop;
+        releaseProgrammaticScrollSoon();
+    }, [releaseProgrammaticScrollSoon]);
+
+    useLayoutEffect(() => {
+        if (isScrolling || isTouchingRef.current) return;
+
+        const container = scrollContainerRef.current;
+
+        if (selectedValue && container) {
             const selectedElement = itemRefs.current.get(selectedValue.langCode);
             if (selectedElement) {
-                isScrollingProgrammatically.current = true;
-                selectedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(() => { isScrollingProgrammatically.current = false; }, 500);
+                centerElement(container, selectedElement);
             }
-        } else if (!selectedValue && scrollContainerRef.current) {
+        } else if (!selectedValue && container) {
+            if (container.scrollTop <= 1) return;
             isScrollingProgrammatically.current = true;
-            scrollContainerRef.current.scrollTop = 0;
-            setTimeout(() => { isScrollingProgrammatically.current = false; }, 300);
+            container.scrollTop = 0;
+            releaseProgrammaticScrollSoon();
         }
-    }, [selectedValue]);
+    });
+
+    useEffect(() => {
+        return () => {
+            if (programmaticResetTimeoutRef.current !== null) {
+                window.clearTimeout(programmaticResetTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const selectClosestItem = useCallback(() => {
         if (isScrollingProgrammatically.current) return;
@@ -53,7 +119,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
         languages.forEach((lang, index) => {
             const itemEl = itemRefs.current.get(lang.langCode);
             if (itemEl) {
-                const itemTop = itemEl.offsetTop - container.offsetTop;
+                const itemTop = itemEl.offsetTop;
                 const itemHeight = itemEl.offsetHeight;
                 const itemCenter = itemTop + itemHeight / 2;
                 const distance = Math.abs(scrollCenter - itemCenter);
@@ -67,11 +133,15 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
 
         if (closestIndex > -1) {
             const newSelectedLang = languages[closestIndex];
+            const newSelectedElement = itemRefs.current.get(newSelectedLang.langCode);
+            if (newSelectedElement) {
+                centerElement(container, newSelectedElement);
+            }
             if (newSelectedLang.langCode !== selectedValue?.langCode) {
                 onSelect(newSelectedLang);
             }
         }
-    }, [languages, onSelect, selectedValue]);
+    }, [centerElement, languages, onSelect, selectedValue]);
 
     const handleScrollEnd = useCallback(() => {
         if (isScrollingProgrammatically.current || isTouchingRef.current) return;
@@ -147,46 +217,88 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
         };
     }, [scheduleScrollEnd, handleScrollEnd, handleTouchStart, handleTouchEnd]);
 
-    const scrollingBorderClass = isScrolling && variant
-        ? variant === 'native'
-            ? 'ring-2 ring-profile-input-accent shadow-profile-input-accent/30 shadow-md'
-            : 'ring-2 ring-scroll-wheel-target-accent shadow-scroll-wheel-target-accent/30 shadow-md'
-        : '';
-
     return (
-        <div className={`flex-1 text-center relative min-w-[3rem] ${disabled ? 'opacity-50' : ''}`}>
-            {title && <p className="text-xs text-ctrl-muted-text mb-1 h-4">{title}</p>}
-            <div className={`transition-all duration-150 sketchy-border-thin ${scrollingBorderClass}`}>
-                <div 
-                    ref={scrollContainerRef}
-                    className={`h-32 overflow-y-auto relative scrollbar-hide ${disabled ? 'pointer-events-none' : ''}`}
-                    style={{
-                        scrollSnapType: 'y mandatory',
-                        WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
-                        maskImage: 'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
-                    }}
-                    onPointerDown={() => onInteract?.()}
-                >
-                <div className="h-[calc(50%-1.25rem)]"></div>
+        <div
+            className={[
+                'maestro-language-flag-wheel relative text-center',
+                'w-[4.8rem] sm:w-[5.35rem]',
+                disabled ? 'opacity-35' : '',
+            ].filter(Boolean).join(' ')}
+            data-variant={variant}
+        >
+            {title && <p className="sr-only">{title}</p>}
+            <div
+                ref={scrollContainerRef}
+                className={[
+                    'relative overflow-y-auto scrollbar-hide pointer-events-auto',
+                    'transition-[filter,opacity,transform] duration-200',
+                    isScrolling ? 'scale-[1.025]' : 'scale-100',
+                    disabled ? 'pointer-events-none' : '',
+                ].filter(Boolean).join(' ')}
+                style={flagScrollStyle}
+                onPointerDown={() => onInteract?.()}
+                onWheel={(event) => {
+                    event.stopPropagation();
+                    onInteract?.();
+                }}
+                aria-label={title || (variant === 'native' ? 'Native language' : 'Target language')}
+                aria-disabled={disabled || undefined}
+                role="listbox"
+            >
+                <div className="flex flex-col items-center justify-start">
+                <div aria-hidden className="h-20 shrink-0" />
                 {languages.map(lang => {
                     const isSelected = lang.langCode === selectedValue?.langCode;
                     const showShortCode = hasSharedFlag(lang);
                     return (
-                        <div
+                        <button
+                            type="button"
                             key={lang.langCode}
-                            ref={el => { if (el) itemRefs.current.set(lang.langCode, el) }}
-                            className={`flex items-center justify-center h-10 transition-all duration-200 ease-out`}
-                            style={{ scrollSnapAlign: 'center' }}
+                            ref={el => {
+                                if (el) {
+                                    itemRefs.current.set(lang.langCode, el);
+                                } else {
+                                    itemRefs.current.delete(lang.langCode);
+                                }
+                            }}
+                            className={[
+                                'group flex h-10 w-full items-center justify-center p-1',
+                                'transition-all duration-300 transform-gpu outline-none',
+                                'cursor-pointer disabled:cursor-default',
+                                isSelected ? 'opacity-100 scale-110' : 'opacity-60 scale-95 hover:opacity-85 hover:scale-100',
+                            ].join(' ')}
                             onClick={() => { if (!disabled) { onInteract?.(); onSelect(lang); } }}
+                            disabled={disabled}
+                            role="option"
+                            aria-selected={isSelected}
+                            aria-label={lang.displayName}
                         >
-                            <span className={`text-2xl font-semibold flex items-center gap-0.5 cursor-pointer transition-all duration-200 ${isSelected ? 'opacity-100 scale-125' : 'opacity-50 scale-100'}`}>
-                                {lang.flag}
-                                {showShortCode && <span className="text-[9px] text-mode-toggle-text/50 font-bold ml-0.5">{lang.shortCode}</span>}
+                            <span
+                                className={[
+                                    'inline-flex min-h-9 min-w-9 items-center justify-center gap-0.5',
+                                    'rounded-full ring-1 ring-transparent transition-all duration-300',
+                                    isSelected ? `${variantClasses.selectedRing} ${variantClasses.selectedGlow}` : '',
+                                ].filter(Boolean).join(' ')}
+                            >
+                                <span className="text-[1.95rem] leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
+                                    {lang.flag}
+                                </span>
+                                {showShortCode && (
+                                    <span
+                                        className={[
+                                            'ml-0.5 text-[0.55rem] font-bold leading-none',
+                                            'drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]',
+                                            isSelected ? variantClasses.code : 'text-white/65',
+                                        ].join(' ')}
+                                    >
+                                        {lang.shortCode}
+                                    </span>
+                                )}
                             </span>
-                        </div>
+                        </button>
                     );
                 })}
-                <div className="h-[calc(50%-1.25rem)]"></div>
+                <div aria-hidden className="h-20 shrink-0" />
                 </div>
             </div>
         </div>
