@@ -392,7 +392,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},
         outputAudioTranscription: {},
-        thinkingConfig: { thinkingBudget: 0 },
         systemInstruction: augmentedSystemInstruction,
         language: opts?.language,
         replySuggestionsCount: suggestionList.length,
@@ -407,7 +406,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
           outputAudioTranscription: {}, // Enable Output Transcription (The Parrot)
-          thinkingConfig: { thinkingBudget: 0 },
           systemInstruction: augmentedSystemInstruction,
         },
         callbacks: {

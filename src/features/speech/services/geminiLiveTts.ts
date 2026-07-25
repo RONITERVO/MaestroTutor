@@ -168,7 +168,6 @@ ${textBlock}`;
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
     systemInstruction: { parts: [{ text: systemInstructionText }] },
     outputAudioTranscription: {},
-    thinkingConfig: {thinkingBudget: 0},
   };
 
   const log = debugLogService.logRequest('streamGeminiLiveTts', model, {
@@ -348,8 +347,11 @@ ${textBlock}`;
           },
           onmessage: (msg: LiveServerMessage) => {
             // 1. Handle Audio Response - stream immediately for playback
-            const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (inlineAudio) {
+            const inlineAudioParts = msg.serverContent?.modelTurn?.parts
+              ?.map((part) => part.inlineData?.data)
+              .filter((data): data is string => typeof data === 'string' && data.length > 0)
+              ?? [];
+            for (const inlineAudio of inlineAudioParts) {
               try {
                 // Accumulate raw PCM for splitting
                 const pcm16 = base64ToInt16(inlineAudio);

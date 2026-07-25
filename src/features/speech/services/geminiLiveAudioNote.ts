@@ -129,12 +129,14 @@ export const synthesizeGeminiAudioNote = async (params: {
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
             systemInstruction: { parts: [{ text: systemInstructionText }] },
             outputAudioTranscription: {},
-            thinkingConfig: { thinkingBudget: 0 },
           } as any,
           callbacks: {
             onmessage: (msg: LiveServerMessage) => {
-              const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-              if (inlineAudio) {
+              const inlineAudioParts = msg.serverContent?.modelTurn?.parts
+                ?.map((part) => part.inlineData?.data)
+                .filter((data): data is string => typeof data === 'string' && data.length > 0)
+                ?? [];
+              for (const inlineAudio of inlineAudioParts) {
                 try {
                   audioChunks.push(base64ToInt16(inlineAudio));
                 } catch (error) {
