@@ -600,7 +600,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             if (currentSessionIdRef.current !== sessionId) return;
             if (!sessionRef.current) return;
             sessionRef.current.sendRealtimeInput({
-              media: {
+              audio: {
                 data: base64,
                 mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
               },

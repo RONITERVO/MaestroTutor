@@ -207,7 +207,7 @@ export const synthesizeGeminiAudioNote = async (params: {
 
           try {
             session.sendRealtimeInput({
-              media: {
+              audio: {
                 mimeType: `audio/pcm;rate=${TRIGGER_SAMPLE_RATE}`,
                 data: base64Chunk,
               },

@@ -519,7 +519,7 @@ ${textBlock}`;
 
         try {
           session.sendRealtimeInput({
-            media: { mimeType: `audio/pcm;rate=${TRIGGER_SAMPLE_RATE}`, data: b64Data }
+            audio: { mimeType: `audio/pcm;rate=${TRIGGER_SAMPLE_RATE}`, data: b64Data }
           });
         } catch (e) {
           cleanup();
