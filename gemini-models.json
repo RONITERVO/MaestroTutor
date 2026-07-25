@@ -3,7 +3,7 @@
     "default": "gemini-flash-latest",
     "aux": "gemini-flash-lite-latest",
     "translation": "gemini-flash-lite-latest",
-    "fallback": "gemini-pro-latest"
+    "fallback": "gemini-flash-lite-latest"
   },
   "image": {
     "generation": "gemini-2.5-flash-image"
