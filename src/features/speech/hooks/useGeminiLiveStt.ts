@@ -17,7 +17,7 @@ import {
 } from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
 import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
-import { trackGeminiUsage } from '../../../shared/utils/costTracker';
+import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -390,6 +390,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       }
 
       const model = getGeminiModels().audio.live;
+      const usageTracker = createLiveUsageTracker({ feature: 'stt', configuredModel: model });
       logRef.current = debugLogService.logRequest('useGeminiLiveStt', model, {
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},
@@ -423,11 +424,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             if (currentSessionIdRef.current !== sessionId) return;
 
             if (msg.usageMetadata) {
-              trackGeminiUsage({
-                feature: 'stt',
-                configuredModel: model,
-                usageMetadata: msg.usageMetadata,
-              });
+              usageTracker.trackSnapshot(msg.usageMetadata);
             }
             
             // 1. Capture User Input (ASR) - Low Latency, potentially inaccurate

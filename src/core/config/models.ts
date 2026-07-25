@@ -84,6 +84,7 @@ const isValidRegistry = (value: any): value is {
   image: { generation: string };
   audio: { live: string };
   music: { generation: string };
+  pricing?: GeminiPricingRegistry;
 } => {
   if (!value || typeof value !== 'object') return false;
   return (

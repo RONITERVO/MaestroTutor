@@ -6,7 +6,7 @@ import { getGeminiModels } from '../../../core/config/models';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
-import { trackGeminiUsage } from '../../../shared/utils/costTracker';
+import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 const OUTPUT_SAMPLE_RATE = 24000;
 const SESSION_TIMEOUT_MS = 180000;
@@ -54,6 +54,7 @@ export const synthesizeGeminiAudioNote = async (params: {
   const apiKey = await getApiKeyOrThrow();
   const ai = new GoogleGenAI({ apiKey });
   const model = getGeminiModels().audio.live;
+  const usageTracker = createLiveUsageTracker({ feature: 'audioNote', configuredModel: model });
   const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';
 
   const systemInstructionText = [
@@ -134,11 +135,7 @@ export const synthesizeGeminiAudioNote = async (params: {
           callbacks: {
             onmessage: (msg: LiveServerMessage) => {
               if (msg.usageMetadata) {
-                trackGeminiUsage({
-                  feature: 'audioNote',
-                  configuredModel: model,
-                  usageMetadata: msg.usageMetadata,
-                });
+                usageTracker.trackSnapshot(msg.usageMetadata);
               }
 
               const inlineAudioParts = msg.serverContent?.modelTurn?.parts

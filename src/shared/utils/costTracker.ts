@@ -113,6 +113,7 @@ export interface TrackGeminiUsageOptions {
   usageMetadata?: UsageMetadataLike | null;
   generatedImages?: number;
   searchQueries?: number;
+  requestCount?: number;
 }
 
 export interface CalculatedUsageCost {
@@ -189,6 +190,31 @@ const subtractModalityTotals = (total: ModalityTotals, subtraction: ModalityTota
   return result;
 };
 
+const normalizePersistedModalityTotals = (value: unknown): ModalityTotals => {
+  const source = value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Partial<Record<BillingModality, unknown>>
+    : {};
+  const result = createModalityTotals();
+  for (const modality of Object.keys(result) as BillingModality[]) {
+    result[modality] = asCount(source[modality]);
+  }
+  return result;
+};
+
+const distributeAcrossModalities = (shape: ModalityTotals, amount: number): ModalityTotals => {
+  const result = createModalityTotals();
+  const shapeTotal = Object.values(shape).reduce((sum, count) => sum + count, 0);
+  if (amount <= 0) return result;
+  if (shapeTotal <= 0) {
+    result.text = amount;
+    return result;
+  }
+  for (const modality of Object.keys(result) as BillingModality[]) {
+    result[modality] = amount * (shape[modality] / shapeTotal);
+  }
+  return result;
+};
+
 const getRate = (rates: ModalityRates | undefined, modality: BillingModality): number | undefined => (
   rates?.[modality] ?? rates?.text
 );
@@ -234,7 +260,9 @@ export const calculateGeminiUsageCost = (
   const searchPrompts = searchQueries > 0 ? 1 : 0;
 
   const promptByModality = toModalityTotals(metadata.promptTokensDetails, promptTokenCount);
-  const cachedByModality = toModalityTotals(metadata.cacheTokensDetails, cachedInputTokens);
+  const cachedByModality = Array.isArray(metadata.cacheTokensDetails) && metadata.cacheTokensDetails.length > 0
+    ? toModalityTotals(metadata.cacheTokensDetails, cachedInputTokens)
+    : distributeAcrossModalities(promptByModality, cachedInputTokens);
   const uncachedPromptByModality = subtractModalityTotals(promptByModality, cachedByModality);
   const toolByModality = toModalityTotals(metadata.toolUsePromptTokensDetails, toolInputTokens);
   const inputByModality = { ...promptByModality };
@@ -246,11 +274,9 @@ export const calculateGeminiUsageCost = (
     outputDetails,
     generatedImages > 0 && !hasOutputDetails ? 0 : candidateTokens
   );
-  outputByModality.text += thinkingTokens;
 
   const requestedModel = (options.modelVersion || options.configuredModel || '').replace(/^models\//, '');
-  const rule = resolvePricingRule(requestedModel, pricing)
-    ?? resolvePricingRule(options.configuredModel, pricing);
+  const rule = resolvePricingRule(requestedModel, pricing);
   const resolvedModel = rule?.id || requestedModel || options.configuredModel || 'unknown-model';
   const modelDisplayName = rule?.displayName || requestedModel || options.configuredModel || 'Unknown model';
 
@@ -263,6 +289,7 @@ export const calculateGeminiUsageCost = (
     modelCostUsd += priceModalities(toolByModality, rates.input);
     modelCostUsd += priceModalities(cachedByModality, rates.cached ?? rates.input);
     modelCostUsd += priceModalities(outputByModality, rates.output);
+    modelCostUsd += (thinkingTokens / 1_000_000) * (rates.output?.text ?? 0);
     if (generatedImages > 0 && !hasOutputDetails && rule.generatedImageUsdFallback !== undefined) {
       modelCostUsd += generatedImages * rule.generatedImageUsdFallback;
     }
@@ -331,9 +358,26 @@ const readData = (): CostDataV2 => {
       schemaVersion: COST_SCHEMA_VERSION,
       entries: parsed.entries.map(entry => ({
         ...entry,
-        searchPrompts: entry.searchPrompts || 0,
+        requests: asCount(entry.requests),
+        inputTokens: asCount(entry.inputTokens),
+        outputTokens: asCount(entry.outputTokens),
+        thinkingTokens: asCount(entry.thinkingTokens),
+        cachedInputTokens: asCount(entry.cachedInputTokens),
+        toolInputTokens: asCount(entry.toolInputTokens),
+        inputByModality: normalizePersistedModalityTotals(entry.inputByModality),
+        outputByModality: normalizePersistedModalityTotals(entry.outputByModality),
+        generatedImages: asCount(entry.generatedImages),
+        generatedAudioSeconds: asCount(entry.generatedAudioSeconds),
+        searchPrompts: asCount(entry.searchPrompts),
+        searchQueries: asCount(entry.searchQueries),
+        modelCostUsd: asCount(entry.modelCostUsd),
+        potentialSearchCostUsd: asCount(entry.potentialSearchCostUsd),
         pricingEffectiveAt: entry.pricingEffectiveAt || parsed.pricingEffectiveAt || getGeminiModels().pricing.effectiveAt,
       })),
+      legacyEstimateUsd: asCount(parsed.legacyEstimateUsd),
+      legacyInputTokens: asCount(parsed.legacyInputTokens),
+      legacyOutputTokens: asCount(parsed.legacyOutputTokens),
+      legacyImageGenCount: asCount(parsed.legacyImageGenCount),
     } as CostDataV2;
   } catch {
     return createEmptyData();
@@ -398,7 +442,7 @@ export const trackGeminiUsage = (options: TrackGeminiUsageOptions): void => {
     calculated.modelDisplayName,
     pricingEffectiveAt
   );
-  entry.requests += 1;
+  entry.requests += options.requestCount === undefined ? 1 : asCount(options.requestCount);
   entry.inputTokens += calculated.inputTokens;
   entry.outputTokens += calculated.outputTokens;
   entry.thinkingTokens += calculated.thinkingTokens;
@@ -418,6 +462,120 @@ export const trackGeminiUsage = (options: TrackGeminiUsageOptions): void => {
   data.updatedAt = new Date().toISOString();
   data.pricingEffectiveAt = pricingEffectiveAt;
   writeData(data);
+};
+
+type LiveUsageTrackingOptions = Pick<TrackGeminiUsageOptions, 'feature' | 'configuredModel' | 'modelVersion'>;
+
+const normalizeUsageDetails = (
+  details: ModalityTokenCountLike[] | undefined
+): ModalityTokenCountLike[] | undefined => {
+  if (!Array.isArray(details) || details.length === 0) return undefined;
+  const totals = toModalityTotals(details, 0);
+  const normalized = (Object.keys(totals) as BillingModality[])
+    .filter(modality => totals[modality] > 0)
+    .map(modality => ({ modality, tokenCount: totals[modality] }));
+  return normalized.length > 0 ? normalized : undefined;
+};
+
+const normalizeUsageSnapshot = (metadata: UsageMetadataLike): UsageMetadataLike => ({
+  promptTokenCount: asCount(metadata.promptTokenCount),
+  cachedContentTokenCount: asCount(metadata.cachedContentTokenCount),
+  candidatesTokenCount: asCount(metadata.candidatesTokenCount ?? metadata.responseTokenCount),
+  thoughtsTokenCount: asCount(metadata.thoughtsTokenCount),
+  toolUsePromptTokenCount: asCount(metadata.toolUsePromptTokenCount),
+  promptTokensDetails: normalizeUsageDetails(metadata.promptTokensDetails),
+  cacheTokensDetails: normalizeUsageDetails(metadata.cacheTokensDetails),
+  candidatesTokensDetails: normalizeUsageDetails(
+    metadata.candidatesTokensDetails ?? metadata.responseTokensDetails
+  ),
+  toolUsePromptTokensDetails: normalizeUsageDetails(metadata.toolUsePromptTokensDetails),
+});
+
+const usageCountDelta = (current: unknown, previous: unknown): number => {
+  const currentCount = asCount(current);
+  const previousCount = asCount(previous);
+  return currentCount >= previousCount ? currentCount - previousCount : currentCount;
+};
+
+const usageDetailsDelta = (
+  current: ModalityTokenCountLike[] | undefined,
+  previous: ModalityTokenCountLike[] | undefined
+): ModalityTokenCountLike[] | undefined => {
+  if (!current) return undefined;
+  const currentTotals = toModalityTotals(current, 0);
+  const previousTotals = toModalityTotals(previous, 0);
+  const delta = (Object.keys(currentTotals) as BillingModality[])
+    .map(modality => ({
+      modality,
+      tokenCount: usageCountDelta(currentTotals[modality], previousTotals[modality]),
+    }))
+    .filter(detail => detail.tokenCount > 0);
+  return delta.length > 0 ? delta : undefined;
+};
+
+const usageSnapshotDelta = (
+  current: UsageMetadataLike,
+  previous?: UsageMetadataLike
+): UsageMetadataLike => ({
+  promptTokenCount: usageCountDelta(current.promptTokenCount, previous?.promptTokenCount),
+  cachedContentTokenCount: usageCountDelta(
+    current.cachedContentTokenCount,
+    previous?.cachedContentTokenCount
+  ),
+  candidatesTokenCount: usageCountDelta(current.candidatesTokenCount, previous?.candidatesTokenCount),
+  thoughtsTokenCount: usageCountDelta(current.thoughtsTokenCount, previous?.thoughtsTokenCount),
+  toolUsePromptTokenCount: usageCountDelta(
+    current.toolUsePromptTokenCount,
+    previous?.toolUsePromptTokenCount
+  ),
+  promptTokensDetails: usageDetailsDelta(current.promptTokensDetails, previous?.promptTokensDetails),
+  cacheTokensDetails: usageDetailsDelta(current.cacheTokensDetails, previous?.cacheTokensDetails),
+  candidatesTokensDetails: usageDetailsDelta(
+    current.candidatesTokensDetails,
+    previous?.candidatesTokensDetails
+  ),
+  toolUsePromptTokensDetails: usageDetailsDelta(
+    current.toolUsePromptTokensDetails,
+    previous?.toolUsePromptTokensDetails
+  ),
+});
+
+const usageDetailsTotal = (details: ModalityTokenCountLike[] | undefined): number => (
+  Object.values(toModalityTotals(details, 0)).reduce((sum, count) => sum + count, 0)
+);
+
+const hasUsage = (metadata: UsageMetadataLike): boolean => (
+  asCount(metadata.promptTokenCount)
+  + asCount(metadata.cachedContentTokenCount)
+  + asCount(metadata.candidatesTokenCount)
+  + asCount(metadata.thoughtsTokenCount)
+  + asCount(metadata.toolUsePromptTokenCount)
+  + [
+    metadata.promptTokensDetails,
+    metadata.cacheTokensDetails,
+    metadata.candidatesTokensDetails,
+    metadata.toolUsePromptTokensDetails,
+  ].reduce((sum, details) => sum + usageDetailsTotal(details), 0)
+  > 0
+);
+
+export const createLiveUsageTracker = (options: LiveUsageTrackingOptions) => {
+  let previous: UsageMetadataLike | undefined;
+  let hasRecordedRequest = false;
+  return {
+    trackSnapshot(metadata: UsageMetadataLike): void {
+      const normalized = normalizeUsageSnapshot(metadata);
+      const delta = usageSnapshotDelta(normalized, previous);
+      previous = normalized;
+      if (!hasUsage(delta)) return;
+      trackGeminiUsage({
+        ...options,
+        usageMetadata: delta,
+        requestCount: hasRecordedRequest ? 0 : 1,
+      });
+      hasRecordedRequest = true;
+    },
+  };
 };
 
 export const trackMusicGeneration = (model: string, durationSeconds: number): void => {

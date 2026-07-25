@@ -2,9 +2,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DEFAULT_GEMINI_PRICING } from '../../core/config/pricing';
+import {
+  DEFAULT_GEMINI_PRICING,
+  isGeminiPricingRegistry,
+  resolvePricingRule,
+} from '../../core/config/pricing';
 import {
   calculateGeminiUsageCost,
+  createLiveUsageTracker,
   getCostSummary,
   trackGeminiUsage,
   trackMusicGeneration,
@@ -73,9 +78,11 @@ describe('calculateGeminiUsageCost', () => {
         promptTokenCount: 1_000_000,
         cachedContentTokenCount: 400_000,
         candidatesTokenCount: 0,
+        promptTokensDetails: [{ modality: 'AUDIO', tokenCount: 1_000_000 }],
       },
     });
     expect(result.modelCostUsd).toBeCloseTo(0.96);
+    expect(result.inputByModality.audio).toBe(1_000_000);
   });
 
   it('prices Live usage by input and output modality', () => {
@@ -96,6 +103,7 @@ describe('calculateGeminiUsageCost', () => {
     expect(result.modelCostUsd).toBeCloseTo(20.5);
     expect(result.inputByModality.audio).toBe(1_000_000);
     expect(result.outputByModality.audio).toBe(1_000_000);
+    expect(result.outputByModality.text).toBe(0);
   });
 
   it('uses Pro long-context rates above 200k prompt tokens', () => {
@@ -141,10 +149,49 @@ describe('calculateGeminiUsageCost', () => {
     });
     expect(result.pricingStatus).toBe('unpriced');
     expect(result.modelCostUsd).toBe(0);
+
+    const unknownReturnedVariant = calculate({
+      configuredModel: 'gemini-flash-latest',
+      modelVersion: 'gemini-2.5-flash-thinking',
+      usageMetadata: { promptTokenCount: 1000, candidatesTokenCount: 1000 },
+    });
+    expect(unknownReturnedVariant.pricingStatus).toBe('unpriced');
+    expect(unknownReturnedVariant.model).toBe('gemini-2.5-flash-thinking');
+  });
+
+  it('matches only exact model ids and recognized version suffixes', () => {
+    expect(resolvePricingRule('models/gemini-2.5-flash')?.id).toBe('gemini-2.5-flash');
+    expect(resolvePricingRule('gemini-2.5-flash-2026-07-21')?.id).toBe('gemini-2.5-flash');
+    expect(resolvePricingRule('gemini-2.5-flash-image-preview')?.id).toBe('gemini-2.5-flash-image');
+    expect(resolvePricingRule('gemini-2.5-flash-lite')).toBeUndefined();
+    expect(resolvePricingRule('gemini-2.5-flash-thinking')).toBeUndefined();
+  });
+
+  it('rejects empty and text-less modality rate maps', () => {
+    const emptyRates = JSON.parse(JSON.stringify(DEFAULT_GEMINI_PRICING));
+    emptyRates.models[0].inputPerMillion = {};
+    expect(isGeminiPricingRegistry(emptyRates)).toBe(false);
+
+    const textlessRates = JSON.parse(JSON.stringify(DEFAULT_GEMINI_PRICING));
+    textlessRates.models[0].inputPerMillion = { audio: 1 };
+    expect(isGeminiPricingRegistry(textlessRates)).toBe(false);
   });
 });
 
 describe('cost tracking storage', () => {
+  it('persists Live usage deltas instead of summing cumulative snapshots', () => {
+    const tracker = createLiveUsageTracker({
+      feature: 'liveConversation',
+      configuredModel: 'gemini-3.1-flash-live-preview',
+    });
+    tracker.trackSnapshot({ promptTokenCount: 10 });
+    tracker.trackSnapshot({ promptTokenCount: 25 });
+
+    const entry = getCostSummary().entries[0];
+    expect(entry.inputTokens).toBe(25);
+    expect(entry.requests).toBe(1);
+  });
+
   it('preserves the old unverifiable estimate separately during migration', () => {
     localStorage.setItem('maestro_costTracking', JSON.stringify({
       inputTokens: 1000,
@@ -156,6 +203,33 @@ describe('cost tracking storage', () => {
     expect(summary.legacyEstimateUsd).toBe(1.23);
     expect(summary.totalCostUsd).toBe(0);
     expect(summary.entries).toEqual([]);
+  });
+
+  it('normalizes malformed numeric fields and modality maps in persisted v2 data', () => {
+    localStorage.setItem('maestro_costTracking', JSON.stringify({
+      schemaVersion: 2,
+      startedAt: '2026-07-25T00:00:00.000Z',
+      updatedAt: '2026-07-25T00:00:00.000Z',
+      pricingEffectiveAt: '2026-07-21',
+      legacyEstimateUsd: 'not-a-number',
+      entries: [{
+        feature: 'tutor',
+        model: 'gemini-3.6-flash',
+        modelDisplayName: 'Gemini 3.6 Flash',
+        pricingEffectiveAt: '2026-07-21',
+        pricingStatus: 'priced',
+        inputTokens: 100,
+        inputByModality: { text: 'bad', audio: 100 },
+        outputByModality: null,
+        modelCostUsd: 'bad',
+      }],
+    }));
+
+    const summary = getCostSummary();
+    expect(summary.legacyEstimateUsd).toBe(0);
+    expect(summary.knownModelCostUsd).toBe(0);
+    expect(summary.entries[0].inputByModality).toMatchObject({ text: 0, audio: 100 });
+    expect(summary.entries[0].outputByModality).toMatchObject({ text: 0, audio: 0 });
   });
 
   it('aggregates priced and explicitly unpriced activity without mixing them', () => {

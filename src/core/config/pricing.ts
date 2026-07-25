@@ -144,7 +144,9 @@ const isFiniteNonNegativeNumber = (value: unknown): value is number => (
 
 const isModalityRates = (value: unknown): value is ModalityRates => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  return Object.entries(value).every(([key, rate]) => (
+  const entries = Object.entries(value);
+  if (entries.length === 0 || !isFiniteNonNegativeNumber((value as ModalityRates).text)) return false;
+  return entries.every(([key, rate]) => (
     ['text', 'audio', 'image', 'video', 'document'].includes(key)
     && isFiniteNonNegativeNumber(rate)
   ));
@@ -196,12 +198,23 @@ export const resolvePricingRule = (
   model: string,
   pricing: GeminiPricingRegistry = DEFAULT_GEMINI_PRICING
 ): ModelPricingRule | undefined => {
-  const normalized = (model || '').toLowerCase().replace(/^models\//, '');
+  const normalized = (model || '').trim().toLowerCase().replace(/^models\//, '');
+  const dateSuffix = '(?:\\d{4}-\\d{2}-\\d{2}|\\d{2}-\\d{2,4}|\\d{8})';
+  const versionSuffixPattern = new RegExp(`^-(?:(?:preview|exp)(?:-${dateSuffix})?|${dateSuffix}|\\d{3})$`);
   let best: { rule: ModelPricingRule; matchLength: number } | undefined;
+
+  for (const rule of pricing.models) {
+    if (rule.matches.some(rawMatch => normalized === rawMatch.trim().toLowerCase().replace(/^models\//, ''))) {
+      return rule;
+    }
+  }
+
   for (const rule of pricing.models) {
     for (const rawMatch of rule.matches) {
-      const match = rawMatch.toLowerCase().replace(/^models\//, '');
-      if (!normalized.includes(match)) continue;
+      const match = rawMatch.trim().toLowerCase().replace(/^models\//, '');
+      if (!normalized.startsWith(match)) continue;
+      const suffix = normalized.slice(match.length);
+      if (!versionSuffixPattern.test(suffix)) continue;
       if (!best || match.length > best.matchLength) {
         best = { rule, matchLength: match.length };
       }

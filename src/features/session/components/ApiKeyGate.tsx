@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
 import { IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconSparkles, IconEyeOpen, IconCreditCard, IconShield, IconTrash } from '../../../shared/ui/Icons';
@@ -105,6 +105,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [costSummary, setCostSummary] = useState(() => getCostSummary());
+  const costButtonRef = useRef<HTMLButtonElement>(null);
 
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
@@ -267,6 +268,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
         <CostBreakdownView
           summary={costSummary}
           onBack={() => setShowCostDetails(false)}
+          returnFocusRef={costButtonRef}
         />
       </div>
     );
@@ -348,6 +350,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   )}
                   {showCostButton && (
                     <button
+                      ref={costButtonRef}
                       type="button"
                       onClick={() => {
                         setCostSummary(getCostSummary());
@@ -360,7 +363,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                       <IconSparkles className="h-3.5 w-3.5" />
                       <span>
                         {costSummary.totalCostUsd > 0 && costSummary.totalCostUsd < 0.01
-                          ? '&lt;$0.01'
+                          ? '<$0.01'
                           : `~$${costSummary.totalCostUsd.toFixed(2)}`}
                         {costSummary.hasUnpricedUsage ? '+' : ''}
                       </span>

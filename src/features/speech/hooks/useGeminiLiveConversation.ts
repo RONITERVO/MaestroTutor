@@ -28,7 +28,7 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
 import { LIVE_MAX_THINKING_CONFIG } from '../config/liveThinking';
-import { trackGeminiUsage } from '../../../shared/utils/costTracker';
+import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -802,6 +802,7 @@ export function useGeminiLiveConversation(
       }
 
       const model = getGeminiModels().audio.live;
+      const usageTracker = createLiveUsageTracker({ feature: costFeature, configuredModel: model });
       modelRef.current = model;
       logFinalizedRef.current = false;
       logRef.current = debugLogService.logRequest('useGeminiLiveConversation', model, {
@@ -840,11 +841,7 @@ export function useGeminiLiveConversation(
                 if (currentSessionIdRef.current !== sessionId) return;
 
                 if (msg.usageMetadata) {
-                  trackGeminiUsage({
-                    feature: costFeature,
-                    configuredModel: model,
-                    usageMetadata: msg.usageMetadata,
-                  });
+                  usageTracker.trackSnapshot(msg.usageMetadata);
                 }
 
                 if (msg.goAway) {

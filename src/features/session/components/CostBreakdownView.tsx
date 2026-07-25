@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React from 'react';
+import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import {
   IconBookOpen,
   IconCamera,
@@ -27,16 +28,19 @@ import {
 interface CostBreakdownViewProps {
   summary: CostSummary;
   onBack: () => void;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 const formatUsd = (value: number): string => {
   if (value === 0) return '$0.00';
-  if (value < 0.01) return `$${value.toFixed(4)}`;
+  if (value < 0.01) return value < 0.00005 ? '<$0.0001' : `$${value.toFixed(4)}`;
   return `$${value.toFixed(2)}`;
 };
 
 const formatUsdDetailed = (value: number): string => (
-  value > 0 && value < 10 ? `$${value.toFixed(3)}` : formatUsd(value)
+  value > 0 && value < 10
+    ? value < 0.0005 ? '<$0.001' : `$${value.toFixed(3)}`
+    : formatUsd(value)
 );
 
 const formatTokens = (value: number): string => new Intl.NumberFormat(undefined, {
@@ -81,31 +85,87 @@ const FEATURE_TRANSLATION_KEYS: Record<CostFeature, string> = {
   music: 'costBreakdown.feature.music',
 };
 
-const summarizeModalities = (entry: CostBreakdownEntry): string => {
+const summarizeModalities = (entry: CostBreakdownEntry, t: TranslationFunction): string => {
   const parts: string[] = [];
   for (const modality of ['text', 'audio', 'image', 'video', 'document'] as const) {
     const input = entry.inputByModality[modality];
     const output = entry.outputByModality[modality];
     if (input + output > 0) {
-      parts.push(`${modality} ${formatTokens(input)} in / ${formatTokens(output)} out`);
+      parts.push(t('costBreakdown.modalitySummary', {
+        modality: t(`costBreakdown.modality.${modality}`),
+        input: formatTokens(input),
+        output: formatTokens(output),
+      }));
     }
   }
   return parts.join(' · ');
 };
 
-export const CostBreakdownView: React.FC<CostBreakdownViewProps> = ({ summary, onBack }) => {
+export const CostBreakdownView: React.FC<CostBreakdownViewProps> = ({
+  summary,
+  onBack,
+  returnFocusRef,
+}) => {
   const { t } = useAppTranslations();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
   const hasPotentialSearchCost = summary.potentialSearchCostUsd > 0;
   const totalLabel = hasPotentialSearchCost
     ? t('costBreakdown.maximumEstimate')
     : t('costBreakdown.totalEstimate');
 
+  React.useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    dialogRef.current?.focus();
+    return () => {
+      requestAnimationFrame(() => {
+        const focusTarget = returnFocusRef?.current ?? previouslyFocused;
+        if (focusTarget?.isConnected) focusTarget.focus();
+      });
+    };
+  }, [returnFocusRef]);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      onBack();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
+    )).filter(element => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true');
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   return (
     <div
+      ref={dialogRef}
       className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden bg-gate-bg text-gate-text shadow-2xl sketchy-border sketch-shape-7"
       role="dialog"
       aria-modal="true"
       aria-labelledby="cost-breakdown-title"
+      tabIndex={-1}
+      onKeyDown={handleDialogKeyDown}
       onClick={(event) => event.stopPropagation()}
     >
       <header className="flex shrink-0 items-start gap-3 border-b border-gate-muted-text/15 px-4 py-4 sm:px-6">
@@ -183,7 +243,7 @@ export const CostBreakdownView: React.FC<CostBreakdownViewProps> = ({ summary, o
             ) : summary.entries.map((entry) => {
               const FeatureIcon = featureIcon[entry.feature];
               const entryTotal = entry.modelCostUsd + entry.potentialSearchCostUsd;
-              const modalitySummary = summarizeModalities(entry);
+              const modalitySummary = summarizeModalities(entry, t);
               return (
                 <details key={`${entry.feature}:${entry.model}:${entry.pricingEffectiveAt}`} className="group bg-gate-input-bg/45 sketchy-border-thin">
                   <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gate-accent">
