@@ -205,6 +205,10 @@ export const createSettingsSlice: StateCreator<
       if (!effective.stt || effective.stt.provider !== 'gemini') {
         effective = { ...effective, stt: { ...effective.stt, provider: 'gemini' } };
       }
+
+      if (typeof effective.enableGoogleSearch !== 'boolean') {
+        effective = { ...effective, enableGoogleSearch: true };
+      }
       
       if (!effective.selectedLanguagePairId || !allGeneratedLanguagePairs.some(p => p.id === effective.selectedLanguagePairId)) {
         effective = { ...effective, selectedLanguagePairId: null };

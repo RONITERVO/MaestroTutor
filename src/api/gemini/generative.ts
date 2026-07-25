@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { ThinkingLevel } from '@google/genai';
 import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
@@ -47,6 +48,7 @@ export interface GenerateGeminiResponseOptions {
   configOverrides?: any;
   timeoutMs?: number;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
+  onGoogleSearchUnavailable?: () => void;
 }
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
@@ -167,6 +169,11 @@ const isHighDemandError = (error: any): boolean => {
   );
 };
 
+const shouldProbeWithoutGoogleSearch = (error: any): boolean => {
+  const status = getErrorStatus(error);
+  return status === 400 || status === 403 || status === 429;
+};
+
 const normalizeModelName = (model: string): string => model.trim();
 
 const resolveFallbackTextModel = (primaryModel: string): string | undefined => {
@@ -205,7 +212,7 @@ const withHighDemandRetry = async <T>(opts: {
   operation: string;
   model: string;
   fallbackModel?: string;
-  requestPayload: any;
+  requestPayload: any | ((model: string) => any);
   run: (model: string) => Promise<T>;
   mapSuccess: (result: T) => any;
   onProgress?: (event: GeminiProgressEvent) => void;
@@ -228,7 +235,10 @@ const withHighDemandRetry = async <T>(opts: {
       attempt: attemptNumber,
       totalAttempts,
     });
-    const attemptLog = debugLogService.logRequest(opts.operation, activeModel, opts.requestPayload);
+    const requestPayload = typeof opts.requestPayload === 'function'
+      ? opts.requestPayload(activeModel)
+      : opts.requestPayload;
+    const attemptLog = debugLogService.logRequest(opts.operation, activeModel, requestPayload);
 
     const attemptStartedAt = Date.now();
     opts.onProgress?.({
@@ -361,6 +371,7 @@ export const generateGeminiResponse = async (
     configOverrides,
     timeoutMs = DEFAULT_TIMEOUT_MS,
     lifecycleHooks,
+    onGoogleSearchUnavailable,
   } = options;
   const ai = await getAi();
   const rawContents: any[] = [];
@@ -446,14 +457,32 @@ export const generateGeminiResponse = async (
   };
   const redactedContents = redactInlineData(contents);
 
-  try {
-    const fallbackModel = resolveFallbackTextModel(modelName);
-    const retryResult = await withHighDemandRetry(
-      {
+  const fallbackModel = resolveFallbackTextModel(modelName);
+  const configForModel = (requestConfig: any, activeModel: string): any => {
+    if (!fallbackModel || normalizeModelName(activeModel) !== normalizeModelName(fallbackModel)) {
+      return requestConfig;
+    }
+
+    const fallbackThinkingConfig = {
+      ...(requestConfig?.thinkingConfig || {}),
+      thinkingLevel: ThinkingLevel.HIGH,
+    };
+    delete fallbackThinkingConfig.thinkingBudget;
+    return {
+      ...requestConfig,
+      thinkingConfig: fallbackThinkingConfig,
+    };
+  };
+
+  const runWithConfig = (requestConfig: any) => withHighDemandRetry(
+    {
         operation: 'generateContent',
         model: modelName,
         fallbackModel,
-        requestPayload: { contents: redactedContents, config },
+        requestPayload: (activeModel: string) => ({
+          contents: redactedContents,
+          config: configForModel(requestConfig, activeModel),
+        }),
         run: activeModel => withTimeout(
           (async () => {
             const abortController = new AbortController();
@@ -490,7 +519,7 @@ export const generateGeminiResponse = async (
                 model: activeModel,
                 contents,
                 config: {
-                  ...config,
+                  ...configForModel(requestConfig, activeModel),
                   abortSignal: abortController.signal,
                 },
               });
@@ -544,7 +573,22 @@ export const generateGeminiResponse = async (
         mapSuccess: result => ({ text: result.text, usage: result.usageMetadata }),
         onProgress: lifecycleHooks?.onProgress,
       }
-    );
+  );
+
+  try {
+    let retryResult;
+    try {
+      retryResult = await runWithConfig(config);
+    } catch (error: any) {
+      if (!useGoogleSearch || !shouldProbeWithoutGoogleSearch(error)) {
+        throw error;
+      }
+
+      const configWithoutGoogleSearch = { ...config };
+      delete configWithoutGoogleSearch.tools;
+      retryResult = await runWithConfig(configWithoutGoogleSearch);
+      onGoogleSearchUnavailable?.();
+    }
     const result = retryResult.value;
     return {
       text: result.text,

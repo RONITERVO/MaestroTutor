@@ -780,9 +780,13 @@ const App: React.FC = () => {
         isSaving={isApiKeySaving}
         error={apiKeyError}
         keyInvalid={apiKeyInvalid}
+        googleSearchEnabled={settings.enableGoogleSearch}
         instructionFocusIndex={apiKeyGateInstructionIndex}
         onSave={saveApiKey}
         onClear={clearApiKey}
+        onEnableGoogleSearch={() => {
+          setSettings(prev => ({ ...prev, enableGoogleSearch: true }));
+        }}
         onValueChange={() => setApiKeyError(null)}
         onClose={() => {
           setApiKeyError(null);

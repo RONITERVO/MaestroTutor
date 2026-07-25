@@ -19,9 +19,11 @@ interface ApiKeyGateProps {
   isSaving?: boolean;
   error?: string | null;
   keyInvalid?: boolean;
+  googleSearchEnabled: boolean;
   instructionFocusIndex?: number | null;
   onSave: (value: string) => Promise<boolean>;
   onClear: () => Promise<void>;
+  onEnableGoogleSearch: () => void;
   onClose: () => void;
   onValueChange?: (value: string) => void;
 }
@@ -92,9 +94,11 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   isSaving = false,
   error,
   keyInvalid = false,
+  googleSearchEnabled,
   instructionFocusIndex,
   onSave,
   onClear,
+  onEnableGoogleSearch,
   onClose,
   onValueChange,
 }) => {
@@ -267,6 +271,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
       >
         <CostBreakdownView
           summary={costSummary}
+          googleSearchEnabled={googleSearchEnabled}
           onBack={() => setShowCostDetails(false)}
           returnFocusRef={costButtonRef}
         />
@@ -390,6 +395,16 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                     ? t('apiKeyGate.keyInvalid', { maskedKey: value.length >= 8 ? `${value.slice(0, 4)}\u2022\u2022\u2022\u2022${value.slice(-4)}` : '' })
                     : error}
                 </div>
+              )}
+              {hasKey && !googleSearchEnabled && (
+                <button
+                  type="button"
+                  onClick={onEnableGoogleSearch}
+                  className="inline-flex min-h-8 items-center gap-1.5 bg-gate-accent/10 px-2.5 py-1 text-[11px] font-semibold text-gate-accent hover:bg-gate-accent/20 focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+                >
+                  <IconSparkles className="h-3.5 w-3.5" />
+                  {t('apiKeyGate.reenableGoogleSearch')}
+                </button>
               )}
             </div>
           </div>

@@ -2176,6 +2176,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           systemInstruction: params.systemInstructionForGemini,
           currentFileParts: params.imageForGeminiContextFileUri,
           useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
+          onGoogleSearchUnavailable: () => {
+            setSettings(prev => prev.enableGoogleSearch
+              ? { ...prev, enableGoogleSearch: false }
+              : prev
+            );
+          },
           lifecycleHooks: {
             onProgress: (event) => {
               if (event.phase === 'attempt-processing') {
@@ -2283,7 +2289,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       });
       throw error;
     }
-  }, [appendThinkingTrace, formatGeminiPhaseLabel, formatGeminiStatusLine, parseStrictTutorResponse, setLatestGroundingChunks, setThinkingStatusLine, updateMessage]);
+  }, [appendThinkingTrace, formatGeminiPhaseLabel, formatGeminiStatusLine, parseStrictTutorResponse, setLatestGroundingChunks, setSettings, setThinkingStatusLine, updateMessage]);
 
   const runUserImageGeneration = useCallback(async (params: {
     shouldGenerateUserImage: boolean;
