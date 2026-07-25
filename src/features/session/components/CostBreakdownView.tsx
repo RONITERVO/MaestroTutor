@@ -27,7 +27,6 @@ import {
 
 interface CostBreakdownViewProps {
   summary: CostSummary;
-  googleSearchEnabled: boolean;
   onBack: () => void;
   returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
@@ -104,7 +103,6 @@ const summarizeModalities = (entry: CostBreakdownEntry, t: TranslationFunction):
 
 export const CostBreakdownView: React.FC<CostBreakdownViewProps> = ({
   summary,
-  googleSearchEnabled,
   onBack,
   returnFocusRef,
 }) => {
@@ -195,28 +193,6 @@ export const CostBreakdownView: React.FC<CostBreakdownViewProps> = ({
       </header>
 
       <div className="overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
-        <section className="mb-3 flex items-start gap-2 bg-gate-accent/10 px-3 py-2 text-[11px] leading-relaxed sketchy-border-thin">
-          <IconSparkles className="mt-0.5 h-4 w-4 shrink-0 text-gate-accent" />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <strong className="text-gate-text">{t('costBreakdown.smartSearchTitle')}</strong>
-              <span className="bg-gate-bg/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-gate-accent sketchy-border-thin">
-                {googleSearchEnabled
-                  ? t('costBreakdown.smartSearchMonitoring')
-                  : t('costBreakdown.smartSearchDisabled')}
-              </span>
-              <span className="bg-gate-bg/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-gate-muted-text sketchy-border-thin">
-                {t('costBreakdown.smartSearchNoCharge')}
-              </span>
-            </div>
-            <p className="mt-0.5 text-gate-muted-text">
-              {googleSearchEnabled
-                ? t('costBreakdown.smartSearchEnabledBody')
-                : t('costBreakdown.smartSearchDisabledBody')}
-            </p>
-          </div>
-        </section>
-
         <section className="relative overflow-hidden bg-gate-btn-bg p-4 text-gate-btn-text msg-depth sketchy-border-thin sketch-shape-2">
           <div className="absolute -right-5 -top-6 opacity-10">
             <IconSparkles className="h-24 w-24" />
