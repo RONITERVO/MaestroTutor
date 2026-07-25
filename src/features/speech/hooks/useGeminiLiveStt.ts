@@ -16,6 +16,8 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
+import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
+import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -388,11 +390,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       }
 
       const model = getGeminiModels().audio.live;
+      const usageTracker = createLiveUsageTracker({ feature: 'stt', configuredModel: model });
       logRef.current = debugLogService.logRequest('useGeminiLiveStt', model, {
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},
         outputAudioTranscription: {},
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
         systemInstruction: augmentedSystemInstruction,
         language: opts?.language,
         replySuggestionsCount: suggestionList.length,
@@ -407,7 +410,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
           outputAudioTranscription: {}, // Enable Output Transcription (The Parrot)
-          thinkingConfig: { thinkingBudget: 0 },
+          thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
           systemInstruction: augmentedSystemInstruction,
         },
         callbacks: {
@@ -419,6 +422,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           onmessage: (msg: LiveServerMessage) => {
             // Check session is still valid before processing message
             if (currentSessionIdRef.current !== sessionId) return;
+
+            if (msg.usageMetadata) {
+              usageTracker.trackSnapshot(msg.usageMetadata);
+            }
             
             // 1. Capture User Input (ASR) - Low Latency, potentially inaccurate
             if (msg.serverContent?.inputTranscription) {

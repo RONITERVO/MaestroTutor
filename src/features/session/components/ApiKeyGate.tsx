@@ -1,14 +1,15 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Capacitor } from '@capacitor/core';
 import { IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, IconSparkles, IconEyeOpen, IconCreditCard, IconShield, IconTrash } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
-import { getCostSummary, GOOGLE_BILLING_URL } from '../../../shared/utils/costTracker';
+import { getCostSummary } from '../../../shared/utils/costTracker';
+import CostBreakdownView from './CostBreakdownView';
 
 interface ApiKeyGateProps {
   isOpen: boolean;
@@ -100,15 +101,19 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   const { t } = useAppTranslations();
   const [value, setValue] = useState('');
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showCostDetails, setShowCostDetails] = useState(false);
   const [instructionIndex, setInstructionIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [costSummary, setCostSummary] = useState({ inputTokens: 0, outputTokens: 0, imageGenCount: 0, totalCostUsd: 0 });
+  const [costSummary, setCostSummary] = useState(() => getCostSummary());
+  const costButtonRef = useRef<HTMLButtonElement>(null);
 
   const canClose = !isBlocking;
   const totalInstructions = INSTRUCTION_IMAGES.length;
   const isBillingHelp = instructionIndex >= REGULAR_INSTRUCTIONS_COUNT;
   const displayValue = value || (hasKey ? maskedKey || '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' : '');
-  const hasCostEstimate = costSummary.totalCostUsd > 0;
+  const hasCostEstimate = costSummary.totalCostUsd > 0
+    || costSummary.legacyEstimateUsd > 0
+    || costSummary.entries.length > 0;
   const showCostButton = hasKey && hasCostEstimate;
   const inputRightPaddingClass = hasKey
     ? showCostButton
@@ -117,7 +122,9 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
     : 'pr-14';
   const savedKeyBorderColor = keyInvalid ? 'hsl(0 60% 60%)' : hasKey ? 'hsl(120 40% 60%)' : undefined;
   const closeCurrentView = () => {
-    if (showInstructions) {
+    if (showCostDetails) {
+      setShowCostDetails(false);
+    } else if (showInstructions) {
       setShowInstructions(false);
     } else {
       onClose();
@@ -127,6 +134,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setShowInstructions(false);
+      setShowCostDetails(false);
       setInstructionIndex(0);
       setIsAutoPlaying(true);
     } else {
@@ -251,6 +259,21 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   if (!isOpen) return null;
 
+  if (showCostDetails) {
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+        onClick={() => setShowCostDetails(false)}
+      >
+        <CostBreakdownView
+          summary={costSummary}
+          onBack={() => setShowCostDetails(false)}
+          returnFocusRef={costButtonRef}
+        />
+      </div>
+    );
+  }
+
   if (!showInstructions) {
     return (
       <div
@@ -327,14 +350,23 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
                   )}
                   {showCostButton && (
                     <button
+                      ref={costButtonRef}
                       type="button"
-                      onClick={() => openExternalUrl(GOOGLE_BILLING_URL)}
+                      onClick={() => {
+                        setCostSummary(getCostSummary());
+                        setShowCostDetails(true);
+                      }}
                       aria-label={t('apiKeyGate.costLabel')}
                       title={t('apiKeyGate.costLabel')}
                       className="inline-flex h-8 items-center justify-center gap-1 px-2 text-xs text-gate-muted-text transition-colors hover:bg-gate-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
                     >
                       <IconSparkles className="h-3.5 w-3.5" />
-                      <span>~${costSummary.totalCostUsd.toFixed(2)}</span>
+                      <span>
+                        {costSummary.totalCostUsd > 0 && costSummary.totalCostUsd < 0.01
+                          ? '<$0.01'
+                          : `~$${costSummary.totalCostUsd.toFixed(2)}`}
+                        {costSummary.hasUnpricedUsage ? '+' : ''}
+                      </span>
                     </button>
                   )}
                   <button

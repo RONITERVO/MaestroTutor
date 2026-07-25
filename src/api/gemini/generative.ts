@@ -209,7 +209,7 @@ const withHighDemandRetry = async <T>(opts: {
   run: (model: string) => Promise<T>;
   mapSuccess: (result: T) => any;
   onProgress?: (event: GeminiProgressEvent) => void;
-}): Promise<T> => {
+}): Promise<{ value: T; modelUsed: string }> => {
   let lastError: any;
   let activeModel = normalizeModelName(opts.model);
   const fallbackModel = opts.fallbackModel
@@ -262,7 +262,7 @@ const withHighDemandRetry = async <T>(opts: {
         elapsedMs: Date.now() - attemptStartedAt,
       });
       attemptLog.complete({ ...opts.mapSuccess(result), retry: buildRetryMeta(attemptNumber) });
-      return result;
+      return { value: result, modelUsed: activeModel };
     } catch (error: any) {
       clearInterval(processingTimer);
       lastError = error;
@@ -448,7 +448,7 @@ export const generateGeminiResponse = async (
 
   try {
     const fallbackModel = resolveFallbackTextModel(modelName);
-    const result = await withHighDemandRetry(
+    const retryResult = await withHighDemandRetry(
       {
         operation: 'generateContent',
         model: modelName,
@@ -458,6 +458,7 @@ export const generateGeminiResponse = async (
           (async () => {
             const abortController = new AbortController();
             let latestChunk: any | undefined;
+            let resolvedModelVersion: string | undefined;
             let accumulatedText = '';
             let previousChunkText = '';
             let accumulatedThought = '';
@@ -496,6 +497,9 @@ export const generateGeminiResponse = async (
 
               for await (const chunk of stream) {
                 latestChunk = chunk;
+                if (typeof chunk?.modelVersion === 'string' && chunk.modelVersion.trim()) {
+                  resolvedModelVersion = chunk.modelVersion;
+                }
 
                 const chunkText = typeof chunk?.text === 'string' ? chunk.text : '';
                 if (chunkText) {
@@ -524,6 +528,7 @@ export const generateGeminiResponse = async (
                 text: accumulatedText || latestChunk?.text || '',
                 candidates: latestChunk?.candidates,
                 usageMetadata: latestChunk?.usageMetadata,
+                modelVersion: resolvedModelVersion,
               };
             } catch (error: any) {
               if (!hasVisibleModelOutput && abortController.signal.aborted) {
@@ -540,10 +545,13 @@ export const generateGeminiResponse = async (
         onProgress: lifecycleHooks?.onProgress,
       }
     );
+    const result = retryResult.value;
     return {
       text: result.text,
       candidates: result.candidates,
       usageMetadata: result.usageMetadata,
+      modelVersion: result.modelVersion,
+      modelUsed: retryResult.modelUsed,
     };
   } catch (e: any) {
     console.error('Gemini API Error:', e);
@@ -558,7 +566,7 @@ export const translateText = async (text: string, from: string, to: string) => {
   const fallbackModel = resolveFallbackTextModel(model);
 
   try {
-    const result = await withHighDemandRetry(
+    const retryResult = await withHighDemandRetry(
       {
         operation: 'translateText',
         model,
@@ -574,7 +582,13 @@ export const translateText = async (text: string, from: string, to: string) => {
         mapSuccess: res => ({ text: res.text, usage: res.usageMetadata }),
       }
     );
-    return { translatedText: result.text || '', usageMetadata: result.usageMetadata };
+    const result = retryResult.value;
+    return {
+      translatedText: result.text || '',
+      usageMetadata: result.usageMetadata,
+      modelVersion: result.modelVersion,
+      modelUsed: retryResult.modelUsed,
+    };
   } catch (e: any) {
     throw new ApiError(e.message || 'Translation failed', { status: getErrorStatus(e) || 500, code: getErrorCode(e) });
   }

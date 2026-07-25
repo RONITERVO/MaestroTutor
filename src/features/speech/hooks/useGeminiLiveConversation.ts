@@ -27,6 +27,8 @@ import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
+import { LIVE_MAX_THINKING_CONFIG } from '../config/liveThinking';
+import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -80,6 +82,7 @@ export interface StartLiveConversationOptions {
   playModelAudio?: boolean;
   emitTurns?: boolean;
   sessionResumption?: SessionResumptionConfig;
+  costFeature?: 'liveConversation' | 'reengagement';
 }
 
 const INPUT_SAMPLE_RATE = 16000;
@@ -682,6 +685,7 @@ export function useGeminiLiveConversation(
       playModelAudio = true,
       emitTurns = true,
       sessionResumption,
+      costFeature = 'liveConversation',
     } = opts;
     
     // Wait for any in-progress cleanup to finish
@@ -798,6 +802,7 @@ export function useGeminiLiveConversation(
       }
 
       const model = getGeminiModels().audio.live;
+      const usageTracker = createLiveUsageTracker({ feature: costFeature, configuredModel: model });
       modelRef.current = model;
       logFinalizedRef.current = false;
       logRef.current = debugLogService.logRequest('useGeminiLiveConversation', model, {
@@ -817,9 +822,7 @@ export function useGeminiLiveConversation(
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          thinkingConfig: {
-            includeThoughts: true,
-          },
+          thinkingConfig: LIVE_MAX_THINKING_CONFIG,
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
           sessionResumption,
@@ -836,6 +839,10 @@ export function useGeminiLiveConversation(
               .then(async () => {
                 // Check session is still valid before processing message
                 if (currentSessionIdRef.current !== sessionId) return;
+
+                if (msg.usageMetadata) {
+                  usageTracker.trackSnapshot(msg.usageMetadata);
+                }
 
                 if (msg.goAway) {
                   callbacksRef.current.onGoAway?.(msg.goAway);

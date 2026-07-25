@@ -1,17 +1,97 @@
 {
   "text": {
-    "default": "gemini-3-flash-preview",
-    "aux": "gemini-3-flash-preview",
-    "translation": "gemini-3-flash-preview",
-    "fallback": "gemini-3.1-pro-preview"
+    "default": "gemini-flash-latest",
+    "aux": "gemini-flash-lite-latest",
+    "translation": "gemini-flash-lite-latest",
+    "fallback": "gemini-pro-latest"
   },
   "image": {
     "generation": "gemini-2.5-flash-image"
   },
   "audio": {
-    "live": "gemini-2.5-flash-native-audio-preview-12-2025"
+    "live": "gemini-3.1-flash-live-preview"
   },
   "music": {
     "generation": "lyria-realtime-exp"
+  },
+  "pricing": {
+    "schemaVersion": 1,
+    "currency": "USD",
+    "estimateBasis": "paid-standard-list",
+    "effectiveAt": "2026-07-21",
+    "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+    "googleSearch": {
+      "pricePerThousandQueriesUsd": 14,
+      "monthlyFreePrompts": 5000
+    },
+    "models": [
+      {
+        "id": "gemini-3.6-flash",
+        "displayName": "Gemini 3.6 Flash",
+        "matches": ["gemini-flash-latest", "gemini-3.6-flash"],
+        "inputPerMillion": { "text": 1.5, "audio": 1.5, "image": 1.5, "video": 1.5, "document": 1.5 },
+        "outputPerMillion": { "text": 7.5, "audio": 7.5, "image": 7.5, "video": 7.5, "document": 7.5 },
+        "cachedInputPerMillion": { "text": 0.15, "audio": 0.15, "image": 0.15, "video": 0.15, "document": 0.15 }
+      },
+      {
+        "id": "gemini-3.5-flash-lite",
+        "displayName": "Gemini 3.5 Flash-Lite",
+        "matches": ["gemini-flash-lite-latest", "gemini-3.5-flash-lite"],
+        "inputPerMillion": { "text": 0.3, "audio": 0.3, "image": 0.3, "video": 0.3, "document": 0.3 },
+        "outputPerMillion": { "text": 2.5, "audio": 2.5, "image": 2.5, "video": 2.5, "document": 2.5 },
+        "cachedInputPerMillion": { "text": 0.03, "audio": 0.03, "image": 0.03, "video": 0.03, "document": 0.03 }
+      },
+      {
+        "id": "gemini-3.1-pro-preview",
+        "displayName": "Gemini 3.1 Pro Preview",
+        "matches": ["gemini-pro-latest", "gemini-3.1-pro-preview"],
+        "inputPerMillion": { "text": 2, "audio": 2, "image": 2, "video": 2, "document": 2 },
+        "outputPerMillion": { "text": 12, "audio": 12, "image": 12, "video": 12, "document": 12 },
+        "cachedInputPerMillion": { "text": 0.2, "audio": 0.2, "image": 0.2, "video": 0.2, "document": 0.2 },
+        "longContext": {
+          "abovePromptTokens": 200000,
+          "inputPerMillion": { "text": 4, "audio": 4, "image": 4, "video": 4, "document": 4 },
+          "outputPerMillion": { "text": 18, "audio": 18, "image": 18, "video": 18, "document": 18 },
+          "cachedInputPerMillion": { "text": 0.4, "audio": 0.4, "image": 0.4, "video": 0.4, "document": 0.4 }
+        }
+      },
+      {
+        "id": "gemini-3.1-flash-live-preview",
+        "displayName": "Gemini 3.1 Flash Live Preview",
+        "matches": ["gemini-3.1-flash-live-preview"],
+        "inputPerMillion": { "text": 0.75, "audio": 3, "image": 1, "video": 1, "document": 1 },
+        "outputPerMillion": { "text": 4.5, "audio": 12, "image": 4.5, "video": 4.5, "document": 4.5 }
+      },
+      {
+        "id": "gemini-2.5-flash-image",
+        "displayName": "Gemini 2.5 Flash Image",
+        "matches": ["gemini-2.5-flash-image"],
+        "inputPerMillion": { "text": 0.3, "image": 0.3, "document": 0.3 },
+        "outputPerMillion": { "text": 2.5, "image": 30 },
+        "generatedImageUsdFallback": 0.039
+      },
+      {
+        "id": "gemini-2.5-flash",
+        "displayName": "Gemini 2.5 Flash",
+        "matches": ["gemini-2.5-flash"],
+        "inputPerMillion": { "text": 0.3, "audio": 1, "image": 0.3, "video": 0.3, "document": 0.3 },
+        "outputPerMillion": { "text": 2.5, "audio": 2.5, "image": 2.5, "video": 2.5, "document": 2.5 },
+        "cachedInputPerMillion": { "text": 0.03, "audio": 0.1, "image": 0.03, "video": 0.03, "document": 0.03 }
+      },
+      {
+        "id": "gemini-2.0-flash",
+        "displayName": "Gemini 2.0 Flash (retired)",
+        "matches": ["gemini-2.0-flash"],
+        "inputPerMillion": { "text": 0.1, "audio": 0.7, "image": 0.1, "video": 0.1, "document": 0.1 },
+        "outputPerMillion": { "text": 0.4, "audio": 0.4, "image": 0.4, "video": 0.4, "document": 0.4 },
+        "cachedInputPerMillion": { "text": 0.025, "audio": 0.175, "image": 0.025, "video": 0.025, "document": 0.025 }
+      },
+      {
+        "id": "lyria-realtime-exp",
+        "displayName": "Lyria RealTime Experimental",
+        "matches": ["lyria-realtime-exp"],
+        "unpricedReason": "Google does not currently publish a Lyria RealTime list price."
+      }
+    ]
   }
 }

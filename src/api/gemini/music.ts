@@ -4,6 +4,7 @@ import type { WeightedPrompt } from '@google/genai';
 import { debugLogService } from '../../features/diagnostics';
 import { mergeInt16Arrays, pcmToWav } from '../../features/speech';
 import { getGeminiModels } from '../../core/config/models';
+import { trackMusicGeneration } from '../../shared/utils/costTracker';
 import { getAi } from './client';
 
 const DEFAULT_SAMPLE_RATE = 48000;
@@ -238,6 +239,7 @@ export const generateMusic = async (params: {
       }
 
       const durationSeconds = merged.length / Math.max(1, sampleRate * channels);
+      trackMusicGeneration(model, durationSeconds);
       log.complete({
         durationSeconds,
         sampleRate,

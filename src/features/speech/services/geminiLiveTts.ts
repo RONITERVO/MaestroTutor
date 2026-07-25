@@ -27,6 +27,8 @@ import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
+import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
+import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 // ============================================================================
 // TYPES
@@ -163,12 +165,13 @@ TEXT TO READ:
 ${textBlock}`;
 
   const model = getGeminiModels().audio.live;
+  const usageTracker = createLiveUsageTracker({ feature: 'tts', configuredModel: model });
   const config = {
     responseModalities: [Modality.AUDIO],
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
     systemInstruction: { parts: [{ text: systemInstructionText }] },
     outputAudioTranscription: {},
-    thinkingConfig: {thinkingBudget: 0},
+    thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
   };
 
   const log = debugLogService.logRequest('streamGeminiLiveTts', model, {
@@ -347,9 +350,16 @@ ${textBlock}`;
             onStatusUpdate?.('CONNECTED / STREAMING');
           },
           onmessage: (msg: LiveServerMessage) => {
+            if (msg.usageMetadata) {
+              usageTracker.trackSnapshot(msg.usageMetadata);
+            }
+
             // 1. Handle Audio Response - stream immediately for playback
-            const inlineAudio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (inlineAudio) {
+            const inlineAudioParts = msg.serverContent?.modelTurn?.parts
+              ?.map((part) => part.inlineData?.data)
+              .filter((data): data is string => typeof data === 'string' && data.length > 0)
+              ?? [];
+            for (const inlineAudio of inlineAudioParts) {
               try {
                 // Accumulate raw PCM for splitting
                 const pcm16 = base64ToInt16(inlineAudio);

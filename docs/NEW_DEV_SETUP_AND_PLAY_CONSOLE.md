@@ -240,6 +240,8 @@ This repo already contains a privacy policy page at [`public/privacy.html`](../p
 
 Run "npm run deploy" to host on github pages and make sure the custom domain stays set at https://chatwithmaestro.com on github pages so that /privacy.html can be accessed alongside the /gemini-models.json both of those must exist in the custom deployment https://chatwithmaestro.com so that a. User in the app can open the privacy policy and b. The app can fetch the latest models from the json.
 
+`public/gemini-models.json` also contains the versioned Standard paid-tier pricing rules used by the in-app estimate. Whenever a model alias changes its underlying model or Google changes a rate, update the matching rule, `effectiveAt`, and `sourceUrl` in the same deployment. Existing usage keeps the rate snapshot it was calculated with, while new usage begins a separate breakdown entry under the new effective date. Never add a fallback price for an unknown model; leaving it unpriced makes the app disclose the gap instead of showing a misleading zero or guessed cost.
+
 ## 7. App review setup for the Gemini API key gate
 
 This app is BYOK. Reviewers cannot use the app if they do not have a Gemini API key.
