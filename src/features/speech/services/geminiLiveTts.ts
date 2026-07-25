@@ -27,6 +27,7 @@ import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
+import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
 
 // ============================================================================
 // TYPES
@@ -168,6 +169,7 @@ ${textBlock}`;
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
     systemInstruction: { parts: [{ text: systemInstructionText }] },
     outputAudioTranscription: {},
+    thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
   };
 
   const log = debugLogService.logRequest('streamGeminiLiveTts', model, {

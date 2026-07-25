@@ -16,6 +16,7 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
+import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -392,6 +393,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},
         outputAudioTranscription: {},
+        thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
         systemInstruction: augmentedSystemInstruction,
         language: opts?.language,
         replySuggestionsCount: suggestionList.length,
@@ -406,6 +408,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
           outputAudioTranscription: {}, // Enable Output Transcription (The Parrot)
+          thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
           systemInstruction: augmentedSystemInstruction,
         },
         callbacks: {

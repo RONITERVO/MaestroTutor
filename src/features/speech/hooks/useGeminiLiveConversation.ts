@@ -27,6 +27,7 @@ import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
+import { LIVE_MAX_THINKING_CONFIG } from '../config/liveThinking';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -817,9 +818,7 @@ export function useGeminiLiveConversation(
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          thinkingConfig: {
-            includeThoughts: true,
-          },
+          thinkingConfig: LIVE_MAX_THINKING_CONFIG,
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
           sessionResumption,
