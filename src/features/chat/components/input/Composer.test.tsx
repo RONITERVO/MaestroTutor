@@ -28,10 +28,13 @@ const renderComposer = (inputText: string) => render(
     placeholder="Write a message"
     isDisabled={false}
     isDrawDisabled={false}
+    googleSearchEnabled={false}
+    isGoogleSearchToggleDisabled={false}
     onChange={vi.fn()}
     onKeyDown={vi.fn()}
     onPaste={vi.fn()}
     onOpenDrawCanvas={vi.fn()}
+    onToggleGoogleSearch={vi.fn()}
     onCancelSuggestionPractice={vi.fn()}
     bubbleTextAreaRef={React.createRef<HTMLTextAreaElement>()}
     prepDisplay={null}
@@ -49,6 +52,7 @@ describe('Composer suggestion practice', () => {
     expect(input.getAttribute('aria-describedby')).toBe('composer-suggestion-practice-hint');
     expect(screen.getByRole('button', { name: 'Cancel practice' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Trace next character' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'chat.googleSearchToggle' }).getAttribute('aria-pressed')).toBe('false');
     expect(container.querySelector('.opacity-35')?.textContent).toBe('llo');
   });
 

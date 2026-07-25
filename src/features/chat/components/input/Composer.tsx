@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React from 'react';
 import { TranslationReplacements } from '../../../../core/i18n/index';
-import { IconPencil, IconXMark } from '../../../../shared/ui/Icons';
+import { IconPencil, IconSearch, IconXMark } from '../../../../shared/ui/Icons';
 import { getSuggestionPracticeProgress } from '../../utils/suggestionPractice';
 
 interface ComposerProps {
@@ -13,10 +13,13 @@ interface ComposerProps {
   placeholder: string;
   isDisabled: boolean;
   isDrawDisabled: boolean;
+  googleSearchEnabled: boolean;
+  isGoogleSearchToggleDisabled: boolean;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
   onOpenDrawCanvas: () => void;
+  onToggleGoogleSearch: () => void;
   onCancelSuggestionPractice: () => void;
   bubbleTextAreaRef: React.RefObject<HTMLTextAreaElement | null>;
   prepDisplay: string | null;
@@ -31,10 +34,13 @@ const Composer: React.FC<ComposerProps> = ({
   placeholder,
   isDisabled,
   isDrawDisabled,
+  googleSearchEnabled,
+  isGoogleSearchToggleDisabled,
   onChange,
   onKeyDown,
   onPaste,
   onOpenDrawCanvas,
+  onToggleGoogleSearch,
   onCancelSuggestionPractice,
   bubbleTextAreaRef,
   prepDisplay,
@@ -52,7 +58,7 @@ const Composer: React.FC<ComposerProps> = ({
     : suggestionPracticeTarget
       ? t('chat.suggestion.practiceActive', { suggestion: suggestionPracticeTarget })
       : '';
-  const inputPaddingClass = suggestionPracticeTarget ? 'pr-20' : 'pr-12';
+  const inputPaddingClass = suggestionPracticeTarget ? 'pr-28' : 'pr-20';
   const textLayoutStyle: React.CSSProperties = {
     fontSize: '3.6cqw',
     lineHeight: 1.35,
@@ -106,7 +112,7 @@ const Composer: React.FC<ComposerProps> = ({
           ref={bubbleTextAreaRef}
           rows={1}
           dir="auto"
-          className="w-full py-3 px-4 pr-12 bg-transparent border-none focus:ring-0 resize-none overflow-hidden placeholder-inherit min-h-[50px]"
+          className="w-full py-3 px-4 pr-20 bg-transparent border-none focus:ring-0 resize-none overflow-hidden placeholder-inherit min-h-[50px]"
           style={{ fontSize: '3.6cqw', lineHeight: 1.35 }}
           placeholder={placeholder}
           value={inputText}
@@ -135,6 +141,17 @@ const Composer: React.FC<ComposerProps> = ({
             <IconXMark className="w-4 h-4" />
           </button>
         )}
+        <button
+          type="button"
+          onClick={onToggleGoogleSearch}
+          disabled={isGoogleSearchToggleDisabled}
+          className={`p-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-input-focus-ring disabled:opacity-30 ${drawButtonClassName} ${googleSearchEnabled ? '' : 'opacity-40 grayscale hover:opacity-65'}`}
+          title={t(googleSearchEnabled ? 'chat.googleSearchOn' : 'chat.googleSearchOff')}
+          aria-label={t('chat.googleSearchToggle')}
+          aria-pressed={googleSearchEnabled}
+        >
+          <IconSearch crossed={!googleSearchEnabled} className="w-4 h-4" />
+        </button>
         <button
           type="button"
           onClick={onOpenDrawCanvas}
