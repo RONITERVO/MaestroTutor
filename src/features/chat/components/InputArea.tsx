@@ -1039,10 +1039,13 @@ const InputArea: React.FC<InputAreaProps> = ({
                 placeholder={getPlaceholderText()}
                 isDisabled={isSending || (isListening && isSttGloballyEnabled) || (isSuggestionMode && isCreatingSuggestion)}
                 isDrawDisabled={isSending || isSpeaking || isComposerAnnotating || (isSuggestionMode && isCreatingSuggestion)}
+                googleSearchEnabled={settings.enableGoogleSearch}
+                isGoogleSearchToggleDisabled={isSending}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 onPaste={handleComposerPaste}
                 onOpenDrawCanvas={handleComposerStartBlankCanvas}
+                onToggleGoogleSearch={() => updateSetting('enableGoogleSearch', !settings.enableGoogleSearch)}
                 onCancelSuggestionPractice={() => finishSuggestionPractice(true)}
                 bubbleTextAreaRef={bubbleTextAreaRef}
                 prepDisplay={prepDisplay}

@@ -114,7 +114,7 @@ export const enTranslations: Record<string, string> = {
   // Cost transparency
   "costBreakdown.title": "Your API cost estimate",
   "costBreakdown.subtitle": "Calculated locally from usage reported by Gemini. Maestro adds no fees.",
-  "costBreakdown.paidTierBadge": "Standard paid tier",
+  "costBreakdown.paidTierBadge": "Free/Paid tier. Free tier can ignore this estimate.",
   "costBreakdown.back": "Back to API key settings",
   "costBreakdown.totalEstimate": "Estimated paid-tier cost",
   "costBreakdown.maximumEstimate": "Maximum estimate before Search allowance",
@@ -174,6 +174,9 @@ export const enTranslations: Record<string, string> = {
   "chat.attachImageFromFile": "Attach file",
   "chat.removeAttachedImage": "Remove attached file",
   "chat.sendMessage": "Send message",
+  "chat.googleSearchToggle": "Google Search",
+  "chat.googleSearchOn": "Google Search on",
+  "chat.googleSearchOff": "Google Search off",
   "chat.messageInputAriaLabel": "Message input",
   "chat.retrievedFromWeb": "Retrieved from the web:",
   "chat.videoNotSupported": "Your browser does not support the video tag.",
