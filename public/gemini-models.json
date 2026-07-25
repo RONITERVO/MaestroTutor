@@ -1,9 +1,9 @@
 {
   "text": {
-    "default": "gemini-3-flash-preview",
-    "aux": "gemini-3-flash-preview",
-    "translation": "gemini-3-flash-preview",
-    "fallback": "gemini-3.1-pro-preview"
+    "default": "gemini-flash-latest",
+    "aux": "gemini-flash-lite-latest",
+    "translation": "gemini-flash-lite-latest",
+    "fallback": "gemini-pro-latest"
   },
   "image": {
     "generation": "gemini-2.5-flash-image"

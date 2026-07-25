@@ -41,13 +41,13 @@ export interface GeminiModelRegistryInput {
 export const MODEL_REGISTRY_STORAGE_KEY = 'maestro_gemini_models_v1';
 export const MODEL_REGISTRY_URL_STORAGE_KEY = 'maestro_gemini_models_url';
 export const DEFAULT_MODEL_REGISTRY_URL = 'https://chatwithmaestro.com/gemini-models.json';
-const DEFAULT_TEXT_FALLBACK_MODEL = 'gemini-3.1-pro-preview';
+const DEFAULT_TEXT_FALLBACK_MODEL = 'gemini-pro-latest';
 
 const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   text: {
-    default: 'gemini-3-flash-preview',
-    aux: 'gemini-3-flash-preview',
-    translation: 'gemini-3-flash-preview',
+    default: 'gemini-flash-latest',
+    aux: 'gemini-flash-lite-latest',
+    translation: 'gemini-flash-lite-latest',
     fallback: DEFAULT_TEXT_FALLBACK_MODEL,
   },
   image: {
