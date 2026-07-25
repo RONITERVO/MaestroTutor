@@ -16,7 +16,7 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
-import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
+import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export interface GeminiLiveSttTurnComplete {
@@ -389,13 +389,14 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         augmentedSystemInstruction = `${baseSystemInstruction}\n\nContext:\n${parts.join('\n')}`;
       }
 
-      const model = getGeminiModels().audio.live;
+      const model = getGeminiModels().audio.stt;
+      const thinkingConfig = getLiveMinimalThinkingConfig(model);
       const usageTracker = createLiveUsageTracker({ feature: 'stt', configuredModel: model });
       logRef.current = debugLogService.logRequest('useGeminiLiveStt', model, {
         responseModalities: [Modality.AUDIO],
         inputAudioTranscription: {},
         outputAudioTranscription: {},
-        thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
+        thinkingConfig,
         systemInstruction: augmentedSystemInstruction,
         language: opts?.language,
         replySuggestionsCount: suggestionList.length,
@@ -410,7 +411,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
           outputAudioTranscription: {}, // Enable Output Transcription (The Parrot)
-          thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
+          thinkingConfig,
           systemInstruction: augmentedSystemInstruction,
         },
         callbacks: {

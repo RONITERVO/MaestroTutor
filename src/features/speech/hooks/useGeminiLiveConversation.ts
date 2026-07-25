@@ -27,7 +27,7 @@ import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
-import { LIVE_MAX_THINKING_CONFIG } from '../config/liveThinking';
+import { getLiveConversationThinkingConfig } from '../config/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
@@ -801,7 +801,7 @@ export function useGeminiLiveConversation(
         playbackNodeRef.current = playbackNode;
       }
 
-      const model = getGeminiModels().audio.live;
+      const model = getGeminiModels().audio.conversation;
       const usageTracker = createLiveUsageTracker({ feature: costFeature, configuredModel: model });
       modelRef.current = model;
       logFinalizedRef.current = false;
@@ -822,7 +822,7 @@ export function useGeminiLiveConversation(
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          thinkingConfig: LIVE_MAX_THINKING_CONFIG,
+          thinkingConfig: getLiveConversationThinkingConfig(model),
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
           sessionResumption,

@@ -7,6 +7,7 @@ import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
+import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
 
 const OUTPUT_SAMPLE_RATE = 24000;
 const SESSION_TIMEOUT_MS = 180000;
@@ -53,7 +54,7 @@ export const synthesizeGeminiAudioNote = async (params: {
 
   const apiKey = await getApiKeyOrThrow();
   const ai = new GoogleGenAI({ apiKey });
-  const model = getGeminiModels().audio.live;
+  const model = getGeminiModels().audio.tts;
   const usageTracker = createLiveUsageTracker({ feature: 'audioNote', configuredModel: model });
   const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';
 
@@ -131,7 +132,8 @@ export const synthesizeGeminiAudioNote = async (params: {
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
             systemInstruction: { parts: [{ text: systemInstructionText }] },
             outputAudioTranscription: {},
-          } as any,
+            thinkingConfig: getLiveMinimalThinkingConfig(model),
+          },
           callbacks: {
             onmessage: (msg: LiveServerMessage) => {
               if (msg.usageMetadata) {

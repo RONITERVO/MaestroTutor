@@ -27,7 +27,7 @@ import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
-import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
+import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 // ============================================================================
@@ -164,14 +164,14 @@ IMPORTANT RULES:
 TEXT TO READ:
 ${textBlock}`;
 
-  const model = getGeminiModels().audio.live;
+  const model = getGeminiModels().audio.tts;
   const usageTracker = createLiveUsageTracker({ feature: 'tts', configuredModel: model });
   const config = {
     responseModalities: [Modality.AUDIO],
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
     systemInstruction: { parts: [{ text: systemInstructionText }] },
     outputAudioTranscription: {},
-    thinkingConfig: LIVE_MINIMAL_THINKING_CONFIG,
+    thinkingConfig: getLiveMinimalThinkingConfig(model),
   };
 
   const log = debugLogService.logRequest('streamGeminiLiveTts', model, {
