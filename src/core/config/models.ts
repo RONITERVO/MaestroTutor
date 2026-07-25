@@ -19,7 +19,10 @@ export interface GeminiModelRegistry {
     generation: string;
   };
   audio: {
-    live: string;
+    tts: string;
+    stt: string;
+    /** Shared by interactive Live sessions and silent-observer re-engagement. */
+    conversation: string;
   };
   music: {
     generation: string;
@@ -38,7 +41,10 @@ export interface GeminiModelRegistryInput {
     generation?: string;
   };
   audio?: {
-    live?: string;
+    tts?: string;
+    stt?: string;
+    /** Shared by interactive Live sessions and silent-observer re-engagement. */
+    conversation?: string;
   };
   music?: {
     generation?: string;
@@ -46,10 +52,12 @@ export interface GeminiModelRegistryInput {
   pricing?: GeminiPricingRegistry;
 }
 
-export const MODEL_REGISTRY_STORAGE_KEY = 'maestro_gemini_models_v1';
+export const MODEL_REGISTRY_STORAGE_KEY = 'maestro_gemini_models_v2';
 export const MODEL_REGISTRY_URL_STORAGE_KEY = 'maestro_gemini_models_url';
 export const DEFAULT_MODEL_REGISTRY_URL = 'https://chatwithmaestro.com/gemini-models.json';
 const DEFAULT_TEXT_FALLBACK_MODEL = 'gemini-flash-lite-latest';
+const DEFAULT_TTS_LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
+const DEFAULT_GENERAL_LIVE_MODEL = 'gemini-3.1-flash-live-preview';
 
 const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   text: {
@@ -62,7 +70,9 @@ const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
     generation: 'gemini-2.5-flash-image',
   },
   audio: {
-    live: 'gemini-2.5-flash-native-audio-preview-12-2025',
+    tts: DEFAULT_TTS_LIVE_MODEL,
+    stt: DEFAULT_GENERAL_LIVE_MODEL,
+    conversation: DEFAULT_GENERAL_LIVE_MODEL,
   },
   music: {
     generation: 'lyria-realtime-exp',
@@ -82,7 +92,7 @@ const isNonEmptyString = (value: unknown): value is string => typeof value === '
 const isValidRegistry = (value: any): value is {
   text: { default: string; aux: string; translation: string; fallback?: string };
   image: { generation: string };
-  audio: { live: string };
+  audio: { tts: string; stt: string; conversation: string };
   music: { generation: string };
   pricing?: GeminiPricingRegistry;
 } => {
@@ -93,7 +103,9 @@ const isValidRegistry = (value: any): value is {
     isNonEmptyString(value?.text?.translation) &&
     (value?.text?.fallback === undefined || isNonEmptyString(value?.text?.fallback)) &&
     isNonEmptyString(value?.image?.generation) &&
-    isNonEmptyString(value?.audio?.live) &&
+    isNonEmptyString(value?.audio?.tts) &&
+    isNonEmptyString(value?.audio?.stt) &&
+    isNonEmptyString(value?.audio?.conversation) &&
     isNonEmptyString(value?.music?.generation) &&
     (value?.pricing === undefined || isGeminiPricingRegistry(value.pricing))
   );
@@ -110,7 +122,9 @@ const mergeWithDefaults = (value: GeminiModelRegistryInput): GeminiModelRegistry
     generation: value?.image?.generation ?? DEFAULT_GEMINI_MODELS.image.generation,
   },
   audio: {
-    live: value?.audio?.live ?? DEFAULT_GEMINI_MODELS.audio.live,
+    tts: value?.audio?.tts ?? DEFAULT_GEMINI_MODELS.audio.tts,
+    stt: value?.audio?.stt ?? DEFAULT_GEMINI_MODELS.audio.stt,
+    conversation: value?.audio?.conversation ?? DEFAULT_GEMINI_MODELS.audio.conversation,
   },
   music: {
     generation: value?.music?.generation ?? DEFAULT_GEMINI_MODELS.music.generation,

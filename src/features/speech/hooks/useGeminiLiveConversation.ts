@@ -27,11 +27,7 @@ import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
-import {
-  createLiveAudioInput,
-  createLiveVideoInput,
-  getLiveMaxThinkingConfig,
-} from '../config/liveModelCompatibility';
+import { getLiveConversationThinkingConfig } from '../config/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
@@ -641,10 +637,7 @@ export function useGeminiLiveConversation(
             if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
               const b64 = await blobToBase64(blob);
               if (currentSessionIdRef.current !== sessionId) return;
-              sessionRef.current.sendRealtimeInput(createLiveVideoInput(modelRef.current, {
-                data: b64,
-                mimeType: 'image/jpeg',
-              }));
+              sessionRef.current.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
             }
           } finally {
             videoFrameInFlightRef.current = false;
@@ -808,7 +801,7 @@ export function useGeminiLiveConversation(
         playbackNodeRef.current = playbackNode;
       }
 
-      const model = getGeminiModels().audio.live;
+      const model = getGeminiModels().audio.conversation;
       const usageTracker = createLiveUsageTracker({ feature: costFeature, configuredModel: model });
       modelRef.current = model;
       logFinalizedRef.current = false;
@@ -829,7 +822,7 @@ export function useGeminiLiveConversation(
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          thinkingConfig: getLiveMaxThinkingConfig(model),
+          thinkingConfig: getLiveConversationThinkingConfig(model),
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
           sessionResumption,
@@ -1248,10 +1241,12 @@ export function useGeminiLiveConversation(
             const transferBuffer = toTransferableArrayBuffer(packet);
             const base64 = await ensureInputCodecWorker().encodePcmToBase64(transferBuffer);
             if (currentSessionIdRef.current !== sessionId) return;
-            sessionRef.current?.sendRealtimeInput(createLiveAudioInput(model, {
-              data: base64,
-              mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
-            }));
+            sessionRef.current?.sendRealtimeInput({
+              audio: {
+                data: base64,
+                mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+              },
+            });
           } catch (error) {
             if (currentSessionIdRef.current !== sessionId) return;
             inputAudioTelemetryRef.current.encodeErrors += 1;

@@ -117,8 +117,8 @@ export const DEFAULT_GEMINI_PRICING: GeminiPricingRegistry = {
       id: 'gemini-2.5-flash-native-audio-preview-12-2025',
       displayName: 'Gemini 2.5 Flash Native Audio Preview',
       matches: ['gemini-2.5-flash-native-audio-preview-12-2025'],
-      inputPerMillion: { text: 0.5, audio: 3, image: 3, video: 3, document: 0.5 },
-      outputPerMillion: { text: 2, audio: 12, image: 2, video: 2, document: 2 },
+      inputPerMillion: { text: 0.5, audio: 3, video: 3 },
+      outputPerMillion: { text: 2, audio: 12 },
     },
     {
       id: 'gemini-2.5-flash',

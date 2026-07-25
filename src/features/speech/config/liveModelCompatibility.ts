@@ -2,51 +2,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  ThinkingLevel,
-  type LiveSendRealtimeInputParameters,
-  type ThinkingConfig,
-} from '@google/genai';
-
-interface LiveMediaBlob {
-  data: string;
-  mimeType: string;
-}
+import { ThinkingLevel, type ThinkingConfig } from '@google/genai';
 
 const normalizeModel = (model: string): string => (
   (model || '').trim().toLowerCase().replace(/^models\//, '')
 );
 
 /**
- * Gemini 2.5 Live uses the legacy thinking-budget and generic media contracts.
- * Unknown/future models intentionally use the current dedicated Live contract.
+ * Gemini 2.5 Live uses token budgets; newer Live models use thinking levels.
  */
-export const usesLegacyGemini25LiveApi = (model: string): boolean => (
+export const usesGemini25ThinkingBudget = (model: string): boolean => (
   normalizeModel(model).startsWith('gemini-2.5-')
 );
 
 export const getLiveMinimalThinkingConfig = (model: string): ThinkingConfig => (
-  usesLegacyGemini25LiveApi(model)
+  usesGemini25ThinkingBudget(model)
     ? { thinkingBudget: 0, includeThoughts: false }
     : { thinkingLevel: ThinkingLevel.MINIMAL, includeThoughts: false }
 );
 
-export const getLiveMaxThinkingConfig = (model: string): ThinkingConfig => (
-  usesLegacyGemini25LiveApi(model)
+export const getLiveConversationThinkingConfig = (model: string): ThinkingConfig => (
+  usesGemini25ThinkingBudget(model)
     ? { thinkingBudget: -1, includeThoughts: true }
     : { thinkingLevel: ThinkingLevel.HIGH, includeThoughts: true }
-);
-
-export const createLiveAudioInput = (
-  model: string,
-  audio: LiveMediaBlob
-): LiveSendRealtimeInputParameters => (
-  usesLegacyGemini25LiveApi(model) ? { media: audio } : { audio }
-);
-
-export const createLiveVideoInput = (
-  model: string,
-  video: LiveMediaBlob
-): LiveSendRealtimeInputParameters => (
-  usesLegacyGemini25LiveApi(model) ? { media: video } : { video }
 );

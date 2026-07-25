@@ -106,6 +106,31 @@ describe('calculateGeminiUsageCost', () => {
     expect(result.outputByModality.text).toBe(0);
   });
 
+  it('uses the published Gemini 2.5 native-audio Live rates', () => {
+    const result = calculate({
+      feature: 'liveConversation',
+      configuredModel: 'gemini-2.5-flash-native-audio-preview-12-2025',
+      usageMetadata: {
+        promptTokenCount: 3_000_000,
+        responseTokenCount: 2_000_000,
+        thoughtsTokenCount: 1_000_000,
+        promptTokensDetails: [
+          { modality: 'TEXT', tokenCount: 1_000_000 },
+          { modality: 'AUDIO', tokenCount: 1_000_000 },
+          { modality: 'VIDEO', tokenCount: 1_000_000 },
+        ],
+        responseTokensDetails: [
+          { modality: 'TEXT', tokenCount: 1_000_000 },
+          { modality: 'AUDIO', tokenCount: 1_000_000 },
+        ],
+      },
+    });
+
+    expect(result.modelCostUsd).toBeCloseTo(22.5);
+    expect(result.inputByModality.video).toBe(1_000_000);
+    expect(result.outputByModality.audio).toBe(1_000_000);
+  });
+
   it('uses Pro long-context rates above 200k prompt tokens', () => {
     const result = calculate({
       configuredModel: 'gemini-pro-latest',

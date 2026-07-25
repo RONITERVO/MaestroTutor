@@ -16,10 +16,7 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
-import {
-  createLiveAudioInput,
-  getLiveMinimalThinkingConfig,
-} from '../config/liveModelCompatibility';
+import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export interface GeminiLiveSttTurnComplete {
@@ -392,7 +389,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         augmentedSystemInstruction = `${baseSystemInstruction}\n\nContext:\n${parts.join('\n')}`;
       }
 
-      const model = getGeminiModels().audio.live;
+      const model = getGeminiModels().audio.stt;
       const thinkingConfig = getLiveMinimalThinkingConfig(model);
       const usageTracker = createLiveUsageTracker({ feature: 'stt', configuredModel: model });
       logRef.current = debugLogService.logRequest('useGeminiLiveStt', model, {
@@ -603,10 +600,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
             if (currentSessionIdRef.current !== sessionId) return;
             if (!sessionRef.current) return;
-            sessionRef.current.sendRealtimeInput(createLiveAudioInput(model, {
-              data: base64,
-              mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
-            }));
+            sessionRef.current.sendRealtimeInput({
+              audio: {
+                data: base64,
+                mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+              },
+            });
           } catch (error) {
             if (currentSessionIdRef.current !== sessionId) return;
             audioTelemetryRef.current.encodeErrors += 1;
