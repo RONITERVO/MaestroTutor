@@ -28,6 +28,7 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../utils/realtimePcmPacketizer';
 import { LIVE_MAX_THINKING_CONFIG } from '../config/liveThinking';
+import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
 
@@ -81,6 +82,7 @@ export interface StartLiveConversationOptions {
   playModelAudio?: boolean;
   emitTurns?: boolean;
   sessionResumption?: SessionResumptionConfig;
+  costFeature?: 'liveConversation' | 'reengagement';
 }
 
 const INPUT_SAMPLE_RATE = 16000;
@@ -683,6 +685,7 @@ export function useGeminiLiveConversation(
       playModelAudio = true,
       emitTurns = true,
       sessionResumption,
+      costFeature = 'liveConversation',
     } = opts;
     
     // Wait for any in-progress cleanup to finish
@@ -835,6 +838,14 @@ export function useGeminiLiveConversation(
               .then(async () => {
                 // Check session is still valid before processing message
                 if (currentSessionIdRef.current !== sessionId) return;
+
+                if (msg.usageMetadata) {
+                  trackGeminiUsage({
+                    feature: costFeature,
+                    configuredModel: model,
+                    usageMetadata: msg.usageMetadata,
+                  });
+                }
 
                 if (msg.goAway) {
                   callbacksRef.current.onGoAway?.(msg.goAway);

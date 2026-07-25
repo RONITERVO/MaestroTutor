@@ -4,6 +4,7 @@
 import { debugLogService } from '../../features/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
+import { trackGeminiUsage } from '../../shared/utils/costTracker';
 import { getAi } from './client';
 
 const TIMEOUT_MS = 600_000; // 10 minutes
@@ -181,9 +182,23 @@ export const generateImage = async (params: {
       TIMEOUT_MS
     );
 
-    log.complete({ candidates: result.candidates?.length });
-
     const candidates = result.candidates || [];
+    const generatedImages = candidates.reduce((count, candidate) => (
+      count + (candidate.content?.parts || []).filter(part => (
+        part.inlineData?.mimeType?.startsWith('image/')
+        && typeof part.inlineData?.data === 'string'
+        && part.inlineData.data.trim() !== ''
+      )).length
+    ), 0);
+    trackGeminiUsage({
+      feature: 'image',
+      configuredModel: model,
+      modelVersion: result.modelVersion,
+      usageMetadata: result.usageMetadata,
+      generatedImages,
+    });
+    log.complete({ candidates: candidates.length, generatedImages });
+
     for (const c of candidates) {
       for (const part of c.content?.parts || []) {
         const inlineData = part.inlineData;

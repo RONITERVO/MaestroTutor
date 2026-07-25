@@ -71,7 +71,7 @@ import {
 } from '../../../core/config/prompts';
 import { isRealChatMessage } from '../../../shared/utils/common';
 import { groupAdjacentRoleItems } from '../../../shared/utils/conversationTurns';
-import { trackTokenUsage, trackImageGeneration, hasShownCostWarning, setCostWarningShown } from '../../../shared/utils/costTracker';
+import { trackGeminiUsage, hasShownCostWarning, setCostWarningShown } from '../../../shared/utils/costTracker';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { getPrimarySubtag, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
@@ -1616,7 +1616,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           }
         );
 
-        trackTokenUsage(getGeminiModels().text.aux, response.usageMetadata);
+        trackGeminiUsage({
+          feature: 'suggestions',
+          configuredModel: response.modelUsed || getGeminiModels().text.aux,
+          modelVersion: response.modelVersion,
+          usageMetadata: response.usageMetadata,
+        });
 
         let jsonStr = (response.text || '').trim();
         const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
@@ -1732,8 +1737,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
 
     try {
-      const { translatedText, usageMetadata } = await translateText(textToTranslate, fromLangName, toLangName);
-      trackTokenUsage(getGeminiModels().text.translation, usageMetadata);
+      const { translatedText, usageMetadata, modelVersion, modelUsed } = await translateText(textToTranslate, fromLangName, toLangName);
+      trackGeminiUsage({
+        feature: 'translation',
+        configuredModel: modelUsed || getGeminiModels().text.translation,
+        modelVersion,
+        usageMetadata,
+      });
       const newSuggestion: ReplySuggestion = {
         target: originalTextIsTarget ? textToTranslate : translatedText,
         native: originalTextIsTarget ? translatedText : textToTranslate,
@@ -2218,7 +2228,18 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       flushThinkingDraft(true);
       flushThoughtTrace(true);
 
-      trackTokenUsage(getGeminiModels().text.default, response.usageMetadata);
+      const searchQueries = response.candidates?.reduce((count: number, candidate: any) => (
+        count + (Array.isArray(candidate?.groundingMetadata?.webSearchQueries)
+          ? candidate.groundingMetadata.webSearchQueries.length
+          : 0)
+      ), 0) || 0;
+      trackGeminiUsage({
+        feature: 'tutor',
+        configuredModel: response.modelUsed || getGeminiModels().text.default,
+        modelVersion: response.modelVersion,
+        usageMetadata: response.usageMetadata,
+        searchQueries,
+      });
 
       const accumulatedFullText = response.text || "";
       const strictParsedResponse = parseStrictTutorResponse(accumulatedFullText);
@@ -2307,7 +2328,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     if (finalResult && 'base64Image' in finalResult) {
       const duration = Date.now() - userImageGenStartTime;
       addImageLoadDuration(duration);
-      trackImageGeneration();
       if (!hasShownCostWarning()) {
         setCostWarningShown();
         addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
@@ -2452,7 +2472,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       if ('base64Image' in assistantImgGenResult) {
         const duration = Date.now() - assistantStartTime;
         addImageLoadDuration(duration);
-        trackImageGeneration();
         if (!hasShownCostWarning()) {
           setCostWarningShown();
           addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });

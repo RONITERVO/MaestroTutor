@@ -28,6 +28,7 @@ import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset'
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
 import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
+import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 
 // ============================================================================
 // TYPES
@@ -348,6 +349,14 @@ ${textBlock}`;
             onStatusUpdate?.('CONNECTED / STREAMING');
           },
           onmessage: (msg: LiveServerMessage) => {
+            if (msg.usageMetadata) {
+              trackGeminiUsage({
+                feature: 'tts',
+                configuredModel: model,
+                usageMetadata: msg.usageMetadata,
+              });
+            }
+
             // 1. Handle Audio Response - stream immediately for playback
             const inlineAudioParts = msg.serverContent?.modelTurn?.parts
               ?.map((part) => part.inlineData?.data)

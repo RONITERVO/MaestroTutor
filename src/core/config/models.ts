@@ -1,6 +1,12 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import {
+  clonePricingRegistry,
+  DEFAULT_GEMINI_PRICING,
+  GeminiPricingRegistry,
+  isGeminiPricingRegistry,
+} from './pricing';
 
 export interface GeminiModelRegistry {
   text: {
@@ -18,6 +24,7 @@ export interface GeminiModelRegistry {
   music: {
     generation: string;
   };
+  pricing: GeminiPricingRegistry;
 }
 
 export interface GeminiModelRegistryInput {
@@ -36,6 +43,7 @@ export interface GeminiModelRegistryInput {
   music?: {
     generation?: string;
   };
+  pricing?: GeminiPricingRegistry;
 }
 
 export const MODEL_REGISTRY_STORAGE_KEY = 'maestro_gemini_models_v1';
@@ -59,6 +67,7 @@ const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   music: {
     generation: 'lyria-realtime-exp',
   },
+  pricing: clonePricingRegistry(DEFAULT_GEMINI_PRICING),
 };
 
 let currentModels: GeminiModelRegistry = { ...DEFAULT_GEMINI_MODELS };
@@ -84,7 +93,8 @@ const isValidRegistry = (value: any): value is {
     (value?.text?.fallback === undefined || isNonEmptyString(value?.text?.fallback)) &&
     isNonEmptyString(value?.image?.generation) &&
     isNonEmptyString(value?.audio?.live) &&
-    isNonEmptyString(value?.music?.generation)
+    isNonEmptyString(value?.music?.generation) &&
+    (value?.pricing === undefined || isGeminiPricingRegistry(value.pricing))
   );
 };
 
@@ -104,6 +114,9 @@ const mergeWithDefaults = (value: GeminiModelRegistryInput): GeminiModelRegistry
   music: {
     generation: value?.music?.generation ?? DEFAULT_GEMINI_MODELS.music.generation,
   },
+  pricing: value?.pricing
+    ? clonePricingRegistry(value.pricing)
+    : clonePricingRegistry(DEFAULT_GEMINI_MODELS.pricing),
 });
 
 export const getGeminiModels = (): GeminiModelRegistry => currentModels;
@@ -163,7 +176,14 @@ export const loadCachedGeminiModels = (): boolean => {
   return false;
 };
 
-export const getModelRegistryDefaults = (): GeminiModelRegistry => ({ ...DEFAULT_GEMINI_MODELS });
+export const getModelRegistryDefaults = (): GeminiModelRegistry => ({
+  ...DEFAULT_GEMINI_MODELS,
+  text: { ...DEFAULT_GEMINI_MODELS.text },
+  image: { ...DEFAULT_GEMINI_MODELS.image },
+  audio: { ...DEFAULT_GEMINI_MODELS.audio },
+  music: { ...DEFAULT_GEMINI_MODELS.music },
+  pricing: clonePricingRegistry(DEFAULT_GEMINI_MODELS.pricing),
+});
 
 export const refreshGeminiModelsFromRemote = async (options?: { url?: string; timeoutMs?: number }) => {
   const cached = loadCachedGeminiModels();

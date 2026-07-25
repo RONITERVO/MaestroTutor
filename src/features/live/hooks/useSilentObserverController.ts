@@ -193,6 +193,7 @@ export const useSilentObserverController = ({
         playModelAudio: true,
         emitTurns: Boolean(onTurnComplete),
         sessionResumption,
+        costFeature: 'reengagement',
       });
     } catch (error) {
       if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;

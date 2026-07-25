@@ -6,6 +6,7 @@ import { getGeminiModels } from '../../../core/config/models';
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
+import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 
 const OUTPUT_SAMPLE_RATE = 24000;
 const SESSION_TIMEOUT_MS = 180000;
@@ -132,6 +133,14 @@ export const synthesizeGeminiAudioNote = async (params: {
           } as any,
           callbacks: {
             onmessage: (msg: LiveServerMessage) => {
+              if (msg.usageMetadata) {
+                trackGeminiUsage({
+                  feature: 'audioNote',
+                  configuredModel: model,
+                  usageMetadata: msg.usageMetadata,
+                });
+              }
+
               const inlineAudioParts = msg.serverContent?.modelTurn?.parts
                 ?.map((part) => part.inlineData?.data)
                 .filter((data): data is string => typeof data === 'string' && data.length > 0)

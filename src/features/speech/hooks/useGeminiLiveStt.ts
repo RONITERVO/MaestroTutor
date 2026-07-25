@@ -17,6 +17,7 @@ import {
 } from '../utils/realtimePcmPacketizer';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
 import { LIVE_MINIMAL_THINKING_CONFIG } from '../config/liveThinking';
+import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -420,6 +421,14 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           onmessage: (msg: LiveServerMessage) => {
             // Check session is still valid before processing message
             if (currentSessionIdRef.current !== sessionId) return;
+
+            if (msg.usageMetadata) {
+              trackGeminiUsage({
+                feature: 'stt',
+                configuredModel: model,
+                usageMetadata: msg.usageMetadata,
+              });
+            }
             
             // 1. Capture User Input (ASR) - Low Latency, potentially inaccurate
             if (msg.serverContent?.inputTranscription) {
