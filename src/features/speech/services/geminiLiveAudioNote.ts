@@ -7,6 +7,10 @@ import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
+import {
+  createLiveAudioInput,
+  getLiveMinimalThinkingConfig,
+} from '../config/liveModelCompatibility';
 
 const OUTPUT_SAMPLE_RATE = 24000;
 const SESSION_TIMEOUT_MS = 180000;
@@ -131,6 +135,7 @@ export const synthesizeGeminiAudioNote = async (params: {
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
             systemInstruction: { parts: [{ text: systemInstructionText }] },
             outputAudioTranscription: {},
+            thinkingConfig: getLiveMinimalThinkingConfig(model),
           } as any,
           callbacks: {
             onmessage: (msg: LiveServerMessage) => {
@@ -206,12 +211,10 @@ export const synthesizeGeminiAudioNote = async (params: {
           }
 
           try {
-            session.sendRealtimeInput({
-              audio: {
-                mimeType: `audio/pcm;rate=${TRIGGER_SAMPLE_RATE}`,
-                data: base64Chunk,
-              },
-            });
+            session.sendRealtimeInput(createLiveAudioInput(model, {
+              mimeType: `audio/pcm;rate=${TRIGGER_SAMPLE_RATE}`,
+              data: base64Chunk,
+            }));
           } catch (error) {
             abort((error as Error)?.message || 'Audio note trigger failed.');
           }

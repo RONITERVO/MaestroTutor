@@ -161,6 +161,8 @@ describe('calculateGeminiUsageCost', () => {
 
   it('matches only exact model ids and recognized version suffixes', () => {
     expect(resolvePricingRule('models/gemini-2.5-flash')?.id).toBe('gemini-2.5-flash');
+    expect(resolvePricingRule('gemini-2.5-flash-native-audio-preview-12-2025')?.id)
+      .toBe('gemini-2.5-flash-native-audio-preview-12-2025');
     expect(resolvePricingRule('gemini-2.5-flash-2026-07-21')?.id).toBe('gemini-2.5-flash');
     expect(resolvePricingRule('gemini-2.5-flash-image-preview')?.id).toBe('gemini-2.5-flash-image');
     expect(resolvePricingRule('gemini-2.5-flash-lite')).toBeUndefined();
