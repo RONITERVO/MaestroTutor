@@ -39,8 +39,16 @@ function colorTokensPlugin(): Plugin {
   };
 }
 
+/**
+ * Diagnostic builds keep function names so a CPU profile and React's fiber tree
+ * name real components instead of minified identifiers. Costs a little bundle
+ * size, so it is opt-in per build alongside MAESTRO_WEBVIEW_DEBUG.
+ */
+const keepNames = process.env.MAESTRO_WEBVIEW_DEBUG === '1';
+
 export default defineConfig(() => ({
   plugins: [colorTokensPlugin(), react()],
+  esbuild: { keepNames },
   // Using '/' as base path for custom domain (chatwithmaestro.com)
   // GitHub Pages serves from root when a custom domain is configured
   base: '/',
