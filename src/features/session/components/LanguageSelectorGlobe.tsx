@@ -47,7 +47,50 @@ interface RoutePaths {
 }
 
 const DEG_TO_RAD = Math.PI / 180;
-const GLOBE_RADIUS_PERCENT = 43.5;
+/**
+ * Screen radius of the rendered sphere, as a percentage of the stage.
+ *
+ * Must match the canvas geometry exactly or pins drift off their countries: the
+ * canvas is inset 5% and 90% wide, and the shader's unit sphere spans that box,
+ * so the sphere's radius on screen is half of 90%. Zoom multiplies any mismatch
+ * here, which is why it has to be derived rather than eyeballed.
+ */
+const GLOBE_RADIUS_PERCENT = 45;
+export const MIN_GLOBE_ZOOM = 1;
+export const MAX_GLOBE_ZOOM = 3.5;
+/**
+ * Ambient shader animation (drifting cloud bands, a very slowly moving sun) is
+ * redrawn at this interval rather than every frame. The cloud pattern cycles
+ * about once every 20 seconds, so 10fps is indistinguishable from 60 while
+ * costing a sixth of the draws when nobody is touching the globe.
+ */
+const AMBIENT_FRAME_MS = 100;
+/** How far outside the frame a pin may sit before it stops being rendered. */
+const PIN_CULL_MARGIN_PERCENT = 8;
+/** One press of a zoom control, and one double tap. */
+const ZOOM_STEP = 0.75;
+/** Travel beyond which a press on a flag was a gesture, not a selection. */
+const FLAG_TAP_SLOP_PX = 10;
+
+/**
+ * Is a projected pin close enough to the frame to be worth rendering?
+ *
+ * Zooming pushes most of the globe outside the window, so without this the
+ * number of pins rendered per frame would stay proportional to the entire
+ * language list however far in the user is — the cost that would bite once
+ * every country is on the map rather than the current few dozen.
+ */
+export function isPinWithinFrame(screenX: number, screenY: number, zoom = 1): boolean {
+    // The margin shrinks as you zoom. At rest the globe is a disc inside the
+    // frame, so a pin just outside it still reads as sitting beside the globe;
+    // zoomed in the globe fills the frame, and anything past the edge is
+    // floating over blank paper instead of over its country.
+    const margin = PIN_CULL_MARGIN_PERCENT / Math.max(1, zoom);
+    return screenX > -margin
+        && screenX < 100 + margin
+        && screenY > -margin
+        && screenY < 100 + margin;
+}
 const MAX_LAT_ROTATION = Math.PI * 0.47;
 const EARTH_TEXTURE_URL = '/globe-image-background/Flag_map_of_the_world-1024.webp';
 
@@ -69,6 +112,7 @@ uniform sampler2D u_map;
 uniform vec2 u_rotation;
 uniform float u_time;
 uniform float u_hasTexture;
+uniform float u_zoom;
 
 const float PI = 3.141592653589793;
 
@@ -108,7 +152,11 @@ float proceduralLand(vec2 geoUv, vec3 world) {
 }
 
 void main() {
-  vec2 disk = v_uv * 2.0 - 1.0;
+  // Dividing by zoom shrinks the disk coordinate a screen pixel maps to, so the
+  // sphere covers more of the canvas and its horizon leaves the frame — the
+  // globe grows while the flag pins keep their screen size, which is what opens
+  // the gaps between them.
+  vec2 disk = (v_uv * 2.0 - 1.0) / u_zoom;
   float radiusSq = dot(disk, disk);
 
   if (radiusSq > 1.0) {
@@ -215,13 +263,14 @@ function rotateVector(vector: Vector3, rotation: Rotation): Vector3 {
     };
 }
 
-function projectVector(vector: Vector3, rotation: Rotation): ProjectedPoint {
+export function projectVector(vector: Vector3, rotation: Rotation, zoom = 1): ProjectedPoint {
     const rotated = rotateVector(vector, rotation);
+    const radius = GLOBE_RADIUS_PERCENT * zoom;
 
     return {
         ...rotated,
-        screenX: 50 + rotated.x * GLOBE_RADIUS_PERCENT,
-        screenY: 50 - rotated.y * GLOBE_RADIUS_PERCENT,
+        screenX: 50 + rotated.x * radius,
+        screenY: 50 - rotated.y * radius,
         centerDistance: Math.hypot(rotated.x, rotated.y),
     };
 }
@@ -264,14 +313,14 @@ function pathFromPoints(points: ProjectedPoint[]): string {
         .join(' ');
 }
 
-function buildRoutePaths(from: Vector3, to: Vector3, rotation: Rotation): RoutePaths | null {
+function buildRoutePaths(from: Vector3, to: Vector3, rotation: Rotation, zoom = 1): RoutePaths | null {
     const samples = 88;
     const visibleSegments: ProjectedPoint[][] = [];
     let currentSegment: ProjectedPoint[] = [];
 
     for (let index = 0; index <= samples; index++) {
         const vector = slerpVector(from, to, index / samples);
-        const projected = projectVector(vector, rotation);
+        const projected = projectVector(vector, rotation, zoom);
 
         if (projected.z > 0.025) {
             currentSegment.push(projected);
@@ -346,16 +395,22 @@ function createProgram(gl: WebGLRenderingContext): WebGLProgram | null {
 
 interface EarthCanvasProps {
     rotation: Rotation;
+    zoom: number;
     textureUrl: string;
 }
 
-const EarthCanvas: React.FC<EarthCanvasProps> = ({ rotation, textureUrl }) => {
+const EarthCanvas: React.FC<EarthCanvasProps> = ({ rotation, zoom, textureUrl }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const rotationRef = useRef(rotation);
+    const zoomRef = useRef(zoom);
 
     useEffect(() => {
         rotationRef.current = rotation;
     }, [rotation]);
+
+    useEffect(() => {
+        zoomRef.current = zoom;
+    }, [zoom]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -381,6 +436,7 @@ const EarthCanvas: React.FC<EarthCanvasProps> = ({ rotation, textureUrl }) => {
         const timeLocation = gl.getUniformLocation(program, 'u_time');
         const mapLocation = gl.getUniformLocation(program, 'u_map');
         const hasTextureLocation = gl.getUniformLocation(program, 'u_hasTexture');
+        const zoomLocation = gl.getUniformLocation(program, 'u_zoom');
         const positionBuffer = gl.createBuffer();
         const texture = gl.createTexture();
 
@@ -425,6 +481,9 @@ const EarthCanvas: React.FC<EarthCanvasProps> = ({ rotation, textureUrl }) => {
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
             textureReady = true;
+            // Force one draw: the loop is otherwise idle and would not repaint
+            // until something moved.
+            lastAmbientAt = -Infinity;
         };
         image.src = textureUrl;
 
@@ -441,12 +500,41 @@ const EarthCanvas: React.FC<EarthCanvasProps> = ({ rotation, textureUrl }) => {
             }
         };
 
-        const resizeObserver = new ResizeObserver(resize);
+        // The observer is the only thing that needs to measure: it fires when the
+        // box actually changes, which the render loop cannot know without asking.
+        const resizeObserver = new ResizeObserver(() => { sizeDirty = true; });
         resizeObserver.observe(canvas);
         resize();
 
+        let lastLng = Number.NaN;
+        let lastLat = Number.NaN;
+        let lastZoom = Number.NaN;
+        let lastAmbientAt = -Infinity;
+        let sizeDirty = false;
+
         const render = (time: number) => {
-            resize();
+            rafId = requestAnimationFrame(render);
+
+            const { lng, lat } = rotationRef.current;
+            const currentZoom = zoomRef.current;
+            const moved = lng !== lastLng || lat !== lastLat || currentZoom !== lastZoom;
+            const ambientDue = time - lastAmbientAt >= AMBIENT_FRAME_MS;
+
+            // Nothing moved and the ambient animation is not due: skip the draw
+            // entirely. Previously every frame redrew a full-screen shader and
+            // called resize(), whose getBoundingClientRect forced a synchronous
+            // layout ~40 times a second even with the globe sitting untouched.
+            if (!moved && !ambientDue && !sizeDirty) return;
+
+            if (sizeDirty) {
+                resize();
+                sizeDirty = false;
+            }
+
+            lastLng = lng;
+            lastLat = lat;
+            lastZoom = currentZoom;
+            if (ambientDue) lastAmbientAt = time;
 
             gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
@@ -457,12 +545,11 @@ const EarthCanvas: React.FC<EarthCanvasProps> = ({ rotation, textureUrl }) => {
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.uniform1i(mapLocation, 0);
-            gl.uniform2f(rotationLocation, rotationRef.current.lng, rotationRef.current.lat);
+            gl.uniform2f(rotationLocation, lng, lat);
             gl.uniform1f(timeLocation, time);
             gl.uniform1f(hasTextureLocation, textureReady ? 1 : 0);
+            gl.uniform1f(zoomLocation, currentZoom);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-            rafId = requestAnimationFrame(render);
         };
 
         rafId = requestAnimationFrame(render);
@@ -499,6 +586,21 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     const [isWheelOverlayActive, setIsWheelOverlayActive] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [rotation, setRotation] = useState<Rotation>(() => clampRotation({ lng: 0.45, lat: 0.18 }));
+    const [zoom, setZoom] = useState(MIN_GLOBE_ZOOM);
+    const zoomRef = useRef(MIN_GLOBE_ZOOM);
+    /** Active pointers, so a second finger can be recognised as a pinch. */
+    const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+    const pinchRef = useRef<{ distance: number; zoom: number } | null>(null);
+    const lastTapRef = useRef(0);
+    /**
+     * Distance travelled since the gesture began.
+     *
+     * Flag pins used to stopPropagation on pointerdown, so a finger that landed
+     * on a flag could neither drag nor pinch the globe — already awkward, and
+     * unusable once the globe is covered in flags. They let the event through
+     * now, and this is what still tells a tap apart from a drag.
+     */
+    const gestureTravelRef = useRef(0);
 
     const globeContainerRef = useRef<HTMLDivElement>(null);
     const wheelOverlayTimeoutRef = useRef<number | null>(null);
@@ -629,6 +731,12 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         };
     }, [onCancel]);
 
+    const applyZoom = useCallback((next: number) => {
+        const clamped = clamp(next, MIN_GLOBE_ZOOM, MAX_GLOBE_ZOOM);
+        zoomRef.current = clamped;
+        setZoom(clamped);
+    }, []);
+
     const startMomentum = useCallback(() => {
         if (momentumFrameRef.current !== null) {
             cancelAnimationFrame(momentumFrameRef.current);
@@ -658,8 +766,40 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         momentumFrameRef.current = requestAnimationFrame(step);
     }, [applyRotation]);
 
+    const pinchDistance = (): number => {
+        const points = [...pointersRef.current.values()];
+        if (points.length < 2) return 0;
+        return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    };
+
     const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        gestureTravelRef.current = 0;
+
+        // Second finger down: this is a pinch, not a drag. Remember the starting
+        // span and zoom so the gesture is absolute rather than incremental,
+        // which keeps it from drifting over a long pinch.
+        if (pointersRef.current.size === 2) {
+            isDraggingRef.current = false;
+            setIsDragging(false);
+            cancelMotion();
+            pinchRef.current = { distance: pinchDistance(), zoom: zoomRef.current };
+            return;
+        }
+
         if (!event.isPrimary) return;
+
+        // Double tap steps in, and steps back out once at the far end, so the
+        // gesture is a round trip rather than a dead end.
+        const now = event.timeStamp || Date.now();
+        if (now - lastTapRef.current < 320) {
+            lastTapRef.current = 0;
+            applyZoom(zoomRef.current >= MAX_GLOBE_ZOOM - 0.01
+                ? MIN_GLOBE_ZOOM
+                : zoomRef.current + ZOOM_STEP);
+        } else {
+            lastTapRef.current = now;
+        }
 
         cancelMotion();
         handleInteraction();
@@ -671,13 +811,31 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     }, [cancelMotion, handleInteraction]);
 
     const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        if (pointersRef.current.has(event.pointerId)) {
+            pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        }
+
+        const pinch = pinchRef.current;
+        if (pinch && pointersRef.current.size >= 2) {
+            const distance = pinchDistance();
+            gestureTravelRef.current = Infinity;
+            if (pinch.distance > 0 && distance > 0) {
+                applyZoom(pinch.zoom * (distance / pinch.distance));
+            }
+            return;
+        }
+
         if (!isDraggingRef.current || !event.isPrimary) return;
 
         const dx = event.clientX - lastPointerRef.current.x;
         const dy = event.clientY - lastPointerRef.current.y;
+        gestureTravelRef.current += Math.hypot(dx, dy);
         lastPointerRef.current = { x: event.clientX, y: event.clientY };
 
-        const sensitivity = 0.0062;
+        // Divided by zoom so a finger travels the same distance across the
+        // surface however far in you are — the whole point of zooming is finer
+        // control, and fixed sensitivity would make it worse instead.
+        const sensitivity = 0.0062 / zoomRef.current;
         const nextVelocity = {
             lng: dx * sensitivity,
             lat: dy * sensitivity,
@@ -691,6 +849,9 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     }, [applyRotation]);
 
     const finishPointerDrag = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        pointersRef.current.delete(event.pointerId);
+        if (pointersRef.current.size < 2) pinchRef.current = null;
+
         if (!isDraggingRef.current) return;
 
         isDraggingRef.current = false;
@@ -721,6 +882,10 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     }, [applyRotation, cancelMotion, handleInteraction]);
 
     const handleFlagClick = useCallback((lang: LanguageDefinition) => {
+        // The pointer that produced this click may have been dragging or
+        // pinching the globe; only a stationary one is a selection.
+        if (gestureTravelRef.current > FLAG_TAP_SLOP_PX) return;
+
         handleInteraction();
         focusLanguage(lang);
 
@@ -750,7 +915,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
     const projectedFlags = useMemo(() => (
         globePoints.map(point => {
-            const projected = projectVector(point.vector, rotation);
+            const projected = projectVector(point.vector, rotation, zoom);
             const frontness = smoothStep(-0.05, 0.88, projected.z);
             const centerFocus = clamp01((0.38 - projected.centerDistance) / 0.38);
 
@@ -761,7 +926,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 focusScore: frontness * centerFocus,
             };
         })
-    ), [globePoints, rotation]);
+    ), [globePoints, rotation, zoom]);
 
     const focusedLangCode = useMemo(() => {
         const best = projectedFlags.reduce((winner, flag) => {
@@ -775,9 +940,13 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
     const sortedFlags = useMemo(() => (
         projectedFlags
-            .filter(flag => flag.visible)
+            // Zooming in pushes most of the globe off the frame. Without this the
+            // pin count rendered per frame would stay proportional to the whole
+            // language list however far in the user is — which is exactly what
+            // would hurt once every country is on the map.
+            .filter(flag => flag.visible && isPinWithinFrame(flag.screenX, flag.screenY, zoom))
             .sort((a, b) => a.z - b.z)
-    ), [projectedFlags]);
+    ), [projectedFlags, zoom]);
 
     const route = useMemo<RoutePaths | null>(() => {
         if (!nativeLang || !targetLang) return null;
@@ -786,8 +955,8 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         const targetPoint = globePointByCode.get(targetLang.langCode);
         if (!nativePoint || !targetPoint) return null;
 
-        return buildRoutePaths(nativePoint.vector, targetPoint.vector, rotation);
-    }, [globePointByCode, nativeLang, rotation, targetLang]);
+        return buildRoutePaths(nativePoint.vector, targetPoint.vector, rotation, zoom);
+    }, [globePointByCode, nativeLang, rotation, targetLang, zoom]);
 
     return (
         <div ref={globeContainerRef} className="w-full flex justify-center py-2">
@@ -831,6 +1000,35 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     cursor: grabbing;
                 }
 
+                .maestro-globe-zoom-controls {
+                    position: absolute;
+                    right: 6px;
+                    bottom: 6px;
+                    z-index: 400;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .maestro-globe-zoom-button {
+                    width: 26px;
+                    height: 26px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 999px;
+                    border: 1px solid rgba(255, 255, 255, 0.28);
+                    background: rgba(6, 18, 32, 0.55);
+                    color: rgba(255, 255, 255, 0.92);
+                    font-size: 15px;
+                    line-height: 1;
+                    backdrop-filter: blur(2px);
+                }
+
+                .maestro-globe-zoom-button:disabled {
+                    opacity: 0.35;
+                }
+
                 .maestro-globe-space {
                     position: absolute;
                     inset: 0;
@@ -843,7 +1041,15 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     inset: 5%;
                     width: 90%;
                     height: 90%;
-                    border-radius: 9999px;
+                    /* Deliberately not a circle. The shader already discards
+                       outside the sphere, so at rest the silhouette comes from
+                       the geometry and this radius is invisible. A CSS circle
+                       here was only ever correct while the sphere inscribed the
+                       canvas: zoomed in, the sphere fills the whole box and the
+                       clip cut away the corners where the globe genuinely is,
+                       stranding flags over blank paper. The small radius just
+                       keeps the zoomed-in frame from being a hard rectangle. */
+                    border-radius: 18px;
                     pointer-events: none;
                     filter:
                         drop-shadow(0 0 18px rgba(84, 190, 255, 0.26))
@@ -1107,6 +1313,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 <div className="maestro-globe-window">
                     <div
                         className={`maestro-globe-stage ${isDragging ? 'is-dragging' : ''}`}
+                        style={{ ['--globe-zoom' as string]: `${zoom}` }}
                         onPointerDown={handlePointerDown}
                         onPointerMove={handlePointerMove}
                         onPointerUp={finishPointerDrag}
@@ -1116,7 +1323,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                         aria-label="Interactive language globe"
                     >
                         <div className="maestro-globe-space" />
-                        <EarthCanvas rotation={rotation} textureUrl={EARTH_TEXTURE_URL} />
+                        <EarthCanvas rotation={rotation} zoom={zoom} textureUrl={EARTH_TEXTURE_URL} />
 
                         {route && (
                             <svg viewBox="0 0 100 100" className="maestro-globe-route-layer" aria-hidden="true">
@@ -1150,6 +1357,29 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                             </svg>
                         )}
 
+                        <div className="maestro-globe-zoom-controls" onPointerDown={event => event.stopPropagation()}>
+                            <button
+                                type="button"
+                                className="maestro-globe-zoom-button"
+                                onClick={() => { handleInteraction(); applyZoom(zoomRef.current + ZOOM_STEP); }}
+                                disabled={zoom >= MAX_GLOBE_ZOOM - 0.01}
+                                title="Zoom in"
+                                aria-label="Zoom in"
+                            >
+                                +
+                            </button>
+                            <button
+                                type="button"
+                                className="maestro-globe-zoom-button"
+                                onClick={() => { handleInteraction(); applyZoom(zoomRef.current - ZOOM_STEP); }}
+                                disabled={zoom <= MIN_GLOBE_ZOOM + 0.01}
+                                title="Zoom out"
+                                aria-label="Zoom out"
+                            >
+                                &minus;
+                            </button>
+                        </div>
+
                         <div className="maestro-globe-flag-layer">
                             {sortedFlags.map(flag => {
                                 const isNative = nativeLang?.langCode === flag.lang.langCode;
@@ -1181,7 +1411,6 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                             isTarget ? 'is-target' : '',
                                         ].filter(Boolean).join(' ')}
                                         style={pinStyle}
-                                        onPointerDown={event => event.stopPropagation()}
                                         onClick={() => handleFlagClick(flag.lang)}
                                         onMouseEnter={() => setHoveredLangCode(flag.lang.langCode)}
                                         onMouseLeave={() => setHoveredLangCode(null)}
