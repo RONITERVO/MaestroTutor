@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
  * Hardware Slice - manages camera and microphone hardware state
- * 
+ *
  * Responsibilities:
  * - Available cameras list
  * - Camera facing mode
@@ -10,7 +10,8 @@
  * - Visual context stream (non-serializable, transient)
  * - Camera/snapshot error states
  * - Visual context capture state
- * 
+ * - Device performance tier and the embed/attachment budgets derived from it
+ *
  * Note: MediaStream objects are non-serializable and should NOT be persisted.
  * These are marked as transient state.
  */
@@ -18,6 +19,60 @@
 import type { StateCreator } from 'zustand';
 import type { CameraDevice } from '../../core/types';
 import type { MaestroStore } from '../maestroStore';
+
+/**
+ * How much simultaneous rich content this device can carry.
+ *
+ * Drives every memory budget in the chat. Play's memory and bitmap thresholds
+ * are enforced against real devices, and the bottom of the Android range has
+ * roughly an order of magnitude less headroom than the top, so a single fixed
+ * budget is either unsafe on low-end or needlessly austere on high-end.
+ */
+export type DevicePerformanceTier = 'low' | 'mid' | 'high';
+
+export interface DeviceBudgets {
+  /** Simultaneously live embeds: real iframes / rendered documents. */
+  maxLiveEmbeds: number;
+  /** Retained poster bitmaps for frozen embeds. 0 = go straight to placeholder. */
+  posterBudget: number;
+  /** PDF pages rasterized around the viewport. */
+  pdfWindowPages: number;
+  /** Upper bound on the PDF render scale, before the device-pixel-ratio factor. */
+  pdfScaleCap: number;
+  /** Ceiling applied to the user's maxVisibleMessages setting. */
+  maxVisibleMessagesCap: number;
+}
+
+export const DEVICE_BUDGETS: Record<DevicePerformanceTier, DeviceBudgets> = {
+  low: { maxLiveEmbeds: 1, posterBudget: 0, pdfWindowPages: 1, pdfScaleCap: 1.0, maxVisibleMessagesCap: 20 },
+  mid: { maxLiveEmbeds: 1, posterBudget: 4, pdfWindowPages: 2, pdfScaleCap: 1.25, maxVisibleMessagesCap: 35 },
+  high: { maxLiveEmbeds: 2, posterBudget: 8, pdfWindowPages: 3, pdfScaleCap: 1.5, maxVisibleMessagesCap: 50 },
+};
+
+interface DeviceCapabilityProbe {
+  deviceMemory?: number;
+  hardwareConcurrency?: number;
+}
+
+/**
+ * Classify the device once at startup.
+ *
+ * `navigator.deviceMemory` is absent on a number of Android WebViews and on
+ * every iOS browser, so the unknown case must land somewhere safe rather than
+ * optimistic: we default to 'mid', and let a single weak signal pull down to
+ * 'low'. Over-estimating the tier is what gets an app terminated.
+ */
+export const detectDevicePerformanceTier = (probe?: DeviceCapabilityProbe): DevicePerformanceTier => {
+  const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & DeviceCapabilityProbe) : undefined;
+  const deviceMemory = probe?.deviceMemory ?? nav?.deviceMemory;
+  const cores = probe?.hardwareConcurrency ?? nav?.hardwareConcurrency;
+
+  if ((deviceMemory !== undefined && deviceMemory <= 2) || (cores !== undefined && cores <= 4)) {
+    return 'low';
+  }
+  if (deviceMemory === undefined) return 'mid';
+  return deviceMemory <= 4 ? 'mid' : 'high';
+};
 
 export interface HardwareSlice {
   // State
@@ -34,11 +89,14 @@ export interface HardwareSlice {
   
   // Capability detection
   microphoneApiAvailable: boolean;
-  
+  devicePerformanceTier: DevicePerformanceTier;
+
   // Capture state
   isCurrentlyPerformingVisualContextCapture: boolean;
-  
+
   // Actions
+  /** Override the detected tier (diagnostics panel, low-end QA passes). */
+  setDevicePerformanceTier: (tier: DevicePerformanceTier) => void;
   setAvailableCameras: (cameras: CameraDevice[]) => void;
   setCurrentCameraFacingMode: (mode: 'user' | 'environment' | 'unknown') => void;
   setLiveVideoStream: (stream: MediaStream | null) => void;
@@ -70,13 +128,18 @@ export const createHardwareSlice: StateCreator<
   snapshotUserError: null,
   
   // Capability detection
-  microphoneApiAvailable: typeof window !== 'undefined' && 
+  microphoneApiAvailable: typeof window !== 'undefined' &&
     !!(navigator && navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
-  
+  devicePerformanceTier: detectDevicePerformanceTier(),
+
   // Capture state
   isCurrentlyPerformingVisualContextCapture: false,
-  
+
   // Actions
+  setDevicePerformanceTier: (tier: DevicePerformanceTier) => {
+    set({ devicePerformanceTier: tier });
+  },
+
   setAvailableCameras: (cameras: CameraDevice[]) => {
     set({ availableCameras: cameras });
   },
@@ -132,3 +195,10 @@ export const createHardwareSlice: StateCreator<
     });
   },
 });
+
+/** Selectors — DEVICE_BUDGETS entries are stable references, safe for useStore. */
+export const selectDevicePerformanceTier = (state: MaestroStore): DevicePerformanceTier =>
+  state.devicePerformanceTier;
+
+export const selectDeviceBudgets = (state: MaestroStore): DeviceBudgets =>
+  DEVICE_BUDGETS[state.devicePerformanceTier] ?? DEVICE_BUDGETS.mid;

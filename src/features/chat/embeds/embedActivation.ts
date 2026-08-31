@@ -1,0 +1,511 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
+/**
+ * Embed activation manager.
+ *
+ * Decides which embeds are allowed to be *live* (a real iframe / rendered PDF)
+ * at any moment. Everything else is a placeholder or a poster, so the number of
+ * documents and decoded bitmaps in the WebView is bounded by policy rather than
+ * by how far the user has scrolled.
+ *
+ * Design notes:
+ *
+ * - **One** IntersectionObserver for the whole chat, not one per embed. Every
+ *   embed used to observe the shared scroll container, so a single scroll cost
+ *   N callbacks and N rect reads. Here a scroll costs one batch and one rAF.
+ * - Arbitration never runs synchronously from an observer callback; it is
+ *   coalesced into a single rAF so a burst of entries settles once.
+ * - Promotion waits for a dwell period and is suppressed during a fling, so
+ *   flicking past ten mini-games boots zero of them instead of ten.
+ * - Demotion of a fully off-screen embed is immediate: it frees memory at once
+ *   and cannot be seen.
+ *
+ * This module is deliberately framework-free (see useEmbedSlot for the React
+ * binding) so it can be driven directly from tests.
+ */
+
+import type { EmbedKind, EmbedPhase } from './embedTypes';
+
+/** How long a candidate must stay top-ranked before we boot it. */
+const PROMOTION_DWELL_MS = 250;
+/** Above this scroll speed we assume a fling and hold off on booting anything. */
+const FLING_VELOCITY_PX_PER_MS = 1.2;
+/** How long after the last fast scroll sample we keep treating it as a fling. */
+const FLING_COOLDOWN_MS = 180;
+
+const INTERSECTION_THRESHOLDS = [0, 0.01, 0.15, 0.35, 0.6, 0.85, 0.99];
+
+export interface EmbedBudgets {
+  /** Maximum simultaneously live embeds (real iframes / rendered documents). */
+  maxLiveEmbeds: number;
+  /** Maximum retained poster bitmaps for frozen embeds. 0 disables posters. */
+  posterBudget: number;
+}
+
+const DEFAULT_BUDGETS: EmbedBudgets = { maxLiveEmbeds: 1, posterBudget: 4 };
+
+interface EmbedRecord {
+  id: string;
+  kind: EmbedKind;
+  element: Element | null;
+  /** Fraction of the embed visible in the scroll root, 0..1. */
+  visibleFraction: number;
+  /** 1 when the embed's centre sits on the root's centre line, 0 at the edge. */
+  centeredness: number;
+  /** User is actively engaged (playing, scrolling a PDF). Beats visibility. */
+  pinned: boolean;
+  phase: EmbedPhase;
+  /** Registration order, used as a stable tie-break and as the IO-less fallback. */
+  seq: number;
+  /** Latched at the 0.99 threshold, so it changes rarely rather than per scroll. */
+  fullyVisible: boolean;
+  onPhase: (phase: EmbedPhase) => void;
+  onFullyVisible?: (fullyVisible: boolean) => void;
+}
+
+/** An embed is "fully visible" once essentially all of it is inside the root. */
+const FULL_VISIBILITY_RATIO = 0.99;
+
+export interface EmbedActivationDebugSnapshot {
+  live: string[];
+  frozen: string[];
+  placeholder: string[];
+  posters: number;
+  budgets: EmbedBudgets;
+  observing: boolean;
+}
+
+const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+class EmbedActivationManager {
+  private records = new Map<string, EmbedRecord>();
+  private elementIndex = new WeakMap<Element, string>();
+  private posters = new Map<string, string>(); // insertion-ordered = LRU
+  private budgets: EmbedBudgets = { ...DEFAULT_BUDGETS };
+  private observer: IntersectionObserver | null = null;
+  private root: Element | null = null;
+  private seq = 0;
+  private rafHandle = 0;
+  private dwellTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastScrollTop = 0;
+  private lastScrollAt = 0;
+  private lastFlingAt = 0;
+  private scrollTarget: Element | null = null;
+
+  // ---------------------------------------------------------------- lifecycle
+
+  /**
+   * Point the manager at the chat's scroll container. Safe to call repeatedly;
+   * only a genuine root change rebuilds the observer.
+   */
+  setRoot(root: Element | null): void {
+    if (this.root === root) return;
+    this.detachScrollListener();
+    this.root = root;
+    this.rebuildObserver();
+    this.attachScrollListener();
+    this.schedule();
+  }
+
+  setBudgets(budgets: Partial<EmbedBudgets>): void {
+    const next: EmbedBudgets = {
+      maxLiveEmbeds: Math.max(1, Math.floor(budgets.maxLiveEmbeds ?? this.budgets.maxLiveEmbeds)),
+      posterBudget: Math.max(0, Math.floor(budgets.posterBudget ?? this.budgets.posterBudget)),
+    };
+    if (next.maxLiveEmbeds === this.budgets.maxLiveEmbeds && next.posterBudget === this.budgets.posterBudget) {
+      return;
+    }
+    this.budgets = next;
+    this.trimPosters();
+    this.schedule();
+  }
+
+  getBudgets(): EmbedBudgets {
+    return { ...this.budgets };
+  }
+
+  /**
+   * Register an embed. Returns an unregister function.
+   *
+   * Re-registering the same id (React StrictMode double-invoke, or a re-mount
+   * after a key change) replaces the previous record and keeps the current
+   * phase, so a live embed is not torn down and rebooted by a remount.
+   */
+  register(options: {
+    id: string;
+    kind: EmbedKind;
+    element: Element | null;
+    onPhase: (phase: EmbedPhase) => void;
+    onFullyVisible?: (fullyVisible: boolean) => void;
+  }): () => void {
+    const { id, kind, element, onPhase, onFullyVisible } = options;
+    const previous = this.records.get(id);
+
+    if (previous?.element && previous.element !== element) {
+      this.observer?.unobserve(previous.element);
+    }
+
+    const record: EmbedRecord = {
+      id,
+      kind,
+      element,
+      visibleFraction: previous?.visibleFraction ?? 0,
+      centeredness: previous?.centeredness ?? 0,
+      pinned: previous?.pinned ?? false,
+      phase: previous?.phase ?? (this.posters.has(id) ? 'frozen' : 'placeholder'),
+      seq: previous?.seq ?? this.seq++,
+      fullyVisible: previous?.fullyVisible ?? false,
+      onPhase,
+      onFullyVisible,
+    };
+    this.records.set(id, record);
+
+    if (element) {
+      this.elementIndex.set(element, id);
+      this.observer?.observe(element);
+    }
+    // Without an observer (jsdom, very old WebViews) fall back to registration
+    // order so the app still works, just without visibility-driven arbitration.
+    if (!this.supportsObserver()) record.visibleFraction = 1;
+
+    this.schedule();
+    onPhase(record.phase);
+    onFullyVisible?.(record.fullyVisible);
+
+    return () => this.unregister(id, element);
+  }
+
+  private unregister(id: string, element: Element | null): void {
+    const record = this.records.get(id);
+    if (!record) return;
+    // A re-register may already have replaced this record with a new element.
+    if (element && record.element !== element) return;
+
+    if (record.element) this.observer?.unobserve(record.element);
+    this.records.delete(id);
+    this.schedule();
+  }
+
+  // ------------------------------------------------------------------ pinning
+
+  /**
+   * Pin an embed the user is actively engaged with. A pinned embed outranks
+   * everything visible, so an in-progress game cannot be evicted out from under
+   * the player by an embed that happens to be more centred.
+   */
+  setPinned(id: string, pinned: boolean): void {
+    const record = this.records.get(id);
+    if (!record || record.pinned === pinned) return;
+    record.pinned = pinned;
+    // Engagement is an explicit user action; apply it without dwell.
+    this.clearDwell();
+    this.arbitrate();
+  }
+
+  // ------------------------------------------------------------------ posters
+
+  /**
+   * Hand the manager a poster for a frozen embed. Ownership of the blob URL
+   * transfers to the manager, which revokes it on eviction.
+   */
+  setPoster(id: string, url: string): void {
+    if (this.budgets.posterBudget <= 0) {
+      revokeObjectUrl(url);
+      return;
+    }
+    const existing = this.posters.get(id);
+    if (existing && existing !== url) revokeObjectUrl(existing);
+    this.posters.delete(id);
+    this.posters.set(id, url);
+    this.trimPosters();
+
+    const record = this.records.get(id);
+    if (record && record.phase === 'placeholder') this.setPhase(record, 'frozen');
+  }
+
+  getPoster(id: string): string | undefined {
+    return this.posters.get(id);
+  }
+
+  /**
+   * Whether it is worth capturing posters at all. On the low tier the budget is
+   * zero, and capturing a frame we would immediately throw away is pure cost.
+   */
+  postersEnabled(): boolean {
+    return this.budgets.posterBudget > 0;
+  }
+
+  private trimPosters(): void {
+    while (this.posters.size > this.budgets.posterBudget) {
+      const oldest = this.posters.keys().next();
+      if (oldest.done) break;
+      this.dropPoster(oldest.value);
+    }
+  }
+
+  private dropPoster(id: string): void {
+    const url = this.posters.get(id);
+    if (url) revokeObjectUrl(url);
+    this.posters.delete(id);
+    const record = this.records.get(id);
+    if (record && record.phase === 'frozen') this.setPhase(record, 'placeholder');
+  }
+
+  // -------------------------------------------------------------- arbitration
+
+  private supportsObserver(): boolean {
+    return typeof IntersectionObserver !== 'undefined';
+  }
+
+  private rebuildObserver(): void {
+    this.observer?.disconnect();
+    this.observer = null;
+    if (!this.supportsObserver()) return;
+
+    this.observer = new IntersectionObserver(
+      (entries) => this.ingest(entries),
+      { root: this.root, threshold: INTERSECTION_THRESHOLDS },
+    );
+    for (const record of this.records.values()) {
+      if (record.element) this.observer.observe(record.element);
+    }
+  }
+
+  private ingest(entries: IntersectionObserverEntry[]): void {
+    for (const entry of entries) {
+      const record = this.findByElement(entry.target);
+      if (!record) continue;
+
+      record.visibleFraction = entry.isIntersecting ? entry.intersectionRatio : 0;
+      record.centeredness = computeCenteredness(entry);
+
+      const fullyVisible = record.visibleFraction >= FULL_VISIBILITY_RATIO;
+      if (fullyVisible !== record.fullyVisible) {
+        record.fullyVisible = fullyVisible;
+        record.onFullyVisible?.(fullyVisible);
+      }
+
+      if (record.visibleFraction <= 0) {
+        // Engagement ends when the embed leaves the screen; otherwise a pin taken
+        // while playing would hold the single live slot for the rest of the session.
+        record.pinned = false;
+        // Fully out of view: free it now. No dwell — nobody can see the change,
+        // and holding the slot open is exactly the leak we are fixing.
+        if (record.phase === 'live') {
+          this.setPhase(record, this.posters.has(record.id) ? 'frozen' : 'placeholder');
+        }
+      }
+    }
+    this.schedule();
+  }
+
+  private findByElement(element: Element): EmbedRecord | undefined {
+    const id = this.elementIndex.get(element);
+    if (id === undefined) return undefined;
+    const record = this.records.get(id);
+    return record?.element === element ? record : undefined;
+  }
+
+  private schedule(): void {
+    if (this.rafHandle) return;
+    const run = () => {
+      this.rafHandle = 0;
+      this.arbitrate();
+    };
+    this.rafHandle = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame(run)
+      : (setTimeout(run, 16) as unknown as number);
+  }
+
+  private score(record: EmbedRecord): number {
+    if (record.pinned) return 10_000 + record.visibleFraction;
+    if (record.visibleFraction <= 0) return -1;
+    return record.visibleFraction * 100 + record.centeredness * 20;
+  }
+
+  /** Ids that *should* be live right now, best first. */
+  private desiredLive(): string[] {
+    const ranked = [...this.records.values()]
+      .map((record) => ({ record, score: this.score(record) }))
+      .filter((entry) => entry.score >= 0)
+      .sort((a, b) => (b.score - a.score) || (a.record.seq - b.record.seq));
+
+    return ranked.slice(0, this.budgets.maxLiveEmbeds).map((entry) => entry.record.id);
+  }
+
+  private isFlinging(): boolean {
+    return now() - this.lastFlingAt < FLING_COOLDOWN_MS;
+  }
+
+  private arbitrate(): void {
+    if (this.records.size === 0) {
+      this.clearDwell();
+      return;
+    }
+
+    const desired = new Set(this.desiredLive());
+    const currentLive = new Set(
+      [...this.records.values()].filter((record) => record.phase === 'live').map((record) => record.id),
+    );
+
+    const wantsPromotion = [...desired].some((id) => !currentLive.has(id));
+    const hasPin = [...this.records.values()].some((record) => record.pinned);
+
+    // Booting a document mid-fling is the worst possible moment for it: hold the
+    // current assignment and re-arbitrate once the scroll settles.
+    if (wantsPromotion && this.isFlinging() && !hasPin) {
+      this.armDwell();
+      return;
+    }
+
+    // Demotions are always safe to apply: they only ever free resources.
+    for (const record of this.records.values()) {
+      if (record.phase === 'live' && !desired.has(record.id)) {
+        this.setPhase(record, this.posters.has(record.id) ? 'frozen' : 'placeholder');
+      }
+    }
+
+    if (wantsPromotion && !hasPin) {
+      // Require the candidate set to stay stable for a beat before booting.
+      this.armDwell();
+      return;
+    }
+
+    this.clearDwell();
+    this.applyPromotions(desired);
+  }
+
+  private applyPromotions(desired: Set<string>): void {
+    for (const record of this.records.values()) {
+      if (desired.has(record.id)) {
+        if (record.phase !== 'live') this.setPhase(record, 'live');
+      } else if (record.phase !== 'live') {
+        const next: EmbedPhase = this.posters.has(record.id) ? 'frozen' : 'placeholder';
+        if (record.phase !== next) this.setPhase(record, next);
+      }
+    }
+  }
+
+  private armDwell(): void {
+    this.clearDwell();
+    this.dwellTimer = setTimeout(() => {
+      this.dwellTimer = null;
+      if (this.isFlinging()) {
+        this.armDwell();
+        return;
+      }
+      this.applyPromotions(new Set(this.desiredLive()));
+    }, PROMOTION_DWELL_MS);
+  }
+
+  private clearDwell(): void {
+    if (this.dwellTimer === null) return;
+    clearTimeout(this.dwellTimer);
+    this.dwellTimer = null;
+  }
+
+  private setPhase(record: EmbedRecord, phase: EmbedPhase): void {
+    if (record.phase === phase) return;
+    record.phase = phase;
+    record.onPhase(phase);
+  }
+
+  // ------------------------------------------------------------ scroll velocity
+
+  private handleScroll = (): void => {
+    const target = this.scrollTarget;
+    if (!target) return;
+    const at = now();
+    const top = target.scrollTop;
+    const elapsed = at - this.lastScrollAt;
+    if (elapsed > 0 && this.lastScrollAt > 0) {
+      const velocity = Math.abs(top - this.lastScrollTop) / elapsed;
+      if (velocity > FLING_VELOCITY_PX_PER_MS) this.lastFlingAt = at;
+    }
+    this.lastScrollTop = top;
+    this.lastScrollAt = at;
+  };
+
+  private attachScrollListener(): void {
+    if (!this.root || typeof this.root.addEventListener !== 'function') return;
+    this.scrollTarget = this.root;
+    this.lastScrollTop = this.root.scrollTop;
+    this.lastScrollAt = now();
+    this.root.addEventListener('scroll', this.handleScroll, { passive: true });
+  }
+
+  private detachScrollListener(): void {
+    this.scrollTarget?.removeEventListener('scroll', this.handleScroll);
+    this.scrollTarget = null;
+    this.lastScrollAt = 0;
+    this.lastFlingAt = 0;
+  }
+
+  // ----------------------------------------------------------------- teardown
+
+  /** Release every observer, timer and poster. Used on chat teardown and by tests. */
+  reset(): void {
+    this.clearDwell();
+    if (this.rafHandle && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this.rafHandle);
+    this.rafHandle = 0;
+    this.observer?.disconnect();
+    this.observer = null;
+    this.detachScrollListener();
+    this.root = null;
+    this.records.clear();
+    for (const url of this.posters.values()) revokeObjectUrl(url);
+    this.posters.clear();
+    this.budgets = { ...DEFAULT_BUDGETS };
+    this.seq = 0;
+  }
+
+  /** Snapshot for the dev overlay and for regression tests. */
+  debugSnapshot(): EmbedActivationDebugSnapshot {
+    const live: string[] = [];
+    const frozen: string[] = [];
+    const placeholder: string[] = [];
+    for (const record of this.records.values()) {
+      if (record.phase === 'live') live.push(record.id);
+      else if (record.phase === 'frozen') frozen.push(record.id);
+      else placeholder.push(record.id);
+    }
+    return {
+      live,
+      frozen,
+      placeholder,
+      posters: this.posters.size,
+      budgets: { ...this.budgets },
+      observing: this.observer !== null,
+    };
+  }
+}
+
+/**
+ * 1 when the embed's centre sits on the root's centre line, falling to 0 at the
+ * root's edge. Breaks ties between two equally-visible embeds in favour of the
+ * one the user is actually looking at.
+ */
+const computeCenteredness = (entry: IntersectionObserverEntry): number => {
+  const root = entry.rootBounds;
+  if (!root || root.height <= 0) return 0;
+  const elementCentre = entry.boundingClientRect.top + entry.boundingClientRect.height / 2;
+  const rootCentre = root.top + root.height / 2;
+  const distance = Math.abs(elementCentre - rootCentre);
+  return Math.max(0, 1 - distance / (root.height / 2));
+};
+
+const revokeObjectUrl = (url: string): void => {
+  if (!url.startsWith('blob:')) return;
+  try {
+    URL.revokeObjectURL(url);
+  } catch {
+    /* the URL may already be gone; nothing to do */
+  }
+};
+
+export const embedActivation = new EmbedActivationManager();
+
+if (typeof window !== 'undefined' && import.meta.env?.DEV) {
+  (window as unknown as Record<string, unknown>).__EMBED_DEBUG__ = () => embedActivation.debugSnapshot();
+}

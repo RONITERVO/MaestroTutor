@@ -10,7 +10,8 @@ import ChatMessageBubble from './ChatMessageBubble';
 import SuggestionsList from './SuggestionsList';
 import InputArea from './InputArea';
 import { LanguageSelectorGlobe } from '../../session';
-import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT } from '../../../store';
+import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT, selectDeviceBudgets } from '../../../store';
+import { useEmbedViewport } from '../embeds/useEmbedViewport';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import {
   selectMessages,
@@ -134,10 +135,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     setTempTargetLangCode(code);
   }, [setTempTargetLangCode]);
 
+  const deviceBudgets = useMaestroStore(selectDeviceBudgets);
+
   const speakNativeLang = settings.tts.speakNative;
   const imageFocusedModeEnabled = settings.imageFocusedModeEnabled;
   const bookmarkedMessageId = settings.historyBookmarkMessageId ?? null;
-  const maxVisibleMessages = settings.maxVisibleMessages ?? MAX_VISIBLE_MESSAGES_DEFAULT;
+  // The user's history depth is a preference; the tier cap is a memory limit.
+  // On a low-end device 50 rendered bubbles is itself a large retained cost,
+  // independent of how many of them hold an embed.
+  const maxVisibleMessages = Math.min(
+    settings.maxVisibleMessages ?? MAX_VISIBLE_MESSAGES_DEFAULT,
+    deviceBudgets.maxVisibleMessagesCap,
+  );
   const currentTargetLangCode = useMemo(
     () => getPrimaryCode(selectedLanguagePair?.targetLanguageCode || targetLanguageDef?.code || 'es'),
     [selectedLanguagePair, targetLanguageDef]
@@ -186,6 +195,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Single source of the embed height cap and the one shared IntersectionObserver.
+  useEmbedViewport(scrollContainerRef, deviceBudgets);
   const shouldAutoScrollRef = useRef(true);
 
   const handleContainerScroll = useCallback(() => {
@@ -742,6 +754,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
           return (
              <div
               key={msg.id}
+              className="chat-message-shell"
               style={{ touchAction: 'pan-y', position: 'relative' }}
               onPointerDown={openTrayForId === msg.id ? undefined : (canBeDeleted ? (e) => handleSwipePointerDown(e, msg.id, isUser) : undefined)}
             >

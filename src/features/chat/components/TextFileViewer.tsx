@@ -11,6 +11,7 @@ import MiniGameErrorBoundary from './MiniGameErrorBoundary';
 import NotebookTextPreview from './NotebookTextPreview';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
+import type { EmbedBox } from '../../../core/types';
 
 interface TextFileViewerProps {
   src: string;
@@ -19,6 +20,11 @@ interface TextFileViewerProps {
   fileName?: string | null;
   mimeType?: string | null;
   bottomInset?: number;
+  /** Stable identity for the embed activation slot — normally the message id. */
+  embedId?: string;
+  /** Reserved box persisted on the message, when the attachment is runnable. */
+  embedBox?: EmbedBox;
+  onEmbedBoxChange?: (box: EmbedBox) => void;
 }
 
 const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
@@ -28,17 +34,23 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
   fileName,
   mimeType,
   bottomInset = 0,
+  embedId,
+  embedBox,
+  onEmbedBoxChange,
 }) => {
   const { t } = useAppTranslations();
   const decodedText = useMemo(() => decodeTextFromDataUrl(src), [src]);
   const shouldRenderMiniGame = useMemo(() => {
-    if (compact || !decodedText) return false;
+    // Without a stable id the activation manager cannot arbitrate this embed,
+    // so it would be the one iframe that escapes the budget. Fall through to
+    // the static source preview instead.
+    if (compact || !decodedText || !embedId) return false;
     return isRunnableMiniGameAttachment({
       sourceCode: decodedText,
       fileName,
       mimeType,
     });
-  }, [compact, decodedText, fileName, mimeType]);
+  }, [compact, decodedText, embedId, fileName, mimeType]);
   const tabularSheets = useMemo(
     () => deriveTabularSheetsFromTextAttachment(decodedText, mimeType, fileName),
     [decodedText, fileName, mimeType]
@@ -64,11 +76,14 @@ const TextFileViewer: React.FC<TextFileViewerProps> = React.memo(({
         retryText={t('miniGame.retry') || 'Retry'}
       >
         <MiniGameViewer
+          embedId={embedId!}
           sourceCode={decodedText}
           variant={variant}
           fileName={fileName}
           mimeType={mimeType}
           bottomInset={effectiveBottomInset}
+          embedBox={embedBox}
+          onEmbedBoxChange={onEmbedBoxChange}
         />
       </MiniGameErrorBoundary>
     );

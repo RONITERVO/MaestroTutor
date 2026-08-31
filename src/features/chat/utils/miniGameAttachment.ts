@@ -52,6 +52,7 @@ const buildRuntimeBridge = (frameId: string): string => {
   var EVENT_TYPE = 'maestro-mini-game-status';
   var INPUT_EVENT_TYPE = 'maestro-mini-game-input';
   var MODE_EVENT_TYPE = 'maestro-mini-game-mode';
+  var POSTER_EVENT_TYPE = 'maestro-mini-game-poster-request';
   var backgroundSyncTimer = 0;
   var metricsSyncTimer = 0;
   var metricsAnimationFrame = 0;
@@ -63,6 +64,55 @@ const buildRuntimeBridge = (frameId: string): string => {
 
   var sendStatus = function (status, detail, metrics) {
     try { parent.postMessage({ type: EVENT_TYPE, frameId: FRAME_ID, status: status, detail: detail || '', metrics: metrics || null }, '*'); } catch (e) {}
+  };
+
+  /*
+   * Poster capture.
+   *
+   * The host asks for a still while we are alive so it has something to show
+   * after we are torn down — a demotion cannot wait for a postMessage round
+   * trip, because by the time a reply arrived the frame would already be gone.
+   *
+   * Only canvas-backed artifacts can be captured cheaply; for DOM-only ones we
+   * reply with no poster and the host falls back to a placeholder rather than
+   * pulling in a DOM rasterizer.
+   */
+  var findLargestCanvas = function () {
+    var best = null;
+    var bestArea = 0;
+    try {
+      var canvases = document.getElementsByTagName('canvas');
+      for (var i = 0; i < canvases.length; i += 1) {
+        var candidate = canvases[i];
+        var area = (Number(candidate.width) || 0) * (Number(candidate.height) || 0);
+        if (area > bestArea) { best = candidate; bestArea = area; }
+      }
+    } catch (e) {}
+    return bestArea > 0 ? best : null;
+  };
+
+  var capturePoster = function (maxEdge, quality) {
+    var source = findLargestCanvas();
+    if (!source) return '';
+
+    var sourceWidth = Number(source.width) || 0;
+    var sourceHeight = Number(source.height) || 0;
+    if (sourceWidth < 8 || sourceHeight < 8) return '';
+
+    var scale = Math.min(1, maxEdge / Math.max(sourceWidth, sourceHeight));
+    var target = document.createElement('canvas');
+    target.width = Math.max(1, Math.round(sourceWidth * scale));
+    target.height = Math.max(1, Math.round(sourceHeight * scale));
+
+    try {
+      var context = target.getContext('2d');
+      if (!context) return '';
+      context.drawImage(source, 0, 0, target.width, target.height);
+      return target.toDataURL('image/jpeg', quality);
+    } catch (e) {
+      /* A canvas tainted by a cross-origin draw cannot be read back. */
+      return '';
+    }
   };
 
   var clearShellBackground = function (element) {
@@ -577,6 +627,21 @@ const buildRuntimeBridge = (frameId: string): string => {
 
     if (payload.type === MODE_EVENT_TYPE) {
       setInteractionMode(payload.mode);
+      return;
+    }
+
+    if (payload.type === POSTER_EVENT_TYPE) {
+      var maxEdge = Number(payload.maxEdge) || 360;
+      var quality = Number(payload.quality) || 0.6;
+      try {
+        parent.postMessage({
+          type: EVENT_TYPE,
+          frameId: FRAME_ID,
+          status: 'poster',
+          detail: '',
+          poster: capturePoster(maxEdge, quality)
+        }, '*');
+      } catch (e) {}
     }
   });
 
@@ -610,8 +675,20 @@ const buildRuntimeBridge = (frameId: string): string => {
     }).catch(function () {});
   }
 
+  /*
+   * A subtree MutationObserver fires on every DOM write, which for an animating
+   * game is every frame — on a low-end CPU that observer alone was a measurable
+   * share of the frame budget, forever.
+   *
+   * Both things it feeds settle early: the transparent-shell fixup only matters
+   * for the initial markup, and metrics are advisory now (the host reserves the
+   * box from static analysis and only commits a measurement on the way out). So
+   * observe during the settling window, then disconnect for good. Later mode
+   * changes still re-apply touch-action, because the host re-posts the mode.
+   */
   if (typeof MutationObserver !== 'undefined' && document.documentElement) {
     try {
+      var SETTLE_MS = 4000;
       var observer = new MutationObserver(function () {
         scheduleShellSync();
         syncInteractionModeTouchAction();
@@ -624,6 +701,11 @@ const buildRuntimeBridge = (frameId: string): string => {
         attributes: true,
         attributeFilter: ['style', 'class', 'width', 'height', 'hidden']
       });
+      window.setTimeout(function () {
+        try { observer.disconnect(); } catch (e) {}
+        syncShellBackgrounds();
+        syncContentMetrics(false);
+      }, SETTLE_MS);
     } catch (e) {}
   }
 
