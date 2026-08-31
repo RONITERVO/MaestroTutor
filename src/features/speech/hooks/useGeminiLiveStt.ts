@@ -792,9 +792,15 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             let confirmed = false;
 
             if (!detector || detector.status === 'failed' || detector.status === 'disposed') {
-              audioTelemetryRef.current.energyFallbacks += 1;
-              confirmed = gate.confirmSpeech(now);
-              loadingFallbackOnsetAtRef.current = null;
+              if (fallback.action === 'expire') {
+                gate.rejectSpeech(now);
+                gatePrerollRef.current = [];
+                loadingFallbackOnsetAtRef.current = null;
+              } else if (fallback.action === 'confirm') {
+                audioTelemetryRef.current.energyFallbacks += 1;
+                confirmed = gate.confirmSpeech(now);
+                loadingFallbackOnsetAtRef.current = null;
+              }
             } else if (
               (detector.status === 'idle' || detector.status === 'loading')
               && detector.loadingStartedAt > 0
@@ -847,9 +853,16 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                   || speechGateRef.current !== gate
                 ) return;
                 audioTelemetryRef.current.whisperErrors += 1;
-                audioTelemetryRef.current.energyFallbacks += 1;
-                confirmed = gate.confirmSpeech(Date.now());
-                loadingFallbackOnsetAtRef.current = null;
+                const fallbackAt = Date.now();
+                if (fallback.action === 'expire') {
+                  gate.rejectSpeech(fallbackAt);
+                  gatePrerollRef.current = [];
+                  loadingFallbackOnsetAtRef.current = null;
+                } else if (fallback.action === 'confirm') {
+                  audioTelemetryRef.current.energyFallbacks += 1;
+                  confirmed = gate.confirmSpeech(fallbackAt);
+                  loadingFallbackOnsetAtRef.current = null;
+                }
                 if (!whisperFailureWarnedRef.current) {
                   whisperFailureWarnedRef.current = true;
                   console.warn('Local Whisper check failed; STT is using the energy-only fallback.', error);

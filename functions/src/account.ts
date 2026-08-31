@@ -10,6 +10,7 @@ import { clearLegacyManagedFiles, clearManagedFiles, queueManagedFileCleanupJobs
 import { createHttpError } from './http';
 import {
   MANAGED_REPORT_RETENTION_MS,
+  MANAGED_RATE_LIMIT_BUCKETS,
   MANAGED_SCHEMA_VERSION,
   accountDeletionClaimRef,
   checkoutGrantsCollection,
@@ -18,6 +19,8 @@ import {
   managedUserRef,
   purchaseClaimId,
   purchaseClaimsCollection,
+  rateLimitWindowId,
+  rateLimitWindowsCollection,
   reportsCollection,
   timestampFromMillis,
 } from './managedData';
@@ -244,10 +247,10 @@ export const deleteManagedAccount = async (params: {
   );
   const deletedManagedFileCount = deletedCurrentManagedFileCount + deletedLegacyManagedFileCount;
 
-  await deleteDocumentsById(adminDb.collection('rateLimits'), [
-    `${params.uid}__default`,
-    `${params.uid}__live-token`,
-  ]);
+  await deleteDocumentsById(
+    rateLimitWindowsCollection(),
+    MANAGED_RATE_LIMIT_BUCKETS.map((bucket) => rateLimitWindowId(params.uid, bucket)),
+  );
 
   const deletedCurrentReservationCount = await deleteQueryDocuments(
     () => managedReservationsCollection(params.uid),

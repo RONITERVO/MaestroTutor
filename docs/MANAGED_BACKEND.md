@@ -121,8 +121,9 @@ app imports the same files directly.
    in Play for any pack that names a `playProductId`.
 5. For web payments, set `STRIPE_SECRET_KEY`, `APP_URL`, and add a webhook
    endpoint in the Stripe dashboard pointing at
-   `<api>/billing/stripe/webhook` subscribed to `checkout.session.completed`;
-   put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+   `<api>/billing/stripe/webhook` subscribed to `checkout.session.completed` and
+   `checkout.session.async_payment_succeeded`; put its signing secret in
+   `STRIPE_WEBHOOK_SECRET`.
 6. Deploy `firestore.indexes.json` as checked in. It enables TTL on `purgeAt`
    for operational collection groups as well as creating the reservation and
    cleanup-job indexes.

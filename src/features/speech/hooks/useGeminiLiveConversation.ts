@@ -1479,9 +1479,15 @@ export function useGeminiLiveConversation(
             if (!detector || detector.status === 'failed' || detector.status === 'disposed') {
               // A model/CDN/WASM failure must not make the observer deaf. This
               // retains the cheap energy, cooldown and playback protections.
-              inputAudioTelemetryRef.current.energyFallbacks += 1;
-              confirmed = gate.confirmSpeech(now);
-              loadingFallbackOnsetAtRef.current = null;
+              if (fallback.action === 'expire') {
+                gate.rejectSpeech(now);
+                gatePrerollRef.current = [];
+                loadingFallbackOnsetAtRef.current = null;
+              } else if (fallback.action === 'confirm') {
+                inputAudioTelemetryRef.current.energyFallbacks += 1;
+                confirmed = gate.confirmSpeech(now);
+                loadingFallbackOnsetAtRef.current = null;
+              }
             } else if (
               (detector.status === 'idle' || detector.status === 'loading')
               && detector.loadingStartedAt > 0
@@ -1537,9 +1543,16 @@ export function useGeminiLiveConversation(
                   || speechGateRef.current !== gate
                 ) return;
                 inputAudioTelemetryRef.current.whisperErrors += 1;
-                inputAudioTelemetryRef.current.energyFallbacks += 1;
-                confirmed = gate.confirmSpeech(Date.now());
-                loadingFallbackOnsetAtRef.current = null;
+                const fallbackAt = Date.now();
+                if (fallback.action === 'expire') {
+                  gate.rejectSpeech(fallbackAt);
+                  gatePrerollRef.current = [];
+                  loadingFallbackOnsetAtRef.current = null;
+                } else if (fallback.action === 'confirm') {
+                  inputAudioTelemetryRef.current.energyFallbacks += 1;
+                  confirmed = gate.confirmSpeech(fallbackAt);
+                  loadingFallbackOnsetAtRef.current = null;
+                }
                 if (!whisperFailureWarnedRef.current) {
                   whisperFailureWarnedRef.current = true;
                   console.warn('Local Whisper check failed; using the energy-only fallback.', error);

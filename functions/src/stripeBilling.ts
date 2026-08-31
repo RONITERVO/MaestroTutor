@@ -42,6 +42,7 @@ import {
   timestampFromMillis,
 } from './managedData';
 import {
+  isCheckoutFulfilmentEventType,
   resolveCheckoutGrant,
   type CheckoutGrantSnapshotLike,
 } from '../../shared/billing/stripeFulfilment';
@@ -230,10 +231,10 @@ export const createManagedCheckoutSession = async (params: {
 /**
  * Fulfil a completed Checkout session.
  *
- * Deliberately handles exactly one event type. Stripe emits several for a
- * single purchase — `checkout.session.completed`, `payment_intent.succeeded`,
- * `charge.succeeded` — and acting on more than one would grant the same pack
- * more than once for anything keyed per event.
+ * Handles Checkout completion and delayed-payment success. Stripe emits other
+ * events for the same purchase, but the purchase claim is keyed by Checkout
+ * session rather than event, so a paid completion followed by async success is
+ * still idempotent.
  */
 const fulfilCheckoutSession = async (session: Stripe.Checkout.Session): Promise<boolean> => {
   const grantSnapshotDoc = await checkoutGrantRef(session.id).get();
@@ -324,7 +325,7 @@ export const handleStripeWebhook = async (req: Request, res: Response): Promise<
     throw createHttpError(400, 'Invalid Stripe signature.');
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (isCheckoutFulfilmentEventType(event.type)) {
     const granted = await fulfilCheckoutSession(event.data.object as Stripe.Checkout.Session);
     console.log(`[stripeBilling] ${event.type} ${event.id}: ${granted ? 'granted' : 'no-op'}`);
   }

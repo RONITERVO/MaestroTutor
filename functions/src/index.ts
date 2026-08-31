@@ -13,6 +13,7 @@ import { adminDb } from './firebase';
 import { generateManagedContent, streamManagedContent, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
 import { getErrorMessage, getHttpStatus } from './http';
 import { countExpiredReservations, getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
+import type { ManagedRateLimitBucket } from './managedData';
 import { verifyManagedGooglePlayPurchase } from './playBilling';
 import { consumeRateLimit } from './rateLimit';
 import { createManagedCheckoutSession, handleStripeWebhook } from './stripeBilling';
@@ -50,7 +51,7 @@ app.use(express.json({ limit: getJsonBodyLimitBytes() }));
  * much tighter, bucket: each one mints real Gemini access, and a client stuck
  * reconnecting would otherwise mint them as fast as it could loop.
  */
-type RateBucket = 'live-token' | 'default' | null;
+type RateBucket = ManagedRateLimitBucket | null;
 
 const getAnonymousRateLimitId = (req: Request): string => {
   const connectionAddress = req.ip || req.socket.remoteAddress || 'unknown';

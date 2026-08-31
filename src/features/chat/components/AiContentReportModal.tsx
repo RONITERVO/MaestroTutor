@@ -94,7 +94,7 @@ const AiContentReportModal: React.FC<AiContentReportModalProps> = ({
               id="ai-report-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value as AiContentReportReason)}
-              className="w-full border border-line-border bg-page-bg px-3 py-2 text-base outline-none sm:text-sm"
+              className="w-full border border-line-border bg-page-bg px-3 py-2 text-base outline-none focus:ring-2 focus:ring-focus-ring sm:text-sm"
               disabled={isSubmitting}
             >
               {REPORT_REASONS.map((item) => (
@@ -120,7 +120,7 @@ const AiContentReportModal: React.FC<AiContentReportModalProps> = ({
               id="ai-report-notes"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              className="min-h-24 w-full resize-y border border-line-border bg-page-bg px-3 py-2 text-base outline-none sm:text-sm"
+              className="min-h-24 w-full resize-y border border-line-border bg-page-bg px-3 py-2 text-base outline-none focus:ring-2 focus:ring-focus-ring sm:text-sm"
               placeholder={t('chat.report.notesPlaceholder')}
               disabled={isSubmitting}
             />

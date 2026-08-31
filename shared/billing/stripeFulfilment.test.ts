@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   type CheckoutSessionLike,
   type CheckoutGrantSnapshotLike,
+  isCheckoutFulfilmentEventType,
   resolveCheckoutGrant,
 } from './stripeFulfilment';
 
@@ -101,6 +102,26 @@ describe('only settled payments are fulfilled', () => {
       expect(decision).toEqual({ action: 'skip', reason: 'not-paid' });
     });
   }
+
+  it('grants credits when a delayed payment later succeeds', () => {
+    expect(isCheckoutFulfilmentEventType('checkout.session.completed')).toBe(true);
+    expect(resolveCheckoutGrant(session({ payment_status: 'unpaid' }), snapshot())).toEqual({
+      action: 'skip',
+      reason: 'not-paid',
+    });
+
+    expect(isCheckoutFulfilmentEventType('checkout.session.async_payment_succeeded')).toBe(true);
+    expect(resolveCheckoutGrant(session({ payment_status: 'paid' }), snapshot())).toMatchObject({
+      action: 'grant',
+      uid: 'user-1',
+      credits: 1000,
+      idempotencyKey: 'stripe:cs_test_123',
+    });
+  });
+
+  it('does not route non-Checkout payment events through fulfilment', () => {
+    expect(isCheckoutFulfilmentEventType('payment_intent.succeeded')).toBe(false);
+  });
 });
 
 describe('snapshots that cannot be attributed', () => {

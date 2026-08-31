@@ -20,7 +20,12 @@
 import { createHash } from 'node:crypto';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
-import { rateLimitWindowsCollection, timestampFromMillis } from './managedData';
+import {
+  type ManagedRateLimitBucket,
+  rateLimitWindowId,
+  rateLimitWindowsCollection,
+  timestampFromMillis,
+} from './managedData';
 
 const WINDOW_MS = 60_000;
 
@@ -40,12 +45,12 @@ interface RateWindow {
  */
 export const consumeRateLimit = async (params: {
   uid: string;
-  bucket: string;
+  bucket: ManagedRateLimitBucket;
   limitPerMinute: number;
 }): Promise<void> => {
   const subjectHash = createHash('sha256').update(params.uid).digest('hex');
   const ref = rateLimitWindowsCollection()
-    .doc(createHash('sha256').update(`${params.uid}\0${params.bucket}`).digest('hex'));
+    .doc(rateLimitWindowId(params.uid, params.bucket));
   const now = Date.now();
 
   try {

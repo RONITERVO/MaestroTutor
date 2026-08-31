@@ -87,6 +87,11 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       setIsRefreshing(false);
     }
   }, [session?.firebaseIdToken, t]);
+  const refreshAccountRef = useRef(refreshAccount);
+
+  useEffect(() => {
+    refreshAccountRef.current = refreshAccount;
+  }, [refreshAccount]);
 
   const processPendingPurchases = useCallback(async (purchaseRecords: GooglePlayPurchaseRecord[]) => {
     if (!session?.firebaseIdToken) return;
@@ -253,13 +258,13 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     let attempt = 0;
     const timer = window.setInterval(() => {
       attempt += 1;
-      void refreshAccount();
+      void refreshAccountRef.current();
       if (attempt >= 5) window.clearInterval(timer);
     }, 2000);
     return () => window.clearInterval(timer);
     // Deliberately runs once on mount: it reacts to the redirect that brought
     // the user here, not to anything that changes afterwards.
-  }, [refreshAccount, t]);
+  }, []);
 
   const handleRestore = useCallback(async () => {
     setErrorMessage(null);

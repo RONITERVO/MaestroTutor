@@ -46,6 +46,11 @@ export type FulfilmentSkipReason =
   | 'missing-snapshot'
   | 'invalid-snapshot';
 
+export const isCheckoutFulfilmentEventType = (eventType: string): boolean => (
+  eventType === 'checkout.session.completed'
+  || eventType === 'checkout.session.async_payment_succeeded'
+);
+
 /**
  * What, if anything, this session should be granted.
  *

@@ -69,6 +69,11 @@ export const purchaseClaimId = makePurchaseClaimId;
 export const checkoutGrantsCollection = () => adminDb.collection('checkoutGrants');
 export const reportsCollection = () => adminDb.collection('reports');
 export const rateLimitWindowsCollection = () => adminDb.collection('rateLimitWindows');
+export const MANAGED_RATE_LIMIT_BUCKETS = ['default', 'live-token'] as const;
+export type ManagedRateLimitBucket = typeof MANAGED_RATE_LIMIT_BUCKETS[number];
+export const rateLimitWindowId = (uid: string, bucket: string): string => (
+  createHash('sha256').update(`${uid}\0${bucket}`).digest('hex')
+);
 export const cleanupJobsCollection = () => adminDb.collection('cleanupJobs');
 export const accountDeletionClaimRef = (uid: string) => (
   adminDb.collection('accountDeletionClaims')
