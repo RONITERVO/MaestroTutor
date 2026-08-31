@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "lib",
+    // Root is the repo so `shared/` compiles alongside `functions/src`. The
+    // backend bills with the same pricing code the app displays, so that code
+    // has to be reachable from both; emitting it here keeps the deployed bundle
+    // self-contained with no build-time copying.
+    "rootDir": "..",
+    "strict": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "../shared/**/*.ts"],
+  "exclude": ["../shared/**/*.test.ts"]
+}

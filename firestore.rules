@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsUser(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read, write: if false;
+
+      match /account/{docId} {
+        allow read: if ownsUser(userId);
+        allow write: if false;
+      }
+
+      match /billingLedger/{entryId} {
+        allow read: if ownsUser(userId);
+        allow write: if false;
+      }
+
+      match /usageLedger/{entryId} {
+        allow read: if ownsUser(userId);
+        allow write: if false;
+      }
+
+      match /entitlements/{entitlementId} {
+        allow read: if ownsUser(userId);
+        allow write: if false;
+      }
+    }
+
+    match /googlePlayPurchases/{purchaseToken} {
+      allow read, write: if false;
+    }
+
+    match /managedReservations/{reservationId} {
+      allow read, write: if false;
+    }
+
+    match /managedFiles/{fileId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
