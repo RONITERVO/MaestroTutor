@@ -211,6 +211,28 @@ registerEmbed(id, el, kind, priorityHints) → unregister
 Every embed component (`MiniGameViewer`, `PdfViewer`, scripted-SVG, `OfficeFileViewer`)
 subscribes to its own id only, so arbitration re-renders one component, not the list.
 
+### 2.4a Measure visibility against the viewport, not the chat container
+
+The observer's root is `null` (the viewport), **not** the chat's scroll
+container, and that is not a detail. Passing the container looked obviously
+right and was badly wrong on a real device: its `overflow-y: auto` never
+engages, because the flex chain above it (`min-h-screen`, `flex-1`, `h-full`)
+only ever sets a *minimum* height. It therefore grows to the full conversation
+— measured at 9717px against an 800px screen — and the document scrolls instead.
+
+With that as the root, every embed measured as fully visible, "centred" meant
+the middle of the entire transcript rather than of the screen, and scrolling
+produced no entries at all. The visible result: nothing auto-ran, whatever did
+run was off-screen, and an engaged embed was never reported off-screen so it
+held the only live slot for the rest of the session.
+
+A viewport root cannot drift out of sync with the layout that way, and it still
+accounts for clipping by any intermediate scroll container, so it stays correct
+if the chat later gains a real inner scroller. The same layout fact means the
+`--embed-max-h` cap must come from the visual viewport rather than the
+container's height, and that scroll velocity has to be sampled by capturing at
+the window rather than listening on a container that never scrolls.
+
 ### 2.5 Three states, with a budgeted poster
 
 ```

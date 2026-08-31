@@ -99,7 +99,7 @@ export interface EmbedActivationDebugSnapshot {
   posters: number;
   budgets: EmbedBudgets;
   observing: boolean;
-  /** A scroll root has been supplied by ChatInterface. */
+  /** A scroll container was nominated for velocity sampling. */
   hasRoot: boolean;
   /** The observer has delivered at least one entry. False here explains a lot. */
   receivedEntries: boolean;
@@ -121,7 +121,7 @@ class EmbedActivationManager {
   private lastScrollTop = 0;
   private lastScrollAt = 0;
   private lastFlingAt = 0;
-  private scrollTarget: Element | null = null;
+  private scrollListenerAttached = false;
   /** Whether the observer has ever delivered anything. See assumeVisibleIfSilent. */
   private hasIngested = false;
   private silenceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -130,14 +130,16 @@ class EmbedActivationManager {
   // ---------------------------------------------------------------- lifecycle
 
   /**
-   * Point the manager at the chat's scroll container. Safe to call repeatedly;
-   * only a genuine root change rebuilds the observer.
+   * Tell the manager which element the chat *intends* to scroll.
+   *
+   * Used only to sample scroll velocity for fling suppression — visibility is
+   * measured against the viewport (see ensureObserver), so activation no longer
+   * depends on this element actually being the scroller.
    */
   setRoot(root: Element | null): void {
     if (this.root === root) return;
     this.detachScrollListener();
     this.root = root;
-    this.rebuildObserver();
     this.attachScrollListener();
     this.schedule();
   }
@@ -199,6 +201,7 @@ class EmbedActivationManager {
 
     if (element) {
       this.elementIndex.set(element, id);
+      this.ensureObserver();
       this.observer?.observe(element);
     }
     // With no observer yet — the root has not been set, or the platform has no
@@ -324,14 +327,32 @@ class EmbedActivationManager {
     return typeof IntersectionObserver !== 'undefined';
   }
 
-  private rebuildObserver(): void {
-    this.observer?.disconnect();
-    this.observer = null;
-    if (!this.supportsObserver()) return;
+  /**
+   * Create the observer if we do not have one.
+   *
+   * The root is deliberately the viewport (`root: null`) rather than the chat's
+   * scroll container. Passing that container looked right and was badly wrong:
+   * its `overflow-y: auto` never engages, because the flex chain above it only
+   * ever sets a *minimum* height, so it grows to the full conversation — 9717px
+   * against an 800px screen on a real device. Every embed then measured as
+   * fully visible, "centred" meant the middle of the whole transcript rather
+   * than of the screen, and scrolling the document produced no entries at all,
+   * so nothing was ever promoted or released by scrolling.
+   *
+   * A viewport root cannot drift out of sync with the layout that way, and it
+   * still accounts for clipping by any intermediate scroll container, so it
+   * stays correct if the chat later gains a real inner scroller.
+   *
+   * Creating it lazily on first registration also removes the ordering hazard:
+   * React runs child effects before parent ones, so embeds register before
+   * ChatInterface could hand us anything.
+   */
+  private ensureObserver(): void {
+    if (this.observer || !this.supportsObserver()) return;
 
     this.observer = new IntersectionObserver(
       (entries) => this.ingest(entries),
-      { root: this.root, threshold: INTERSECTION_THRESHOLDS },
+      { root: null, threshold: INTERSECTION_THRESHOLDS },
     );
     for (const record of this.records.values()) {
       if (record.element) this.observer.observe(record.element);
@@ -565,11 +586,21 @@ class EmbedActivationManager {
 
   // ------------------------------------------------------------ scroll velocity
 
+  /**
+   * Whichever of the document or the nominated container is actually moving.
+   * Summing is safe because only one of them scrolls in any given layout, so
+   * the delta is the real one either way.
+   */
+  private scrollPosition(): number {
+    const documentTop = typeof window !== 'undefined'
+      ? (window.scrollY || document.scrollingElement?.scrollTop || 0)
+      : 0;
+    return documentTop + (this.root?.scrollTop ?? 0);
+  }
+
   private handleScroll = (): void => {
-    const target = this.scrollTarget;
-    if (!target) return;
     const at = now();
-    const top = target.scrollTop;
+    const top = this.scrollPosition();
     const elapsed = at - this.lastScrollAt;
     if (elapsed > 0 && this.lastScrollAt > 0) {
       const velocity = Math.abs(top - this.lastScrollTop) / elapsed;
@@ -579,17 +610,27 @@ class EmbedActivationManager {
     this.lastScrollAt = at;
   };
 
+  /**
+   * Listen at the window in the capture phase.
+   *
+   * Scroll events do not bubble, so listening on the element we were handed
+   * misses the case that actually occurs here — the document being the thing
+   * that scrolls. Capturing at the window catches every scroller regardless of
+   * which one the layout ends up using.
+   */
   private attachScrollListener(): void {
-    if (!this.root || typeof this.root.addEventListener !== 'function') return;
-    this.scrollTarget = this.root;
-    this.lastScrollTop = this.root.scrollTop;
+    if (typeof window === 'undefined' || this.scrollListenerAttached) return;
+    this.lastScrollTop = this.scrollPosition();
     this.lastScrollAt = now();
-    this.root.addEventListener('scroll', this.handleScroll, { passive: true });
+    window.addEventListener('scroll', this.handleScroll, { capture: true, passive: true });
+    this.scrollListenerAttached = true;
   }
 
   private detachScrollListener(): void {
-    this.scrollTarget?.removeEventListener('scroll', this.handleScroll);
-    this.scrollTarget = null;
+    if (typeof window !== 'undefined' && this.scrollListenerAttached) {
+      window.removeEventListener('scroll', this.handleScroll, { capture: true });
+    }
+    this.scrollListenerAttached = false;
     this.lastScrollAt = 0;
     this.lastFlingAt = 0;
   }

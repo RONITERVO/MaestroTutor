@@ -33,7 +33,14 @@ export const useEmbedViewport = (
     embedActivation.setRoot(container);
 
     const publishMaxHeight = () => {
-      const cap = Math.max(MIN_EMBED_MAX_HEIGHT_PX, Math.floor(container.clientHeight - VIEWPORT_CHROME_PX));
+      // Measured from the visual viewport, not the container. The container's
+      // `overflow-y: auto` never engages — the flex chain above it only sets a
+      // minimum height — so it is as tall as the whole conversation (9717px
+      // against an 800px screen on a real device), and a cap derived from it
+      // would never cap anything.
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const available = Math.min(container.clientHeight, viewportHeight);
+      const cap = Math.max(MIN_EMBED_MAX_HEIGHT_PX, Math.floor(available - VIEWPORT_CHROME_PX));
       container.style.setProperty('--embed-max-h', `${cap}px`);
     };
 

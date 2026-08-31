@@ -81,10 +81,11 @@ class FakeIntersectionObserver implements IntersectionObserver {
   }
 
   static live(): FakeIntersectionObserver | undefined {
-    // The manager rebuilds its observer when the root changes; only the most
-    // recent one has any targets.
-    return [...FakeIntersectionObserver.instances].reverse().find((o) => o.root !== null);
+    // The manager keeps a single viewport-rooted observer for its lifetime.
+    return [...FakeIntersectionObserver.instances].reverse().find((o) => o.hasTargets());
   }
+
+  hasTargets(): boolean { return this.targets.size > 0; }
 }
 
 const GAME = '<canvas id="stage" width="800" height="600"></canvas><script>void 0;</script>';
