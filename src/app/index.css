@@ -753,8 +753,11 @@
 @supports not (aspect-ratio: 1 / 1) {
   .embed-box {
     height: 0;
-    padding-top: calc(100% / var(--embed-ar, 1.333));
-    min-height: var(--embed-min-h, 220px);
+    /* The floor has to live inside the padding, not as a min-height: with
+       height:0 a min-height would stack on top of the padding rather than
+       raise it, making every short box 220px too tall. */
+    min-height: 0;
+    padding-top: max(calc(100% / var(--embed-ar, 1.333)), var(--embed-min-h, 220px));
     contain: layout paint;
   }
 }
