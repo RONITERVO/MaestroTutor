@@ -2,12 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Deciding when the silent observer is allowed to spend money.
+ * Deciding when a Gemini Live microphone path is allowed to spend money.
  *
- * The observer holds a Gemini Live session open the whole time the app is
- * foregrounded and idle, and every microphone packet — plus periodic video —
- * is paid input whether or not anyone is there. A quiet room should not consume
- * user quota or managed-backend credits.
+ * The silent observer is the largest case because it stays open while the app
+ * is idle, but STT also uses Live and otherwise uploads every quiet-room packet
+ * between start and turn completion. A quiet room should not consume user quota
+ * or managed-backend credits in either path.
  *
  * This is the first of the layers that stop that:
  *
@@ -55,7 +55,7 @@ export interface SpeechGateOptions {
   playbackSettleMs?: number;
   /**
    * Keep the gate shut after the energy test until a semantic detector (local
-   * Whisper in Maestro) confirms that the buffered sound contains real words.
+ * Whisper in Maestro) confirms that the buffered sound contains real words.
    */
   requireConfirmation?: boolean;
 }
@@ -285,8 +285,8 @@ export const extendPlaybackEnd = (
  * Deliberately computed where the samples already are, on the main thread,
  * rather than in the worklet: the packet has to cross that boundary regardless,
  * and what this avoids is the base64 encoding, the websocket write and the
- * billing that follow — not the postMessage. Leaving the worklet untouched also
- * keeps the STT capture path, which shares it, exactly as it was.
+ * billing that follow — not the postMessage. Both observer and STT share this
+ * measurement without adding work to the capture worklet.
  *
  * `noiseFloor` is in int16 units; samples below it do not count as active.
  */

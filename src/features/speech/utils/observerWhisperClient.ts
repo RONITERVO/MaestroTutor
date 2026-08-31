@@ -26,7 +26,9 @@ export class ObserverWhisperClient {
   private readonly options: ObserverWhisperClientOptions;
   private nextRequestId = 1;
   private pending = new Map<number, PendingTranscription>();
+  private transcriptionQueue: Promise<void> = Promise.resolve();
   private currentStatus: ObserverWhisperStatus = 'idle';
+  private initializationStartedAt = 0;
   private readyPromise: Promise<void> | null = null;
   private resolveReady: (() => void) | null = null;
   private rejectReady: ((error: Error) => void) | null = null;
@@ -45,6 +47,11 @@ export class ObserverWhisperClient {
     return this.currentStatus;
   }
 
+  /** Wall-clock start of the current load, used by callers' availability grace period. */
+  get loadingStartedAt(): number {
+    return this.initializationStartedAt;
+  }
+
   initialize(): Promise<void> {
     if (this.currentStatus === 'ready') return Promise.resolve();
     if (this.currentStatus === 'disposed') {
@@ -53,6 +60,7 @@ export class ObserverWhisperClient {
     if (this.readyPromise) return this.readyPromise;
 
     this.currentStatus = 'loading';
+    this.initializationStartedAt = Date.now();
     this.readyPromise = new Promise<void>((resolve, reject) => {
       this.resolveReady = resolve;
       this.rejectReady = reject;
@@ -70,14 +78,23 @@ export class ObserverWhisperClient {
     if (this.currentStatus !== 'ready') {
       return Promise.reject(new Error(`Local Whisper is ${this.currentStatus}`));
     }
-    const requestId = this.nextRequestId++;
     const buffer = new ArrayBuffer(audio.byteLength);
     new Float32Array(buffer).set(audio);
-    return new Promise<string>((resolve, reject) => {
-      this.pending.set(requestId, { resolve, reject });
-      const request: ObserverWhisperRequest = { kind: 'transcribe', requestId, audio: buffer };
-      this.worker.postMessage(request, [buffer]);
+    const result = this.transcriptionQueue.then(() => {
+      if (this.currentStatus !== 'ready') {
+        throw new Error(`Local Whisper is ${this.currentStatus}`);
+      }
+      const requestId = this.nextRequestId++;
+      return new Promise<string>((resolve, reject) => {
+        this.pending.set(requestId, { resolve, reject });
+        const request: ObserverWhisperRequest = { kind: 'transcribe', requestId, audio: buffer };
+        this.worker.postMessage(request, [buffer]);
+      });
     });
+    // The observer and STT share this client. Serialize their requests because
+    // the Transformers pipeline is not guaranteed to be re-entrant.
+    this.transcriptionQueue = result.then(() => undefined, () => undefined);
+    return result;
   }
 
   dispose(): void {

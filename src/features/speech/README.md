@@ -63,17 +63,25 @@ import {
 
 - `audioProcessing.ts`: PCM to WAV conversion, silence detection
 - `audioUtils.ts`: Audio playback utilities
-- `observerSpeechDetection.ts`: Ariadne-style energy pre-gate, Whisper output filtering, and bounded pre-roll windows
+- `observerSpeechDetection.ts`: Ariadne-style detector implementation and backward-compatible observer names
+- `liveSpeechDetection.ts`: shared detector names used by observer and Live STT
+- `localWhisperClient.ts`: one reference-counted Whisper worker shared by both Live paths
 
-## Silent observer input gate
+## Local Live input gate
 
-Only the automatically started re-engagement observer enables `gateInputOnSpeech`.
-It buffers microphone PCM locally, runs quantized `whisper-tiny.en` in a lazy Web
-Worker after the energy pre-gate passes, and sends audio plus video to Gemini only
-after the transcript filter confirms real words. Gemini remains the transcript
-authority. Model playback closes and clears the gate so speaker echo cannot start
-another turn. If local Whisper cannot load, the observer falls back to the energy,
-cooldown, and playback protections rather than becoming unavailable.
+The automatically started re-engagement observer and Gemini Live STT buffer
+microphone PCM locally, run quantized `whisper-tiny.en` in a lazy Web Worker after
+the energy pre-gate passes, and send audio to Gemini only after the transcript
+filter confirms real words. They share one worker/model so switching between the
+observer and STT does not double Android memory. Gemini remains the transcript
+authority.
+
+The observer also gates video and closes its input while model audio is playing,
+so speaker echo cannot start another turn. STT already stops before app TTS plays.
+Both paths send `audioStreamEnd` when speech ends, retain a bounded pre-roll to
+avoid clipped syllables, and fall back to energy gating if local Whisper cannot
+load. Full user-started Live conversations continue to stream directly because
+they need the lowest possible conversational latency.
 
 ## Integration Notes
 

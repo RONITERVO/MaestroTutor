@@ -25,7 +25,11 @@ import {
 import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
-import { ObserverWhisperClient } from '../utils/observerWhisperClient';
+import {
+  acquireLocalWhisperClient,
+  releaseLocalWhisperClient,
+  type LocalWhisperClient,
+} from '../utils/localWhisperClient';
 import {
   isLikelySpeechTranscript,
   OBSERVER_SPEECH_BUFFER_MS,
@@ -276,10 +280,9 @@ export function useGeminiLiveConversation(
   const speechGateRef = useRef<SpeechGate | null>(null);
   /** Raw packets held back while the gate is shut, encoded only if it opens. */
   const gatePrerollRef = useRef<Int16Array[]>([]);
-  /** Loaded once and reused across observer reconnects; never created for user-started Live. */
-  const observerWhisperRef = useRef<ObserverWhisperClient | null>(null);
+  /** Shared with Live STT so Android never holds two copies of Whisper. */
+  const observerWhisperRef = useRef<LocalWhisperClient | null>(null);
   const observerWhisperBusyRef = useRef(false);
-  const observerWhisperStartedAtRef = useRef(0);
   const lastWhisperRequestAtRef = useRef(0);
   const whisperFailureWarnedRef = useRef(false);
   /** Invalidates an inference result when cleanup replaces its session. */
@@ -794,7 +797,7 @@ export function useGeminiLiveConversation(
 
     if (gateInputOnSpeech) {
       try {
-        observerWhisperRef.current ??= new ObserverWhisperClient({
+        observerWhisperRef.current ??= acquireLocalWhisperClient({
           model: OBSERVER_WHISPER_MODEL,
           // The quantized model is the only safe profile in a native WebView.
           // Browsers can try fp32 if q4 is unavailable; native falls back to the
@@ -803,7 +806,6 @@ export function useGeminiLiveConversation(
         });
         const detector = observerWhisperRef.current;
         if (detector.status === 'idle') {
-          observerWhisperStartedAtRef.current = Date.now();
           void detector.initialize().catch((error) => {
             if (observerWhisperRef.current !== detector) return;
             inputAudioTelemetryRef.current.whisperErrors += 1;
@@ -1456,8 +1458,8 @@ export function useGeminiLiveConversation(
               confirmed = gate.confirmSpeech(now);
             } else if (
               (detector.status === 'idle' || detector.status === 'loading')
-              && observerWhisperStartedAtRef.current > 0
-              && now - observerWhisperStartedAtRef.current >= OBSERVER_WHISPER_LOAD_GRACE_MS
+              && detector.loadingStartedAt > 0
+              && now - detector.loadingStartedAt >= OBSERVER_WHISPER_LOAD_GRACE_MS
             ) {
               // First model load may be slow on mobile data. Continue loading
               // in the background, but preserve re-engagement after the grace
@@ -1608,7 +1610,7 @@ export function useGeminiLiveConversation(
 
   useEffect(() => {
       return () => {
-        observerWhisperRef.current?.dispose();
+        releaseLocalWhisperClient(observerWhisperRef.current);
         observerWhisperRef.current = null;
         void cleanupRef.current().catch((error) => {
           console.warn('Live cleanup on unmount failed:', error);
