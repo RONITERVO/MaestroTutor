@@ -50,6 +50,12 @@ describe('pin culling', () => {
     expect(isPinWithinFrame(-5, 50)).toBe(true);
   });
 
+  it('tightens the margin as zoom fills the frame', () => {
+    // Just outside the frame: beside the globe at rest, over blank paper zoomed.
+    expect(isPinWithinFrame(-6, 50, 1)).toBe(true);
+    expect(isPinWithinFrame(-6, 50, 3.5)).toBe(false);
+  });
+
   it('drops pins zoom has pushed well outside the window', () => {
     expect(isPinWithinFrame(-40, 50)).toBe(false);
     expect(isPinWithinFrame(50, 180)).toBe(false);

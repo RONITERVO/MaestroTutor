@@ -47,7 +47,15 @@ interface RoutePaths {
 }
 
 const DEG_TO_RAD = Math.PI / 180;
-const GLOBE_RADIUS_PERCENT = 43.5;
+/**
+ * Screen radius of the rendered sphere, as a percentage of the stage.
+ *
+ * Must match the canvas geometry exactly or pins drift off their countries: the
+ * canvas is inset 5% and 90% wide, and the shader's unit sphere spans that box,
+ * so the sphere's radius on screen is half of 90%. Zoom multiplies any mismatch
+ * here, which is why it has to be derived rather than eyeballed.
+ */
+const GLOBE_RADIUS_PERCENT = 45;
 export const MIN_GLOBE_ZOOM = 1;
 export const MAX_GLOBE_ZOOM = 3.5;
 /**
@@ -61,6 +69,8 @@ const AMBIENT_FRAME_MS = 100;
 const PIN_CULL_MARGIN_PERCENT = 8;
 /** One press of a zoom control, and one double tap. */
 const ZOOM_STEP = 0.75;
+/** Travel beyond which a press on a flag was a gesture, not a selection. */
+const FLAG_TAP_SLOP_PX = 10;
 
 /**
  * Is a projected pin close enough to the frame to be worth rendering?
@@ -70,11 +80,16 @@ const ZOOM_STEP = 0.75;
  * language list however far in the user is — the cost that would bite once
  * every country is on the map rather than the current few dozen.
  */
-export function isPinWithinFrame(screenX: number, screenY: number): boolean {
-    return screenX > -PIN_CULL_MARGIN_PERCENT
-        && screenX < 100 + PIN_CULL_MARGIN_PERCENT
-        && screenY > -PIN_CULL_MARGIN_PERCENT
-        && screenY < 100 + PIN_CULL_MARGIN_PERCENT;
+export function isPinWithinFrame(screenX: number, screenY: number, zoom = 1): boolean {
+    // The margin shrinks as you zoom. At rest the globe is a disc inside the
+    // frame, so a pin just outside it still reads as sitting beside the globe;
+    // zoomed in the globe fills the frame, and anything past the edge is
+    // floating over blank paper instead of over its country.
+    const margin = PIN_CULL_MARGIN_PERCENT / Math.max(1, zoom);
+    return screenX > -margin
+        && screenX < 100 + margin
+        && screenY > -margin
+        && screenY < 100 + margin;
 }
 const MAX_LAT_ROTATION = Math.PI * 0.47;
 const EARTH_TEXTURE_URL = '/globe-image-background/Flag_map_of_the_world-1024.webp';
@@ -577,6 +592,15 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     const pointersRef = useRef(new Map<number, { x: number; y: number }>());
     const pinchRef = useRef<{ distance: number; zoom: number } | null>(null);
     const lastTapRef = useRef(0);
+    /**
+     * Distance travelled since the gesture began.
+     *
+     * Flag pins used to stopPropagation on pointerdown, so a finger that landed
+     * on a flag could neither drag nor pinch the globe — already awkward, and
+     * unusable once the globe is covered in flags. They let the event through
+     * now, and this is what still tells a tap apart from a drag.
+     */
+    const gestureTravelRef = useRef(0);
 
     const globeContainerRef = useRef<HTMLDivElement>(null);
     const wheelOverlayTimeoutRef = useRef<number | null>(null);
@@ -750,6 +774,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
     const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
         pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        gestureTravelRef.current = 0;
 
         // Second finger down: this is a pinch, not a drag. Remember the starting
         // span and zoom so the gesture is absolute rather than incremental,
@@ -793,6 +818,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
         const pinch = pinchRef.current;
         if (pinch && pointersRef.current.size >= 2) {
             const distance = pinchDistance();
+            gestureTravelRef.current = Infinity;
             if (pinch.distance > 0 && distance > 0) {
                 applyZoom(pinch.zoom * (distance / pinch.distance));
             }
@@ -803,6 +829,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
 
         const dx = event.clientX - lastPointerRef.current.x;
         const dy = event.clientY - lastPointerRef.current.y;
+        gestureTravelRef.current += Math.hypot(dx, dy);
         lastPointerRef.current = { x: event.clientX, y: event.clientY };
 
         // Divided by zoom so a finger travels the same distance across the
@@ -855,6 +882,10 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
     }, [applyRotation, cancelMotion, handleInteraction]);
 
     const handleFlagClick = useCallback((lang: LanguageDefinition) => {
+        // The pointer that produced this click may have been dragging or
+        // pinching the globe; only a stationary one is a selection.
+        if (gestureTravelRef.current > FLAG_TAP_SLOP_PX) return;
+
         handleInteraction();
         focusLanguage(lang);
 
@@ -913,9 +944,9 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
             // pin count rendered per frame would stay proportional to the whole
             // language list however far in the user is — which is exactly what
             // would hurt once every country is on the map.
-            .filter(flag => flag.visible && isPinWithinFrame(flag.screenX, flag.screenY))
+            .filter(flag => flag.visible && isPinWithinFrame(flag.screenX, flag.screenY, zoom))
             .sort((a, b) => a.z - b.z)
-    ), [projectedFlags]);
+    ), [projectedFlags, zoom]);
 
     const route = useMemo<RoutePaths | null>(() => {
         if (!nativeLang || !targetLang) return null;
@@ -1010,7 +1041,15 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                     inset: 5%;
                     width: 90%;
                     height: 90%;
-                    border-radius: 9999px;
+                    /* Deliberately not a circle. The shader already discards
+                       outside the sphere, so at rest the silhouette comes from
+                       the geometry and this radius is invisible. A CSS circle
+                       here was only ever correct while the sphere inscribed the
+                       canvas: zoomed in, the sphere fills the whole box and the
+                       clip cut away the corners where the globe genuinely is,
+                       stranding flags over blank paper. The small radius just
+                       keeps the zoomed-in frame from being a hard rectangle. */
+                    border-radius: 18px;
                     pointer-events: none;
                     filter:
                         drop-shadow(0 0 18px rgba(84, 190, 255, 0.26))
@@ -1274,6 +1313,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 <div className="maestro-globe-window">
                     <div
                         className={`maestro-globe-stage ${isDragging ? 'is-dragging' : ''}`}
+                        style={{ ['--globe-zoom' as string]: `${zoom}` }}
                         onPointerDown={handlePointerDown}
                         onPointerMove={handlePointerMove}
                         onPointerUp={finishPointerDrag}
@@ -1371,7 +1411,6 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                                             isTarget ? 'is-target' : '',
                                         ].filter(Boolean).join(' ')}
                                         style={pinStyle}
-                                        onPointerDown={event => event.stopPropagation()}
                                         onClick={() => handleFlagClick(flag.lang)}
                                         onMouseEnter={() => setHoveredLangCode(flag.lang.langCode)}
                                         onMouseLeave={() => setHoveredLangCode(null)}
