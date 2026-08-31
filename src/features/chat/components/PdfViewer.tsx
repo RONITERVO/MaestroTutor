@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
+import type * as PdfJs from 'pdfjs-dist';
 import { IconPaperclip } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
 import AttachmentInteractionToggle from './AttachmentInteractionToggle';
@@ -11,7 +11,24 @@ import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { useMaestroStore, selectDeviceBudgets } from '../../../store';
 import { useEmbedSlot } from '../embeds/useEmbedSlot';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
+/**
+ * pdf.js is loaded on demand rather than at startup.
+ *
+ * It is one of the largest dependencies in the bundle and most sessions never
+ * open a PDF, so eagerly importing it cost every launch the parse, compile and
+ * retained module memory for code that would never run.
+ */
+let pdfjsPromise: Promise<typeof PdfJs> | null = null;
+
+const loadPdfjs = (): Promise<typeof PdfJs> => {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import('pdfjs-dist').then((lib) => {
+      lib.GlobalWorkerOptions.workerSrc = `${import.meta.env.BASE_URL}pdf.worker.min.mjs`;
+      return lib;
+    });
+  }
+  return pdfjsPromise;
+};
 
 /** Decode a base64 data-URL (or raw base64 string) into a Uint8Array. */
 export function decodeBase64ToUint8Array(src: string): Uint8Array {
@@ -25,16 +42,20 @@ export function decodeBase64ToUint8Array(src: string): Uint8Array {
 }
 
 // Simple cache for parsed PDFDocumentProxy objects keyed by src.
-const pdfPromiseCache = new Map<string, Promise<pdfjsLib.PDFDocumentProxy>>();
+const pdfPromiseCache = new Map<string, Promise<PdfJs.PDFDocumentProxy>>();
 const PDF_CACHE_MAX = 4;
 
 /** Return a cached or freshly-loaded PDFDocumentProxy for the given src. */
-export async function getOrLoadPdf(src: string): Promise<pdfjsLib.PDFDocumentProxy> {
+export function getOrLoadPdf(src: string): Promise<PdfJs.PDFDocumentProxy> {
   const existing = pdfPromiseCache.get(src);
   if (existing) return existing;
 
-  const bytes = decodeBase64ToUint8Array(src);
-  const loadPromise = pdfjsLib.getDocument({ data: bytes }).promise;
+  // Cached synchronously despite the async library load, so concurrent callers
+  // for the same document still share one parse.
+  const loadPromise = loadPdfjs().then((lib) => {
+    const bytes = decodeBase64ToUint8Array(src);
+    return lib.getDocument({ data: bytes }).promise;
+  });
 
   if (pdfPromiseCache.size >= PDF_CACHE_MAX) {
     const oldestKey = pdfPromiseCache.keys().next().value;
@@ -85,7 +106,7 @@ export async function renderPdfPageToImage(
  *   string bytes plus a decoded bitmap we have no way to release.
  */
 async function renderPageToBlobUrl(
-  pdf: pdfjsLib.PDFDocumentProxy,
+  pdf: PdfJs.PDFDocumentProxy,
   pageNum: number,
   targetCssWidth: number,
   scaleCap: number,

@@ -396,6 +396,68 @@ Each phase landed on its own and left the app better than it found it.
   remembered height hint the way `embedBox` remembers a ratio, then verify on a
   real low-end device against a long mixed-attachment history.
 
+## 4b. Measured on device
+
+Honor DNP_NX9, Android 16, 800px viewport, a real 28-message conversation with
+6 mini-game artifacts. Identical scripted scroll (top to bottom and back) on
+each build, via CDP against a release-signed diagnostic build.
+
+| | main | this branch |
+|---|---|---|
+| Documents — idle → after scroll → after GC | **8 → 12 → 10** | **4 → 4 → 4** |
+| DOM nodes | 2204 → 2351 → 2315 | 2070 → 2070 → 2070 |
+| JS event listeners | 440 → 556 → 496 | 390 → 434 → 390 |
+| JS heap | 61 MB | 57.5 MB |
+| Main JS chunk | 2587 KB (688 KB gz) | 2085 KB (538 KB gz) |
+
+The document row is the result that matters. On `main` a **single** scroll pass
+creates four more documents and garbage collection reclaims only two; the same
+pass on this branch leaves every counter exactly where it started. Node and
+listener counts behave the same way. That is the accumulation the Play memory
+thresholds punish, and it is now bounded by policy rather than by history depth.
+
+**On PSS:** don't read much into it. Sampled repeatedly it swings ±10 MB on an
+idle device and is dominated by Graphics (~86 MB of WebView compositing), so
+while the branch measured lower than `main`, the difference sits inside the
+noise band. The deterministic counters above are the evidence; PSS is not.
+
+### React render behaviour
+
+Profiled by installing a React DevTools hook stub before app scripts run and
+counting commits plus prop-changed fibers.
+
+| | main | branch | after fixes |
+|---|---|---|---|
+| ChatMessageBubble (prop-driven) | 281 | 469 | **0** |
+| IconTrash | 336 | 560 | **0** |
+| IconBookmark | 168 | 280 | **0** |
+| commits per scroll | 12 | 20 | 20 |
+
+Every bubble was re-rendering on every commit despite `React.memo`, because a
+single forwarded callback (`onQuotaStartLive`) changed identity each render.
+One unstable prop is enough to defeat memo for a whole subtree, and nothing
+surfaces it short of profiling — hence `useStableCallback` at the ChatInterface
+boundary rather than pinning the upstream chain.
+
+Commits rose 12 → 20 because embed promotion and demotion are state changes.
+That is a real cost of the design, now offset by each commit being far cheaper.
+
+**Where it stands:** CPU during a scroll is 57% browser compositing and 35%
+idle, with no JS frame above ~3%. The remaining per-commit icon renders inside
+bubbles (bubbles subscribe to the store directly, so store changes still
+re-render them) do not show up in the profile. Narrowing those subscriptions is
+the next lever if one is ever needed; there is currently nothing to gain.
+
+### Not done, and why
+
+- **R8 / `minifyEnabled`** is still `false`. Play names code optimization as a
+  threshold, so this is worth doing — but it needs a functional pass over every
+  Capacitor plugin (secure storage, filesystem, share, clipboard, browser,
+  preferences) with real ProGuard rules, which is not a change to make
+  unverified immediately before a release.
+
+---
+
 ## 5. Guardrails
 
 Without these, this regresses within a few features.

@@ -4,9 +4,10 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, ReplySuggestion, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
-import { IconEyeOpen, IconBookmark, IconTrash } from '../../../shared/ui/Icons';
+import { IconEyeOpen, IconBookmark } from '../../../shared/ui/Icons';
 import BookmarkActions from './BookmarkActions';
 import ChatMessageBubble from './ChatMessageBubble';
+import MessageSwipeTray from './MessageSwipeTray';
 import SuggestionsList from './SuggestionsList';
 import InputArea from './InputArea';
 import { LanguageSelectorGlobe } from '../../session';
@@ -208,6 +209,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   // Any one of them changing identity re-renders the whole list, so they are
   // pinned here rather than relying on the callback chains upstream staying
   // memoised. onQuotaStartLive was the one that actually did it.
+  const stableBookmarkAt = useStableCallback(onBookmarkAt);
+  const stableDeleteMessage = useStableCallback(onDeleteMessage);
   const stableQuotaSetupBilling = useStableCallback(onQuotaSetupBilling);
   const stableQuotaStartLive = useStableCallback(onQuotaStartLive);
   const stableImageGenViewCost = useStableCallback(onImageGenViewCost);
@@ -846,40 +849,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                </div>
              )}
              {canBeDeleted && (
-               <div
-                 className={`absolute ${isUser ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 flex flex-col items-center gap-2`}
-                 style={{
-                   width: 56,
-                   zIndex: 50,
-                   pointerEvents: openTrayForId === msg.id ? 'auto' : 'none',
-                   opacity: openTrayForId === msg.id ? 1 : 0,
-                   transform: `translateY(-50%) ${openTrayForId === msg.id ? 'translateX(0)' : `translateX(${isUser ? '8px' : '-8px'})`}`,
-                   transition: 'opacity 120ms ease, transform 120ms ease',
-                   touchAction: 'none',
-                 }}
-                 onPointerDown={(e) => { e.stopPropagation(); }}
-                 aria-hidden={openTrayForId === msg.id ? undefined : true}
-               >
-                 {isAssistant && (msg.id === bookmarkedMessageId || bookmarkEligibleAssistantIds.has(msg.id)) && (
-                   <button
-                     className={`p-2 bg-save-sugg-bg text-save-sugg-text shadow sketchy-border-thin`}
-                     onPointerDown={(e) => { e.stopPropagation(); }}
-                         onClick={(e) => { e.stopPropagation(); if (msg.id !== bookmarkedMessageId) { onBookmarkAt(msg.id); } }}
-                         title={msg.id === bookmarkedMessageId ? (t('chat.bookmark.isHere') || 'Bookmark is here') : (t('chat.bookmark.setHere') || 'Set bookmark here')}
-                     aria-pressed={msg.id === bookmarkedMessageId}
-                   >
-                     <IconBookmark className={`w-5 h-5 ${msg.id === bookmarkedMessageId ? 'opacity-100' : 'opacity-90'}`} />
-                   </button>
-                 )}
-                 <button
-                   className={`p-2 bg-delete-msg-bg text-delete-msg-text shadow sketchy-border-thin`}
-                   onPointerDown={(e) => { e.stopPropagation(); }}
-                   onClick={(e) => { e.stopPropagation(); onDeleteMessage(msg.id); }}
-                   title={t('chat.deleteMessage') || 'Delete message'}
-                 >
-                   <IconTrash className="w-5 h-5" />
-                 </button>
-               </div>
+               <MessageSwipeTray
+                 messageId={msg.id}
+                 isUser={isUser}
+                 isAssistant={isAssistant}
+                 isOpen={openTrayForId === msg.id}
+                 isBookmarked={msg.id === bookmarkedMessageId}
+                 canBookmark={bookmarkEligibleAssistantIds.has(msg.id)}
+                 t={t}
+                 onBookmark={stableBookmarkAt}
+                 onDelete={stableDeleteMessage}
+               />
              )}
 
               <ChatMessageBubble
