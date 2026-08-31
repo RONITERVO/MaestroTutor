@@ -44,8 +44,14 @@ export interface EmbedSlot {
 
 export function useEmbedSlot({ id, kind, enabled = true }: UseEmbedSlotOptions): EmbedSlot {
   const [element, setElement] = useState<HTMLElement | null>(null);
-  const [phase, setPhase] = useState<EmbedPhase>('placeholder');
+  // Phase and poster move together: the URL shown must be the one the manager
+  // currently owns, so they cannot be tracked separately without risking a
+  // render against a poster that has already been revoked.
+  const [slotState, setSlotState] = useState<{ phase: EmbedPhase; poster: string | undefined }>(
+    { phase: 'placeholder', poster: undefined },
+  );
   const [isFullyVisible, setIsFullyVisible] = useState(false);
+  const { phase, poster } = slotState;
 
   const setRef = useCallback((next: HTMLElement | null) => {
     setElement((current) => (current === next ? current : next));
@@ -53,7 +59,7 @@ export function useEmbedSlot({ id, kind, enabled = true }: UseEmbedSlotOptions):
 
   useEffect(() => {
     if (!enabled || !element) {
-      setPhase('placeholder');
+      setSlotState({ phase: 'placeholder', poster: undefined });
       setIsFullyVisible(false);
       return;
     }
@@ -61,7 +67,7 @@ export function useEmbedSlot({ id, kind, enabled = true }: UseEmbedSlotOptions):
       id,
       kind,
       element,
-      onPhase: setPhase,
+      onPhase: (nextPhase, nextPoster) => setSlotState({ phase: nextPhase, poster: nextPoster }),
       onFullyVisible: setIsFullyVisible,
     });
   }, [id, kind, enabled, element]);
@@ -79,7 +85,7 @@ export function useEmbedSlot({ id, kind, enabled = true }: UseEmbedSlotOptions):
     phase,
     isLive: phase === 'live',
     isFullyVisible,
-    poster: phase === 'frozen' ? embedActivation.getPoster(id) : undefined,
+    poster: phase === 'frozen' ? poster : undefined,
     pin,
     unpin,
     publishPoster,

@@ -51,4 +51,12 @@ describe('DEVICE_BUDGETS', () => {
   it('disables posters entirely on the low tier', () => {
     expect(DEVICE_BUDGETS.low.posterBudget).toBe(0);
   });
+
+  it('never lets any tier run more than one live embed', () => {
+    // The product requirement is one running artifact at a time; the arbiter
+    // supports more, so the cap has to be asserted rather than assumed.
+    for (const budgets of Object.values(DEVICE_BUDGETS)) {
+      expect(budgets.maxLiveEmbeds).toBe(1);
+    }
+  });
 });

@@ -33,7 +33,10 @@ const ArtifactLoadingScene: React.FC = () => {
       title="Interactive artifact loading scene"
       src={artifactLoadingSceneSrc}
       className="absolute inset-0 block h-full w-full border-0 bg-transparent"
-      sandbox="allow-scripts allow-same-origin"
+      // The scene animates via script but is purely decorative, so it has no
+      // reason to share the parent origin. Dropping allow-same-origin leaves it
+      // an opaque origin and unable to reach into the app.
+      sandbox="allow-scripts"
       referrerPolicy="no-referrer"
       loading="lazy"
       style={{ backgroundColor: 'transparent' }}

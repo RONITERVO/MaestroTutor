@@ -134,7 +134,7 @@ describe('embed activation under real mount order', () => {
     await settle();
 
     // Nothing was tapped. A visible artifact has to start on its own.
-    expect(container.querySelectorAll('iframe')).toHaveLength(1);
+    expect(container.querySelectorAll('iframe')).toHaveLength(DEVICE_BUDGETS.mid.maxLiveEmbeds);
   });
 
   it('still runs something when the observer never delivers an entry', async () => {
@@ -154,7 +154,7 @@ describe('embed activation under real mount order', () => {
     act(() => { vi.advanceTimersByTime(1500); });
     await settle();
 
-    expect(container.querySelectorAll('iframe')).toHaveLength(1);
+    expect(container.querySelectorAll('iframe')).toHaveLength(DEVICE_BUDGETS.mid.maxLiveEmbeds);
     expect(embedActivation.debugSnapshot().receivedEntries).toBe(false);
   });
 
@@ -184,7 +184,7 @@ describe('embed activation under real mount order', () => {
     await settle();
 
     expect(embedActivation.debugSnapshot().records.some((r) => r.pinned)).toBe(false);
-    expect(container.querySelectorAll('iframe')).toHaveLength(1);
+    expect(container.querySelectorAll('iframe')).toHaveLength(DEVICE_BUDGETS.mid.maxLiveEmbeds);
   });
 
   it('hands the slot to whichever embed the reader scrolls to', async () => {

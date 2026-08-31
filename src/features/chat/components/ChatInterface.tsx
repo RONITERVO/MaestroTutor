@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, ReplySuggestion, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconEyeOpen, IconBookmark } from '../../../shared/ui/Icons';
@@ -221,7 +221,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const stableStopSpeaking = useStableCallback(stopSpeaking);
 
   const focusToggleRef = useRef(onToggleImageFocusedMode);
-  focusToggleRef.current = onToggleImageFocusedMode;
+  // In a layout effect for the same reason as useStableCallback: an abandoned
+  // concurrent render must not swap the handler under committed listeners.
+  useLayoutEffect(() => {
+    focusToggleRef.current = onToggleImageFocusedMode;
+  });
   const perMessageHandlers = useRef(new Map<string, {
     toggleFocus: () => void;
     registerEl: (el: HTMLDivElement | null) => void;

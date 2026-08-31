@@ -19,16 +19,26 @@ const PAGE_COUNT = 20;
 
 const renderedPages: number[] = [];
 
+/** Landscape every third page, so page 1's shape cannot stand in for the rest. */
+const isLandscape = (pageNum: number) => pageNum % 3 === 0;
+
+/** Lets a test hold a page mid-rasterization while the document is replaced. */
+let renderGate: (() => void) | null = null;
+
 const makePdf = () => ({
   numPages: PAGE_COUNT,
   getPage: vi.fn(async (pageNum: number) => ({
     getViewport: ({ scale }: { scale: number }) => ({
-      width: PAGE_WIDTH * scale,
-      height: PAGE_HEIGHT * scale,
+      width: (isLandscape(pageNum) ? PAGE_HEIGHT : PAGE_WIDTH) * scale,
+      height: (isLandscape(pageNum) ? PAGE_WIDTH : PAGE_HEIGHT) * scale,
     }),
     render: () => {
       renderedPages.push(pageNum);
-      return { promise: Promise.resolve() };
+      return {
+        promise: renderGate
+          ? new Promise<void>((resolve) => { renderGate = () => resolve(); })
+          : Promise.resolve(),
+      };
     },
   })),
 });
@@ -56,10 +66,13 @@ vi.mock('../../../store', () => ({
 import PdfViewer from './PdfViewer';
 
 const SRC = 'data:application/pdf;base64,QUJDRA==';
+// A distinct, still-valid base64 payload: the src is decoded before use.
+const SRC_REPLACEMENT = 'data:application/pdf;base64,RUZHSA==';
 
 describe('PdfViewer page windowing', () => {
   beforeEach(() => {
     renderedPages.length = 0;
+    renderGate = null;
 
     // jsdom has no canvas backend; the viewer only needs the calls to succeed.
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({ drawImage: vi.fn() })) as never;
@@ -121,6 +134,41 @@ describe('PdfViewer page windowing', () => {
     expect(Number(declaredRatio)).toBeCloseTo(PAGE_WIDTH / PAGE_HEIGHT, 3);
     // Nothing has been rendered into it, and it still occupies its space.
     expect(lastSlot.querySelector('img')).toBeNull();
+  });
+
+  it('reserves each page at its own shape rather than page one shape', async () => {
+    const { container } = render(<PdfViewer src={SRC} variant="assistant" />);
+
+    await waitFor(() => {
+      const slot = container.querySelector<HTMLElement>('[data-page="3"]');
+      const ratio = /aspect-ratio:\s*([\d.]+)/.exec(slot?.getAttribute('style') ?? '')?.[1];
+      // Page 3 is landscape; stamping page 1's portrait ratio here would put
+      // every later page at the wrong offset.
+      expect(Number(ratio)).toBeCloseTo(PAGE_HEIGHT / PAGE_WIDTH, 3);
+    });
+
+    const portraitSlot = container.querySelector<HTMLElement>('[data-page="2"]')!;
+    const portraitRatio = /aspect-ratio:\s*([\d.]+)/.exec(portraitSlot.getAttribute('style') ?? '')?.[1];
+    expect(Number(portraitRatio)).toBeCloseTo(PAGE_WIDTH / PAGE_HEIGHT, 3);
+  });
+
+  it('still renders a page of the new document when the old one left work in flight', async () => {
+    renderGate = () => {};
+    const { rerender } = render(<PdfViewer src={SRC} variant="assistant" />);
+
+    await waitFor(() => { expect(renderedPages.length).toBeGreaterThan(0); });
+    const strandedPage = renderedPages[0];
+
+    // Swap the document while that rasterization is still outstanding. Keyed
+    // only by page number, the stranded entry would make the same page of the
+    // new document look already handled and it would never render.
+    renderGate = null;
+    renderedPages.length = 0;
+    rerender(<PdfViewer src={SRC_REPLACEMENT} variant="assistant" />);
+
+    await waitFor(() => {
+      expect(renderedPages).toContain(strandedPage);
+    });
   });
 
   it('renders only the first page for a compact thumbnail', async () => {

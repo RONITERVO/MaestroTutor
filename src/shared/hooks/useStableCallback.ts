@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 
 /**
  * Give an event handler a permanently stable identity.
@@ -25,9 +25,13 @@ export function useStableCallback<TArgs extends unknown[], TResult>(
   callback: ((...args: TArgs) => TResult) | undefined,
 ): (...args: TArgs) => TResult | undefined {
   const ref = useRef(callback);
-  // Assigned during render rather than in an effect so a handler fired between
-  // render and effect flush still runs the current implementation.
-  ref.current = callback;
+  // Assigned in a layout effect, not during render: a concurrent render that is
+  // abandoned must not leave its callback behind for committed handlers to run.
+  // Layout effects flush synchronously after DOM mutation and before paint, so
+  // no event can fire against a stale implementation in between.
+  useLayoutEffect(() => {
+    ref.current = callback;
+  });
 
   return useCallback((...args: TArgs) => ref.current?.(...args), []);
 }

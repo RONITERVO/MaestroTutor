@@ -19,6 +19,9 @@ export const POSTER_MAX_EDGE_PX = 360;
 /** JPEG quality — a poster is a hint that content exists, not a reproduction. */
 export const POSTER_QUALITY = 0.6;
 
+/** The only types a captured poster is allowed to claim. */
+const POSTER_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 /**
  * Convert a data URL produced inside an embed into a blob URL.
  *
@@ -32,7 +35,11 @@ export const dataUrlToBlobUrl = (dataUrl: string): string | null => {
 
   const header = dataUrl.slice(0, comma);
   if (!header.startsWith('data:')) return null;
-  const mimeType = header.slice(5).split(';')[0] || 'image/jpeg';
+  // The data URL is produced inside the artifact, which is model-authored and
+  // therefore untrusted: it could name any type. Pin the blob to an image type
+  // so a poster can never become, say, a text/html blob URL.
+  const declared = header.slice(5).split(';')[0].trim().toLowerCase();
+  const mimeType = POSTER_MIME_TYPES.has(declared) ? declared : 'image/jpeg';
 
   try {
     const binary = atob(dataUrl.slice(comma + 1));

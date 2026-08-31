@@ -233,6 +233,17 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   useEffect(() => {
     setGameGesturesEnabled(false);
     resetPointerGate();
+
+    // A measurement or poster captured from the previous attachment describes
+    // content that no longer exists here. Left in place they would be committed
+    // to this message's box, or published as this artifact's poster, the next
+    // time it leaves the live phase.
+    measuredAspectRatioRef.current = 0;
+    const staleposter = pendingPosterRef.current;
+    pendingPosterRef.current = null;
+    if (staleposter) URL.revokeObjectURL(staleposter);
+    setRuntimeState('booting');
+    setRuntimeError('');
   }, [frameId, sourceCode, fileName, mimeType, resetPointerGate]);
 
   /**
@@ -528,7 +539,12 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               ref={iframeRef}
               title={fileName ? t('miniGame.titleWithFile', { fileName }) || `Mini game ${fileName}` : t('miniGame.title') || 'Mini game'}
               srcDoc={srcDoc}
-              sandbox="allow-scripts allow-same-origin"
+              // Deliberately without allow-same-origin. Paired with
+              // allow-scripts on a srcdoc frame that is effectively no sandbox
+              // at all: the content shares the app's origin and can reach the
+              // parent document and its stored credentials. The bridge only
+              // needs postMessage, which works across an opaque origin.
+              sandbox="allow-scripts"
               referrerPolicy="no-referrer"
               style={{
                 backgroundColor: 'transparent',

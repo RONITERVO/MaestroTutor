@@ -62,7 +62,7 @@ when an `<img>` would do.
 
 This is the important one. Today the box size is *derived from the running content*:
 
-```
+```text
 iframe boots → measureContentMetrics() (miniGameAttachment.ts:283)
             → postMessage 'metrics'
             → setFrameMetrics (MiniGameViewer.tsx:303)
@@ -181,7 +181,7 @@ New module `src/features/chat/embeds/EmbedActivationManager.ts` — a small
 subscribable store (a `uiSlice` addition, or a standalone one; it must not live in
 React state that re-renders the whole list).
 
-```
+```text
 registerEmbed(id, el, kind, priorityHints) → unregister
 ```
 
@@ -235,7 +235,7 @@ the window rather than listening on a container that never scrolls.
 
 ### 2.5 Three states, with a budgeted poster
 
-```
+```text
 placeholder ──promote──> live ──demote──> frozen ──evict──> placeholder
      ^                                                          |
      └──────────────────────────────────────────────────────────┘
@@ -271,11 +271,18 @@ const tier =
 
 | | low | mid | high |
 |---|---|---|---|
-| max live embeds | 1 | 1 | 2 |
+| max live embeds | 1 | 1 | 1 |
 | poster budget | 0 | 4 | 8 |
 | PDF pre-rendered pages | 1 | 2 | 3 |
 | PDF render scale cap | 1.0 | 1.25 | 1.5 |
 | `maxVisibleMessages` cap | 20 | 35 | 50 |
+
+`maxLiveEmbeds` is 1 on every tier. The arbiter takes a top-N, so a larger
+budget works, but the product requirement is one running artifact at a time and
+a second document on the strongest devices buys little while doubling the worst
+case the Play thresholds are measured against. The invariant asserted by the
+tests and checked at release is therefore simply: **never more than one live
+embed, on any device.**
 
 `navigator.deviceMemory` is absent on some WebViews — the `?? 4` default lands on
 `mid`, which is the safe middle. Expose an override in settings so the tier can be
@@ -369,8 +376,14 @@ Each phase landed on its own and left the app better than it found it.
 
 **Phase 2 — activation manager** ✅
 - `embeds/embedActivation.ts` + `useEmbedSlot`: one IntersectionObserver, rAF-
-  coalesced arbitration, dwell before promotion, fling suppression, pinning for
-  active engagement, immediate demotion on leaving the viewport.
+  coalesced arbitration, dwell before promotion, fling suppression, and pinning
+  for active engagement.
+- Demotion on leaving the viewport is immediate **except** for an embed the user
+  is engaged with. That one keeps its live state off screen for up to
+  `PIN_OFFSCREEN_GRACE_MS` (20s) so glancing away does not restart a game in
+  progress — but it ranks below everything visible, so it yields the moment
+  something on screen wants the slot, and it never raises the live count above
+  the budget. Everything unpinned is released the instant it leaves.
 - The sticky `hasIntersected` and the per-embed observer stack are gone.
 
 **Phase 3 — posters + tiering** ✅

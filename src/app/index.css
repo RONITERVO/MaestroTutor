@@ -757,7 +757,13 @@
        height:0 a min-height would stack on top of the padding rather than
        raise it, making every short box 220px too tall. */
     min-height: 0;
-    padding-top: max(calc(100% / var(--embed-ar, 1.333)), var(--embed-min-h, 220px));
+    /* min() applies the viewport cap that max-height cannot reach here: with
+       height:0 the cap would apply to a zero-height content box and do
+       nothing, so a tall ratio could otherwise reserve past the screen. */
+    padding-top: max(
+      min(calc(100% / var(--embed-ar, 1.333)), var(--embed-max-h, 70vh)),
+      var(--embed-min-h, 220px)
+    );
     contain: layout paint;
   }
 }

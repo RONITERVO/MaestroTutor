@@ -39,7 +39,8 @@ const META_HINT_RE = /<meta[^>]+name\s*=\s*["']maestro-aspect["'][^>]*content\s*
 const DATA_HINT_RE = /data-maestro-aspect\s*=\s*["']([^"']+)["']/i;
 const CANVAS_RE = /<canvas\b[^>]*>/i;
 const SVG_TAG_RE = /<svg\b[^>]*>/i;
-const VIEWBOX_RE = /viewBox\s*=\s*["']\s*[-\d.eE+]+\s+[-\d.eE+]+\s+([-\d.eE+]+)\s+([-\d.eE+]+)\s*["']/i;
+// SVG permits commas as well as whitespace between viewBox values.
+const VIEWBOX_RE = /viewBox\s*=\s*["']\s*[-\d.eE+]+[\s,]+[-\d.eE+]+[\s,]+([-\d.eE+]+)[\s,]+([-\d.eE+]+)\s*["']/i;
 const CSS_ASPECT_RE = /aspect-ratio\s*:\s*([^;}"']+)/i;
 
 const attributeNumber = (tag: string, name: string): number => {

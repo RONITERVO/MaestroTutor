@@ -75,7 +75,7 @@ interface EmbedRecord {
   seq: number;
   /** Latched at the 0.99 threshold, so it changes rarely rather than per scroll. */
   fullyVisible: boolean;
-  onPhase: (phase: EmbedPhase) => void;
+  onPhase: (phase: EmbedPhase, poster: string | undefined) => void;
   onFullyVisible?: (fullyVisible: boolean) => void;
 }
 
@@ -172,7 +172,7 @@ class EmbedActivationManager {
     id: string;
     kind: EmbedKind;
     element: Element | null;
-    onPhase: (phase: EmbedPhase) => void;
+    onPhase: (phase: EmbedPhase, poster: string | undefined) => void;
     onFullyVisible?: (fullyVisible: boolean) => void;
   }): () => void {
     const { id, kind, element, onPhase, onFullyVisible } = options;
@@ -213,7 +213,7 @@ class EmbedActivationManager {
 
     this.schedule();
     this.armSilenceFallback();
-    onPhase(record.phase);
+    onPhase(record.phase, this.posters.get(id));
     onFullyVisible?.(record.fullyVisible);
 
     return () => this.unregister(id, element);
@@ -290,7 +290,10 @@ class EmbedActivationManager {
     this.trimPosters();
 
     const record = this.records.get(id);
-    if (record && record.phase === 'placeholder') this.setPhase(record, 'frozen');
+    if (!record) return;
+    if (record.phase === 'placeholder') this.setPhase(record, 'frozen');
+    // Already frozen: the phase has not changed, so push the new URL directly.
+    else if (record.phase === 'frozen') record.onPhase('frozen', url);
   }
 
   getPoster(id: string): string | undefined {
@@ -516,11 +519,16 @@ class EmbedActivationManager {
     );
 
     const wantsPromotion = [...desired].some((id) => !currentLive.has(id));
-    const hasPin = [...this.records.values()].some((record) => record.pinned);
+    // Scoped to the promotion actually being considered. A global "is anything
+    // pinned" test let an unrelated embed skip the dwell and the fling guard
+    // just because some other embed happened to be engaged.
+    const promotingPinned = [...desired].some(
+      (id) => !currentLive.has(id) && this.records.get(id)?.pinned,
+    );
 
     // Booting a document mid-fling is the worst possible moment for it: hold the
     // current assignment and re-arbitrate once the scroll settles.
-    if (wantsPromotion && this.isFlinging() && !hasPin) {
+    if (wantsPromotion && this.isFlinging() && !promotingPinned) {
       this.armDwell();
       return;
     }
@@ -532,7 +540,7 @@ class EmbedActivationManager {
       }
     }
 
-    if (wantsPromotion && !hasPin) {
+    if (wantsPromotion && !promotingPinned) {
       // Require the candidate set to stay stable for a beat before booting.
       this.armDwell();
       return;
@@ -578,10 +586,16 @@ class EmbedActivationManager {
     this.dwellTimer = null;
   }
 
+  /**
+   * The poster travels with the phase rather than being read back by the
+   * consumer during render: reading the manager's map while rendering is a
+   * read of external mutable state, and a poster that changes while an embed
+   * stays frozen would otherwise never reach the screen.
+   */
   private setPhase(record: EmbedRecord, phase: EmbedPhase): void {
     if (record.phase === phase) return;
     record.phase = phase;
-    record.onPhase(phase);
+    record.onPhase(phase, this.posters.get(record.id));
   }
 
   // ------------------------------------------------------------ scroll velocity

@@ -54,6 +54,9 @@ const MessageSwipeTray: React.FC<MessageSwipeTrayProps> = ({
     {isAssistant && (isBookmarked || canBookmark) && (
       <button
         className="p-2 bg-save-sugg-bg text-save-sugg-text shadow sketchy-border-thin"
+        // The tray stays mounted while closed (it animates), so without this it
+        // is invisible but still in the tab order.
+        tabIndex={isOpen ? 0 : -1}
         onPointerDown={(e) => { e.stopPropagation(); }}
         onClick={(e) => { e.stopPropagation(); if (!isBookmarked) onBookmark(messageId); }}
         title={isBookmarked ? (t('chat.bookmark.isHere') || 'Bookmark is here') : (t('chat.bookmark.setHere') || 'Set bookmark here')}
@@ -64,6 +67,7 @@ const MessageSwipeTray: React.FC<MessageSwipeTrayProps> = ({
     )}
     <button
       className="p-2 bg-delete-msg-bg text-delete-msg-text shadow sketchy-border-thin"
+      tabIndex={isOpen ? 0 : -1}
       onPointerDown={(e) => { e.stopPropagation(); }}
       onClick={(e) => { e.stopPropagation(); onDelete(messageId); }}
       title={t('chat.deleteMessage') || 'Delete message'}

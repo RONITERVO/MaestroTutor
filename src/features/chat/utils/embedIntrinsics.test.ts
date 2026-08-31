@@ -48,6 +48,12 @@ describe('deriveEmbedBox', () => {
     expect(deriveEmbedBox({ sourceCode: source, kind: 'artifact' }).aspectRatio).toBe(2);
   });
 
+  it('reads a comma-separated viewBox', () => {
+    // SVG allows commas between viewBox values, not only whitespace.
+    const source = '<svg viewBox="0,0,1000,500"></svg>';
+    expect(deriveEmbedBox({ sourceCode: source, kind: 'artifact' }).aspectRatio).toBe(2);
+  });
+
   it('reads SVG width/height when there is no viewBox', () => {
     const source = '<svg width="300" height="200"></svg>';
     expect(deriveEmbedBox({ sourceCode: source, kind: 'artifact' }).aspectRatio).toBe(1.5);

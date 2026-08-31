@@ -46,7 +46,11 @@ export interface DeviceBudgets {
 export const DEVICE_BUDGETS: Record<DevicePerformanceTier, DeviceBudgets> = {
   low: { maxLiveEmbeds: 1, posterBudget: 0, pdfWindowPages: 1, pdfScaleCap: 1.0, maxVisibleMessagesCap: 20 },
   mid: { maxLiveEmbeds: 1, posterBudget: 4, pdfWindowPages: 2, pdfScaleCap: 1.25, maxVisibleMessagesCap: 35 },
-  high: { maxLiveEmbeds: 2, posterBudget: 8, pdfWindowPages: 3, pdfScaleCap: 1.5, maxVisibleMessagesCap: 50 },
+  // maxLiveEmbeds stays at 1 on every tier. The arbiter supports N, but the
+  // product requirement is one running artifact at a time, and holding a
+  // second document on the strongest devices buys little while doubling the
+  // worst case the Play memory thresholds are measured against.
+  high: { maxLiveEmbeds: 1, posterBudget: 8, pdfWindowPages: 3, pdfScaleCap: 1.5, maxVisibleMessagesCap: 50 },
 };
 
 interface DeviceCapabilityProbe {

@@ -139,6 +139,9 @@ async function renderPageToBlobUrl(
   }
 }
 
+/** Upper bound on how many page dictionaries we parse just to learn shapes. */
+const MAX_RATIO_PROBE_PAGES = 200;
+
 interface PdfViewerProps {
   src: string;
   variant: 'user' | 'assistant' | 'preview';
@@ -153,6 +156,9 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   const budgets = useMaestroStore(selectDeviceBudgets);
 
   const [pageCount, setPageCount] = useState(0);
+  // Per page: a document may mix portrait and landscape, and reserving every
+  // slot at page 1's shape would misplace the rest.
+  const [pageRatios, setPageRatios] = useState<number[]>([]);
   const [pageAspectRatio, setPageAspectRatio] = useState(1 / Math.SQRT2);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,7 +175,10 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pageRefsMap = useRef<Map<number, HTMLElement>>(new Map());
   const renderedPagesRef = useRef<Record<number, string>>({});
-  const inFlightRef = useRef<Set<number>>(new Set());
+  const inFlightRef = useRef<Set<string>>(new Set());
+  // Bumped whenever the document changes, so work still in flight for the
+  // previous PDF cannot make a page of the new one look already-handled.
+  const generationRef = useRef(0);
 
   // A PDF is an embed like any other: when it is not the live one, every
   // rasterized page is released. Compact thumbnails stay outside the system —
@@ -231,6 +240,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
       setIsLoading(true);
       setError(null);
       setPageCount(0);
+      setPageRatios([]);
       setVisiblePage(1);
       setIsPdfScrollEnabled(false);
 
@@ -252,6 +262,27 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
         if (viewport.width > 0 && viewport.height > 0) {
           setPageAspectRatio(viewport.width / viewport.height);
         }
+
+        // Then each page's own shape, so a document that mixes portrait and
+        // landscape reserves each slot correctly rather than stamping page 1's
+        // ratio across all of them. getViewport needs the page dictionary but
+        // no rasterization, so this is cheap next to rendering; it is still
+        // capped, since very long documents would make it less so.
+        const probeCount = Math.min(pdf.numPages, MAX_RATIO_PROBE_PAGES);
+        const ratios: number[] = [];
+        for (let pageNum = 1; pageNum <= probeCount; pageNum += 1) {
+          if (cancelled) return;
+          try {
+            const page = await pdf.getPage(pageNum);
+            const pageViewport = page.getViewport({ scale: 1 });
+            ratios.push(pageViewport.width > 0 && pageViewport.height > 0
+              ? pageViewport.width / pageViewport.height
+              : 0);
+          } catch {
+            ratios.push(0);
+          }
+        }
+        if (!cancelled) setPageRatios(ratios);
       } catch (err) {
         // Store the raw reason and translate at render time: a loading effect
         // must not depend on the translator, or a new locale object identity
@@ -267,7 +298,11 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   }, [src, setIsPdfScrollEnabled]);
 
   // A new document means every page we hold belongs to the old one.
-  useEffect(() => () => releaseRenderedPages(), [src, releaseRenderedPages]);
+  useEffect(() => {
+    generationRef.current += 1;
+    inFlightRef.current.clear();
+    return () => releaseRenderedPages();
+  }, [src, releaseRenderedPages]);
 
   const windowRadius = compact ? 0 : Math.max(0, budgets.pdfWindowPages - 1);
 
@@ -291,6 +326,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
     }
 
     let cancelled = false;
+    const generation = generationRef.current;
     const keep = new Set(desiredPages);
     releaseRenderedPages(keep);
 
@@ -303,9 +339,10 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
 
       for (const pageNum of desiredPages) {
         if (cancelled) return;
-        if (renderedPagesRef.current[pageNum] || inFlightRef.current.has(pageNum)) continue;
+        const inFlightKey = `${generation}:${pageNum}`;
+        if (renderedPagesRef.current[pageNum] || inFlightRef.current.has(inFlightKey)) continue;
 
-        inFlightRef.current.add(pageNum);
+        inFlightRef.current.add(inFlightKey);
         try {
           const rendered = await renderPageToBlobUrl(pdf, pageNum, targetWidth, budgets.pdfScaleCap);
           if (!rendered) continue;
@@ -320,7 +357,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
         } catch {
           /* a single unrenderable page should not take down the viewer */
         } finally {
-          inFlightRef.current.delete(pageNum);
+          inFlightRef.current.delete(inFlightKey);
         }
       }
     };
@@ -437,7 +474,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
                 ref={(el) => setPageRef(pageNum, el)}
                 data-page={pageNum}
                 className="w-full rounded shadow-sm bg-black/[0.03]"
-                style={{ aspectRatio: `${pageAspectRatio}` }}
+                style={{ aspectRatio: `${pageRatios[pageNum - 1] || pageAspectRatio}` }}
               >
                 {pageUrl && (
                   <img
