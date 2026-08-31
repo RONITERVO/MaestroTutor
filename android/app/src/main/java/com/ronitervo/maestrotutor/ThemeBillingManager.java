@@ -21,6 +21,7 @@ import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.UnfetchedProduct;
 import com.android.billingclient.api.QueryPurchasesParams;
 
 import java.util.ArrayList;
@@ -191,16 +192,28 @@ public class ThemeBillingManager {
                 .setProductList(productList)
                 .build();
 
-        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
+        billingClient.queryProductDetailsAsync(params, (billingResult, queryResult) -> {
             if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                 Log.w(TAG, "queryProductDetails failed: " + billingResult.getDebugMessage());
                 notifyError(billingResult);
                 return;
             }
             productDetailsCache.clear();
+            List<ProductDetails> productDetailsList =
+                    queryResult == null ? null : queryResult.getProductDetailsList();
             if (productDetailsList != null) {
                 for (ProductDetails pd : productDetailsList) {
                     productDetailsCache.put(pd.getProductId(), pd);
+                }
+            }
+            // Products Play could not return — typically a product id that is not
+            // active in the console, or a market where it is not published.
+            List<UnfetchedProduct> unfetched =
+                    queryResult == null ? null : queryResult.getUnfetchedProductList();
+            if (unfetched != null && !unfetched.isEmpty()) {
+                for (UnfetchedProduct product : unfetched) {
+                    Log.w(TAG, "Product unavailable: " + product.getProductId()
+                            + " (status " + product.getStatusCode() + ")");
                 }
             }
             if (productDetailsCallback != null) {
@@ -267,7 +280,9 @@ public class ThemeBillingManager {
         );
         billingClient.queryProductDetailsAsync(
                 QueryProductDetailsParams.newBuilder().setProductList(productList).build(),
-                (billingResult, productDetailsList) -> {
+                (billingResult, queryResult) -> {
+                    List<ProductDetails> productDetailsList =
+                            queryResult == null ? null : queryResult.getProductDetailsList();
                     if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK
                             || productDetailsList == null || productDetailsList.isEmpty()) {
                         notifyError(billingResult);
