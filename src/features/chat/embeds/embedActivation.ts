@@ -33,6 +33,15 @@ const PROMOTION_DWELL_MS = 250;
 const FLING_VELOCITY_PX_PER_MS = 1.2;
 /** How long after the last fast scroll sample we keep treating it as a fling. */
 const FLING_COOLDOWN_MS = 180;
+/**
+ * How long an embed the user was engaged with stays alive after scrolling off.
+ *
+ * Glancing up at the previous message and coming back should not restart a game
+ * in progress. It yields immediately to anything visible, so this never costs a
+ * slot that something on screen wants; the timer only stops a forgotten game
+ * from holding a document open for the rest of the session.
+ */
+const PIN_OFFSCREEN_GRACE_MS = 20_000;
 
 const INTERSECTION_THRESHOLDS = [0, 0.01, 0.15, 0.35, 0.6, 0.85, 0.99];
 
@@ -55,6 +64,8 @@ interface EmbedRecord {
   centeredness: number;
   /** User is actively engaged (playing, scrolling a PDF). Beats visibility. */
   pinned: boolean;
+  /** When a pinned embed left the viewport; 0 while it is on screen. */
+  pinnedOffscreenAt: number;
   phase: EmbedPhase;
   /** Registration order, used as a stable tie-break and as the IO-less fallback. */
   seq: number;
@@ -153,6 +164,7 @@ class EmbedActivationManager {
       visibleFraction: previous?.visibleFraction ?? 0,
       centeredness: previous?.centeredness ?? 0,
       pinned: previous?.pinned ?? false,
+      pinnedOffscreenAt: previous?.pinnedOffscreenAt ?? 0,
       phase: previous?.phase ?? (this.posters.has(id) ? 'frozen' : 'placeholder'),
       seq: previous?.seq ?? this.seq++,
       fullyVisible: previous?.fullyVisible ?? false,
@@ -165,9 +177,12 @@ class EmbedActivationManager {
       this.elementIndex.set(element, id);
       this.observer?.observe(element);
     }
-    // Without an observer (jsdom, very old WebViews) fall back to registration
-    // order so the app still works, just without visibility-driven arbitration.
-    if (!this.supportsObserver()) record.visibleFraction = 1;
+    // With no observer yet — the root has not been set, or the platform has no
+    // IntersectionObserver at all — assume visible rather than leaving every
+    // embed inert. A silent "nothing ever runs" is a far worse failure than a
+    // brief over-eager guess, and the observer corrects this on its first batch,
+    // well inside the promotion dwell.
+    if (!this.observer) record.visibleFraction = 1;
 
     this.schedule();
     onPhase(record.phase);
@@ -198,6 +213,7 @@ class EmbedActivationManager {
     const record = this.records.get(id);
     if (!record || record.pinned === pinned) return;
     record.pinned = pinned;
+    record.pinnedOffscreenAt = pinned && record.visibleFraction <= 0 ? now() : 0;
     // Engagement is an explicit user action; apply it without dwell.
     this.clearDwell();
     this.arbitrate();
@@ -286,15 +302,23 @@ class EmbedActivationManager {
         record.onFullyVisible?.(fullyVisible);
       }
 
-      if (record.visibleFraction <= 0) {
-        // Engagement ends when the embed leaves the screen; otherwise a pin taken
-        // while playing would hold the single live slot for the rest of the session.
-        record.pinned = false;
-        // Fully out of view: free it now. No dwell — nobody can see the change,
-        // and holding the slot open is exactly the leak we are fixing.
-        if (record.phase === 'live') {
-          this.setPhase(record, this.posters.has(record.id) ? 'frozen' : 'placeholder');
-        }
+      if (record.visibleFraction > 0) {
+        record.pinnedOffscreenAt = 0;
+        continue;
+      }
+
+      if (record.pinned) {
+        // Start the grace clock, but leave the decision to arbitration: an
+        // engaged embed yields to anything visible, and only survives while
+        // nothing else wants the slot.
+        if (record.pinnedOffscreenAt === 0) record.pinnedOffscreenAt = now();
+        continue;
+      }
+
+      // Out of view and not engaged: free it now. No dwell — nobody can see the
+      // change, and holding the slot open is exactly the leak we are fixing.
+      if (record.phase === 'live') {
+        this.setPhase(record, this.posters.has(record.id) ? 'frozen' : 'placeholder');
       }
     }
     this.schedule();
@@ -319,9 +343,27 @@ class EmbedActivationManager {
   }
 
   private score(record: EmbedRecord): number {
-    if (record.pinned) return 10_000 + record.visibleFraction;
+    if (record.pinned) {
+      // On screen and engaged: outranks everything, so an in-progress game
+      // cannot be evicted by something that merely drifted closer to centre.
+      if (record.visibleFraction > 0) return 10_000 + record.visibleFraction;
+      // Engaged but scrolled off: worth less than any visible embed, so it
+      // yields the moment something on screen needs the slot.
+      return 0.01;
+    }
     if (record.visibleFraction <= 0) return -1;
     return record.visibleFraction * 100 + record.centeredness * 20;
+  }
+
+  /** Release engagement that has been off screen long enough to be forgotten. */
+  private expireStalePins(): void {
+    const at = now();
+    for (const record of this.records.values()) {
+      if (!record.pinned || record.pinnedOffscreenAt === 0) continue;
+      if (at - record.pinnedOffscreenAt < PIN_OFFSCREEN_GRACE_MS) continue;
+      record.pinned = false;
+      record.pinnedOffscreenAt = 0;
+    }
   }
 
   /** Ids that *should* be live right now, best first. */
@@ -343,6 +385,8 @@ class EmbedActivationManager {
       this.clearDwell();
       return;
     }
+
+    this.expireStalePins();
 
     const desired = new Set(this.desiredLive());
     const currentLive = new Set(

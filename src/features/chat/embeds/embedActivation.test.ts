@@ -167,7 +167,47 @@ describe('embedActivation', () => {
     expect(centre.phase()).toBe('placeholder');
   });
 
-  it('drops the pin when the engaged embed scrolls away, so the slot is not held forever', () => {
+  it('keeps an engaged embed alive across a glance away when nothing else wants the slot', () => {
+    embedActivation.setBudgets({ maxLiveEmbeds: 1 });
+    const playing = registerEmbed('playing');
+
+    MockIntersectionObserver.latest().emit([{ target: playing.element, ratio: 1 }]);
+    settle();
+    embedActivation.setPinned('playing', true);
+    expect(playing.phase()).toBe('live');
+
+    // Scrolled up to read the previous message. Coming back must not restart it.
+    MockIntersectionObserver.latest().emit([{ target: playing.element, ratio: 0 }]);
+    settle();
+    expect(playing.phase()).toBe('live');
+
+    MockIntersectionObserver.latest().emit([{ target: playing.element, ratio: 1 }]);
+    settle();
+    expect(playing.phase()).toBe('live');
+  });
+
+  it('eventually releases an engaged embed that was left off screen', () => {
+    embedActivation.setBudgets({ maxLiveEmbeds: 1 });
+    const playing = registerEmbed('playing');
+
+    MockIntersectionObserver.latest().emit([{ target: playing.element, ratio: 1 }]);
+    settle();
+    embedActivation.setPinned('playing', true);
+
+    MockIntersectionObserver.latest().emit([{ target: playing.element, ratio: 0 }]);
+    settle();
+    expect(playing.phase()).toBe('live');
+
+    // Forgotten rather than glanced away from: the grace period lapses and the
+    // document is released instead of being held for the rest of the session.
+    vi.advanceTimersByTime(25_000);
+    MockIntersectionObserver.latest().emit([{ target: playing.element, ratio: 0 }]);
+    settle();
+
+    expect(playing.phase()).toBe('placeholder');
+  });
+
+  it('yields an engaged embed to a visible one, so engagement never costs a needed slot', () => {
     embedActivation.setBudgets({ maxLiveEmbeds: 1 });
     const playing = registerEmbed('playing');
     const other = registerEmbed('other');

@@ -194,6 +194,11 @@ registerEmbed(id, el, kind, priorityHints) → unregister
 - Explicit user interaction (tapping "game swipes", scrolling a PDF) pins that
   embed live and demotes whatever else held the slot. Pinning must beat visibility
   so an embed can't be evicted out from under an active player.
+- A pinned embed that scrolls off screen is *not* dropped immediately — glancing
+  up at the previous message should not restart a game in progress. It falls
+  below every visible embed in the ranking, so it yields the instant anything on
+  screen needs the slot, and a 20s grace period stops a forgotten game from
+  holding a document open for the rest of the session.
 - Hysteresis: a ~250 ms dwell before promoting, and a slot is not handed over while
   a fling is in progress (`scroll` velocity check), so a fast scroll through ten
   games boots **zero** of them instead of ten.
