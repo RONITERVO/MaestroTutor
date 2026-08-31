@@ -11,7 +11,6 @@ import type { ManagedAccessSession } from '../../../core/contracts/backend';
 import type { GooglePlayPurchaseRecord } from '../../../core/contracts/integrations';
 import {
   loadPendingManagedPurchases,
-  markPendingManagedPurchaseConsumed,
   removePendingManagedPurchase,
   upsertPendingManagedPurchase,
 } from '../../../core/security/pendingManagedPurchasesStorage';
@@ -100,18 +99,16 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       }
       processingTokensRef.current.add(record.purchaseToken);
       try {
-        const pendingRecord = await upsertPendingManagedPurchase(record);
-        if (!pendingRecord.consumed) {
-          try {
-            await billingService.consumePurchase(record.purchaseToken);
-            await markPendingManagedPurchaseConsumed(record.purchaseToken);
-          } catch {
-            // Continue to backend verification anyway. If the purchase had already
-            // been consumed before a previous crash, the backend will now see the
-            // consumed token and grant credits exactly once.
-          }
-        }
+        // Recorded locally first, so a purchase survives the app being killed
+        // between Play confirming it and the backend hearing about it.
+        await upsertPendingManagedPurchase(record);
 
+        // The token is handed straight to the backend, which verifies it with
+        // Play, grants the credits and only then consumes it. The client
+        // deliberately does not consume: consumption is irreversible, so
+        // consuming before the grant meant any failure in between took the
+        // money and destroyed the token with nothing left to retry against.
+        // Granting is keyed on the token, so retrying this is a no-op.
         await maestroPaymentsService.verifyGooglePlayPurchase({ purchase: record });
         completedTokensRef.current.add(record.purchaseToken);
         await removePendingManagedPurchase(record.purchaseToken);

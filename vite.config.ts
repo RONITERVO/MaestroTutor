@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
@@ -49,6 +50,17 @@ const keepNames = process.env.MAESTRO_WEBVIEW_DEBUG === '1';
 export default defineConfig(() => ({
   plugins: [colorTokensPlugin(), react()],
   esbuild: { keepNames },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        // Google Play requires an account-deletion route reachable without
+        // installing the app, so this is a second entry point rather than a
+        // route inside the SPA.
+        deleteAccount: path.resolve(__dirname, 'delete-account.html'),
+      },
+    },
+  },
   // Using '/' as base path for custom domain (chatwithmaestro.com)
   // GitHub Pages serves from root when a custom domain is configured
   base: '/',

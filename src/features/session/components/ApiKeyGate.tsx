@@ -8,6 +8,9 @@ import { IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, Ico
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
+import { isManagedModeEnabled } from '../../../core/config/integrations';
+import { useManagedAccess } from '../../../shared/hooks/useManagedAccess';
+import ManagedAccessPanel from './ManagedAccessPanel';
 import { getCostSummary } from '../../../shared/utils/costTracker';
 import CostBreakdownView from './CostBreakdownView';
 
@@ -164,6 +167,11 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   const currentInstruction = INSTRUCTION_IMAGES[instructionIndex] || '';
   const showHeaderClose = showInstructions || canClose;
+  // `useManagedAccess` is cheap when managed mode is off: it never touches the
+  // Firebase SDK unless a session is actually being restored.
+  const { session: managedSession } = useManagedAccess();
+  const showManagedAccess = isManagedModeEnabled();
+
   const headerCloseLabel = showInstructions ? t('apiKeyGate.closeInstructions') : t('apiKeyGate.close');
   const handleHeaderClose = showInstructions ? () => setShowInstructions(false) : onClose;
 
@@ -311,6 +319,23 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
           />
           <div className="relative overflow-visible bg-gate-bg p-4 text-sm text-gate-text msg-depth sketchy-border-thin sketch-shape-2">
             <div className="space-y-3">
+              {/*
+                The only entry point to managed mode. Gated on the build flag
+                *and* complete configuration, so a build without a backend never
+                offers an account it cannot serve. Everything below is the
+                unchanged bring-your-own-key flow, which stays the default.
+              */}
+              {showManagedAccess && (
+                <>
+                  <ManagedAccessPanel session={managedSession} />
+                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-gate-muted-text">
+                    <span className="h-px flex-1 bg-gate-muted-text/30" />
+                    <span>{t('managedAccess.orByok') || 'or use your own key'}</span>
+                    <span className="h-px flex-1 bg-gate-muted-text/30" />
+                  </div>
+                </>
+              )}
+
               <button
                 type="button"
                 onClick={() => openExternalUrl(AI_STUDIO_URL)}
