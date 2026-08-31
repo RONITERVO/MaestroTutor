@@ -194,6 +194,11 @@ registerEmbed(id, el, kind, priorityHints) → unregister
 - Explicit user interaction (tapping "game swipes", scrolling a PDF) pins that
   embed live and demotes whatever else held the slot. Pinning must beat visibility
   so an embed can't be evicted out from under an active player.
+- Engagement is **exclusive** and has no timer on it. Two pins competing for one
+  slot would resolve on an arbitrary tie-break rather than on what the user last
+  asked for, so pinning releases every other pin; and an expiring pin hands the
+  slot straight back to whichever neighbour scored higher, which is what made a
+  tapped embed stop about a second after it started.
 - A pinned embed that scrolls off screen is *not* dropped immediately — glancing
   up at the previous message should not restart a game in progress. It falls
   below every visible embed in the ranking, so it yields the instant anything on

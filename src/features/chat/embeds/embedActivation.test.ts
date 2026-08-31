@@ -186,6 +186,53 @@ describe('embedActivation', () => {
     expect(playing.phase()).toBe('live');
   });
 
+  it('treats engagement as exclusive, so the last thing asked for wins', () => {
+    embedActivation.setBudgets({ maxLiveEmbeds: 1 });
+    const first = registerEmbed('first');
+    const second = registerEmbed('second');
+
+    MockIntersectionObserver.latest().emit([
+      { target: first.element, ratio: 1, top: 450 },
+      { target: second.element, ratio: 1, top: 780 },
+    ]);
+    settle();
+    expect(first.phase()).toBe('live');
+
+    embedActivation.setPinned('first', true);
+    embedActivation.setPinned('second', true);
+
+    // Two pins competing for one slot would otherwise resolve on an arbitrary
+    // tie-break rather than on what the user last asked for.
+    expect(second.phase()).toBe('live');
+    expect(first.phase()).toBe('placeholder');
+  });
+
+  it('holds an explicitly engaged embed against a higher-scoring neighbour', () => {
+    embedActivation.setBudgets({ maxLiveEmbeds: 1 });
+    const centre = registerEmbed('centre');
+    const edge = registerEmbed('edge');
+
+    MockIntersectionObserver.latest().emit([
+      { target: centre.element, ratio: 1, top: 450 },
+      { target: edge.element, ratio: 1, top: 780 },
+    ]);
+    settle();
+    expect(centre.phase()).toBe('live');
+
+    embedActivation.setPinned('edge', true);
+    expect(edge.phase()).toBe('live');
+
+    // Further arbitration passes must not quietly hand the slot back.
+    MockIntersectionObserver.latest().emit([
+      { target: centre.element, ratio: 1, top: 450 },
+      { target: edge.element, ratio: 1, top: 780 },
+    ]);
+    settle();
+
+    expect(edge.phase()).toBe('live');
+    expect(centre.phase()).toBe('placeholder');
+  });
+
   it('eventually releases an engaged embed that was left off screen', () => {
     embedActivation.setBudgets({ maxLiveEmbeds: 1 });
     const playing = registerEmbed('playing');

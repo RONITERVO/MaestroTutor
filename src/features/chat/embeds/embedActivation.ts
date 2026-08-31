@@ -208,10 +208,26 @@ class EmbedActivationManager {
    * Pin an embed the user is actively engaged with. A pinned embed outranks
    * everything visible, so an in-progress game cannot be evicted out from under
    * the player by an embed that happens to be more centred.
+   *
+   * Engagement is **exclusive**: you can only be interacting with one thing, and
+   * two pinned records competing for a single slot would resolve by an
+   * arbitrary tie-break rather than by what the user last asked for. Pinning
+   * therefore releases every other pin.
    */
   setPinned(id: string, pinned: boolean): void {
     const record = this.records.get(id);
-    if (!record || record.pinned === pinned) return;
+    if (!record) return;
+
+    if (pinned) {
+      for (const other of this.records.values()) {
+        if (other === record || !other.pinned) continue;
+        other.pinned = false;
+        other.pinnedOffscreenAt = 0;
+      }
+    } else if (!record.pinned) {
+      return;
+    }
+
     record.pinned = pinned;
     record.pinnedOffscreenAt = pinned && record.visibleFraction <= 0 ? now() : 0;
     // Engagement is an explicit user action; apply it without dwell.

@@ -162,6 +162,42 @@ describe('MiniGameViewer embed budget', () => {
     expect(reservedAfter).toEqual(reservedBefore);
   });
 
+  it('keeps running what the user tapped, instead of handing the slot back a beat later', () => {
+    embedActivation.setBudgets({ maxLiveEmbeds: 1 });
+    const { container } = render(
+      <>
+        <MiniGameViewer embedId="msg-0" sourceCode={GAME_SOURCE} variant="assistant" />
+        <MiniGameViewer embedId="msg-1" sourceCode={GAME_SOURCE} variant="assistant" />
+      </>,
+    );
+    const boxes = Array.from(container.querySelectorAll('.embed-box'));
+
+    // The first one is nearer the centre, so it wins the slot on its own and
+    // the second is left showing its resting state.
+    act(() => {
+      MockIntersectionObserver.latest().emit([
+        { target: boxes[0], ratio: 1, top: 450 },
+        { target: boxes[1], ratio: 1, top: 780 },
+      ]);
+    });
+    settle();
+    expect(boxes[0].querySelector('iframe')).not.toBeNull();
+    expect(boxes[1].querySelector('iframe')).toBeNull();
+
+    // The user asks for the second one explicitly.
+    const runButton = boxes[1].querySelector('button')!;
+    act(() => { runButton.click(); });
+    expect(boxes[1].querySelector('iframe')).not.toBeNull();
+
+    // …and it has to stay. An explicit request outlives arbitration until the
+    // user's attention moves; it must not be handed back to the neighbour.
+    act(() => { vi.advanceTimersByTime(4000); });
+    settle();
+
+    expect(boxes[1].querySelector('iframe')).not.toBeNull();
+    expect(boxes[0].querySelector('iframe')).toBeNull();
+  });
+
   it('tears the iframe down again once the embed scrolls out of view', () => {
     embedActivation.setBudgets({ maxLiveEmbeds: 1 });
     const { container } = renderGames(1);

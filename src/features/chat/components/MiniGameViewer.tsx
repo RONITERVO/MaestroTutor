@@ -140,7 +140,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const pendingPosterRef = useRef<string | null>(null);
 
   const slot = useEmbedSlot({ id: embedId, kind: 'mini-game' });
-  const { setRef, isLive, isFullyVisible, poster, pin, unpin, publishPoster, postersEnabled } = slot;
+  const { setRef, isLive, isFullyVisible, poster, pin, publishPoster, postersEnabled } = slot;
 
   /**
    * The reserved box. Derived from the source text when nothing is stored, so
@@ -393,11 +393,15 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   /**
    * Playing pins the slot: an in-progress game must not be evicted just because
    * another embed drifted closer to the centre of the viewport.
+   *
+   * Only ever pins. Switching back to chat scrolling means "give me the page
+   * back", not "stop running this" — releasing the pin there would let a
+   * neighbour take the slot and stop the game the user is still looking at. The
+   * pin is released by scrolling away or by engaging a different embed.
    */
   useEffect(() => {
     if (gameGesturesEnabled) pin();
-    else unpin();
-  }, [gameGesturesEnabled, pin, unpin]);
+  }, [gameGesturesEnabled, pin]);
 
   const handleSelectGameGestureMode = useCallback((nextEnabled: boolean, event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -415,13 +419,18 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     }
   }, [canUseGameGestures, gameGesturesEnabled, resetPointerGate]);
 
-  /** Tapping a resting embed asks for the live slot explicitly. */
+  /**
+   * Tapping a resting embed asks for the live slot explicitly.
+   *
+   * The pin deliberately has no timer on it. An explicit "run this" has to
+   * outlive arbitration, or the slot is handed straight back to whichever
+   * neighbour scored higher and the embed stops a second after it started. It
+   * is released the way every other pin is: when this embed scrolls away, or
+   * when the user engages a different one.
+   */
   const handleActivateFromRest = useCallback(() => {
     pin();
-    // The pin only needs to survive arbitration, not the session; it is released
-    // when the embed scrolls out of view or the user starts a different one.
-    window.setTimeout(() => unpin(), 1200);
-  }, [pin, unpin]);
+  }, [pin]);
 
   const handleGatePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0 || gameGesturesEnabled || showCode) return;

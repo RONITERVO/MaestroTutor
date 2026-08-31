@@ -162,7 +162,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   // rather than silently rendering a blank document.
   const isLive = compact || !embedId || slot.isLive;
 
-  const { pin, unpin, setRef: setSlotRef } = slot;
+  const { pin, setRef: setSlotRef } = slot;
 
   /**
    * Must be stable: React detaches and reattaches an inline ref callback on
@@ -174,12 +174,17 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
     setSlotRef(el);
   }, [setSlotRef]);
 
-  /** Scrolling the pages is an explicit engagement; hold the live slot. */
+  /**
+   * Scrolling the pages is an explicit engagement; hold the live slot. Only
+   * ever pins: page scrolling is switched back off by any chat scroll, and
+   * dropping the pin there would release the document while the reader is
+   * still looking at it. The pin ends when the PDF scrolls away or the user
+   * engages a different embed.
+   */
   useEffect(() => {
     if (compact || !embedId) return;
     if (isPdfScrollEnabled) pin();
-    else unpin();
-  }, [compact, embedId, isPdfScrollEnabled, pin, unpin]);
+  }, [compact, embedId, isPdfScrollEnabled, pin]);
 
   const releaseRenderedPages = useCallback((keep?: Set<number>) => {
     const current = renderedPagesRef.current;
