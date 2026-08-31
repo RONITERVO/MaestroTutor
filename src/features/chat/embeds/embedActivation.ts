@@ -376,14 +376,21 @@ class EmbedActivationManager {
     this.applyPromotions(desired);
   }
 
+  /**
+   * Make the world match `desired` in both directions.
+   *
+   * Demoting here as well as in arbitrate() is deliberate belt-and-braces: this
+   * is also reached from the dwell timer, and the budget invariant should not
+   * depend on tracing which call path got us here.
+   */
   private applyPromotions(desired: Set<string>): void {
     for (const record of this.records.values()) {
       if (desired.has(record.id)) {
         if (record.phase !== 'live') this.setPhase(record, 'live');
-      } else if (record.phase !== 'live') {
-        const next: EmbedPhase = this.posters.has(record.id) ? 'frozen' : 'placeholder';
-        if (record.phase !== next) this.setPhase(record, next);
+        continue;
       }
+      const next: EmbedPhase = this.posters.has(record.id) ? 'frozen' : 'placeholder';
+      if (record.phase !== next) this.setPhase(record, next);
     }
   }
 

@@ -139,8 +139,8 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   /** A captured poster we own until the manager takes it. */
   const pendingPosterRef = useRef<string | null>(null);
 
-  const slot = useEmbedSlot<HTMLDivElement>({ id: embedId, kind: 'mini-game' });
-  const { isLive, isFullyVisible, poster, pin, unpin, publishPoster, postersEnabled } = slot;
+  const slot = useEmbedSlot({ id: embedId, kind: 'mini-game' });
+  const { setRef, isLive, isFullyVisible, poster, pin, unpin, publishPoster, postersEnabled } = slot;
 
   /**
    * The reserved box. Derived from the source text when nothing is stored, so
@@ -511,7 +511,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
         <EmbedBox
           aspectRatio={resolvedBox.aspectRatio}
-          boxRef={slot.ref}
+          boxRef={setRef}
           className={`rounded-2xl border ${lineColor} shadow-none ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
         >
           {isLive ? (
@@ -547,7 +547,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               title={resumeLabel}
               aria-label={resumeLabel}
             >
-              <span className={`flex items-center gap-1.5 rounded-full border ${lineColor} ${containerBg} px-3 py-1.5 text-[10px] uppercase tracking-wider ${textColor}`}>
+              <span className={`embed-rest-hint flex items-center gap-1.5 rounded-full border ${lineColor} ${containerBg} px-3 py-1.5 text-[10px] uppercase tracking-wider ${textColor}`}>
                 <IconPlay className="w-3 h-3 shrink-0" />
                 <span className="font-semibold">{resumeLabel}</span>
               </span>

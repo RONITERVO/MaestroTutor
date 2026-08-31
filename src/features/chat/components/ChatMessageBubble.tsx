@@ -1481,6 +1481,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                         src={displayUrl!}
                         variant={isUser ? 'user' : 'assistant'}
                         bottomInset={scrollableAttachmentBottomInset}
+                        embedId={message.id}
                       />
                       {isFocusedMode && !isAnnotationActive && (
                         <button

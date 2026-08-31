@@ -745,6 +745,20 @@
   background-color: transparent;
 }
 
+/* minSdk is 24, and while the system WebView is normally kept current through
+   Play, some OEM devices freeze it below Chrome 88 where `aspect-ratio` does not
+   exist. Fall back to the padding-ratio technique so the box is still reserved:
+   absolutely positioned children resolve against the padding box, which is what
+   every child of .embed-box already is. */
+@supports not (aspect-ratio: 1 / 1) {
+  .embed-box {
+    height: 0;
+    padding-top: calc(100% / var(--embed-ar, 1.333));
+    min-height: var(--embed-min-h, 220px);
+    contain: layout paint;
+  }
+}
+
 .embed-box > iframe,
 .embed-box > .embed-fill {
   position: absolute;
@@ -770,12 +784,20 @@
   opacity: 0.92;
 }
 
-.embed-resume-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 12px;
-  transform: translateX(-50%);
-  pointer-events: none;
+/* Held back so it never flashes on an embed that is merely a beat away from
+   booting — a freshly generated artifact should look like it is starting up,
+   not like it is waiting to be asked. */
+.embed-rest-hint {
+  animation: embed-rest-hint-in 180ms ease-out 420ms both;
+}
+
+@keyframes embed-rest-hint-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .embed-rest-hint { animation-duration: 1ms; }
 }
 
 /* ============================================================

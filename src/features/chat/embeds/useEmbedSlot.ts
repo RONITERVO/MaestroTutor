@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /** React binding for the embed activation manager. */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { embedActivation } from './embedActivation';
 import type { EmbedKind, EmbedPhase } from './embedTypes';
 
@@ -15,9 +15,16 @@ interface UseEmbedSlotOptions {
   enabled?: boolean;
 }
 
-export interface EmbedSlot<T extends HTMLElement> {
-  /** Attach to the element that represents the reserved box. */
-  ref: React.RefObject<T | null>;
+export interface EmbedSlot {
+  /**
+   * Attach to the element that represents the reserved box.
+   *
+   * A callback ref rather than a RefObject on purpose: a viewer that renders a
+   * loading state first only produces its box element on a later render, and a
+   * RefObject read once inside an effect would register `null` and never be
+   * observed. This re-registers whenever the node actually changes.
+   */
+  setRef: (element: HTMLElement | null) => void;
   phase: EmbedPhase;
   isLive: boolean;
   /**
@@ -35,17 +42,17 @@ export interface EmbedSlot<T extends HTMLElement> {
   postersEnabled: boolean;
 }
 
-export function useEmbedSlot<T extends HTMLElement>({
-  id,
-  kind,
-  enabled = true,
-}: UseEmbedSlotOptions): EmbedSlot<T> {
-  const ref = useRef<T | null>(null);
+export function useEmbedSlot({ id, kind, enabled = true }: UseEmbedSlotOptions): EmbedSlot {
+  const [element, setElement] = useState<HTMLElement | null>(null);
   const [phase, setPhase] = useState<EmbedPhase>('placeholder');
   const [isFullyVisible, setIsFullyVisible] = useState(false);
 
+  const setRef = useCallback((next: HTMLElement | null) => {
+    setElement((current) => (current === next ? current : next));
+  }, []);
+
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !element) {
       setPhase('placeholder');
       setIsFullyVisible(false);
       return;
@@ -53,11 +60,11 @@ export function useEmbedSlot<T extends HTMLElement>({
     return embedActivation.register({
       id,
       kind,
-      element: ref.current,
+      element,
       onPhase: setPhase,
       onFullyVisible: setIsFullyVisible,
     });
-  }, [id, kind, enabled]);
+  }, [id, kind, enabled, element]);
 
   // Releasing the pin on unmount matters: a pinned record that outlives its
   // component would hold the only live slot forever.
@@ -68,7 +75,7 @@ export function useEmbedSlot<T extends HTMLElement>({
   const publishPoster = useCallback((url: string) => embedActivation.setPoster(id, url), [id]);
 
   return {
-    ref,
+    setRef,
     phase,
     isLive: phase === 'live',
     isFullyVisible,
