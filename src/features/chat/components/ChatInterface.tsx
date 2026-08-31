@@ -13,6 +13,7 @@ import { LanguageSelectorGlobe } from '../../session';
 import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT, selectDeviceBudgets } from '../../../store';
 import { useEmbedViewport } from '../embeds/useEmbedViewport';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
+import { useStableCallback } from '../../../shared/hooks/useStableCallback';
 import {
   selectMessages,
   selectLiveTranscriptMessages,
@@ -192,6 +193,56 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     }
     return eligible;
   }, [combinedMessages, maxVisibleBookmarkBudget]);
+
+  /*
+   * Per-message callbacks, created once and cached.
+   *
+   * These were inline arrows in the JSX, which handed every ChatMessageBubble a
+   * fresh prop object on every render and so defeated its React.memo entirely:
+   * profiling on device showed all ~23 rendered bubbles — and their whole icon
+   * subtrees — re-rendering on every single commit. Reading the current handler
+   * through a ref keeps the cached closures stable for the life of the message
+   * even if the callback prop itself changes identity.
+   */
+  // Handlers that arrive as props from App and are forwarded to every bubble.
+  // Any one of them changing identity re-renders the whole list, so they are
+  // pinned here rather than relying on the callback chains upstream staying
+  // memoised. onQuotaStartLive was the one that actually did it.
+  const stableQuotaSetupBilling = useStableCallback(onQuotaSetupBilling);
+  const stableQuotaStartLive = useStableCallback(onQuotaStartLive);
+  const stableImageGenViewCost = useStableCallback(onImageGenViewCost);
+  const stableSetAttachedImage = useStableCallback(onSetAttachedImage);
+  const stableUserInputActivity = useStableCallback(onUserInputActivity);
+  const stableToggleSpeakNativeLang = useStableCallback(onToggleSpeakNativeLang);
+  const stableSpeakText = useStableCallback(speakText);
+  const stableStopSpeaking = useStableCallback(stopSpeaking);
+
+  const focusToggleRef = useRef(onToggleImageFocusedMode);
+  focusToggleRef.current = onToggleImageFocusedMode;
+  const perMessageHandlers = useRef(new Map<string, {
+    toggleFocus: () => void;
+    registerEl: (el: HTMLDivElement | null) => void;
+  }>());
+
+  const getMessageHandlers = useCallback((messageId: string) => {
+    const cache = perMessageHandlers.current;
+    let handlers = cache.get(messageId);
+    if (!handlers) {
+      // Messages come and go over a long session; rebuilding the whole cache
+      // occasionally is cheaper than tracking liveness, and costs one extra
+      // render wave at most.
+      if (cache.size > 300) cache.clear();
+      handlers = {
+        toggleFocus: () => focusToggleRef.current(messageId),
+        registerEl: (el: HTMLDivElement | null) => {
+          if (el) bubbleWrapperRefs.current.set(messageId, el);
+          else bubbleWrapperRefs.current.delete(messageId);
+        },
+      };
+      cache.set(messageId, handlers);
+    }
+    return handlers;
+  }, [bubbleWrapperRefs]);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -840,22 +891,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 estimatedLoadTime={estimatedImageLoadTime} 
                 loadingAnimations={loadingAnimations}
                 t={t}
-                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
+                onToggleSpeakNativeLang={stableToggleSpeakNativeLang}
                 handleSpeakLine={handleSpeakLine}
                 handlePlayUserMessage={handlePlayUserMessage}
-                speakText={speakText}
-                stopSpeaking={stopSpeaking}
-                onToggleImageFocusedMode={() => onToggleImageFocusedMode(msg.id)}
+                speakText={stableSpeakText}
+                stopSpeaking={stableStopSpeaking}
+                onToggleImageFocusedMode={getMessageHandlers(msg.id).toggleFocus}
                 transitioningImageId={transitioningImageId}
-                onSetAttachedImage={onSetAttachedImage}
-                onUserInputActivity={onUserInputActivity}
-                onQuotaSetupBilling={onQuotaSetupBilling}
-                onQuotaStartLive={onQuotaStartLive}
-                onImageGenViewCost={onImageGenViewCost}
-                registerBubbleEl={(el) => {
-                  if (el) bubbleWrapperRefs.current.set(msg.id, el);
-                  else bubbleWrapperRefs.current.delete(msg.id);
-                }}
+                onSetAttachedImage={stableSetAttachedImage}
+                onUserInputActivity={stableUserInputActivity}
+                onQuotaSetupBilling={stableQuotaSetupBilling}
+                onQuotaStartLive={stableQuotaStartLive}
+                onImageGenViewCost={stableImageGenViewCost}
+                registerBubbleEl={getMessageHandlers(msg.id).registerEl}
               />
             </div>
           );
@@ -948,7 +996,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 <InputArea
                     onSttToggle={onSttToggle}
                     onSendMessage={onSendMessage}
-                    onUserInputActivity={onUserInputActivity}
+                    onUserInputActivity={stableUserInputActivity}
                     onStartLiveSession={onStartLiveSession}
                     onStopLiveSession={onStopLiveSession}
                     onStopSilentObserver={onStopSilentObserver}
@@ -977,8 +1025,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     t={t}
                     onToggleSuggestionMode={() => onToggleSuggestionMode()}
                     onSuggestionClick={onSuggestionClick}
-                    stopSpeaking={stopSpeaking}
-                    onToggleSpeakNativeLang={onToggleSpeakNativeLang}
+                    stopSpeaking={stableStopSpeaking}
+                    onToggleSpeakNativeLang={stableToggleSpeakNativeLang}
                     speakNativeLang={speakNativeLang}
                     onPracticeSuggestion={handlePracticeSuggestion}
                     isPracticeDisabled={isLiveSession}
