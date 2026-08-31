@@ -545,20 +545,30 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               draggable={false}
             />
           ) : (
-            <div className={`embed-fill embed-placeholder ${containerBg}`} aria-hidden />
+            /* The resting state has to read as a card you can open, not as
+               content that failed to load, because with one live embed at a
+               time this is what most artifacts look like most of the time. */
+            <div className="embed-fill embed-placeholder notebook-attachment-paper paper-texture notebook-lines" aria-hidden />
           )}
 
           {!isLive && (
             <button
               type="button"
               onClick={handleActivateFromRest}
-              className="absolute inset-0 z-20 flex items-center justify-center bg-transparent"
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-transparent"
               title={resumeLabel}
-              aria-label={resumeLabel}
+              aria-label={fileName ? `${resumeLabel}: ${fileName}` : resumeLabel}
             >
-              <span className={`embed-rest-hint flex items-center gap-1.5 rounded-full border ${lineColor} ${containerBg} px-3 py-1.5 text-[10px] uppercase tracking-wider ${textColor}`}>
-                <IconPlay className="w-3 h-3 shrink-0" />
-                <span className="font-semibold">{resumeLabel}</span>
+              <span className="embed-rest-hint flex flex-col items-center gap-2">
+                <span className={`flex items-center gap-1.5 rounded-full border ${lineColor} ${containerBg} px-3 py-1.5 text-[10px] uppercase tracking-wider ${textColor}`}>
+                  <IconPlay className="w-3 h-3 shrink-0" />
+                  <span className="font-semibold">{resumeLabel}</span>
+                </span>
+                {fileName && (
+                  <span className="max-w-[85%] truncate font-architect text-[11px] text-deep-ink/70">
+                    {fileName}
+                  </span>
+                )}
               </span>
             </button>
           )}

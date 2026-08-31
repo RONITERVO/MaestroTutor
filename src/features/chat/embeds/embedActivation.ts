@@ -42,6 +42,8 @@ const FLING_COOLDOWN_MS = 180;
  * from holding a document open for the rest of the session.
  */
 const PIN_OFFSCREEN_GRACE_MS = 20_000;
+/** How long we wait for the observer to say anything before assuming it never will. */
+const OBSERVER_SILENCE_TIMEOUT_MS = 1_200;
 
 const INTERSECTION_THRESHOLDS = [0, 0.01, 0.15, 0.35, 0.6, 0.85, 0.99];
 
@@ -78,6 +80,16 @@ interface EmbedRecord {
 /** An embed is "fully visible" once essentially all of it is inside the root. */
 const FULL_VISIBILITY_RATIO = 0.99;
 
+export interface EmbedActivationDebugRecord {
+  id: string;
+  kind: EmbedKind;
+  phase: EmbedPhase;
+  visibleFraction: number;
+  centeredness: number;
+  pinned: boolean;
+  observed: boolean;
+}
+
 export interface EmbedActivationDebugSnapshot {
   live: string[];
   frozen: string[];
@@ -85,6 +97,11 @@ export interface EmbedActivationDebugSnapshot {
   posters: number;
   budgets: EmbedBudgets;
   observing: boolean;
+  /** A scroll root has been supplied by ChatInterface. */
+  hasRoot: boolean;
+  /** The observer has delivered at least one entry. False here explains a lot. */
+  receivedEntries: boolean;
+  records: EmbedActivationDebugRecord[];
 }
 
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -103,6 +120,9 @@ class EmbedActivationManager {
   private lastScrollAt = 0;
   private lastFlingAt = 0;
   private scrollTarget: Element | null = null;
+  /** Whether the observer has ever delivered anything. See assumeVisibleIfSilent. */
+  private hasIngested = false;
+  private silenceTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ---------------------------------------------------------------- lifecycle
 
@@ -185,6 +205,7 @@ class EmbedActivationManager {
     if (!this.observer) record.visibleFraction = 1;
 
     this.schedule();
+    this.armSilenceFallback();
     onPhase(record.phase);
     onFullyVisible?.(record.fullyVisible);
 
@@ -304,7 +325,49 @@ class EmbedActivationManager {
     }
   }
 
+  /**
+   * Guarantee that something runs even if the observer never speaks.
+   *
+   * Visibility-driven activation has one catastrophic failure mode: if no entry
+   * ever arrives, every embed sits at zero visibility, nothing is ever promoted,
+   * and the whole chat is permanently inert — artifacts that only start when
+   * tapped, and an engaged one that is never reported off screen so it holds the
+   * slot for the session. That is far worse than being slightly over-eager, and
+   * it is not a state we can rule out across every WebView and every DOM shape
+   * an attachment might sit in.
+   *
+   * So: if the observer has delivered nothing at all shortly after embeds have
+   * registered, assume they are visible and let normal arbitration proceed. A
+   * working observer corrects this on its first batch, long before the timer.
+   */
+  private armSilenceFallback(): void {
+    if (this.hasIngested || this.silenceTimer !== null) return;
+
+    this.silenceTimer = setTimeout(() => {
+      this.silenceTimer = null;
+      if (this.hasIngested || this.records.size === 0) return;
+
+      if (import.meta.env?.DEV) {
+        console.warn(
+          '[embedActivation] no IntersectionObserver entries arrived; falling back to '
+          + 'assuming embeds are visible. Activation will not follow scrolling.',
+        );
+      }
+      for (const record of this.records.values()) {
+        record.visibleFraction = 1;
+        record.centeredness = 0;
+      }
+      this.arbitrate();
+    }, OBSERVER_SILENCE_TIMEOUT_MS);
+  }
+
   private ingest(entries: IntersectionObserverEntry[]): void {
+    this.hasIngested = true;
+    if (this.silenceTimer !== null) {
+      clearTimeout(this.silenceTimer);
+      this.silenceTimer = null;
+    }
+
     for (const entry of entries) {
       const record = this.findByElement(entry.target);
       if (!record) continue;
@@ -514,6 +577,9 @@ class EmbedActivationManager {
   /** Release every observer, timer and poster. Used on chat teardown and by tests. */
   reset(): void {
     this.clearDwell();
+    if (this.silenceTimer !== null) clearTimeout(this.silenceTimer);
+    this.silenceTimer = null;
+    this.hasIngested = false;
     if (this.rafHandle && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this.rafHandle);
     this.rafHandle = 0;
     this.observer?.disconnect();
@@ -532,11 +598,24 @@ class EmbedActivationManager {
     const live: string[] = [];
     const frozen: string[] = [];
     const placeholder: string[] = [];
+    const records: EmbedActivationDebugRecord[] = [];
+
     for (const record of this.records.values()) {
       if (record.phase === 'live') live.push(record.id);
       else if (record.phase === 'frozen') frozen.push(record.id);
       else placeholder.push(record.id);
+
+      records.push({
+        id: record.id,
+        kind: record.kind,
+        phase: record.phase,
+        visibleFraction: Math.round(record.visibleFraction * 100) / 100,
+        centeredness: Math.round(record.centeredness * 100) / 100,
+        pinned: record.pinned,
+        observed: record.element !== null,
+      });
     }
+
     return {
       live,
       frozen,
@@ -544,6 +623,11 @@ class EmbedActivationManager {
       posters: this.posters.size,
       budgets: { ...this.budgets },
       observing: this.observer !== null,
+      // The two fields that tell you whether visibility is working at all: a
+      // root but no entries means the observer is attached and silent.
+      hasRoot: this.root !== null,
+      receivedEntries: this.hasIngested,
+      records,
     };
   }
 }
@@ -573,6 +657,9 @@ const revokeObjectUrl = (url: string): void => {
 
 export const embedActivation = new EmbedActivationManager();
 
-if (typeof window !== 'undefined' && import.meta.env?.DEV) {
+// Exposed in release builds too, not just dev: these budgets are only ever
+// verified on real low-end devices over chrome://inspect, and a read-only
+// snapshot function is a negligible thing to ship for that.
+if (typeof window !== 'undefined') {
   (window as unknown as Record<string, unknown>).__EMBED_DEBUG__ = () => embedActivation.debugSnapshot();
 }

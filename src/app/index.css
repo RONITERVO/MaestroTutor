@@ -769,6 +769,13 @@
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+/* Only the iframe is forced transparent, so an artifact sits on the notebook
+   page rather than on its own sheet. The placeholder and poster must NOT be:
+   this rule is two classes deep and would otherwise out-specify the Tailwind
+   `bg-*` utility on the element, leaving the resting state invisible. */
+.embed-box > iframe {
   background-color: transparent;
 }
 
