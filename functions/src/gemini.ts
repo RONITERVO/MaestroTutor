@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -13,6 +13,18 @@ import type { AppUser } from './auth';
 import { appConfig } from './config';
 import { adminDb } from './firebase';
 import { createHttpError, getErrorMessage } from './http';
+import {
+  MANAGED_RUNTIME_RETENTION_MS,
+  accountDeletionClaimRef,
+  cleanupJobsCollection,
+  ensureManagedUserDocument,
+  managedFileQuotaRef,
+  managedFileRef,
+  managedFilesCollection,
+  managedLiveLeaseRef,
+  managedLiveQuotaRef,
+  timestampFromMillis,
+} from './managedData';
 import {
   releaseManagedReservation,
   reserveManagedCredits,
@@ -55,14 +67,6 @@ const normalizeGeminiFileName = (nameOrUri: string): string | null => {
   }
   return null;
 };
-
-const fileDocId = (name: string): string => Buffer.from(name, 'utf8').toString('base64url');
-
-const managedFileRef = (name: string) => adminDb.collection('managedFiles').doc(fileDocId(name));
-const managedAccountSummaryRef = (uid: string) =>
-  adminDb.collection('users').doc(uid).collection('account').doc('summary');
-const managedLiveLeaseRef = (uid: string, leaseId: string) =>
-  adminDb.collection('users').doc(uid).collection('managedLiveLeases').doc(leaseId);
 
 const isNotFoundError = (error: unknown): boolean => {
   const status = Number((error as { status?: unknown })?.status);
@@ -117,10 +121,10 @@ const readActiveManagedLiveLeases = (value: unknown, now = Date.now()): ManagedL
 
 const reserveManagedLiveLease = async (params: {
   uid: string;
-  user: AppUser;
   purpose: 'live' | 'music';
   durationMs: number;
 }): Promise<ManagedLiveLeaseRecord> => {
+  await ensureManagedUserDocument(params.uid);
   const currentTime = Date.now();
   const lease: ManagedLiveLeaseRecord = {
     leaseId: randomUUID(),
@@ -129,8 +133,14 @@ const reserveManagedLiveLease = async (params: {
   };
 
   await adminDb.runTransaction(async (transaction: any) => {
-    const summaryRef = managedAccountSummaryRef(params.uid);
-    const summarySnapshot = await transaction.get(summaryRef);
+    const summaryRef = managedLiveQuotaRef(params.uid);
+    const [summarySnapshot, deletionClaim] = await Promise.all([
+      transaction.get(summaryRef),
+      transaction.get(accountDeletionClaimRef(params.uid)),
+    ]);
+    if (deletionClaim.exists) {
+      throw createHttpError(409, 'This managed account is being deleted.');
+    }
     const currentLeases = readActiveManagedLiveLeases(summarySnapshot.data()?.activeManagedLiveLeases, currentTime);
     if (currentLeases.length >= appConfig.managedMaxActiveLiveSockets) {
       throw createHttpError(
@@ -140,8 +150,8 @@ const reserveManagedLiveLease = async (params: {
     }
 
     transaction.set(summaryRef, {
-      user: params.user,
       activeManagedLiveLeases: [...currentLeases, lease],
+      updatedAt: currentTime,
     }, { merge: true });
     transaction.set(managedLiveLeaseRef(params.uid, lease.leaseId), {
       uid: params.uid,
@@ -149,6 +159,7 @@ const reserveManagedLiveLease = async (params: {
       createdAt: currentTime,
       expiresAt: lease.expiresAt,
       releasedAt: null,
+      purgeAt: timestampFromMillis(lease.expiresAt + MANAGED_RUNTIME_RETENTION_MS),
     }, { merge: true });
   });
 
@@ -182,22 +193,30 @@ const countGeneratedImages = (response: unknown): number => {
 export const releaseManagedLiveLease = async (uid: string, leaseId: string): Promise<{ ok: boolean }> => {
   if (!leaseId.trim()) return { ok: false };
   const currentTime = Date.now();
-  await adminDb.runTransaction(async (transaction: any) => {
-    const summaryRef = managedAccountSummaryRef(uid);
+  const released = await adminDb.runTransaction(async (transaction: any) => {
+    const summaryRef = managedLiveQuotaRef(uid);
     const leaseRef = managedLiveLeaseRef(uid, leaseId);
-    const summarySnapshot = await transaction.get(summaryRef);
+    const [summarySnapshot, leaseSnapshot] = await Promise.all([
+      transaction.get(summaryRef),
+      transaction.get(leaseRef),
+    ]);
+    if (!leaseSnapshot.exists) return false;
     const currentLeases = readActiveManagedLiveLeases(summarySnapshot.data()?.activeManagedLiveLeases, currentTime);
     transaction.set(summaryRef, {
       activeManagedLiveLeases: currentLeases.filter((lease) => lease.leaseId !== leaseId),
+      updatedAt: currentTime,
     }, { merge: true });
-    transaction.set(leaseRef, { releasedAt: currentTime }, { merge: true });
+    transaction.set(leaseRef, {
+      releasedAt: currentTime,
+      purgeAt: timestampFromMillis(currentTime + MANAGED_RUNTIME_RETENTION_MS),
+    }, { merge: true });
+    return true;
   });
-  return { ok: true };
+  return { ok: released };
 };
 
 const listActiveManagedFilesForUser = async (uid: string) => {
-  const snapshot = await adminDb.collection('managedFiles')
-    .where('uid', '==', uid)
+  const snapshot = await managedFilesCollection(uid)
     .where('deletedAt', '==', null)
     .limit(appConfig.managedMaxActiveFilesPerUser + 5)
     .get();
@@ -210,10 +229,17 @@ const listActiveManagedFilesForUser = async (uid: string) => {
   }));
 };
 
-const reserveManagedUploadSlot = async (uid: string, user?: AppUser): Promise<void> => {
+const reserveManagedUploadSlot = async (uid: string): Promise<void> => {
+  await ensureManagedUserDocument(uid);
   await adminDb.runTransaction(async (transaction: any) => {
-    const summaryRef = managedAccountSummaryRef(uid);
-    const summarySnapshot = await transaction.get(summaryRef);
+    const summaryRef = managedFileQuotaRef(uid);
+    const [summarySnapshot, deletionClaim] = await Promise.all([
+      transaction.get(summaryRef),
+      transaction.get(accountDeletionClaimRef(uid)),
+    ]);
+    if (deletionClaim.exists) {
+      throw createHttpError(409, 'This managed account is being deleted.');
+    }
     const currentCount = readActiveManagedFileCount(summarySnapshot.data()?.activeManagedFileCount);
     if (currentCount >= appConfig.managedMaxActiveFilesPerUser) {
       throw createHttpError(
@@ -223,27 +249,28 @@ const reserveManagedUploadSlot = async (uid: string, user?: AppUser): Promise<vo
     }
 
     transaction.set(summaryRef, {
-      ...(user ? { user } : {}),
       activeManagedFileCount: currentCount + 1,
+      updatedAt: Date.now(),
     }, { merge: true });
   });
 };
 
 const releaseManagedUploadSlot = async (uid: string): Promise<void> => {
   await adminDb.runTransaction(async (transaction: any) => {
-    const summaryRef = managedAccountSummaryRef(uid);
+    const summaryRef = managedFileQuotaRef(uid);
     const summarySnapshot = await transaction.get(summaryRef);
     const currentCount = readActiveManagedFileCount(summarySnapshot.data()?.activeManagedFileCount);
     transaction.set(summaryRef, {
       activeManagedFileCount: Math.max(0, currentCount - 1),
+      updatedAt: Date.now(),
     }, { merge: true });
   });
 };
 
 const markManagedFileDeleted = async (uid: string, fileName: string): Promise<boolean> => (
   adminDb.runTransaction(async (transaction: any) => {
-    const fileRef = managedFileRef(fileName);
-    const summaryRef = managedAccountSummaryRef(uid);
+    const fileRef = managedFileRef(uid, fileName);
+    const summaryRef = managedFileQuotaRef(uid);
     const [fileSnapshot, summarySnapshot] = await Promise.all([
       transaction.get(fileRef),
       transaction.get(summaryRef),
@@ -261,16 +288,18 @@ const markManagedFileDeleted = async (uid: string, fileName: string): Promise<bo
       state: 'deleted',
       cleanupPending: false,
       cleanupLastError: null,
+      purgeAt: timestampFromMillis(Date.now() + MANAGED_RUNTIME_RETENTION_MS),
     }, { merge: true });
     transaction.set(summaryRef, {
       activeManagedFileCount: Math.max(0, currentCount - 1),
+      updatedAt: Date.now(),
     }, { merge: true });
     return true;
   })
 );
 
 const deleteManagedFileByName = async (uid: string, fileName: string): Promise<boolean> => {
-  const snapshot = await managedFileRef(fileName).get();
+  const snapshot = await managedFileRef(uid, fileName).get();
   const data = snapshot.data();
   if (!snapshot.exists || data?.uid !== uid) {
     return false;
@@ -643,11 +672,11 @@ export const uploadManagedMedia = async (params: {
   try {
     await evictManagedFilesForUpload(params.uid, 1);
     try {
-      await reserveManagedUploadSlot(params.uid, actingUser);
+      await reserveManagedUploadSlot(params.uid);
     } catch (error) {
       if (Number((error as { status?: unknown })?.status) === 403) {
         await evictManagedFilesForUpload(params.uid, 1);
-        await reserveManagedUploadSlot(params.uid, actingUser);
+        await reserveManagedUploadSlot(params.uid);
       } else {
         throw error;
       }
@@ -685,7 +714,7 @@ export const uploadManagedMedia = async (params: {
       await waitForManagedFileActive(fileName);
     }
 
-    await managedFileRef(fileName).set({
+    await managedFileRef(params.uid, fileName).set({
       uid: params.uid,
       name: fileName,
       uri: uploaded.uri,
@@ -762,7 +791,7 @@ export const getManagedFileStatuses = async (uid: string, uris: string[]) => {
         return;
       }
 
-      const snapshot = await managedFileRef(fileName).get();
+      const snapshot = await managedFileRef(uid, fileName).get();
       const data = snapshot.data();
       if (!snapshot.exists || data?.uid !== uid || data?.deletedAt) {
         statuses[uri] = { deleted: true, active: false };
@@ -778,7 +807,7 @@ export const getManagedFileStatuses = async (uid: string, uris: string[]) => {
         if (deleted) {
           await markManagedFileDeleted(uid, fileName);
         } else {
-          await managedFileRef(fileName).set({
+          await managedFileRef(uid, fileName).set({
             lastCheckedAt: Date.now(),
             state: active ? 'active' : 'processing',
           }, { merge: true });
@@ -813,8 +842,7 @@ export const clearManagedFiles = async (uid: string) => {
   let lastDocument: FirebaseFirestore.QueryDocumentSnapshot | undefined;
 
   while (true) {
-    let query = adminDb.collection('managedFiles')
-      .where('uid', '==', uid)
+    let query = managedFilesCollection(uid)
       .orderBy(FieldPath.documentId())
       .limit(FILE_CLEANUP_BATCH_SIZE);
     if (lastDocument) {
@@ -863,6 +891,134 @@ export const clearManagedFiles = async (uid: string) => {
   return { deletedCount, failedCount, failedNames, cleanedMetadataIds };
 };
 
+/** Defensively clean paths referenced by the undeployed, code-only v1 draft. */
+export const clearLegacyManagedFiles = async (uid: string) => {
+  let deletedCount = 0;
+  let failedCount = 0;
+  const failedNames: string[] = [];
+  const cleanedMetadataIds: string[] = [];
+  let lastDocument: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+
+  while (true) {
+    let query = adminDb.collection('managedFiles')
+      .where('uid', '==', uid)
+      .orderBy(FieldPath.documentId())
+      .limit(FILE_CLEANUP_BATCH_SIZE);
+    if (lastDocument) query = query.startAfter(lastDocument);
+    const snapshot = await query.get();
+    if (snapshot.empty) break;
+    lastDocument = snapshot.docs[snapshot.docs.length - 1];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data() as { name?: unknown; uri?: unknown; deletedAt?: unknown };
+      const name = typeof data.name === 'string'
+        ? data.name
+        : (typeof data.uri === 'string' ? normalizeGeminiFileName(data.uri) || '' : '');
+      if (data.deletedAt) {
+        cleanedMetadataIds.push(doc.id);
+        continue;
+      }
+      try {
+        if (!name) throw new Error('Legacy managed file record has no remote file name.');
+        try {
+          await getGeminiClient().files.delete({ name });
+        } catch (error) {
+          if (!isNotFoundError(error)) throw error;
+        }
+        deletedCount += 1;
+        cleanedMetadataIds.push(doc.id);
+      } catch (error) {
+        failedCount += 1;
+        if (name) failedNames.push(name);
+        // The retry job now owns any recoverable remote name. Do not retain a
+        // abandoned v1-path document containing the deleted user's UID.
+        cleanedMetadataIds.push(doc.id);
+      }
+    }
+
+    if (snapshot.size < FILE_CLEANUP_BATCH_SIZE) break;
+  }
+
+  return { deletedCount, failedCount, failedNames, cleanedMetadataIds };
+};
+
+/**
+ * Preserve remote deletions that outlive a user root (notably account
+ * deletion). Jobs contain only the opaque Gemini file name, never user data.
+ */
+export const queueManagedFileCleanupJobs = async (fileNames: string[]): Promise<number> => {
+  const uniqueNames = [...new Set(fileNames.map((name) => name.trim()).filter(Boolean))];
+  if (uniqueNames.length === 0) return 0;
+
+  const currentTime = Date.now();
+  for (let offset = 0; offset < uniqueNames.length; offset += FILE_CLEANUP_BATCH_SIZE) {
+    const batch = adminDb.batch();
+    for (const name of uniqueNames.slice(offset, offset + FILE_CLEANUP_BATCH_SIZE)) {
+      const jobId = createHash('sha256').update(name).digest('hex');
+      batch.set(cleanupJobsCollection().doc(jobId), {
+        kind: 'gemini-file-delete',
+        name,
+        status: 'pending',
+        attempts: 0,
+        createdAt: currentTime,
+        updatedAt: currentTime,
+        retryAt: timestampFromMillis(currentTime),
+      }, { merge: true });
+    }
+    await batch.commit();
+  }
+  return uniqueNames.length;
+};
+
+export const retryManagedFileCleanupJobs = async (limit = 50): Promise<{
+  attempted: number;
+  completed: number;
+}> => {
+  const currentTime = Date.now();
+  const snapshot = await cleanupJobsCollection()
+    .where('status', '==', 'pending')
+    .where('retryAt', '<=', timestampFromMillis(currentTime))
+    .limit(Math.max(1, Math.min(200, Math.floor(limit))))
+    .get();
+
+  let completed = 0;
+  for (const doc of snapshot.docs) {
+    const data = doc.data() as { name?: unknown; attempts?: unknown };
+    const name = typeof data.name === 'string' ? data.name : '';
+    try {
+      if (!name) throw new Error('Cleanup job has no Gemini file name.');
+      try {
+        await getGeminiClient().files.delete({ name });
+      } catch (error) {
+        if (!isNotFoundError(error)) throw error;
+      }
+
+      const completedAt = Date.now();
+      await doc.ref.set({
+        status: 'completed',
+        completedAt,
+        updatedAt: completedAt,
+        lastError: null,
+        purgeAt: timestampFromMillis(completedAt + MANAGED_RUNTIME_RETENTION_MS),
+      }, { merge: true });
+      completed += 1;
+    } catch (error) {
+      const attempts = Math.max(0, Number(data.attempts || 0)) + 1;
+      const retryDelayMs = Math.min(24 * 60 * 60 * 1_000, 60_000 * (2 ** Math.min(attempts, 10)));
+      const failedAt = Date.now();
+      await doc.ref.set({
+        attempts,
+        updatedAt: failedAt,
+        lastAttemptAt: failedAt,
+        lastError: getErrorMessage(error).slice(0, 1_000),
+        retryAt: timestampFromMillis(failedAt + retryDelayMs),
+      }, { merge: true });
+    }
+  }
+
+  return { attempted: snapshot.size, completed };
+};
+
 export const createManagedLiveToken = async (params: {
   uid: string;
   user: AppUser;
@@ -883,7 +1039,6 @@ export const createManagedLiveToken = async (params: {
 
   const lease = await reserveManagedLiveLease({
     uid: params.uid,
-    user: params.user,
     purpose,
     durationMs: liveWindowSeconds * 1000,
   });

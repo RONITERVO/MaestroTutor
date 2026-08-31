@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "serve": "firebase emulators:start --only functions,firestore",
+    "test:emulator": "npm run build && firebase emulators:exec --config ../firebase.json --only firestore --project demo-maestrotutor \"node test/managedBilling.emulator.cjs\"",
     "deploy": "firebase deploy --only functions,firestore:rules,firestore:indexes"
   },
   "dependencies": {

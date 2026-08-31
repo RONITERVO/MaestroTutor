@@ -11,46 +11,74 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, write: if false;
+      // A real root document carries lifecycle/schema metadata. It contains no
+      // profile or billing data and is only readable by its owner.
+      allow read: if ownsUser(userId);
+      allow write: if false;
 
-      match /account/{docId} {
+      match /managedAccounts/{accountId} {
         allow read: if ownsUser(userId);
         allow write: if false;
+
+        match /billingEvents/{entryId} {
+          allow read: if ownsUser(userId);
+          allow write: if false;
+        }
+
+        match /usageEvents/{entryId} {
+          allow read: if ownsUser(userId);
+          allow write: if false;
+        }
+
+        match /entitlements/{entitlementId} {
+          allow read: if ownsUser(userId);
+          allow write: if false;
+        }
+
+        // Reservations are internal transaction state, not account history.
+        match /reservations/{reservationId} {
+          allow read, write: if false;
+        }
       }
 
-      match /billingLedger/{entryId} {
-        allow read: if ownsUser(userId);
-        allow write: if false;
+      match /runtime/{docId} {
+        allow read, write: if false;
       }
 
-      match /usageLedger/{entryId} {
-        allow read: if ownsUser(userId);
-        allow write: if false;
+      match /files/{fileId} {
+        allow read, write: if false;
       }
 
-      match /entitlements/{entitlementId} {
-        allow read: if ownsUser(userId);
-        allow write: if false;
+      match /liveLeases/{leaseId} {
+        allow read, write: if false;
       }
     }
 
-    // Purchase dedupe records for every storefront. Server-only: a client that
-    // could write here could mint credits.
-    match /processedPurchases/{purchaseKey} {
+    // Provider-scoped, hashed idempotency claims. Server-only: a client that
+    // could write one could mint credits.
+    match /purchaseClaims/{purchaseKey} {
       allow read, write: if false;
     }
 
     // Immutable Stripe grant snapshots, created and consumed only by the
     // backend. A client must never be able to change what a paid session buys.
-    match /stripeCheckoutGrants/{sessionId} {
+    match /checkoutGrants/{sessionId} {
       allow read, write: if false;
     }
 
-    match /managedReservations/{reservationId} {
+    match /rateLimitWindows/{windowId} {
       allow read, write: if false;
     }
 
-    match /managedFiles/{fileId} {
+    match /reports/{reportId} {
+      allow read, write: if false;
+    }
+
+    match /cleanupJobs/{jobId} {
+      allow read, write: if false;
+    }
+
+    match /accountDeletionClaims/{claimId} {
       allow read, write: if false;
     }
 

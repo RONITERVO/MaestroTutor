@@ -53,11 +53,39 @@ user would be overcharged or the service would lose money. There is one.
   Play ──verify──▶  api  ──grant──▶  credits  ──consume──▶ Play
 ```
 
-Firestore holds the balance, the reservations, the ledgers and the purchase
-records. Rules deny everything by default: a signed-in user may **read** their
-own account summary, ledgers, and entitlements. Every write goes through the
-Admin SDK, which bypasses rules, so there is no path for a client to write its
-own balance.
+Firestore holds the balance, reservations, ledgers and purchase claims. Rules
+deny everything by default: a signed-in user may **read** their own account
+summary, ledgers and entitlements. Every write goes through the Admin SDK,
+which bypasses rules, so there is no path for a client to write its own balance.
+
+The v2 layout deliberately follows ownership and transaction boundaries:
+
+```text
+users/{uid}                         lifecycle + schema metadata only
+  managedAccounts/default          money only
+    entitlements/{claimId}
+    reservations/{reservationId}
+    billingEvents/{eventId}
+    usageEvents/{eventId}
+  runtime/fileQuota                upload counter only
+  runtime/liveQuota                live leases only
+  files/{fileId}
+  liveLeases/{leaseId}
+
+purchaseClaims/{provider}_{hash}   global idempotency claim
+checkoutGrants/{stripeSessionId}   immutable fulfilment input
+reports/{reportId}
+rateLimitWindows/{subjectBucketHash}
+cleanupJobs/{remoteFileHash}
+accountDeletionClaims/{uidHash}    permanent deletion tombstone
+```
+
+Billing, file uploads and live sockets do not update one shared summary
+document. Purchase claim IDs are provider-scoped hashes; raw Play tokens and
+Stripe session IDs are not put in document paths or returned in entitlements.
+The global collections are small operational indexes/claims, not second
+canonical copies of user data. Recursive deletion of `users/{uid}` therefore
+removes all canonical user-owned records.
 
 ### Where the money logic lives
 
@@ -67,7 +95,7 @@ own balance.
 | Credits, reservation estimates | `shared/pricing/credits.ts` | yes |
 | Balance arithmetic and its invariants | `shared/billing/ledger.ts` | yes |
 | Reconnect pacing | `shared/reconnect/policy.ts` | yes |
-| Firestore persistence of the above | `functions/src/managedBilling.ts` | no — needs the emulator |
+| Firestore persistence of the above | `functions/src/managedBilling.ts` | core concurrency/idempotency path in emulator |
 | Play verification | `functions/src/playBilling.ts` | no — needs a real purchase |
 | Stripe fulfilment rules | `shared/billing/stripeFulfilment.ts` | yes |
 | Stripe checkout and webhook | `functions/src/stripeBilling.ts` | no — needs Stripe CLI or a live endpoint |
@@ -95,6 +123,9 @@ app imports the same files directly.
    endpoint in the Stripe dashboard pointing at
    `<api>/billing/stripe/webhook` subscribed to `checkout.session.completed`;
    put its signing secret in `STRIPE_WEBHOOK_SECRET`.
+6. Deploy `firestore.indexes.json` as checked in. It enables TTL on `purgeAt`
+   for operational collection groups as well as creating the reservation and
+   cleanup-job indexes.
 
 ### Every deploy
 
@@ -120,13 +151,19 @@ VITE_MANAGED_MODE_ENABLED=true
 ## 4. What is verified, and what is not
 
 Everything in `shared/` is unit tested, including each money defect the original
-draft carried. Those tests run in the normal suite.
+draft carried. Those tests run in the normal suite. The core Firestore
+concurrency, provider-scoped idempotency and deletion-tombstone path runs with:
+
+```bash
+cd functions
+npm run test:emulator
+```
 
 **Not yet verified, and needing a live project before release:**
 
-- Firestore transaction behaviour under concurrency. The arithmetic is tested;
-  its persistence is not. Worth running the emulator with two concurrent
-  requests against one balance before trusting it.
+- Production Firestore behaviour under representative load. The emulator test
+  proves two concurrent reservations cannot both overspend one balance, but it
+  is not a latency/load test against the selected production region.
 - Play purchase verification end to end. Requires a real or licence-tested
   purchase; the failure modes that matter are a pending purchase, a replayed
   token, and a token belonging to another account.
@@ -136,6 +173,44 @@ draft carried. Those tests run in the normal suite.
 - Stripe end to end against the real account. The decision logic is tested, but
   signature verification, the customer record and the redirect round trip are
   not exercised by unit tests.
+
+### Retention and deletion
+
+- Rate-limit windows expire two minutes after their window starts.
+- Released live leases and deleted file metadata remain for 30 days.
+- Settled/released reservations and checkout grant snapshots remain for 90
+  days. The billing and usage events are canonical and are not TTL'd.
+- AI content reports remain for 365 days unless account deletion anonymizes
+  them sooner.
+- Purchase claims are not TTL'd: removing an idempotency claim would allow the
+  same external purchase to grant credits again. Account deletion removes its
+  user link and raw provider payloads while retaining the non-personal claim.
+- Account-deletion tombstones contain only a one-way UID hash and prevent a
+  delayed webhook or in-flight request from recreating a deleted account.
+- Account deletion removes Stripe live/test customer objects as well as local
+  customer IDs. A Stripe failure stops deletion before Firebase Auth is
+  removed, allowing a safe retry instead of silently leaving remote PII.
+- Failed remote Gemini file deletion is copied to `cleanupJobs` before the user
+  tree is recursively removed. The hourly retry worker applies backoff; only a
+  completed cleanup job receives `purgeAt`.
+
+Firestore TTL is asynchronous (normally within about 24 hours), so expired
+documents must still be treated as present until Firestore removes them. None
+of the TTL-managed documents owns a subcollection.
+
+### v1 was code-only
+
+The v1 paths existed only in unreleased implementation code. They were never
+deployed, no Firebase project was configured with them, and no v1 Firestore
+collections, users, balances, purchases, reservations, files or ledgers were
+created. Consequently, v2 is the first live managed-mode schema and requires no
+backfill, dual reads/writes or production data migration.
+
+The account-deletion handler still recognizes the abandoned v1 collection
+names defensively, but this is cleanup hardening rather than a migration
+contract. Deploy the functions, rules and indexes while
+`VITE_MANAGED_MODE_ENABLED=false`; enable managed mode only after staging has
+verified the complete v2 deployment.
 
 ---
 

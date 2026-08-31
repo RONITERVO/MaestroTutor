@@ -10,7 +10,7 @@ import { deleteManagedAccount, submitAiContentReport } from './account';
 import { type AuthContext, applyCors, getOptionalAuthContext, requireAuthContext } from './auth';
 import { appConfig, getJsonBodyLimitBytes } from './config';
 import { adminDb } from './firebase';
-import { generateManagedContent, streamManagedContent, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease } from './gemini';
+import { generateManagedContent, streamManagedContent, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
 import { getErrorMessage, getHttpStatus } from './http';
 import { countExpiredReservations, getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
 import { verifyManagedGooglePlayPurchase } from './playBilling';
@@ -263,4 +263,17 @@ export const releaseExpiredReservations = onSchedule(
       expiredReservationsRemaining: remainingCount,
     });
   }
+);
+
+export const retryManagedFileCleanup = onSchedule(
+  {
+    region: appConfig.functionRegion,
+    schedule: 'every 60 minutes',
+    timeZone: 'UTC',
+    timeoutSeconds: 540,
+  },
+  async () => {
+    const result = await retryManagedFileCleanupJobs(100);
+    console.info('[files] Managed cleanup retry completed.', result);
+  },
 );

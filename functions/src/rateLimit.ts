@@ -17,14 +17,17 @@
  * per request, which is the point at which the limit becomes real.
  */
 
+import { createHash } from 'node:crypto';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
+import { rateLimitWindowsCollection, timestampFromMillis } from './managedData';
 
 const WINDOW_MS = 60_000;
 
 interface RateWindow {
   windowStartedAt: number;
   count: number;
+  purgeAt?: FirebaseFirestore.Timestamp;
 }
 
 /**
@@ -40,9 +43,9 @@ export const consumeRateLimit = async (params: {
   bucket: string;
   limitPerMinute: number;
 }): Promise<void> => {
-  const ref = adminDb
-    .collection('rateLimits')
-    .doc(`${params.uid}__${params.bucket}`);
+  const subjectHash = createHash('sha256').update(params.uid).digest('hex');
+  const ref = rateLimitWindowsCollection()
+    .doc(createHash('sha256').update(`${params.uid}\0${params.bucket}`).digest('hex'));
   const now = Date.now();
 
   try {
@@ -52,8 +55,16 @@ export const consumeRateLimit = async (params: {
 
       const withinWindow = existing && now - existing.windowStartedAt < WINDOW_MS;
       const next: RateWindow = withinWindow
-        ? { windowStartedAt: existing!.windowStartedAt, count: existing!.count + 1 }
-        : { windowStartedAt: now, count: 1 };
+        ? {
+          windowStartedAt: existing!.windowStartedAt,
+          count: existing!.count + 1,
+          purgeAt: timestampFromMillis(existing!.windowStartedAt + (2 * WINDOW_MS)),
+        }
+        : {
+          windowStartedAt: now,
+          count: 1,
+          purgeAt: timestampFromMillis(now + (2 * WINDOW_MS)),
+        };
 
       if (next.count > params.limitPerMinute) {
         const retryAfterSeconds = Math.max(
@@ -66,7 +77,7 @@ export const consumeRateLimit = async (params: {
         );
       }
 
-      transaction.set(ref, next);
+      transaction.set(ref, { ...next, subjectHash, bucket: params.bucket });
     });
   } catch (error) {
     if ((error as { status?: number })?.status === 429) throw error;

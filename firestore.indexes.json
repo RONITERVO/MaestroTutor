@@ -1,30 +1,37 @@
 {
   "indexes": [
     {
-      "collectionGroup": "managedFiles",
+      "collectionGroup": "reservations",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "deletedAt", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "managedReservations",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "expiresAt", "order": "ASCENDING" }
       ]
     },
     {
-      "collectionGroup": "managedReservations",
-      "queryScope": "COLLECTION",
+      "collectionGroup": "reservations",
+      "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "cleanupJobs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "retryAt", "order": "ASCENDING" }
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    { "collectionGroup": "reservations", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "files", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "liveLeases", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "checkoutGrants", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "rateLimitWindows", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "reports", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "cleanupJobs", "fieldPath": "purgeAt", "ttl": true, "indexes": [] }
+  ]
 }

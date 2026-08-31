@@ -3,11 +3,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Request } from 'express';
+import { FieldValue } from 'firebase-admin/firestore';
 import type { AppUser, AuthContext } from './auth';
 import { adminAuth, adminDb } from './firebase';
-import { clearManagedFiles } from './gemini';
+import { clearLegacyManagedFiles, clearManagedFiles, queueManagedFileCleanupJobs } from './gemini';
 import { createHttpError } from './http';
+import {
+  MANAGED_REPORT_RETENTION_MS,
+  MANAGED_SCHEMA_VERSION,
+  accountDeletionClaimRef,
+  checkoutGrantsCollection,
+  managedFilesCollection,
+  managedReservationsCollection,
+  managedUserRef,
+  purchaseClaimId,
+  purchaseClaimsCollection,
+  reportsCollection,
+  timestampFromMillis,
+} from './managedData';
 import { releaseManagedReservation, sweepExpiredReservationsForUser } from './managedBilling';
+import { deleteManagedStripeCustomers } from './stripeBilling';
 
 export interface ManagedAccountDeletionResult {
   ok: true;
@@ -18,6 +33,8 @@ export interface ManagedAccountDeletionResult {
   anonymizedPurchaseCount: number;
   anonymizedReportCount: number;
   remoteManagedFileFailures: number;
+  queuedRemoteCleanupCount: number;
+  deletedStripeCustomerCount: number;
 }
 
 export interface AiContentReportResult {
@@ -31,8 +48,6 @@ const MAX_NOTES_LENGTH = 2_000;
 const MAX_ID_LENGTH = 200;
 const MAX_MODEL_LENGTH = 200;
 const MAX_SURFACE_LENGTH = 100;
-
-const userDoc = (uid: string) => adminDb.collection('users').doc(uid);
 
 const trimString = (value: unknown, maxLength: number): string => {
   if (typeof value !== 'string') return '';
@@ -65,7 +80,7 @@ const deleteQueryDocuments = async (
 };
 
 const deleteDocumentsById = async (
-  collectionName: string,
+  collection: FirebaseFirestore.CollectionReference<FirebaseFirestore.DocumentData>,
   documentIds: string[],
   batchSize = 200,
 ): Promise<number> => {
@@ -73,7 +88,7 @@ const deleteDocumentsById = async (
   for (let index = 0; index < documentIds.length; index += batchSize) {
     const ids = documentIds.slice(index, index + batchSize);
     const batch = adminDb.batch();
-    ids.forEach((id) => batch.delete(adminDb.collection(collectionName).doc(id)));
+    ids.forEach((id) => batch.delete(collection.doc(id)));
     await batch.commit();
     deletedCount += ids.length;
   }
@@ -100,12 +115,60 @@ const patchQueryDocuments = async (
   return updatedCount;
 };
 
+/**
+ * Defensively replace any record at a code-only v1 path whose document id is a
+ * raw store token, then remove the credential-bearing document path.
+ */
+const anonymizeLegacyPurchaseClaims = async (
+  collectionName: string,
+  uid: string,
+  deletedAt: number,
+  batchSize = 200,
+): Promise<number> => {
+  let migratedCount = 0;
+  while (true) {
+    const snapshot = await adminDb.collection(collectionName)
+      .where('uid', '==', uid)
+      .limit(batchSize)
+      .get();
+    if (snapshot.empty) break;
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const platform = data.platform === 'stripe' ? 'stripe' : 'google-play';
+      const claimId = purchaseClaimId(platform, doc.id);
+      const claimRef = purchaseClaimsCollection().doc(claimId);
+      await adminDb.runTransaction(async (transaction) => {
+        const existingClaim = await transaction.get(claimRef);
+        const existingUid = existingClaim.data()?.uid;
+        if (!existingClaim.exists || existingUid === uid || existingUid == null) {
+          transaction.set(claimRef, {
+            uid: null,
+            platform,
+            externalIdHash: claimId,
+            productId: typeof data.productId === 'string' ? data.productId : null,
+            creditsGranted: Number(data.creditsGranted || 0) || 0,
+            createdAt: Number(data.createdAt || 0) || deletedAt,
+            orderId: FieldValue.delete(),
+            rawPurchase: FieldValue.delete(),
+            rawVerification: FieldValue.delete(),
+            deletedUser: true,
+            accountDeletedAt: deletedAt,
+          }, { merge: true });
+        }
+        transaction.delete(doc.ref);
+      });
+      migratedCount += 1;
+    }
+  }
+  return migratedCount;
+};
+
 const releaseActiveReservationsForUser = async (uid: string): Promise<number> => {
   let releasedCount = 0;
 
   while (true) {
-    const snapshot = await adminDb.collection('managedReservations')
-      .where('uid', '==', uid)
+    const snapshot = await managedReservationsCollection(uid)
       .where('status', '==', 'active')
       .limit(25)
       .get();
@@ -134,40 +197,114 @@ export const deleteManagedAccount = async (params: {
 }): Promise<ManagedAccountDeletionResult> => {
   const deletedAt = Date.now();
 
+  // If cleanup fails midway, the real root document records the lifecycle
+  // state instead of leaving an apparently active account with missing data.
+  const deletionBatch = adminDb.batch();
+  deletionBatch.set(managedUserRef(params.uid), {
+    status: 'deleting',
+    updatedAt: deletedAt,
+  }, { merge: true });
+  deletionBatch.create(accountDeletionClaimRef(params.uid), {
+    createdAt: deletedAt,
+    schemaVersion: MANAGED_SCHEMA_VERSION,
+  });
+  try {
+    await deletionBatch.commit();
+  } catch (error) {
+    // A retry after partial cleanup should reuse the existing tombstone.
+    const code = (error as { code?: unknown })?.code;
+    if (code !== 6 && code !== '6' && code !== 'already-exists') throw error;
+    await managedUserRef(params.uid).set({ status: 'deleting', updatedAt: deletedAt }, { merge: true });
+  }
+
+  // Stripe keeps the email and Firebase UID on its customer object. Removing
+  // only Firestore would therefore not be a complete account deletion.
+  const deletedStripeCustomerCount = await deleteManagedStripeCustomers(params.uid);
+
   await sweepExpiredReservationsForUser(params.uid);
   const releasedReservationCount = await releaseActiveReservationsForUser(params.uid);
-  const managedFileCleanup = await clearManagedFiles(params.uid);
+  const [managedFileCleanup, legacyManagedFileCleanup] = await Promise.all([
+    clearManagedFiles(params.uid),
+    clearLegacyManagedFiles(params.uid),
+  ]);
 
-  const deletedManagedFileCount = await deleteDocumentsById(
-    'managedFiles',
+  // Persist retry ownership before removing metadata. If this write fails the
+  // deletion stops while the source records are still available for a retry.
+  const queuedRemoteCleanupCount = await queueManagedFileCleanupJobs(
+    [...managedFileCleanup.failedNames, ...legacyManagedFileCleanup.failedNames],
+  );
+
+  const deletedCurrentManagedFileCount = await deleteDocumentsById(
+    managedFilesCollection(params.uid),
     managedFileCleanup.cleanedMetadataIds,
   );
+  const deletedLegacyManagedFileCount = await deleteDocumentsById(
+    adminDb.collection('managedFiles'),
+    legacyManagedFileCleanup.cleanedMetadataIds,
+  );
+  const deletedManagedFileCount = deletedCurrentManagedFileCount + deletedLegacyManagedFileCount;
 
-  const deletedReservationCount = await deleteQueryDocuments(
+  await deleteDocumentsById(adminDb.collection('rateLimits'), [
+    `${params.uid}__default`,
+    `${params.uid}__live-token`,
+  ]);
+
+  const deletedCurrentReservationCount = await deleteQueryDocuments(
+    () => managedReservationsCollection(params.uid),
+  );
+  const deletedLegacyReservationCount = await deleteQueryDocuments(
     () => adminDb.collection('managedReservations').where('uid', '==', params.uid),
   );
+  const deletedReservationCount = deletedCurrentReservationCount + deletedLegacyReservationCount;
 
-  const anonymizedPurchaseCount = await patchQueryDocuments(
-    () => adminDb.collection('googlePlayPurchases').where('uid', '==', params.uid),
+  const anonymizedCurrentPurchaseCount = await patchQueryDocuments(
+    () => purchaseClaimsCollection().where('uid', '==', params.uid),
     (data) => ({
       uid: null,
       orderId: null,
-      rawPurchase: null,
-      rawVerification: null,
+      rawPurchase: FieldValue.delete(),
+      rawVerification: FieldValue.delete(),
       deletedUser: true,
       accountDeletedAt: deletedAt,
-      lastKnownEmail: null,
-      lastKnownDisplayName: null,
-      lastKnownPhotoUrl: null,
       creditsGranted: Number(data.creditsGranted || 0) || 0,
       productId: typeof data.productId === 'string' ? data.productId : null,
-      packageName: typeof data.packageName === 'string' ? data.packageName : null,
       createdAt: Number(data.createdAt || 0) || deletedAt,
     }),
   );
 
-  const anonymizedReportCount = await patchQueryDocuments(
-    () => adminDb.collection('aiContentReports').where('uid', '==', params.uid),
+  // Prevent a checkout that completes after account deletion from recreating
+  // a balance for a Firebase Auth user that no longer exists.
+  await patchQueryDocuments(
+    () => checkoutGrantsCollection().where('uid', '==', params.uid),
+    () => ({
+      uid: null,
+      accountDeleted: true,
+      accountDeletedAt: deletedAt,
+    }),
+  );
+  await patchQueryDocuments(
+    () => adminDb.collection('stripeCheckoutGrants').where('uid', '==', params.uid),
+    () => ({ uid: null, accountDeleted: true, accountDeletedAt: deletedAt }),
+  );
+
+  // The undeployed v1 draft put the raw store token in the document path.
+  // Preserve idempotency defensively before removing any such document.
+  const anonymizedLegacyProcessedPurchaseCount = await anonymizeLegacyPurchaseClaims(
+    'processedPurchases',
+    params.uid,
+    deletedAt,
+  );
+  const anonymizedLegacyPurchaseCount = await anonymizeLegacyPurchaseClaims(
+    'googlePlayPurchases',
+    params.uid,
+    deletedAt,
+  );
+  const anonymizedPurchaseCount = anonymizedCurrentPurchaseCount
+    + anonymizedLegacyProcessedPurchaseCount
+    + anonymizedLegacyPurchaseCount;
+
+  const anonymizedCurrentReportCount = await patchQueryDocuments(
+    () => reportsCollection().where('uid', '==', params.uid),
     () => ({
       uid: null,
       user: null,
@@ -176,7 +313,14 @@ export const deleteManagedAccount = async (params: {
     }),
   );
 
-  await adminDb.recursiveDelete(userDoc(params.uid));
+  // Cover reports written by the v1 preview as well.
+  const anonymizedLegacyReportCount = await patchQueryDocuments(
+    () => adminDb.collection('aiContentReports').where('uid', '==', params.uid),
+    () => ({ uid: null, user: null, accountDeletedAt: deletedAt, accountDeleted: true }),
+  );
+  const anonymizedReportCount = anonymizedCurrentReportCount + anonymizedLegacyReportCount;
+
+  await adminDb.recursiveDelete(managedUserRef(params.uid));
 
   try {
     await adminAuth.deleteUser(params.uid);
@@ -194,7 +338,9 @@ export const deleteManagedAccount = async (params: {
     deletedManagedFileCount,
     anonymizedPurchaseCount,
     anonymizedReportCount,
-    remoteManagedFileFailures: managedFileCleanup.failedCount,
+    remoteManagedFileFailures: managedFileCleanup.failedCount + legacyManagedFileCleanup.failedCount,
+    queuedRemoteCleanupCount,
+    deletedStripeCustomerCount,
   };
 };
 
@@ -229,7 +375,7 @@ export const submitAiContentReport = async (params: {
   const assistantText = trimString(params.payload.assistantText, MAX_TEXT_EXCERPT_LENGTH);
   const rawAssistantResponse = trimString(params.payload.rawAssistantResponse, MAX_TEXT_EXCERPT_LENGTH);
   const surface = trimString(params.payload.surface, MAX_SURFACE_LENGTH) || 'chat';
-  const reportRef = adminDb.collection('aiContentReports').doc();
+  const reportRef = reportsCollection().doc();
 
   await reportRef.set({
     reportId: reportRef.id,
@@ -252,6 +398,7 @@ export const submitAiContentReport = async (params: {
       hasAuth: Boolean(params.auth),
       hasAppCheckToken: Boolean(trimString(params.req.headers['x-firebase-appcheck'], MAX_ID_LENGTH)),
     },
+    purgeAt: timestampFromMillis(createdAt + MANAGED_REPORT_RETENTION_MS),
   });
 
   return {

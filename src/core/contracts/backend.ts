@@ -77,6 +77,8 @@ export interface BackendDeleteManagedAccountResponse {
   anonymizedPurchaseCount: number;
   anonymizedReportCount: number;
   remoteManagedFileFailures: number;
+  queuedRemoteCleanupCount: number;
+  deletedStripeCustomerCount: number;
 }
 
 export type AiContentReportReason =

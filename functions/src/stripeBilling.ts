@@ -33,6 +33,15 @@ import { getManagedAccountState, grantPurchasedCredits } from './managedBilling'
 import { createHttpError } from './http';
 import { adminAuth, adminDb } from './firebase';
 import {
+  MANAGED_OPERATIONAL_RETENTION_MS,
+  accountDeletionClaimRef,
+  checkoutGrantsCollection,
+  ensureManagedUserDocument,
+  managedAccountRef,
+  managedUserRef,
+  timestampFromMillis,
+} from './managedData';
+import {
   resolveCheckoutGrant,
   type CheckoutGrantSnapshotLike,
 } from '../../shared/billing/stripeFulfilment';
@@ -44,10 +53,13 @@ interface StripeCheckoutGrantSnapshot extends CheckoutGrantSnapshotLike {
   priceCents: number;
   currency: string;
   createdAt: number;
+  status: 'pending' | 'fulfilled';
+  purgeAt: FirebaseFirestore.Timestamp;
+  accountDeleted?: boolean;
 }
 
 const checkoutGrantRef = (sessionId: string) => (
-  adminDb.collection('stripeCheckoutGrants').doc(sessionId)
+  checkoutGrantsCollection().doc(sessionId)
 );
 
 const requireStripe = (): Stripe => {
@@ -77,7 +89,8 @@ const customerFieldForMode = (): 'stripeCustomerIdLive' | 'stripeCustomerIdTest'
 
 const getOrCreateCustomer = async (uid: string, user: AppUser): Promise<string> => {
   const stripe = requireStripe();
-  const ref = adminDb.collection('users').doc(uid).collection('account').doc('summary');
+  await ensureManagedUserDocument(uid);
+  const ref = managedAccountRef(uid);
   const field = customerFieldForMode();
 
   const snapshot = await ref.get();
@@ -100,6 +113,44 @@ const getOrCreateCustomer = async (uid: string, user: AppUser): Promise<string> 
   });
   await ref.set({ [field]: customer.id }, { merge: true });
   return customer.id;
+};
+
+const isStripeResourceMissing = (error: unknown): boolean => (
+  (error as { code?: unknown })?.code === 'resource_missing'
+  || Number((error as { statusCode?: unknown })?.statusCode) === 404
+);
+
+/** Remove the remote Stripe profile that stores the user's email and UID. */
+export const deleteManagedStripeCustomers = async (uid: string): Promise<number> => {
+  const [snapshot, legacySnapshot] = await Promise.all([
+    managedAccountRef(uid).get(),
+    managedUserRef(uid).collection('account').doc('summary').get(),
+  ]);
+  const data = snapshot.data() || {};
+  const legacyData = legacySnapshot.data() || {};
+  const customerIds = [...new Set([
+    data.stripeCustomerIdLive,
+    data.stripeCustomerIdTest,
+    legacyData.stripeCustomerIdLive,
+    legacyData.stripeCustomerIdTest,
+  ].filter((value): value is string => typeof value === 'string' && Boolean(value)))];
+
+  if (customerIds.length === 0) return 0;
+  const stripe = requireStripe();
+  let deletedCount = 0;
+  for (const customerId of customerIds) {
+    try {
+      await stripe.customers.del(customerId);
+      deletedCount += 1;
+    } catch (error) {
+      if (isStripeResourceMissing(error)) {
+        deletedCount += 1;
+        continue;
+      }
+      throw error;
+    }
+  }
+  return deletedCount;
 };
 
 export const createManagedCheckoutSession = async (params: {
@@ -153,7 +204,7 @@ export const createManagedCheckoutSession = async (params: {
   // Firestore `create` is deliberately used instead of set/merge: a Checkout
   // session's grant is immutable and keyed by the session id. Catalogue edits
   // after this point must never change what this already-created session buys.
-  await checkoutGrantRef(session.id).create({
+  const grantSnapshot = {
     schemaVersion: 1,
     uid: params.uid,
     packId: pack.id,
@@ -161,7 +212,17 @@ export const createManagedCheckoutSession = async (params: {
     priceCents: pack.priceCents,
     currency: appConfig.billingCurrency,
     createdAt: Date.now(),
-  } satisfies StripeCheckoutGrantSnapshot);
+    status: 'pending',
+    purgeAt: timestampFromMillis(Date.now() + MANAGED_OPERATIONAL_RETENTION_MS),
+  } satisfies StripeCheckoutGrantSnapshot;
+
+  await adminDb.runTransaction(async (transaction) => {
+    const deletionClaim = await transaction.get(accountDeletionClaimRef(params.uid));
+    if (deletionClaim.exists) {
+      throw createHttpError(409, 'This managed account is being deleted.');
+    }
+    transaction.create(checkoutGrantRef(session.id), grantSnapshot);
+  });
 
   return { url: session.url, sessionId: session.id };
 };
@@ -180,6 +241,11 @@ const fulfilCheckoutSession = async (session: Stripe.Checkout.Session): Promise<
     ? grantSnapshotDoc.data() as StripeCheckoutGrantSnapshot
     : null;
 
+  if (grantSnapshot?.accountDeleted) {
+    console.info(`[stripeBilling] Session ${session.id} belongs to a deleted account; no grant issued.`);
+    return false;
+  }
+
   // Every rule about what may be granted lives in the shared, tested decision
   // function; this only performs the write it asks for.
   const decision = resolveCheckoutGrant(session, grantSnapshot);
@@ -191,11 +257,15 @@ const fulfilCheckoutSession = async (session: Stripe.Checkout.Session): Promise<
   }
 
   const userRecord = await adminAuth.getUser(decision.uid).catch(() => null);
+  if (!userRecord) {
+    console.info(`[stripeBilling] Session ${session.id} has no active Firebase user; no grant issued.`);
+    return false;
+  }
   const user: AppUser = {
     id: decision.uid,
-    email: userRecord?.email || decision.email,
-    displayName: userRecord?.displayName || null,
-    photoUrl: userRecord?.photoURL || null,
+    email: userRecord.email || decision.email,
+    displayName: userRecord.displayName || null,
+    photoUrl: userRecord.photoURL || null,
   };
 
   const grant = await grantPurchasedCredits({
@@ -213,6 +283,13 @@ const fulfilCheckoutSession = async (session: Stripe.Checkout.Session): Promise<
     },
     rawVerification: session as unknown as Record<string, unknown>,
   });
+
+  const fulfilledAt = Date.now();
+  await grantSnapshotDoc.ref.set({
+    status: 'fulfilled',
+    fulfilledAt,
+    purgeAt: timestampFromMillis(fulfilledAt + MANAGED_OPERATIONAL_RETENTION_MS),
+  }, { merge: true });
 
   return !grant.alreadyProcessed;
 };

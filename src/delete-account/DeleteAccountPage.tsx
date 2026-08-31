@@ -136,13 +136,13 @@ const DeleteAccountPage: React.FC = () => {
           </ul>
           <div className="mt-3 font-medium">What may remain in anonymized form</div>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Processed Google Play purchase token records needed to prevent fraud and duplicate credit grants.</li>
+            <li>Provider-scoped purchase claim hashes needed to prevent duplicate credit grants; raw purchase tokens and verification payloads are removed.</li>
             <li>Generated-content safety reports if you previously submitted one.</li>
           </ul>
           <div className="mt-3 font-medium">What this does not delete</div>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>BYOK API keys, local chats, or local usage history stored on another device.</li>
-            <li>Google Play payment records held by Google.</li>
+            <li>Payment transaction records that Google Play or Stripe must retain independently.</li>
           </ul>
         </div>
 

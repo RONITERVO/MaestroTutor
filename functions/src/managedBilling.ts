@@ -7,6 +7,21 @@ import { appConfig, getReservationTtlMs } from './config';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
 import {
+  MANAGED_OPERATIONAL_RETENTION_MS,
+  MANAGED_SCHEMA_VERSION,
+  accountDeletionClaimRef,
+  ensureManagedUserDocument,
+  managedAccountRef,
+  managedBillingEventsCollection,
+  managedEntitlementsCollection,
+  managedReservationRef,
+  managedReservationsCollection,
+  managedUsageEventsCollection,
+  purchaseClaimId,
+  purchaseClaimsCollection,
+  timestampFromMillis,
+} from './managedData';
+import {
   type BillingSummary,
   EMPTY_BILLING_SUMMARY as SHARED_EMPTY_SUMMARY,
   applyGrant,
@@ -32,7 +47,8 @@ export interface EntitlementRecord {
   platform: PurchasePlatform;
   productId: string;
   creditsGranted: number;
-  purchaseToken: string | null;
+  /** Store credentials never leave the backend. */
+  purchaseToken: null;
   orderId: string | null;
   createdAt: number;
 }
@@ -55,13 +71,6 @@ interface ReservationRecord {
 
 const nowMs = (): number => Date.now();
 
-const userDoc = (uid: string) => adminDb.collection('users').doc(uid);
-const accountSummaryRef = (uid: string) => userDoc(uid).collection('account').doc('summary');
-const entitlementsCollection = (uid: string) => userDoc(uid).collection('entitlements');
-const billingLedgerCollection = (uid: string) => userDoc(uid).collection('billingLedger');
-const usageLedgerCollection = (uid: string) => userDoc(uid).collection('usageLedger');
-const reservationsCollection = () => adminDb.collection('managedReservations');
-
 export const EMPTY_BILLING_SUMMARY: ManagedBillingSummary = SHARED_EMPTY_SUMMARY;
 
 const mergeBillingSummary = (value: unknown): ManagedBillingSummary => (
@@ -75,23 +84,15 @@ const billingSummaryMatches = (value: unknown, expected: ManagedBillingSummary):
     .every((key) => current[key] === expected[key]);
 };
 
-const userMatches = (value: unknown, expected: AppUser): boolean => {
-  if (!value || typeof value !== 'object') return false;
-  const current = value as Partial<AppUser>;
-  return current.id === expected.id
-    && current.email === expected.email
-    && current.displayName === expected.displayName
-    && current.photoUrl === expected.photoUrl;
-};
-
 const clampLimit = (limit: number | undefined, fallback = 50): number => {
   const parsed = Number(limit);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.max(1, Math.min(200, Math.floor(parsed)));
 };
 
-const ensureAccountSummary = async (uid: string, user: AppUser): Promise<ManagedBillingSummary> => {
-  const ref = accountSummaryRef(uid);
+const ensureAccountSummary = async (uid: string): Promise<ManagedBillingSummary> => {
+  await ensureManagedUserDocument(uid);
+  const ref = managedAccountRef(uid);
   return adminDb.runTransaction(async (transaction) => {
     const snapshot = await transaction.get(ref);
     const data = snapshot.data() || {};
@@ -102,9 +103,12 @@ const ensureAccountSummary = async (uid: string, user: AppUser): Promise<Managed
     if (
       !snapshot.exists
       || !billingSummaryMatches(data.billingSummary, billingSummary)
-      || !userMatches(data.user, user)
     ) {
-      transaction.set(ref, { user, billingSummary }, { merge: true });
+      transaction.set(ref, {
+        billingSummary,
+        schemaVersion: MANAGED_SCHEMA_VERSION,
+        updatedAt: billingSummary.updatedAt,
+      }, { merge: true });
     }
 
     return billingSummary;
@@ -112,13 +116,12 @@ const ensureAccountSummary = async (uid: string, user: AppUser): Promise<Managed
 };
 
 const listEntitlements = async (uid: string): Promise<EntitlementRecord[]> => {
-  const snapshot = await entitlementsCollection(uid).orderBy('createdAt', 'desc').limit(100).get();
+  const snapshot = await managedEntitlementsCollection(uid).orderBy('createdAt', 'desc').limit(100).get();
   return snapshot.docs.map((doc: any) => doc.data() as EntitlementRecord);
 };
 
 export const sweepExpiredReservationsForUser = async (uid: string): Promise<void> => {
-  const snapshot = await reservationsCollection()
-    .where('uid', '==', uid)
+  const snapshot = await managedReservationsCollection(uid)
     .where('status', '==', 'active')
     .where('expiresAt', '<=', nowMs())
     .limit(25)
@@ -130,7 +133,7 @@ export const sweepExpiredReservationsForUser = async (uid: string): Promise<void
 };
 
 export const sweepExpiredReservations = async (limit = 50): Promise<number> => {
-  const snapshot = await reservationsCollection()
+  const snapshot = await adminDb.collectionGroup('reservations')
     .where('status', '==', 'active')
     .where('expiresAt', '<=', nowMs())
     .limit(clampLimit(limit, 50))
@@ -145,7 +148,7 @@ export const sweepExpiredReservations = async (limit = 50): Promise<number> => {
 };
 
 export const countExpiredReservations = async (): Promise<number> => {
-  const snapshot = await reservationsCollection()
+  const snapshot = await adminDb.collectionGroup('reservations')
     .where('status', '==', 'active')
     .where('expiresAt', '<=', nowMs())
     .count()
@@ -155,13 +158,13 @@ export const countExpiredReservations = async (): Promise<number> => {
 
 export const getManagedAccountState = async (uid: string, user: AppUser) => {
   await sweepExpiredReservationsForUser(uid);
-  const billingSummary = await ensureAccountSummary(uid, user);
+  const billingSummary = await ensureAccountSummary(uid);
   const entitlements = await listEntitlements(uid);
   return { user, billingSummary, entitlements };
 };
 
 export const listManagedUsageLedger = async (uid: string, limit?: number) => {
-  const snapshot = await usageLedgerCollection(uid)
+  const snapshot = await managedUsageEventsCollection(uid)
     .orderBy('createdAt', 'desc')
     .limit(clampLimit(limit))
     .get();
@@ -169,7 +172,7 @@ export const listManagedUsageLedger = async (uid: string, limit?: number) => {
 };
 
 export const listManagedBillingLedger = async (uid: string, limit?: number) => {
-  const snapshot = await billingLedgerCollection(uid)
+  const snapshot = await managedBillingEventsCollection(uid)
     .orderBy('createdAt', 'desc')
     .limit(clampLimit(limit))
     .get();
@@ -186,17 +189,24 @@ export const reserveManagedCredits = async (params: {
   metadata?: Record<string, unknown>;
 }): Promise<{ reservationId: string; billingSummary: ManagedBillingSummary }> => {
   if (params.estimatedCredits <= 0) {
-    const summary = await ensureAccountSummary(params.uid, params.user);
+    const summary = await ensureAccountSummary(params.uid);
     return { reservationId: '', billingSummary: summary };
   }
 
-  const summaryRef = accountSummaryRef(params.uid);
-  const reservationRef = reservationsCollection().doc();
+  await ensureManagedUserDocument(params.uid);
+  const summaryRef = managedAccountRef(params.uid);
+  const reservationRef = managedReservationsCollection(params.uid).doc();
   const currentTime = nowMs();
   const expiresAt = currentTime + getReservationTtlMs();
 
   const billingSummary = await adminDb.runTransaction(async (transaction) => {
-    const summarySnapshot = await transaction.get(summaryRef);
+    const [summarySnapshot, deletionClaim] = await Promise.all([
+      transaction.get(summaryRef),
+      transaction.get(accountDeletionClaimRef(params.uid)),
+    ]);
+    if (deletionClaim.exists) {
+      throw createHttpError(409, 'This managed account is being deleted.');
+    }
     const currentSummary = mergeBillingSummary(summarySnapshot.data()?.billingSummary);
 
     const outcome = applyReservation(currentSummary, params.estimatedCredits, currentTime);
@@ -209,8 +219,9 @@ export const reserveManagedCredits = async (params: {
     const nextSummary = outcome.summary;
 
     transaction.set(summaryRef, {
-      user: params.user,
       billingSummary: nextSummary,
+      schemaVersion: MANAGED_SCHEMA_VERSION,
+      updatedAt: currentTime,
     }, { merge: true });
 
     transaction.set(reservationRef, {
@@ -236,9 +247,9 @@ export const releaseManagedReservation = async (
   reservationId: string,
   reason: string
 ): Promise<ManagedBillingSummary> => {
-  const summaryRef = accountSummaryRef(uid);
-  const reservationRef = reservationsCollection().doc(reservationId);
-  const billingLedgerRef = billingLedgerCollection(uid).doc();
+  const summaryRef = managedAccountRef(uid);
+  const reservationRef = managedReservationRef(uid, reservationId);
+  const billingLedgerRef = managedBillingEventsCollection(uid).doc();
   const currentTime = nowMs();
 
   return adminDb.runTransaction(async (transaction) => {
@@ -259,10 +270,11 @@ export const releaseManagedReservation = async (
 
     const nextSummary = applyRelease(currentSummary, reservation.reservedCredits, currentTime);
 
-    transaction.set(summaryRef, { billingSummary: nextSummary }, { merge: true });
+    transaction.set(summaryRef, { billingSummary: nextSummary, updatedAt: currentTime }, { merge: true });
     transaction.set(reservationRef, {
       status: 'released',
       releasedAt: currentTime,
+      purgeAt: timestampFromMillis(currentTime + MANAGED_OPERATIONAL_RETENTION_MS),
       metadata: {
         ...(reservation.metadata || {}),
         releaseReason: reason,
@@ -298,10 +310,10 @@ export const settleManagedReservation = async (params: {
     throw createHttpError(500, 'Missing managed reservation id.');
   }
 
-  const summaryRef = accountSummaryRef(params.uid);
-  const reservationRef = reservationsCollection().doc(params.reservationId);
-  const usageLedgerRef = usageLedgerCollection(params.uid).doc();
-  const billingLedgerRef = billingLedgerCollection(params.uid).doc();
+  const summaryRef = managedAccountRef(params.uid);
+  const reservationRef = managedReservationRef(params.uid, params.reservationId);
+  const usageLedgerRef = managedUsageEventsCollection(params.uid).doc();
+  const billingLedgerRef = managedBillingEventsCollection(params.uid).doc();
   const currentTime = nowMs();
 
   return adminDb.runTransaction(async (transaction) => {
@@ -339,7 +351,7 @@ export const settleManagedReservation = async (params: {
       );
     }
 
-    transaction.set(summaryRef, { billingSummary: nextSummary }, { merge: true });
+    transaction.set(summaryRef, { billingSummary: nextSummary, updatedAt: currentTime }, { merge: true });
     transaction.set(reservationRef, {
       status: 'settled',
       settledAt: currentTime,
@@ -347,6 +359,7 @@ export const settleManagedReservation = async (params: {
       chargedCredits: settlement.chargedCredits,
       shortfallCredits: settlement.shortfallCredits,
       billedUsd: params.billedUsd,
+      purgeAt: timestampFromMillis(currentTime + MANAGED_OPERATIONAL_RETENTION_MS),
       metadata: {
         ...(reservation.metadata || {}),
         ...(params.metadata || {}),
@@ -393,11 +406,10 @@ export const settleManagedReservation = async (params: {
  * Add purchased credits, exactly once.
  *
  * `purchaseToken` is whatever uniquely identifies the purchase in its
- * storefront — a Play purchase token, or a Stripe checkout session id. It is
- * the idempotency key: the dedupe document is read inside the transaction, so
- * a replayed webhook or a retried verification is a no-op rather than free
- * credits. Both storefronts share the collection so a key can never collide
- * across providers unnoticed.
+ * storefront — a Play purchase token, or a Stripe checkout session id. The
+ * persisted idempotency key is provider-scoped and SHA-256 hashed, so two
+ * providers cannot collide and a store credential never appears in a document
+ * path or a client-visible entitlement.
  */
 export const grantPurchasedCredits = async (params: {
   uid: string;
@@ -411,23 +423,30 @@ export const grantPurchasedCredits = async (params: {
   rawVerification: Record<string, unknown>;
 }): Promise<{ alreadyProcessed: boolean; grantedCredits: number; billingSummary: ManagedBillingSummary }> => {
   const platform: PurchasePlatform = params.platform || 'google-play';
-  const purchaseRef = adminDb.collection('processedPurchases').doc(params.purchaseToken);
-  const summaryRef = accountSummaryRef(params.uid);
-  const entitlementRef = entitlementsCollection(params.uid).doc(params.purchaseToken);
-  const billingLedgerRef = billingLedgerCollection(params.uid).doc();
+  await ensureManagedUserDocument(params.uid);
+  const claimId = purchaseClaimId(platform, params.purchaseToken);
+  const purchaseRef = purchaseClaimsCollection().doc(claimId);
+  const summaryRef = managedAccountRef(params.uid);
+  const entitlementRef = managedEntitlementsCollection(params.uid).doc(claimId);
+  const billingLedgerRef = managedBillingEventsCollection(params.uid).doc();
   const currentTime = nowMs();
 
   const transactionResult = await adminDb.runTransaction(async (transaction) => {
-    const [purchaseSnapshot, summarySnapshot] = await Promise.all([
+    const [purchaseSnapshot, summarySnapshot, deletionClaim] = await Promise.all([
       transaction.get(purchaseRef),
       transaction.get(summaryRef),
+      transaction.get(accountDeletionClaimRef(params.uid)),
     ]);
+
+    if (deletionClaim.exists) {
+      throw createHttpError(409, 'This managed account is being deleted.');
+    }
 
     const currentSummary = mergeBillingSummary(summarySnapshot.data()?.billingSummary);
     if (purchaseSnapshot.exists) {
       const existing = purchaseSnapshot.data() as { uid?: string };
       if (existing.uid && existing.uid !== params.uid) {
-        throw createHttpError(409, 'This Google Play purchase token is already linked to another account.');
+        throw createHttpError(409, 'This purchase is already linked to another account.');
       }
       return {
         alreadyProcessed: true,
@@ -442,14 +461,15 @@ export const grantPurchasedCredits = async (params: {
     }, currentTime);
 
     transaction.set(summaryRef, {
-      user: params.user,
       billingSummary: nextSummary,
+      schemaVersion: MANAGED_SCHEMA_VERSION,
+      updatedAt: currentTime,
     }, { merge: true });
     transaction.set(purchaseRef, {
       uid: params.uid,
       platform,
+      externalIdHash: claimId,
       productId: params.productId,
-      purchaseToken: params.purchaseToken,
       orderId: params.orderId,
       creditsGranted: params.creditsGranted,
       packageName: appConfig.googlePlayPackageName,
@@ -458,11 +478,11 @@ export const grantPurchasedCredits = async (params: {
       rawVerification: params.rawVerification,
     });
     transaction.set(entitlementRef, {
-      id: params.purchaseToken,
+      id: claimId,
       platform,
       productId: params.productId,
       creditsGranted: params.creditsGranted,
-      purchaseToken: params.purchaseToken,
+      purchaseToken: null,
       orderId: params.orderId,
       createdAt: currentTime,
     } satisfies EntitlementRecord);
@@ -473,7 +493,7 @@ export const grantPurchasedCredits = async (params: {
       productId: params.productId,
       createdAt: currentTime,
       metadata: {
-        purchaseToken: params.purchaseToken,
+        purchaseClaimId: claimId,
         orderId: params.orderId,
       },
     });
