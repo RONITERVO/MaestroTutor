@@ -64,6 +64,22 @@ const deleteQueryDocuments = async (
   return deletedCount;
 };
 
+const deleteDocumentsById = async (
+  collectionName: string,
+  documentIds: string[],
+  batchSize = 200,
+): Promise<number> => {
+  let deletedCount = 0;
+  for (let index = 0; index < documentIds.length; index += batchSize) {
+    const ids = documentIds.slice(index, index + batchSize);
+    const batch = adminDb.batch();
+    ids.forEach((id) => batch.delete(adminDb.collection(collectionName).doc(id)));
+    await batch.commit();
+    deletedCount += ids.length;
+  }
+  return deletedCount;
+};
+
 const patchQueryDocuments = async (
   createQuery: () => FirebaseFirestore.Query<FirebaseFirestore.DocumentData>,
   buildPatch: (data: FirebaseFirestore.DocumentData) => FirebaseFirestore.UpdateData<FirebaseFirestore.DocumentData>,
@@ -122,8 +138,9 @@ export const deleteManagedAccount = async (params: {
   const releasedReservationCount = await releaseActiveReservationsForUser(params.uid);
   const managedFileCleanup = await clearManagedFiles(params.uid);
 
-  const deletedManagedFileCount = await deleteQueryDocuments(
-    () => adminDb.collection('managedFiles').where('uid', '==', params.uid),
+  const deletedManagedFileCount = await deleteDocumentsById(
+    'managedFiles',
+    managedFileCleanup.cleanedMetadataIds,
   );
 
   const deletedReservationCount = await deleteQueryDocuments(

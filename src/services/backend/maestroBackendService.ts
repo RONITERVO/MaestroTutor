@@ -31,7 +31,6 @@ import type {
   VerifyGooglePlayPurchaseResult,
 } from '../../core/contracts/integrations';
 import {
-  getManagedAccessSessionOrThrow,
   loadManagedAccessSession,
   saveManagedAccessSession,
 } from '../../core/security/managedAccessSessionStorage';
@@ -51,6 +50,9 @@ const DEFAULT_BILLING_SUMMARY: ManagedBillingSummary = {
   lastProductId: null,
 };
 
+const BACKEND_REQUEST_TIMEOUT_MS = 120_000;
+const BACKEND_STREAM_CONNECT_TIMEOUT_MS = 60_000;
+
 const ensureBackendBaseUrl = (): string => {
   const baseUrl = MAESTRO_INTEGRATION_CONFIG.backendBaseUrl;
   if (!baseUrl) {
@@ -64,18 +66,19 @@ const ensureBackendBaseUrl = (): string => {
 
 const buildUrl = (path: string): string => new URL(path.replace(/^\/+/, ''), ensureBackendBaseUrl()).toString();
 
-const safeParseJson = (text: string): unknown => {
+const safeParseJson = (text: string): { ok: true; value: unknown } | { ok: false } => {
   try {
-    return JSON.parse(text);
+    return { ok: true, value: JSON.parse(text) };
   } catch {
-    return null;
+    return { ok: false };
   }
 };
 
 const readJson = async <T>(response: Response): Promise<T> => {
   const text = await response.text();
-  const payload = text ? safeParseJson(text) : null;
+  const parsed = text.trim() ? safeParseJson(text) : { ok: false } as const;
   if (!response.ok) {
+    const payload = parsed.ok ? parsed.value : null;
     const record = payload && typeof payload === 'object' ? payload as Record<string, unknown> : null;
     const message =
       (record && typeof record.error === 'string' && record.error) ||
@@ -83,7 +86,18 @@ const readJson = async <T>(response: Response): Promise<T> => {
       `Backend request failed with status ${response.status}`;
     throw new Error(message);
   }
-  return payload as T;
+  if (!text.trim()) {
+    throw new Error('Backend returned an empty response for a successful request.');
+  }
+  if (!parsed.ok) {
+    throw new Error('Backend returned invalid JSON for a successful request.');
+  }
+  return parsed.value as T;
+};
+
+const withRequestTimeout = (signal?: AbortSignal | null): AbortSignal => {
+  const timeoutSignal = AbortSignal.timeout(BACKEND_REQUEST_TIMEOUT_MS);
+  return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 };
 
 const updateStoredSession = async (updates: {
@@ -107,7 +121,9 @@ const getOptionalHeaders = async (): Promise<Record<string, string>> => {
   if (session) {
     const identity = await firebaseAuthBridgeService.getCurrentIdentity(false);
     const token = identity?.firebaseIdToken || session.firebaseIdToken;
-    headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
 
     if (identity && identity.firebaseIdToken !== session.firebaseIdToken) {
       await saveManagedAccessSession({
@@ -130,9 +146,15 @@ const getOptionalHeaders = async (): Promise<Record<string, string>> => {
 };
 
 const getManagedHeaders = async (): Promise<Record<string, string>> => {
-  const session = await getManagedAccessSessionOrThrow();
+  const session = await loadManagedAccessSession();
+  if (!session?.user?.id) {
+    throw new Error('Managed access session is missing.');
+  }
   const identity = await firebaseAuthBridgeService.getCurrentIdentity(false);
   const token = identity?.firebaseIdToken || session.firebaseIdToken;
+  if (!token) {
+    throw new Error('Managed access session is missing.');
+  }
 
   if (identity && identity.firebaseIdToken !== session.firebaseIdToken) {
     await saveManagedAccessSession({
@@ -166,6 +188,7 @@ const requestJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(buildUrl(path), {
     ...init,
     headers,
+    signal: withRequestTimeout(init?.signal),
   });
   return readJson<T>(response);
 };
@@ -213,15 +236,26 @@ export const maestroBackendService = {
 
   requestManagedStream: async (path: string, body: unknown): Promise<Response> => {
     const authHeaders = await getManagedHeaders();
-    const response = await fetch(buildUrl(path), {
-      method: 'POST',
-      headers: {
-        Accept: 'application/x-ndjson, application/json',
-        'Content-Type': 'application/json',
-        ...authHeaders,
-      },
-      body: JSON.stringify(body),
-    });
+    const connectionController = new AbortController();
+    const timeoutId = globalThis.setTimeout(
+      () => connectionController.abort(new Error('Backend stream connection timed out.')),
+      BACKEND_STREAM_CONNECT_TIMEOUT_MS,
+    );
+    let response: Response;
+    try {
+      response = await fetch(buildUrl(path), {
+        method: 'POST',
+        headers: {
+          Accept: 'application/x-ndjson, application/json',
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify(body),
+        signal: connectionController.signal,
+      });
+    } finally {
+      globalThis.clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       throw new Error((await readJson<{ error?: string; message?: string }>(response)).error || `Backend request failed with status ${response.status}`);

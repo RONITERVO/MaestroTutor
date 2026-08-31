@@ -87,13 +87,16 @@ export const verifyManagedGooglePlayPurchase = async (params: {
   user: AppUser;
   purchase: GooglePlayPurchaseRecord;
 }) => {
+  if (!params.purchase || typeof params.purchase !== 'object' || Array.isArray(params.purchase)) {
+    throw createHttpError(400, 'Missing Google Play purchase payload.');
+  }
   const { productId, purchaseToken, packageName } = params.purchase;
 
   const creditsGranted = getCreditsForManagedProduct(productId);
   if (creditsGranted <= 0) {
     throw createHttpError(400, `Product ${productId} is not configured for managed credits.`);
   }
-  if (!purchaseToken?.trim()) {
+  if (typeof purchaseToken !== 'string' || !purchaseToken.trim()) {
     throw createHttpError(400, 'Missing Google Play purchase token.');
   }
   if (packageName && packageName !== appConfig.googlePlayPackageName) {

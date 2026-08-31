@@ -26,6 +26,7 @@ import {
   type LocalWhisperClient,
 } from '../utils/localWhisperClient';
 import {
+  evaluateFreshSpeechFallback,
   isLikelySpeechTranscript,
   LOCAL_SPEECH_BUFFER_MS,
   LOCAL_SPEECH_PREROLL_MS,
@@ -143,6 +144,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const localWhisperRef = useRef<LocalWhisperClient | null>(null);
   const localWhisperBusyRef = useRef(false);
   const lastWhisperRequestAtRef = useRef(0);
+  const loadingFallbackOnsetAtRef = useRef<number | null>(null);
   const whisperFailureWarnedRef = useRef(false);
   const speechGateEpochRef = useRef(0);
   const transcriptUpdateTimerRef = useRef<number | null>(null);
@@ -257,6 +259,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     speechGateRef.current?.forceClose();
     speechGateRef.current = null;
     gatePrerollRef.current = [];
+    loadingFallbackOnsetAtRef.current = null;
     speechGateEpochRef.current += 1;
 
     // Invalidate current session to prevent stale callbacks from processing
@@ -387,6 +390,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       : null;
     gatePrerollRef.current = [];
     lastWhisperRequestAtRef.current = 0;
+    loadingFallbackOnsetAtRef.current = null;
     const speechGateEpoch = speechGateEpochRef.current;
 
     try {
@@ -730,7 +734,9 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
             const gate = speechGateRef.current;
             const now = Date.now();
-            const decision = gate ? gate.evaluate(measureEnergy(packet), now) : null;
+            const energy = measureEnergy(packet);
+            const wasAwaitingConfirmation = gate?.isAwaitingConfirmation ?? false;
+            const decision = gate ? gate.evaluate(energy, now) : null;
 
             if (!decision || decision.send) {
               await encodeAndSend(packet);
@@ -747,11 +753,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 audioTelemetryRef.current.audioStreamEnds += 1;
               }
               gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
               return;
             }
 
             if (decision.reason === 'playback' || decision.reason === 'cooldown') {
               gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
               return;
             }
 
@@ -763,19 +771,44 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
             if (decision.reason !== 'awaiting-confirmation') return;
 
+            const previousFallbackOnset = loadingFallbackOnsetAtRef.current;
+            const fallback = evaluateFreshSpeechFallback(
+              energy,
+              previousFallbackOnset,
+              now,
+            );
+            loadingFallbackOnsetAtRef.current = fallback.onsetAt;
+            if (
+              wasAwaitingConfirmation
+              && previousFallbackOnset === null
+              && fallback.action === 'wait'
+            ) {
+              // This is fresh speech after the old candidate went silent.
+              // Drop the stale pre-roll but keep the current packet.
+              gatePrerollRef.current = [packet];
+            }
+
             const detector = localWhisperRef.current;
             let confirmed = false;
 
             if (!detector || detector.status === 'failed' || detector.status === 'disposed') {
               audioTelemetryRef.current.energyFallbacks += 1;
               confirmed = gate.confirmSpeech(now);
+              loadingFallbackOnsetAtRef.current = null;
             } else if (
               (detector.status === 'idle' || detector.status === 'loading')
               && detector.loadingStartedAt > 0
               && now - detector.loadingStartedAt >= LOCAL_WHISPER_LOAD_GRACE_MS
             ) {
-              audioTelemetryRef.current.energyFallbacks += 1;
-              confirmed = gate.confirmSpeech(now);
+              if (fallback.action === 'expire') {
+                gate.rejectSpeech(now);
+                gatePrerollRef.current = [];
+                loadingFallbackOnsetAtRef.current = null;
+              } else if (fallback.action === 'confirm') {
+                audioTelemetryRef.current.energyFallbacks += 1;
+                confirmed = gate.confirmSpeech(now);
+                loadingFallbackOnsetAtRef.current = null;
+              }
             } else if (detector.status === 'ready') {
               if (
                 localWhisperBusyRef.current
@@ -800,10 +833,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 if (isLikelySpeechTranscript(text)) {
                   audioTelemetryRef.current.whisperAccepted += 1;
                   confirmed = gate.confirmSpeech(resultAt);
+                  loadingFallbackOnsetAtRef.current = null;
                 } else {
                   audioTelemetryRef.current.whisperRejected += 1;
                   gate.rejectSpeech(resultAt);
                   gatePrerollRef.current = [];
+                  loadingFallbackOnsetAtRef.current = null;
                 }
               } catch (error) {
                 if (
@@ -814,6 +849,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 audioTelemetryRef.current.whisperErrors += 1;
                 audioTelemetryRef.current.energyFallbacks += 1;
                 confirmed = gate.confirmSpeech(Date.now());
+                loadingFallbackOnsetAtRef.current = null;
                 if (!whisperFailureWarnedRef.current) {
                   whisperFailureWarnedRef.current = true;
                   console.warn('Local Whisper check failed; STT is using the energy-only fallback.', error);

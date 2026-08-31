@@ -23,6 +23,9 @@ export const acquireLocalWhisperClient = (
 ): LocalWhisperClient => {
   if (!sharedClient || sharedClient.status === 'disposed') {
     sharedClient = new ObserverWhisperClient(options);
+    // Holders of the previous disposed instance are no longer consumers of
+    // this replacement; their later release is ignored by identity below.
+    consumerCount = 0;
   }
   consumerCount += 1;
   return sharedClient;

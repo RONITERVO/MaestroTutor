@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   type CheckoutSessionLike,
-  type CreditPackLike,
+  type CheckoutGrantSnapshotLike,
   resolveCheckoutGrant,
 } from './stripeFulfilment';
 
@@ -14,12 +14,12 @@ import {
  * granting twice because the key was not stable across retries.
  */
 
-const CATALOGUE: Record<string, CreditPackLike> = {
-  pack_small: { id: 'pack_small', credits: 1000 },
-  pack_large: { id: 'pack_large', credits: 6000 },
-};
-
-const lookupPack = (packId: string): CreditPackLike | undefined => CATALOGUE[packId];
+const snapshot = (overrides: Partial<CheckoutGrantSnapshotLike> = {}): CheckoutGrantSnapshotLike => ({
+  uid: 'user-1',
+  packId: 'pack_small',
+  credits: 1000,
+  ...overrides,
+});
 
 const session = (overrides: Partial<CheckoutSessionLike> = {}): CheckoutSessionLike => ({
   id: 'cs_test_123',
@@ -32,7 +32,7 @@ const session = (overrides: Partial<CheckoutSessionLike> = {}): CheckoutSessionL
 
 describe('a paid session', () => {
   it('grants the pack to the buyer', () => {
-    const decision = resolveCheckoutGrant(session(), lookupPack);
+    const decision = resolveCheckoutGrant(session(), snapshot());
     expect(decision).toMatchObject({
       action: 'grant',
       uid: 'user-1',
@@ -45,37 +45,47 @@ describe('a paid session', () => {
   it('reads the payment intent when Stripe expands it into an object', () => {
     const decision = resolveCheckoutGrant(
       session({ payment_intent: { id: 'pi_expanded' } }),
-      lookupPack,
+      snapshot(),
     );
     expect(decision).toMatchObject({ action: 'grant', orderId: 'pi_expanded' });
   });
 });
 
-describe('credits come from the catalogue, never the session', () => {
+describe('credits come from the immutable Checkout snapshot', () => {
   it('ignores an inflated credits value in metadata', () => {
     // The metadata round-trips through the browser and back from Stripe. A
     // fulfilment that trusted it would hand out whatever the session claimed.
     const decision = resolveCheckoutGrant(
       session({ metadata: { firebaseUid: 'user-1', packId: 'pack_small', credits: '999999999' } }),
-      lookupPack,
+      snapshot(),
     );
     expect(decision).toMatchObject({ action: 'grant', credits: 1000 });
   });
 
-  it('refuses a pack the server does not sell', () => {
+  it('preserves the sold quantity if the current catalogue later changes', () => {
     const decision = resolveCheckoutGrant(
-      session({ metadata: { firebaseUid: 'user-1', packId: 'pack_invented' } }),
-      lookupPack,
+      session({ metadata: { firebaseUid: 'user-1', packId: 'replacement_pack', credits: '6000' } }),
+      snapshot({ packId: 'pack_small', credits: 1000 }),
     );
-    expect(decision).toEqual({ action: 'skip', reason: 'unknown-pack' });
+    expect(decision).toMatchObject({
+      action: 'grant',
+      packId: 'pack_small',
+      credits: 1000,
+    });
   });
 
-  it('refuses a pack that resolves to no credits', () => {
-    const decision = resolveCheckoutGrant(
-      session({ metadata: { firebaseUid: 'user-1', packId: 'pack_zero' } }),
-      () => ({ id: 'pack_zero', credits: 0 }),
-    );
-    expect(decision).toEqual({ action: 'skip', reason: 'unknown-pack' });
+  it('refuses a missing snapshot', () => {
+    expect(resolveCheckoutGrant(session(), null)).toEqual({
+      action: 'skip',
+      reason: 'missing-snapshot',
+    });
+  });
+
+  it.each([0, 1.5, Number.MAX_SAFE_INTEGER + 1])('refuses invalid snapshot credits %s', (credits) => {
+    expect(resolveCheckoutGrant(session(), snapshot({ credits }))).toEqual({
+      action: 'skip',
+      reason: 'invalid-snapshot',
+    });
   });
 });
 
@@ -86,62 +96,43 @@ describe('only settled payments are fulfilled', () => {
       // and settle later, and some never settle at all.
       const decision = resolveCheckoutGrant(
         session({ payment_status: status as string | null | undefined }),
-        lookupPack,
+        snapshot(),
       );
       expect(decision).toEqual({ action: 'skip', reason: 'not-paid' });
     });
   }
 });
 
-describe('sessions that cannot be attributed', () => {
+describe('snapshots that cannot be attributed', () => {
   it('skips when there is no account to credit', () => {
-    const decision = resolveCheckoutGrant(
-      session({ metadata: { packId: 'pack_small' } }),
-      lookupPack,
-    );
-    expect(decision).toEqual({ action: 'skip', reason: 'missing-metadata' });
+    const decision = resolveCheckoutGrant(session(), snapshot({ uid: '   ' }));
+    expect(decision).toEqual({ action: 'skip', reason: 'invalid-snapshot' });
   });
 
   it('skips when there is no pack to grant', () => {
-    const decision = resolveCheckoutGrant(
-      session({ metadata: { firebaseUid: 'user-1' } }),
-      lookupPack,
-    );
-    expect(decision).toEqual({ action: 'skip', reason: 'missing-metadata' });
-  });
-
-  it('skips when metadata is absent entirely', () => {
-    const decision = resolveCheckoutGrant(session({ metadata: null }), lookupPack);
-    expect(decision).toEqual({ action: 'skip', reason: 'missing-metadata' });
-  });
-
-  it('treats blank metadata as absent', () => {
-    const decision = resolveCheckoutGrant(
-      session({ metadata: { firebaseUid: '   ', packId: 'pack_small' } }),
-      lookupPack,
-    );
-    expect(decision).toEqual({ action: 'skip', reason: 'missing-metadata' });
+    const decision = resolveCheckoutGrant(session(), snapshot({ packId: ' ' }));
+    expect(decision).toEqual({ action: 'skip', reason: 'invalid-snapshot' });
   });
 });
 
 describe('idempotency', () => {
   it('keys on the session, so retried deliveries collapse to one grant', () => {
     // Stripe retries webhooks until they are acknowledged; retries are normal.
-    const first = resolveCheckoutGrant(session(), lookupPack);
-    const retry = resolveCheckoutGrant(session(), lookupPack);
+    const first = resolveCheckoutGrant(session(), snapshot());
+    const retry = resolveCheckoutGrant(session(), snapshot());
     expect(first).toMatchObject({ action: 'grant', idempotencyKey: 'stripe:cs_test_123' });
     expect(retry).toMatchObject({ idempotencyKey: 'stripe:cs_test_123' });
   });
 
   it('gives different purchases different keys', () => {
-    const a = resolveCheckoutGrant(session({ id: 'cs_a' }), lookupPack);
-    const b = resolveCheckoutGrant(session({ id: 'cs_b' }), lookupPack);
+    const a = resolveCheckoutGrant(session({ id: 'cs_a' }), snapshot());
+    const b = resolveCheckoutGrant(session({ id: 'cs_b' }), snapshot());
     if (a.action !== 'grant' || b.action !== 'grant') throw new Error('both should grant');
     expect(a.idempotencyKey).not.toBe(b.idempotencyKey);
   });
 
   it('namespaces the key so it cannot collide with a Play purchase token', () => {
-    const decision = resolveCheckoutGrant(session(), lookupPack);
+    const decision = resolveCheckoutGrant(session(), snapshot());
     if (decision.action !== 'grant') throw new Error('should grant');
     expect(decision.idempotencyKey.startsWith('stripe:')).toBe(true);
   });

@@ -28,13 +28,27 @@
 import Stripe from 'stripe';
 import type { Request, Response } from 'express';
 import type { AppUser } from './auth';
-import { appConfig, getCreditPackById, isStripeConfigured } from './config';
+import { appConfig, getCreditPackForCheckout, isStripeConfigured } from './config';
 import { getManagedAccountState, grantPurchasedCredits } from './managedBilling';
 import { createHttpError } from './http';
 import { adminAuth, adminDb } from './firebase';
-import { resolveCheckoutGrant } from '../../shared/billing/stripeFulfilment';
+import {
+  resolveCheckoutGrant,
+  type CheckoutGrantSnapshotLike,
+} from '../../shared/billing/stripeFulfilment';
 
 let cachedStripe: Stripe | null = null;
+
+interface StripeCheckoutGrantSnapshot extends CheckoutGrantSnapshotLike {
+  schemaVersion: 1;
+  priceCents: number;
+  currency: string;
+  createdAt: number;
+}
+
+const checkoutGrantRef = (sessionId: string) => (
+  adminDb.collection('stripeCheckoutGrants').doc(sessionId)
+);
 
 const requireStripe = (): Stripe => {
   if (!isStripeConfigured()) {
@@ -98,7 +112,7 @@ export const createManagedCheckoutSession = async (params: {
     throw createHttpError(500, 'APP_URL is required to build Stripe return URLs.');
   }
 
-  const pack = getCreditPackById(params.packId);
+  const pack = getCreditPackForCheckout(params.packId);
   if (!pack) {
     throw createHttpError(400, `Unknown credit pack "${params.packId}".`);
   }
@@ -135,6 +149,20 @@ export const createManagedCheckoutSession = async (params: {
   if (!session.url) {
     throw createHttpError(502, 'Stripe did not return a checkout URL.');
   }
+
+  // Firestore `create` is deliberately used instead of set/merge: a Checkout
+  // session's grant is immutable and keyed by the session id. Catalogue edits
+  // after this point must never change what this already-created session buys.
+  await checkoutGrantRef(session.id).create({
+    schemaVersion: 1,
+    uid: params.uid,
+    packId: pack.id,
+    credits: pack.credits,
+    priceCents: pack.priceCents,
+    currency: appConfig.billingCurrency,
+    createdAt: Date.now(),
+  } satisfies StripeCheckoutGrantSnapshot);
+
   return { url: session.url, sessionId: session.id };
 };
 
@@ -147,9 +175,14 @@ export const createManagedCheckoutSession = async (params: {
  * more than once for anything keyed per event.
  */
 const fulfilCheckoutSession = async (session: Stripe.Checkout.Session): Promise<boolean> => {
+  const grantSnapshotDoc = await checkoutGrantRef(session.id).get();
+  const grantSnapshot = grantSnapshotDoc.exists
+    ? grantSnapshotDoc.data() as StripeCheckoutGrantSnapshot
+    : null;
+
   // Every rule about what may be granted lives in the shared, tested decision
   // function; this only performs the write it asks for.
-  const decision = resolveCheckoutGrant(session, getCreditPackById);
+  const decision = resolveCheckoutGrant(session, grantSnapshot);
   if (decision.action === 'skip') {
     if (decision.reason !== 'not-paid') {
       console.error(`[stripeBilling] Session ${session.id} not fulfilled: ${decision.reason}.`);
@@ -173,7 +206,11 @@ const fulfilCheckoutSession = async (session: Stripe.Checkout.Session): Promise<
     orderId: decision.orderId,
     creditsGranted: decision.credits,
     platform: 'stripe',
-    rawPurchase: { sessionId: session.id, packId: decision.packId },
+    rawPurchase: {
+      sessionId: session.id,
+      packId: decision.packId,
+      checkoutSnapshot: grantSnapshot,
+    },
     rawVerification: session as unknown as Record<string, unknown>,
   });
 

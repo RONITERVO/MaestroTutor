@@ -74,7 +74,7 @@ export const applyReservation = (
   credits: number,
   now: number,
 ): ReservationOutcome => {
-  const wanted = Math.max(0, Math.ceil(credits));
+  const wanted = Math.max(0, Math.ceil(nonNegative(credits)));
   if (wanted === 0) return { ok: true, summary };
 
   if (summary.availableCredits < wanted) {
@@ -102,13 +102,11 @@ export const applyRelease = (
   reservedCredits: number,
   now: number,
 ): BillingSummary => {
-  const held = Math.max(0, reservedCredits);
+  const held = Math.min(nonNegative(reservedCredits), summary.reservedCredits);
   return {
     ...summary,
     availableCredits: summary.availableCredits + held,
-    // Clamped because a release must never drive reserved below zero, even if
-    // the stored reservation disagrees with the summary after a partial write.
-    reservedCredits: Math.max(0, summary.reservedCredits - held),
+    reservedCredits: summary.reservedCredits - held,
     updatedAt: now,
   };
 };
@@ -136,8 +134,8 @@ export const applySettlement = (
   params: { reservedCredits: number; billedCredits: number; billedUsd: number },
   now: number,
 ): SettlementResult => {
-  const held = Math.max(0, params.reservedCredits);
-  const billed = Math.max(0, Math.ceil(params.billedCredits));
+  const held = Math.min(nonNegative(params.reservedCredits), summary.reservedCredits);
+  const billed = Math.ceil(nonNegative(params.billedCredits));
 
   const releasedToAvailable = summary.availableCredits + held;
   const chargedCredits = Math.min(billed, releasedToAvailable);
@@ -147,7 +145,7 @@ export const applySettlement = (
     summary: {
       ...summary,
       availableCredits: releasedToAvailable - chargedCredits,
-      reservedCredits: Math.max(0, summary.reservedCredits - held),
+      reservedCredits: summary.reservedCredits - held,
       lifetimeSpentCredits: summary.lifetimeSpentCredits + chargedCredits,
       lifetimeSpentUsd: roundUsd(summary.lifetimeSpentUsd + Math.max(0, params.billedUsd)),
       updatedAt: now,

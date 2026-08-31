@@ -55,7 +55,7 @@ user would be overcharged or the service would lose money. There is one.
 
 Firestore holds the balance, the reservations, the ledgers and the purchase
 records. Rules deny everything by default: a signed-in user may **read** their
-own account summary and ledgers and nothing else. Every write goes through the
+own account summary, ledgers, and entitlements. Every write goes through the
 Admin SDK, which bypasses rules, so there is no path for a client to write its
 own balance.
 
@@ -153,8 +153,10 @@ integration that works from one that gives money away:
 - **Credits are granted from the webhook, never from the redirect.** The return
   from Checkout can be forged, replayed, closed early, or never arrive. The
   webhook is the only statement from Stripe that a payment settled.
-- **The quantity comes from the server's catalogue**, never from the session
-  metadata, which round-trips through the browser.
+- **The quantity comes from an immutable server snapshot** written under the
+  Checkout session id before its URL is returned. Fulfilment never re-reads the
+  mutable catalogue or trusts session metadata, so later catalogue edits cannot
+  change what an already-created Checkout session buys.
 
 The webhook route is registered with a raw body parser *before* `express.json()`.
 Stripe signs the exact bytes it sent; parsing and re-serialising changes them and

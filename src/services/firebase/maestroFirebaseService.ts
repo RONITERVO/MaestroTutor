@@ -88,7 +88,8 @@ const initializeOptionalAppCheck = async (): Promise<boolean> => {
       });
       hasInitializedAppCheck = true;
       return true;
-    } catch {
+    } catch (error) {
+      console.error('[firebase] App Check initialization failed.', error);
       appCheckInitializationPromise = null;
       return false;
     }

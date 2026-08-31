@@ -40,6 +40,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Immutable Stripe grant snapshots, created and consumed only by the
+    // backend. A client must never be able to change what a paid session buys.
+    match /stripeCheckoutGrants/{sessionId} {
+      allow read, write: if false;
+    }
+
     match /managedReservations/{reservationId} {
       allow read, write: if false;
     }

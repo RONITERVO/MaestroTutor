@@ -22,6 +22,12 @@ const parseCsv = (value: string | undefined): string[] => (
     .filter(Boolean)
 );
 
+const CLOUD_FUNCTIONS_V2_MAX_REQUEST_BYTES = 32 * 1024 * 1024;
+const JSON_UPLOAD_ENVELOPE_BYTES = 1024 * 1024;
+const MAX_MANAGED_UPLOAD_BYTES = Math.floor(
+  (CLOUD_FUNCTIONS_V2_MAX_REQUEST_BYTES - JSON_UPLOAD_ENVELOPE_BYTES - 1) / 4
+) * 3;
+
 /**
  * A buyable bundle of credits.
  *
@@ -41,18 +47,46 @@ export interface CreditPack {
 }
 
 /** `id:credits:cents[:playProductId]`, comma separated. */
-const parseCreditPacks = (value: string | undefined): CreditPack[] => {
+export const parseCreditPacks = (value: string | undefined): CreditPack[] => {
   const packs: CreditPack[] = [];
+  const packIds = new Set<string>();
+  const playProductIds = new Set<string>();
+
   for (const item of parseCsv(value)) {
-    const [id, creditsRaw, centsRaw, playProductId] = item.split(':').map((part) => part.trim());
+    const parts = item.split(':').map((part) => part.trim());
+    if (parts.length < 3 || parts.length > 4) {
+      throw new Error(`Invalid MANAGED_CREDIT_PACKS entry "${item}".`);
+    }
+
+    const [id, creditsRaw, centsRaw, playProductId] = parts;
     const credits = Number(creditsRaw);
     const priceCents = Number(centsRaw);
-    if (!id || !Number.isFinite(credits) || credits <= 0) continue;
-    if (!Number.isFinite(priceCents) || priceCents <= 0) continue;
+
+    if (!id) {
+      throw new Error('MANAGED_CREDIT_PACKS contains a pack with no id.');
+    }
+    if (!Number.isSafeInteger(credits) || credits <= 0) {
+      throw new Error(`Credit pack "${id}" must have a positive safe-integer credit quantity.`);
+    }
+    if (!Number.isSafeInteger(priceCents) || priceCents <= 0) {
+      throw new Error(`Credit pack "${id}" must have a positive safe-integer price in cents.`);
+    }
+    if (packIds.has(id)) {
+      throw new Error(`Duplicate credit pack id "${id}" in MANAGED_CREDIT_PACKS.`);
+    }
+    if (playProductId && playProductIds.has(playProductId)) {
+      throw new Error(`Duplicate Google Play product id "${playProductId}" in MANAGED_CREDIT_PACKS.`);
+    }
+    if (playProductIds.has(id) || (playProductId && packIds.has(playProductId))) {
+      throw new Error(`Ambiguous credit pack/store id in MANAGED_CREDIT_PACKS entry "${id}".`);
+    }
+
+    packIds.add(id);
+    if (playProductId) playProductIds.add(playProductId);
     packs.push({
       id,
-      credits: Math.floor(credits),
-      priceCents: Math.floor(priceCents),
+      credits,
+      priceCents,
       ...(playProductId ? { playProductId } : {}),
     });
   }
@@ -89,10 +123,22 @@ export const appConfig = {
   managedMusicSessionCredits: Math.max(1, parseInteger(process.env.MANAGED_MUSIC_SESSION_CREDITS, 120)),
   managedMaxActiveFilesPerUser: Math.max(1, parseInteger(process.env.MANAGED_MAX_ACTIVE_FILES_PER_USER, 20)),
   managedUploadCreditsPerMb: Math.max(1, parseInteger(process.env.MANAGED_UPLOAD_CREDITS_PER_MB, 10)),
-  managedMaxUploadBytes: Math.max(1, parseInteger(process.env.MANAGED_MAX_UPLOAD_BYTES, 50 * 1024 * 1024)),
+  managedMaxUploadBytes: Math.min(
+    MAX_MANAGED_UPLOAD_BYTES,
+    Math.max(1, parseInteger(process.env.MANAGED_MAX_UPLOAD_BYTES, MAX_MANAGED_UPLOAD_BYTES)),
+  ),
   /** Requests per minute per user, per class of operation. See rateLimit.ts. */
   rateLimitPerMinute: Math.max(1, parseInteger(process.env.MANAGED_RATE_LIMIT_PER_MINUTE, 60)),
+  anonymousReportRateLimitPerMinute: Math.max(
+    1,
+    parseInteger(process.env.MANAGED_ANONYMOUS_REPORT_RATE_LIMIT_PER_MINUTE, 5),
+  ),
   liveTokenRateLimitPerMinute: Math.max(1, parseInteger(process.env.MANAGED_LIVE_TOKEN_RATE_LIMIT_PER_MINUTE, 6)),
+  functionMaxInstances: Math.max(1, parseInteger(process.env.MANAGED_FUNCTION_MAX_INSTANCES, 10)),
+  functionConcurrency: Math.min(
+    80,
+    Math.max(1, parseInteger(process.env.MANAGED_FUNCTION_CONCURRENCY, 20)),
+  ),
 } as const;
 
 /**
@@ -106,7 +152,7 @@ export const appConfig = {
  * so the limit the user was told about was not the limit they got.
  */
 export const getJsonBodyLimitBytes = (): number => (
-  Math.ceil(appConfig.managedMaxUploadBytes * 4 / 3) + 1024 * 1024
+  4 * Math.ceil(appConfig.managedMaxUploadBytes / 3) + JSON_UPLOAD_ENVELOPE_BYTES
 );
 
 export const isOriginAllowed = (origin: string | undefined): boolean => {
@@ -121,6 +167,13 @@ export const getCreditsForManagedProduct = (productId: string): number => (
 
 export const getCreditPackById = (packId: string): CreditPack | undefined => (
   appConfig.creditPacks.find((pack) => pack.id === packId)
+);
+
+/** Resolve the internal pack id used by web, or its configured Play alias. */
+export const getCreditPackForCheckout = (packOrProductId: string): CreditPack | undefined => (
+  appConfig.creditPacks.find((pack) => (
+    pack.id === packOrProductId || pack.playProductId === packOrProductId
+  ))
 );
 
 export const isStripeConfigured = (): boolean => (

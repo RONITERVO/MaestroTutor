@@ -65,7 +65,12 @@ describe('releasing', () => {
     // releasing must still land on a legal balance.
     const released = applyRelease(withCredits(0, 10), 999, NOW);
     expect(released.reservedCredits).toBe(0);
-    expect(released.availableCredits).toBe(999);
+    expect(released.availableCredits).toBe(10);
+  });
+
+  it('treats non-finite release amounts as zero', () => {
+    const released = applyRelease(withCredits(5, 10), Number.POSITIVE_INFINITY, NOW);
+    expect(released).toMatchObject({ availableCredits: 5, reservedCredits: 10 });
   });
 });
 
@@ -129,6 +134,16 @@ describe('settling', () => {
       NOW,
     );
     expect(settled.summary.availableCredits).toBe(1000);
+    expect(settled.chargedCredits).toBe(0);
+  });
+
+  it('does not release more than the summary says is reserved', () => {
+    const settled = applySettlement(
+      withCredits(0, 10),
+      { reservedCredits: 999, billedCredits: Number.POSITIVE_INFINITY, billedUsd: 0 },
+      NOW,
+    );
+    expect(settled.summary).toMatchObject({ availableCredits: 10, reservedCredits: 0 });
     expect(settled.chargedCredits).toBe(0);
   });
 });

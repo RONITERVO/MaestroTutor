@@ -130,6 +130,10 @@ export class SpeechGate {
     return this.open;
   }
 
+  get isAwaitingConfirmation(): boolean {
+    return this.awaitingConfirmation;
+  }
+
   /**
    * Hold the gate shut while the app is speaking, and for a moment afterwards.
    *

@@ -30,19 +30,25 @@ const readLocalStorage = (): PendingManagedPurchaseRecord[] => {
   }
 };
 
-const writeLocalStorage = (records: PendingManagedPurchaseRecord[]) => {
+const writeLocalStorage = (records: PendingManagedPurchaseRecord[]): boolean => {
   try {
-    safeWindow()?.localStorage?.setItem(STORAGE_KEY, JSON.stringify(records));
+    const storage = safeWindow()?.localStorage;
+    if (!storage) return false;
+    storage.setItem(STORAGE_KEY, JSON.stringify(records));
+    return true;
   } catch {
-    // Ignore persistence failures.
+    return false;
   }
 };
 
-const removeLocalStorage = () => {
+const removeLocalStorage = (): boolean => {
   try {
-    safeWindow()?.localStorage?.removeItem(STORAGE_KEY);
+    const storage = safeWindow()?.localStorage;
+    if (!storage) return false;
+    storage.removeItem(STORAGE_KEY);
+    return true;
   } catch {
-    // Ignore persistence failures.
+    return false;
   }
 };
 
@@ -61,30 +67,29 @@ const saveSecureStorage = async (records: PendingManagedPurchaseRecord[]): Promi
   await SecureStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 };
 
-const removeSecureStorage = async (): Promise<void> => {
+const removeSecureStorage = async (): Promise<boolean> => {
   try {
     await SecureStorage.removeItem(STORAGE_KEY);
+    return true;
   } catch {
-    // Ignore persistence failures.
+    return false;
   }
 };
 
 const persistRecords = async (records: PendingManagedPurchaseRecord[]): Promise<void> => {
-  cachedRecords = records;
   if (records.length === 0) {
-    if (isNative) {
-      await removeSecureStorage();
-    } else {
-      removeLocalStorage();
-    }
+    const persisted = isNative ? await removeSecureStorage() : removeLocalStorage();
+    if (persisted) cachedRecords = records;
     return;
   }
 
+  let persisted = true;
   if (isNative) {
     await saveSecureStorage(records);
   } else {
-    writeLocalStorage(records);
+    persisted = writeLocalStorage(records);
   }
+  if (persisted) cachedRecords = records;
 };
 
 const loadRecords = async (): Promise<PendingManagedPurchaseRecord[]> => {

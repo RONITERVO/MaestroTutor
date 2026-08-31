@@ -6,7 +6,6 @@ import type { AppUser } from './auth';
 import { appConfig, getReservationTtlMs } from './config';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
-import { creditsToUsd } from './pricing';
 import {
   type BillingSummary,
   EMPTY_BILLING_SUMMARY as SHARED_EMPTY_SUMMARY,
@@ -69,6 +68,22 @@ const mergeBillingSummary = (value: unknown): ManagedBillingSummary => (
   normalizeBillingSummary(value)
 );
 
+const billingSummaryMatches = (value: unknown, expected: ManagedBillingSummary): boolean => {
+  if (!value || typeof value !== 'object') return false;
+  const current = value as Partial<ManagedBillingSummary>;
+  return (Object.keys(EMPTY_BILLING_SUMMARY) as Array<keyof ManagedBillingSummary>)
+    .every((key) => current[key] === expected[key]);
+};
+
+const userMatches = (value: unknown, expected: AppUser): boolean => {
+  if (!value || typeof value !== 'object') return false;
+  const current = value as Partial<AppUser>;
+  return current.id === expected.id
+    && current.email === expected.email
+    && current.displayName === expected.displayName
+    && current.photoUrl === expected.photoUrl;
+};
+
 const clampLimit = (limit: number | undefined, fallback = 50): number => {
   const parsed = Number(limit);
   if (!Number.isFinite(parsed)) return fallback;
@@ -77,31 +92,23 @@ const clampLimit = (limit: number | undefined, fallback = 50): number => {
 
 const ensureAccountSummary = async (uid: string, user: AppUser): Promise<ManagedBillingSummary> => {
   const ref = accountSummaryRef(uid);
-  const snapshot = await ref.get();
-  if (snapshot.exists) {
+  return adminDb.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(ref);
     const data = snapshot.data() || {};
-    const billingSummary = mergeBillingSummary(data.billingSummary);
-    await ref.set(
-      {
-        user,
-        billingSummary,
-      },
-      { merge: true }
-    );
-    return billingSummary;
-  }
+    const billingSummary = snapshot.exists
+      ? mergeBillingSummary(data.billingSummary)
+      : { ...EMPTY_BILLING_SUMMARY, updatedAt: nowMs() };
 
-  await ref.set({
-    user,
-    billingSummary: {
-      ...EMPTY_BILLING_SUMMARY,
-      updatedAt: nowMs(),
-    },
+    if (
+      !snapshot.exists
+      || !billingSummaryMatches(data.billingSummary, billingSummary)
+      || !userMatches(data.user, user)
+    ) {
+      transaction.set(ref, { user, billingSummary }, { merge: true });
+    }
+
+    return billingSummary;
   });
-  return {
-    ...EMPTY_BILLING_SUMMARY,
-    updatedAt: nowMs(),
-  };
 };
 
 const listEntitlements = async (uid: string): Promise<EntitlementRecord[]> => {
@@ -135,6 +142,15 @@ export const sweepExpiredReservations = async (limit = 50): Promise<number> => {
   }
 
   return snapshot.size;
+};
+
+export const countExpiredReservations = async (): Promise<number> => {
+  const snapshot = await reservationsCollection()
+    .where('status', '==', 'active')
+    .where('expiresAt', '<=', nowMs())
+    .count()
+    .get();
+  return snapshot.data().count;
 };
 
 export const getManagedAccountState = async (uid: string, user: AppUser) => {
@@ -179,7 +195,7 @@ export const reserveManagedCredits = async (params: {
   const currentTime = nowMs();
   const expiresAt = currentTime + getReservationTtlMs();
 
-  const billingSummary = await adminDb.runTransaction(async (transaction: any) => {
+  const billingSummary = await adminDb.runTransaction(async (transaction) => {
     const summarySnapshot = await transaction.get(summaryRef);
     const currentSummary = mergeBillingSummary(summarySnapshot.data()?.billingSummary);
 
@@ -225,7 +241,7 @@ export const releaseManagedReservation = async (
   const billingLedgerRef = billingLedgerCollection(uid).doc();
   const currentTime = nowMs();
 
-  return adminDb.runTransaction(async (transaction: any) => {
+  return adminDb.runTransaction(async (transaction) => {
     const [summarySnapshot, reservationSnapshot] = await Promise.all([
       transaction.get(summaryRef),
       transaction.get(reservationRef),
@@ -288,7 +304,7 @@ export const settleManagedReservation = async (params: {
   const billingLedgerRef = billingLedgerCollection(params.uid).doc();
   const currentTime = nowMs();
 
-  return adminDb.runTransaction(async (transaction: any) => {
+  return adminDb.runTransaction(async (transaction) => {
     const [summarySnapshot, reservationSnapshot] = await Promise.all([
       transaction.get(summaryRef),
       transaction.get(reservationRef),
@@ -373,73 +389,6 @@ export const settleManagedReservation = async (params: {
   });
 };
 
-export const chargeManagedCredits = async (params: {
-  uid: string;
-  user: AppUser;
-  operation: string;
-  model: string;
-  billedCredits: number;
-  billedUsd?: number;
-  metadata?: Record<string, unknown>;
-}): Promise<ManagedBillingSummary> => {
-  if (params.billedCredits <= 0) {
-    return ensureAccountSummary(params.uid, params.user);
-  }
-
-  const billedUsd = typeof params.billedUsd === 'number'
-    ? params.billedUsd
-    : creditsToUsd(params.billedCredits);
-  const summaryRef = accountSummaryRef(params.uid);
-  const usageLedgerRef = usageLedgerCollection(params.uid).doc();
-  const billingLedgerRef = billingLedgerCollection(params.uid).doc();
-  const currentTime = nowMs();
-
-  return adminDb.runTransaction(async (transaction: any) => {
-    const summarySnapshot = await transaction.get(summaryRef);
-    const currentSummary = mergeBillingSummary(summarySnapshot.data()?.billingSummary);
-
-    if (currentSummary.availableCredits < params.billedCredits) {
-      throw createHttpError(402, 'Not enough Maestro credits to continue.');
-    }
-
-    const nextSummary: ManagedBillingSummary = {
-      ...currentSummary,
-      availableCredits: currentSummary.availableCredits - params.billedCredits,
-      lifetimeSpentCredits: currentSummary.lifetimeSpentCredits + params.billedCredits,
-      lifetimeSpentUsd: Math.round((currentSummary.lifetimeSpentUsd + billedUsd) * 1_000_000) / 1_000_000,
-      updatedAt: currentTime,
-      lastChargeAt: currentTime,
-    };
-
-    transaction.set(summaryRef, {
-      user: params.user,
-      billingSummary: nextSummary,
-    }, { merge: true });
-    transaction.set(usageLedgerRef, {
-      operation: params.operation,
-      model: params.model,
-      billedCredits: params.billedCredits,
-      billedUsd,
-      createdAt: currentTime,
-      metadata: params.metadata || {},
-    });
-    transaction.set(billingLedgerRef, {
-      kind: 'charge',
-      credits: params.billedCredits,
-      usd: billedUsd,
-      productId: null,
-      createdAt: currentTime,
-      metadata: {
-        operation: params.operation,
-        model: params.model,
-        ...(params.metadata || {}),
-      },
-    });
-
-    return nextSummary;
-  });
-};
-
 /**
  * Add purchased credits, exactly once.
  *
@@ -468,7 +417,7 @@ export const grantPurchasedCredits = async (params: {
   const billingLedgerRef = billingLedgerCollection(params.uid).doc();
   const currentTime = nowMs();
 
-  const transactionResult = await adminDb.runTransaction(async (transaction: any) => {
+  const transactionResult = await adminDb.runTransaction(async (transaction) => {
     const [purchaseSnapshot, summarySnapshot] = await Promise.all([
       transaction.get(purchaseRef),
       transaction.get(summaryRef),

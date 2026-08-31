@@ -89,7 +89,7 @@ export const getOptionalAuthContext = async (req: Request): Promise<AuthContext 
 
   let decodedToken: DecodedIdToken;
   try {
-    decodedToken = await adminAuth.verifyIdToken(bearerToken);
+    decodedToken = await adminAuth.verifyIdToken(bearerToken, true);
   } catch {
     throw createHttpError(401, 'Invalid Firebase Authentication token.');
   }

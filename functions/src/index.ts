@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { createHash } from 'node:crypto';
 import express, { type Request, type Response } from 'express';
 import { onRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -11,7 +12,7 @@ import { appConfig, getJsonBodyLimitBytes } from './config';
 import { adminDb } from './firebase';
 import { generateManagedContent, streamManagedContent, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease } from './gemini';
 import { getErrorMessage, getHttpStatus } from './http';
-import { getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
+import { countExpiredReservations, getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
 import { verifyManagedGooglePlayPurchase } from './playBilling';
 import { consumeRateLimit } from './rateLimit';
 import { createManagedCheckoutSession, handleStripeWebhook } from './stripeBilling';
@@ -51,6 +52,12 @@ app.use(express.json({ limit: getJsonBodyLimitBytes() }));
  */
 type RateBucket = 'live-token' | 'default' | null;
 
+const getAnonymousRateLimitId = (req: Request): string => {
+  const connectionAddress = req.ip || req.socket.remoteAddress || 'unknown';
+  const digest = createHash('sha256').update(connectionAddress).digest('hex');
+  return `anonymous-${digest}`;
+};
+
 const asyncRoute = (
   authMode: 'none' | 'optional' | 'required',
   handler: (req: Request, res: Response, auth: AuthContext | null) => Promise<void>,
@@ -64,13 +71,16 @@ const asyncRoute = (
     } else if (authMode === 'optional') {
       auth = await getOptionalAuthContext(req);
     }
-    if (auth && rateBucket) {
+    const rateLimitId = auth?.uid || (authMode === 'optional' ? getAnonymousRateLimitId(req) : null);
+    if (rateLimitId && rateBucket) {
       await consumeRateLimit({
-        uid: auth.uid,
+        uid: rateLimitId,
         bucket: rateBucket,
-        limitPerMinute: rateBucket === 'live-token'
-          ? appConfig.liveTokenRateLimitPerMinute
-          : appConfig.rateLimitPerMinute,
+        limitPerMinute: auth
+          ? (rateBucket === 'live-token'
+            ? appConfig.liveTokenRateLimitPerMinute
+            : appConfig.rateLimitPerMinute)
+          : appConfig.anonymousReportRateLimitPerMinute,
       });
     }
     await handler(req, res, auth);
@@ -225,6 +235,8 @@ export const api = onRequest(
     region: appConfig.functionRegion,
     timeoutSeconds: 540,
     memory: '1GiB',
+    maxInstances: appConfig.functionMaxInstances,
+    concurrency: appConfig.functionConcurrency,
   },
   app
 );
@@ -237,6 +249,18 @@ export const releaseExpiredReservations = onSchedule(
     timeoutSeconds: 540,
   },
   async () => {
-    await sweepExpiredReservations(50);
+    const batchLimit = 200;
+    let releasedCount = 0;
+    let batchCount = 0;
+    do {
+      batchCount = await sweepExpiredReservations(batchLimit);
+      releasedCount += batchCount;
+    } while (batchCount === batchLimit);
+
+    const remainingCount = await countExpiredReservations();
+    console.info('[billing] Expired reservation sweep completed.', {
+      expiredReservationsReleased: releasedCount,
+      expiredReservationsRemaining: remainingCount,
+    });
   }
 );

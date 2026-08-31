@@ -15,9 +15,13 @@ export interface ObserverWhisperClientOptions {
   allowFp32Fallback: boolean;
 }
 
+/** Prevent one lost worker message from blocking every later transcription. */
+export const LOCAL_WHISPER_TRANSCRIPTION_TIMEOUT_MS = 30_000;
+
 interface PendingTranscription {
   resolve: (text: string) => void;
   reject: (error: Error) => void;
+  timeoutId: ReturnType<typeof setTimeout>;
 }
 
 /** A lazy, reusable facade around the expensive local Whisper worker. */
@@ -86,9 +90,18 @@ export class ObserverWhisperClient {
       }
       const requestId = this.nextRequestId++;
       return new Promise<string>((resolve, reject) => {
-        this.pending.set(requestId, { resolve, reject });
+        const timeoutId = globalThis.setTimeout(() => {
+          const pending = this.takePending(requestId);
+          pending?.reject(new Error('Local Whisper transcription timed out'));
+        }, LOCAL_WHISPER_TRANSCRIPTION_TIMEOUT_MS);
+        this.pending.set(requestId, { resolve, reject, timeoutId });
         const request: ObserverWhisperRequest = { kind: 'transcribe', requestId, audio: buffer };
-        this.worker.postMessage(request, [buffer]);
+        try {
+          this.worker.postMessage(request, [buffer]);
+        } catch (error) {
+          const pending = this.takePending(requestId);
+          pending?.reject(error instanceof Error ? error : new Error(String(error)));
+        }
       });
     });
     // The observer and STT share this client. Serialize their requests because
@@ -119,18 +132,16 @@ export class ObserverWhisperClient {
       return;
     }
     if (message.kind === 'result') {
-      const pending = this.pending.get(message.requestId);
+      const pending = this.takePending(message.requestId);
       if (!pending) return;
-      this.pending.delete(message.requestId);
       pending.resolve(message.text);
       return;
     }
 
     const error = new Error(message.message || 'Local Whisper failed');
     if (message.requestId !== undefined) {
-      const pending = this.pending.get(message.requestId);
+      const pending = this.takePending(message.requestId);
       if (!pending) return;
-      this.pending.delete(message.requestId);
       pending.reject(error);
       return;
     }
@@ -141,13 +152,25 @@ export class ObserverWhisperClient {
     if (this.currentStatus === 'disposed') return;
     this.currentStatus = 'failed';
     this.rejectReady?.(error);
+    this.readyPromise = null;
     this.clearReadyCallbacks();
     this.failPending(error);
   }
 
   private failPending(error: Error): void {
-    this.pending.forEach(request => request.reject(error));
+    this.pending.forEach(request => {
+      globalThis.clearTimeout(request.timeoutId);
+      request.reject(error);
+    });
     this.pending.clear();
+  }
+
+  private takePending(requestId: number): PendingTranscription | undefined {
+    const pending = this.pending.get(requestId);
+    if (!pending) return undefined;
+    this.pending.delete(requestId);
+    globalThis.clearTimeout(pending.timeoutId);
+    return pending;
   }
 
   private clearReadyCallbacks(): void {

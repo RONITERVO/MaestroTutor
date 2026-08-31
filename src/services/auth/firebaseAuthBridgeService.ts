@@ -104,6 +104,7 @@ export const firebaseAuthBridgeService = {
 
     if (!maestroFirebaseService.isConfigured()) return null;
     const auth = await maestroFirebaseService.getAuth();
+    await auth.authStateReady();
     if (!auth.currentUser) return null;
     return {
       firebaseIdToken: await auth.currentUser.getIdToken(forceRefresh),

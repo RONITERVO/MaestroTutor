@@ -30,27 +30,43 @@ const readLocalStorage = (): ManagedAccessSession | null => {
     const win = safeWindow();
     const raw = win?.localStorage?.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as ManagedAccessSession;
+    const stored = JSON.parse(raw) as ManagedAccessSession;
+    return {
+      ...stored,
+      firebaseIdToken: '',
+      refreshToken: null,
+    };
   } catch {
     return null;
   }
 };
 
-const writeLocalStorage = (session: ManagedAccessSession) => {
+const writeLocalStorage = (session: ManagedAccessSession): boolean => {
   try {
     const win = safeWindow();
-    win?.localStorage?.setItem(STORAGE_KEY, JSON.stringify(session));
+    if (!win?.localStorage) return false;
+    win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      provider: session.provider,
+      user: session.user,
+      expiresAt: session.expiresAt,
+      entitlements: session.entitlements,
+      billingSummary: session.billingSummary,
+      lastSyncedAt: session.lastSyncedAt,
+    }));
+    return true;
   } catch {
-    // Ignore persistence failures.
+    return false;
   }
 };
 
-const removeLocalStorage = () => {
+const removeLocalStorage = (): boolean => {
   try {
     const win = safeWindow();
-    win?.localStorage?.removeItem(STORAGE_KEY);
+    if (!win?.localStorage) return false;
+    win.localStorage.removeItem(STORAGE_KEY);
+    return true;
   } catch {
-    // Ignore persistence failures.
+    return false;
   }
 };
 
@@ -67,11 +83,12 @@ const saveToSecureStorage = async (session: ManagedAccessSession): Promise<void>
   await SecureStorage.setItem(STORAGE_KEY, JSON.stringify(session));
 };
 
-const removeFromSecureStorage = async (): Promise<void> => {
+const removeFromSecureStorage = async (): Promise<boolean> => {
   try {
     await SecureStorage.removeItem(STORAGE_KEY);
+    return true;
   } catch {
-    // Ignore persistence failures.
+    return false;
   }
 };
 
@@ -82,22 +99,23 @@ export const loadManagedAccessSession = async (): Promise<ManagedAccessSession |
 };
 
 export const saveManagedAccessSession = async (session: ManagedAccessSession): Promise<void> => {
-  cachedSession = session;
+  let persisted = true;
   if (isNative) {
     await saveToSecureStorage(session);
   } else {
-    writeLocalStorage(session);
+    persisted = writeLocalStorage(session);
   }
+  if (!persisted) return;
+  cachedSession = session;
   dispatchManagedAccessChanged(session);
 };
 
 export const clearManagedAccessSession = async (): Promise<void> => {
+  const persisted = isNative
+    ? await removeFromSecureStorage()
+    : removeLocalStorage();
+  if (!persisted) return;
   cachedSession = null;
-  if (isNative) {
-    await removeFromSecureStorage();
-  } else {
-    removeLocalStorage();
-  }
   dispatchManagedAccessChanged(null);
 };
 

@@ -39,6 +39,7 @@ import {
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
 } from '../utils/observerSpeechDetection';
+import { evaluateFreshSpeechFallback } from '../utils/liveSpeechDetection';
 import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
@@ -284,6 +285,7 @@ export function useGeminiLiveConversation(
   const observerWhisperRef = useRef<LocalWhisperClient | null>(null);
   const observerWhisperBusyRef = useRef(false);
   const lastWhisperRequestAtRef = useRef(0);
+  const loadingFallbackOnsetAtRef = useRef<number | null>(null);
   const whisperFailureWarnedRef = useRef(false);
   /** Invalidates an inference result when cleanup replaces its session. */
   const speechGateEpochRef = useRef(0);
@@ -545,6 +547,7 @@ export function useGeminiLiveConversation(
     playbackActiveRef.current = false;
     speechGateRef.current = null;
     gatePrerollRef.current = [];
+    loadingFallbackOnsetAtRef.current = null;
     if (!wasSpeechGated) {
       speechGateEpochRef.current += 1;
     }
@@ -793,6 +796,7 @@ export function useGeminiLiveConversation(
     playbackUntilRef.current = 0;
     playbackActiveRef.current = false;
     lastWhisperRequestAtRef.current = 0;
+    loadingFallbackOnsetAtRef.current = null;
     const speechGateEpoch = speechGateEpochRef.current;
 
     if (gateInputOnSpeech) {
@@ -1413,7 +1417,9 @@ export function useGeminiLiveConversation(
               }
             }
 
-            const decision = gate ? gate.evaluate(measureEnergy(packet), now) : null;
+            const energy = measureEnergy(packet);
+            const wasAwaitingConfirmation = gate?.isAwaitingConfirmation ?? false;
+            const decision = gate ? gate.evaluate(energy, now) : null;
 
             if (!decision || decision.send) {
               await encodeAndSend(packet);
@@ -1430,6 +1436,7 @@ export function useGeminiLiveConversation(
               sessionRef.current?.sendRealtimeInput({ audioStreamEnd: true });
               inputAudioTelemetryRef.current.audioStreamEnds += 1;
               gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
               return;
             }
 
@@ -1437,6 +1444,7 @@ export function useGeminiLiveConversation(
             // survive in pre-roll and leak into the next confirmed user turn.
             if (decision.reason === 'playback' || decision.reason === 'cooldown') {
               gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
               return;
             }
 
@@ -1448,6 +1456,23 @@ export function useGeminiLiveConversation(
 
             if (decision.reason !== 'awaiting-confirmation') return;
 
+            const previousFallbackOnset = loadingFallbackOnsetAtRef.current;
+            const fallback = evaluateFreshSpeechFallback(
+              energy,
+              previousFallbackOnset,
+              now,
+            );
+            loadingFallbackOnsetAtRef.current = fallback.onsetAt;
+            if (
+              wasAwaitingConfirmation
+              && previousFallbackOnset === null
+              && fallback.action === 'wait'
+            ) {
+              // Fresh speech after a stale candidate: do not replay the old
+              // sound, but retain this packet as the new utterance's pre-roll.
+              gatePrerollRef.current = [packet];
+            }
+
             const detector = observerWhisperRef.current;
             let confirmed = false;
 
@@ -1456,6 +1481,7 @@ export function useGeminiLiveConversation(
               // retains the cheap energy, cooldown and playback protections.
               inputAudioTelemetryRef.current.energyFallbacks += 1;
               confirmed = gate.confirmSpeech(now);
+              loadingFallbackOnsetAtRef.current = null;
             } else if (
               (detector.status === 'idle' || detector.status === 'loading')
               && detector.loadingStartedAt > 0
@@ -1464,8 +1490,15 @@ export function useGeminiLiveConversation(
               // First model load may be slow on mobile data. Continue loading
               // in the background, but preserve re-engagement after the grace
               // period with the same energy-only fallback used for failures.
-              inputAudioTelemetryRef.current.energyFallbacks += 1;
-              confirmed = gate.confirmSpeech(now);
+              if (fallback.action === 'expire') {
+                gate.rejectSpeech(now);
+                gatePrerollRef.current = [];
+                loadingFallbackOnsetAtRef.current = null;
+              } else if (fallback.action === 'confirm') {
+                inputAudioTelemetryRef.current.energyFallbacks += 1;
+                confirmed = gate.confirmSpeech(now);
+                loadingFallbackOnsetAtRef.current = null;
+              }
             } else if (detector.status === 'ready') {
               if (
                 observerWhisperBusyRef.current
@@ -1490,10 +1523,12 @@ export function useGeminiLiveConversation(
                 if (isLikelySpeechTranscript(text)) {
                   inputAudioTelemetryRef.current.whisperAccepted += 1;
                   confirmed = gate.confirmSpeech(resultAt);
+                  loadingFallbackOnsetAtRef.current = null;
                 } else {
                   inputAudioTelemetryRef.current.whisperRejected += 1;
                   gate.rejectSpeech(resultAt);
                   gatePrerollRef.current = [];
+                  loadingFallbackOnsetAtRef.current = null;
                 }
               } catch (error) {
                 if (
@@ -1504,6 +1539,7 @@ export function useGeminiLiveConversation(
                 inputAudioTelemetryRef.current.whisperErrors += 1;
                 inputAudioTelemetryRef.current.energyFallbacks += 1;
                 confirmed = gate.confirmSpeech(Date.now());
+                loadingFallbackOnsetAtRef.current = null;
                 if (!whisperFailureWarnedRef.current) {
                   whisperFailureWarnedRef.current = true;
                   console.warn('Local Whisper check failed; using the energy-only fallback.', error);

@@ -50,4 +50,22 @@ describe('shared local Whisper worker', () => {
     expect(workerState.instances).toHaveLength(2);
     releaseLocalWhisperClient(nextSession);
   });
+
+  it('does not carry stale consumers into a replacement for a disposed worker', () => {
+    const options = {
+      model: 'onnx-community/whisper-tiny.en',
+      allowFp32Fallback: false,
+    };
+
+    const oldObserver = acquireLocalWhisperClient(options);
+    const oldStt = acquireLocalWhisperClient(options);
+    oldObserver.dispose();
+
+    const replacement = acquireLocalWhisperClient(options);
+    releaseLocalWhisperClient(oldObserver);
+    releaseLocalWhisperClient(oldStt);
+    releaseLocalWhisperClient(replacement);
+
+    expect(workerState.instances[workerState.instances.length - 1].dispose).toHaveBeenCalledOnce();
+  });
 });

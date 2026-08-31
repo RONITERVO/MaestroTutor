@@ -20,8 +20,10 @@ export interface CheckoutSessionLike {
   customer_details?: { email?: string | null } | null;
 }
 
-export interface CreditPackLike {
-  id: string;
+/** Immutable server record written when the Checkout session is created. */
+export interface CheckoutGrantSnapshotLike {
+  uid: string;
+  packId: string;
   credits: number;
 }
 
@@ -30,7 +32,7 @@ export type FulfilmentDecision =
     action: 'grant';
     uid: string;
     packId: string;
-    /** Always the catalogue's number, never the session's. */
+    /** Always the Checkout snapshot's number, never mutable metadata/catalogue state. */
     credits: number;
     /** Stable per purchase, so replayed deliveries are no-ops. */
     idempotencyKey: string;
@@ -41,21 +43,20 @@ export type FulfilmentDecision =
 
 export type FulfilmentSkipReason =
   | 'not-paid'
-  | 'missing-metadata'
-  | 'unknown-pack';
+  | 'missing-snapshot'
+  | 'invalid-snapshot';
 
 /**
  * What, if anything, this session should be granted.
  *
- * `lookupPack` is the server's catalogue. The session's own `credits` metadata
- * is deliberately ignored: it round-trips through the browser and through
- * Stripe, and a fulfilment that trusted it would hand out whatever quantity the
- * session claimed. Metadata is used only to identify *which* pack and *whose*
- * account — both of which are then re-checked here.
+ * `snapshot` is written by the server under the Stripe session id before the
+ * Checkout URL is returned. The session metadata and current catalogue are
+ * deliberately ignored: fulfilment must keep the exact user, pack and credit
+ * quantity sold when this particular Checkout session was created.
  */
 export const resolveCheckoutGrant = (
   session: CheckoutSessionLike,
-  lookupPack: (packId: string) => CreditPackLike | undefined,
+  snapshot: CheckoutGrantSnapshotLike | null | undefined,
 ): FulfilmentDecision => {
   // A completed session is not necessarily a paid one: delayed payment methods
   // complete first and settle later, and granting on completion alone would
@@ -64,15 +65,19 @@ export const resolveCheckoutGrant = (
     return { action: 'skip', reason: 'not-paid' };
   }
 
-  const uid = session.metadata?.firebaseUid?.trim();
-  const packId = session.metadata?.packId?.trim();
-  if (!uid || !packId) {
-    return { action: 'skip', reason: 'missing-metadata' };
+  if (!snapshot) {
+    return { action: 'skip', reason: 'missing-snapshot' };
   }
 
-  const pack = lookupPack(packId);
-  if (!pack || !(pack.credits > 0)) {
-    return { action: 'skip', reason: 'unknown-pack' };
+  const uid = typeof snapshot.uid === 'string' ? snapshot.uid.trim() : '';
+  const packId = typeof snapshot.packId === 'string' ? snapshot.packId.trim() : '';
+  if (
+    !uid
+    || !packId
+    || !Number.isSafeInteger(snapshot.credits)
+    || snapshot.credits <= 0
+  ) {
+    return { action: 'skip', reason: 'invalid-snapshot' };
   }
 
   const paymentIntent = typeof session.payment_intent === 'string'
@@ -82,8 +87,8 @@ export const resolveCheckoutGrant = (
   return {
     action: 'grant',
     uid,
-    packId: pack.id,
-    credits: pack.credits,
+    packId,
+    credits: snapshot.credits,
     // Keyed on the session rather than the webhook event: the session is the
     // purchase, so this stays stable across event retries and would still hold
     // if another event type for the same session were ever handled.

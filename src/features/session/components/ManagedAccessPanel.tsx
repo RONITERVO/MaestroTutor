@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { maestroPaymentsService } from '../../../services/payments/maestroPaymentsService';
 import { googleAuthService } from '../../../services/auth/googleAuthService';
@@ -47,6 +48,12 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const billingService = maestroPaymentsService.themeBilling;
   const managedProductIds = useMemo(() => maestroPaymentsService.getManagedBillingProductIds(), []);
   const primaryProductId = managedProductIds[0] || '';
+  const webBillingAvailable = (
+    !Capacitor.isNativePlatform()
+    && maestroBackendService.isConfigured()
+    && Boolean(primaryProductId)
+  );
+  const purchasingAvailable = billingService.isAvailable || webBillingAvailable;
   const processingTokensRef = useRef<Set<string>>(new Set());
   const completedTokensRef = useRef<Set<string>>(new Set());
 
@@ -370,7 +377,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
           </>
         )}
 
-        {billingService.isAvailable ? (
+        {purchasingAvailable ? (
           <>
             <button
               type="button"
@@ -380,14 +387,16 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
             >
               {isPurchasing ? t('managedAccess.purchasing') : t('managedAccess.buyCredits')}
             </button>
-            <button
-              type="button"
-              onClick={() => void handleRestore()}
-              disabled={!session?.firebaseIdToken}
-              className="px-3 py-2 text-gate-text hover:bg-gate-bg disabled:opacity-60 sketchy-border-thin"
-            >
-              {t('managedAccess.restorePurchases')}
-            </button>
+            {billingService.isAvailable && (
+              <button
+                type="button"
+                onClick={() => void handleRestore()}
+                disabled={!session?.firebaseIdToken}
+                className="px-3 py-2 text-gate-text hover:bg-gate-bg disabled:opacity-60 sketchy-border-thin"
+              >
+                {t('managedAccess.restorePurchases')}
+              </button>
+            )}
           </>
         ) : (
           <div className="text-xs text-gate-muted-text">{t('managedAccess.androidOnly')}</div>
@@ -426,7 +435,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
                 value={deleteConfirmationText}
                 onChange={(event) => setDeleteConfirmationText(event.target.value)}
                 placeholder="DELETE"
-                className="w-full px-3 py-2 bg-white text-sm text-gate-text border border-red-300 rounded-none focus:outline-none focus:ring-1 focus:ring-red-400"
+                className="w-full px-3 py-2 bg-white text-base text-gate-text border border-red-300 rounded-none focus:outline-none focus:ring-1 focus:ring-red-400 sm:text-sm"
               />
               <div className="flex flex-wrap gap-2">
                 <button

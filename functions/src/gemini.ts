@@ -8,10 +8,11 @@ import os from 'node:os';
 import path from 'node:path';
 import type { Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
+import { FieldPath } from 'firebase-admin/firestore';
 import type { AppUser } from './auth';
 import { appConfig } from './config';
 import { adminDb } from './firebase';
-import { createHttpError } from './http';
+import { createHttpError, getErrorMessage } from './http';
 import {
   releaseManagedReservation,
   reserveManagedCredits,
@@ -33,6 +34,9 @@ import {
 const STREAM_CONTENT_TYPE = 'application/x-ndjson; charset=utf-8';
 const FILE_ACTIVE_TIMEOUT_MS = 60_000;
 const FILE_ACTIVE_POLL_MS = 1_000;
+const MAX_FILE_STATUS_URIS = 100;
+const FILE_STATUS_BATCH_SIZE = 10;
+const FILE_CLEANUP_BATCH_SIZE = 200;
 
 const getGeminiClient = (): GoogleGenAI => {
   if (!appConfig.geminiApiKey) {
@@ -255,6 +259,8 @@ const markManagedFileDeleted = async (uid: string, fileName: string): Promise<bo
       deletedAt: Date.now(),
       lastCheckedAt: Date.now(),
       state: 'deleted',
+      cleanupPending: false,
+      cleanupLastError: null,
     }, { merge: true });
     transaction.set(summaryRef, {
       activeManagedFileCount: Math.max(0, currentCount - 1),
@@ -295,8 +301,8 @@ const evictManagedFilesForUpload = async (uid: string, slotsNeeded = 1): Promise
   const evictionCandidates = activeFiles
     .filter((file) => file.name)
     .sort((left, right) => {
-      const leftKey = left.createdAt || left.lastCheckedAt || 0;
-      const rightKey = right.createdAt || right.lastCheckedAt || 0;
+      const leftKey = left.lastCheckedAt || left.createdAt || 0;
+      const rightKey = right.lastCheckedAt || right.createdAt || 0;
       return leftKey - rightKey;
     })
     .slice(0, overflow);
@@ -420,10 +426,6 @@ export const streamManagedContent = async (params: {
   response: Response;
 }) => {
   const response = params.response;
-  response.setHeader('Content-Type', STREAM_CONTENT_TYPE);
-  response.setHeader('Cache-Control', 'no-store, no-transform');
-  response.setHeader('X-Accel-Buffering', 'no');
-
   await sweepExpiredReservationsForUser(params.uid);
 
   const promptTokens = await countPromptTokens(params.model, params.contents, params.config);
@@ -443,6 +445,10 @@ export const streamManagedContent = async (params: {
     estimatedUsd,
     metadata: { promptTokens },
   });
+
+  response.setHeader('Content-Type', STREAM_CONTENT_TYPE);
+  response.setHeader('Cache-Control', 'no-store, no-transform');
+  response.setHeader('X-Accel-Buffering', 'no');
 
   let latestChunk: any = null;
   let deliveredAnyChunk = false;
@@ -583,7 +589,12 @@ const waitForManagedFileActive = async (name: string): Promise<any> => {
   throw createHttpError(504, `Timed out waiting for Gemini file ${name} to become active.`);
 };
 
-const dataUrlToTemporaryFile = async (dataUrl: string, mimeType: string, displayName?: string) => {
+const dataUrlToTemporaryFile = async (
+  dataUrl: string,
+  mimeType: string,
+  maxBytes: number,
+  displayName?: string,
+) => {
   const base64Index = dataUrl.indexOf(',');
   if (base64Index === -1) {
     throw createHttpError(400, 'Invalid base64 data URL.');
@@ -592,6 +603,9 @@ const dataUrlToTemporaryFile = async (dataUrl: string, mimeType: string, display
   const buffer = Buffer.from(dataUrl.slice(base64Index + 1), 'base64');
   if (!buffer.length) {
     throw createHttpError(400, 'Uploaded media payload is empty.');
+  }
+  if (buffer.length > maxBytes) {
+    throw createHttpError(413, 'Uploaded media exceeds the managed upload size limit.');
   }
 
   const extension = (mimeType.split('/')[1] || 'bin').replace(/[^a-z0-9]/gi, '');
@@ -611,11 +625,12 @@ export const uploadManagedMedia = async (params: {
   mimeType: string;
   displayName?: string;
 }) => {
-  const tempFile = await dataUrlToTemporaryFile(params.dataUrl, params.mimeType, params.displayName);
-  if (tempFile.sizeBytes > appConfig.managedMaxUploadBytes) {
-    await fs.unlink(tempFile.path).catch(() => undefined);
-    throw createHttpError(413, 'Uploaded media exceeds the managed upload size limit.');
-  }
+  const tempFile = await dataUrlToTemporaryFile(
+    params.dataUrl,
+    params.mimeType,
+    appConfig.managedMaxUploadBytes,
+    params.displayName,
+  );
 
   const uploadCredits = uploadBytesToCredits(tempFile.sizeBytes);
   const uploadUsd = uploadBytesToUsd(tempFile.sizeBytes);
@@ -733,45 +748,51 @@ export const uploadManagedMedia = async (params: {
 };
 
 export const getManagedFileStatuses = async (uid: string, uris: string[]) => {
+  if (uris.length > MAX_FILE_STATUS_URIS) {
+    throw createHttpError(400, `At most ${MAX_FILE_STATUS_URIS} file URIs may be checked at once.`);
+  }
   const statuses: Record<string, { deleted: boolean; active: boolean }> = {};
 
-  await Promise.all(uris.map(async (uri) => {
-    const fileName = normalizeGeminiFileName(uri);
-    if (!fileName) {
-      statuses[uri] = { deleted: true, active: false };
-      return;
-    }
-
-    const snapshot = await managedFileRef(fileName).get();
-    const data = snapshot.data();
-    if (!snapshot.exists || data?.uid !== uid || data?.deletedAt) {
-      statuses[uri] = { deleted: true, active: false };
-      return;
-    }
-
-    try {
-      const file = await getGeminiClient().files.get({ name: fileName });
-      const active = file?.state === 'ACTIVE';
-      const deleted = file?.state === 'FAILED';
-      statuses[uri] = { deleted, active };
-
-      if (deleted) {
-        await markManagedFileDeleted(uid, fileName);
-      } else {
-        await managedFileRef(fileName).set({
-          lastCheckedAt: Date.now(),
-          state: active ? 'active' : 'processing',
-        }, { merge: true });
-      }
-    } catch (error) {
-      if (isNotFoundError(error)) {
+  for (let index = 0; index < uris.length; index += FILE_STATUS_BATCH_SIZE) {
+    const batch = uris.slice(index, index + FILE_STATUS_BATCH_SIZE);
+    await Promise.all(batch.map(async (uri) => {
+      const fileName = normalizeGeminiFileName(uri);
+      if (!fileName) {
         statuses[uri] = { deleted: true, active: false };
-        await markManagedFileDeleted(uid, fileName);
         return;
       }
-      throw error;
-    }
-  }));
+
+      const snapshot = await managedFileRef(fileName).get();
+      const data = snapshot.data();
+      if (!snapshot.exists || data?.uid !== uid || data?.deletedAt) {
+        statuses[uri] = { deleted: true, active: false };
+        return;
+      }
+
+      try {
+        const file = await getGeminiClient().files.get({ name: fileName });
+        const active = file?.state === 'ACTIVE';
+        const deleted = file?.state === 'FAILED';
+        statuses[uri] = { deleted, active };
+
+        if (deleted) {
+          await markManagedFileDeleted(uid, fileName);
+        } else {
+          await managedFileRef(fileName).set({
+            lastCheckedAt: Date.now(),
+            state: active ? 'active' : 'processing',
+          }, { merge: true });
+        }
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          statuses[uri] = { deleted: true, active: false };
+          await markManagedFileDeleted(uid, fileName);
+          return;
+        }
+        throw error;
+      }
+    }));
+  }
 
   return { statuses };
 };
@@ -785,32 +806,61 @@ export const deleteManagedFile = async (uid: string, nameOrUri: string) => {
 };
 
 export const clearManagedFiles = async (uid: string) => {
-  const snapshot = await adminDb.collection('managedFiles')
-    .where('uid', '==', uid)
-    .where('deletedAt', '==', null)
-    .limit(200)
-    .get();
-
   let deletedCount = 0;
   let failedCount = 0;
   const failedNames: string[] = [];
+  const cleanedMetadataIds: string[] = [];
+  let lastDocument: FirebaseFirestore.QueryDocumentSnapshot | undefined;
 
-  for (const doc of snapshot.docs) {
-    const data = doc.data() as { name?: string };
-    const fileName = typeof data.name === 'string' ? data.name : '';
-    if (!fileName) continue;
-
-    try {
-      if (await deleteManagedFileByName(uid, fileName)) {
-        deletedCount += 1;
-      }
-    } catch (error) {
-      failedCount += 1;
-      failedNames.push(fileName);
+  while (true) {
+    let query = adminDb.collection('managedFiles')
+      .where('uid', '==', uid)
+      .orderBy(FieldPath.documentId())
+      .limit(FILE_CLEANUP_BATCH_SIZE);
+    if (lastDocument) {
+      query = query.startAfter(lastDocument);
     }
+    const snapshot = await query.get();
+    if (snapshot.empty) break;
+    lastDocument = snapshot.docs[snapshot.docs.length - 1];
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data() as {
+        name?: string;
+        deletedAt?: number | null;
+        cleanupAttempts?: number;
+      };
+      const fileName = typeof data.name === 'string' ? data.name : '';
+      if (data.deletedAt) {
+        cleanedMetadataIds.push(doc.id);
+        continue;
+      }
+
+      try {
+        if (!fileName) {
+          throw new Error('Managed file record has no remote file name.');
+        }
+        if (!await deleteManagedFileByName(uid, fileName)) {
+          throw new Error('Managed file metadata could not be matched for remote cleanup.');
+        }
+        deletedCount += 1;
+        cleanedMetadataIds.push(doc.id);
+      } catch (error) {
+        failedCount += 1;
+        failedNames.push(fileName || doc.id);
+        await doc.ref.set({
+          cleanupPending: true,
+          cleanupAttempts: Math.max(0, Number(data.cleanupAttempts || 0)) + 1,
+          cleanupLastAttemptAt: Date.now(),
+          cleanupLastError: getErrorMessage(error).slice(0, 1_000),
+        }, { merge: true });
+      }
+    }
+
+    if (snapshot.size < FILE_CLEANUP_BATCH_SIZE) break;
   }
 
-  return { deletedCount, failedCount, failedNames };
+  return { deletedCount, failedCount, failedNames, cleanedMetadataIds };
 };
 
 export const createManagedLiveToken = async (params: {
@@ -838,21 +888,27 @@ export const createManagedLiveToken = async (params: {
     durationMs: liveWindowSeconds * 1000,
   });
 
-  const reservation = await reserveManagedCredits({
-    uid: params.uid,
-    user: params.user,
-    operation: purpose === 'music' ? 'liveTokenMusic' : 'liveToken',
-    model: purpose === 'music' ? 'lyria-realtime-exp' : 'gemini-2.5-flash-native-audio-preview-12-2025',
-    estimatedCredits: fixedCredits,
-    estimatedUsd: billedUsd,
-    metadata: {
-      purpose,
-      leaseId: lease.leaseId,
-      requestedDurationSeconds: params.durationSeconds || null,
-      maxWindowSeconds: liveWindowSeconds,
-      ...(liveTokenBudget || {}),
-    },
-  });
+  let reservation: Awaited<ReturnType<typeof reserveManagedCredits>>;
+  try {
+    reservation = await reserveManagedCredits({
+      uid: params.uid,
+      user: params.user,
+      operation: purpose === 'music' ? 'liveTokenMusic' : 'liveToken',
+      model: purpose === 'music' ? 'lyria-realtime-exp' : 'gemini-2.5-flash-native-audio-preview-12-2025',
+      estimatedCredits: fixedCredits,
+      estimatedUsd: billedUsd,
+      metadata: {
+        purpose,
+        leaseId: lease.leaseId,
+        requestedDurationSeconds: params.durationSeconds || null,
+        maxWindowSeconds: liveWindowSeconds,
+        ...(liveTokenBudget || {}),
+      },
+    });
+  } catch (error) {
+    await releaseManagedLiveLease(params.uid, lease.leaseId).catch(() => undefined);
+    throw error;
+  }
 
   const expireTime = new Date(Date.now() + liveWindowSeconds * 1000).toISOString();
 

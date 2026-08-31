@@ -70,8 +70,12 @@ const DeleteAccountPage: React.FC = () => {
   const handleSignOut = useCallback(async () => {
     setErrorMessage(null);
     setSuccessMessage(null);
-    await googleAuthService.signOutManagedSession();
-    setSession(null);
+    try {
+      await googleAuthService.signOutManagedSession();
+      setSession(null);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to sign out.');
+    }
   }, []);
 
   const handleDeleteAccount = useCallback(async () => {
@@ -89,10 +93,22 @@ const DeleteAccountPage: React.FC = () => {
     setSuccessMessage(null);
     try {
       await maestroBackendService.deleteManagedAccount();
-      await googleAuthService.signOutManagedSession();
+      let signOutError: unknown = null;
+      try {
+        await googleAuthService.signOutManagedSession();
+      } catch (error) {
+        signOutError = error;
+      }
       setSession(null);
       setConfirmationText('');
       setSuccessMessage('Your managed Maestro account has been deleted.');
+      if (signOutError) {
+        setErrorMessage(
+          signOutError instanceof Error
+            ? `Your account was deleted, but sign-out failed: ${signOutError.message}`
+            : 'Your account was deleted, but sign-out failed.'
+        );
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to delete your managed account.');
     } finally {
@@ -188,7 +204,7 @@ const DeleteAccountPage: React.FC = () => {
                 value={confirmationText}
                 onChange={(event) => setConfirmationText(event.target.value)}
                 placeholder="DELETE"
-                className="w-full border border-line-border bg-page-bg px-3 py-2 text-sm outline-none"
+                className="w-full border border-line-border bg-page-bg px-3 py-2 text-base outline-none sm:text-sm"
                 disabled={isDeleting}
               />
             </div>
