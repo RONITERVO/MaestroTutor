@@ -194,6 +194,10 @@ export const useSilentObserverController = ({
         emitTurns: Boolean(onTurnComplete),
         sessionResumption,
         costFeature: 'reengagement',
+        // The observer is the one session nobody asked for: it holds the socket
+        // open for as long as the app is idle and foregrounded, so it is the one
+        // that must stay quiet until there is actually someone to listen to.
+        gateInputOnSpeech: true,
       });
     } catch (error) {
       if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;

@@ -1,0 +1,142 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import ObserverWhisperWorker from '../workers/observerWhisper.worker.ts?worker';
+import type {
+  ObserverWhisperRequest,
+  ObserverWhisperResponse,
+} from '../workers/observerWhisperProtocol';
+
+export type ObserverWhisperStatus = 'idle' | 'loading' | 'ready' | 'failed' | 'disposed';
+
+export interface ObserverWhisperClientOptions {
+  model: string;
+  allowFp32Fallback: boolean;
+}
+
+interface PendingTranscription {
+  resolve: (text: string) => void;
+  reject: (error: Error) => void;
+}
+
+/** A lazy, reusable facade around the expensive local Whisper worker. */
+export class ObserverWhisperClient {
+  private readonly worker = new ObserverWhisperWorker();
+  private readonly options: ObserverWhisperClientOptions;
+  private nextRequestId = 1;
+  private pending = new Map<number, PendingTranscription>();
+  private currentStatus: ObserverWhisperStatus = 'idle';
+  private readyPromise: Promise<void> | null = null;
+  private resolveReady: (() => void) | null = null;
+  private rejectReady: ((error: Error) => void) | null = null;
+
+  constructor(options: ObserverWhisperClientOptions) {
+    this.options = options;
+    this.worker.onmessage = (event: MessageEvent<ObserverWhisperResponse>) => {
+      this.handleMessage(event.data);
+    };
+    this.worker.onerror = (event) => {
+      this.fail(new Error(event.message || 'Local Whisper worker crashed'));
+    };
+  }
+
+  get status(): ObserverWhisperStatus {
+    return this.currentStatus;
+  }
+
+  initialize(): Promise<void> {
+    if (this.currentStatus === 'ready') return Promise.resolve();
+    if (this.currentStatus === 'disposed') {
+      return Promise.reject(new Error('Local Whisper worker has been disposed'));
+    }
+    if (this.readyPromise) return this.readyPromise;
+
+    this.currentStatus = 'loading';
+    this.readyPromise = new Promise<void>((resolve, reject) => {
+      this.resolveReady = resolve;
+      this.rejectReady = reject;
+    });
+    const request: ObserverWhisperRequest = {
+      kind: 'init',
+      model: this.options.model,
+      allowFp32Fallback: this.options.allowFp32Fallback,
+    };
+    this.worker.postMessage(request);
+    return this.readyPromise;
+  }
+
+  transcribe(audio: Float32Array): Promise<string> {
+    if (this.currentStatus !== 'ready') {
+      return Promise.reject(new Error(`Local Whisper is ${this.currentStatus}`));
+    }
+    const requestId = this.nextRequestId++;
+    const buffer = new ArrayBuffer(audio.byteLength);
+    new Float32Array(buffer).set(audio);
+    return new Promise<string>((resolve, reject) => {
+      this.pending.set(requestId, { resolve, reject });
+      const request: ObserverWhisperRequest = { kind: 'transcribe', requestId, audio: buffer };
+      this.worker.postMessage(request, [buffer]);
+    });
+  }
+
+  dispose(): void {
+    if (this.currentStatus === 'disposed') return;
+    this.currentStatus = 'disposed';
+    this.worker.terminate();
+    this.failPending(new Error('Local Whisper worker disposed'));
+    this.rejectReady?.(new Error('Local Whisper worker disposed'));
+    this.clearReadyCallbacks();
+  }
+
+  private handleMessage(message: ObserverWhisperResponse): void {
+    if (this.currentStatus === 'disposed') return;
+    if (message.kind === 'loading') {
+      this.currentStatus = 'loading';
+      return;
+    }
+    if (message.kind === 'ready') {
+      this.currentStatus = 'ready';
+      this.resolveReady?.();
+      this.clearReadyCallbacks();
+      return;
+    }
+    if (message.kind === 'result') {
+      const pending = this.pending.get(message.requestId);
+      if (!pending) return;
+      this.pending.delete(message.requestId);
+      pending.resolve(message.text);
+      return;
+    }
+
+    const error = new Error(message.message || 'Local Whisper failed');
+    if (message.requestId !== undefined) {
+      const pending = this.pending.get(message.requestId);
+      if (!pending) return;
+      this.pending.delete(message.requestId);
+      pending.reject(error);
+      return;
+    }
+    this.fail(error);
+  }
+
+  private fail(error: Error): void {
+    if (this.currentStatus === 'disposed') return;
+    this.currentStatus = 'failed';
+    this.rejectReady?.(error);
+    this.clearReadyCallbacks();
+    this.failPending(error);
+  }
+
+  private failPending(error: Error): void {
+    this.pending.forEach(request => request.reject(error));
+    this.pending.clear();
+  }
+
+  private clearReadyCallbacks(): void {
+    this.resolveReady = null;
+    this.rejectReady = null;
+  }
+}
+
+export default ObserverWhisperClient;
