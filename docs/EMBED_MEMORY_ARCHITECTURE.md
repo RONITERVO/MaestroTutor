@@ -2,6 +2,10 @@
 
 Branch: `perf/single-live-embed`
 
+> **Status: implemented.** Sections 1–3 are the analysis and the decision record;
+> §4 tracks what shipped. One item from the original plan — `content-visibility`
+> on message bubbles — was deliberately **not** shipped; see §4, Phase 4.
+
 Goal: at most one live embed (iframe / PDF / scripted SVG) alive at a time, without
 the chat ever shifting when embeds mount, unmount, boot, or resize — and without
 losing the "part of the notebook page" feel.
@@ -305,56 +309,97 @@ The shared-frame trick is still the right answer for `ArtifactLoadingScene`.
 
 ---
 
-## 4. Sequencing
+## 4. What shipped
 
-Each phase is shippable on its own and leaves the app better than it found it.
+Each phase landed on its own and left the app better than it found it.
 
-**Phase 0 — free wins, no architecture change**
-- de-iframe static SVG (§2.7)
-- single shared / inlined `ArtifactLoadingScene` (§2.7)
-- cap `PdfViewer` render scale by device pixel ratio and box width
-- *Effect:* immediate drop in document count and bitmap bytes. No behaviour change.
+**Phase 0 — free wins** ✅
+- `ArtifactLoadingScene` is now a single shared iframe granted to the first
+  claimant (`embeds/useArtifactLoadingSceneSlot.ts`); concurrent loads get the
+  ordinary spinner. There is never a reason for two of these to exist.
+- Static SVG attachments already rendered through `<img>`, so there was nothing
+  to de-iframe there — the audit in §1.4 was wrong about that one, and the real
+  decorative-iframe cost was the loading scene.
+- The in-frame `MutationObserver` now disconnects after a 4s settling window
+  instead of firing on every DOM write for the life of the game.
 
-**Phase 1 — reserved box (the keystone)**
-- `embedIntrinsics.ts` + `embedBox` on `ChatMessage` (§2.2, §2.1)
-- CSS `aspect-ratio` box with `contain`; shared `--embed-max-h` from one RO
-- demote live metrics to advisory + commit-on-exit (§2.3)
-- *Effect:* the jitter and the scroll-jump-on-boot are gone. Nothing has been
-  unmounted yet, so this phase is low-risk and independently valuable.
+**Phase 1 — reserved box (the keystone)** ✅
+- `utils/embedIntrinsics.ts` derives an aspect ratio from source text; `embedBox`
+  persists it on `ChatMessage` (and rides the existing `sanitizeForPersistence`
+  spread, so it survives a restart with no schema work).
+- `embeds/EmbedBox.tsx` + `.embed-box` in `index.css`: `aspect-ratio` and
+  `contain: layout paint size`, with `--embed-max-h` published once per viewport
+  by `useEmbedViewport`. A `@supports` fallback covers WebViews below Chrome 88.
+- Live metrics are advisory, held in a ref and committed on the way out of the
+  live phase.
+- Artifact generation is now asked to emit `<meta name="maestro-aspect">`, which
+  is what makes the *first* paint of a brand-new artifact land on the right box.
 
-**Phase 2 — activation manager**
-- `EmbedActivationManager` + one shared IO, wired into `MiniGameViewer` first (§2.4)
-- placeholder state; delete the sticky `hasIntersected`; delete the per-embed
-  observer stack
-- *Effect:* live embed count drops from "everything ever seen" to 1.
+**Phase 2 — activation manager** ✅
+- `embeds/embedActivation.ts` + `useEmbedSlot`: one IntersectionObserver, rAF-
+  coalesced arbitration, dwell before promotion, fling suppression, pinning for
+  active engagement, immediate demotion on leaving the viewport.
+- The sticky `hasIntersected` and the per-embed observer stack are gone.
 
-**Phase 3 — posters + tiering**
-- frozen state, blob-URL poster LRU (§2.5)
-- `devicePerformanceTier` in `hardwareSlice` driving every budget (§2.6)
-- extend the manager to `PdfViewer` and `OfficeFileViewer`
+**Phase 3 — posters + tiering** ✅
+- Blob-URL poster LRU with revocation on eviction; capture happens *while* live
+  (a demotion cannot wait for a postMessage round trip) and only for
+  canvas-backed artifacts, since rasterizing arbitrary DOM is not worth a
+  dependency.
+- `devicePerformanceTier` in `hardwareSlice` drives every budget, including a
+  cap on `maxVisibleMessages`.
 
-**Phase 4 — PDF windowing + `content-visibility`**
-- page-level windowing with blob URLs (§2.7)
-- `content-visibility: auto` on bubbles (§2.8)
-
----
+**Phase 4 — PDF windowing** ✅ / **`content-visibility`** ❌ deliberately deferred
+- `PdfViewer` rasterizes only the pages in a tier-sized window around the
+  reader, at a scale derived from the displayed width, into revocable blob URLs.
+  Every page still reserves its slot at the document's page ratio.
+- `content-visibility: auto` on message bubbles was **not** shipped. The
+  transcript is bottom-anchored and the user scrolls up into history that has
+  never been rendered, so `contain-intrinsic-size: auto <estimate>` would snap
+  each bubble from the estimate to its true height — a correction of ~80px to
+  ~500px depending on the message — *above* the scroll position, absorbed only
+  by Chromium scroll anchoring, in a container that also drives its own
+  `scrollIntoView`. That is the same class of shift this whole design removes,
+  so it is not a trade worth making blind. To land it: give each message a
+  remembered height hint the way `embedBox` remembers a ratio, then verify on a
+  real low-end device against a long mixed-attachment history.
 
 ## 5. Guardrails
 
 Without these, this regresses within a few features.
 
-- **Test:** render a 50-message fixture with 10 mini-games, scroll it, assert
-  `container.querySelectorAll('iframe').length <= maxLiveEmbeds`. This is the
-  regression test that matters; everything else is secondary.
-- **Test:** the reserved box is computed identically from source text before and
-  after a live run (no shift on remount), and a rotation changes the height but
-  not the stored `embedBox`.
-- **Dev counter:** a `__EMBED_DEBUG__` overlay showing live embeds, frozen posters,
-  live blob URLs, and current tier. Cheap to add, and it makes "did this feature
-  leak a document?" a five-second check.
-- **Release checklist:** add a low-tier memory pass (Android Studio memory profiler
-  against a long chat with mixed attachments) to `docs/RELEASE_CHECKLIST.md`, since
-  the Play thresholds are measured on real devices, not in dev.
+- **`components/MiniGameViewer.test.tsx`** — renders a wall of mini-games, walks a
+  viewport down it, and asserts the live `iframe` count never exceeds the budget,
+  including across the exact scroll motion that used to leave one behind at every
+  stop. It also asserts the reserved box is byte-identical before and after one
+  of them boots. This is the test that matters; the rest are supporting.
+- **`embeds/embedActivation.test.ts`** — budget enforcement, centre-weighted
+  selection, immediate release on leaving the viewport, engagement outranking
+  visibility, pins dropping when the embed scrolls away, poster eviction and
+  revocation, and the no-IntersectionObserver fallback.
+- **`components/PdfViewer.test.tsx`** — only the window around the reader is
+  rasterized, and every page still reserves its slot at the document ratio.
+- **`utils/embedIntrinsics.test.ts`** — derivation priority, clamping,
+  determinism, and the commit policy that keeps boots from churning the layout.
+- **`store/slices/hardwareSlice.test.ts`** — tier classification (including the
+  unreported-memory case that must not resolve optimistically) and monotonic budgets.
+- **Dev counter:** `window.__EMBED_DEBUG__()` returns live ids, frozen ids, poster
+  count, budgets and whether the observer is attached. Makes "did this feature leak
+  a document?" a five-second check.
+- **Release checklist:** `docs/RELEASE_CHECKLIST.md` carries a low-tier memory pass,
+  since the Play thresholds are measured on real devices, not in dev.
+
+### Known follow-ups, not addressed here
+
+- **`sandbox="allow-scripts allow-same-origin"` on the mini-game iframe.** That
+  pair is effectively no sandbox for a same-origin `srcdoc` frame, and the content
+  is model-authored. Out of scope for a memory and layout change, and dropping
+  `allow-same-origin` would need its own compatibility pass over existing artifacts
+  (storage access, canvas readback), but it should be looked at.
+- **`renderPdfPageToImage` still rasterizes at a fixed 1.5 scale** for the
+  annotation flow. That is one page on an explicit user action, so it is not a
+  standing cost, but it is the last uncapped rasterization in the app.
+- **`content-visibility` on message bubbles**, per §4.
 
 ---
 
@@ -362,15 +407,22 @@ Without these, this regresses within a few features.
 
 | File | Change |
 |---|---|
-| `src/core/types/index.ts` | `embedBox` on `ChatMessage` |
-| `src/features/chat/utils/embedIntrinsics.ts` | **new** — static aspect-ratio derivation |
-| `src/features/chat/embeds/EmbedActivationManager.ts` | **new** — arbiter + shared IO |
-| `src/features/chat/embeds/EmbedBox.tsx` | **new** — reserved box + placeholder/frozen/live |
-| `src/features/chat/components/MiniGameViewer.tsx` | drop sticky `hasIntersected`, drop the 3-observer stack, consume `EmbedBox` |
-| `src/features/chat/utils/miniGameAttachment.ts` | metrics advisory only; add poster capture on demand |
-| `src/features/chat/components/PdfViewer.tsx` | page windowing, blob URLs, tiered scale |
-| `src/features/chat/components/ChatMessageBubble.tsx` | static SVG via `<img>`; box sizing from `embedBox` |
-| `src/features/chat/components/ArtifactLoadingScene.tsx` | inline SVG / shared instance |
-| `src/features/chat/components/ChatInterface.tsx` | owns the single IO + the `--embed-max-h` RO |
-| `src/store/slices/hardwareSlice.ts` | `devicePerformanceTier` + budgets |
-| `src/app/index.css` | `.embed-box`, `content-visibility` on bubbles |
+| `src/core/types/index.ts` | `EmbedBox` type; `embedBox` on `ChatMessage` |
+| `src/features/chat/utils/embedIntrinsics.ts` | **new** — static aspect-ratio derivation and the commit policy |
+| `src/features/chat/embeds/embedTypes.ts` | **new** — shared embed vocabulary |
+| `src/features/chat/embeds/embedActivation.ts` | **new** — arbiter + the single shared IntersectionObserver |
+| `src/features/chat/embeds/useEmbedSlot.ts` | **new** — React binding (callback ref, so late-appearing boxes register) |
+| `src/features/chat/embeds/useEmbedViewport.ts` | **new** — publishes `--embed-max-h`, points the arbiter at the scroll root, applies budgets |
+| `src/features/chat/embeds/EmbedBox.tsx` | **new** — the reserved box |
+| `src/features/chat/embeds/posterStore.ts` | **new** — poster sizing constants + data-URL → blob-URL |
+| `src/features/chat/embeds/useArtifactLoadingSceneSlot.ts` | **new** — grants the one shared loading-scene iframe |
+| `src/features/chat/components/MiniGameViewer.tsx` | drop sticky `hasIntersected` and the 3-observer stack; consume `EmbedBox` + the slot; poster capture; commit-on-exit |
+| `src/features/chat/utils/miniGameAttachment.ts` | metrics advisory only; poster capture in the bridge; MutationObserver disconnects after settling |
+| `src/features/chat/components/PdfViewer.tsx` | page windowing, blob URLs, tiered scale, activation slot |
+| `src/features/chat/components/TextFileViewer.tsx` | threads `embedId` / `embedBox` through to the mini-game |
+| `src/features/chat/components/ChatMessageBubble.tsx` | supplies `embedId` / `embedBox` and persists a committed box |
+| `src/features/chat/components/ArtifactLoadingScene.tsx` | one shared instance, spinner fallback |
+| `src/features/chat/components/ChatInterface.tsx` | owns the viewport wiring; tier-capped `maxVisibleMessages` |
+| `src/store/slices/hardwareSlice.ts` | `devicePerformanceTier` + `DEVICE_BUDGETS` |
+| `src/core/config/prompts.ts` | asks artifacts to declare `<meta name="maestro-aspect">` |
+| `src/app/index.css` | `.embed-box` + `@supports` fallback, placeholder/poster/rest-hint styling |

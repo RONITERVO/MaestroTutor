@@ -801,13 +801,25 @@
 }
 
 /* ============================================================
-   OFF-SCREEN MESSAGE SKIPPING
+   OFF-SCREEN MESSAGE SKIPPING — deliberately NOT enabled.
 
-   Safe only because every rich attachment now reserves its height without
-   being measured: the browser can skip layout, style and paint for bubbles
-   outside the viewport and still land the scrollbar in the right place.
+   `content-visibility: auto` on message bubbles is the obvious next win: it
+   would let the browser skip layout, style and paint for everything outside
+   the viewport. It is not safe here yet, and the reason is specific to this
+   chat rather than to the property.
+
+   The transcript is bottom-anchored and the user scrolls *up* into history.
+   With `contain-intrinsic-size: auto <estimate>`, a bubble that has never
+   been rendered is laid out at the estimate and snaps to its true height as
+   it approaches the viewport. Bubbles here range from ~80px of text to a
+   ~500px focused-mode attachment, so the correction is large, it happens
+   above the scroll position, and it is absorbed only by Chromium's scroll
+   anchoring — inside a container that also drives its own scrollIntoView.
+   That is the exact class of shift the reserved-box work exists to remove,
+   so shipping it would trade a known win for an unmeasured risk.
+
+   To land it: give each message a remembered height hint the same way
+   embedBox remembers an attachment's ratio, then verify against scroll
+   anchoring on a real low-end device with a long mixed-attachment history.
+   See docs/EMBED_MEMORY_ARCHITECTURE.md.
    ============================================================ */
-.chat-message-shell {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 120px;
-}

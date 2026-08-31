@@ -754,7 +754,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
           return (
              <div
               key={msg.id}
-              className="chat-message-shell"
               style={{ touchAction: 'pan-y', position: 'relative' }}
               onPointerDown={openTrayForId === msg.id ? undefined : (canBeDeleted ? (e) => handleSwipePointerDown(e, msg.id, isUser) : undefined)}
             >
