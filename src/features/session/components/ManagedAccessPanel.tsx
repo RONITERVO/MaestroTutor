@@ -189,6 +189,14 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     }
   }, [t]);
 
+  /**
+   * Buy credits, by whichever route this platform allows.
+   *
+   * Android must use Play Billing — Google's payments policy requires it for
+   * purchases made inside the app — while the web goes to Stripe Checkout.
+   * Both fund the same credit balance, so which one ran is invisible
+   * afterwards.
+   */
   const handlePurchase = useCallback(async () => {
     if (!session?.firebaseIdToken) {
       setErrorMessage(t('managedAccess.signInRequired'));
@@ -203,12 +211,48 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setStatusMessage(null);
     setIsPurchasing(true);
     try {
-      await billingService.purchaseProduct(primaryProductId);
+      if (billingService.isAvailable) {
+        await billingService.purchaseProduct(primaryProductId);
+        // Play drives the rest through the purchase listener, which keeps the
+        // spinner up until the purchase is reconciled.
+        return;
+      }
+
+      // Navigates away to Stripe, so the spinner is never cleared on success.
+      await maestroPaymentsService.startStripeCheckout(primaryProductId);
     } catch (error) {
       setIsPurchasing(false);
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseFailed'));
     }
   }, [billingService, primaryProductId, session?.firebaseIdToken, t]);
+
+  /*
+   * Coming back from Stripe, the credits may not have landed yet: the webhook
+   * is a separate call from Stripe to the backend and can arrive either side of
+   * the redirect. Refreshing a few times covers the usual gap without making
+   * the user wonder whether their money went somewhere.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('billing') !== 'success') return undefined;
+
+    // Drop the marker so a later reload does not re-trigger this.
+    params.delete('billing');
+    const query = params.toString();
+    window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+
+    setStatusMessage(t('managedAccess.checkoutComplete') || 'Payment received. Adding your credits…');
+    let attempt = 0;
+    const timer = window.setInterval(() => {
+      attempt += 1;
+      void refreshAccount();
+      if (attempt >= 5) window.clearInterval(timer);
+    }, 2000);
+    return () => window.clearInterval(timer);
+    // Deliberately runs once on mount: it reacts to the redirect that brought
+    // the user here, not to anything that changes afterwards.
+  }, [refreshAccount, t]);
 
   const handleRestore = useCallback(async () => {
     setErrorMessage(null);

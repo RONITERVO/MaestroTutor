@@ -14,8 +14,32 @@ import { getErrorMessage, getHttpStatus } from './http';
 import { getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
 import { verifyManagedGooglePlayPurchase } from './playBilling';
 import { consumeRateLimit } from './rateLimit';
+import { createManagedCheckoutSession, handleStripeWebhook } from './stripeBilling';
 
 const app = express();
+
+/*
+ * Registered before the JSON parser, and only for this route.
+ *
+ * Stripe signs the exact bytes it sent, so verification needs the raw body.
+ * Once express.json() has parsed and the handler re-serialises, the bytes
+ * differ and every signature check fails — with an error that looks like a
+ * misconfigured secret rather than middleware ordering. It is also
+ * deliberately unauthenticated: Stripe calls it, not a signed-in browser, and
+ * the signature is what establishes trust.
+ */
+app.post(
+  '/billing/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req: Request, res: Response) => {
+    try {
+      await handleStripeWebhook(req, res);
+    } catch (error) {
+      res.status(getHttpStatus(error)).json({ error: getErrorMessage(error) });
+    }
+  },
+);
+
 // Derived from the advertised upload limit rather than set independently, so a
 // file the API says it accepts cannot be rejected by middleware. See config.ts.
 app.use(express.json({ limit: getJsonBodyLimitBytes() }));
@@ -67,7 +91,7 @@ app.get('/health', asyncRoute('none', async (_req, res) => {
     ok: true,
     region: appConfig.functionRegion,
     firestoreReady: Boolean(adminDb),
-    managedBillingProducts: Object.keys(appConfig.managedCreditProducts),
+    managedBillingProducts: appConfig.creditPacks.map((pack) => pack.id),
   });
 }));
 
@@ -107,6 +131,15 @@ app.post('/billing/google-play/verify', asyncRoute('required', async (req, res, 
     uid: auth!.uid,
     user: auth!.user,
     purchase,
+  });
+  res.json(result);
+}));
+
+app.post('/billing/stripe/checkout', asyncRoute('required', async (req, res, auth) => {
+  const result = await createManagedCheckoutSession({
+    uid: auth!.uid,
+    user: auth!.user,
+    packId: String(req.body?.packId || ''),
   });
   res.json(result);
 }));

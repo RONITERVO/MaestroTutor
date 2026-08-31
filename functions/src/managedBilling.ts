@@ -25,9 +25,12 @@ import {
  */
 export type ManagedBillingSummary = BillingSummary;
 
+/** Where a grant came from. Both storefronts fund the same credit balance. */
+export type PurchasePlatform = 'google-play' | 'stripe';
+
 export interface EntitlementRecord {
   id: string;
-  platform: 'google-play';
+  platform: PurchasePlatform;
   productId: string;
   creditsGranted: number;
   purchaseToken: string | null;
@@ -437,6 +440,16 @@ export const chargeManagedCredits = async (params: {
   });
 };
 
+/**
+ * Add purchased credits, exactly once.
+ *
+ * `purchaseToken` is whatever uniquely identifies the purchase in its
+ * storefront — a Play purchase token, or a Stripe checkout session id. It is
+ * the idempotency key: the dedupe document is read inside the transaction, so
+ * a replayed webhook or a retried verification is a no-op rather than free
+ * credits. Both storefronts share the collection so a key can never collide
+ * across providers unnoticed.
+ */
 export const grantPurchasedCredits = async (params: {
   uid: string;
   user: AppUser;
@@ -444,10 +457,12 @@ export const grantPurchasedCredits = async (params: {
   productId: string;
   orderId: string | null;
   creditsGranted: number;
+  platform?: PurchasePlatform;
   rawPurchase: Record<string, unknown>;
   rawVerification: Record<string, unknown>;
 }): Promise<{ alreadyProcessed: boolean; grantedCredits: number; billingSummary: ManagedBillingSummary }> => {
-  const purchaseRef = adminDb.collection('googlePlayPurchases').doc(params.purchaseToken);
+  const platform: PurchasePlatform = params.platform || 'google-play';
+  const purchaseRef = adminDb.collection('processedPurchases').doc(params.purchaseToken);
   const summaryRef = accountSummaryRef(params.uid);
   const entitlementRef = entitlementsCollection(params.uid).doc(params.purchaseToken);
   const billingLedgerRef = billingLedgerCollection(params.uid).doc();
@@ -483,6 +498,7 @@ export const grantPurchasedCredits = async (params: {
     }, { merge: true });
     transaction.set(purchaseRef, {
       uid: params.uid,
+      platform,
       productId: params.productId,
       purchaseToken: params.purchaseToken,
       orderId: params.orderId,
@@ -494,7 +510,7 @@ export const grantPurchasedCredits = async (params: {
     });
     transaction.set(entitlementRef, {
       id: params.purchaseToken,
-      platform: 'google-play',
+      platform,
       productId: params.productId,
       creditsGranted: params.creditsGranted,
       purchaseToken: params.purchaseToken,

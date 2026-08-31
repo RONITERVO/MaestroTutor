@@ -195,6 +195,20 @@ const requestOptionalAuthJson = async <T>(path: string, init?: RequestInit): Pro
 export const maestroBackendService = {
   isConfigured: isBackendConfigured,
 
+  /**
+   * Ask the backend to open a Stripe Checkout session for a credit pack.
+   *
+   * Returns a URL to send the browser to. Nothing is granted here: the credits
+   * arrive when Stripe calls the webhook, which is the only signal that the
+   * payment actually settled. The redirect back is presentation only.
+   */
+  createStripeCheckoutSession: async (packId: string): Promise<{ url: string; sessionId: string }> => (
+    requestManagedJson<{ url: string; sessionId: string }>('/billing/stripe/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ packId }),
+    })
+  ),
+
   requestManagedJson,
 
   requestManagedStream: async (path: string, body: unknown): Promise<Response> => {

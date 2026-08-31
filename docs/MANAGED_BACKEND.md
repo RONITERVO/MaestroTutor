@@ -1,8 +1,9 @@
 # Managed mode: architecture and runbook
 
 Managed mode lets someone use Maestro Tutor without supplying a Gemini API key.
-They sign in, buy credits through Google Play, and the backend proxies Gemini
-on their behalf, charging credits against real usage.
+They sign in, buy credits — through Google Play in the Android app, or Stripe
+Checkout on the web — and the backend proxies Gemini on their behalf, charging
+credits against real usage.
 
 It ships **dark**: `VITE_MANAGED_MODE_ENABLED` is `false` by default and the app
 behaves exactly as it does today. Nothing below is reachable until that flag is
@@ -19,8 +20,8 @@ changes what "careful" means, so three properties drive the design.
 
 **The client is never trusted about money.** It may ask for work and report what
 it thinks happened, but every charge is computed server-side from the usage
-Gemini reports, and every purchase is verified against Google Play rather than
-believed.
+Gemini reports, and every purchase is verified with the storefront that took the
+money rather than believed.
 
 **Charges are bounded before they happen.** Credits are reserved up front and
 settled afterwards, so a request cannot run without the balance to pay for it.
@@ -36,6 +37,11 @@ user would be overcharged or the service would lose money. There is one.
 ## 2. Shape
 
 ```text
+  Android ──Play Billing──▶ api ──verify──▶ Play ──▶ grant ──▶ consume
+  Web     ──Checkout────▶ Stripe ──webhook──▶ api ──▶ grant
+                                                      │
+                                        one credit balance, either way
+
   app  ──HTTPS──▶  api (Cloud Function, Express)
                      │
                      ├── auth: Firebase ID token, optional App Check
@@ -63,6 +69,8 @@ own balance.
 | Reconnect pacing | `shared/reconnect/policy.ts` | yes |
 | Firestore persistence of the above | `functions/src/managedBilling.ts` | no — needs the emulator |
 | Play verification | `functions/src/playBilling.ts` | no — needs a real purchase |
+| Stripe fulfilment rules | `shared/billing/stripeFulfilment.ts` | yes |
+| Stripe checkout and webhook | `functions/src/stripeBilling.ts` | no — needs Stripe CLI or a live endpoint |
 
 `shared/` is compiled into the functions bundle (see `functions/tsconfig.json`,
 which roots at the repo so `shared/` is emitted alongside `functions/src`). The
@@ -80,8 +88,13 @@ app imports the same files directly.
 3. Configure App Check for web and Android. Leave `REQUIRE_APPCHECK=false`
    until both are verified, then turn it on — it is the main defence against
    someone driving the backend outside the app.
-4. Create the consumable credit products in Play and list them in
-   `MANAGED_CREDIT_PRODUCTS` as `productId:credits`.
+4. Define the credit packs once in `MANAGED_CREDIT_PACKS` as
+   `id:credits:cents[:playProductId]`. Create the matching consumable products
+   in Play for any pack that names a `playProductId`.
+5. For web payments, set `STRIPE_SECRET_KEY`, `APP_URL`, and add a webhook
+   endpoint in the Stripe dashboard pointing at
+   `<api>/billing/stripe/webhook` subscribed to `checkout.session.completed`;
+   put its signing secret in `STRIPE_WEBHOOK_SECRET`.
 
 ### Every deploy
 
@@ -120,6 +133,45 @@ draft carried. Those tests run in the normal suite.
 - App Check enforcement.
 - Account deletion actually removing everything, which is a compliance
   obligation and not only a feature.
+- Stripe end to end against the real account. The decision logic is tested, but
+  signature verification, the customer record and the redirect round trip are
+  not exercised by unit tests.
+
+---
+
+## 4b. Payments, per platform
+
+Android uses Google Play Billing and the web uses Stripe Checkout. That split is
+a policy requirement, not a preference: Play's payments policy requires Play
+Billing for digital goods bought inside the Android app, so Stripe cannot serve
+the app even though it serves the same product. Both fund one credit balance,
+and nothing downstream of the grant knows which was used.
+
+Two rules hold on the Stripe side, and both are what separate a billing
+integration that works from one that gives money away:
+
+- **Credits are granted from the webhook, never from the redirect.** The return
+  from Checkout can be forged, replayed, closed early, or never arrive. The
+  webhook is the only statement from Stripe that a payment settled.
+- **The quantity comes from the server's catalogue**, never from the session
+  metadata, which round-trips through the browser.
+
+The webhook route is registered with a raw body parser *before* `express.json()`.
+Stripe signs the exact bytes it sent; parsing and re-serialising changes them and
+every signature check fails with an error that reads like a bad secret rather
+than middleware ordering.
+
+### Verifying it locally
+
+```bash
+stripe listen --forward-to localhost:5001/<project>/<region>/api/billing/stripe/webhook
+stripe trigger checkout.session.completed
+```
+
+The signing secret `stripe listen` prints is what goes in `STRIPE_WEBHOOK_SECRET`
+for local runs. Worth testing specifically: replaying the same event (must grant
+once), a session with `payment_status: unpaid` (must not grant), and a tampered
+`credits` value in metadata (must grant the catalogue amount).
 
 ---
 

@@ -34,7 +34,9 @@ service cloud.firestore {
       }
     }
 
-    match /googlePlayPurchases/{purchaseToken} {
+    // Purchase dedupe records for every storefront. Server-only: a client that
+    // could write here could mint credits.
+    match /processedPurchases/{purchaseKey} {
       allow read, write: if false;
     }
 

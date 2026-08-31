@@ -22,15 +22,41 @@ const parseCsv = (value: string | undefined): string[] => (
     .filter(Boolean)
 );
 
-const parseManagedCreditProducts = (value: string | undefined): Record<string, number> => {
-  const out: Record<string, number> = {};
+/**
+ * A buyable bundle of credits.
+ *
+ * One catalogue serves both storefronts. Google Play and Stripe have to agree
+ * on what a pack contains, and two separate lists would let them drift the same
+ * way the two pricing tables did — with the difference that here the drift is
+ * the user paying one price and receiving another store's quantity.
+ */
+export interface CreditPack {
+  /** Internal id. What Stripe checkout is asked for. */
+  id: string;
+  credits: number;
+  /** Stripe price, in the smallest currency unit. */
+  priceCents: number;
+  /** The matching Google Play product, when the pack is sold there too. */
+  playProductId?: string;
+}
+
+/** `id:credits:cents[:playProductId]`, comma separated. */
+const parseCreditPacks = (value: string | undefined): CreditPack[] => {
+  const packs: CreditPack[] = [];
   for (const item of parseCsv(value)) {
-    const [productId, creditsRaw] = item.split(':').map((part) => part.trim());
+    const [id, creditsRaw, centsRaw, playProductId] = item.split(':').map((part) => part.trim());
     const credits = Number(creditsRaw);
-    if (!productId || !Number.isFinite(credits) || credits <= 0) continue;
-    out[productId] = Math.floor(credits);
+    const priceCents = Number(centsRaw);
+    if (!id || !Number.isFinite(credits) || credits <= 0) continue;
+    if (!Number.isFinite(priceCents) || priceCents <= 0) continue;
+    packs.push({
+      id,
+      credits: Math.floor(credits),
+      priceCents: Math.floor(priceCents),
+      ...(playProductId ? { playProductId } : {}),
+    });
   }
-  return out;
+  return packs;
 };
 
 const trustedLocalOrigins = new Set([
@@ -48,7 +74,12 @@ export const appConfig = {
     ...parseCsv(process.env.ALLOWED_ORIGINS),
     ...trustedLocalOrigins,
   ]),
-  managedCreditProducts: parseManagedCreditProducts(process.env.MANAGED_CREDIT_PRODUCTS),
+  creditPacks: parseCreditPacks(process.env.MANAGED_CREDIT_PACKS),
+  billingCurrency: (process.env.BILLING_CURRENCY?.trim() || 'eur').toLowerCase(),
+  /** Where Stripe sends the buyer back to. Required for checkout. */
+  appUrl: process.env.APP_URL?.trim() || '',
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY?.trim() || '',
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || '',
   managedCreditsPerUsd: Math.max(1, parseInteger(process.env.MANAGED_CREDITS_PER_USD, 1000)),
   requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, false),
   geminiLiveTokenUses: Math.max(1, parseInteger(process.env.GEMINI_LIVE_TOKEN_USES, 1)),
@@ -83,8 +114,17 @@ export const isOriginAllowed = (origin: string | undefined): boolean => {
   return appConfig.allowedOrigins.has(origin);
 };
 
+/** Credits for a Google Play product id, or 0 if it is not a known pack. */
 export const getCreditsForManagedProduct = (productId: string): number => (
-  appConfig.managedCreditProducts[productId] || 0
+  appConfig.creditPacks.find((pack) => pack.playProductId === productId)?.credits || 0
+);
+
+export const getCreditPackById = (packId: string): CreditPack | undefined => (
+  appConfig.creditPacks.find((pack) => pack.id === packId)
+);
+
+export const isStripeConfigured = (): boolean => (
+  Boolean(appConfig.stripeSecretKey) && Boolean(appConfig.stripeWebhookSecret)
 );
 
 export const getReservationTtlMs = (): number => appConfig.reservationTtlMinutes * 60_000;

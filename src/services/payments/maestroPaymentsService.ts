@@ -22,6 +22,18 @@ export const maestroPaymentsService = {
 
   getManagedBillingProductIds: (): string[] => [...MAESTRO_INTEGRATION_CONFIG.managedBillingProductIds],
 
+  /**
+   * Buy credits on the web.
+   *
+   * Google Play's payments policy requires Play Billing for purchases made
+   * inside the Android app, so this is the web path only; Android continues to
+   * go through `verifyGooglePlayPurchase`. Both fund the same balance.
+   */
+  startStripeCheckout: async (packId: string): Promise<void> => {
+    const { url } = await maestroBackendService.createStripeCheckoutSession(packId);
+    window.location.assign(url);
+  },
+
   verifyGooglePlayPurchase: async (
     payload: VerifyGooglePlayPurchaseRequest
   ): Promise<VerifyGooglePlayPurchaseResult> => (

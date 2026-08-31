@@ -121,6 +121,7 @@ export const verifyManagedGooglePlayPurchase = async (params: {
       ? verification.orderId
       : (params.purchase.orderId || null),
     creditsGranted,
+    platform: 'google-play',
     rawPurchase: params.purchase as unknown as Record<string, unknown>,
     rawVerification: verification,
   });
