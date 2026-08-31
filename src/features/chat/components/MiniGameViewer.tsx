@@ -2,20 +2,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IconEnableGameGestures, IconPaperclip, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
+import { IconEnableGameGestures, IconPaperclip, IconPlay, IconTerminal, IconUndo } from '../../../shared/ui/Icons';
 import AttachmentInteractionToggle from './AttachmentInteractionToggle';
 import { buildMiniGameSrcDoc } from '../utils/miniGameAttachment';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
+import EmbedBox from '../embeds/EmbedBox';
+import { useEmbedSlot } from '../embeds/useEmbedSlot';
+import { POSTER_MAX_EDGE_PX, POSTER_QUALITY, dataUrlToBlobUrl } from '../embeds/posterStore';
+import {
+  EMBED_BOX_VERSION,
+  clampAspectRatio,
+  resolveEmbedBox,
+  shouldCommitMeasuredBox,
+} from '../utils/embedIntrinsics';
+import type { EmbedBox as EmbedBoxValue } from '../../../core/types';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 type MiniGameInteractionMode = 'scroll' | 'gestures';
 type MiniGameForwardedPointerKind = 'pointerdown' | 'pointerup' | 'click';
-
-interface MiniGameFrameMetrics {
-  width: number;
-  height: number;
-  aspectRatio: number;
-}
 
 interface MiniGamePointerGateState {
   pointerId: number | null;
@@ -28,20 +32,17 @@ interface MiniGamePointerGateState {
 }
 
 interface MiniGameViewerProps {
+  /** Stable identity for the activation slot — normally the message id. */
+  embedId: string;
   sourceCode: string;
   variant: 'user' | 'assistant' | 'preview';
   fileName?: string | null;
   mimeType?: string | null;
   bottomInset?: number;
-}
-
-interface RectLike {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-  width: number;
-  height: number;
+  /** Reserved box persisted on the message, if one has been stored. */
+  embedBox?: EmbedBoxValue;
+  /** Called only when a live run measured a materially different box. */
+  onEmbedBoxChange?: (box: EmbedBoxValue) => void;
 }
 
 interface MiniGameInteractionDeckToggleProps {
@@ -61,8 +62,10 @@ interface MiniGameInteractionDeckToggleProps {
   onSelectMode: (enabled: boolean, event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-const FULL_VISIBILITY_TOLERANCE_PX = 3;
 const TAP_SLOP_PX = 9;
+/** First poster once the game has drawn something; then rarely, while live. */
+const POSTER_FIRST_CAPTURE_MS = 1800;
+const POSTER_REFRESH_MS = 8000;
 
 const createEmptyPointerGateState = (): MiniGamePointerGateState => ({
   pointerId: null,
@@ -73,51 +76,6 @@ const createEmptyPointerGateState = (): MiniGamePointerGateState => ({
   canForward: false,
   hasMoved: false,
 });
-
-const isScrollableOverflow = (value: string): boolean => /(auto|scroll)/i.test(value);
-
-const getNearestScrollContainer = (element: HTMLElement | null): HTMLElement | null => {
-  if (!element || typeof window === 'undefined') return null;
-
-  let parent = element.parentElement;
-  while (parent) {
-    const style = window.getComputedStyle(parent);
-    if (isScrollableOverflow(style.overflowY || '')) {
-      return parent;
-    }
-    parent = parent.parentElement;
-  }
-
-  return null;
-};
-
-const getViewportRect = (): RectLike => {
-  const visualViewport = typeof window !== 'undefined' ? window.visualViewport : null;
-  const width = visualViewport?.width ?? window.innerWidth;
-  const height = visualViewport?.height ?? window.innerHeight;
-  const left = visualViewport?.offsetLeft ?? 0;
-  const top = visualViewport?.offsetTop ?? 0;
-  return {
-    top,
-    left,
-    right: left + width,
-    bottom: top + height,
-    width,
-    height,
-  };
-};
-
-const getVisibilityRootRect = (element: HTMLElement): RectLike => {
-  const scrollContainer = getNearestScrollContainer(element);
-  return scrollContainer ? scrollContainer.getBoundingClientRect() : getViewportRect();
-};
-
-const isFullyInsideRect = (elementRect: DOMRect, rootRect: RectLike): boolean => (
-  elementRect.top >= rootRect.top - FULL_VISIBILITY_TOLERANCE_PX &&
-  elementRect.left >= rootRect.left - FULL_VISIBILITY_TOLERANCE_PX &&
-  elementRect.right <= rootRect.right + FULL_VISIBILITY_TOLERANCE_PX &&
-  elementRect.bottom <= rootRect.bottom + FULL_VISIBILITY_TOLERANCE_PX
-);
 
 const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps> = ({
   gameGesturesEnabled,
@@ -158,52 +116,50 @@ const MiniGameInteractionDeckToggle: React.FC<MiniGameInteractionDeckToggleProps
 };
 
 const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
+  embedId,
   sourceCode,
   variant,
   fileName,
   mimeType,
   bottomInset = 0,
+  embedBox,
+  onEmbedBoxChange,
 }) => {
   const { t } = useAppTranslations();
   const [showCode, setShowCode] = useState(false);
   const [runtimeState, setRuntimeState] = useState<MiniGameRuntimeState>('booting');
   const [runtimeError, setRuntimeError] = useState<string>('');
   const [reloadToken, setReloadToken] = useState(0);
-  const [frameMetrics, setFrameMetrics] = useState<MiniGameFrameMetrics | null>(null);
-
-  const [hasIntersected, setHasIntersected] = useState(false);
-  const [isFrameFullyVisible, setIsFrameFullyVisible] = useState(false);
-  const [frameHeightCap, setFrameHeightCap] = useState<number | null>(null);
   const [gameGesturesEnabled, setGameGesturesEnabled] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const frameShellRef = useRef<HTMLDivElement>(null);
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const pointerGateRef = useRef<MiniGamePointerGateState>(createEmptyPointerGateState());
+  /** Latest measurement from the live run; committed on the way out, never live. */
+  const measuredAspectRatioRef = useRef(0);
+  /** A captured poster we own until the manager takes it. */
+  const pendingPosterRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
+  const slot = useEmbedSlot({ id: embedId, kind: 'mini-game' });
+  const { setRef, isLive, isFullyVisible, poster, pin, publishPoster, postersEnabled } = slot;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasIntersected) {
-          setHasIntersected(true);
-        }
-      },
-      { rootMargin: '600px' },
-    );
-    observer.observe(el);
-    return () => { observer.disconnect(); };
-  }, [hasIntersected]);
+  /**
+   * The reserved box. Derived from the source text when nothing is stored, so
+   * the very first paint — before any iframe exists — already occupies the
+   * right amount of space.
+   */
+  const resolvedBox = useMemo(
+    () => resolveEmbedBox(embedBox, { sourceCode, kind: 'mini-game' }),
+    [embedBox, sourceCode],
+  );
 
   const frameId = useMemo(
-    () => `mini-game-${Math.random().toString(36).slice(2, 10)}-${reloadToken}`,
-    [reloadToken]
+    () => `mini-game-${embedId.replace(/[^\w-]/g, '').slice(0, 24)}-${reloadToken}`,
+    [embedId, reloadToken],
   );
 
   const srcDoc = useMemo(
     () => buildMiniGameSrcDoc({ sourceCode, fileName, mimeType, frameId }),
-    [sourceCode, fileName, mimeType, frameId]
+    [sourceCode, fileName, mimeType, frameId],
   );
 
   const resetPointerGate = useCallback(() => {
@@ -272,21 +228,76 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     setShowCode((prev) => !prev);
   }, [resetPointerGate]);
 
-  useEffect(() => {
-    setGameGesturesEnabled(false);
-    setIsFrameFullyVisible(false);
-    resetPointerGate();
-    postMiniGameMode('scroll');
-  }, [frameId, sourceCode, fileName, mimeType, resetPointerGate, postMiniGameMode]);
+  // ---------------------------------------------------------------- lifecycle
 
   useEffect(() => {
-    if (!hasIntersected) return;
+    setGameGesturesEnabled(false);
+    resetPointerGate();
+
+    // A measurement or poster captured from the previous attachment describes
+    // content that no longer exists here. Left in place they would be committed
+    // to this message's box, or published as this artifact's poster, the next
+    // time it leaves the live phase.
+    measuredAspectRatioRef.current = 0;
+    const staleposter = pendingPosterRef.current;
+    pendingPosterRef.current = null;
+    if (staleposter) URL.revokeObjectURL(staleposter);
+    setRuntimeState('booting');
+    setRuntimeError('');
+  }, [frameId, sourceCode, fileName, mimeType, resetPointerGate]);
+
+  /**
+   * Commit a measured box on the way out rather than while running.
+   *
+   * A live commit would resize the message under the user's finger and shift
+   * everything below it — the feedback loop this whole design exists to remove.
+   * Committing on teardown means the corrected ratio applies to the *next*
+   * mount, at a moment when nothing is animating.
+   */
+  const commitMeasuredBox = useCallback(() => {
+    const measured = measuredAspectRatioRef.current;
+    measuredAspectRatioRef.current = 0;
+    if (!onEmbedBoxChange || !shouldCommitMeasuredBox(embedBox, measured)) return;
+    onEmbedBoxChange({
+      aspectRatio: clampAspectRatio(measured),
+      source: 'measured',
+      v: EMBED_BOX_VERSION,
+    });
+  }, [embedBox, onEmbedBoxChange]);
+
+  useEffect(() => {
+    if (isLive) return;
+
+    // Left the live phase: hand over the poster and the measurement, then let
+    // React unmount the iframe. Both are already in hand, so neither step needs
+    // to talk to a frame that is about to disappear.
+    setRuntimeState('booting');
+    setGameGesturesEnabled(false);
+    resetPointerGate();
+
+    const pending = pendingPosterRef.current;
+    if (pending) {
+      pendingPosterRef.current = null;
+      publishPoster(pending);
+    }
+    commitMeasuredBox();
+  }, [isLive, commitMeasuredBox, publishPoster, resetPointerGate]);
+
+  useEffect(() => () => {
+    // Unmounted without passing through a demotion (message deleted, chat
+    // cleared): drop the poster we still own so the blob is not orphaned.
+    const pending = pendingPosterRef.current;
+    pendingPosterRef.current = null;
+    if (pending) URL.revokeObjectURL(pending);
+  }, []);
+
+  useEffect(() => {
+    if (!isLive) return;
 
     setRuntimeState('booting');
     setRuntimeError('');
-    setFrameMetrics(null);
 
-    const timeout = window.setTimeout(() => {
+    const bootTimeout = window.setTimeout(() => {
       setRuntimeState((prev) => (prev === 'booting' ? 'ready' : prev));
     }, 1800);
 
@@ -295,28 +306,20 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       if (!payload || payload.type !== 'maestro-mini-game-status' || payload.frameId !== frameId) return;
 
       if (payload.status === 'metrics' && payload.metrics) {
-        const nextWidth = typeof payload.metrics.width === 'number' && Number.isFinite(payload.metrics.width) ? payload.metrics.width : 0;
-        const nextHeight = typeof payload.metrics.height === 'number' && Number.isFinite(payload.metrics.height) ? payload.metrics.height : 0;
-        const nextAspectRatio = typeof payload.metrics.aspectRatio === 'number' && Number.isFinite(payload.metrics.aspectRatio) ? payload.metrics.aspectRatio : 0;
+        // Advisory only. Never touches the box that is currently on screen.
+        const ratio = Number(payload.metrics.aspectRatio);
+        if (Number.isFinite(ratio) && ratio > 0) measuredAspectRatioRef.current = ratio;
+        return;
+      }
 
-        if (nextWidth >= 16 && nextHeight >= 16) {
-          setFrameMetrics((prev) => {
-            if (
-              prev &&
-              Math.abs(prev.width - nextWidth) < 2 &&
-              Math.abs(prev.height - nextHeight) < 2 &&
-              Math.abs(prev.aspectRatio - nextAspectRatio) < 0.02
-            ) {
-              return prev;
-            }
-
-            return {
-              width: nextWidth,
-              height: nextHeight,
-              aspectRatio: nextAspectRatio > 0 ? nextAspectRatio : nextWidth / nextHeight,
-            };
-          });
-        }
+      if (payload.status === 'poster') {
+        const dataUrl = typeof payload.poster === 'string' ? payload.poster : '';
+        if (!dataUrl) return;
+        const blobUrl = dataUrlToBlobUrl(dataUrl);
+        if (!blobUrl) return;
+        const previous = pendingPosterRef.current;
+        pendingPosterRef.current = blobUrl;
+        if (previous) URL.revokeObjectURL(previous);
         return;
       }
 
@@ -330,10 +333,30 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
     window.addEventListener('message', onMessage);
     return () => {
-      window.clearTimeout(timeout);
+      window.clearTimeout(bootTimeout);
       window.removeEventListener('message', onMessage);
     };
-  }, [frameId, srcDoc, hasIntersected]);
+  }, [frameId, isLive]);
+
+  /** Keep a recent still on hand, so a demotion never waits on a round trip. */
+  useEffect(() => {
+    if (!isLive || !postersEnabled || runtimeState !== 'ready') return;
+
+    const requestPoster = () => postMiniGameMessage({
+      type: 'maestro-mini-game-poster-request',
+      maxEdge: POSTER_MAX_EDGE_PX,
+      quality: POSTER_QUALITY,
+    });
+
+    const first = window.setTimeout(requestPoster, POSTER_FIRST_CAPTURE_MS);
+    const refresh = window.setInterval(requestPoster, POSTER_REFRESH_MS);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(refresh);
+    };
+  }, [isLive, postersEnabled, runtimeState, postMiniGameMessage]);
+
+  // ------------------------------------------------------------------- styling
 
   const isUser = variant === 'user';
   const containerBg = isUser ? 'bg-user-msg-bg/20' : 'bg-ai-file-bg';
@@ -346,35 +369,6 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const controlsUnderOverlay = effectiveBottomInset > 0;
   const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
   const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
-  const fallbackFrameHeight = controlsUnderOverlay ? 520 : 480;
-  const updateFrameAvailability = useCallback(() => {
-    const frameShell = frameShellRef.current;
-    if (!frameShell || typeof window === 'undefined') return;
-
-    const rootRect = getVisibilityRootRect(frameShell);
-    const reservedHeight = controlsUnderOverlay ? 28 : 92;
-    const nextFrameHeightCap = Math.max(220, Math.floor(rootRect.height - reservedHeight));
-    setFrameHeightCap((prev) => (prev === nextFrameHeightCap ? prev : nextFrameHeightCap));
-
-    const frameRect = frameShell.getBoundingClientRect();
-    const nextIsFullyVisible = isFullyInsideRect(frameRect, rootRect);
-    setIsFrameFullyVisible((prev) => (prev === nextIsFullyVisible ? prev : nextIsFullyVisible));
-  }, [controlsUnderOverlay]);
-  const effectiveFrameHeightCap = frameHeightCap ?? 960;
-  const resolvedFrameHeight = Math.max(
-    220,
-    Math.min(
-      Math.round(frameMetrics?.height || fallbackFrameHeight),
-      960,
-      effectiveFrameHeightCap,
-    ),
-  );
-  const gameScreenStyle: React.CSSProperties = {
-    width: '100%',
-    height: `${resolvedFrameHeight}px`,
-    minHeight: '220px',
-    backgroundColor: 'transparent',
-  };
 
   const overlayIconShadowStyle: React.CSSProperties = {
     filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
@@ -384,91 +378,16 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     const result = t(key);
     return result === key ? fallback : result;
   }, [t]);
-  const canUseGameGestures = hasIntersected && runtimeState === 'ready' && isFrameFullyVisible && !showCode;
+
+  const canUseGameGestures = isLive && runtimeState === 'ready' && isFullyVisible && !showCode;
   const useGameGesturesLabel = translateOrFallback('miniGame.useGameGestures', 'Game swipes');
   const useGameGesturesTitle = translateOrFallback('miniGame.useGameGesturesTitle', 'Use game swipes');
   const returnToChatScrollLabel = translateOrFallback('miniGame.returnToChatScroll', 'Chat scroll');
   const gameGesturesUnavailableLabel = translateOrFallback('miniGame.gameGesturesUnavailable', 'Fully show game to use swipes');
   const interactionModeGroupLabel = translateOrFallback('miniGame.interactionMode', 'Mini-game interaction mode');
+  const resumeLabel = translateOrFallback('miniGame.tapToRun', 'Tap to run');
 
-  useEffect(() => {
-    if (!hasIntersected) return;
-    const animationFrame = window.requestAnimationFrame(updateFrameAvailability);
-    return () => { window.cancelAnimationFrame(animationFrame); };
-  }, [hasIntersected, resolvedFrameHeight, showCode, updateFrameAvailability]);
-
-  useEffect(() => {
-    if (!hasIntersected) return;
-    const frameShell = frameShellRef.current;
-    if (!frameShell || typeof window === 'undefined') return;
-
-    let animationFrame = 0;
-    const scheduleAvailabilityUpdate = () => {
-      if (animationFrame) {
-        window.cancelAnimationFrame(animationFrame);
-      }
-      animationFrame = window.requestAnimationFrame(() => {
-        animationFrame = 0;
-        updateFrameAvailability();
-      });
-    };
-
-    const scrollContainer = getNearestScrollContainer(frameShell);
-    window.addEventListener('resize', scheduleAvailabilityUpdate, { passive: true });
-    window.visualViewport?.addEventListener('resize', scheduleAvailabilityUpdate, { passive: true });
-
-    const resizeObserver = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(scheduleAvailabilityUpdate)
-      : null;
-    resizeObserver?.observe(frameShell);
-    if (scrollContainer) resizeObserver?.observe(scrollContainer);
-
-    const intersectionObserver = typeof IntersectionObserver !== 'undefined'
-      ? new IntersectionObserver(
-          ([entry]) => {
-            if (!entry) return;
-            if (!entry.isIntersecting || entry.intersectionRatio < 0.995) {
-              setIsFrameFullyVisible((prev) => (prev ? false : prev));
-              return;
-            }
-            scheduleAvailabilityUpdate();
-          },
-          { root: scrollContainer, threshold: [0, 0.5, 0.995, 1] },
-        )
-      : null;
-    intersectionObserver?.observe(frameShell);
-
-    scheduleAvailabilityUpdate();
-
-    return () => {
-      if (animationFrame) window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener('resize', scheduleAvailabilityUpdate);
-      window.visualViewport?.removeEventListener('resize', scheduleAvailabilityUpdate);
-      resizeObserver?.disconnect();
-      intersectionObserver?.disconnect();
-    };
-  }, [hasIntersected, updateFrameAvailability]);
-
-  useEffect(() => {
-    if (!gameGesturesEnabled) return;
-
-    const frameShell = frameShellRef.current;
-    if (!frameShell || typeof window === 'undefined') return;
-
-    const handleChatSurfaceMove = () => {
-      setGameGesturesEnabled(false);
-      resetPointerGate();
-    };
-
-    const scrollContainer = getNearestScrollContainer(frameShell);
-    scrollContainer?.addEventListener('scroll', handleChatSurfaceMove, { passive: true });
-    window.addEventListener('scroll', handleChatSurfaceMove, { passive: true });
-
-    return () => {
-      scrollContainer?.removeEventListener('scroll', handleChatSurfaceMove);
-      window.removeEventListener('scroll', handleChatSurfaceMove);
-    };
-  }, [gameGesturesEnabled, resetPointerGate]);
+  // ------------------------------------------------------------------ gestures
 
   useEffect(() => {
     if (!canUseGameGestures && gameGesturesEnabled) {
@@ -478,19 +397,29 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   }, [canUseGameGestures, gameGesturesEnabled, resetPointerGate]);
 
   useEffect(() => {
-    if (!hasIntersected) return;
+    if (!isLive) return;
     postMiniGameMode(gameGesturesEnabled ? 'gestures' : 'scroll');
-  }, [gameGesturesEnabled, hasIntersected, postMiniGameMode]);
+  }, [gameGesturesEnabled, isLive, postMiniGameMode]);
+
+  /**
+   * Playing pins the slot: an in-progress game must not be evicted just because
+   * another embed drifted closer to the centre of the viewport.
+   *
+   * Only ever pins. Switching back to chat scrolling means "give me the page
+   * back", not "stop running this" — releasing the pin there would let a
+   * neighbour take the slot and stop the game the user is still looking at. The
+   * pin is released by scrolling away or by engaging a different embed.
+   */
+  useEffect(() => {
+    if (gameGesturesEnabled) pin();
+  }, [gameGesturesEnabled, pin]);
 
   const handleSelectGameGestureMode = useCallback((nextEnabled: boolean, event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     resetPointerGate();
 
-    if (nextEnabled === gameGesturesEnabled) {
-      return;
-    }
-
+    if (nextEnabled === gameGesturesEnabled) return;
     if (nextEnabled && !canUseGameGestures) return;
 
     setGameGesturesEnabled(nextEnabled);
@@ -500,6 +429,19 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       }, 0);
     }
   }, [canUseGameGestures, gameGesturesEnabled, resetPointerGate]);
+
+  /**
+   * Tapping a resting embed asks for the live slot explicitly.
+   *
+   * The pin deliberately has no timer on it. An explicit "run this" has to
+   * outlive arbitration, or the slot is handed straight back to whichever
+   * neighbour scored higher and the embed stops a second after it started. It
+   * is released the way every other pin is: when this embed scrolls away, or
+   * when the user engages a different one.
+   */
+  const handleActivateFromRest = useCallback(() => {
+    pin();
+  }, [pin]);
 
   const handleGatePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.isPrimary || event.button !== 0 || gameGesturesEnabled || showCode) return;
@@ -559,10 +501,11 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
-    } catch (e) {
+    } catch {
+      /* the pointer may already have been released */
     }
     resetPointerGate();
-  }, [resetPointerGate]);
+  }, [postPointerInput, resetPointerGate]);
 
   const handleGatePointerCancel = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const state = pointerGateRef.current;
@@ -574,40 +517,79 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
       if (event.currentTarget.hasPointerCapture(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
       }
-    } catch (e) {
+    } catch {
+      /* the pointer may already have been released */
     }
     resetPointerGate();
-  }, [postPointerInput, resetPointerGate]);
+  }, [resetPointerGate]);
+
+  // -------------------------------------------------------------------- render
 
   return (
-    <div ref={containerRef} className="w-full flex flex-col items-center">
+    <div className="w-full flex flex-col items-center">
       <div className="relative w-full max-w-[560px]" style={{ paddingBottom: `${wrapperBottomPadding}px` }}>
 
-        <div
-          ref={frameShellRef}
-          className={`relative rounded-2xl overflow-hidden border ${lineColor} shadow-none ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
-          style={gameScreenStyle}
+        <EmbedBox
+          aspectRatio={resolvedBox.aspectRatio}
+          boxRef={setRef}
+          className={`rounded-2xl border ${lineColor} shadow-none ${controlsUnderOverlay && showCode ? 'z-30' : 'z-10'}`}
         >
-          {hasIntersected ? (
+          {isLive ? (
             <iframe
               ref={iframeRef}
               title={fileName ? t('miniGame.titleWithFile', { fileName }) || `Mini game ${fileName}` : t('miniGame.title') || 'Mini game'}
               srcDoc={srcDoc}
-              className="w-full h-full border-0 bg-transparent block"
-              sandbox="allow-scripts allow-same-origin"
+              // Deliberately without allow-same-origin. Paired with
+              // allow-scripts on a srcdoc frame that is effectively no sandbox
+              // at all: the content shares the app's origin and can reach the
+              // parent document and its stored credentials. The bridge only
+              // needs postMessage, which works across an opaque origin.
+              sandbox="allow-scripts"
               referrerPolicy="no-referrer"
-              loading="lazy"
               style={{
                 backgroundColor: 'transparent',
                 pointerEvents: gameGesturesEnabled ? 'auto' : 'none',
                 touchAction: gameGesturesEnabled ? 'none' : 'pan-y',
               }}
             />
+          ) : poster ? (
+            <img
+              src={poster}
+              alt=""
+              aria-hidden
+              className="embed-fill embed-poster"
+              draggable={false}
+            />
           ) : (
-            <div className="w-full h-full" />
+            /* The resting state has to read as a card you can open, not as
+               content that failed to load, because with one live embed at a
+               time this is what most artifacts look like most of the time. */
+            <div className="embed-fill embed-placeholder notebook-attachment-paper paper-texture notebook-lines" aria-hidden />
           )}
 
-          {hasIntersected && !showCode && !gameGesturesEnabled && (
+          {!isLive && (
+            <button
+              type="button"
+              onClick={handleActivateFromRest}
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-transparent"
+              title={resumeLabel}
+              aria-label={fileName ? `${resumeLabel}: ${fileName}` : resumeLabel}
+            >
+              <span className="embed-rest-hint flex flex-col items-center gap-2">
+                <span className={`flex items-center gap-1.5 rounded-full border ${lineColor} ${containerBg} px-3 py-1.5 text-[10px] uppercase tracking-wider ${textColor}`}>
+                  <IconPlay className="w-3 h-3 shrink-0" />
+                  <span className="font-semibold">{resumeLabel}</span>
+                </span>
+                {fileName && (
+                  <span className="max-w-[85%] truncate font-architect text-[11px] text-deep-ink/70">
+                    {fileName}
+                  </span>
+                )}
+              </span>
+            </button>
+          )}
+
+          {isLive && !showCode && !gameGesturesEnabled && (
             <div
               className="absolute inset-0 z-20 bg-transparent"
               style={{ touchAction: 'pan-y' }}
@@ -620,7 +602,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
             />
           )}
 
-          {runtimeState !== 'ready' && hasIntersected && (
+          {runtimeState !== 'ready' && isLive && (
             <div className={`absolute left-2 right-2 top-2 z-10 rounded-lg px-2 py-1 text-[11px] ${statusBubbleBg} text-white`}>
               {runtimeState === 'error' ? t('miniGame.runtimeError', { error: runtimeError }) || `Mini-game error: ${runtimeError}` : t('miniGame.launching') || 'Launching mini-game...'}
             </div>
@@ -672,7 +654,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
               </div>
             </div>
           )}
-        </div>
+        </EmbedBox>
 
         {controlsUnderOverlay ? (
           <div
@@ -735,5 +717,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
     </div>
   );
 });
+
+MiniGameViewer.displayName = 'MiniGameViewer';
 
 export default MiniGameViewer;

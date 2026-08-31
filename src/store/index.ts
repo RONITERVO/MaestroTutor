@@ -43,6 +43,15 @@ export {
   selectSpeakingUtteranceText,
 } from './slices/speechSlice';
 
+export {
+  DEVICE_BUDGETS,
+  detectDevicePerformanceTier,
+  selectDeviceBudgets,
+  selectDevicePerformanceTier,
+} from './slices/hardwareSlice';
+
+export type { DeviceBudgets, DevicePerformanceTier } from './slices/hardwareSlice';
+
 export type {
   MaestroStore,
   SettingsSlice,

@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 import {
   decodeTextFromDataUrl,
   extractGoogleWorkspaceUrlFromDataUrl,
@@ -418,7 +418,10 @@ const parseOfficePreviewInternal = async (src: string, mimeType?: string | null,
   }
 
   try {
-    const zip = await JSZip.loadAsync(bytes);
+    // Loaded on demand: most sessions never open an Office document, and the
+    // library is pure startup cost until one is.
+    const { default: JSZipModule } = await import('jszip');
+    const zip = await JSZipModule.loadAsync(bytes);
     let extracted = '';
     let tableRows: string[][] | undefined;
     let chartSeries: TabularChartSeries | undefined;

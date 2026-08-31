@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { ChatMessage, SpeechPart } from '../../../core/types';
+import { ChatMessage, EmbedBox, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck, IconChevronLeft, IconChevronRight, IconSpeaker, IconVolumeOff } from '../../../shared/ui/Icons';
 import { SmallSpinner } from '../../../shared/ui/SmallSpinner';
@@ -116,6 +116,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
+  const updateMessage = useMaestroStore(state => state.updateMessage);
   const createUiToken = useCallback(
     (subtype: TokenSubtype) =>
       addActivityToken(
@@ -696,6 +697,16 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   useEffect(() => {
     setShowSvgCodeView(false);
   }, [message.id, displayUrl, isAttachmentSvg]);
+
+  /**
+   * Persist a box measured during a live embed run.
+   *
+   * Only ever called on the way *out* of the live phase, so the committed ratio
+   * applies to the next mount rather than resizing the message under the user.
+   */
+  const handleEmbedBoxChange = useCallback((box: EmbedBox) => {
+    updateMessage(message.id, { embedBox: box });
+  }, [message.id, updateMessage]);
 
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
@@ -1431,6 +1442,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                       fileName={message.attachmentName}
                       mimeType={displayMime}
                       bottomInset={scrollableAttachmentBottomInset}
+                      embedId={message.id}
+                      embedBox={message.embedBox}
+                      onEmbedBoxChange={handleEmbedBoxChange}
                     />
                   )}
                   {isOfficeFileSuccessfullyDisplayed && (
@@ -1467,6 +1481,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                         src={displayUrl!}
                         variant={isUser ? 'user' : 'assistant'}
                         bottomInset={scrollableAttachmentBottomInset}
+                        embedId={message.id}
                       />
                       {isFocusedMode && !isAnnotationActive && (
                         <button

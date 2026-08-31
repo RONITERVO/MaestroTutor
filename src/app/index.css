@@ -721,3 +721,121 @@
   border-color: rgba(57, 70, 96, 0.4);
 }
 @keyframes rotate-globe { from { background-position: 0% center; } to { background-position: 200% center; } }
+
+/* ============================================================
+   EMBED BOXES
+   Reserved space for rich attachments (mini-games, PDFs, artifacts).
+
+   The box's height comes from a stored aspect ratio and the chat column's
+   width — never from its contents. `contain: layout paint size` makes that
+   structural: a live iframe, a poster and an empty placeholder all occupy
+   exactly the same space, so mounting or tearing one down cannot move the
+   page. That is what makes it safe to keep only one embed alive at a time.
+   ============================================================ */
+.embed-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--embed-ar, 1.333);
+  min-height: var(--embed-min-h, 220px);
+  /* Published once per viewport by ChatInterface; the vh value is the
+     first-paint fallback before that measurement lands. */
+  max-height: var(--embed-max-h, 70vh);
+  overflow: hidden;
+  contain: layout paint size;
+  background-color: transparent;
+}
+
+/* minSdk is 24, and while the system WebView is normally kept current through
+   Play, some OEM devices freeze it below Chrome 88 where `aspect-ratio` does not
+   exist. Fall back to the padding-ratio technique so the box is still reserved:
+   absolutely positioned children resolve against the padding box, which is what
+   every child of .embed-box already is. */
+@supports not (aspect-ratio: 1 / 1) {
+  .embed-box {
+    height: 0;
+    /* The floor has to live inside the padding, not as a min-height: with
+       height:0 a min-height would stack on top of the padding rather than
+       raise it, making every short box 220px too tall. */
+    min-height: 0;
+    /* min() applies the viewport cap that max-height cannot reach here: with
+       height:0 the cap would apply to a zero-height content box and do
+       nothing, so a tall ratio could otherwise reserve past the screen. */
+    padding-top: max(
+      min(calc(100% / var(--embed-ar, 1.333)), var(--embed-max-h, 70vh)),
+      var(--embed-min-h, 220px)
+    );
+    contain: layout paint;
+  }
+}
+
+.embed-box > iframe,
+.embed-box > .embed-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Only the iframe is forced transparent, so an artifact sits on the notebook
+   page rather than on its own sheet. The placeholder and poster must NOT be:
+   this rule is two classes deep and would otherwise out-specify the Tailwind
+   `bg-*` utility on the element, leaving the resting state invisible. */
+.embed-box > iframe {
+  background-color: transparent;
+}
+
+/* Resting state: the notebook surface shows through, nothing is running. */
+.embed-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.embed-poster {
+  object-fit: contain;
+  /* A poster is a still of the last live frame; keep it visually quieter than
+     the running thing so "not running" reads without a heavy overlay. */
+  opacity: 0.92;
+}
+
+/* Held back so it never flashes on an embed that is merely a beat away from
+   booting — a freshly generated artifact should look like it is starting up,
+   not like it is waiting to be asked. */
+.embed-rest-hint {
+  animation: embed-rest-hint-in 180ms ease-out 420ms both;
+}
+
+@keyframes embed-rest-hint-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .embed-rest-hint { animation-duration: 1ms; }
+}
+
+/* ============================================================
+   OFF-SCREEN MESSAGE SKIPPING — deliberately NOT enabled.
+
+   `content-visibility: auto` on message bubbles is the obvious next win: it
+   would let the browser skip layout, style and paint for everything outside
+   the viewport. It is not safe here yet, and the reason is specific to this
+   chat rather than to the property.
+
+   The transcript is bottom-anchored and the user scrolls *up* into history.
+   With `contain-intrinsic-size: auto <estimate>`, a bubble that has never
+   been rendered is laid out at the estimate and snaps to its true height as
+   it approaches the viewport. Bubbles here range from ~80px of text to a
+   ~500px focused-mode attachment, so the correction is large, it happens
+   above the scroll position, and it is absorbed only by Chromium's scroll
+   anchoring — inside a container that also drives its own scrollIntoView.
+   That is the exact class of shift the reserved-box work exists to remove,
+   so shipping it would trade a known win for an unmeasured risk.
+
+   To land it: give each message a remembered height hint the same way
+   embedBox remembers an attachment's ratio, then verify against scroll
+   anchoring on a real low-end device with a long mixed-attachment history.
+   See docs/EMBED_MEMORY_ARCHITECTURE.md.
+   ============================================================ */

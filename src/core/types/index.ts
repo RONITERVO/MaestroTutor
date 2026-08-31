@@ -1,6 +1,23 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+
+/**
+ * The persisted layout box for a message's rich attachment.
+ *
+ * An aspect ratio (width / height) rather than a pixel height, so it survives
+ * rotation, keyboard show/hide, split-screen and font scaling. A remembered
+ * pixel height is wrong the moment any of those change, which is what used to
+ * force a live re-measure and a visible jump.
+ */
+export interface EmbedBox {
+  aspectRatio: number;
+  /** 'static' = derived from source text, 'measured' = committed from a live run. */
+  source: 'static' | 'measured';
+  /** Schema version, so improved heuristics can invalidate stored values. */
+  v: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';
@@ -47,6 +64,15 @@ export interface ChatMessage {
   toolAttachmentStartTime?: number;
   isLoadingArtifact?: boolean;
   artifactLoadStartTime?: number;
+  /**
+   * Reserved layout box for this message's rich attachment (mini-game, PDF, …).
+   *
+   * Stored as an aspect ratio rather than a pixel height so it stays correct
+   * across rotation and viewport changes, and so the chat can lay itself out
+   * without mounting — or even having ever mounted — the embed.
+   * See features/chat/utils/embedIntrinsics.ts.
+   */
+  embedBox?: EmbedBox;
   tempSelectedNativeLangCode?: string;
   tempSelectedTargetLangCode?: string;
   /** Optional action hint for error messages (e.g. 'quota') to render contextual action buttons */

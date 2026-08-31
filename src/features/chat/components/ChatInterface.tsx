@@ -1,17 +1,20 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { ChatMessage, ReplySuggestion, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
-import { IconEyeOpen, IconBookmark, IconTrash } from '../../../shared/ui/Icons';
+import { IconEyeOpen, IconBookmark } from '../../../shared/ui/Icons';
 import BookmarkActions from './BookmarkActions';
 import ChatMessageBubble from './ChatMessageBubble';
+import MessageSwipeTray from './MessageSwipeTray';
 import SuggestionsList from './SuggestionsList';
 import InputArea from './InputArea';
 import { LanguageSelectorGlobe } from '../../session';
-import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT } from '../../../store';
+import { useMaestroStore, MAX_VISIBLE_MESSAGES_DEFAULT, selectDeviceBudgets } from '../../../store';
+import { useEmbedViewport } from '../embeds/useEmbedViewport';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
+import { useStableCallback } from '../../../shared/hooks/useStableCallback';
 import {
   selectMessages,
   selectLiveTranscriptMessages,
@@ -134,10 +137,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     setTempTargetLangCode(code);
   }, [setTempTargetLangCode]);
 
+  const deviceBudgets = useMaestroStore(selectDeviceBudgets);
+
   const speakNativeLang = settings.tts.speakNative;
   const imageFocusedModeEnabled = settings.imageFocusedModeEnabled;
   const bookmarkedMessageId = settings.historyBookmarkMessageId ?? null;
-  const maxVisibleMessages = settings.maxVisibleMessages ?? MAX_VISIBLE_MESSAGES_DEFAULT;
+  // The user's history depth is a preference; the tier cap is a memory limit.
+  // On a low-end device 50 rendered bubbles is itself a large retained cost,
+  // independent of how many of them hold an embed.
+  const maxVisibleMessages = Math.min(
+    settings.maxVisibleMessages ?? MAX_VISIBLE_MESSAGES_DEFAULT,
+    deviceBudgets.maxVisibleMessagesCap,
+  );
   const currentTargetLangCode = useMemo(
     () => getPrimaryCode(selectedLanguagePair?.targetLanguageCode || targetLanguageDef?.code || 'es'),
     [selectedLanguagePair, targetLanguageDef]
@@ -184,8 +195,67 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     return eligible;
   }, [combinedMessages, maxVisibleBookmarkBudget]);
 
+  /*
+   * Per-message callbacks, created once and cached.
+   *
+   * These were inline arrows in the JSX, which handed every ChatMessageBubble a
+   * fresh prop object on every render and so defeated its React.memo entirely:
+   * profiling on device showed all ~23 rendered bubbles — and their whole icon
+   * subtrees — re-rendering on every single commit. Reading the current handler
+   * through a ref keeps the cached closures stable for the life of the message
+   * even if the callback prop itself changes identity.
+   */
+  // Handlers that arrive as props from App and are forwarded to every bubble.
+  // Any one of them changing identity re-renders the whole list, so they are
+  // pinned here rather than relying on the callback chains upstream staying
+  // memoised. onQuotaStartLive was the one that actually did it.
+  const stableBookmarkAt = useStableCallback(onBookmarkAt);
+  const stableDeleteMessage = useStableCallback(onDeleteMessage);
+  const stableQuotaSetupBilling = useStableCallback(onQuotaSetupBilling);
+  const stableQuotaStartLive = useStableCallback(onQuotaStartLive);
+  const stableImageGenViewCost = useStableCallback(onImageGenViewCost);
+  const stableSetAttachedImage = useStableCallback(onSetAttachedImage);
+  const stableUserInputActivity = useStableCallback(onUserInputActivity);
+  const stableToggleSpeakNativeLang = useStableCallback(onToggleSpeakNativeLang);
+  const stableSpeakText = useStableCallback(speakText);
+  const stableStopSpeaking = useStableCallback(stopSpeaking);
+
+  const focusToggleRef = useRef(onToggleImageFocusedMode);
+  // In a layout effect for the same reason as useStableCallback: an abandoned
+  // concurrent render must not swap the handler under committed listeners.
+  useLayoutEffect(() => {
+    focusToggleRef.current = onToggleImageFocusedMode;
+  });
+  const perMessageHandlers = useRef(new Map<string, {
+    toggleFocus: () => void;
+    registerEl: (el: HTMLDivElement | null) => void;
+  }>());
+
+  const getMessageHandlers = useCallback((messageId: string) => {
+    const cache = perMessageHandlers.current;
+    let handlers = cache.get(messageId);
+    if (!handlers) {
+      // Messages come and go over a long session; rebuilding the whole cache
+      // occasionally is cheaper than tracking liveness, and costs one extra
+      // render wave at most.
+      if (cache.size > 300) cache.clear();
+      handlers = {
+        toggleFocus: () => focusToggleRef.current(messageId),
+        registerEl: (el: HTMLDivElement | null) => {
+          if (el) bubbleWrapperRefs.current.set(messageId, el);
+          else bubbleWrapperRefs.current.delete(messageId);
+        },
+      };
+      cache.set(messageId, handlers);
+    }
+    return handlers;
+  }, [bubbleWrapperRefs]);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Single source of the embed height cap and the one shared IntersectionObserver.
+  useEmbedViewport(scrollContainerRef, deviceBudgets);
   const shouldAutoScrollRef = useRef(true);
 
   const handleContainerScroll = useCallback(() => {
@@ -783,40 +853,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                </div>
              )}
              {canBeDeleted && (
-               <div
-                 className={`absolute ${isUser ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 flex flex-col items-center gap-2`}
-                 style={{
-                   width: 56,
-                   zIndex: 50,
-                   pointerEvents: openTrayForId === msg.id ? 'auto' : 'none',
-                   opacity: openTrayForId === msg.id ? 1 : 0,
-                   transform: `translateY(-50%) ${openTrayForId === msg.id ? 'translateX(0)' : `translateX(${isUser ? '8px' : '-8px'})`}`,
-                   transition: 'opacity 120ms ease, transform 120ms ease',
-                   touchAction: 'none',
-                 }}
-                 onPointerDown={(e) => { e.stopPropagation(); }}
-                 aria-hidden={openTrayForId === msg.id ? undefined : true}
-               >
-                 {isAssistant && (msg.id === bookmarkedMessageId || bookmarkEligibleAssistantIds.has(msg.id)) && (
-                   <button
-                     className={`p-2 bg-save-sugg-bg text-save-sugg-text shadow sketchy-border-thin`}
-                     onPointerDown={(e) => { e.stopPropagation(); }}
-                         onClick={(e) => { e.stopPropagation(); if (msg.id !== bookmarkedMessageId) { onBookmarkAt(msg.id); } }}
-                         title={msg.id === bookmarkedMessageId ? (t('chat.bookmark.isHere') || 'Bookmark is here') : (t('chat.bookmark.setHere') || 'Set bookmark here')}
-                     aria-pressed={msg.id === bookmarkedMessageId}
-                   >
-                     <IconBookmark className={`w-5 h-5 ${msg.id === bookmarkedMessageId ? 'opacity-100' : 'opacity-90'}`} />
-                   </button>
-                 )}
-                 <button
-                   className={`p-2 bg-delete-msg-bg text-delete-msg-text shadow sketchy-border-thin`}
-                   onPointerDown={(e) => { e.stopPropagation(); }}
-                   onClick={(e) => { e.stopPropagation(); onDeleteMessage(msg.id); }}
-                   title={t('chat.deleteMessage') || 'Delete message'}
-                 >
-                   <IconTrash className="w-5 h-5" />
-                 </button>
-               </div>
+               <MessageSwipeTray
+                 messageId={msg.id}
+                 isUser={isUser}
+                 isAssistant={isAssistant}
+                 isOpen={openTrayForId === msg.id}
+                 isBookmarked={msg.id === bookmarkedMessageId}
+                 canBookmark={bookmarkEligibleAssistantIds.has(msg.id)}
+                 t={t}
+                 onBookmark={stableBookmarkAt}
+                 onDelete={stableDeleteMessage}
+               />
              )}
 
               <ChatMessageBubble
@@ -828,22 +875,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 estimatedLoadTime={estimatedImageLoadTime} 
                 loadingAnimations={loadingAnimations}
                 t={t}
-                onToggleSpeakNativeLang={onToggleSpeakNativeLang}
+                onToggleSpeakNativeLang={stableToggleSpeakNativeLang}
                 handleSpeakLine={handleSpeakLine}
                 handlePlayUserMessage={handlePlayUserMessage}
-                speakText={speakText}
-                stopSpeaking={stopSpeaking}
-                onToggleImageFocusedMode={() => onToggleImageFocusedMode(msg.id)}
+                speakText={stableSpeakText}
+                stopSpeaking={stableStopSpeaking}
+                onToggleImageFocusedMode={getMessageHandlers(msg.id).toggleFocus}
                 transitioningImageId={transitioningImageId}
-                onSetAttachedImage={onSetAttachedImage}
-                onUserInputActivity={onUserInputActivity}
-                onQuotaSetupBilling={onQuotaSetupBilling}
-                onQuotaStartLive={onQuotaStartLive}
-                onImageGenViewCost={onImageGenViewCost}
-                registerBubbleEl={(el) => {
-                  if (el) bubbleWrapperRefs.current.set(msg.id, el);
-                  else bubbleWrapperRefs.current.delete(msg.id);
-                }}
+                onSetAttachedImage={stableSetAttachedImage}
+                onUserInputActivity={stableUserInputActivity}
+                onQuotaSetupBilling={stableQuotaSetupBilling}
+                onQuotaStartLive={stableQuotaStartLive}
+                onImageGenViewCost={stableImageGenViewCost}
+                registerBubbleEl={getMessageHandlers(msg.id).registerEl}
               />
             </div>
           );
@@ -936,7 +980,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                 <InputArea
                     onSttToggle={onSttToggle}
                     onSendMessage={onSendMessage}
-                    onUserInputActivity={onUserInputActivity}
+                    onUserInputActivity={stableUserInputActivity}
                     onStartLiveSession={onStartLiveSession}
                     onStopLiveSession={onStopLiveSession}
                     onStopSilentObserver={onStopSilentObserver}
@@ -965,8 +1009,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                     t={t}
                     onToggleSuggestionMode={() => onToggleSuggestionMode()}
                     onSuggestionClick={onSuggestionClick}
-                    stopSpeaking={stopSpeaking}
-                    onToggleSpeakNativeLang={onToggleSpeakNativeLang}
+                    stopSpeaking={stableStopSpeaking}
+                    onToggleSpeakNativeLang={stableToggleSpeakNativeLang}
                     speakNativeLang={speakNativeLang}
                     onPracticeSuggestion={handlePracticeSuggestion}
                     isPracticeDisabled={isLiveSession}

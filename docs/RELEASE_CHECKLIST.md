@@ -17,6 +17,29 @@ Check: Verify android/app/src/main/res/mipmap-* contains your logo, not the defa
 [X] Icons Swapped: Default Capacitor icons replaced via capacitor-assets.
 
 
+## 1b) Memory & Quality Thresholds (Play requirement)
+
+Play sets thresholds on dynamic memory usage, bitmap usage and code
+optimization. These are measured on real devices, so a dev-machine pass proves
+nothing. Run this on the weakest device you have, or an emulator configured with
+2 GB RAM and 4 cores.
+
+- [ ] Open a chat with a long mixed history: several mini-games, a multi-page
+      PDF, images, audio. Scroll top to bottom and back.
+- [ ] In `chrome://inspect` → Console, run `__EMBED_DEBUG__()` at rest and while
+      scrolling. `live.length` must never exceed `budgets.maxLiveEmbeds`, and
+      `posters` must never exceed `budgets.posterBudget`. (Dev builds only.)
+- [ ] Android Studio → Profiler → Memory: total should stay flat while scrolling
+      past embeds. A staircase that never comes down means something is
+      retaining rasterized pages or documents.
+- [ ] Confirm the tier the device resolved to. `navigator.deviceMemory` is
+      missing on some WebViews, which resolves to `mid`; if the device is
+      genuinely weak, check that it was not over-classified.
+- [ ] Scroll the transcript up through history and confirm nothing jumps: the
+      reserved boxes must hold their space with no embed running.
+- [ ] Rotate the device with an embed on screen. The box changes height but the
+      content must stay correctly proportioned and the page must not jump.
+
 ## 2) Versioning (Required for every upload)
 Edit `android/app/build.gradle`:
 - [X] Increment `versionCode`
