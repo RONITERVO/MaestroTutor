@@ -157,6 +157,35 @@ describe('embed activation under real mount order', () => {
     expect(embedActivation.debugSnapshot().receivedEntries).toBe(false);
   });
 
+  it('does not let a tapped embed hold the slot forever when the observer is silent', async () => {
+    // Without visibility data "scrolled away" never arrives, so the pin's usual
+    // release never fires and the user is stuck: one artifact runs and nothing
+    // else will ever start again.
+    class SilentObserver {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+      takeRecords() { return []; }
+    }
+    vi.stubGlobal('IntersectionObserver', SilentObserver);
+
+    const { container } = render(<Chat ids={['a', 'b']} />);
+    await settle();
+    act(() => { vi.advanceTimersByTime(1500); });
+    await settle();
+
+    const boxes = Array.from(container.querySelectorAll('.embed-box'));
+    const resting = boxes.find((box) => box.querySelector('button'))!;
+    act(() => { resting.querySelector('button')!.click(); });
+    expect(resting.querySelector('iframe')).not.toBeNull();
+
+    act(() => { vi.advanceTimersByTime(25_000); });
+    await settle();
+
+    expect(embedActivation.debugSnapshot().records.some((r) => r.pinned)).toBe(false);
+    expect(container.querySelectorAll('iframe')).toHaveLength(1);
+  });
+
   it('hands the slot to whichever embed the reader scrolls to', async () => {
     const { container } = render(<Chat ids={['a', 'b']} />);
     const boxes = Array.from(container.querySelectorAll('.embed-box'));

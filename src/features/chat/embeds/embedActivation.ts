@@ -68,6 +68,8 @@ interface EmbedRecord {
   pinned: boolean;
   /** When a pinned embed left the viewport; 0 while it is on screen. */
   pinnedOffscreenAt: number;
+  /** When engagement was taken. The expiry clock when visibility is unavailable. */
+  pinnedAt: number;
   phase: EmbedPhase;
   /** Registration order, used as a stable tie-break and as the IO-less fallback. */
   seq: number;
@@ -123,6 +125,7 @@ class EmbedActivationManager {
   /** Whether the observer has ever delivered anything. See assumeVisibleIfSilent. */
   private hasIngested = false;
   private silenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private pinExpiryTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ---------------------------------------------------------------- lifecycle
 
@@ -185,6 +188,7 @@ class EmbedActivationManager {
       centeredness: previous?.centeredness ?? 0,
       pinned: previous?.pinned ?? false,
       pinnedOffscreenAt: previous?.pinnedOffscreenAt ?? 0,
+      pinnedAt: previous?.pinnedAt ?? 0,
       phase: previous?.phase ?? (this.posters.has(id) ? 'frozen' : 'placeholder'),
       seq: previous?.seq ?? this.seq++,
       fullyVisible: previous?.fullyVisible ?? false,
@@ -250,7 +254,16 @@ class EmbedActivationManager {
     }
 
     record.pinned = pinned;
+    record.pinnedAt = pinned ? now() : 0;
     record.pinnedOffscreenAt = pinned && record.visibleFraction <= 0 ? now() : 0;
+
+    // Arbitration is event-driven, so without a timer a pin taken in a quiet
+    // chat would never be reconsidered and would outlive its own grace period.
+    if (this.pinExpiryTimer !== null) clearTimeout(this.pinExpiryTimer);
+    this.pinExpiryTimer = pinned
+      ? setTimeout(() => { this.pinExpiryTimer = null; this.arbitrate(); }, PIN_OFFSCREEN_GRACE_MS + 100)
+      : null;
+
     // Engagement is an explicit user action; apply it without dwell.
     this.clearDwell();
     this.arbitrate();
@@ -347,12 +360,13 @@ class EmbedActivationManager {
       this.silenceTimer = null;
       if (this.hasIngested || this.records.size === 0) return;
 
-      if (import.meta.env?.DEV) {
-        console.warn(
-          '[embedActivation] no IntersectionObserver entries arrived; falling back to '
-          + 'assuming embeds are visible. Activation will not follow scrolling.',
-        );
-      }
+      // Deliberately not dev-gated: this only fires when something is wrong,
+      // it fires once, and a release build on a real device is exactly where we
+      // need to see it (Capacitor forwards console to logcat).
+      console.warn(
+        '[embedActivation] no IntersectionObserver entries arrived; falling back to '
+        + 'assuming embeds are visible. Activation will not follow scrolling.',
+      );
       for (const record of this.records.values()) {
         record.visibleFraction = 1;
         record.centeredness = 0;
@@ -438,10 +452,18 @@ class EmbedActivationManager {
   private expireStalePins(): void {
     const at = now();
     for (const record of this.records.values()) {
-      if (!record.pinned || record.pinnedOffscreenAt === 0) continue;
-      if (at - record.pinnedOffscreenAt < PIN_OFFSCREEN_GRACE_MS) continue;
+      if (!record.pinned) continue;
+
+      // Without visibility data we cannot tell that the user scrolled away, so
+      // "off screen" never arrives and the pin would hold the only live slot for
+      // the rest of the session — the user taps one artifact and no other will
+      // ever start again. Fall back to expiring from when engagement was taken.
+      const since = this.hasIngested ? record.pinnedOffscreenAt : record.pinnedAt;
+      if (since === 0 || at - since < PIN_OFFSCREEN_GRACE_MS) continue;
+
       record.pinned = false;
       record.pinnedOffscreenAt = 0;
+      record.pinnedAt = 0;
     }
   }
 
@@ -579,6 +601,8 @@ class EmbedActivationManager {
     this.clearDwell();
     if (this.silenceTimer !== null) clearTimeout(this.silenceTimer);
     this.silenceTimer = null;
+    if (this.pinExpiryTimer !== null) clearTimeout(this.pinExpiryTimer);
+    this.pinExpiryTimer = null;
     this.hasIngested = false;
     if (this.rafHandle && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this.rafHandle);
     this.rafHandle = 0;
