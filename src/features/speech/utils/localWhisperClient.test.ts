@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const workerState = vi.hoisted(() => ({
   instances: [] as Array<{ status: string; dispose: ReturnType<typeof vi.fn> }>,
@@ -27,6 +27,10 @@ import {
 } from './localWhisperClient';
 
 describe('shared local Whisper worker', () => {
+  beforeEach(() => {
+    workerState.instances.length = 0;
+  });
+
   it('keeps one model alive until the final Live consumer releases it', () => {
     const options = {
       model: 'onnx-community/whisper-tiny.en',

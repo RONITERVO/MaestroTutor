@@ -230,12 +230,13 @@ public class ThemeBillingManager {
      * Launches the Google Play purchase sheet for the given {@code productId}.
      *
      * @param activity   The foreground activity (required by Play Billing).
-     * @param productId  One of the IDs defined in {@link ThemeProducts}.
+     * @param productId  The Play in-app product to purchase.
+     * @param obfuscatedAccountId Optional account hash for managed-credit purchase binding.
      */
     public void launchBillingFlow(
             @NonNull Activity activity,
             @NonNull String productId,
-            @NonNull String obfuscatedAccountId
+            @Nullable String obfuscatedAccountId
     ) {
         if (!ensureConnected()) {
             notifyError(buildBillingResult(
@@ -252,13 +253,16 @@ public class ThemeBillingManager {
             return;
         }
 
-        BillingFlowParams flowParams = BillingFlowParams.newBuilder()
-                .setObfuscatedAccountId(obfuscatedAccountId)
+        BillingFlowParams.Builder flowBuilder = BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(
                         List.of(BillingFlowParams.ProductDetailsParams.newBuilder()
                                 .setProductDetails(productDetails)
                                 .build())
-                ).build();
+                );
+        if (obfuscatedAccountId != null && !obfuscatedAccountId.trim().isEmpty()) {
+            flowBuilder.setObfuscatedAccountId(obfuscatedAccountId);
+        }
+        BillingFlowParams flowParams = flowBuilder.build();
 
         BillingResult result = billingClient.launchBillingFlow(activity, flowParams);
         if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
@@ -271,7 +275,7 @@ public class ThemeBillingManager {
     private void queryProductDetailsAndThen(
             @NonNull Activity activity,
             @NonNull String productId,
-            @NonNull String obfuscatedAccountId
+            @Nullable String obfuscatedAccountId
     ) {
         if (!ensureConnected()) {
             notifyError(buildBillingResult(

@@ -39,7 +39,7 @@ export interface IsProductOwnedResult {
 interface ThemeBillingPluginInterface {
   startConnection(): Promise<void>;
   getProductDetails(options?: { productIds?: string[] }): Promise<void>;
-  purchaseTheme(options: { productId: string; obfuscatedAccountId: string }): Promise<void>;
+  purchaseManagedProduct(options: { productId: string; obfuscatedAccountId: string }): Promise<void>;
   restorePurchases(): Promise<void>;
   consumePurchase(options: { purchaseToken: string }): Promise<void>;
   isThemeOwned(options: { productId: string }): Promise<IsProductOwnedResult>;
@@ -87,7 +87,7 @@ const createWebStub = (): ThemeBillingPluginInterface => ({
   startConnection: async () => {},
   getProductDetails: async () => {},
   // Anything that would need Play to complete must reject, not resolve.
-  purchaseTheme: unavailable,
+  purchaseManagedProduct: unavailable,
   restorePurchases: async () => {},
   consumePurchase: unavailable,
   isThemeOwned: async () => ({ owned: false }),
@@ -105,7 +105,7 @@ export const googlePlayBillingService = {
     plugin.getProductDetails(productIds?.length ? { productIds } : {})
   ),
   purchaseProduct: (productId: string, obfuscatedAccountId: string) => (
-    plugin.purchaseTheme({ productId, obfuscatedAccountId })
+    plugin.purchaseManagedProduct({ productId, obfuscatedAccountId })
   ),
   restorePurchases: () => plugin.restorePurchases(),
   consumePurchase: (purchaseToken: string) => plugin.consumePurchase({ purchaseToken }),

@@ -24,6 +24,7 @@ import java.util.List;
  *   <li>{@code startConnection()} – Initialise the billing client and restore purchases.</li>
  *   <li>{@code getProductDetails()} – Return available theme product details (id, title, price).</li>
  *   <li>{@code purchaseTheme({ productId })} – Launch the billing flow for a theme.</li>
+ *   <li>{@code purchaseManagedProduct({ productId, obfuscatedAccountId })} – Launch an account-bound managed-credit purchase.</li>
  *   <li>{@code restorePurchases()} – Re-query Google Play and refresh the local cache.</li>
  *   <li>{@code isThemeOwned({ productId })} – Check the local cache for a specific theme.</li>
  *   <li>{@code getOwnedThemes()} – Return all locally cached owned theme IDs.</li>
@@ -115,17 +116,34 @@ public class ThemeBillingPlugin extends Plugin {
     /**
      * Launches the Google Play purchase sheet for the given theme product.
      *
-     * <p>Expected call data: {@code { productId: string, obfuscatedAccountId: string }}
+     * <p>Expected call data: {@code { productId: string, obfuscatedAccountId?: string }}.
+     * Managed-credit callers provide the account hash used by server-side purchase
+     * binding; standalone theme purchases intentionally remain account-optional.
      */
     @PluginMethod
     public void purchaseTheme(PluginCall call) {
+        launchPurchase(call, false);
+    }
+
+    /**
+     * Launches a managed-credit purchase and requires the account-binding hash.
+     *
+     * <p>Expected call data: {@code { productId: string, obfuscatedAccountId: string }}.
+     */
+    @PluginMethod
+    public void purchaseManagedProduct(PluginCall call) {
+        launchPurchase(call, true);
+    }
+
+    private void launchPurchase(PluginCall call, boolean requireObfuscatedAccountId) {
         String productId = call.getString("productId");
         if (productId == null || productId.isEmpty()) {
             call.reject("productId is required");
             return;
         }
         String obfuscatedAccountId = call.getString("obfuscatedAccountId");
-        if (obfuscatedAccountId == null || obfuscatedAccountId.isEmpty()) {
+        if (requireObfuscatedAccountId
+                && (obfuscatedAccountId == null || obfuscatedAccountId.trim().isEmpty())) {
             call.reject("obfuscatedAccountId is required");
             return;
         }
