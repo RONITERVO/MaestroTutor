@@ -2,7 +2,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
-import { getAi } from './client';
+import { sanitizeHistoryWithVerifiedMedia } from '../../core-sdk/chat/history';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
+import { getDirectAi } from './client';
 
 /**
  * Set of URIs known to be expired/deleted (403/404).
@@ -40,7 +43,7 @@ const waitForFileActive = async (
   maxWaitMs: number = 60000,
   pollIntervalMs: number = 1000
 ): Promise<any> => {
-  const ai = await getAi();
+  const ai = await getDirectAi();
 
   let name = fileNameOrUri;
   const m = /\/files\/([^?\s]+)/.exec(fileNameOrUri || '');
@@ -84,7 +87,11 @@ const waitForFileActive = async (
 
 export const checkFileStatuses = async (uris: string[]): Promise<Record<string, { deleted: boolean; active: boolean }>> => {
   if (!uris || !uris.length) return {};
-  const ai = await getAi();
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    return (await maestroBackendService.checkFileStatuses({ uris })).statuses;
+  }
+  const ai = await getDirectAi();
   const out: Record<string, { deleted: boolean; active: boolean }> = {};
 
   // Filter out URIs already known to be expired
@@ -138,79 +145,20 @@ export const checkFileStatuses = async (uris: string[]): Promise<Record<string, 
 };
 
 export const sanitizeHistoryWithVerifiedUris = async (history: any[]) => {
-  const uris = Array.from(new Set(history.flatMap((item) => {
-    const parts = Array.isArray(item?.fileParts) ? item.fileParts : [];
-    const filePartUris = parts
-      .map((part: any) => (typeof part?.fileUri === 'string' ? part.fileUri : ''))
-      .filter(Boolean);
-    const avatarUri = typeof item?.avatarFileUri === 'string' ? item.avatarFileUri : '';
-    return avatarUri ? [...filePartUris, avatarUri] : filePartUris;
-  })));
-  if (uris.length === 0) return history;
-
-  const statuses = await checkFileStatuses(uris);
   let strippedCount = 0;
-  const result = history.map((h, idx) => {
-    const hadFileParts = Array.isArray(h.fileParts);
-    const avatarUri = typeof h?.avatarFileUri === 'string' ? h.avatarFileUri : '';
-    const hadAvatarFileUri = !!avatarUri;
-    const fileParts = hadFileParts
-      ? h.fileParts.filter((part: any) => {
-          const uri = typeof part?.fileUri === 'string' ? part.fileUri : '';
-          if (!uri) return false;
-          const status = statuses[uri];
-          const keep = !status?.deleted && !!status?.active;
-          if (!keep) {
-            strippedCount++;
-            console.warn(`[sanitizeHistory] Stripping expired/invalid media URI from history item ${idx}:`, uri.slice(0, 80));
-          }
-          return keep;
-        })
-      : undefined;
-    const avatarStatus = avatarUri ? statuses[avatarUri] : undefined;
-    const keepAvatar = !hadAvatarFileUri || (!avatarStatus?.deleted && !!avatarStatus?.active);
-    if (hadAvatarFileUri && !keepAvatar) {
+  const result = await sanitizeHistoryWithVerifiedMedia(
+    history,
+    checkFileStatuses,
+    ({ uri, historyIndex, kind }) => {
       strippedCount++;
-      console.warn(`[sanitizeHistory] Stripping expired/invalid avatar URI from history item ${idx}:`, avatarUri.slice(0, 80));
-    }
-
-    if ((fileParts && fileParts.length > 0) || (hadAvatarFileUri && !keepAvatar)) {
-      const nextHistoryItem = { ...h };
-
-      if (fileParts && fileParts.length > 0) {
-        nextHistoryItem.fileParts = fileParts;
-      } else if (hadFileParts) {
-        delete nextHistoryItem.fileParts;
-      }
-
-      if (hadAvatarFileUri && !keepAvatar) {
-        delete nextHistoryItem.avatarFileUri;
-        delete nextHistoryItem.avatarMimeType;
-      }
-
-      return nextHistoryItem;
-    }
-
-    if (hadFileParts) {
-      const nextHistoryItem = { ...h };
-      delete nextHistoryItem.fileParts;
-      if (hadAvatarFileUri && !keepAvatar) {
-        delete nextHistoryItem.avatarFileUri;
-        delete nextHistoryItem.avatarMimeType;
-      }
-      return nextHistoryItem;
-    }
-
-    if (hadAvatarFileUri && !keepAvatar) {
-      const nextHistoryItem = { ...h };
-      delete nextHistoryItem.avatarFileUri;
-      delete nextHistoryItem.avatarMimeType;
-      return nextHistoryItem;
-    }
-    return h;
-  });
+      console.warn(
+        `[sanitizeHistory] Stripping expired/invalid ${kind} URI from history item ${historyIndex}:`,
+        uri.slice(0, 80),
+      );
+    },
+  );
   if (strippedCount > 0) {
-    console.warn(`[sanitizeHistory] Total media items stripped due to expired URIs: ${strippedCount}/${uris.length}`);
+    console.warn(`[sanitizeHistory] Total media items stripped due to expired URIs: ${strippedCount}`);
   }
   return result;
 };
@@ -220,9 +168,17 @@ export const uploadMediaToFiles = async (
   mimeType: string,
   displayName?: string
 ): Promise<{ uri: string; mimeType: string }> => {
-  const ai = await getAi();
-
   const normalizedMimeType = normalizeMimeTypeForUpload(mimeType);
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    const result = await maestroBackendService.uploadMedia({
+      dataUrl,
+      mimeType: normalizedMimeType,
+      ...(displayName ? { displayName } : {}),
+    });
+    return { uri: result.uri, mimeType: result.mimeType };
+  }
+  const ai = await getDirectAi();
 
   const base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
   const byteCharacters = atob(base64Data);
@@ -272,7 +228,11 @@ export const clearAllGeminiFiles = async (): Promise<{
   failedCount: number;
   failedNames: string[];
 }> => {
-  const ai = await getAi();
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    return maestroBackendService.clearFiles();
+  }
+  const ai = await getDirectAi();
   const log = debugLogService.logRequest('files.clearAll', 'Files API', {
     pageSize: 100,
   });
@@ -310,7 +270,11 @@ export const clearAllGeminiFiles = async (): Promise<{
 };
 
 export const deleteFileByNameOrUri = async (nameOrUri: string) => {
-  const ai = await getAi();
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    return maestroBackendService.deleteFile({ nameOrUri });
+  }
+  const ai = await getDirectAi();
   let name = nameOrUri;
   const m = /\/files\/([^?\s]+)/.exec(nameOrUri || '');
   if (m) name = `files/${m[1]}`;

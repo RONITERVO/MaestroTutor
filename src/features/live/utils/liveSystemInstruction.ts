@@ -2,10 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ChatMessage } from '../../../core/types';
-import { deriveHistoryForApi } from '../../chat';
 import { getGlobalProfileDB } from '../../session';
-import { buildCompactAssistantHistoryText } from '../../chat/utils/assistantMessageContext';
-import { groupAdjacentRoleItems } from '../../../shared/utils/conversationTurns';
+import { buildCoreLiveSystemInstruction } from '../../../core-sdk/chat/liveContext';
 
 export interface BuildLiveSystemInstructionParams {
   basePrompt: string;
@@ -24,49 +22,12 @@ export const buildLiveSystemInstruction = async ({
   computeHistorySubsetForMedia,
   resolveBookmarkContextSummary,
 }: BuildLiveSystemInstructionParams): Promise<string> => {
-  let prompt = basePrompt;
-
   const historySubset = computeHistorySubsetForMedia(messages);
-  const apiHistory = deriveHistoryForApi(historySubset, {
-    maxMessages: 10,
+  return buildCoreLiveSystemInstruction({
+    basePrompt,
+    messages: historySubset,
     contextSummary: resolveBookmarkContextSummary() || undefined,
     globalProfileText: (await getGlobalProfileDB())?.text || undefined,
+    maxMessages: 10,
   });
-  const sourceMessagesById = new Map(historySubset.map(message => [message.id, message]));
-  const latestAssistantEntryId = [...apiHistory]
-    .reverse()
-    .find(entry => entry.role === 'assistant')
-    ?.messageId;
-
-  // Live mode bakes history into one large instruction string. Grouping adjacent
-  // entries here keeps that context aligned with the same turn-collapse rule used
-  // by direct Gemini payloads, so imported/deleted/tool-split chats still read
-  // like normal back-and-forth conversation to the model.
-  const historyContext = groupAdjacentRoleItems(apiHistory)
-    .map((group) => {
-      const role = group.role === 'user' ? 'User' : 'Maestro';
-      const text = group.items
-        .map((entry) => {
-          const sourceMessage = entry.messageId ? sourceMessagesById.get(entry.messageId) : undefined;
-          return entry.role === 'assistant'
-            ? (buildCompactAssistantHistoryText(sourceMessage, {
-                includeArtifact: entry.messageId === latestAssistantEntryId,
-                includeToolRequest: entry.messageId === latestAssistantEntryId,
-              }) || entry.rawAssistantResponse || entry.text || '(assistant attachment)')
-            : (entry.rawAssistantResponse || entry.text || '(image)');
-        })
-        .filter((value): value is string => Boolean(value && value.trim()))
-        .join('\n\n')
-        .trim();
-
-      return text ? `${role}: ${text}` : '';
-    })
-    .filter(Boolean)
-    .join('\n');
-
-  if (historyContext) {
-    prompt += `\n\n--- CURRENT CONVERSATION CONTEXT (History) ---\n${historyContext}\n--- END CONTEXT ---`;
-  }
-
-  return prompt;
 };

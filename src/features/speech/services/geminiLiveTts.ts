@@ -21,13 +21,14 @@
  * - Cache audio segments per line for replay
  */
 
-import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
+import { Modality, LiveServerMessage } from '@google/genai';
+import { getAi } from '../../../api/gemini/client';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
+import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from '../../../core-sdk/media/triggerAudioAsset';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
-import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
+import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
+import { buildTriggeredTtsSystemInstruction } from '../../../core-sdk/media/triggeredTts';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 // ============================================================================
@@ -139,30 +140,19 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     return { isComplete: true, audioSegments: [] };
   }
 
-  // Validate API key is available
-  let apiKey: string;
+  // Resolve either the local BYOK transport or a managed Live-token transport.
+  let ai;
   try {
-    apiKey = await getApiKeyOrThrow();
+    ai = await getAi();
   } catch (e: any) {
-    const errorMsg = e?.message || 'Missing API key';
+    const errorMsg = e?.message || 'Missing AI access';
     onError?.(errorMsg);
     return { isComplete: false, error: errorMsg, audioSegments: [] };
   }
 
   // Build the text block for the system instruction
   // Each line on a new line for proper transcript splitting
-  const textBlock = lines.map(l => `[${(l.langCode || '')}] ${l.text}`).join('\n\n');
-  
-  const systemInstructionText = `You are a professional Text-to-Speech engine. Your ONLY task is to read the following text aloud, exactly as written, when the user says "Play". 
-IMPORTANT RULES:
-- Read EXACTLY what is written, character by character
-- Speak each line clearly with a brief pause between lines
-- Do NOT add any intro, outro, commentary, or acknowledgment
-- Do NOT modify, translate, or interpret the text
-- Just speak the text immediately
-- Do NOT replace language codes with newlines.
-TEXT TO READ:
-${textBlock}`;
+  const systemInstructionText = buildTriggeredTtsSystemInstruction(lines);
 
   const model = getGeminiModels().audio.tts;
   const usageTracker = createLiveUsageTracker({ feature: 'tts', configuredModel: model });
@@ -340,8 +330,6 @@ ${textBlock}`;
     };
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      
       session = await ai.live.connect({
         model,
         config: config as any,

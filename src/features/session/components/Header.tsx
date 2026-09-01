@@ -17,9 +17,10 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityToke
 interface HeaderProps {
   onOpenApiKey?: () => void;
   hasApiKey?: boolean;
+  hasManagedAccess?: boolean;
 }
 
-const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKey }, ref) => {
+const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKey, hasManagedAccess }, ref) => {
   const { t } = useAppTranslations();
   const maestroActivityStage = useMaestroStore(state => state.maestroActivityStage);
   const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
@@ -219,12 +220,22 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
            <button
              onClick={onOpenApiKey}
              className={`flex items-center gap-2 px-3 py-2 backdrop-blur-sm transition-all text-xs sm:text-sm sketchy-border-thin btn-depth
-               ${hasApiKey ? 'bg-apikey-ok-bg text-apikey-ok-text hover:bg-apikey-ok-hover' : 'bg-apikey-missing-bg text-apikey-missing-text hover:bg-apikey-missing-hover'}
+               ${hasApiKey || hasManagedAccess ? 'bg-apikey-ok-bg text-apikey-ok-text hover:bg-apikey-ok-hover' : 'bg-apikey-missing-bg text-apikey-missing-text hover:bg-apikey-missing-hover'}
              `}
-             title={hasApiKey ? t('header.manageApiKey') || 'Manage API Key' : t('header.apiKeyRequired') || 'API Key Required'}
+             title={hasApiKey
+               ? t('header.manageApiKey') || 'Manage API Key'
+               : hasManagedAccess
+                 ? t('managedAccess.title') || 'Managed access'
+                 : t('header.aiAccessRequired') || 'AI access required'}
            >
              <IconKey className="w-4 h-4" />
-             <span className="hidden sm:inline">{hasApiKey ? t('header.apiKey') || 'API Key' : t('header.apiKeyRequired') || 'API Key Required'}</span>
+             <span className="hidden sm:inline">
+               {hasApiKey
+                 ? t('header.apiKey') || 'API Key'
+                 : hasManagedAccess
+                   ? t('managedAccess.title') || 'Managed access'
+                   : t('header.aiAccessRequired') || 'AI access required'}
+             </span>
            </button>
          )}
 

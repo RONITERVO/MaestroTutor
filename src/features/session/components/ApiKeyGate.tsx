@@ -8,6 +8,9 @@ import { IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, Ico
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
+import { isManagedAccessConfigured } from '../../../core/config/integrations';
+import ManagedAccessPanel from './ManagedAccessPanel';
+import type { ManagedAccessSession } from '../../../core/contracts/backend';
 import { getCostSummary } from '../../../shared/utils/costTracker';
 import CostBreakdownView from './CostBreakdownView';
 
@@ -24,6 +27,7 @@ interface ApiKeyGateProps {
   onClear: () => Promise<void>;
   onClose: () => void;
   onValueChange?: (value: string) => void;
+  managedSession?: ManagedAccessSession | null;
 }
 
 const AI_STUDIO_URL = 'https://aistudio.google.com/app/apikey';
@@ -97,6 +101,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   onClear,
   onClose,
   onValueChange,
+  managedSession = null,
 }) => {
   const { t } = useAppTranslations();
   const [value, setValue] = useState('');
@@ -164,6 +169,8 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   const currentInstruction = INSTRUCTION_IMAGES[instructionIndex] || '';
   const showHeaderClose = showInstructions || canClose;
+  const showManagedAccess = isManagedAccessConfigured();
+
   const headerCloseLabel = showInstructions ? t('apiKeyGate.closeInstructions') : t('apiKeyGate.close');
   const handleHeaderClose = showInstructions ? () => setShowInstructions(false) : onClose;
 
@@ -311,6 +318,23 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
           />
           <div className="relative overflow-visible bg-gate-bg p-4 text-sm text-gate-text msg-depth sketchy-border-thin sketch-shape-2">
             <div className="space-y-3">
+              {/*
+                The account entry point is available whenever its complete
+                Firebase/backend configuration is present. A build without that
+                configuration does not advertise an account it cannot serve.
+                Everything below remains the bring-your-own-key path.
+              */}
+              {showManagedAccess && (
+                <>
+                  <ManagedAccessPanel session={managedSession} />
+                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-gate-muted-text">
+                    <span className="h-px flex-1 bg-gate-muted-text/30" />
+                    <span>{t('managedAccess.orByok') || 'or use your own key'}</span>
+                    <span className="h-px flex-1 bg-gate-muted-text/30" />
+                  </div>
+                </>
+              )}
+
               <button
                 type="button"
                 onClick={() => openExternalUrl(AI_STUDIO_URL)}

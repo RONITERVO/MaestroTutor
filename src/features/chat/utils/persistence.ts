@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, TtsProvider, SttProvider } from '../../../core/types';
-import { normalizeUploadedAttachmentVariants, buildUploadedAttachmentState } from './uploadedAttachmentVariants';
+import { normalizeUploadedAttachmentVariants, buildUploadedAttachmentState } from '../../../core-sdk/chat/uploadedAttachmentVariants';
 
 export const INLINE_CAP_IMAGE = 2_000_000; // ~2MB (increased from 1MB to reduce data loss from large images)
 export const INLINE_CAP_VIDEO = 4_000_000; // ~4MB

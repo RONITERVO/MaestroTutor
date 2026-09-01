@@ -1,8 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { PURCHASABLE_THEME_PRESETS } from './purchasableThemePresets';
-import type { ThemeProductId } from './themeProducts';
+import { THEME_PRESETS_BY_ID } from './themePresets';
+import type { ThemeId } from './themeCatalogue';
 
 /**
  * Old color key -> new color key(s).
@@ -245,15 +245,15 @@ export const migrateLegacyColorMap = (colors?: Record<string, string>): Record<s
 };
 
 // ---------------------------------------------------------------------------
-// Theme forward-fill: auto-populate tokens added to paid themes after user
+// Theme forward-fill: auto-populate tokens added to catalogue themes after user
 // applied the theme. Runs after rename migration on app startup.
 // ---------------------------------------------------------------------------
 
 /**
- * Two highly distinctive tokens per paid theme. Both must match exactly for
+ * Two highly distinctive tokens per catalogue theme. Both must match exactly for
  * the theme to be identified — reduces false-positive risk to near zero.
  */
-const PAID_THEME_FINGERPRINTS: Record<ThemeProductId, readonly [string, string][]> = {
+const CATALOGUE_THEME_FINGERPRINTS: Record<ThemeId, readonly [string, string][]> = {
   theme_ocean_blue:  [['page-bg', '204 46% 95%'], ['user-msg-bg', '204 69% 39%']],
   theme_sunset_gold: [['page-bg', '36 67% 95%'],  ['user-msg-bg', '24 70% 46%']],
   theme_dark_neon:   [['page-bg', '230 24% 9%'],  ['user-msg-bg', '282 78% 56%']],
@@ -267,8 +267,8 @@ const PAID_THEME_FINGERPRINTS: Record<ThemeProductId, readonly [string, string][
   theme_original:    [['page-bg', '210 20% 97%'], ['user-msg-bg', '220 30% 20%']],
 };
 
-const detectPaidThemeId = (colors: Record<string, string>): ThemeProductId | null => {
-  const entries = Object.entries(PAID_THEME_FINGERPRINTS) as [ThemeProductId, readonly [string, string][]][];
+const detectCatalogueThemeId = (colors: Record<string, string>): ThemeId | null => {
+  const entries = Object.entries(CATALOGUE_THEME_FINGERPRINTS) as [ThemeId, readonly [string, string][]][];
   for (const [themeId, fingerprint] of entries) {
     if (fingerprint.every(([token, value]) => colors[token] === value)) {
       return themeId;
@@ -278,7 +278,7 @@ const detectPaidThemeId = (colors: Record<string, string>): ThemeProductId | nul
 };
 
 /**
- * Fills in any tokens that are defined in the user's active paid theme but
+ * Fills in any tokens that are defined in the user's active catalogue theme but
  * absent from their saved customColors (i.e. tokens added to the theme after
  * the user first applied it). Existing user values are never overwritten.
  *
@@ -288,10 +288,10 @@ const detectPaidThemeId = (colors: Record<string, string>): ThemeProductId | nul
 export const forwardFillThemeTokens = (colors: Record<string, string>): Record<string, string> => {
   if (!colors || Object.keys(colors).length === 0) return colors;
 
-  const themeId = detectPaidThemeId(colors);
+  const themeId = detectCatalogueThemeId(colors);
   if (!themeId) return colors;
 
-  const preset = PURCHASABLE_THEME_PRESETS[themeId];
+  const preset = THEME_PRESETS_BY_ID[themeId];
   if (!preset) return colors;
 
   let changed = false;

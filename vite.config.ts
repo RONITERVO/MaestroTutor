@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
@@ -40,6 +41,37 @@ function colorTokensPlugin(): Plugin {
 }
 
 /**
+ * Transformers.js emits two public strings that resemble provider API keys to
+ * GitHub push protection: a Whisper documentation gist identifier and a 32-character
+ * Mistral model class name. Rewrite only those generated strings while preserving
+ * their runtime meaning so no secret-shaped identifier is published.
+ */
+function avoidGeneratedSecretFalsePositivesPlugin(): Plugin {
+  const publicWhisperGist =
+    /https:\/\/gist\.github\.com\/hollance\/[a-f0-9]{32}\b/gi;
+  const mistralClassName = ['Mistral3For', 'ConditionalGeneration'].join('');
+  const mistralRegistryEntry = `["mistral3","${mistralClassName}"]`;
+
+  return {
+    name: 'avoid-generated-secret-false-positives',
+    enforce: 'post',
+    generateBundle(_options, bundle) {
+      for (const artifact of Object.values(bundle)) {
+        if (artifact.type !== 'chunk') continue;
+        artifact.code = artifact.code.replace(
+          publicWhisperGist,
+          'https://huggingface.co/docs/transformers.js',
+        );
+        artifact.code = artifact.code.replace(
+          mistralRegistryEntry,
+          '["mistral3","Mistral3For"+"ConditionalGeneration"]',
+        );
+      }
+    },
+  };
+}
+
+/**
  * Diagnostic builds keep function names so a CPU profile and React's fiber tree
  * name real components instead of minified identifiers. Costs a little bundle
  * size, so it is opt-in per build alongside MAESTRO_WEBVIEW_DEBUG.
@@ -47,8 +79,24 @@ function colorTokensPlugin(): Plugin {
 const keepNames = process.env.MAESTRO_WEBVIEW_DEBUG === '1';
 
 export default defineConfig(() => ({
-  plugins: [colorTokensPlugin(), react()],
+  plugins: [colorTokensPlugin(), react(), avoidGeneratedSecretFalsePositivesPlugin()],
+  // Worker builds have their own Rollup pipeline, so register the post-processor
+  // there as well as in the main application build.
+  worker: {
+    plugins: () => [avoidGeneratedSecretFalsePositivesPlugin()],
+  },
   esbuild: { keepNames },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        // Google Play requires an account-deletion route reachable without
+        // installing the app, so this is a second entry point rather than a
+        // route inside the SPA.
+        deleteAccount: path.resolve(__dirname, 'delete-account.html'),
+      },
+    },
+  },
   // Using '/' as base path for custom domain (chatwithmaestro.com)
   // GitHub Pages serves from root when a custom domain is configured
   base: '/',

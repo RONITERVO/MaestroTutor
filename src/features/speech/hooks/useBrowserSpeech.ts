@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { SpeechPart, RecordedUtterance } from '../../../core/types';
 import { useTtsEngine } from './useTtsEngine';
 import { type GeminiLiveSttTurnComplete, useGeminiLiveStt } from './useGeminiLiveStt';
-import { pcmToWav } from '../utils/audioProcessing';
+import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
 
 interface UseBrowserSpeechProps {
   onEngineCycleEnd?: (errorOccurred: boolean) => void;

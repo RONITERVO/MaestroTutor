@@ -18,8 +18,8 @@ import AudioControls from './input/AudioControls';
 import CameraControls from './input/CameraControls';
 import SessionControls from '../../session/components/SessionControls';
 import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
-import { normalizeAttachmentMimeType } from '../utils/fileAttachments';
-import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
+import { normalizeAttachmentMimeType } from '../../../core-sdk/chat/fileAttachments';
+import { parseAssistantResponseForAttachment } from '../../../core-sdk/chat/assistantResponseAttachments';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import {
   getNextSuggestionPracticeStep,

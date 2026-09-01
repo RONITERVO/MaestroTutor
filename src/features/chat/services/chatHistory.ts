@@ -4,8 +4,7 @@
 import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
 import { ChatMessage, ChatMeta } from '../../../core/types';
 import { sanitizeForPersistence } from '../utils/persistence';
-import { selectUploadedAttachmentParts } from '../utils/uploadedAttachmentVariants';
-import { MAX_MEDIA_TO_KEEP } from '../../../core/config/app';
+export { deriveHistoryForApi } from '../../../core-sdk/chat/history';
 
 export const getChatHistoryDB = async (pairId: string): Promise<ChatMessage[]> => {
   const db = await openDB();
@@ -20,7 +19,6 @@ export const getChatHistoryDB = async (pairId: string): Promise<ChatMessage[]> =
     };
   });
 };
-
 export const saveChatHistoryDB = async (pairId: string, messages: ChatMessage[]): Promise<void> => {
   if (!pairId) return;
   const messagesToSave = messages
@@ -263,93 +261,3 @@ export const setChatMetaDB = async (pairId: string, meta: ChatMeta | null): Prom
     }
   });
 };
-
-type DerivedHistoryItem = {
-  messageId?: string;
-  role: 'user' | 'assistant';
-  text?: string;
-  rawAssistantResponse?: string;
-  fileParts?: Array<{ fileUri: string; mimeType: string }>;
-  chatSummary?: string;
-  avatarFileUri?: string;
-  avatarMimeType?: string;
-};
-
-export const deriveHistoryForApi = (fullHistory: ChatMessage[], opts?: { roles?: Array<'user' | 'assistant' | 'system'>; maxMessages?: number; maxMediaToKeep?: number; contextSummary?: string; globalProfileText?: string; placeholderLatestUserMessage?: string; avatarOverlayFileUri?: string; avatarOverlayMimeType?: string; }) => {
-    const { roles = ['user','assistant'], maxMessages, maxMediaToKeep = MAX_MEDIA_TO_KEEP, contextSummary, globalProfileText, placeholderLatestUserMessage, avatarOverlayFileUri, avatarOverlayMimeType } = opts || {};
-    const roleSet = new Set(roles);
-    
-    // 1. Filter relevant messages
-    let filtered = fullHistory.filter(m => {
-      if (!roleSet.has(m.role as any)) return false;
-      if (m.role === 'user' || m.role === 'assistant') return !m.thinking;
-      return true;
-    });
-
-    // 2. Trim to maxMessages
-    if (typeof maxMessages === 'number' && maxMessages >= 0) {
-      if (filtered.length > maxMessages) filtered = maxMessages > 0 ? filtered.slice(-maxMessages) : [];
-    }
-
-    // 3. Map to simple API objects
-    const history: DerivedHistoryItem[] = filtered.map(m => {
-      const fileParts = selectUploadedAttachmentParts(m, 'chat');
-      return {
-        messageId: m.id,
-        role: (m.role === 'user' || m.role === 'assistant') ? m.role : 'user',
-        text: m.text,
-        rawAssistantResponse: m.rawAssistantResponse,
-        fileParts: fileParts.length ? fileParts : undefined,
-        chatSummary: m.chatSummary,
-      };
-    });
-
-    // 4. Enforce media limits
-    if (history.length > 0 && Number.isFinite(maxMediaToKeep) && (maxMediaToKeep as number) >= 0) {
-      const mediaIdx: number[] = [];
-      for (let i = 0; i < history.length; i++) {
-        if (history[i].fileParts && history[i].fileParts!.length > 0) mediaIdx.push(i);
-      }
-      const toKeep = new Set<number>(mediaIdx.slice(-(maxMediaToKeep as number)));
-      for (let i = 0; i < history.length; i++) {
-          if ((history[i].fileParts && history[i].fileParts!.length > 0) && !toKeep.has(i)) {
-              history[i].fileParts = undefined;
-          }
-      }
-    }
-
-    // 5. Build context preface (Global Profile + Chat Summary)
-    const contextParts: string[] = [];
-    if (globalProfileText && globalProfileText.trim()) {
-      const txt = globalProfileText.trim().slice(0, 10000);
-      contextParts.push(`Learner Profile (global):\n${txt}\nEND OF GLOBAL PROFILE MEMORY.`);
-    }
-    if (contextSummary && contextSummary.trim()) {
-      contextParts.push(`Conversation Summary:\n${contextSummary.trim().slice(0, 10000)}`);
-    }
-
-    // 6. Insert context. 
-    // Optimization: If the first history message is 'user', prepend to it to avoid double-user turn.
-    // Otherwise, insert as a separate system/user turn at the start.
-    if (contextParts.length > 0) {
-      const prefaceText = contextParts.join('\n\n');
-      if (history.length > 0 && history[0].role === 'user') {
-          history[0].text = `${prefaceText}\n\n${history[0].text || ''}`;
-      } else {
-          history.unshift({ role: 'user', text: prefaceText });
-      }
-    }
-
-    // 6b. Attach avatar overlay to the context message (first user message)
-    if (avatarOverlayFileUri && avatarOverlayMimeType && history.length > 0 && history[0].role === 'user') {
-      history[0].avatarFileUri = avatarOverlayFileUri;
-      history[0].avatarMimeType = avatarOverlayMimeType;
-    }
-
-    // 7. Append placeholder latest message if provided (e.g. for Image Gen context)
-    if (placeholderLatestUserMessage && placeholderLatestUserMessage.trim()) {
-         history.push({ role: 'user', text: placeholderLatestUserMessage.trim().slice(0, 10000) });
-    }
-    
-    return history;
-  };

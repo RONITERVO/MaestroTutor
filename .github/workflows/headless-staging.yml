@@ -1,0 +1,110 @@
+name: Headless staging journey
+
+on:
+  workflow_dispatch:
+    inputs:
+      require_byok:
+        description: Fail unless the BYOK provider journey can run
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: '17 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: headless-staging
+  cancel-in-progress: false
+
+jobs:
+  managed-provider-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      MAESTRO_BACKEND_BASE_URL: ${{ vars.MAESTRO_BACKEND_BASE_URL }}
+      MAESTRO_FIREBASE_API_KEY: ${{ vars.MAESTRO_FIREBASE_API_KEY }}
+      MAESTRO_FIREBASE_APP_ID: ${{ vars.MAESTRO_FIREBASE_APP_ID }}
+      MAESTRO_FIREBASE_EMAIL: ${{ secrets.HEADLESS_FIREBASE_EMAIL }}
+      MAESTRO_FIREBASE_PASSWORD: ${{ secrets.HEADLESS_FIREBASE_PASSWORD }}
+      MAESTRO_APPCHECK_DEBUG_TOKEN: ${{ secrets.HEADLESS_APPCHECK_DEBUG_TOKEN }}
+      MAESTRO_HEADLESS_HOME: /tmp/maestro-headless
+      MAESTRO_TEST_PACK_ID: ${{ vars.MAESTRO_TEST_PACK_ID || 'pack_1000' }}
+      MAESTRO_TEST_PACK_CREDITS: ${{ vars.MAESTRO_TEST_PACK_CREDITS || '1000' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - name: Verify release configuration and JSON-RPC contract
+        run: |
+          npm run verify:release-config
+          npx tsx src/headless/cli.ts system.describe > protocol.json
+          node -e "const p=require('./protocol.json'); for (const m of ['billing.checkout.completeTest','journey.firstLesson','suggestions.process','translation.create','speech.transcribe','speech.tts.generate','live.conversation.turn','live.observer.turn']) if(!p.methods.includes(m)) throw new Error('Missing '+m)"
+      - name: Authenticate through Firebase and read the managed account
+        run: |
+          npx tsx src/headless/cli.ts auth.signIn --profile staging-ci > auth.json
+          npx tsx src/headless/cli.ts account.summary --profile staging-ci > account.json
+          node -e "const a=require('./account.json'); if(!a.account?.user?.id) process.exit(1); console.log('Authenticated managed account:', a.account.user.id, 'credits:', a.account.billingSummary.availableCredits)"
+      - name: Complete one controlled Stripe test purchase
+        run: |
+          npx tsx src/headless/cli.ts billing.checkout.completeTest --profile staging-ci --params "{\"packId\":\"$MAESTRO_TEST_PACK_ID\",\"expectedCredits\":$MAESTRO_TEST_PACK_CREDITS,\"headless\":true}" > checkout.json
+          node -e "const c=require('./checkout.json'); if(c.grantedCredits!==Number(process.env.MAESTRO_TEST_PACK_CREDITS)||c.newPurchaseLedgerEntries!==1||!c.purchaseClaimId) process.exit(1); console.log('Stripe session:',c.sessionId,'claim:',c.purchaseClaimId,'grant:',c.grantedCredits)"
+      - name: Exercise a complete first lesson through shared UI/Core paths
+        run: |
+          npx tsx src/headless/cli.ts journey.firstLesson --profile staging-ci --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > first-lesson.json
+          node -e 'const fs=require("fs"),r=require("./first-lesson.json"); if(!r.passed||r.userTurnCount<10) process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing first-lesson coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,turns:r.turns}; console.log("First lesson turns:",r.userTurnCount,"coverage:",Object.keys(r.coverage).length); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### Managed first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'
+      - name: Exercise the low-level direct and streamed JSON-RPC routes
+        run: |
+          node -e "const p=require('./protocol.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
+          npx tsx src/headless/cli.ts gemini.generate --profile staging-ci --params "$(cat gemini-params.json)" > gemini.json
+          npx tsx src/headless/cli.ts gemini.generateStream --profile staging-ci --params "$(cat gemini-stream-params.json)" > gemini-stream.json
+          node -e "const r=require('./gemini-stream.json'); if(!Array.isArray(r.chunks)||!r.chunks.length) process.exit(1)"
+      - name: Verify ledgers, clear generated files and sign out
+        if: always()
+        run: |
+          npx tsx src/headless/cli.ts files.clear --profile staging-ci > clear.json
+          node -e "const c=require('./clear.json'); if(c.failedCount!==0) throw new Error('Provider file cleanup failed: '+JSON.stringify(c.failedNames||[]))"
+          npx tsx src/headless/cli.ts account.ledgers --profile staging-ci --params '{"limit":200}' > ledgers.json
+          node -e "const l=require('./ledgers.json'); if(!l.usage.entries.length) process.exit(1)"
+          npx tsx src/headless/cli.ts auth.signOut --profile staging-ci > signout.json
+
+  byok-provider-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      MAESTRO_GEMINI_API_KEY: ${{ secrets.HEADLESS_GEMINI_API_KEY }}
+      MAESTRO_HEADLESS_ACCESS_MODE: byok
+      MAESTRO_HEADLESS_HOME: /tmp/maestro-headless-byok
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: access
+        name: Detect the isolated BYOK release credential
+        shell: bash
+        run: |
+          if [ -n "$MAESTRO_GEMINI_API_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::HEADLESS_GEMINI_API_KEY is not configured; BYOK live-provider proof was not run."
+          fi
+      - name: Require BYOK proof when requested
+        if: ${{ inputs.require_byok && steps.access.outputs.configured != 'true' }}
+        run: |
+          echo "HEADLESS_GEMINI_API_KEY is required for this release run." >&2
+          exit 1
+      - name: Exercise the full first lesson with direct Gemini access
+        if: ${{ steps.access.outputs.configured == 'true' }}
+        run: |
+          npx tsx src/headless/cli.ts system.describe --access byok > protocol-byok.json
+          npx tsx src/headless/cli.ts journey.firstLesson --access byok --profile staging-ci-byok --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":false}' > first-lesson-byok.json
+          node -e 'const fs=require("fs"),r=require("./first-lesson-byok.json"); if(r.accessMode!=="byok"||!r.passed||r.userTurnCount<10) process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing BYOK coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,turns:r.turns}; fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### BYOK first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'

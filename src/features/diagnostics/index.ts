@@ -13,4 +13,5 @@
 export { default as DebugLogPanel } from './components/DebugLogPanel';
 
 // Services
-export { debugLogService } from './services/debugLogService';
+export { debugLogService } from '../../core-sdk/diagnostics';
+export type { LogEntry } from '../../core-sdk/diagnostics';

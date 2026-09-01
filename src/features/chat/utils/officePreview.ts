@@ -8,7 +8,7 @@ import {
   isGoogleWorkspaceShortcutFileName,
   isGoogleWorkspaceShortcutMimeType,
   isMicrosoftOfficeMimeType,
-} from './fileAttachments';
+} from '../../../core-sdk/chat/fileAttachments';
 import { deriveChartSeriesListFromRows, type TabularChartSeries, type TabularSheetPreview } from './tabularPreview';
 
 const WORD_OPENXML_EXTENSIONS = new Set(['docx', 'docm', 'dotx', 'dotm']);

@@ -3,18 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { GoogleGenAI } from '@google/genai';
 import { getApiKeyOrThrow } from '../../core/security/apiKeyStorage';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
+import {
+  createManagedGeminiClient,
+  type CoreGeminiClient,
+} from '../../core-sdk/managedGeminiClient';
+import { ApiError } from '../../core-sdk/errors';
 
-export class ApiError extends Error {
-  status?: number;
-  code?: string;
-  cooldownSuggestSeconds?: number;
-  constructor(message: string, opts?: { status?: number; code?: string; cooldownSuggestSeconds?: number }) {
-    super(message);
-    this.status = opts?.status;
-    this.code = opts?.code;
-    this.cooldownSuggestSeconds = opts?.cooldownSuggestSeconds;
-  }
-}
+export { ApiError } from '../../core-sdk/errors';
 
 /**
  * Validates an API key by making a lightweight models list call.
@@ -52,7 +49,9 @@ export const validateApiKey = async (apiKey: string): Promise<{ valid: boolean }
   }
 };
 
-export const getAi = async (options?: { apiVersion?: string }) => {
+export type MaestroGeminiClient = CoreGeminiClient;
+
+export const getDirectAi = async (options?: { apiVersion?: string }): Promise<GoogleGenAI> => {
   try {
     const apiKey = await getApiKeyOrThrow();
     return new GoogleGenAI({
@@ -63,4 +62,27 @@ export const getAi = async (options?: { apiVersion?: string }) => {
     const message = e?.message || 'Missing API key';
     throw new ApiError(message, { code: 'MISSING_API_KEY' });
   }
+};
+
+
+/**
+ * Return the Gemini transport for the active access mode.
+ *
+ * BYOK deliberately keeps precedence when both credentials exist, preserving
+ * the local-first contract and preventing a stored API key from unexpectedly
+ * spending managed credits. Without a BYOK key, a managed Firebase session is
+ * routed through the authenticated backend for every supported operation.
+ */
+export const getAi = async (options?: { apiVersion?: string }): Promise<MaestroGeminiClient> => {
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'byok') {
+    return getDirectAi(options);
+  }
+  if (accessMode === 'managed') {
+    return createManagedGeminiClient(maestroBackendService, options);
+  }
+  throw new ApiError('Sign in for managed access or add a Gemini API key.', {
+    status: 401,
+    code: 'MISSING_ACCESS',
+  });
 };

@@ -41,7 +41,7 @@ import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
   PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
-} from '../../chat/utils/uploadedAttachmentVariants';
+} from '../../../core-sdk/chat/uploadedAttachmentVariants';
 
 export interface UseLiveSessionControllerConfig {
   // Translation function

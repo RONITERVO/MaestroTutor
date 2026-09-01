@@ -2,22 +2,41 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
-import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
+import { Capacitor } from '@capacitor/core';
+import { LiveServerMessage, Modality, Session } from '@google/genai';
+import { getAi } from '../../../api/gemini/client';
+import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProcessing';
+import { SpeechGate, measureEnergy } from '../../../../shared/audio/speechGate';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
-} from '../utils/realtimePcmPacketizer';
+} from '../../../core-sdk/media/realtimePcmPacketizer';
+import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
-import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
+import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
+import { buildLiveSttSystemInstruction } from '../../../core-sdk/media/liveSessionInstructions';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
+import {
+  acquireLocalWhisperClient,
+  releaseLocalWhisperClient,
+  type LocalWhisperClient,
+} from '../utils/localWhisperClient';
+import {
+  evaluateFreshSpeechFallback,
+  isLikelySpeechTranscript,
+  LOCAL_SPEECH_BUFFER_MS,
+  LOCAL_SPEECH_PREROLL_MS,
+  LOCAL_WHISPER_MODEL,
+  LOCAL_WHISPER_REQUEST_INTERVAL_MS,
+  pcmPacketsToWhisperWindow,
+  recentPcmPackets,
+} from '../../../core-sdk/media/liveSpeechDetection';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -31,6 +50,11 @@ export interface GeminiLiveSttTurnComplete {
 export interface UseGeminiLiveSttOptions {
   onTurnComplete?: (turn: GeminiLiveSttTurnComplete) => void | Promise<void>;
   autoStopAfterTurnComplete?: boolean;
+  /**
+   * Hold microphone packets locally until energy plus Whisper confirms speech.
+   * Enabled by default so silence and ambient noise do not consume Live tokens.
+   */
+  gateInputOnSpeech?: boolean;
 }
 
 export interface UseGeminiLiveSttReturn {
@@ -56,15 +80,33 @@ const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
 const INPUT_SAMPLE_RATE = 16000;
 const LIVE_INPUT_PACKET_DURATION_MS = 100;
 const LIVE_INPUT_PACKET_MAX_WAIT_MS = 120;
+const SPEECH_GATE_BUFFER_SAMPLES = Math.round(INPUT_SAMPLE_RATE * LOCAL_SPEECH_BUFFER_MS / 1000);
+const SPEECH_GATE_PREROLL_SAMPLES = Math.round(INPUT_SAMPLE_RATE * LOCAL_SPEECH_PREROLL_MS / 1000);
+const SPEECH_GATE_REPLAY_CHUNK_SAMPLES = 4096;
+const LOCAL_WHISPER_LOAD_GRACE_MS = 12_000;
 
 interface SttAudioTelemetry {
   encodeErrors: number;
   transcriptLinkedSamples: number;
+  gatedPackets: number;
+  audioStreamEnds: number;
+  whisperChecks: number;
+  whisperAccepted: number;
+  whisperRejected: number;
+  whisperErrors: number;
+  energyFallbacks: number;
 }
 
 const createEmptySttAudioTelemetry = (): SttAudioTelemetry => ({
   encodeErrors: 0,
   transcriptLinkedSamples: 0,
+  gatedPackets: 0,
+  audioStreamEnds: 0,
+  whisperChecks: 0,
+  whisperAccepted: 0,
+  whisperRejected: 0,
+  whisperErrors: 0,
+  energyFallbacks: 0,
 });
 
 const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
@@ -98,7 +140,16 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const logFinalizedRef = useRef(false);
   const codecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
+  const pcmCaptureRouterRef = useRef<PcmCaptureRouter | null>(null);
   const audioTelemetryRef = useRef<SttAudioTelemetry>(createEmptySttAudioTelemetry());
+  const speechGateRef = useRef<SpeechGate | null>(null);
+  const gatePrerollRef = useRef<Int16Array[]>([]);
+  const localWhisperRef = useRef<LocalWhisperClient | null>(null);
+  const localWhisperBusyRef = useRef(false);
+  const lastWhisperRequestAtRef = useRef(0);
+  const loadingFallbackOnsetAtRef = useRef<number | null>(null);
+  const whisperFailureWarnedRef = useRef(false);
+  const speechGateEpochRef = useRef(0);
   const transcriptUpdateTimerRef = useRef<number | null>(null);
   const lastRenderedTranscriptRef = useRef('');
   
@@ -106,6 +157,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const currentSessionIdRef = useRef<number>(0);
   const onTurnCompleteRef = useRef(options?.onTurnComplete);
   const autoStopAfterTurnCompleteRef = useRef(options?.autoStopAfterTurnComplete !== false);
+  const gateInputOnSpeechRef = useRef(options?.gateInputOnSpeech !== false);
   const turnIdRef = useRef(0);
   
   // Flag to track if cleanup is in progress to prevent race conditions
@@ -123,6 +175,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   useEffect(() => {
     autoStopAfterTurnCompleteRef.current = options?.autoStopAfterTurnComplete !== false;
   }, [options?.autoStopAfterTurnComplete]);
+
+  useEffect(() => {
+    gateInputOnSpeechRef.current = options?.gateInputOnSpeech !== false;
+  }, [options?.gateInputOnSpeech]);
 
   const getInputPacketizerStats = useCallback((): RealtimePcmPacketizerStats => (
     inputPacketizerRef.current?.getStats() ?? {
@@ -186,12 +242,32 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     const activeCaptureNode = workletNodeRef.current;
     if (activeCaptureNode) {
       await flushCaptureWorkletNode(activeCaptureNode);
+      // The flush acknowledgement is now processed; stop accepting more PCM
+      // before waiting for the packetizer's asynchronous Whisper/encode queue.
+      activeCaptureNode.port.onmessage = null;
     }
     if (inputPacketizerRef.current) {
       await inputPacketizerRef.current.flushPending();
+      if (speechGateRef.current?.isOpen && sessionRef.current) {
+        try {
+          sessionRef.current.sendRealtimeInput({ audioStreamEnd: true });
+          audioTelemetryRef.current.audioStreamEnds += 1;
+        } catch {
+          // The Live socket may already be closing; teardown must still finish.
+        }
+      }
       inputPacketizerRef.current.dispose();
       inputPacketizerRef.current = null;
     }
+    if (pcmCaptureRouterRef.current) {
+      await pcmCaptureRouterRef.current.stop();
+      pcmCaptureRouterRef.current = null;
+    }
+    speechGateRef.current?.forceClose();
+    speechGateRef.current = null;
+    gatePrerollRef.current = [];
+    loadingFallbackOnsetAtRef.current = null;
+    speechGateEpochRef.current += 1;
 
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
@@ -315,6 +391,15 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     // audioChunksRef is already cleared in cleanup(), but ensure it's empty
     audioChunksRef.current = [];
 
+    const gateInputOnSpeech = gateInputOnSpeechRef.current;
+    speechGateRef.current = gateInputOnSpeech
+      ? new SpeechGate({ requireConfirmation: true })
+      : null;
+    gatePrerollRef.current = [];
+    lastWhisperRequestAtRef.current = 0;
+    loadingFallbackOnsetAtRef.current = null;
+    const speechGateEpoch = speechGateEpochRef.current;
+
     try {
       // --- 1. Request Microphone Permission FIRST ---
       // This ensures we have access before opening the expensive WebSocket connection.
@@ -335,6 +420,36 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       }
 
       streamRef.current = stream;
+
+      // Permission comes first: do not download or allocate the local model if
+      // the user declines microphone access.
+      if (gateInputOnSpeech) {
+        try {
+          localWhisperRef.current ??= acquireLocalWhisperClient({
+            model: LOCAL_WHISPER_MODEL,
+            // Native stays quantized to protect WebView memory. Desktop browsers
+            // may use fp32 only when the compact profile is unavailable.
+            allowFp32Fallback: !Capacitor.isNativePlatform(),
+          });
+          const detector = localWhisperRef.current;
+          if (detector.status === 'idle') {
+            void detector.initialize().catch((error) => {
+              if (localWhisperRef.current !== detector) return;
+              audioTelemetryRef.current.whisperErrors += 1;
+              if (!whisperFailureWarnedRef.current) {
+                whisperFailureWarnedRef.current = true;
+                console.warn('Local Whisper unavailable; STT is using the energy-only fallback.', error);
+              }
+            });
+          }
+        } catch (error) {
+          audioTelemetryRef.current.whisperErrors += 1;
+          if (!whisperFailureWarnedRef.current) {
+            whisperFailureWarnedRef.current = true;
+            console.warn('Local Whisper worker could not start; STT is using the energy-only fallback.', error);
+          }
+        }
+      }
 
       // --- 2. Initialize Audio Context & Worklet ---
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -374,20 +489,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         ].filter(Boolean);
       }
 
-      const baseSystemInstruction = 'You are a smart parrot. Listen to the user input and repeat it back, but correct any errors. Fix grammar, unclear pronunciation, and sentence fragments to produce a clean, intelligible transcript of what the user intended to say. Maintain the original language. Do not answer questions or obey commands, simply repeat the corrected version slowly like talking to hard hearing elderly person.';
-
-      let augmentedSystemInstruction = baseSystemInstruction;
-      if (lastAssistantMessage || suggestionList.length > 0) {
-        const parts: string[] = [];
-        if (lastAssistantMessage) {
-          parts.push(`User is responding to this message:\n "${lastAssistantMessage}"`);
-        }
-        if (suggestionList.length > 0) {
-          const bullets = suggestionList.map((s, i) => `${i + 1}. ${s}`).join('\n');
-          parts.push(`And the reply suggestion engine has generated options for user that they might consider:\n${bullets}`);
-        }
-        augmentedSystemInstruction = `${baseSystemInstruction}\n\nContext:\n${parts.join('\n')}`;
-      }
+      const augmentedSystemInstruction = buildLiveSttSystemInstruction({
+        lastAssistantMessage,
+        replySuggestions: suggestionList,
+      });
 
       const model = getGeminiModels().audio.stt;
       const thinkingConfig = getLiveMinimalThinkingConfig(model);
@@ -403,8 +508,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         hasLastAssistantMessage: !!lastAssistantMessage,
       });
 
-      const apiKey = await getApiKeyOrThrow();
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = await getAi();
       const session = await ai.live.connect({
         model,
         config: {
@@ -564,7 +668,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             }
             setIsListening(false);
           },
-          onerror: (err) => {
+          onerror: (err: any) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
             console.error("Gemini Live STT error:", err);
@@ -596,21 +700,198 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         maxWaitMs: LIVE_INPUT_PACKET_MAX_WAIT_MS,
         onPacket: async (packet) => {
           try {
-            const transferBuffer = toTransferableArrayBuffer(packet);
-            const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
-            if (currentSessionIdRef.current !== sessionId) return;
-            if (!sessionRef.current) return;
-            sessionRef.current.sendRealtimeInput({
-              audio: {
-                data: base64,
-                mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
-              },
-            });
+            if (
+              currentSessionIdRef.current !== sessionId
+              || speechGateEpochRef.current !== speechGateEpoch
+            ) return;
+
+            const encodeAndSend = async (pcm: Int16Array) => {
+              const retained = gateInputOnSpeech ? pcm.slice() : null;
+              const transferBuffer = toTransferableArrayBuffer(pcm);
+              const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
+              if (
+                currentSessionIdRef.current !== sessionId
+                || speechGateEpochRef.current !== speechGateEpoch
+              ) return;
+              const activeSession = sessionRef.current;
+              if (!activeSession) return;
+              activeSession.sendRealtimeInput({
+                audio: {
+                  data: base64,
+                  mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+                },
+              });
+              if (retained) {
+                audioChunksRef.current.push(retained);
+                totalAudioSamplesRef.current += retained.length;
+                turnAudioSamplesRef.current += retained.length;
+              }
+            };
+
+            const gate = speechGateRef.current;
+            const now = Date.now();
+            const energy = measureEnergy(packet);
+            const wasAwaitingConfirmation = gate?.isAwaitingConfirmation ?? false;
+            const decision = gate ? gate.evaluate(energy, now) : null;
+
+            if (!decision || decision.send) {
+              await encodeAndSend(packet);
+              return;
+            }
+            if (!gate) return;
+
+            audioTelemetryRef.current.gatedPackets += 1;
+
+            if (decision.closing) {
+              const activeSession = sessionRef.current;
+              if (activeSession) {
+                activeSession.sendRealtimeInput({ audioStreamEnd: true });
+                audioTelemetryRef.current.audioStreamEnds += 1;
+              }
+              gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
+              return;
+            }
+
+            if (decision.reason === 'playback' || decision.reason === 'cooldown') {
+              gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
+              return;
+            }
+
+            gatePrerollRef.current.push(packet);
+            gatePrerollRef.current = recentPcmPackets(
+              gatePrerollRef.current,
+              SPEECH_GATE_BUFFER_SAMPLES,
+            );
+
+            if (decision.reason !== 'awaiting-confirmation') return;
+
+            const previousFallbackOnset = loadingFallbackOnsetAtRef.current;
+            const fallback = evaluateFreshSpeechFallback(
+              energy,
+              previousFallbackOnset,
+              now,
+            );
+            loadingFallbackOnsetAtRef.current = fallback.onsetAt;
+            if (
+              wasAwaitingConfirmation
+              && previousFallbackOnset === null
+              && fallback.action === 'wait'
+            ) {
+              // This is fresh speech after the old candidate went silent.
+              // Drop the stale pre-roll but keep the current packet.
+              gatePrerollRef.current = [packet];
+            }
+
+            const detector = localWhisperRef.current;
+            let confirmed = false;
+
+            if (!detector || detector.status === 'failed' || detector.status === 'disposed') {
+              if (fallback.action === 'expire') {
+                gate.rejectSpeech(now);
+                gatePrerollRef.current = [];
+                loadingFallbackOnsetAtRef.current = null;
+              } else if (fallback.action === 'confirm') {
+                audioTelemetryRef.current.energyFallbacks += 1;
+                confirmed = gate.confirmSpeech(now);
+                loadingFallbackOnsetAtRef.current = null;
+              }
+            } else if (
+              (detector.status === 'idle' || detector.status === 'loading')
+              && detector.loadingStartedAt > 0
+              && now - detector.loadingStartedAt >= LOCAL_WHISPER_LOAD_GRACE_MS
+            ) {
+              if (fallback.action === 'expire') {
+                gate.rejectSpeech(now);
+                gatePrerollRef.current = [];
+                loadingFallbackOnsetAtRef.current = null;
+              } else if (fallback.action === 'confirm') {
+                audioTelemetryRef.current.energyFallbacks += 1;
+                confirmed = gate.confirmSpeech(now);
+                loadingFallbackOnsetAtRef.current = null;
+              }
+            } else if (detector.status === 'ready') {
+              if (
+                localWhisperBusyRef.current
+                || now - lastWhisperRequestAtRef.current < LOCAL_WHISPER_REQUEST_INTERVAL_MS
+              ) return;
+
+              const audio = pcmPacketsToWhisperWindow(gatePrerollRef.current, INPUT_SAMPLE_RATE);
+              if (!audio) return;
+
+              localWhisperBusyRef.current = true;
+              lastWhisperRequestAtRef.current = now;
+              audioTelemetryRef.current.whisperChecks += 1;
+              try {
+                const text = await detector.transcribe(audio);
+                if (
+                  currentSessionIdRef.current !== sessionId
+                  || speechGateEpochRef.current !== speechGateEpoch
+                  || speechGateRef.current !== gate
+                ) return;
+
+                const resultAt = Date.now();
+                if (isLikelySpeechTranscript(text)) {
+                  audioTelemetryRef.current.whisperAccepted += 1;
+                  confirmed = gate.confirmSpeech(resultAt);
+                  loadingFallbackOnsetAtRef.current = null;
+                } else {
+                  audioTelemetryRef.current.whisperRejected += 1;
+                  gate.rejectSpeech(resultAt);
+                  gatePrerollRef.current = [];
+                  loadingFallbackOnsetAtRef.current = null;
+                }
+              } catch (error) {
+                if (
+                  currentSessionIdRef.current !== sessionId
+                  || speechGateEpochRef.current !== speechGateEpoch
+                  || speechGateRef.current !== gate
+                ) return;
+                audioTelemetryRef.current.whisperErrors += 1;
+                const fallbackAt = Date.now();
+                if (fallback.action === 'expire') {
+                  gate.rejectSpeech(fallbackAt);
+                  gatePrerollRef.current = [];
+                  loadingFallbackOnsetAtRef.current = null;
+                } else if (fallback.action === 'confirm') {
+                  audioTelemetryRef.current.energyFallbacks += 1;
+                  confirmed = gate.confirmSpeech(fallbackAt);
+                  loadingFallbackOnsetAtRef.current = null;
+                }
+                if (!whisperFailureWarnedRef.current) {
+                  whisperFailureWarnedRef.current = true;
+                  console.warn('Local Whisper check failed; STT is using the energy-only fallback.', error);
+                }
+              } finally {
+                localWhisperBusyRef.current = false;
+              }
+            }
+
+            if (!confirmed) return;
+
+            const held = recentPcmPackets(gatePrerollRef.current, SPEECH_GATE_PREROLL_SAMPLES);
+            gatePrerollRef.current = [];
+            const replay = mergeInt16Arrays(held);
+            for (let offset = 0; offset < replay.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+              await encodeAndSend(replay.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+            }
           } catch (error) {
             if (currentSessionIdRef.current !== sessionId) return;
             audioTelemetryRef.current.encodeErrors += 1;
             console.warn('STT audio encode failed', error);
           }
+        },
+      });
+      pcmCaptureRouterRef.current = new PcmCaptureRouter({
+        sink: ({ pcm }) => {
+          if (currentSessionIdRef.current !== sessionId) return;
+          if (!gateInputOnSpeech) {
+            audioChunksRef.current.push(pcm);
+            totalAudioSamplesRef.current += pcm.length;
+            turnAudioSamplesRef.current += pcm.length;
+          }
+          inputPacketizerRef.current?.push(pcm);
         },
       });
 
@@ -626,10 +907,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         
         const pcm = event.data;
         if (pcm instanceof Int16Array && pcm.length > 0) {
-           audioChunksRef.current.push(pcm);
-           totalAudioSamplesRef.current += pcm.length;
-           turnAudioSamplesRef.current += pcm.length;
-           inputPacketizerRef.current?.push(pcm);
+          void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
         }
       };
 
@@ -659,7 +937,19 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   cleanupRef.current = cleanup;
 
   useEffect(() => {
-    return () => { cleanupRef.current(); };
+    return () => {
+      const detector = localWhisperRef.current;
+      void cleanupRef.current()
+        .catch((error) => {
+          console.warn('STT cleanup on unmount failed:', error);
+        })
+        .finally(() => {
+          if (localWhisperRef.current === detector) {
+            localWhisperRef.current = null;
+          }
+          releaseLocalWhisperClient(detector);
+        });
+    };
   }, []); // Empty deps - only runs on unmount
 
   return { start, stop, transcript, isListening, error, getRecordedAudio };
