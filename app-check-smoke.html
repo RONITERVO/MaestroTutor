@@ -16,6 +16,8 @@
         if (!token) {
           result.textContent = 'APP_CHECK_TOKEN_FAILED';
         } else {
+          result.textContent = 'APP_CHECK_TOKEN_OK BACKEND_PENDING';
+          try {
           const response = await fetch(
             'https://europe-west1-chatwithmaestro.cloudfunctions.net/api/auth/session',
             { headers: { 'X-Firebase-AppCheck': token } },
@@ -28,6 +30,10 @@
               ? 'BACKEND_REACHED_AUTH_GATE'
               : 'BACKEND_UNEXPECTED_RESPONSE',
           ].join(' ');
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            result.textContent = `APP_CHECK_TOKEN_OK BACKEND_FETCH_FAILED ${message}`;
+          }
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
