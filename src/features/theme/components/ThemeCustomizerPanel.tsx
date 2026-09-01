@@ -10,12 +10,11 @@ import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
 import { DEFAULT_THEME_COLORS } from '../config/defaultTheme';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
-import { getPurchasableThemePreset } from '../config/purchasableThemePresets';
-import { STORE_THEME_PRODUCTS } from '../config/themeProducts';
-import { useThemeBilling } from '../hooks/useThemeBilling';
+import { getThemePreset } from '../config/themePresets';
+import { THEME_GALLERY_ITEMS } from '../config/themeCatalogue';
 import { hslStringToHex, hexToHslString } from '../utils/colorConversion';
 import { exportThemeToFile, importThemeFromFile } from '../utils/themeFileIO';
-import ThemeStorePanel from './ThemeStorePanel';
+import ThemeGalleryPanel from './ThemeGalleryPanel';
 
 interface ThemeCustomizerPanelProps {
   onClose: () => void;
@@ -215,8 +214,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const customColors = settings.customColors || {};
 
   const [activeColorVar, setActiveColorVar] = useState<string | null>(null);
-  const [isThemeStoreOpen, setIsThemeStoreOpen] = useState(false);
-  const { ownedProductIds } = useThemeBilling();
+  const [isThemeGalleryOpen, setIsThemeGalleryOpen] = useState(false);
 
   // Debounce timer for IndexedDB persistence
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -299,13 +297,11 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const isModified = (cssVar: string) => cssVar in customColors;
   const hasAnyCustomization = Object.keys(customColors).length > 0;
   const savedPresets = settings.savedThemePresets || [];
-  const ownedPurchasedThemes = STORE_THEME_PRODUCTS.flatMap(product => {
-    if (!ownedProductIds.has(product.productId)) return [];
-
-    const preset = getPurchasableThemePreset(product.productId);
+  const includedThemes = THEME_GALLERY_ITEMS.flatMap(theme => {
+    const preset = getThemePreset(theme.themeId);
     if (!preset) return [];
 
-    return [{ productId: product.productId, preset }];
+    return [{ themeId: theme.themeId, preset }];
   });
 
   // Inline naming state: 'save' or 'export' mode, or null when idle
@@ -524,9 +520,9 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                   />
                 );
               })}
-              {ownedPurchasedThemes.map(({ productId, preset }) => (
+              {includedThemes.map(({ themeId, preset }) => (
                 <QuickThemeButton
-                  key={productId}
+                  key={themeId}
                   name={preset.name}
                   description={preset.description}
                   previewColors={getPresetPreviewColors(preset)}
@@ -557,14 +553,14 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                 );
               })}
               <QuickThemeButton
-                name={t('themeCustomizer.storeTitle') || 'Theme Store'}
-                description={t('themeCustomizer.storeDescription') || 'Browse and buy more themes'}
+                name={t('themeCustomizer.galleryTitle') || 'Theme Gallery'}
+                description={t('themeCustomizer.galleryDescription') || 'Browse included color themes'}
                 previewColors={[
                   '210 70% 45%',
                   '38 90% 55%',
                   '280 100% 65%',
                 ]}
-                onClick={() => setIsThemeStoreOpen(true)}
+                onClick={() => setIsThemeGalleryOpen(true)}
                 accentIcon={<IconSparkles className="w-3 h-3 text-theme-input-border shrink-0" />}
               />
             </div>
@@ -589,8 +585,11 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
           ))}
         </div>
       </div>
-      {isThemeStoreOpen && (
-        <ThemeStorePanel onClose={() => setIsThemeStoreOpen(false)} />
+      {isThemeGalleryOpen && (
+        <ThemeGalleryPanel
+          onApplyTheme={applyPreset}
+          onClose={() => setIsThemeGalleryOpen(false)}
+        />
       )}
     </>
   );

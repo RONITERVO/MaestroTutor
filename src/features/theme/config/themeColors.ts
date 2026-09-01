@@ -5,7 +5,7 @@
  * Raw color maps for all themes.
  *
  * To add a theme: write one `Record<string, string>` export here, then wire it
- * up with a single-line reference in presetThemes.ts or purchasableThemePresets.ts.
+ * up with a single-line reference in presetThemes.ts or themePresets.ts.
  * Values are bare HSL strings (no `hsl()` wrapper), e.g. '210 20% 97%'.
  *
  * Note: `*-overlay-*` attachment transcript keys are retained for backwards

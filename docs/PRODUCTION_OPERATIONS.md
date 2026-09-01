@@ -417,6 +417,10 @@ process.
 
 ## 10. Google Play billing maintenance
 
+Google Play billing is only for backend-managed products such as consumable
+credit packs. Color themes are local and permanently free; they must never be
+added to the Play catalogue, purchase ledger, or client ownership state.
+
 The store product ID, app client configuration and server catalogue must match:
 
 ```text

@@ -493,16 +493,12 @@ export const enTranslations: Record<string, string> = {
   // Camera / observer
   "camera.observerActive": "Observer active",
 
-  // Theme store
-  "themeStore.title": "Theme Store",
-  "themeStore.restorePurchases": "Restore Purchases",
-  "themeStore.close": "Close",
-  "themeStore.purchaseFailed": "Purchase failed. Please check your connection and try again.",
-  "themeStore.notAvailable": "Theme purchases are only available on Android via Google Play.",
-  "themeStore.owned": "Owned",
-  "themeStore.buy": "Buy",
-  "themeStore.loading": "Loading themes…",
-  "themeStore.footerNote": "Purchases are managed by Google Play and tied to your Google account. Tap the restore button (↩) to recover past purchases on reinstall.",
+  // Theme gallery
+  "themeGallery.title": "Theme Gallery",
+  "themeGallery.close": "Close",
+  "themeGallery.included": "Free",
+  "themeGallery.apply": "Apply",
+  "themeGallery.footerNote": "Every color theme is included and will remain free.",
 
   // Theme customizer
   "themeCustomizer.title": "Paint Colors",
@@ -518,8 +514,8 @@ export const enTranslations: Record<string, string> = {
   "themeCustomizer.cancel": "Cancel",
   "themeCustomizer.quickThemes": "Quick Themes",
   "themeCustomizer.deletePreset": "Delete saved preset",
-  "themeCustomizer.storeTitle": "Theme Store",
-  "themeCustomizer.storeDescription": "Browse and buy more themes",
+  "themeCustomizer.galleryTitle": "Theme Gallery",
+  "themeCustomizer.galleryDescription": "Browse included color themes",
 
   // Debug log panel
   "debugLog.title": "Traffic Log",

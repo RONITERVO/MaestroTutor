@@ -17,7 +17,7 @@ const normalizePurchaseRecord = (purchase: GooglePlayPurchaseRecord): GooglePlay
 });
 
 export const maestroPaymentsService = {
-  themeBilling: googlePlayBillingService,
+  googlePlayBilling: googlePlayBillingService,
 
   isManagedBillingProduct,
 

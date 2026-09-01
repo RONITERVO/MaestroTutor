@@ -52,7 +52,7 @@ const dedupePurchaseRecords = (purchaseRecords: GooglePlayPurchaseRecord[]): Goo
 
 const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const { t } = useAppTranslations();
-  const billingService = maestroPaymentsService.themeBilling;
+  const billingService = maestroPaymentsService.googlePlayBilling;
   const managedProductIds = useMemo(() => maestroPaymentsService.getManagedBillingProductIds(), []);
   const primaryProductId = managedProductIds[0] || '';
   const webBillingAvailable = (
@@ -170,7 +170,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     void billingService.startConnection()
       .then(() => billingService.getProductDetails(managedProductIds))
       .then(() => processPendingPurchases([]))
-      .then(() => billingService.getOwnedPurchases())
+      .then(() => billingService.getUnconsumedPurchases())
       .then(result => processPendingPurchases(result.purchases || []))
       .catch(error => {
         if (!mounted) return;

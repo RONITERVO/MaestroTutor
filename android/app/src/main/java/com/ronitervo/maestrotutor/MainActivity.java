@@ -8,7 +8,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     registerPlugin(AndroidDebugLogPlugin.class);
-    registerPlugin(ThemeBillingPlugin.class);
+    registerPlugin(ManagedBillingPlugin.class);
     super.onCreate(savedInstanceState);
     if (getBridge() != null && getBridge().getWebView() != null) {
       getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { GooglePlayPurchaseRecord } from '../../core/contracts/integrations';
-import { getThemeBillingNativePlugin, isNativeAndroidBilling } from './themeBillingNativePlugin';
+import { getManagedBillingNativePlugin, isNativeManagedBilling } from './managedBillingNativePlugin';
 
 export interface ProductDetailsResult {
   productId: string;
@@ -14,7 +14,6 @@ export interface ProductDetailsResult {
 }
 
 export interface PurchasesUpdatedEvent {
-  ownedProductIds: string[];
   purchases: GooglePlayPurchaseRecord[];
 }
 
@@ -27,24 +26,16 @@ export interface BillingErrorEvent {
   debugMessage: string;
 }
 
-export interface OwnedPurchasesResult {
-  ownedProductIds: string[];
+export interface UnconsumedPurchasesResult {
   purchases: GooglePlayPurchaseRecord[];
 }
 
-export interface IsProductOwnedResult {
-  owned: boolean;
-}
-
-interface ThemeBillingPluginInterface {
+interface ManagedBillingPluginInterface {
   startConnection(): Promise<void>;
-  getProductDetails(options?: { productIds?: string[] }): Promise<void>;
-  purchaseManagedProduct(options: { productId: string; obfuscatedAccountId: string }): Promise<void>;
+  getProductDetails(options: { productIds: string[] }): Promise<void>;
+  purchaseProduct(options: { productId: string; obfuscatedAccountId: string }): Promise<void>;
   restorePurchases(): Promise<void>;
-  consumePurchase(options: { purchaseToken: string }): Promise<void>;
-  isThemeOwned(options: { productId: string }): Promise<IsProductOwnedResult>;
-  getOwnedThemes(): Promise<OwnedPurchasesResult>;
-  getOwnedPurchases?(): Promise<OwnedPurchasesResult>;
+  getUnconsumedPurchases(): Promise<UnconsumedPurchasesResult>;
   addListener(
     eventName: 'purchasesUpdated',
     listenerFunc: (event: PurchasesUpdatedEvent) => void,
@@ -60,7 +51,7 @@ interface ThemeBillingPluginInterface {
   removeAllListeners(): Promise<void>;
 }
 
-const ThemeBillingNative = getThemeBillingNativePlugin<ThemeBillingPluginInterface>();
+const ManagedBillingNative = getManagedBillingNativePlugin<ManagedBillingPluginInterface>();
 
 /**
  * Thrown by the web stub for anything that cannot complete off Android.
@@ -81,44 +72,33 @@ const unavailable = async (): Promise<never> => {
   throw new BillingUnavailableError();
 };
 
-const createWebStub = (): ThemeBillingPluginInterface => ({
-  // Read-only calls resolve empty: nothing is owned off Android, and callers
-  // treat that as a legitimate answer rather than a failure.
+const createWebStub = (): ManagedBillingPluginInterface => ({
+  // Read-only calls resolve empty off Android; web purchases use Stripe.
   startConnection: async () => {},
   getProductDetails: async () => {},
   // Anything that would need Play to complete must reject, not resolve.
-  purchaseManagedProduct: unavailable,
+  purchaseProduct: unavailable,
   restorePurchases: async () => {},
-  consumePurchase: unavailable,
-  isThemeOwned: async () => ({ owned: false }),
-  getOwnedThemes: async () => ({ ownedProductIds: [], purchases: [] }),
-  getOwnedPurchases: async () => ({ ownedProductIds: [], purchases: [] }),
+  getUnconsumedPurchases: async () => ({ purchases: [] }),
   addListener: async () => ({ remove: () => {} }),
   removeAllListeners: async () => {},
 });
 
-const plugin = isNativeAndroidBilling && ThemeBillingNative ? ThemeBillingNative : createWebStub();
+const plugin = isNativeManagedBilling && ManagedBillingNative ? ManagedBillingNative : createWebStub();
 
 export const googlePlayBillingService = {
   startConnection: () => plugin.startConnection(),
-  getProductDetails: (productIds?: string[]) => (
-    plugin.getProductDetails(productIds?.length ? { productIds } : {})
-  ),
+  getProductDetails: (productIds: string[]) => plugin.getProductDetails({ productIds }),
   purchaseProduct: (productId: string, obfuscatedAccountId: string) => (
-    plugin.purchaseManagedProduct({ productId, obfuscatedAccountId })
+    plugin.purchaseProduct({ productId, obfuscatedAccountId })
   ),
   restorePurchases: () => plugin.restorePurchases(),
-  consumePurchase: (purchaseToken: string) => plugin.consumePurchase({ purchaseToken }),
-  isProductOwned: (productId: string) => plugin.isThemeOwned({ productId }),
-  getOwnedPurchases: async (): Promise<OwnedPurchasesResult> => {
-    if (typeof plugin.getOwnedPurchases === 'function') {
-      return plugin.getOwnedPurchases();
-    }
-    return plugin.getOwnedThemes();
-  },
+  getUnconsumedPurchases: (): Promise<UnconsumedPurchasesResult> => (
+    plugin.getUnconsumedPurchases()
+  ),
   onPurchasesUpdated: (cb: (event: PurchasesUpdatedEvent) => void) => plugin.addListener('purchasesUpdated', cb),
   onProductDetailsAvailable: (cb: (event: ProductDetailsAvailableEvent) => void) => plugin.addListener('productDetailsAvailable', cb),
   onBillingError: (cb: (event: BillingErrorEvent) => void) => plugin.addListener('billingError', cb),
   removeAllListeners: () => plugin.removeAllListeners(),
-  isAvailable: isNativeAndroidBilling,
+  isAvailable: isNativeManagedBilling,
 } as const;

@@ -7,6 +7,8 @@
 - [X] No `.env` key in production build
 - [X] Privacy policy is hosted (URL to provide Play Console)
 - [ ] Store listing describes both BYOK and managed access
+- [ ] Every color theme applies locally without sign-in, a network request,
+      price, purchase, ownership, or restore UI
 
 - The "Default Icon" Flag
 If you upload an app with the default Capacitor/React/Vue logo as the app icon or splash screen, Google (and users) immediately perceive it as "low quality" or "spam."
@@ -107,6 +109,8 @@ maintainers must account for are:
 - [ ] Stripe processes managed web checkout; Google Play processes Android
       purchases. Maestro stores provider references and verification/grant
       records, not raw payment-card details.
+- [ ] Color themes are free local presentation choices and are not products or
+      entitlements in either provider.
 - [ ] A voluntarily submitted AI-content report can include reported content,
       a reason, optional notes, and request metadata.
 - [ ] Uninstalling clears only data stored locally on that device. It does not
