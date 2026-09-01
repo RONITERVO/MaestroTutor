@@ -109,7 +109,7 @@ public final class ManagedBillingPlugin extends Plugin {
     public void restorePurchases(PluginCall call) {
         billingManager.restorePurchases((billingResult, purchases) -> {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                call.resolve(purchasesPayload(purchases));
+                call.resolve();
             } else {
                 call.reject(billingResult.getDebugMessage());
             }
