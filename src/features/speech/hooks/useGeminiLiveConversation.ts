@@ -11,7 +11,7 @@ import {
   SessionResumptionConfig,
 } from '@google/genai';
 import { getAi } from '../../../api/gemini/client';
-import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
+import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProcessing';
 import { countTranscriptNewlines } from '../utils/transcriptParsing';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
@@ -37,13 +37,14 @@ import {
   OBSERVER_WHISPER_REQUEST_INTERVAL_MS,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
-} from '../utils/observerSpeechDetection';
-import { evaluateFreshSpeechFallback } from '../utils/liveSpeechDetection';
+} from '../../../core-sdk/media/observerSpeechDetection';
+import { evaluateFreshSpeechFallback } from '../../../core-sdk/media/liveSpeechDetection';
 import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
-} from '../utils/realtimePcmPacketizer';
-import { getLiveConversationThinkingConfig } from '../config/liveModelCompatibility';
+} from '../../../core-sdk/media/realtimePcmPacketizer';
+import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
+import { getLiveConversationThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
@@ -244,6 +245,7 @@ export function useGeminiLiveConversation(
   const inputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const outputCodecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
+  const pcmCaptureRouterRef = useRef<PcmCaptureRouter | null>(null);
   
   // Session ID to track valid session and invalidate stale callbacks
   const currentSessionIdRef = useRef<number>(0);
@@ -519,6 +521,10 @@ export function useGeminiLiveConversation(
       }
       inputPacketizerRef.current.dispose();
       inputPacketizerRef.current = null;
+    }
+    if (pcmCaptureRouterRef.current) {
+      await pcmCaptureRouterRef.current.stop();
+      pcmCaptureRouterRef.current = null;
     }
 
     // Invalidate current session to prevent stale callbacks from processing
@@ -1578,6 +1584,16 @@ export function useGeminiLiveConversation(
           }
         },
       });
+      pcmCaptureRouterRef.current = new PcmCaptureRouter({
+        sink: ({ pcm }) => {
+          if (currentSessionIdRef.current !== sessionId) return;
+          if (!gateInputOnSpeech) {
+            currentUserAudioChunksRef.current.push(pcm);
+            currentUserAudioTotalLengthRef.current += pcm.length;
+          }
+          inputPacketizerRef.current?.push(pcm);
+        },
+      });
 
       // Audio Streaming Loop (Worklet) with session validation
       workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
@@ -1587,13 +1603,7 @@ export function useGeminiLiveConversation(
           const pcm = event.data;
           if (!(pcm instanceof Int16Array) || !pcm.length) return;
           
-          // A gated observer records only the pre-roll and speech it actually
-          // sends. Otherwise hours of idle room audio accumulate in memory.
-          if (!gateInputOnSpeech) {
-            currentUserAudioChunksRef.current.push(pcm);
-            currentUserAudioTotalLengthRef.current += pcm.length;
-          }
-          inputPacketizerRef.current?.push(pcm);
+          void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
       };
       source.connect(workletNode);
 

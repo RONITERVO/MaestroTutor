@@ -268,7 +268,11 @@ integration that works from one that gives money away:
 The webhook route is registered with a raw body parser *before* `express.json()`.
 Stripe signs the exact bytes it sent; parsing and re-serialising changes them and
 every signature check fails with an error that reads like a bad secret rather
-than middleware ordering.
+than middleware ordering. Cloud Functions may pre-parse `req.body` even for that
+route, but it preserves the original bytes in `req.rawBody`; the handler accepts a
+Buffer from either location and refuses strings or parsed objects. Keep the
+`req.rawBody` fallback and its regression tests whenever Express/Functions is
+upgraded.
 
 ### Verifying it locally
 

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ChatMessage } from '../../../core/types';
+import type { ChatMessage } from '../../core/types';
 import { parseAssistantResponseForAttachment } from './assistantResponseAttachments';
 import { decodeTextFromDataUrl, isTextLikeAttachment } from './fileAttachments';
 

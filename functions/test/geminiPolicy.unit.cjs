@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   applyManagedGenerationLimits,
+  buildManagedPromptTokenCountInputs,
   collectGeminiFileUris,
   requireAllowedManagedModel,
   requirePricedManagedGenerationModel,
@@ -78,6 +79,19 @@ test('managed config allows only server-priced tools and no transport overrides'
     () => requireSafeManagedGenerationConfig({ httpOptions: { baseUrl: 'https://example.test' } }),
     (error) => error.status === 400 && /httpOptions/.test(error.message),
   );
+});
+
+test('prompt token counting separates Developer API-incompatible config', () => {
+  const contents = [{ role: 'user', parts: [{ text: 'hello' }] }];
+  const inputs = buildManagedPromptTokenCountInputs(contents, {
+    systemInstruction: 'Teach Finnish.',
+    tools: [{ googleSearch: {} }],
+    maxOutputTokens: 512,
+  });
+  assert.equal(inputs[0], contents);
+  assert.equal(inputs[1], 'Teach Finnish.');
+  assert.match(inputs[2], /googleSearch/);
+  assert.match(inputs[2], /maxOutputTokens/);
 });
 
 test('managed Live config is scopeable but cannot mint tool-enabled tokens', () => {

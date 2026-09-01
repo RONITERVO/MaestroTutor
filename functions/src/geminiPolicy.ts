@@ -151,6 +151,30 @@ export const usesManagedGoogleSearch = (
   config: Record<string, unknown> | undefined,
 ): boolean => Array.isArray(config?.tools) && config.tools.length === 1;
 
+/**
+ * The Gemini Developer API countTokens endpoint rejects generation config,
+ * including systemInstruction and tools. Count the real contents, the system
+ * instruction, and a deterministic serialization of the remaining prompt-
+ * affecting config as separate inputs. The small serialization overhead is a
+ * deliberate reservation-side overestimate; settlement still uses provider
+ * usage metadata.
+ */
+export const buildManagedPromptTokenCountInputs = (
+  contents: unknown,
+  config: Record<string, unknown> | undefined,
+): unknown[] => {
+  const inputs: unknown[] = [contents];
+  if (!config) return inputs;
+  const { systemInstruction, ...remainingConfig } = config;
+  if (systemInstruction !== undefined && systemInstruction !== null) {
+    inputs.push(systemInstruction);
+  }
+  if (Object.keys(remainingConfig).length > 0) {
+    inputs.push(`Managed generation config:\n${JSON.stringify(remainingConfig)}`);
+  }
+  return inputs;
+};
+
 /** Live tokens are scoped to this validated config as well as their model. */
 export const requireSafeManagedLiveConfig = (
   config: Record<string, unknown> | undefined,

@@ -1,0 +1,51 @@
+name: Headless staging journey
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: headless-staging
+  cancel-in-progress: false
+
+jobs:
+  managed-provider-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      MAESTRO_BACKEND_BASE_URL: ${{ vars.MAESTRO_BACKEND_BASE_URL }}
+      MAESTRO_FIREBASE_API_KEY: ${{ vars.MAESTRO_FIREBASE_API_KEY }}
+      MAESTRO_FIREBASE_APP_ID: ${{ vars.MAESTRO_FIREBASE_APP_ID }}
+      MAESTRO_FIREBASE_EMAIL: ${{ secrets.HEADLESS_FIREBASE_EMAIL }}
+      MAESTRO_FIREBASE_PASSWORD: ${{ secrets.HEADLESS_FIREBASE_PASSWORD }}
+      MAESTRO_APPCHECK_DEBUG_TOKEN: ${{ secrets.HEADLESS_APPCHECK_DEBUG_TOKEN }}
+      MAESTRO_HEADLESS_HOME: ${{ runner.temp }}/maestro-headless
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - name: Verify JSON-RPC/CLI contract starts
+        run: npx tsx src/headless/cli.ts system.describe > protocol.json
+      - name: Authenticate through Firebase and read the managed account
+        run: |
+          npx tsx src/headless/cli.ts auth.signIn --profile staging-ci > auth.json
+          npx tsx src/headless/cli.ts account.summary --profile staging-ci > account.json
+          node -e "const a=require('./account.json'); if(!a.account?.user?.id) process.exit(1); console.log('Authenticated managed account:', a.account.user.id, 'credits:', a.account.billingSummary.availableCredits)"
+      - name: Exercise a paid production chat route when funded
+        run: |
+          node -e "const a=require('./account.json'); process.exit(a.account.billingSummary.availableCredits > 0 ? 0 : 78)" || code=$?
+          if [ "${code:-0}" = "78" ]; then
+            echo 'No staging credits are available; authenticated route smoke passed and paid generation was skipped.'
+            exit 0
+          fi
+          npx tsx src/headless/cli.ts language.select --profile staging-ci --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US"}' > language.json
+          npx tsx src/headless/cli.ts chat.turn --profile staging-ci --params '{"text":"Say one short friendly greeting.","requireInvariants":true}' > turn.json
+          node -e "const t=require('./turn.json'); if(!t.assistantMessage?.translations?.length) process.exit(1); console.log('Tutor invariant pairs:', t.assistantMessage.translations.length)"

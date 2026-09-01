@@ -21,9 +21,9 @@ import { sketchShapeStyle } from '../../../shared/utils/sketchyShape';
 import { generateTapeLayout, tapeStripStyle } from '../../../shared/utils/messageTapes';
 import TextFileViewer from './TextFileViewer';
 import OfficeFileViewer from './OfficeFileViewer';
-import { decodeTextFromDataUrl, isOfficeAttachment, isTextLikeAttachment } from '../utils/fileAttachments';
+import { decodeTextFromDataUrl, isOfficeAttachment, isTextLikeAttachment } from '../../../core-sdk/chat/fileAttachments';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
-import { selectPrimaryUploadedAttachmentVariant } from '../utils/uploadedAttachmentVariants';
+import { selectPrimaryUploadedAttachmentVariant } from '../../../core-sdk/chat/uploadedAttachmentVariants';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;

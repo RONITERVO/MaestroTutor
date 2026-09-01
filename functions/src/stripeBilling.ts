@@ -324,8 +324,8 @@ export const handleStripeWebhook = async (req: Request, res: Response): Promise<
     throw createHttpError(400, 'Missing Stripe signature header.');
   }
 
-  const rawBody = req.body;
-  if (!Buffer.isBuffer(rawBody)) {
+  const rawBody = getStripeWebhookRawBody(req as Request & { rawBody?: unknown });
+  if (!rawBody) {
     throw createHttpError(400, 'Stripe webhook raw body is unavailable.');
   }
 
@@ -347,6 +347,17 @@ export const handleStripeWebhook = async (req: Request, res: Response): Promise<
   // Everything is acknowledged, including event types we ignore. Returning an
   // error would make Stripe retry a delivery that will never be actioned.
   res.json({ received: true });
+};
+
+/**
+ * Cloud Functions preserves the exact inbound bytes on `req.rawBody` before
+ * Express middleware runs. Local Express tests may instead place the Buffer in
+ * `req.body`, so accept both while refusing parsed objects and strings.
+ */
+export const getStripeWebhookRawBody = (req: { body?: unknown; rawBody?: unknown }): Buffer | null => {
+  if (Buffer.isBuffer(req.body)) return req.body;
+  if (Buffer.isBuffer(req.rawBody)) return req.rawBody;
+  return null;
 };
 
 export const getStripeAccountState = async (uid: string, user: AppUser) => (

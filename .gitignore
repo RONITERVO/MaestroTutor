@@ -74,7 +74,7 @@ typings/
 .env.test
 .env.production
 .env.local
-functions/.secret.local
+functions/.secret.*
 
 # Android signing
 *.jks
@@ -141,3 +141,8 @@ node_modules/
 
 # Firebase Functions build output
 functions/lib/
+.firebase/
+
+# Headless browser/profile artifacts (may contain session cookies)
+/.maestro-debug*/
+/.maestro-headless/

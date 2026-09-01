@@ -5,7 +5,7 @@ import type {
   ChatMessage,
   UploadedAttachmentTarget,
   UploadedAttachmentVariant,
-} from '../../../core/types';
+} from '../../core/types';
 
 export const PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID = 'primary';
 export const VIDEO_KEYFRAME_UPLOADED_ATTACHMENT_VARIANT_ID = 'video-keyframe';

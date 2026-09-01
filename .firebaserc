@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "chatwithmaestro"
+    "default": "chatwithmaestro",
+    "staging": "chatwithmaestro-staging"
   }
 }

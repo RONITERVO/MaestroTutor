@@ -1,7 +1,10 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { registerPlugin, Capacitor } from '@capacitor/core';
+import {
+  getThemeBillingNativePlugin,
+  isNativeAndroidBilling,
+} from '../../services/payments/themeBillingNativePlugin';
 
 // ------------------------------------------------------------------ //
 //  Plugin interface types                                              //
@@ -59,14 +62,11 @@ interface ThemeBillingPluginInterface {
   removeAllListeners(): Promise<void>;
 }
 
-// Register the native plugin (only active on Android; no-ops on web/iOS).
-const ThemeBillingNative = registerPlugin<ThemeBillingPluginInterface>('ThemeBilling');
+const ThemeBillingNative = getThemeBillingNativePlugin<ThemeBillingPluginInterface>();
 
 // ------------------------------------------------------------------ //
 //  Web stub — used when running in a browser / non-Android platform   //
 // ------------------------------------------------------------------ //
-
-const isNativeAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
 /** Returns a stable no-op stub for non-Android platforms. */
 function createWebStub(): ThemeBillingPluginInterface {
@@ -89,7 +89,7 @@ function createWebStub(): ThemeBillingPluginInterface {
   };
 }
 
-const plugin: ThemeBillingPluginInterface = isNativeAndroid
+const plugin: ThemeBillingPluginInterface = isNativeAndroidBilling && ThemeBillingNative
   ? ThemeBillingNative
   : createWebStub();
 
@@ -140,5 +140,5 @@ export const ThemeBillingService = {
   removeAllListeners: () => plugin.removeAllListeners(),
 
   /** Whether billing is available on the current platform. */
-  isAvailable: isNativeAndroid,
+  isAvailable: isNativeAndroidBilling,
 } as const;

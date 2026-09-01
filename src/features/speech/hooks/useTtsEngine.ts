@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { streamGeminiLiveTts } from '../services/geminiLiveTts';
-import { pcmToWav } from '../utils/audioProcessing';
+import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
 import type { SpeechPart, TtsProvider, SpeechCacheDetails } from '../../../core/types';
 
 export interface UseTtsEngineOptions {

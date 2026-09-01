@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React from 'react';
-import { IconBookmark, IconTrash } from '../../../shared/ui/Icons';
+import { IconBookmark, IconFlag, IconTrash } from '../../../shared/ui/Icons';
 import { TranslationReplacements } from '../../../core/i18n/index';
 
 interface MessageSwipeTrayProps {
@@ -15,6 +15,7 @@ interface MessageSwipeTrayProps {
   t: (key: string, replacements?: TranslationReplacements) => string;
   onBookmark: (messageId: string) => void;
   onDelete: (messageId: string) => void;
+  onReport?: (messageId: string) => void;
 }
 
 /**
@@ -36,6 +37,7 @@ const MessageSwipeTray: React.FC<MessageSwipeTrayProps> = ({
   t,
   onBookmark,
   onDelete,
+  onReport,
 }) => (
   <div
     className={`absolute ${isUser ? 'right-0' : 'left-0'} top-1/2 -translate-y-1/2 flex flex-col items-center gap-2`}
@@ -63,6 +65,17 @@ const MessageSwipeTray: React.FC<MessageSwipeTrayProps> = ({
         aria-pressed={isBookmarked}
       >
         <IconBookmark className={`w-5 h-5 ${isBookmarked ? 'opacity-100' : 'opacity-90'}`} />
+      </button>
+    )}
+    {isAssistant && onReport && (
+      <button
+        className="p-2 bg-gate-input-bg text-red-700 shadow sketchy-border-thin"
+        tabIndex={isOpen ? 0 : -1}
+        onPointerDown={(e) => { e.stopPropagation(); }}
+        onClick={(e) => { e.stopPropagation(); onReport(messageId); }}
+        title={t('chat.report.action')}
+      >
+        <IconFlag className="h-5 w-5" />
       </button>
     )}
     <button

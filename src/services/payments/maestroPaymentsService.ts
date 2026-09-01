@@ -7,6 +7,7 @@ import type {
   VerifyGooglePlayPurchaseRequest,
   VerifyGooglePlayPurchaseResult,
 } from '../../core/contracts/integrations';
+import { maestroManagedAccountController } from '../account/maestroManagedAccountController';
 import { maestroBackendService } from '../backend/maestroBackendService';
 import { googlePlayBillingService } from './googlePlayBillingService';
 
@@ -30,8 +31,7 @@ export const maestroPaymentsService = {
    * go through `verifyGooglePlayPurchase`. Both fund the same balance.
    */
   startStripeCheckout: async (packId: string): Promise<void> => {
-    const { url } = await maestroBackendService.createStripeCheckoutSession(packId);
-    window.location.assign(url);
+    await maestroManagedAccountController.startStripeCheckout(packId);
   },
 
   verifyGooglePlayPurchase: async (

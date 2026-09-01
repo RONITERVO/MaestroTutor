@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect } from 'react';
-import { debugLogService, LogEntry } from '../services/debugLogService';
+import { debugLogService, type LogEntry } from '../../../core-sdk/diagnostics';
 import { clearAllGeminiFiles } from '../../../api/gemini';
 import { IconCloudSlash, IconXMark, IconTrash } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';

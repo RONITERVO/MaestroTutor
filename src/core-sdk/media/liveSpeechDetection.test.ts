@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import type { AudioEnergy } from '../../../../shared/audio/speechGate';
+import type { AudioEnergy } from '../../../shared/audio/speechGate';
 import { evaluateFreshSpeechFallback } from './liveSpeechDetection';
 
 const SILENCE: AudioEnergy = { rms: 0, peak: 0, activeRatio: 0 };

@@ -27,6 +27,11 @@ import { selectIsLoadingSuggestions, selectIsSpeaking } from '../../../store/sli
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 import { ALL_LANGUAGES } from '../../../core/config/languages';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
+import AiContentReportModal from './AiContentReportModal';
+import { buildAiContentReportRequest } from '../../../core-sdk/managedAccount';
+import { maestroManagedAccountController } from '../../../services/account/maestroManagedAccountController';
+import { maestroAccessService } from '../../../services/access/maestroAccessService';
+import type { AiContentReportReason } from '../../../core/contracts/backend';
 
 const BOOKMARK_SHOW_ABOVE_CHUNK_SIZE = 100;
 const isRealChatMessage = (m: ChatMessage) => (m.role === 'user' || m.role === 'assistant') && !m.thinking;
@@ -97,6 +102,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const isLoadingSuggestions = useMaestroStore(selectIsLoadingSuggestions);
   const isSpeaking = useMaestroStore(selectIsSpeaking);
   const latestGroundingChunks = useMaestroStore(selectLatestGroundingChunks);
+  const [reportMessage, setReportMessage] = useState<ChatMessage | null>(null);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportConfirmation, setReportConfirmation] = useState<string | null>(null);
   const combinedMessages = useMemo(() => {
     if (liveTranscriptMessages.length === 0) return persistedMessages;
     const persistedIds = new Set(persistedMessages.map(message => message.id));
@@ -104,6 +113,37 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     if (liveOnlyMessages.length === 0) return persistedMessages;
     return [...persistedMessages, ...liveOnlyMessages];
   }, [liveTranscriptMessages, persistedMessages]);
+
+  const openReport = useCallback((messageId: string) => {
+    const message = combinedMessages.find(candidate => candidate.id === messageId && candidate.role === 'assistant');
+    if (!message) return;
+    setReportError(null);
+    setReportConfirmation(null);
+    setReportMessage(message);
+  }, [combinedMessages]);
+
+  const submitReport = useCallback(async (input: { reason: AiContentReportReason; notes: string }) => {
+    if (!reportMessage) return;
+    setIsSubmittingReport(true);
+    setReportError(null);
+    try {
+      const resolvedMode = await maestroAccessService.resolveAccessMode();
+      await maestroManagedAccountController.submitAiContentReport(buildAiContentReportRequest({
+        message: reportMessage,
+        accessMode: resolvedMode === 'managed' ? 'managed' : 'byok',
+        reason: input.reason,
+        notes: input.notes,
+        surface: 'chat',
+      }));
+      setReportMessage(null);
+      setReportConfirmation(t('chat.report.success'));
+      window.setTimeout(() => setReportConfirmation(null), 4000);
+    } catch (error) {
+      setReportError(error instanceof Error ? error.message : t('chat.report.failed'));
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  }, [reportMessage, t]);
   const liveTranscriptMessageIds = useMemo(() => (
     new Set(
       liveTranscriptMessages
@@ -861,9 +901,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
                  isBookmarked={msg.id === bookmarkedMessageId}
                  canBookmark={bookmarkEligibleAssistantIds.has(msg.id)}
                  t={t}
-                 onBookmark={stableBookmarkAt}
-                 onDelete={stableDeleteMessage}
-               />
+                  onBookmark={stableBookmarkAt}
+                  onDelete={stableDeleteMessage}
+                  onReport={openReport}
+                />
              )}
 
               <ChatMessageBubble
@@ -921,6 +962,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
             </ul>
           </div>
         )}
+        {reportConfirmation && (
+          <div
+            role="status"
+            className="fixed bottom-4 left-1/2 z-[110] -translate-x-1/2 bg-emerald-50 px-4 py-2 text-sm text-emerald-900 shadow-lg sketchy-border-thin"
+          >
+            {reportConfirmation}
+          </div>
+        )}
+        <AiContentReportModal
+          isOpen={Boolean(reportMessage)}
+          message={reportMessage}
+          isSubmitting={isSubmittingReport}
+          errorMessage={reportError}
+          onClose={() => {
+            if (isSubmittingReport) return;
+            setReportMessage(null);
+            setReportError(null);
+          }}
+          onSubmit={submitReport}
+        />
 
 
        {bookmarkInfo.hasBookmark && bookmarkViewMode === 'above' && (

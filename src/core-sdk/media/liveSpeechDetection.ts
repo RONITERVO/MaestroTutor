@@ -17,7 +17,7 @@ import {
   DEFAULT_SPEECH_GATE,
   isSpeechLike,
   type AudioEnergy,
-} from '../../../../shared/audio/speechGate';
+} from '../../../shared/audio/speechGate';
 
 /** Shared names for every Gemini Live microphone path that uses the detector. */
 export const LOCAL_WHISPER_MODEL = OBSERVER_WHISPER_MODEL;

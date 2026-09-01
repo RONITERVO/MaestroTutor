@@ -14,6 +14,7 @@ import { appConfig } from './config';
 import { adminDb } from './firebase';
 import {
   applyManagedGenerationLimits,
+  buildManagedPromptTokenCountInputs,
   collectGeminiFileUris,
   requireAllowedManagedModel,
   requirePricedManagedGenerationModel,
@@ -91,16 +92,19 @@ const countPromptTokens = async (
   config?: Record<string, unknown>
 ): Promise<number> => {
   try {
-    const result = await getGeminiClient().models.countTokens({
-      model,
-      contents,
-      ...(config ? { config } : {}),
-    } as any);
-    const tokenCount = Number((result as any)?.totalTokens ?? (result as any)?.tokenCount);
-    if (!Number.isFinite(tokenCount) || tokenCount < 0) {
-      throw new Error('Gemini countTokens returned no usable token count.');
+    let totalTokens = 0;
+    for (const countableInput of buildManagedPromptTokenCountInputs(contents, config)) {
+      const result = await getGeminiClient().models.countTokens({
+        model,
+        contents: countableInput,
+      } as any);
+      const tokenCount = Number((result as any)?.totalTokens ?? (result as any)?.tokenCount);
+      if (!Number.isFinite(tokenCount) || tokenCount < 0) {
+        throw new Error('Gemini countTokens returned no usable token count.');
+      }
+      totalTokens += Math.floor(tokenCount);
     }
-    return Math.floor(tokenCount);
+    return totalTokens;
   } catch (error) {
     console.error('[billing] Prompt token count failed; generation was not started.', error);
     throw createHttpError(502, 'The backend could not price this prompt before generation.');
@@ -619,7 +623,6 @@ export const streamManagedContent = async (params: {
   // rather than read off the final one.
   let streamedImageCount = 0;
   let streamedSearchQueryCount = 0;
-  let generationCompleted = false;
   let clientDisconnected = false;
   let streamFinished = false;
 
@@ -651,7 +654,10 @@ export const streamManagedContent = async (params: {
       );
       if (clientDisconnected || response.destroyed || !response.writable) {
         clientDisconnected = true;
-        break;
+        // Keep consuming the provider stream to obtain final usage metadata.
+        // Otherwise a client can avoid exact settlement by disconnecting, and
+        // honest network drops get charged the worst-case reservation.
+        continue;
       }
 
       response.write(`${JSON.stringify({
@@ -661,101 +667,49 @@ export const streamManagedContent = async (params: {
       deliveredAnyChunk = true;
     }
 
-    generationCompleted = !clientDisconnected;
-
-    if (generationCompleted) {
-      const usageMetadata = latestChunk?.usageMetadata as Record<string, unknown> | undefined;
-      const billedUsd = usageMetadataToUsd(
-        model,
-        usageMetadata,
-        operation,
-        streamedImageCount,
-        streamedSearchQueryCount,
-        resolvedModelVersion,
-      );
-      const billedCredits = usdToCredits(billedUsd);
-      const billingSummary = await settleManagedReservation({
-        uid: params.uid,
-        reservationId: reservation.reservationId,
-        billedCredits,
-        billedUsd,
-        operation,
-        model: resolvedModelVersion || model,
-        metadata: {
-          requestedModel: model,
-          resolvedModelVersion: resolvedModelVersion || null,
-          promptTokenCount: usageMetadata?.promptTokenCount,
-          candidatesTokenCount: usageMetadata?.candidatesTokenCount,
-          disconnectRecovered: false,
-          searchQueries: streamedSearchQueryCount,
-        },
-      });
-
-      if (!clientDisconnected && !response.destroyed && response.writable) {
-        response.write(`${JSON.stringify({
-          type: 'final',
-          result: serializeGenerateContentResponse(
-            latestChunk || {},
-            billingSummary,
-            resolvedModelVersion,
-          ),
-        })}\n`);
-        streamFinished = true;
-        response.end();
-      }
-      return;
-    }
-
-    if (deliveredAnyChunk || latestChunk != null) {
-      await settleManagedReservation({
-        uid: params.uid,
-        reservationId: reservation.reservationId,
-        billedCredits: estimatedCredits,
-        billedUsd: estimatedUsd,
-        operation,
-        model: resolvedModelVersion || model,
-        metadata: {
-          requestedModel: model,
-          resolvedModelVersion: resolvedModelVersion || null,
-          promptTokens,
-          disconnectRecovered: true,
-          partialStreamDelivered: deliveredAnyChunk,
-        },
-      });
-      return;
-    }
-
-    await releaseManagedReservation(
-      params.uid,
-      reservation.reservationId,
-      'stream-disconnected-before-output'
+    const usageMetadata = latestChunk?.usageMetadata as Record<string, unknown> | undefined;
+    const billedUsd = usageMetadataToUsd(
+      model,
+      usageMetadata,
+      operation,
+      streamedImageCount,
+      streamedSearchQueryCount,
+      resolvedModelVersion,
     );
+    const billedCredits = usdToCredits(billedUsd);
+    const billingSummary = await settleManagedReservation({
+      uid: params.uid,
+      reservationId: reservation.reservationId,
+      billedCredits,
+      billedUsd,
+      operation,
+      model: resolvedModelVersion || model,
+      metadata: {
+        requestedModel: model,
+        resolvedModelVersion: resolvedModelVersion || null,
+        promptTokenCount: usageMetadata?.promptTokenCount,
+        candidatesTokenCount: usageMetadata?.candidatesTokenCount,
+        disconnectRecovered: clientDisconnected,
+        searchQueries: streamedSearchQueryCount,
+      },
+    });
+
+    if (!clientDisconnected && !response.destroyed && response.writable) {
+      response.write(`${JSON.stringify({
+        type: 'final',
+        result: serializeGenerateContentResponse(
+          latestChunk || {},
+          billingSummary,
+          resolvedModelVersion,
+        ),
+      })}\n`);
+      streamFinished = true;
+      response.end();
+    }
   } catch (error) {
-    if (deliveredAnyChunk || latestChunk != null) {
-      const billingSummary = await settleManagedReservation({
-        uid: params.uid,
-        reservationId: reservation.reservationId,
-        billedCredits: estimatedCredits,
-        billedUsd: estimatedUsd,
-        operation,
-        model: resolvedModelVersion || model,
-        metadata: {
-          requestedModel: model,
-          resolvedModelVersion: resolvedModelVersion || null,
-          promptTokens,
-          streamFailedAfterOutput: true,
-          partialStreamDelivered: deliveredAnyChunk,
-        },
-      });
+    await releaseManagedReservation(params.uid, reservation.reservationId, 'provider-stream-failed');
+    if (deliveredAnyChunk || clientDisconnected || response.headersSent) {
       if (!response.destroyed && response.writable && !response.writableEnded) {
-        response.write(`${JSON.stringify({
-          type: 'final',
-          result: serializeGenerateContentResponse(
-            latestChunk || {},
-            billingSummary,
-            resolvedModelVersion,
-          ),
-        })}\n`);
         response.write(`${JSON.stringify({
           type: 'error',
           message: getErrorMessage(error),
@@ -766,8 +720,6 @@ export const streamManagedContent = async (params: {
       }
       return;
     }
-
-    await releaseManagedReservation(params.uid, reservation.reservationId, 'request-failed');
     throw error;
   } finally {
     streamFinished = true;

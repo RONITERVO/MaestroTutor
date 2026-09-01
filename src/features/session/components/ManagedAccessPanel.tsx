@@ -5,8 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Capacitor } from '@capacitor/core';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { maestroPaymentsService } from '../../../services/payments/maestroPaymentsService';
-import { googleAuthService } from '../../../services/auth/googleAuthService';
-import { maestroAccountService } from '../../../services/account/maestroAccountService';
+import { maestroManagedAccountController } from '../../../services/account/maestroManagedAccountController';
 import { maestroBackendService } from '../../../services/backend/maestroBackendService';
 import type { ManagedAccessSession } from '../../../core/contracts/backend';
 import type { GooglePlayPurchaseRecord } from '../../../core/contracts/integrations';
@@ -15,6 +14,7 @@ import {
   removePendingManagedPurchase,
   upsertPendingManagedPurchase,
 } from '../../../core/security/pendingManagedPurchasesStorage';
+import ManagedAccountActivityModal from './ManagedAccountActivityModal';
 
 interface ManagedAccessPanelProps {
   session: ManagedAccessSession | null;
@@ -75,6 +75,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -87,7 +88,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setErrorMessage(null);
     setStatusMessage(null);
     try {
-      await maestroAccountService.getManagedAccountSummary();
+      await maestroManagedAccountController.refreshAccount();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.refreshFailed'));
     } finally {
@@ -189,8 +190,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setErrorMessage(null);
     setStatusMessage(null);
     try {
-      await googleAuthService.beginSignIn();
-      await refreshAccount();
+      await maestroManagedAccountController.signIn();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.signInFailed'));
     } finally {
@@ -202,7 +202,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setErrorMessage(null);
     setStatusMessage(null);
     try {
-      await googleAuthService.signOutManagedSession();
+      await maestroManagedAccountController.signOut();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.signOutFailed'));
     }
@@ -239,7 +239,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       }
 
       // Navigates away to Stripe, so the spinner is never cleared on success.
-      await maestroPaymentsService.startStripeCheckout(primaryProductId);
+      await maestroManagedAccountController.startStripeCheckout(primaryProductId);
     } catch (error) {
       setIsPurchasing(false);
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseFailed'));
@@ -263,13 +263,17 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
 
     setStatusMessage(t('managedAccess.checkoutComplete') || 'Payment received. Adding your credits…');
-    let attempt = 0;
-    const timer = window.setInterval(() => {
-      attempt += 1;
-      void refreshAccountRef.current();
-      if (attempt >= 5) window.clearInterval(timer);
-    }, 2000);
-    return () => window.clearInterval(timer);
+    const poll = maestroManagedAccountController.startStripeReturnPolling({
+      attempts: 5,
+      intervalMs: 2000,
+      // Keep the callback current without making token refreshes restart the
+      // redirect reconciliation effect.
+      refresh: async () => {
+        await refreshAccountRef.current();
+        return null;
+      },
+    });
+    return poll.cancel;
     // Deliberately runs once on mount: it reacts to the redirect that brought
     // the user here, not to anything that changes afterwards.
   }, []);
@@ -298,8 +302,10 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setErrorMessage(null);
     setStatusMessage(null);
     try {
-      await maestroBackendService.deleteManagedAccount();
-      await googleAuthService.signOutManagedSession();
+      await maestroManagedAccountController.deleteAccount({
+        confirmation: deleteConfirmationText,
+        actualUserId: session.user.id,
+      });
       setDeleteConfirmationText('');
       setIsDeleteConfirmOpen(false);
       setStatusMessage(t('managedAccess.deleteSuccess'));
@@ -379,6 +385,13 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
               className="px-3 py-2 text-gate-text hover:bg-gate-bg disabled:opacity-60 sketchy-border-thin"
             >
               {isRefreshing ? t('managedAccess.refreshing') : t('managedAccess.refresh')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsActivityOpen(true)}
+              className="px-3 py-2 text-gate-text hover:bg-gate-bg focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
+            >
+              {t('managedAccess.activityAction')}
             </button>
             <button
               type="button"
@@ -475,6 +488,10 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
           )}
         </div>
       )}
+      <ManagedAccountActivityModal
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
+      />
     </section>
   );
 };

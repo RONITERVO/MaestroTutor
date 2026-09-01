@@ -5,18 +5,13 @@ import { GoogleGenAI } from '@google/genai';
 import { getApiKeyOrThrow } from '../../core/security/apiKeyStorage';
 import { maestroAccessService } from '../../services/access/maestroAccessService';
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
+import {
+  createManagedGeminiClient,
+  type CoreGeminiClient,
+} from '../../core-sdk/managedGeminiClient';
+import { ApiError } from '../../core-sdk/errors';
 
-export class ApiError extends Error {
-  status?: number;
-  code?: string;
-  cooldownSuggestSeconds?: number;
-  constructor(message: string, opts?: { status?: number; code?: string; cooldownSuggestSeconds?: number }) {
-    super(message);
-    this.status = opts?.status;
-    this.code = opts?.code;
-    this.cooldownSuggestSeconds = opts?.cooldownSuggestSeconds;
-  }
-}
+export { ApiError } from '../../core-sdk/errors';
 
 /**
  * Validates an API key by making a lightweight models list call.
@@ -54,18 +49,7 @@ export const validateApiKey = async (apiKey: string): Promise<{ valid: boolean }
   }
 };
 
-export interface MaestroGeminiClient {
-  models: {
-    generateContent: (request: any) => Promise<any>;
-    generateContentStream: (request: any) => Promise<AsyncIterable<any>>;
-  };
-  live: {
-    connect: (request: any) => Promise<any>;
-    music: {
-      connect: (request: any) => Promise<any>;
-    };
-  };
-}
+export type MaestroGeminiClient = CoreGeminiClient;
 
 export const getDirectAi = async (options?: { apiVersion?: string }): Promise<GoogleGenAI> => {
   try {
@@ -80,116 +64,6 @@ export const getDirectAi = async (options?: { apiVersion?: string }): Promise<Go
   }
 };
 
-const splitManagedConfig = (config: unknown): {
-  config?: Record<string, unknown>;
-  signal?: AbortSignal;
-} => {
-  if (!config || typeof config !== 'object' || Array.isArray(config)) return {};
-  const { abortSignal, ...serializableConfig } = config as Record<string, unknown> & {
-    abortSignal?: AbortSignal;
-  };
-  return {
-    config: Object.keys(serializableConfig).length ? serializableConfig : undefined,
-    signal: abortSignal,
-  };
-};
-
-const createManagedAi = (options?: { apiVersion?: string }): MaestroGeminiClient => {
-  const releaseLease = (leaseId: string) => {
-    let released = false;
-    return async () => {
-      if (released) return;
-      released = true;
-      try {
-        await maestroBackendService.releaseLiveTokenLease({ leaseId });
-      } catch (error) {
-        console.warn('[managed-ai] Failed to release a live-token lease.', error);
-      }
-    };
-  };
-
-  const connectManagedLive = async (purpose: 'live' | 'music', request: any) => {
-    const model = typeof request?.model === 'string' ? request.model.trim() : '';
-    if (!model) {
-      throw new ApiError('A managed Live session requires a model.', { status: 400, code: 'MODEL_REQUIRED' });
-    }
-
-    const tokenLease = await maestroBackendService.createLiveToken({
-      purpose,
-      model,
-      ...(request?.config && typeof request.config === 'object'
-        ? { config: request.config as Record<string, unknown> }
-        : {}),
-    });
-    const release = releaseLease(tokenLease.leaseId);
-    const callbacks = request?.callbacks || {};
-    const wrappedRequest = {
-      ...request,
-      callbacks: {
-        ...callbacks,
-        onclose: (event: unknown) => {
-          void release();
-          callbacks.onclose?.(event);
-        },
-        onerror: (event: unknown) => {
-          callbacks.onerror?.(event);
-        },
-      },
-    };
-
-    const tokenClient = new GoogleGenAI({
-      apiKey: tokenLease.token,
-      apiVersion: options?.apiVersion || 'v1alpha',
-    });
-
-    try {
-      const session = purpose === 'music'
-        ? await tokenClient.live.music.connect(wrappedRequest)
-        : await tokenClient.live.connect(wrappedRequest);
-      const close = typeof session?.close === 'function' ? session.close.bind(session) : null;
-      if (close) {
-        session.close = () => {
-          try {
-            return close();
-          } finally {
-            void release();
-          }
-        };
-      }
-      return session;
-    } catch (error) {
-      await release();
-      throw error;
-    }
-  };
-
-  return {
-    models: {
-      generateContent: async (request: any) => {
-        const { config, signal } = splitManagedConfig(request?.config);
-        return maestroBackendService.generateContent({
-          model: String(request?.model || ''),
-          contents: request?.contents,
-          ...(config ? { config } : {}),
-        }, signal);
-      },
-      generateContentStream: async (request: any) => {
-        const { config, signal } = splitManagedConfig(request?.config);
-        return maestroBackendService.generateContentStream({
-          model: String(request?.model || ''),
-          contents: request?.contents,
-          ...(config ? { config } : {}),
-        }, signal);
-      },
-    },
-    live: {
-      connect: (request: any) => connectManagedLive('live', request),
-      music: {
-        connect: (request: any) => connectManagedLive('music', request),
-      },
-    },
-  };
-};
 
 /**
  * Return the Gemini transport for the active access mode.
@@ -205,7 +79,7 @@ export const getAi = async (options?: { apiVersion?: string }): Promise<MaestroG
     return getDirectAi(options);
   }
   if (accessMode === 'managed') {
-    return createManagedAi(options);
+    return createManagedGeminiClient(maestroBackendService, options);
   }
   throw new ApiError('Sign in for managed access or add a Gemini API key.', {
     status: 401,

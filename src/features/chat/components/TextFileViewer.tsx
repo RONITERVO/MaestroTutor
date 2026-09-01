@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useMemo } from 'react';
 import { IconPaperclip } from '../../../shared/ui/Icons';
-import { decodeTextFromDataUrl } from '../utils/fileAttachments';
+import { decodeTextFromDataUrl } from '../../../core-sdk/chat/fileAttachments';
 import TabularPreview from './TabularPreview';
 import { deriveTabularSheetsFromTextAttachment } from '../utils/tabularPreview';
 import MiniGameViewer from './MiniGameViewer';

@@ -1,8 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import { Capacitor, registerPlugin } from '@capacitor/core';
 import type { GooglePlayPurchaseRecord } from '../../core/contracts/integrations';
+import { getThemeBillingNativePlugin, isNativeAndroidBilling } from './themeBillingNativePlugin';
 
 export interface ProductDetailsResult {
   productId: string;
@@ -60,8 +60,7 @@ interface ThemeBillingPluginInterface {
   removeAllListeners(): Promise<void>;
 }
 
-const ThemeBillingNative = registerPlugin<ThemeBillingPluginInterface>('ThemeBilling');
-const isNativeAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+const ThemeBillingNative = getThemeBillingNativePlugin<ThemeBillingPluginInterface>();
 
 /**
  * Thrown by the web stub for anything that cannot complete off Android.
@@ -98,7 +97,7 @@ const createWebStub = (): ThemeBillingPluginInterface => ({
   removeAllListeners: async () => {},
 });
 
-const plugin = isNativeAndroid ? ThemeBillingNative : createWebStub();
+const plugin = isNativeAndroidBilling && ThemeBillingNative ? ThemeBillingNative : createWebStub();
 
 export const googlePlayBillingService = {
   startConnection: () => plugin.startConnection(),
@@ -121,5 +120,5 @@ export const googlePlayBillingService = {
   onProductDetailsAvailable: (cb: (event: ProductDetailsAvailableEvent) => void) => plugin.addListener('productDetailsAvailable', cb),
   onBillingError: (cb: (event: BillingErrorEvent) => void) => plugin.addListener('billingError', cb),
   removeAllListeners: () => plugin.removeAllListeners(),
-  isAvailable: isNativeAndroid,
+  isAvailable: isNativeAndroidBilling,
 } as const;

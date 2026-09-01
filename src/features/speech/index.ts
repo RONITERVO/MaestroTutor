@@ -35,7 +35,7 @@ export { streamGeminiLiveTts, type GeminiLiveTtsParams, type GeminiLiveTtsLine }
 export { validateTriggerAudio } from './services/triggerAudioAsset';
 
 // Utils
-export { mergeInt16Arrays, pcmToWav, splitPcmBySilence } from './utils/audioProcessing';
+export { mergeInt16Arrays, pcmToWav, splitPcmBySilence } from '../../core-sdk/media/audioProcessing';
 export {
   normalizeTranscriptForSplitting,
   countTranscriptNewlines,

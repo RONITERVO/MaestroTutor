@@ -22,10 +22,10 @@ const request = {
   },
 };
 
-// countTokens deliberately receives the same bounded GenerateContent config as
-// production. The paid generation then proves that a valid-looking key also
-// has provider billing/quota available; countTokens alone does not prove that.
-const tokenCount = await client.models.countTokens(request);
+// Gemini Developer API countTokens rejects GenerateContent config. Production
+// counts prompt-affecting config separately for reservation and settles from
+// provider usage; this smoke proves the content count plus paid generation.
+const tokenCount = await client.models.countTokens({ model, contents: request.contents });
 const response = await client.models.generateContent(request);
 const text = typeof response.text === 'string' ? response.text.trim() : '';
 if (!text) {

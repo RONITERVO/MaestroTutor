@@ -319,10 +319,10 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
           <div className="relative overflow-visible bg-gate-bg p-4 text-sm text-gate-text msg-depth sketchy-border-thin sketch-shape-2">
             <div className="space-y-3">
               {/*
-                The only entry point to managed mode. Gated on the build flag
-                *and* complete configuration, so a build without a backend never
-                offers an account it cannot serve. Everything below is the
-                unchanged bring-your-own-key flow, which stays the default.
+                The account entry point is available whenever its complete
+                Firebase/backend configuration is present. A build without that
+                configuration does not advertise an account it cannot serve.
+                Everything below remains the bring-your-own-key path.
               */}
               {showManagedAccess && (
                 <>

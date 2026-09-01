@@ -4,7 +4,7 @@
 import { ChatMessage } from '../../../core/types';
 import { deriveHistoryForApi } from '../../chat';
 import { getGlobalProfileDB } from '../../session';
-import { buildCompactAssistantHistoryText } from '../../chat/utils/assistantMessageContext';
+import { buildCompactAssistantHistoryText } from '../../../core-sdk/chat/assistantMessageContext';
 import { groupAdjacentRoleItems } from '../../../shared/utils/conversationTurns';
 
 export interface BuildLiveSystemInstructionParams {

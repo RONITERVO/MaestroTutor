@@ -27,7 +27,7 @@ import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
-import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
+import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 // ============================================================================

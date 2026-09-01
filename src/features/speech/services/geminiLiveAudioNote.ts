@@ -4,10 +4,10 @@ import { Modality, type LiveServerMessage } from '@google/genai';
 import { getAi } from '../../../api/gemini/client';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
+import { mergeInt16Arrays, pcmToWav } from '../../../core-sdk/media/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
-import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
+import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
 
 const OUTPUT_SAMPLE_RATE = 24000;
 const SESSION_TIMEOUT_MS = 180000;

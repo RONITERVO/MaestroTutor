@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DEFAULT_SPEECH_GATE, isSpeechLike, measureEnergy } from '../../../../shared/audio/speechGate';
+import { DEFAULT_SPEECH_GATE, isSpeechLike, measureEnergy } from '../../../shared/audio/speechGate';
 
 /** Ariadne's proven local detector settings. Gemini remains transcript authority. */
 export const OBSERVER_WHISPER_MODEL = 'onnx-community/whisper-tiny.en';

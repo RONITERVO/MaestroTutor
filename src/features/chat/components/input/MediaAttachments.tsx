@@ -12,7 +12,7 @@ import AudioPlayer from '../AudioPlayer';
 import PdfViewer from '../PdfViewer';
 import TextFileViewer from '../TextFileViewer';
 import OfficeFileViewer from '../OfficeFileViewer';
-import { isOfficeAttachment, isTextLikeAttachment } from '../../utils/fileAttachments';
+import { isOfficeAttachment, isTextLikeAttachment } from '../../../../core-sdk/chat/fileAttachments';
 
 interface MediaAttachmentsProps {
   t: (key: string, replacements?: TranslationReplacements) => string;

@@ -10,7 +10,7 @@ import {
   extractGoogleWorkspaceUrlFromDataUrl,
   isGoogleWorkspaceShortcutFileName,
   isGoogleWorkspaceShortcutMimeType,
-} from '../utils/fileAttachments';
+} from '../../../core-sdk/chat/fileAttachments';
 import { getOfficePreview } from '../utils/officePreview';
 import { isAttachmentOpenCancelError, openAttachmentFile } from '../utils/openAttachmentFile';
 import type { TabularChartSeries, TabularSheetPreview } from '../utils/tabularPreview';

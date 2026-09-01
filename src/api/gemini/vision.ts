@@ -1,11 +1,11 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import { debugLogService } from '../../features/diagnostics';
+import { debugLogService } from '../../core-sdk/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
 import { trackGeminiUsage } from '../../shared/utils/costTracker';
-import { getAi } from './client';
+import type { CoreGeminiClient } from '../../core-sdk/managedGeminiClient';
 
 const TIMEOUT_MS = 600_000; // 10 minutes
 
@@ -24,6 +24,10 @@ const addNoise = (text: string): string => {
   return `${text} <!-- ${timestamp}_${randomId} -->`;
 };
 
+export type ImageGenerationResult =
+  | { base64Image: string; mimeType: string }
+  | { error: string };
+
 export const generateImage = async (params: {
   prompt?: string;
   history?: any[];
@@ -32,8 +36,9 @@ export const generateImage = async (params: {
   systemInstruction?: string;
   maestroAvatarUri?: string;
   maestroAvatarMimeType?: string;
-}) => {
-  const ai = await getAi();
+  aiClient?: CoreGeminiClient;
+}): Promise<ImageGenerationResult> => {
+  const ai = params.aiClient || await (await import('./client')).getAi();
   const { prompt, latestMessageText, history, systemInstruction, maestroAvatarUri, maestroAvatarMimeType } = params;
 
   const rawContents: any[] = [];

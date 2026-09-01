@@ -141,6 +141,16 @@ and reported prompt, output and thinking usage. Re-run `npm run smoke:gemini`
 before every backend release; a configured secret or successful `countTokens`
 alone is not evidence that provider billing is usable.
 
+The Gemini Developer API `countTokens` endpoint does not accept the full generation
+config (`systemInstruction`, tools or generation config), even though the SDK type
+surface permits it. The backend counts contents and the instruction separately and
+adds a deterministic serialized-config estimate, then settles from final provider
+usage. Do not “simplify” this by passing the full generation request to
+`countTokens`. A provider stream error releases its reservation with
+`provider-stream-failed`, including after partial/thought chunks; charging the full
+reservation for an incomplete answer is a billing incident. Client disconnects are
+consumed to provider completion so actual usage can still be settled.
+
 ## 3. Access a maintainer needs
 
 A maintainer can complete the entire runbook with:
@@ -389,6 +399,13 @@ the live destination's provider UI, confirm a 2xx delivery, then disable the old
 Secret Manager version. The same procedure applies to `STRIPE_SECRET`, using a
 live restricted key for the correct account. Never use a broad secret key if a
 restricted key can provide the required Checkout/customer permissions.
+
+Stripe's dashboard masks the signing secret until its reveal control is activated.
+Never copy a visible `whsec_····` placeholder: it is not a secret and every delivery
+will fail. Cloud Functions can expose parsed JSON in `req.body` while preserving
+the signed bytes in `req.rawBody`; the webhook handler accepts only a Buffer from
+one of those locations. Keep the raw-body regression tests when changing Express,
+Firebase Functions or webhook middleware.
 
 For an end-to-end release test, make one low-value real Checkout purchase with
 a dedicated test user. Confirm exactly one billing ledger grant, the expected

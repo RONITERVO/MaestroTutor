@@ -5,7 +5,7 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LiveServerMessage, Modality, Session } from '@google/genai';
 import { getAi } from '../../../api/gemini/client';
-import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
+import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProcessing';
 import { SpeechGate, measureEnergy } from '../../../../shared/audio/speechGate';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
@@ -16,9 +16,10 @@ import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/ca
 import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
-} from '../utils/realtimePcmPacketizer';
+} from '../../../core-sdk/media/realtimePcmPacketizer';
+import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
-import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
+import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 import {
   acquireLocalWhisperClient,
@@ -34,7 +35,7 @@ import {
   LOCAL_WHISPER_REQUEST_INTERVAL_MS,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
-} from '../utils/liveSpeechDetection';
+} from '../../../core-sdk/media/liveSpeechDetection';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -138,6 +139,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const logFinalizedRef = useRef(false);
   const codecWorkerRef = useRef<AudioCodecWorkerClient | null>(null);
   const inputPacketizerRef = useRef<RealtimePcmPacketizer | null>(null);
+  const pcmCaptureRouterRef = useRef<PcmCaptureRouter | null>(null);
   const audioTelemetryRef = useRef<SttAudioTelemetry>(createEmptySttAudioTelemetry());
   const speechGateRef = useRef<SpeechGate | null>(null);
   const gatePrerollRef = useRef<Int16Array[]>([]);
@@ -255,6 +257,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       }
       inputPacketizerRef.current.dispose();
       inputPacketizerRef.current = null;
+    }
+    if (pcmCaptureRouterRef.current) {
+      await pcmCaptureRouterRef.current.stop();
+      pcmCaptureRouterRef.current = null;
     }
     speechGateRef.current?.forceClose();
     speechGateRef.current = null;
@@ -886,6 +892,17 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           }
         },
       });
+      pcmCaptureRouterRef.current = new PcmCaptureRouter({
+        sink: ({ pcm }) => {
+          if (currentSessionIdRef.current !== sessionId) return;
+          if (!gateInputOnSpeech) {
+            audioChunksRef.current.push(pcm);
+            totalAudioSamplesRef.current += pcm.length;
+            turnAudioSamplesRef.current += pcm.length;
+          }
+          inputPacketizerRef.current?.push(pcm);
+        },
+      });
 
       // --- 4. Connect Audio Graph ---
       const source = ctx.createMediaStreamSource(stream);
@@ -899,15 +916,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         
         const pcm = event.data;
         if (pcm instanceof Int16Array && pcm.length > 0) {
-           // When gated, retain only packets that really reach Gemini. This
-           // keeps recorded audio aligned with transcripts and bounds memory
-           // during long stretches of silence.
-           if (!gateInputOnSpeech) {
-             audioChunksRef.current.push(pcm);
-             totalAudioSamplesRef.current += pcm.length;
-             turnAudioSamplesRef.current += pcm.length;
-           }
-           inputPacketizerRef.current?.push(pcm);
+          void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
         }
       };
 

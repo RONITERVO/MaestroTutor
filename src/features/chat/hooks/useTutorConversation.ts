@@ -23,10 +23,9 @@ import {
   UploadedAttachmentVariant,
 } from '../../../core/types';
 import { ApiError } from '../../../api/gemini/client';
-import { generateGeminiResponse, translateText, type GeminiProgressEvent } from '../../../api/gemini/generative';
+import { translateText, type GeminiProgressEvent } from '../../../api/gemini/generative';
 import { sanitizeHistoryWithVerifiedUris, uploadMediaToFiles, checkFileStatuses } from '../../../api/gemini/files';
 import { generateMusic } from '../../../api/gemini/music';
-import { generateImage } from '../../../api/gemini/vision';
 import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../api/gemini/maestroAvatarEnsure';
 import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../session';
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
@@ -37,14 +36,20 @@ import {
   isGoogleWorkspaceShortcutMimeType,
   isMicrosoftOfficeMimeType,
   normalizeAttachmentMimeType,
-} from '../utils/fileAttachments';
-import { sanitizeSvgAnimationStructure } from '../utils/sanitizeSvgAnimationStructure';
+} from '../../../core-sdk/chat/fileAttachments';
+import { sanitizeSvgAnimationStructure } from '../../../core-sdk/chat/sanitizeSvgAnimationStructure';
 import {
-  buildCompactAssistantHistoryText,
   buildCompactAssistantRawText,
   getVisibleAssistantMessageText,
-} from '../utils/assistantMessageContext';
-import { parseAssistantResponseForAttachment } from '../utils/assistantResponseAttachments';
+} from '../../../core-sdk/chat/assistantMessageContext';
+import {
+  formatStreamingTutorDraftText,
+  parseStrictTutorResponseText,
+  type StrictParsedTutorResponse,
+} from '../../../core-sdk/chat/tutorResponse';
+import { runTutorTextTurn } from '../../../core-sdk/chat/tutorTextTurn';
+import { runReplySuggestions } from '../../../core-sdk/chat/suggestions';
+import { runMaestroImageGeneration } from '../../../core-sdk/chat/imageGeneration';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -56,7 +61,7 @@ import {
   SVG_SOURCE_UPLOADED_ATTACHMENT_VARIANT_ID,
   upsertUploadedAttachmentVariant,
   VIDEO_KEYFRAME_UPLOADED_ATTACHMENT_VARIANT_ID,
-} from '../utils/uploadedAttachmentVariants';
+} from '../../../core-sdk/chat/uploadedAttachmentVariants';
 import { 
   IMAGE_GEN_CAMERA_ID,
   MAX_MEDIA_TO_KEEP 
@@ -64,16 +69,12 @@ import {
 import { getGeminiModels } from '../../../core/config/models';
 import { 
   DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE, 
-  IMAGE_GEN_SYSTEM_INSTRUCTION, 
-  IMAGE_GEN_USER_PROMPT_TEMPLATE,
-  IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION,
   composeMaestroSystemInstruction 
 } from '../../../core/config/prompts';
 import { isRealChatMessage } from '../../../shared/utils/common';
-import { groupAdjacentRoleItems } from '../../../shared/utils/conversationTurns';
 import { trackGeminiUsage, hasShownCostWarning, setCostWarningShown } from '../../../shared/utils/costTracker';
 import { createSmartRef } from '../../../shared/utils/smartRef';
-import { getPrimarySubtag, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
+import { getPrimarySubtag } from '../../../shared/utils/languageUtils';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 import { synthesizeGeminiAudioNote } from '../../speech/services/geminiLiveAudioNote';
@@ -329,287 +330,6 @@ const buildAttachmentUploadPlans = (
       }),
     },
   ];
-};
-
-type StrictParsedTutorResponse = {
-  translations: Array<{ target: string; native: string }>;
-  visibleText: string;
-  hasSkippedNonLanguageContent: boolean;
-};
-
-const TUTOR_FENCE_OPEN_REGEX = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/;
-const MARKUP_LINE_TAG_REGEX = /<\/?[a-z][\w:-]*(?:\s+[^<>]*)?\/?>/i;
-const MARKUP_DECLARATION_OR_COMMENT_REGEX = /<!--|-->|^<!doctype\b|^<!\[CDATA\[|^\]\]>$|^<\?xml\b|^\?>$/i;
-const MARKUP_ATTRIBUTE_ONLY_LINE_REGEX = /^(?:[a-z_:][\w:.-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>/]+)\s*)+\/?>?$/i;
-const MARKUP_STYLE_DECLARATION_LINE_REGEX = /^[a-z-]+\s*:\s*[^;]+;?$/i;
-const MARKUP_STYLE_HINT_REGEX = /(?:#(?:[0-9a-f]{3}){1,2}\b|rgb[a]?\(|hsl[a]?\(|url\(|\b(?:px|em|rem|vh|vw|deg|ms|s)\b|font|fill|stroke|color|width|height|margin|padding|display|position|background|transform|animation)/i;
-const MARKUP_VOID_TAGS = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'param',
-  'source',
-  'track',
-  'wbr',
-]);
-
-const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const isMatchingTutorFenceClose = (
-  rawLine: string,
-  activeFence: { char: '`' | '~'; length: number }
-): boolean => {
-  const trimmed = rawLine.trim();
-  if (!trimmed || trimmed[0] !== activeFence.char) return false;
-
-  let count = 0;
-  while (count < trimmed.length && trimmed[count] === activeFence.char) {
-    count++;
-  }
-
-  return count >= activeFence.length && trimmed.slice(count).trim().length === 0;
-};
-
-const getMarkupBlockFromLine = (trimmedLine: string): { tag: string; inOpeningTag: boolean } | null => {
-  const openMatch = /^<([a-z][\w:-]*)\b/i.exec(trimmedLine);
-  if (!openMatch) return null;
-
-  const tagName = openMatch[1].toLowerCase();
-  if (MARKUP_VOID_TAGS.has(tagName)) return null;
-  if (/\/>\s*$/.test(trimmedLine)) return null;
-  if (new RegExp(`<\\/${escapeRegExp(tagName)}\\s*>`, 'i').test(trimmedLine)) return null;
-  return {
-    tag: tagName,
-    inOpeningTag: !trimmedLine.includes('>'),
-  };
-};
-
-const stripTutorVisibleLines = (responseText: string): {
-  lines: string[];
-  hasSkippedNonLanguageContent: boolean;
-} => {
-  const normalizedLines = responseText
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n');
-
-  const lines: string[] = [];
-  let hasSkippedNonLanguageContent = false;
-  let activeFence: { char: '`' | '~'; length: number } | null = null;
-  let activeMarkupBlock: { tag: string; inOpeningTag: boolean } | null = null;
-  let activeMarkupComment = false;
-
-  for (const rawLine of normalizedLines) {
-    if (activeFence) {
-      hasSkippedNonLanguageContent = true;
-      if (isMatchingTutorFenceClose(rawLine, activeFence)) {
-        activeFence = null;
-      }
-      continue;
-    }
-
-    const trimmed = rawLine.trim();
-
-    if (activeMarkupComment) {
-      hasSkippedNonLanguageContent = true;
-      if (trimmed.includes('-->')) {
-        activeMarkupComment = false;
-      }
-      continue;
-    }
-
-    if (activeMarkupBlock) {
-      hasSkippedNonLanguageContent = true;
-      if (
-        activeMarkupBlock.inOpeningTag &&
-        /\/>\s*$/.test(trimmed)
-      ) {
-        activeMarkupBlock = null;
-        continue;
-      }
-      if (activeMarkupBlock?.inOpeningTag && trimmed.includes('>')) {
-        activeMarkupBlock.inOpeningTag = false;
-      }
-      if (
-        activeMarkupBlock &&
-        new RegExp(`<\\/${escapeRegExp(activeMarkupBlock.tag)}\\s*>`, 'i').test(trimmed)
-      ) {
-        activeMarkupBlock = null;
-      }
-      continue;
-    }
-
-    const openMatch = TUTOR_FENCE_OPEN_REGEX.exec(rawLine);
-    if (openMatch) {
-      activeFence = {
-        char: openMatch[2][0] as '`' | '~',
-        length: openMatch[2].length,
-      };
-      hasSkippedNonLanguageContent = true;
-      continue;
-    }
-
-    if (trimmed.includes('<!--')) {
-      activeMarkupComment = !trimmed.includes('-->');
-      hasSkippedNonLanguageContent = true;
-      continue;
-    }
-
-    const markupBlock = getMarkupBlockFromLine(trimmed);
-    if (markupBlock) {
-      activeMarkupBlock = markupBlock;
-      hasSkippedNonLanguageContent = true;
-      continue;
-    }
-
-    if (trimmed) {
-      lines.push(trimmed);
-    }
-  }
-
-  if (activeFence || activeMarkupBlock || activeMarkupComment) {
-    hasSkippedNonLanguageContent = true;
-  }
-
-  return { lines, hasSkippedNonLanguageContent };
-};
-
-const extractNativeTutorText = (line: string, nativeLangPrefix: string): string | null => {
-  const trimmed = line.trim();
-  if (!trimmed) return null;
-  if (!trimmed.toLowerCase().startsWith(nativeLangPrefix.toLowerCase())) return null;
-  return trimmed.slice(nativeLangPrefix.length).trim();
-};
-
-const isLikelyArtifactLeakTutorLine = (line: string): boolean => {
-  const trimmed = line.trim();
-  if (!trimmed) return false;
-  if (/^(?:`{3,}|~{3,})/.test(trimmed)) return true;
-  if (MARKUP_DECLARATION_OR_COMMENT_REGEX.test(trimmed)) return true;
-  if (MARKUP_LINE_TAG_REGEX.test(trimmed)) return true;
-  if (MARKUP_ATTRIBUTE_ONLY_LINE_REGEX.test(trimmed)) return true;
-  if (MARKUP_STYLE_DECLARATION_LINE_REGEX.test(trimmed) && MARKUP_STYLE_HINT_REGEX.test(trimmed)) return true;
-  if (/^<\/?(?:html|head|body|main|section|article|div|svg|canvas|script|style|button|table|form)\b/i.test(trimmed)) return true;
-  if (/^[{}\[\](),.;:]+$/.test(trimmed)) return true;
-  if (/^(?:const|let|var|function|class|import|export|return|if|for|while|switch|document\.|window\.)\b/.test(trimmed)) return true;
-  return false;
-};
-
-const filterTutorLanguageCandidateLines = (
-  lines: string[]
-): { lines: string[]; hasSkippedNonLanguageContent: boolean } => {
-  const languageLines: string[] = [];
-  let hasSkippedNonLanguageContent = false;
-
-  for (const line of lines) {
-    if (isLikelyArtifactLeakTutorLine(line)) {
-      hasSkippedNonLanguageContent = true;
-      continue;
-    }
-    languageLines.push(line);
-  }
-
-  return { lines: languageLines, hasSkippedNonLanguageContent };
-};
-
-const parseStrictTutorResponseText = (
-  responseText: string | undefined,
-  nativeLanguageCode: string | undefined
-): StrictParsedTutorResponse => {
-  if (typeof responseText !== 'string' || !responseText.trim() || !nativeLanguageCode) {
-    return { translations: [], visibleText: '', hasSkippedNonLanguageContent: false };
-  }
-
-  const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
-  const artifactParsed = parseAssistantResponseForAttachment(responseText);
-  const textWithoutArtifact = artifactParsed.attachment ? artifactParsed.cleanedText : responseText;
-  const stripped = stripTutorVisibleLines(textWithoutArtifact);
-  const candidates = filterTutorLanguageCandidateLines(stripped.lines);
-  const translations: Array<{ target: string; native: string }> = [];
-  const visibleLines: string[] = [];
-  let hasSkippedNonLanguageContent =
-    stripped.hasSkippedNonLanguageContent ||
-    candidates.hasSkippedNonLanguageContent ||
-    Boolean(artifactParsed.attachment);
-
-  for (let i = 0; i < candidates.lines.length; i++) {
-    const currentLine = candidates.lines[i];
-    if (!currentLine) continue;
-
-    const orphanNative = extractNativeTutorText(currentLine, nativeLangPrefix);
-    if (orphanNative !== null) {
-      hasSkippedNonLanguageContent = true;
-      continue;
-    }
-
-    const nextLine = candidates.lines[i + 1] || '';
-    const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
-    const nativeText = taggedNative !== null ? taggedNative : nextLine.trim();
-    if (!nativeText || isLikelyArtifactLeakTutorLine(nextLine) || isLikelyArtifactLeakTutorLine(nativeText)) {
-      hasSkippedNonLanguageContent = true;
-      continue;
-    }
-
-    translations.push({
-      target: currentLine,
-      native: nativeText,
-    });
-    visibleLines.push(currentLine);
-    visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
-    i++;
-  }
-
-  return {
-    translations,
-    visibleText: visibleLines.join('\n').trim(),
-    hasSkippedNonLanguageContent,
-  };
-};
-
-const formatStreamingTutorDraftText = (
-  responseText: string | undefined,
-  nativeLanguageCode: string | undefined
-): string => {
-  if (typeof responseText !== 'string' || !responseText.trim() || !nativeLanguageCode) {
-    return '';
-  }
-
-  const nativeLangPrefix = `[${getShortLangCodeForPrompt(nativeLanguageCode)}]`;
-  const artifactParsed = parseAssistantResponseForAttachment(responseText);
-  const textWithoutArtifact = artifactParsed.attachment ? artifactParsed.cleanedText : responseText;
-  const stripped = stripTutorVisibleLines(textWithoutArtifact);
-  const candidates = filterTutorLanguageCandidateLines(stripped.lines);
-  const visibleLines: string[] = [];
-
-  for (let i = 0; i < candidates.lines.length; i++) {
-    const currentLine = candidates.lines[i];
-    if (!currentLine) continue;
-    if (extractNativeTutorText(currentLine, nativeLangPrefix) !== null) continue;
-
-    const nextLine = candidates.lines[i + 1] || '';
-    const taggedNative = extractNativeTutorText(nextLine, nativeLangPrefix);
-    const nativeText = taggedNative !== null ? taggedNative : nextLine.trim();
-
-    if (nativeText && !isLikelyArtifactLeakTutorLine(nextLine) && !isLikelyArtifactLeakTutorLine(nativeText)) {
-      visibleLines.push(currentLine);
-      visibleLines.push(`${nativeLangPrefix} ${nativeText}`);
-      i++;
-      continue;
-    }
-
-    if (!nextLine) {
-      visibleLines.push(currentLine);
-    }
-  }
-
-  return visibleLines.join('\n').trim();
 };
 
 type SuggestionCreatorArtifact = {
@@ -1503,56 +1223,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     setReplySuggestions([]);
     setSuggestionsLoadingStreamText('');
 
-    // The suggestion model should see conversational turns, not raw UI message
-    // fragments. Adjacent same-role messages are merged here so deleted/imported
-    // chats and tool/artifact sidecars read as one coherent turn.
-    const historyForPrompt = groupAdjacentRoleItems(
-      getHistoryRespectingBookmark(history)
-        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-    )
-      .slice(-6)
-      .map(group => {
-        if (group.role === 'user') {
-          const userText = group.items
-            .map(msg => msg.text?.trim() || '(sent an image)')
-            .filter(Boolean)
-            .join('\n\n')
-            .trim();
-          return userText ? `User: ${userText}` : '';
-        }
-
-        const tutorText = group.items
-          .map(msg => (
-            buildCompactAssistantHistoryText(msg)
-            || msg.translations?.[0]?.target
-            || msg.rawAssistantResponse
-            || msg.text
-            || '(sent an image)'
-          ))
-          .filter(Boolean)
-          .join('\n\n')
-          .trim();
-
-        return tutorText ? `Tutor: ${tutorText}` : '';
-      })
-      .filter(Boolean)
-      .join('\n');
-
-    const allMsgs = messagesRef.current;
-    let previousChatSummary = '';
-    {
-      const idx = allMsgs.findIndex(m => m.id === assistantMessageId);
-      const searchEnd = idx === -1 ? allMsgs.length - 1 : idx - 1;
-      for (let i = searchEnd; i >= 0; i--) {
-        const m = allMsgs[i];
-        if (m.role === 'assistant' && typeof m.chatSummary === 'string' && m.chatSummary.trim()) {
-          previousChatSummary = m.chatSummary.trim();
-          break;
-        }
-      }
-    }
-
-    // Fetch existing global profile for the prompt (single API call optimization)
+    const suggestionHistory = getHistoryRespectingBookmark(history);
     let existingGlobalProfile = '';
     try {
       existingGlobalProfile = (await getGlobalProfileDB())?.text || '';
@@ -1560,20 +1231,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       existingGlobalProfile = '';
     }
 
-    let suggestionPrompt = currentReplySuggestionsPromptText
-      .replace("{tutor_message_placeholder}", lastTutorMessage)
-      .replace("{conversation_history_placeholder}", historyForPrompt || "No history yet.")
-      .replace("{previous_chat_summary_placeholder}", previousChatSummary || "")
-      .replace("{existing_global_profile_placeholder}", existingGlobalProfile || "(none)");
-
-    // Live sessions mostly produce transcript text
-    const isLiveSuggestionSource = options?.responseSource === 'live';
-    if (isLiveSuggestionSource) {
-      suggestionPrompt +=
-        `\n\nIMPORTANT: This latest tutor message came from the live audio model. Its transcript will not contain fenced artifact blocks or maestro-tool JSON even when an artifact or tool would improve the turn. For this live turn, decide yourself whether to synthesize an "artifact" object and/or a "toolRequest" object from the tutor transcript using the same quality bar as the main chat path. Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images or audio-note. Do consider creating different artifact, not repeating same that is already in the ui, if this is likely a followup to already created artifact on previous message. If artifact or tool does not materially improve the response, return null for them.`;
-    }
-
-    const MAX_RETRIES = 2;
+    // Retry and structured-response validation now live in the shared Core SDK.
+    const MAX_RETRIES = 0;
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         let thoughtText = '';
@@ -1591,12 +1250,16 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
           }
         };
 
-        const response = await generateGeminiResponse(
-          getGeminiModels().text.aux,
-          suggestionPrompt,
-          [],
+        const parsedResponse = await runReplySuggestions(
           {
-            configOverrides: { responseMimeType: "application/json" },
+            assistantMessageId,
+            lastTutorMessage,
+            history: suggestionHistory,
+            languagePair: selectedLanguagePairRef.current!,
+            existingGlobalProfile,
+            responseSource: options?.responseSource,
+          },
+          {
             lifecycleHooks: {
               onProgress: (event) => {
                 const progressLine = formatGeminiStatusLine(event);
@@ -1613,31 +1276,15 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
                 flushSuggestionsLoadingText();
               },
             },
-          }
+          },
         );
 
         trackGeminiUsage({
           feature: 'suggestions',
-          configuredModel: response.modelUsed || getGeminiModels().text.aux,
-          modelVersion: response.modelVersion,
-          usageMetadata: response.usageMetadata,
+          configuredModel: parsedResponse.modelUsed || getGeminiModels().text.aux,
+          modelVersion: parsedResponse.modelVersion,
+          usageMetadata: parsedResponse.usageMetadata,
         });
-
-        let jsonStr = (response.text || '').trim();
-        const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-        const fenceMatch = jsonStr.match(fenceRegex);
-
-        if (fenceMatch && fenceMatch[2]) {
-          jsonStr = fenceMatch[2].trim();
-        } else {
-          const firstBrace = jsonStr.indexOf('{');
-          const lastBrace = jsonStr.lastIndexOf('}');
-          if (firstBrace !== -1 && lastBrace !== -1) {
-            jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
-          }
-        }
-
-        const parsedResponse = JSON.parse(jsonStr);
         resolvedArtifact = parsedResponse?.artifact ?? null;
         resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
 
@@ -2168,14 +1815,17 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         filePartCount: params.imageForGeminiContextFileUri?.length || 0,
         useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
       });
-      const response = await generateGeminiResponse(
-        getGeminiModels().text.default,
-        params.geminiPromptText,
-        params.sanitizedDerivedHistory,
+      const turn = await runTutorTextTurn(
         {
+          model: getGeminiModels().text.default,
+          prompt: params.geminiPromptText,
+          history: params.sanitizedDerivedHistory,
+          nativeLanguageCode: selectedLanguagePairRef.current?.nativeLanguageCode || '',
           systemInstruction: params.systemInstructionForGemini,
           currentFileParts: params.imageForGeminiContextFileUri,
           useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
+        },
+        {
           onGoogleSearchUnavailable: () => {
             setSettings(prev => prev.enableGoogleSearch
               ? { ...prev, enableGoogleSearch: false }
@@ -2224,8 +1874,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
               flushThoughtTrace(false);
             },
           },
-        }
+        },
       );
+      const response = turn.response;
 
       markGeminiStage('gemini.request.done', {
         thinkingMessageId: params.thinkingMessageId,
@@ -2234,11 +1885,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       flushThinkingDraft(true);
       flushThoughtTrace(true);
 
-      const searchQueries = response.candidates?.reduce((count: number, candidate: any) => (
-        count + (Array.isArray(candidate?.groundingMetadata?.webSearchQueries)
-          ? candidate.groundingMetadata.webSearchQueries.length
-          : 0)
-      ), 0) || 0;
+      const searchQueries = turn.searchQueryCount;
       trackGeminiUsage({
         feature: 'tutor',
         configuredModel: response.modelUsed || getGeminiModels().text.default,
@@ -2247,8 +1894,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         searchQueries,
       });
 
-      const accumulatedFullText = response.text || "";
-      const strictParsedResponse = parseStrictTutorResponse(accumulatedFullText);
+      const accumulatedFullText = turn.rawResponse;
+      const strictParsedResponse = turn.parsed;
       const responseTextForConversation = strictParsedResponse.visibleText;
       const parsedTranslationsOnComplete = strictParsedResponse.translations;
       const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
@@ -2314,22 +1961,12 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     });
 
     const sanitizedUserHistoryForImage = params.sanitizedDerivedHistory as any;
-    let finalResult: any = null;
-
-    for (let attempt = 0; attempt < 7; attempt++) {
-      const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", params.userMessageText + (attempt !== 0 ? IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION : ""));
-      const userImgGenResult = await generateImage({
-        history: sanitizedUserHistoryForImage,
-        latestMessageText: prompt,
-        latestMessageRole: 'user',
-        systemInstruction: IMAGE_GEN_SYSTEM_INSTRUCTION,
-        maestroAvatarUri: maestroAvatarUriRef.current || undefined,
-        maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
-      });
-      finalResult = userImgGenResult;
-      if ('base64Image' in userImgGenResult) break;
-      if (attempt < 6) await new Promise(r => setTimeout(r, 1500));
-    }
+    const finalResult = await runMaestroImageGeneration({
+      contextText: params.userMessageText,
+      history: sanitizedUserHistoryForImage,
+      maestroAvatarUri: maestroAvatarUriRef.current || undefined,
+      maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
+    });
 
     if (finalResult && 'base64Image' in finalResult) {
       const duration = Date.now() - userImageGenStartTime;
@@ -2389,7 +2026,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     return {};
   }, [
     addMessage,
-    generateImage,
     maestroAvatarMimeTypeRef,
     maestroAvatarUriRef,
     optimizeAndUploadMedia,
@@ -2448,96 +2084,85 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       await new Promise(r => setTimeout(r, 0));
     } catch { /* ignore */ }
 
-    for (let attempt = 0; attempt < 7; attempt++) {
-      const histForAssistantImgBase = historyForAssistantImageGen || baseForEnsure;
-      let gpTextForAssistant: string | undefined = undefined;
+    const histForAssistantImgBase = historyForAssistantImageGen || baseForEnsure;
+    let gpTextForAssistant: string | undefined;
+    try {
+      gpTextForAssistant = (await getGlobalProfileDB())?.text || undefined;
+    } catch {
+      gpTextForAssistant = undefined;
+    }
+    const assistantHistory = deriveHistoryForApi(histForAssistantImgBase, {
+      maxMessages: computeMaxMessagesForArray(baseForEnsure.filter((message: ChatMessage) => message.role === 'user' || message.role === 'assistant')),
+      maxMediaToKeep: MAX_MEDIA_TO_KEEP,
+      contextSummary: resolveBookmarkContextSummary() || undefined,
+      globalProfileText: gpTextForAssistant,
+      placeholderLatestUserMessage: DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
+    });
+    const sanitizedAssistantHistoryForImage = await sanitizeHistoryWithVerifiedUris(assistantHistory as any);
+    const assistantImgGenResult = await runMaestroImageGeneration({
+      contextText: params.accumulatedFullText,
+      history: sanitizedAssistantHistoryForImage,
+      maestroAvatarUri: maestroAvatarUriRef.current || undefined,
+      maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
+    });
+
+    if ('base64Image' in assistantImgGenResult) {
+      const duration = Date.now() - assistantStartTime;
+      addImageLoadDuration(duration);
+      if (!hasShownCostWarning()) {
+        setCostWarningShown();
+        addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
+      }
       try {
-        const gp3 = await getGlobalProfileDB();
-        gpTextForAssistant = gp3?.text || undefined;
-      } catch {}
-
-      const assistantHistory = deriveHistoryForApi(histForAssistantImgBase, {
-        maxMessages: computeMaxMessagesForArray(baseForEnsure.filter((m: ChatMessage) => m.role === 'user' || m.role === 'assistant')),
-        maxMediaToKeep: MAX_MEDIA_TO_KEEP,
-        contextSummary: resolveBookmarkContextSummary() || undefined,
-        globalProfileText: gpTextForAssistant,
-        placeholderLatestUserMessage: DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
-      });
-      const sanitizedAssistantHistoryForImage = await sanitizeHistoryWithVerifiedUris(assistantHistory as any);
-
-      const prompt = IMAGE_GEN_USER_PROMPT_TEMPLATE.replace("{TEXT}", params.accumulatedFullText + (attempt !== 0 ? IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION : ""));
-      const assistantImgGenResult = await generateImage({
-        history: sanitizedAssistantHistoryForImage,
-        latestMessageText: prompt,
-        latestMessageRole: 'user',
-        systemInstruction: IMAGE_GEN_SYSTEM_INSTRUCTION,
-        maestroAvatarUri: maestroAvatarUriRef.current || undefined,
-        maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
-      });
-
-      if ('base64Image' in assistantImgGenResult) {
-        const duration = Date.now() - assistantStartTime;
-        addImageLoadDuration(duration);
-        if (!hasShownCostWarning()) {
-          setCostWarningShown();
-          addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
-        }
-        try {
-          const { optimized, upload } = await optimizeAndUploadMedia({
-            dataUrl: assistantImgGenResult.base64Image as string,
-            mimeType: assistantImgGenResult.mimeType as string,
-            displayName: 'assistant-generated',
-            setUploadPrepLabel: false,
-          });
-          const uploadedAttachmentState = buildUploadedAttachmentState([
-            {
-              id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
-              uri: upload.uri,
-              mimeType: upload.mimeType,
-              targets: inferUploadedAttachmentTargetsForMimeType(upload.mimeType),
-              source: 'original',
-              order: 10,
-            },
-          ]);
-
-          updateMessage(params.thinkingMessageId, {
-            imageUrl: assistantImgGenResult.base64Image,
-            imageMimeType: assistantImgGenResult.mimeType,
-            storageOptimizedImageUrl: optimized.dataUrl,
-            storageOptimizedImageMimeType: optimized.mimeType,
-            ...uploadedAttachmentState,
-            attachmentName: 'assistant-generated.jpg',
-            isGeneratingImage: false,
-            imageGenError: null,
-            imageGenerationStartTime: undefined,
-            maestroToolKind: 'image',
-          });
-        } catch (e) {
-          updateMessage(params.thinkingMessageId, {
-            imageUrl: assistantImgGenResult.base64Image,
-            imageMimeType: assistantImgGenResult.mimeType,
-            attachmentName: 'assistant-generated.jpg',
-            isGeneratingImage: false,
-            imageGenError: null,
-            imageGenerationStartTime: undefined,
-            maestroToolKind: 'image',
-          });
-        }
-        break;
-      } else if (attempt < 6) {
-        await new Promise(r => setTimeout(r, 1500));
-      } else {
+        const { optimized, upload } = await optimizeAndUploadMedia({
+          dataUrl: assistantImgGenResult.base64Image,
+          mimeType: assistantImgGenResult.mimeType,
+          displayName: 'assistant-generated',
+          setUploadPrepLabel: false,
+        });
+        const uploadedAttachmentState = buildUploadedAttachmentState([
+          {
+            id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
+            uri: upload.uri,
+            mimeType: upload.mimeType,
+            targets: inferUploadedAttachmentTargetsForMimeType(upload.mimeType),
+            source: 'original',
+            order: 10,
+          },
+        ]);
         updateMessage(params.thinkingMessageId, {
+          imageUrl: assistantImgGenResult.base64Image,
+          imageMimeType: assistantImgGenResult.mimeType,
+          storageOptimizedImageUrl: optimized.dataUrl,
+          storageOptimizedImageMimeType: optimized.mimeType,
+          ...uploadedAttachmentState,
+          attachmentName: 'assistant-generated.jpg',
           isGeneratingImage: false,
-          imageGenerationStartTime: undefined
+          imageGenError: null,
+          imageGenerationStartTime: undefined,
+          maestroToolKind: 'image',
+        });
+      } catch {
+        updateMessage(params.thinkingMessageId, {
+          imageUrl: assistantImgGenResult.base64Image,
+          imageMimeType: assistantImgGenResult.mimeType,
+          attachmentName: 'assistant-generated.jpg',
+          isGeneratingImage: false,
+          imageGenError: null,
+          imageGenerationStartTime: undefined,
+          maestroToolKind: 'image',
         });
       }
+    } else {
+      updateMessage(params.thinkingMessageId, {
+        isGeneratingImage: false,
+        imageGenerationStartTime: undefined,
+      });
     }
   }, [
     addMessage,
     computeMaxMessagesForArray,
     ensureUrisForHistoryForSend,
-    generateImage,
     getHistoryRespectingBookmark,
     maestroAvatarMimeTypeRef,
     maestroAvatarUriRef,

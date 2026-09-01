@@ -2,10 +2,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { ThinkingLevel } from '@google/genai';
-import { debugLogService } from '../../features/diagnostics';
+import { debugLogService } from '../../core-sdk/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
-import { ApiError, getAi } from './client';
+import { ApiError } from '../../core-sdk/errors';
+import type { CoreGeminiClient } from '../../core-sdk/managedGeminiClient';
 
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 const HIGH_DEMAND_MAX_RETRIES = 10;
@@ -49,6 +50,8 @@ export interface GenerateGeminiResponseOptions {
   timeoutMs?: number;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   onGoogleSearchUnavailable?: () => void;
+  /** Shared transport injection used by non-visual clients. UI callers omit it. */
+  aiClient?: CoreGeminiClient;
 }
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
@@ -373,7 +376,7 @@ export const generateGeminiResponse = async (
     lifecycleHooks,
     onGoogleSearchUnavailable,
   } = options;
-  const ai = await getAi();
+  const ai = options.aiClient || await (await import('./client')).getAi();
   const rawContents: any[] = [];
 
   const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
@@ -604,7 +607,7 @@ export const generateGeminiResponse = async (
 };
 
 export const translateText = async (text: string, from: string, to: string) => {
-  const ai = await getAi();
+  const ai = await (await import('./client')).getAi();
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
   const model = getGeminiModels().text.translation;
   const fallbackModel = resolveFallbackTextModel(model);

@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
+import { sanitizeHistoryWithVerifiedMedia } from '../../core-sdk/chat/history';
 import { maestroAccessService } from '../../services/access/maestroAccessService';
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
 import { getDirectAi } from './client';
@@ -144,79 +145,20 @@ export const checkFileStatuses = async (uris: string[]): Promise<Record<string, 
 };
 
 export const sanitizeHistoryWithVerifiedUris = async (history: any[]) => {
-  const uris = Array.from(new Set(history.flatMap((item) => {
-    const parts = Array.isArray(item?.fileParts) ? item.fileParts : [];
-    const filePartUris = parts
-      .map((part: any) => (typeof part?.fileUri === 'string' ? part.fileUri : ''))
-      .filter(Boolean);
-    const avatarUri = typeof item?.avatarFileUri === 'string' ? item.avatarFileUri : '';
-    return avatarUri ? [...filePartUris, avatarUri] : filePartUris;
-  })));
-  if (uris.length === 0) return history;
-
-  const statuses = await checkFileStatuses(uris);
   let strippedCount = 0;
-  const result = history.map((h, idx) => {
-    const hadFileParts = Array.isArray(h.fileParts);
-    const avatarUri = typeof h?.avatarFileUri === 'string' ? h.avatarFileUri : '';
-    const hadAvatarFileUri = !!avatarUri;
-    const fileParts = hadFileParts
-      ? h.fileParts.filter((part: any) => {
-          const uri = typeof part?.fileUri === 'string' ? part.fileUri : '';
-          if (!uri) return false;
-          const status = statuses[uri];
-          const keep = !status?.deleted && !!status?.active;
-          if (!keep) {
-            strippedCount++;
-            console.warn(`[sanitizeHistory] Stripping expired/invalid media URI from history item ${idx}:`, uri.slice(0, 80));
-          }
-          return keep;
-        })
-      : undefined;
-    const avatarStatus = avatarUri ? statuses[avatarUri] : undefined;
-    const keepAvatar = !hadAvatarFileUri || (!avatarStatus?.deleted && !!avatarStatus?.active);
-    if (hadAvatarFileUri && !keepAvatar) {
+  const result = await sanitizeHistoryWithVerifiedMedia(
+    history,
+    checkFileStatuses,
+    ({ uri, historyIndex, kind }) => {
       strippedCount++;
-      console.warn(`[sanitizeHistory] Stripping expired/invalid avatar URI from history item ${idx}:`, avatarUri.slice(0, 80));
-    }
-
-    if ((fileParts && fileParts.length > 0) || (hadAvatarFileUri && !keepAvatar)) {
-      const nextHistoryItem = { ...h };
-
-      if (fileParts && fileParts.length > 0) {
-        nextHistoryItem.fileParts = fileParts;
-      } else if (hadFileParts) {
-        delete nextHistoryItem.fileParts;
-      }
-
-      if (hadAvatarFileUri && !keepAvatar) {
-        delete nextHistoryItem.avatarFileUri;
-        delete nextHistoryItem.avatarMimeType;
-      }
-
-      return nextHistoryItem;
-    }
-
-    if (hadFileParts) {
-      const nextHistoryItem = { ...h };
-      delete nextHistoryItem.fileParts;
-      if (hadAvatarFileUri && !keepAvatar) {
-        delete nextHistoryItem.avatarFileUri;
-        delete nextHistoryItem.avatarMimeType;
-      }
-      return nextHistoryItem;
-    }
-
-    if (hadAvatarFileUri && !keepAvatar) {
-      const nextHistoryItem = { ...h };
-      delete nextHistoryItem.avatarFileUri;
-      delete nextHistoryItem.avatarMimeType;
-      return nextHistoryItem;
-    }
-    return h;
-  });
+      console.warn(
+        `[sanitizeHistory] Stripping expired/invalid ${kind} URI from history item ${historyIndex}:`,
+        uri.slice(0, 80),
+      );
+    },
+  );
   if (strippedCount > 0) {
-    console.warn(`[sanitizeHistory] Total media items stripped due to expired URIs: ${strippedCount}/${uris.length}`);
+    console.warn(`[sanitizeHistory] Total media items stripped due to expired URIs: ${strippedCount}`);
   }
   return result;
 };

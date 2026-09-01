@@ -32,7 +32,7 @@ export class RealtimePcmPacketizer {
 
   private bufferedChunks: Int16Array[] = [];
   private bufferedSamples = 0;
-  private flushTimer: number | null = null;
+  private flushTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
   private sendQueue: Promise<void> = Promise.resolve();
   private stats: RealtimePcmPacketizerStats = {
     totalInputSamples: 0,
@@ -95,7 +95,7 @@ export class RealtimePcmPacketizer {
 
   private ensureFlushTimer() {
     if (this.flushTimer !== null) return;
-    this.flushTimer = window.setTimeout(() => {
+    this.flushTimer = globalThis.setTimeout(() => {
       this.flushTimer = null;
       if (this.bufferedSamples === 0) return;
       this.enqueuePacket(this.takeSamples(this.bufferedSamples), 'timer');
@@ -104,7 +104,7 @@ export class RealtimePcmPacketizer {
 
   private clearFlushTimer() {
     if (this.flushTimer === null) return;
-    window.clearTimeout(this.flushTimer);
+    globalThis.clearTimeout(this.flushTimer);
     this.flushTimer = null;
   }
 
