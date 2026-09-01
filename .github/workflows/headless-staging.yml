@@ -53,7 +53,7 @@ jobs:
       - name: Complete one controlled Stripe test purchase
         run: |
           npx tsx src/headless/cli.ts billing.checkout.completeTest --profile staging-ci --params "{\"packId\":\"$MAESTRO_TEST_PACK_ID\",\"expectedCredits\":$MAESTRO_TEST_PACK_CREDITS,\"headless\":true}" > checkout.json
-          node -e "const c=require('./checkout.json'); if(c.grantedCredits!==Number(process.env.MAESTRO_TEST_PACK_CREDITS)||c.newPurchaseLedgerEntries!==1) process.exit(1); console.log('Stripe session:',c.sessionId,'grant:',c.grantedCredits)"
+          node -e "const c=require('./checkout.json'); if(c.grantedCredits!==Number(process.env.MAESTRO_TEST_PACK_CREDITS)||c.newPurchaseLedgerEntries!==1||!c.purchaseClaimId) process.exit(1); console.log('Stripe session:',c.sessionId,'claim:',c.purchaseClaimId,'grant:',c.grantedCredits)"
       - name: Exercise a complete first lesson through shared UI/Core paths
         run: |
           npx tsx src/headless/cli.ts journey.firstLesson --profile staging-ci --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > first-lesson.json
@@ -68,8 +68,9 @@ jobs:
         if: always()
         run: |
           npx tsx src/headless/cli.ts files.clear --profile staging-ci > clear.json
+          node -e "const c=require('./clear.json'); if(c.failedCount!==0) throw new Error('Provider file cleanup failed: '+JSON.stringify(c.failedNames||[]))"
           npx tsx src/headless/cli.ts account.ledgers --profile staging-ci --params '{"limit":200}' > ledgers.json
-          node -e "const l=require('./ledgers.json'); if(!l.billing.entries.some(e=>e.kind==='purchase')||!l.usage.entries.length) process.exit(1)"
+          node -e "const l=require('./ledgers.json'); if(!l.usage.entries.length) process.exit(1)"
           npx tsx src/headless/cli.ts auth.signOut --profile staging-ci > signout.json
 
   byok-provider-smoke:

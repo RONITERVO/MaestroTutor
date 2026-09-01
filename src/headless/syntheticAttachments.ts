@@ -4,7 +4,9 @@
 import { pcmToWav } from '../core-sdk/media/audioProcessing';
 import { createAdvancedSyntheticAttachment } from './syntheticAdvancedAttachments';
 
-export type SyntheticAttachmentKind = 'text' | 'image' | 'audio' | 'pdf' | 'svg' | 'video' | 'office';
+export type BasicSyntheticAttachmentKind = 'text' | 'image' | 'audio' | 'pdf';
+export type AdvancedSyntheticAttachmentKind = 'svg' | 'video' | 'office';
+export type SyntheticAttachmentKind = BasicSyntheticAttachmentKind | AdvancedSyntheticAttachmentKind;
 
 export interface SyntheticAttachment {
   kind: SyntheticAttachmentKind;
@@ -27,6 +29,9 @@ const textDataUrl = (text: string, mimeType: string) => (
 );
 
 const createPdf = (text: string): string => {
+  if (/[^\x20-\x7e]/.test(text)) {
+    throw new Error('Synthetic PDF labels must contain printable ASCII characters only.');
+  }
   const safeText = text.replace(/[()\\]/g, match => `\\${match}`);
   const stream = `BT /F1 12 Tf 72 720 Td (${safeText}) Tj ET`;
   const objects = [
@@ -63,7 +68,7 @@ const createAudio = (): string => {
 };
 
 export const createSyntheticAttachment = (
-  kind: SyntheticAttachmentKind,
+  kind: BasicSyntheticAttachmentKind,
   label = 'Maestro deterministic attachment fixture',
 ): SyntheticAttachment => {
   switch (kind) {

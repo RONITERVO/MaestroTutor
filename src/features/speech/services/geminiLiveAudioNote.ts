@@ -24,10 +24,11 @@ export const synthesizeGeminiAudioNote = async (params: {
   abortSignal?: AbortSignal;
 }): Promise<GeminiAudioNoteResult> => {
   const model = getGeminiModels().audio.tts;
+  const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';
   const usageTracker = createLiveUsageTracker({ feature: 'audioNote', configuredModel: model });
   const log = debugLogService.logRequest('synthesizeGeminiAudioNote', model, {
     textLength: params.text.trim().length,
-    voiceName: params.voiceName || 'Kore',
+    voiceName,
     langCode: params.langCode,
   });
   try {
@@ -38,7 +39,7 @@ export const synthesizeGeminiAudioNote = async (params: {
       triggerPcmBase64: TRIGGER_AUDIO_PCM_24K,
       triggerSampleRate: TRIGGER_SAMPLE_RATE,
       langCode: params.langCode,
-      voiceName: params.voiceName,
+      voiceName,
       abortSignal: params.abortSignal,
       onUsageMetadata: metadata => usageTracker.trackSnapshot(metadata as any),
     });

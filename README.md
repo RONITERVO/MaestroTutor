@@ -239,8 +239,10 @@ an optional managed account for users who prefer to buy service credits.
 - The key is stored locally on your device using secure storage — never sent to any backend
 - All AI calls go directly from your device to the Gemini API
 - BYOK sessions require no Maestro account or Maestro backend
-- Managed sessions use Firebase Authentication, the managed backend and either
-  Google Play Billing (Android) or Stripe Checkout (web)
+- Managed sessions use Firebase Authentication, the managed backend and Stripe
+  Checkout as the sole credit-purchase provider. Android can spend a balance
+  purchased on the web; its buy action is fail-closed unless the documented Play
+  external-checkout programme gate is satisfied.
 
 The API key button in the top-right corner shows green when a key is present, red when missing. Tap it anytime to update your key or view setup instructions.
 
@@ -265,7 +267,7 @@ Step-by-step screenshots are available in [`/docs/`](./docs/).
 
 ### Prerequisites
 
-- **Node.js** v24 (the deployed Functions runtime version)
+- **Node.js** v22 (the deployed Functions runtime version)
 - A **Google Gemini API key** — [get one free from AI Studio](https://aistudio.google.com/)
 
 ### Web (development)

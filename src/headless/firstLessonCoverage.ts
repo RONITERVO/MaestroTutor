@@ -50,7 +50,11 @@ export const evaluateFirstLessonCoverage = (evidence: FirstLessonCoverageEvidenc
       turn => turn.kind === 'google-search' && Number(turn.searchQueryCount) > 0,
     ),
     attachments: FIRST_LESSON_ATTACHMENT_KINDS.every(
-      kind => evidence.turns.some(turn => turn.kind === `attachment-${kind}`),
+      kind => evidence.turns.some(turn => (
+        turn.kind === `attachment-${kind}`
+        && turn.cleanedUp === true
+        && Number(turn.cleanupFailureCount) === 0
+      )),
     ),
     chatStreaming: chatTurns.length > 0
       && chatTurns.every(turn => turn.streaming?.visiblyStreamed === true),
@@ -88,6 +92,7 @@ export const evaluateFirstLessonCoverage = (evidence: FirstLessonCoverageEvidenc
       evidence.observerVisual,
     ].every(hasCapturedAudio),
     reengagement: evidence.reengagement.emptyUserRequest === true
-      && evidence.reengagement.userMessagePersisted === false,
+      && evidence.reengagement.userMessagePersisted === false
+      && evidence.reengagement.turn?.streaming?.visiblyStreamed === true,
   };
 };

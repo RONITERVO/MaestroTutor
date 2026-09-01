@@ -57,4 +57,27 @@ describe('core audio-note generation', () => {
       'audioNote.succeeded',
     ]));
   });
+
+  it('rejects an unexpected close after partial audio but before turn completion', async () => {
+    const audioBase64 = Buffer.from(new Int16Array([1, 2]).buffer).toString('base64');
+    const connect = vi.fn(async (request: any) => {
+      queueMicrotask(() => {
+        request.callbacks.onmessage({
+          serverContent: {
+            modelTurn: { parts: [{ inlineData: { data: audioBase64, mimeType: 'audio/pcm;rate=24000' } }] },
+          },
+        });
+        request.callbacks.onclose();
+      });
+      return { sendRealtimeInput: vi.fn(), close: vi.fn() };
+    });
+
+    await expect(runCoreAudioNoteGeneration({
+      aiClient: { models: {} as any, live: { connect, music: { connect: vi.fn() } } },
+      model: 'gemini-live-test',
+      text: 'Hola',
+      triggerPcmBase64: Buffer.from(new Int16Array([1]).buffer).toString('base64'),
+      triggerSampleRate: 24_000,
+    })).rejects.toThrow('before turn completion');
+  });
 });

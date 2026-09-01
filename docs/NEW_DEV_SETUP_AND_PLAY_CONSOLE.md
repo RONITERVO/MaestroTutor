@@ -42,9 +42,11 @@ Functions package pins the supported version.
 | Production | `chatwithmaestro` | `https://chatwithmaestro.web.app` and the production custom domain |
 | Staging | `chatwithmaestro-staging` | `https://chatwithmaestro-staging.web.app` |
 
-Use `.firebaserc` aliases and always include `--project staging` or
-`--project production` for a deploy. Never infer the target from the currently
-selected Firebase CLI project.
+The checked-in `.firebaserc` aliases are `default` (production
+`chatwithmaestro`) and `staging` (`chatwithmaestro-staging`). Always include
+`--project staging` for staging or `--project chatwithmaestro` / `--project
+default` for production. There is no `production` alias. Never infer the target
+from the currently selected Firebase CLI project.
 
 Tracked dotenv files contain public client configuration and examples. Ignored
 local dotenv/secret files may contain environment-specific values. Confirm with
@@ -172,6 +174,26 @@ Repository secrets:
 - `HEADLESS_FIREBASE_PASSWORD`
 - `HEADLESS_APPCHECK_DEBUG_TOKEN`
 
+For a local managed staging run, create the ignored
+`.env.headless.staging.local` yourself and obtain the three secret values through
+the approved secret manager. Do not commit or paste the file:
+
+```dotenv
+MAESTRO_BACKEND_BASE_URL=https://europe-west1-chatwithmaestro-staging.cloudfunctions.net/api
+MAESTRO_FIREBASE_API_KEY=<public staging web API key>
+MAESTRO_FIREBASE_APP_ID=<public staging web app id>
+MAESTRO_FIREBASE_EMAIL=<dedicated staging automation user>
+MAESTRO_FIREBASE_PASSWORD=<secret>
+MAESTRO_APPCHECK_DEBUG_TOKEN=<secret>
+```
+
+Load it only through the CLI's supported flag:
+
+```powershell
+npm run maestro -- auth.signIn --env-file .env.headless.staging.local --profile release-smoke
+npm run maestro -- account.summary --env-file .env.headless.staging.local --profile release-smoke
+```
+
 The `Release gate` runs app tests/lint/build, Functions tests, Firestore billing
 invariants and the static single-provider verifier. The weekly/manual `Headless
 staging journey` performs the controlled Stripe-first real-provider sequence. Both
@@ -187,15 +209,15 @@ npm run lint
 npm run build:staging
 npm --prefix functions test
 npm --prefix functions run test:emulator
-npm exec firebase -- deploy --project staging --only functions,firestore:rules,firestore:indexes,hosting
+npm --prefix functions exec firebase -- deploy --config firebase.json --project staging --only functions,firestore:rules,firestore:indexes,hosting
 ```
 
 After deployment:
 
 ```powershell
 Invoke-RestMethod https://europe-west1-chatwithmaestro-staging.cloudfunctions.net/api/health
-npm run maestro -- auth.signIn --profile release-smoke
-npm run maestro -- billing.checkout.completeTest --profile release-smoke --params '{"packId":"pack_1000","expectedCredits":1000,"headless":true}'
+npm run maestro -- auth.signIn --env-file .env.headless.staging.local --profile release-smoke
+npm run maestro -- billing.checkout.completeTest --env-file .env.headless.staging.local --profile release-smoke --params '{"packId":"pack_1000","expectedCredits":1000,"headless":true}'
 ```
 
 Dispatch `Headless staging journey`. Do not substitute a local emulator result for
@@ -218,7 +240,9 @@ the Stripe/Gemini/App Check provider proof.
 
 ```powershell
 npm run cap:android
-android\gradlew.bat :app:compileDebugJavaWithJavac --no-daemon
+Push-Location android
+.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug --no-daemon
+Pop-Location
 ```
 
 There is deliberately no Android Billing Client dependency and no managed purchase

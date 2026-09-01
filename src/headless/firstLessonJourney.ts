@@ -44,6 +44,8 @@ const summarizeTurn = (turn: any, kind: string) => ({
   capturedInputSha256: turn?.capturedInputSha256 ?? null,
   capturedModelSamples: turn?.capturedModelSamples ?? null,
   capturedModelSha256: turn?.capturedModelSha256 ?? null,
+  cleanedUp: turn?.cleanedUp ?? null,
+  cleanupFailureCount: Array.isArray(turn?.cleanupFailures) ? turn.cleanupFailures.length : null,
 });
 
 export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
@@ -278,6 +280,7 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
       operationId: reengagement.operationId,
       emptyUserRequest: reengagement.emptyUserRequest,
       userMessagePersisted: reengagement.userMessagePersisted,
+      streaming: reengagement.turn.streaming,
     },
     coverage,
     passed,

@@ -29,12 +29,12 @@ Verified on 2026-09-01:
 | Android package | `com.ronitervo.maestrotutor` |
 | Play developer ID | `7337511454933294600` |
 | Play app ID | `4972859959018040172` |
-| Play consumable | `maestro_credits_1000` — 1,000 credits, EUR 2.99 |
+| Managed credit pack | `pack_1000` — 1,000 credits, Stripe Checkout price EUR 2.99 |
 | Stripe account | `Maestro Chat And Learn` (`acct_1Rui2P1dnAf99VGW`) |
 | Stripe webhook destination | `maestro-managed-billing` (`we_1UAmNP1dnAf99VGWLBHM6tdC`) |
 | Stripe webhook URL | `https://europe-west1-chatwithmaestro.cloudfunctions.net/api/billing/stripe/webhook` |
 
-The API is a Node.js 24, second-generation Cloud Function. Two scheduled
+The API is a Node.js 22, second-generation Cloud Function. Two scheduled
 functions also exist in `europe-west1`: expired reservations run every ten
 minutes and managed file cleanup retries hourly. Firestore rules, indexes and
 TTL policies are deployed. Artifact Registry deletes old function images after
@@ -83,8 +83,12 @@ async success event. The webhook signing secret is in Secret Manager as
 `STRIPE_SECRET`. Do not replace either with a test-mode value in production.
 
 Older webhook destinations named `playful-brilliance` and
-`paymentevents-maestro` predate this setup. They were intentionally preserved.
-Do not delete them until their owners and consumers are identified.
+`paymentevents-maestro` predate this setup. Before enabling or rebuilding any
+destination, inspect both legacy destinations, record their URLs, subscribed
+events, owners and consumers, and disable the two Checkout fulfilment events or
+quarantine any unidentified endpoint. Do not leave an unidentified consumer
+receiving credit-fulfilment events. Deletion remains a separately reviewed
+provider change after ownership and retention evidence is recorded.
 
 Official reference: [Stripe webhooks](https://docs.stripe.com/webhooks).
 
@@ -152,8 +156,8 @@ A maintainer can complete the entire runbook with:
 - Write access to the GitHub repository and permission to publish `gh-pages`.
 - Firebase/GCP access to project `chatwithmaestro`, including Functions,
   Firestore, App Check, Secret Manager, Cloud Scheduler and billing visibility.
-- Play Console permission to manage the Maestro app's products, test tracks,
-  users and orders.
+- Play Console permission to manage the Maestro app's integrity settings, test
+  tracks, users and releases.
 - Stripe access to the `Maestro Chat And Learn` live account, including
   Developers/Webhooks and restricted keys.
 - Access to the Android release keystore and its passwords through the team's
@@ -165,7 +169,7 @@ their runtime identity.
 
 ## 4. Prepare a workstation
 
-Install Node.js 24, npm, Git, JDK 21, Android Studio/SDK, Google Cloud CLI and
+Install Node.js 22, npm, Git, JDK 21, Android Studio/SDK, Google Cloud CLI and
 GitHub CLI. The repository's local Firebase CLI is the supported deployment
 CLI; do not depend on an unrelated global version.
 
@@ -207,7 +211,9 @@ Rules:
 - Production secrets live only in Secret Manager.
 - `functions/.secret.local` is only for emulator secrets and is gitignored.
 - Never commit any of those ignored files.
-- Keep `.firebaserc` pointed at `chatwithmaestro` before deploying.
+- Always pass the intended Firebase project explicitly. In the checked-in
+  `.firebaserc`, `default` is production and `staging` is staging; do not rely on
+  whichever alias a previous maintainer selected locally.
 
 For production, confirm the fail-closed server setting without printing the
 rest of the file:
@@ -284,7 +290,7 @@ that every lower-severity advisory is harmless.
 ## 6. Publish the web app
 
 1. Confirm root `.env` has the live Firebase values, Enterprise site key,
-   backend URL, Google client IDs and `maestro_credits_1000`.
+   backend URL, Google client IDs and `pack_1000`.
 2. Confirm `public/CNAME` contains exactly `chatwithmaestro.com`.
 3. Run:
 
@@ -471,7 +477,7 @@ Also inspect:
 - Firebase Functions errors, latency, instance count and App Check metrics.
 - Firestore usage, rejected rules requests, TTL backlog and index health.
 - Stripe webhook delivery failures and retries.
-- Play order/purchase-verification errors.
+- Play Integrity/App Check failures and internal-track release health.
 - Cloud Billing spend against a maintainer-approved budget.
 
 The deployed API caps scaling at 10 instances with concurrency 20. Credits and
@@ -488,8 +494,9 @@ budget and alert recipients, then record them in this document.
 - Stripe failures: leave webhook signature verification fail-closed. Restore the
   correct secret/key and replay failed events from Stripe; idempotency prevents a
   second grant.
-- Play verification failures: do not consume locally or grant manually. Restore
-  API/permissions, then retry the same purchase token.
+- Paid balance missing: inspect the signed Stripe delivery, `checkoutGrants`,
+  and the hashed `purchaseClaims` record, then replay the same provider event.
+  Do not grant manually; the idempotent claim must remain the only grant path.
 - Firestore migration: stop. v2 is the first deployed schema, but any future
   schema change must inventory live documents and include a tested rollback.
 - Account deletion failure: preserve the signed-in account so deletion can be
@@ -501,7 +508,9 @@ Infrastructure and configuration are real and active, but these checks cannot
 be truthfully replaced with setup screens or unit tests:
 
 - A real Stripe Checkout payment, including a delayed-payment success path.
-- A Play licence-test purchase and replay/pending-purchase checks.
+- An Android internal-track run proving managed balance spend and Play Integrity.
+  If external Stripe checkout is approved and enabled, test the Custom Tab return
+  and exact grant; otherwise prove that the Android buy action is fail-closed.
 - Full account deletion across Firebase, Stripe and remote Gemini files.
 - Representative production load and cost observation.
 - A signed Android build containing the new Firebase config, followed by a

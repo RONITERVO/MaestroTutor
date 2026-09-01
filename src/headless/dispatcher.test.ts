@@ -35,6 +35,10 @@ describe('headless dispatcher contract', () => {
     expect(result.methods).toContain('chat.reengage');
     expect(result.methods).toContain('journey.firstLesson');
     expect(result.methodInfo['chat.attachment.turn'].params.join(' ')).toContain('svg|video|office');
+    expect(result.methodInfo['chat.attachment.turn'].params).toEqual(expect.arrayContaining([
+      'useGoogleSearch?',
+      'requireInvariants?',
+    ]));
     expect(result.configuredModels.text.default).toBeTruthy();
     expect(result.configuredModels.music).toBeTruthy();
   });
@@ -49,6 +53,22 @@ describe('headless dispatcher contract', () => {
     await expect(dispatchHeadlessMethod(unusedClient, 'chat.turn', {})).rejects.toMatchObject({
       name: 'HeadlessDispatchError', rpcCode: -32602,
     } satisfies Partial<HeadlessDispatchError>);
+  });
+
+  it.each([
+    {},
+    { fixture: '' },
+    { fixture: 7 },
+    { fixture: 'unknown' },
+    { dataUrl: 'data:text/plain;base64,QQ==' },
+    { mimeType: 'text/plain' },
+    { dataUrl: '', mimeType: 'text/plain' },
+    { dataUrl: 'data:text/plain;base64,QQ==', mimeType: '' },
+  ])('rejects invalid attachment alternatives before starting the journey: %j', async invalid => {
+    await expect(dispatchHeadlessMethod(unusedClient, 'chat.attachment.turn', {
+      text: 'Inspect this attachment.',
+      ...invalid,
+    })).rejects.toMatchObject({ rpcCode: -32602 });
   });
 
   it('bounds and filters language discovery output', async () => {

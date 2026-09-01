@@ -17,7 +17,7 @@
   </head>
   <body>
     <h1>Privacy Policy</h1>
-    <p><strong>Effective Date:</strong> September 1, 2026</p>
+    <p><strong>Effective Date:</strong> September 2, 2026</p>
     <p>
       Maestro Tutor offers two ways to access Google Gemini: bring your own API key
       ("BYOK") or sign in to use Maestro managed access. The data flow depends on
@@ -37,7 +37,7 @@
       <li><strong>Account data:</strong> Google/Firebase sign-in identifiers and available profile details such as your name, email address, and profile image.</li>
       <li><strong>Generation content:</strong> Prompts, responses, and uploaded media pass through Maestro's Firebase/Google Cloud service and then Google Gemini. Maestro does not store ordinary chat history in its managed database. Managed uploads can remain temporarily in Google Gemini Files until deletion or automated cleanup; Maestro stores operational file metadata needed to manage that lifecycle.</li>
       <li><strong>Usage and operations:</strong> Credit balance, entitlements, usage and billing ledger metadata, reservations, rate-limit windows, request identifiers, and file/cleanup state.</li>
-      <li><strong>Purchases:</strong> Stripe customer and checkout references for web purchases, or Google Play purchase/order references for Android purchases, plus verification and credit-grant records. Payment providers process payment credentials; Maestro does not store raw card details.</li>
+      <li><strong>Purchases:</strong> Stripe customer and Checkout references, verification results, and credit-grant records. Stripe processes payment credentials; Maestro does not store raw card details. Stripe Checkout is the only managed-credit purchase provider. Android users can spend a balance purchased on the web; the Android buy action remains unavailable unless Maestro is approved and configured for an applicable Google Play external-checkout programme.</li>
       <li><strong>Content reports:</strong> If you voluntarily report an AI response, Maestro stores the reported content, selected reason, optional notes, surface/model details, and basic request/account metadata so the report can be reviewed.</li>
     </ul>
 
@@ -60,8 +60,9 @@
       linked Stripe customer when applicable. Purchase-integrity claims and previously
       submitted content reports may remain only in anonymized form. A one-way account
       tombstone is retained to prevent delayed requests or payment events from recreating
-      the deleted account. Stripe, Google Play, Google, and other providers may retain
-      transaction or service records under their own policies and legal obligations.
+      the deleted account. Stripe, Google, and Google Play may retain payment,
+      service, app-distribution, or integrity records under their own policies and
+      legal obligations.
     </p>
 
     <div class="note">
@@ -73,9 +74,10 @@
 
     <h2>Third-Party Services</h2>
     <p>
-      Maestro uses Google Gemini, Firebase and Google Cloud, Stripe for managed web
-      purchases, and Google Play for managed Android purchases. Their handling of data is
-      governed by their own terms and policies. See
+      Maestro uses Google Gemini, Firebase and Google Cloud, Stripe for managed-credit
+      purchases, and Google Play for Android distribution and Play Integrity App Check—not
+      for managed-credit payments. Their handling of data is governed by their own terms
+      and policies. See
       <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a>,
       <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Gemini API Terms</a>,
       <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Firebase Privacy and Security</a>, and

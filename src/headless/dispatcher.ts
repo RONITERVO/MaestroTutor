@@ -211,20 +211,42 @@ export const dispatchHeadlessMethod = async (
       const fixtureKinds = new Set<SyntheticAttachmentKind>([
         'text', 'image', 'audio', 'pdf', 'svg', 'video', 'office',
       ]);
-      const fixture = typeof input.fixture === 'string'
-        ? input.fixture as SyntheticAttachmentKind
+      const hasFixture = Object.prototype.hasOwnProperty.call(input, 'fixture');
+      const fixtureValue = hasFixture ? input.fixture : undefined;
+      const fixture = typeof fixtureValue === 'string' && fixtureValue.trim()
+        ? fixtureValue.trim() as SyntheticAttachmentKind
         : undefined;
-      if (fixture && !fixtureKinds.has(fixture)) {
+      if (hasFixture && (!fixture || !fixtureKinds.has(fixture))) {
         throw new HeadlessDispatchError(
           -32602,
           'Parameter "fixture" must be text, image, audio, pdf, svg, video or office.',
         );
       }
+      const hasDataUrl = Object.prototype.hasOwnProperty.call(input, 'dataUrl');
+      const hasMimeType = Object.prototype.hasOwnProperty.call(input, 'mimeType');
+      const dataUrl = typeof input.dataUrl === 'string' && input.dataUrl.trim()
+        ? input.dataUrl.trim()
+        : undefined;
+      const mimeType = typeof input.mimeType === 'string' && input.mimeType.trim()
+        ? input.mimeType.trim()
+        : undefined;
+      if (!fixture && (!dataUrl || !mimeType)) {
+        throw new HeadlessDispatchError(
+          -32602,
+          'Provide a supported "fixture" or both non-empty "dataUrl" and "mimeType" parameters.',
+        );
+      }
+      if ((hasDataUrl && !dataUrl) || (hasMimeType && !mimeType) || (hasDataUrl !== hasMimeType && !fixture)) {
+        throw new HeadlessDispatchError(
+          -32602,
+          'Parameters "dataUrl" and "mimeType" must be non-empty strings and supplied together.',
+        );
+      }
       return runHeadlessAttachmentTurn(client, {
         text: requiredString(input, 'text'),
         fixture,
-        dataUrl: typeof input.dataUrl === 'string' ? input.dataUrl : undefined,
-        mimeType: typeof input.mimeType === 'string' ? input.mimeType : undefined,
+        dataUrl,
+        mimeType,
         displayName: typeof input.displayName === 'string' ? input.displayName : undefined,
         languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
         useGoogleSearch: typeof input.useGoogleSearch === 'boolean' ? input.useGoogleSearch : undefined,

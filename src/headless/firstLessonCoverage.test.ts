@@ -29,6 +29,8 @@ const validEvidence = () => ({
     ...FIRST_LESSON_ATTACHMENT_KINDS.map(kind => ({
       kind: `attachment-${kind}`,
       streaming: { visiblyStreamed: true },
+      cleanedUp: true,
+      cleanupFailureCount: 0,
     })),
   ],
   aftersteps: ['image', 'audio-note', 'music'].map(tool => ({
@@ -49,7 +51,11 @@ const validEvidence = () => ({
     purpose: 'tts',
     dataSha256: hash,
   },
-  reengagement: { emptyUserRequest: true, userMessagePersisted: false },
+  reengagement: {
+    emptyUserRequest: true,
+    userMessagePersisted: false,
+    turn: { streaming: { visiblyStreamed: true } },
+  },
 });
 
 describe('first lesson coverage gate', () => {
@@ -70,5 +76,11 @@ describe('first lesson coverage gate', () => {
       observerAudio: false,
       audioCapture: false,
     });
+  });
+
+  it('requires visible streaming evidence from the empty-input re-engagement turn', () => {
+    const evidence = validEvidence();
+    evidence.reengagement.turn.streaming.visiblyStreamed = false;
+    expect(evaluateFirstLessonCoverage(evidence).reengagement).toBe(false);
   });
 });

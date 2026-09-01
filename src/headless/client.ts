@@ -174,7 +174,7 @@ export const describeHeadlessMethods = () => ({
     'language.list': { mutates: false, params: ['targetLanguageCode?', 'nativeLanguageCode?', 'limit? (1..500, default 100)'] },
     'language.select': { mutates: true, params: ['pairId? | targetLanguageCode + nativeLanguageCode'] },
     'chat.turn': { mutates: true, params: ['text', 'languagePairId?', 'useGoogleSearch?', 'requireInvariants?', 'fileParts?'] },
-    'chat.attachment.turn': { mutates: true, external: true, params: ['text', 'fixture? (text|image|audio|pdf|svg|video|office) | dataUrl + mimeType', 'displayName?', 'languagePairId?', 'cleanup?'] },
+    'chat.attachment.turn': { mutates: true, external: true, params: ['text', 'fixture? (text|image|audio|pdf|svg|video|office) | dataUrl + mimeType', 'displayName?', 'languagePairId?', 'useGoogleSearch?', 'requireInvariants?', 'cleanup?'] },
     'suggestions.generate': { mutates: true, params: ['languagePairId?', 'assistantMessageId?', 'responseSource?', 'includeArtifactContent?'] },
     'suggestions.process': { mutates: true, external: true, params: ['languagePairId?', 'assistantMessageId?', 'responseSource?', 'syntheticDecision?', 'uploadGeneratedMedia?'] },
     'translation.create': { mutates: true, external: true, params: ['text', 'languagePairId?', 'from? (target|native)', 'attachToSuggestions?'] },

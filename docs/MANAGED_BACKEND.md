@@ -60,7 +60,12 @@ Authenticated + App Check:
 - `POST /gemini/clear-files`
 - `POST /gemini/live-token`
 - `POST /gemini/live-token/release`
-- `POST /reports/ai-content`
+
+App Check required, Firebase Authentication optional:
+
+- `POST /reports/ai-content` — accepts anonymous reports when no bearer token is
+  supplied and applies the anonymous rate limit; a valid bearer token associates
+  the report with its managed account.
 
 There is no client-triggered purchase fulfilment endpoint. The retired
 `/billing/google-play/verify` route must not return.
@@ -69,7 +74,9 @@ There is no client-triggered purchase fulfilment endpoint. The retired
 
 `requireAuthContext` verifies Firebase ID tokens and resolves the token subject as
 the account id. The caller cannot choose another uid. `REQUIRE_APPCHECK=true`
-requires a valid Firebase App Check token for authenticated product routes.
+requires a valid Firebase App Check token for product routes, including anonymous
+content reports. The provider-signed Stripe webhook is outside App Check and
+trusts only its raw-body signature.
 
 Web attestation uses a domain-restricted reCAPTCHA Enterprise key. Android uses
 Play Integrity with registered signing fingerprints. CI uses a staging-only debug
@@ -230,7 +237,8 @@ or a production identity.
 Deploy staging explicitly:
 
 ```powershell
-npm exec firebase -- deploy --project staging --only functions,firestore:rules,firestore:indexes,hosting
+npm run build:staging
+npm --prefix functions exec firebase -- deploy --config firebase.json --project staging --only functions,firestore:rules,firestore:indexes,hosting
 ```
 
 ## Failure rules

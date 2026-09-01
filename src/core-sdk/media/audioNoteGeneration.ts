@@ -178,8 +178,9 @@ export const runCoreAudioNoteGeneration = async (params: {
         },
         onclose: () => {
           if (settled) return;
-          if (chunks.length > 0) finalize();
-          else rejectOnce(new Error('Audio note session closed before generating audio.'));
+          rejectOnce(new Error(chunks.length > 0
+            ? 'Audio note session closed before turn completion.'
+            : 'Audio note session closed before generating audio.'));
         },
         onerror: (error: unknown) => rejectOnce(new Error(
           error instanceof Error ? error.message : 'Audio note generation failed.',

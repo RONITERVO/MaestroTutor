@@ -67,17 +67,31 @@ const functions = JSON.parse(functionsPackage);
 requireText(app.scripts?.['maestro:rpc'], 'package.json must expose the JSON-RPC harness.');
 requireText(!functions.dependencies?.googleapis, 'Functions must not restore the retired Google Play verifier dependency.');
 requireText(!functionsIndex.includes('/billing/google-play/verify'), 'Functions must not expose a second purchase grant route.');
-requireText(functionsIndex.includes('/gemini/generate-music'), 'Functions must expose managed music through the authenticated backend.');
+requireText(
+  /app\.post\(\s*['"]\/gemini\/generate-music['"]\s*,\s*asyncRoute\(\s*['"]required['"]/.test(functionsIndex),
+  'Functions must expose managed music through an authenticated required-auth route.',
+);
 requireText(functionsGemini.includes("apiVersion: 'v1alpha'"), 'The Lyria backend adapter must use its supported v1alpha WebSocket endpoint.');
-requireText(managedGeminiClient.includes('Managed music generation must use the authenticated backend music route.'), 'Managed clients must not mint unsupported ephemeral Lyria tokens.');
+requireText(
+  /music:\s*\{\s*connect:\s*async\s*\(\)\s*=>\s*\{\s*throw new Error\(/s.test(managedGeminiClient),
+  'Managed music connect must throw instead of minting an unsupported ephemeral Lyria token.',
+);
+requireText(functionsGemini.includes('trimMusicPcmChunk'), 'Managed music must trim PCM to the requested duration.');
+requireText(functionsGemini.includes('isCompleteMusicSampleCount'), 'Managed music must reject partial provider closes.');
+requireText(functionsGemini.includes('getManagedMusicLeaseDurationMs'), 'Managed music leases must cover the full provider timeout.');
 requireText(!androidBuild.includes('com.android.billingclient'), 'Android must not ship a second purchase SDK.');
 requireText(!mainActivity.includes('ManagedBillingPlugin'), 'Android must not register the retired billing plugin.');
 
-const clientPacks = envValue(stagingEnv, 'VITE_MANAGED_CREDIT_PACK_IDS').split(',').filter(Boolean).sort();
+const clientPacks = envValue(stagingEnv, 'VITE_MANAGED_CREDIT_PACK_IDS')
+  .split(',')
+  .map(entry => entry.trim())
+  .filter(Boolean)
+  .sort();
 const backendPacks = envValue(functionsExample, 'MANAGED_CREDIT_PACKS')
   .split(',')
+  .map(entry => entry.trim())
   .filter(Boolean)
-  .map(entry => entry.split(':')[0])
+  .map(entry => entry.split(':')[0].trim())
   .sort();
 requireText(clientPacks.length > 0, 'Staging must advertise at least one managed credit pack.');
 requireText(JSON.stringify(clientPacks) === JSON.stringify(backendPacks), 'Client and backend example pack ids must match exactly.');
@@ -108,6 +122,8 @@ for (const toolKind of ['image', 'audio-note', 'music']) {
 }
 requireText(firstLessonJourney.includes("mode: 'observer'"), 'The first-lesson journey must retain silent-observer coverage.');
 requireText(firstLessonJourney.includes('useGoogleSearch: false'), 'Non-Search first-lesson turns must not inherit the earlier Search toggle.');
+requireText(firstLessonCoverage.includes('cleanupFailureCount'), 'The first-lesson attachment gate must require confirmed cleanup.');
+requireText(firstLessonCoverage.includes('visiblyStreamed'), 'The first-lesson reengagement gate must require visible streaming.');
 requireText(tutorConversation.includes('executeSuggestionToolRequest'), 'The visual UI must use the shared suggestion afterstep dispatcher.');
 requireText(tutorConversation.includes('normalizeCoreSuggestionCreatorArtifact'), 'The visual UI must use shared artifact normalization.');
 requireText(tutorConversation.includes('buildCoreAttachmentUploadPlans'), 'The visual UI must use the shared attachment upload planner.');

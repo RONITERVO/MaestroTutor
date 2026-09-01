@@ -13,6 +13,7 @@ import type { HeadlessClient } from './client';
 
 export interface HeadlessChatTurnParams {
   text: string;
+  operationId?: string;
   languagePairId?: string;
   useGoogleSearch?: boolean;
   fileParts?: Array<{ fileUri: string; mimeType: string }>;
@@ -89,6 +90,7 @@ export const runHeadlessChatTurn = async (
     useGoogleSearch: params.useGoogleSearch ?? client.state.settings.enableGoogleSearch ?? true,
   }, {
     runtime: client.runtime,
+    operationId: params.operationId,
     aiClient: client.ai,
   });
   const assistantMessage = createMessage(client, 'assistant', {

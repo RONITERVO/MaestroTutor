@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { HeadlessClient } from './client';
 import { completeStripeTestCheckout } from './hostedBrowser';
+import { makePurchaseClaimId } from '../../shared/billing/purchaseClaims';
 
 export interface StripeTestJourneyInput {
   packId: string;
@@ -26,12 +27,8 @@ export const runStripeTestCheckoutJourney = async (
   const email = input.email?.trim() || process.env.MAESTRO_FIREBASE_EMAIL?.trim() || '';
   if (!email) throw new Error('email or MAESTRO_FIREBASE_EMAIL is required for the hosted Checkout form.');
 
-  const [before, ledgersBefore] = await Promise.all([
-    client.account.refreshAccount(operationId),
-    client.account.listLedgers(200, operationId),
-  ]);
+  const before = await client.account.refreshAccount(operationId);
   const creditsBefore = before.account.billingSummary.availableCredits;
-  const purchasesBefore = ledgersBefore.billing.entries.filter(entry => entry.kind === 'purchase').length;
   const checkout = await client.account.startStripeCheckout(input.packId, operationId);
   if (!checkout.sessionId.startsWith('cs_test_')) {
     throw new Error('Refusing to continue: Stripe returned a non-test Checkout session.');
@@ -71,9 +68,13 @@ export const runStripeTestCheckoutJourney = async (
     throw new Error(`Expected one ${expectedCredits}-credit grant, observed a ${creditsAfter - creditsBefore}-credit delta.`);
   }
   const ledgersAfter = await client.account.listLedgers(200, operationId);
-  const purchasesAfter = ledgersAfter.billing.entries.filter(entry => entry.kind === 'purchase').length;
-  if (purchasesAfter - purchasesBefore !== 1) {
-    throw new Error(`Expected one new purchase ledger entry, observed ${purchasesAfter - purchasesBefore}.`);
+  const expectedPurchaseClaimId = makePurchaseClaimId('stripe', checkout.sessionId);
+  const matchingPurchaseEntries = ledgersAfter.billing.entries.filter(entry => (
+    entry.kind === 'purchase'
+    && entry.metadata?.purchaseClaimId === expectedPurchaseClaimId
+  ));
+  if (matchingPurchaseEntries.length !== 1) {
+    throw new Error(`Expected one ledger entry for Checkout session ${checkout.sessionId}, observed ${matchingPurchaseEntries.length}.`);
   }
 
   client.runtime.events.emit({
@@ -88,7 +89,8 @@ export const runStripeTestCheckoutJourney = async (
     creditsBefore,
     creditsAfter,
     grantedCredits: creditsAfter - creditsBefore,
-    newPurchaseLedgerEntries: purchasesAfter - purchasesBefore,
+    purchaseClaimId: expectedPurchaseClaimId,
+    newPurchaseLedgerEntries: matchingPurchaseEntries.length,
     returnOrigin: hosted.returnOrigin,
   };
 };

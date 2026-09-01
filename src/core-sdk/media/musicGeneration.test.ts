@@ -113,4 +113,105 @@ describe('core music generation', () => {
     expect(result).toMatchObject({ mimeType: 'audio/wav', sampleCount: 4, durationSeconds: 2 });
     expect(events.snapshot().map(event => event.phase)).toEqual(['music.started', 'music.succeeded']);
   });
+
+  it('does not fail an already-completed managed generation when playback observers throw', async () => {
+    const pcm = new Int16Array(16);
+    const generateMusic = vi.fn(async () => ({
+      pcmBase64: Buffer.from(pcm.buffer).toString('base64'),
+      sampleRate: 2,
+      channels: 1,
+      sampleCount: pcm.length,
+      durationSeconds: 8,
+    }));
+
+    await expect(runCoreManagedMusicGeneration({
+      backend: { generateMusic },
+      model: 'lyria-realtime-exp',
+      prompt: 'Original scale exercise',
+      durationSeconds: 8,
+      onPcmChunk: async () => { throw new Error('playback unavailable'); },
+      onPcmObserverStart: () => { throw new Error('UI callback failed'); },
+    })).resolves.toMatchObject({ sampleCount: 16, durationSeconds: 8 });
+  });
+
+  it('trims the final provider chunk, ignores later chunks and serializes observers', async () => {
+    const connect = vi.fn(async (request: any) => {
+      queueMicrotask(() => {
+        request.callbacks.onmessage({ setupComplete: true });
+        request.callbacks.onmessage({
+          serverContent: {
+            audioChunks: [
+              { data: Buffer.from(new Int16Array(6).buffer).toString('base64'), mimeType: 'audio/pcm;rate=1;channels=1' },
+              { data: Buffer.from(new Int16Array(6).buffer).toString('base64'), mimeType: 'audio/pcm;rate=1;channels=1' },
+              { data: Buffer.from(new Int16Array(4).buffer).toString('base64'), mimeType: 'audio/pcm;rate=1;channels=1' },
+            ],
+          },
+        });
+        request.callbacks.onclose();
+      });
+      return {
+        setWeightedPrompts: vi.fn(async () => undefined),
+        setMusicGenerationConfig: vi.fn(async () => undefined),
+        play: vi.fn(),
+        pause: vi.fn(),
+        close: vi.fn(),
+      };
+    });
+    const observedTotals: number[] = [];
+    let activeObservers = 0;
+    let maxActiveObservers = 0;
+    const observerStarted = vi.fn();
+    const result = await runCoreMusicGeneration({
+      aiClient: { models: {} as any, live: { connect: vi.fn(), music: { connect } } },
+      model: 'lyria-realtime-exp',
+      prompt: 'A precise eight second exercise',
+      durationSeconds: 8,
+      onPcmChunk: async chunk => {
+        activeObservers += 1;
+        maxActiveObservers = Math.max(maxActiveObservers, activeObservers);
+        observedTotals.push(chunk.totalSamples);
+        await Promise.resolve();
+        activeObservers -= 1;
+        return true;
+      },
+      onPcmObserverStart: observerStarted,
+    });
+    await vi.waitFor(() => expect(observedTotals).toHaveLength(2));
+
+    expect(result).toMatchObject({ sampleCount: 8, durationSeconds: 8 });
+    expect(observedTotals).toEqual([6, 8]);
+    expect(maxActiveObservers).toBe(1);
+    expect(observerStarted).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a stream that closes with only partial audio', async () => {
+    const connect = vi.fn(async (request: any) => {
+      queueMicrotask(() => {
+        request.callbacks.onmessage({ setupComplete: true });
+        request.callbacks.onmessage({
+          serverContent: {
+            audioChunks: [{
+              data: Buffer.from(new Int16Array(2).buffer).toString('base64'),
+              mimeType: 'audio/pcm;rate=1;channels=1',
+            }],
+          },
+        });
+        request.callbacks.onclose();
+      });
+      return {
+        setWeightedPrompts: vi.fn(async () => undefined),
+        setMusicGenerationConfig: vi.fn(async () => undefined),
+        play: vi.fn(),
+        pause: vi.fn(),
+        close: vi.fn(),
+      };
+    });
+
+    await expect(runCoreMusicGeneration({
+      aiClient: { models: {} as any, live: { connect: vi.fn(), music: { connect } } },
+      model: 'lyria-realtime-exp',
+      prompt: 'A complete exercise',
+      durationSeconds: 8,
+    })).rejects.toThrow('before the requested 8s duration');
+  });
 });

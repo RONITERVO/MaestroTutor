@@ -63,6 +63,7 @@ describe('synthetic Live journey', () => {
       gateInputOnSpeech: true,
       semanticSpeech: true,
       includeModelAudio: true,
+      videoFrames: [{ dataBase64: 'data:image/png;base64,AA==' }],
     }, { runtime });
 
     expect(result.transcript).toBe('Hola.');
@@ -71,6 +72,7 @@ describe('synthetic Live journey', () => {
     expect(result.gate.gatedPackets).toBeGreaterThan(0);
     expect(result.modelAudioChunksBase64).toEqual(['AA==']);
     expect(sent.some(message => message.audio?.mimeType === 'audio/pcm;rate=16000')).toBe(true);
+    expect(sent.some(message => message.video?.mimeType === 'image/png')).toBe(true);
     expect(events.snapshot().some(event => event.phase === 'input.frame' && event.data?.source === 'synthetic')).toBe(true);
   });
 

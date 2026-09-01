@@ -53,6 +53,12 @@ import {
   usdToCredits,
   creditsToUsd,
 } from './pricing';
+import {
+  MANAGED_MUSIC_GENERATION_TIMEOUT_MS,
+  getManagedMusicLeaseDurationMs,
+  isCompleteMusicSampleCount,
+  trimMusicPcmChunk,
+} from './musicStreamPolicy';
 
 const STREAM_CONTENT_TYPE = 'application/x-ndjson; charset=utf-8';
 const FILE_ACTIVE_TIMEOUT_MS = 60_000;
@@ -1251,7 +1257,6 @@ const MANAGED_MUSIC_MAX_DURATION_SECONDS = 20;
 const MANAGED_MUSIC_SAMPLE_RATE = 48_000;
 const MANAGED_MUSIC_CHANNELS = 2;
 const MANAGED_MUSIC_SETUP_TIMEOUT_MS = 12_000;
-const MANAGED_MUSIC_GENERATION_TIMEOUT_MS = 90_000;
 
 const readMusicErrorMessage = (value: unknown): string => {
   if (value instanceof Error && value.message) return value.message;
@@ -1325,10 +1330,19 @@ const generateMusicPcm = async (params: {
       fail(new Error('No music audio was generated.'));
       return;
     }
+    const sampleCount = Math.floor(pcm.byteLength / 2);
+    if (!isCompleteMusicSampleCount({
+      sampleCount,
+      durationSeconds: params.durationSeconds,
+      sampleRate,
+      channels,
+    })) {
+      fail(new Error('Music generation ended before the requested duration was complete.'));
+      return;
+    }
     settled = true;
     cleanup();
     close();
-    const sampleCount = Math.floor(pcm.byteLength / 2);
     resolve({
       pcmBase64: pcm.toString('base64'),
       durationSeconds: sampleCount / Math.max(1, sampleRate * channels),
@@ -1400,11 +1414,20 @@ const generateMusicPcm = async (params: {
             || parseMusicMimeInteger(chunk.mimeType, 'sampleRate')
             || sampleRate;
           channels = parseMusicMimeInteger(chunk.mimeType, 'channels') || channels;
-          const pcm = Buffer.from(chunk.data, 'base64');
-          chunks.push(pcm);
-          totalSamples += Math.floor(pcm.byteLength / 2);
-          if (totalSamples / Math.max(1, sampleRate * channels) >= params.durationSeconds) {
+          const trimmed = trimMusicPcmChunk({
+            pcm: Buffer.from(chunk.data, 'base64'),
+            totalSamples,
+            durationSeconds: params.durationSeconds,
+            sampleRate,
+            channels,
+          });
+          if (trimmed.acceptedSamples > 0) {
+            chunks.push(trimmed.pcm);
+            totalSamples += trimmed.acceptedSamples;
+          }
+          if (trimmed.complete) {
             try { session?.pause(); } catch {}
+            if (finalizeTimer) clearTimeout(finalizeTimer);
             finalizeTimer = setTimeout(finish, 250);
             break;
           }
@@ -1465,7 +1488,7 @@ export const generateManagedMusic = async (params: {
   const lease = await reserveManagedLiveLease({
     uid: params.uid,
     purpose: 'music',
-    durationMs: appConfig.managedLiveTokenLifetimeSeconds * 1_000,
+    durationMs: getManagedMusicLeaseDurationMs(appConfig.managedLiveTokenLifetimeSeconds),
   });
 
   let reservation: Awaited<ReturnType<typeof reserveManagedCredits>>;

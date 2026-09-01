@@ -24,6 +24,7 @@ export interface TutorTextTurnInput {
 
 export interface TutorTextTurnOptions {
   runtime?: CoreRuntime;
+  operationId?: string;
   aiClient?: CoreGeminiClient;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   onGoogleSearchUnavailable?: () => void;
@@ -42,7 +43,7 @@ export const runTutorTextTurn = async (
   options: TutorTextTurnOptions = {},
 ): Promise<TutorTextTurnResult> => {
   const runtime = options.runtime || createCoreRuntime();
-  const operationId = runtime.ids.create('chat-turn');
+  const operationId = options.operationId || runtime.ids.create('chat-turn');
   runtime.events.emit({
     operationId,
     journey: 'chat',

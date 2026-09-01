@@ -43,7 +43,7 @@ persisted state transition is mocked in a provider run.
 | Silent observer audio | shared `SpeechGate`, retained PCM preroll and semantic confirmation | `live.observer.turn`; gate enabled, no video frames, transcript/audio evidence |
 | Silent observer plus visual | same observer path plus real JPEG stream injection | `includeVisual:true`; gate and sent-frame evidence |
 | Translation | the same `translateText` request with an injected managed/BYOK client | `translation.create`; translated text, optionally attached to suggestions |
-| Empty-input re-engagement | the UI-equivalent `"..."` provider prompt without a user bubble | `chat.reengage`; `emptyUserRequest:true`, `userMessagePersisted:false` |
+| Empty-input re-engagement | the UI-equivalent `"..."` provider prompt without a user bubble | `chat.reengage`; no user bubble and at least one visible streamed text delta |
 | Trigger-audio TTS | shared exact `Play` trigger instruction and audio-note Live engine | `speech.tts.generate`; trigger packets/samples and captured model samples |
 | Audio captured correctly | shared WAV encoding and Live audio capture | non-zero input/model sample counts and 64-character SHA-256 values |
 | Coherent first lesson | one persistent language-pair chat and normal aftersteps | `journey.firstLesson`; every boolean in `coverage` must be `true` |
@@ -93,7 +93,9 @@ response is retried and is never accepted as a suggestion or afterstep.
 
 The returned `userTurnCount` counts only user messages created by this invocation,
 not messages already in the named profile. A pass requires at least ten new user
-messages and every coverage flag to be true.
+messages and every coverage flag to be true. Every synthetic attachment turn must
+also report confirmed provider deletion with zero cleanup failures; a best-effort
+cleanup attempt alone is not release evidence.
 
 ## Managed provider proof
 
@@ -111,9 +113,11 @@ Required GitHub Actions configuration:
   `MAESTRO_FIREBASE_APP_ID`, `MAESTRO_TEST_PACK_ID`,
   `MAESTRO_TEST_PACK_CREDITS`.
 
-### Latest local staging proof (2026-09-02)
+### Latest pushed staging proof (2026-09-02)
 
-The expanded pre-push candidate journey completed with `accessMode: managed`, 14
+The required [Headless staging journey](https://github.com/RONITERVO/MaestroTutor/actions/runs/33567265510)
+completed on commit `ff6c07cc9e55d64ec69be38afe56db044ed90ebf` with both
+managed and required BYOK jobs green. The expanded managed journey reported 14
 new persistent user turns, `passed: true`, and all 16 coverage flags true. It
 produced real Search evidence, all seven attachment classes, streamed suggestions
 after every assistant response, model-selected artifacts, all three deterministic
@@ -122,11 +126,9 @@ one video frame in each visual mode, translation, 11 exact-trigger TTS packets a
 empty-input re-engagement without a persisted user bubble. The controlled Stripe
 test Checkout immediately before it granted exactly 1,000 credits with one new
 purchase ledger entry. Cleanup deleted six remaining generated provider files with
-zero failures and account reconciliation reported zero reserved credits.
-
-This is local staging evidence for the candidate, not a substitute for the workflow
-on the pushed commit. BYOK proof remains pending until the repository has the
-dedicated `HEADLESS_GEMINI_API_KEY` and the required workflow dispatch is green.
+zero failures and account reconciliation reported zero reserved credits. This is
+historical evidence for that exact SHA; every later release candidate still needs
+its own required dispatch.
 
 ## BYOK provider proof
 

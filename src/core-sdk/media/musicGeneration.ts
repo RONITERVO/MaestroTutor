@@ -17,6 +17,7 @@ export const MAX_MUSIC_DURATION_SECONDS = 20;
 
 const SETUP_TIMEOUT_MS = 12_000;
 const GENERATION_TIMEOUT_MS = 90_000;
+const DURATION_TOLERANCE_SECONDS = 0.25;
 
 export interface CoreMusicGenerationResult {
   operationId: string;
@@ -72,6 +73,16 @@ const base64ToInt16 = (base64: string): Int16Array => {
   return new Int16Array(bytes.buffer, 0, Math.floor(bytes.byteLength / 2));
 };
 
+const int16ToBase64 = (pcm: Int16Array): string => {
+  const bytes = new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, Math.min(bytes.length, offset + chunkSize)));
+  }
+  return globalThis.btoa(binary);
+};
+
 const readProviderErrorMessage = (value: unknown, fallback: string): string => {
   if (value instanceof Error && value.message) return value.message;
   if (value && typeof value === 'object') {
@@ -124,13 +135,20 @@ export const runCoreManagedMusicGeneration = async (params: {
     const pcm = base64ToInt16(response.pcmBase64);
     if (!pcm.length) throw new Error('Managed music generation returned no audio.');
     if (params.onPcmChunk) {
-      const observed = await params.onPcmChunk({
-        pcmBase64: response.pcmBase64,
-        sampleRate: response.sampleRate,
-        channels: response.channels,
-        totalSamples: response.sampleCount,
-      });
-      if (observed) params.onPcmObserverStart?.();
+      try {
+        const observed = await params.onPcmChunk({
+          pcmBase64: response.pcmBase64,
+          sampleRate: response.sampleRate,
+          channels: response.channels,
+          totalSamples: response.sampleCount,
+        });
+        if (observed) {
+          try { params.onPcmObserverStart?.(); } catch {}
+        }
+      } catch {
+        // Browser playback is an observer. The backend generation has already
+        // succeeded and must not be turned into a paid-request failure here.
+      }
     }
     const result: CoreMusicGenerationResult = {
       operationId,
@@ -199,6 +217,7 @@ export const runCoreMusicGeneration = async (params: {
     let startingPlayback = false;
     let playbackStarted = false;
     let observerStarted = false;
+    let observerChain: Promise<void> = Promise.resolve();
     let targetReached = false;
     let lastWarning = '';
     let setupTimer: ReturnType<typeof setTimeout> | null = null;
@@ -236,10 +255,16 @@ export const runCoreMusicGeneration = async (params: {
         rejectOnce(new Error('No music audio was generated.'));
         return;
       }
+      const durationSeconds = merged.length / Math.max(1, sampleRate * channels);
+      if (durationSeconds + DURATION_TOLERANCE_SECONDS < targetDurationSeconds) {
+        rejectOnce(new Error(
+          `Music stream ended at ${durationSeconds.toFixed(2)}s before the requested ${targetDurationSeconds}s duration.`,
+        ));
+        return;
+      }
       settled = true;
       cleanup();
       closeSession();
-      const durationSeconds = merged.length / Math.max(1, sampleRate * channels);
       const result: CoreMusicGenerationResult = {
         operationId,
         dataUrl: pcmToWav(merged, sampleRate, channels),
@@ -336,7 +361,8 @@ export const runCoreMusicGeneration = async (params: {
             ? message.serverContent.audioChunks
             : [];
           for (const chunk of audioChunks) {
-            if (settled || typeof chunk?.data !== 'string' || !chunk.data) continue;
+            if (settled || targetReached) break;
+            if (typeof chunk?.data !== 'string' || !chunk.data) continue;
             if (setupTimer) globalThis.clearTimeout(setupTimer);
             setupTimer = null;
             sampleRate = parseIntParam(chunk.mimeType, 'rate')
@@ -344,20 +370,29 @@ export const runCoreMusicGeneration = async (params: {
               || sampleRate;
             channels = parseIntParam(chunk.mimeType, 'channels') || channels;
             const pcm = base64ToInt16(chunk.data);
-            chunks.push(pcm);
-            totalSamples += pcm.length;
-            emit('music.chunkReceived', { sampleRate, channels, samples: pcm.length, totalSamples });
+            const targetSamples = Math.max(1, Math.round(targetDurationSeconds * sampleRate * channels));
+            const remainingSamples = Math.max(0, targetSamples - totalSamples);
+            const acceptedPcm = pcm.length > remainingSamples ? pcm.slice(0, remainingSamples) : pcm;
+            if (!acceptedPcm.length) {
+              targetReached = true;
+              break;
+            }
+            chunks.push(acceptedPcm);
+            totalSamples += acceptedPcm.length;
+            emit('music.chunkReceived', { sampleRate, channels, samples: acceptedPcm.length, totalSamples });
 
             if (params.onPcmChunk) {
-              void Promise.resolve(params.onPcmChunk({
-                pcmBase64: chunk.data,
+              const observedChunk = {
+                pcmBase64: acceptedPcm.length === pcm.length ? chunk.data : int16ToBase64(acceptedPcm),
                 sampleRate,
                 channels,
                 totalSamples,
-              })).then(started => {
-                if (!settled && started && !observerStarted) {
+              };
+              observerChain = observerChain.then(async () => {
+                const started = await params.onPcmChunk?.(observedChunk);
+                if (started && !observerStarted) {
                   observerStarted = true;
-                  params.onPcmObserverStart?.();
+                  try { params.onPcmObserverStart?.(); } catch {}
                 }
               }).catch(() => undefined);
             }
@@ -367,6 +402,7 @@ export const runCoreMusicGeneration = async (params: {
               targetReached = true;
               try { session?.pause(); } catch {}
               finalizeTimer = globalThis.setTimeout(finalize, 250);
+              break;
             }
           }
         },

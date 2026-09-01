@@ -92,6 +92,13 @@ Never print them, place them in command arguments, or commit them.
 Production account: **Maestro Chat And Learn**. Use live mode for production and
 test mode for staging. Do not copy a test key or signing secret into production.
 
+Before enabling or rebuilding a destination, audit the legacy destinations named
+`playful-brilliance` and `paymentevents-maestro`: record their endpoint URLs,
+subscribed events, owners and consumers. Disable the two Checkout fulfilment
+events or quarantine any unidentified endpoint so only the documented destination
+can deliver grants. Do not delete legacy provider objects until a separately
+reviewed retention/ownership decision is recorded.
+
 1. Deploy Functions first so the endpoint exists:
    `https://europe-west1-<project>.cloudfunctions.net/api/billing/stripe/webhook`.
 2. Create or open the webhook event destination for that exact URL.
@@ -115,8 +122,11 @@ mode switch cannot reuse an invalid customer.
 
 ## Firebase and App Check prerequisites
 
-Billing routes require Firebase Authentication and App Check in addition to Stripe
-signatures. Keep these provider controls distinct:
+Checkout creation and other account product routes require Firebase Authentication
+and App Check. The webhook is deliberately unauthenticated by Firebase and outside
+App Check because Stripe cannot present those client credentials; it trusts only
+the exact raw request bytes verified with the destination signing secret. Keep
+these provider controls distinct:
 
 - Web App Check uses the domain-restricted reCAPTCHA Enterprise key registered to
   the exact Firebase web app. Production domains only belong on the production key;
@@ -174,7 +184,7 @@ then exercises real managed routes using the granted credits:
 
 - authenticated account/Firestore reads;
 - tutor chat and suggestions;
-- text, image, WAV and PDF uploads followed by multimodal tutor turns;
+- text, image, WAV, PDF, SVG, MP4 and Office uploads followed by multimodal tutor turns;
 - raw Gemini generate and stream;
 - image and Gemini Live audio-note generation;
 - Lyria music streaming through the shared Core SDK;

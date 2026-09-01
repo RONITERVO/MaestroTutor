@@ -41,18 +41,31 @@ export const runHeadlessAttachmentTurn = async (client: HeadlessClient, input: {
   });
   const uploadedVariants: UploadedAttachmentVariant[] = [];
   const uploadedDisplayNames = new Map<string, string | undefined>();
-  let cleanedUp = false;
+  let cleanupAttempted = false;
+  const cleanupFailures: Array<{ id: string; uri: string; message: string }> = [];
   const cleanupUploads = async () => {
-    if (cleanedUp) return;
-    cleanedUp = true;
+    if (cleanupAttempted) return;
+    cleanupAttempted = true;
     for (const variant of uploadedVariants) {
-      await client.files.delete(variant.uri);
-      client.runtime.events.emit({
-        operationId,
-        journey: 'media',
-        phase: 'attachment.cleanedUp',
-        data: { id: variant.id, uri: variant.uri },
-      });
+      try {
+        const result = await client.files.delete(variant.uri);
+        if (!result.ok) throw new Error('File provider did not confirm deletion.');
+        client.runtime.events.emit({
+          operationId,
+          journey: 'media',
+          phase: 'attachment.cleanedUp',
+          data: { id: variant.id, uri: variant.uri },
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        cleanupFailures.push({ id: variant.id, uri: variant.uri, message });
+        client.runtime.events.emit({
+          operationId,
+          journey: 'media',
+          phase: 'attachment.cleanupFailed',
+          data: { id: variant.id, uri: variant.uri, message },
+        });
+      }
     }
   };
 
@@ -88,6 +101,7 @@ export const runHeadlessAttachmentTurn = async (client: HeadlessClient, input: {
     if (fileParts.length === 0) throw new Error('Attachment preparation produced no chat upload variants.');
     turn = await runHeadlessChatTurn(client, {
       text: input.text,
+      operationId,
       languagePairId: input.languagePairId,
       useGoogleSearch: input.useGoogleSearch,
       requireInvariants: input.requireInvariants,
@@ -115,7 +129,11 @@ export const runHeadlessAttachmentTurn = async (client: HeadlessClient, input: {
       ...variant,
       displayName: uploadedDisplayNames.get(variant.id),
     })),
-    cleanedUp: cleanedUp && Boolean(input.cleanup),
+    cleanedUp: Boolean(input.cleanup)
+      && cleanupAttempted
+      && uploadedVariants.length > 0
+      && cleanupFailures.length === 0,
+    cleanupFailures,
     turn,
   };
 };

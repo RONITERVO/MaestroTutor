@@ -154,13 +154,14 @@ export const generateMusic = async (params: {
         onPcmObserverStart: params.onStreamPlaybackStart,
       } : {}),
     };
-    const result = (await maestroAccessService.resolveAccessMode()) === 'managed'
+    const accessMode = await maestroAccessService.resolveAccessMode();
+    const result = accessMode === 'managed'
       ? await runCoreManagedMusicGeneration({ backend: maestroBackendService, ...common })
       : await runCoreMusicGeneration({
         aiClient: await getAi({ apiVersion: 'v1alpha' }),
         ...common,
       });
-    trackMusicGeneration(model, result.durationSeconds);
+    if (accessMode === 'byok') trackMusicGeneration(model, result.durationSeconds);
     log.complete({
       durationSeconds: result.durationSeconds,
       sampleRate: result.sampleRate,

@@ -33,10 +33,12 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const { t } = useAppTranslations();
   const primaryPackId = maestroPaymentsService.getManagedCreditPackIds()[0] || '';
   const isNative = Capacitor.isNativePlatform();
+  const nativeExternalCheckoutEnabled = isNative
+    && maestroPaymentsService.isAndroidExternalCheckoutEnabled();
   const purchasingAvailable = (
     maestroBackendService.isConfigured()
     && Boolean(primaryPackId)
-    && (!isNative || maestroPaymentsService.isAndroidExternalCheckoutEnabled())
+    && (!isNative || nativeExternalCheckoutEnabled)
   );
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -62,19 +64,31 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     }
   }, [session?.firebaseIdToken, t]);
   const refreshAccountRef = useRef(refreshAccount);
+  const translationRef = useRef(t);
+  const activeNativeCheckoutRef = useRef(false);
+  const stripeReturnPollRef = useRef<ReturnType<
+    typeof maestroManagedAccountController.startStripeReturnPolling
+  > | null>(null);
 
   useEffect(() => {
     refreshAccountRef.current = refreshAccount;
   }, [refreshAccount]);
 
   useEffect(() => {
-    if (!isNative || !maestroPaymentsService.isAndroidExternalCheckoutEnabled()) return undefined;
+    translationRef.current = t;
+  }, [t]);
+
+  useEffect(() => {
+    if (!nativeExternalCheckoutEnabled) return undefined;
+    let disposed = false;
     let handle: { remove: () => Promise<void> } | null = null;
-    let poll: ReturnType<typeof maestroManagedAccountController.startStripeReturnPolling> | null = null;
-    void Browser.addListener('browserFinished', () => {
+    const onBrowserFinished = () => {
+      if (!activeNativeCheckoutRef.current || disposed) return;
+      activeNativeCheckoutRef.current = false;
       setIsPurchasing(false);
-      setStatusMessage(t('managedAccess.checkoutReturn'));
-      poll = maestroManagedAccountController.startStripeReturnPolling({
+      setStatusMessage(translationRef.current('managedAccess.checkoutReturn'));
+      stripeReturnPollRef.current?.cancel();
+      stripeReturnPollRef.current = maestroManagedAccountController.startStripeReturnPolling({
         attempts: 15,
         intervalMs: 2000,
         refresh: async () => {
@@ -82,15 +96,27 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
           return null;
         },
       });
-    }).then(listener => {
-      handle = listener;
-    });
+    };
+    void Browser.addListener('browserFinished', onBrowserFinished)
+      .then(async listener => {
+        if (disposed) {
+          await listener.remove();
+          return;
+        }
+        handle = listener;
+      })
+      .catch(() => {
+        if (!disposed) setErrorMessage(translationRef.current('managedAccess.purchaseFailed'));
+      });
 
     return () => {
-      poll?.cancel();
+      disposed = true;
+      activeNativeCheckoutRef.current = false;
+      stripeReturnPollRef.current?.cancel();
+      stripeReturnPollRef.current = null;
       void handle?.remove();
     };
-  }, [isNative, t]);
+  }, [nativeExternalCheckoutEnabled]);
 
   const handleSignIn = useCallback(async () => {
     setIsSigningIn(true);
@@ -133,15 +159,17 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setErrorMessage(null);
     setStatusMessage(null);
     setIsPurchasing(true);
+    if (nativeExternalCheckoutEnabled) activeNativeCheckoutRef.current = true;
     try {
       // Web navigation leaves the page. Native navigation returns after the
       // Custom Tab opens and browserFinished performs reconciliation.
       await maestroManagedAccountController.startStripeCheckout(primaryPackId);
     } catch (error) {
+      activeNativeCheckoutRef.current = false;
       setIsPurchasing(false);
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseFailed'));
     }
-  }, [primaryPackId, session, t]);
+  }, [nativeExternalCheckoutEnabled, primaryPackId, session, t]);
 
   /*
    * Coming back from Stripe, the credits may not have landed yet: the webhook

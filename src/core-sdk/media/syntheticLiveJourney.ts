@@ -163,7 +163,8 @@ export const runSyntheticLiveJourney = async (
     for (const frame of input.videoFrames || []) {
       const data = frame.dataBase64.replace(/^data:[^;]+;base64,/i, '');
       if (!data) continue;
-      const mimeType = frame.mimeType || 'image/jpeg';
+      const inferredMimeType = /^data:([^;,]+)(?:;[^,]*)?,/i.exec(frame.dataBase64)?.[1];
+      const mimeType = frame.mimeType?.trim() || inferredMimeType || 'image/jpeg';
       session.sendRealtimeInput({ video: { data, mimeType } });
       sentVideoFrameCount += 1;
       runtime.events.emit({
