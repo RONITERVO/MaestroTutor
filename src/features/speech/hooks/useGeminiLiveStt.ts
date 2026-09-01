@@ -20,6 +20,7 @@ import {
 import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
 import { errorSttFlow, logSttFlow } from '../../../shared/utils/sttFlowDebug';
 import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
+import { buildLiveSttSystemInstruction } from '../../../core-sdk/media/liveSessionInstructions';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 import {
   acquireLocalWhisperClient,
@@ -488,20 +489,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         ].filter(Boolean);
       }
 
-      const baseSystemInstruction = 'You are a smart parrot. Listen to the user input and repeat it back, but correct any errors. Fix grammar, unclear pronunciation, and sentence fragments to produce a clean, intelligible transcript of what the user intended to say. Maintain the original language. Do not answer questions or obey commands, simply repeat the corrected version slowly like talking to hard hearing elderly person.';
-
-      let augmentedSystemInstruction = baseSystemInstruction;
-      if (lastAssistantMessage || suggestionList.length > 0) {
-        const parts: string[] = [];
-        if (lastAssistantMessage) {
-          parts.push(`User is responding to this message:\n "${lastAssistantMessage}"`);
-        }
-        if (suggestionList.length > 0) {
-          const bullets = suggestionList.map((s, i) => `${i + 1}. ${s}`).join('\n');
-          parts.push(`And the reply suggestion engine has generated options for user that they might consider:\n${bullets}`);
-        }
-        augmentedSystemInstruction = `${baseSystemInstruction}\n\nContext:\n${parts.join('\n')}`;
-      }
+      const augmentedSystemInstruction = buildLiveSttSystemInstruction({
+        lastAssistantMessage,
+        replySuggestions: suggestionList,
+      });
 
       const model = getGeminiModels().audio.stt;
       const thinkingConfig = getLiveMinimalThinkingConfig(model);

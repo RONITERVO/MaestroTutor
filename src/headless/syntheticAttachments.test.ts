@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { createSyntheticAttachment, type SyntheticAttachmentKind } from './syntheticAttachments';
+import {
+  createSyntheticAttachment,
+  createSyntheticAttachmentFixture,
+  type SyntheticAttachmentKind,
+} from './syntheticAttachments';
 
 const decode = (dataUrl: string): Buffer => Buffer.from(dataUrl.split(',')[1], 'base64');
 
@@ -20,5 +24,12 @@ describe('synthetic attachment fixtures', () => {
     const pdf = decode(createSyntheticAttachment('pdf').dataUrl).toString('ascii');
     expect(pdf.startsWith('%PDF-1.4')).toBe(true);
     expect(pdf.endsWith('%%EOF\n')).toBe(true);
+  });
+
+  it.each<SyntheticAttachmentKind>(['svg', 'video', 'office'])('builds deterministic advanced %s payloads', async kind => {
+    const first = await createSyntheticAttachmentFixture(kind);
+    const second = await createSyntheticAttachmentFixture(kind);
+    expect(first).toEqual(second);
+    expect(decode(first.dataUrl).length).toBeGreaterThan(0);
   });
 });

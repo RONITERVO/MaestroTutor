@@ -28,6 +28,7 @@ import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from '../../../core-sdk/media/triggerAudioAsset';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
 import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
+import { buildTriggeredTtsSystemInstruction } from '../../../core-sdk/media/triggeredTts';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 
 // ============================================================================
@@ -151,18 +152,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
 
   // Build the text block for the system instruction
   // Each line on a new line for proper transcript splitting
-  const textBlock = lines.map(l => `[${(l.langCode || '')}] ${l.text}`).join('\n\n');
-  
-  const systemInstructionText = `You are a professional Text-to-Speech engine. Your ONLY task is to read the following text aloud, exactly as written, when the user says "Play". 
-IMPORTANT RULES:
-- Read EXACTLY what is written, character by character
-- Speak each line clearly with a brief pause between lines
-- Do NOT add any intro, outro, commentary, or acknowledgment
-- Do NOT modify, translate, or interpret the text
-- Just speak the text immediately
-- Do NOT replace language codes with newlines.
-TEXT TO READ:
-${textBlock}`;
+  const systemInstructionText = buildTriggeredTtsSystemInstruction(lines);
 
   const model = getGeminiModels().audio.tts;
   const usageTracker = createLiveUsageTracker({ feature: 'tts', configuredModel: model });

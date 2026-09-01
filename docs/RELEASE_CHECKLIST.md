@@ -13,6 +13,8 @@
       provider and the intended pack ids.
 - [ ] Release gate and the Stripe-first `Headless staging journey` are green for
       the candidate commit.
+- [ ] The full `journey.firstLesson` coverage object is green in both managed and
+      BYOK jobs for the same commit; a skipped BYOK job does not count.
 - [ ] Web reCAPTCHA Enterprise and Android Play Integrity App Check remain
       enforced for the exact production apps/domains/fingerprints.
 - [ ] `VITE_ANDROID_EXTERNAL_STRIPE_CHECKOUT_ENABLED` matches recorded Play

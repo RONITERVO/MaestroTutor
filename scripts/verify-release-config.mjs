@@ -23,6 +23,19 @@ const [
   functionsExample,
   headlessClient,
   managedGeminiClient,
+  headlessAccess,
+  firstLessonJourney,
+  tutorConversation,
+  liveSystemInstruction,
+  liveStt,
+  attachmentUploadPlans,
+  headlessAttachmentJourney,
+  firstLessonCoverage,
+  stagingWorkflow,
+  headlessCoverageDoc,
+  officeTextExtraction,
+  headlessAttachmentAdapters,
+  replySuggestions,
 ] = await Promise.all([
   read('package.json'),
   read('functions/package.json'),
@@ -34,6 +47,19 @@ const [
   read('functions/.env.example'),
   read('src/headless/client.ts'),
   read('src/core-sdk/managedGeminiClient.ts'),
+  read('src/headless/access.ts'),
+  read('src/headless/firstLessonJourney.ts'),
+  read('src/features/chat/hooks/useTutorConversation.ts'),
+  read('src/features/live/utils/liveSystemInstruction.ts'),
+  read('src/features/speech/hooks/useGeminiLiveStt.ts'),
+  read('src/core-sdk/chat/attachmentUploadPlans.ts'),
+  read('src/headless/attachmentJourney.ts'),
+  read('src/headless/firstLessonCoverage.ts'),
+  read('.github/workflows/headless-staging.yml'),
+  read('docs/HEADLESS_COVERAGE.md'),
+  read('src/core-sdk/chat/officeTextExtraction.ts'),
+  read('src/headless/attachmentUploadAdapters.ts'),
+  read('src/core-sdk/chat/suggestions.ts'),
 ]);
 
 const app = JSON.parse(appPackage);
@@ -61,9 +87,48 @@ for (const method of [
   'media.audioNote.generate',
   'media.music.generate',
   'speech.synthetic.live',
+  'speech.transcribe',
+  'speech.tts.generate',
+  'live.conversation.turn',
+  'live.observer.turn',
+  'translation.create',
+  'chat.reengage',
+  'suggestions.process',
+  'journey.firstLesson',
 ]) {
   requireText(headlessClient.includes(`'${method}'`), `Headless contract is missing ${method}.`);
 }
+requireText(headlessAccess.includes('MAESTRO_GEMINI_API_KEY'), 'BYOK headless mode must read its Gemini key from the environment.');
+requireText(headlessAccess.includes('createDirectHeadlessFilePort'), 'BYOK headless mode must use the direct Files API adapter.');
+for (const attachmentKind of ['text', 'image', 'audio', 'pdf', 'svg', 'video', 'office']) {
+  requireText(firstLessonCoverage.includes(`'${attachmentKind}'`), `The first-lesson journey must retain ${attachmentKind} attachment coverage.`);
+}
+for (const toolKind of ['image', 'audio-note', 'music']) {
+  requireText(firstLessonCoverage.includes(`'${toolKind}'`), `The first-lesson journey must retain the ${toolKind} suggestion tool afterstep.`);
+}
+requireText(firstLessonJourney.includes("mode: 'observer'"), 'The first-lesson journey must retain silent-observer coverage.');
+requireText(tutorConversation.includes('executeSuggestionToolRequest'), 'The visual UI must use the shared suggestion afterstep dispatcher.');
+requireText(tutorConversation.includes('normalizeCoreSuggestionCreatorArtifact'), 'The visual UI must use shared artifact normalization.');
+requireText(tutorConversation.includes('buildCoreAttachmentUploadPlans'), 'The visual UI must use the shared attachment upload planner.');
+requireText(headlessAttachmentJourney.includes('buildHeadlessAttachmentUploadPlans'), 'The headless client must use the shared attachment upload planner through its runtime adapters.');
+requireText(attachmentUploadPlans.includes('resolveAttachmentStrategy'), 'Attachment upload orchestration must retain the shared MIME strategy.');
+requireText(tutorConversation.includes('extractOfficeTextForUpload'), 'The visual UI must use shared Office upload extraction.');
+requireText(headlessAttachmentAdapters.includes('extractOfficeTextForUpload'), 'The headless client must use shared Office upload extraction.');
+requireText(officeTextExtraction.includes('JSZip.loadAsync'), 'Shared Office extraction must inspect the real OpenXML/ODF package.');
+requireText(replySuggestions.includes('responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA'), 'Suggestion creation must enforce provider-side JSON structure for artifact-bearing replies.');
+requireText(liveSystemInstruction.includes('buildCoreLiveSystemInstruction'), 'The visual UI must use shared Live context serialization.');
+requireText(liveStt.includes('buildLiveSttSystemInstruction'), 'The visual UI must use the shared STT instruction contract.');
+for (const coverageFlag of [
+  'chatStreaming', 'stt', 'liveAudio', 'liveVisual', 'observerAudio',
+  'observerVisual', 'suggestionAftersteps', 'translation', 'ttsTrigger',
+  'audioCapture', 'reengagement',
+]) {
+  requireText(firstLessonCoverage.includes(`${coverageFlag}:`), `The first-lesson gate must assert ${coverageFlag}.`);
+}
+requireText(stagingWorkflow.includes('HEADLESS_GEMINI_API_KEY'), 'The staging workflow must accept an isolated BYOK provider credential.');
+requireText(stagingWorkflow.includes('require_byok'), 'A release dispatch must be able to require rather than skip BYOK proof.');
+requireText(stagingWorkflow.match(/journey\.firstLesson/g)?.length >= 2, 'Managed and BYOK jobs must both run the same first-lesson command.');
+requireText(headlessCoverageDoc.includes('A skipped BYOK job is not evidence.'), 'Maintainer docs must explain that skipped BYOK validation is not release proof.');
 
 if (failures.length) {
   for (const failure of failures) process.stderr.write(`release-config: ${failure}\n`);
@@ -73,6 +138,11 @@ if (failures.length) {
     ok: true,
     activePurchaseProvider: 'stripe',
     creditPackIds: clientPacks,
-    headlessCoverage: ['billing', 'chat', 'attachments', 'image', 'audio-note', 'music', 'speech-live'],
+    headlessCoverage: [
+      'billing', 'chat-stream', 'google-search', 'attachments', 'stt', 'tts-trigger',
+      'image', 'audio-note', 'music', 'suggestion-aftersteps', 'translation',
+      'reengagement', 'live-audio', 'live-video', 'observer-audio', 'observer-video',
+      'first-lesson', 'managed', 'byok',
+    ],
   }, null, 2) + '\n');
 }

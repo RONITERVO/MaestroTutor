@@ -606,8 +606,13 @@ export const generateGeminiResponse = async (
   }
 };
 
-export const translateText = async (text: string, from: string, to: string) => {
-  const ai = await (await import('./client')).getAi();
+export const translateText = async (
+  text: string,
+  from: string,
+  to: string,
+  options: { aiClient?: CoreGeminiClient; lifecycleHooks?: GeminiRequestLifecycleHooks } = {},
+) => {
+  const ai = options.aiClient || await (await import('./client')).getAi();
   const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
   const model = getGeminiModels().text.translation;
   const fallbackModel = resolveFallbackTextModel(model);
@@ -627,6 +632,7 @@ export const translateText = async (text: string, from: string, to: string) => {
           DEFAULT_TIMEOUT_MS
         ),
         mapSuccess: res => ({ text: res.text, usage: res.usageMetadata }),
+        onProgress: options.lifecycleHooks?.onProgress,
       }
     );
     const result = retryResult.value;

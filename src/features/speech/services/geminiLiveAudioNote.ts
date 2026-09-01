@@ -11,7 +11,10 @@ import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 import { debugLogService } from '../../diagnostics';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from '../../../core-sdk/media/triggerAudioAsset';
 
-export type GeminiAudioNoteResult = Omit<CoreAudioNoteResult, 'operationId' | 'sampleCount'>;
+export type GeminiAudioNoteResult = Omit<
+  CoreAudioNoteResult,
+  'operationId' | 'sampleCount' | 'triggerAudioSamplesSent' | 'triggerPacketCount'
+>;
 
 /** Browser adapter around the shared Core SDK Gemini Live audio-note journey. */
 export const synthesizeGeminiAudioNote = async (params: {

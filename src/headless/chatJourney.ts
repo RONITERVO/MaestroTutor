@@ -3,7 +3,7 @@
 
 import { composeMaestroSystemInstruction } from '../core/config/prompts';
 import { getGeminiModels } from '../core/config/models';
-import type { ChatMessage } from '../core/types';
+import type { ChatMessage, UploadedAttachmentVariant } from '../core/types';
 import { assertTutorTurnInvariants } from '../core-sdk/assertions';
 import { deriveHistoryForApi, sanitizeHistoryWithVerifiedMedia } from '../core-sdk/chat/history';
 import { resolveLanguagePair } from '../core-sdk/chat/language';
@@ -16,7 +16,10 @@ export interface HeadlessChatTurnParams {
   languagePairId?: string;
   useGoogleSearch?: boolean;
   fileParts?: Array<{ fileUri: string; mimeType: string }>;
+  uploadedFileVariants?: UploadedAttachmentVariant[];
   requireInvariants?: boolean;
+  /** Internal UI-equivalent re-engagements send "..." without persisting a user bubble. */
+  persistUserMessage?: boolean;
 }
 
 export const selectHeadlessLanguage = async (
@@ -55,22 +58,26 @@ export const runHeadlessChatTurn = async (
     pairId: params.languagePairId || client.state.settings.selectedLanguagePairId,
   });
   const history = client.state.chats[pair.id] || [];
-  const userMessage = createMessage(client, 'user', {
+  const userMessage = params.persistUserMessage === false ? null : createMessage(client, 'user', {
     text: params.text,
-    ...(params.fileParts?.length ? {
-      uploadedFileVariants: params.fileParts.map((part, index) => ({
-        id: `headless-${index}`,
-        uri: part.fileUri,
-        mimeType: part.mimeType,
-        targets: ['chat'],
-        source: 'original',
-        order: index,
-      })),
-    } : {}),
+    ...(params.uploadedFileVariants?.length
+      ? { uploadedFileVariants: params.uploadedFileVariants }
+      : params.fileParts?.length
+        ? {
+            uploadedFileVariants: params.fileParts.map((part, index) => ({
+              id: `headless-${index}`,
+              uri: part.fileUri,
+              mimeType: part.mimeType,
+              targets: ['chat'],
+              source: 'original',
+              order: index,
+            })),
+          }
+        : {}),
   });
   const derivedHistory = await sanitizeHistoryWithVerifiedMedia(
     deriveHistoryForApi(history),
-    async uris => (await client.backend.checkFileStatuses({ uris })).statuses,
+    uris => client.files.statuses(uris),
   );
   const turn = await runTutorTextTurn({
     model: getGeminiModels().text.default,
@@ -91,7 +98,8 @@ export const runHeadlessChatTurn = async (
     text: turn.parsed.translations.length ? undefined : turn.parsed.visibleText || undefined,
     isLoadingArtifact: turn.parsed.hasSkippedNonLanguageContent,
   });
-  history.push(userMessage, assistantMessage);
+  if (userMessage) history.push(userMessage);
+  history.push(assistantMessage);
   client.state.chats[pair.id] = history;
   client.state.settings.selectedLanguagePairId = pair.id;
   await client.save();
@@ -104,6 +112,7 @@ export const runHeadlessChatTurn = async (
     error.assertions = assertions;
     throw error;
   }
+  const streamEvents = client.events.snapshot().filter(event => event.operationId === turn.operationId);
   return {
     operationId: turn.operationId,
     languagePair: {
@@ -118,6 +127,11 @@ export const runHeadlessChatTurn = async (
     modelUsed: turn.response.modelUsed,
     modelVersion: turn.response.modelVersion,
     searchQueryCount: turn.searchQueryCount,
+    streaming: {
+      textDeltaCount: streamEvents.filter(event => event.phase === 'response.text-delta').length,
+      thoughtDeltaCount: streamEvents.filter(event => event.phase === 'response.thought-delta').length,
+      visiblyStreamed: streamEvents.some(event => event.phase === 'response.text-delta'),
+    },
   };
 };
 
@@ -154,6 +168,7 @@ export const runHeadlessSuggestions = async (
   if (result.chatSummary) assistantMessage.chatSummary = result.chatSummary;
   if (result.globalProfile) client.state.globalProfile = result.globalProfile;
   await client.save();
+  const streamEvents = client.events.snapshot().filter(event => event.operationId === result.operationId);
   return {
     operationId: result.operationId,
     assistantMessageId: assistantMessage.id,
@@ -166,5 +181,10 @@ export const runHeadlessSuggestions = async (
     modelUsed: result.modelUsed,
     modelVersion: result.modelVersion,
     usageMetadata: result.usageMetadata,
+    streaming: {
+      textDeltaCount: streamEvents.filter(event => event.phase === 'response.text-delta').length,
+      thoughtDeltaCount: streamEvents.filter(event => event.phase === 'response.thought-delta').length,
+      visiblyStreamed: streamEvents.some(event => event.phase === 'response.text-delta'),
+    },
   };
 };

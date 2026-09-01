@@ -17,10 +17,12 @@ explicit about every provider operation that can spend money or destroy data.
 - BYOK and managed access setup.
 - Language selection, settings, chat-history loading and persistence.
 - Streaming tutor turns and follow-up suggestions.
-- Text, PNG, WAV and PDF attachment fixtures, image generation, Gemini Live
-  audio notes and Lyria music.
-- Synthetic microphone audio, TTS output and Gemini Live conversation input at
-  the post-device-capture stream boundary.
+- Text, image, audio, PDF, SVG, video and Office attachment fixtures, image
+  generation, Gemini Live audio notes and Lyria music.
+- Synthetic microphone audio, real JPEG video frames, exact-trigger TTS, STT,
+  Live conversation and silent-observer input at post-device-capture boundaries.
+- A persistent minimum-ten-turn first lesson that requires visible chat/suggestion
+  streaming, Search, aftersteps, translations, transcript deltas and audio hashes.
 - Stripe test-mode Checkout followed by webhook credit reconciliation.
 - Managed account summary and disposable-account deletion.
 - AI content reports and managed usage/billing ledger reads.
@@ -159,6 +161,7 @@ The same names are used locally and in GitHub Actions so there is only one runbo
 | `HEADLESS_FIREBASE_EMAIL` | harness secret | staging Secret Manager and GitHub Actions |
 | `HEADLESS_FIREBASE_PASSWORD` | harness secret | staging Secret Manager and GitHub Actions |
 | `HEADLESS_APPCHECK_DEBUG_TOKEN` | harness secret | staging Secret Manager and GitHub Actions |
+| `HEADLESS_GEMINI_API_KEY` | dedicated quota-limited BYOK test secret | GitHub Actions only |
 | `MAESTRO_FIREBASE_API_KEY` | public CI variable | GitHub Actions |
 | `MAESTRO_FIREBASE_APP_ID` | public CI variable | GitHub Actions |
 | `MAESTRO_BACKEND_BASE_URL` | public CI variable | GitHub Actions |
@@ -189,6 +192,7 @@ npm run maestro -- language.select --profile release-smoke --params '{"targetLan
 npm run maestro -- chat.turn --profile release-smoke --params '{"text":"Give me one short greeting.","requireInvariants":true}'
 npm run maestro -- chat.attachment.turn --profile release-smoke --params '{"text":"Identify this fixture.","fixture":"pdf","cleanup":true}'
 npm run maestro -- media.music.generate --profile release-smoke --params '{"prompt":"An original scale-practice track","durationSeconds":8}'
+npm run maestro -- journey.firstLesson --profile release-smoke --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US"}'
 ```
 
 For media payloads that may exceed the operating system command-line limit,
@@ -248,9 +252,11 @@ notifications are emitted on stdout; human diagnostics use stderr.
 
 - authentication status/sign-in/sign-out;
 - language list/select and chat history/turns;
-- follow-up suggestions and image generation;
+- streamed follow-up suggestions, artifact/tool aftersteps and image generation;
 - managed file upload/status/delete/clear;
-- synthetic PCM-to-Live sessions;
+- synthetic PCM-to-STT/Live/observer sessions, real JPEG frame injection,
+  translation, empty-input re-engagement and exact-trigger TTS;
+- the full persistent first-lesson release journey;
 - account summary, usage/billing ledgers and guarded deletion;
 - checkout creation, return reconciliation and a Stripe test-card journey;
 - AI content reports and low-level managed Gemini/Live routes.
@@ -350,12 +356,11 @@ the command does not accept arbitrary card data.
    fills the provider-hosted page, waits for the staging redirect, polls the normal
    account refresh route, and requires exactly a 1,000-credit increase and one new
    purchase ledger entry.
-4. Run `chat.turn`, `suggestions.generate`, `chat.attachment.turn` once for each
-   `text`, `image`, `audio` and `pdf` fixture, `media.image.generate`,
-   `media.music.generate`, and `speech.synthetic.live`. These use the same Core SDK
-   and managed routes as the visual UI. Inspect the ordered event stream and ledger.
-   For a bounded release smoke, set image attempts to `1` or `2` and music duration
-   to `8` seconds.
+4. Run `journey.firstLesson` and require every returned coverage flag. It exercises
+   text/Search streaming, all seven attachment classes, STT, conversation and
+   observer audio/video, suggestion artifacts/tools, translation, exact-trigger
+   TTS, audio capture and re-engagement through the shared UI/Core paths. The full
+   proof matrix and BYOK procedure are in `docs/HEADLESS_COVERAGE.md`.
 
 Managed `media.music.generate` deliberately calls the authenticated
 `/gemini/generate-music` route. Lyria rejects the short-lived tokens used by
@@ -378,6 +383,18 @@ run. Do not hard-code or reuse a prior UID, and never point this command at prod
 
 ## Validated staging baseline (2026-09-01)
 
+The expanded managed parity gate was also run locally against staging on
+2026-09-02. It passed all 16 coverage flags with 14 new user turns after a
+controlled Checkout granted exactly 1,000 credits once. The same run exercised all
+seven attachment classes, Search, streamed suggestions/artifacts, image,
+audio-note, music, STT, Live and observer audio/video, translation, trigger-audio
+TTS, hashed audio capture and re-engagement. Six generated provider files were
+then deleted with zero failures and the account had zero reserved credits. See
+`docs/HEADLESS_COVERAGE.md` for the evidence boundary and the still-required BYOK
+workflow proof.
+
+The earlier 2026-09-01 baseline remains useful historical evidence:
+
 The first complete real-provider run established these release facts:
 
 - normal-browser Google sign-in reached the signed-in account UI and signed out;
@@ -395,6 +412,10 @@ The first complete real-provider run established these release facts:
   producing input/output transcripts and model-audio chunks; and
 - an AI content report was accepted, all Live leases were released, file metadata
   was cleared, and account reconciliation ended with zero reserved credits.
+
+This baseline predates the expanded first-lesson parity gate. It remains historical
+evidence only; it does not prove the current candidate. A current release requires
+green managed and BYOK first-lesson jobs for the same commit.
 
 Two provider edge cases were fixed during that run. Gemini Developer API
 `countTokens` does not accept the generation call's `systemInstruction`, tools or

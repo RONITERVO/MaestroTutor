@@ -43,11 +43,17 @@ describe('core audio-note generation', () => {
     expect(sendRealtimeInput).toHaveBeenCalledWith(expect.objectContaining({
       audio: expect.objectContaining({ mimeType: 'audio/pcm;rate=24000' }),
     }));
-    expect(result).toMatchObject({ mimeType: 'audio/wav', sampleCount: 4 });
+    expect(result).toMatchObject({
+      mimeType: 'audio/wav',
+      sampleCount: 4,
+      triggerAudioSamplesSent: 4,
+      triggerPacketCount: 1,
+    });
     expect(result.dataUrl).toMatch(/^data:audio\/wav;base64,/);
     expect(events.snapshot().map(event => event.phase)).toEqual(expect.arrayContaining([
       'audioNote.started',
       'audioNote.chunkReceived',
+      'audioNote.triggerChunkSent',
       'audioNote.succeeded',
     ]));
   });

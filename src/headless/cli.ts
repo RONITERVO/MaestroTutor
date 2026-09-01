@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { createHeadlessClient } from './client';
 import { dispatchHeadlessMethod } from './dispatcher';
 import { runJsonRpcServer } from './jsonRpc';
+import type { HeadlessAccessMode } from './access';
 
 interface ParsedArguments {
   method: string;
@@ -14,6 +15,7 @@ interface ParsedArguments {
   profileName?: string;
   backendBaseUrl?: string;
   envFile?: string;
+  accessMode?: HeadlessAccessMode;
 }
 
 export const parseArguments = (argv: string[]): ParsedArguments => {
@@ -22,6 +24,7 @@ export const parseArguments = (argv: string[]): ParsedArguments => {
   let profileName: string | undefined;
   let backendBaseUrl: string | undefined;
   let envFile: string | undefined;
+  let accessMode: HeadlessAccessMode | undefined;
   let paramsSource: '--params' | '--params-file' | null = null;
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -46,23 +49,32 @@ export const parseArguments = (argv: string[]): ParsedArguments => {
     } else if (argument === '--env-file') {
       envFile = argv[++index];
       if (!envFile) throw new Error('--env-file requires a path.');
+    } else if (argument === '--access') {
+      const value = argv[++index];
+      if (value !== 'managed' && value !== 'byok') throw new Error('--access requires managed or byok.');
+      accessMode = value;
     } else {
       positional.push(argument);
     }
   }
-  return { method: positional[0] || 'system.describe', params, profileName, backendBaseUrl, envFile };
+  return { method: positional[0] || 'system.describe', params, profileName, backendBaseUrl, envFile, accessMode };
 };
 
 export const runCli = async (argv = process.argv.slice(2)) => {
   const parsed = parseArguments(argv);
   if (parsed.envFile) loadEnvFile(parsed.envFile);
   if (parsed.method === 'rpc') {
-    await runJsonRpcServer({ profileName: parsed.profileName, backendBaseUrl: parsed.backendBaseUrl });
+    await runJsonRpcServer({
+      profileName: parsed.profileName,
+      backendBaseUrl: parsed.backendBaseUrl,
+      accessMode: parsed.accessMode,
+    });
     return;
   }
   const client = await createHeadlessClient({
     profileName: parsed.profileName,
     backendBaseUrl: parsed.backendBaseUrl,
+    accessMode: parsed.accessMode,
     onEvent: event => process.stderr.write(`${JSON.stringify({ type: 'event', event })}\n`),
   });
   const result = await dispatchHeadlessMethod(client, parsed.method, parsed.params);

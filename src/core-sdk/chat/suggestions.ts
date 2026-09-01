@@ -39,6 +39,84 @@ export interface ReplySuggestionsResult {
   modelUsed?: string;
 }
 
+/**
+ * Keep the provider responsible for producing valid structured output. A MIME
+ * type alone still permits malformed JSON (most often when an artifact embeds
+ * HTML or JavaScript containing quotes), which used to make both the UI and
+ * headless first-lesson journey abandon suggestion processing after retries.
+ */
+export const REPLY_SUGGESTIONS_RESPONSE_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  propertyOrdering: [
+    'suggestions',
+    'reengagementSeconds',
+    'chatSummary',
+    'globalProfile',
+    'artifact',
+    'toolRequest',
+  ],
+  required: [
+    'suggestions',
+    'reengagementSeconds',
+    'chatSummary',
+    'globalProfile',
+    'artifact',
+    'toolRequest',
+  ],
+  properties: {
+    suggestions: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 4,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['target', 'native'],
+        properties: {
+          target: { type: 'string' },
+          native: { type: 'string' },
+        },
+      },
+    },
+    reengagementSeconds: { type: 'integer', minimum: 5, maximum: 86_400 },
+    chatSummary: { type: 'string' },
+    globalProfile: { type: 'string' },
+    artifact: {
+      anyOf: [
+        { type: 'null' },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['mimeType', 'fileName', 'encoding', 'content'],
+          properties: {
+            mimeType: { type: 'string' },
+            fileName: { type: 'string' },
+            encoding: { type: 'string', enum: ['text', 'data-url'] },
+            content: { type: 'string' },
+          },
+        },
+      ],
+    },
+    toolRequest: {
+      anyOf: [
+        { type: 'null' },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['tool'],
+          properties: {
+            tool: { type: 'string', enum: ['image', 'audio-note', 'music'] },
+            prompt: { type: 'string' },
+            text: { type: 'string' },
+            durationSeconds: { type: 'integer', minimum: 8, maximum: 20 },
+          },
+        },
+      ],
+    },
+  },
+} as const;
+
 const extractJsonObject = (responseText: string): Record<string, unknown> => {
   let json = responseText.trim();
   const fenceMatch = json.match(/^```(?:\w*)?\s*\n?(.*?)\n?\s*```$/s);
@@ -142,8 +220,31 @@ export const runReplySuggestions = async (
     try {
       const response = await generateGeminiResponse(getGeminiModels().text.aux, prompt, [], {
         aiClient: options.aiClient,
-        configOverrides: { responseMimeType: 'application/json' },
-        lifecycleHooks: options.lifecycleHooks,
+        configOverrides: {
+          responseMimeType: 'application/json',
+          responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA,
+        },
+        lifecycleHooks: {
+          onProgress: event => options.lifecycleHooks?.onProgress?.(event),
+          onTextDelta: (delta, fullText) => {
+            runtime.events.emit({
+              operationId,
+              journey: 'suggestions',
+              phase: 'response.text-delta',
+              data: { deltaLength: delta.length, fullLength: fullText.length },
+            });
+            options.lifecycleHooks?.onTextDelta?.(delta, fullText);
+          },
+          onThoughtDelta: (delta, fullThought) => {
+            runtime.events.emit({
+              operationId,
+              journey: 'suggestions',
+              phase: 'response.thought-delta',
+              data: { deltaLength: delta.length, fullLength: fullThought.length },
+            });
+            options.lifecycleHooks?.onThoughtDelta?.(delta, fullThought);
+          },
+        },
       });
       const rawResponse = response.text || '';
       const parsed = extractJsonObject(rawResponse);

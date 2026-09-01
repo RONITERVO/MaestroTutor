@@ -7,7 +7,10 @@ import { SpeechGate, measureEnergy } from '../../../shared/audio/speechGate';
 import type { CoreGeminiClient } from '../managedGeminiClient';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { mergeInt16Arrays } from './audioProcessing';
-import { getLiveMinimalThinkingConfig } from './liveModelCompatibility';
+import {
+  getLiveConversationThinkingConfig,
+  getLiveMinimalThinkingConfig,
+} from './liveModelCompatibility';
 import { PcmCaptureRouter, type PcmInputSource } from './pcmInput';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
 import { recentPcmPackets } from './observerSpeechDetection';
@@ -36,6 +39,9 @@ export interface SyntheticLiveJourneyInput {
   semanticSpeech?: boolean;
   timeoutMs?: number;
   includeModelAudio?: boolean;
+  videoFrames?: Array<{ dataBase64: string; mimeType?: string }>;
+  thinkingMode?: 'minimal' | 'conversation';
+  voiceName?: string;
 }
 
 export const runSyntheticLiveJourney = async (
@@ -57,6 +63,11 @@ export const runSyntheticLiveJourney = async (
   const modelAudioChunks: string[] = [];
   let inputTranscript = '';
   let outputTranscript = '';
+  let inputTranscriptDeltaCount = 0;
+  let outputTranscriptDeltaCount = 0;
+  let modelAudioSampleCount = 0;
+  let sentVideoFrameCount = 0;
+  let videoFramesSent = false;
   let logicalNow = runtime.clock.now();
   let gatedPackets = 0;
   let streamEnds = 0;
@@ -80,7 +91,12 @@ export const runSyntheticLiveJourney = async (
       responseModalities: [Modality.AUDIO],
       inputAudioTranscription: {},
       outputAudioTranscription: {},
-      thinkingConfig: getLiveMinimalThinkingConfig(model),
+      thinkingConfig: input.thinkingMode === 'conversation'
+        ? getLiveConversationThinkingConfig(model)
+        : getLiveMinimalThinkingConfig(model),
+      speechConfig: input.voiceName
+        ? { voiceConfig: { prebuiltVoiceConfig: { voiceName: input.voiceName } } }
+        : undefined,
       systemInstruction: input.systemInstruction
         || 'You are a smart parrot. Listen to the user input and repeat it back, correcting errors while preserving the original language. Do not answer questions; return only the corrected utterance.',
     },
@@ -90,8 +106,22 @@ export const runSyntheticLiveJourney = async (
         const message = rawMessage as any;
         const inputText = message?.serverContent?.inputTranscription?.text;
         const outputText = message?.serverContent?.outputTranscription?.text;
-        if (typeof inputText === 'string') inputTranscript += inputText;
-        if (typeof outputText === 'string') outputTranscript += outputText;
+        if (typeof inputText === 'string' && inputText) {
+          inputTranscript += inputText;
+          inputTranscriptDeltaCount += 1;
+          runtime.events.emit({
+            operationId, journey: 'live', phase: 'transcript.input-delta',
+            data: { deltaLength: inputText.length, fullLength: inputTranscript.length },
+          });
+        }
+        if (typeof outputText === 'string' && outputText) {
+          outputTranscript += outputText;
+          outputTranscriptDeltaCount += 1;
+          runtime.events.emit({
+            operationId, journey: 'live', phase: 'transcript.output-delta',
+            data: { deltaLength: outputText.length, fullLength: outputTranscript.length },
+          });
+        }
         const parts = message?.serverContent?.modelTurn?.parts;
         if (Array.isArray(parts)) {
           for (const part of parts) {
@@ -99,6 +129,13 @@ export const runSyntheticLiveJourney = async (
             const mimeType = part?.inlineData?.mimeType;
             if (typeof data === 'string' && typeof mimeType === 'string' && mimeType.startsWith('audio/')) {
               modelAudioChunks.push(data);
+              const byteLength = Math.floor(globalThis.atob(data).length / 2) * 2;
+              const samples = byteLength / 2;
+              modelAudioSampleCount += samples;
+              runtime.events.emit({
+                operationId, journey: 'live', phase: 'audio.output-chunk',
+                data: { samples, totalSamples: modelAudioSampleCount },
+              });
             }
           }
         }
@@ -120,7 +157,23 @@ export const runSyntheticLiveJourney = async (
     },
   });
 
+  const sendVideoFrames = () => {
+    if (videoFramesSent) return;
+    videoFramesSent = true;
+    for (const frame of input.videoFrames || []) {
+      const data = frame.dataBase64.replace(/^data:[^;]+;base64,/i, '');
+      if (!data) continue;
+      const mimeType = frame.mimeType || 'image/jpeg';
+      session.sendRealtimeInput({ video: { data, mimeType } });
+      sentVideoFrameCount += 1;
+      runtime.events.emit({
+        operationId, journey: 'live', phase: 'video.input-frame',
+        data: { mimeType, frame: sentVideoFrameCount },
+      });
+    }
+  };
   const sendPacket = async (pcm: Int16Array) => {
+    sendVideoFrames();
     sentPackets.push(pcm.slice());
     session.sendRealtimeInput({
       audio: { data: encodePcm16LeBase64(pcm), mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
@@ -203,6 +256,10 @@ export const runSyntheticLiveJourney = async (
       inputSamples: input.source.kind === 'synthetic' ? packetStats.totalInputSamples : undefined,
       sentSamples: sentAudio.length,
       modelAudioChunkCount: modelAudioChunks.length,
+      modelAudioSampleCount,
+      inputTranscriptDeltaCount,
+      outputTranscriptDeltaCount,
+      sentVideoFrameCount,
       ...(input.includeModelAudio ? { modelAudioChunksBase64: modelAudioChunks } : {}),
       gate: { enabled: gateEnabled, semanticSpeech, gatedPackets, streamEnds },
       packetizer: packetStats,
@@ -215,6 +272,10 @@ export const runSyntheticLiveJourney = async (
         transcriptLength: result.transcript.length,
         sentSamples: result.sentSamples,
         modelAudioChunkCount: result.modelAudioChunkCount,
+        modelAudioSampleCount,
+        inputTranscriptDeltaCount,
+        outputTranscriptDeltaCount,
+        sentVideoFrameCount,
         gatedPackets,
       },
     });

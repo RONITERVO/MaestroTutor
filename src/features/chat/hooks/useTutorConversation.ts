@@ -30,14 +30,8 @@ import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../../
 import { getGlobalProfileDB, setGlobalProfileDB, setAppSettingsDB } from '../../session';
 import { safeSaveChatHistoryDB, deriveHistoryForApi, INLINE_CAP_AUDIO } from '..';
 import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vision';
-import { getOfficePreview } from '../utils/officePreview';
-import {
-  decodeTextFromDataUrl,
-  isGoogleWorkspaceShortcutMimeType,
-  isMicrosoftOfficeMimeType,
-  normalizeAttachmentMimeType,
-} from '../../../core-sdk/chat/fileAttachments';
-import { sanitizeSvgAnimationStructure } from '../../../core-sdk/chat/sanitizeSvgAnimationStructure';
+import { extractOfficeTextForUpload } from '../../../core-sdk/chat/officeTextExtraction';
+import { buildAttachmentUploadPlans as buildCoreAttachmentUploadPlans } from '../../../core-sdk/chat/attachmentUploadPlans';
 import {
   buildCompactAssistantRawText,
   getVisibleAssistantMessageText,
@@ -49,18 +43,19 @@ import {
 } from '../../../core-sdk/chat/tutorResponse';
 import { runTutorTextTurn } from '../../../core-sdk/chat/tutorTextTurn';
 import { runReplySuggestions } from '../../../core-sdk/chat/suggestions';
+import {
+  executeSuggestionToolRequest,
+  normalizeSuggestionCreatorArtifact as normalizeCoreSuggestionCreatorArtifact,
+  normalizeSuggestionCreatorToolRequest as normalizeCoreSuggestionCreatorToolRequest,
+} from '../../../core-sdk/chat/suggestionAftersteps';
 import { runMaestroImageGeneration } from '../../../core-sdk/chat/imageGeneration';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
   normalizeUploadedAttachmentVariants,
-  OFFICE_TEXT_UPLOADED_ATTACHMENT_VARIANT_ID,
   PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
   selectUploadedAttachmentParts,
-  SVG_RASTER_UPLOADED_ATTACHMENT_VARIANT_ID,
-  SVG_SOURCE_UPLOADED_ATTACHMENT_VARIANT_ID,
   upsertUploadedAttachmentVariant,
-  VIDEO_KEYFRAME_UPLOADED_ATTACHMENT_VARIANT_ID,
 } from '../../../core-sdk/chat/uploadedAttachmentVariants';
 import { 
   IMAGE_GEN_CAMERA_ID,
@@ -119,66 +114,13 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
   return msg.includes('api_key_invalid') || msg.includes('api key not valid');
 };
 
-const isSvgMimeType = (mimeType?: string | null): boolean => {
-  return (mimeType || '').trim().toLowerCase() === 'image/svg+xml';
-};
-
 const MAX_THINKING_TRACE_LINES = 8;
 const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
-
-const isOfficeMimeUnsupportedByGemini = (mimeType?: string | null): boolean => {
-  const normalized = (mimeType || '').trim().toLowerCase();
-  if (!normalized) return false;
-  return isMicrosoftOfficeMimeType(normalized) || isGoogleWorkspaceShortcutMimeType(normalized);
-};
-
-const toUtf8Base64DataUrl = (mimeType: string, text: string): string => {
-  const bytes = new TextEncoder().encode(text);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return `data:${mimeType};charset=utf-8;base64,${btoa(binary)}`;
-};
-
-const DEFAULT_ARTIFACT_FILE_NAMES: Record<string, string> = {
-  'image/svg+xml': 'artifact.svg',
-  'text/html': 'artifact.html',
-  'text/markdown': 'artifact.md',
-  'text/csv': 'artifact.csv',
-  'text/tab-separated-values': 'artifact.tsv',
-  'application/json': 'artifact.json',
-  'application/xml': 'artifact.xml',
-  'text/xml': 'artifact.xml',
-  'text/css': 'artifact.css',
-  'text/javascript': 'artifact.js',
-  'application/javascript': 'artifact.js',
-  'text/typescript': 'artifact.ts',
-  'text/plain': 'artifact.txt',
-};
-
-const sanitizeArtifactFileName = (value?: string | null, mimeType?: string | null): string => {
-  const raw = (value || '').trim();
-  const fallback = DEFAULT_ARTIFACT_FILE_NAMES[(mimeType || '').trim().toLowerCase()] || 'artifact.txt';
-  const normalized = (raw || fallback).replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, '_');
-  return normalized || fallback;
-};
-
-const inferMimeTypeFromDataUrl = (value?: string | null): string | null => {
-  const match = typeof value === 'string' ? value.match(/^data:([^;,]+)(?:;[^,]*)?,/i) : null;
-  return match?.[1]?.trim().toLowerCase() || null;
-};
 
 type HistoryMediaOverride = {
   newVariants?: UploadedAttachmentVariant[];
   transient?: boolean;
   omitFromHistory?: boolean;
-};
-
-type AttachmentUploadPlan = {
-  id: string;
-  source: UploadedAttachmentVariant['source'];
-  targets: UploadedAttachmentVariant['targets'];
-  order: number;
-  build: () => Promise<{ dataUrl: string; mimeType: string; displayName?: string }>;
 };
 
 const getMessageAttachmentSource = (
@@ -211,151 +153,29 @@ const getMessageAttachmentSource = (
 const buildAttachmentUploadPlans = (
   source: { dataUrl: string; mimeType: string; attachmentName?: string },
   t: TranslationFunction
-): AttachmentUploadPlan[] => {
-  const mimeType = (source.mimeType || '').trim().toLowerCase();
-  const displayName = source.attachmentName || 'attachment';
+) => buildCoreAttachmentUploadPlans(source, {
+  createVideoKeyframe: async mediaSource => createKeyframeFromVideoDataUrl(mediaSource.dataUrl, {
+    at: 'start',
+    maxDim: 768,
+    quality: 0.75,
+    outputMime: 'image/jpeg',
+  }),
+  extractOfficeText: async mediaSource => {
+    return extractOfficeTextForUpload({
+      dataUrl: mediaSource.dataUrl,
+      mimeType: mediaSource.mimeType,
+      fileName: mediaSource.attachmentName,
+    });
+  },
+  rasterizeSvg: async mediaSource => processMediaForUpload(
+    mediaSource.dataUrl,
+    mediaSource.mimeType,
+    { t },
+  ),
+});
 
-  if (mimeType.startsWith('video/')) {
-    return [
-      {
-        id: VIDEO_KEYFRAME_UPLOADED_ATTACHMENT_VARIANT_ID,
-        source: 'video-keyframe',
-        targets: ['chat', 'image-generation'],
-        order: 0,
-        build: async () => {
-          const keyframe = await createKeyframeFromVideoDataUrl(source.dataUrl, {
-            at: 'start',
-            maxDim: 768,
-            quality: 0.75,
-            outputMime: 'image/jpeg',
-          });
-          return {
-            dataUrl: keyframe.dataUrl,
-            mimeType: keyframe.mimeType,
-            displayName: `${displayName}-keyframe.jpg`,
-          };
-        },
-      },
-      {
-        id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
-        source: 'original',
-        targets: ['chat'],
-        order: 10,
-        build: async () => ({
-          dataUrl: source.dataUrl,
-          mimeType: source.mimeType,
-          displayName,
-        }),
-      },
-    ];
-  }
-
-  if (isOfficeMimeUnsupportedByGemini(mimeType)) {
-    return [
-      {
-        id: OFFICE_TEXT_UPLOADED_ATTACHMENT_VARIANT_ID,
-        source: 'office-text',
-        targets: ['chat'],
-        order: 0,
-        build: async () => {
-          const preview = await getOfficePreview(source.dataUrl, source.mimeType, source.attachmentName);
-          const extracted = (preview.text || '').trim();
-          if (!extracted) {
-            throw new Error(preview.note || 'No extracted Office text available for Gemini upload conversion.');
-          }
-          return {
-            dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
-            mimeType: 'text/plain',
-            displayName: `${displayName}.txt`,
-          };
-        },
-      },
-    ];
-  }
-
-  if (isSvgMimeType(mimeType)) {
-    return [
-      {
-        id: SVG_SOURCE_UPLOADED_ATTACHMENT_VARIANT_ID,
-        source: 'svg-source',
-        targets: ['chat'],
-        order: 0,
-        build: async () => {
-          const extracted = decodeTextFromDataUrl(source.dataUrl)?.trim();
-          if (!extracted) {
-            throw new Error('SVG source could not be decoded for Gemini upload conversion.');
-          }
-          return {
-            dataUrl: toUtf8Base64DataUrl('text/plain', extracted),
-            mimeType: 'text/plain',
-            displayName: `${displayName}.txt`,
-          };
-        },
-      },
-      {
-        id: SVG_RASTER_UPLOADED_ATTACHMENT_VARIANT_ID,
-        source: 'svg-rasterized',
-        targets: ['chat', 'image-generation'],
-        order: 5,
-        build: async () => {
-          const rasterized = await processMediaForUpload(source.dataUrl, source.mimeType, { t });
-          if (
-            !rasterized.dataUrl ||
-            !rasterized.mimeType ||
-            !rasterized.mimeType.startsWith('image/') ||
-            isSvgMimeType(rasterized.mimeType)
-          ) {
-            throw new Error(`SVG rasterization did not produce a supported image MIME: ${rasterized.mimeType}`);
-          }
-          return {
-            dataUrl: rasterized.dataUrl,
-            mimeType: rasterized.mimeType,
-            displayName: `${displayName}.jpg`,
-          };
-        },
-      },
-    ];
-  }
-
-  return [
-    {
-      id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
-      source: 'original',
-      targets: inferUploadedAttachmentTargetsForMimeType(mimeType),
-      order: 10,
-      build: async () => ({
-        dataUrl: source.dataUrl,
-        mimeType: source.mimeType,
-        displayName,
-      }),
-    },
-  ];
-};
-
-type SuggestionCreatorArtifact = {
-  mimeType?: string;
-  fileName?: string;
-  encoding?: string;
-  content?: string;
-};
-
-type MaestroToolKind = NonNullable<ChatMessage['maestroToolKind']>;
 type ToolAttachmentPhase = NonNullable<ChatMessage['toolAttachmentPhase']>;
-
-type SuggestionCreatorToolRequest = {
-  tool?: string;
-  prompt?: string;
-  text?: string;
-  durationSeconds?: number;
-  musicDurationSeconds?: number;
-};
-
-const SUPPORTED_MAESTRO_TOOLS: MaestroToolKind[] = ['image', 'audio-note', 'music'];
-
-const isSupportedMaestroTool = (value: unknown): value is MaestroToolKind => (
-  typeof value === 'string' &&
-  SUPPORTED_MAESTRO_TOOLS.includes(value as MaestroToolKind)
-);
+type MaestroToolKind = NonNullable<ChatMessage['maestroToolKind']>;
 
 const truncateForToolPrompt = (value: string, maxChars: number = 420): string => {
   const normalized = (value || '').replace(/\s+/g, ' ').trim();
@@ -619,83 +439,13 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   }, [parseStrictTutorResponse]);
 
   const normalizeSuggestionCreatorArtifact = useCallback((artifact: unknown) => {
-    if (!artifact || typeof artifact !== 'object') return null;
-
-    const candidate = artifact as SuggestionCreatorArtifact;
-    const rawContent = typeof candidate.content === 'string' ? candidate.content : '';
-    const rawEncoding = typeof candidate.encoding === 'string' ? candidate.encoding.trim().toLowerCase() : 'text';
-    const isDataUrlEncoding = rawEncoding === 'data-url' || rawEncoding === 'dataurl' || rawEncoding === 'data_url';
-    if (!rawContent.trim()) return null;
-
-    let mimeType = typeof candidate.mimeType === 'string' ? candidate.mimeType.trim().toLowerCase() : '';
-    let dataUrl: string;
-
-    if (isDataUrlEncoding) {
-      dataUrl = rawContent.trim();
-      if (!/^data:[^,]+,/i.test(dataUrl)) return null;
-      mimeType = mimeType || inferMimeTypeFromDataUrl(dataUrl) || '';
-      if (mimeType === 'image/svg+xml') {
-        const decodedSvg = decodeTextFromDataUrl(dataUrl);
-        if (decodedSvg) {
-          dataUrl = toUtf8Base64DataUrl(mimeType, sanitizeSvgAnimationStructure(decodedSvg));
-        }
-      }
-    } else {
-      mimeType = mimeType || normalizeAttachmentMimeType({ name: candidate.fileName || 'artifact.txt', type: 'text/plain' });
-      let normalizedContent = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
-      if (!normalizedContent) return null;
-      if (mimeType.startsWith('image/') && mimeType !== 'image/svg+xml') {
-        return null;
-      }
-      if (mimeType === 'image/svg+xml') {
-        normalizedContent = sanitizeSvgAnimationStructure(normalizedContent);
-      }
-      dataUrl = toUtf8Base64DataUrl(mimeType || 'text/plain', normalizedContent);
-    }
-
-    const fileName = sanitizeArtifactFileName(candidate.fileName, mimeType);
-    return {
-      dataUrl,
-      mimeType: mimeType || 'text/plain',
-      fileName,
-    };
+    return normalizeCoreSuggestionCreatorArtifact(artifact);
   }, []);
 
   const normalizeSuggestionCreatorToolRequest = useCallback((toolRequest: unknown, assistantMessageId: string) => {
-    if (!toolRequest || typeof toolRequest !== 'object') return null;
-
-    const candidate = toolRequest as SuggestionCreatorToolRequest;
-    const toolValue = typeof candidate.tool === 'string' ? candidate.tool.trim().toLowerCase() : '';
-    if (!isSupportedMaestroTool(toolValue)) return null;
-
     const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
     const fallbackText = truncateForToolPrompt(getVisibleAssistantMessageText(assistantMessage), 500);
-    const prompt = typeof candidate.prompt === 'string' ? candidate.prompt.trim() : '';
-    const text = typeof candidate.text === 'string' ? candidate.text.trim() : '';
-    const rawDuration = Number(candidate.durationSeconds ?? candidate.musicDurationSeconds);
-    const durationSeconds = Number.isFinite(rawDuration)
-      ? Math.max(8, Math.min(20, Math.round(rawDuration)))
-      : undefined;
-
-    if (toolValue === 'audio-note') {
-      return {
-        tool: toolValue,
-        text: text || prompt || fallbackText,
-      } as const;
-    }
-
-    if (toolValue === 'music') {
-      return {
-        tool: toolValue,
-        prompt: prompt || text || truncateForToolPrompt(fallbackText, 280),
-        durationSeconds,
-      } as const;
-    }
-
-    return {
-      tool: toolValue,
-      prompt: prompt || text || truncateForToolPrompt(fallbackText, 280),
-    } as const;
+    return normalizeCoreSuggestionCreatorToolRequest(toolRequest, fallbackText);
   }, [messagesRef, settingsRef]);
 
   const finalizeAssistantArtifact = useCallback((
@@ -1539,78 +1289,75 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
       return;
     }
 
-    if (toolRequest.tool === 'image') {
-      const assistantMessage = messagesRef.current.find(m => m.id === assistantMessageId);
-
-      // Prefer to use the full raw LLM response (or fallback to prompt only and then visible text. Why?: More context is useful for image generator.) 
-      const fullRawText = assistantMessage?.llmRawResponse
-        || toolRequest.prompt
-        || assistantMessage?.rawAssistantResponse
-        || getVisibleAssistantMessageText(assistantMessage);
-
-      await runAssistantImageGeneration({
-        thinkingMessageId: assistantMessageId,
-        accumulatedFullText: fullRawText,
-      });
-      return;
-    }
-
-    updateMessage(assistantMessageId, {
-      isGeneratingToolAttachment: true,
-      toolAttachmentStartTime: Date.now(),
-      toolAttachmentPhase: 'pending' as ToolAttachmentPhase,
-      maestroToolKind: toolRequest.tool,
-    });
-
     try {
-      if (toolRequest.tool === 'audio-note') {
-        const selectedLanguagePair = selectedLanguagePairRef.current;
-        const langCode = getPrimarySubtag(selectedLanguagePair?.targetLanguageCode || settingsRef.current.stt.language || 'en');
-        const audioNote = await synthesizeGeminiAudioNote({
-          text: truncateForToolPrompt(toolRequest.text || getVisibleAssistantMessageText(messagesRef.current.find(m => m.id === assistantMessageId)), 500),
-          langCode,
-          voiceName: settingsRef.current.tts.voiceName || 'Kore',
-        });
-
-        await attachGeneratedToolMedia({
-          messageId: assistantMessageId,
-          toolKind: 'audio-note',
-          dataUrl: audioNote.dataUrl,
-          mimeType: audioNote.mimeType,
-          attachmentName: 'maestro-audio-note.wav',
-        });
-        return;
-      }
-
-      if (toolRequest.tool === 'music') {
-        const music = await generateMusic({
-          prompt: (toolRequest.prompt || getVisibleAssistantMessageText(messagesRef.current.find(m => m.id === assistantMessageId))).trim(),
-          durationSeconds: toolRequest.durationSeconds,
-          onStreamPlaybackStart: () => {
-            updateMessage(assistantMessageId, {
-              isGeneratingToolAttachment: false,
-              toolAttachmentStartTime: undefined,
-              toolAttachmentPhase: 'streaming' as ToolAttachmentPhase,
-              maestroToolKind: 'music',
-            });
-          },
-        });
-
-        updateMessage(assistantMessageId, {
-          isGeneratingToolAttachment: false,
-          toolAttachmentStartTime: undefined,
-          toolAttachmentPhase: 'finalizing' as ToolAttachmentPhase,
-          maestroToolKind: 'music',
-        });
-
-        await attachGeneratedToolMedia({
-          messageId: assistantMessageId,
-          toolKind: 'music',
-          dataUrl: music.dataUrl,
-          mimeType: music.mimeType,
-          attachmentName: 'maestro-music.wav',
-        });
-      }
+      await executeSuggestionToolRequest(toolRequest, {
+        image: async request => {
+          const assistantMessage = messagesRef.current.find(m => m.id === assistantMessageId);
+          const fullRawText = assistantMessage?.llmRawResponse
+            || request.prompt
+            || assistantMessage?.rawAssistantResponse
+            || getVisibleAssistantMessageText(assistantMessage);
+          await runAssistantImageGeneration({
+            thinkingMessageId: assistantMessageId,
+            accumulatedFullText: fullRawText,
+          });
+        },
+        audioNote: async request => {
+          updateMessage(assistantMessageId, {
+            isGeneratingToolAttachment: true,
+            toolAttachmentStartTime: Date.now(),
+            toolAttachmentPhase: 'pending' as ToolAttachmentPhase,
+            maestroToolKind: 'audio-note',
+          });
+          const selectedLanguagePair = selectedLanguagePairRef.current;
+          const langCode = getPrimarySubtag(selectedLanguagePair?.targetLanguageCode || settingsRef.current.stt.language || 'en');
+          const audioNote = await synthesizeGeminiAudioNote({
+            text: truncateForToolPrompt(request.text, 500),
+            langCode,
+            voiceName: settingsRef.current.tts.voiceName || 'Kore',
+          });
+          await attachGeneratedToolMedia({
+            messageId: assistantMessageId,
+            toolKind: 'audio-note',
+            dataUrl: audioNote.dataUrl,
+            mimeType: audioNote.mimeType,
+            attachmentName: 'maestro-audio-note.wav',
+          });
+        },
+        music: async request => {
+          updateMessage(assistantMessageId, {
+            isGeneratingToolAttachment: true,
+            toolAttachmentStartTime: Date.now(),
+            toolAttachmentPhase: 'pending' as ToolAttachmentPhase,
+            maestroToolKind: 'music',
+          });
+          const music = await generateMusic({
+            prompt: request.prompt,
+            durationSeconds: request.durationSeconds,
+            onStreamPlaybackStart: () => {
+              updateMessage(assistantMessageId, {
+                isGeneratingToolAttachment: false,
+                toolAttachmentStartTime: undefined,
+                toolAttachmentPhase: 'streaming' as ToolAttachmentPhase,
+                maestroToolKind: 'music',
+              });
+            },
+          });
+          updateMessage(assistantMessageId, {
+            isGeneratingToolAttachment: false,
+            toolAttachmentStartTime: undefined,
+            toolAttachmentPhase: 'finalizing' as ToolAttachmentPhase,
+            maestroToolKind: 'music',
+          });
+          await attachGeneratedToolMedia({
+            messageId: assistantMessageId,
+            toolKind: 'music',
+            dataUrl: music.dataUrl,
+            mimeType: music.mimeType,
+            attachmentName: 'maestro-music.wav',
+          });
+        },
+      });
     } catch (error) {
       console.warn(`[MaestroTool] ${toolRequest.tool} generation failed.`, error);
       updateMessage(assistantMessageId, {

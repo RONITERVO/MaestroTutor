@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import type {
   BackendAiContentReportRequest,
-  BackendGenerateContentRequest,
 } from '../core/contracts/backend';
 import { createHash } from 'node:crypto';
 import type { HeadlessClient } from './client';
@@ -18,6 +17,11 @@ import { createSyntheticPcmSource, decodePcm16LeBase64 } from '../core-sdk/media
 import { runSyntheticLiveJourney } from '../core-sdk/media/syntheticLiveJourney';
 import { runStripeTestCheckoutJourney } from './billingJourney';
 import { verifyHostedGoogleSignIn } from './hostedBrowser';
+import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
+import { runHeadlessTranslation } from './translationJourney';
+import { runHeadlessReengagement } from './reengagementJourney';
+import { runHeadlessLiveTurn } from './liveJourney';
+import { runHeadlessFirstLesson } from './firstLessonJourney';
 
 export class HeadlessDispatchError extends Error {
   constructor(public readonly rpcCode: -32601 | -32602, message: string) {
@@ -37,6 +41,20 @@ const requiredString = (record: Record<string, unknown>, key: string): string =>
     throw new HeadlessDispatchError(-32602, `Parameter "${key}" is required.`);
   }
   return value.trim();
+};
+
+const requireManagedMode = (client: HeadlessClient, method: string) => {
+  if (client.accessMode !== 'managed') {
+    throw new Error(`${method} requires managed access. BYOK mode calls Gemini directly and has no Maestro account or billing session.`);
+  }
+};
+
+const readPcm = (input: Record<string, unknown>, required = true): Int16Array | undefined => {
+  if (typeof input.pcmBase64 !== 'string' || !input.pcmBase64.trim()) {
+    if (required) throw new HeadlessDispatchError(-32602, 'Parameter "pcmBase64" is required.');
+    return undefined;
+  }
+  return decodePcm16LeBase64(input.pcmBase64.trim().replace(/^data:audio\/[^;]+;base64,/i, ''));
 };
 
 const optionalNumber = (record: Record<string, unknown>, key: string, fallback: number): number => {
@@ -105,6 +123,7 @@ export const dispatchHeadlessMethod = async (
       }));
       return {
         name: client.profile.name,
+        accessMode: client.accessMode,
         directory: client.profile.directory,
         isolated: client.profile.isolated,
         stateSummary: {
@@ -118,14 +137,16 @@ export const dispatchHeadlessMethod = async (
       };
     }
     case 'auth.status':
-      return client.credentials.describe();
+      return { accessMode: client.accessMode, ...(await client.credentials.describe()) };
     case 'auth.signIn': {
+      requireManagedMode(client, method);
       const response = await client.account.signIn(
         typeof input.operationId === 'string' ? input.operationId : undefined,
       );
       return { user: response.account.user, billingSummary: response.account.billingSummary };
     }
     case 'auth.signOut':
+      requireManagedMode(client, method);
       await client.account.signOut(typeof input.operationId === 'string' ? input.operationId : undefined);
       return { signedOut: true };
     case 'auth.google.verifyHosted':
@@ -187,12 +208,17 @@ export const dispatchHeadlessMethod = async (
           : undefined,
       });
     case 'chat.attachment.turn': {
-      const fixtureKinds = new Set<SyntheticAttachmentKind>(['text', 'image', 'audio', 'pdf']);
+      const fixtureKinds = new Set<SyntheticAttachmentKind>([
+        'text', 'image', 'audio', 'pdf', 'svg', 'video', 'office',
+      ]);
       const fixture = typeof input.fixture === 'string'
         ? input.fixture as SyntheticAttachmentKind
         : undefined;
       if (fixture && !fixtureKinds.has(fixture)) {
-        throw new HeadlessDispatchError(-32602, 'Parameter "fixture" must be text, image, audio or pdf.');
+        throw new HeadlessDispatchError(
+          -32602,
+          'Parameter "fixture" must be text, image, audio, pdf, svg, video or office.',
+        );
       }
       return runHeadlessAttachmentTurn(client, {
         text: requiredString(input, 'text'),
@@ -218,6 +244,31 @@ export const dispatchHeadlessMethod = async (
         artifactSummary: summarizeHeadlessArtifact(result.artifact),
       };
     }
+    case 'suggestions.process':
+      return runHeadlessSuggestionAftersteps(client, {
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        assistantMessageId: typeof input.assistantMessageId === 'string' ? input.assistantMessageId : undefined,
+        responseSource: input.responseSource === 'live' ? 'live' : 'chat',
+        syntheticDecision: input.syntheticDecision && typeof input.syntheticDecision === 'object' && !Array.isArray(input.syntheticDecision)
+          ? input.syntheticDecision as any
+          : undefined,
+        uploadGeneratedMedia: typeof input.uploadGeneratedMedia === 'boolean' ? input.uploadGeneratedMedia : undefined,
+      });
+    case 'translation.create': {
+      const from = input.from === 'target' || input.from === 'native' ? input.from : undefined;
+      if (input.from !== undefined && !from) throw new HeadlessDispatchError(-32602, 'Parameter "from" must be target or native.');
+      return runHeadlessTranslation(client, {
+        text: requiredString(input, 'text'),
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        from,
+        attachToSuggestions: typeof input.attachToSuggestions === 'boolean' ? input.attachToSuggestions : undefined,
+      });
+    }
+    case 'chat.reengage':
+      return runHeadlessReengagement(client, {
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        runSuggestionAftersteps: typeof input.runSuggestionAftersteps === 'boolean' ? input.runSuggestionAftersteps : undefined,
+      });
     case 'media.image.generate':
       return runHeadlessImageGeneration(client, {
         contextText: requiredString(input, 'contextText'),
@@ -234,6 +285,8 @@ export const dispatchHeadlessMethod = async (
         model: typeof input.model === 'string' ? input.model : undefined,
         upload: input.upload === true,
         includeDataUrl: input.includeDataUrl === true,
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        assistantMessageId: typeof input.assistantMessageId === 'string' ? input.assistantMessageId : undefined,
       });
     case 'media.audioNote.generate':
       return runHeadlessAudioNoteGeneration(client, {
@@ -243,6 +296,8 @@ export const dispatchHeadlessMethod = async (
         model: typeof input.model === 'string' ? input.model : undefined,
         upload: input.upload === true,
         includeDataUrl: input.includeDataUrl === true,
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        assistantMessageId: typeof input.assistantMessageId === 'string' ? input.assistantMessageId : undefined,
       });
     case 'speech.synthetic.live': {
       const sampleRate = optionalNumber(input, 'sampleRate', 16_000);
@@ -264,11 +319,63 @@ export const dispatchHeadlessMethod = async (
         includeModelAudio: input.includeModelAudio === true,
       }, { runtime: client.runtime });
     }
+    case 'speech.transcribe':
+      return runHeadlessLiveTurn(client, {
+        pcm: readPcm(input)!,
+        sampleRate: optionalNumber(input, 'sampleRate', 16_000),
+        mode: 'stt',
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        pace: input.pace === true,
+        timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
+      });
+    case 'speech.tts.generate':
+      return runHeadlessAudioNoteGeneration(client, {
+        text: requiredString(input, 'text'),
+        langCode: typeof input.langCode === 'string' ? input.langCode : undefined,
+        voiceName: typeof input.voiceName === 'string' ? input.voiceName : undefined,
+        model: typeof input.model === 'string' ? input.model : undefined,
+        upload: false,
+        includeDataUrl: input.includeDataUrl === true,
+        exactTts: true,
+      });
+    case 'live.conversation.turn':
+    case 'live.observer.turn':
+      return runHeadlessLiveTurn(client, {
+        pcm: readPcm(input)!,
+        sampleRate: optionalNumber(input, 'sampleRate', 16_000),
+        mode: method === 'live.observer.turn' ? 'observer' : 'conversation',
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        pace: input.pace === true,
+        timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
+        includeVisual: input.includeVisual === true,
+        visualLabel: typeof input.visualLabel === 'string' ? input.visualLabel : undefined,
+        instructionSuffix: typeof input.instructionSuffix === 'string' ? input.instructionSuffix : undefined,
+        runSuggestionAftersteps: typeof input.runSuggestionAftersteps === 'boolean' ? input.runSuggestionAftersteps : undefined,
+        uploadVisual: input.uploadVisual === true,
+      });
+    case 'journey.firstLesson':
+      return runHeadlessFirstLesson(client, {
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        targetLanguageCode: typeof input.targetLanguageCode === 'string' ? input.targetLanguageCode : undefined,
+        nativeLanguageCode: typeof input.nativeLanguageCode === 'string' ? input.nativeLanguageCode : undefined,
+        pcm: readPcm(input, false),
+        paceLiveAudio: typeof input.paceLiveAudio === 'boolean' ? input.paceLiveAudio : undefined,
+        timeoutMs: optionalNumber(input, 'timeoutMs', 60_000),
+        includeSyntheticToolDecisions: typeof input.includeSyntheticToolDecisions === 'boolean'
+          ? input.includeSyntheticToolDecisions
+          : undefined,
+        uploadGeneratedMedia: typeof input.uploadGeneratedMedia === 'boolean'
+          ? input.uploadGeneratedMedia
+          : undefined,
+      });
     case 'account.summary':
+      requireManagedMode(client, method);
       return client.account.refreshAccount(typeof input.operationId === 'string' ? input.operationId : undefined);
     case 'account.ledgers':
+      requireManagedMode(client, method);
       return client.account.listLedgers(optionalNumber(input, 'limit', 50));
     case 'account.delete': {
+      requireManagedMode(client, method);
       const actualUserId = await client.credentials.getUserId();
       if (!actualUserId) throw new Error('Unable to resolve the authenticated Firebase user ID.');
       return client.account.deleteAccount({
@@ -279,10 +386,12 @@ export const dispatchHeadlessMethod = async (
       });
     }
     case 'billing.checkout.create': {
+      requireManagedMode(client, method);
       const result = await client.account.startStripeCheckout(requiredString(input, 'packId'));
       return { ...result, navigationUrl: client.lastNavigationUrl() };
     }
     case 'billing.checkout.reconcile': {
+      requireManagedMode(client, method);
       const poll = client.account.startStripeReturnPolling({
         attempts: optionalNumber(input, 'attempts', 5),
         intervalMs: optionalNumber(input, 'intervalMs', 2000),
@@ -290,6 +399,7 @@ export const dispatchHeadlessMethod = async (
       return poll.completion;
     }
     case 'billing.checkout.completeTest':
+      requireManagedMode(client, method);
       return runStripeTestCheckoutJourney(client, {
         packId: requiredString(input, 'packId'),
         expectedCredits: optionalNumber(input, 'expectedCredits', 1_000),
@@ -301,6 +411,7 @@ export const dispatchHeadlessMethod = async (
         operationId: typeof input.operationId === 'string' ? input.operationId : undefined,
       });
     case 'report.submit':
+      requireManagedMode(client, method);
       return client.account.submitAiContentReport((() => {
         const reason = requiredString(input, 'reason');
         const reasons = new Set(['sexual', 'hate', 'harassment', 'self-harm', 'violent', 'deceptive', 'spam', 'other']);
@@ -324,41 +435,42 @@ export const dispatchHeadlessMethod = async (
         } as BackendAiContentReportRequest;
       })());
     case 'gemini.generate':
-      return client.backend.generateContent({
+      return client.ai.models.generateContent({
         model: requiredString(input, 'model'),
         contents: input.contents,
         ...(input.config && typeof input.config === 'object' && !Array.isArray(input.config)
           ? { config: input.config as Record<string, unknown> }
           : {}),
-      } as BackendGenerateContentRequest);
+      });
     case 'gemini.generateStream': {
       const chunks: unknown[] = [];
-      for await (const chunk of await client.backend.generateContentStream({
+      for await (const chunk of await client.ai.models.generateContentStream({
         model: requiredString(input, 'model'),
         contents: input.contents,
         ...(input.config && typeof input.config === 'object' && !Array.isArray(input.config)
           ? { config: input.config as Record<string, unknown> }
           : {}),
-      } as BackendGenerateContentRequest)) {
+      })) {
         chunks.push(chunk);
       }
       return { chunks };
     }
     case 'files.upload':
-      return client.backend.uploadMedia({
+      return client.files.upload({
         dataUrl: requiredString(input, 'dataUrl'),
         mimeType: requiredString(input, 'mimeType'),
         displayName: typeof input.displayName === 'string' ? input.displayName : undefined,
       });
     case 'files.status':
-      return client.backend.checkFileStatuses({
-        uris: Array.isArray(input.uris) ? input.uris.filter((uri): uri is string => typeof uri === 'string') : [],
-      });
+      return { statuses: await client.files.statuses(
+        Array.isArray(input.uris) ? input.uris.filter((uri): uri is string => typeof uri === 'string') : [],
+      ) };
     case 'files.delete':
-      return client.backend.deleteFile({ nameOrUri: requiredString(input, 'nameOrUri') });
+      return client.files.delete(requiredString(input, 'nameOrUri'));
     case 'files.clear':
-      return client.backend.clearFiles();
+      return client.files.clear();
     case 'live.token.create':
+      requireManagedMode(client, method);
       if (input.purpose !== undefined && input.purpose !== 'live') {
         throw new HeadlessDispatchError(-32602, 'live.token.create purpose must be "live". Use media.music.generate for music.');
       }
@@ -371,6 +483,7 @@ export const dispatchHeadlessMethod = async (
         ...(typeof input.durationSeconds === 'number' ? { durationSeconds: input.durationSeconds } : {}),
       });
     case 'live.token.release':
+      requireManagedMode(client, method);
       return client.backend.releaseLiveTokenLease({ leaseId: requiredString(input, 'leaseId') });
     default:
       throw new HeadlessDispatchError(-32601, `Unknown headless method: ${method}`);

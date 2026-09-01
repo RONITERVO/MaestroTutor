@@ -36,4 +36,9 @@ describe('headless CLI arguments', () => {
     expect(() => parseArguments(['system.describe', '--params', '{}', '--params-file', 'request.json']))
       .toThrow('--params and --params-file are mutually exclusive');
   });
+
+  it('selects BYOK without accepting an API key on the command line', () => {
+    expect(parseArguments(['system.describe', '--access', 'byok'])).toMatchObject({ accessMode: 'byok' });
+    expect(() => parseArguments(['system.describe', '--access', 'other'])).toThrow('--access requires managed or byok');
+  });
 });

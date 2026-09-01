@@ -37,6 +37,8 @@ export interface CoreAudioNoteResult {
   mimeType: 'audio/wav';
   durationSeconds: number;
   sampleCount: number;
+  triggerAudioSamplesSent: number;
+  triggerPacketCount: number;
 }
 
 /** Framework-free Gemini Live audio-note journey shared by UI and headless. */
@@ -52,6 +54,7 @@ export const runCoreAudioNoteGeneration = async (params: {
   operationId?: string;
   runtime?: CoreRuntime;
   onUsageMetadata?: (metadata: Record<string, unknown>) => void;
+  systemInstruction?: string;
 }): Promise<CoreAudioNoteResult> => {
   const text = (params.text || '').trim();
   if (!text) throw new Error('Audio note text is empty.');
@@ -61,7 +64,7 @@ export const runCoreAudioNoteGeneration = async (params: {
   const operationId = params.operationId || runtime.ids.create('audio-note');
   const model = params.model.trim();
   const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';
-  const systemInstruction = [
+  const systemInstruction = params.systemInstruction || [
     'You are a professional text-to-speech engine.',
     'Read the provided text aloud exactly as written.',
     'Do not add any intro, explanation, or extra words.',
@@ -85,6 +88,8 @@ export const runCoreAudioNoteGeneration = async (params: {
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const chunks: Int16Array[] = [];
+    let triggerAudioSamplesSent = 0;
+    let triggerPacketCount = 0;
 
     const cleanup = () => {
       streaming = false;
@@ -121,11 +126,15 @@ export const runCoreAudioNoteGeneration = async (params: {
         mimeType: 'audio/wav',
         durationSeconds: merged.length / OUTPUT_SAMPLE_RATE,
         sampleCount: merged.length,
+        triggerAudioSamplesSent,
+        triggerPacketCount,
       };
       emit('audioNote.succeeded', {
         model,
         durationSeconds: result.durationSeconds,
         sampleCount: result.sampleCount,
+        triggerAudioSamplesSent,
+        triggerPacketCount,
       });
       resolve(result);
     };
@@ -195,10 +204,12 @@ export const runCoreAudioNoteGeneration = async (params: {
         if (!streaming || !session || settled) return;
         const elapsed = runtime.clock.now() - startedAt;
         let chunk: Uint8Array;
+        let isTriggerAudio = false;
         if (sendOffset < triggerBytes.length) {
           const end = Math.min(sendOffset + chunkSize, triggerBytes.length);
           chunk = triggerBytes.slice(sendOffset, end);
           sendOffset = end;
+          isTriggerAudio = true;
         } else if (elapsed <= MAX_TRIGGER_DURATION_MS) {
           chunk = new Uint8Array(chunkSize);
         } else {
@@ -210,6 +221,15 @@ export const runCoreAudioNoteGeneration = async (params: {
               mimeType: `audio/pcm;rate=${params.triggerSampleRate}`,
               data: bytesToBase64(chunk),
             },
+          });
+          if (isTriggerAudio) {
+            triggerPacketCount += 1;
+            triggerAudioSamplesSent += Math.floor(chunk.byteLength / 2);
+          }
+          emit('audioNote.triggerChunkSent', {
+            samples: Math.floor(chunk.byteLength / 2),
+            isTriggerAudio,
+            triggerPacketCount,
           });
         } catch (error) {
           rejectOnce(new Error(error instanceof Error ? error.message : 'Audio note trigger failed.'));

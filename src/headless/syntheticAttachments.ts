@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { pcmToWav } from '../core-sdk/media/audioProcessing';
+import { createAdvancedSyntheticAttachment } from './syntheticAdvancedAttachments';
 
-export type SyntheticAttachmentKind = 'text' | 'image' | 'audio' | 'pdf';
+export type SyntheticAttachmentKind = 'text' | 'image' | 'audio' | 'pdf' | 'svg' | 'video' | 'office';
 
 export interface SyntheticAttachment {
   kind: SyntheticAttachmentKind;
@@ -98,3 +99,12 @@ export const createSyntheticAttachment = (
       throw new Error(`Unsupported synthetic attachment kind: ${String(kind)}`);
   }
 };
+
+export const createSyntheticAttachmentFixture = async (
+  kind: SyntheticAttachmentKind,
+  label = 'Maestro deterministic attachment fixture',
+): Promise<SyntheticAttachment> => (
+  kind === 'svg' || kind === 'video' || kind === 'office'
+    ? createAdvancedSyntheticAttachment(kind)
+    : createSyntheticAttachment(kind, label)
+);

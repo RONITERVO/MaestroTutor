@@ -25,7 +25,7 @@ export const runHeadlessImageGeneration = async (
       globalProfileText: client.state.globalProfile,
       placeholderLatestUserMessage: DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
     }),
-    async uris => (await client.backend.checkFileStatuses({ uris })).statuses,
+    uris => client.files.statuses(uris),
   );
   const result = await runMaestroImageGeneration({
     contextText: input.contextText,
@@ -39,7 +39,7 @@ export const runHeadlessImageGeneration = async (
 
   const shouldUpload = input.upload ?? true;
   const uploaded = shouldUpload
-    ? await client.backend.uploadMedia({
+    ? await client.files.upload({
       dataUrl: result.base64Image,
       mimeType: result.mimeType,
       displayName: 'headless-generated',
