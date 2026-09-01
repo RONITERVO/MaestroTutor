@@ -370,4 +370,13 @@ export const idTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "Simpan sebagai",
   "themeCustomizer.saveAsPreset": "Simpan sebagai preset",
   "themeCustomizer.title": "Warna Cat",
+  "header.aiAccessRequired": "Akses AI diperlukan",
+  "themeGallery.title": "Galeri Tema",
+  "themeGallery.close": "Tutup",
+  "themeGallery.included": "Gratis",
+  "themeGallery.apply": "Terapkan",
+  "themeGallery.includedDescription": "Tema warna yang disertakan",
+  "themeGallery.footerNote": "Semua tema warna disertakan dan akan tetap gratis.",
+  "themeCustomizer.galleryTitle": "Galeri Tema",
+  "themeCustomizer.galleryDescription": "Jelajahi tema warna yang disertakan",
 };

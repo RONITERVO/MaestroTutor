@@ -10,8 +10,6 @@ import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
 import { DEFAULT_THEME_COLORS } from '../config/defaultTheme';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
-import { getThemePreset } from '../config/themePresets';
-import { THEME_GALLERY_ITEMS } from '../config/themeCatalogue';
 import { hslStringToHex, hexToHslString } from '../utils/colorConversion';
 import { exportThemeToFile, importThemeFromFile } from '../utils/themeFileIO';
 import ThemeGalleryPanel from './ThemeGalleryPanel';
@@ -297,13 +295,6 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const isModified = (cssVar: string) => cssVar in customColors;
   const hasAnyCustomization = Object.keys(customColors).length > 0;
   const savedPresets = settings.savedThemePresets || [];
-  const includedThemes = THEME_GALLERY_ITEMS.flatMap(theme => {
-    const preset = getThemePreset(theme.themeId);
-    if (!preset) return [];
-
-    return [{ themeId: theme.themeId, preset }];
-  });
-
   // Inline naming state: 'save' or 'export' mode, or null when idle
   const [namingMode, setNamingMode] = useState<'save' | 'export' | null>(null);
   const [nameInput, setNameInput] = useState('');
@@ -520,17 +511,6 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                   />
                 );
               })}
-              {includedThemes.map(({ themeId, preset }) => (
-                <QuickThemeButton
-                  key={themeId}
-                  name={preset.name}
-                  description={preset.description}
-                  previewColors={getPresetPreviewColors(preset)}
-                  onClick={() => applyPreset(preset)}
-                  accentIcon={<IconCheck className="w-3 h-3 text-flag-busy-text shrink-0" />}
-                  className="border-theme-input-border/30"
-                />
-              ))}
               {savedPresets.map((preset, idx) => {
                 return (
                   <div key={`saved-${idx}`} className="relative group/saved">

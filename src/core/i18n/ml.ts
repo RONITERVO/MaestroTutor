@@ -370,4 +370,13 @@ export const mlTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "ആയി സംരക്ഷിക്കുക",
   "themeCustomizer.saveAsPreset": "പ്രീസെറ്റ് ആയി സംരക്ഷിക്കുക",
   "themeCustomizer.title": "നിറങ്ങൾ ചിത്രീകരിക്കുക",
+  "header.aiAccessRequired": "AI ആക്‌സസ് ആവശ്യമാണ്",
+  "themeGallery.title": "തീം ഗാലറി",
+  "themeGallery.close": "അടയ്ക്കുക",
+  "themeGallery.included": "സൗജന്യം",
+  "themeGallery.apply": "പ്രയോഗിക്കുക",
+  "themeGallery.includedDescription": "ഉൾപ്പെടുത്തിയ വർണ്ണ തീം",
+  "themeGallery.footerNote": "എല്ലാ വർണ്ണ തീമുകളും ഉൾപ്പെടുത്തിയിട്ടുണ്ട്, അവ എന്നും സൗജന്യമായിരിക്കും.",
+  "themeCustomizer.galleryTitle": "തീം ഗാലറി",
+  "themeCustomizer.galleryDescription": "ഉൾപ്പെടുത്തിയ വർണ്ണ തീമുകൾ കാണുക",
 };

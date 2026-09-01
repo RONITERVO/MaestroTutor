@@ -370,4 +370,13 @@ export const trTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "Farklı kaydet",
   "themeCustomizer.saveAsPreset": "Önayar olarak kaydet",
   "themeCustomizer.title": "Renkleri Boyayın",
+  "header.aiAccessRequired": "AI erişimi gerekli",
+  "themeGallery.title": "Tema Galerisi",
+  "themeGallery.close": "Kapat",
+  "themeGallery.included": "Ücretsiz",
+  "themeGallery.apply": "Uygula",
+  "themeGallery.includedDescription": "Dahil renk teması",
+  "themeGallery.footerNote": "Tüm renk temaları dahildir ve ücretsiz kalacaktır.",
+  "themeCustomizer.galleryTitle": "Tema Galerisi",
+  "themeCustomizer.galleryDescription": "Dahil renk temalarına göz atın",
 };

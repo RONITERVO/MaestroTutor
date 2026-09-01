@@ -498,6 +498,7 @@ export const enTranslations: Record<string, string> = {
   "themeGallery.title": "Theme Gallery",
   "themeGallery.close": "Close",
   "themeGallery.included": "Free",
+  "themeGallery.includedDescription": "Included color theme",
   "themeGallery.apply": "Apply",
   "themeGallery.footerNote": "Every color theme is included and will remain free.",
 

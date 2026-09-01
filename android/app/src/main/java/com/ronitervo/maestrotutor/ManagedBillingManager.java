@@ -22,7 +22,9 @@ import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 import com.android.billingclient.api.UnfetchedProduct;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -55,13 +57,36 @@ public final class ManagedBillingManager {
         void onBillingError(int responseCode, String debugMessage);
     }
 
+    public interface OnPurchasesQueryCallback {
+        void onPurchasesQueryComplete(BillingResult billingResult, List<Purchase> purchases);
+    }
+
+    private static final class PendingPurchaseRequest {
+        private final WeakReference<Activity> activity;
+        private final String productId;
+        private final String obfuscatedAccountId;
+
+        private PendingPurchaseRequest(
+                @NonNull Activity activity,
+                @NonNull String productId,
+                @NonNull String obfuscatedAccountId
+        ) {
+            this.activity = new WeakReference<>(activity);
+            this.productId = productId;
+            this.obfuscatedAccountId = obfuscatedAccountId;
+        }
+    }
+
     private final Context applicationContext;
     private final Map<String, ProductDetails> productDetailsCache = new LinkedHashMap<>();
     private final Map<String, Purchase> purchaseCache = new LinkedHashMap<>();
     private final Set<String> queuedProductIds = new LinkedHashSet<>();
+    private final List<OnPurchasesQueryCallback> purchasesQueryCallbacks = new ArrayList<>();
 
     @Nullable private BillingClient billingClient;
+    @Nullable private PendingPurchaseRequest pendingPurchaseRequest;
     private boolean isConnecting;
+    private boolean purchasesQueryInFlight;
     private boolean restoreWhenConnected = true;
 
     @Nullable private OnPurchasesUpdatedCallback purchasesUpdatedCallback;
@@ -117,21 +142,31 @@ public final class ManagedBillingManager {
                     return;
                 }
                 Log.w(TAG, "BillingClient setup failed: " + billingResult.getDebugMessage());
+                pendingPurchaseRequest = null;
+                completePurchasesQueryCallbacks(billingResult, Collections.emptyList());
                 notifyError(billingResult);
             }
 
             @Override
             public void onBillingServiceDisconnected() {
                 Log.w(TAG, "BillingClient disconnected; reconnecting on the next operation.");
+                boolean hasAwaitingOperation = pendingPurchaseRequest != null
+                        || !purchasesQueryCallbacks.isEmpty()
+                        || !queuedProductIds.isEmpty();
                 isConnecting = false;
+                purchasesQueryInFlight = false;
                 restoreWhenConnected = true;
                 billingClient = null;
+                if (hasAwaitingOperation) startConnection();
             }
         });
     }
 
     public void endConnection() {
         isConnecting = false;
+        purchasesQueryInFlight = false;
+        pendingPurchaseRequest = null;
+        purchasesQueryCallbacks.clear();
         if (billingClient != null) {
             billingClient.endConnection();
             billingClient = null;
@@ -150,8 +185,13 @@ public final class ManagedBillingManager {
             @NonNull String productId,
             @NonNull String obfuscatedAccountId
     ) {
-        if (!ensureConnected()) {
-            notifyError(disconnectedResult());
+        if (!isReady()) {
+            pendingPurchaseRequest = new PendingPurchaseRequest(
+                    activity,
+                    productId,
+                    obfuscatedAccountId
+            );
+            startConnection();
             return;
         }
 
@@ -164,7 +204,8 @@ public final class ManagedBillingManager {
     }
 
     /** Reconciles unconsumed purchases. Results are passed to the backend unchanged. */
-    public void restorePurchases() {
+    public void restorePurchases(@Nullable OnPurchasesQueryCallback callback) {
+        if (callback != null) purchasesQueryCallbacks.add(callback);
         restoreWhenConnected = true;
         if (!ensureConnected()) return;
         queryPurchases();
@@ -182,6 +223,7 @@ public final class ManagedBillingManager {
             notifyPurchasesUpdated();
         } else if (code == BillingClient.BillingResponseCode.USER_CANCELED) {
             Log.d(TAG, "User cancelled purchase.");
+            notifyError(billingResult);
         } else {
             Log.w(TAG, "Purchase update failed: " + billingResult.getDebugMessage());
             notifyError(billingResult);
@@ -191,10 +233,26 @@ public final class ManagedBillingManager {
     private void flushQueuedWork() {
         if (restoreWhenConnected) queryPurchases();
         if (!queuedProductIds.isEmpty()) queryQueuedProductDetails();
+
+        PendingPurchaseRequest request = pendingPurchaseRequest;
+        pendingPurchaseRequest = null;
+        if (request == null) return;
+
+        Activity activity = request.activity.get();
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+            notifyError(BillingResult.newBuilder()
+                    .setResponseCode(BillingClient.BillingResponseCode.DEVELOPER_ERROR)
+                    .setDebugMessage("No foreground activity is available to launch Google Play Billing.")
+                    .build());
+            return;
+        }
+        launchBillingFlow(activity, request.productId, request.obfuscatedAccountId);
     }
 
     private void queryQueuedProductDetails() {
         if (!isReady() || queuedProductIds.isEmpty()) return;
+        BillingClient client = billingClient;
+        if (client == null || !client.isReady()) return;
         List<String> productIds = new ArrayList<>(queuedProductIds);
         queuedProductIds.clear();
 
@@ -206,24 +264,29 @@ public final class ManagedBillingManager {
                     .build());
         }
 
-        billingClient.queryProductDetailsAsync(
+        client.queryProductDetailsAsync(
                 QueryProductDetailsParams.newBuilder().setProductList(products).build(),
                 (billingResult, queryResult) -> {
                     if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                         Log.w(TAG, "Product query failed: " + billingResult.getDebugMessage());
+                        queuedProductIds.addAll(productIds);
                         notifyError(billingResult);
+                        if (billingResult.getResponseCode()
+                                == BillingClient.BillingResponseCode.SERVICE_DISCONNECTED) {
+                            startConnection();
+                        }
                         return;
                     }
 
                     List<ProductDetails> fetched = queryResult == null
-                            ? List.of()
+                            ? Collections.emptyList()
                             : queryResult.getProductDetailsList();
                     for (ProductDetails product : fetched) {
                         productDetailsCache.put(product.getProductId(), product);
                     }
 
                     List<UnfetchedProduct> unfetched = queryResult == null
-                            ? List.of()
+                            ? Collections.emptyList()
                             : queryResult.getUnfetchedProductList();
                     for (UnfetchedProduct product : unfetched) {
                         Log.w(TAG, "Product unavailable: " + product.getProductId()
@@ -247,20 +310,41 @@ public final class ManagedBillingManager {
             @NonNull String productId,
             @NonNull String obfuscatedAccountId
     ) {
-        List<QueryProductDetailsParams.Product> products = List.of(
+        BillingClient client = billingClient;
+        if (client == null || !client.isReady()) {
+            pendingPurchaseRequest = new PendingPurchaseRequest(
+                    activity,
+                    productId,
+                    obfuscatedAccountId
+            );
+            startConnection();
+            return;
+        }
+
+        List<QueryProductDetailsParams.Product> products = Collections.singletonList(
                 QueryProductDetailsParams.Product.newBuilder()
                         .setProductId(productId)
                         .setProductType(BillingClient.ProductType.INAPP)
                         .build()
         );
-        billingClient.queryProductDetailsAsync(
+        client.queryProductDetailsAsync(
                 QueryProductDetailsParams.newBuilder().setProductList(products).build(),
                 (billingResult, queryResult) -> {
                     List<ProductDetails> fetched = queryResult == null
-                            ? List.of()
+                            ? Collections.emptyList()
                             : queryResult.getProductDetailsList();
                     if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK
                             || fetched.isEmpty()) {
+                        if (billingResult.getResponseCode()
+                                == BillingClient.BillingResponseCode.SERVICE_DISCONNECTED) {
+                            pendingPurchaseRequest = new PendingPurchaseRequest(
+                                    activity,
+                                    productId,
+                                    obfuscatedAccountId
+                            );
+                            startConnection();
+                            return;
+                        }
                         notifyError(billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
                                 ? BillingResult.newBuilder()
                                         .setResponseCode(BillingClient.BillingResponseCode.ITEM_UNAVAILABLE)
@@ -281,38 +365,64 @@ public final class ManagedBillingManager {
             @NonNull ProductDetails productDetails,
             @NonNull String obfuscatedAccountId
     ) {
+        BillingClient client = billingClient;
+        if (client == null || !client.isReady()) {
+            notifyError(disconnectedResult());
+            return;
+        }
+
         BillingFlowParams flowParams = BillingFlowParams.newBuilder()
-                .setProductDetailsParamsList(List.of(
+                .setProductDetailsParamsList(Collections.singletonList(
                         BillingFlowParams.ProductDetailsParams.newBuilder()
                                 .setProductDetails(productDetails)
                                 .build()
                 ))
                 .setObfuscatedAccountId(obfuscatedAccountId)
                 .build();
-        BillingResult result = billingClient.launchBillingFlow(activity, flowParams);
+        BillingResult result = client.launchBillingFlow(activity, flowParams);
         if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
             notifyError(result);
         }
     }
 
     private void queryPurchases() {
-        if (!isReady()) return;
+        if (!isReady() || purchasesQueryInFlight) return;
+        BillingClient client = billingClient;
+        if (client == null || !client.isReady()) return;
         restoreWhenConnected = false;
-        billingClient.queryPurchasesAsync(
+        purchasesQueryInFlight = true;
+        client.queryPurchasesAsync(
                 QueryPurchasesParams.newBuilder()
                         .setProductType(BillingClient.ProductType.INAPP)
                         .build(),
                 (billingResult, purchases) -> {
+                    purchasesQueryInFlight = false;
                     if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                         Log.w(TAG, "Purchase restore failed: " + billingResult.getDebugMessage());
+                        restoreWhenConnected = true;
+                        completePurchasesQueryCallbacks(billingResult, Collections.emptyList());
                         notifyError(billingResult);
                         return;
                     }
                     purchaseCache.clear();
                     if (purchases != null) mergePurchases(purchases);
+                    restoreWhenConnected = false;
                     notifyPurchasesUpdated();
+                    completePurchasesQueryCallbacks(billingResult, getCachedPurchases());
                 }
         );
+    }
+
+    private void completePurchasesQueryCallbacks(
+            @NonNull BillingResult billingResult,
+            @NonNull List<Purchase> purchases
+    ) {
+        if (purchasesQueryCallbacks.isEmpty()) return;
+        List<OnPurchasesQueryCallback> callbacks = new ArrayList<>(purchasesQueryCallbacks);
+        purchasesQueryCallbacks.clear();
+        for (OnPurchasesQueryCallback callback : callbacks) {
+            callback.onPurchasesQueryComplete(billingResult, purchases);
+        }
     }
 
     private void mergePurchases(@NonNull List<Purchase> purchases) {

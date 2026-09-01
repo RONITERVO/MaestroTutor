@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { IconCheck, IconSparkles, IconXMark } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { THEME_GALLERY_ITEMS } from '../config/themeCatalogue';
@@ -22,12 +22,63 @@ interface ThemeGalleryPanelProps {
  */
 const ThemeGalleryPanel: React.FC<ThemeGalleryPanelProps> = ({ onApplyTheme, onClose }) => {
   const { t } = useAppTranslations();
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    dialogRef.current?.focus();
+
+    return () => {
+      requestAnimationFrame(() => {
+        if (previouslyFocused?.isConnected) previouslyFocused.focus();
+      });
+    };
+  }, []);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
+    )).filter(element => element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true');
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   return (
     <>
       <div className="fixed inset-0 z-[89] bg-black/20" onClick={onClose} />
 
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="theme-gallery-title"
+        tabIndex={-1}
+        onKeyDown={handleDialogKeyDown}
         className="fixed inset-x-0 bottom-0 z-[90] flex flex-col bg-theme-panel-bg/10 backdrop-blur-md border-t border-line-border shadow-2xl rounded-t-2xl overflow-hidden"
         style={{ maxHeight: '70vh' }}
       >
@@ -36,15 +87,16 @@ const ThemeGalleryPanel: React.FC<ThemeGalleryPanelProps> = ({ onApplyTheme, onC
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               <IconSparkles className="w-5 h-5 text-theme-panel-text" />
-              <h2 className="text-lg font-sketch text-theme-panel-text">
+              <h2 id="theme-gallery-title" className="text-lg font-sketch text-theme-panel-text">
                 {t('themeGallery.title') || 'Theme Gallery'}
               </h2>
             </div>
             <button
               type="button"
               title={t('themeGallery.close') || 'Close'}
+              aria-label={t('themeGallery.close') || 'Close'}
               onClick={onClose}
-              className="p-1.5 rounded-lg text-theme-muted-text hover:text-theme-panel-text hover:bg-theme-input-bg transition-colors"
+              className="p-1.5 rounded-lg text-theme-muted-text hover:text-theme-panel-text hover:bg-theme-input-bg focus:outline-none focus:ring-2 focus:ring-gate-accent transition-colors"
             >
               <IconXMark className="w-5 h-5" />
             </button>
@@ -83,7 +135,7 @@ const ThemeGalleryPanel: React.FC<ThemeGalleryPanelProps> = ({ onApplyTheme, onC
                     </span>
                   </div>
                   <p className="text-xs text-theme-muted-text mt-0.5 leading-snug">
-                    {theme.description}
+                    {t('themeGallery.includedDescription') || 'Included color theme'}
                   </p>
                 </div>
 
@@ -91,7 +143,7 @@ const ThemeGalleryPanel: React.FC<ThemeGalleryPanelProps> = ({ onApplyTheme, onC
                   <button
                     type="button"
                     onClick={() => onApplyTheme(preset)}
-                    className="px-3 py-1.5 rounded-lg bg-gate-btn-bg text-gate-btn-text text-xs font-medium active:opacity-80 transition-opacity"
+                    className="px-3 py-1.5 rounded-lg bg-gate-btn-bg text-gate-btn-text text-xs font-medium active:opacity-80 focus:outline-none focus:ring-2 focus:ring-gate-accent transition-opacity"
                   >
                     {t('themeGallery.apply') || 'Apply'}
                   </button>

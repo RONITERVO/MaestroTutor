@@ -370,4 +370,13 @@ export const thTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "บันทึกเป็น",
   "themeCustomizer.saveAsPreset": "บันทึกเป็นค่าที่ตั้งไว้ล่วงหน้า",
   "themeCustomizer.title": "สีสัน",
+  "header.aiAccessRequired": "ต้องมีสิทธิ์เข้าถึง AI",
+  "themeGallery.title": "แกลเลอรีธีม",
+  "themeGallery.close": "ปิด",
+  "themeGallery.included": "ฟรี",
+  "themeGallery.apply": "ใช้",
+  "themeGallery.includedDescription": "ธีมสีที่รวมมาให้",
+  "themeGallery.footerNote": "ธีมสีทุกแบบรวมมาให้และจะยังคงใช้ฟรี",
+  "themeCustomizer.galleryTitle": "แกลเลอรีธีม",
+  "themeCustomizer.galleryDescription": "เรียกดูธีมสีที่รวมมาให้",
 };

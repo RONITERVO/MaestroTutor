@@ -75,5 +75,9 @@ export const THEME_PRESETS_BY_ID: Record<ThemeId, PresetTheme> = {
   },
 };
 
-export const getThemePreset = (themeId: string): PresetTheme | null =>
-  THEME_PRESETS_BY_ID[themeId as ThemeId] ?? null;
+export const getThemePreset = (themeId: string): PresetTheme | null => {
+  if (!Object.prototype.hasOwnProperty.call(THEME_PRESETS_BY_ID, themeId)) {
+    return null;
+  }
+  return THEME_PRESETS_BY_ID[themeId as ThemeId];
+};

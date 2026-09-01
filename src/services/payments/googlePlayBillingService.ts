@@ -24,6 +24,7 @@ export interface ProductDetailsAvailableEvent {
 export interface BillingErrorEvent {
   responseCode: number;
   debugMessage: string;
+  canceled?: boolean;
 }
 
 export interface UnconsumedPurchasesResult {

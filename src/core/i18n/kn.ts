@@ -370,4 +370,13 @@ export const knTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "ಇಂತಹದಾಗಿ ಉಳಿಸಿ",
   "themeCustomizer.saveAsPreset": "ಪ್ರಿಸೆಟ್ ಆಗಿ ಉಳಿಸಿ",
   "themeCustomizer.title": "ಬಣ್ಣಗಳನ್ನು ಚಿತ್ರಿಸಿ",
+  "header.aiAccessRequired": "AI ಪ್ರವೇಶ ಅಗತ್ಯವಿದೆ",
+  "themeGallery.title": "ಥೀಮ್ ಗ್ಯಾಲರಿ",
+  "themeGallery.close": "ಮುಚ್ಚಿ",
+  "themeGallery.included": "ಉಚಿತ",
+  "themeGallery.apply": "ಅನ್ವಯಿಸಿ",
+  "themeGallery.includedDescription": "ಒಳಗೊಂಡ ಬಣ್ಣದ ಥೀಮ್",
+  "themeGallery.footerNote": "ಪ್ರತಿ ಬಣ್ಣದ ಥೀಮ್ ಒಳಗೊಂಡಿದೆ ಮತ್ತು ಯಾವಾಗಲೂ ಉಚಿತವಾಗಿರುತ್ತದೆ.",
+  "themeCustomizer.galleryTitle": "ಥೀಮ್ ಗ್ಯಾಲರಿ",
+  "themeCustomizer.galleryDescription": "ಒಳಗೊಂಡ ಬಣ್ಣದ ಥೀಮ್‌ಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
 };

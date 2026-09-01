@@ -5,6 +5,7 @@ package com.ronitervo.maestrotutor;
 
 import android.app.Activity;
 
+import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.getcapacitor.JSArray;
@@ -43,6 +44,7 @@ public final class ManagedBillingPlugin extends Plugin {
             JSObject payload = new JSObject();
             payload.put("responseCode", responseCode);
             payload.put("debugMessage", debugMessage == null ? "" : debugMessage);
+            payload.put("canceled", responseCode == BillingClient.BillingResponseCode.USER_CANCELED);
             notifyListeners("billingError", payload);
         });
         billingManager.startConnection();
@@ -105,13 +107,24 @@ public final class ManagedBillingPlugin extends Plugin {
 
     @PluginMethod
     public void restorePurchases(PluginCall call) {
-        billingManager.restorePurchases();
-        call.resolve();
+        billingManager.restorePurchases((billingResult, purchases) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                call.resolve(purchasesPayload(purchases));
+            } else {
+                call.reject(billingResult.getDebugMessage());
+            }
+        });
     }
 
     @PluginMethod
     public void getUnconsumedPurchases(PluginCall call) {
-        call.resolve(purchasesPayload(billingManager.getCachedPurchases()));
+        billingManager.restorePurchases((billingResult, purchases) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                call.resolve(purchasesPayload(purchases));
+            } else {
+                call.reject(billingResult.getDebugMessage());
+            }
+        });
     }
 
     private JSObject purchasesPayload(List<Purchase> purchases) {

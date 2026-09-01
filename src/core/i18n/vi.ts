@@ -370,4 +370,13 @@ export const viTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "Lưu dưới dạng",
   "themeCustomizer.saveAsPreset": "Lưu dưới dạng cài đặt sẵn",
   "themeCustomizer.title": "Màu sắc",
+  "header.aiAccessRequired": "Cần quyền truy cập AI",
+  "themeGallery.title": "Thư viện chủ đề",
+  "themeGallery.close": "Đóng",
+  "themeGallery.included": "Miễn phí",
+  "themeGallery.apply": "Áp dụng",
+  "themeGallery.includedDescription": "Chủ đề màu đi kèm",
+  "themeGallery.footerNote": "Mọi chủ đề màu đều được bao gồm và sẽ luôn miễn phí.",
+  "themeCustomizer.galleryTitle": "Thư viện chủ đề",
+  "themeCustomizer.galleryDescription": "Duyệt các chủ đề màu đi kèm",
 };

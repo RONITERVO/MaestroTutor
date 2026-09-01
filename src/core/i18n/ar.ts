@@ -368,4 +368,13 @@ export const arTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "حفظ باسم",
   "themeCustomizer.saveAsPreset": "حفظ كإعداد مسبق",
   "themeCustomizer.title": "ألوان الطلاء",
+  "header.aiAccessRequired": "الوصول إلى الذكاء الاصطناعي مطلوب",
+  "themeGallery.title": "معرض السمات",
+  "themeGallery.close": "إغلاق",
+  "themeGallery.included": "مجاني",
+  "themeGallery.apply": "تطبيق",
+  "themeGallery.includedDescription": "سمة ألوان مضمنة",
+  "themeGallery.footerNote": "جميع سمات الألوان مضمنة وستظل مجانية.",
+  "themeCustomizer.galleryTitle": "معرض السمات",
+  "themeCustomizer.galleryDescription": "تصفّح سمات الألوان المضمنة",
 };

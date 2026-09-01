@@ -369,4 +369,13 @@ export const jaTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "名前を付けて保存",
   "themeCustomizer.saveAsPreset": "プリセットとして保存",
   "themeCustomizer.title": "カラー設定",
+  "header.aiAccessRequired": "AIへのアクセスが必要です",
+  "themeGallery.title": "テーマギャラリー",
+  "themeGallery.close": "閉じる",
+  "themeGallery.included": "無料",
+  "themeGallery.apply": "適用",
+  "themeGallery.includedDescription": "付属のカラーテーマ",
+  "themeGallery.footerNote": "すべてのカラーテーマが含まれており、今後も無料です。",
+  "themeCustomizer.galleryTitle": "テーマギャラリー",
+  "themeCustomizer.galleryDescription": "付属のカラーテーマを見る",
 };

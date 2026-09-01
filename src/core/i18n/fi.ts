@@ -370,4 +370,13 @@ export const fiTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "Tallenna nimellä",
   "themeCustomizer.saveAsPreset": "Tallenna esiasetuksena",
   "themeCustomizer.title": "Maalaa värejä",
+  "header.aiAccessRequired": "Tekoälyn käyttöoikeus vaaditaan",
+  "themeGallery.title": "Teemagalleria",
+  "themeGallery.close": "Sulje",
+  "themeGallery.included": "Ilmainen",
+  "themeGallery.apply": "Käytä",
+  "themeGallery.includedDescription": "Mukana oleva väriteema",
+  "themeGallery.footerNote": "Kaikki väriteemat sisältyvät sovellukseen ja pysyvät ilmaisina.",
+  "themeCustomizer.galleryTitle": "Teemagalleria",
+  "themeCustomizer.galleryDescription": "Selaa mukana olevia väriteemoja",
 };

@@ -163,6 +163,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       billingService.onBillingError(event => {
         if (!mounted) return;
         setIsPurchasing(false);
+        if (event.canceled) return;
         setErrorMessage(event.debugMessage || t('managedAccess.genericError'));
       }),
     );

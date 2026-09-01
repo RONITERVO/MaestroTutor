@@ -370,4 +370,13 @@ export const svTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "Spara som",
   "themeCustomizer.saveAsPreset": "Spara som förinställning",
   "themeCustomizer.title": "Måla färger",
+  "header.aiAccessRequired": "AI-åtkomst krävs",
+  "themeGallery.title": "Temagalleri",
+  "themeGallery.close": "Stäng",
+  "themeGallery.included": "Gratis",
+  "themeGallery.apply": "Använd",
+  "themeGallery.includedDescription": "Inkluderat färgtema",
+  "themeGallery.footerNote": "Alla färgteman ingår och kommer att förbli gratis.",
+  "themeCustomizer.galleryTitle": "Temagalleri",
+  "themeCustomizer.galleryDescription": "Bläddra bland inkluderade färgteman",
 };

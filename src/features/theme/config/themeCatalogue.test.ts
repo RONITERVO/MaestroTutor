@@ -26,4 +26,9 @@ describe('free theme catalogue', () => {
       THEME_CATALOGUE.filter(theme => theme.themeId !== DEFAULT_THEME_ID),
     );
   });
+
+  it('rejects inherited object keys as unknown theme IDs', () => {
+    expect(getThemePreset('__proto__')).toBeNull();
+    expect(getThemePreset('constructor')).toBeNull();
+  });
 });

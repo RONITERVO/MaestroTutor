@@ -369,4 +369,13 @@ export const zhTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "另存为",
   "themeCustomizer.saveAsPreset": "另存为预设",
   "themeCustomizer.title": "颜色设置",
+  "header.aiAccessRequired": "需要 AI 访问权限",
+  "themeGallery.title": "主题库",
+  "themeGallery.close": "关闭",
+  "themeGallery.included": "免费",
+  "themeGallery.apply": "应用",
+  "themeGallery.includedDescription": "内置配色主题",
+  "themeGallery.footerNote": "所有配色主题均已包含，并将永久免费。",
+  "themeCustomizer.galleryTitle": "主题库",
+  "themeCustomizer.galleryDescription": "浏览内置配色主题",
 };

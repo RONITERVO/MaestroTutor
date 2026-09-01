@@ -370,4 +370,13 @@ export const taTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "என்று சேமிக்கவும்",
   "themeCustomizer.saveAsPreset": "முன்னமைவாகச் சேமிக்கவும்",
   "themeCustomizer.title": "வண்ணங்களை வரையவும்",
+  "header.aiAccessRequired": "AI அணுகல் தேவை",
+  "themeGallery.title": "தீம் தொகுப்பு",
+  "themeGallery.close": "மூடு",
+  "themeGallery.included": "இலவசம்",
+  "themeGallery.apply": "பயன்படுத்து",
+  "themeGallery.includedDescription": "சேர்க்கப்பட்ட வண்ண தீம்",
+  "themeGallery.footerNote": "ஒவ்வொரு வண்ண தீமும் சேர்க்கப்பட்டுள்ளது, எப்போதும் இலவசமாக இருக்கும்.",
+  "themeCustomizer.galleryTitle": "தீம் தொகுப்பு",
+  "themeCustomizer.galleryDescription": "சேர்க்கப்பட்ட வண்ண தீம்களைப் பார்க்கவும்",
 };

@@ -368,4 +368,13 @@ export const deTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "Speichern als",
   "themeCustomizer.saveAsPreset": "Als Preset speichern",
   "themeCustomizer.title": "Farben gestalten",
+  "header.aiAccessRequired": "KI-Zugriff erforderlich",
+  "themeGallery.title": "Theme-Galerie",
+  "themeGallery.close": "Schließen",
+  "themeGallery.included": "Kostenlos",
+  "themeGallery.apply": "Anwenden",
+  "themeGallery.includedDescription": "Enthaltenes Farbdesign",
+  "themeGallery.footerNote": "Alle Farbdesigns sind enthalten und bleiben kostenlos.",
+  "themeCustomizer.galleryTitle": "Theme-Galerie",
+  "themeCustomizer.galleryDescription": "Enthaltene Farbdesigns durchsuchen",
 };

@@ -369,4 +369,13 @@ export const itTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "Salva come",
   "themeCustomizer.saveAsPreset": "Salva come preset",
   "themeCustomizer.title": "Palette colori",
+  "header.aiAccessRequired": "Accesso all'IA richiesto",
+  "themeGallery.title": "Galleria temi",
+  "themeGallery.close": "Chiudi",
+  "themeGallery.included": "Gratis",
+  "themeGallery.apply": "Applica",
+  "themeGallery.includedDescription": "Tema di colori incluso",
+  "themeGallery.footerNote": "Tutti i temi di colori sono inclusi e rimarranno gratuiti.",
+  "themeCustomizer.galleryTitle": "Galleria temi",
+  "themeCustomizer.galleryDescription": "Sfoglia i temi di colori inclusi",
 };

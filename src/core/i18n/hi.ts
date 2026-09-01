@@ -369,4 +369,13 @@ export const hiTranslations: Record<string, string> = {
   "themeCustomizer.saveAs": "इस रूप में सहेजें",
   "themeCustomizer.saveAsPreset": "प्रीसेट के रूप में सहेजें",
   "themeCustomizer.title": "रंग पेंट करें",
+  "header.aiAccessRequired": "AI एक्सेस आवश्यक है",
+  "themeGallery.title": "थीम गैलरी",
+  "themeGallery.close": "बंद करें",
+  "themeGallery.included": "मुफ़्त",
+  "themeGallery.apply": "लागू करें",
+  "themeGallery.includedDescription": "शामिल रंग थीम",
+  "themeGallery.footerNote": "हर रंग थीम शामिल है और हमेशा मुफ़्त रहेगी।",
+  "themeCustomizer.galleryTitle": "थीम गैलरी",
+  "themeCustomizer.galleryDescription": "शामिल रंग थीम ब्राउज़ करें",
 };
