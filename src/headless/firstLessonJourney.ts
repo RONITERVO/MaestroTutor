@@ -137,6 +137,9 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
       text: `Teach me one useful phrase inspired by this ${fixture} attachment.`,
       fixture,
       languagePairId: pair.id,
+      // The preceding Search turn persists the user's Search toggle. Each
+      // attachment case is intentionally a plain multimodal tutor request.
+      useGoogleSearch: false,
       cleanup: true,
       requireInvariants: true,
     });

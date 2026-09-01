@@ -107,6 +107,7 @@ for (const toolKind of ['image', 'audio-note', 'music']) {
   requireText(firstLessonCoverage.includes(`'${toolKind}'`), `The first-lesson journey must retain the ${toolKind} suggestion tool afterstep.`);
 }
 requireText(firstLessonJourney.includes("mode: 'observer'"), 'The first-lesson journey must retain silent-observer coverage.');
+requireText(firstLessonJourney.includes('useGoogleSearch: false'), 'Non-Search first-lesson turns must not inherit the earlier Search toggle.');
 requireText(tutorConversation.includes('executeSuggestionToolRequest'), 'The visual UI must use the shared suggestion afterstep dispatcher.');
 requireText(tutorConversation.includes('normalizeCoreSuggestionCreatorArtifact'), 'The visual UI must use shared artifact normalization.');
 requireText(tutorConversation.includes('buildCoreAttachmentUploadPlans'), 'The visual UI must use the shared attachment upload planner.');
