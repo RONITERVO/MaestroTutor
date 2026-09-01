@@ -3,6 +3,7 @@
 import type { HeadlessClient } from './client';
 import { completeStripeTestCheckout } from './hostedBrowser';
 import { makePurchaseClaimId } from '../../shared/billing/purchaseClaims';
+import { makeStripeCheckoutIdempotencyKey } from '../../shared/billing/stripeFulfilment';
 
 export interface StripeTestJourneyInput {
   packId: string;
@@ -68,7 +69,10 @@ export const runStripeTestCheckoutJourney = async (
     throw new Error(`Expected one ${expectedCredits}-credit grant, observed a ${creditsAfter - creditsBefore}-credit delta.`);
   }
   const ledgersAfter = await client.account.listLedgers(200, operationId);
-  const expectedPurchaseClaimId = makePurchaseClaimId('stripe', checkout.sessionId);
+  const expectedPurchaseClaimId = makePurchaseClaimId(
+    'stripe',
+    makeStripeCheckoutIdempotencyKey(checkout.sessionId),
+  );
   const matchingPurchaseEntries = ledgersAfter.billing.entries.filter(entry => (
     entry.kind === 'purchase'
     && entry.metadata?.purchaseClaimId === expectedPurchaseClaimId

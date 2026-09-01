@@ -40,7 +40,7 @@ Buy credits
        checkout.session.completed
        or checkout.session.async_payment_succeeded
   -> resolveCheckoutGrant requires payment_status=paid
-  -> purchaseClaims/stripe_<sha256(session id)> transaction
+  -> purchaseClaims/stripe_<sha256("stripe:" + session id)> transaction
   -> account summary + entitlement + one billing-ledger entry
   -> normal account refresh observes the new balance
 ```
@@ -243,7 +243,8 @@ Balance changed twice:
 
 - stop the release immediately;
 - preserve the session/event ids and Firestore records;
-- verify both event types resolve to the same `stripe_<sha256(session id)>` claim;
+- verify both event types resolve to the same
+  `stripe_<sha256("stripe:" + session id)>` claim;
 - do not delete claims to “retry”; claims are the protection against another grant.
 
 Android buy button missing:

@@ -51,6 +51,11 @@ export const isCheckoutFulfilmentEventType = (eventType: string): boolean => (
   || eventType === 'checkout.session.async_payment_succeeded'
 );
 
+/** Stable provider-scoped key used by the backend purchase-claim transaction. */
+export const makeStripeCheckoutIdempotencyKey = (sessionId: string): string => (
+  `stripe:${sessionId}`
+);
+
 /**
  * What, if anything, this session should be granted.
  *
@@ -97,7 +102,7 @@ export const resolveCheckoutGrant = (
     // Keyed on the session rather than the webhook event: the session is the
     // purchase, so this stays stable across event retries and would still hold
     // if another event type for the same session were ever handled.
-    idempotencyKey: `stripe:${session.id}`,
+    idempotencyKey: makeStripeCheckoutIdempotencyKey(session.id),
     orderId: paymentIntent,
     email: session.customer_details?.email ?? null,
   };

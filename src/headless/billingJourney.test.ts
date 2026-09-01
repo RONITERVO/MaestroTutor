@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createCoreEventJournal } from '../core-sdk/events';
 import { createCoreRuntime } from '../core-sdk/runtime';
 import { makePurchaseClaimId } from '../../shared/billing/purchaseClaims';
+import { makeStripeCheckoutIdempotencyKey } from '../../shared/billing/stripeFulfilment';
 import type { HeadlessClient } from './client';
 
 vi.mock('./hostedBrowser', () => ({
@@ -40,7 +41,10 @@ const createClient = (billingEntries: unknown[]): HeadlessClient => {
 
 describe('Stripe headless checkout proof', () => {
   it('proves the new Checkout by its exact hashed claim instead of a bounded count delta', async () => {
-    const purchaseClaimId = makePurchaseClaimId('stripe', 'cs_test_exact_claim');
+    const purchaseClaimId = makePurchaseClaimId(
+      'stripe',
+      makeStripeCheckoutIdempotencyKey('cs_test_exact_claim'),
+    );
     const olderEntries = Array.from({ length: 199 }, (_, index) => ({
       kind: index % 2 ? 'purchase' : 'usage',
       metadata: { purchaseClaimId: `older-${index}` },
@@ -63,7 +67,10 @@ describe('Stripe headless checkout proof', () => {
   });
 
   it('rejects duplicate ledger evidence for the same purchase claim', async () => {
-    const purchaseClaimId = makePurchaseClaimId('stripe', 'cs_test_exact_claim');
+    const purchaseClaimId = makePurchaseClaimId(
+      'stripe',
+      makeStripeCheckoutIdempotencyKey('cs_test_exact_claim'),
+    );
     const entry = { kind: 'purchase', metadata: { purchaseClaimId } };
     const client = createClient([entry, entry]);
 

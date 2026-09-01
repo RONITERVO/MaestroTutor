@@ -405,8 +405,8 @@ export const settleManagedReservation = async (params: {
 /**
  * Add purchased credits, exactly once.
  *
- * `purchaseToken` is the Stripe Checkout session id. The persisted idempotency
- * key is SHA-256 hashed, so the external identifier never appears in a document
+ * `purchaseToken` is the stable provider-scoped Stripe Checkout idempotency key.
+ * It is SHA-256 hashed, so the external identifier never appears in a document
  * path or a client-visible entitlement.
  */
 export const grantPurchasedCredits = async (params: {
