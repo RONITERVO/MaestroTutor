@@ -28,6 +28,22 @@ const MAX_MANAGED_UPLOAD_BYTES = Math.floor(
   (CLOUD_FUNCTIONS_V2_MAX_REQUEST_BYTES - JSON_UPLOAD_ENVELOPE_BYTES - 1) / 4
 ) * 3;
 
+const DEFAULT_MANAGED_GENERATION_MODELS = [
+  'gemini-flash-latest',
+  'gemini-flash-lite-latest',
+  'gemini-2.5-flash-image',
+] as const;
+const DEFAULT_MANAGED_LIVE_MODELS = [
+  'gemini-2.5-flash-native-audio-preview-12-2025',
+  'gemini-3.1-flash-live-preview',
+] as const;
+const DEFAULT_MANAGED_MUSIC_MODELS = ['lyria-realtime-exp'] as const;
+
+const configuredSet = (value: string | undefined, defaults: readonly string[]): ReadonlySet<string> => {
+  const configured = parseCsv(value);
+  return new Set(configured.length > 0 ? configured : defaults);
+};
+
 /**
  * A buyable bundle of credits.
  *
@@ -114,7 +130,7 @@ export const appConfig = {
   stripeSecretKey: process.env.STRIPE_SECRET_KEY?.trim() || process.env.STRIPE_SECRET?.trim() || '',
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || '',
   managedCreditsPerUsd: Math.max(1, parseInteger(process.env.MANAGED_CREDITS_PER_USD, 1000)),
-  requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, false),
+  requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, true),
   geminiLiveTokenUses: Math.max(1, parseInteger(process.env.GEMINI_LIVE_TOKEN_USES, 1)),
   managedLiveTokenLifetimeSeconds: Math.min(180, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 180))),
   managedMaxActiveLiveSockets: Math.min(2, Math.max(1, parseInteger(process.env.MANAGED_MAX_ACTIVE_LIVE_SOCKETS, 2))),
@@ -125,6 +141,26 @@ export const appConfig = {
   managedMaxUploadBytes: Math.min(
     MAX_MANAGED_UPLOAD_BYTES,
     Math.max(1, parseInteger(process.env.MANAGED_MAX_UPLOAD_BYTES, MAX_MANAGED_UPLOAD_BYTES)),
+  ),
+  managedAllowedGeminiModels: configuredSet(
+    process.env.MANAGED_ALLOWED_GEMINI_MODELS,
+    DEFAULT_MANAGED_GENERATION_MODELS,
+  ),
+  managedAllowedLiveModels: configuredSet(
+    process.env.MANAGED_ALLOWED_LIVE_MODELS,
+    DEFAULT_MANAGED_LIVE_MODELS,
+  ),
+  managedAllowedMusicModels: configuredSet(
+    process.env.MANAGED_ALLOWED_MUSIC_MODELS,
+    DEFAULT_MANAGED_MUSIC_MODELS,
+  ),
+  managedSearchReservationQueries: Math.min(
+    100,
+    Math.max(1, parseInteger(process.env.MANAGED_SEARCH_RESERVATION_QUERIES, 10)),
+  ),
+  managedMaxOutputTokens: Math.min(
+    65_536,
+    Math.max(256, parseInteger(process.env.MANAGED_MAX_OUTPUT_TOKENS, 8_192)),
   ),
   /** Requests per minute per user, per class of operation. See rateLimit.ts. */
   rateLimitPerMinute: Math.max(1, parseInteger(process.env.MANAGED_RATE_LIMIT_PER_MINUTE, 60)),

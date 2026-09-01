@@ -34,6 +34,13 @@ const formatUsd = (value: number): string => (
   })
 );
 
+const sha256Hex = async (value: string): Promise<string> => {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)]
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+};
+
 const dedupePurchaseRecords = (purchaseRecords: GooglePlayPurchaseRecord[]): GooglePlayPurchaseRecord[] => {
   const recordsByToken = new Map<string, GooglePlayPurchaseRecord>();
   for (const purchase of purchaseRecords) {
@@ -224,7 +231,8 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setIsPurchasing(true);
     try {
       if (billingService.isAvailable) {
-        await billingService.purchaseProduct(primaryProductId);
+        const obfuscatedAccountId = await sha256Hex(session.user.id);
+        await billingService.purchaseProduct(primaryProductId, obfuscatedAccountId);
         // Play drives the rest through the purchase listener, which keeps the
         // spinner up until the purchase is reconciled.
         return;
@@ -236,7 +244,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       setIsPurchasing(false);
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseFailed'));
     }
-  }, [billingService, primaryProductId, session?.firebaseIdToken, t]);
+  }, [billingService, primaryProductId, session, t]);
 
   /*
    * Coming back from Stripe, the credits may not have landed yet: the webhook

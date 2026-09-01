@@ -28,6 +28,7 @@ import type { AppUser } from './auth';
 import { appConfig, getCreditsForManagedProduct } from './config';
 import { getManagedAccountState, grantPurchasedCredits } from './managedBilling';
 import { createHttpError } from './http';
+import { playPurchaseBelongsToAccount } from '../../shared/billing/playAccountBinding';
 
 export interface GooglePlayPurchaseRecord {
   productId: string;
@@ -111,6 +112,10 @@ export const verifyManagedGooglePlayPurchase = async (params: {
     // Pending purchases are a normal state for slow payment methods, and the
     // client is expected to come back once Play settles them.
     throw createHttpError(409, 'Google Play purchase is not in a completed purchased state.');
+  }
+
+  if (!playPurchaseBelongsToAccount(verification.obfuscatedExternalAccountId, params.uid)) {
+    throw createHttpError(403, 'Google Play purchase does not belong to this managed account.');
   }
 
   // 2. Grant before consuming. Idempotent on the purchase token, so a retry

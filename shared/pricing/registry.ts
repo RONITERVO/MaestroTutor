@@ -49,7 +49,7 @@ export const DEFAULT_GEMINI_PRICING: GeminiPricingRegistry = {
   schemaVersion: 1,
   currency: 'USD',
   estimateBasis: 'paid-standard-list',
-  effectiveAt: '2026-07-21',
+  effectiveAt: '2026-09-01',
   sourceUrl: 'https://ai.google.dev/gemini-api/docs/pricing',
   googleSearch: {
     pricePerThousandQueriesUsd: 14,
@@ -60,9 +60,11 @@ export const DEFAULT_GEMINI_PRICING: GeminiPricingRegistry = {
       id: 'gemini-3.6-flash',
       displayName: 'Gemini 3.6 Flash',
       matches: ['gemini-flash-latest', 'gemini-3.6-flash'],
-      inputPerMillion: allModalities(1.5),
-      outputPerMillion: allModalities(7.5),
-      cachedInputPerMillion: allModalities(0.15),
+      // Promotional Standard rates published through 2026-12-31. Re-verify
+      // before 2027-01-01, when Google currently says these rates double.
+      inputPerMillion: allModalities(0.75),
+      outputPerMillion: allModalities(3.75),
+      cachedInputPerMillion: allModalities(0.075),
     },
     {
       id: 'gemini-3.5-flash-lite',

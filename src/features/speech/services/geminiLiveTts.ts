@@ -21,11 +21,11 @@
  * - Cache audio segments per line for replay
  */
 
-import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
+import { Modality, LiveServerMessage } from '@google/genai';
+import { getAi } from '../../../api/gemini/client';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsToTextLines } from '../utils/transcriptParsing';
 import { getLiveMinimalThinkingConfig } from '../config/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
@@ -139,12 +139,12 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     return { isComplete: true, audioSegments: [] };
   }
 
-  // Validate API key is available
-  let apiKey: string;
+  // Resolve either the local BYOK transport or a managed Live-token transport.
+  let ai;
   try {
-    apiKey = await getApiKeyOrThrow();
+    ai = await getAi();
   } catch (e: any) {
-    const errorMsg = e?.message || 'Missing API key';
+    const errorMsg = e?.message || 'Missing AI access';
     onError?.(errorMsg);
     return { isComplete: false, error: errorMsg, audioSegments: [] };
   }
@@ -340,8 +340,6 @@ ${textBlock}`;
     };
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      
       session = await ai.live.connect({
         model,
         config: config as any,

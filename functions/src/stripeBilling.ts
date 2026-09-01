@@ -25,6 +25,7 @@
  * not.
  */
 
+import { createHash } from 'node:crypto';
 import Stripe from 'stripe';
 import type { Request, Response } from 'express';
 import type { AppUser } from './auth';
@@ -96,12 +97,16 @@ const getOrCreateCustomer = async (uid: string, user: AppUser): Promise<string> 
 
   const snapshot = await ref.get();
   const existingId = snapshot.exists ? (snapshot.data() || {})[field] : null;
+  let replacementFor = '';
 
   if (typeof existingId === 'string' && existingId) {
     try {
       const existing = await stripe.customers.retrieve(existingId);
       if (!(existing as { deleted?: boolean }).deleted) return existingId;
-    } catch {
+      replacementFor = existingId;
+    } catch (error) {
+      if (!isStripeResourceMissing(error)) throw error;
+      replacementFor = existingId;
       // Falls through and creates a new one. A stored id that Stripe no longer
       // recognises — a deleted customer, or one from the other mode — must not
       // be allowed to block the purchase.
@@ -111,6 +116,15 @@ const getOrCreateCustomer = async (uid: string, user: AppUser): Promise<string> 
   const customer = await stripe.customers.create({
     email: user.email || undefined,
     metadata: { firebaseUid: uid },
+  }, {
+    idempotencyKey: [
+      'managed-customer',
+      stripeMode(),
+      createHash('sha256').update(uid).digest('hex'),
+      replacementFor
+        ? createHash('sha256').update(replacementFor).digest('hex')
+        : 'initial',
+    ].join('-'),
   });
   await ref.set({ [field]: customer.id }, { merge: true });
   return customer.id;

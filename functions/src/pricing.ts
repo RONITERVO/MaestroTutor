@@ -81,12 +81,22 @@ export const estimateReservationUsd = (params: {
   model: string;
   promptTokens: number;
   operation: string;
-}): number => estimateOperationUsd({
-  model: params.model,
-  promptTokens: params.promptTokens,
-  operation: params.operation as ManagedOperation,
-  pricing,
-});
+  searchQueries?: number;
+  expectedOutputTokens?: number;
+}): number => roundUsd(
+  estimateOperationUsd({
+    model: params.model,
+    promptTokens: params.promptTokens,
+    operation: params.operation as ManagedOperation,
+    pricing,
+    expectedOutputTokens: params.expectedOutputTokens,
+  }) + googleSearchQueriesToUsd(params.searchQueries || 0)
+);
+
+export const googleSearchQueriesToUsd = (searchQueries: number): number => roundUsd(
+  (Math.max(0, Math.floor(searchQueries)) / 1_000)
+  * pricing.googleSearch.pricePerThousandQueriesUsd
+);
 
 /**
  * What a completed request actually cost.
@@ -100,15 +110,17 @@ export const usageMetadataToUsd = (
   usageMetadata: Record<string, unknown> | undefined,
   fallbackOperation?: string,
   generatedImages?: number,
+  searchQueries?: number,
 ): number => {
-  const images = Number.isFinite(generatedImages) && (generatedImages as number) > 0
-    ? generatedImages as number
+  const images = Number.isFinite(generatedImages)
+    ? Math.max(0, generatedImages as number)
     : (fallbackOperation === 'generateImage' ? 1 : 0);
 
   const cost = calculateGeminiUsageCost({
     configuredModel: model,
     usageMetadata: (usageMetadata || {}) as Record<string, never>,
     generatedImages: images,
+    searchQueries,
   }, pricing);
 
   // An unpriced model must not silently bill as free — that is revenue lost with
@@ -122,8 +134,9 @@ export const usageMetadataToUsd = (
       model,
       promptTokens: Number(usageMetadata?.promptTokenCount || 0),
       operation: fallbackOperation || 'generateContent',
+      searchQueries,
     });
   }
 
-  return roundUsd(cost.modelCostUsd);
+  return roundUsd(cost.modelCostUsd + cost.potentialSearchCostUsd);
 };

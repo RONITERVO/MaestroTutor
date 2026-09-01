@@ -12,6 +12,15 @@ import { FieldPath } from 'firebase-admin/firestore';
 import type { AppUser } from './auth';
 import { appConfig } from './config';
 import { adminDb } from './firebase';
+import {
+  applyManagedGenerationLimits,
+  collectGeminiFileUris,
+  requireAllowedManagedModel,
+  requirePricedManagedGenerationModel,
+  requireSafeManagedLiveConfig,
+  resolveManagedContentOperation,
+  usesManagedGoogleSearch,
+} from './geminiPolicy';
 import { createHttpError, getErrorMessage } from './http';
 import {
   MANAGED_RUNTIME_RETENTION_MS,
@@ -47,6 +56,7 @@ const STREAM_CONTENT_TYPE = 'application/x-ndjson; charset=utf-8';
 const FILE_ACTIVE_TIMEOUT_MS = 60_000;
 const FILE_ACTIVE_POLL_MS = 1_000;
 const MAX_FILE_STATUS_URIS = 100;
+const MAX_REFERENCED_FILE_URIS = 20;
 const FILE_STATUS_BATCH_SIZE = 10;
 const FILE_CLEANUP_BATCH_SIZE = 200;
 
@@ -85,9 +95,14 @@ const countPromptTokens = async (
       contents,
       ...(config ? { config } : {}),
     } as any);
-    return Math.max(0, Number((result as any)?.totalTokens || (result as any)?.tokenCount || 0));
-  } catch {
-    return 0;
+    const tokenCount = Number((result as any)?.totalTokens ?? (result as any)?.tokenCount);
+    if (!Number.isFinite(tokenCount) || tokenCount < 0) {
+      throw new Error('Gemini countTokens returned no usable token count.');
+    }
+    return Math.floor(tokenCount);
+  } catch (error) {
+    console.error('[billing] Prompt token count failed; generation was not started.', error);
+    throw createHttpError(502, 'The backend could not price this prompt before generation.');
   }
 };
 
@@ -188,6 +203,17 @@ const countGeneratedImages = (response: unknown): number => {
     }
   }
   return images;
+};
+
+const countGoogleSearchQueries = (response: unknown): number => {
+  const candidates = (response as { candidates?: unknown })?.candidates;
+  if (!Array.isArray(candidates)) return 0;
+  return candidates.reduce((total, candidate) => {
+    const queries = (candidate as {
+      groundingMetadata?: { webSearchQueries?: unknown };
+    })?.groundingMetadata?.webSearchQueries;
+    return total + (Array.isArray(queries) ? queries.length : 0);
+  }, 0);
 };
 
 export const releaseManagedLiveLease = async (uid: string, leaseId: string): Promise<{ ok: boolean }> => {
@@ -353,8 +379,58 @@ const serializeGenerateContentResponse = (
   text: typeof response?.text === 'string' ? response.text : '',
   candidates: Array.isArray(response?.candidates) ? response.candidates : [],
   usageMetadata: response?.usageMetadata || undefined,
+  modelVersion: typeof response?.modelVersion === 'string' ? response.modelVersion : undefined,
+  promptFeedback: response?.promptFeedback || undefined,
+  responseId: typeof response?.responseId === 'string' ? response.responseId : undefined,
   billingSummary,
 });
+
+const serializeGenerateContentChunk = (chunk: any): Record<string, unknown> => {
+  const serialized = JSON.parse(JSON.stringify(chunk || {})) as Record<string, unknown>;
+  if (typeof chunk?.text === 'string') {
+    serialized.text = chunk.text;
+  }
+  return serialized;
+};
+
+const requireOwnedManagedContentFiles = async (
+  uid: string,
+  contents: unknown,
+  config?: Record<string, unknown>,
+): Promise<void> => {
+  const referencedUris = collectGeminiFileUris({ contents, config });
+  if (referencedUris.length > MAX_REFERENCED_FILE_URIS) {
+    throw createHttpError(
+      400,
+      `At most ${MAX_REFERENCED_FILE_URIS} managed files may be referenced in one request.`,
+    );
+  }
+
+  const references = referencedUris.map((uri) => {
+    const name = normalizeGeminiFileName(uri);
+    if (!name) {
+      throw createHttpError(400, 'A generation request contains an invalid Gemini file URI.');
+    }
+    return { uri, name, ref: managedFileRef(uid, name) };
+  });
+  if (references.length === 0) return;
+
+  const snapshots = await adminDb.getAll(...references.map((reference) => reference.ref));
+  snapshots.forEach((snapshot: any, index: number) => {
+    const reference = references[index];
+    const data = snapshot.data();
+    if (
+      !snapshot.exists
+      || data?.uid !== uid
+      || data?.name !== reference.name
+      || data?.uri !== reference.uri
+      || data?.deletedAt
+      || data?.state !== 'active'
+    ) {
+      throw createHttpError(403, 'A referenced Gemini file is not an active file owned by this account.');
+    }
+  });
+};
 
 const withManagedReservation = async <T>(params: {
   uid: string;
@@ -369,10 +445,15 @@ const withManagedReservation = async <T>(params: {
   await sweepExpiredReservationsForUser(params.uid);
 
   const promptTokens = await countPromptTokens(params.model, params.contents, params.config);
+  const reservedSearchQueries = usesManagedGoogleSearch(params.config)
+    ? appConfig.managedSearchReservationQueries
+    : 0;
   const estimatedUsd = estimateReservationUsd({
     model: params.model,
     promptTokens,
     operation: params.operation,
+    searchQueries: reservedSearchQueries,
+    expectedOutputTokens: Number(params.config?.maxOutputTokens || 0),
   });
   const estimatedCredits = usdToCredits(estimatedUsd);
 
@@ -383,7 +464,11 @@ const withManagedReservation = async <T>(params: {
     model: params.model,
     estimatedCredits,
     estimatedUsd,
-    metadata: { promptTokens },
+    metadata: {
+      promptTokens,
+      reservedSearchQueries,
+      maxOutputTokens: Number(params.config?.maxOutputTokens || 0),
+    },
   });
 
   try {
@@ -406,24 +491,41 @@ export const generateManagedContent = async (params: {
   model: string;
   contents: unknown;
   config?: Record<string, unknown>;
-  operation: string;
 }) => {
+  const model = requirePricedManagedGenerationModel(
+    requireAllowedManagedModel(
+      params.model,
+      appConfig.managedAllowedGeminiModels,
+      'generation',
+    ),
+  );
+  const config = applyManagedGenerationLimits(
+    params.config,
+    appConfig.managedMaxOutputTokens,
+  );
+  const operation = resolveManagedContentOperation(config, false, model);
+  await requireOwnedManagedContentFiles(params.uid, params.contents, config);
+
   const finalized = await withManagedReservation({
     ...params,
+    model,
+    operation,
+    config,
     execute: async () => (
       getGeminiClient().models.generateContent({
-        model: params.model,
+        model,
         contents: params.contents,
-        ...(params.config ? { config: params.config } : {}),
+        ...(config ? { config } : {}),
       } as any)
     ),
     finalize: async (reservationId, response) => {
       const usageMetadata = response?.usageMetadata as Record<string, unknown> | undefined;
       const billedUsd = usageMetadataToUsd(
-        params.model,
+        model,
         usageMetadata,
-        params.operation,
+        operation,
         countGeneratedImages(response),
+        countGoogleSearchQueries(response),
       );
       const billedCredits = usdToCredits(billedUsd);
       const billingSummary = await settleManagedReservation({
@@ -431,11 +533,12 @@ export const generateManagedContent = async (params: {
         reservationId,
         billedCredits,
         billedUsd,
-        operation: params.operation,
-        model: params.model,
+        operation,
+        model,
         metadata: {
           promptTokenCount: usageMetadata?.promptTokenCount,
           candidatesTokenCount: usageMetadata?.candidatesTokenCount,
+          searchQueries: countGoogleSearchQueries(response),
         },
       });
       return { result: response, billingSummary };
@@ -451,28 +554,49 @@ export const streamManagedContent = async (params: {
   model: string;
   contents: unknown;
   config?: Record<string, unknown>;
-  operation: string;
   response: Response;
 }) => {
   const response = params.response;
+  const model = requirePricedManagedGenerationModel(
+    requireAllowedManagedModel(
+      params.model,
+      appConfig.managedAllowedGeminiModels,
+      'streaming generation',
+    ),
+  );
+  const config = applyManagedGenerationLimits(
+    params.config,
+    appConfig.managedMaxOutputTokens,
+  );
+  const operation = resolveManagedContentOperation(config, true, model);
+  await requireOwnedManagedContentFiles(params.uid, params.contents, config);
   await sweepExpiredReservationsForUser(params.uid);
 
-  const promptTokens = await countPromptTokens(params.model, params.contents, params.config);
+  const promptTokens = await countPromptTokens(model, params.contents, config);
+  const reservedSearchQueries = usesManagedGoogleSearch(config)
+    ? appConfig.managedSearchReservationQueries
+    : 0;
   const estimatedUsd = estimateReservationUsd({
-    model: params.model,
+    model,
     promptTokens,
-    operation: params.operation,
+    operation,
+    searchQueries: reservedSearchQueries,
+    expectedOutputTokens: Number(config.maxOutputTokens || 0),
   });
   const estimatedCredits = usdToCredits(estimatedUsd);
 
   const reservation = await reserveManagedCredits({
     uid: params.uid,
     user: params.user,
-    operation: params.operation,
-    model: params.model,
+    operation,
+    model,
     estimatedCredits,
     estimatedUsd,
-    metadata: { promptTokens },
+    metadata: {
+      promptTokens,
+      reservedSearchQueries,
+      maxOutputTokens: Number(config.maxOutputTokens || 0),
+    },
   });
 
   response.setHeader('Content-Type', STREAM_CONTENT_TYPE);
@@ -484,6 +608,7 @@ export const streamManagedContent = async (params: {
   // Images arrive spread across chunks, so they are tallied as they stream
   // rather than read off the final one.
   let streamedImageCount = 0;
+  let streamedSearchQueryCount = 0;
   let generationCompleted = false;
   let clientDisconnected = false;
   let streamFinished = false;
@@ -499,20 +624,27 @@ export const streamManagedContent = async (params: {
 
   try {
     const stream = await getGeminiClient().models.generateContentStream({
-      model: params.model,
+      model,
       contents: params.contents,
-      ...(params.config ? { config: params.config } : {}),
+      ...(config ? { config } : {}),
     } as any);
 
     for await (const chunk of stream) {
       latestChunk = chunk;
       streamedImageCount += countGeneratedImages(chunk);
+      streamedSearchQueryCount = Math.max(
+        streamedSearchQueryCount,
+        countGoogleSearchQueries(chunk),
+      );
       if (clientDisconnected || response.destroyed || !response.writable) {
         clientDisconnected = true;
         break;
       }
 
-      response.write(`${JSON.stringify({ type: 'chunk', chunk })}\n`);
+      response.write(`${JSON.stringify({
+        type: 'chunk',
+        chunk: serializeGenerateContentChunk(chunk),
+      })}\n`);
       deliveredAnyChunk = true;
     }
 
@@ -521,10 +653,11 @@ export const streamManagedContent = async (params: {
     if (generationCompleted) {
       const usageMetadata = latestChunk?.usageMetadata as Record<string, unknown> | undefined;
       const billedUsd = usageMetadataToUsd(
-        params.model,
+        model,
         usageMetadata,
-        params.operation,
+        operation,
         streamedImageCount,
+        streamedSearchQueryCount,
       );
       const billedCredits = usdToCredits(billedUsd);
       const billingSummary = await settleManagedReservation({
@@ -532,12 +665,13 @@ export const streamManagedContent = async (params: {
         reservationId: reservation.reservationId,
         billedCredits,
         billedUsd,
-        operation: params.operation,
-        model: params.model,
+        operation,
+        model,
         metadata: {
           promptTokenCount: usageMetadata?.promptTokenCount,
           candidatesTokenCount: usageMetadata?.candidatesTokenCount,
           disconnectRecovered: false,
+          searchQueries: streamedSearchQueryCount,
         },
       });
 
@@ -558,8 +692,8 @@ export const streamManagedContent = async (params: {
         reservationId: reservation.reservationId,
         billedCredits: estimatedCredits,
         billedUsd: estimatedUsd,
-        operation: params.operation,
-        model: params.model,
+        operation,
+        model,
         metadata: {
           promptTokens,
           disconnectRecovered: true,
@@ -576,13 +710,13 @@ export const streamManagedContent = async (params: {
     );
   } catch (error) {
     if (deliveredAnyChunk || latestChunk != null) {
-      await settleManagedReservation({
+      const billingSummary = await settleManagedReservation({
         uid: params.uid,
         reservationId: reservation.reservationId,
         billedCredits: estimatedCredits,
         billedUsd: estimatedUsd,
-        operation: params.operation,
-        model: params.model,
+        operation,
+        model,
         metadata: {
           promptTokens,
           streamFailedAfterOutput: true,
@@ -590,6 +724,15 @@ export const streamManagedContent = async (params: {
         },
       });
       if (!response.destroyed && response.writable && !response.writableEnded) {
+        response.write(`${JSON.stringify({
+          type: 'final',
+          result: serializeGenerateContentResponse(latestChunk || {}, billingSummary),
+        })}\n`);
+        response.write(`${JSON.stringify({
+          type: 'error',
+          message: getErrorMessage(error),
+          status: Number((error as { status?: unknown })?.status) || 500,
+        })}\n`);
         streamFinished = true;
         response.end();
       }
@@ -1022,10 +1165,20 @@ export const retryManagedFileCleanupJobs = async (limit = 50): Promise<{
 export const createManagedLiveToken = async (params: {
   uid: string;
   user: AppUser;
+  model: string;
+  config?: Record<string, unknown>;
   purpose?: 'live' | 'music';
   durationSeconds?: number;
 }) => {
   const purpose = params.purpose === 'music' ? 'music' : 'live';
+  const model = requireAllowedManagedModel(
+    params.model,
+    purpose === 'music'
+      ? appConfig.managedAllowedMusicModels
+      : appConfig.managedAllowedLiveModels,
+    purpose === 'music' ? 'music' : 'live audio',
+  );
+  const liveConfig = requireSafeManagedLiveConfig(params.config);
   const liveWindowSeconds = appConfig.managedLiveTokenLifetimeSeconds;
   const fixedCredits = purpose === 'music'
     ? appConfig.managedMusicSessionCredits
@@ -1049,7 +1202,7 @@ export const createManagedLiveToken = async (params: {
       uid: params.uid,
       user: params.user,
       operation: purpose === 'music' ? 'liveTokenMusic' : 'liveToken',
-      model: purpose === 'music' ? 'lyria-realtime-exp' : 'gemini-2.5-flash-native-audio-preview-12-2025',
+      model,
       estimatedCredits: fixedCredits,
       estimatedUsd: billedUsd,
       metadata: {
@@ -1075,6 +1228,10 @@ export const createManagedLiveToken = async (params: {
         httpOptions: {
           apiVersion: 'v1alpha',
         },
+        liveConnectConstraints: {
+          model,
+          ...(liveConfig ? { config: liveConfig } : {}),
+        },
       },
     } as any);
 
@@ -1091,7 +1248,7 @@ export const createManagedLiveToken = async (params: {
       billedCredits: fixedCredits,
       billedUsd,
       operation: purpose === 'music' ? 'liveTokenMusic' : 'liveToken',
-      model: purpose === 'music' ? 'lyria-realtime-exp' : 'gemini-2.5-flash-native-audio-preview-12-2025',
+      model,
       metadata: {
         purpose,
         leaseId: lease.leaseId,

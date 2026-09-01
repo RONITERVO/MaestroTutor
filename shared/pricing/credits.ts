@@ -92,6 +92,7 @@ export const estimateOperationUsd = (params: {
   promptTokens: number;
   operation: ManagedOperation;
   pricing: GeminiPricingRegistry;
+  expectedOutputTokens?: number;
 }): number => {
   const rule = resolvePricingRule(params.model, params.pricing);
   const promptTokens = Math.max(0, params.promptTokens);
@@ -101,15 +102,24 @@ export const estimateOperationUsd = (params: {
   if (params.operation === 'generateImage') {
     const perImage = rule?.generatedImageUsdFallback ?? 0.039;
     const inputRate = rule?.inputPerMillion?.text ?? 0;
-    return roundUsd(perImage + (promptTokens / 1_000_000) * inputRate);
+    const outputRate = rule?.outputPerMillion?.text ?? 0;
+    const outputTokens = Math.max(0, Number(params.expectedOutputTokens || 0));
+    return roundUsd(
+      perImage
+      + (promptTokens / 1_000_000) * inputRate
+      + (outputTokens / 1_000_000) * outputRate
+    );
   }
 
   const inputRate = rule?.inputPerMillion?.text ?? 0;
   const outputRate = rule?.outputPerMillion?.text ?? 0;
 
-  const expectedOutputTokens = params.operation === 'translateText'
-    ? Math.max(promptTokens, 256)
-    : Math.max(promptTokens * 2, 1024);
+  const configuredOutputTokens = Number(params.expectedOutputTokens);
+  const expectedOutputTokens = Number.isFinite(configuredOutputTokens) && configuredOutputTokens >= 0
+    ? configuredOutputTokens
+    : params.operation === 'translateText'
+      ? Math.max(promptTokens, 256)
+      : Math.max(promptTokens * 2, 1024);
 
   const estimated =
     (promptTokens / 1_000_000) * inputRate

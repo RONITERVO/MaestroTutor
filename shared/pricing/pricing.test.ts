@@ -55,6 +55,14 @@ describe('generated images are billed as images', () => {
 });
 
 describe('model rates come from the registry, not a fallback', () => {
+  it('uses the current Gemini 3.6 Flash promotional Standard rate', () => {
+    const flash = resolvePricingRule('gemini-flash-latest', pricing);
+    expect(pricing.effectiveAt).toBe('2026-09-01');
+    expect(flash?.inputPerMillion?.text).toBe(0.75);
+    expect(flash?.outputPerMillion?.text).toBe(3.75);
+    expect(flash?.cachedInputPerMillion?.text).toBe(0.075);
+  });
+
   it('prices a lite model well below the pro rate', () => {
     // The draft mapped three model substrings and fell back to Pro rates for
     // anything else, so flash-lite traffic was billed at roughly ten times its
@@ -120,6 +128,20 @@ describe('credit conversion', () => {
 });
 
 describe('reservation estimates cover what settlement will charge', () => {
+  it('can reserve a server-enforced output ceiling', () => {
+    const reserved = estimateOperationUsd({
+      model: 'gemini-flash-latest',
+      promptTokens: 1_000,
+      operation: 'streamContent',
+      pricing,
+      expectedOutputTokens: 8_192,
+    });
+    const rule = resolvePricingRule('gemini-flash-latest', pricing)!;
+    const exactCeiling = (1_000 / 1_000_000) * rule.inputPerMillion!.text!
+      + (8_192 / 1_000_000) * rule.outputPerMillion!.text!;
+    expect(reserved).toBeGreaterThanOrEqual(exactCeiling);
+  });
+
   const cases: Array<{ model: string; promptTokens: number }> = [
     { model: 'gemini-flash-latest', promptTokens: 500 },
     { model: 'gemini-flash-latest', promptTokens: 50_000 },

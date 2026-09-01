@@ -10,3 +10,15 @@ export class ServiceNotConfiguredError extends Error {
     this.service = service;
   }
 }
+
+export class ServiceHttpError extends Error {
+  status: number;
+  code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'ServiceHttpError';
+    this.status = status;
+    this.code = code;
+  }
+}

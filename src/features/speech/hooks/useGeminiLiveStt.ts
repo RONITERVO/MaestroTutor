@@ -3,13 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { GoogleGenAI, LiveServerMessage, Modality, Session } from '@google/genai';
+import { LiveServerMessage, Modality, Session } from '@google/genai';
+import { getAi } from '../../../api/gemini/client';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { SpeechGate, measureEnergy } from '../../../../shared/audio/speechGate';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
@@ -511,8 +511,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         hasLastAssistantMessage: !!lastAssistantMessage,
       });
 
-      const apiKey = await getApiKeyOrThrow();
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = await getAi();
       const session = await ai.live.connect({
         model,
         config: {
@@ -672,7 +671,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             }
             setIsListening(false);
           },
-          onerror: (err) => {
+          onerror: (err: any) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
             console.error("Gemini Live STT error:", err);

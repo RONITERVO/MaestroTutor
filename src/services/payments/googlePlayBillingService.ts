@@ -39,7 +39,7 @@ export interface IsProductOwnedResult {
 interface ThemeBillingPluginInterface {
   startConnection(): Promise<void>;
   getProductDetails(options?: { productIds?: string[] }): Promise<void>;
-  purchaseTheme(options: { productId: string }): Promise<void>;
+  purchaseTheme(options: { productId: string; obfuscatedAccountId: string }): Promise<void>;
   restorePurchases(): Promise<void>;
   consumePurchase(options: { purchaseToken: string }): Promise<void>;
   isThemeOwned(options: { productId: string }): Promise<IsProductOwnedResult>;
@@ -105,7 +105,9 @@ export const googlePlayBillingService = {
   getProductDetails: (productIds?: string[]) => (
     plugin.getProductDetails(productIds?.length ? { productIds } : {})
   ),
-  purchaseProduct: (productId: string) => plugin.purchaseTheme({ productId }),
+  purchaseProduct: (productId: string, obfuscatedAccountId: string) => (
+    plugin.purchaseTheme({ productId, obfuscatedAccountId })
+  ),
   restorePurchases: () => plugin.restorePurchases(),
   consumePurchase: (purchaseToken: string) => plugin.consumePurchase({ purchaseToken }),
   isProductOwned: (productId: string) => plugin.isThemeOwned({ productId }),

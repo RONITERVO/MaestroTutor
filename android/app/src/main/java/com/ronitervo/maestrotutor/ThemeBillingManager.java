@@ -232,7 +232,11 @@ public class ThemeBillingManager {
      * @param activity   The foreground activity (required by Play Billing).
      * @param productId  One of the IDs defined in {@link ThemeProducts}.
      */
-    public void launchBillingFlow(@NonNull Activity activity, @NonNull String productId) {
+    public void launchBillingFlow(
+            @NonNull Activity activity,
+            @NonNull String productId,
+            @NonNull String obfuscatedAccountId
+    ) {
         if (!ensureConnected()) {
             notifyError(buildBillingResult(
                     BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
@@ -244,11 +248,12 @@ public class ThemeBillingManager {
         ProductDetails productDetails = productDetailsCache.get(productId);
         if (productDetails == null) {
             // Details not cached yet — re-query and retry.
-            queryProductDetailsAndThen(activity, productId);
+            queryProductDetailsAndThen(activity, productId, obfuscatedAccountId);
             return;
         }
 
         BillingFlowParams flowParams = BillingFlowParams.newBuilder()
+                .setObfuscatedAccountId(obfuscatedAccountId)
                 .setProductDetailsParamsList(
                         List.of(BillingFlowParams.ProductDetailsParams.newBuilder()
                                 .setProductDetails(productDetails)
@@ -263,7 +268,11 @@ public class ThemeBillingManager {
     }
 
     /** Helper: query product details then immediately launch the billing flow. */
-    private void queryProductDetailsAndThen(@NonNull Activity activity, @NonNull String productId) {
+    private void queryProductDetailsAndThen(
+            @NonNull Activity activity,
+            @NonNull String productId,
+            @NonNull String obfuscatedAccountId
+    ) {
         if (!ensureConnected()) {
             notifyError(buildBillingResult(
                     BillingClient.BillingResponseCode.SERVICE_DISCONNECTED,
@@ -290,7 +299,7 @@ public class ThemeBillingManager {
                     }
                     ProductDetails pd = productDetailsList.get(0);
                     productDetailsCache.put(pd.getProductId(), pd);
-                    launchBillingFlow(activity, productId);
+                    launchBillingFlow(activity, productId, obfuscatedAccountId);
                 }
         );
     }

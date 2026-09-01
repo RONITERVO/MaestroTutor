@@ -351,10 +351,21 @@ const coerceAccessMode = (value: unknown): 'byok' | 'managed' => (
   value === 'managed' ? 'managed' : 'byok'
 );
 
+const AI_CONTENT_REPORT_REASONS = new Set([
+  'sexual',
+  'hate',
+  'harassment',
+  'self-harm',
+  'violent',
+  'deceptive',
+  'spam',
+  'other',
+]);
+
 const coerceReason = (value: unknown): string => {
   const reason = trimString(value, 50).toLowerCase();
-  if (!reason) {
-    throw createHttpError(400, 'A report reason is required.');
+  if (!AI_CONTENT_REPORT_REASONS.has(reason)) {
+    throw createHttpError(400, 'Report reason is not supported.');
   }
   return reason;
 };

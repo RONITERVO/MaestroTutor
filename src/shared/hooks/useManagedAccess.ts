@@ -10,7 +10,7 @@ import {
   loadManagedAccessSession,
 } from '../../core/security/managedAccessSessionStorage';
 import type { ManagedAccessSession } from '../../core/contracts/backend';
-import { isManagedModeEnabled } from '../../core/config/integrations';
+import { isManagedAccessConfigured } from '../../core/config/integrations';
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
 
 interface ManagedAccessState {
@@ -25,11 +25,10 @@ export const useManagedAccess = (): ManagedAccessState & { refresh: () => Promis
   const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    // Managed mode off: do no work at all. This hook is mounted by the API key
-    // gate on every open, and with the feature dark it should not be reading
-    // secure storage — let alone reaching for the Firebase SDK — to discover
-    // there is nothing to restore.
-    if (!isManagedModeEnabled()) {
+    // A partially configured build must not initialize Firebase or advertise an
+    // account flow that cannot reach its backend. Complete configuration is the
+    // availability boundary; there is deliberately no separate release flag.
+    if (!isManagedAccessConfigured()) {
       setSession(null);
       setIsLoading(false);
       return;

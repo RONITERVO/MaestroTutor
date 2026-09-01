@@ -48,7 +48,7 @@ describe('calculateGeminiUsageCost', () => {
       usageMetadata: { promptTokenCount: 1_000_000, candidatesTokenCount: 1_000_000 },
     });
     expect(flash.model).toBe('gemini-3.6-flash');
-    expect(flash.modelCostUsd).toBeCloseTo(9);
+    expect(flash.modelCostUsd).toBeCloseTo(4.5);
 
     const flashLite = calculate({
       configuredModel: 'gemini-flash-lite-latest',
@@ -69,7 +69,7 @@ describe('calculateGeminiUsageCost', () => {
     });
     expect(result.inputTokens).toBe(2_000_000);
     expect(result.outputTokens).toBe(1_000_000);
-    expect(result.modelCostUsd).toBeCloseTo(10.5);
+    expect(result.modelCostUsd).toBeCloseTo(5.25);
   });
 
   it('uses reduced cache rates without charging cached tokens twice', () => {
@@ -81,7 +81,7 @@ describe('calculateGeminiUsageCost', () => {
         promptTokensDetails: [{ modality: 'AUDIO', tokenCount: 1_000_000 }],
       },
     });
-    expect(result.modelCostUsd).toBeCloseTo(0.96);
+    expect(result.modelCostUsd).toBeCloseTo(0.48);
     expect(result.inputByModality.audio).toBe(1_000_000);
   });
 
@@ -268,8 +268,8 @@ describe('cost tracking storage', () => {
     trackMusicGeneration('lyria-realtime-exp', 90);
 
     const summary = getCostSummary();
-    expect(summary.knownModelCostUsd).toBeCloseTo(9);
-    expect(summary.totalCostUsd).toBeCloseTo(9);
+    expect(summary.knownModelCostUsd).toBeCloseTo(4.5);
+    expect(summary.totalCostUsd).toBeCloseTo(4.5);
     expect(summary.hasUnpricedUsage).toBe(true);
     expect(summary.entries).toHaveLength(2);
     expect(summary.entries.find(entry => entry.feature === 'music')).toMatchObject({

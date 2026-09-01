@@ -1,9 +1,9 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import { GoogleGenAI, Modality, type LiveServerMessage } from '@google/genai';
+import { Modality, type LiveServerMessage } from '@google/genai';
+import { getAi } from '../../../api/gemini/client';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { mergeInt16Arrays, pcmToWav } from '../utils/audioProcessing';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
@@ -52,8 +52,7 @@ export const synthesizeGeminiAudioNote = async (params: {
     throw new Error('Audio note text is empty.');
   }
 
-  const apiKey = await getApiKeyOrThrow();
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = await getAi();
   const model = getGeminiModels().audio.tts;
   const usageTracker = createLiveUsageTracker({ feature: 'audioNote', configuredModel: model });
   const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';

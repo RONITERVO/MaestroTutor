@@ -1,0 +1,59 @@
+name: Release gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feat/managed-backend
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install app dependencies
+        run: npm ci
+      - name: Install Functions dependencies
+        run: npm --prefix functions ci
+
+      # Root runtime audit currently contains reviewed high-severity findings in
+      # Node-only Transformers dependencies that are not shipped in the browser.
+      # Functions has one reviewed moderate transitive UUID finding. These
+      # thresholds keep a new critical app or high-severity backend finding from
+      # entering a release unnoticed without forcing incompatible overrides.
+      - name: Audit shipped app dependencies
+        run: npm audit --omit=dev --audit-level=critical
+      - name: Audit shipped Functions dependencies
+        run: npm --prefix functions audit --omit=dev --audit-level=high
+
+      - name: Test app and shared core
+        run: npm test
+      - name: Lint app
+        run: npm run lint
+      - name: Build production app
+        run: npm run build
+      - name: Test Functions units and CORS
+        run: npm --prefix functions test
+      - name: Test Firestore billing invariants
+        run: npm --prefix functions run test:emulator

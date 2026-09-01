@@ -10,9 +10,12 @@ They sign in, buy credits — through Google Play in the Android app, or Stripe
 Checkout on the web — and the backend proxies Gemini on their behalf, charging
 credits against real usage.
 
-The source template ships **dark**: `VITE_MANAGED_MODE_ENABLED` is `false` by
-default. The production web build has been deliberately enabled after the live
-backend and App Check verification described in the operations runbook.
+Managed access has no independent dark-launch flag. A build offers it when its
+Firebase client and backend URL are completely configured; an incomplete build
+fails closed and continues to offer BYOK only. The same provider facade selects
+BYOK or managed access for text, image, Files API, speech, Live and music, so a
+signed-in user exercises the same application journeys rather than a parallel
+demo path.
 
 ---
 
@@ -49,7 +52,7 @@ user would be overcharged or the service would lose money. There is one.
 
   app  ──HTTPS──▶  api (Cloud Function, Express)
                      │
-                     ├── auth: Firebase ID token, optional App Check
+                     ├── auth: Firebase ID token + enforced App Check
                      ├── rate limit: per user, per bucket (Firestore)
                      ├── reserve credits ──▶ Firestore transaction
                      ├── call Gemini with the service key
@@ -101,7 +104,8 @@ removes all canonical user-owned records.
 | Balance arithmetic and its invariants | `shared/billing/ledger.ts` | yes |
 | Reconnect pacing | `shared/reconnect/policy.ts` | yes |
 | Firestore persistence of the above | `functions/src/managedBilling.ts` | core concurrency/idempotency path in emulator |
-| Play verification | `functions/src/playBilling.ts` | no — needs a real purchase |
+| Managed model/billing/file policy | `functions/src/geminiPolicy.ts` | yes |
+| Play verification + account binding | `functions/src/playBilling.ts`, `shared/billing/playAccountBinding.ts` | binding yes; provider call needs a real purchase |
 | Stripe fulfilment rules | `shared/billing/stripeFulfilment.ts` | yes |
 | Stripe checkout and webhook | `functions/src/stripeBilling.ts` | fulfilment and delayed-payment regression tests; a real purchase is still required |
 
@@ -122,10 +126,10 @@ app imports the same files directly.
    subscriptions**. Google no longer requires linking the Play developer
    account to a Cloud project; purchase verification fails without the API and
    Play permissions.
-3. Configure App Check for web and Android. Leave `REQUIRE_APPCHECK=false`
-   until both are verified, then turn it on — it is the main defence against
-   someone driving the backend outside the app. Production enforcement is on;
-   use the rollback procedure in `PRODUCTION_OPERATIONS.md` for an outage.
+3. Configure App Check for web and Android before deploying the API. The source
+   default is `REQUIRE_APPCHECK=true`; it is the main defence against someone
+   driving the backend outside the app. Use the documented emergency rollback
+   only during an active App Check incident.
 4. Define the credit packs once in `MANAGED_CREDIT_PACKS` as
    `id:credits:cents[:playProductId]`. Create the matching consumable products
    in Play for any pack that names a `playProductId`.
@@ -155,13 +159,15 @@ gitignored `functions/.secret.local` file.
 the bundle. Deploying without that build would ship a bundle whose pricing code
 is missing.
 
-### Turning it on in the app
+### Configuring the app
 
 ```bash
 cp .env.example .env                        # fill in, never commit
-# then, only once the backend is verified against staging:
-VITE_MANAGED_MODE_ENABLED=true
 ```
+
+There is no second enable switch. Complete Firebase plus backend configuration
+is the availability boundary, and removing that configuration is the
+fail-closed rollback for a client build.
 
 ---
 
@@ -236,9 +242,7 @@ backfill, dual reads/writes or production data migration.
 
 The account-deletion handler still recognizes the abandoned v1 collection
 names defensively, but this is cleanup hardening rather than a migration
-contract. Deploy the functions, rules and indexes while
-`VITE_MANAGED_MODE_ENABLED=false`; enable managed mode only after staging has
-verified the complete v2 deployment.
+contract. No code should add v1 dual reads, writes or migration machinery.
 
 ---
 

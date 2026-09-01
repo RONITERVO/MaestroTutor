@@ -1,0 +1,41 @@
+// Copyright 2025 Roni Tervo
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { GoogleGenAI } from '@google/genai';
+
+const apiKey = process.env.GEMINI_API_KEY?.trim();
+if (!apiKey) {
+  throw new Error('GEMINI_API_KEY must be present in this process environment.');
+}
+
+const model = process.env.MANAGED_GEMINI_SMOKE_MODEL?.trim() || 'gemini-flash-latest';
+const client = new GoogleGenAI({ apiKey });
+const request = {
+  model,
+  contents: 'Return exactly the word: ready',
+  config: {
+    candidateCount: 1,
+    maxOutputTokens: 8,
+    temperature: 0,
+  },
+};
+
+// countTokens deliberately receives the same bounded GenerateContent config as
+// production. The paid generation then proves that a valid-looking key also
+// has provider billing/quota available; countTokens alone does not prove that.
+const tokenCount = await client.models.countTokens(request);
+const response = await client.models.generateContent(request);
+const text = typeof response.text === 'string' ? response.text.trim() : '';
+if (!text) {
+  throw new Error('Gemini smoke generation returned no text.');
+}
+
+console.log(JSON.stringify({
+  ok: true,
+  model,
+  modelVersion: response.modelVersion || null,
+  countedPromptTokens: tokenCount.totalTokens ?? tokenCount.tokenCount ?? null,
+  promptTokens: response.usageMetadata?.promptTokenCount ?? null,
+  outputTokens: response.usageMetadata?.candidatesTokenCount ?? null,
+}));

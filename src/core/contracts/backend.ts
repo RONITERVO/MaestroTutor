@@ -113,13 +113,15 @@ export interface BackendGenerateContentRequest {
   model: string;
   contents: unknown;
   config?: Record<string, unknown>;
-  operation?: string;
 }
 
 export interface BackendGenerateContentResponse {
   text?: string;
   candidates?: unknown[];
   usageMetadata?: Record<string, unknown>;
+  modelVersion?: string;
+  promptFeedback?: unknown;
+  responseId?: string;
   billingSummary?: ManagedBillingSummary;
 }
 
@@ -164,6 +166,8 @@ export interface BackendClearFilesResponse {
 
 export interface BackendLiveTokenRequest {
   purpose?: 'live' | 'music';
+  model: string;
+  config?: Record<string, unknown>;
   durationSeconds?: number;
 }
 

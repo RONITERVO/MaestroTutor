@@ -8,9 +8,9 @@ import { IconChevronLeft, IconChevronRight, IconQuestionMarkCircle, IconKey, Ico
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { openExternalUrl } from '../../../shared/utils/openExternalUrl';
 import { isLikelyApiKey, normalizeApiKey } from '../../../core/security/apiKeyStorage';
-import { isManagedModeEnabled } from '../../../core/config/integrations';
-import { useManagedAccess } from '../../../shared/hooks/useManagedAccess';
+import { isManagedAccessConfigured } from '../../../core/config/integrations';
 import ManagedAccessPanel from './ManagedAccessPanel';
+import type { ManagedAccessSession } from '../../../core/contracts/backend';
 import { getCostSummary } from '../../../shared/utils/costTracker';
 import CostBreakdownView from './CostBreakdownView';
 
@@ -27,6 +27,7 @@ interface ApiKeyGateProps {
   onClear: () => Promise<void>;
   onClose: () => void;
   onValueChange?: (value: string) => void;
+  managedSession?: ManagedAccessSession | null;
 }
 
 const AI_STUDIO_URL = 'https://aistudio.google.com/app/apikey';
@@ -100,6 +101,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   onClear,
   onClose,
   onValueChange,
+  managedSession = null,
 }) => {
   const { t } = useAppTranslations();
   const [value, setValue] = useState('');
@@ -167,10 +169,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
 
   const currentInstruction = INSTRUCTION_IMAGES[instructionIndex] || '';
   const showHeaderClose = showInstructions || canClose;
-  // `useManagedAccess` is cheap when managed mode is off: it never touches the
-  // Firebase SDK unless a session is actually being restored.
-  const { session: managedSession } = useManagedAccess();
-  const showManagedAccess = isManagedModeEnabled();
+  const showManagedAccess = isManagedAccessConfigured();
 
   const headerCloseLabel = showInstructions ? t('apiKeyGate.closeInstructions') : t('apiKeyGate.close');
   const handleHeaderClose = showInstructions ? () => setShowInstructions(false) : onClose;

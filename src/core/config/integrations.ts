@@ -9,23 +9,7 @@ const parseCsv = (value?: string): string[] => {
     .filter(Boolean);
 };
 
-const parseBoolean = (value?: string): boolean => {
-  const normalized = (value || '').trim().toLowerCase();
-  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
-};
-
 export const MAESTRO_INTEGRATION_CONFIG = {
-  /**
-   * Master switch for managed mode. Off unless explicitly enabled.
-   *
-   * Managed mode spends real money on the user's behalf, and none of it can be
-   * exercised end to end without a live Firebase project and a real Play
-   * purchase. Shipping it dark means the backend can be deployed and verified
-   * against staging while production builds carry the code but never reach it,
-   * rather than the switch being an accident of which env vars happen to be
-   * set on a given build machine.
-   */
-  managedModeEnabled: parseBoolean(import.meta.env.VITE_MANAGED_MODE_ENABLED),
   firebaseApiKey: import.meta.env.VITE_FIREBASE_API_KEY?.trim() || '',
   firebaseAuthDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN?.trim() || '',
   firebaseProjectId: import.meta.env.VITE_FIREBASE_PROJECT_ID?.trim() || '',
@@ -54,18 +38,14 @@ export const isBackendConfigured = (): boolean => Boolean(MAESTRO_INTEGRATION_CO
 
 export const isGoogleAuthConfigured = (): boolean => (
   isFirebaseClientConfigured() && isBackendConfigured()
+  && Boolean(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckSiteKey)
 );
 
 /**
- * Whether the app may offer managed mode at all.
- *
- * Requires both the deliberate switch and complete configuration: a build with
- * the flag on but no backend URL would otherwise present an account UI that
- * cannot do anything.
+ * Managed access is available only in a fully configured build. There is no
+ * independent release flag: removing configuration is the fail-closed boundary.
  */
-export const isManagedModeEnabled = (): boolean => (
-  MAESTRO_INTEGRATION_CONFIG.managedModeEnabled && isGoogleAuthConfigured()
-);
+export const isManagedAccessConfigured = (): boolean => isGoogleAuthConfigured();
 
 export const isManagedBillingProduct = (productId: string): boolean => (
   MAESTRO_INTEGRATION_CONFIG.managedBillingProductIds.includes(productId)

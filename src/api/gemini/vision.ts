@@ -183,8 +183,8 @@ export const generateImage = async (params: {
     );
 
     const candidates = result.candidates || [];
-    const generatedImages = candidates.reduce((count, candidate) => (
-      count + (candidate.content?.parts || []).filter(part => (
+    const generatedImages = candidates.reduce((count: number, candidate: any) => (
+      count + (candidate.content?.parts || []).filter((part: any) => (
         part.inlineData?.mimeType?.startsWith('image/')
         && typeof part.inlineData?.data === 'string'
         && part.inlineData.data.trim() !== ''

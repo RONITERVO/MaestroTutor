@@ -36,7 +36,7 @@ import {
 } from '../../core/security/managedAccessSessionStorage';
 import { firebaseAuthBridgeService } from '../auth/firebaseAuthBridgeService';
 import { maestroFirebaseService } from '../firebase/maestroFirebaseService';
-import { ServiceNotConfiguredError } from '../shared/serviceErrors';
+import { ServiceHttpError, ServiceNotConfiguredError } from '../shared/serviceErrors';
 
 const DEFAULT_BILLING_SUMMARY: ManagedBillingSummary = {
   availableCredits: 0,
@@ -51,6 +51,9 @@ const DEFAULT_BILLING_SUMMARY: ManagedBillingSummary = {
 };
 
 const BACKEND_REQUEST_TIMEOUT_MS = 120_000;
+// Cloud Functions stops generation at 540s; leave room for its final response
+// to cross the network instead of aborting the client at the same instant.
+const BACKEND_GENERATION_TIMEOUT_MS = 555_000;
 const BACKEND_STREAM_CONNECT_TIMEOUT_MS = 60_000;
 
 const ensureBackendBaseUrl = (): string => {
@@ -84,7 +87,8 @@ const readJson = async <T>(response: Response): Promise<T> => {
       (record && typeof record.error === 'string' && record.error) ||
       (record && typeof record.message === 'string' && record.message) ||
       `Backend request failed with status ${response.status}`;
-    throw new Error(message);
+    const code = record && typeof record.code === 'string' ? record.code : undefined;
+    throw new ServiceHttpError(message, response.status, code);
   }
   if (!text.trim()) {
     throw new Error('Backend returned an empty response for a successful request.');
@@ -95,8 +99,11 @@ const readJson = async <T>(response: Response): Promise<T> => {
   return parsed.value as T;
 };
 
-const withRequestTimeout = (signal?: AbortSignal | null): AbortSignal => {
-  const timeoutSignal = AbortSignal.timeout(BACKEND_REQUEST_TIMEOUT_MS);
+const withRequestTimeout = (
+  signal?: AbortSignal | null,
+  timeoutMs = BACKEND_REQUEST_TIMEOUT_MS,
+): AbortSignal => {
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
   return signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 };
 
@@ -112,6 +119,83 @@ const updateStoredSession = async (updates: {
     entitlements: updates.entitlements || currentSession.entitlements,
     lastSyncedAt: Date.now(),
   });
+};
+
+type ManagedStreamEvent =
+  | { type: 'chunk'; chunk: unknown }
+  | { type: 'final'; result?: BackendGenerateContentResponse }
+  | { type: 'error'; message?: string; status?: number; code?: string };
+
+export const readManagedGenerationStream = async function* (response: Response): AsyncGenerator<unknown> {
+  if (!response.body) {
+    throw new Error('Managed backend returned a streaming response without a body.');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let sawFinal = false;
+  let bodyCompleted = false;
+
+  const parseLine = (line: string): ManagedStreamEvent => {
+    try {
+      return JSON.parse(line) as ManagedStreamEvent;
+    } catch {
+      throw new Error('Managed backend returned malformed streaming data.');
+    }
+  };
+
+  const consumeEvent = async (event: ManagedStreamEvent): Promise<unknown | undefined> => {
+    if (event.type === 'error') {
+      throw new ServiceHttpError(
+        event.message || 'Managed generation stream failed.',
+        Number.isFinite(event.status) ? Number(event.status) : 500,
+        event.code,
+      );
+    }
+    if (event.type === 'final') {
+      sawFinal = true;
+      await updateStoredSession({ billingSummary: event.result?.billingSummary || null });
+      return undefined;
+    }
+    if (event.type === 'chunk') return event.chunk;
+    throw new Error('Managed backend returned an unknown streaming event.');
+  };
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() || '';
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+        const chunk = await consumeEvent(parseLine(line));
+        if (chunk !== undefined) yield chunk;
+      }
+
+      if (done) {
+        bodyCompleted = true;
+        break;
+      }
+    }
+
+    const finalLine = buffer.trim();
+    if (finalLine) {
+      const chunk = await consumeEvent(parseLine(finalLine));
+      if (chunk !== undefined) yield chunk;
+    }
+    if (!sawFinal) {
+      throw new Error('Managed generation stream ended before its final accounting event.');
+    }
+  } finally {
+    if (!bodyCompleted) {
+      await reader.cancel('Managed stream consumer stopped.').catch(() => undefined);
+    }
+    reader.releaseLock();
+  }
 };
 
 const getOptionalHeaders = async (): Promise<Record<string, string>> => {
@@ -179,7 +263,11 @@ const getManagedHeaders = async (): Promise<Record<string, string>> => {
   return headers;
 };
 
-const requestJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
+const requestJson = async <T>(
+  path: string,
+  init?: RequestInit,
+  timeoutMs = BACKEND_REQUEST_TIMEOUT_MS,
+): Promise<T> => {
   const headers = new Headers(init?.headers || {});
   if (!headers.has('Accept')) headers.set('Accept', 'application/json');
   if (init?.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
@@ -188,12 +276,16 @@ const requestJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(buildUrl(path), {
     ...init,
     headers,
-    signal: withRequestTimeout(init?.signal),
+    signal: withRequestTimeout(init?.signal, timeoutMs),
   });
   return readJson<T>(response);
 };
 
-const requestManagedJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
+const requestManagedJson = async <T>(
+  path: string,
+  init?: RequestInit,
+  timeoutMs = BACKEND_REQUEST_TIMEOUT_MS,
+): Promise<T> => {
   const authHeaders = await getManagedHeaders();
   return requestJson<T>(path, {
     ...init,
@@ -201,7 +293,7 @@ const requestManagedJson = async <T>(path: string, init?: RequestInit): Promise<
       ...authHeaders,
       ...(init?.headers || {}),
     },
-  });
+  }, timeoutMs);
 };
 
 const requestOptionalAuthJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
@@ -234,7 +326,11 @@ export const maestroBackendService = {
 
   requestManagedJson,
 
-  requestManagedStream: async (path: string, body: unknown): Promise<Response> => {
+  requestManagedStream: async (
+    path: string,
+    body: unknown,
+    signal?: AbortSignal | null,
+  ): Promise<Response> => {
     const authHeaders = await getManagedHeaders();
     const connectionController = new AbortController();
     const timeoutId = globalThis.setTimeout(
@@ -251,7 +347,9 @@ export const maestroBackendService = {
           ...authHeaders,
         },
         body: JSON.stringify(body),
-        signal: connectionController.signal,
+        signal: signal
+          ? AbortSignal.any([signal, connectionController.signal])
+          : connectionController.signal,
       });
     } finally {
       globalThis.clearTimeout(timeoutId);
@@ -319,14 +417,28 @@ export const maestroBackendService = {
   },
 
   generateContent: async (
-    payload: BackendGenerateContentRequest
+    payload: BackendGenerateContentRequest,
+    signal?: AbortSignal | null,
   ): Promise<BackendGenerateContentResponse> => {
     const response = await requestManagedJson<BackendGenerateContentResponse>('gemini/generate-content', {
       method: 'POST',
       body: JSON.stringify(payload),
-    });
+      signal: signal || undefined,
+    }, BACKEND_GENERATION_TIMEOUT_MS);
     await updateStoredSession({ billingSummary: response.billingSummary || null });
     return response;
+  },
+
+  generateContentStream: async (
+    payload: BackendGenerateContentRequest,
+    signal?: AbortSignal | null,
+  ): Promise<AsyncIterable<unknown>> => {
+    const response = await maestroBackendService.requestManagedStream(
+      'gemini/generate-content-stream',
+      payload,
+      signal,
+    );
+    return readManagedGenerationStream(response);
   },
 
   uploadMedia: async (

@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { Capacitor } from '@capacitor/core';
-// Loaded on demand alongside the Firebase SDK: managed mode is off for most
-// sessions, and neither package should reach the main bundle to support it.
+// Loaded on demand alongside the Firebase SDK so BYOK-only sessions do not pay
+// the download/initialization cost for managed authentication.
 // See services/firebase/maestroFirebaseService.ts.
 const loadNativeAuth = async () => (await import('@capacitor-firebase/authentication')).FirebaseAuthentication;
 const loadWebAuth = () => import('firebase/auth');

@@ -40,10 +40,11 @@ minutes and managed file cleanup retries hourly. Firestore rules, indexes and
 TTL policies are deployed. Artifact Registry deletes old function images after
 30 days.
 
-Managed mode is enabled in the current production web build. Source templates
-still default `VITE_MANAGED_MODE_ENABLED=false` so a clean checkout cannot spend
-money accidentally. A production maintainer must set it to `true` deliberately
-in the ignored root `.env` before building.
+Managed access has no dark-launch flag. The client exposes it only when the
+Firebase client and backend URL are completely configured; a clean checkout
+with blank template values remains BYOK-only. BYOK keeps precedence when a user
+has both access methods, preventing an existing personal key from unexpectedly
+spending managed credits.
 
 ## 2. Provider state
 
@@ -105,6 +106,34 @@ Google no longer requires linking the Play developer account to a Cloud
 project. The required setup is enabling the Android Publisher API and granting
 the Play Console user permissions described above. See Google's
 [Android Publisher API setup](https://developers.google.com/android-publisher/getting_started).
+
+### Gemini model policy
+
+The public `gemini-models.json` registry chooses the client models and contains
+their pricing rules. The Functions environment independently allowlists models
+with `MANAGED_ALLOWED_GEMINI_MODELS`, `MANAGED_ALLOWED_LIVE_MODELS` and
+`MANAGED_ALLOWED_MUSIC_MODELS`. This is intentional: editing public JSON must
+not turn the service API key into access to an arbitrary or unpriced model.
+
+Treat a model update as one release: verify the provider name and pricing,
+update the checked-in registry/defaults and pricing tests, update the matching
+server allowlist, deploy Functions, publish the client, and run one managed
+request for every affected surface. Live tokens are constrained to the exact
+allowlisted model requested by the client.
+
+The checked-in Gemini 3.6 Flash Standard rate was verified on 2026-09-01. Its
+current promotional input/output/cache rates expire after 2026-12-31 according
+to the provider pricing page. Re-verify and deploy the registry before
+2027-01-01; leaving an expired rate in production is a billing incident.
+Grounded Gemini 3 requests are settled per reported Search query at list price,
+with ten queries reserved before the call by default.
+
+Active release blocker recorded on 2026-09-01: the production Gemini key passes
+`countTokens`, but a minimal paid generation returns HTTP 429 because the AI
+Studio project's prepayment credits are depleted. Do not deploy or advertise
+the managed client until the owner restores the provider balance and the smoke
+test below passes. Remove this incident note only after recording the successful
+retest; a configured secret is not evidence that provider billing is usable.
 
 ## 3. Access a maintainer needs
 
@@ -170,15 +199,15 @@ Rules:
 - Never commit any of those ignored files.
 - Keep `.firebaserc` pointed at `chatwithmaestro` before deploying.
 
-For production, confirm these deliberate switches locally without printing the
-rest of either file:
+For production, confirm the fail-closed server setting without printing the
+rest of the file:
 
 ```powershell
-rg "^VITE_MANAGED_MODE_ENABLED=" .env
 rg "^REQUIRE_APPCHECK=" functions\.env
 ```
 
-Both must be `true` for the current production posture.
+It must be `true`. Also verify that the root `.env` has the complete Firebase
+and backend values; there is no separate client switch.
 
 ## 5. Validate before any release
 
@@ -188,27 +217,63 @@ From the repository root:
 npm test
 npm run lint
 npm run build
+npm audit --omit=dev --audit-level=critical
 git diff --check
 ```
 
 From `functions/`:
 
 ```powershell
-npm run build
-npm run test:cors
+npm test
 npm run test:emulator
+npm audit --omit=dev --audit-level=high
 ```
 
-The emulator test requires Java; use JDK 21. A bundle-size warning for the main
-app and Whisper worker is currently known. Treat new build errors as blocking.
-`npm audit` findings in Firebase/tooling dependencies must be reviewed before
-upgrading; never run a force fix blindly on the release branch.
+Then run the paid-provider smoke test. It makes one bounded, very small Gemini
+generation and therefore incurs a real provider charge:
+
+```powershell
+$env:GEMINI_API_KEY = (gcloud secrets versions access latest --secret GEMINI_API_KEY --project chatwithmaestro).Trim()
+npm run smoke:gemini
+Remove-Item Env:GEMINI_API_KEY
+```
+
+The command must return JSON with `ok: true`. Never echo the environment
+variable or paste it into the command itself. A successful `countTokens` call
+without a successful generation is not a pass; depleted prepayment currently
+has exactly that failure shape.
+
+Pull requests and pushes to the release branches run the same release gate in
+`.github/workflows/release-gate.yml` on Node 24 and JDK 21. Do not merge a red
+gate or weaken it to get a release through.
+
+The emulator test requires Java; use JDK 21 and make sure `JAVA_HOME` points at
+that JDK when more than one Java version is installed. A bundle-size warning for
+the main app and Whisper worker is currently known. Treat new build errors as
+blocking. Never run an audit force fix blindly on the release branch.
+
+Audit exceptions reviewed on 2026-09-01:
+
+- The root runtime tree reports `adm-zip` and `sharp` through Transformers.js.
+  They belong to its Node-only ONNX/image path; the production browser bundle
+  uses `onnxruntime-web` and contains neither package. `@capacitor/assets` also
+  carries older `sharp`/`tar` versions, but it is a development-only tool that
+  processes repository-owned assets. Recheck these when either upstream ships
+  an update; do not force incompatible transitive majors into the lockfile.
+- The Functions runtime tree reports a moderate `uuid` advisory through
+  Firebase Admin's Google Cloud Storage client. The affected buffer overloads
+  of UUID v3/v5/v6 are not called by Maestro. Keep the high-severity Functions
+  audit gate and remove this exception when Firebase Admin updates the chain.
+
+The CI thresholds intentionally fail on a new critical shipped-app advisory or
+a new high-severity Functions advisory. A lower-severity result still requires
+human review during dependency maintenance; the threshold is not a statement
+that every lower-severity advisory is harmless.
 
 ## 6. Publish the web app
 
 1. Confirm root `.env` has the live Firebase values, Enterprise site key,
-   backend URL, Google client IDs, `maestro_credits_1000`, and
-   `VITE_MANAGED_MODE_ENABLED=true`.
+   backend URL, Google client IDs and `maestro_credits_1000`.
 2. Confirm `public/CNAME` contains exactly `chatwithmaestro.com`.
 3. Run:
 
@@ -264,7 +329,10 @@ gcloud functions describe api --gen2 --region europe-west1 --project chatwithmae
 ```
 
 Expected health facts are `ok: true`, region `europe-west1`, Firestore ready,
-and managed product `pack_1000`.
+Gemini and Stripe configured, App Check required, managed product `pack_1000`,
+and model lists matching the deployed registry. The response deliberately says
+`geminiConfigured`, not `geminiReady`: the paid smoke test above is what proves
+the provider balance and generation quota are usable.
 
 ## 8. App Check changes and rollback
 
@@ -340,7 +408,9 @@ Before testing purchases, confirm the runtime service account still appears as
 enabled under Play Console → Users and permissions and is scoped only to
 Maestro. A successful test must prove: purchased state grants once, replaying
 the token grants nothing, the server consumes only after granting, and a pending
-purchase grants nothing.
+purchase grants nothing. New purchases carry the SHA-256 Firebase UID as Play's
+64-character `obfuscatedAccountId`; the server rejects a missing value or a
+purchase bound to a different account before granting.
 
 At setup time the app had only four joined closed-test users. Play's production
 access page required at least 12 joined testers continuously for 14 days. This

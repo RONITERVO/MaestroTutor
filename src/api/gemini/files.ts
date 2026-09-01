@@ -2,7 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { debugLogService } from '../../features/diagnostics';
-import { getAi } from './client';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { maestroBackendService } from '../../services/backend/maestroBackendService';
+import { getDirectAi } from './client';
 
 /**
  * Set of URIs known to be expired/deleted (403/404).
@@ -40,7 +42,7 @@ const waitForFileActive = async (
   maxWaitMs: number = 60000,
   pollIntervalMs: number = 1000
 ): Promise<any> => {
-  const ai = await getAi();
+  const ai = await getDirectAi();
 
   let name = fileNameOrUri;
   const m = /\/files\/([^?\s]+)/.exec(fileNameOrUri || '');
@@ -84,7 +86,11 @@ const waitForFileActive = async (
 
 export const checkFileStatuses = async (uris: string[]): Promise<Record<string, { deleted: boolean; active: boolean }>> => {
   if (!uris || !uris.length) return {};
-  const ai = await getAi();
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    return (await maestroBackendService.checkFileStatuses({ uris })).statuses;
+  }
+  const ai = await getDirectAi();
   const out: Record<string, { deleted: boolean; active: boolean }> = {};
 
   // Filter out URIs already known to be expired
@@ -220,9 +226,17 @@ export const uploadMediaToFiles = async (
   mimeType: string,
   displayName?: string
 ): Promise<{ uri: string; mimeType: string }> => {
-  const ai = await getAi();
-
   const normalizedMimeType = normalizeMimeTypeForUpload(mimeType);
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    const result = await maestroBackendService.uploadMedia({
+      dataUrl,
+      mimeType: normalizedMimeType,
+      ...(displayName ? { displayName } : {}),
+    });
+    return { uri: result.uri, mimeType: result.mimeType };
+  }
+  const ai = await getDirectAi();
 
   const base64Data = dataUrl.substring(dataUrl.indexOf(',') + 1);
   const byteCharacters = atob(base64Data);
@@ -272,7 +286,11 @@ export const clearAllGeminiFiles = async (): Promise<{
   failedCount: number;
   failedNames: string[];
 }> => {
-  const ai = await getAi();
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    return maestroBackendService.clearFiles();
+  }
+  const ai = await getDirectAi();
   const log = debugLogService.logRequest('files.clearAll', 'Files API', {
     pageSize: 100,
   });
@@ -310,7 +328,11 @@ export const clearAllGeminiFiles = async (): Promise<{
 };
 
 export const deleteFileByNameOrUri = async (nameOrUri: string) => {
-  const ai = await getAi();
+  const accessMode = await maestroAccessService.resolveAccessMode();
+  if (accessMode === 'managed') {
+    return maestroBackendService.deleteFile({ nameOrUri });
+  }
+  const ai = await getDirectAi();
   let name = nameOrUri;
   const m = /\/files\/([^?\s]+)/.exec(nameOrUri || '');
   if (m) name = `files/${m[1]}`;

@@ -25,6 +25,41 @@ const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 
 const app = express();
 
+const FIRESTORE_HEALTH_CACHE_MS = 15_000;
+let firestoreHealthCheckedAt = 0;
+let firestoreHealthReady = false;
+let firestoreHealthProbe: Promise<boolean> | null = null;
+
+const probeFirestore = async (): Promise<boolean> => {
+  const currentTime = Date.now();
+  if (currentTime - firestoreHealthCheckedAt < FIRESTORE_HEALTH_CACHE_MS) {
+    return firestoreHealthReady;
+  }
+  if (firestoreHealthProbe) return firestoreHealthProbe;
+
+  firestoreHealthProbe = (async () => {
+    try {
+      await Promise.race([
+        adminDb.collection('managedSystem').doc('health').get(),
+        new Promise((_, reject) => setTimeout(
+          () => reject(new Error('Firestore health probe timed out.')),
+          3_000,
+        )),
+      ]);
+      firestoreHealthReady = true;
+    } catch (error) {
+      firestoreHealthReady = false;
+      console.error('[health] Firestore readiness probe failed.', error);
+    } finally {
+      firestoreHealthCheckedAt = Date.now();
+      firestoreHealthProbe = null;
+    }
+    return firestoreHealthReady;
+  })();
+
+  return firestoreHealthProbe;
+};
+
 /*
  * Registered before the JSON parser, and only for this route.
  *
@@ -108,18 +143,36 @@ const asyncRoute = (
       return;
     }
     if (!res.writableEnded) {
-      res.write(`${JSON.stringify({ type: 'error', message: getErrorMessage(error) })}\n`);
+      res.write(`${JSON.stringify({
+        type: 'error',
+        message: getErrorMessage(error),
+        status: getHttpStatus(error),
+      })}\n`);
       res.end();
     }
   }
 };
 
 app.get('/health', asyncRoute('none', async (_req, res) => {
-  res.json({
-    ok: true,
+  const firestoreReady = await probeFirestore();
+  const geminiConfigured = Boolean(appConfig.geminiApiKey);
+  const ready = firestoreReady && geminiConfigured;
+  res.status(ready ? 200 : 503).json({
+    ok: ready,
     region: appConfig.functionRegion,
-    firestoreReady: Boolean(adminDb),
+    firestoreReady,
+    // Presence checks are intentionally named "configured", not "ready".
+    // Secret Manager has no API for the provider's prepaid Gemini balance, and
+    // a countTokens call can succeed while paid generation is rejected. The
+    // release runbook's real generation smoke test is the readiness proof.
+    geminiConfigured,
+    stripeConfigured: Boolean(appConfig.stripeSecretKey && appConfig.stripeWebhookSecret),
+    paidProviderSmokeRequired: true,
+    appCheckRequired: appConfig.requireAppCheck,
     managedBillingProducts: appConfig.creditPacks.map((pack) => pack.id),
+    managedGenerationModels: [...appConfig.managedAllowedGeminiModels],
+    managedLiveModels: [...appConfig.managedAllowedLiveModels],
+    managedMusicModels: [...appConfig.managedAllowedMusicModels],
   });
 }));
 
@@ -188,7 +241,6 @@ app.post('/gemini/generate-content', asyncRoute('required', async (req, res, aut
     model: String(req.body?.model || ''),
     contents: req.body?.contents,
     config: req.body?.config,
-    operation: String(req.body?.operation || 'generateContent'),
   });
   res.json(result);
 }));
@@ -200,7 +252,6 @@ app.post('/gemini/generate-content-stream', asyncRoute('required', async (req, r
     model: String(req.body?.model || ''),
     contents: req.body?.contents,
     config: req.body?.config,
-    operation: String(req.body?.operation || 'generateContent'),
     response: res,
   });
 }));
@@ -236,6 +287,8 @@ app.post('/gemini/live-token', asyncRoute('required', async (req, res, auth) => 
   const result = await createManagedLiveToken({
     uid: auth!.uid,
     user: auth!.user,
+    model: String(req.body?.model || ''),
+    config: req.body?.config,
     purpose: req.body?.purpose === 'music' ? 'music' : 'live',
     durationSeconds: Number(req.body?.durationSeconds || 0) || undefined,
   });

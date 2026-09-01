@@ -4,13 +4,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import {
-  GoogleGenAI,
   LiveServerMessage,
   Modality,
   LiveServerGoAway,
   LiveServerSessionResumptionUpdate,
   SessionResumptionConfig,
 } from '@google/genai';
+import { getAi } from '../../../api/gemini/client';
 import { mergeInt16Arrays, trimSilence } from '../utils/audioProcessing';
 import { countTranscriptNewlines } from '../utils/transcriptParsing';
 import { debugLogService } from '../../diagnostics';
@@ -22,7 +22,6 @@ import {
   PCM_PLAYBACK_PROCESSOR_URL,
   PCM_PLAYBACK_PROCESSOR_NAME,
 } from '../worklets';
-import { getApiKeyOrThrow } from '../../../core/security/apiKeyStorage';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import {
@@ -942,8 +941,7 @@ export function useGeminiLiveConversation(
         outputAudioTranscription: {},
       });
 
-      const apiKey = await getApiKeyOrThrow();
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = await getAi();
       const session = await ai.live.connect({
         model,
         config: {

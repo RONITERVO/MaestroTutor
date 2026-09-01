@@ -115,13 +115,18 @@ public class ThemeBillingPlugin extends Plugin {
     /**
      * Launches the Google Play purchase sheet for the given theme product.
      *
-     * <p>Expected call data: {@code { productId: string }}
+     * <p>Expected call data: {@code { productId: string, obfuscatedAccountId: string }}
      */
     @PluginMethod
     public void purchaseTheme(PluginCall call) {
         String productId = call.getString("productId");
         if (productId == null || productId.isEmpty()) {
             call.reject("productId is required");
+            return;
+        }
+        String obfuscatedAccountId = call.getString("obfuscatedAccountId");
+        if (obfuscatedAccountId == null || obfuscatedAccountId.isEmpty()) {
+            call.reject("obfuscatedAccountId is required");
             return;
         }
 
@@ -131,7 +136,7 @@ public class ThemeBillingPlugin extends Plugin {
             return;
         }
 
-        billingManager.launchBillingFlow(activity, productId);
+        billingManager.launchBillingFlow(activity, productId, obfuscatedAccountId);
         call.resolve();
     }
 
