@@ -10,6 +10,10 @@ import { describeHeadlessMethods } from './client';
 import { listLanguagePairs, resolveLanguagePair } from '../core-sdk/chat/language';
 import { runHeadlessChatTurn, runHeadlessSuggestions, selectHeadlessLanguage } from './chatJourney';
 import { runHeadlessImageGeneration } from './mediaJourney';
+import { runHeadlessMusicGeneration } from './musicJourney';
+import { runHeadlessAttachmentTurn } from './attachmentJourney';
+import type { SyntheticAttachmentKind } from './syntheticAttachments';
+import { runHeadlessAudioNoteGeneration } from './audioNoteJourney';
 import { createSyntheticPcmSource, decodePcm16LeBase64 } from '../core-sdk/media/pcmInput';
 import { runSyntheticLiveJourney } from '../core-sdk/media/syntheticLiveJourney';
 import { runStripeTestCheckoutJourney } from './billingJourney';
@@ -182,6 +186,26 @@ export const dispatchHeadlessMethod = async (
           })
           : undefined,
       });
+    case 'chat.attachment.turn': {
+      const fixtureKinds = new Set<SyntheticAttachmentKind>(['text', 'image', 'audio', 'pdf']);
+      const fixture = typeof input.fixture === 'string'
+        ? input.fixture as SyntheticAttachmentKind
+        : undefined;
+      if (fixture && !fixtureKinds.has(fixture)) {
+        throw new HeadlessDispatchError(-32602, 'Parameter "fixture" must be text, image, audio or pdf.');
+      }
+      return runHeadlessAttachmentTurn(client, {
+        text: requiredString(input, 'text'),
+        fixture,
+        dataUrl: typeof input.dataUrl === 'string' ? input.dataUrl : undefined,
+        mimeType: typeof input.mimeType === 'string' ? input.mimeType : undefined,
+        displayName: typeof input.displayName === 'string' ? input.displayName : undefined,
+        languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
+        useGoogleSearch: typeof input.useGoogleSearch === 'boolean' ? input.useGoogleSearch : undefined,
+        requireInvariants: typeof input.requireInvariants === 'boolean' ? input.requireInvariants : undefined,
+        cleanup: input.cleanup === true,
+      });
+    }
     case 'suggestions.generate': {
       const result = await runHeadlessSuggestions(client, {
         languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
@@ -201,6 +225,23 @@ export const dispatchHeadlessMethod = async (
         assistantMessageId: typeof input.assistantMessageId === 'string' ? input.assistantMessageId : undefined,
         maxAttempts: optionalBoundedInteger(input, 'maxAttempts', 2, 1, 7),
         upload: typeof input.upload === 'boolean' ? input.upload : undefined,
+        includeDataUrl: input.includeDataUrl === true,
+      });
+    case 'media.music.generate':
+      return runHeadlessMusicGeneration(client, {
+        prompt: requiredString(input, 'prompt'),
+        durationSeconds: optionalBoundedInteger(input, 'durationSeconds', 12, 8, 20),
+        model: typeof input.model === 'string' ? input.model : undefined,
+        upload: input.upload === true,
+        includeDataUrl: input.includeDataUrl === true,
+      });
+    case 'media.audioNote.generate':
+      return runHeadlessAudioNoteGeneration(client, {
+        text: requiredString(input, 'text'),
+        langCode: typeof input.langCode === 'string' ? input.langCode : undefined,
+        voiceName: typeof input.voiceName === 'string' ? input.voiceName : undefined,
+        model: typeof input.model === 'string' ? input.model : undefined,
+        upload: input.upload === true,
         includeDataUrl: input.includeDataUrl === true,
       });
     case 'speech.synthetic.live': {
@@ -318,9 +359,12 @@ export const dispatchHeadlessMethod = async (
     case 'files.clear':
       return client.backend.clearFiles();
     case 'live.token.create':
+      if (input.purpose !== undefined && input.purpose !== 'live') {
+        throw new HeadlessDispatchError(-32602, 'live.token.create purpose must be "live". Use media.music.generate for music.');
+      }
       return client.backend.createLiveToken({
         model: requiredString(input, 'model'),
-        ...(input.purpose === 'music' ? { purpose: 'music' as const } : { purpose: 'live' as const }),
+        purpose: 'live',
         ...(input.config && typeof input.config === 'object' && !Array.isArray(input.config)
           ? { config: input.config as Record<string, unknown> }
           : {}),

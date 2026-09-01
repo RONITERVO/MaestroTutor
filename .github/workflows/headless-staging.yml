@@ -24,28 +24,63 @@ jobs:
       MAESTRO_FIREBASE_PASSWORD: ${{ secrets.HEADLESS_FIREBASE_PASSWORD }}
       MAESTRO_APPCHECK_DEBUG_TOKEN: ${{ secrets.HEADLESS_APPCHECK_DEBUG_TOKEN }}
       MAESTRO_HEADLESS_HOME: ${{ runner.temp }}/maestro-headless
+      MAESTRO_TEST_PACK_ID: ${{ vars.MAESTRO_TEST_PACK_ID || 'pack_1000' }}
+      MAESTRO_TEST_PACK_CREDITS: ${{ vars.MAESTRO_TEST_PACK_CREDITS || '1000' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - run: npm ci
-      - name: Verify JSON-RPC/CLI contract starts
-        run: npx tsx src/headless/cli.ts system.describe > protocol.json
+      - name: Verify release configuration and JSON-RPC contract
+        run: |
+          npm run verify:release-config
+          npx tsx src/headless/cli.ts system.describe > protocol.json
+          node -e "const p=require('./protocol.json'); for (const m of ['billing.checkout.completeTest','chat.attachment.turn','media.audioNote.generate','media.music.generate','speech.synthetic.live']) if(!p.methods.includes(m)) throw new Error('Missing '+m)"
       - name: Authenticate through Firebase and read the managed account
         run: |
           npx tsx src/headless/cli.ts auth.signIn --profile staging-ci > auth.json
           npx tsx src/headless/cli.ts account.summary --profile staging-ci > account.json
           node -e "const a=require('./account.json'); if(!a.account?.user?.id) process.exit(1); console.log('Authenticated managed account:', a.account.user.id, 'credits:', a.account.billingSummary.availableCredits)"
-      - name: Exercise a paid production chat route when funded
+      - name: Complete one controlled Stripe test purchase
         run: |
-          node -e "const a=require('./account.json'); process.exit(a.account.billingSummary.availableCredits > 0 ? 0 : 78)" || code=$?
-          if [ "${code:-0}" = "78" ]; then
-            echo 'No staging credits are available; authenticated route smoke passed and paid generation was skipped.'
-            exit 0
-          fi
+          npx tsx src/headless/cli.ts billing.checkout.completeTest --profile staging-ci --params "{\"packId\":\"$MAESTRO_TEST_PACK_ID\",\"expectedCredits\":$MAESTRO_TEST_PACK_CREDITS,\"headless\":true}" > checkout.json
+          node -e "const c=require('./checkout.json'); if(c.grantedCredits!==Number(process.env.MAESTRO_TEST_PACK_CREDITS)||c.newPurchaseLedgerEntries!==1) process.exit(1); console.log('Stripe session:',c.sessionId,'grant:',c.grantedCredits)"
+      - name: Exercise text chat and suggestions through the Core SDK
+        run: |
           npx tsx src/headless/cli.ts language.select --profile staging-ci --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US"}' > language.json
           npx tsx src/headless/cli.ts chat.turn --profile staging-ci --params '{"text":"Say one short friendly greeting.","requireInvariants":true}' > turn.json
           node -e "const t=require('./turn.json'); if(!t.assistantMessage?.translations?.length) process.exit(1); console.log('Tutor invariant pairs:', t.assistantMessage.translations.length)"
+          npx tsx src/headless/cli.ts suggestions.generate --profile staging-ci --params '{}' > suggestions.json
+          node -e "const s=require('./suggestions.json'); if(!Array.isArray(s.suggestions)||!s.suggestions.length) process.exit(1)"
+      - name: Exercise text, image, audio and PDF attachments
+        run: |
+          for fixture in text image audio pdf; do
+            npx tsx src/headless/cli.ts chat.attachment.turn --profile staging-ci --params "{\"text\":\"Briefly identify the attached $fixture fixture.\",\"fixture\":\"$fixture\",\"cleanup\":true,\"requireInvariants\":true}" > "attachment-$fixture.json"
+            node -e "const r=require('./attachment-$fixture.json'); if(r.fixture!=='$fixture'||!r.turn?.assertions?.passed||!r.cleanedUp) process.exit(1)"
+          done
+      - name: Exercise raw Gemini, streaming Gemini and image generation
+        run: |
+          node -e "const p=require('./protocol.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
+          npx tsx src/headless/cli.ts gemini.generate --profile staging-ci --params "$(cat gemini-params.json)" > gemini.json
+          npx tsx src/headless/cli.ts gemini.generateStream --profile staging-ci --params "$(cat gemini-stream-params.json)" > gemini-stream.json
+          node -e "const r=require('./gemini-stream.json'); if(!Array.isArray(r.chunks)||!r.chunks.length) process.exit(1)"
+          npx tsx src/headless/cli.ts media.image.generate --profile staging-ci --params '{"contextText":"A simple blue circle flashcard with no text","maxAttempts":2,"upload":true}' > image.json
+          node -e "const r=require('./image.json'); if(!r.uploaded?.uri||r.mimeType?.indexOf('image/')!==0) process.exit(1)"
+      - name: Exercise audio-note, Lyria music and synthetic live streams
+        run: |
+          npx tsx src/headless/cli.ts media.audioNote.generate --profile staging-ci --params '{"text":"Hola, practiquemos juntos.","langCode":"es-ES","upload":true}' > audio-note.json
+          node -e "const r=require('./audio-note.json'); if(r.durationSeconds<=0||r.mimeType!=='audio/wav'||!r.uploaded?.uri) process.exit(1)"
+          npx tsx src/headless/cli.ts media.music.generate --profile staging-ci --params '{"prompt":"A calm original scale-practice backing track","durationSeconds":8,"upload":true}' > music.json
+          node -e "const r=require('./music.json'); if(r.durationSeconds<=0||r.mimeType!=='audio/wav'||!r.uploaded?.uri) process.exit(1)"
+          npx tsx -e "import {TRIGGER_AUDIO_PCM_24K} from './src/core-sdk/media/triggerAudioAsset.ts'; const raw=Buffer.from(TRIGGER_AUDIO_PCM_24K,'base64'); const source=new Int16Array(raw.buffer,raw.byteOffset,Math.floor(raw.byteLength/2)); const output=new Int16Array(Math.floor(source.length*2/3)); for(let i=0;i<output.length;i++) output[i]=source[Math.min(source.length-1,Math.floor(i*3/2))]; require('fs').writeFileSync('live-params.json',JSON.stringify({pcmBase64:Buffer.from(output.buffer).toString('base64'),sampleRate:16000,pace:true,timeoutMs:45000}))"
+          npx tsx src/headless/cli.ts speech.synthetic.live --profile staging-ci --params-file live-params.json > live.json
+          node -e "const r=require('./live.json'); if(!r.operationId||(!r.outputTranscript&&r.modelAudioChunkCount<1)) process.exit(1)"
+      - name: Verify ledgers, clear generated files and sign out
+        run: |
+          npx tsx src/headless/cli.ts account.ledgers --profile staging-ci --params '{"limit":200}' > ledgers.json
+          node -e "const l=require('./ledgers.json'); if(!l.billing.entries.some(e=>e.kind==='purchase')||!l.usage.entries.length) process.exit(1)"
+          npx tsx src/headless/cli.ts files.clear --profile staging-ci > clear.json
+          npx tsx src/headless/cli.ts auth.signOut --profile staging-ci > signout.json

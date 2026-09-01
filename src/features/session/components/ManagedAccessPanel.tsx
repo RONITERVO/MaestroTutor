@@ -1,19 +1,14 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { maestroPaymentsService } from '../../../services/payments/maestroPaymentsService';
 import { maestroManagedAccountController } from '../../../services/account/maestroManagedAccountController';
 import { maestroBackendService } from '../../../services/backend/maestroBackendService';
 import type { ManagedAccessSession } from '../../../core/contracts/backend';
-import type { GooglePlayPurchaseRecord } from '../../../core/contracts/integrations';
-import {
-  loadPendingManagedPurchases,
-  removePendingManagedPurchase,
-  upsertPendingManagedPurchase,
-} from '../../../core/security/pendingManagedPurchasesStorage';
 import ManagedAccountActivityModal from './ManagedAccountActivityModal';
 
 interface ManagedAccessPanelProps {
@@ -34,42 +29,15 @@ const formatUsd = (value: number): string => (
   })
 );
 
-const sha256Hex = async (value: string): Promise<string> => {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return [...new Uint8Array(digest)]
-    .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('');
-};
-
-const dedupePurchaseRecords = (purchaseRecords: GooglePlayPurchaseRecord[]): GooglePlayPurchaseRecord[] => {
-  const recordsByToken = new Map<string, GooglePlayPurchaseRecord>();
-  for (const purchase of purchaseRecords) {
-    if (!purchase.purchaseToken) continue;
-    recordsByToken.set(purchase.purchaseToken, purchase);
-  }
-  return [...recordsByToken.values()];
-};
-
 const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const { t } = useAppTranslations();
-  const billingService = maestroPaymentsService.googlePlayBilling;
-  const managedProductIds = useMemo(() => maestroPaymentsService.getManagedBillingProductIds(), []);
-  const primaryProductId = managedProductIds[0] || '';
-  const webBillingAvailable = (
-    !Capacitor.isNativePlatform()
-    && maestroBackendService.isConfigured()
-    && Boolean(primaryProductId)
+  const primaryPackId = maestroPaymentsService.getManagedCreditPackIds()[0] || '';
+  const isNative = Capacitor.isNativePlatform();
+  const purchasingAvailable = (
+    maestroBackendService.isConfigured()
+    && Boolean(primaryPackId)
+    && (!isNative || maestroPaymentsService.isAndroidExternalCheckoutEnabled())
   );
-  const purchasingAvailable = billingService.isAvailable || webBillingAvailable;
-  const processingTokensRef = useRef<Set<string>>(new Set());
-  const completedTokensRef = useRef<Set<string>>(new Set());
-
-  const [products, setProducts] = useState<Array<{
-    productId: string;
-    title: string;
-    description: string;
-    formattedPrice?: string;
-  }>>([]);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -79,8 +47,6 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
-  const activeProduct = products.find(product => product.productId === primaryProductId) || null;
 
   const refreshAccount = useCallback(async () => {
     if (!session?.firebaseIdToken) return;
@@ -101,90 +67,30 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     refreshAccountRef.current = refreshAccount;
   }, [refreshAccount]);
 
-  const processPendingPurchases = useCallback(async (purchaseRecords: GooglePlayPurchaseRecord[]) => {
-    if (!session?.firebaseIdToken) return;
-    const pendingPurchases = await loadPendingManagedPurchases();
-    const relevantPurchases = dedupePurchaseRecords([
-      ...pendingPurchases.map(record => record.purchase),
-      ...purchaseRecords,
-    ]).filter(record => (
-      record.purchaseState === 'purchased'
-      && managedProductIds.includes(record.productId)
-      && !completedTokensRef.current.has(record.purchaseToken)
-    ));
-
-    for (const record of relevantPurchases) {
-      if (processingTokensRef.current.has(record.purchaseToken)) {
-        continue;
-      }
-      processingTokensRef.current.add(record.purchaseToken);
-      try {
-        // Recorded locally first, so a purchase survives the app being killed
-        // between Play confirming it and the backend hearing about it.
-        await upsertPendingManagedPurchase(record);
-
-        // The token is handed straight to the backend, which verifies it with
-        // Play, grants the credits and only then consumes it. The client
-        // deliberately does not consume: consumption is irreversible, so
-        // consuming before the grant meant any failure in between took the
-        // money and destroyed the token with nothing left to retry against.
-        // Granting is keyed on the token, so retrying this is a no-op.
-        await maestroPaymentsService.verifyGooglePlayPurchase({ purchase: record });
-        completedTokensRef.current.add(record.purchaseToken);
-        await removePendingManagedPurchase(record.purchaseToken);
-      } catch (error) {
-        throw error;
-      } finally {
-        processingTokensRef.current.delete(record.purchaseToken);
-      }
-    }
-  }, [billingService, managedProductIds, session?.firebaseIdToken]);
-
   useEffect(() => {
-    if (!billingService.isAvailable || managedProductIds.length === 0) return undefined;
-
-    let mounted = true;
-    const listenerPromises: Array<Promise<{ remove: () => void }>> = [];
-
-    listenerPromises.push(
-      billingService.onProductDetailsAvailable(event => {
-        if (!mounted) return;
-        setProducts(event.products.filter(product => managedProductIds.includes(product.productId)));
-      }),
-      billingService.onPurchasesUpdated(event => {
-        if (!mounted) return;
-        setIsPurchasing(false);
-        void processPendingPurchases(event.purchases || [])
-          .then(() => refreshAccount())
-          .catch(error => {
-            setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseSyncFailed'));
-          });
-      }),
-      billingService.onBillingError(event => {
-        if (!mounted) return;
-        setIsPurchasing(false);
-        if (event.canceled) return;
-        setErrorMessage(event.debugMessage || t('managedAccess.genericError'));
-      }),
-    );
-
-    void billingService.startConnection()
-      .then(() => billingService.getProductDetails(managedProductIds))
-      .then(() => processPendingPurchases([]))
-      .then(() => billingService.getUnconsumedPurchases())
-      .then(result => processPendingPurchases(result.purchases || []))
-      .catch(error => {
-        if (!mounted) return;
-        setErrorMessage(error instanceof Error ? error.message : t('managedAccess.billingUnavailable'));
+    if (!isNative || !maestroPaymentsService.isAndroidExternalCheckoutEnabled()) return undefined;
+    let handle: { remove: () => Promise<void> } | null = null;
+    let poll: ReturnType<typeof maestroManagedAccountController.startStripeReturnPolling> | null = null;
+    void Browser.addListener('browserFinished', () => {
+      setIsPurchasing(false);
+      setStatusMessage(t('managedAccess.checkoutReturn'));
+      poll = maestroManagedAccountController.startStripeReturnPolling({
+        attempts: 15,
+        intervalMs: 2000,
+        refresh: async () => {
+          await refreshAccountRef.current();
+          return null;
+        },
       });
+    }).then(listener => {
+      handle = listener;
+    });
 
     return () => {
-      mounted = false;
-      Promise.all(listenerPromises).then(handles => {
-        handles.forEach(handle => handle.remove());
-      });
+      poll?.cancel();
+      void handle?.remove();
     };
-  }, [billingService, managedProductIds, processPendingPurchases, refreshAccount, t]);
+  }, [isNative, t]);
 
   const handleSignIn = useCallback(async () => {
     setIsSigningIn(true);
@@ -210,19 +116,16 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   }, [t]);
 
   /**
-   * Buy credits, by whichever route this platform allows.
-   *
-   * Android must use Play Billing — Google's payments policy requires it for
-   * purchases made inside the app — while the web goes to Stripe Checkout.
-   * Both fund the same credit balance, so which one ran is invisible
-   * afterwards.
+   * Every enabled platform creates the same Stripe Checkout session. Android
+   * opens it in a Custom Tab only when the release is explicitly enrolled for
+   * external checkout; Stripe's webhook remains the sole grant authority.
    */
   const handlePurchase = useCallback(async () => {
     if (!session?.firebaseIdToken) {
       setErrorMessage(t('managedAccess.signInRequired'));
       return;
     }
-    if (!primaryProductId) {
+    if (!primaryPackId) {
       setErrorMessage(t('managedAccess.productMissing'));
       return;
     }
@@ -231,21 +134,14 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     setStatusMessage(null);
     setIsPurchasing(true);
     try {
-      if (billingService.isAvailable) {
-        const obfuscatedAccountId = await sha256Hex(session.user.id);
-        await billingService.purchaseProduct(primaryProductId, obfuscatedAccountId);
-        // Play drives the rest through the purchase listener, which keeps the
-        // spinner up until the purchase is reconciled.
-        return;
-      }
-
-      // Navigates away to Stripe, so the spinner is never cleared on success.
-      await maestroManagedAccountController.startStripeCheckout(primaryProductId);
+      // Web navigation leaves the page. Native navigation returns after the
+      // Custom Tab opens and browserFinished performs reconciliation.
+      await maestroManagedAccountController.startStripeCheckout(primaryPackId);
     } catch (error) {
       setIsPurchasing(false);
       setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseFailed'));
     }
-  }, [billingService, primaryProductId, session, t]);
+  }, [primaryPackId, session, t]);
 
   /*
    * Coming back from Stripe, the credits may not have landed yet: the webhook
@@ -278,16 +174,6 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     // Deliberately runs once on mount: it reacts to the redirect that brought
     // the user here, not to anything that changes afterwards.
   }, []);
-
-  const handleRestore = useCallback(async () => {
-    setErrorMessage(null);
-    setStatusMessage(null);
-    try {
-      await billingService.restorePurchases();
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t('managedAccess.restoreFailed'));
-    }
-  }, [billingService, t]);
 
   const handleDeleteManagedAccount = useCallback(async () => {
     if (!session?.firebaseIdToken) {
@@ -345,16 +231,6 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
         </div>
       </div>
 
-      {activeProduct && (
-        <div className="rounded-md border border-line-border/50 bg-gate-bg/80 px-3 py-2 text-xs sm:text-sm">
-          <div className="font-medium text-gate-text">{activeProduct.title || t('managedAccess.packTitle')}</div>
-          <div className="text-gate-muted-text">
-            {t('managedAccess.packDescription')}
-            {activeProduct.formattedPrice ? ` - ${activeProduct.formattedPrice}` : ''}
-          </div>
-        </div>
-      )}
-
       {statusMessage && (
         <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
           {statusMessage}
@@ -409,21 +285,11 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
             <button
               type="button"
               onClick={() => void handlePurchase()}
-              disabled={!session?.firebaseIdToken || isPurchasing || !primaryProductId}
+              disabled={!session?.firebaseIdToken || isPurchasing || !primaryPackId}
               className="bg-gate-btn-bg px-3 py-2 text-gate-btn-text hover:bg-gate-btn-bg/80 disabled:opacity-60 sketchy-border-thin"
             >
               {isPurchasing ? t('managedAccess.purchasing') : t('managedAccess.buyCredits')}
             </button>
-            {billingService.isAvailable && (
-              <button
-                type="button"
-                onClick={() => void handleRestore()}
-                disabled={!session?.firebaseIdToken}
-                className="px-3 py-2 text-gate-text hover:bg-gate-bg disabled:opacity-60 sketchy-border-thin"
-              >
-                {t('managedAccess.restorePurchases')}
-              </button>
-            )}
           </>
         ) : (
           <div className="text-xs text-gate-muted-text">{t('managedAccess.androidOnly')}</div>

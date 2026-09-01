@@ -7,8 +7,8 @@ import { appConfig, getJsonBodyLimitBytes, parseCreditPacks } from '../../functi
 
 describe('managed credit pack configuration', () => {
   it('preserves a valid catalogue in insertion order', () => {
-    expect(parseCreditPacks('small:1000:299:play_small,large:6000:999')).toEqual([
-      { id: 'small', credits: 1000, priceCents: 299, playProductId: 'play_small' },
+    expect(parseCreditPacks('small:1000:299,large:6000:999')).toEqual([
+      { id: 'small', credits: 1000, priceCents: 299 },
       { id: 'large', credits: 6000, priceCents: 999 },
     ]);
   });
@@ -28,16 +28,9 @@ describe('managed credit pack configuration', () => {
     expect(() => parseCreditPacks('same:1000:299,same:2000:499')).toThrow(/Duplicate credit pack id/);
   });
 
-  it('rejects duplicate non-empty Play product ids', () => {
-    expect(() => parseCreditPacks('a:1000:299:play_pack,b:2000:499:play_pack'))
-      .toThrow(/Duplicate Google Play product id/);
-  });
-
-  it('rejects identifiers that collide across pack and Play namespaces', () => {
-    expect(() => parseCreditPacks('a:1000:299:shared,b:2000:499:a'))
-      .toThrow(/Ambiguous credit pack\/store id/);
-    expect(() => parseCreditPacks('a:1000:299:shared,shared:2000:499:play_b'))
-      .toThrow(/Ambiguous credit pack\/store id/);
+  it('rejects the retired provider-alias fourth field', () => {
+    expect(() => parseCreditPacks('a:1000:299:play_pack'))
+      .toThrow(/Invalid MANAGED_CREDIT_PACKS entry/);
   });
 
   it('keeps base64 uploads and their JSON envelope below the v2 request ceiling', () => {

@@ -11,11 +11,10 @@ import { deleteManagedAccount, submitAiContentReport } from './account';
 import { type AuthContext, applyCors, getOptionalAuthContext, requireAuthContext } from './auth';
 import { appConfig, getJsonBodyLimitBytes } from './config';
 import { adminDb } from './firebase';
-import { generateManagedContent, streamManagedContent, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
+import { generateManagedContent, streamManagedContent, generateManagedMusic, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
 import { getErrorMessage, getHttpStatus } from './http';
 import { countExpiredReservations, getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
 import type { ManagedRateLimitBucket } from './managedData';
-import { verifyManagedGooglePlayPurchase } from './playBilling';
 import { consumeRateLimit } from './rateLimit';
 import { createManagedCheckoutSession, handleStripeWebhook } from './stripeBilling';
 
@@ -169,7 +168,7 @@ app.get('/health', asyncRoute('none', async (_req, res) => {
     stripeConfigured: Boolean(appConfig.stripeSecretKey && appConfig.stripeWebhookSecret),
     paidProviderSmokeRequired: true,
     appCheckRequired: appConfig.requireAppCheck,
-    managedBillingProducts: appConfig.creditPacks.map((pack) => pack.id),
+    managedCreditPacks: appConfig.creditPacks.map((pack) => pack.id),
     managedGenerationModels: [...appConfig.managedAllowedGeminiModels],
     managedLiveModels: [...appConfig.managedAllowedLiveModels],
     managedMusicModels: [...appConfig.managedAllowedMusicModels],
@@ -202,16 +201,6 @@ app.post('/account/delete', asyncRoute('required', async (_req, res, auth) => {
   const result = await deleteManagedAccount({
     uid: auth!.uid,
     user: auth!.user,
-  });
-  res.json(result);
-}));
-
-app.post('/billing/google-play/verify', asyncRoute('required', async (req, res, auth) => {
-  const purchase = req.body?.purchase;
-  const result = await verifyManagedGooglePlayPurchase({
-    uid: auth!.uid,
-    user: auth!.user,
-    purchase,
   });
   res.json(result);
 }));
@@ -256,6 +245,17 @@ app.post('/gemini/generate-content-stream', asyncRoute('required', async (req, r
   });
 }));
 
+app.post('/gemini/generate-music', asyncRoute('required', async (req, res, auth) => {
+  const result = await generateManagedMusic({
+    uid: auth!.uid,
+    user: auth!.user,
+    model: String(req.body?.model || ''),
+    prompt: String(req.body?.prompt || ''),
+    durationSeconds: Number(req.body?.durationSeconds || 0) || undefined,
+  });
+  res.json(result);
+}, 'live-token'));
+
 app.post('/gemini/upload-media', asyncRoute('required', async (req, res, auth) => {
   const result = await uploadManagedMedia({
     uid: auth!.uid,
@@ -284,12 +284,16 @@ app.post('/gemini/clear-files', asyncRoute('required', async (_req, res, auth) =
 }));
 
 app.post('/gemini/live-token', asyncRoute('required', async (req, res, auth) => {
+  if (req.body?.purpose === 'music') {
+    res.status(400).json({ error: 'Managed music uses the authenticated music generation route.' });
+    return;
+  }
   const result = await createManagedLiveToken({
     uid: auth!.uid,
     user: auth!.user,
     model: String(req.body?.model || ''),
     config: req.body?.config,
-    purpose: req.body?.purpose === 'music' ? 'music' : 'live',
+    purpose: 'live',
     durationSeconds: Number(req.body?.durationSeconds || 0) || undefined,
   });
   res.json(result);

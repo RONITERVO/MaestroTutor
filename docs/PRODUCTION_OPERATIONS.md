@@ -88,24 +88,18 @@ Do not delete them until their owners and consumers are identified.
 
 Official reference: [Stripe webhooks](https://docs.stripe.com/webhooks).
 
-### Google Play
+### Android distribution and Play Integrity
 
-`androidpublisher.googleapis.com` is enabled. The functions runtime service
-account `47084692464-compute@developer.gserviceaccount.com` is enabled in Play
-Console, scoped only to Maestro, and has the minimum billing permissions:
+Google Play is used for distribution and Play Integrity App Check, not for
+managed-credit purchases. The release and debug SHA-256 fingerprints above are
+registered and the Play Integrity/API terms are accepted. Revalidate attestation
+with a signed internal-track build after changing package, certificate or Firebase
+app configuration.
 
-- View financial data, which includes Purchases API access.
-- Manage orders.
-
-The older `play-billing-verifier@ideatesvg.iam.gserviceaccount.com` account was
-preserved. Do not remove it until its ownership and use are confirmed. New Play
-permissions can take time to propagate, so do not immediately broaden access if
-the first verification call fails.
-
-Google no longer requires linking the Play developer account to a Cloud
-project. The required setup is enabling the Android Publisher API and granting
-the Play Console user permissions described above. See Google's
-[Android Publisher API setup](https://developers.google.com/android-publisher/getting_started).
+The old Android Publisher billing-verifier service accounts and API permissions
+are not required by the current application. They are legacy cloud-access cleanup,
+not a release dependency; remove them only through an independently reviewed IAM
+change after ownership/audit evidence is recorded.
 
 ### Gemini model policy
 
@@ -261,7 +255,7 @@ text because an output ceiling consumed entirely by thinking tokens is not a
 usable generation.
 
 Pull requests and pushes to the release branches run the same release gate in
-`.github/workflows/release-gate.yml` on Node 24 and JDK 21. Do not merge a red
+`.github/workflows/release-gate.yml` on Node 22 and JDK 21. Do not merge a red
 gate or weaken it to get a release through.
 
 The emulator test requires Java; use JDK 21 and make sure `JAVA_HOME` points at
@@ -415,35 +409,31 @@ grant until `checkout.session.async_payment_succeeded` arrives. Refund or
 otherwise reconcile the test purchase according to the team's accounting
 process.
 
-## 10. Google Play billing maintenance
+## 10. Stripe-only catalogue and Android checkout policy
 
-Google Play billing is only for backend-managed products such as consumable
-credit packs. Color themes are local and permanently free; they must never be
-added to the Play catalogue, purchase ledger, or client ownership state.
-
-The store product ID, app client configuration and server catalogue must match:
+Color themes are local and permanently free. Managed credits use the single
+Stripe catalogue:
 
 ```text
-Play:       maestro_credits_1000
-Client:     VITE_MANAGED_BILLING_PRODUCT_IDS=maestro_credits_1000
-Functions:  MANAGED_CREDIT_PACKS=pack_1000:1000:299:maestro_credits_1000
+Client:     VITE_MANAGED_CREDIT_PACK_IDS=pack_1000
+Functions:  MANAGED_CREDIT_PACKS=pack_1000:1000:299
 ```
 
-When changing price or adding a product, update the provider and both config
-values in one release. Do not reuse a product ID for a different credit amount.
+When changing price or adding a pack, update both values in one release, run
+`npm run verify:release-config`, and complete a controlled Stripe test purchase.
+Do not reuse a pack id for a different credit quantity after Checkout sessions
+exist.
 
-Before testing purchases, confirm the runtime service account still appears as
-enabled under Play Console → Users and permissions and is scoped only to
-Maestro. A successful test must prove: purchased state grants once, replaying
-the token grants nothing, the server consumes only after granting, and a pending
-purchase grants nothing. New purchases carry the SHA-256 Firebase UID as Play's
-64-character `obfuscatedAccountId`; the server rejects a missing value or a
-purchase bound to a different account before granting.
+The Android app has no Play Billing SDK or verification route. Its optional
+Stripe Custom Tab uses the same Core SDK checkout path, but production must keep
+`VITE_ANDROID_EXTERNAL_STRIPE_CHECKOUT_ENABLED=false` until Play programme
+eligibility, enrollment, required information/choice UI, transaction-token
+handling and reporting are all recorded. See `docs/STRIPE_ONLY_BILLING.md` and
+verify Google's current rules at release time.
 
-At setup time the app had only four joined closed-test users. Play's production
-access page required at least 12 joined testers continuously for 14 days. This
-is the current external production-release gate; always read the live Play
-Console requirement because Google can change eligibility rules.
+Closed/internal-track tester-count and duration requirements remain Play
+distribution gates. Read the live Console because Google can change them; they are
+separate from payment-provider eligibility.
 
 ## 11. Build and test Android
 
@@ -460,8 +450,10 @@ Build a signed Android App Bundle in Android Studio or with the repository's
 Gradle release configuration. At setup time the app used version code 67 and
 version name 2.3.1; every Play upload needs a higher version code. Do not upload
 or promote a release merely to test a local build. Use an internal or closed
-track, test Google sign-in, App Check, product loading, purchase verification,
-restore/retry behavior and account deletion, then promote through Play Console.
+track, test Google sign-in, App Check, shared credit balance, Gemini journeys and
+account deletion. If external Stripe checkout is policy-approved and enabled,
+also test Custom Tab return and exactly-once webhook reconciliation; otherwise
+verify the buy action is fail-closed. Then promote through Play Console.
 
 ## 12. Monitoring and incident checks
 

@@ -17,18 +17,20 @@ explicit about every provider operation that can spend money or destroy data.
 - BYOK and managed access setup.
 - Language selection, settings, chat-history loading and persistence.
 - Streaming tutor turns and follow-up suggestions.
-- File/image attachments and image generation.
+- Text, PNG, WAV and PDF attachment fixtures, image generation, Gemini Live
+  audio notes and Lyria music.
 - Synthetic microphone audio, TTS output and Gemini Live conversation input at
   the post-device-capture stream boundary.
 - Stripe test-mode Checkout followed by webhook credit reconciliation.
 - Managed account summary and disposable-account deletion.
 - AI content reports and managed usage/billing ledger reads.
 
-The first release deliberately excludes Android Play Billing automation. That flow
-requires an installed release build and an ADB-connected Android device; a fabricated
-purchase token would not exercise the human path. MCP is also deferred until the
-JSON-RPC contract is stable. A later MCP adapter must be a thin mapping over the
-same commands.
+Stripe Checkout is the only managed-credit purchase implementation. Android uses
+the same Core SDK session creation and an external Custom Tab adapter, but the
+production flag remains off until the Play Console records eligibility/enrollment
+for the applicable external-checkout programme. The harness never fabricates a
+purchase token. MCP remains deferred until the JSON-RPC contract is stable; a later
+MCP adapter must be a thin mapping over the same commands.
 
 ## Architecture invariant
 
@@ -54,7 +56,9 @@ The browser shell supplies IndexedDB, secure-storage, microphone/camera,
 AudioContext and hosted-page navigation adapters. The headless shell supplies
 isolated or named filesystem profiles, WAV/raw-PCM and image/frame fixtures, file
 artifact sinks, headless Chromium for Stripe test Checkout, and a normal-system-
-browser handoff for Google sign-in.
+browser handoff for Google sign-in. The Android shell supplies a Capacitor Custom
+Tab for the same Stripe Checkout URL; it has no independent billing SDK or grant
+route.
 
 ## Automation contract
 
@@ -139,9 +143,9 @@ configuration is public. It is valid only for the staging web app.
 The staging Android app is reserved for a future `applicationIdSuffix ".staging"`
 flavor. The current signed Android application remains
 `com.ronitervo.maestrotutor`, uses the production Firebase Android app, and must
-never be pointed at staging by swapping `google-services.json` by hand. Android
-Play Billing automation stays deferred until that flavor and its Play test track
-exist.
+never be pointed at staging by swapping `google-services.json` by hand. Staging
+enables its external Stripe browser adapter for local/internal testing; production
+must keep that build flag false until programme enrollment is independently proven.
 
 ## Secret and variable inventory
 
@@ -158,6 +162,8 @@ The same names are used locally and in GitHub Actions so there is only one runbo
 | `MAESTRO_FIREBASE_API_KEY` | public CI variable | GitHub Actions |
 | `MAESTRO_FIREBASE_APP_ID` | public CI variable | GitHub Actions |
 | `MAESTRO_BACKEND_BASE_URL` | public CI variable | GitHub Actions |
+| `MAESTRO_TEST_PACK_ID` | public CI variable (`pack_1000`) | GitHub Actions |
+| `MAESTRO_TEST_PACK_CREDITS` | public CI variable (`1000`) | GitHub Actions |
 
 Never put a Stripe key, password, debug token, Firebase ID token, App Check JWT or
 webhook signing secret in a profile, command argument, trace, issue, pull request or
@@ -166,7 +172,7 @@ short-lived diagnosis; normal runs use renewable credentials.
 
 ## Install and run
 
-Use Node 24, matching Functions and CI:
+Use Node 22, matching Functions and CI:
 
 ```powershell
 npm ci
@@ -181,7 +187,14 @@ share chat state need an explicit name:
 ```powershell
 npm run maestro -- language.select --profile release-smoke --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US"}'
 npm run maestro -- chat.turn --profile release-smoke --params '{"text":"Give me one short greeting.","requireInvariants":true}'
+npm run maestro -- chat.attachment.turn --profile release-smoke --params '{"text":"Identify this fixture.","fixture":"pdf","cleanup":true}'
+npm run maestro -- media.music.generate --profile release-smoke --params '{"prompt":"An original scale-practice track","durationSeconds":8}'
 ```
+
+For media payloads that may exceed the operating system command-line limit,
+write the JSON object to a file and use `--params-file request.json`. It is
+mutually exclusive with inline `--params` and works identically in one-shot and
+CI invocations.
 
 Named profiles resolve below `%LOCALAPPDATA%\MaestroTutor\headless` on Windows and
 `~/.maestrotutor/headless` elsewhere, unless `MAESTRO_HEADLESS_HOME` is set. Names
@@ -311,8 +324,10 @@ environment as follows. Do not reuse production payment credentials.
 5. Create the disposable Firebase password user with a generated random password.
    Add the email, password and App Check debug token to both staging Secret Manager
    and repository Actions secrets. Add the public backend URL, Firebase web API key
-   and app ID as repository Actions variables. Dispatch `Headless staging journey`
-   and require its authentication/account/chat steps to pass.
+   and app ID as repository Actions variables. Add `MAESTRO_TEST_PACK_ID` and
+   `MAESTRO_TEST_PACK_CREDITS` as public repository variables. Dispatch `Headless
+   staging journey` and require every Stripe, chat, attachment, image, music and
+   synthetic-live step to pass.
 6. Deploy Firestore rules/indexes, Functions and hosting with the explicit `staging`
    alias. Verify the health endpoint, then run the bounded real release journey
    below. Provider configuration is not proven by a green build alone.
@@ -335,10 +350,18 @@ the command does not accept arbitrary card data.
    fills the provider-hosted page, waits for the staging redirect, polls the normal
    account refresh route, and requires exactly a 1,000-credit increase and one new
    purchase ledger entry.
-4. Run `chat.turn`, `suggestions.generate`, a small upload/image request as budget
-   permits, and `speech.synthetic.live`. Inspect the ordered event stream and ledger.
-   For a bounded release smoke, set `media.image.generate.maxAttempts` to `1` or `2`;
-   the harness default is `2`, while the shared UI core still permits up to seven.
+4. Run `chat.turn`, `suggestions.generate`, `chat.attachment.turn` once for each
+   `text`, `image`, `audio` and `pdf` fixture, `media.image.generate`,
+   `media.music.generate`, and `speech.synthetic.live`. These use the same Core SDK
+   and managed routes as the visual UI. Inspect the ordered event stream and ledger.
+   For a bounded release smoke, set image attempts to `1` or `2` and music duration
+   to `8` seconds.
+
+Managed `media.music.generate` deliberately calls the authenticated
+`/gemini/generate-music` route. Lyria rejects the short-lived tokens used by
+Gemini Live, so the backend owns that provider WebSocket while both visual and
+headless clients consume the same Core PCM result. A BYOK browser continues to
+connect directly with its user-supplied key.
 5. Redeliver the same Checkout event from Stripe. The balance must not change; the
    Checkout-session purchase claim is the idempotency key.
 6. Account deletion is last and uses the authenticated token subject, not a caller-
@@ -443,8 +466,12 @@ and reports success only after the app itself shows its normal signed-in state.
   The adapter fixes locale to `en-US`, selects Card explicitly, checks that
   disclosure and submits the exact final Pay action. Do not weaken the `cs_test_`
   and `checkout.stripe.com` safety guards to make a test pass.
-- Functions and CI use Node 24. Firestore Emulator now requires JDK 21 even though
+- Functions and CI use Node 22. Firestore Emulator now requires JDK 21 even though
   the Android source compatibility remains Java 17; select JDK 21 for emulator and
   Gradle validation on maintainer machines.
-- Android Play Billing and MCP remain explicitly deferred. Do not simulate purchase
-  tokens or add a second business-logic implementation while those adapters wait.
+- MCP remains explicitly deferred. Do not add a second business-logic
+  implementation while that thin adapter waits.
+- Android external Stripe checkout is a release-policy gate, not a code-completion
+  guess. Keep `VITE_ANDROID_EXTERNAL_STRIPE_CHECKOUT_ENABLED=false` in production
+  until a maintainer records Play programme enrollment and reporting obligations.
+  The authoritative checklist is `docs/STRIPE_ONLY_BILLING.md`.

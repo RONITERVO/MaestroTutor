@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AppUser } from './auth';
-import { appConfig, getReservationTtlMs } from './config';
+import { getReservationTtlMs } from './config';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
 import {
@@ -39,8 +39,8 @@ import {
  */
 export type ManagedBillingSummary = BillingSummary;
 
-/** Where a grant came from. Both storefronts fund the same credit balance. */
-export type PurchasePlatform = 'google-play' | 'stripe';
+/** New grants are Stripe-only; Google Play may appear only in legacy records. */
+export type PurchasePlatform = 'stripe' | 'google-play';
 
 export interface EntitlementRecord {
   id: string;
@@ -405,10 +405,8 @@ export const settleManagedReservation = async (params: {
 /**
  * Add purchased credits, exactly once.
  *
- * `purchaseToken` is whatever uniquely identifies the purchase in its
- * storefront — a Play purchase token, or a Stripe checkout session id. The
- * persisted idempotency key is provider-scoped and SHA-256 hashed, so two
- * providers cannot collide and a store credential never appears in a document
+ * `purchaseToken` is the Stripe Checkout session id. The persisted idempotency
+ * key is SHA-256 hashed, so the external identifier never appears in a document
  * path or a client-visible entitlement.
  */
 export const grantPurchasedCredits = async (params: {
@@ -418,11 +416,10 @@ export const grantPurchasedCredits = async (params: {
   productId: string;
   orderId: string | null;
   creditsGranted: number;
-  platform?: PurchasePlatform;
   rawPurchase: Record<string, unknown>;
   rawVerification: Record<string, unknown>;
 }): Promise<{ alreadyProcessed: boolean; grantedCredits: number; billingSummary: ManagedBillingSummary }> => {
-  const platform: PurchasePlatform = params.platform || 'google-play';
+  const platform: PurchasePlatform = 'stripe';
   await ensureManagedUserDocument(params.uid);
   const claimId = purchaseClaimId(platform, params.purchaseToken);
   const purchaseRef = purchaseClaimsCollection().doc(claimId);
@@ -472,7 +469,6 @@ export const grantPurchasedCredits = async (params: {
       productId: params.productId,
       orderId: params.orderId,
       creditsGranted: params.creditsGranted,
-      packageName: appConfig.googlePlayPackageName,
       createdAt: currentTime,
       rawPurchase: params.rawPurchase,
       rawVerification: params.rawVerification,

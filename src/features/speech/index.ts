@@ -32,7 +32,11 @@ export { useSuggestionModeAutoRestart } from './hooks/useSuggestionModeAutoResta
 
 // Services
 export { streamGeminiLiveTts, type GeminiLiveTtsParams, type GeminiLiveTtsLine } from './services/geminiLiveTts';
-export { validateTriggerAudio } from './services/triggerAudioAsset';
+export {
+  TRIGGER_AUDIO_PCM_24K,
+  TRIGGER_SAMPLE_RATE,
+  validateTriggerAudio,
+} from '../../core-sdk/media/triggerAudioAsset';
 
 // Utils
 export { mergeInt16Arrays, pcmToWav, splitPcmBySilence } from '../../core-sdk/media/audioProcessing';

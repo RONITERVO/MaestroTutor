@@ -1,11 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import type { ManagedBillingSummary } from './backend';
-
-export type PurchasePlatform = 'google-play';
-
-export type GooglePlayPurchaseState = 'purchased' | 'pending' | 'unspecified';
+/** Google Play is retained only so historical entitlements remain readable. */
+export type PurchasePlatform = 'stripe' | 'google-play';
 
 export interface AppUser {
   id: string;
@@ -22,26 +19,4 @@ export interface EntitlementRecord {
   purchaseToken: string | null;
   orderId: string | null;
   createdAt: number;
-}
-
-export interface GooglePlayPurchaseRecord {
-  productId: string;
-  purchaseToken: string;
-  packageName: string;
-  orderId?: string | null;
-  purchaseTime?: number | null;
-  purchaseState: GooglePlayPurchaseState;
-  acknowledged?: boolean;
-}
-
-export interface VerifyGooglePlayPurchaseRequest {
-  purchase: GooglePlayPurchaseRecord;
-}
-
-export interface VerifyGooglePlayPurchaseResult {
-  ok: boolean;
-  alreadyProcessed: boolean;
-  grantedCredits: number;
-  entitlements: EntitlementRecord[];
-  billingSummary: ManagedBillingSummary;
 }

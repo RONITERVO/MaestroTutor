@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Trigger Audio Asset for Gemini Live TTS
+ * Shared trigger audio asset for Gemini Live speech generation
  * 
  * This is a pre-recorded audio clip that says "Play" to trigger the Gemini Live
  * model to start speaking the text from the system instruction.

@@ -9,6 +9,14 @@
 - [ ] Store listing describes both BYOK and managed access
 - [ ] Every color theme applies locally without sign-in, a network request,
       price, purchase, ownership, or restore UI
+- [ ] `npm run verify:release-config` reports Stripe as the sole active purchase
+      provider and the intended pack ids.
+- [ ] Release gate and the Stripe-first `Headless staging journey` are green for
+      the candidate commit.
+- [ ] Web reCAPTCHA Enterprise and Android Play Integrity App Check remain
+      enforced for the exact production apps/domains/fingerprints.
+- [ ] `VITE_ANDROID_EXTERNAL_STRIPE_CHECKOUT_ENABLED` matches recorded Play
+      programme eligibility. Keep it `false` without that proof.
 
 - The "Default Icon" Flag
 If you upload an app with the default Capacitor/React/Vue logo as the app icon or splash screen, Google (and users) immediately perceive it as "low quality" or "spam."
@@ -106,9 +114,11 @@ maintainers must account for are:
       Firebase/Google Cloud and Google Gemini for app functionality.
 - [ ] Managed access stores account/billing summaries, entitlements, usage and
       billing ledger metadata, and operational anti-abuse/cleanup state.
-- [ ] Stripe processes managed web checkout; Google Play processes Android
-      purchases. Maestro stores provider references and verification/grant
-      records, not raw payment-card details.
+- [ ] Stripe Checkout is the sole managed-credit payment provider. Maestro
+      stores Checkout/customer references, immutable grant snapshots and hashed
+      idempotency claims, not raw payment-card details. Android in-app checkout
+      is fail-closed unless the documented Play external-checkout programme gate
+      is satisfied; signed-in users can spend a balance purchased on the web.
 - [ ] Color themes are free local presentation choices and are not products or
       entitlements in either provider.
 - [ ] A voluntarily submitted AI-content report can include reported content,

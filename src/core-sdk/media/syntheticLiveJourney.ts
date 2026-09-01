@@ -190,6 +190,9 @@ export const runSyntheticLiveJourney = async (
     ]).finally(() => {
       if (timeoutId) globalThis.clearTimeout(timeoutId);
     });
+    if (!outputTranscript.trim() && modelAudioChunks.length === 0) {
+      throw new Error('Live turn completed without model output.');
+    }
     const packetStats = packetizer.getStats();
     const sentAudio = mergeInt16Arrays(sentPackets);
     const result = {

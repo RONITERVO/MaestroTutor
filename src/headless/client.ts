@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import type { BackendAiContentReportRequest } from '../core/contracts/backend';
+import { getGeminiModels } from '../core/config/models';
 import { createCoreEventJournal, type CoreEventListener } from '../core-sdk/events';
 import { createManagedAccountController } from '../core-sdk/managedAccount';
 import { createManagedBackendClient } from '../core-sdk/managedBackendClient';
@@ -103,8 +104,11 @@ const HEADLESS_METHODS = [
   'language.select',
   'chat.history',
   'chat.turn',
+  'chat.attachment.turn',
   'suggestions.generate',
   'media.image.generate',
+  'media.audioNote.generate',
+  'media.music.generate',
   'speech.synthetic.live',
   'account.summary',
   'account.ledgers',
@@ -128,6 +132,12 @@ export const describeHeadlessMethods = () => ({
   transport: 'json-rpc-2.0-ndjson',
   eventNotification: 'maestro.event',
   profileDefault: 'isolated-temporary',
+  configuredModels: {
+    text: getGeminiModels().text,
+    image: getGeminiModels().image.generation,
+    live: getGeminiModels().audio,
+    music: getGeminiModels().music.generation,
+  },
   methods: [...HEADLESS_METHODS],
   methodInfo: {
     'profile.get': { mutates: false, params: ['includeState?'] },
@@ -137,8 +147,11 @@ export const describeHeadlessMethods = () => ({
     'language.list': { mutates: false, params: ['targetLanguageCode?', 'nativeLanguageCode?', 'limit? (1..500, default 100)'] },
     'language.select': { mutates: true, params: ['pairId? | targetLanguageCode + nativeLanguageCode'] },
     'chat.turn': { mutates: true, params: ['text', 'languagePairId?', 'useGoogleSearch?', 'requireInvariants?', 'fileParts?'] },
+    'chat.attachment.turn': { mutates: true, external: true, params: ['text', 'fixture? (text|image|audio|pdf) | dataUrl + mimeType', 'displayName?', 'languagePairId?', 'cleanup?'] },
     'suggestions.generate': { mutates: true, params: ['languagePairId?', 'assistantMessageId?', 'responseSource?', 'includeArtifactContent?'] },
     'media.image.generate': { mutates: true, params: ['contextText', 'languagePairId?', 'assistantMessageId?', 'maxAttempts? (1..7, default 2)', 'upload?', 'includeDataUrl?'] },
+    'media.audioNote.generate': { mutates: true, external: true, params: ['text', 'langCode?', 'voiceName?', 'model?', 'upload?', 'includeDataUrl?'] },
+    'media.music.generate': { mutates: true, external: true, params: ['prompt', 'durationSeconds? (8..20)', 'model?', 'upload?', 'includeDataUrl?'] },
     'speech.synthetic.live': { mutates: true, params: ['pcmBase64', 'sampleRate?', 'chunkDurationMs?', 'pace?', 'systemInstruction?', 'model?', 'gateInputOnSpeech?', 'semanticSpeech?', 'timeoutMs?', 'includeModelAudio?'] },
     'account.ledgers': { mutates: false, params: ['limit?'] },
     'account.delete': { mutates: true, destructive: true, params: ['confirmation=DELETE', 'expectedUserId', 'operationId?'] },
@@ -152,10 +165,13 @@ export const describeHeadlessMethods = () => ({
     'files.status': { mutates: false, params: ['uris'] },
     'files.delete': { mutates: true, destructive: true, params: ['nameOrUri'] },
     'files.clear': { mutates: true, destructive: true, params: [] },
-    'live.token.create': { mutates: true, external: true, params: ['model', 'purpose?', 'config?', 'durationSeconds?'] },
+    'live.token.create': { mutates: true, external: true, params: ['model', 'purpose? (live only)', 'config?', 'durationSeconds?'] },
     'live.token.release': { mutates: true, params: ['leaseId'] },
   },
-  deferred: ['android.playBilling', 'mcp'],
+  releaseRequirements: [
+    'Android external Stripe checkout stays disabled until Play programme enrollment is recorded.',
+  ],
+  deferred: ['mcp'],
 });
 
 export type HeadlessReportParams = BackendAiContentReportRequest;

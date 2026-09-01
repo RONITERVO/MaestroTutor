@@ -82,14 +82,14 @@ export const createManagedGeminiClient = (
     };
   };
 
-  const connectManagedLive = async (purpose: 'live' | 'music', rawRequest: unknown) => {
+  const connectManagedLive = async (rawRequest: unknown) => {
     const request = asRequest(rawRequest);
     const model = typeof request.model === 'string' ? request.model.trim() : '';
     if (!model) throw createModelRequiredError();
     const config = request.config && typeof request.config === 'object' && !Array.isArray(request.config)
       ? request.config as Record<string, unknown>
       : undefined;
-    const tokenLease = await backend.createLiveToken({ purpose, model, ...(config ? { config } : {}) });
+    const tokenLease = await backend.createLiveToken({ purpose: 'live', model, ...(config ? { config } : {}) });
     const release = releaseLease(tokenLease.leaseId);
     const callbacks = request.callbacks && typeof request.callbacks === 'object'
       ? request.callbacks as Record<string, (...args: unknown[]) => unknown>
@@ -107,9 +107,7 @@ export const createManagedGeminiClient = (
     };
     const tokenClient = createTokenClient(tokenLease.token, apiVersion);
     try {
-      const session = purpose === 'music'
-        ? await tokenClient.live.music.connect(wrappedRequest)
-        : await tokenClient.live.connect(wrappedRequest);
+      const session = await tokenClient.live.connect(wrappedRequest);
       const closeable = session as { close?: () => unknown } | null | undefined;
       const close = typeof closeable?.close === 'function' ? closeable.close.bind(closeable) : null;
       if (closeable && close) {
@@ -150,8 +148,12 @@ export const createManagedGeminiClient = (
       },
     },
     live: {
-      connect: request => connectManagedLive('live', request),
-      music: { connect: request => connectManagedLive('music', request) },
+      connect: request => connectManagedLive(request),
+      music: {
+        connect: async () => {
+          throw new Error('Managed music generation must use the authenticated backend music route.');
+        },
+      },
     },
   };
 };

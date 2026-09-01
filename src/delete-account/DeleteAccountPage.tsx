@@ -122,8 +122,8 @@ const DeleteAccountPage: React.FC = () => {
         <div className="space-y-2">
           <div className="text-2xl font-sketch font-semibold">Delete Managed Account</div>
           <p className="text-sm text-page-text/80">
-            This page deletes your managed Maestro account for this app. It is intended for Google Play
-            account-deletion compliance and uses the same backend deletion flow as the in-app managed access panel.
+            This page deletes your managed Maestro account for this app. It supports app-store account-deletion
+            compliance and uses the same backend deletion flow as the in-app managed access panel.
           </p>
         </div>
 
@@ -142,7 +142,7 @@ const DeleteAccountPage: React.FC = () => {
           <div className="mt-3 font-medium">What this does not delete</div>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>BYOK API keys, local chats, or local usage history stored on another device.</li>
-            <li>Payment transaction records that Google Play or Stripe must retain independently.</li>
+            <li>Payment transaction records that Stripe must retain independently.</li>
           </ul>
         </div>
 

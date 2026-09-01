@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createCoreEventJournal } from '../../core-sdk/events';
 import { createManagedAccountController } from '../../core-sdk/managedAccount';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { googleAuthService } from '../auth/googleAuthService';
 import { maestroBackendService } from '../backend/maestroBackendService';
 
@@ -14,7 +16,11 @@ export const maestroManagedAccountController = createManagedAccountController({
     signOut: () => googleAuthService.signOutManagedSession(),
   },
   navigation: {
-    navigate: url => {
+    navigate: async url => {
+      if (Capacitor.isNativePlatform()) {
+        await Browser.open({ url });
+        return;
+      }
       if (typeof window === 'undefined') {
         throw new Error('Hosted checkout navigation is unavailable outside a browser adapter.');
       }

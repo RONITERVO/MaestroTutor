@@ -15,6 +15,8 @@ import type {
   BackendLiveTokenResponse,
   BackendMediaUploadRequest,
   BackendMediaUploadResponse,
+  BackendMusicGenerationRequest,
+  BackendMusicGenerationResponse,
   BackendReleaseLiveTokenLeaseRequest,
   BackendReleaseLiveTokenLeaseResponse,
   ManagedAccountSummaryResponse,
@@ -23,11 +25,7 @@ import type {
   ManagedSessionResponse,
   ManagedUsageLedgerResponse,
 } from '../core/contracts/backend';
-import type {
-  EntitlementRecord,
-  VerifyGooglePlayPurchaseRequest,
-  VerifyGooglePlayPurchaseResult,
-} from '../core/contracts/integrations';
+import type { EntitlementRecord } from '../core/contracts/integrations';
 import { ServiceHttpError, ServiceNotConfiguredError } from './errors';
 
 const BACKEND_REQUEST_TIMEOUT_MS = 120_000;
@@ -249,13 +247,6 @@ export const createManagedBackendClient = (options: ManagedBackendClientOptions)
     deleteManagedAccount: (): Promise<BackendDeleteManagedAccountResponse> => requestManagedJson(
       'account/delete', { method: 'POST' },
     ),
-    verifyGooglePlayPurchase: async (payload: VerifyGooglePlayPurchaseRequest): Promise<VerifyGooglePlayPurchaseResult> => {
-      const response = await requestManagedJson<VerifyGooglePlayPurchaseResult>('billing/google-play/verify', {
-        method: 'POST', body: JSON.stringify(payload),
-      });
-      await options.session.update({ billingSummary: response.billingSummary, entitlements: response.entitlements });
-      return response;
-    },
     generateContent: async (payload: BackendGenerateContentRequest, signal?: AbortSignal | null): Promise<BackendGenerateContentResponse> => {
       const response = await requestManagedJson<BackendGenerateContentResponse>('gemini/generate-content', {
         method: 'POST', body: JSON.stringify(payload), signal: signal || undefined,
@@ -271,6 +262,16 @@ export const createManagedBackendClient = (options: ManagedBackendClientOptions)
       const response = await requestManagedJson<BackendMediaUploadResponse>('gemini/upload-media', {
         method: 'POST', body: JSON.stringify(payload),
       });
+      await options.session.update({ billingSummary: response.billingSummary || null });
+      return response;
+    },
+    generateMusic: async (
+      payload: BackendMusicGenerationRequest,
+      signal?: AbortSignal | null,
+    ): Promise<BackendMusicGenerationResponse> => {
+      const response = await requestManagedJson<BackendMusicGenerationResponse>('gemini/generate-music', {
+        method: 'POST', body: JSON.stringify(payload), signal: signal || undefined,
+      }, BACKEND_GENERATION_TIMEOUT_MS);
       await options.session.update({ billingSummary: response.billingSummary || null });
       return response;
     },

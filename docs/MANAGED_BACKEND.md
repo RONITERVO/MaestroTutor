@@ -1,314 +1,249 @@
-# Managed mode: architecture and runbook
+# Managed backend architecture
 
-For the live provider inventory, beginner release steps, credential rotation,
-monitoring and rollback procedures, use
-[PRODUCTION_OPERATIONS.md](./PRODUCTION_OPERATIONS.md). This document explains
-the design and data invariants.
+Maestro supports two access modes:
 
-Managed mode lets someone use Maestro Tutor without supplying a Gemini API key.
-They sign in, buy credits — through Google Play in the Android app, or Stripe
-Checkout on the web — and the backend proxies Gemini on their behalf, charging
-credits against real usage.
+- BYOK calls Gemini with the user's local API key and does not use managed credits.
+- Managed access authenticates with Firebase, enforces App Check, reserves shared
+  credits, calls Gemini from Cloud Functions and settles actual provider usage.
 
-Managed access has no independent dark-launch flag. A build offers it when its
-Firebase client and backend URL are completely configured; an incomplete build
-fails closed and continues to offer BYOK only. The same provider facade selects
-BYOK or managed access for text, image, Files API, speech, Live and music, so a
-signed-in user exercises the same application journeys rather than a parallel
-demo path.
+Managed credit purchases are Stripe-only. See
+[`STRIPE_ONLY_BILLING.md`](./STRIPE_ONLY_BILLING.md) for provider setup and release
+proof, and [`HEADLESS_CLIENT.md`](./HEADLESS_CLIENT.md) for the real client harness.
 
----
-
-## 1. Why it is shaped this way
-
-The user's own API key never leaves their device today, and that is the whole
-security story. Managed mode breaks that premise: the service now holds a key,
-spends money on the user's behalf, and has to be right about the amount. That
-changes what "careful" means, so three properties drive the design.
-
-**The client is never trusted about money.** It may ask for work and report what
-it thinks happened, but every charge is computed server-side from the usage
-Gemini reports, and every purchase is verified with the storefront that took the
-money rather than believed.
-
-**Charges are bounded before they happen.** Credits are reserved up front and
-settled afterwards, so a request cannot run without the balance to pay for it.
-Reservations expire, so a crashed request cannot strand a balance.
-
-**The same numbers are shown and charged.** The app already displayed cost
-estimates for BYOK usage. Managed mode charges for the same requests, so a
-second pricing implementation would eventually disagree with the first and the
-user would be overcharged or the service would lose money. There is one.
-
----
-
-## 2. Shape
+## Runtime layout
 
 ```text
-  Android ──Play Billing──▶ api ──verify──▶ Play ──▶ grant ──▶ consume
-  Web     ──Checkout────▶ Stripe ──webhook──▶ api ──▶ grant
-                                                      │
-                                        one credit balance, either way
-
-  app  ──HTTPS──▶  api (Cloud Function, Express)
-                     │
-                     ├── auth: Firebase ID token + enforced App Check
-                     ├── rate limit: per user, per bucket (Firestore)
-                     ├── reserve credits ──▶ Firestore transaction
-                     ├── call Gemini with the service key
-                     └── settle credits ──▶ Firestore transaction + ledgers
-
-  Play ──verify──▶  api  ──grant──▶  credits  ──consume──▶ Play
+React / Android adapter / CLI JSON-RPC
+       |
+       +-- Core SDK controllers and media streams
+       |
+       +-- Firebase ID token + App Check token
+                    |
+              Cloud Functions API
+       +------------+-------------+
+       |            |             |
+   Firestore      Gemini        Stripe
+   ledger/files   generate/live checkout/webhook
 ```
 
-Firestore holds the balance, reservations, ledgers and purchase claims. Rules
-deny everything by default: a signed-in user may **read** their own account
-summary, ledgers and entitlements. Every write goes through the Admin SDK,
-which bypasses rules, so there is no path for a client to write its own balance.
+The Core SDK owns business transitions and provider request assembly. React,
+Capacitor, browser automation and filesystem profiles are adapters. Headless tests
+must call the same controllers/routes; they must not reproduce UI behavior in a
+parallel model.
 
-The v2 layout deliberately follows ownership and transaction boundaries:
+## Public API routes
 
-```text
-users/{uid}                         lifecycle + schema metadata only
-  managedAccounts/default          money only
-    entitlements/{claimId}
-    reservations/{reservationId}
-    billingEvents/{eventId}
-    usageEvents/{eventId}
-  runtime/fileQuota                upload counter only
-  runtime/liveQuota                live leases only
-  files/{fileId}
-  liveLeases/{leaseId}
+Unauthenticated but provider-signed:
 
-purchaseClaims/{provider}_{hash}   global idempotency claim
-checkoutGrants/{stripeSessionId}   immutable fulfilment input
-reports/{reportId}
-rateLimitWindows/{subjectBucketHash}
-cleanupJobs/{remoteFileHash}
-accountDeletionClaims/{uidHash}    permanent deletion tombstone
+- `POST /billing/stripe/webhook` — raw-body Stripe signature verification and
+  idempotent fulfilment.
+
+Unauthenticated health:
+
+- `GET /health` — Firestore readiness and provider/configuration presence. It does
+  not spend money and is not a provider smoke test.
+
+Authenticated + App Check:
+
+- `GET /auth/session`
+- `GET /account/summary`
+- `GET /account/usage-ledger`
+- `GET /account/billing-ledger`
+- `POST /account/delete`
+- `POST /billing/stripe/checkout`
+- `POST /gemini/generate-content`
+- `POST /gemini/generate-content-stream`
+- `POST /gemini/generate-music`
+- `POST /gemini/upload-media`
+- `POST /gemini/file-statuses`
+- `POST /gemini/delete-file`
+- `POST /gemini/clear-files`
+- `POST /gemini/live-token`
+- `POST /gemini/live-token/release`
+- `POST /reports/ai-content`
+
+There is no client-triggered purchase fulfilment endpoint. The retired
+`/billing/google-play/verify` route must not return.
+
+## Authentication and App Check
+
+`requireAuthContext` verifies Firebase ID tokens and resolves the token subject as
+the account id. The caller cannot choose another uid. `REQUIRE_APPCHECK=true`
+requires a valid Firebase App Check token for authenticated product routes.
+
+Web attestation uses a domain-restricted reCAPTCHA Enterprise key. Android uses
+Play Integrity with registered signing fingerprints. CI uses a staging-only debug
+token. A debug token is a secret and does not belong in a committed dotenv file.
+
+Rate limits are per uid and operation bucket. Account deletion removes current
+rate-limit windows using the same SHA-256 uid/bucket ids as the limiter. Legacy
+collections are cleaned only for backward compatibility.
+
+## Billing data and invariants
+
+Authoritative collections use the managed-data helpers in `functions/src/managedData.ts`:
+
+- user root and account summary;
+- reservations;
+- usage and billing ledgers;
+- entitlements;
+- managed file records and cleanup jobs;
+- Stripe checkout grant snapshots;
+- provider-scoped purchase claims;
+- deletion claims and reports.
+
+Critical invariants:
+
+1. Stripe creates an immutable grant snapshot when Checkout is created.
+2. A signed webhook must describe a paid session matching that snapshot.
+3. The claim id is `stripe_` plus SHA-256 of the Checkout session id.
+4. Account summary, claim, entitlement and ledger entry are written in one
+   Firestore transaction.
+5. Duplicate delivery returns success without another grant.
+6. Account deletion claims prevent delayed requests from recreating deleted data.
+7. Reservations prevent concurrent operations from overspending one balance.
+8. Failed/abandoned provider operations release reservations; successful operations
+   settle actual usage metadata.
+
+`google-play` may appear only when reading/anonymizing historical draft records.
+The v1 Play implementation existed only in code and was never configured or used in
+a deployed purchase. It is not an alternate provider.
+
+## Credit catalogue
+
+Functions configuration is one list:
+
+```dotenv
+MANAGED_CREDIT_PACKS=pack_1000:1000:299,pack_6000:6000:999
+BILLING_CURRENCY=eur
 ```
 
-Billing, file uploads and live sockets do not update one shared summary
-document. Purchase claim IDs are provider-scoped hashes; raw Play tokens and
-Stripe session IDs are not put in document paths or returned in entitlements.
-The global collections are small operational indexes/claims, not second
-canonical copies of user data. Recursive deletion of `users/{uid}` therefore
-removes all canonical user-owned records.
+Each entry is `id:credits:priceInSmallestCurrencyUnit`. Client configuration lists
+the same stable ids:
 
-### Where the money logic lives
-
-| Concern | Location | Tested |
-|---|---|---|
-| Rate card, model matching, usage → USD | `shared/pricing/` | yes |
-| Credits, reservation estimates | `shared/pricing/credits.ts` | yes |
-| Balance arithmetic and its invariants | `shared/billing/ledger.ts` | yes |
-| Reconnect pacing | `shared/reconnect/policy.ts` | yes |
-| Firestore persistence of the above | `functions/src/managedBilling.ts` | core concurrency/idempotency path in emulator |
-| Managed model/billing/file policy | `functions/src/geminiPolicy.ts` | yes |
-| Play verification + account binding | `functions/src/playBilling.ts`, `shared/billing/playAccountBinding.ts` | binding yes; provider call needs a real purchase |
-| Stripe fulfilment rules | `shared/billing/stripeFulfilment.ts` | yes |
-| Stripe checkout and webhook | `functions/src/stripeBilling.ts` | fulfilment and delayed-payment regression tests; a real purchase is still required |
-
-`shared/` is compiled into the functions bundle (see `functions/tsconfig.json`,
-which roots at the repo so `shared/` is emitted alongside `functions/src`). The
-app imports the same files directly.
-
----
-
-## 3. Deploying
-
-### Once per project
-
-1. Create the Firebase project; enable Firestore and Google sign-in.
-2. Enable `androidpublisher.googleapis.com`, then invite the functions runtime
-   service account from Play Console's **Users and permissions** page. Scope it
-   to the Maestro app and grant **View financial data** plus **Manage orders and
-   subscriptions**. Google no longer requires linking the Play developer
-   account to a Cloud project; purchase verification fails without the API and
-   Play permissions.
-3. Configure App Check for web and Android before deploying the API. The source
-   default is `REQUIRE_APPCHECK=true`; it is the main defence against someone
-   driving the backend outside the app. Use the documented emergency rollback
-   only during an active App Check incident.
-4. Define the credit packs once in `MANAGED_CREDIT_PACKS` as
-   `id:credits:cents[:playProductId]`. Create the matching consumable products
-   in Play for any pack that names a `playProductId`.
-5. Store `GEMINI_API_KEY`, `STRIPE_SECRET` and `STRIPE_WEBHOOK_SECRET` in
-   Google Secret Manager with `firebase functions:secrets:set`. For web
-   payments, set `APP_URL` in `functions/.env` and add a webhook
-   endpoint in the Stripe dashboard pointing at
-   `<api>/billing/stripe/webhook` subscribed to `checkout.session.completed` and
-   `checkout.session.async_payment_succeeded`; put its signing secret in
-   `STRIPE_WEBHOOK_SECRET`.
-6. Deploy `firestore.indexes.json` as checked in. It enables TTL on `purgeAt`
-   for operational collection groups as well as creating the reservation and
-   cleanup-job indexes.
-
-### Every deploy
-
-```bash
-cp functions/.env.example functions/.env    # fill in non-secret values
-firebase deploy --only functions,firestore:rules,firestore:indexes
+```dotenv
+VITE_MANAGED_CREDIT_PACK_IDS=pack_1000,pack_6000
 ```
 
-Production secrets are declared and bound in `functions/src/index.ts`; they do
-not belong in dotenv files. Local emulator-only values may be placed in the
-gitignored `functions/.secret.local` file.
+There is no Play product alias. Run `npm run verify:release-config` after changing
+the catalogue. Stripe Checkout uses inline price data from the server-side pack;
+the client never supplies price or credit quantity.
 
-`firebase.json` runs the functions build first, which compiles `shared/` into
-the bundle. Deploying without that build would ship a bundle whose pricing code
-is missing.
+## Gemini accounting
 
-### Configuring the app
+The backend allowlists configured generation, Live and music models. It estimates
+and reserves credits before a paid operation, then settles from provider usage or
+the configured Live/music fixed reservation rules. Search usage is included in the
+reservation and settlement metadata. A provider failure after partial streaming
+must still release or settle deterministically; it must not leave reserved credits.
 
-```bash
-cp .env.example .env                        # fill in, never commit
+Uploads reserve an active-file slot and upload cost, wait for Gemini File state
+`ACTIVE`, write ownership metadata, then settle. Generation verifies every
+referenced file belongs to the caller and is active. Both UI and headless chat/image
+paths sanitize expired history URIs through the same Core SDK helper.
+
+Managed Gemini Live uses short-lived backend-minted tokens and leases. Lyria is
+different: its music WebSocket does not accept Gemini ephemeral tokens, so
+`/gemini/generate-music` opens the provider stream with the server-held key and
+returns PCM through the authenticated backend. The shared Core SDK gives the UI
+and headless harness the same managed route and stream-observer boundary; BYOK
+music remains a direct client connection. Synthetic speech PCM enters after
+device capture so CI exercises packetization, speech gating, provider Live
+transport and final lease release without a physical microphone.
+
+## Account deletion
+
+Deletion:
+
+- creates a deletion claim first;
+- releases and deletes reservations;
+- deletes managed user/account/ledger/entitlement/file data;
+- requests remote Gemini file cleanup and records bounded retry jobs;
+- anonymizes purchase claims and content reports needed for abuse/idempotency;
+- deletes live/test Stripe customer profiles when configured;
+- removes current rate-limit window ids plus legacy collections defensively;
+- deletes the Firebase Authentication user last.
+
+The public delete-account page and in-app panel call the same controller/backend
+route. A headless delete additionally requires `DELETE` and an expected disposable
+test uid.
+
+## Configuration and secrets
+
+Functions environment (non-secret):
+
+- region, allowed origins, `APP_URL`, currency and catalogue;
+- App Check enforcement;
+- model allowlists, rate limits, reservation/file/live limits;
+- managed credit conversion and music session charge.
+
+Secret Manager:
+
+- `GEMINI_API_KEY`
+- `STRIPE_SECRET`
+- `STRIPE_WEBHOOK_SECRET`
+
+Client public configuration includes Firebase ids, backend URL, App Check site key,
+Google OAuth ids and managed pack ids. Do not embed server secrets in Vite variables;
+every `VITE_` value is shipped to the client.
+
+## Local validation
+
+Use Node 22 and JDK 21:
+
+```powershell
+npm ci
+npm --prefix functions ci
+npm run verify:release-config
+npm test
+npm run lint
+npm run build
+npm --prefix functions test
+npm --prefix functions run test:emulator
 ```
 
-There is no second enable switch. Complete Firebase plus backend configuration
-is the availability boundary, and removing that configuration is the
-fail-closed rollback for a client build.
+Functions unit tests cover configuration, CORS, raw webhook body handling, async
+Stripe payment fulfilment and account/rate-limit helpers. The emulator test proves
+reservation contention, release, Stripe idempotency and deletion-claim blocking.
 
----
+## Staging validation
 
-## 4. What is verified, and what is not
+The weekly/manual `Headless staging journey` is required provider evidence. It
+authenticates with Firebase + App Check, completes a controlled Stripe test-card
+purchase, verifies one grant, then runs text, attachments, image, audio note, music and Live
+through real managed routes. It clears generated files and signs out.
 
-Everything in `shared/` is unit tested, including each money defect the original
-draft carried. Those tests run in the normal suite. The core Firestore
-concurrency, provider-scoped idempotency and deletion-tombstone path runs with:
+Do not weaken the workflow to skip paid routes when the balance is zero; the first
+step deliberately creates test credits. Do not use production Stripe credentials
+or a production identity.
 
-```bash
-cd functions
-npm run test:emulator
+## Deployment order
+
+1. Run all local gates.
+2. Add/rotate Secret Manager versions without printing values.
+3. Deploy Functions, Firestore rules and indexes.
+4. Verify `/health` and webhook delivery.
+5. Deploy Hosting/client.
+6. Run the staging Stripe-first journey.
+7. Require independent review before production.
+
+Deploy staging explicitly:
+
+```powershell
+npm exec firebase -- deploy --project staging --only functions,firestore:rules,firestore:indexes,hosting
 ```
 
-**Verified against the live project:**
+## Failure rules
 
-- Web reCAPTCHA Enterprise App Check issues a token on
-  `chatwithmaestro.com`; enforced requests without it are rejected, and a valid
-  token crosses CORS and reaches the Firebase Authentication gate.
-- Android Play Integrity is registered with the existing release and debug
-  SHA-256 fingerprints.
-- The live Stripe destination is active with both Checkout completion events,
-  and the signing secret is bound to the deployed API.
-- The Play consumable is active and the runtime service account has the minimum
-  app-scoped billing permissions.
-
-**Still requiring live human testing:**
-
-- Production Firestore behaviour under representative load. The emulator test
-  proves two concurrent reservations cannot both overspend one balance, but it
-  is not a latency/load test against the selected production region.
-- Play purchase verification end to end. Requires a real or licence-tested
-  purchase; the failure modes that matter are a pending purchase, a replayed
-  token, and a token belonging to another account.
-- Account deletion actually removing everything, which is a compliance
-  obligation and not only a feature.
-- Stripe end to end with a real payment. The endpoint and signatures are live,
-  but the customer record, credit grant and redirect round trip still need a
-  controlled purchase.
-
-### Retention and deletion
-
-- Rate-limit windows expire two minutes after their window starts.
-- Released live leases and deleted file metadata remain for 30 days.
-- Settled/released reservations and checkout grant snapshots remain for 90
-  days. The billing and usage events are canonical and are not TTL'd.
-- AI content reports remain for 365 days unless account deletion anonymizes
-  them sooner.
-- Purchase claims are not TTL'd: removing an idempotency claim would allow the
-  same external purchase to grant credits again. Account deletion removes its
-  user link and raw provider payloads while retaining the non-personal claim.
-- Account-deletion tombstones contain only a one-way UID hash and prevent a
-  delayed webhook or in-flight request from recreating a deleted account.
-- Account deletion removes Stripe live/test customer objects as well as local
-  customer IDs. A Stripe failure stops deletion before Firebase Auth is
-  removed, allowing a safe retry instead of silently leaving remote PII.
-- Failed remote Gemini file deletion is copied to `cleanupJobs` before the user
-  tree is recursively removed. The hourly retry worker applies backoff; only a
-  completed cleanup job receives `purgeAt`.
-
-Firestore TTL is asynchronous (normally within about 24 hours), so expired
-documents must still be treated as present until Firestore removes them. None
-of the TTL-managed documents owns a subcollection.
-
-### v1 was code-only
-
-The v1 paths existed only in unreleased implementation code. They were never
-deployed, no Firebase project was configured with them, and no v1 Firestore
-collections, users, balances, purchases, reservations, files or ledgers were
-created. Consequently, v2 is the first live managed-mode schema and requires no
-backfill, dual reads/writes or production data migration.
-
-The account-deletion handler still recognizes the abandoned v1 collection
-names defensively, but this is cleanup hardening rather than a migration
-contract. No code should add v1 dual reads, writes or migration machinery.
-
----
-
-## 4b. Payments, per platform
-
-Android uses Google Play Billing and the web uses Stripe Checkout. That split is
-a policy requirement, not a preference: Play's payments policy requires Play
-Billing for digital goods bought inside the Android app, so Stripe cannot serve
-the app even though it serves the same product. Both fund one credit balance,
-and nothing downstream of the grant knows which was used.
-
-Two rules hold on the Stripe side, and both are what separate a billing
-integration that works from one that gives money away:
-
-- **Credits are granted from the webhook, never from the redirect.** The return
-  from Checkout can be forged, replayed, closed early, or never arrive. The
-  webhook is the only statement from Stripe that a payment settled.
-- **The quantity comes from an immutable server snapshot** written under the
-  Checkout session id before its URL is returned. Fulfilment never re-reads the
-  mutable catalogue or trusts session metadata, so later catalogue edits cannot
-  change what an already-created Checkout session buys.
-
-The webhook route is registered with a raw body parser *before* `express.json()`.
-Stripe signs the exact bytes it sent; parsing and re-serialising changes them and
-every signature check fails with an error that reads like a bad secret rather
-than middleware ordering. Cloud Functions may pre-parse `req.body` even for that
-route, but it preserves the original bytes in `req.rawBody`; the handler accepts a
-Buffer from either location and refuses strings or parsed objects. Keep the
-`req.rawBody` fallback and its regression tests whenever Express/Functions is
-upgraded.
-
-### Verifying it locally
-
-```bash
-stripe listen --forward-to localhost:5001/<project>/<region>/api/billing/stripe/webhook
-stripe trigger checkout.session.completed
-```
-
-The signing secret `stripe listen` prints is what goes in `STRIPE_WEBHOOK_SECRET`
-for local runs. Worth testing specifically: replaying the same event (must grant
-once), a session with `payment_status: unpaid` (must not grant), and a tampered
-`credits` value in metadata (must grant the catalogue amount).
-
----
-
-## 5. Failure modes worth knowing
-
-**A request costs more than its reservation.** Settlement charges what the
-balance can cover and records the remainder as `shortfallCredits` on the usage
-ledger entry, rather than driving the balance negative. A negative balance would
-silently swallow the user's next purchase. Recurring shortfalls mean the
-estimate in `shared/pricing/credits.ts` is too low for that operation — the
-backend logs a warning naming it.
-
-**A purchase is verified but consumption fails.** Credits are already granted;
-the token stays in the user's Play inventory until the next verification
-consumes it. The user has what they paid for, and the worst case is that they
-cannot re-buy that pack until it clears. This ordering is deliberate: consuming
-first, as the draft did, meant any failure after consumption took the money and
-destroyed the token with nothing left to retry.
-
-**A live session cannot connect.** Reconnects back off exponentially and stop
-after a bounded number of attempts. Each reconnect mints a token and reserves
-credits, so an unbounded retry is a direct cost.
-
-**Firestore is unavailable for the rate limiter.** It fails open. A throttle
-that takes the service down when its own storage hiccups is worse than one that
-briefly lets traffic through, and everything behind it still has to reserve
-credits before it can spend anything.
+- Firestore not ready: stop; do not treat configured secrets as readiness.
+- App Check failure: fix app/key/domain/fingerprint alignment; do not disable it as
+  normal operation.
+- Paid Checkout with no credit: repair/redeliver the signed webhook; do not grant
+  from the browser.
+- Duplicate credit: stop release and preserve claim/session evidence.
+- Reserved credits remain after a failed journey: stop release and fix lifecycle
+  accounting.
+- Android checkout not enrolled: keep the production flag false; users can use a
+  balance purchased on the hosted web app.
+- Provider model unavailable/high demand: preserve error telemetry and verified
+  fallback behavior; do not silently bill a failed primary request.

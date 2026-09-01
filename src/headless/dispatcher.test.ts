@@ -16,11 +16,17 @@ describe('headless dispatcher contract', () => {
       protocolVersion: string;
       transport: string;
       methods: string[];
+      configuredModels: { text: { default: string }; music: string };
     };
     expect(result.protocolVersion).toBe('1.0.0');
     expect(result.transport).toBe('json-rpc-2.0-ndjson');
     expect(result.methods).toContain('billing.checkout.completeTest');
     expect(result.methods).toContain('speech.synthetic.live');
+    expect(result.methods).toContain('media.music.generate');
+    expect(result.methods).toContain('media.audioNote.generate');
+    expect(result.methods).toContain('chat.attachment.turn');
+    expect(result.configuredModels.text.default).toBeTruthy();
+    expect(result.configuredModels.music).toBeTruthy();
   });
 
   it('uses the JSON-RPC method-not-found code', async () => {

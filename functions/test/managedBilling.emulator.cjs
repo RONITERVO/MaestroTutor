@@ -21,16 +21,16 @@ const {
 
 const uid = `emulator-${randomUUID()}`;
 const token = `purchase-${randomUUID()}`;
+const secondToken = `purchase-${randomUUID()}`;
 const user = { id: uid, email: null, displayName: null, photoUrl: null };
 
-const grant = (platform = 'google-play') => grantPurchasedCredits({
+const grant = (purchaseToken = token) => grantPurchasedCredits({
   uid,
   user,
-  purchaseToken: token,
+  purchaseToken,
   productId: 'emulator-pack',
   orderId: null,
   creditsGranted: 100,
-  platform,
   rawPurchase: {},
   rawVerification: {},
 });
@@ -64,10 +64,9 @@ const run = async () => {
   assert.equal(duplicate.alreadyProcessed, true);
   assert.equal(duplicate.billingSummary.availableCredits, 100);
 
-  // An identical opaque id from another provider is a distinct purchase.
-  const stripeGrant = await grant('stripe');
-  assert.equal(stripeGrant.alreadyProcessed, false);
-  assert.equal(stripeGrant.billingSummary.availableCredits, 200);
+  const secondPurchase = await grant(secondToken);
+  assert.equal(secondPurchase.alreadyProcessed, false);
+  assert.equal(secondPurchase.billingSummary.availableCredits, 200);
 
   assert.equal((await managedUserRef(uid).get()).exists, true);
   assert.equal((await managedAccountRef(uid).get()).exists, true);
@@ -82,8 +81,8 @@ run()
     await Promise.all([
       adminDb.recursiveDelete(managedUserRef(uid)).catch(() => undefined),
       accountDeletionClaimRef(uid).delete().catch(() => undefined),
-      purchaseClaimsCollection().doc(purchaseClaimId('google-play', token)).delete().catch(() => undefined),
       purchaseClaimsCollection().doc(purchaseClaimId('stripe', token)).delete().catch(() => undefined),
+      purchaseClaimsCollection().doc(purchaseClaimId('stripe', secondToken)).delete().catch(() => undefined),
     ]);
     await adminDb.terminate();
   })

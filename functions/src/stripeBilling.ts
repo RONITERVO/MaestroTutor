@@ -4,10 +4,9 @@
 /**
  * Stripe checkout and fulfilment for managed credit packs.
  *
- * This is the web half of the same balance Google Play funds on Android. Both
- * end in `grantPurchasedCredits`, keyed on whatever identifies the purchase in
- * its storefront, so a user who buys on the web and a user who buys in the app
- * hold the same kind of credits.
+ * Stripe is the only active purchase provider. Web, Android, the Core SDK and
+ * the headless harness all create the same Checkout session; only the signed
+ * webhook is allowed to grant the shared managed-credit balance.
  *
  * Two rules govern everything here, and both are the difference between a
  * billing integration that works and one that gives money away:
@@ -290,7 +289,6 @@ const fulfilCheckoutSession = async (session: Stripe.Checkout.Session): Promise<
     productId: decision.packId,
     orderId: decision.orderId,
     creditsGranted: decision.credits,
-    platform: 'stripe',
     rawPurchase: {
       sessionId: session.id,
       packId: decision.packId,

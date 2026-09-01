@@ -23,8 +23,11 @@ export const MAESTRO_INTEGRATION_CONFIG = {
   backendBaseUrl: import.meta.env.VITE_BACKEND_BASE_URL?.trim() || '',
   googleWebClientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID?.trim() || '',
   googleServerClientId: import.meta.env.VITE_GOOGLE_SERVER_CLIENT_ID?.trim() || '',
-  googlePlayPackageName: import.meta.env.VITE_GOOGLE_PLAY_PACKAGE_NAME?.trim() || 'com.ronitervo.maestrotutor',
-  managedBillingProductIds: parseCsv(import.meta.env.VITE_MANAGED_BILLING_PRODUCT_IDS),
+  managedCreditPackIds: parseCsv(import.meta.env.VITE_MANAGED_CREDIT_PACK_IDS),
+  // External checkout must stay opt-in for Play-distributed builds until the
+  // app is enrolled in a Google billing-choice/external-offers programme.
+  androidExternalStripeCheckoutEnabled:
+    import.meta.env.VITE_ANDROID_EXTERNAL_STRIPE_CHECKOUT_ENABLED?.trim().toLowerCase() === 'true',
 } as const;
 
 export const isFirebaseClientConfigured = (): boolean => (
@@ -47,6 +50,6 @@ export const isGoogleAuthConfigured = (): boolean => (
  */
 export const isManagedAccessConfigured = (): boolean => isGoogleAuthConfigured();
 
-export const isManagedBillingProduct = (productId: string): boolean => (
-  MAESTRO_INTEGRATION_CONFIG.managedBillingProductIds.includes(productId)
+export const isManagedCreditPack = (packId: string): boolean => (
+  MAESTRO_INTEGRATION_CONFIG.managedCreditPackIds.includes(packId)
 );

@@ -1,241 +1,52 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import { Modality, type LiveServerMessage } from '@google/genai';
+
 import { getAi } from '../../../api/gemini/client';
-import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { mergeInt16Arrays, pcmToWav } from '../../../core-sdk/media/audioProcessing';
-import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from './triggerAudioAsset';
+import {
+  runCoreAudioNoteGeneration,
+  type CoreAudioNoteResult,
+} from '../../../core-sdk/media/audioNoteGeneration';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
-import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
+import { debugLogService } from '../../diagnostics';
+import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from '../../../core-sdk/media/triggerAudioAsset';
 
-const OUTPUT_SAMPLE_RATE = 24000;
-const SESSION_TIMEOUT_MS = 180000;
-const MAX_TRIGGER_DURATION_MS = 10000;
+export type GeminiAudioNoteResult = Omit<CoreAudioNoteResult, 'operationId' | 'sampleCount'>;
 
-const toBase64 = (bytes: Uint8Array): string => {
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-};
-
-const base64ToUint8 = (base64: string): Uint8Array => {
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-};
-
-const base64ToInt16 = (base64: string): Int16Array => {
-  const bytes = base64ToUint8(base64);
-  return new Int16Array(bytes.buffer);
-};
-
-export interface GeminiAudioNoteResult {
-  dataUrl: string;
-  mimeType: 'audio/wav';
-  durationSeconds: number;
-}
-
+/** Browser adapter around the shared Core SDK Gemini Live audio-note journey. */
 export const synthesizeGeminiAudioNote = async (params: {
   text: string;
   langCode?: string;
   voiceName?: string;
   abortSignal?: AbortSignal;
 }): Promise<GeminiAudioNoteResult> => {
-  const text = (params.text || '').trim();
-  if (!text) {
-    throw new Error('Audio note text is empty.');
-  }
-
-  const ai = await getAi();
   const model = getGeminiModels().audio.tts;
   const usageTracker = createLiveUsageTracker({ feature: 'audioNote', configuredModel: model });
-  const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';
-
-  const systemInstructionText = [
-    'You are a professional text-to-speech engine.',
-    'Read the provided text aloud exactly as written.',
-    'Do not add any intro, explanation, or extra words.',
-    'Keep the delivery warm and clear.',
-    params.langCode ? `Language hint: ${params.langCode}` : '',
-    'TEXT TO READ:',
-    text,
-  ].filter(Boolean).join('\n');
-
   const log = debugLogService.logRequest('synthesizeGeminiAudioNote', model, {
-    textLength: text.length,
-    voiceName,
+    textLength: params.text.trim().length,
+    voiceName: params.voiceName || 'Kore',
     langCode: params.langCode,
   });
-
-  return new Promise<GeminiAudioNoteResult>((resolve, reject) => {
-    let session: any = null;
-    let isSettled = false;
-    let isStreaming = false;
-    let cleanupStream: (() => void) | null = null;
-    const audioChunks: Int16Array[] = [];
-
-    const resolveOnce = (result: GeminiAudioNoteResult) => {
-      if (isSettled) return;
-      isSettled = true;
-      resolve(result);
+  try {
+    const result = await runCoreAudioNoteGeneration({
+      aiClient: await getAi(),
+      model,
+      text: params.text,
+      triggerPcmBase64: TRIGGER_AUDIO_PCM_24K,
+      triggerSampleRate: TRIGGER_SAMPLE_RATE,
+      langCode: params.langCode,
+      voiceName: params.voiceName,
+      abortSignal: params.abortSignal,
+      onUsageMetadata: metadata => usageTracker.trackSnapshot(metadata as any),
+    });
+    log.complete({ durationSeconds: result.durationSeconds, sampleCount: result.sampleCount });
+    return {
+      dataUrl: result.dataUrl,
+      mimeType: result.mimeType,
+      durationSeconds: result.durationSeconds,
     };
-
-    const rejectOnce = (error: any) => {
-      if (isSettled) return;
-      isSettled = true;
-      reject(error);
-    };
-
-    const cleanup = () => {
-      isStreaming = false;
-      if (cleanupStream) cleanupStream();
-    };
-
-    const finalize = () => {
-      const mergedAudio = mergeInt16Arrays(audioChunks);
-      if (!mergedAudio.length) {
-        const error = new Error('No audio note was generated.');
-        log.error(error);
-        rejectOnce(error);
-        return;
-      }
-
-      const dataUrl = pcmToWav(mergedAudio, OUTPUT_SAMPLE_RATE, 1);
-      const durationSeconds = mergedAudio.length / OUTPUT_SAMPLE_RATE;
-      log.complete({ durationSeconds, sampleCount: mergedAudio.length });
-      resolveOnce({
-        dataUrl,
-        mimeType: 'audio/wav',
-        durationSeconds,
-      });
-    };
-
-    const abort = (reason: string) => {
-      cleanup();
-      try { session?.close(); } catch {}
-      rejectOnce(new Error(reason));
-    };
-
-    void (async () => {
-      try {
-        session = await ai.live.connect({
-          model,
-          config: {
-            responseModalities: [Modality.AUDIO],
-            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
-            systemInstruction: { parts: [{ text: systemInstructionText }] },
-            outputAudioTranscription: {},
-            thinkingConfig: getLiveMinimalThinkingConfig(model),
-          },
-          callbacks: {
-            onmessage: (msg: LiveServerMessage) => {
-              if (msg.usageMetadata) {
-                usageTracker.trackSnapshot(msg.usageMetadata);
-              }
-
-              const inlineAudioParts = msg.serverContent?.modelTurn?.parts
-                ?.map((part) => part.inlineData?.data)
-                .filter((data): data is string => typeof data === 'string' && data.length > 0)
-                ?? [];
-              for (const inlineAudio of inlineAudioParts) {
-                try {
-                  audioChunks.push(base64ToInt16(inlineAudio));
-                } catch (error) {
-                  console.warn('[GeminiAudioNote] Failed to decode inline audio chunk.', error);
-                }
-              }
-
-              if (msg.serverContent?.turnComplete) {
-                cleanup();
-                try { session?.close(); } catch {}
-                finalize();
-              }
-            },
-            onclose: () => {
-              cleanup();
-              if (!isSettled && audioChunks.length > 0) {
-                finalize();
-              }
-            },
-            onerror: (error: any) => {
-              cleanup();
-              const message = error?.message || 'Audio note generation failed.';
-              log.error({ message });
-              rejectOnce(new Error(message));
-            },
-          },
-        });
-
-        isStreaming = true;
-        const triggerBytes = base64ToUint8(TRIGGER_AUDIO_PCM_24K);
-        const chunkDurationMs = 100;
-        const chunkSize = Math.floor((TRIGGER_SAMPLE_RATE * chunkDurationMs) / 1000) * 2;
-        let sendOffset = 0;
-        const triggerStartTime = Date.now();
-        const sessionTimeoutId = setTimeout(() => {
-          if (!isStreaming || isSettled) return;
-          abort('Audio note generation timed out.');
-        }, SESSION_TIMEOUT_MS);
-
-        const intervalId = setInterval(() => {
-          if (!isStreaming || !session) {
-            clearInterval(intervalId);
-            clearTimeout(sessionTimeoutId);
-            return;
-          }
-
-          const triggerElapsed = Date.now() - triggerStartTime;
-          if (triggerElapsed > MAX_TRIGGER_DURATION_MS && sendOffset >= triggerBytes.length) {
-            return;
-          }
-
-          let base64Chunk = '';
-          if (sendOffset < triggerBytes.length) {
-            const end = Math.min(sendOffset + chunkSize, triggerBytes.length);
-            base64Chunk = toBase64(triggerBytes.slice(sendOffset, end));
-            sendOffset = end;
-          } else if (triggerElapsed <= MAX_TRIGGER_DURATION_MS) {
-            base64Chunk = toBase64(new Uint8Array(chunkSize));
-          } else {
-            return;
-          }
-
-          try {
-            session.sendRealtimeInput({
-              audio: {
-                mimeType: `audio/pcm;rate=${TRIGGER_SAMPLE_RATE}`,
-                data: base64Chunk,
-              },
-            });
-          } catch (error) {
-            abort((error as Error)?.message || 'Audio note trigger failed.');
-          }
-        }, chunkDurationMs);
-
-        cleanupStream = () => {
-          clearInterval(intervalId);
-          clearTimeout(sessionTimeoutId);
-        };
-
-        if (params.abortSignal) {
-          if (params.abortSignal.aborted) {
-            abort('Audio note generation aborted.');
-            return;
-          }
-          params.abortSignal.addEventListener('abort', () => abort('Audio note generation aborted.'), { once: true });
-        }
-      } catch (error: any) {
-        cleanup();
-        const message = error?.message || 'Audio note session failed.';
-        log.error({ message });
-        rejectOnce(new Error(message));
-      }
-    })();
-  });
+  } catch (error) {
+    log.error(error);
+    throw error;
+  }
 };

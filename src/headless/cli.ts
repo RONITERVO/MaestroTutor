@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { pathToFileURL } from 'node:url';
 import { loadEnvFile } from 'node:process';
+import { readFileSync } from 'node:fs';
 import { createHeadlessClient } from './client';
 import { dispatchHeadlessMethod } from './dispatcher';
 import { runJsonRpcServer } from './jsonRpc';
@@ -15,18 +16,27 @@ interface ParsedArguments {
   envFile?: string;
 }
 
-const parseArguments = (argv: string[]): ParsedArguments => {
+export const parseArguments = (argv: string[]): ParsedArguments => {
   const positional: string[] = [];
   let params: unknown = {};
   let profileName: string | undefined;
   let backendBaseUrl: string | undefined;
   let envFile: string | undefined;
+  let paramsSource: '--params' | '--params-file' | null = null;
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === '--params') {
       const raw = argv[++index];
       if (!raw) throw new Error('--params requires a JSON object.');
+      if (paramsSource) throw new Error('--params and --params-file are mutually exclusive.');
       params = JSON.parse(raw);
+      paramsSource = '--params';
+    } else if (argument === '--params-file') {
+      const path = argv[++index];
+      if (!path) throw new Error('--params-file requires a path to a JSON file.');
+      if (paramsSource) throw new Error('--params and --params-file are mutually exclusive.');
+      params = JSON.parse(readFileSync(path, 'utf8'));
+      paramsSource = '--params-file';
     } else if (argument === '--profile') {
       profileName = argv[++index];
       if (!profileName) throw new Error('--profile requires a name.');

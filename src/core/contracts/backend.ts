@@ -137,6 +137,21 @@ export interface BackendMediaUploadResponse {
   billingSummary?: ManagedBillingSummary;
 }
 
+export interface BackendMusicGenerationRequest {
+  model: string;
+  prompt: string;
+  durationSeconds?: number;
+}
+
+export interface BackendMusicGenerationResponse {
+  pcmBase64: string;
+  durationSeconds: number;
+  sampleRate: number;
+  channels: number;
+  sampleCount: number;
+  billingSummary?: ManagedBillingSummary;
+}
+
 export interface BackendFileStatus {
   deleted: boolean;
   active: boolean;
@@ -165,7 +180,7 @@ export interface BackendClearFilesResponse {
 }
 
 export interface BackendLiveTokenRequest {
-  purpose?: 'live' | 'music';
+  purpose?: 'live';
   model: string;
   config?: Record<string, unknown>;
   durationSeconds?: number;

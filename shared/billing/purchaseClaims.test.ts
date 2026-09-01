@@ -8,18 +8,16 @@ import { makePurchaseClaimId } from './purchaseClaims';
 describe('purchase claim ids', () => {
   it('are deterministic without exposing the external purchase id', () => {
     const token = 'sensitive-store-token-123';
-    const first = makePurchaseClaimId('google-play', token);
-    const second = makePurchaseClaimId('google-play', token);
+    const first = makePurchaseClaimId('stripe', token);
+    const second = makePurchaseClaimId('stripe', token);
 
     expect(first).toBe(second);
-    expect(first).toMatch(/^google-play_[a-f0-9]{64}$/);
+    expect(first).toMatch(/^stripe_[a-f0-9]{64}$/);
     expect(first).not.toContain(token);
   });
 
-  it('namespace identical external ids by provider', () => {
-    const externalId = 'same-opaque-id';
-
-    expect(makePurchaseClaimId('google-play', externalId))
-      .not.toBe(makePurchaseClaimId('stripe', externalId));
+  it('keeps the provider namespace for legacy migration safety', () => {
+    expect(makePurchaseClaimId('google-play', 'legacy-token'))
+      .toMatch(/^google-play_[a-f0-9]{64}$/);
   });
 });

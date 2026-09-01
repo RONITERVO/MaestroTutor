@@ -47,34 +47,29 @@ const configuredSet = (value: string | undefined, defaults: readonly string[]): 
 /**
  * A buyable bundle of credits.
  *
- * One catalogue serves both storefronts. Google Play and Stripe have to agree
- * on what a pack contains, and two separate lists would let them drift the same
- * way the two pricing tables did — with the difference that here the drift is
- * the user paying one price and receiving another store's quantity.
+ * Stripe is the sole purchase source. A pack id is shared unchanged by the
+ * hosted UI, Core SDK, JSON-RPC harness and webhook fulfilment path.
  */
 export interface CreditPack {
-  /** Internal id. What Stripe checkout is asked for. */
+  /** Stable id passed from every client to Stripe checkout. */
   id: string;
   credits: number;
   /** Stripe price, in the smallest currency unit. */
   priceCents: number;
-  /** The matching Google Play product, when the pack is sold there too. */
-  playProductId?: string;
 }
 
-/** `id:credits:cents[:playProductId]`, comma separated. */
+/** `id:credits:cents`, comma separated. */
 export const parseCreditPacks = (value: string | undefined): CreditPack[] => {
   const packs: CreditPack[] = [];
   const packIds = new Set<string>();
-  const playProductIds = new Set<string>();
 
   for (const item of parseCsv(value)) {
     const parts = item.split(':').map((part) => part.trim());
-    if (parts.length < 3 || parts.length > 4) {
+    if (parts.length !== 3) {
       throw new Error(`Invalid MANAGED_CREDIT_PACKS entry "${item}".`);
     }
 
-    const [id, creditsRaw, centsRaw, playProductId] = parts;
+    const [id, creditsRaw, centsRaw] = parts;
     const credits = Number(creditsRaw);
     const priceCents = Number(centsRaw);
 
@@ -90,20 +85,11 @@ export const parseCreditPacks = (value: string | undefined): CreditPack[] => {
     if (packIds.has(id)) {
       throw new Error(`Duplicate credit pack id "${id}" in MANAGED_CREDIT_PACKS.`);
     }
-    if (playProductId && playProductIds.has(playProductId)) {
-      throw new Error(`Duplicate Google Play product id "${playProductId}" in MANAGED_CREDIT_PACKS.`);
-    }
-    if (playProductIds.has(id) || (playProductId && packIds.has(playProductId))) {
-      throw new Error(`Ambiguous credit pack/store id in MANAGED_CREDIT_PACKS entry "${id}".`);
-    }
-
     packIds.add(id);
-    if (playProductId) playProductIds.add(playProductId);
     packs.push({
       id,
       credits,
       priceCents,
-      ...(playProductId ? { playProductId } : {}),
     });
   }
   return packs;
@@ -118,7 +104,6 @@ const trustedLocalOrigins = new Set([
 export const appConfig = {
   functionRegion: process.env.MAESTRO_FUNCTION_REGION?.trim() || 'europe-west1',
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() || '',
-  googlePlayPackageName: process.env.GOOGLE_PLAY_PACKAGE_NAME?.trim() || 'com.ronitervo.maestrotutor',
   allowedOrigins: new Set([
     ...parseCsv(process.env.ALLOWED_ORIGINS),
     ...trustedLocalOrigins,
@@ -195,21 +180,11 @@ export const isOriginAllowed = (origin: string | undefined): boolean => {
   return appConfig.allowedOrigins.has(origin);
 };
 
-/** Credits for a Google Play product id, or 0 if it is not a known pack. */
-export const getCreditsForManagedProduct = (productId: string): number => (
-  appConfig.creditPacks.find((pack) => pack.playProductId === productId)?.credits || 0
-);
-
 export const getCreditPackById = (packId: string): CreditPack | undefined => (
   appConfig.creditPacks.find((pack) => pack.id === packId)
 );
 
-/** Resolve the internal pack id used by web, or its configured Play alias. */
-export const getCreditPackForCheckout = (packOrProductId: string): CreditPack | undefined => (
-  appConfig.creditPacks.find((pack) => (
-    pack.id === packOrProductId || pack.playProductId === packOrProductId
-  ))
-);
+export const getCreditPackForCheckout = getCreditPackById;
 
 export const isStripeConfigured = (): boolean => (
   Boolean(appConfig.stripeSecretKey) && Boolean(appConfig.stripeWebhookSecret)
