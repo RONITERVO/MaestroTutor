@@ -30,4 +30,29 @@ describe('Header access button', () => {
     expect(screen.getByTitle('Managed access')).toBeTruthy();
     expect(screen.queryByTitle('Manage API Key')).toBeNull();
   });
+
+  it('keeps API-key management as the label when both access methods exist', () => {
+    render(
+      <Header
+        onOpenApiKey={vi.fn()}
+        hasApiKey
+        hasManagedAccess
+      />,
+    );
+
+    expect(screen.getByTitle('Manage API Key')).toBeTruthy();
+    expect(screen.queryByTitle('Managed access')).toBeNull();
+  });
+
+  it('describes the missing-access action when neither method exists', () => {
+    render(
+      <Header
+        onOpenApiKey={vi.fn()}
+        hasApiKey={false}
+        hasManagedAccess={false}
+      />,
+    );
+
+    expect(screen.getByTitle('AI access required')).toBeTruthy();
+  });
 });
