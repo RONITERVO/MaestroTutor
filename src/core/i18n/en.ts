@@ -17,6 +17,7 @@ export const enTranslations: Record<string, string> = {
   "header.pauseMaestro": "Pause Maestro",
   "header.manageApiKey": "Manage API Key",
   "header.apiKeyRequired": "API Key Required",
+  "header.aiAccessRequired": "AI access required",
   "header.apiKey": "API Key",
   "header.viewTrafficLogs": "View Traffic Logs",
   

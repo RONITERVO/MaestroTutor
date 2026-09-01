@@ -226,7 +226,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
                ? t('header.manageApiKey') || 'Manage API Key'
                : hasManagedAccess
                  ? t('managedAccess.title') || 'Managed access'
-                 : t('header.apiKeyRequired') || 'AI access required'}
+                 : t('header.aiAccessRequired') || 'AI access required'}
            >
              <IconKey className="w-4 h-4" />
              <span className="hidden sm:inline">
@@ -234,7 +234,7 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
                  ? t('header.apiKey') || 'API Key'
                  : hasManagedAccess
                    ? t('managedAccess.title') || 'Managed access'
-                   : t('header.apiKeyRequired') || 'AI access required'}
+                   : t('header.aiAccessRequired') || 'AI access required'}
              </span>
            </button>
          )}
