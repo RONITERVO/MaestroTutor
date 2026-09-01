@@ -23,7 +23,7 @@ jobs:
       MAESTRO_FIREBASE_EMAIL: ${{ secrets.HEADLESS_FIREBASE_EMAIL }}
       MAESTRO_FIREBASE_PASSWORD: ${{ secrets.HEADLESS_FIREBASE_PASSWORD }}
       MAESTRO_APPCHECK_DEBUG_TOKEN: ${{ secrets.HEADLESS_APPCHECK_DEBUG_TOKEN }}
-      MAESTRO_HEADLESS_HOME: ${{ runner.temp }}/maestro-headless
+      MAESTRO_HEADLESS_HOME: /tmp/maestro-headless
       MAESTRO_TEST_PACK_ID: ${{ vars.MAESTRO_TEST_PACK_ID || 'pack_1000' }}
       MAESTRO_TEST_PACK_CREDITS: ${{ vars.MAESTRO_TEST_PACK_CREDITS || '1000' }}
     steps:
