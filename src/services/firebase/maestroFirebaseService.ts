@@ -78,9 +78,9 @@ const initializeOptionalAppCheck = async (): Promise<boolean> => {
         return false;
       }
 
-      const { ReCaptchaV3Provider } = await import('firebase/app-check');
+      const { ReCaptchaEnterpriseProvider } = await import('firebase/app-check');
       await FirebaseAppCheck.initialize({
-        provider: new ReCaptchaV3Provider(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckSiteKey),
+        provider: new ReCaptchaEnterpriseProvider(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckSiteKey),
         isTokenAutoRefreshEnabled: true,
         ...(MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckDebugToken
           ? { debugToken: MAESTRO_INTEGRATION_CONFIG.firebaseAppCheckDebugToken }

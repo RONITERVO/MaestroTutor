@@ -232,12 +232,15 @@ You can always tap the pencil icon in session controls to add or modify your nam
 
 ## Privacy and your API key
 
-Maestro operates on a **Bring Your Own Key** model.
+Maestro keeps **Bring Your Own Key** as its local-first option and also offers
+an optional managed account for users who prefer to buy service credits.
 
 - You supply your own **Google Gemini API key** from [Google AI Studio](https://aistudio.google.com/)
 - The key is stored locally on your device using secure storage — never sent to any backend
 - All AI calls go directly from your device to the Gemini API
-- No account, no server, no telemetry
+- BYOK sessions require no Maestro account or Maestro backend
+- Managed sessions use Firebase Authentication, the managed backend and either
+  Google Play Billing (Android) or Stripe Checkout (web)
 
 The API key button in the top-right corner shows green when a key is present, red when missing. Tap it anytime to update your key or view setup instructions.
 
@@ -262,7 +265,7 @@ Step-by-step screenshots are available in [`/docs/`](./docs/).
 
 ### Prerequisites
 
-- **Node.js** v18 or higher
+- **Node.js** v24 (the deployed Functions runtime version)
 - A **Google Gemini API key** — [get one free from AI Studio](https://aistudio.google.com/)
 
 ### Web (development)
@@ -307,6 +310,7 @@ Contributions are welcome. The codebase follows a strict feature-slice architect
 
 - Read [`docs/DESIGN_SYSTEM.md`](./docs/DESIGN_SYSTEM.md) — every color in the UI is a named CSS token. New elements require new tokens, not hardcoded values.
 - Check [`docs/DEV_CHEATSHEET.md`](./docs/DEV_CHEATSHEET.md) for patterns around state management, ref synchronization, and audio lifecycle.
+- Managed-service maintainers must follow [`docs/PRODUCTION_OPERATIONS.md`](./docs/PRODUCTION_OPERATIONS.md); architecture and billing invariants are in [`docs/MANAGED_BACKEND.md`](./docs/MANAGED_BACKEND.md).
 
 **Key architectural notes:**
 

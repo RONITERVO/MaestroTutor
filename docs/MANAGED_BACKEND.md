@@ -1,13 +1,18 @@
 # Managed mode: architecture and runbook
 
+For the live provider inventory, beginner release steps, credential rotation,
+monitoring and rollback procedures, use
+[PRODUCTION_OPERATIONS.md](./PRODUCTION_OPERATIONS.md). This document explains
+the design and data invariants.
+
 Managed mode lets someone use Maestro Tutor without supplying a Gemini API key.
 They sign in, buy credits — through Google Play in the Android app, or Stripe
 Checkout on the web — and the backend proxies Gemini on their behalf, charging
 credits against real usage.
 
-It ships **dark**: `VITE_MANAGED_MODE_ENABLED` is `false` by default and the app
-behaves exactly as it does today. Nothing below is reachable until that flag is
-turned on in a build.
+The source template ships **dark**: `VITE_MANAGED_MODE_ENABLED` is `false` by
+default. The production web build has been deliberately enabled after the live
+backend and App Check verification described in the operations runbook.
 
 ---
 
@@ -98,7 +103,7 @@ removes all canonical user-owned records.
 | Firestore persistence of the above | `functions/src/managedBilling.ts` | core concurrency/idempotency path in emulator |
 | Play verification | `functions/src/playBilling.ts` | no — needs a real purchase |
 | Stripe fulfilment rules | `shared/billing/stripeFulfilment.ts` | yes |
-| Stripe checkout and webhook | `functions/src/stripeBilling.ts` | no — needs Stripe CLI or a live endpoint |
+| Stripe checkout and webhook | `functions/src/stripeBilling.ts` | fulfilment and delayed-payment regression tests; a real purchase is still required |
 
 `shared/` is compiled into the functions bundle (see `functions/tsconfig.json`,
 which roots at the repo so `shared/` is emitted alongside `functions/src`). The
@@ -111,15 +116,22 @@ app imports the same files directly.
 ### Once per project
 
 1. Create the Firebase project; enable Firestore and Google sign-in.
-2. Grant the functions service account access to the Play Developer API, and
-   link the Play Console to the project. Purchase verification fails without it.
+2. Enable `androidpublisher.googleapis.com`, then invite the functions runtime
+   service account from Play Console's **Users and permissions** page. Scope it
+   to the Maestro app and grant **View financial data** plus **Manage orders and
+   subscriptions**. Google no longer requires linking the Play developer
+   account to a Cloud project; purchase verification fails without the API and
+   Play permissions.
 3. Configure App Check for web and Android. Leave `REQUIRE_APPCHECK=false`
    until both are verified, then turn it on — it is the main defence against
-   someone driving the backend outside the app.
+   someone driving the backend outside the app. Production enforcement is on;
+   use the rollback procedure in `PRODUCTION_OPERATIONS.md` for an outage.
 4. Define the credit packs once in `MANAGED_CREDIT_PACKS` as
    `id:credits:cents[:playProductId]`. Create the matching consumable products
    in Play for any pack that names a `playProductId`.
-5. For web payments, set `STRIPE_SECRET_KEY`, `APP_URL`, and add a webhook
+5. Store `GEMINI_API_KEY`, `STRIPE_SECRET` and `STRIPE_WEBHOOK_SECRET` in
+   Google Secret Manager with `firebase functions:secrets:set`. For web
+   payments, set `APP_URL` in `functions/.env` and add a webhook
    endpoint in the Stripe dashboard pointing at
    `<api>/billing/stripe/webhook` subscribed to `checkout.session.completed` and
    `checkout.session.async_payment_succeeded`; put its signing secret in
@@ -131,9 +143,13 @@ app imports the same files directly.
 ### Every deploy
 
 ```bash
-cp functions/.env.example functions/.env    # fill in, never commit
+cp functions/.env.example functions/.env    # fill in non-secret values
 firebase deploy --only functions,firestore:rules,firestore:indexes
 ```
+
+Production secrets are declared and bound in `functions/src/index.ts`; they do
+not belong in dotenv files. Local emulator-only values may be placed in the
+gitignored `functions/.secret.local` file.
 
 `firebase.json` runs the functions build first, which compiles `shared/` into
 the bundle. Deploying without that build would ship a bundle whose pricing code
@@ -160,7 +176,19 @@ cd functions
 npm run test:emulator
 ```
 
-**Not yet verified, and needing a live project before release:**
+**Verified against the live project:**
+
+- Web reCAPTCHA Enterprise App Check issues a token on
+  `chatwithmaestro.com`; enforced requests without it are rejected, and a valid
+  token crosses CORS and reaches the Firebase Authentication gate.
+- Android Play Integrity is registered with the existing release and debug
+  SHA-256 fingerprints.
+- The live Stripe destination is active with both Checkout completion events,
+  and the signing secret is bound to the deployed API.
+- The Play consumable is active and the runtime service account has the minimum
+  app-scoped billing permissions.
+
+**Still requiring live human testing:**
 
 - Production Firestore behaviour under representative load. The emulator test
   proves two concurrent reservations cannot both overspend one balance, but it
@@ -168,12 +196,11 @@ npm run test:emulator
 - Play purchase verification end to end. Requires a real or licence-tested
   purchase; the failure modes that matter are a pending purchase, a replayed
   token, and a token belonging to another account.
-- App Check enforcement.
 - Account deletion actually removing everything, which is a compliance
   obligation and not only a feature.
-- Stripe end to end against the real account. The decision logic is tested, but
-  signature verification, the customer record and the redirect round trip are
-  not exercised by unit tests.
+- Stripe end to end with a real payment. The endpoint and signatures are live,
+  but the customer record, credit grant and redirect round trip still need a
+  controlled purchase.
 
 ### Retention and deletion
 

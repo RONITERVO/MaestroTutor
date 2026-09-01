@@ -4,6 +4,7 @@
 
 import { createHash } from 'node:crypto';
 import express, { type Request, type Response } from 'express';
+import { defineSecret } from 'firebase-functions/params';
 import { onRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { deleteManagedAccount, submitAiContentReport } from './account';
@@ -17,6 +18,10 @@ import type { ManagedRateLimitBucket } from './managedData';
 import { verifyManagedGooglePlayPurchase } from './playBilling';
 import { consumeRateLimit } from './rateLimit';
 import { createManagedCheckoutSession, handleStripeWebhook } from './stripeBilling';
+
+const geminiApiKeySecret = defineSecret('GEMINI_API_KEY');
+const stripeSecret = defineSecret('STRIPE_SECRET');
+const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 
 const app = express();
 
@@ -41,6 +46,18 @@ app.post(
     }
   },
 );
+
+// Browser preflight requests do not match the GET/POST route that eventually
+// calls asyncRoute, so handle them before routing. Without this middleware the
+// browser receives Express's generic OPTIONS response without CORS headers and
+// never sends requests carrying Authorization or X-Firebase-AppCheck.
+app.use((req, res, next) => {
+  if (req.method !== 'OPTIONS') {
+    next();
+    return;
+  }
+  applyCors(req, res);
+});
 
 // Derived from the advertised upload limit rather than set independently, so a
 // file the API says it accepts cannot be rejected by middleware. See config.ts.
@@ -238,6 +255,7 @@ export const api = onRequest(
     memory: '1GiB',
     maxInstances: appConfig.functionMaxInstances,
     concurrency: appConfig.functionConcurrency,
+    secrets: [geminiApiKeySecret, stripeSecret, stripeWebhookSecret],
   },
   app
 );
@@ -272,6 +290,7 @@ export const retryManagedFileCleanup = onSchedule(
     schedule: 'every 60 minutes',
     timeZone: 'UTC',
     timeoutSeconds: 540,
+    secrets: [geminiApiKeySecret],
   },
   async () => {
     const result = await retryManagedFileCleanupJobs(100);

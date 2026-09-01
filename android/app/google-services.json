@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "47084692464",
+    "project_id": "chatwithmaestro",
+    "storage_bucket": "chatwithmaestro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47084692464:android:1f3e885d2a423a63ac7335",
+        "android_client_info": {
+          "package_name": "com.ronitervo.maestrotutor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "47084692464-f1f5o4snmgbp0ns1d5h7i5oagr9i5b0e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ronitervo.maestrotutor",
+            "certificate_hash": "7822039e2050866821402431b4b9f6c107941e56"
+          }
+        },
+        {
+          "client_id": "47084692464-geilka5ifgdvdrqsfif00063td5jvmnc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ronitervo.maestrotutor",
+            "certificate_hash": "e0bf758c4f98256dfc3637ae026a65adfd258048"
+          }
+        },
+        {
+          "client_id": "47084692464-a17vgic5l82t23eks2i88vdpjlej03k1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ_-HuP5_mH57WZHcLLq22r0SQBvHAA7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "47084692464-a17vgic5l82t23eks2i88vdpjlej03k1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

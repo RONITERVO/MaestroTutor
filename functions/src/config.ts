@@ -100,8 +100,7 @@ const trustedLocalOrigins = new Set([
 ]);
 
 export const appConfig = {
-  functionRegion: process.env.FUNCTION_REGION?.trim() || 'europe-west1',
-  firebaseProjectId: process.env.FIREBASE_PROJECT_ID?.trim() || '',
+  functionRegion: process.env.MAESTRO_FUNCTION_REGION?.trim() || 'europe-west1',
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() || '',
   googlePlayPackageName: process.env.GOOGLE_PLAY_PACKAGE_NAME?.trim() || 'com.ronitervo.maestrotutor',
   allowedOrigins: new Set([
@@ -112,7 +111,7 @@ export const appConfig = {
   billingCurrency: (process.env.BILLING_CURRENCY?.trim() || 'eur').toLowerCase(),
   /** Where Stripe sends the buyer back to. Required for checkout. */
   appUrl: process.env.APP_URL?.trim() || '',
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY?.trim() || '',
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY?.trim() || process.env.STRIPE_SECRET?.trim() || '',
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || '',
   managedCreditsPerUsd: Math.max(1, parseInteger(process.env.MANAGED_CREDITS_PER_USD, 1000)),
   requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, false),
