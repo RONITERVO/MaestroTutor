@@ -121,19 +121,25 @@ server allowlist, deploy Functions, publish the client, and run one managed
 request for every affected surface. Live tokens are constrained to the exact
 allowlisted model requested by the client.
 
-The checked-in Gemini 3.6 Flash Standard rate was verified on 2026-09-01. Its
-current promotional input/output/cache rates expire after 2026-12-31 according
-to the provider pricing page. Re-verify and deploy the registry before
+Managed text traffic is pinned to the stable `gemini-3.7-flash` and
+`gemini-3.5-flash-lite` IDs. Do not put provider-owned `*-latest` aliases in the
+Functions allowlist: Google can hot-swap an alias to a model with different
+behavior or pricing. The backend maps the two old text aliases to these stable
+IDs so installed clients remain compatible. Settlement uses the provider's
+returned model version and records both requested and resolved IDs in metadata.
+
+The checked-in Gemini 3.7 and 3.6 Flash Standard rates were verified on
+2026-09-01. Their promotional input/output/cache rates expire after 2026-12-31
+according to the provider pricing page. Re-verify and deploy the registry before
 2027-01-01; leaving an expired rate in production is a billing incident.
 Grounded Gemini 3 requests are settled per reported Search query at list price,
 with ten queries reserved before the call by default.
 
-Active release blocker recorded on 2026-09-01: the production Gemini key passes
-`countTokens`, but a minimal paid generation returns HTTP 429 because the AI
-Studio project's prepayment credits are depleted. Do not deploy or advertise
-the managed client until the owner restores the provider balance and the smoke
-test below passes. Remove this incident note only after recording the successful
-retest; a configured secret is not evidence that provider billing is usable.
+Provider release gate passed on 2026-09-01: the production secret successfully
+ran `countTokens` and a paid `gemini-3.7-flash` generation, returned visible text,
+and reported prompt, output and thinking usage. Re-run `npm run smoke:gemini`
+before every backend release; a configured secret or successful `countTokens`
+alone is not evidence that provider billing is usable.
 
 ## 3. Access a maintainer needs
 
@@ -240,8 +246,9 @@ Remove-Item Env:GEMINI_API_KEY
 
 The command must return JSON with `ok: true`. Never echo the environment
 variable or paste it into the command itself. A successful `countTokens` call
-without a successful generation is not a pass; depleted prepayment currently
-has exactly that failure shape.
+without a successful generation is not a pass. The smoke also requires visible
+text because an output ceiling consumed entirely by thinking tokens is not a
+usable generation.
 
 Pull requests and pushes to the release branches run the same release gate in
 `.github/workflows/release-gate.yml` on Node 24 and JDK 21. Do not merge a red

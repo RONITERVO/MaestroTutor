@@ -111,6 +111,7 @@ export const usageMetadataToUsd = (
   fallbackOperation?: string,
   generatedImages?: number,
   searchQueries?: number,
+  modelVersion?: string,
 ): number => {
   const images = Number.isFinite(generatedImages)
     ? Math.max(0, generatedImages as number)
@@ -118,6 +119,7 @@ export const usageMetadataToUsd = (
 
   const cost = calculateGeminiUsageCost({
     configuredModel: model,
+    modelVersion,
     usageMetadata: (usageMetadata || {}) as Record<string, never>,
     generatedImages: images,
     searchQueries,

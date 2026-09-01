@@ -1,9 +1,9 @@
 {
   "text": {
-    "default": "gemini-flash-latest",
-    "aux": "gemini-flash-lite-latest",
-    "translation": "gemini-flash-lite-latest",
-    "fallback": "gemini-flash-lite-latest"
+    "default": "gemini-3.7-flash",
+    "aux": "gemini-3.5-flash-lite",
+    "translation": "gemini-3.5-flash-lite",
+    "fallback": "gemini-3.5-flash-lite"
   },
   "image": {
     "generation": "gemini-2.5-flash-image"
@@ -28,9 +28,17 @@
     },
     "models": [
       {
+        "id": "gemini-3.7-flash",
+        "displayName": "Gemini 3.7 Flash",
+        "matches": ["gemini-flash-latest", "gemini-3.7-flash"],
+        "inputPerMillion": { "text": 0.75, "audio": 0.75, "image": 0.75, "video": 0.75, "document": 0.75 },
+        "outputPerMillion": { "text": 3.75, "audio": 3.75, "image": 3.75, "video": 3.75, "document": 3.75 },
+        "cachedInputPerMillion": { "text": 0.075, "audio": 0.075, "image": 0.075, "video": 0.075, "document": 0.075 }
+      },
+      {
         "id": "gemini-3.6-flash",
         "displayName": "Gemini 3.6 Flash",
-        "matches": ["gemini-flash-latest", "gemini-3.6-flash"],
+        "matches": ["gemini-3.6-flash"],
         "inputPerMillion": { "text": 0.75, "audio": 0.75, "image": 0.75, "video": 0.75, "document": 0.75 },
         "outputPerMillion": { "text": 3.75, "audio": 3.75, "image": 3.75, "video": 3.75, "document": 3.75 },
         "cachedInputPerMillion": { "text": 0.075, "audio": 0.075, "image": 0.075, "video": 0.075, "document": 0.075 }

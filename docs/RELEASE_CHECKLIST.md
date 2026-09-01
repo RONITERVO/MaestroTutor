@@ -2,10 +2,11 @@
 
 ## 1) Pre‑Flight
 - [X] App ID is correct: `com.ronitervo.maestrotutor`
-- [X] API key gate works (blocks first launch)
+- [X] Access gate works: BYOK accepts a user-supplied Gemini key; managed
+      access signs in with Google and uses purchased credits
 - [X] No `.env` key in production build
 - [X] Privacy policy is hosted (URL to provide Play Console)
-- [X] App description mentions BYOK + open source
+- [ ] Store listing describes both BYOK and managed access
 
 - The "Default Icon" Flag
 If you upload an app with the default Capacitor/React/Vue logo as the app icon or splash screen, Google (and users) immediately perceive it as "low quality" or "spam."
@@ -74,37 +75,60 @@ android/app/build/outputs/bundle/release/app-release.aab
 - [X] Upload the `.aab`
 - [ ] Add testers
 - [ ] Provide “App Access” instructions:
-  - The app requires a Gemini API key
-  - Provide a temporary test key for reviewers
-The "Reviewer Trap" (Crucial for Approval)
-Since your app has a "Hard Gate," the Google Play Review team cannot test your app unless they have a key. If they launch it, see a lock screen, and can't get past it, they may reject it for "Limited Functionality" or "App Not Working."
+  - Mark **All or some functionality is restricted**.
+  - Prefer a dedicated Google reviewer account that can use managed access and
+    has enough test credits for every reviewed flow. Provide its credentials
+    and exact sign-in steps in the private App Access field, never in this
+    repository or the public store listing.
+  - If a managed reviewer account cannot be used, provide a temporary,
+    quota-limited Gemini API key and instructions for the BYOK path.
+  - Exercise the supplied access method on a clean device before submitting.
+  - Remove the reviewer account's access or revoke the temporary key after the
+    review is complete.
 
-Action: Generate a specific, temporary API Key from your own Google AI Studio account.
-
-Where to put it: In the Google Play Console, go to Policy and programs > App content > App access.
-
-Select: "All or some functionality is restricted" -> Add instructions.
-
-Write: "This app requires a user-generated Google Gemini API Key. For testing purposes, please use this valid key: [PASTE_YOUR_KEY_HERE]. You can revoke this key after testing."
+The access gate is a rejection risk if the reviewer cannot get past it. Keep
+these instructions current whenever authentication or the first-run flow
+changes.
 
 - [X] Add privacy policy URL: `https://chatwithmaestro.com/privacy.html`
 
 ## 7) Data Safety Form
-Recommended answers:
-- [x] Data collected/shared: **Yes**
-- [x] Data encrypted in transit: **Yes**
-- [x] User data deletion: **Users can delete by uninstalling app**
-- [x] Data type: “Messages / User content”
-- [x] Purpose: “App functionality”
+Do not copy old blanket answers. Re-evaluate the form against the release and
+Google Play's current definitions each time. The current implementation facts
+maintainers must account for are:
+
+- [ ] Data is encrypted in transit.
+- [ ] BYOK credentials and chat history stay in local app storage; BYOK Gemini
+      requests go directly from the device to Google.
+- [ ] Managed access sends account identifiers and generation content through
+      Firebase/Google Cloud and Google Gemini for app functionality.
+- [ ] Managed access stores account/billing summaries, entitlements, usage and
+      billing ledger metadata, and operational anti-abuse/cleanup state.
+- [ ] Stripe processes managed web checkout; Google Play processes Android
+      purchases. Maestro stores provider references and verification/grant
+      records, not raw payment-card details.
+- [ ] A voluntarily submitted AI-content report can include reported content,
+      a reason, optional notes, and request metadata.
+- [ ] Uninstalling clears only data stored locally on that device. It does not
+      delete a managed account or provider-held records.
+- [ ] Managed users can request account deletion in the app or at
+      `https://chatwithmaestro.com/delete-account.html`.
+- [ ] The published privacy policy and account-deletion URL match the release.
+
+Record the final Play Console answers and the date they were revalidated in the
+release ticket. If the product or Google's form wording changes, obtain an
+appropriate policy/legal review rather than inferring an answer from this
+engineering checklist.
 
 ## 8) Store Listing (Short copy to add)
 ```
-This app is a secure local client for your own Gemini API key.
-No backend. Your key stays on-device.
+Use your own Gemini API key locally, or sign in for Maestro managed access with
+purchased credits. Chat history stays on your device. Managed requests are
+processed securely by Maestro's cloud service and Google Gemini.
 ```
 
 ## 9) After Approval
-- [ ] Revoke the temporary review key
+- [ ] Remove dedicated reviewer access or revoke the temporary review key
 - [ ] Tag the release in Git
 - [x] Archive the AAB + keystore info
 
@@ -112,4 +136,5 @@ No backend. Your key stays on-device.
 - Forgot to bump `versionCode` → upload fails
 - Forgot `npm run build` before sync → old UI ships
 - Privacy policy missing → review rejection
-- “No data collected” set in Data Safety → rejection
+- Data Safety or App Access answers copied from an older architecture → review
+  rejection or an inaccurate disclosure

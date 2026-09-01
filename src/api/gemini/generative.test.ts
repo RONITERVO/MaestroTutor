@@ -71,7 +71,7 @@ describe('generateGeminiResponse capability fallbacks', () => {
     expect(onGoogleSearchUnavailable).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the latest Flash-Lite fallback with maximum thinking after high demand', async () => {
+  it('uses the pinned Flash-Lite fallback with maximum thinking after high demand', async () => {
     const highDemandError = Object.assign(new Error('Model is in high demand.'), {
       status: 503,
       code: 'UNAVAILABLE',
@@ -89,10 +89,10 @@ describe('generateGeminiResponse capability fallbacks', () => {
       },
     });
 
-    expect(response.modelUsed).toBe('gemini-flash-lite-latest');
+    expect(response.modelUsed).toBe('gemini-3.5-flash-lite');
     expect(mocks.generateContentStream).toHaveBeenCalledTimes(2);
     expect(mocks.generateContentStream.mock.calls[1][0]).toMatchObject({
-      model: 'gemini-flash-lite-latest',
+      model: 'gemini-3.5-flash-lite',
       config: {
         thinkingConfig: {
           includeThoughts: true,

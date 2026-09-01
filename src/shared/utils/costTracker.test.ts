@@ -47,7 +47,7 @@ describe('calculateGeminiUsageCost', () => {
     const flash = calculate({
       usageMetadata: { promptTokenCount: 1_000_000, candidatesTokenCount: 1_000_000 },
     });
-    expect(flash.model).toBe('gemini-3.6-flash');
+    expect(flash.model).toBe('gemini-3.7-flash');
     expect(flash.modelCostUsd).toBeCloseTo(4.5);
 
     const flashLite = calculate({

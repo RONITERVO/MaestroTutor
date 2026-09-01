@@ -11,6 +11,7 @@ const {
   requirePricedManagedGenerationModel,
   requireSafeManagedGenerationConfig,
   requireSafeManagedLiveConfig,
+  resolvePinnedManagedGenerationModel,
   resolveManagedContentOperation,
   usesManagedGoogleSearch,
 } = require('../lib/functions/src/geminiPolicy.js');
@@ -18,6 +19,14 @@ const {
   googleSearchQueriesToUsd,
   usageMetadataToUsd,
 } = require('../lib/functions/src/pricing.js');
+const { appConfig } = require('../lib/functions/src/config.js');
+
+test('managed generation defaults pin provider-stable model ids', () => {
+  assert.deepEqual(
+    [...appConfig.managedAllowedGeminiModels],
+    ['gemini-3.7-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash-image'],
+  );
+});
 
 test('billing operation is derived from server-visible request shape', () => {
   assert.equal(resolveManagedContentOperation(undefined, false), 'generateContent');
@@ -34,8 +43,8 @@ test('billing operation is derived from server-visible request shape', () => {
 
 test('prepaid generation rejects allowlisted models without a rate', () => {
   assert.equal(
-    requirePricedManagedGenerationModel('gemini-flash-latest'),
-    'gemini-flash-latest',
+    requirePricedManagedGenerationModel('gemini-3.7-flash'),
+    'gemini-3.7-flash',
   );
   assert.throws(
     () => requirePricedManagedGenerationModel('unpriced-preview'),
@@ -59,10 +68,12 @@ test('managed config allows only server-priced tools and no transport overrides'
     applyManagedGenerationLimits({ maxOutputTokens: 512 }, 8_192),
     { maxOutputTokens: 512 },
   );
-  assert.throws(
-    () => applyManagedGenerationLimits({ candidateCount: 2 }, 8_192),
-    (error) => error.status === 400 && /one response candidate/.test(error.message),
-  );
+  for (const unsupported of ['candidateCount', 'temperature', 'topP', 'topK']) {
+    assert.throws(
+      () => applyManagedGenerationLimits({ [unsupported]: 1 }, 8_192),
+      (error) => error.status === 400 && error.message.includes(unsupported),
+    );
+  }
   assert.throws(
     () => requireSafeManagedGenerationConfig({ httpOptions: { baseUrl: 'https://example.test' } }),
     (error) => error.status === 400 && /httpOptions/.test(error.message),
@@ -102,11 +113,29 @@ test('an image request is charged for images actually produced', () => {
   assert.ok(withImage >= 0.039);
 });
 
+test('settlement prices the provider-resolved model version', () => {
+  const billedUsd = usageMetadataToUsd(
+    'gemini-3.5-flash-lite',
+    { promptTokenCount: 1_000_000, candidatesTokenCount: 1_000_000 },
+    'generateContent',
+    0,
+    0,
+    'gemini-3.7-flash',
+  );
+  assert.equal(billedUsd, 4.5);
+});
+
 test('managed models are allowlisted, including SDK-qualified names', () => {
-  const allowed = new Set(['gemini-flash-latest', 'lyria-realtime-exp']);
+  const allowed = new Set(['gemini-3.7-flash', 'gemini-3.5-flash-lite', 'lyria-realtime-exp']);
+  assert.equal(resolvePinnedManagedGenerationModel('gemini-flash-latest'), 'gemini-3.7-flash');
+  assert.equal(resolvePinnedManagedGenerationModel('models/gemini-flash-lite-latest'), 'gemini-3.5-flash-lite');
   assert.equal(
-    requireAllowedManagedModel('gemini-flash-latest', allowed, 'generation'),
-    'gemini-flash-latest',
+    requireAllowedManagedModel(
+      resolvePinnedManagedGenerationModel('gemini-flash-latest'),
+      allowed,
+      'generation',
+    ),
+    'gemini-3.7-flash',
   );
   assert.equal(
     requireAllowedManagedModel('models/lyria-realtime-exp', allowed, 'music'),

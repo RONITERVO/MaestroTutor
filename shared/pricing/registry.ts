@@ -57,11 +57,20 @@ export const DEFAULT_GEMINI_PRICING: GeminiPricingRegistry = {
   },
   models: [
     {
-      id: 'gemini-3.6-flash',
-      displayName: 'Gemini 3.6 Flash',
-      matches: ['gemini-flash-latest', 'gemini-3.6-flash'],
+      id: 'gemini-3.7-flash',
+      displayName: 'Gemini 3.7 Flash',
+      matches: ['gemini-flash-latest', 'gemini-3.7-flash'],
       // Promotional Standard rates published through 2026-12-31. Re-verify
       // before 2027-01-01, when Google currently says these rates double.
+      inputPerMillion: allModalities(0.75),
+      outputPerMillion: allModalities(3.75),
+      cachedInputPerMillion: allModalities(0.075),
+    },
+    {
+      id: 'gemini-3.6-flash',
+      displayName: 'Gemini 3.6 Flash',
+      matches: ['gemini-3.6-flash'],
+      // Google applies the same 2026 promotional Standard rates to 3.6 Flash.
       inputPerMillion: allModalities(0.75),
       outputPerMillion: allModalities(3.75),
       cachedInputPerMillion: allModalities(0.075),

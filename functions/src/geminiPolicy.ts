@@ -7,6 +7,23 @@ import { DEFAULT_GEMINI_PRICING, resolvePricingRule } from '../../shared/pricing
 
 export type ManagedContentOperation = 'generateContent' | 'streamContent' | 'generateImage';
 
+const LEGACY_MANAGED_GENERATION_MODEL_PINS = new Map<string, string>([
+  ['gemini-flash-latest', 'gemini-3.7-flash'],
+  ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite'],
+]);
+
+/**
+ * Keep installed clients working without letting a provider-owned `latest`
+ * alias choose a different model or price for prepaid traffic.
+ */
+export const resolvePinnedManagedGenerationModel = (model: string): string => {
+  const normalized = (model || '').trim();
+  const unqualified = normalized.startsWith('models/')
+    ? normalized.slice('models/'.length)
+    : normalized;
+  return LEGACY_MANAGED_GENERATION_MODEL_PINS.get(unqualified.toLowerCase()) || normalized;
+};
+
 const normalizedResponseModalities = (config: Record<string, unknown> | undefined): string[] => {
   const modalities = config?.responseModalities;
   if (!Array.isArray(modalities)) return [];
@@ -63,9 +80,13 @@ const FORBIDDEN_MANAGED_CONFIG_KEYS = new Set([
   'abortSignal',
   'apiKey',
   'baseUrl',
+  'candidateCount',
   'headers',
   'httpOptions',
+  'temperature',
   'timeout',
+  'topK',
+  'topP',
 ]);
 
 /** Prevent callers from altering backend transport or enabling unpriced tools. */
@@ -75,9 +96,6 @@ export const requireSafeManagedGenerationConfig = (
   if (!config) return undefined;
   if (typeof config !== 'object' || Array.isArray(config)) {
     throw createHttpError(400, 'Managed generation config must be an object.');
-  }
-  if (config.candidateCount !== undefined && config.candidateCount !== 1) {
-    throw createHttpError(400, 'Managed generation supports exactly one response candidate.');
   }
   if (
     config.maxOutputTokens !== undefined

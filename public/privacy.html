@@ -17,27 +17,80 @@
   </head>
   <body>
     <h1>Privacy Policy</h1>
-    <p><strong>Effective Date:</strong> January 24, 2025</p>
-    <p>Maestro Tutor operates as a client-side interface for the Google Gemini API.</p>
+    <p><strong>Effective Date:</strong> September 1, 2026</p>
+    <p>
+      Maestro Tutor offers two ways to access Google Gemini: bring your own API key
+      ("BYOK") or sign in to use Maestro managed access. The data flow depends on
+      the access mode you choose.
+    </p>
 
-    <h2>Data Collection and Usage</h2>
+    <h2>BYOK access</h2>
     <ul>
-      <li><strong>API Key:</strong> If you choose to enter a Google AI Studio API key, it is stored locally on your device. We do not collect or transmit your key to our servers.</li>
-      <li><strong>Chat Content:</strong> Prompts and media you send are transmitted directly from your device to Google’s servers using the official Google GenAI SDK.</li>
-      <li><strong>Local Storage:</strong> The app does not use a developer-hosted backend. Chat history is stored locally on your device. <strong>Uninstalling the app permanently removes this local data.</strong></li>
+      <li><strong>API key:</strong> A Google AI Studio API key you enter is stored locally on your device. Maestro does not send that key to its managed service.</li>
+      <li><strong>Generation content:</strong> Prompts and media are sent directly from your device to Google Gemini.</li>
+      <li><strong>Local data:</strong> Chat history and local usage information are stored on your device. Uninstalling the app clears the app's local data on that device.</li>
     </ul>
 
+    <h2>Managed access</h2>
+    <p>When you choose managed access, Maestro processes the following data to provide, secure, bill, and maintain the service:</p>
+    <ul>
+      <li><strong>Account data:</strong> Google/Firebase sign-in identifiers and available profile details such as your name, email address, and profile image.</li>
+      <li><strong>Generation content:</strong> Prompts, responses, and uploaded media pass through Maestro's Firebase/Google Cloud service and then Google Gemini. Maestro does not store ordinary chat history in its managed database. Managed uploads can remain temporarily in Google Gemini Files until deletion or automated cleanup; Maestro stores operational file metadata needed to manage that lifecycle.</li>
+      <li><strong>Usage and operations:</strong> Credit balance, entitlements, usage and billing ledger metadata, reservations, rate-limit windows, request identifiers, and file/cleanup state.</li>
+      <li><strong>Purchases:</strong> Stripe customer and checkout references for web purchases, or Google Play purchase/order references for Android purchases, plus verification and credit-grant records. Payment providers process payment credentials; Maestro does not store raw card details.</li>
+      <li><strong>Content reports:</strong> If you voluntarily report an AI response, Maestro stores the reported content, selected reason, optional notes, surface/model details, and basic request/account metadata so the report can be reviewed.</li>
+    </ul>
+
+    <h2>Retention</h2>
+    <ul>
+      <li>Rate-limit windows expire two minutes after their window begins.</li>
+      <li>Released live-session and deleted-file metadata is scheduled for deletion after 30 days.</li>
+      <li>Settled or released reservations and checkout-grant snapshots are scheduled for deletion after 90 days.</li>
+      <li>AI-content reports are scheduled for deletion after 365 days unless account deletion anonymizes them sooner.</li>
+      <li>Managed billing and usage ledgers are kept while the managed account exists. Purchase-claim integrity records are retained to prevent the same external purchase from granting credits twice.</li>
+    </ul>
+    <p>Scheduled deletion is asynchronous, so an expired record may remain briefly before the storage service removes it.</p>
+
+    <h2>Account deletion</h2>
+    <p>
+      Uninstalling clears local app data only; it does not delete a managed account.
+      A managed user can choose <strong>Delete managed account</strong> in the app or use the
+      <a href="/delete-account.html">account-deletion page</a>. Deletion removes the
+      Firebase-authenticated Maestro account, its managed user data and files, and the
+      linked Stripe customer when applicable. Purchase-integrity claims and previously
+      submitted content reports may remain only in anonymized form. A one-way account
+      tombstone is retained to prevent delayed requests or payment events from recreating
+      the deleted account. Stripe, Google Play, Google, and other providers may retain
+      transaction or service records under their own policies and legal obligations.
+    </p>
+
     <div class="note">
-      <strong>Important Note on Google's Data Retention:</strong><br/>
-      While uninstalling the app deletes your local history, data sent to the Google Gemini API is subject to Google's data retention policies.
-      If you use a free API key, Google may retain prompts and responses to improve their products.
-      Please do not share sensitive personal information (PII), passwords, or confidential data in your chats.
+      <strong>Use care with sensitive information.</strong><br/>
+      Content sent to Gemini is subject to the terms and data practices that apply to your
+      chosen access mode and provider account. Do not include passwords or information you
+      are not authorized to share.
     </div>
 
     <h2>Third-Party Services</h2>
-    <p>This app uses the Google Gemini API. Your interactions are governed by <a href="https://policies.google.com/privacy" target="_blank">Google’s Privacy Policy</a> and <a href="https://ai.google.dev/gemini-api/terms" target="_blank">Terms of Service</a>.</p>
+    <p>
+      Maestro uses Google Gemini, Firebase and Google Cloud, Stripe for managed web
+      purchases, and Google Play for managed Android purchases. Their handling of data is
+      governed by their own terms and policies. See
+      <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a>,
+      <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Gemini API Terms</a>,
+      <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Firebase Privacy and Security</a>, and
+      <a href="https://stripe.com/legal/privacy-center" target="_blank" rel="noopener noreferrer">Stripe's Privacy Center</a>.
+    </p>
+
+    <h2>Security and policy changes</h2>
+    <p>
+      Maestro uses encrypted network connections and access controls intended to protect
+      managed data. No system can guarantee absolute security. This policy will be updated
+      when the service's material data practices change, with a new effective date shown
+      above.
+    </p>
 
     <h2>Contact</h2>
-    <p>If you have questions, please contact the developer via the <a href="https://github.com/ronitervo/maestrotutor/issues" target="_blank">GitHub repository</a>.</p>
+    <p>If you have privacy questions or a deletion problem, contact the developer through the <a href="https://github.com/ronitervo/maestrotutor/issues" target="_blank" rel="noopener noreferrer">GitHub repository</a>.</p>
   </body>
 </html>

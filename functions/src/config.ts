@@ -29,8 +29,8 @@ const MAX_MANAGED_UPLOAD_BYTES = Math.floor(
 ) * 3;
 
 const DEFAULT_MANAGED_GENERATION_MODELS = [
-  'gemini-flash-latest',
-  'gemini-flash-lite-latest',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash-lite',
   'gemini-2.5-flash-image',
 ] as const;
 const DEFAULT_MANAGED_LIVE_MODELS = [

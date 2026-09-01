@@ -18,6 +18,7 @@ import {
   requireAllowedManagedModel,
   requirePricedManagedGenerationModel,
   requireSafeManagedLiveConfig,
+  resolvePinnedManagedGenerationModel,
   resolveManagedContentOperation,
   usesManagedGoogleSearch,
 } from './geminiPolicy';
@@ -374,12 +375,14 @@ const evictManagedFilesForUpload = async (uid: string, slotsNeeded = 1): Promise
 
 const serializeGenerateContentResponse = (
   response: any,
-  billingSummary: unknown
+  billingSummary: unknown,
+  modelVersionOverride?: string,
 ) => ({
   text: typeof response?.text === 'string' ? response.text : '',
   candidates: Array.isArray(response?.candidates) ? response.candidates : [],
   usageMetadata: response?.usageMetadata || undefined,
-  modelVersion: typeof response?.modelVersion === 'string' ? response.modelVersion : undefined,
+  modelVersion: modelVersionOverride
+    || (typeof response?.modelVersion === 'string' ? response.modelVersion : undefined),
   promptFeedback: response?.promptFeedback || undefined,
   responseId: typeof response?.responseId === 'string' ? response.responseId : undefined,
   billingSummary,
@@ -494,7 +497,7 @@ export const generateManagedContent = async (params: {
 }) => {
   const model = requirePricedManagedGenerationModel(
     requireAllowedManagedModel(
-      params.model,
+      resolvePinnedManagedGenerationModel(params.model),
       appConfig.managedAllowedGeminiModels,
       'generation',
     ),
@@ -520,12 +523,16 @@ export const generateManagedContent = async (params: {
     ),
     finalize: async (reservationId, response) => {
       const usageMetadata = response?.usageMetadata as Record<string, unknown> | undefined;
+      const resolvedModelVersion = typeof response?.modelVersion === 'string'
+        ? response.modelVersion.trim() || undefined
+        : undefined;
       const billedUsd = usageMetadataToUsd(
         model,
         usageMetadata,
         operation,
         countGeneratedImages(response),
         countGoogleSearchQueries(response),
+        resolvedModelVersion,
       );
       const billedCredits = usdToCredits(billedUsd);
       const billingSummary = await settleManagedReservation({
@@ -534,8 +541,10 @@ export const generateManagedContent = async (params: {
         billedCredits,
         billedUsd,
         operation,
-        model,
+        model: resolvedModelVersion || model,
         metadata: {
+          requestedModel: model,
+          resolvedModelVersion: resolvedModelVersion || null,
           promptTokenCount: usageMetadata?.promptTokenCount,
           candidatesTokenCount: usageMetadata?.candidatesTokenCount,
           searchQueries: countGoogleSearchQueries(response),
@@ -559,7 +568,7 @@ export const streamManagedContent = async (params: {
   const response = params.response;
   const model = requirePricedManagedGenerationModel(
     requireAllowedManagedModel(
-      params.model,
+      resolvePinnedManagedGenerationModel(params.model),
       appConfig.managedAllowedGeminiModels,
       'streaming generation',
     ),
@@ -604,6 +613,7 @@ export const streamManagedContent = async (params: {
   response.setHeader('X-Accel-Buffering', 'no');
 
   let latestChunk: any = null;
+  let resolvedModelVersion: string | undefined;
   let deliveredAnyChunk = false;
   // Images arrive spread across chunks, so they are tallied as they stream
   // rather than read off the final one.
@@ -631,6 +641,9 @@ export const streamManagedContent = async (params: {
 
     for await (const chunk of stream) {
       latestChunk = chunk;
+      if (typeof chunk?.modelVersion === 'string' && chunk.modelVersion.trim()) {
+        resolvedModelVersion = chunk.modelVersion.trim();
+      }
       streamedImageCount += countGeneratedImages(chunk);
       streamedSearchQueryCount = Math.max(
         streamedSearchQueryCount,
@@ -658,6 +671,7 @@ export const streamManagedContent = async (params: {
         operation,
         streamedImageCount,
         streamedSearchQueryCount,
+        resolvedModelVersion,
       );
       const billedCredits = usdToCredits(billedUsd);
       const billingSummary = await settleManagedReservation({
@@ -666,8 +680,10 @@ export const streamManagedContent = async (params: {
         billedCredits,
         billedUsd,
         operation,
-        model,
+        model: resolvedModelVersion || model,
         metadata: {
+          requestedModel: model,
+          resolvedModelVersion: resolvedModelVersion || null,
           promptTokenCount: usageMetadata?.promptTokenCount,
           candidatesTokenCount: usageMetadata?.candidatesTokenCount,
           disconnectRecovered: false,
@@ -678,7 +694,11 @@ export const streamManagedContent = async (params: {
       if (!clientDisconnected && !response.destroyed && response.writable) {
         response.write(`${JSON.stringify({
           type: 'final',
-          result: serializeGenerateContentResponse(latestChunk || {}, billingSummary),
+          result: serializeGenerateContentResponse(
+            latestChunk || {},
+            billingSummary,
+            resolvedModelVersion,
+          ),
         })}\n`);
         streamFinished = true;
         response.end();
@@ -693,8 +713,10 @@ export const streamManagedContent = async (params: {
         billedCredits: estimatedCredits,
         billedUsd: estimatedUsd,
         operation,
-        model,
+        model: resolvedModelVersion || model,
         metadata: {
+          requestedModel: model,
+          resolvedModelVersion: resolvedModelVersion || null,
           promptTokens,
           disconnectRecovered: true,
           partialStreamDelivered: deliveredAnyChunk,
@@ -716,8 +738,10 @@ export const streamManagedContent = async (params: {
         billedCredits: estimatedCredits,
         billedUsd: estimatedUsd,
         operation,
-        model,
+        model: resolvedModelVersion || model,
         metadata: {
+          requestedModel: model,
+          resolvedModelVersion: resolvedModelVersion || null,
           promptTokens,
           streamFailedAfterOutput: true,
           partialStreamDelivered: deliveredAnyChunk,
@@ -726,7 +750,11 @@ export const streamManagedContent = async (params: {
       if (!response.destroyed && response.writable && !response.writableEnded) {
         response.write(`${JSON.stringify({
           type: 'final',
-          result: serializeGenerateContentResponse(latestChunk || {}, billingSummary),
+          result: serializeGenerateContentResponse(
+            latestChunk || {},
+            billingSummary,
+            resolvedModelVersion,
+          ),
         })}\n`);
         response.write(`${JSON.stringify({
           type: 'error',
