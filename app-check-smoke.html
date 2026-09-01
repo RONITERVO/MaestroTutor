@@ -29,8 +29,9 @@
               : 'BACKEND_UNEXPECTED_RESPONSE',
           ].join(' ');
         }
-      } catch {
-        result.textContent = 'APP_CHECK_SMOKE_FAILED';
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        result.textContent = `APP_CHECK_SMOKE_FAILED ${message}`;
       }
     </script>
   </body>
