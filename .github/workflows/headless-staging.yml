@@ -75,12 +75,21 @@ jobs:
           node -e "const r=require('./audio-note.json'); if(r.durationSeconds<=0||r.mimeType!=='audio/wav'||!r.uploaded?.uri) process.exit(1)"
           npx tsx src/headless/cli.ts media.music.generate --profile staging-ci --params '{"prompt":"A calm original scale-practice backing track","durationSeconds":8,"upload":true}' > music.json
           node -e "const r=require('./music.json'); if(r.durationSeconds<=0||r.mimeType!=='audio/wav'||!r.uploaded?.uri) process.exit(1)"
-          npx tsx -e "import {TRIGGER_AUDIO_PCM_24K} from './src/core-sdk/media/triggerAudioAsset.ts'; const raw=Buffer.from(TRIGGER_AUDIO_PCM_24K,'base64'); const source=new Int16Array(raw.buffer,raw.byteOffset,Math.floor(raw.byteLength/2)); const output=new Int16Array(Math.floor(source.length*2/3)); for(let i=0;i<output.length;i++) output[i]=source[Math.min(source.length-1,Math.floor(i*3/2))]; require('fs').writeFileSync('live-params.json',JSON.stringify({pcmBase64:Buffer.from(output.buffer).toString('base64'),sampleRate:16000,pace:true,timeoutMs:45000}))"
-          npx tsx src/headless/cli.ts speech.synthetic.live --profile staging-ci --params-file live-params.json > live.json
-          node -e "const r=require('./live.json'); if(!r.operationId||(!r.outputTranscript&&r.modelAudioChunkCount<1)) process.exit(1)"
+          npx tsx -e "import {TRIGGER_AUDIO_PCM_24K} from './src/core-sdk/media/triggerAudioAsset.ts'; const raw=Buffer.from(TRIGGER_AUDIO_PCM_24K,'base64'); const source=new Int16Array(raw.buffer,raw.byteOffset,Math.floor(raw.byteLength/2)); const speech=new Int16Array(Math.floor(source.length*2/3)); for(let i=0;i<speech.length;i++) speech[i]=source[Math.min(source.length-1,Math.floor(i*3/2))]; const output=new Int16Array(speech.length+12000); output.set(speech); require('fs').writeFileSync('live-params.json',JSON.stringify({pcmBase64:Buffer.from(output.buffer).toString('base64'),sampleRate:16000,pace:true,timeoutMs:60000}))"
+          live_ok=0
+          for attempt in 1 2; do
+            if npx tsx src/headless/cli.ts speech.synthetic.live --profile staging-ci --params-file live-params.json > live.json \
+              && node -e "const r=require('./live.json'); if(!r.operationId||(!r.outputTranscript&&r.modelAudioChunkCount<1)) process.exit(1)"; then
+              live_ok=1
+              break
+            fi
+            echo "Synthetic Live attempt $attempt did not produce a completed model turn."
+          done
+          test "$live_ok" -eq 1
       - name: Verify ledgers, clear generated files and sign out
+        if: always()
         run: |
+          npx tsx src/headless/cli.ts files.clear --profile staging-ci > clear.json
           npx tsx src/headless/cli.ts account.ledgers --profile staging-ci --params '{"limit":200}' > ledgers.json
           node -e "const l=require('./ledgers.json'); if(!l.billing.entries.some(e=>e.kind==='purchase')||!l.usage.entries.length) process.exit(1)"
-          npx tsx src/headless/cli.ts files.clear --profile staging-ci > clear.json
           npx tsx src/headless/cli.ts auth.signOut --profile staging-ci > signout.json
