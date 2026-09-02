@@ -34,13 +34,11 @@ This is the canonical color and UI styling reference for contributors.
 
 When adding or changing a colorized element:
 
-1. Add or update CSS variable defaults in `src/app/index.css` (`:root`).
-2. Register token in Tailwind color map in `index.html` (`tailwind.config.theme.extend.colors`).
-3. Add token metadata to `src/features/theme/config/colorRegistry.ts` with friendly name and description.
-5. Add token to the active default palette in `src/features/theme/config/themeColors.ts` and keep `src/features/theme/config/defaultTheme.ts` aligned if the app default changes.
-6. Use the tokenized utility class in JSX/TSX; remove any direct hardcoded color utility or literal color.
-7. If replacing legacy token keys, add mapping to `src/features/theme/config/colorRenameMap.ts`.
-8. Validate with build + visual pass + Theme Customizer coverage.
+1. Add token metadata to `src/features/theme/config/colorRegistry.ts` with friendly name and description. This registry is the single source of truth: the `:root` declarations in `src/app/index.css` are generated from it by `colorTokensPlugin` in `vite.config.ts` (replacing the `/* __COLOR_TOKENS__ */` marker), and the Tailwind color map in `tailwind.config.ts` is derived from it too. Neither needs a manual edit.
+2. Add token to the active default palette in `src/features/theme/config/themeColors.ts` and keep `src/features/theme/config/defaultTheme.ts` aligned if the app default changes. The build fails if a registered token has no default value.
+3. Use the tokenized utility class in JSX/TSX; remove any direct hardcoded color utility or literal color.
+4. If replacing legacy token keys, add mapping to `src/features/theme/config/colorRenameMap.ts`.
+5. Validate with build + visual pass + Theme Customizer coverage.
 
 ## Recent Token Isolation Updates (2026-03-15)
 

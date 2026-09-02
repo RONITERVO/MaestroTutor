@@ -1,20 +1,23 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-const { readFileSync } = require('node:fs');
+import type { Config } from 'tailwindcss';
+import { COLOR_GROUPS } from './src/features/theme/config/colorRegistry';
 
-// CSS variables are the theme source of truth. Deriving Tailwind colors from
-// them prevents the runtime CDN configuration and the actual design tokens
-// from drifting into two separate lists.
-const css = readFileSync('./src/app/index.css', 'utf8');
-const variableNames = [...css.matchAll(/--([a-z][a-z0-9-]+)\s*:/g)]
-  .map(match => match[1])
-  .filter(name => name !== 'radius');
+// COLOR_GROUPS is the single source of truth for the theme tokens. The Vite
+// colorTokensPlugin emits the matching `--token: value` declarations into
+// :root, so deriving the Tailwind palette from the same registry keeps the
+// utilities and the custom properties from drifting apart.
+//
+// Note: the tokens cannot be read back out of index.css, because that file only
+// holds the `/* __COLOR_TOKENS__ */` marker until Vite expands it — and that
+// expansion happens after PostCSS/Tailwind has already run.
 const colors = Object.fromEntries(
-  [...new Set(variableNames)].map(name => [name, `hsl(var(--${name}))`]),
+  COLOR_GROUPS.flatMap(group =>
+    group.colors.map(color => [color.cssVar, `hsl(var(--${color.cssVar}))`]),
+  ),
 );
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: ['./index.html', './delete-account.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -59,4 +62,4 @@ module.exports = {
     },
   },
   plugins: [],
-};
+} satisfies Config;
