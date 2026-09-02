@@ -3,10 +3,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
-import { ThinkingLevel } from '@google/genai';
+import {
+  ActivityHandling,
+  EndSensitivity,
+  StartSensitivity,
+  ThinkingLevel,
+} from '@google/genai';
 import {
   getLiveConversationThinkingConfig,
   getLiveMinimalThinkingConfig,
+  getLiveRealtimeInputConfig,
   usesGemini25ThinkingBudget,
 } from './liveModelCompatibility';
 
@@ -41,5 +47,21 @@ describe('Live model compatibility', () => {
       thinkingLevel: ThinkingLevel.HIGH,
       includeThoughts: true,
     });
+  });
+
+  it('protects model speech from Android echo unless barge-in is explicitly enabled', () => {
+    expect(getLiveRealtimeInputConfig()).toEqual({
+      activityHandling: ActivityHandling.NO_INTERRUPTION,
+      automaticActivityDetection: {
+        disabled: false,
+        startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
+        endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
+        prefixPaddingMs: 120,
+        silenceDurationMs: 600,
+      },
+    });
+    expect(getLiveRealtimeInputConfig(true).activityHandling).toBe(
+      ActivityHandling.START_OF_ACTIVITY_INTERRUPTS,
+    );
   });
 });

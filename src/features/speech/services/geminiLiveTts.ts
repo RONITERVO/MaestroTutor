@@ -34,6 +34,7 @@ import {
   createLiveOpenReason,
   type TtsLiveOpenTrigger,
 } from '../../../../shared/liveOpenReason';
+import { ScheduledPlaybackDrain } from '../utils/playbackDrain';
 
 // ============================================================================
 // TYPES
@@ -181,7 +182,10 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     let session: any = null;
     let isResolved = false;
     const activeSources: AudioBufferSourceNode[] = [];
+    const playbackDrain = new ScheduledPlaybackDrain();
     let finalized = false;
+    let terminalHandled = false;
+    let abortHandler: (() => void) | null = null;
 
     let sessionStartTime: number | null = null;
     const scheduledLineStarts: Array<{ lineIndex: number; text: string; startTime: number }> = [];
@@ -230,18 +234,42 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     let correctedHighlightIndex = 0;
     let lastScheduledHighlightIndex = -1;
 
-    const cleanup = () => {
+    const cleanupTransport = () => {
       isStreaming = false;
-      if (streamCleanup) streamCleanup();
+      if (streamCleanup) {
+        streamCleanup();
+        streamCleanup = null;
+      }
+    };
+
+    const detachAbortHandler = () => {
+      if (abortSignal && abortHandler) {
+        abortSignal.removeEventListener('abort', abortHandler);
+        abortHandler = null;
+      }
+    };
+
+    const cleanupPlayback = (interrupt: boolean) => {
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
         rafId = null;
       }
+      scheduledLineStarts.length = 0;
+      pendingLineStarts.length = 0;
+      if (!interrupt) return;
+
+      playbackDrain.cancel();
       while (activeSources.length > 0) {
         const source = activeSources.pop();
         try { source?.stop(); } catch {}
         try { source?.disconnect(); } catch {}
       }
+    };
+
+    const interruptAndCleanup = () => {
+      cleanupTransport();
+      detachAbortHandler();
+      cleanupPlayback(true);
     };
 
     const resolveOnce = (result: GeminiLiveTtsResult) => {
@@ -334,6 +362,67 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
       return { audioSegments, mapping };
     };
 
+    const finishAfterPlayback = async (
+      result: GeminiLiveTtsResult,
+      status: 'complete' | 'closed' | 'error' | 'timeout',
+      reportError = false,
+    ) => {
+      if (terminalHandled) return;
+      terminalHandled = true;
+      cleanupTransport();
+      try { session?.close(); } catch {}
+
+      // Server completion only seals the incoming stream. AudioBufferSources
+      // may still contain most of the spoken answer, especially on Android.
+      onStatusUpdate?.('PLAYBACK DRAINING');
+      const drainStartedAt = Date.now();
+      const drainResult = await playbackDrain.wait();
+      const playbackDrainMs = Date.now() - drainStartedAt;
+      // An explicit stop may arrive after turnComplete while the scheduled
+      // sources are still audible. It remains authoritative.
+      if (drainResult === 'cancelled' || isResolved) return;
+      detachAbortHandler();
+      cleanupPlayback(false);
+
+      if (result.isComplete) {
+        log.complete({
+          status,
+          segmentCount: result.audioSegments.length,
+          transcript: transcriptAccumulator,
+          playbackDrainMs,
+          playbackDrainResult: drainResult,
+        });
+      } else {
+        log.error({
+          message: result.error || 'Connection error',
+          status,
+          transcript: transcriptAccumulator,
+          playbackDrainMs,
+          playbackDrainResult: drainResult,
+        });
+        if (reportError) onError?.(result.error || 'Connection error');
+      }
+      resolveOnce(result);
+    };
+
+    const abortImmediately = () => {
+      if (isResolved) return;
+      terminalHandled = true;
+      interruptAndCleanup();
+      try { session?.close(); } catch {}
+      const finalizedResult = finalizeAudioSegments('aborted');
+      log.complete({
+        status: 'aborted',
+        segmentCount: finalizedResult?.audioSegments.length || 0,
+        transcript: transcriptAccumulator,
+      });
+      resolveOnce({
+        isComplete: false,
+        error: 'ABORTED',
+        audioSegments: finalizedResult?.audioSegments || [],
+      });
+    };
+
     try {
       session = await ai.live.connect({
         model,
@@ -367,7 +456,8 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
                 source.buffer = audioBuffer;
                 source.connect(audioContext.destination);
                 activeSources.push(source);
-                
+                const markSourceEnded = playbackDrain.trackSource();
+
                 // Clean up the source when it finishes playing to free memory
                 source.onended = () => {
                   const idx = activeSources.indexOf(source);
@@ -375,6 +465,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
                     activeSources.splice(idx, 1);
                   }
                   try { source.disconnect(); } catch {}
+                  markSourceEnded();
                 };
                 
                 nextStartTime = Math.max(audioContext.currentTime, nextStartTime);
@@ -392,7 +483,15 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
                     pendingLineStarts.length = 0;
                   }
                 }
-                source.start(nextStartTime);
+                try {
+                  source.start(nextStartTime);
+                } catch (error) {
+                  const idx = activeSources.indexOf(source);
+                  if (idx !== -1) activeSources.splice(idx, 1);
+                  try { source.disconnect(); } catch {}
+                  markSourceEnded();
+                  throw error;
+                }
                 nextStartTime += audioBuffer.duration;
               } catch (e) {
                 console.warn('[GeminiLiveTts] Audio decode failed', e);
@@ -435,30 +534,37 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
 
             // 3. Handle Turn Completion
             if (msg.serverContent?.turnComplete) {
-              // Clean up first to stop timers and prevent timeout firing
-              cleanup();
               const finalizedResult = finalizeAudioSegments('turn-complete');
-              session.close();
-              log.complete({
-                status: 'complete',
-                segmentCount: finalizedResult?.audioSegments.length || 0,
-                transcript: transcriptAccumulator,
-              });
-              resolveOnce({ isComplete: true, audioSegments: finalizedResult?.audioSegments || [] });
+              void finishAfterPlayback(
+                { isComplete: true, audioSegments: finalizedResult?.audioSegments || [] },
+                'complete',
+              );
             }
           },
           onclose: () => {
-            cleanup();
+            if (terminalHandled) return;
+            const finalizedResult = finalizeAudioSegments('closed');
+            void finishAfterPlayback({
+              isComplete: false,
+              error: 'Connection closed before the TTS turn completed',
+              audioSegments: finalizedResult?.audioSegments || [],
+            }, 'closed', true);
           },
           onerror: (err: any) => {
-            cleanup();
             const errorMsg = err?.message || 'Connection error';
-            log.error({ message: errorMsg, transcript: transcriptAccumulator });
-            onError?.(errorMsg);
-            resolveOnce({ isComplete: false, error: errorMsg, audioSegments: [] });
+            const finalizedResult = finalizeAudioSegments('error');
+            void finishAfterPlayback({
+              isComplete: false,
+              error: errorMsg,
+              audioSegments: finalizedResult?.audioSegments || [],
+            }, 'error', true);
           }
         }
       });
+
+      // A test transport or SDK adapter may synchronously emit a terminal
+      // callback before connect() returns. Do not resurrect its trigger loop.
+      if (terminalHandled) return;
 
       // --- Trigger Logic: Send pre-recorded audio to wake up model ---
       isStreaming = true;
@@ -474,12 +580,13 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
       // Session timeout - if no response within limit, fail gracefully
       sessionTimeoutId = setTimeout(() => {
         if (isStreaming) {
-          cleanup();
-          session?.close();
           const errorMsg = 'Session timeout - no response from model';
-          log.error({ message: errorMsg, transcript: transcriptAccumulator });
-          onError?.(errorMsg);
-          resolveOnce({ isComplete: false, error: errorMsg, audioSegments: [] });
+          const finalizedResult = finalizeAudioSegments('timeout');
+          void finishAfterPlayback({
+            isComplete: false,
+            error: errorMsg,
+            audioSegments: finalizedResult?.audioSegments || [],
+          }, 'timeout', true);
         }
       }, SESSION_TIMEOUT_MS);
 
@@ -516,9 +623,15 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
             audio: { mimeType: `audio/pcm;rate=${TRIGGER_SAMPLE_RATE}`, data: b64Data }
           });
         } catch (e) {
-          cleanup();
           clearInterval(intervalId);
           if (sessionTimeoutId) clearTimeout(sessionTimeoutId);
+          const errorMsg = e instanceof Error ? e.message : 'Failed to send TTS trigger audio';
+          const finalizedResult = finalizeAudioSegments('error');
+          void finishAfterPlayback({
+            isComplete: false,
+            error: errorMsg,
+            audioSegments: finalizedResult?.audioSegments || [],
+          }, 'error', true);
         }
       }, chunkDurationMs);
 
@@ -529,36 +642,21 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
 
       if (abortSignal) {
         if (abortSignal.aborted) {
-          cleanup();
-          try { session?.close(); } catch {}
-          const finalizedResult = finalizeAudioSegments('aborted');
-          log.complete({
-            status: 'aborted',
-            segmentCount: finalizedResult?.audioSegments.length || 0,
-            transcript: transcriptAccumulator,
-          });
-          resolveOnce({ isComplete: false, error: 'ABORTED', audioSegments: finalizedResult?.audioSegments || [] });
+          abortImmediately();
           return;
         }
-        abortSignal.addEventListener('abort', () => {
-          cleanup();
-          try { session?.close(); } catch {}
-          const finalizedResult = finalizeAudioSegments('aborted');
-          log.complete({
-            status: 'aborted',
-            segmentCount: finalizedResult?.audioSegments.length || 0,
-            transcript: transcriptAccumulator,
-          });
-          resolveOnce({ isComplete: false, error: 'ABORTED', audioSegments: finalizedResult?.audioSegments || [] });
-        }, { once: true });
+        abortHandler = abortImmediately;
+        abortSignal.addEventListener('abort', abortHandler, { once: true });
       }
 
     } catch (e: any) {
-      cleanup();
       const errorMsg = e?.message || 'Connection failed';
-      log.error({ message: errorMsg, transcript: transcriptAccumulator });
-      onError?.(errorMsg);
-      resolveOnce({ isComplete: false, error: errorMsg, audioSegments: [] });
+      const finalizedResult = finalizeAudioSegments('error');
+      void finishAfterPlayback({
+        isComplete: false,
+        error: errorMsg,
+        audioSegments: finalizedResult?.audioSegments || [],
+      }, 'error', true);
     }
   });
 }

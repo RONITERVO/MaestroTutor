@@ -56,7 +56,10 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../../../core-sdk/media/realtimePcmPacketizer';
 import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
-import { getLiveConversationThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
+import {
+  getLiveConversationThinkingConfig,
+  getLiveRealtimeInputConfig,
+} from '../../../core-sdk/media/liveModelCompatibility';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 import {
   createLiveOpenReason,
@@ -65,6 +68,10 @@ import {
 } from '../../../../shared/liveOpenReason';
 import { useMaestroStore } from '../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
+import {
+  getAudioOutputTailDelayMs,
+  WorkletPlaybackDrainCoordinator,
+} from '../utils/playbackDrain';
 
 export type LiveSessionState = 'idle' | 'armed' | 'connecting' | 'active' | 'error';
 
@@ -89,6 +96,7 @@ export interface LiveTurnTranscriptUpdate {
 export interface UseGeminiLiveConversationCallbacks {
   onStateChange?: (state: LiveSessionState) => void;
   onError?: (message: string) => void;
+  /** Advance disconnect warning only; consumers must not close the session immediately. */
   onGoAway?: (goAway: LiveServerGoAway) => void;
   onSessionResumptionUpdate?: (update: LiveServerSessionResumptionUpdate) => void;
   onTurnTranscriptUpdate?: (update: LiveTurnTranscriptUpdate) => void;
@@ -131,6 +139,8 @@ export interface StartLiveConversationOptions {
   responseModalities?: Modality[];
   playModelAudio?: boolean;
   emitTurns?: boolean;
+  /** Deliberately opt into barge-in. Disabled by default for Android reliability. */
+  allowModelInterruptions?: boolean;
   sessionResumption?: SessionResumptionConfig;
   costFeature?: 'liveConversation' | 'reengagement';
 }
@@ -207,6 +217,9 @@ interface LivePlaybackTelemetry {
   outputSampleRate: number | null;
   resampledOutput: boolean;
   contextFallbackToDefaultRate: boolean;
+  drains: number;
+  drainCancellations: number;
+  lastDrainWaitMs: number | null;
 }
 
 const createEmptyInputAudioTelemetry = (): LiveInputAudioTelemetry => ({
@@ -229,6 +242,9 @@ const createEmptyPlaybackTelemetry = (): LivePlaybackTelemetry => ({
   outputSampleRate: null,
   resampledOutput: false,
   contextFallbackToDefaultRate: false,
+  drains: 0,
+  drainCancellations: 0,
+  lastDrainWaitMs: null,
 });
 
 /**
@@ -307,6 +323,8 @@ export function useGeminiLiveConversation(
   const pendingModelAudioDecodeJobsRef = useRef<Map<number, ModelAudioDecodeJob>>(new Map());
   const inputAudioTelemetryRef = useRef<LiveInputAudioTelemetry>(createEmptyInputAudioTelemetry());
   const playbackTelemetryRef = useRef<LivePlaybackTelemetry>(createEmptyPlaybackTelemetry());
+  const playbackDrainCoordinatorRef = useRef(new WorkletPlaybackDrainCoordinator());
+  const playbackPendingRef = useRef(false);
   /** Non-null only for sessions that opted into speech gating. */
   const speechGateRef = useRef<SpeechGate | null>(null);
   /** Raw packets held back while the gate is shut, encoded only if it opens. */
@@ -539,6 +557,8 @@ export function useGeminiLiveConversation(
   }, []);
 
   const stopAllAudio = useCallback(() => {
+    playbackDrainCoordinatorRef.current.cancelAll();
+    playbackPendingRef.current = false;
     if (playbackNodeRef.current) {
       try {
         playbackNodeRef.current.port.postMessage({ type: 'reset' });
@@ -548,6 +568,25 @@ export function useGeminiLiveConversation(
         // Ignore reset failures during teardown/interruption.
       }
     }
+  }, []);
+
+  const waitForPlaybackDrain = useCallback(async () => {
+    const playbackNode = playbackNodeRef.current;
+    const outputContext = outputAudioContextRef.current;
+    if (!playbackNode || !outputContext || !playbackPendingRef.current) return;
+
+    const startedAt = Date.now();
+    const result = await playbackDrainCoordinatorRef.current.request(playbackNode.port);
+    playbackTelemetryRef.current.lastDrainWaitMs = Date.now() - startedAt;
+    if (result !== 'drained') {
+      playbackTelemetryRef.current.drainCancellations += 1;
+      return;
+    }
+
+    playbackPendingRef.current = false;
+    playbackTelemetryRef.current.drains += 1;
+    if (outputAudioContextRef.current !== outputContext || outputContext.state === 'closed') return;
+    await new Promise(resolve => window.setTimeout(resolve, getAudioOutputTailDelayMs(outputContext)));
   }, []);
 
   const stopVideoFrameLoop = useCallback(() => {
@@ -621,6 +660,8 @@ export function useGeminiLiveConversation(
         workletNodeRef.current = null;
     }
     if (playbackNodeRef.current) {
+      playbackDrainCoordinatorRef.current.cancelAll();
+      playbackPendingRef.current = false;
       try { playbackNodeRef.current.port.postMessage({ type: 'reset' }); } catch { }
       try { playbackNodeRef.current.disconnect(); } catch { }
       playbackNodeRef.current = null;
@@ -858,6 +899,7 @@ export function useGeminiLiveConversation(
       responseModalities = [Modality.AUDIO],
       playModelAudio = true,
       emitTurns = true,
+      allowModelInterruptions = false,
       sessionResumption,
       costFeature = 'liveConversation',
       gateInputOnSpeech = false,
@@ -1010,6 +1052,7 @@ export function useGeminiLiveConversation(
           event?: 'started' | 'resumed' | 'underrun';
         }>) => {
           const telemetryMessage = event.data;
+          if (playbackDrainCoordinatorRef.current.handleMessage(telemetryMessage)) return;
           if (!telemetryMessage || telemetryMessage.type !== 'telemetry') return;
           if (telemetryMessage.event === 'started') {
             playbackTelemetryRef.current.starts += 1;
@@ -1029,6 +1072,7 @@ export function useGeminiLiveConversation(
 
       const model = getGeminiModels().audio.conversation;
       const usageTracker = createLiveUsageTracker({ feature: costFeature, configuredModel: model });
+      const realtimeInputConfig = getLiveRealtimeInputConfig(allowModelInterruptions);
       modelRef.current = model;
       logFinalizedRef.current = false;
       logRef.current = debugLogService.logRequest('useGeminiLiveConversation', model, {
@@ -1036,9 +1080,49 @@ export function useGeminiLiveConversation(
         systemInstruction: systemInstruction || '',
         inputAudioTranscription: {},
         outputAudioTranscription: {},
+        realtimeInputConfig,
       });
 
       const ai = await getAi();
+      let transportTerminalHandled = false;
+      const finishTransportLifecycle = async (
+        terminalState: 'idle' | 'error',
+        errorMessage?: string,
+      ) => {
+        if (transportTerminalHandled || currentSessionIdRef.current !== sessionId) return;
+        transportTerminalHandled = true;
+        const terminalSession = sessionRef.current;
+        sessionRef.current = null;
+        try { terminalSession?.close?.(); } catch {}
+
+        // onclose/onerror can overtake worker decoding. First seal the ordered
+        // server-message queue, then let the audio thread render every PCM chunk.
+        await serverMessageQueueRef.current.catch(() => undefined);
+        const checkpoint = getModelAudioDecodeCheckpoint();
+        await waitForModelAudioDecodeCheckpoint(checkpoint);
+        if (currentSessionIdRef.current !== sessionId) return;
+        await waitForPlaybackDrain();
+        if (currentSessionIdRef.current !== sessionId) return;
+
+        if (logRef.current && !logFinalizedRef.current) {
+          logFinalizedRef.current = true;
+          const details = {
+            inputTranscript: currentInputTranscriptionRef.current,
+            outputTranscript: currentOutputTranscriptionRef.current,
+            audioTelemetry: getAudioTelemetrySnapshot(),
+          };
+          if (terminalState === 'error') {
+            logRef.current.error({ message: errorMessage || 'Connection error', ...details });
+          } else {
+            logRef.current.complete({ status: 'closed-after-playback-drain', ...details });
+          }
+        }
+        if (terminalState === 'error') {
+          callbacksRef.current.onError?.(errorMessage || 'Connection error');
+        }
+        await cleanup();
+        updateState(terminalState);
+      };
       const session = await ai.live.connect({
         model,
         liveOpenReason: createLiveOpenReason(liveOpenTrigger),
@@ -1048,6 +1132,7 @@ export function useGeminiLiveConversation(
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          realtimeInputConfig,
           thinkingConfig: getLiveConversationThinkingConfig(model),
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
@@ -1149,6 +1234,7 @@ export function useGeminiLiveConversation(
                             pcm: pcm16,
                             inputSampleRate: OUTPUT_SAMPLE_RATE,
                           });
+                          playbackPendingRef.current = true;
                           playbackUntilRef.current = extendPlaybackEnd(
                             playbackUntilRef.current,
                             Date.now(),
@@ -1411,27 +1497,13 @@ export function useGeminiLiveConversation(
               });
           },
           onclose: () => {
-            // Check session is still valid before updating state
-            if (currentSessionIdRef.current !== sessionId) return;
-            sessionRef.current = null;
-            if (logRef.current && !logFinalizedRef.current) {
-              logFinalizedRef.current = true;
-              logRef.current.complete({
-                status: 'closed',
-                inputTranscript: currentInputTranscriptionRef.current,
-                outputTranscript: currentOutputTranscriptionRef.current,
-                audioTelemetry: getAudioTelemetrySnapshot(),
-              });
-            }
-            updateState('idle');
-            void cleanup().catch((error) => {
-              console.warn('Live cleanup after close failed:', error);
+            void finishTransportLifecycle('idle').catch((error) => {
+              console.warn('Live playback drain after close failed:', error);
             });
           },
           onerror: (err: any) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
-            updateState('error');
             let message = "Connection error";
             try {
                 if (err instanceof Error) message = err.message;
@@ -1444,18 +1516,8 @@ export function useGeminiLiveConversation(
             } catch {
                 message = "Unknown Connection Error";
             }
-            if (logRef.current && !logFinalizedRef.current) {
-              logFinalizedRef.current = true;
-              logRef.current.error({
-                message,
-                inputTranscript: currentInputTranscriptionRef.current,
-                outputTranscript: currentOutputTranscriptionRef.current,
-                audioTelemetry: getAudioTelemetrySnapshot(),
-              });
-            }
-            callbacksRef.current.onError?.(message);
-            void cleanup().catch((error) => {
-              console.warn('Live cleanup after error failed:', error);
+            void finishTransportLifecycle('error', message).catch((error) => {
+              console.warn('Live playback drain after error failed:', error);
             });
           }
         }
@@ -1786,6 +1848,7 @@ export function useGeminiLiveConversation(
     getModelAudioDecodeCheckpoint,
     getTranscriptLinkedUserAudio,
     resetAudioTelemetry,
+    waitForPlaybackDrain,
     stopAllAudio,
     startNextModelAudioTurn,
     ensureCaptureWorklet,

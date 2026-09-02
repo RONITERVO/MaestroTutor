@@ -29,6 +29,7 @@ const REFILL_BUFFER_MS = 60;
 
 type PlaybackMessage =
   | { type: 'push'; pcm: Int16Array; inputSampleRate?: number }
+  | { type: 'request-drain'; requestId: number }
   | { type: 'reset' };
 
 type PlaybackTelemetryMessage = {
@@ -49,6 +50,7 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
   private queuedSamples = 0;
   private playbackState: PlaybackState = 'startup';
   private inputSampleRate = DEFAULT_INPUT_SAMPLE_RATE;
+  private pendingDrainRequestIds: number[] = [];
 
   constructor() {
     super();
@@ -65,6 +67,12 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
         this.queuedSamples = 0;
         this.playbackState = 'startup';
         this.inputSampleRate = DEFAULT_INPUT_SAMPLE_RATE;
+        this.pendingDrainRequestIds = [];
+        return;
+      }
+
+      if (data.type === 'request-drain' && Number.isSafeInteger(data.requestId) && data.requestId > 0) {
+        this.pendingDrainRequestIds.push(data.requestId);
         return;
       }
 
@@ -105,6 +113,14 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
       outputSampleRate: sampleRate,
     };
     this.port.postMessage(message);
+  }
+
+  private emitCompletedDrains() {
+    if (this.queuedSamples > 0 || this.pendingDrainRequestIds.length === 0) return;
+    const completed = this.pendingDrainRequestIds.splice(0);
+    for (const requestId of completed) {
+      this.port.postMessage({ type: 'drained', requestId });
+    }
   }
 
   private ensureCurrentChunk(): boolean {
@@ -168,7 +184,18 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
     const output = outputs?.[0]?.[0];
     if (!output) return true;
 
-    const requiredBufferedSamples = this.getRequiredBufferedSamples();
+    if (this.queuedSamples === 0) {
+      output.fill(0);
+      this.emitCompletedDrains();
+      return true;
+    }
+
+    // Once the main thread seals a transport, no more chunks are coming. Drain
+    // even a sub-threshold startup/refill tail instead of waiting forever for
+    // the normal anti-stutter buffer target.
+    const requiredBufferedSamples = this.pendingDrainRequestIds.length > 0
+      ? 0
+      : this.getRequiredBufferedSamples();
 
     if (requiredBufferedSamples > 0 && this.queuedSamples < requiredBufferedSamples) {
       output.fill(0);
@@ -208,6 +235,8 @@ class PcmPlaybackProcessor extends AudioWorkletProcessor {
     while (writeIndex < output.length) {
       output[writeIndex++] = 0;
     }
+
+    this.emitCompletedDrains();
 
     return true;
   }
