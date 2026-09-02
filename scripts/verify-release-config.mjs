@@ -98,6 +98,7 @@ const [
   headlessAttachmentAdapters,
   replySuggestions,
   googleServices,
+  androidVariables,
 ] = await Promise.all([
   read('package.json'),
   read('functions/package.json'),
@@ -123,6 +124,7 @@ const [
   read('src/headless/attachmentUploadAdapters.ts'),
   read('src/core-sdk/chat/suggestions.ts'),
   read('android/app/google-services.json'),
+  read('android/variables.gradle'),
 ]);
 
 const app = JSON.parse(appPackage);
@@ -131,13 +133,20 @@ const nativeConfig = capacitorConfigRead.status === 0
   ? JSON.parse(capacitorConfigRead.stdout).app.extConfig
   : {};
 const androidOAuthCertificateHashes = JSON.parse(googleServices).client
-  ?.flatMap(client => client.oauth_client || [])
+  ?.filter(client => (
+    client.client_info?.android_client_info?.package_name === nativeConfig.appId
+  ))
+  .flatMap(client => client.oauth_client || [])
   .map(client => client.android_info?.certificate_hash?.toLowerCase())
   .filter(Boolean) || [];
 requireText(app.scripts?.['maestro:rpc'], 'package.json must expose the JSON-RPC harness.');
 requireText(
   nativeConfig.plugins?.FirebaseAuthentication?.providers?.includes('google.com'),
   'Packaged Android config must enable the native Google authentication provider.',
+);
+requireText(
+  /rgcfaIncludeGoogle\s*=\s*true/.test(androidVariables),
+  'Android Gradle variables must package the native Google authentication SDKs.',
 );
 requireText(
   androidOAuthCertificateHashes.includes('5a8dcea2d9069adcb8f521e9be28b9611ae53b01'),

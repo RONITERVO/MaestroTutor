@@ -380,10 +380,10 @@ When registering or rotating the web key:
 
 For Android, register Play Integrity against the Firebase Android app and keep
 the Play app-signing, upload and debug SHA-256 fingerprints current. Keep their
-SHA-1 fingerprints current for native Google sign-in. If either Play's app-signing
-certificate or the upload certificate changes, register the new SHA-1 and SHA-256
-before publishing, then replace `android/app/google-services.json` with the newly
-downloaded Firebase config.
+SHA-1 fingerprints current for native Google sign-in. If the Play app-signing,
+upload or debug certificate changes, register its new SHA-1 and SHA-256 before
+the next affected build or publication, then replace
+`android/app/google-services.json` with the newly downloaded Firebase config.
 
 Enforcement check without a token:
 

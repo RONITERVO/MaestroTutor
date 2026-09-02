@@ -28,6 +28,12 @@ vi.mock('../firebase/maestroFirebaseService', () => ({
   },
 }));
 
+vi.mock('../../core/config/integrations', () => ({
+  MAESTRO_INTEGRATION_CONFIG: {
+    backendBaseUrl: 'https://backend.example',
+  },
+}));
+
 import { readManagedGenerationStream } from './maestroBackendService';
 
 const managedSession = {
