@@ -31,16 +31,16 @@ persisted state transition is mocked in a provider run.
 | --- | --- | --- |
 | Text-only chat | `runTutorTextTurn`, strict response parser, history persistence | `chat.turn`; `streaming.visiblyStreamed` |
 | Chat with attachments | shared attachment strategy and upload planner, Files API, normal tutor turn | `chat.attachment.turn` with `text`, `image`, `audio`, `pdf`, `svg`, `video`, or `office` |
-| Speech to text | shared Live STT instruction, PCM router and packetizer | `speech.transcribe`; input transcript deltas and input-audio hash |
+| Speech to text | shared Live STT instruction, PCM router and packetizer | `speech.transcribe`; expected-word recall, input transcript deltas and input-audio hash |
 | Streamed text response | shared streaming generator and Core delta events | every first-lesson chat turn requires a text delta |
 | Google Search response | normal tutor tool configuration | search turn requires provider `searchQueryCount > 0` |
 | Suggestion creator stream | `runReplySuggestions` and the same assistant-message context | `suggestions.process`; suggestions plus visible text deltas |
 | Artifact afterstep | shared artifact normalization/sanitization and assistant message update | `suggestions.process`; artifact metadata and persisted attachment |
 | Image, audio-note, music aftersteps | shared tool normalization and `executeSuggestionToolRequest` | deterministic boundary decision, then real selected executor/provider call |
-| Live audio conversation | shared context, Live model compatibility, PCM stream and audio response | `live.conversation.turn`; input/output transcript deltas, audio samples and SHA-256 values |
+| Live audio conversation | shared context, Live model compatibility, PCM stream and audio response | `live.conversation.turn`; expected-word recall, input/output transcript deltas, audio samples and SHA-256 values |
 | Live audio plus visual | same Live path with a real JPEG frame at the video stream boundary | `includeVisual:true`; sent-frame count plus transcript/audio evidence |
 | Post-Live aftersteps | same suggestion creator and dispatcher as chat | `runSuggestionAftersteps:true` or `journey.firstLesson` |
-| Silent observer audio | shared `SpeechGate`, retained PCM preroll and semantic confirmation | `live.observer.turn`; gate enabled, no video frames, transcript/audio evidence |
+| Silent observer audio | shared `SpeechGate`, retained PCM preroll and semantic confirmation | `live.observer.turn`; expected-word recall, one completed audio boundary, gate enabled, no video frames, transcript/audio evidence |
 | Silent observer plus visual | same observer path plus real JPEG stream injection | `includeVisual:true`; gate and sent-frame evidence |
 | Translation | the same `translateText` request with an injected managed/BYOK client | `translation.create`; translated text, optionally attached to suggestions |
 | Empty-input re-engagement | the UI-equivalent `"..."` provider prompt without a user bubble | `chat.reengage`; no user bubble and at least one visible streamed text delta |
@@ -96,6 +96,11 @@ not messages already in the named profile. A pass requires at least ten new user
 messages and every coverage flag to be true. Every synthetic attachment turn must
 also report confirmed provider deletion with zero cleanup failures; a best-effort
 cleanup attempt alone is not release evidence.
+
+The bundled first-lesson audio repeats the known word `Play` long enough to clear
+the sustained-speech gate and now asserts that Live actually transcribed that word.
+A custom `pcmBase64` is accepted only with `expectedTranscript`; this prevents a
+green response/audio check from hiding clipped or misunderstood user speech.
 
 ## Managed provider proof
 

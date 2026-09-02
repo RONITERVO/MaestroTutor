@@ -118,6 +118,88 @@ describe('synthetic Live journey', () => {
     expect(session.sendRealtimeInput).not.toHaveBeenCalledWith(expect.objectContaining({ audio: expect.anything() }));
   });
 
+  it('keeps a final spoken clause after a natural one-second pause in the same turn', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const sent: any[] = [];
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        sent.push(message);
+        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: 'Hello, how are you doing? I am doing great.' },
+            outputTranscription: { text: 'I am glad you are doing great.' },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (request: any) => {
+          callbacks = request.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    const pcm = new Int16Array(64_000);
+    pcm.fill(6_000, 0, 22_400);
+    pcm.fill(6_000, 40_000, 51_200);
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm, sampleRate: 16_000, pace: false }),
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+    });
+
+    expect(result.inputTranscript).toContain('doing great');
+    expect(result.sentSamples).toBe(64_000);
+    expect(result.gate.streamEnds).toBe(1);
+    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+  });
+
+  it('does not send a second empty boundary after the gate already closed', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const sent: any[] = [];
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        sent.push(message);
+        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            outputTranscription: { text: 'I heard the completed turn.' },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (request: any) => {
+          callbacks = request.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    const pcm = new Int16Array(64_000);
+    pcm.fill(6_000, 0, 24_000);
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm, sampleRate: 16_000, pace: false }),
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+    });
+
+    expect(result.gate.streamEnds).toBe(1);
+    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+  });
+
   it('rejects a provider turn that completes without model output', async () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
     const session = {

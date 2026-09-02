@@ -351,6 +351,8 @@ export const dispatchHeadlessMethod = async (
         languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
         pace: input.pace === true,
         timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
+        expectedTranscript: typeof input.expectedTranscript === 'string' ? input.expectedTranscript : undefined,
+        minTranscriptWordRecall: typeof input.minTranscriptWordRecall === 'number' ? input.minTranscriptWordRecall : undefined,
       });
     case 'speech.tts.generate':
       return runHeadlessAudioNoteGeneration(client, {
@@ -374,6 +376,8 @@ export const dispatchHeadlessMethod = async (
         includeVisual: input.includeVisual === true,
         visualLabel: typeof input.visualLabel === 'string' ? input.visualLabel : undefined,
         instructionSuffix: typeof input.instructionSuffix === 'string' ? input.instructionSuffix : undefined,
+        expectedTranscript: typeof input.expectedTranscript === 'string' ? input.expectedTranscript : undefined,
+        minTranscriptWordRecall: typeof input.minTranscriptWordRecall === 'number' ? input.minTranscriptWordRecall : undefined,
         runSuggestionAftersteps: typeof input.runSuggestionAftersteps === 'boolean' ? input.runSuggestionAftersteps : undefined,
         uploadVisual: input.uploadVisual === true,
       });
@@ -383,6 +387,8 @@ export const dispatchHeadlessMethod = async (
         targetLanguageCode: typeof input.targetLanguageCode === 'string' ? input.targetLanguageCode : undefined,
         nativeLanguageCode: typeof input.nativeLanguageCode === 'string' ? input.nativeLanguageCode : undefined,
         pcm: readPcm(input, false),
+        expectedTranscript: typeof input.expectedTranscript === 'string' ? input.expectedTranscript : undefined,
+        minTranscriptWordRecall: typeof input.minTranscriptWordRecall === 'number' ? input.minTranscriptWordRecall : undefined,
         paceLiveAudio: typeof input.paceLiveAudio === 'boolean' ? input.paceLiveAudio : undefined,
         timeoutMs: optionalNumber(input, 'timeoutMs', 60_000),
         includeSyntheticToolDecisions: typeof input.includeSyntheticToolDecisions === 'boolean'

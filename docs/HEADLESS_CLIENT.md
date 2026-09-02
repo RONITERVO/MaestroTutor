@@ -78,6 +78,13 @@ reason. Headless Live and raw-token commands derive `user.headless-live`; caller
 cannot claim a browser Whisper or UI trigger. See
 [`GEMINI_LIVE_OPEN_POLICY.md`](./GEMINI_LIVE_OPEN_POLICY.md).
 
+Protocol 1.3 adds semantic input evidence to `speech.transcribe`,
+`live.conversation.turn`, `live.observer.turn` and `journey.firstLesson`. Supplying
+`expectedTranscript` makes the command fail unless the provider input transcript
+contains at least 80% of the expected words (configurable with
+`minTranscriptWordRecall`). Punctuation and common contraction differences are
+normalized, so this verifies what Live heard without asserting exact model output.
+
 AI output is asserted by invariant rather than exact wording. Release checks verify
 the route and model used, ordered state transitions, message roles, non-empty visible
 output, media metadata, persistence, final accounting events and credit-ledger
@@ -203,7 +210,26 @@ npm run maestro -- journey.firstLesson --profile release-smoke --params '{"targe
 For media payloads that may exceed the operating system command-line limit,
 write the JSON object to a file and use `--params-file request.json`. It is
 mutually exclusive with inline `--params` and works identically in one-shot and
-CI invocations.
+CI invocations. Real-audio checks should convert the source to signed PCM16 mono
+at 16 kHz, place its base64 in the params file, and include the words that were
+recorded:
+
+```json
+{
+  "pcmBase64": "<16 kHz PCM16 mono base64>",
+  "sampleRate": 16000,
+  "pace": true,
+  "expectedTranscript": "Hello. How are you doing? I am doing great.",
+  "minTranscriptWordRecall": 0.8,
+  "runSuggestionAftersteps": false
+}
+```
+
+Run that params file once with each Live method and add `"includeVisual":true`
+for the video variants. A passing result includes `transcriptEvidence.passed`,
+non-zero model audio, audio hashes and (for video) a sent-frame count. Live result
+messages omit persisted inline WAV/JPEG base64 and instead report character counts
+under `omittedInlineData`, keeping JSON-RPC and CI logs bounded.
 
 Named profiles resolve below `%LOCALAPPDATA%\MaestroTutor\headless` on Windows and
 `~/.maestrotutor/headless` elsewhere, unless `MAESTRO_HEADLESS_HOME` is set. Names

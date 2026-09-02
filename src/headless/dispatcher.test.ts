@@ -19,7 +19,7 @@ describe('headless dispatcher contract', () => {
       methodInfo: Record<string, { params: string[] }>;
       configuredModels: { text: { default: string }; music: string };
     };
-    expect(result.protocolVersion).toBe('1.2.0');
+    expect(result.protocolVersion).toBe('1.3.0');
     expect(result.transport).toBe('json-rpc-2.0-ndjson');
     expect(result.methods).toContain('billing.checkout.completeTest');
     expect(result.methods).toContain('speech.synthetic.live');
@@ -39,6 +39,8 @@ describe('headless dispatcher contract', () => {
       'useGoogleSearch?',
       'requireInvariants?',
     ]));
+    expect(result.methodInfo['live.observer.turn'].params.join(' ')).toContain('expectedTranscript');
+    expect(result.methodInfo['journey.firstLesson'].params.join(' ')).toContain('required with custom PCM');
     expect(result.configuredModels.text.default).toBeTruthy();
     expect(result.configuredModels.music).toBeTruthy();
   });

@@ -155,7 +155,7 @@ const HEADLESS_METHODS = [
 ] as const;
 
 export const describeHeadlessMethods = () => ({
-  protocolVersion: '1.2.0',
+  protocolVersion: '1.3.0',
   transport: 'json-rpc-2.0-ndjson',
   eventNotification: 'maestro.event',
   profileDefault: 'isolated-temporary',
@@ -183,11 +183,11 @@ export const describeHeadlessMethods = () => ({
     'media.audioNote.generate': { mutates: true, external: true, params: ['text', 'langCode?', 'voiceName?', 'model?', 'upload?', 'includeDataUrl?'] },
     'media.music.generate': { mutates: true, external: true, params: ['prompt', 'durationSeconds? (8..20)', 'model?', 'upload?', 'includeDataUrl?'] },
     'speech.synthetic.live': { mutates: true, params: ['pcmBase64', 'sampleRate?', 'chunkDurationMs?', 'pace?', 'systemInstruction?', 'model?', 'gateInputOnSpeech?', 'semanticSpeech?', 'timeoutMs?', 'includeModelAudio?'] },
-    'speech.transcribe': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?'] },
+    'speech.transcribe': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)'] },
     'speech.tts.generate': { mutates: true, external: true, params: ['text', 'langCode?', 'voiceName?', 'model?', 'includeDataUrl?'] },
-    'live.conversation.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
-    'live.observer.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
-    'journey.firstLesson': { mutates: true, external: true, params: ['languagePairId? | targetLanguageCode? + nativeLanguageCode?', 'pcmBase64?', 'paceLiveAudio?', 'timeoutMs?', 'includeSyntheticToolDecisions?', 'uploadGeneratedMedia?'] },
+    'live.conversation.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
+    'live.observer.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
+    'journey.firstLesson': { mutates: true, external: true, params: ['languagePairId? | targetLanguageCode? + nativeLanguageCode?', 'pcmBase64?', 'expectedTranscript? (required with custom PCM)', 'minTranscriptWordRecall? (0..1, default 0.8)', 'paceLiveAudio?', 'timeoutMs?', 'includeSyntheticToolDecisions?', 'uploadGeneratedMedia?'] },
     'account.ledgers': { mutates: false, params: ['limit?'] },
     'account.delete': { mutates: true, destructive: true, params: ['confirmation=DELETE', 'expectedUserId', 'operationId?'] },
     'billing.checkout.create': { mutates: true, external: true, params: ['packId'] },

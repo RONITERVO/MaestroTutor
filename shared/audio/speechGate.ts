@@ -67,7 +67,10 @@ export const DEFAULT_SPEECH_GATE: Required<SpeechGateOptions> = {
   minPeak: 0.025,
   minActiveRatio: 0.01,
   openAfterMs: 200,
-  hangoverMs: 900,
+  // Real mobile speech commonly contains pauses around one second between
+  // clauses. A shorter hangover split a verified "How are you doing? ... I am
+  // doing great" recording before its final clause reached Live.
+  hangoverMs: 1500,
   cooldownMs: 400,
   playbackSettleMs: 500,
   requireConfirmation: false,

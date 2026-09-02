@@ -148,6 +148,18 @@ describe('opening', () => {
 });
 
 describe('closing', () => {
+  it('keeps the default gate open across a natural one-second clause pause', () => {
+    const gate = new SpeechGate();
+    const { now } = feed(gate, SPEECH, 5, 0);
+    expect(gate.evaluate(SILENCE, now + 1000)).toMatchObject({ send: true });
+    expect(gate.isOpen).toBe(true);
+    expect(gate.evaluate(SILENCE, now + 1600)).toEqual({
+      send: false,
+      reason: 'cooldown',
+      closing: true,
+    });
+  });
+
   it('keeps streaming through short gaps between words', () => {
     const gate = new SpeechGate({ hangoverMs: 900 });
     const { now } = feed(gate, SPEECH, 5, 0);

@@ -86,6 +86,7 @@ export const runSyntheticLiveJourney = async (
   let logicalNow = runtime.clock.now();
   let gatedPackets = 0;
   let streamEnds = 0;
+  let audioSentSinceLastStreamEnd = false;
   let resolved = false;
   let resolveTurn!: () => void;
   let rejectTurn!: (error: Error) => void;
@@ -192,8 +193,24 @@ export const runSyntheticLiveJourney = async (
   const sendPacket = async (pcm: Int16Array) => {
     sendVideoFrames();
     sentPackets.push(pcm.slice());
+    audioSentSinceLastStreamEnd = true;
     session.sendRealtimeInput({
       audio: { data: encodePcm16LeBase64(pcm), mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
+    });
+  };
+  const endAudioStream = (reason: 'gate-closed' | 'source-ended') => {
+    // A gate close may already have ended the only audio turn. Sending another
+    // empty boundary when the finite source finishes can make Live complete an
+    // empty turn before returning the model response for the heard speech.
+    if (streamEnds > 0 && !audioSentSinceLastStreamEnd) return;
+    session.sendRealtimeInput({ audioStreamEnd: true });
+    streamEnds += 1;
+    audioSentSinceLastStreamEnd = false;
+    runtime.events.emit({
+      operationId,
+      journey: 'live',
+      phase: 'audio.input-stream-end',
+      data: { reason, streamEnds },
     });
   };
   const packetizer = new RealtimePcmPacketizer({
@@ -223,8 +240,7 @@ export const runSyntheticLiveJourney = async (
       }
       gatedPackets += 1;
       if (decision.closing) {
-        session.sendRealtimeInput({ audioStreamEnd: true });
-        streamEnds += 1;
+        endAudioStream('gate-closed');
         heldPackets.length = 0;
         speechActivity!.reset();
         return;
@@ -274,8 +290,7 @@ export const runSyntheticLiveJourney = async (
   try {
     await router.attach(input.source);
     await packetizer.flushPending();
-    session.sendRealtimeInput({ audioStreamEnd: true });
-    streamEnds += 1;
+    endAudioStream('source-ended');
     const timeoutMs = Math.max(1_000, input.timeoutMs ?? 45_000);
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     await Promise.race([

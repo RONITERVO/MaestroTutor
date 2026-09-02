@@ -88,12 +88,12 @@ describe('minimum live speech duration', () => {
     const tracker = new SpeechActivityTracker({ sampleRate: RATE });
     tracker.observe(4_800, true, 100);
 
-    const reset = tracker.observe(1_600, false, 1_100);
+    const reset = tracker.observe(1_600, false, 1_700);
     expect(reset.candidateReset).toBe(true);
     expect(reset.hasMinimumSpeech).toBe(false);
 
     for (let index = 0; index < 9; index += 1) {
-      expect(tracker.observe(1_600, true, 1_200 + index * 100).hasMinimumSpeech).toBe(false);
+      expect(tracker.observe(1_600, true, 1_800 + index * 100).hasMinimumSpeech).toBe(false);
     }
   });
 });
