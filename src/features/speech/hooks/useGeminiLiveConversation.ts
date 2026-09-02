@@ -15,7 +15,13 @@ import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProc
 import { countTranscriptNewlines } from '../utils/transcriptParsing';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
-import { SpeechGate, extendPlaybackEnd, measureEnergy } from '../../../../shared/audio/speechGate';
+import {
+  DEFAULT_SPEECH_GATE,
+  SpeechGate,
+  extendPlaybackEnd,
+  isSpeechLike,
+  measureEnergy,
+} from '../../../../shared/audio/speechGate';
 import {
   FLOAT_TO_INT16_PROCESSOR_URL,
   FLOAT_TO_INT16_PROCESSOR_NAME,
@@ -42,6 +48,7 @@ import {
   OBSERVER_WHISPER_REQUEST_INTERVAL_MS,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SpeechActivityTracker,
 } from '../../../core-sdk/media/observerSpeechDetection';
 import { evaluateFreshSpeechFallback } from '../../../core-sdk/media/liveSpeechDetection';
 import {
@@ -115,6 +122,8 @@ export interface StartLiveConversationOptions {
    * sessions leave this off: the click already declared intent.
    */
   gateInputOnSpeech?: boolean;
+  /** Keep the paid transport open, but hold each microphone turn behind the local gate. */
+  gateAudioAfterConnect?: boolean;
   systemInstruction?: string;
   stream?: MediaStream | null;
   videoElement?: HTMLVideoElement | null;
@@ -240,6 +249,7 @@ export function useGeminiLiveConversation(
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const speechTriggerActivityTokenRef = useRef<string | null>(null);
+  const vadActivityTokenRef = useRef<{ token: string; observer: boolean } | null>(null);
   
   const sessionRef = useRef<any>(null);
   const frameIntervalRef = useRef<number | null>(null);
@@ -301,6 +311,7 @@ export function useGeminiLiveConversation(
   const speechGateRef = useRef<SpeechGate | null>(null);
   /** Raw packets held back while the gate is shut, encoded only if it opens. */
   const gatePrerollRef = useRef<Int16Array[]>([]);
+  const speechActivityTrackerRef = useRef<SpeechActivityTracker | null>(null);
   /** Shared with Live STT so Android never holds two copies of Whisper. */
   const observerWhisperRef = useRef<LocalWhisperClient | null>(null);
   const observerWhisperBusyRef = useRef(false);
@@ -339,6 +350,22 @@ export function useGeminiLiveConversation(
     speechTriggerActivityTokenRef.current = token;
   }, [addActivityToken, removeActivityToken]);
 
+  const setVadActivity = useCallback((active: boolean, observer: boolean) => {
+    const current = vadActivityTokenRef.current;
+    if (current && (!active || current.observer !== observer)) {
+      removeActivityToken(current.token);
+      vadActivityTokenRef.current = null;
+    }
+    if (!active || vadActivityTokenRef.current) return;
+    vadActivityTokenRef.current = {
+      observer,
+      token: addActivityToken(
+        TOKEN_CATEGORY.VAD,
+        observer ? TOKEN_SUBTYPE.VAD_OBSERVER_ACTIVE : TOKEN_SUBTYPE.VAD_ACTIVE,
+      ),
+    };
+  }, [addActivityToken, removeActivityToken]);
+
   const resetAudioTelemetry = useCallback(() => {
     inputAudioTelemetryRef.current = createEmptyInputAudioTelemetry();
     playbackTelemetryRef.current = createEmptyPlaybackTelemetry();
@@ -370,6 +397,12 @@ export function useGeminiLiveConversation(
     const merged = mergeInt16Arrays(currentUserAudioChunksRef.current);
     if (merged.length === 0) {
       return new Int16Array(0);
+    }
+
+    if (speechGateRef.current) {
+      // Gated chunks are exactly what reached Live. Preserve the confirmed
+      // three-second lead-in instead of trimming it a second time for storage.
+      return merged;
     }
 
     const transcriptLinkedSamples = Math.min(
@@ -547,6 +580,7 @@ export function useGeminiLiveConversation(
     speechTriggerAbortRef.current?.abort();
     speechTriggerAbortRef.current = null;
     setLocalSpeechTriggerPhase(null);
+    setVadActivity(false, false);
 
     const wasSpeechGated = speechGateRef.current !== null;
     if (wasSpeechGated) {
@@ -595,6 +629,7 @@ export function useGeminiLiveConversation(
     playbackActiveRef.current = false;
     speechGateRef.current = null;
     gatePrerollRef.current = [];
+    speechActivityTrackerRef.current = null;
     loadingFallbackOnsetAtRef.current = null;
     if (!wasSpeechGated) {
       speechGateEpochRef.current += 1;
@@ -672,6 +707,7 @@ export function useGeminiLiveConversation(
     detachCaptureVideo,
     emitTurnTranscriptReset,
     setLocalSpeechTriggerPhase,
+    setVadActivity,
     startNextModelAudioTurn,
     stopAllAudio,
     stopVideoFrameLoop,
@@ -825,7 +861,10 @@ export function useGeminiLiveConversation(
       sessionResumption,
       costFeature = 'liveConversation',
       gateInputOnSpeech = false,
+      gateAudioAfterConnect = gateInputOnSpeech,
     } = opts;
+    const speechGateEnabled = gateInputOnSpeech || gateAudioAfterConnect;
+    const observerActivity = liveOpenTrigger === LIVE_OPEN_TRIGGER.WHISPER_OBSERVER;
     
     // Wait for any in-progress cleanup to finish
     while (isCleaningUpRef.current) {
@@ -873,6 +912,7 @@ export function useGeminiLiveConversation(
           detector: observerWhisperRef.current,
           signal: triggerAbort.signal,
           onPhaseChange: setLocalSpeechTriggerPhase,
+          onVadActivityChange: active => setVadActivity(active, observerActivity),
         });
         if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
         if (await abortIfInvalidated()) {
@@ -888,10 +928,13 @@ export function useGeminiLiveConversation(
 
       // Cleanup deliberately clears all per-session gate state, so initialize
       // it only after the local pre-connect trigger has completed.
-      speechGateRef.current = gateInputOnSpeech
+      speechGateRef.current = speechGateEnabled
         ? new SpeechGate({ requireConfirmation: true })
         : null;
       gatePrerollRef.current = [];
+      speechActivityTrackerRef.current = speechGateEnabled
+        ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE })
+        : null;
       playbackUntilRef.current = 0;
       playbackActiveRef.current = false;
       lastWhisperRequestAtRef.current = 0;
@@ -1430,7 +1473,7 @@ export function useGeminiLiveConversation(
       const encodeAndSend = async (pcm: Int16Array) => {
         // Encoding transfers the packet buffer to a worker. Preserve a copy
         // only for gated audio that was truly sent.
-        const retained = gateInputOnSpeech ? pcm.slice() : null;
+        const retained = speechGateEnabled ? pcm.slice() : null;
         const base64 = await ensureInputCodecWorker().encodePcmToBase64(
           toTransferableArrayBuffer(pcm),
         );
@@ -1487,8 +1530,25 @@ export function useGeminiLiveConversation(
             }
 
             const energy = measureEnergy(packet);
+            const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
+            const speechActivity = gate && !gate.isOpen
+              ? speechActivityTrackerRef.current?.observe(packet.length, packetIsSpeech, now)
+              : undefined;
+            if (speechActivity?.candidateReset && gate?.isAwaitingConfirmation) {
+              gate.rejectSpeech(now);
+              gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
+            }
             const wasAwaitingConfirmation = gate?.isAwaitingConfirmation ?? false;
             const decision = gate ? gate.evaluate(energy, now) : null;
+            setVadActivity(
+              Boolean(
+                gate
+                && packetIsSpeech
+                && !(decision && !decision.send && decision.reason === 'playback')
+              ),
+              observerActivity,
+            );
 
             if (!decision || decision.send) {
               await encodeAndSend(packet);
@@ -1505,15 +1565,31 @@ export function useGeminiLiveConversation(
               sessionRef.current?.sendRealtimeInput({ audioStreamEnd: true });
               inputAudioTelemetryRef.current.audioStreamEnds += 1;
               gatePrerollRef.current = [];
+              speechActivityTrackerRef.current?.reset();
               loadingFallbackOnsetAtRef.current = null;
               return;
             }
 
-            // Never let the app's own voice (or a rejected candidate's tail)
-            // survive in pre-roll and leak into the next confirmed user turn.
-            if (decision.reason === 'playback' || decision.reason === 'cooldown') {
+            // Never let the app's own voice survive in pre-roll and leak into
+            // the next confirmed user turn.
+            if (decision.reason === 'playback') {
               gatePrerollRef.current = [];
+              speechActivityTrackerRef.current?.reset();
               loadingFallbackOnsetAtRef.current = null;
+              return;
+            }
+            if (decision.reason === 'cooldown') {
+              if (!packetIsSpeech) {
+                gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
+                loadingFallbackOnsetAtRef.current = null;
+                return;
+              }
+              gatePrerollRef.current.push(packet);
+              gatePrerollRef.current = recentPcmPackets(
+                gatePrerollRef.current,
+                SPEECH_GATE_BUFFER_SAMPLES,
+              );
               return;
             }
 
@@ -1542,6 +1618,8 @@ export function useGeminiLiveConversation(
               gatePrerollRef.current = [packet];
             }
 
+            if (!speechActivity?.hasMinimumSpeech) return;
+
             const detector = observerWhisperRef.current;
             let confirmed = false;
 
@@ -1551,6 +1629,7 @@ export function useGeminiLiveConversation(
               if (fallback.action === 'expire') {
                 gate.rejectSpeech(now);
                 gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
                 loadingFallbackOnsetAtRef.current = null;
               } else if (fallback.action === 'confirm') {
                 inputAudioTelemetryRef.current.energyFallbacks += 1;
@@ -1568,6 +1647,7 @@ export function useGeminiLiveConversation(
               if (fallback.action === 'expire') {
                 gate.rejectSpeech(now);
                 gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
                 loadingFallbackOnsetAtRef.current = null;
               } else if (fallback.action === 'confirm') {
                 inputAudioTelemetryRef.current.energyFallbacks += 1;
@@ -1603,6 +1683,7 @@ export function useGeminiLiveConversation(
                   inputAudioTelemetryRef.current.whisperRejected += 1;
                   gate.rejectSpeech(resultAt);
                   gatePrerollRef.current = [];
+                  speechActivityTrackerRef.current?.reset();
                   loadingFallbackOnsetAtRef.current = null;
                 }
               } catch (error) {
@@ -1616,6 +1697,7 @@ export function useGeminiLiveConversation(
                 if (fallback.action === 'expire') {
                   gate.rejectSpeech(fallbackAt);
                   gatePrerollRef.current = [];
+                  speechActivityTrackerRef.current?.reset();
                   loadingFallbackOnsetAtRef.current = null;
                 } else if (fallback.action === 'confirm') {
                   inputAudioTelemetryRef.current.energyFallbacks += 1;
@@ -1638,6 +1720,7 @@ export function useGeminiLiveConversation(
 
             const held = recentPcmPackets(gatePrerollRef.current, SPEECH_GATE_PREROLL_SAMPLES);
             gatePrerollRef.current = [];
+            speechActivityTrackerRef.current?.reset();
             const replay = mergeInt16Arrays(held);
             for (let offset = 0; offset < replay.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
               await encodeAndSend(replay.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
@@ -1652,7 +1735,7 @@ export function useGeminiLiveConversation(
       pcmCaptureRouterRef.current = new PcmCaptureRouter({
         sink: ({ pcm }) => {
           if (currentSessionIdRef.current !== sessionId) return;
-          if (!gateInputOnSpeech) {
+          if (!speechGateEnabled) {
             currentUserAudioChunksRef.current.push(pcm);
             currentUserAudioTotalLengthRef.current += pcm.length;
           }
@@ -1712,6 +1795,7 @@ export function useGeminiLiveConversation(
     ensureVideoElementReady,
     emitTurnTranscriptUpdate,
     setLocalSpeechTriggerPhase,
+    setVadActivity,
     startVideoFrameLoop,
     waitForModelAudioDecodeCheckpoint,
   ]);

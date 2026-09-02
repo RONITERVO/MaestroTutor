@@ -55,7 +55,7 @@ describe('synthetic Live journey', () => {
         clearInterval: () => undefined,
       },
     });
-    const pcm = new Int16Array(16_000);
+    const pcm = new Int16Array(32_000);
     pcm.fill(6_000);
     const source = createSyntheticPcmSource({ pcm, sampleRate: 16_000, pace: false, runtime });
 
@@ -70,7 +70,7 @@ describe('synthetic Live journey', () => {
 
     expect(result.transcript).toBe('Hola.');
     expect(result.sentSamples).toBeGreaterThan(0);
-    expect(result.packetizer.totalInputSamples).toBe(16_000);
+    expect(result.packetizer.totalInputSamples).toBe(32_000);
     expect(result.gate.gatedPackets).toBeGreaterThan(0);
     expect(result.modelAudioChunksBase64).toEqual(['AA==']);
     expect(ai.live.connect).toHaveBeenCalledWith(expect.objectContaining({
@@ -79,6 +79,43 @@ describe('synthetic Live journey', () => {
     expect(sent.some(message => message.audio?.mimeType === 'audio/pcm;rate=16000')).toBe(true);
     expect(sent.some(message => message.video?.mimeType === 'image/png')).toBe(true);
     expect(events.snapshot().some(event => event.phase === 'input.frame' && event.data?.source === 'synthetic')).toBe(true);
+  });
+
+  it('does not send a sub-1.2-second utterance to the Live provider', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            outputTranscription: { text: 'No audio received.' },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (request: any) => {
+          callbacks = request.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    const pcm = new Int16Array(16_000);
+    pcm.fill(6_000, 0, 8_000);
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm, sampleRate: 16_000, pace: false }),
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+    });
+
+    expect(result.sentSamples).toBe(0);
+    expect(session.sendRealtimeInput).not.toHaveBeenCalledWith(expect.objectContaining({ audio: expect.anything() }));
   });
 
   it('rejects a provider turn that completes without model output', async () => {
