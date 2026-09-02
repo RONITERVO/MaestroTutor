@@ -14,8 +14,13 @@
 /** The parts of a Stripe Checkout session fulfilment actually depends on. */
 export interface CheckoutSessionLike {
   id: string;
+  mode?: string | null;
   payment_status?: string | null;
   payment_intent?: string | { id?: string } | null;
+  amount_subtotal?: number | null;
+  amount_total?: number | null;
+  currency?: string | null;
+  total_details?: { amount_discount?: number | null } | null;
   metadata?: Record<string, string> | null;
   customer_details?: { email?: string | null } | null;
 }
@@ -25,6 +30,8 @@ export interface CheckoutGrantSnapshotLike {
   uid: string;
   packId: string;
   credits: number;
+  priceCents?: number;
+  currency?: string;
 }
 
 export type FulfilmentDecision =
@@ -44,7 +51,8 @@ export type FulfilmentDecision =
 export type FulfilmentSkipReason =
   | 'not-paid'
   | 'missing-snapshot'
-  | 'invalid-snapshot';
+  | 'invalid-snapshot'
+  | 'invalid-discount';
 
 export const isCheckoutFulfilmentEventType = (eventType: string): boolean => (
   eventType === 'checkout.session.completed'
@@ -68,10 +76,19 @@ export const resolveCheckoutGrant = (
   session: CheckoutSessionLike,
   snapshot: CheckoutGrantSnapshotLike | null | undefined,
 ): FulfilmentDecision => {
-  // A completed session is not necessarily a paid one: delayed payment methods
-  // complete first and settle later, and granting on completion alone would
-  // give credits away for payments that may still fail.
-  if (session.payment_status !== 'paid') {
+  const paymentIntent = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id ?? null;
+  const requiresDiscountProof = (
+    session.payment_status === 'no_payment_required'
+    || (session.payment_status === 'paid' && !paymentIntent)
+  );
+
+  // A completed session is not necessarily settled: delayed payment methods
+  // complete first and settle later. A fully discounted payment-mode Checkout
+  // is the one exception, and must match every price invariant from the
+  // immutable server snapshot before it can grant without a PaymentIntent.
+  if (session.payment_status !== 'paid' && !requiresDiscountProof) {
     return { action: 'skip', reason: 'not-paid' };
   }
 
@@ -90,9 +107,28 @@ export const resolveCheckoutGrant = (
     return { action: 'skip', reason: 'invalid-snapshot' };
   }
 
-  const paymentIntent = typeof session.payment_intent === 'string'
-    ? session.payment_intent
-    : session.payment_intent?.id ?? null;
+  if (requiresDiscountProof) {
+    const snapshotCurrency = typeof snapshot.currency === 'string'
+      ? snapshot.currency.trim().toLowerCase()
+      : '';
+    const sessionCurrency = typeof session.currency === 'string'
+      ? session.currency.trim().toLowerCase()
+      : '';
+    const hasExactFullDiscount = (
+      session.mode === 'payment'
+      && Number.isSafeInteger(snapshot.priceCents)
+      && Number(snapshot.priceCents) > 0
+      && session.amount_subtotal === snapshot.priceCents
+      && session.amount_total === 0
+      && session.total_details?.amount_discount === snapshot.priceCents
+      && Boolean(snapshotCurrency)
+      && sessionCurrency === snapshotCurrency
+      && !paymentIntent
+    );
+    if (!hasExactFullDiscount) {
+      return { action: 'skip', reason: 'invalid-discount' };
+    }
+  }
 
   return {
     action: 'grant',

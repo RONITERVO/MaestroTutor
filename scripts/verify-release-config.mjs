@@ -1,7 +1,10 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { readFile } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { mkdir, readFile } from 'node:fs/promises';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const failures = [];
@@ -11,6 +14,50 @@ const requireText = (condition, message) => {
 const envValue = (text, name) => (
   text.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1]?.trim() || ''
 );
+
+const isWindows = process.platform === 'win32';
+const repositoryRoot = new URL('../', import.meta.url);
+const capacitorCli = fileURLToPath(new URL('../node_modules/@capacitor/cli/bin/capacitor', import.meta.url));
+// `cap update` resolves native plugins without copying web assets, but its
+// generated plugin JSON still needs the ignored assets directory to exist.
+await mkdir(new URL('../android/app/src/main/assets/public/', import.meta.url), { recursive: true });
+const capacitorUpdate = spawnSync(
+  process.execPath,
+  [capacitorCli, 'update', 'android'],
+  {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  },
+);
+requireText(
+  capacitorUpdate.status === 0,
+  `Capacitor Android plugins could not be updated: ${(
+    capacitorUpdate.stderr || capacitorUpdate.stdout || capacitorUpdate.error?.message || 'unknown Capacitor error'
+  ).trim()}`,
+);
+const gradleExecutable = isWindows ? (process.env.ComSpec || 'cmd.exe') : './gradlew';
+const gradleArgs = isWindows
+  ? ['/d', '/s', '/c', 'gradlew.bat :app:processReleaseManifest --no-daemon']
+  : [':app:processReleaseManifest', '--no-daemon'];
+const mergedManifestBuild = capacitorUpdate.status === 0
+  ? spawnSync(
+    gradleExecutable,
+    gradleArgs,
+    {
+      cwd: new URL('../android/', import.meta.url),
+      encoding: 'utf8',
+    },
+  )
+  : { status: null, stderr: '', stdout: '', error: null };
+requireText(
+  mergedManifestBuild.status === 0,
+  `Android merged release manifest could not be generated: ${(
+    mergedManifestBuild.stderr || mergedManifestBuild.stdout || mergedManifestBuild.error?.message || 'unknown Gradle error'
+  ).trim()}`,
+);
+const androidManifest = mergedManifestBuild.status === 0
+  ? await read('android/app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml')
+  : '';
 
 const [
   appPackage,
@@ -80,6 +127,7 @@ requireText(functionsGemini.includes('trimMusicPcmChunk'), 'Managed music must t
 requireText(functionsGemini.includes('isCompleteMusicSampleCount'), 'Managed music must reject partial provider closes.');
 requireText(functionsGemini.includes('getManagedMusicLeaseDurationMs'), 'Managed music leases must cover the full provider timeout.');
 requireText(!androidBuild.includes('com.android.billingclient'), 'Android must not ship a second purchase SDK.');
+requireText(!androidManifest.includes('com.android.vending.BILLING'), 'Android merged release manifest must not contain the retired Play Billing permission.');
 requireText(!mainActivity.includes('ManagedBillingPlugin'), 'Android must not register the retired billing plugin.');
 
 const clientPacks = envValue(stagingEnv, 'VITE_MANAGED_CREDIT_PACK_IDS')
