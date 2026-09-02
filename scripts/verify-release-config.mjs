@@ -4,6 +4,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const failures = [];
@@ -15,18 +16,36 @@ const envValue = (text, name) => (
 );
 
 const isWindows = process.platform === 'win32';
+const repositoryRoot = new URL('../', import.meta.url);
+const capacitorCli = fileURLToPath(new URL('../node_modules/@capacitor/cli/bin/capacitor', import.meta.url));
+const capacitorSync = spawnSync(
+  process.execPath,
+  [capacitorCli, 'sync', 'android'],
+  {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  },
+);
+requireText(
+  capacitorSync.status === 0,
+  `Capacitor Android project could not be synchronized: ${(
+    capacitorSync.stderr || capacitorSync.stdout || capacitorSync.error?.message || 'unknown Capacitor error'
+  ).trim()}`,
+);
 const gradleExecutable = isWindows ? (process.env.ComSpec || 'cmd.exe') : './gradlew';
 const gradleArgs = isWindows
   ? ['/d', '/s', '/c', 'gradlew.bat :app:processReleaseManifest --no-daemon']
   : [':app:processReleaseManifest', '--no-daemon'];
-const mergedManifestBuild = spawnSync(
-  gradleExecutable,
-  gradleArgs,
-  {
-    cwd: new URL('../android/', import.meta.url),
-    encoding: 'utf8',
-  },
-);
+const mergedManifestBuild = capacitorSync.status === 0
+  ? spawnSync(
+    gradleExecutable,
+    gradleArgs,
+    {
+      cwd: new URL('../android/', import.meta.url),
+      encoding: 'utf8',
+    },
+  )
+  : { status: null, stderr: '', stdout: '', error: null };
 requireText(
   mergedManifestBuild.status === 0,
   `Android merged release manifest could not be generated: ${(
