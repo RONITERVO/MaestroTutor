@@ -28,6 +28,7 @@ import { useMaestroStore } from '../../../store';
 import { selectIsResponsePending } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { createSmartRef, createWritableSmartRef } from '../../../shared/utils/smartRef';
+import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
 
 export interface UseSpeechOrchestratorConfig {
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
@@ -401,7 +402,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
 
       if (partsForTTS.length > 0) {
         const preparedParts = prepareSpeechPartsWithCache(partsForTTS, defaultLangForSpeakText);
-        speak(preparedParts, defaultLangForSpeakText);
+        speak(preparedParts, defaultLangForSpeakText, LIVE_OPEN_TRIGGER.VOICE_TTS_AUTO_MESSAGE);
       }
 
     } else if (message.text && (message.role === 'error' || message.role === 'status')) {
@@ -411,7 +412,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         const preparedParts = prepareSpeechPartsWithCache([
           { text: textToSay.trim(), langCode: langToUse, context: { source: 'adHoc' } },
         ], langToUse);
-        speak(preparedParts, langToUse);
+        speak(preparedParts, langToUse, LIVE_OPEN_TRIGGER.VOICE_TTS_AUTO_MESSAGE);
       }
     }
   }, [prepareSpeechPartsWithCache, speak, settingsRef, selectedLanguagePairRef]);
@@ -422,7 +423,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
         ? [{ text: textOrParts, langCode: defaultLang, context: { source: 'adHoc' } }]
         : textOrParts;
       const preparedParts = prepareSpeechPartsWithCache(baseParts, defaultLang);
-      speak(preparedParts, defaultLang);
+      speak(preparedParts, defaultLang, LIVE_OPEN_TRIGGER.VOICE_TTS_CLICK);
     },
     [prepareSpeechPartsWithCache, speak]
   );

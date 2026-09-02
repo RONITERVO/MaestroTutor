@@ -14,6 +14,10 @@ import {
 import { PcmCaptureRouter, type PcmInputSource } from './pcmInput';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
 import { recentPcmPackets } from './observerSpeechDetection';
+import {
+  createLiveOpenReason,
+  type HeadlessLiveOpenTrigger,
+} from '../../../shared/liveOpenReason';
 
 const INPUT_SAMPLE_RATE = 16_000;
 const PACKET_DURATION_MS = 100;
@@ -32,6 +36,7 @@ const encodePcm16LeBase64 = (pcm: Int16Array): string => {
 };
 
 export interface SyntheticLiveJourneyInput {
+  liveOpenTrigger: HeadlessLiveOpenTrigger;
   source: PcmInputSource;
   systemInstruction?: string;
   model?: string;
@@ -87,6 +92,7 @@ export const runSyntheticLiveJourney = async (
   });
   const session = await ai.live.connect({
     model,
+    liveOpenReason: createLiveOpenReason(input.liveOpenTrigger, { requestId: operationId }),
     config: {
       responseModalities: [Modality.AUDIO],
       inputAudioTranscription: {},

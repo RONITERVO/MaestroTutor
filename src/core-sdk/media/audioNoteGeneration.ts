@@ -6,6 +6,10 @@ import type { CoreGeminiClient } from '../managedGeminiClient';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { mergeInt16Arrays, pcmToWav } from './audioProcessing';
 import { getLiveMinimalThinkingConfig } from './liveModelCompatibility';
+import {
+  createLiveOpenReason,
+  type AudioNoteLiveOpenTrigger,
+} from '../../../shared/liveOpenReason';
 
 const OUTPUT_SAMPLE_RATE = 24_000;
 const SESSION_TIMEOUT_MS = 180_000;
@@ -44,6 +48,7 @@ export interface CoreAudioNoteResult {
 /** Framework-free Gemini Live audio-note journey shared by UI and headless. */
 export const runCoreAudioNoteGeneration = async (params: {
   aiClient: CoreGeminiClient;
+  liveOpenTrigger: AudioNoteLiveOpenTrigger;
   model: string;
   text: string;
   triggerPcmBase64: string;
@@ -150,6 +155,7 @@ export const runCoreAudioNoteGeneration = async (params: {
 
     void params.aiClient.live.connect({
       model,
+      liveOpenReason: createLiveOpenReason(params.liveOpenTrigger, { requestId: operationId }),
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },

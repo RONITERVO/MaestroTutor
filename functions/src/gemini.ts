@@ -10,6 +10,10 @@ import type { Response } from 'express';
 import { GoogleGenAI } from '@google/genai';
 import { FieldPath } from 'firebase-admin/firestore';
 import type { AppUser } from './auth';
+import {
+  getLiveOpenOrigin,
+  type LiveOpenReason,
+} from '../../shared/liveOpenReason';
 import { appConfig } from './config';
 import { adminDb } from './firebase';
 import {
@@ -19,6 +23,7 @@ import {
   requireAllowedManagedModel,
   requirePricedManagedGenerationModel,
   requireSafeManagedLiveConfig,
+  requireManagedLiveOpenReason,
   resolvePinnedManagedGenerationModel,
   resolveManagedContentOperation,
   usesManagedGoogleSearch,
@@ -149,6 +154,7 @@ const reserveManagedLiveLease = async (params: {
   uid: string;
   purpose: 'live' | 'music';
   durationMs: number;
+  metadata?: Record<string, unknown>;
 }): Promise<ManagedLiveLeaseRecord> => {
   await ensureManagedUserDocument(params.uid);
   const currentTime = Date.now();
@@ -185,6 +191,7 @@ const reserveManagedLiveLease = async (params: {
       createdAt: currentTime,
       expiresAt: lease.expiresAt,
       releasedAt: null,
+      metadata: params.metadata || {},
       purgeAt: timestampFromMillis(lease.expiresAt + MANAGED_RUNTIME_RETENTION_MS),
     }, { merge: true });
   });
@@ -1155,7 +1162,15 @@ export const createManagedLiveToken = async (params: {
   config?: Record<string, unknown>;
   purpose?: 'live';
   durationSeconds?: number;
+  liveOpenReason: unknown;
 }) => {
+  const liveOpenReason: LiveOpenReason = requireManagedLiveOpenReason(params.liveOpenReason);
+  const liveOpenMetadata = {
+    liveOpenTrigger: liveOpenReason.trigger,
+    liveOpenOrigin: getLiveOpenOrigin(liveOpenReason.trigger),
+    liveOpenRequestId: liveOpenReason.requestId,
+    liveOpenRequestedAt: liveOpenReason.requestedAt,
+  };
   const model = requireAllowedManagedModel(
     params.model,
     appConfig.managedAllowedLiveModels,
@@ -1171,6 +1186,7 @@ export const createManagedLiveToken = async (params: {
     uid: params.uid,
     purpose: 'live',
     durationMs: liveWindowSeconds * 1000,
+    metadata: liveOpenMetadata,
   });
 
   let reservation: Awaited<ReturnType<typeof reserveManagedCredits>>;
@@ -1187,6 +1203,7 @@ export const createManagedLiveToken = async (params: {
         leaseId: lease.leaseId,
         requestedDurationSeconds: params.durationSeconds || null,
         maxWindowSeconds: liveWindowSeconds,
+        ...liveOpenMetadata,
         ...liveTokenBudget,
       },
     });
@@ -1231,6 +1248,7 @@ export const createManagedLiveToken = async (params: {
         leaseId: lease.leaseId,
         uses: appConfig.geminiLiveTokenUses,
         maxWindowSeconds: liveWindowSeconds,
+        ...liveOpenMetadata,
         ...liveTokenBudget,
       },
     });

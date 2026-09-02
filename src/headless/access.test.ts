@@ -3,6 +3,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import {
+  createDirectHeadlessAi,
   createDirectHeadlessFilePort,
   resolveHeadlessAccessMode,
 } from './access';
@@ -40,5 +41,11 @@ describe('headless access adapters', () => {
     await expect(files.delete('https://generativelanguage.googleapis.com/v1beta/files/test'))
       .resolves.toEqual({ ok: true });
     expect(remove).toHaveBeenCalledWith({ name: 'files/test' });
+  });
+
+  it('keeps direct headless Live behind the shared reason gate', async () => {
+    const direct = createDirectHeadlessAi('test-api-key');
+    await expect((direct.ai.live.connect as any)({ model: 'test-live-model' }))
+      .rejects.toMatchObject({ status: 400, code: 'LIVE_OPEN_REASON_REQUIRED' });
   });
 });

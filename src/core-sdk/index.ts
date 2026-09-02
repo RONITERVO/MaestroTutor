@@ -31,3 +31,4 @@ export * from './media/triggeredTts';
 export * from './media/syntheticLiveJourney';
 export * from './assertions';
 export * from './diagnostics';
+export * from '../../shared/liveOpenReason';

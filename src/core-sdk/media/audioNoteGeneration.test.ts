@@ -6,6 +6,7 @@ import type { CoreGeminiClient } from '../managedGeminiClient';
 import { createCoreEventJournal } from '../events';
 import { createCoreRuntime } from '../runtime';
 import { runCoreAudioNoteGeneration } from './audioNoteGeneration';
+import { LIVE_OPEN_TRIGGER } from '../../../shared/liveOpenReason';
 
 describe('core audio-note generation', () => {
   it('injects trigger PCM and returns streamed model audio without browser APIs', async () => {
@@ -32,6 +33,7 @@ describe('core audio-note generation', () => {
 
     const result = await runCoreAudioNoteGeneration({
       aiClient,
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.TOOL_AUDIO_NOTE,
       runtime: createCoreRuntime({ events }),
       model: 'gemini-live-test',
       text: 'Hola',
@@ -40,6 +42,9 @@ describe('core audio-note generation', () => {
     });
 
     expect(connect).toHaveBeenCalledOnce();
+    expect(connect).toHaveBeenCalledWith(expect.objectContaining({
+      liveOpenReason: expect.objectContaining({ trigger: LIVE_OPEN_TRIGGER.TOOL_AUDIO_NOTE }),
+    }));
     expect(sendRealtimeInput).toHaveBeenCalledWith(expect.objectContaining({
       audio: expect.objectContaining({ mimeType: 'audio/pcm;rate=24000' }),
     }));
@@ -74,6 +79,7 @@ describe('core audio-note generation', () => {
 
     await expect(runCoreAudioNoteGeneration({
       aiClient: { models: {} as any, live: { connect, music: { connect: vi.fn() } } },
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.TOOL_AUDIO_NOTE,
       model: 'gemini-live-test',
       text: 'Hola',
       triggerPcmBase64: Buffer.from(new Int16Array([1]).buffer).toString('base64'),

@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { AppUser, EntitlementRecord } from './integrations';
+import type { LiveOpenReason } from '../../../shared/liveOpenReason';
 
 export interface ManagedBillingSummary {
   availableCredits: number;
@@ -182,6 +183,7 @@ export interface BackendClearFilesResponse {
 export interface BackendLiveTokenRequest {
   purpose?: 'live';
   model: string;
+  liveOpenReason: LiveOpenReason;
   config?: Record<string, unknown>;
   durationSeconds?: number;
 }

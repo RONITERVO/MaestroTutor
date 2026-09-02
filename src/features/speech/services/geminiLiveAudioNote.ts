@@ -10,6 +10,7 @@ import {
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
 import { debugLogService } from '../../diagnostics';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from '../../../core-sdk/media/triggerAudioAsset';
+import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
 
 export type GeminiAudioNoteResult = Omit<
   CoreAudioNoteResult,
@@ -34,6 +35,7 @@ export const synthesizeGeminiAudioNote = async (params: {
   try {
     const result = await runCoreAudioNoteGeneration({
       aiClient: await getAi(),
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.TOOL_AUDIO_NOTE,
       model,
       text: params.text,
       triggerPcmBase64: TRIGGER_AUDIO_PCM_24K,

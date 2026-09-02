@@ -37,6 +37,13 @@ import {
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
 } from '../../../core-sdk/media/liveSpeechDetection';
+import { createLiveOpenReason, LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
+import {
+  waitForLocalSpeechTrigger,
+  type LocalSpeechTriggerPhase,
+} from '../utils/localSpeechTrigger';
+import { useMaestroStore } from '../../../store';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -55,6 +62,7 @@ export interface UseGeminiLiveSttOptions {
    * Enabled by default so silence and ambient noise do not consume Live tokens.
    */
   gateInputOnSpeech?: boolean;
+  onLocalSpeechTriggerPhaseChange?: (phase: LocalSpeechTriggerPhase | null) => void;
 }
 
 export interface UseGeminiLiveSttReturn {
@@ -127,8 +135,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
+  const speechTriggerActivityTokenRef = useRef<string | null>(null);
+  const liveActivityTokenRef = useRef<string | null>(null);
 
   const sessionRef = useRef<Session | null>(null);
+  const speechTriggerAbortRef = useRef<AbortController | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
@@ -158,6 +171,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const onTurnCompleteRef = useRef(options?.onTurnComplete);
   const autoStopAfterTurnCompleteRef = useRef(options?.autoStopAfterTurnComplete !== false);
   const gateInputOnSpeechRef = useRef(options?.gateInputOnSpeech !== false);
+  const onLocalSpeechTriggerPhaseChangeRef = useRef(options?.onLocalSpeechTriggerPhaseChange);
   const turnIdRef = useRef(0);
   
   // Flag to track if cleanup is in progress to prevent race conditions
@@ -166,6 +180,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   // Transcription State Refs
   const committedTranscriptRef = useRef('');
   const interimInputRef = useRef('');
+  const localInputPreviewRef = useRef('');
   const interimParrotRef = useRef('');
 
   useEffect(() => {
@@ -179,6 +194,39 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   useEffect(() => {
     gateInputOnSpeechRef.current = options?.gateInputOnSpeech !== false;
   }, [options?.gateInputOnSpeech]);
+
+  useEffect(() => {
+    onLocalSpeechTriggerPhaseChangeRef.current = options?.onLocalSpeechTriggerPhaseChange;
+  }, [options?.onLocalSpeechTriggerPhaseChange]);
+
+  const setLocalSpeechTriggerPhase = useCallback((phase: LocalSpeechTriggerPhase | null) => {
+    if (speechTriggerActivityTokenRef.current) {
+      removeActivityToken(speechTriggerActivityTokenRef.current);
+      speechTriggerActivityTokenRef.current = null;
+    }
+    onLocalSpeechTriggerPhaseChangeRef.current?.(phase);
+    if (!phase) return;
+    const token = phase === 'whisper-loading'
+      ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_LOADING)
+      : (phase === 'whisper-checking'
+        ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_CHECKING)
+        : (phase === 'speech-confirmed'
+          ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_TRIGGERED)
+          : addActivityToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_LISTEN)));
+    speechTriggerActivityTokenRef.current = token;
+  }, [addActivityToken, removeActivityToken]);
+
+  const setLiveActivityPhase = useCallback((phase: 'connecting' | 'active' | null) => {
+    if (liveActivityTokenRef.current) {
+      removeActivityToken(liveActivityTokenRef.current);
+      liveActivityTokenRef.current = null;
+    }
+    if (!phase) return;
+    liveActivityTokenRef.current = addActivityToken(
+      TOKEN_CATEGORY.LIVE,
+      phase === 'connecting' ? TOKEN_SUBTYPE.CONNECTING : TOKEN_SUBTYPE.SESSION,
+    );
+  }, [addActivityToken, removeActivityToken]);
 
   const getInputPacketizerStats = useCallback((): RealtimePcmPacketizerStats => (
     inputPacketizerRef.current?.getStats() ?? {
@@ -236,6 +284,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     // Prevent concurrent cleanup operations
     if (isCleaningUpRef.current) return;
     isCleaningUpRef.current = true;
+    speechTriggerAbortRef.current?.abort();
+    speechTriggerAbortRef.current = null;
+    setLocalSpeechTriggerPhase(null);
+    setLiveActivityPhase(null);
     const preserveRecordedAudio = options?.preserveRecordedAudio === true;
     const status = options?.status || 'stopped';
 
@@ -324,9 +376,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       transcribedAudioSamplesRef.current = 0;
       audioTelemetryRef.current.transcriptLinkedSamples = 0;
     }
+    localInputPreviewRef.current = '';
     
     isCleaningUpRef.current = false;
-  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot]);
+  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase]);
 
   const stop = useCallback(async () => {
     await cleanup({ status: 'stopped' });
@@ -337,7 +390,11 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     clearTranscriptUpdateTimer();
     const committed = committedTranscriptRef.current;
     // Prefer parrot if available (it's the corrected version), otherwise show input ASR
-    const currentSegment = interimParrotRef.current.trim() || interimInputRef.current.trim();
+    const currentSegment = (
+      interimParrotRef.current.trim()
+      || interimInputRef.current.trim()
+      || localInputPreviewRef.current.trim()
+    );
     const separator = (committed && currentSegment) ? ' ' : '';
     const nextTranscript = committed + separator + currentSegment;
     if (nextTranscript === lastRenderedTranscriptRef.current) return;
@@ -401,55 +458,33 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     const speechGateEpoch = speechGateEpochRef.current;
 
     try {
-      // --- 1. Request Microphone Permission FIRST ---
-      // This ensures we have access before opening the expensive WebSocket connection.
-      // It also fixes the UX issue where the app asks for permission "late".
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: INPUT_SAMPLE_RATE,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        }
+      if (!gateInputOnSpeech) {
+        throw new Error('Gemini Live STT requires a local Whisper speech trigger.');
+      }
+      setIsListening(true);
+      localWhisperRef.current ??= acquireLocalWhisperClient({
+        model: LOCAL_WHISPER_MODEL,
+        allowFp32Fallback: !Capacitor.isNativePlatform(),
       });
-
-      // Check if session was stopped while waiting for permission
+      const triggerAbort = new AbortController();
+      speechTriggerAbortRef.current = triggerAbort;
+      const localSpeechTrigger = await waitForLocalSpeechTrigger({
+        detector: localWhisperRef.current,
+        signal: triggerAbort.signal,
+        onPhaseChange: setLocalSpeechTriggerPhase,
+      });
+      if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
+      const stream = localSpeechTrigger.microphoneStream;
       if (currentSessionIdRef.current !== sessionId) {
         stream.getTracks().forEach(t => t.stop());
         return;
       }
-
       streamRef.current = stream;
-
-      // Permission comes first: do not download or allocate the local model if
-      // the user declines microphone access.
-      if (gateInputOnSpeech) {
-        try {
-          localWhisperRef.current ??= acquireLocalWhisperClient({
-            model: LOCAL_WHISPER_MODEL,
-            // Native stays quantized to protect WebView memory. Desktop browsers
-            // may use fp32 only when the compact profile is unavailable.
-            allowFp32Fallback: !Capacitor.isNativePlatform(),
-          });
-          const detector = localWhisperRef.current;
-          if (detector.status === 'idle') {
-            void detector.initialize().catch((error) => {
-              if (localWhisperRef.current !== detector) return;
-              audioTelemetryRef.current.whisperErrors += 1;
-              if (!whisperFailureWarnedRef.current) {
-                whisperFailureWarnedRef.current = true;
-                console.warn('Local Whisper unavailable; STT is using the energy-only fallback.', error);
-              }
-            });
-          }
-        } catch (error) {
-          audioTelemetryRef.current.whisperErrors += 1;
-          if (!whisperFailureWarnedRef.current) {
-            whisperFailureWarnedRef.current = true;
-            console.warn('Local Whisper worker could not start; STT is using the energy-only fallback.', error);
-          }
-        }
-      }
+      localInputPreviewRef.current = localSpeechTrigger.transcript;
+      scheduleTranscriptStateUpdate(true);
+      setLocalSpeechTriggerPhase(null);
+      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
+      let pendingInitialPcm: Int16Array | null = localSpeechTrigger.pcm;
 
       // --- 2. Initialize Audio Context & Worklet ---
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -509,8 +544,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       });
 
       const ai = await getAi();
+      setLiveActivityPhase('connecting');
       const session = await ai.live.connect({
         model,
+        liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.WHISPER_STT),
         config: {
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
@@ -522,6 +559,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           onopen: () => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
+            setLiveActivityPhase('active');
             setIsListening(true);
           },
           onmessage: (msg: LiveServerMessage) => {
@@ -536,6 +574,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             if (msg.serverContent?.inputTranscription) {
               const text = msg.serverContent.inputTranscription.text;
               if (text) {
+                 localInputPreviewRef.current = '';
                  interimInputRef.current += text;
                  transcribedAudioSamplesRef.current = totalAudioSamplesRef.current;
                  audioTelemetryRef.current.transcriptLinkedSamples = transcribedAudioSamplesRef.current;
@@ -557,13 +596,17 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             // 3. Commit Turn
             if (msg.serverContent?.turnComplete) {
                // Use the parrot if available, otherwise fallback to input
-               const finalSegment = interimParrotRef.current.trim() || interimInputRef.current.trim();
+               const finalSegment = (
+                 interimParrotRef.current.trim()
+                 || interimInputRef.current.trim()
+                 || localInputPreviewRef.current.trim()
+               );
                if (finalSegment) {
                    const sep = committedTranscriptRef.current ? ' ' : '';
                    committedTranscriptRef.current += sep + finalSegment;
                }
 
-               const inputTranscript = interimInputRef.current.trim();
+               const inputTranscript = interimInputRef.current.trim() || localInputPreviewRef.current.trim();
                const outputTranscript = interimParrotRef.current.trim();
                const turnSamples = turnAudioSamplesRef.current;
                const nextTurnId = turnIdRef.current + 1;
@@ -596,6 +639,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                
                // Reset interim buffers for next turn
                interimInputRef.current = '';
+               localInputPreviewRef.current = '';
                interimParrotRef.current = '';
                scheduleTranscriptStateUpdate(true);
 
@@ -655,6 +699,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             // Treat unexpected server closure as an error to prevent infinite restart loops
             // in useSpeechOrchestrator. If it was user-initiated, sessionId would have changed.
             const closeMsg = (event && event.reason) ? event.reason : "Connection closed by server";
+            setLiveActivityPhase(null);
             setError(closeMsg);
 
             if (logRef.current && !logFinalizedRef.current) {
@@ -671,6 +716,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           onerror: (err: any) => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
+            setLiveActivityPhase(null);
             console.error("Gemini Live STT error:", err);
             if (logRef.current && !logFinalizedRef.current) {
               logFinalizedRef.current = true;
@@ -735,6 +781,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             const decision = gate ? gate.evaluate(energy, now) : null;
 
             if (!decision || decision.send) {
+              if (pendingInitialPcm && pendingInitialPcm.length > 0) {
+                const initialPcm = pendingInitialPcm;
+                pendingInitialPcm = null;
+                for (let offset = 0; offset < initialPcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+                  await encodeAndSend(initialPcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+                }
+              }
               await encodeAndSend(packet);
               return;
             }
@@ -916,6 +969,11 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       // not for audible output. The audio graph runs as long as source is connected.
 
     } catch (e: any) {
+      if (e instanceof Error && e.name === 'AbortError') {
+        setIsListening(false);
+        await cleanup({ status: 'stopped-before-live-open' });
+        return;
+      }
       console.error("STT Start Error", e);
       if (logRef.current && !logFinalizedRef.current) {
         logFinalizedRef.current = true;
@@ -930,7 +988,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot]);
+  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);

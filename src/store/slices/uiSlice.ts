@@ -156,6 +156,21 @@ export const selectNonReengagementBusy = (state: { activityTokens: Set<string> }
   [...state.activityTokens].some(t => !isReengagementToken(t));
 
 /**
+ * Activity that should stop the passive speech monitor. The monitor's own VAD,
+ * Whisper and observer-Live tokens must not tear it down as soon as they appear.
+ */
+export const selectBlocksSilentObserver = (state: { activityTokens: Set<string> }): boolean =>
+  [...state.activityTokens].some(token => {
+    if (isReengagementToken(token)) return false;
+    if (token.startsWith(`${TOKEN_CATEGORY.VAD}:`) || token.startsWith(`${TOKEN_CATEGORY.WHISPER}:`)) return false;
+    if (
+      token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_CONNECTING)
+      || token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_SESSION)
+    ) return false;
+    return true;
+  });
+
+/**
  * Get sorted list of active UI tokens for display.
  */
 export const selectActiveUiTokens = (state: { activityTokens: Set<string> }): string[] =>
@@ -168,6 +183,18 @@ export const selectActiveUiTokens = (state: { activityTokens: Set<string> }): st
       const priorityB = UI_TOKEN_DISPLAY[subtypeB]?.priority ?? 100;
       return priorityA - priorityB;
     });
+
+/** Tokens with a compact status-flag representation, in display-priority order. */
+export const selectActiveFlagTokens = (state: { activityTokens: Set<string> }): string[] =>
+  [...state.activityTokens]
+    .filter(token => (
+      token.startsWith(`${TOKEN_CATEGORY.UI}:`)
+      || token.startsWith(`${TOKEN_CATEGORY.LIVE}:`)
+      || token.startsWith(`${TOKEN_CATEGORY.VAD}:`)
+      || token.startsWith(`${TOKEN_CATEGORY.WHISPER}:`)
+    ))
+    .filter(token => !isReengagementToken(token))
+    .sort();
 
 export const createUiSlice: StateCreator<
   MaestroStore,

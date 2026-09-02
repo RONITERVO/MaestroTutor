@@ -9,6 +9,17 @@ import type {
   BackendLiveTokenResponse,
   BackendReleaseLiveTokenLeaseRequest,
 } from '../core/contracts/backend';
+import {
+  requireLiveOpenReason,
+  type LiveOpenReason,
+} from '../../shared/liveOpenReason';
+
+export interface CoreLiveConnectRequest extends Record<string, unknown> {
+  model: string;
+  liveOpenReason: LiveOpenReason;
+  config?: Record<string, unknown>;
+  callbacks?: Record<string, (...args: any[]) => unknown>;
+}
 
 export interface CoreGeminiClient {
   models: {
@@ -16,7 +27,7 @@ export interface CoreGeminiClient {
     generateContentStream(request: any): Promise<AsyncIterable<any>>;
   };
   live: {
-    connect(request: any): Promise<any>;
+    connect(request: CoreLiveConnectRequest): Promise<any>;
     music: { connect(request: any): Promise<any> };
   };
 }
@@ -24,7 +35,7 @@ export interface CoreGeminiClient {
 export interface ManagedGeminiBackendPort {
   generateContent(payload: BackendGenerateContentRequest, signal?: AbortSignal | null): Promise<BackendGenerateContentResponse>;
   generateContentStream(payload: BackendGenerateContentRequest, signal?: AbortSignal | null): Promise<AsyncIterable<unknown>>;
-  createLiveToken(payload?: BackendLiveTokenRequest): Promise<BackendLiveTokenResponse>;
+  createLiveToken(payload: BackendLiveTokenRequest): Promise<BackendLiveTokenResponse>;
   releaseLiveTokenLease(payload: BackendReleaseLiveTokenLeaseRequest): Promise<unknown>;
 }
 
@@ -59,6 +70,40 @@ const createModelRequiredError = () => {
   return error;
 };
 
+const createLiveOpenReasonRequiredError = () => {
+  const error = new Error('A valid, auditable Gemini Live open reason is required.') as Error & { status: number; code: string };
+  error.status = 400;
+  error.code = 'LIVE_OPEN_REASON_REQUIRED';
+  return error;
+};
+
+const splitLiveConnectRequest = (rawRequest: unknown): {
+  providerRequest: Record<string, unknown>;
+  liveOpenReason: LiveOpenReason;
+} => {
+  const request = asRequest(rawRequest);
+  let liveOpenReason: LiveOpenReason;
+  try {
+    liveOpenReason = requireLiveOpenReason(request.liveOpenReason);
+  } catch {
+    throw createLiveOpenReasonRequiredError();
+  }
+  const { liveOpenReason: _clientOnlyReason, ...providerRequest } = request;
+  return { providerRequest, liveOpenReason };
+};
+
+/** Enforce the same Live-open policy for BYOK while keeping metadata out of the Google SDK request. */
+export const createLiveReasonGatedGeminiClient = (client: CoreGeminiClient): CoreGeminiClient => ({
+  models: client.models,
+  live: {
+    connect: async rawRequest => {
+      const { providerRequest } = splitLiveConnectRequest(rawRequest);
+      return client.live.connect(providerRequest as CoreLiveConnectRequest);
+    },
+    music: client.live.music,
+  },
+});
+
 export const createManagedGeminiClient = (
   backend: ManagedGeminiBackendPort,
   options: ManagedGeminiClientOptions = {},
@@ -83,13 +128,18 @@ export const createManagedGeminiClient = (
   };
 
   const connectManagedLive = async (rawRequest: unknown) => {
-    const request = asRequest(rawRequest);
+    const { providerRequest: request, liveOpenReason } = splitLiveConnectRequest(rawRequest);
     const model = typeof request.model === 'string' ? request.model.trim() : '';
     if (!model) throw createModelRequiredError();
     const config = request.config && typeof request.config === 'object' && !Array.isArray(request.config)
       ? request.config as Record<string, unknown>
       : undefined;
-    const tokenLease = await backend.createLiveToken({ purpose: 'live', model, ...(config ? { config } : {}) });
+    const tokenLease = await backend.createLiveToken({
+      purpose: 'live',
+      model,
+      liveOpenReason,
+      ...(config ? { config } : {}),
+    });
     const release = releaseLease(tokenLease.leaseId);
     const callbacks = request.callbacks && typeof request.callbacks === 'object'
       ? request.callbacks as Record<string, (...args: unknown[]) => unknown>
@@ -107,7 +157,7 @@ export const createManagedGeminiClient = (
     };
     const tokenClient = createTokenClient(tokenLease.token, apiVersion);
     try {
-      const session = await tokenClient.live.connect(wrappedRequest);
+      const session = await tokenClient.live.connect(wrappedRequest as any);
       const closeable = session as { close?: () => unknown } | null | undefined;
       const close = typeof closeable?.close === 'function' ? closeable.close.bind(closeable) : null;
       if (closeable && close) {

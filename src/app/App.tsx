@@ -37,7 +37,7 @@ import { setChatMetaDB } from '../features/chat';
 
 // --- Config ---
 import { IMAGE_GEN_CAMERA_ID } from '../core/config/app';
-import { selectIsListening, selectIsResponsePending, selectIsSpeaking, selectNonReengagementBusy } from '../store/slices/uiSlice';
+import { selectBlocksSilentObserver, selectIsListening, selectIsResponsePending, selectIsSpeaking, selectNonReengagementBusy } from '../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 
 // --- Types ---
@@ -88,6 +88,7 @@ const App: React.FC = () => {
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const isBlockingActivity = useMaestroStore(selectNonReengagementBusy);
+  const blocksSilentObserver = useMaestroStore(selectBlocksSilentObserver);
   const liveSessionState = useMaestroStore(state => state.liveSessionState);
   const setLastFetchedSuggestionsFor = useMaestroStore(state => state.setLastFetchedSuggestionsFor);
   const setSttError = useMaestroStore(state => state.setSttError);
@@ -620,7 +621,7 @@ const App: React.FC = () => {
 
   const { stopSilentObserver, resetSilentObserver } = useSilentObserverController({
     enabled: hasAiAccess && !showApiKeyGate,
-    isBlockingActivity,
+    isBlockingActivity: blocksSilentObserver,
     liveSessionState,
     liveVideoStream,
     visualContextVideoRef,

@@ -12,6 +12,8 @@ import {
 import { useMaestroStore } from '../../../store';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
+import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
+import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 
 const OBSERVER_RETRY_MS = 8000;
 const OBSERVER_MANUAL_STOP_HOLD_MS = 5000;
@@ -67,6 +69,8 @@ export const useSilentObserverController = ({
   const silentObserverError = useMaestroStore(state => state.silentObserverError);
   const setSilentObserverState = useMaestroStore(state => state.setSilentObserverState);
   const setSilentObserverError = useMaestroStore(state => state.setSilentObserverError);
+  const addActivityToken = useMaestroStore(state => state.addActivityToken);
+  const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
 
   const messagesRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.messages), []);
   const settingsRef = useMemo(() => createSmartRef(useMaestroStore.getState, state => state.settings), []);
@@ -79,6 +83,7 @@ export const useSilentObserverController = ({
   const startInFlightRef = useRef(false);
   const resumptionHandleRef = useRef<string | undefined>(undefined);
   const stopObserverInternalRef = useRef<((reason: string, holdMs?: number) => Promise<void>) | null>(null);
+  const observerLiveTokenRef = useRef<string | null>(null);
 
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current !== null) {
@@ -106,6 +111,16 @@ export const useSilentObserverController = ({
       }
       if (state === 'active') {
         clearRetryTimer();
+      }
+      if (observerLiveTokenRef.current) {
+        removeActivityToken(observerLiveTokenRef.current);
+        observerLiveTokenRef.current = null;
+      }
+      if (state === 'connecting' || state === 'active') {
+        observerLiveTokenRef.current = addActivityToken(
+          TOKEN_CATEGORY.LIVE,
+          state === 'connecting' ? TOKEN_SUBTYPE.OBSERVER_CONNECTING : TOKEN_SUBTYPE.OBSERVER_SESSION,
+        );
       }
     },
     onError: (message) => {
@@ -140,30 +155,6 @@ export const useSilentObserverController = ({
     });
   }, [computeHistorySubsetForMedia, currentSystemPromptText, messagesRef, resolveBookmarkContextSummary]);
 
-  const primeObserverMicrophonePermission = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      throw new Error('Microphone access is not supported on this device.');
-    }
-
-    // Silent observer is auto-started. Prime the mic permission before opening
-    // the live session so Android/WebView cannot leave us in a "connected but
-    // silent" state after the user accepts the permission prompt.
-    const permissionStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-      },
-    });
-
-    permissionStream.getTracks().forEach(track => {
-      try {
-        track.stop();
-      } catch {
-        // Ignore track stop failures during permission priming.
-      }
-    });
-  }, []);
-
   const startObserverInternal = useCallback(async () => {
     if (startInFlightRef.current) return;
     startInFlightRef.current = true;
@@ -172,9 +163,6 @@ export const useSilentObserverController = ({
     lastStartAttemptRef.current = startAttempt;
 
     try {
-      await primeObserverMicrophonePermission();
-      if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
-
       const liveSystemInstruction = await buildObserverInstruction();
       if (!shouldRunRef.current || lastStartAttemptRef.current !== startAttempt) return;
 
@@ -185,6 +173,7 @@ export const useSilentObserverController = ({
         : {};
 
       await startObserverConversation({
+        liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER,
         stream: activeStream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
@@ -194,9 +183,8 @@ export const useSilentObserverController = ({
         emitTurns: Boolean(onTurnComplete),
         sessionResumption,
         costFeature: 'reengagement',
-        // The observer is the one session nobody asked for: it holds the socket
-        // open for as long as the app is idle and foregrounded, so it is the one
-        // that must stay quiet until there is actually someone to listen to.
+        // The observer is locally armed without a provider transport. VAD plus
+        // Whisper must find words before it may open one.
         gateInputOnSpeech: true,
       });
     } catch (error) {
@@ -214,7 +202,6 @@ export const useSilentObserverController = ({
     liveVideoStream,
     onTurnComplete,
     onTurnTranscriptUpdate,
-    primeObserverMicrophonePermission,
     settingsRef,
     setSilentObserverError,
     setSilentObserverState,
@@ -273,7 +260,11 @@ export const useSilentObserverController = ({
 
   useEffect(() => {
     const stream = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
-    if (silentObserverState !== 'active' && silentObserverState !== 'connecting') {
+    if (
+      silentObserverState !== 'armed'
+      && silentObserverState !== 'active'
+      && silentObserverState !== 'connecting'
+    ) {
       return;
     }
     void updateObserverVideoInput(stream, visualContextVideoRef.current);
@@ -331,8 +322,12 @@ export const useSilentObserverController = ({
       clearRetryTimer();
       clearSuspendWakeTimer();
       void stopObserverConversation();
+      if (observerLiveTokenRef.current) {
+        removeActivityToken(observerLiveTokenRef.current);
+        observerLiveTokenRef.current = null;
+      }
     };
-  }, [clearRetryTimer, clearSuspendWakeTimer, stopObserverConversation]);
+  }, [clearRetryTimer, clearSuspendWakeTimer, removeActivityToken, stopObserverConversation]);
 
   return {
     silentObserverState,

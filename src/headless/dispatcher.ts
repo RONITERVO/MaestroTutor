@@ -17,6 +17,7 @@ import { createSyntheticPcmSource, decodePcm16LeBase64 } from '../core-sdk/media
 import { runSyntheticLiveJourney } from '../core-sdk/media/syntheticLiveJourney';
 import { runStripeTestCheckoutJourney } from './billingJourney';
 import { verifyHostedGoogleSignIn } from './hostedBrowser';
+import { createLiveOpenReason, LIVE_OPEN_TRIGGER } from '../../shared/liveOpenReason';
 import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
 import { runHeadlessTranslation } from './translationJourney';
 import { runHeadlessReengagement } from './reengagementJourney';
@@ -332,6 +333,7 @@ export const dispatchHeadlessMethod = async (
         runtime: client.runtime,
       });
       return runSyntheticLiveJourney(client.ai, {
+        liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
         source,
         systemInstruction: typeof input.systemInstruction === 'string' ? input.systemInstruction : undefined,
         model: typeof input.model === 'string' ? input.model : undefined,
@@ -499,6 +501,7 @@ export const dispatchHeadlessMethod = async (
       return client.backend.createLiveToken({
         model: requiredString(input, 'model'),
         purpose: 'live',
+        liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE),
         ...(input.config && typeof input.config === 'object' && !Array.isArray(input.config)
           ? { config: input.config as Record<string, unknown> }
           : {}),

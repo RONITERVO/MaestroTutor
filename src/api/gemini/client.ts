@@ -7,6 +7,7 @@ import { maestroAccessService } from '../../services/access/maestroAccessService
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
 import {
   createManagedGeminiClient,
+  createLiveReasonGatedGeminiClient,
   type CoreGeminiClient,
 } from '../../core-sdk/managedGeminiClient';
 import { ApiError } from '../../core-sdk/errors';
@@ -76,7 +77,9 @@ export const getDirectAi = async (options?: { apiVersion?: string }): Promise<Go
 export const getAi = async (options?: { apiVersion?: string }): Promise<MaestroGeminiClient> => {
   const accessMode = await maestroAccessService.resolveAccessMode();
   if (accessMode === 'byok') {
-    return getDirectAi(options);
+    return createLiveReasonGatedGeminiClient(
+      await getDirectAi(options) as unknown as CoreGeminiClient,
+    );
   }
   if (accessMode === 'managed') {
     return createManagedGeminiClient(maestroBackendService, options);

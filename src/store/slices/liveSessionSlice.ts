@@ -12,7 +12,7 @@
 import type { StateCreator } from 'zustand';
 import type { MaestroStore } from '../maestroStore';
 
-export type LiveSessionState = 'idle' | 'connecting' | 'active' | 'error';
+export type LiveSessionState = 'idle' | 'armed' | 'connecting' | 'active' | 'error';
 
 export interface LiveSessionSlice {
   // State

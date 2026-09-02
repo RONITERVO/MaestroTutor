@@ -10,6 +10,8 @@ export const TOKEN_CATEGORY = {
   STT: 'stt',
   GEN: 'gen',
   LIVE: 'live',
+  VAD: 'vad',
+  WHISPER: 'whisper',
   UI: 'ui',
 } as const;
 
@@ -29,6 +31,15 @@ export const TOKEN_SUBTYPE = {
 
   // LIVE
   SESSION: 'session',
+  CONNECTING: 'connecting',
+  OBSERVER_SESSION: 'observer-session',
+  OBSERVER_CONNECTING: 'observer-connecting',
+
+  // Local speech trigger
+  VAD_LISTEN: 'listen',
+  WHISPER_LOADING: 'loading',
+  WHISPER_CHECKING: 'checking',
+  WHISPER_TRIGGERED: 'triggered',
 
   // UI - User interactions
   HOLD: 'hold',
@@ -92,7 +103,8 @@ export interface TokenDisplayConfig {
     | 'IconSparkles'
     | 'IconEyeOpen'
     | 'IconSleepingZzz'
-    | 'IconPaperclip';
+    | 'IconPaperclip'
+    | 'IconWaveform';
   /** Translation key for display text. */
   textKey: string;
   /** Translation key for tooltip/title. */
@@ -180,10 +192,63 @@ export const UI_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
   },
 };
 
-/** Display config for LIVE tokens. */
-export const LIVE_TOKEN_DISPLAY: TokenDisplayConfig = {
-  icon: 'IconCamera',
-  textKey: 'chat.header.liveSession',
-  titleKey: 'chat.header.liveSession',
-  priority: 3,
+/** Display configuration for explicit Live transport phases. */
+export const LIVE_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
+  [TOKEN_SUBTYPE.CONNECTING]: {
+    icon: 'IconSparkles',
+    textKey: 'chat.maestro.liveConnecting',
+    titleKey: 'chat.maestro.title.liveConnecting',
+    animate: true,
+    priority: 3,
+  },
+  [TOKEN_SUBTYPE.SESSION]: {
+    icon: 'IconCamera',
+    textKey: 'chat.header.liveSession',
+    titleKey: 'chat.header.liveSession',
+    priority: 3,
+  },
+  [TOKEN_SUBTYPE.OBSERVER_CONNECTING]: {
+    icon: 'IconWaveform',
+    textKey: 'chat.maestro.liveConnecting',
+    titleKey: 'chat.maestro.title.liveConnecting',
+    animate: true,
+    priority: 3,
+  },
+  [TOKEN_SUBTYPE.OBSERVER_SESSION]: {
+    icon: 'IconMicrophone',
+    textKey: 'chat.maestro.liveActive',
+    titleKey: 'chat.maestro.title.liveActive',
+    priority: 3,
+  },
+};
+
+/** Display configuration for local speech gating and detailed Live phases. */
+export const SPEECH_GATE_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
+  [buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_LISTEN)]: {
+    icon: 'IconWaveform',
+    textKey: 'chat.maestro.localListening',
+    titleKey: 'chat.maestro.title.localListening',
+    animate: true,
+    priority: 4,
+  },
+  [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_LOADING)]: {
+    icon: 'IconSparkles',
+    textKey: 'chat.maestro.whisperLoading',
+    titleKey: 'chat.maestro.title.whisperLoading',
+    animate: true,
+    priority: 2,
+  },
+  [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_CHECKING)]: {
+    icon: 'IconWaveform',
+    textKey: 'chat.maestro.whisperChecking',
+    titleKey: 'chat.maestro.title.whisperChecking',
+    animate: true,
+    priority: 1,
+  },
+  [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_TRIGGERED)]: {
+    icon: 'IconMicrophone',
+    textKey: 'chat.maestro.whisperTriggered',
+    titleKey: 'chat.maestro.title.whisperTriggered',
+    priority: 0,
+  },
 };
