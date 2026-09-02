@@ -147,7 +147,7 @@ const DeleteAccountPage: React.FC = () => {
         </div>
 
         <div className="text-sm">
-          <a href="/privacy.html" className="text-blue-700 hover:underline">
+          <a href="/privacy.html" className="text-link-text hover:underline">
             View privacy policy
           </a>
         </div>
@@ -160,13 +160,13 @@ const DeleteAccountPage: React.FC = () => {
         )}
 
         {successMessage && (
-          <div className="rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <div className="rounded-md border border-notice-ok-border bg-notice-ok-bg px-4 py-3 text-sm text-notice-ok-text">
             {successMessage}
           </div>
         )}
 
         {errorMessage && (
-          <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="rounded-md border border-notice-error-border bg-notice-error-bg px-4 py-3 text-sm text-notice-error-text">
             {errorMessage}
           </div>
         )}
@@ -222,7 +222,7 @@ const DeleteAccountPage: React.FC = () => {
                 type="button"
                 onClick={() => void handleDeleteAccount()}
                 disabled={isDeleting || confirmationText.trim().toUpperCase() !== 'DELETE'}
-                className="bg-red-700 px-4 py-2 text-white hover:bg-red-800 disabled:opacity-60 sketchy-border-thin"
+                className="bg-danger-btn-bg px-4 py-2 text-danger-btn-text hover:bg-danger-btn-hover disabled:opacity-60 sketchy-border-thin"
               >
                 {isDeleting ? 'Deleting account...' : 'Delete managed account'}
               </button>

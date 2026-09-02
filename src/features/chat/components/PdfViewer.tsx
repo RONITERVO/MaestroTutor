@@ -397,7 +397,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
   }, []);
 
   const containerBg = 'notebook-native-paper sketch-shape-4';
-  const indicatorBg = 'bg-black/60 text-white';
+  const indicatorBg = 'bg-media-chip-bg text-media-chip-text';
   const errorTextColor = 'text-sketch-line';
   const iconColor = 'text-deep-ink';
   const effectiveBottomInset = !compact ? Math.max(0, Math.round(bottomInset)) : 0;
@@ -473,7 +473,7 @@ const PdfViewer: React.FC<PdfViewerProps> = React.memo(({ src, compact = false, 
                 key={pageNum}
                 ref={(el) => setPageRef(pageNum, el)}
                 data-page={pageNum}
-                className="w-full rounded shadow-sm bg-black/[0.03]"
+                className="w-full rounded shadow-sm bg-pdf-page-placeholder"
                 style={{ aspectRatio: `${pageRatios[pageNum - 1] || pageAspectRatio}` }}
               >
                 {pageUrl && (

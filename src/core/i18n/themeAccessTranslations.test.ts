@@ -4,16 +4,16 @@
 import { describe, expect, it } from 'vitest';
 import { translations } from './index';
 
+/**
+ * Labels every locale must carry itself rather than falling back to English.
+ * The theme gallery keys were dropped with the gallery: the customizer now
+ * lists every included theme directly.
+ */
 const REQUIRED_KEYS = [
   'header.aiAccessRequired',
-  'themeGallery.title',
-  'themeGallery.close',
-  'themeGallery.included',
-  'themeGallery.apply',
-  'themeGallery.includedDescription',
-  'themeGallery.footerNote',
-  'themeCustomizer.galleryTitle',
-  'themeCustomizer.galleryDescription',
+  'themeCustomizer.title',
+  'themeCustomizer.quickThemes',
+  'themeCustomizer.deletePreset',
 ] as const;
 
 describe('theme and access translations', () => {

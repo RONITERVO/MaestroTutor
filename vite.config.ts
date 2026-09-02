@@ -4,11 +4,17 @@ import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import { COLOR_GROUPS } from './src/features/theme/config/colorRegistry';
 import { DEFAULT_THEME_COLORS } from './src/features/theme/config/defaultTheme';
+import { colorVarValue, parseTokenValue } from './src/features/theme/utils/tokenValue';
 
 /**
  * Generates the CSS custom-property block for :root from COLOR_GROUPS + the
  * current default theme colors.
  * Replaces the /* __COLOR_TOKENS__ *\/ marker in index.css at build/dev time.
+ *
+ * Each token emits up to three properties (see utils/tokenValue.ts):
+ *   --x        the HSL channels
+ *   --x-alpha  the default opacity, only when the theme asks for one
+ *   --x-color  the ready-to-use colour, for hand-written CSS and inline styles
  *
  * To add a new token:
  *   1. Add the value to the active default theme palette in themeColors.ts
@@ -25,7 +31,14 @@ function colorTokensPlugin(): Plugin {
       if (val === undefined) {
         throw new Error(`Missing default color for token: ${color.cssVar}`);
       }
-      lines.push(`    --${color.cssVar}: ${val};`);
+      const { channels, alpha } = parseTokenValue(val);
+      lines.push(`    --${color.cssVar}: ${channels};`);
+      // Opaque is the default, so only a genuinely translucent token needs the
+      // property; everything else relies on the `var(--x-alpha, 1)` fallback.
+      if (alpha < 1) {
+        lines.push(`    --${color.cssVar}-alpha: ${alpha};`);
+      }
+      lines.push(`    --${color.cssVar}-color: ${colorVarValue(color.cssVar)};`);
     }
     lines.push('');
   }

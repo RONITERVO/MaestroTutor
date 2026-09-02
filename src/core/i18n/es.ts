@@ -370,12 +370,4 @@ export const esTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "Guardar como preset",
   "themeCustomizer.title": "Paleta de colores",
   "header.aiAccessRequired": "Se requiere acceso a la IA",
-  "themeGallery.title": "Galería de temas",
-  "themeGallery.close": "Cerrar",
-  "themeGallery.included": "Gratis",
-  "themeGallery.apply": "Aplicar",
-  "themeGallery.includedDescription": "Tema de colores incluido",
-  "themeGallery.footerNote": "Todos los temas de colores están incluidos y seguirán siendo gratuitos.",
-  "themeCustomizer.galleryTitle": "Galería de temas",
-  "themeCustomizer.galleryDescription": "Explorar los temas de colores incluidos",
 };

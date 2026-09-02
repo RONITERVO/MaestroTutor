@@ -102,7 +102,7 @@ const AttachmentInteractionToggle: React.FC<AttachmentInteractionToggleProps> = 
               }
               onToggle?.();
             }}
-            className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} ${borderClassName} border paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 ${compact ? 'shadow-[0_10px_22px_rgba(2,6,23,0.28)] backdrop-blur-sm' : 'btn-depth'}`}
+            className={`absolute ${sizeClass} ${positionClass} ${shapeClass} ${toneClass} ${borderClassName} border paper-texture isolate overflow-hidden transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-mode-toggle-text/30 active:scale-95 disabled:cursor-not-allowed disabled:opacity-45 ${compact ? 'shadow-[0_10px_22px_var(--attachment-toggle-shadow-color)] backdrop-blur-sm' : 'btn-depth'}`}
             title={actionLabel}
             aria-label={actionLabel}
             aria-pressed={isActive}

@@ -71,7 +71,7 @@ const BookmarkActions: React.FC<BookmarkActionsProps> = ({ t, message, maxVisibl
           value={summaryText}
           onChange={(e) => setSummaryText(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="bg-bookmark-input-bg/80 border border-bookmark-divider/30 sketch-shape-0 px-2 py-0.5 text-xs text-bookmark-input-text placeholder-bookmark-text/60 focus:outline-none focus:border-bookmark-bg focus:bg-bookmark-input-bg w-48 transition-colors font-hand"
+          className="bg-bookmark-input-bg/80 border border-bookmark-divider/30 sketch-shape-0 px-2 py-0.5 text-xs text-bookmark-input-text placeholder-bookmark-text/60 focus:outline-none focus:border-bookmark-divider focus:bg-bookmark-input-bg w-48 transition-colors font-hand"
           placeholder={t('chat.bookmark.summaryPlaceholder') || 'Summary...'}
           autoFocus
         />

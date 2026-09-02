@@ -286,7 +286,7 @@ const LanguageScrollWheel: React.FC<LanguageScrollWheelProps> = ({ languages, se
                                 className={`${variantClasses.text} pointer-events-none whitespace-normal`}
                                 style={{ fontSize: '3.55cqw', lineHeight: 1.3 }}
                             >
-                                <span className="mr-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.22)]">
+                                <span className="mr-1.5 drop-shadow-[0_1px_2px_var(--scroll-wheel-flag-shadow-color)]">
                                     {lang.flag}
                                 </span>
                                 <span>{lang.displayName}</span>

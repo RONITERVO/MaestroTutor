@@ -117,6 +117,7 @@ export const ORIGINAL_COLORS: Record<string, string> = {
   // Session Controls
   'profile-label-text': '190 60% 55%',
   'profile-input-accent': '190 60% 55%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '142 71% 45%',
   'globe-native-accent': '190 60% 55%',
   'globe-target-accent': '142 71% 60%',
@@ -235,15 +236,15 @@ export const ORIGINAL_COLORS: Record<string, string> = {
   'flag-busy-text': '190 60% 55%',
 
   // Action Confirmation Panels
-  'action-load-bg': '217 91% 60%',
+  'action-load-accent': '217 91% 60%',
   'action-load-text': '214 95% 93%',
-  'action-delete-bg': '0 72% 51%',
+  'action-delete-accent': '0 72% 51%',
   'action-delete-text': '0 86% 97%',
-  'action-export-bg': '188 95% 43%',
+  'action-export-accent': '188 95% 43%',
   'action-export-text': '188 100% 94%',
-  'action-combine-bg': '263 70% 50%',
+  'action-combine-accent': '263 70% 50%',
   'action-combine-text': '263 70% 93%',
-  'action-trim-bg': '25 95% 53%',
+  'action-trim-accent': '25 95% 53%',
   'action-trim-text': '33 100% 96%',
   'delete-shortcut-hover-bg': '0 75% 54%',
   'delete-shortcut-hover-text': '0 86% 97%',
@@ -301,6 +302,114 @@ export const ORIGINAL_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '220 74% 59%',
   'overlay-live-error-hover': '220 74% 53%',
   'overlay-live-error-text': '210 25% 99%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '220 30% 20%',
+  'debug-header-bg': '220 30% 20%',
+  'debug-card-bg': '220 30% 20%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '217 91% 51%',
+  'action-delete-label': '0 72% 50%',
+  'action-export-label': '188 95% 28%',
+  'action-combine-label': '263 70% 50%',
+  'action-trim-label': '25 95% 38%',
 };
 
 // ---------------------------------------------------------------------------
@@ -407,6 +516,7 @@ export const OCEAN_BLUE_COLORS: Record<string, string> = {
   // Session Controls
   'profile-label-text': '188 60% 45%',
   'profile-input-accent': '188 60% 45%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '195 72% 46%',
   'globe-native-accent': '187 76% 40%',
   'globe-target-accent': '195 72% 46%',
@@ -560,6 +670,114 @@ export const OCEAN_BLUE_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '195 76% 56%',
   'overlay-live-error-hover': '195 80% 50%',
   'overlay-live-error-text': '0 0% 100%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '210 42% 20%',
+  'debug-header-bg': '210 42% 20%',
+  'debug-card-bg': '210 42% 20%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 42%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const SUNSET_GOLD_COLORS: Record<string, string> = {
@@ -662,6 +880,7 @@ export const SUNSET_GOLD_COLORS: Record<string, string> = {
   // Session Controls
   'profile-label-text': '21 78% 52%',
   'profile-input-accent': '21 78% 52%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '21 78% 52%',
   'globe-native-accent': '12 76% 54%',
   'globe-target-accent': '31 86% 56%',
@@ -815,6 +1034,114 @@ export const SUNSET_GOLD_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '31 88% 62%',
   'overlay-live-error-hover': '31 88% 56%',
   'overlay-live-error-text': '0 0% 100%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '18 44% 20%',
+  'debug-header-bg': '18 44% 20%',
+  'debug-card-bg': '18 44% 20%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 43%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const DARK_NEON_COLORS: Record<string, string> = {
@@ -917,6 +1244,7 @@ export const DARK_NEON_COLORS: Record<string, string> = {
   // Session Controls
   'profile-label-text': '166 100% 44%',
   'profile-input-accent': '166 100% 44%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '166 100% 44%',
   'globe-native-accent': '53 100% 52%',
   'globe-target-accent': '282 78% 56%',
@@ -1070,6 +1398,114 @@ export const DARK_NEON_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '282 72% 52%',
   'overlay-live-error-hover': '282 74% 46%',
   'overlay-live-error-text': '0 0% 100%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '164 40% 14%',
+  'notice-ok-border': '158 38% 30%',
+  'notice-ok-text': '156 60% 80%',
+  'notice-error-bg': '0 42% 15%',
+  'notice-error-border': '0 38% 34%',
+  'notice-error-text': '0 85% 85%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 62% 46%',
+  'danger-btn-hover': '0 68% 54%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 84% 72%',
+  'danger-zone-bg': '0 42% 13% / 0.7',
+  'danger-zone-border': '0 38% 32% / 0.8',
+  'danger-zone-text': '0 84% 84%',
+  'danger-ghost-hover': '0 42% 22%',
+  'danger-input-bg': '0 15% 12%',
+  'danger-input-border': '0 38% 34%',
+  'danger-input-ring': '0 78% 60%',
+
+  // Debug Log
+  'debug-panel-bg': '230 22% 14%',
+  'debug-header-bg': '230 22% 14%',
+  'debug-card-bg': '230 22% 14%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '214 90% 72%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 92%',
+  'action-delete-label': '220 6% 51%',
+  'action-export-label': '40 8% 90%',
+  'action-combine-label': '220 7% 51%',
+  'action-trim-label': '220 5% 51%',
 };
 
 export const SCHOLAR_COLORS: Record<string, string> = {
@@ -1164,6 +1600,7 @@ export const SCHOLAR_COLORS: Record<string, string> = {
 
   'profile-label-text': '199 80% 50%',
   'profile-input-accent': '199 80% 50%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '199 81% 52%',
   'globe-native-accent': '261 75% 63%',
   'globe-target-accent': '199 84% 58%',
@@ -1303,6 +1740,114 @@ export const SCHOLAR_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '199 80% 62%',
   'overlay-live-error-hover': '199 84% 56%',
   'overlay-live-error-text': '0 0% 100%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '247 29% 20%',
+  'debug-header-bg': '247 29% 20%',
+  'debug-card-bg': '247 29% 20%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 42%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const PURE_LIGHT_COLORS: Record<string, string> = {
@@ -1409,6 +1954,7 @@ export const PURE_LIGHT_COLORS: Record<string, string> = {
   // Session controls / profile
   'profile-label-text': '0 0% 40%',
   'profile-input-accent': '215 100% 50%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '0 0% 12%',
   'globe-native-accent': '0 0% 50%',
   'globe-target-accent': '0 0% 12%',
@@ -1570,15 +2116,15 @@ export const PURE_LIGHT_COLORS: Record<string, string> = {
   'overlay-live-error-text': '0 0% 100%',
 
   // Action Confirmation Panels
-  'action-load-bg': '0 0% 96%',
+  'action-load-accent': '0 0% 96%',
   'action-load-text': '0 0% 20%',
-  'action-delete-bg': '350 70% 50%',
+  'action-delete-accent': '350 70% 50%',
   'action-delete-text': '0 0% 100%',
-  'action-export-bg': '0 0% 12%',
+  'action-export-accent': '0 0% 12%',
   'action-export-text': '0 0% 100%',
-  'action-combine-bg': '0 0% 12%',
+  'action-combine-accent': '0 0% 12%',
   'action-combine-text': '0 0% 100%',
-  'action-trim-bg': '0 0% 12%',
+  'action-trim-accent': '0 0% 12%',
   'action-trim-text': '0 0% 100%',
   'delete-shortcut-hover-bg': '350 70% 90%',
   'delete-shortcut-hover-text': '350 70% 30%',
@@ -1590,7 +2136,115 @@ export const PURE_LIGHT_COLORS: Record<string, string> = {
   'voice-puck': '30 80% 60%',
   'voice-charon': '0 0% 40%',
   'voice-kore': '150 60% 50%',
-  'voice-fenrir': '215 80% 60%'
+  'voice-fenrir': '215 80% 60%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '0 0% 92%',
+  'debug-header-bg': '0 0% 92%',
+  'debug-card-bg': '0 0% 92%',
+  'debug-ok-text': '142 62% 30%',
+  'debug-ok-payload-text': '142 55% 26%',
+  'debug-error-text': '0 72% 42%',
+  'debug-error-alt-text': '0 65% 38%',
+  'debug-error-bg': '0 80% 50% / 0.08',
+  'debug-error-border': '0 70% 60%',
+  'debug-row-hover': '0 0% 0% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.06',
+  'debug-section-bg': '0 0% 0% / 0.03',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '0 0% 45%',
+  'action-delete-label': '350 70% 50%',
+  'action-export-label': '0 0% 12%',
+  'action-combine-label': '0 0% 12%',
+  'action-trim-label': '0 0% 12%',
 };
 
 export const OBSIDIAN_COLORS: Record<string, string> = {
@@ -1698,6 +2352,7 @@ export const OBSIDIAN_COLORS: Record<string, string> = {
   // Session controls / profile
   'profile-label-text': '40 6% 65%',
   'profile-input-accent': '40 6% 65%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '40 8% 85%',
   'globe-native-accent': '40 6% 60%',
   'globe-target-accent': '40 8% 85%',
@@ -1859,15 +2514,15 @@ export const OBSIDIAN_COLORS: Record<string, string> = {
   'overlay-live-error-text': '220 8% 12%',
 
   // Action Confirmation Panels
-  'action-load-bg': '220 8% 25%',
+  'action-load-accent': '220 8% 25%',
   'action-load-text': '40 8% 90%',
-  'action-delete-bg': '220 15% 30%',
+  'action-delete-accent': '220 15% 30%',
   'action-delete-text': '40 8% 95%',
-  'action-export-bg': '220 8% 25%',
+  'action-export-accent': '220 8% 25%',
   'action-export-text': '40 8% 90%',
-  'action-combine-bg': '220 8% 25%',
+  'action-combine-accent': '220 8% 25%',
   'action-combine-text': '40 8% 90%',
-  'action-trim-bg': '220 8% 25%',
+  'action-trim-accent': '220 8% 25%',
   'action-trim-text': '40 8% 90%',
   'delete-shortcut-hover-bg': '220 15% 35%',
   'delete-shortcut-hover-text': '40 8% 95%',
@@ -1880,6 +2535,114 @@ export const OBSIDIAN_COLORS: Record<string, string> = {
   'voice-charon': '40 6% 65%',
   'voice-kore': '220 6% 55%',
   'voice-fenrir': '40 8% 45%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '164 40% 14%',
+  'notice-ok-border': '158 38% 30%',
+  'notice-ok-text': '156 60% 80%',
+  'notice-error-bg': '0 42% 15%',
+  'notice-error-border': '0 38% 34%',
+  'notice-error-text': '0 85% 85%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 62% 46%',
+  'danger-btn-hover': '0 68% 54%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 84% 72%',
+  'danger-zone-bg': '0 42% 13% / 0.7',
+  'danger-zone-border': '0 38% 32% / 0.8',
+  'danger-zone-text': '0 84% 84%',
+  'danger-ghost-hover': '0 42% 22%',
+  'danger-input-bg': '0 15% 12%',
+  'danger-input-border': '0 38% 34%',
+  'danger-input-ring': '0 78% 60%',
+
+  // Debug Log
+  'debug-panel-bg': '40 8% 85%',
+  'debug-header-bg': '40 8% 85%',
+  'debug-card-bg': '40 8% 85%',
+  'debug-ok-text': '142 62% 30%',
+  'debug-ok-payload-text': '142 55% 26%',
+  'debug-error-text': '0 72% 42%',
+  'debug-error-alt-text': '0 65% 38%',
+  'debug-error-bg': '0 80% 50% / 0.08',
+  'debug-error-border': '0 70% 60%',
+  'debug-row-hover': '0 0% 0% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.06',
+  'debug-section-bg': '0 0% 0% / 0.03',
+
+  // Page Canvas
+  'link-text': '214 90% 72%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '220 8% 54%',
+  'action-delete-label': '220 15% 55%',
+  'action-export-label': '220 8% 54%',
+  'action-combine-label': '220 8% 54%',
+  'action-trim-label': '220 8% 54%',
 };
 
 export const FOREST_COLORS: Record<string, string> = {
@@ -1982,6 +2745,7 @@ export const FOREST_COLORS: Record<string, string> = {
   // Session Controls
   'profile-label-text': '160 45% 40%',
   'profile-input-accent': '160 45% 40%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '140 55% 38%',
   'globe-native-accent': '160 45% 45%',
   'globe-target-accent': '140 55% 38%',
@@ -2135,6 +2899,114 @@ export const FOREST_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '140 42% 42%',
   'overlay-live-error-hover': '140 48% 36%',
   'overlay-live-error-text': '80 15% 98%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '90 25% 20%',
+  'debug-header-bg': '90 25% 20%',
+  'debug-card-bg': '90 25% 20%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 42%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const LAVENDER_COLORS: Record<string, string> = {
@@ -2237,6 +3109,7 @@ export const LAVENDER_COLORS: Record<string, string> = {
   // Session Controls
   'profile-label-text': '255 55% 50%',
   'profile-input-accent': '255 55% 50%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '270 58% 56%',
   'globe-native-accent': '255 50% 58%',
   'globe-target-accent': '270 58% 56%',
@@ -2390,6 +3263,114 @@ export const LAVENDER_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '265 42% 46%',
   'overlay-live-error-hover': '265 48% 40%',
   'overlay-live-error-text': '267 35% 98%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '262 52% 24%',
+  'debug-header-bg': '262 52% 24%',
+  'debug-card-bg': '262 52% 24%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 43%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 45%',
 };
 
 export const SPECTRUM_COLORS: Record<string, string> = {
@@ -2492,6 +3473,7 @@ export const SPECTRUM_COLORS: Record<string, string> = {
   // Session Controls
   'profile-label-text': '153 76% 34%',
   'profile-input-accent': '153 76% 34%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '214 89% 55%',
   'globe-native-accent': '153 76% 38%',
   'globe-target-accent': '214 89% 55%',
@@ -2645,6 +3627,114 @@ export const SPECTRUM_COLORS: Record<string, string> = {
   'overlay-live-error-bg': '214 86% 62%',
   'overlay-live-error-hover': '214 88% 56%',
   'overlay-live-error-text': '0 0% 100%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '217 60% 26%',
+  'debug-header-bg': '217 60% 26%',
+  'debug-card-bg': '217 60% 26%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 44%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 43%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 46%',
 };
 
 export const GRAPHITE_COLORS: Record<string, string> = {
@@ -2741,6 +3831,7 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   // Session controls / profile
   'profile-label-text': '220 6% 36%',
   'profile-input-accent': '220 6% 36%',
+  'scroll-wheel-flag-shadow': '0 0% 0% / 0.22',
   'scroll-wheel-target-accent': '220 6% 28%',
   'globe-native-accent': '220 5% 42%',
   'globe-target-accent': '220 6% 28%',
@@ -2880,15 +3971,15 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'overlay-live-error-hover': '220 7% 30%',
   'overlay-live-error-text': '40 8% 97%',
   // Action confirmation panels
-  'action-load-bg': '40 6% 92%',
+  'action-load-accent': '40 6% 92%',
   'action-load-text': '220 8% 14%',
-  'action-delete-bg': '220 6% 28%',
+  'action-delete-accent': '220 6% 28%',
   'action-delete-text': '40 8% 97%',
-  'action-export-bg': '40 8% 90%',
+  'action-export-accent': '40 8% 90%',
   'action-export-text': '220 8% 14%',
-  'action-combine-bg': '220 7% 22%',
+  'action-combine-accent': '220 7% 22%',
   'action-combine-text': '40 8% 97%',
-  'action-trim-bg': '220 5% 50%',
+  'action-trim-accent': '220 5% 50%',
   'action-trim-text': '40 8% 97%',
   'delete-shortcut-hover-bg': '220 6% 34%',
   'delete-shortcut-hover-text': '40 8% 97%',
@@ -2907,4 +3998,112 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'voice-charon': '220 5% 50%',
   'voice-kore': '40 8% 82%',
   'voice-fenrir': '220 8% 16%',
+
+  // Overlay Scrims
+  'scrim-modal': '0 0% 0% / 0.45',
+  'scrim-gate': '0 0% 0% / 0.4',
+  'scrim-panel': '0 0% 0% / 0.2',
+  'scrim-busy': '0 0% 0% / 0.6',
+
+  // Media Overlay
+  'media-letterbox': '0 0% 0%',
+  'media-overlay-icon': '0 0% 100%',
+  'media-overlay-focus': '0 0% 100% / 0.4',
+  'media-overlay-shadow': '0 0% 0% / 0.72',
+  'media-chip-bg': '0 0% 0% / 0.6',
+  'media-chip-text': '0 0% 100%',
+  'media-loading-bg': '0 0% 0% / 0.3',
+  'media-error-scrim': '0 0% 0% / 0.6',
+  'media-preview-veil': '0 0% 0% / 0.2',
+  'media-preview-veil-hover': '0 0% 0% / 0.4',
+  'media-ctrl-focus': '0 0% 100% / 0.5',
+  'media-rec-chip-bg': '0 0% 0% / 0.5',
+  'media-rec-chip-text': '0 0% 100%',
+  'media-observer-dot': '158 64% 52%',
+  'media-observer-dot-border': '0 0% 0% / 0.4',
+  'pdf-page-placeholder': '0 0% 0% / 0.03',
+
+  // Mini-game Overlay
+  'game-status-bg': '0 0% 0% / 0.7',
+  'game-status-error-bg': '0 63% 31% / 0.8',
+  'game-status-text': '0 0% 100%',
+  'game-deck-bg': '0 0% 0% / 0.55',
+  'game-deck-btn-bg': '0 0% 0% / 0.35',
+  'game-deck-btn-hover': '0 0% 0% / 0.5',
+  'game-deck-text': '0 0% 100%',
+  'game-deck-subtle-text': '0 0% 100% / 0.8',
+  'game-deck-line': '0 0% 100% / 0.25',
+  'game-error-bg': '0 75% 15% / 0.6',
+  'game-error-border': '0 63% 31% / 0.4',
+  'game-error-text': '0 96% 89%',
+  'game-error-btn-bg': '0 63% 31% / 0.4',
+  'game-error-btn-hover': '0 63% 31% / 0.6',
+  'game-error-btn-border': '0 91% 71% / 0.3',
+  'game-code-shadow': '229 84% 5% / 0.18',
+
+  // Status Notices
+  'notice-ok-bg': '152 81% 96%',
+  'notice-ok-border': '156 72% 67%',
+  'notice-ok-text': '164 86% 16%',
+  'notice-error-bg': '0 86% 97%',
+  'notice-error-border': '0 94% 82%',
+  'notice-error-text': '0 70% 35%',
+
+  // Danger Actions
+  'danger-btn-bg': '0 74% 42%',
+  'danger-btn-hover': '0 70% 35%',
+  'danger-btn-text': '0 0% 100%',
+  'danger-icon': '0 74% 42%',
+  'danger-zone-bg': '0 86% 97% / 0.7',
+  'danger-zone-border': '0 94% 82% / 0.8',
+  'danger-zone-text': '0 63% 31%',
+  'danger-ghost-hover': '0 93% 94%',
+  'danger-input-bg': '0 0% 100%',
+  'danger-input-border': '0 94% 82%',
+  'danger-input-ring': '0 91% 71%',
+
+  // Debug Log
+  'debug-panel-bg': '220 8% 14%',
+  'debug-header-bg': '220 8% 14%',
+  'debug-card-bg': '220 8% 14%',
+  'debug-ok-text': '142 69% 58%',
+  'debug-ok-payload-text': '142 77% 73%',
+  'debug-error-text': '0 91% 71%',
+  'debug-error-alt-text': '0 94% 82%',
+  'debug-error-bg': '0 63% 31% / 0.1',
+  'debug-error-border': '0 70% 35%',
+  'debug-row-hover': '0 0% 100% / 0.05',
+  'debug-payload-bg': '0 0% 0% / 0.2',
+  'debug-section-bg': '0 0% 0% / 0.1',
+
+  // Page Canvas
+  'link-text': '224 76% 48%',
+
+  // Chat Input Area
+  'stt-lang-selected-bg': '0 0% 100% / 0.3',
+  'stt-lang-selected-sugg-bg': '0 0% 100% / 0.5',
+  'stt-lang-hover-bg': '0 0% 100% / 0.2',
+  'stt-lang-sugg-hover-bg': '0 0% 0% / 0.2',
+  'stt-lang-selected-text': '0 0% 100%',
+
+  // Media Attachments
+  'imagegen-cam-icon': '270 95% 75%',
+  'imagegen-cam-active-text': '271 81% 56%',
+  'imagegen-cam-text': '269 97% 85%',
+  'attachment-toggle-shadow': '229 84% 5% / 0.28',
+
+  // Microphone Recording Button
+  'mic-record-glow': '0 84% 60% / 0.8',
+
+  // API Key Gate
+  'gate-disclaimer-text': '0 0% 100% / 0.55',
+  'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
+  'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 43%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 43%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 45%',
 };

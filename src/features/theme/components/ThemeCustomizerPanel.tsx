@@ -2,17 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useCallback, useRef } from 'react';
-import { HexColorPicker } from 'react-colorful';
-import { IconXMark, IconUndo, IconBookmark, IconDownload, IconUpload, IconCheck, IconSparkles } from '../../../shared/ui/Icons';
+import { HexAlphaColorPicker } from 'react-colorful';
+import { IconXMark, IconUndo, IconBookmark, IconDownload, IconUpload, IconCheck } from '../../../shared/ui/Icons';
 import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
 import { DEFAULT_THEME_COLORS } from '../config/defaultTheme';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
-import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
-import { hslStringToHex, hexToHslString } from '../utils/colorConversion';
+import { type PresetTheme } from '../config/presetThemes';
+import { ALL_THEMES } from '../config/themeCatalogue';
+import { getThemePreset } from '../config/themePresets';
+import { hslStringToHexAlpha, hexAlphaToHslString } from '../utils/colorConversion';
+import { applyTokenValue, clearTokenValue } from '../utils/applyTokenValue';
 import { exportThemeToFile, importThemeFromFile } from '../utils/themeFileIO';
-import ThemeGalleryPanel from './ThemeGalleryPanel';
 
 interface ThemeCustomizerPanelProps {
   onClose: () => void;
@@ -97,11 +99,14 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
                   className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all duration-150
                     ${active ? 'bg-theme-panel-bg/80 ring-2 ring-theme-input-border scale-105' : 'active:scale-95'}`}
                 >
+                  {/* Checkerboard sits behind the swatch so a translucent
+                      token reads as translucent rather than as a paler colour. */}
                   <div
-                    className={`w-8 h-8 rounded-full border-2 shadow-sm transition-colors
+                    className={`w-8 h-8 rounded-full border-2 shadow-sm transition-colors overflow-hidden alpha-checker
                       ${modified ? 'border-theme-input-border' : 'border-line-border'}`}
-                    style={{ backgroundColor: hex }}
-                  />
+                  >
+                    <div className="w-full h-full" style={{ backgroundColor: hex }} />
+                  </div>
                   <span className="text-[10px] text-theme-muted-text leading-tight text-center truncate w-full">
                     {cv.friendlyName}
                   </span>
@@ -136,7 +141,7 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
                   {activeColor.description}
                 </p>
               )}
-              <HexColorPicker
+              <HexAlphaColorPicker
                 color={getEffectiveHex(activeColorVar)}
                 onChange={(hex) => onColorChange(activeColorVar, hex)}
                 style={{ width: '100%', height: '160px' }}
@@ -163,7 +168,8 @@ interface QuickThemeButtonProps {
 
 const getPresetPreviewColors = (preset: PresetTheme): string[] => [
   preset.colors['page-bg'] || DEFAULT_THEME_COLORS['page-bg'],
-  preset.colors['chat-outer-bg'] || DEFAULT_THEME_COLORS['chat-outer-bg'],
+  // A surface rather than the page, so the Clear variants read as hollow.
+  preset.colors['user-msg-bg'] || DEFAULT_THEME_COLORS['user-msg-bg'],
   preset.colors['page-text'] || DEFAULT_THEME_COLORS['page-text'],
 ];
 
@@ -181,12 +187,15 @@ const QuickThemeButton: React.FC<QuickThemeButtonProps> = ({
     className={`flex items-center gap-2 px-3 py-2 rounded-lg border border-line-border/60 hover:border-theme-input-border/50 bg-theme-preset-btn/60 hover:bg-theme-panel-bg/50 transition-all active:scale-95 ${className}`.trim()}
   >
     <div className="flex gap-0.5">
+      {/* Alpha-aware, so a Clear theme's dots read as see-through instead of
+          looking identical to its solid twin. */}
       {previewColors.slice(0, 3).map((color, index) => (
         <div
           key={`${name}-${index}`}
-          className="w-3 h-3 rounded-full border border-line-border/40"
-          style={{ backgroundColor: hslStringToHex(color) }}
-        />
+          className="w-3 h-3 rounded-full border border-line-border/40 overflow-hidden alpha-checker"
+        >
+          <div className="w-full h-full" style={{ backgroundColor: hslStringToHexAlpha(color) }} />
+        </div>
       ))}
     </div>
     <div className="text-left min-w-0">
@@ -212,7 +221,6 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const customColors = settings.customColors || {};
 
   const [activeColorVar, setActiveColorVar] = useState<string | null>(null);
-  const [isThemeGalleryOpen, setIsThemeGalleryOpen] = useState(false);
 
   // Debounce timer for IndexedDB persistence
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -221,16 +229,18 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
     return customColors[cssVar] || DEFAULT_THEME_COLORS[cssVar] || '0 0% 50%';
   }, [customColors]);
 
+  // 8-digit while translucent, 6-digit while opaque - the form the alpha picker
+  // both accepts and emits.
   const getEffectiveHex = useCallback((cssVar: string): string => {
-    return hslStringToHex(getEffectiveHsl(cssVar));
+    return hslStringToHexAlpha(getEffectiveHsl(cssVar));
   }, [getEffectiveHsl]);
 
   // Apply color immediately to DOM for real-time preview, debounce persistence
   const handleColorChange = useCallback((cssVar: string, hex: string) => {
-    const hslValue = hexToHslString(hex);
+    const hslValue = hexAlphaToHslString(hex);
 
     // Immediate DOM update for smooth real-time preview
-    document.documentElement.style.setProperty(`--${cssVar}`, hslValue);
+    applyTokenValue(document.documentElement, cssVar, hslValue);
 
     // Debounced store + IndexedDB persist
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -246,7 +256,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   }, [setSettings]);
 
   const handleResetColor = useCallback((cssVar: string) => {
-    document.documentElement.style.removeProperty(`--${cssVar}`);
+    clearTokenValue(document.documentElement, cssVar);
     setSettings(prev => {
       const next = { ...(prev.customColors || {}) };
       delete next[cssVar];
@@ -258,7 +268,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const handleResetAll = useCallback(() => {
     const root = document.documentElement;
     for (const key of Object.keys(customColors)) {
-      root.style.removeProperty(`--${key}`);
+      clearTokenValue(root, key);
     }
     setSettings(prev => ({ ...prev, customColors: undefined }));
     setActiveColorVar(null);
@@ -269,7 +279,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
     // Clear all current overrides first
     for (const key of Object.keys(customColors)) {
-      root.style.removeProperty(`--${key}`);
+      clearTokenValue(root, key);
     }
 
     // If the preset has no colors (default), just reset
@@ -281,7 +291,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
     // Apply preset colors to DOM
     for (const [cssVar, hslValue] of Object.entries(preset.colors)) {
-      root.style.setProperty(`--${cssVar}`, hslValue);
+      applyTokenValue(root, cssVar, hslValue);
     }
 
     // Persist
@@ -385,7 +395,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[89] bg-black/20"
+        className="fixed inset-0 z-[89] bg-scrim-panel"
         onClick={onClose}
       />
 
@@ -494,25 +504,37 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-4 pb-8 space-y-4 scrollbar-hide">
 
-          {/* ── Quick Themes ────────────────────────── */}
+          {/* ── Included Themes ────────────────────────── */}
           <div>
             <h3 className="text-xs font-hand text-theme-muted-text uppercase tracking-wider mb-2">
-              {t('themeCustomizer.quickThemes') || 'Quick Themes'}
+              {t('themeCustomizer.quickThemes')}
             </h3>
             <div className="flex flex-wrap gap-2">
-              {PRESET_THEMES.map(preset => {
+              {ALL_THEMES.map(theme => {
+                const preset = getThemePreset(theme.themeId);
+                if (!preset) return null;
                 return (
                   <QuickThemeButton
-                    key={preset.name}
-                    name={preset.name}
-                    description={preset.description}
+                    key={theme.themeId}
+                    name={theme.displayName}
+                    description={theme.description}
                     previewColors={getPresetPreviewColors(preset)}
                     onClick={() => applyPreset(preset)}
+                    accentIcon={<span className="shrink-0">{theme.icon}</span>}
                   />
                 );
               })}
-              {savedPresets.map((preset, idx) => {
-                return (
+            </div>
+          </div>
+
+          {/* ── Saved Presets ────────────────────────── */}
+          {savedPresets.length > 0 && (
+            <div>
+              <h3 className="text-xs font-hand text-theme-muted-text uppercase tracking-wider mb-2">
+                {t('themeCustomizer.savedPresets')}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {savedPresets.map((preset, idx) => (
                   <div key={`saved-${idx}`} className="relative group/saved">
                     <QuickThemeButton
                       name={preset.name}
@@ -530,21 +552,10 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
                       &times;
                     </button>
                   </div>
-                );
-              })}
-              <QuickThemeButton
-                name={t('themeCustomizer.galleryTitle') || 'Theme Gallery'}
-                description={t('themeCustomizer.galleryDescription') || 'Browse included color themes'}
-                previewColors={[
-                  '210 70% 45%',
-                  '38 90% 55%',
-                  '280 100% 65%',
-                ]}
-                onClick={() => setIsThemeGalleryOpen(true)}
-                accentIcon={<IconSparkles className="w-3 h-3 text-theme-input-border shrink-0" />}
-              />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ── Divider ────────────────────────── */}
           <div className="border-t border-line-border/30" />
@@ -565,12 +576,6 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
           ))}
         </div>
       </div>
-      {isThemeGalleryOpen && (
-        <ThemeGalleryPanel
-          onApplyTheme={applyPreset}
-          onClose={() => setIsThemeGalleryOpen(false)}
-        />
-      )}
     </>
   );
 };

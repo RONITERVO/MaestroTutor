@@ -6,6 +6,7 @@ import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
 import { ALL_COLOR_VARS } from '../config/colorRegistry';
 import { DEFAULT_THEME_COLORS } from '../config/defaultTheme';
+import { applyTokenValue, clearTokenValue } from '../utils/applyTokenValue';
 /**
  * Syncs customColors from settings to CSS custom properties on <html>.
  * Falls back to the current app default theme when no custom value is set, so
@@ -24,9 +25,9 @@ export function useApplyCustomColors() {
     for (const cssVar of managedVars) {
       const value = customColors?.[cssVar] || DEFAULT_THEME_COLORS[cssVar];
       if (value) {
-        root.style.setProperty(`--${cssVar}`, value);
+        applyTokenValue(root, cssVar, value);
       } else {
-        root.style.removeProperty(`--${cssVar}`);
+        clearTokenValue(root, cssVar);
       }
     }
   }, [customColors]);

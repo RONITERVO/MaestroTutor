@@ -67,11 +67,11 @@ const AiContentReportModal: React.FC<AiContentReportModalProps> = ({
   if (!isOpen || !message) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 px-4 py-6">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-scrim-modal px-4 py-6">
       <div className="w-full max-w-lg bg-paper-surface text-page-text shadow-xl sketchy-border-thin">
         <div className="flex items-center justify-between border-b border-line-border px-4 py-3">
           <div className="flex items-center gap-2">
-            <IconFlag className="h-5 w-5 text-red-700" />
+            <IconFlag className="h-5 w-5 text-danger-icon" />
             <div className="font-medium font-sketch">{t('chat.report.title')}</div>
           </div>
           <button
@@ -127,7 +127,7 @@ const AiContentReportModal: React.FC<AiContentReportModalProps> = ({
           </div>
 
           {errorMessage && (
-            <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800">
+            <div className="rounded-md border border-notice-error-border bg-notice-error-bg px-3 py-2 text-xs text-notice-error-text">
               {errorMessage}
             </div>
           )}
@@ -145,7 +145,7 @@ const AiContentReportModal: React.FC<AiContentReportModalProps> = ({
               type="button"
               onClick={() => void onSubmit({ reason, notes })}
               disabled={isSubmitting}
-              className="bg-red-700 px-3 py-2 text-white hover:bg-red-800 disabled:opacity-60 sketchy-border-thin"
+              className="bg-danger-btn-bg px-3 py-2 text-danger-btn-text hover:bg-danger-btn-hover disabled:opacity-60 sketchy-border-thin"
             >
               {isSubmitting ? t('chat.report.submitting') : t('chat.report.submit')}
             </button>

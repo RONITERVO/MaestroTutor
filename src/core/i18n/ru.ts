@@ -371,12 +371,4 @@ export const ruTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "Сохранить как пресет",
   "themeCustomizer.title": "Цвета оформления",
   "header.aiAccessRequired": "Требуется доступ к ИИ",
-  "themeGallery.title": "Галерея тем",
-  "themeGallery.close": "Закрыть",
-  "themeGallery.included": "Бесплатно",
-  "themeGallery.apply": "Применить",
-  "themeGallery.includedDescription": "Включённая цветовая тема",
-  "themeGallery.footerNote": "Все цветовые темы включены и останутся бесплатными.",
-  "themeCustomizer.galleryTitle": "Галерея тем",
-  "themeCustomizer.galleryDescription": "Просмотреть включённые цветовые темы",
 };

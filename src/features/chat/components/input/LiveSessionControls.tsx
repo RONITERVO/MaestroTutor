@@ -51,7 +51,7 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
         type="button"
         onClick={handleLiveSessionToggle}
         disabled={liveSessionConnecting}
-        className={`px-2 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 ${liveSessionButtonClasses} ${liveSessionConnecting ? 'opacity-70 cursor-wait' : ''}`}
+        className={`px-2 py-1 text-xs font-semibold rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-media-ctrl-focus ${liveSessionButtonClasses} ${liveSessionConnecting ? 'opacity-70 cursor-wait' : ''}`}
       >
         {liveSessionButtonLabel}
       </button>

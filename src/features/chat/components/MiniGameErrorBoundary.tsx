@@ -25,12 +25,12 @@ class MiniGameErrorBoundary extends React.Component<Props, State> {
       const failedText = this.props.failedText || 'Mini-game failed to render.';
       const retryText = this.props.retryText || 'Retry';
       return (
-        <div className="w-full max-w-[560px] mx-auto rounded-2xl border border-red-900/40 bg-red-950/60 p-6 text-center">
-          <p className="text-sm text-red-200">{failedText}</p>
+        <div className="w-full max-w-[560px] mx-auto rounded-2xl border border-game-error-border bg-game-error-bg p-6 text-center">
+          <p className="text-sm text-game-error-text">{failedText}</p>
           <button
             type="button"
             onClick={() => this.setState({ hasError: false })}
-            className="mt-3 rounded-full border border-red-400/30 bg-red-900/40 px-4 py-1.5 text-xs text-red-200 hover:bg-red-900/60"
+            className="mt-3 rounded-full border border-game-error-btn-border bg-game-error-btn-bg px-4 py-1.5 text-xs text-game-error-text hover:bg-game-error-btn-hover"
           >
             {retryText}
           </button>

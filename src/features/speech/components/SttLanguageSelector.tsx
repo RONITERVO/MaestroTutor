@@ -29,9 +29,9 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
     : (isInSuggestionMode ? 'p-0.5 bg-sugg-outer-bg sketchy-border-thin' : 'p-0.5 bg-chat-outer-bg sketchy-border-thin');
   const buttonBase = isCollapsed ? 'p-1.5 sketchy-border-thin' : 'p-2 sketchy-border-thin';
   const flagBase = isCollapsed ? 'text-base leading-none' : 'text-lg leading-none';
-  const selectedClassCollapsed = isInSuggestionMode ? 'bg-white/50' : 'bg-white/30';
+  const selectedClassCollapsed = isInSuggestionMode ? 'bg-stt-lang-selected-sugg-bg' : 'bg-stt-lang-selected-bg';
   const selectedClassExpanded = isInSuggestionMode ? 'bg-sugg-input-bg' : 'bg-chat-input-bg';
-  const unselectedHoverCollapsed = isInSuggestionMode ? 'hover:bg-black/20' : 'hover:bg-white/20';
+  const unselectedHoverCollapsed = isInSuggestionMode ? 'hover:bg-stt-lang-sugg-hover-bg' : 'hover:bg-stt-lang-hover-bg';
   const unselectedHoverExpanded = isInSuggestionMode ? 'hover:bg-sugg-outer-bg' : 'hover:bg-chat-outer-bg';
 
   return (
@@ -43,7 +43,7 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
         aria-label={t('sttLang.selectLanguage', { language: targetLang.displayName })}
         aria-pressed={isTargetSelected}
       >
-        <span className={`${flagBase} ${isTargetSelected && !isCollapsed ? 'text-white' : ''}`}>{targetLang.flag}</span>
+        <span className={`${flagBase} ${isTargetSelected && !isCollapsed ? 'text-stt-lang-selected-text' : ''}`}>{targetLang.flag}</span>
       </button>
       <button
         onClick={() => onSelectLang(nativeCode)}
@@ -52,7 +52,7 @@ const SttLanguageSelector: React.FC<SttLanguageSelectorProps> = React.memo(({ ta
         aria-label={t('sttLang.selectLanguage', { language: nativeLang.displayName })}
         aria-pressed={isNativeSelected}
       >
-        <span className={`${flagBase} ${isNativeSelected && !isCollapsed ? 'text-white' : ''}`}>{nativeLang.flag}</span>
+        <span className={`${flagBase} ${isNativeSelected && !isCollapsed ? 'text-stt-lang-selected-text' : ''}`}>{nativeLang.flag}</span>
       </button>
     </div>
   );

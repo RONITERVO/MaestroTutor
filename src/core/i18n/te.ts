@@ -371,12 +371,4 @@ export const teTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "ప్రీసెట్‌గా సేవ్ చేయండి",
   "themeCustomizer.title": "రంగులు మార్చండి",
   "header.aiAccessRequired": "AI యాక్సెస్ అవసరం",
-  "themeGallery.title": "థీమ్ గ్యాలరీ",
-  "themeGallery.close": "మూసివేయి",
-  "themeGallery.included": "ఉచితం",
-  "themeGallery.apply": "వర్తింపజేయి",
-  "themeGallery.includedDescription": "చేర్చబడిన రంగు థీమ్",
-  "themeGallery.footerNote": "ప్రతి రంగు థీమ్ చేర్చబడింది మరియు ఎల్లప్పుడూ ఉచితంగానే ఉంటుంది.",
-  "themeCustomizer.galleryTitle": "థీమ్ గ్యాలరీ",
-  "themeCustomizer.galleryDescription": "చేర్చబడిన రంగు థీమ్‌లను చూడండి",
 };

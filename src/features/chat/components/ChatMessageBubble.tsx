@@ -1144,10 +1144,10 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
     ? `msg-corner-lift msg-corner-lift-${tapeLayout.liftedCorners[0]}`
     : '';
   const overlayIconShadowStyle: React.CSSProperties = {
-    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
+    filter: 'drop-shadow(0 1px 2px var(--media-overlay-shadow-color))',
   };
   const overlayIconButtonBaseClasses = 'rounded-full opacity-85 transition-all duration-200 hover:opacity-100 focus:outline-none focus:ring-2 active:scale-95 disabled:opacity-40 disabled:cursor-default';
-  const overlayNeutralIconButtonClasses = `${overlayIconButtonBaseClasses} text-white/90 hover:text-white focus:ring-white/40`;
+  const overlayNeutralIconButtonClasses = `${overlayIconButtonBaseClasses} text-media-overlay-icon/90 hover:text-media-overlay-icon focus:ring-media-overlay-focus`;
   const overlayAccentIconButtonClasses = `${overlayIconButtonBaseClasses} text-annotation-btn-text focus:ring-annotation-btn-focus`;
   const focusToggleLabel = isFocusedMode ? t('chat.focusedMode.exit') : t('chat.focusedMode.enter');
   const shouldShowFocusedModeToggle = hasVisibleAttachment && !isAnnotationActive;
@@ -1187,7 +1187,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
                   {isAttachmentLoading && !shouldShowAudioAttachmentPlaceholder && !shouldShowArtifactLoadingScene && (
                       <div className="absolute top-2 right-2 flex flex-col items-end z-20">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-black/30 drop-shadow-md flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-media-loading-bg drop-shadow-md flex items-center justify-center">
                           {selectedLoadingAnimation && !loadingAnimationError ? (
                             <video
                               src={selectedLoadingAnimation}
@@ -1295,7 +1295,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                                     <IconChevronLeft className="w-4 h-4" />
                                   </span>
                                 </button>
-                                <span className="text-white text-xs font-medium tabular-nums bg-black/60 rounded px-1.5 py-0.5 select-none">
+                                <span className="text-media-chip-text text-xs font-medium tabular-nums bg-media-chip-bg rounded px-1.5 py-0.5 select-none">
                                   {pdfPageNum}/{pdfPageCount}
                                 </span>
                                 <button
@@ -1396,7 +1396,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
                                   videoPlayTokenRef.current = null;
                                 }
                               }}
-                              className={`block w-full h-full object-contain rounded-lg bg-black`}
+                              className={`block w-full h-full object-contain rounded-lg bg-media-letterbox`}
                           >
                               {t('chat.videoNotSupported')}
                           </video>
@@ -1513,7 +1513,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
           
           {message.imageGenError && !isAttachmentLoading && (
                <div className={`flex flex-col items-center justify-center p-2 rounded-lg 
-                  ${applyFocusedImageStyles ? 'absolute inset-0 bg-black/60 z-20' : `my-2 ${isUser ? 'bg-user-msg-bg/60' : 'bg-status-msg-bg/60'}`}
+                  ${applyFocusedImageStyles ? 'absolute inset-0 bg-media-error-scrim z-20' : `my-2 ${isUser ? 'bg-user-msg-bg/60' : 'bg-status-msg-bg/60'}`}
                `}>
                   <IconXMark className="w-8 h-8 text-img-error-text mb-1"/>
                   <p className={`text-xs text-center ${applyFocusedImageStyles ? 'text-input-error-text/80' : 'text-img-error-text'}`}>
@@ -1757,7 +1757,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         {/* Corner lift overlays for un-taped corners beyond the first */}
         {tapeLayout.liftedCorners.slice(1).map(corner => (
           <div key={corner} className={`absolute pointer-events-none msg-corner-lift msg-corner-lift-${corner}`} style={{ inset: 0, zIndex: 2 }}>
-            <div style={{ position: 'absolute', ...(corner.includes('t') ? { top: -1 } : { bottom: -1 }), ...(corner.includes('l') ? { left: -1 } : { right: -1 }), width: 28, height: 28, borderRadius: corner === 'tl' ? '0 0 8px 0' : corner === 'tr' ? '0 0 0 8px' : corner === 'bl' ? '0 8px 0 0' : '8px 0 0 0', background: corner === 'tl' ? 'linear-gradient(135deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' : corner === 'tr' ? 'linear-gradient(225deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' : corner === 'bl' ? 'linear-gradient(45deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' : 'linear-gradient(315deg, hsl(var(--page-bg)) 25%, hsl(var(--page-bg) / 0.5) 45%, transparent 70%)' }} />
+            <div style={{ position: 'absolute', ...(corner.includes('t') ? { top: -1 } : { bottom: -1 }), ...(corner.includes('l') ? { left: -1 } : { right: -1 }), width: 28, height: 28, borderRadius: corner === 'tl' ? '0 0 8px 0' : corner === 'tr' ? '0 0 0 8px' : corner === 'bl' ? '0 8px 0 0' : '8px 0 0 0', background: corner === 'tl' ? 'linear-gradient(135deg, var(--page-bg-color) 25%, hsl(var(--page-bg) / calc(var(--page-bg-alpha, 1) * 0.5)) 45%, transparent 70%)' : corner === 'tr' ? 'linear-gradient(225deg, var(--page-bg-color) 25%, hsl(var(--page-bg) / calc(var(--page-bg-alpha, 1) * 0.5)) 45%, transparent 70%)' : corner === 'bl' ? 'linear-gradient(45deg, var(--page-bg-color) 25%, hsl(var(--page-bg) / calc(var(--page-bg-alpha, 1) * 0.5)) 45%, transparent 70%)' : 'linear-gradient(315deg, var(--page-bg-color) 25%, hsl(var(--page-bg) / calc(var(--page-bg-alpha, 1) * 0.5)) 45%, transparent 70%)' }} />
           </div>
         ))}
        </div>

@@ -370,12 +370,4 @@ export const guTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "પ્રીસેટ તરીકે સાચવો",
   "themeCustomizer.title": "રંગ પેઇન્ટ",
   "header.aiAccessRequired": "AI ઍક્સેસ જરૂરી છે",
-  "themeGallery.title": "થીમ ગેલેરી",
-  "themeGallery.close": "બંધ કરો",
-  "themeGallery.included": "મફત",
-  "themeGallery.apply": "લાગુ કરો",
-  "themeGallery.includedDescription": "સમાવિષ્ટ રંગ થીમ",
-  "themeGallery.footerNote": "દરેક રંગ થીમ સામેલ છે અને હંમેશા મફત રહેશે.",
-  "themeCustomizer.galleryTitle": "થીમ ગેલેરી",
-  "themeCustomizer.galleryDescription": "સમાવિષ્ટ રંગ થીમ્સ બ્રાઉઝ કરો",
 };

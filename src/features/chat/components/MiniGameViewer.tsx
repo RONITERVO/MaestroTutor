@@ -364,16 +364,16 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
   const subtleText = isUser ? 'text-user-attachment-game-text/70' : 'text-ai-file-text/70';
   const lineColor = isUser ? 'border-user-attachment-game-text/25' : 'border-ai-file-text/25';
   const padBtnBg = isUser ? 'bg-user-msg-bg/50 hover:bg-user-msg-bg/65' : 'bg-ai-msg-bg/55 hover:bg-ai-msg-bg/70';
-  const statusBubbleBg = runtimeState === 'error' ? 'bg-red-900/80' : 'bg-black/70';
+  const statusBubbleBg = runtimeState === 'error' ? 'bg-game-status-error-bg' : 'bg-game-status-bg';
   const effectiveBottomInset = Math.max(0, Math.round(bottomInset));
   const controlsUnderOverlay = effectiveBottomInset > 0;
   const focusedShellHeight = Math.max(92, Math.min(Math.round(effectiveBottomInset * 0.45) + 32, 122));
   const wrapperBottomPadding = controlsUnderOverlay ? Math.max(72, focusedShellHeight - 10) : 8;
 
   const overlayIconShadowStyle: React.CSSProperties = {
-    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
+    filter: 'drop-shadow(0 1px 2px var(--media-overlay-shadow-color))',
   };
-  const actionButtonClass = 'p-2 rounded-full text-white/90 opacity-85 transition-all duration-200 hover:text-white hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/40 active:scale-95';
+  const actionButtonClass = 'p-2 rounded-full text-media-overlay-icon/90 opacity-85 transition-all duration-200 hover:text-media-overlay-icon hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-media-overlay-focus active:scale-95';
   const translateOrFallback = useCallback((key: string, fallback: string) => {
     const result = t(key);
     return result === key ? fallback : result;
@@ -603,7 +603,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
           )}
 
           {runtimeState !== 'ready' && isLive && (
-            <div className={`absolute left-2 right-2 top-2 z-10 rounded-lg px-2 py-1 text-[11px] ${statusBubbleBg} text-white`}>
+            <div className={`absolute left-2 right-2 top-2 z-10 rounded-lg px-2 py-1 text-[11px] ${statusBubbleBg} text-game-status-text`}>
               {runtimeState === 'error' ? t('miniGame.runtimeError', { error: runtimeError }) || `Mini-game error: ${runtimeError}` : t('miniGame.launching') || 'Launching mini-game...'}
             </div>
           )}
@@ -619,11 +619,11 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
                 gameGesturesTitle={useGameGesturesTitle}
                 returnToChatScrollLabel={returnToChatScrollLabel}
                 gameGesturesUnavailableLabel={gameGesturesUnavailableLabel}
-                textColor="text-white"
-                subtleText="text-white/80"
-                lineColor="border-white/25"
-                containerBg="bg-black/55"
-                padBtnBg="bg-black/35 hover:bg-black/50"
+                textColor="text-game-deck-text"
+                subtleText="text-game-deck-subtle-text"
+                lineColor="border-game-deck-line"
+                containerBg="bg-game-deck-bg"
+                padBtnBg="bg-game-deck-btn-bg hover:bg-game-deck-btn-hover"
                 onSelectMode={handleSelectGameGestureMode}
               />
               <button onClick={handleReload} className={actionButtonClass} title={t('miniGame.restart') || 'Restart'}>
@@ -640,7 +640,7 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
           )}
 
           {controlsUnderOverlay && showCode && (
-            <div className="notebook-source-paper paper-texture notebook-lines sketch-shape-4 absolute inset-2 z-20 overflow-hidden border border-sketch-line/30 shadow-[0_12px_28px_rgba(2,6,23,0.18)]">
+            <div className="notebook-source-paper paper-texture notebook-lines sketch-shape-4 absolute inset-2 z-20 overflow-hidden border border-sketch-line/30 shadow-[0_12px_28px_var(--game-code-shadow-color)]">
               <div className="px-3 py-1.5 pr-12 font-architect text-[12px] font-semibold truncate text-deep-ink border-b border-sketch-line/20">
                 {fileName || mimeType || 'mini-game source'}
               </div>

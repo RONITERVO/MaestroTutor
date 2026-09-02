@@ -37,7 +37,7 @@ const GOOGLE_PRIVACY_POLICY_URL = 'https://policies.google.com/privacy';
 const INSTRUCTION_IMAGES = Array.from({ length: 12 }, (_, index) => `${import.meta.env.BASE_URL}api-key-instructions/step-${index + 1}.jpg`);
 const INSTRUCTION_AUTO_ADVANCE_MS = 3200;
 const REGULAR_INSTRUCTIONS_COUNT = 9;
-const DISCLAIMER_LINK_CLASS_NAME = 'underline decoration-white/25 underline-offset-2 transition-colors hover:text-white/75';
+const DISCLAIMER_LINK_CLASS_NAME = 'underline decoration-gate-disclaimer-underline underline-offset-2 transition-colors hover:text-gate-disclaimer-link-hover';
 const DISCLAIMER_LINKS = {
   geminiTerms: {
     url: GEMINI_API_TERMS_URL,
@@ -269,7 +269,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   if (showCostDetails) {
     return (
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim-modal p-4 backdrop-blur-sm"
         onClick={() => setShowCostDetails(false)}
       >
         <CostBreakdownView
@@ -284,7 +284,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   if (!showInstructions) {
     return (
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim-gate p-4 backdrop-blur-sm"
         onClick={closeCurrentView}
       >
         {canClose && (
@@ -417,7 +417,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
               )}
             </div>
           </div>
-          <p className="mt-3 px-1 text-center text-[11px] leading-relaxed text-white/55">
+          <p className="mt-3 px-1 text-center text-[11px] leading-relaxed text-gate-disclaimer-text">
             {renderApiKeyDisclaimer(t('apiKeyGate.disclaimer'), t)}
           </p>
         </div>
@@ -430,7 +430,7 @@ const ApiKeyGate: React.FC<ApiKeyGateProps> = ({
   // =========================================================================
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim-gate backdrop-blur-sm p-4"
       onClick={closeCurrentView}
     >
       <div className="w-full max-w-lg bg-gate-bg shadow-xl sketchy-border sketch-shape-7" onClick={(e) => e.stopPropagation()}>

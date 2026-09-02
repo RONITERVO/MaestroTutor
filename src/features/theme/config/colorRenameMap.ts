@@ -127,15 +127,23 @@ export const COLOR_RENAME_MAP: Record<string, string[]> = {
   'live-overlay-button-error-text': ['overlay-live-error-text'],
 
   // Action panel rename
-  'action-load': ['action-load-bg'],
+  // Renamed once it was clear these are accents, not surfaces: they paint
+  // the panel label, border, prompt and button, so a clear theme must not
+  // hollow them out.
+  'action-load-bg': ['action-load-accent'],
+  'action-delete-bg': ['action-delete-accent'],
+  'action-export-bg': ['action-export-accent'],
+  'action-combine-bg': ['action-combine-accent'],
+  'action-trim-bg': ['action-trim-accent'],
+  'action-load': ['action-load-accent'],
   'action-load-text': ['action-load-text'],
-  'action-danger': ['action-delete-bg'],
+  'action-danger': ['action-delete-accent'],
   'action-danger-text': ['action-delete-text'],
-  'action-export': ['action-export-bg'],
+  'action-export': ['action-export-accent'],
   'action-export-text': ['action-export-text'],
-  'action-combine': ['action-combine-bg'],
+  'action-combine': ['action-combine-accent'],
   'action-combine-text': ['action-combine-text'],
-  'action-trim': ['action-trim-bg'],
+  'action-trim': ['action-trim-accent'],
   'action-trim-text': ['action-trim-text'],
   'action-danger-shortcut-hover-bg': ['delete-shortcut-hover-bg'],
   'action-danger-shortcut-hover-text': ['delete-shortcut-hover-text'],
@@ -253,19 +261,25 @@ export const migrateLegacyColorMap = (colors?: Record<string, string>): Record<s
  * Two highly distinctive tokens per catalogue theme. Both must match exactly for
  * the theme to be identified — reduces false-positive risk to near zero.
  */
-const CATALOGUE_THEME_FINGERPRINTS: Record<ThemeId, readonly [string, string][]> = {
-  theme_ocean_blue:  [['page-bg', '204 46% 95%'], ['user-msg-bg', '204 69% 39%']],
-  theme_sunset_gold: [['page-bg', '36 67% 95%'],  ['user-msg-bg', '24 70% 46%']],
-  theme_dark_neon:   [['page-bg', '230 24% 9%'],  ['user-msg-bg', '282 78% 56%']],
-  theme_scholar:     [['page-bg', '39 37% 94%'],  ['user-msg-bg', '248 41% 27%']],
-  theme_pure_light:  [['page-bg', '0 0% 98%'], ['user-msg-bg', '0 0% 12%']],
-  theme_obsidian:    [['page-bg', '220 8% 12%'], ['user-msg-bg', '40 8% 85%']],
-  theme_forest:      [['page-bg', '80 15% 95%'],  ['user-msg-bg', '90 25% 20%']],
-  theme_lavender:    [['page-bg', '267 35% 97%'], ['user-msg-bg', '262 52% 24%']],
-  theme_spectrum:    [['page-bg', '0 0% 98%'],    ['user-msg-bg', '217 60% 26%']],
-  theme_graphite:    [['page-bg', '40 8% 97%'],   ['user-msg-bg', '220 8% 14%']],
-  theme_original:    [['page-bg', '210 20% 97%'], ['user-msg-bg', '220 30% 20%']],
-};
+/**
+ * Identifies which catalogue theme a saved colour map came from, so tokens
+ * added after the user applied it can be filled in. Derived from the presets
+ * themselves: a hand-written copy went stale the moment a palette moved.
+ *
+ * `user-msg-bg` separates a Clear variant from its solid twin (one is
+ * transparent), and `page-bg` separates the palettes from each other.
+ * `tokenVars.test.ts` fails if any two themes ever collide on both.
+ */
+const FINGERPRINT_TOKENS = ['page-bg', 'user-msg-bg'] as const;
+
+const CATALOGUE_THEME_FINGERPRINTS = (() => {
+  const map = {} as Record<ThemeId, readonly [string, string][]>;
+  for (const themeId of Object.keys(THEME_PRESETS_BY_ID) as ThemeId[]) {
+    const { colors } = THEME_PRESETS_BY_ID[themeId];
+    map[themeId] = FINGERPRINT_TOKENS.map(token => [token, colors[token]] as [string, string]);
+  }
+  return map;
+})();
 
 const detectCatalogueThemeId = (colors: Record<string, string>): ThemeId | null => {
   const entries = Object.entries(CATALOGUE_THEME_FINGERPRINTS) as [ThemeId, readonly [string, string][]][];

@@ -370,12 +370,4 @@ export const ptTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "Salvar como preset",
   "themeCustomizer.title": "Paleta de cores",
   "header.aiAccessRequired": "Acesso à IA necessário",
-  "themeGallery.title": "Galeria de temas",
-  "themeGallery.close": "Fechar",
-  "themeGallery.included": "Grátis",
-  "themeGallery.apply": "Aplicar",
-  "themeGallery.includedDescription": "Tema de cores incluído",
-  "themeGallery.footerNote": "Todos os temas de cores estão incluídos e continuarão gratuitos.",
-  "themeCustomizer.galleryTitle": "Galeria de temas",
-  "themeCustomizer.galleryDescription": "Explorar temas de cores incluídos",
 };

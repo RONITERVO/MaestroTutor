@@ -965,7 +965,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
         {reportConfirmation && (
           <div
             role="status"
-            className="fixed bottom-4 left-1/2 z-[110] -translate-x-1/2 bg-emerald-50 px-4 py-2 text-sm text-emerald-900 shadow-lg sketchy-border-thin"
+            className="fixed bottom-4 left-1/2 z-[110] -translate-x-1/2 bg-notice-ok-bg px-4 py-2 text-sm text-notice-ok-text shadow-lg sketchy-border-thin"
           >
             {reportConfirmation}
           </div>
