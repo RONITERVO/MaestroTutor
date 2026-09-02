@@ -9,7 +9,8 @@ This is the canonical color and UI styling reference for contributors.
 - Token groups: 28
 - Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
-- Source of truth files: `src/app/index.css`, `index.html`, `src/features/theme/config/colorRegistry.ts`, `src/features/theme/config/defaultTheme.ts`, `src/features/theme/config/presetThemes.ts`
+- Source of truth files: `src/features/theme/config/colorRegistry.ts` (token registry), `src/features/theme/config/themeColors.ts` (palettes), `src/features/theme/config/defaultTheme.ts`, `src/features/theme/config/presetThemes.ts`
+- Generated from those: the `:root` block in `src/app/index.css` (via `colorTokensPlugin` in `vite.config.ts`) and the Tailwind palette in `tailwind.config.ts`
 
 ## Non-Negotiable Rules
 
@@ -30,13 +31,49 @@ This is the canonical color and UI styling reference for contributors.
   - `-ring` or `-focus`: focus treatment
   - `-spinner` or `-glow`: dedicated indicator or glow color
 
+## Opacity
+
+Every token carries an opacity as well as a colour, and both the user and the
+developer can set one. A token value is `"<h> <s>% <l>%"` with an optional
+alpha — `"210 20% 97% / 0.5"`. No alpha means fully opaque, so a value written
+before opacity existed still means exactly what it meant then.
+
+Each token expands to three CSS variables:
+
+| Variable | Holds | Written by |
+| --- | --- | --- |
+| `--x` | the HSL channels | generated `:root`, overridden inline by the customizer |
+| `--x-alpha` | the user's opacity, defaulting to `1` | same |
+| `--x-color` | `hsl(var(--x) / var(--x-alpha, 1))` | generated `:root` only |
+
+**How to reference a token:**
+
+- Tailwind: `bg-page-bg`, or `bg-page-bg/50` to tint it further.
+- Hand-written CSS or an inline style: `var(--page-bg-color)`.
+- Hand-written CSS that needs its own tint:
+  `hsl(var(--page-bg) / calc(var(--page-bg-alpha, 1) * 0.5))`.
+
+Never write `hsl(var(--page-bg))` or `hsl(var(--page-bg) / 0.5)`. Both drop
+whatever opacity the user chose. `tokenVars.test.ts` fails the build on either.
+
+The two controls **multiply**: a token the user set to 50% rendered through
+`bg-x/30` lands at 15%, and a plain `bg-x` is exactly the user's 50%. This is
+why the channels and the alpha live in separate variables — a token that
+carried its alpha inline would make Tailwind emit
+`hsl(H S% L% / 0.5 / .3)` for `bg-x/30`, which is invalid CSS and is dropped
+silently by the browser.
+
+Writes to the DOM all go through `applyTokenValue` / `clearTokenValue` in
+`src/features/theme/utils/applyTokenValue.ts`, so channels and alpha can never
+get out of step. The grammar itself lives in `utils/tokenValue.ts`.
+
 ## Required Contributor Workflow
 
 When adding or changing a colorized element:
 
 1. Add token metadata to `src/features/theme/config/colorRegistry.ts` with friendly name and description. This registry is the single source of truth: the `:root` declarations in `src/app/index.css` are generated from it by `colorTokensPlugin` in `vite.config.ts` (replacing the `/* __COLOR_TOKENS__ */` marker), and the Tailwind color map in `tailwind.config.ts` is derived from it too. Neither needs a manual edit.
-2. Add token to the active default palette in `src/features/theme/config/themeColors.ts` and keep `src/features/theme/config/defaultTheme.ts` aligned if the app default changes. The build fails if a registered token has no default value.
-3. Use the tokenized utility class in JSX/TSX; remove any direct hardcoded color utility or literal color.
+2. Add token to the active default palette in `src/features/theme/config/themeColors.ts` and keep `src/features/theme/config/defaultTheme.ts` aligned if the app default changes. The build fails if a registered token has no default value. Add `/ <alpha>` to the value only if the token should ship translucent.
+3. Use the tokenized utility class in JSX/TSX; remove any direct hardcoded color utility or literal color. For hand-written CSS see [Opacity](#opacity) — `var(--x-color)`, never `hsl(var(--x))`.
 4. If replacing legacy token keys, add mapping to `src/features/theme/config/colorRenameMap.ts`.
 5. Validate with build + visual pass + Theme Customizer coverage.
 

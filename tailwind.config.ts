@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { Config } from 'tailwindcss';
 import { COLOR_GROUPS } from './src/features/theme/config/colorRegistry';
+import { tailwindColorValue } from './src/features/theme/utils/tokenValue';
 
 // COLOR_GROUPS is the single source of truth for the theme tokens. The Vite
 // colorTokensPlugin emits the matching `--token: value` declarations into
@@ -11,9 +12,13 @@ import { COLOR_GROUPS } from './src/features/theme/config/colorRegistry';
 // Note: the tokens cannot be read back out of index.css, because that file only
 // holds the `/* __COLOR_TOKENS__ */` marker until Vite expands it — and that
 // expansion happens after PostCSS/Tailwind has already run.
+//
+// `tailwindColorValue` carries the `<alpha-value>` placeholder, which is what
+// lets a user's per-token opacity and a developer's `/50` modifier multiply
+// instead of overwriting each other. See utils/tokenValue.ts.
 const colors = Object.fromEntries(
   COLOR_GROUPS.flatMap(group =>
-    group.colors.map(color => [color.cssVar, `hsl(var(--${color.cssVar}))`]),
+    group.colors.map(color => [color.cssVar, tailwindColorValue(color.cssVar)]),
   ),
 );
 

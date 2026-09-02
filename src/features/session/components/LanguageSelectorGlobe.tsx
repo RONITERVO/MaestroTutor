@@ -1125,7 +1125,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 }
 
                 .maestro-globe-flag-pin:focus-visible .maestro-globe-flag-card {
-                    outline: 2px solid hsl(var(--profile-input-accent));
+                    outline: 2px solid var(--profile-input-accent-color);
                     outline-offset: 2px;
                 }
 
@@ -1213,18 +1213,18 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 }
 
                 .maestro-globe-flag-pin.is-native .maestro-globe-flag-card {
-                    border-color: hsl(var(--globe-native-accent));
+                    border-color: var(--globe-native-accent-color);
                     box-shadow:
-                        0 0 0 1px hsl(var(--globe-native-accent) / 0.25),
-                        0 0 18px hsl(var(--globe-native-accent) / 0.42),
+                        0 0 0 1px hsl(var(--globe-native-accent) / calc(var(--globe-native-accent-alpha, 1) * 0.25)),
+                        0 0 18px hsl(var(--globe-native-accent) / calc(var(--globe-native-accent-alpha, 1) * 0.42)),
                         0 7px 15px rgba(0,0,0,0.28);
                 }
 
                 .maestro-globe-flag-pin.is-target .maestro-globe-flag-card {
-                    border-color: hsl(var(--globe-target-accent));
+                    border-color: var(--globe-target-accent-color);
                     box-shadow:
-                        0 0 0 1px hsl(var(--globe-target-accent) / 0.25),
-                        0 0 18px hsl(var(--globe-target-accent) / 0.42),
+                        0 0 0 1px hsl(var(--globe-target-accent) / calc(var(--globe-target-accent-alpha, 1) * 0.25)),
+                        0 0 18px hsl(var(--globe-target-accent) / calc(var(--globe-target-accent-alpha, 1) * 0.42)),
                         0 7px 15px rgba(0,0,0,0.28);
                 }
 
@@ -1269,7 +1269,7 @@ const LanguageSelectorGlobe: React.FC<LanguageSelectorGlobeProps> = ({
                 }
 
                 .maestro-globe-transcript-column.is-native {
-                    border-right: 1px solid hsl(var(--attachment-svg-native-text) / 0.18);
+                    border-right: 1px solid hsl(var(--attachment-svg-native-text) / calc(var(--attachment-svg-native-text-alpha, 1) * 0.18));
                     padding-right: 0.45rem;
                 }
 

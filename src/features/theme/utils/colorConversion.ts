@@ -1,11 +1,14 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { formatTokenValue, parseTokenValue } from './tokenValue';
+
 /**
  * Convert HSL CSS variable string (e.g. "210 20% 97%") to hex (e.g. "#f4f6f8").
+ * Any alpha on the value is ignored; use `hslStringToHexAlpha` to keep it.
  */
 export function hslStringToHex(hslString: string): string {
-  const parts = hslString.trim().split(/\s+/);
+  const parts = parseTokenValue(hslString).channels.split(/\s+/);
   if (parts.length < 3) return '#808080';
 
   const h = parseFloat(parts[0]) / 360;
@@ -77,4 +80,30 @@ export function hexToHslString(hex: string): string {
   }
 
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+}
+
+/**
+ * Convert a stored token value to the 8-digit hex the alpha picker speaks
+ * (e.g. "210 20% 97% / 0.5" -> "#f4f6f880"). Opaque values stay 6-digit so the
+ * picker and the hex readout show the familiar form.
+ */
+export function hslStringToHexAlpha(value: string): string {
+  const { channels, alpha } = parseTokenValue(value);
+  const hex = hslStringToHex(channels);
+  if (alpha >= 1) return hex;
+  return hex + toHex(alpha);
+}
+
+/**
+ * Convert a hex string from the alpha picker back to a stored token value.
+ * Accepts both "#rrggbb" and "#rrggbbaa"; react-colorful drops the alpha pair
+ * when the colour is fully opaque.
+ */
+export function hexAlphaToHslString(hex: string): string {
+  const match = /^#?([a-f\d]{6})([a-f\d]{2})?$/i.exec(hex.trim());
+  if (!match) return '0 0% 50%';
+
+  const channels = hexToHslString(`#${match[1]}`);
+  const alpha = match[2] === undefined ? 1 : parseInt(match[2], 16) / 255;
+  return formatTokenValue(channels, alpha);
 }

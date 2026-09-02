@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useCallback, useRef } from 'react';
-import { HexColorPicker } from 'react-colorful';
+import { HexAlphaColorPicker } from 'react-colorful';
 import { IconXMark, IconUndo, IconBookmark, IconDownload, IconUpload, IconCheck, IconSparkles } from '../../../shared/ui/Icons';
 import { useMaestroStore } from '../../../store';
 import { selectSettings } from '../../../store/slices/settingsSlice';
@@ -10,7 +10,8 @@ import { COLOR_GROUPS, type ColorGroup } from '../config/colorRegistry';
 import { DEFAULT_THEME_COLORS } from '../config/defaultTheme';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
 import { PRESET_THEMES, type PresetTheme } from '../config/presetThemes';
-import { hslStringToHex, hexToHslString } from '../utils/colorConversion';
+import { hslStringToHex, hslStringToHexAlpha, hexAlphaToHslString } from '../utils/colorConversion';
+import { applyTokenValue, clearTokenValue } from '../utils/applyTokenValue';
 import { exportThemeToFile, importThemeFromFile } from '../utils/themeFileIO';
 import ThemeGalleryPanel from './ThemeGalleryPanel';
 
@@ -97,11 +98,14 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
                   className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all duration-150
                     ${active ? 'bg-theme-panel-bg/80 ring-2 ring-theme-input-border scale-105' : 'active:scale-95'}`}
                 >
+                  {/* Checkerboard sits behind the swatch so a translucent
+                      token reads as translucent rather than as a paler colour. */}
                   <div
-                    className={`w-8 h-8 rounded-full border-2 shadow-sm transition-colors
+                    className={`w-8 h-8 rounded-full border-2 shadow-sm transition-colors overflow-hidden alpha-checker
                       ${modified ? 'border-theme-input-border' : 'border-line-border'}`}
-                    style={{ backgroundColor: hex }}
-                  />
+                  >
+                    <div className="w-full h-full" style={{ backgroundColor: hex }} />
+                  </div>
                   <span className="text-[10px] text-theme-muted-text leading-tight text-center truncate w-full">
                     {cv.friendlyName}
                   </span>
@@ -136,7 +140,7 @@ const ColorGroupSection: React.FC<ColorGroupSectionProps> = ({
                   {activeColor.description}
                 </p>
               )}
-              <HexColorPicker
+              <HexAlphaColorPicker
                 color={getEffectiveHex(activeColorVar)}
                 onChange={(hex) => onColorChange(activeColorVar, hex)}
                 style={{ width: '100%', height: '160px' }}
@@ -221,16 +225,18 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
     return customColors[cssVar] || DEFAULT_THEME_COLORS[cssVar] || '0 0% 50%';
   }, [customColors]);
 
+  // 8-digit while translucent, 6-digit while opaque - the form the alpha picker
+  // both accepts and emits.
   const getEffectiveHex = useCallback((cssVar: string): string => {
-    return hslStringToHex(getEffectiveHsl(cssVar));
+    return hslStringToHexAlpha(getEffectiveHsl(cssVar));
   }, [getEffectiveHsl]);
 
   // Apply color immediately to DOM for real-time preview, debounce persistence
   const handleColorChange = useCallback((cssVar: string, hex: string) => {
-    const hslValue = hexToHslString(hex);
+    const hslValue = hexAlphaToHslString(hex);
 
     // Immediate DOM update for smooth real-time preview
-    document.documentElement.style.setProperty(`--${cssVar}`, hslValue);
+    applyTokenValue(document.documentElement, cssVar, hslValue);
 
     // Debounced store + IndexedDB persist
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -246,7 +252,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   }, [setSettings]);
 
   const handleResetColor = useCallback((cssVar: string) => {
-    document.documentElement.style.removeProperty(`--${cssVar}`);
+    clearTokenValue(document.documentElement, cssVar);
     setSettings(prev => {
       const next = { ...(prev.customColors || {}) };
       delete next[cssVar];
@@ -258,7 +264,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
   const handleResetAll = useCallback(() => {
     const root = document.documentElement;
     for (const key of Object.keys(customColors)) {
-      root.style.removeProperty(`--${key}`);
+      clearTokenValue(root, key);
     }
     setSettings(prev => ({ ...prev, customColors: undefined }));
     setActiveColorVar(null);
@@ -269,7 +275,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
     // Clear all current overrides first
     for (const key of Object.keys(customColors)) {
-      root.style.removeProperty(`--${key}`);
+      clearTokenValue(root, key);
     }
 
     // If the preset has no colors (default), just reset
@@ -281,7 +287,7 @@ const ThemeCustomizerPanel: React.FC<ThemeCustomizerPanelProps> = ({ onClose }) 
 
     // Apply preset colors to DOM
     for (const [cssVar, hslValue] of Object.entries(preset.colors)) {
-      root.style.setProperty(`--${cssVar}`, hslValue);
+      applyTokenValue(root, cssVar, hslValue);
     }
 
     // Persist
