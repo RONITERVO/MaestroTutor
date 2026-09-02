@@ -69,7 +69,7 @@ const MessageSwipeTray: React.FC<MessageSwipeTrayProps> = ({
     )}
     {isAssistant && onReport && (
       <button
-        className="p-2 bg-gate-input-bg text-red-700 shadow sketchy-border-thin"
+        className="p-2 bg-gate-input-bg text-danger-icon shadow sketchy-border-thin"
         tabIndex={isOpen ? 0 : -1}
         onPointerDown={(e) => { e.stopPropagation(); }}
         onClick={(e) => { e.stopPropagation(); onReport(messageId); }}

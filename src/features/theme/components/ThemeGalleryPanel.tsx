@@ -70,7 +70,7 @@ const ThemeGalleryPanel: React.FC<ThemeGalleryPanelProps> = ({ onApplyTheme, onC
 
   return (
     <>
-      <div className="fixed inset-0 z-[89] bg-black/20" onClick={onClose} />
+      <div className="fixed inset-0 z-[89] bg-scrim-panel" onClick={onClose} />
 
       <div
         ref={dialogRef}

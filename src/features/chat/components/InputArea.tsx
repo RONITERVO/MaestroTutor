@@ -985,10 +985,10 @@ const InputArea: React.FC<InputAreaProps> = ({
   const sendButtonStyle = isSuggestionMode ? 'bg-send-sugg-btn-bg text-send-sugg-btn-text hover:bg-send-sugg-btn-bg/80 focus:ring-focus-ring' : 'bg-send-btn-bg text-send-btn-text hover:bg-send-btn-bg/80 focus:ring-focus-ring';
   const iconButtonStyle = isSuggestionMode ? 'text-sugg-input-icon hover:text-sugg-input-text hover:bg-sugg-outer-bg' : 'text-chat-input-icon/70 hover:text-chat-input-icon hover:bg-chat-input-icon-hover-bg';
   const overlayIconShadowStyle: React.CSSProperties = {
-    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
+    filter: 'drop-shadow(0 1px 2px var(--media-overlay-shadow-color))',
   };
   const overlayIconButtonBaseClasses = 'rounded-full opacity-85 transition-all duration-200 hover:opacity-100 focus:outline-none focus:ring-2 active:scale-95 disabled:opacity-40 disabled:cursor-default';
-  const overlayNeutralIconButtonClasses = `${overlayIconButtonBaseClasses} text-white/90 hover:text-white focus:ring-white/40`;
+  const overlayNeutralIconButtonClasses = `${overlayIconButtonBaseClasses} text-media-overlay-icon/90 hover:text-media-overlay-icon focus:ring-media-overlay-focus`;
   const overlayAccentIconButtonClasses = `${overlayIconButtonBaseClasses} text-annotation-btn-text focus:ring-input-focus-ring`;
 
   const handlePaperclipClick = () => {
@@ -1160,7 +1160,7 @@ const InputArea: React.FC<InputAreaProps> = ({
             <div className="mt-3 w-full max-w-2xl animate-fade-in-up">
               <div
                 ref={composerViewportRef}
-                className="relative w-full max-h-[75vh] bg-black rounded-md overflow-hidden transition-all duration-300"
+                className="relative w-full max-h-[75vh] bg-media-letterbox rounded-md overflow-hidden transition-all duration-300"
                 style={{
                   aspectRatio: composerImageAspectRatio || undefined,
                   touchAction: 'none',
@@ -1205,7 +1205,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                 </div>
                 <div className="absolute inset-0 pointer-events-none">
                   {isDrawingSuggestionPractice && suggestionPracticeStep && (
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 rounded bg-black/60 px-2 py-1 text-xs font-medium text-white select-none">
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 rounded bg-media-chip-bg px-2 py-1 text-xs font-medium text-media-chip-text select-none">
                       {t('chat.suggestion.traceCharacter', { character: suggestionPracticeStep.grapheme })}
                     </div>
                   )}
@@ -1227,7 +1227,7 @@ const InputArea: React.FC<InputAreaProps> = ({
                           <IconChevronLeft className="w-4 h-4" />
                         </span>
                       </button>
-                      <span className="text-white text-xs font-medium tabular-nums bg-black/60 rounded px-1.5 py-0.5 select-none">
+                      <span className="text-media-chip-text text-xs font-medium tabular-nums bg-media-chip-bg rounded px-1.5 py-0.5 select-none">
                         {composerPdfPageNum}/{composerPdfPageCount}
                       </span>
                       <button

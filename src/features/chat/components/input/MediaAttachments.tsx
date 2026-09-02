@@ -255,11 +255,11 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
     ? 'w-[calc(50%-0.25rem)] max-w-[calc(50%-0.25rem)]'
     : 'w-[min(50%,22rem)] max-w-[50%]';
   const overlayIconShadowStyle: React.CSSProperties = {
-    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.72))',
+    filter: 'drop-shadow(0 1px 2px var(--media-overlay-shadow-color))',
   };
   const overlayIconButtonBaseClasses = 'rounded-full opacity-85 transition-all duration-200 hover:opacity-100 focus:outline-none focus:ring-2 active:scale-95 disabled:opacity-40 disabled:cursor-default';
-  const neutralOverlayIconButtonClasses = `${overlayIconButtonBaseClasses} text-white/90 hover:text-white focus:ring-white/40`;
-  const removeOverlayIconButtonClasses = `${overlayIconButtonBaseClasses} text-remove-attach-icon focus:ring-white/40`;
+  const neutralOverlayIconButtonClasses = `${overlayIconButtonBaseClasses} text-media-overlay-icon/90 hover:text-media-overlay-icon focus:ring-media-overlay-focus`;
+  const removeOverlayIconButtonClasses = `${overlayIconButtonBaseClasses} text-remove-attach-icon focus:ring-media-overlay-focus`;
 
   return (
     <div className="flex flex-wrap justify-center items-start gap-2 w-full">
@@ -285,7 +285,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                 ref={attachedPreviewVideoRef}
                 src={attachedImageBase64}
                 controls
-                className="h-24 w-full object-contain rounded bg-black"
+                className="h-24 w-full object-contain rounded bg-media-letterbox"
                 onPlay={() => {
                   setAttachedVideoPlaying(true);
                   if (!attachedVideoPlayTokenRef.current) {
@@ -386,12 +386,12 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
             />
             {isSilentObserverActive && !liveSessionActive && !liveSessionConnecting && (
               <div
-                className="absolute top-1 right-1 z-20 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-black/40"
+                className="absolute top-1 right-1 z-20 h-2.5 w-2.5 rounded-full bg-media-observer-dot border border-media-observer-dot-border"
                 title={t('camera.observerActive') || 'Observer active'}
                 aria-label={t('camera.observerActive') || 'Observer active'}
               />
             )}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+            <div className="absolute inset-0 flex items-center justify-center bg-media-preview-veil group-hover:bg-media-preview-veil-hover transition-colors">
               {liveSessionActive ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-live-badge-bg text-live-badge-text uppercase text-xs font-semibold tracking-wide">
@@ -401,22 +401,22 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
                   <button
                     type="button"
                     onClick={onStopLiveSession}
-                    className={`p-2 ${overlayIconButtonBaseClasses} focus:ring-white/40`}
+                    className={`p-2 ${overlayIconButtonBaseClasses} focus:ring-media-overlay-focus`}
                     aria-label={t('chat.camera.stopRecording')}
                   >
                     <div className="w-4 h-4 bg-live-stop-icon rounded-sm" style={overlayIconShadowStyle} />
                   </button>
                 </div>
               ) : liveSessionConnecting ? (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 text-white text-xs">
-                  <SmallSpinner className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-media-chip-bg text-media-chip-text text-xs">
+                  <SmallSpinner className="w-4 h-4 text-media-chip-text" />
                   <span>{t('chat.liveSession.connecting') || 'Connecting'}</span>
                 </div>
               ) : isRecording ? (
                 <button
                   type="button"
                   onClick={handleStopRecording}
-                  className={`p-2 ${overlayIconButtonBaseClasses} focus:ring-white/40`}
+                  className={`p-2 ${overlayIconButtonBaseClasses} focus:ring-media-overlay-focus`}
                   aria-label={t('chat.camera.stopRecording')}
                 >
                   <div className="w-4 h-4 bg-vid-stop-icon rounded-sm" style={overlayIconShadowStyle} />
@@ -459,9 +459,9 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
               )}
             </div>
             {isRecording && !liveSessionActive && !liveSessionConnecting && (
-              <div className="absolute top-1 left-1 flex items-center space-x-1 p-1 bg-black/50 rounded-lg z-20">
+              <div className="absolute top-1 left-1 flex items-center space-x-1 p-1 bg-media-rec-chip-bg rounded-lg z-20">
                 <div className="w-2 h-2 bg-rec-dot rounded-full animate-pulse" />
-                <span className="text-white text-xs font-mono">REC</span>
+                <span className="text-media-rec-chip-text text-xs font-mono">REC</span>
               </div>
             )}
           </div>

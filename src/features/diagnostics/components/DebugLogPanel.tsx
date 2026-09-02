@@ -49,13 +49,13 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
         style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
       >
         <h2 className="text-debug-btn-text font-semibold flex items-center gap-2">
-          <span className="text-green-400">➜</span> {t('debugLog.title') || 'Traffic Log'}
+          <span className="text-debug-ok-text">➜</span> {t('debugLog.title') || 'Traffic Log'}
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={handleClearUploads}
             disabled={isClearingUploads}
-            className="p-1.5 text-debug-btn-muted hover:text-red-300 hover:bg-debug-btn-bg/70 rounded transition-colors disabled:cursor-wait disabled:opacity-50"
+            className="p-1.5 text-debug-btn-muted hover:text-debug-error-alt-text hover:bg-debug-btn-bg/70 rounded transition-colors disabled:cursor-wait disabled:opacity-50"
             title={t('debugLog.clearUploads') || 'Delete all Gemini uploads for the current API key'}
             aria-label={t('debugLog.clearUploads') || 'Delete all Gemini uploads for the current API key'}
           >
@@ -94,19 +94,19 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           return (
             <div
               key={log.id}
-              className={`rounded border ${isError ? 'border-red-800 bg-red-900/10' : 'border-line-border bg-debug-btn-bg/70'} overflow-hidden transition-colors`}
+              className={`rounded border ${isError ? 'border-debug-error-border bg-debug-error-bg' : 'border-line-border bg-debug-btn-bg/70'} overflow-hidden transition-colors`}
             >
               <div
-                className="px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-white/5 select-none"
+                className="px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-debug-row-hover select-none"
                 onClick={() => toggleExpand(log.id)}
               >
                 <div className="flex items-center gap-2 overflow-hidden">
-                  <span className={`text-xs ${isError ? 'text-red-400' : 'text-debug-btn-muted'}`}>{time}</span>
-                  <span className={`font-semibold truncate ${isError ? 'text-red-300' : 'text-web-results-link'}`}>{log.type}</span>
+                  <span className={`text-xs ${isError ? 'text-debug-error-text' : 'text-debug-btn-muted'}`}>{time}</span>
+                  <span className={`font-semibold truncate ${isError ? 'text-debug-error-alt-text' : 'text-web-results-link'}`}>{log.type}</span>
                   <span className="text-xs text-debug-btn-muted truncate hidden sm:inline-block">- {log.model}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className={`${isError ? 'text-red-400' : 'text-green-400'}`}>{duration}</span>
+                  <span className={`${isError ? 'text-debug-error-text' : 'text-debug-ok-text'}`}>{duration}</span>
                   <span className="text-debug-btn-muted">{isExpanded ? '▲' : '▼'}</span>
                 </div>
               </div>
@@ -114,20 +114,20 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
               {isExpanded && (
                 <div className="border-t border-line-border/50">
                   {/* Request Section */}
-                  <div className="bg-black/20 p-2">
+                  <div className="bg-debug-payload-bg p-2">
                     <div className="text-xs text-debug-btn-muted uppercase font-bold mb-1 px-1">{t('debugLog.requestPayload') || 'Request Payload'}</div>
-                    <pre className="text-xs text-debug-btn-text/70 overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
+                    <pre className="text-xs text-debug-btn-text/70 overflow-x-auto whitespace-pre-wrap break-all bg-debug-payload-bg p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
                       {JSON.stringify(log.request, null, 2)}
                     </pre>
                   </div>
 
                   {/* Response Section */}
                   {(log.response || log.error) && (
-                    <div className="bg-black/10 p-2 border-t border-line-border/30">
-                      <div className={`text-xs uppercase font-bold mb-1 px-1 ${isError ? 'text-red-400' : 'text-green-400'}`}>
+                    <div className="bg-debug-section-bg p-2 border-t border-line-border/30">
+                      <div className={`text-xs uppercase font-bold mb-1 px-1 ${isError ? 'text-debug-error-text' : 'text-debug-ok-text'}`}>
                         {isError ? t('debugLog.error') || 'Error' : t('debugLog.response') || 'Response'}
                       </div>
-                      <pre className={`text-xs overflow-x-auto whitespace-pre-wrap break-all bg-black/20 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar ${isError ? 'text-red-300' : 'text-green-300'}`}>
+                      <pre className={`text-xs overflow-x-auto whitespace-pre-wrap break-all bg-debug-payload-bg p-2 rounded max-h-60 overflow-y-auto custom-scrollbar ${isError ? 'text-debug-error-alt-text' : 'text-debug-ok-payload-text'}`}>
                         {JSON.stringify(log.error || log.response, null, 2)}
                       </pre>
                     </div>

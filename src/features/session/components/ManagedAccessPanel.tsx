@@ -260,13 +260,13 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       </div>
 
       {statusMessage && (
-        <div className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+        <div className="rounded-md border border-notice-ok-border bg-notice-ok-bg px-3 py-2 text-xs text-notice-ok-text">
           {statusMessage}
         </div>
       )}
 
       {errorMessage && (
-        <div className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800">
+        <div className="rounded-md border border-notice-error-border bg-notice-error-bg px-3 py-2 text-xs text-notice-error-text">
           {errorMessage}
         </div>
       )}
@@ -330,10 +330,10 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       </div>
 
       {session?.firebaseIdToken && (
-        <div className="rounded-md border border-red-300/80 bg-red-50/70 px-3 py-3 space-y-3">
+        <div className="rounded-md border border-danger-zone-border bg-danger-zone-bg px-3 py-3 space-y-3">
           <div className="space-y-1">
-            <div className="font-medium text-red-900">{t('managedAccess.deleteTitle')}</div>
-            <p className="text-xs text-red-900/80">{t('managedAccess.deleteDescription')}</p>
+            <div className="font-medium text-danger-zone-text">{t('managedAccess.deleteTitle')}</div>
+            <p className="text-xs text-danger-zone-text/80">{t('managedAccess.deleteDescription')}</p>
           </div>
 
           {!isDeleteConfirmOpen ? (
@@ -344,19 +344,19 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
                 setErrorMessage(null);
                 setIsDeleteConfirmOpen(true);
               }}
-              className="px-3 py-2 text-red-900 hover:bg-red-100 sketchy-border-thin"
+              className="px-3 py-2 text-danger-zone-text hover:bg-danger-ghost-hover sketchy-border-thin"
             >
               {t('managedAccess.deleteAction')}
             </button>
           ) : (
             <div className="space-y-2">
-              <p className="text-xs text-red-900/80">{t('managedAccess.deleteConfirmHint')}</p>
+              <p className="text-xs text-danger-zone-text/80">{t('managedAccess.deleteConfirmHint')}</p>
               <input
                 type="text"
                 value={deleteConfirmationText}
                 onChange={(event) => setDeleteConfirmationText(event.target.value)}
                 placeholder="DELETE"
-                className="w-full px-3 py-2 bg-white text-base text-gate-text border border-red-300 rounded-none focus:outline-none focus:ring-1 focus:ring-red-400 sm:text-sm"
+                className="w-full px-3 py-2 bg-danger-input-bg text-base text-gate-text border border-danger-input-border rounded-none focus:outline-none focus:ring-1 focus:ring-danger-input-ring sm:text-sm"
               />
               <div className="flex flex-wrap gap-2">
                 <button
@@ -374,7 +374,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
                   type="button"
                   onClick={() => void handleDeleteManagedAccount()}
                   disabled={isDeletingAccount || deleteConfirmationText.trim().toUpperCase() !== 'DELETE'}
-                  className="px-3 py-2 bg-red-700 text-white hover:bg-red-800 disabled:opacity-60 sketchy-border-thin"
+                  className="px-3 py-2 bg-danger-btn-bg text-danger-btn-text hover:bg-danger-btn-hover disabled:opacity-60 sketchy-border-thin"
                 >
                   {isDeletingAccount ? t('managedAccess.deleting') : t('managedAccess.deleteConfirm')}
                 </button>

@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "build:staging": "tsc && vite build --mode staging",
     "optimize:globe": "node scripts/optimize-globe.mjs",
+    "docs:tokens": "tsx scripts/generate-design-system-docs.ts",
     "deploy": "npm run build:ghpages && gh-pages -d dist",
     "build:ghpages": "tsc && vite build --mode ghpages",
     "preview": "vite preview",

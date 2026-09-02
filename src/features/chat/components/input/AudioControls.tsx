@@ -266,7 +266,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
           className={`flex flex-col items-center justify-center p-1 rounded-full transition-colors ${
             isSuggestionMode
               ? 'hover:bg-sugg-outer-bg'
-              : 'hover:bg-white/20'
+              : 'hover:bg-chat-input-icon-hover-bg'
           }`}
           title={t('chat.languageSelector.openGlobe')}
           disabled={isSending || isSpeaking}
@@ -296,7 +296,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
               ? 'bg-mic-record-bg text-mic-record-icon ring-2 ring-mic-record-ring/50'
               : isListening
                 ? 'bg-mic-stt-bg text-mic-stt-icon'
-                : (isSuggestionMode ? 'text-sugg-input-icon hover:text-sugg-input-text hover:bg-sugg-outer-bg' : 'text-chat-input-icon/70 hover:text-chat-input-icon hover:bg-white/20')
+                : (isSuggestionMode ? 'text-sugg-input-icon hover:text-sugg-input-text hover:bg-sugg-outer-bg' : 'text-chat-input-icon/70 hover:text-chat-input-icon hover:bg-chat-input-icon-hover-bg')
           } disabled:opacity-50`}
           title={getMicButtonTitle()}
           disabled={isSending || isSpeaking || isLanguageSelectionOpen}
@@ -308,7 +308,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
               <span className="pointer-events-none absolute -inset-6 rounded-full bg-mic-pulse-inner/15 animate-ping" style={{ animationDuration: '2s' }} />
             </>
           )}
-          <IconMicrophone className={`relative z-10 w-5 h-5 ${isRecordingAudioNote ? 'drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]' : ''}`} />
+          <IconMicrophone className={`relative z-10 w-5 h-5 ${isRecordingAudioNote ? 'drop-shadow-[0_0_6px_var(--mic-record-glow-color)]' : ''}`} />
         </button>
       )}
     </div>

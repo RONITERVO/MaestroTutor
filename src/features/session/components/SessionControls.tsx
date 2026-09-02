@@ -795,7 +795,7 @@ const SessionControls: React.FC = () => {
                 )}
 
                 {isUploadingMaestro && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
+                  <div className="absolute inset-0 bg-scrim-busy flex items-center justify-center backdrop-blur-[1px]">
                     <SmallSpinner className="w-4 h-4 text-profile-btn-text" />
                   </div>
                 )}

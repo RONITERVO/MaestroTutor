@@ -65,7 +65,7 @@ const ManagedAccountActivityModal: React.FC<ManagedAccountActivityModalProps> = 
   );
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-scrim-modal p-4" onClick={onClose}>
       <div
         ref={dialogRef}
         role="dialog"
@@ -102,7 +102,7 @@ const ManagedAccountActivityModal: React.FC<ManagedAccountActivityModalProps> = 
               {t('managedAccess.activityLoading')}
             </div>
           ) : errorMessage ? (
-            <div className="border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+            <div className="border border-notice-error-border bg-notice-error-bg px-3 py-2 text-sm text-notice-error-text">
               {errorMessage}
             </div>
           ) : (

@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { buildDoc, DOC_PATH } from '../../../../scripts/generate-design-system-docs';
 import { ALL_COLOR_VARS } from '../config/colorRegistry';
 import { DEFAULT_THEME_COLORS } from '../config/defaultTheme';
 import {
@@ -107,6 +108,55 @@ describe('theme token CSS variables', () => {
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  /**
+   * Product UI has to be themeable end to end, so a colour from Tailwind's own
+   * palette is never the right answer - a user cannot reach `bg-black/60` or
+   * `text-red-800` from the customizer. The same goes for a literal colour
+   * smuggled into an arbitrary value, e.g. `shadow-[0_2px_4px_rgba(0,0,0,.3)]`.
+   *
+   * Add a token to colorRegistry.ts instead; see docs/DESIGN_SYSTEM.md.
+   *
+   * Multi-colour illustrations (shared/ui/Icons.tsx), the canvas-generated
+   * practice paper and the globe widget's own palette are deliberately outside
+   * this rule: they are artwork rather than themeable chrome, and they are
+   * `style`/SVG attributes rather than utility classes, so they do not match.
+   */
+  it('never styles product UI with a raw Tailwind palette colour', () => {
+    const PALETTE = [
+      'white', 'black', 'slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'orange',
+      'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue',
+      'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
+    ].join('|');
+    const UTILITY = 'bg|text|border|ring|from|via|to|fill|stroke|shadow|divide|placeholder|outline|decoration|accent|caret';
+    const paletteClass = new RegExp(
+      `\\b(?:${UTILITY})-(?:${PALETTE})(?:-[0-9]{2,3})?(?:/(?:\\[[^\\]]*\\]|[0-9]+))?\\b`,
+      'g',
+    );
+    // An arbitrary value carrying a literal colour, e.g. shadow-[0_1px_2px_#0003].
+    const literalInArbitrary = new RegExp(
+      `\\b(?:${UTILITY})-\\[[^\\]]*(?:rgba?\\(|hsla?\\(|#[0-9a-fA-F]{3,8})[^\\]]*\\]`,
+      'g',
+    );
+
+    const offenders: string[] = [];
+    for (const file of collectSourceFiles(SRC_ROOT)) {
+      if (!/\.tsx?$/.test(file)) continue;
+      const source = readFileSync(file, 'utf8');
+      for (const re of [paletteClass, literalInArbitrary]) {
+        for (const hit of source.matchAll(re)) {
+          offenders.push(`${relative(REPO_ROOT, file)}: ${hit[0]}`);
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps the design system doc in step with the registry', () => {
+    // Regenerating a current doc is a no-op, so any drift shows up as a diff.
+    expect(buildDoc(), 'run `npm run docs:tokens`').toEqual(readFileSync(DOC_PATH, 'utf8'));
   });
 });
 

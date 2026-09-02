@@ -522,7 +522,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
             >
               {isCameraActive ? (
                 /* Camera ON: show current camera icon */
-                <CurrentCameraIcon className={`w-5 h-5 ${isImageGenCameraSelected ? 'text-purple-400' : ''}`} />
+                <CurrentCameraIcon className={`w-5 h-5 ${isImageGenCameraSelected ? 'text-imagegen-cam-icon' : ''}`} />
               ) : (
                 /* Camera OFF: show camera with X overlay */
                 <IconCameraOff className="w-5 h-5" />
@@ -563,11 +563,11 @@ const CameraControls: React.FC<CameraControlsProps> = ({
                       {...{ [DATA_ACTION]: 'camera-select', [DATA_DEVICE_ID]: cam.deviceId }}
                       className={`p-2 -ml-2 rounded-full flex items-center justify-center shadow-md transition-all duration-200 ${
                         isSelected
-                          ? `${selectorColors.activeBg} ${isImageGen ? 'text-purple-600' : selectorColors.activeText}`
-                          : `${selectorColors.bg} ${isImageGen ? 'text-purple-300' : selectorColors.inactiveText}`
+                          ? `${selectorColors.activeBg} ${isImageGen ? 'text-imagegen-cam-active-text' : selectorColors.activeText}`
+                          : `${selectorColors.bg} ${isImageGen ? 'text-imagegen-cam-text' : selectorColors.inactiveText}`
                       } ${
                         isButtonHighlighted 
-                          ? 'scale-125 z-30 ring-2 ring-white/50' 
+                          ? 'scale-125 z-30 ring-2 ring-media-ctrl-focus' 
                           : 'hover:scale-110 hover:z-20'
                       }`}
                       title={cam.label}
