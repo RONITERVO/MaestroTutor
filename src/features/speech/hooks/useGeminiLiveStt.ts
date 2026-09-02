@@ -738,6 +738,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       }
 
       const encodeAndSend = async (pcm: Int16Array) => {
+        if (
+          currentSessionIdRef.current !== sessionId
+          || speechGateEpochRef.current !== speechGateEpoch
+        ) return;
         const retained = gateInputOnSpeech ? pcm.slice() : null;
         const transferBuffer = toTransferableArrayBuffer(pcm);
         const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
@@ -761,6 +765,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       };
 
       for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+        if (
+          currentSessionIdRef.current !== sessionId
+          || speechGateEpochRef.current !== speechGateEpoch
+        ) return;
         await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
       }
       if (currentSessionIdRef.current !== sessionId) {
@@ -970,6 +978,14 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       // not for audible output. The audio graph runs as long as source is connected.
 
     } catch (e: any) {
+      // A stop can dispose the codec worker while confirmed pre-roll is being
+      // encoded. Once this startup no longer owns the session, that rejection
+      // is normal cancellation and must not recreate the worker or set an STT
+      // error for the user.
+      if (
+        currentSessionIdRef.current !== sessionId
+        || speechGateEpochRef.current !== speechGateEpoch
+      ) return;
       if (e instanceof Error && e.name === 'AbortError') {
         setIsListening(false);
         await cleanup({ status: 'stopped-before-live-open' });
