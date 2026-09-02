@@ -18,25 +18,25 @@ const envValue = (text, name) => (
 const isWindows = process.platform === 'win32';
 const repositoryRoot = new URL('../', import.meta.url);
 const capacitorCli = fileURLToPath(new URL('../node_modules/@capacitor/cli/bin/capacitor', import.meta.url));
-const capacitorSync = spawnSync(
+const capacitorUpdate = spawnSync(
   process.execPath,
-  [capacitorCli, 'sync', 'android'],
+  [capacitorCli, 'update', 'android'],
   {
     cwd: repositoryRoot,
     encoding: 'utf8',
   },
 );
 requireText(
-  capacitorSync.status === 0,
-  `Capacitor Android project could not be synchronized: ${(
-    capacitorSync.stderr || capacitorSync.stdout || capacitorSync.error?.message || 'unknown Capacitor error'
+  capacitorUpdate.status === 0,
+  `Capacitor Android plugins could not be updated: ${(
+    capacitorUpdate.stderr || capacitorUpdate.stdout || capacitorUpdate.error?.message || 'unknown Capacitor error'
   ).trim()}`,
 );
 const gradleExecutable = isWindows ? (process.env.ComSpec || 'cmd.exe') : './gradlew';
 const gradleArgs = isWindows
   ? ['/d', '/s', '/c', 'gradlew.bat :app:processReleaseManifest --no-daemon']
   : [':app:processReleaseManifest', '--no-daemon'];
-const mergedManifestBuild = capacitorSync.status === 0
+const mergedManifestBuild = capacitorUpdate.status === 0
   ? spawnSync(
     gradleExecutable,
     gradleArgs,

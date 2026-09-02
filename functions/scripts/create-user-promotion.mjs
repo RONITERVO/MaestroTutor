@@ -186,6 +186,8 @@ if (errors.length > 0) {
     || promotionCouponId !== coupon.id
     || promotion.max_redemptions !== 1
     || promotion.expires_at !== expiresAt
+    || !promotion.active
+    || promotion.times_redeemed !== 0
   ) {
     throw new Error('The recoverable Stripe promotion does not match this operation. Use a new code; nothing was created.');
   }
