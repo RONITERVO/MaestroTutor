@@ -19,13 +19,20 @@ const snapshot = (overrides: Partial<CheckoutGrantSnapshotLike> = {}): CheckoutG
   uid: 'user-1',
   packId: 'pack_small',
   credits: 1000,
+  priceCents: 299,
+  currency: 'eur',
   ...overrides,
 });
 
 const session = (overrides: Partial<CheckoutSessionLike> = {}): CheckoutSessionLike => ({
   id: 'cs_test_123',
+  mode: 'payment',
   payment_status: 'paid',
   payment_intent: 'pi_test_123',
+  amount_subtotal: 299,
+  amount_total: 299,
+  currency: 'eur',
+  total_details: { amount_discount: 0 },
   metadata: { firebaseUid: 'user-1', packId: 'pack_small', credits: '1000' },
   customer_details: { email: 'buyer@example.com' },
   ...overrides,
@@ -91,7 +98,7 @@ describe('credits come from the immutable Checkout snapshot', () => {
 });
 
 describe('only settled payments are fulfilled', () => {
-  for (const status of ['unpaid', 'no_payment_required', null, undefined]) {
+  for (const status of ['unpaid', null, undefined]) {
     it(`does not grant when payment_status is ${String(status)}`, () => {
       // Completion is not payment: delayed methods complete the session first
       // and settle later, and some never settle at all.
@@ -102,6 +109,39 @@ describe('only settled payments are fulfilled', () => {
       expect(decision).toEqual({ action: 'skip', reason: 'not-paid' });
     });
   }
+
+  it.each(['paid', 'no_payment_required'])('grants an exact fully discounted session with status %s', (paymentStatus) => {
+    const decision = resolveCheckoutGrant(session({
+      payment_status: paymentStatus,
+      payment_intent: null,
+      amount_total: 0,
+      total_details: { amount_discount: 299 },
+    }), snapshot());
+    expect(decision).toMatchObject({
+      action: 'grant',
+      uid: 'user-1',
+      credits: 1000,
+      orderId: null,
+      idempotencyKey: 'stripe:cs_test_123',
+    });
+  });
+
+  it.each([
+    ['wrong mode', { mode: 'setup' }],
+    ['partial discount', { amount_total: 1, total_details: { amount_discount: 298 } }],
+    ['wrong subtotal', { amount_subtotal: 999 }],
+    ['wrong currency', { currency: 'usd' }],
+    ['unexpected PaymentIntent', { payment_intent: 'pi_unexpected' }],
+  ])('rejects a zero-payment claim with %s', (_label, overrides) => {
+    const decision = resolveCheckoutGrant(session({
+      payment_status: 'no_payment_required',
+      payment_intent: null,
+      amount_total: 0,
+      total_details: { amount_discount: 299 },
+      ...overrides,
+    }), snapshot());
+    expect(decision).toEqual({ action: 'skip', reason: 'invalid-discount' });
+  });
 
   it('grants credits when a delayed payment later succeeds', () => {
     expect(isCheckoutFulfilmentEventType('checkout.session.completed')).toBe(true);

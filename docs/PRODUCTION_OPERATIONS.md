@@ -415,6 +415,40 @@ grant until `checkout.session.async_payment_succeeded` arrives. Refund or
 otherwise reconcile the test purchase according to the team's accounting
 process.
 
+### Customer-specific 100% promotion
+
+Use a 100% promotion when an authorized maintainer needs to prove the live
+Checkout/webhook/ledger journey without taking money. Do not add credits by hand:
+that bypasses the route being tested. The user must first start and cancel one
+Checkout so the backend creates and stores the correct mode-specific Stripe
+customer. Then use Application Default Credentials with Firebase Auth/Firestore
+access and load the matching restricted Stripe key without printing it:
+
+```powershell
+$env:STRIPE_SECRET = gcloud secrets versions access latest --secret=STRIPE_SECRET --project=chatwithmaestro
+try {
+  npm --prefix functions run promotion:create-user -- --project chatwithmaestro --mode live --email maintainer@example.com --expires-hours 24
+} finally {
+  Remove-Item Env:STRIPE_SECRET
+}
+```
+
+The command verifies the Firebase user, canonical managed-account customer id,
+Stripe mode and the customer's Firebase UID metadata. It creates a random code
+restricted to that one customer, with one redemption and a short expiry. Share
+only the generated code through the approved maintainer channel; never share the
+restricted key. In Checkout, expand the promotion-code field, enter the code and
+complete the zero-total order. A correct event has an exact full discount, zero
+total and no PaymentIntent. The signed webhook still grants from the immutable
+Checkout snapshot and uses the Checkout session id for idempotency. Confirm one
+ledger entry and the exact pack credit delta, then confirm the promotion shows one
+redemption. Replaying the delivery must not change the balance.
+
+If the command reports no customer, start Checkout and cancel it before payment,
+then retry. If credentials, mode, customer metadata, subtotal, currency or full
+discount do not match, stop; do not weaken the verifier or create an unrestricted
+code as a workaround.
+
 ## 10. Stripe-only catalogue and Android checkout policy
 
 Color themes are local and permanently free. Managed credits use the single
@@ -436,6 +470,11 @@ Stripe Custom Tab uses the same Core SDK checkout path, but production must keep
 eligibility, enrollment, required information/choice UI, transaction-token
 handling and reporting are all recorded. See `docs/STRIPE_ONLY_BILLING.md` and
 verify Google's current rules at release time.
+
+Do not declare `com.android.vending.BILLING` in the manifest. Even without a
+Billing Client dependency, Play interprets that legacy permission as an AIDL
+billing integration and blocks the release for using an obsolete library. The
+release-config verifier checks both the Gradle dependency text and manifest.
 
 Closed/internal-track tester-count and duration requirements remain Play
 distribution gates. Read the live Console because Google can change them; they are

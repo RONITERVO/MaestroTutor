@@ -18,6 +18,7 @@ const [
   functionsIndex,
   functionsGemini,
   androidBuild,
+  androidManifest,
   mainActivity,
   stagingEnv,
   functionsExample,
@@ -42,6 +43,7 @@ const [
   read('functions/src/index.ts'),
   read('functions/src/gemini.ts'),
   read('android/app/build.gradle'),
+  read('android/app/src/main/AndroidManifest.xml'),
   read('android/app/src/main/java/com/ronitervo/maestrotutor/MainActivity.java'),
   read('.env.staging'),
   read('functions/.env.example'),
@@ -80,6 +82,7 @@ requireText(functionsGemini.includes('trimMusicPcmChunk'), 'Managed music must t
 requireText(functionsGemini.includes('isCompleteMusicSampleCount'), 'Managed music must reject partial provider closes.');
 requireText(functionsGemini.includes('getManagedMusicLeaseDurationMs'), 'Managed music leases must cover the full provider timeout.');
 requireText(!androidBuild.includes('com.android.billingclient'), 'Android must not ship a second purchase SDK.');
+requireText(!androidManifest.includes('com.android.vending.BILLING'), 'Android must not declare the retired Play Billing permission.');
 requireText(!mainActivity.includes('ManagedBillingPlugin'), 'Android must not register the retired billing plugin.');
 
 const clientPacks = envValue(stagingEnv, 'VITE_MANAGED_CREDIT_PACK_IDS')
