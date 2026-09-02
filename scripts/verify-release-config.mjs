@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { spawnSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
@@ -18,6 +18,9 @@ const envValue = (text, name) => (
 const isWindows = process.platform === 'win32';
 const repositoryRoot = new URL('../', import.meta.url);
 const capacitorCli = fileURLToPath(new URL('../node_modules/@capacitor/cli/bin/capacitor', import.meta.url));
+// `cap update` resolves native plugins without copying web assets, but its
+// generated plugin JSON still needs the ignored assets directory to exist.
+await mkdir(new URL('../android/app/src/main/assets/public/', import.meta.url), { recursive: true });
 const capacitorUpdate = spawnSync(
   process.execPath,
   [capacitorCli, 'update', 'android'],
