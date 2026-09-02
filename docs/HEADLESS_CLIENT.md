@@ -73,6 +73,11 @@ ordered event trace containing the operation ID, journey phase and relevant publ
 metadata. Secrets, bearer tokens, App Check tokens, raw payment details and full
 provider payloads must never be included in traces.
 
+Protocol 1.2 also requires every Gemini Live transport to have a reviewed open
+reason. Headless Live and raw-token commands derive `user.headless-live`; callers
+cannot claim a browser Whisper or UI trigger. See
+[`GEMINI_LIVE_OPEN_POLICY.md`](./GEMINI_LIVE_OPEN_POLICY.md).
+
 AI output is asserted by invariant rather than exact wording. Release checks verify
 the route and model used, ordered state transitions, message roles, non-empty visible
 output, media metadata, persistence, final accounting events and credit-ledger

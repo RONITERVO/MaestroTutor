@@ -37,6 +37,7 @@ import { useMaestroStore } from '../../../store';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
+import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -637,16 +638,15 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       if (state === 'connecting') {
         setLiveSessionError(null);
       }
-      if (state === 'active') {
-        if (!liveUiTokenRef.current) {
-          const token = addActivityToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.SESSION);
-          liveUiTokenRef.current = token;
-        }
-      } else {
-        if (liveUiTokenRef.current) {
-          removeActivityToken(liveUiTokenRef.current);
-          liveUiTokenRef.current = null;
-        }
+      if (liveUiTokenRef.current) {
+        removeActivityToken(liveUiTokenRef.current);
+        liveUiTokenRef.current = null;
+      }
+      if (state === 'connecting' || state === 'active') {
+        liveUiTokenRef.current = addActivityToken(
+          TOKEN_CATEGORY.LIVE,
+          state === 'connecting' ? TOKEN_SUBTYPE.CONNECTING : TOKEN_SUBTYPE.SESSION,
+        );
       }
       if (state === 'idle' || state === 'error') {
         restoreSttAfterLiveSession();
@@ -730,6 +730,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
       await startLiveConversation({
+        liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
         stream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,

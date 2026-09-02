@@ -155,7 +155,7 @@ const HEADLESS_METHODS = [
 ] as const;
 
 export const describeHeadlessMethods = () => ({
-  protocolVersion: '1.1.0',
+  protocolVersion: '1.2.0',
   transport: 'json-rpc-2.0-ndjson',
   eventNotification: 'maestro.event',
   profileDefault: 'isolated-temporary',
@@ -206,6 +206,7 @@ export const describeHeadlessMethods = () => ({
   releaseRequirements: [
     'Android external Stripe checkout stays disabled until Play programme enrollment is recorded.',
     'Managed and BYOK provider journeys must use the same Core SDK boundaries; BYOK keys come only from MAESTRO_GEMINI_API_KEY.',
+    'Every Gemini Live transport requires a reviewed live-open reason; synthetic headless actions are audited as user.headless-live.',
   ],
   deferred: ['mcp'],
 });

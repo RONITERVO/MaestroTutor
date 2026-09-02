@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { streamGeminiLiveTts } from '../services/geminiLiveTts';
 import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
 import type { SpeechPart, TtsProvider, SpeechCacheDetails } from '../../../core/types';
+import type { TtsLiveOpenTrigger } from '../../../../shared/liveOpenReason';
 
 export interface UseTtsEngineOptions {
   onQueueComplete?: () => void;
@@ -24,13 +25,14 @@ interface SpeechQueueItem {
   onAudioCached?: (audioDataUrl: string, details: SpeechCacheDetails) => void;
   cacheKey?: string;
   cacheNotified?: boolean;
+  liveOpenTrigger: TtsLiveOpenTrigger;
 }
 
 export interface UseTtsEngineReturn {
   isSpeechSynthesisSupported: boolean;
   isSpeaking: boolean;
   speakingUtteranceText: string | null;
-  speak: (textOrParts: string | SpeechPart[], defaultLang: string) => void;
+  speak: (textOrParts: string | SpeechPart[], defaultLang: string, liveOpenTrigger: TtsLiveOpenTrigger) => void;
   stopSpeaking: () => void;
   hasPendingQueueItems: () => boolean;
 }
@@ -118,9 +120,11 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
 
     // Batch consecutive gemini-live items at the front that are not cached
     const geminiLiveItems: SpeechQueueItem[] = [];
+    const batchTrigger = queue[0]?.liveOpenTrigger;
     for (const item of queue) {
       if (item.provider !== 'gemini-live') break;
       if (item.audioDataUrl || item.cachedAudio) break;
+      if (item.liveOpenTrigger !== batchTrigger) break;
       geminiLiveItems.push(item);
     }
     if (geminiLiveItems.length === 0) {
@@ -159,6 +163,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
         lines,
         audioContext,
         voiceName: geminiLiveItems[0]?.voiceName,
+        liveOpenTrigger: geminiLiveItems[0].liveOpenTrigger,
         abortSignal: abortController.signal,
         onLineStart: (_, text) => {
           setSpeakingUtteranceText(text);
@@ -254,7 +259,11 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
       }
   }, [handleQueueComplete, processGeminiLiveQueue]);
 
-  const speak = useCallback((textOrParts: string | SpeechPart[], defaultLang: string) => {
+  const speak = useCallback((
+    textOrParts: string | SpeechPart[],
+    defaultLang: string,
+    liveOpenTrigger: TtsLiveOpenTrigger,
+  ) => {
     const parts: SpeechPart[] = typeof textOrParts === 'string' ? [{ text: textOrParts, langCode: defaultLang }] : textOrParts;
     const provider: TtsProvider = 'gemini-live';
     
@@ -270,7 +279,8 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
         provider,
         cacheKey: p.cacheKey,
         cachedAudio: p.cachedAudio,
-        onAudioCached: p.onAudioCached
+        onAudioCached: p.onAudioCached,
+        liveOpenTrigger,
       });
     });
     processSpeechQueue();

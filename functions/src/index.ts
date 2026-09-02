@@ -295,6 +295,7 @@ app.post('/gemini/live-token', asyncRoute('required', async (req, res, auth) => 
     config: req.body?.config,
     purpose: 'live',
     durationSeconds: Number(req.body?.durationSeconds || 0) || undefined,
+    liveOpenReason: req.body?.liveOpenReason,
   });
   res.json(result);
 }, 'live-token'));

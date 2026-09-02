@@ -5,6 +5,7 @@ import {
   TOKEN_SUBTYPE,
   type TokenCategory,
   isReengagementToken,
+  isSilentObserverActivityToken,
 } from '../../../core/config/activityTokens';
 import { useMaestroStore } from '../../../store';
 import { createSmartRef } from '../../../shared/utils/smartRef';
@@ -62,15 +63,17 @@ export const useSmartReengagement = ({
   useEffect(() => { removeActivityTokenRef.current = removeActivityToken; }, [removeActivityToken]);
 
   // canScheduleReengagement - checks if reengagement can be scheduled
-  // Uses unified activity tokens - any non-reengagement token blocks scheduling
+  // Uses unified activity tokens; passive observer-owned tokens do not block
+  // scheduling the next check after that observer completes a turn.
   const canScheduleReengagement = useCallback((): boolean => {
     if (isLoadingHistory) return false;
     if (!selectedLanguagePairId) return false;
     if (isVisualContextActive) return false;
     
-    // Simple check: any non-reengagement token blocks scheduling
+    // Foreground activity blocks scheduling; the passive observer's own
+    // lifecycle is the activity that reached this scheduling point.
     const hasBlockingActivity = [...activityTokens].some(
-      token => !isReengagementToken(token)
+      token => !isReengagementToken(token) && !isSilentObserverActivityToken(token)
     );
     return !hasBlockingActivity;
   }, [isLoadingHistory, selectedLanguagePairId, isVisualContextActive, activityTokens]);

@@ -10,7 +10,7 @@ import { useStatusAnimations } from '../hooks/useStatusAnimations';
 import { useMaestroStore } from '../../../store';
 import { parseLanguagePairId } from '../../../shared/utils/languageUtils';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
-import { selectActiveUiTokens, selectIsLive, selectIsUserHold, selectIsSending } from '../../../store/slices/uiSlice';
+import { selectActiveFlagTokens, selectIsLive, selectIsUserHold, selectIsSending } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair, selectTargetLanguageDef } from '../../../store/slices/settingsSlice';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 
@@ -123,13 +123,13 @@ const Header = forwardRef<HTMLDivElement, HeaderProps>(({ onOpenApiKey, hasApiKe
       }
   };
 
-  const activeUiTokens = useMaestroStore(useShallow(selectActiveUiTokens));
+  const activeFlagTokens = useMaestroStore(useShallow(selectActiveFlagTokens));
   const isHolding = useMaestroStore(selectIsUserHold);
   const isLive = useMaestroStore(selectIsLive);
 
   const statusConfig = useMemo(
-    () => getStatusConfig(maestroActivityStage, activeUiTokens, isHolding, isLive),
-    [maestroActivityStage, activeUiTokens, isHolding, isLive]
+    () => getStatusConfig(maestroActivityStage, activeFlagTokens, isHolding, isLive),
+    [maestroActivityStage, activeFlagTokens, isHolding, isLive]
   );
 
   const { currentAnimation, isVisible, handleAnimationEnded, handleTransitionEnd } = useStatusAnimations();

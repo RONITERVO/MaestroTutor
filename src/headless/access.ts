@@ -3,6 +3,7 @@
 
 import { GoogleGenAI } from '@google/genai';
 import type { CoreGeminiClient } from '../core-sdk/managedGeminiClient';
+import { createLiveReasonGatedGeminiClient } from '../core-sdk/managedGeminiClient';
 import type { ReturnTypeOfCreateManagedBackendClient } from './types';
 
 export type HeadlessAccessMode = 'managed' | 'byok';
@@ -61,7 +62,10 @@ export const createDirectHeadlessAi = (apiKey?: string): {
     throw new Error('BYOK headless mode requires MAESTRO_GEMINI_API_KEY. The key is read from the environment and is never persisted.');
   }
   const direct = new GoogleGenAI({ apiKey: key, apiVersion: 'v1alpha' });
-  return { ai: direct as unknown as CoreGeminiClient, direct };
+  return {
+    ai: createLiveReasonGatedGeminiClient(direct as unknown as CoreGeminiClient),
+    direct,
+  };
 };
 
 export const createManagedHeadlessFilePort = (

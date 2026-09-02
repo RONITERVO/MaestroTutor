@@ -19,7 +19,7 @@ describe('headless dispatcher contract', () => {
       methodInfo: Record<string, { params: string[] }>;
       configuredModels: { text: { default: string }; music: string };
     };
-    expect(result.protocolVersion).toBe('1.1.0');
+    expect(result.protocolVersion).toBe('1.2.0');
     expect(result.transport).toBe('json-rpc-2.0-ndjson');
     expect(result.methods).toContain('billing.checkout.completeTest');
     expect(result.methods).toContain('speech.synthetic.live');

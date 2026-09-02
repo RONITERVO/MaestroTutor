@@ -7,6 +7,7 @@ import { runCoreAudioNoteGeneration } from '../core-sdk/media/audioNoteGeneratio
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from '../core-sdk/media/triggerAudioAsset';
 import type { HeadlessClient } from './client';
 import { buildTriggeredTtsSystemInstruction } from '../core-sdk/media/triggeredTts';
+import { LIVE_OPEN_TRIGGER } from '../../shared/liveOpenReason';
 
 export const runHeadlessAudioNoteGeneration = async (client: HeadlessClient, input: {
   text: string;
@@ -21,6 +22,9 @@ export const runHeadlessAudioNoteGeneration = async (client: HeadlessClient, inp
 }) => {
   const result = await runCoreAudioNoteGeneration({
     aiClient: client.ai,
+    liveOpenTrigger: input.exactTts
+      ? LIVE_OPEN_TRIGGER.VOICE_TTS_CLICK
+      : LIVE_OPEN_TRIGGER.TOOL_AUDIO_NOTE,
     runtime: client.runtime,
     model: input.model || getGeminiModels().audio.tts,
     text: input.text,

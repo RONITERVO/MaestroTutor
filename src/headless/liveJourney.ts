@@ -15,6 +15,7 @@ import { buildLiveSttSystemInstruction } from '../core-sdk/media/liveSessionInst
 import type { HeadlessClient } from './client';
 import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
 import { createSyntheticVisualFrame } from './syntheticVisual';
+import { LIVE_OPEN_TRIGGER } from '../../shared/liveOpenReason';
 
 const decodePcmChunk = (base64: string): Int16Array => {
   const bytes = Uint8Array.from(globalThis.atob(base64), character => character.charCodeAt(0));
@@ -69,6 +70,9 @@ export const runHeadlessLiveTurn = async (
     systemInstruction += `\n\n${input.instructionSuffix.trim()}`;
   }
   const result = await runSyntheticLiveJourney(client.ai, {
+    // Synthetic stream injection is an explicit headless user action. Never
+    // claim that local Whisper fired when no browser Whisper worker ran.
+    liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
     source: createSyntheticPcmSource({
       pcm: input.pcm,
       sampleRate,

@@ -7,6 +7,7 @@ import type { SpeechPart, RecordedUtterance } from '../../../core/types';
 import { useTtsEngine } from './useTtsEngine';
 import { type GeminiLiveSttTurnComplete, useGeminiLiveStt } from './useGeminiLiveStt';
 import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
+import type { TtsLiveOpenTrigger } from '../../../../shared/liveOpenReason';
 
 interface UseBrowserSpeechProps {
   onEngineCycleEnd?: (errorOccurred: boolean) => void;
@@ -19,7 +20,7 @@ interface UseBrowserSpeechProps {
 
 interface UseBrowserSpeechReturn {
   isSpeaking: boolean;
-  speak: (textOrParts: string | SpeechPart[], defaultLang: string) => void;
+  speak: (textOrParts: string | SpeechPart[], defaultLang: string, liveOpenTrigger: TtsLiveOpenTrigger) => void;
   stopSpeaking: () => void;
   isSpeechSynthesisSupported: boolean;
   isListening: boolean;

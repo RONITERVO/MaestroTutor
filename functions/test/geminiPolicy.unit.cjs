@@ -9,6 +9,7 @@ const {
   buildManagedPromptTokenCountInputs,
   collectGeminiFileUris,
   requireAllowedManagedModel,
+  requireManagedLiveOpenReason,
   requirePricedManagedGenerationModel,
   requireSafeManagedGenerationConfig,
   requireSafeManagedLiveConfig,
@@ -101,6 +102,28 @@ test('managed Live config is scopeable but cannot mint tool-enabled tokens', () 
     () => requireSafeManagedLiveConfig({ tools: [{ googleSearch: {} }] }),
     (error) => error.status === 400 && /tools/.test(error.message),
   );
+});
+
+test('managed Live tokens require a reviewed auditable open reason', () => {
+  const reason = {
+    trigger: 'whisper.observer',
+    requestId: 'observer-request-1234',
+    requestedAt: '2026-09-02T12:34:56+00:00',
+  };
+  assert.deepEqual(requireManagedLiveOpenReason(reason), {
+    ...reason,
+    requestedAt: '2026-09-02T12:34:56.000Z',
+  });
+  for (const invalid of [
+    undefined,
+    { ...reason, trigger: 'user.unreviewed-control' },
+    { ...reason, requestId: 'short' },
+  ]) {
+    assert.throws(
+      () => requireManagedLiveOpenReason(invalid),
+      (error) => error.status === 400 && /auditable Gemini Live open reason/.test(error.message),
+    );
+  }
 });
 
 test('Google Search queries are charged at the registry list price', () => {

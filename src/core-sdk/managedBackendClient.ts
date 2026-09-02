@@ -282,9 +282,9 @@ export const createManagedBackendClient = (options: ManagedBackendClientOptions)
       'gemini/delete-file', { method: 'POST', body: JSON.stringify(payload) },
     ),
     clearFiles: (): Promise<BackendClearFilesResponse> => requestManagedJson('gemini/clear-files', { method: 'POST' }),
-    createLiveToken: async (payload?: BackendLiveTokenRequest): Promise<BackendLiveTokenResponse> => {
+    createLiveToken: async (payload: BackendLiveTokenRequest): Promise<BackendLiveTokenResponse> => {
       const response = await requestManagedJson<BackendLiveTokenResponse>('gemini/live-token', {
-        method: 'POST', body: JSON.stringify(payload || {}),
+        method: 'POST', body: JSON.stringify(payload),
       });
       await options.session.update({ billingSummary: response.billingSummary || null });
       return response;

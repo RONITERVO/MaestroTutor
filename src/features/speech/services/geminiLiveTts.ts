@@ -30,6 +30,10 @@ import { countLanguageCodeSeparators, countTranscriptNewlines, mapAudioSegmentsT
 import { getLiveMinimalThinkingConfig } from '../../../core-sdk/media/liveModelCompatibility';
 import { buildTriggeredTtsSystemInstruction } from '../../../core-sdk/media/triggeredTts';
 import { createLiveUsageTracker } from '../../../shared/utils/costTracker';
+import {
+  createLiveOpenReason,
+  type TtsLiveOpenTrigger,
+} from '../../../../shared/liveOpenReason';
 
 // ============================================================================
 // TYPES
@@ -48,6 +52,7 @@ export interface GeminiLiveTtsParams {
   audioContext: AudioContext;
   abortSignal?: AbortSignal;
   voiceName?: string;
+  liveOpenTrigger: TtsLiveOpenTrigger;
   onLineStart?: (lineIndex: number, text: string) => void;
   onLineComplete?: (lineIndex: number, audioPcm: Int16Array) => void;
   onStatusUpdate?: (status: string) => void;
@@ -332,6 +337,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     try {
       session = await ai.live.connect({
         model,
+        liveOpenReason: createLiveOpenReason(params.liveOpenTrigger),
         config: config as any,
         callbacks: {
           onopen: () => {

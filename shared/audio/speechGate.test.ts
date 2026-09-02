@@ -12,9 +12,8 @@ import {
 } from './speechGate';
 
 /**
- * The gate decides when an always-open Live socket is allowed to cost money,
- * so the cases below are the ways it could leak: opening on noise, staying
- * open after everyone stops talking, or answering the app's own voice.
+ * The gate decides when an already-authorized Live socket may send input. The
+ * pre-connect monitor uses the same state machine before a socket exists.
  */
 
 const SILENCE: AudioEnergy = { rms: 0.0005, peak: 0.004, activeRatio: 0.001 };
@@ -135,6 +134,16 @@ describe('opening', () => {
     gate.rejectSpeech(250);
     expect(gate.evaluate(SPEECH, 300)).toEqual({ send: false, reason: 'cooldown' });
     expect(gate.confirmSpeech(300)).toBe(false);
+  });
+
+  it('can seed a gate only after an external semantic trigger', () => {
+    const semanticGate = new SpeechGate({ requireConfirmation: true });
+    expect(semanticGate.openFromConfirmedTrigger(1_000)).toBe(true);
+    expect(semanticGate.isOpen).toBe(true);
+
+    const energyOnlyGate = new SpeechGate();
+    expect(energyOnlyGate.openFromConfirmedTrigger(1_000)).toBe(false);
+    expect(energyOnlyGate.isOpen).toBe(false);
   });
 });
 

@@ -69,19 +69,24 @@ import {
 
 ## Local Live input gate
 
-The automatically started re-engagement observer and Gemini Live STT buffer
-microphone PCM locally, run quantized `whisper-tiny.en` in a lazy Web Worker after
-the energy pre-gate passes, and send audio to Gemini only after the transcript
+The automatically armed re-engagement observer and Gemini Live STT buffer
+microphone PCM locally and run quantized `whisper-tiny.en` in a lazy Web Worker
+after the energy pre-gate passes. They do not open Gemini Live until the transcript
 filter confirms real words. They share one worker/model so switching between the
-observer and STT does not double Android memory. Gemini remains the transcript
-authority.
+observer and STT does not double Android memory. The local transcript appears as
+a pending preview; Gemini remains the final transcript authority.
 
 The observer also gates video and closes its input while model audio is playing,
 so speaker echo cannot start another turn. STT already stops before app TTS plays.
-Both paths send `audioStreamEnd` when speech ends, retain a bounded pre-roll to
-avoid clipped syllables, and fall back to energy gating if local Whisper cannot
-load. Full user-started Live conversations continue to stream directly because
-they need the lowest possible conversational latency.
+Both paths send `audioStreamEnd` when speech ends and retain a bounded pre-roll to
+avoid clipped syllables. Before connection they fail closed if local Whisper is
+unavailable. An energy fallback can preserve later turns only after an authorized
+transport is already active. Full user-started camera Live conversations continue
+to stream directly because their click is an explicit open reason.
+
+See [`docs/GEMINI_LIVE_OPEN_POLICY.md`](../../../docs/GEMINI_LIVE_OPEN_POLICY.md)
+for the complete allowlist, activity phases, backend audit fields and maintainer
+checklist.
 
 ## Integration Notes
 

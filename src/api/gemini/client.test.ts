@@ -12,9 +12,10 @@ const mocks = vi.hoisted(() => ({
   generateContentStream: vi.fn(),
   createLiveToken: vi.fn(),
   releaseLiveTokenLease: vi.fn(),
+  directConnect: vi.fn(),
   directClient: {
     models: {},
-    live: {},
+    live: { connect: vi.fn(), music: { connect: vi.fn() } },
   },
   tokenConnect: vi.fn(),
   tokenMusicConnect: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock('../../services/backend/maestroBackendService', () => ({
 }));
 
 import { getAi } from './client';
+import { createLiveOpenReason, LIVE_OPEN_TRIGGER } from '../../../shared/liveOpenReason';
 
 describe('Gemini provider routing', () => {
   beforeEach(() => {
@@ -64,6 +66,8 @@ describe('Gemini provider routing', () => {
     mocks.releaseLiveTokenLease.mockResolvedValue({ ok: true });
     mocks.tokenConnect.mockResolvedValue({ close: vi.fn() });
     mocks.tokenMusicConnect.mockResolvedValue({ close: vi.fn() });
+    mocks.directClient.live.connect = mocks.directConnect;
+    mocks.directConnect.mockResolvedValue({ close: vi.fn() });
     mocks.googleGenAi.mockImplementation(function MockGoogleGenAi(options: { apiKey: string }) {
       return options.apiKey === 'byok-key'
         ? mocks.directClient
@@ -81,12 +85,22 @@ describe('Gemini provider routing', () => {
 
     const ai = await getAi({ apiVersion: 'v1alpha' });
 
-    expect(ai).toBe(mocks.directClient);
+    expect(ai).not.toBe(mocks.directClient);
+    expect(ai.models).toBe(mocks.directClient.models);
     expect(mocks.googleGenAi).toHaveBeenCalledWith({
       apiKey: 'byok-key',
       apiVersion: 'v1alpha',
     });
     expect(mocks.generateContent).not.toHaveBeenCalled();
+
+    await ai.live.connect({
+      model: 'gemini-live-test',
+      liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.VOICE_TTS_CLICK, {
+        requestId: 'live-byok-test-1',
+        now: new Date('2026-09-02T10:00:00.000Z'),
+      }),
+    });
+    expect(mocks.directConnect).toHaveBeenCalledWith({ model: 'gemini-live-test' });
   });
 
   it('routes managed generation and its abort signal through the backend', async () => {
@@ -114,6 +128,10 @@ describe('Gemini provider routing', () => {
 
     const session = await ai.live.connect({
       model: 'gemini-3.1-flash-live-preview',
+      liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, {
+        requestId: 'live-test-request-1',
+        now: new Date('2026-09-02T10:00:00.000Z'),
+      }),
       config: { responseModalities: ['AUDIO'] },
       callbacks: { onclose },
     });
@@ -122,6 +140,11 @@ describe('Gemini provider routing', () => {
     expect(mocks.createLiveToken).toHaveBeenCalledWith({
       purpose: 'live',
       model: 'gemini-3.1-flash-live-preview',
+      liveOpenReason: {
+        trigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+        requestId: 'live-test-request-1',
+        requestedAt: '2026-09-02T10:00:00.000Z',
+      },
       config: { responseModalities: ['AUDIO'] },
     });
     expect(mocks.googleGenAi).toHaveBeenLastCalledWith({
@@ -137,6 +160,18 @@ describe('Gemini provider routing', () => {
       expect(mocks.releaseLiveTokenLease).toHaveBeenCalledTimes(1);
     });
     expect(onclose).toHaveBeenCalledWith({ reason: 'closed' });
+    expect(wrappedRequest.liveOpenReason).toBeUndefined();
+  });
+
+  it('rejects an unreasoned managed Live connection before minting a token', async () => {
+    mocks.resolveAccessMode.mockResolvedValue('managed');
+    const ai = await getAi();
+
+    await expect(ai.live.connect({ model: 'gemini-live-test' } as any)).rejects.toMatchObject({
+      status: 400,
+      code: 'LIVE_OPEN_REASON_REQUIRED',
+    });
+    expect(mocks.createLiveToken).not.toHaveBeenCalled();
   });
 
   it('fails clearly when neither access path is available', async () => {

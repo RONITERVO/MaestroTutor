@@ -4,10 +4,9 @@
 /**
  * Deciding when a Gemini Live microphone path is allowed to spend money.
  *
- * The silent observer is the largest case because it stays open while the app
- * is idle, but STT also uses Live and otherwise uploads every quiet-room packet
- * between start and turn completion. A quiet room should not consume user quota
- * or managed-backend credits in either path.
+ * The silent observer is the largest case because it remains locally armed
+ * while the app is idle. STT uses the same pre-connect check. A quiet room must
+ * not create a paid transport or consume user quota in either path.
  *
  * This is the first of the layers that stop that:
  *
@@ -179,6 +178,22 @@ export class SpeechGate {
       this.forceClose();
       return false;
     }
+    this.open = true;
+    this.awaitingConfirmation = false;
+    this.onsetAt = null;
+    this.lastSpeechAt = now;
+    return true;
+  }
+
+  /**
+   * Seed an already-confirmed utterance captured by the pre-connect Whisper
+   * monitor once the paid transport is ready to receive its buffered audio.
+   * This is intentionally separate from `confirmSpeech`: the paid transport
+   * did not exist while the monitor accumulated its candidate.
+   */
+  openFromConfirmedTrigger(now: number): boolean {
+    if (!this.options.requireConfirmation) return false;
+    if (now < this.playbackMutedUntil || now < this.cooldownUntil) return false;
     this.open = true;
     this.awaitingConfirmation = false;
     this.onsetAt = null;

@@ -158,6 +158,11 @@ music remains a direct client connection. Synthetic speech PCM enters after
 device capture so CI exercises packetization, speech gating, provider Live
 transport and final lease release without a physical microphone.
 
+Every Live token request also carries a validated open reason. Validation happens
+before reservation or token minting, and the lease plus billing metadata record
+the trigger, origin, request id and timestamp. The reviewed allowlist and extension
+procedure are in [`GEMINI_LIVE_OPEN_POLICY.md`](./GEMINI_LIVE_OPEN_POLICY.md).
+
 ## Account deletion
 
 Deletion:

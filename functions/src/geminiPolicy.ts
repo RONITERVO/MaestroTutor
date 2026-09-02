@@ -4,8 +4,18 @@
 
 import { createHttpError } from './http';
 import { DEFAULT_GEMINI_PRICING, resolvePricingRule } from '../../shared/pricing/registry';
+import { requireLiveOpenReason, type LiveOpenReason } from '../../shared/liveOpenReason';
 
 export type ManagedContentOperation = 'generateContent' | 'streamContent' | 'generateImage';
+
+/** Fail closed before any lease, credit reservation, or provider call occurs. */
+export const requireManagedLiveOpenReason = (value: unknown): LiveOpenReason => {
+  try {
+    return requireLiveOpenReason(value);
+  } catch {
+    throw createHttpError(400, 'A valid, auditable Gemini Live open reason is required.');
+  }
+};
 
 const LEGACY_MANAGED_GENERATION_MODEL_PINS = new Map<string, string>([
   ['gemini-flash-latest', 'gemini-3.7-flash'],

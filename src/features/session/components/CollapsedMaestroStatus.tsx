@@ -8,15 +8,15 @@ import { useMaestroStore } from '../../../store';
 import {
   TOKEN_CATEGORY,
   TOKEN_SUBTYPE,
-  buildToken,
   getTokenCategory,
   getTokenSubtype,
   LIVE_TOKEN_DISPLAY,
+  SPEECH_GATE_TOKEN_DISPLAY,
   type TokenDisplayConfig,
   UI_TOKEN_DISPLAY,
 } from '../../../core/config/activityTokens';
 import { useShallow } from 'zustand/react/shallow';
-import { selectActiveUiTokens, selectIsLive } from '../../../store/slices/uiSlice';
+import { selectActiveFlagTokens, selectIsLive } from '../../../store/slices/uiSlice';
 import * as Icons from '../../../shared/ui/Icons';
 
 interface CollapsedMaestroStatusProps {
@@ -68,8 +68,11 @@ const STAGE_DISPLAY: Record<MaestroActivityStage, { icon: keyof typeof Icons; te
 };
 
 const getTokenDisplayConfig = (token: string): TokenDisplayConfig | null => {
+  if (SPEECH_GATE_TOKEN_DISPLAY[token]) return SPEECH_GATE_TOKEN_DISPLAY[token];
   const category = getTokenCategory(token);
-  if (category === TOKEN_CATEGORY.LIVE) return LIVE_TOKEN_DISPLAY;
+  if (category === TOKEN_CATEGORY.LIVE) {
+    return LIVE_TOKEN_DISPLAY[getTokenSubtype(token)] || LIVE_TOKEN_DISPLAY[TOKEN_SUBTYPE.SESSION];
+  }
   if (category === TOKEN_CATEGORY.UI) return UI_TOKEN_DISPLAY[getTokenSubtype(token)] || null;
   return null;
 };
@@ -77,7 +80,7 @@ const getTokenDisplayConfig = (token: string): TokenDisplayConfig | null => {
 // Helper to get configuration for the parent container (The Flag)
 export const getStatusConfig = (
   stage: MaestroActivityStage,
-  activeUiTokens: string[] = [],
+  activeFlagTokens: string[] = [],
   isHolding = false,
   isLive = false
 ) => {
@@ -103,9 +106,9 @@ export const getStatusConfig = (
       return { color: 'bg-flag-observing-bg', borderColor: 'border-flag-observing-border', textColor: 'text-flag-observing-text' };
     case 'idle':
     default: {
-      const hasBusyTasks = activeUiTokens.length > 0 || isLive;
-      if (activeUiTokens.length > 0) {
-        const primaryConfig = UI_TOKEN_DISPLAY[getTokenSubtype(activeUiTokens[0])];
+      const hasBusyTasks = activeFlagTokens.length > 0 || isLive;
+      if (activeFlagTokens.length > 0) {
+        const primaryConfig = getTokenDisplayConfig(activeFlagTokens[0]);
         if (primaryConfig?.color) {
           return {
             color: primaryConfig.color.bg,
@@ -130,27 +133,28 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
   className,
   isExpanded = true,
 }) => {
-  const activeUiTokens = useMaestroStore(useShallow(selectActiveUiTokens));
+  const activeFlagTokens = useMaestroStore(useShallow(selectActiveFlagTokens));
   const isLive = useMaestroStore(selectIsLive);
   const silentObserverState = useMaestroStore(state => state.silentObserverState);
   const liveVideoStream = useMaestroStore(state => state.liveVideoStream);
-  const isHolding = activeUiTokens.some(token => getTokenSubtype(token) === TOKEN_SUBTYPE.HOLD);
+  const isHolding = activeFlagTokens.some(token => getTokenSubtype(token) === TOKEN_SUBTYPE.HOLD);
 
-  const isObserverActive = silentObserverState === 'active' || silentObserverState === 'connecting';
+  const isObserverActive = silentObserverState === 'armed' || silentObserverState === 'active' || silentObserverState === 'connecting';
   const showMicUsageBadge = isObserverActive || isLive;
   const showCameraUsageBadge = showMicUsageBadge && Boolean(liveVideoStream && liveVideoStream.active);
   const showHoldUsageBadge = isHolding;
 
   const displayTokens = useMemo(() => {
-    const tokens: string[] = activeUiTokens.filter(token => getTokenSubtype(token) !== TOKEN_SUBTYPE.HOLD);
-    if (isLive) {
-      tokens.push(buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.SESSION));
-    }
+    const tokens: string[] = activeFlagTokens.filter(token => getTokenSubtype(token) !== TOKEN_SUBTYPE.HOLD);
     return tokens
       .map(token => ({ token, config: getTokenDisplayConfig(token) }))
       .filter((entry): entry is { token: string; config: TokenDisplayConfig } => Boolean(entry.config))
       .sort((a, b) => (a.config.priority ?? 100) - (b.config.priority ?? 100));
-  }, [activeUiTokens, isLive]);
+  }, [activeFlagTokens]);
+  const hasSpeechGatePhase = displayTokens.some(({ token }) => {
+    const category = getTokenCategory(token);
+    return category === TOKEN_CATEGORY.VAD || category === TOKEN_CATEGORY.WHISPER;
+  });
 
   const renderUsageBadges = () => {
     if (!showHoldUsageBadge && !showMicUsageBadge) return null;
@@ -196,7 +200,7 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     );
   };
 
-  if (stage !== 'idle') {
+  if (stage !== 'idle' && !(stage === 'listening' && hasSpeechGatePhase)) {
     const config = STAGE_DISPLAY[stage];
     const IconComponent = Icons[config.icon as keyof typeof Icons];
     return (
