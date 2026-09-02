@@ -392,9 +392,18 @@ curl.exe -sS "https://europe-west1-chatwithmaestro.cloudfunctions.net/api/auth/s
   -H "Origin: https://chatwithmaestro.com"
 ```
 
-It must return `Missing Firebase App Check token.` A real app token should pass
-App Check and then either authenticate normally or, without an ID token, return
-`Missing Authorization bearer token.` Never print an App Check token.
+It must return `Missing Firebase App Check token.` with the code
+`app-check/missing`. A real app token should pass App Check and then either
+authenticate normally or, without an ID token, return
+`Missing Authorization bearer token.` (`auth/missing-token`). Never print an App
+Check token.
+
+The app never reaches this route without a token: a device that cannot attest
+fails the request locally with `app-check/unavailable` and shows what to do
+about it, so a support report of "Missing Firebase App Check token." now means
+the header was stripped in transit rather than never minted. Client-side
+attestation also retries once with a forced refresh, which absorbs the Play
+Integrity misses seen right after a cold start.
 
 Emergency rollback: set `REQUIRE_APPCHECK=false` in the ignored
 `functions/.env`, deploy only `functions:api`, confirm service recovery, and

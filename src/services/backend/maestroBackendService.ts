@@ -16,6 +16,26 @@ import {
 } from '../../core/security/managedAccessSessionStorage';
 import { firebaseAuthBridgeService } from '../auth/firebaseAuthBridgeService';
 import { maestroFirebaseService } from '../firebase/maestroFirebaseService';
+import { ServiceHttpError } from '../shared/serviceErrors';
+
+/**
+ * Every managed route is behind App Check, so a request that leaves without the
+ * header is a round trip whose only possible answer is 401. Failing here keeps
+ * the reason — the attestation error the device actually hit — attached to a
+ * code the UI can explain, instead of letting the backend's internal wording
+ * ("Missing Firebase App Check token.") become the message a user reads.
+ */
+export const APP_CHECK_UNAVAILABLE_CODE = 'app-check/unavailable';
+
+const requireAppCheckHeader = async (): Promise<Record<string, string>> => {
+  const appCheckToken = await maestroFirebaseService.getAppCheckToken(false);
+  if (appCheckToken) return { 'X-Firebase-AppCheck': appCheckToken };
+  throw new ServiceHttpError(
+    maestroFirebaseService.getAppCheckFailureReason() || 'This device could not obtain a Firebase App Check token.',
+    401,
+    APP_CHECK_UNAVAILABLE_CODE,
+  );
+};
 
 const updateStoredSession = async (updates: {
   billingSummary?: ManagedBillingSummary | null;
@@ -49,9 +69,7 @@ const getOptionalHeaders = async (): Promise<Record<string, string>> => {
       });
     }
   }
-  const appCheckToken = await maestroFirebaseService.getAppCheckToken(false);
-  if (appCheckToken) headers['X-Firebase-AppCheck'] = appCheckToken;
-  return headers;
+  return { ...headers, ...await requireAppCheckHeader() };
 };
 
 const getManagedHeaders = async (): Promise<Record<string, string>> => {
@@ -70,10 +88,7 @@ const getManagedHeaders = async (): Promise<Record<string, string>> => {
       lastSyncedAt: Date.now(),
     });
   }
-  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
-  const appCheckToken = await maestroFirebaseService.getAppCheckToken(false);
-  if (appCheckToken) headers['X-Firebase-AppCheck'] = appCheckToken;
-  return headers;
+  return { Authorization: `Bearer ${token}`, ...await requireAppCheckHeader() };
 };
 
 export const maestroBackendService = createManagedBackendClient({

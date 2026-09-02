@@ -82,6 +82,21 @@ Web attestation uses a domain-restricted reCAPTCHA Enterprise key. Android uses
 Play Integrity with registered signing fingerprints. CI uses a staging-only debug
 token. A debug token is a secret and does not belong in a committed dotenv file.
 
+Rejections carry a stable `code` beside the human-readable `error`, so a client
+can explain the condition instead of showing server prose:
+
+| code | meaning |
+| --- | --- |
+| `app-check/missing` | the request carried no `X-Firebase-AppCheck` header |
+| `app-check/invalid` | the token was present and failed verification |
+| `auth/missing-token` | no `Authorization: Bearer` header on a required route |
+| `auth/invalid-token` | the Firebase ID token failed verification |
+
+Only errors raised through `createHttpError` carry a code; runtime and library
+error codes are never echoed to callers. The client adds `app-check/unavailable`
+for its own side of the same condition: the device could not attest at all, so
+the request is refused before it is sent.
+
 Rate limits are per uid and operation bucket. Account deletion removes current
 rate-limit windows using the same SHA-256 uid/bucket ids as the limiter. Legacy
 collections are cleaned only for backward compatibility.

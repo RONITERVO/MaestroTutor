@@ -12,7 +12,7 @@ import { type AuthContext, applyCors, getOptionalAuthContext, requireAuthContext
 import { appConfig, getJsonBodyLimitBytes } from './config';
 import { adminDb } from './firebase';
 import { generateManagedContent, streamManagedContent, generateManagedMusic, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
-import { getErrorMessage, getHttpStatus } from './http';
+import { getErrorMessage, getHttpErrorCode, getHttpStatus } from './http';
 import { countExpiredReservations, getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
 import type { ManagedRateLimitBucket } from './managedData';
 import { consumeRateLimit } from './rateLimit';
@@ -138,7 +138,10 @@ const asyncRoute = (
     await handler(req, res, auth);
   } catch (error) {
     if (!res.headersSent) {
-      res.status(getHttpStatus(error)).json({ error: getErrorMessage(error) });
+      res.status(getHttpStatus(error)).json({
+        error: getErrorMessage(error),
+        ...(getHttpErrorCode(error) ? { code: getHttpErrorCode(error) } : {}),
+      });
       return;
     }
     if (!res.writableEnded) {
@@ -146,6 +149,7 @@ const asyncRoute = (
         type: 'error',
         message: getErrorMessage(error),
         status: getHttpStatus(error),
+        code: getHttpErrorCode(error),
       })}\n`);
       res.end();
     }

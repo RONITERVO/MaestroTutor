@@ -54,18 +54,27 @@ const getBearerToken = (req: Request): string | null => {
   return match?.[1] || null;
 };
 
+/*
+ * Stable identifiers for the two App Check rejections. The prose is for logs
+ * and curl; clients match on these instead, so a wording change here cannot
+ * silently turn a recognised, explainable failure back into a raw server
+ * string in front of a user.
+ */
+export const APP_CHECK_MISSING_CODE = 'app-check/missing';
+export const APP_CHECK_INVALID_CODE = 'app-check/invalid';
+
 const shouldEnforceAppCheck = (): boolean => appConfig.requireAppCheck;
 
 export const verifyAppCheckIfNeeded = async (req: Request): Promise<void> => {
   if (!shouldEnforceAppCheck()) return;
   const appCheckToken = req.headers['x-firebase-appcheck'];
   if (typeof appCheckToken !== 'string' || !appCheckToken.trim()) {
-    throw createHttpError(401, 'Missing Firebase App Check token.');
+    throw createHttpError(401, 'Missing Firebase App Check token.', APP_CHECK_MISSING_CODE);
   }
   try {
     await adminAppCheck.verifyToken(appCheckToken.trim());
   } catch {
-    throw createHttpError(401, 'Invalid Firebase App Check token.');
+    throw createHttpError(401, 'Invalid Firebase App Check token.', APP_CHECK_INVALID_CODE);
   }
 };
 
@@ -91,7 +100,7 @@ export const getOptionalAuthContext = async (req: Request): Promise<AuthContext 
   try {
     decodedToken = await adminAuth.verifyIdToken(bearerToken, true);
   } catch {
-    throw createHttpError(401, 'Invalid Firebase Authentication token.');
+    throw createHttpError(401, 'Invalid Firebase Authentication token.', 'auth/invalid-token');
   }
 
   return buildAuthContext(decodedToken);
@@ -100,7 +109,7 @@ export const getOptionalAuthContext = async (req: Request): Promise<AuthContext 
 export const requireAuthContext = async (req: Request): Promise<AuthContext> => {
   const auth = await getOptionalAuthContext(req);
   if (!auth) {
-    throw createHttpError(401, 'Missing Authorization bearer token.');
+    throw createHttpError(401, 'Missing Authorization bearer token.', 'auth/missing-token');
   }
   return auth;
 };

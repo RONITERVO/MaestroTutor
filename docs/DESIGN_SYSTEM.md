@@ -156,6 +156,29 @@ When adding or changing a colorized element:
 - Tailwind animations are configured in `index.html`.
 - App utility animations are in `src/app/index.css` (`animate-voice-swap`, `animate-voice-ripple`, `animate-flag-wave`).
 
+## Access Card Layout
+
+The API key gate is one card and stays one card. Every access method it offers
+competes for the same two-control budget the Gemini key path already uses: a
+button that goes and gets something, and the field it lands in.
+
+- No prose on the card. Text belongs inside a button that names its action or
+  inside a field. `OR USE YOUR OWN KEY` is the deliberate exception: it marks
+  the boundary between two access methods and nothing else does that job.
+- Controls that act on a field sit inside it, as icons unless the icon alone
+  would be a guess. Buttons keep words only where the word is the explanation.
+- Anything that does not fit — balances, ledgers, purchases, account deletion,
+  status and error prose — opens from a button in a modal. That button may
+  carry a one-value preview (a balance, an estimated spend), never a sentence.
+- Two icons on the card never mean two different things. The API-key help
+  button owns the question mark; managed access uses its own symbol.
+- The card stays within roughly twice the height of the bare key path. Growing
+  past that means something belongs in a modal, not that the card should grow.
+
+`ApiKeyGate`, `ManagedAccessPanel` and `ManagedAccountModal` implement this;
+`ManagedAccessPanel.test.tsx` pins each state's control count so a later
+addition has to make the same choice deliberately.
+
 ## Legacy Migration
 
 - Legacy key map: `src/features/theme/config/colorRenameMap.ts`.

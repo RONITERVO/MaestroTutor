@@ -680,3 +680,7 @@ export const IconDownload = (props: any) => <svg {...props} fill="none" viewBox=
 export const IconUpload = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>;
 
 export const IconFlag = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V5a2 2 0 0 1 2-2h11l-1.5 4L16 11H5a2 2 0 0 0-2 2" /></svg>;
+
+export const IconArrowPath = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16.023 9.348h4.992V4.356m0 4.992-2.036-2.13A7.5 7.5 0 0 0 6.11 8.16m-2.126 6.492H8.977v4.992m-4.993-4.992 2.036 2.13a7.5 7.5 0 0 0 12.87-.945" /></svg>;
+
+export const IconExclamationTriangle = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m0 3.75h.008v.008H12v-.008ZM10.36 3.591 1.99 18a1.875 1.875 0 0 0 1.64 2.812h16.74A1.875 1.875 0 0 0 22.01 18L13.64 3.59a1.875 1.875 0 0 0-3.28 0Z" /></svg>;
