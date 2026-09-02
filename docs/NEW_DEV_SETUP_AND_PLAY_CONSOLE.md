@@ -132,11 +132,21 @@ Android uses Play Integrity for App Check.
 
 1. In Firebase App Check, select the exact Android app/package.
 2. Register the Play Integrity provider.
-3. Verify the existing release and debug SHA-256 fingerprints are correct.
-4. In Play Console / Google Cloud, accept the Play Integrity/API terms if prompted.
-5. Upload/install a correctly signed internal-track build and verify protected API
+3. In Play Console, open **App signing** and copy both the **App signing key
+   certificate** and **Upload key certificate** SHA-1 and SHA-256 fingerprints.
+   These are separate identities.
+4. From the repository, run `cd android` followed by
+   `.\gradlew.bat signingReport` on Windows (`./gradlew signingReport` on macOS
+   or Linux), then record the debug variant's SHA-1 and SHA-256 fingerprints.
+5. In Firebase project settings, register the Play app-signing, upload and debug
+   SHA-1 fingerprints for native Google sign-in, and all three SHA-256
+   fingerprints for App Check.
+6. Download the refreshed `google-services.json` after adding a SHA-1 fingerprint
+   and replace `android/app/google-services.json` before building.
+7. In Play Console / Google Cloud, accept the Play Integrity/API terms if prompted.
+8. Upload/install a correctly signed internal-track build and verify protected API
    calls succeed.
-6. Confirm a build signed with an unknown certificate fails closed.
+9. Confirm a build signed with an unknown certificate fails closed.
 
 Play Integrity attests the app. It does not enable Stripe checkout or satisfy Google
 Play payment-program rules.

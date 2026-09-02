@@ -25,6 +25,7 @@ let cachedFirebaseApp: FirebaseApp | null = null;
 let cachedFirebaseAuth: Auth | null = null;
 let appCheckInitializationPromise: Promise<boolean> | null = null;
 let hasInitializedAppCheck = false;
+let lastAppCheckFailure: string | null = null;
 
 const isNativeAppCheckPlatform = Capacitor.isNativePlatform() && Capacitor.getPlatform() !== 'web';
 
@@ -90,6 +91,7 @@ const initializeOptionalAppCheck = async (): Promise<boolean> => {
       return true;
     } catch (error) {
       console.error('[firebase] App Check initialization failed.', error);
+      lastAppCheckFailure = error instanceof Error ? error.message : String(error);
       appCheckInitializationPromise = null;
       return false;
     }
@@ -114,13 +116,38 @@ export const maestroFirebaseService = {
 
   getAppCheckToken: async (forceRefresh = false): Promise<string | null> => {
     const isReady = await initializeOptionalAppCheck();
-    if (!isReady) return null;
-    try {
-      const { FirebaseAppCheck } = await import('@capacitor-firebase/app-check');
-      const tokenResult = await FirebaseAppCheck.getToken({ forceRefresh });
-      return tokenResult.token || null;
-    } catch {
+    if (!isReady) {
+      lastAppCheckFailure = lastAppCheckFailure || 'App Check is not available in this build.';
       return null;
     }
+
+    const { FirebaseAppCheck } = await import('@capacitor-firebase/app-check');
+    /*
+     * Play Integrity's first attestation after a cold start regularly fails
+     * while Play services warm up, and a cached token can expire between two
+     * requests. Both look identical from here — an empty token — and both are
+     * cured by asking again with a forced refresh. Without the retry a single
+     * transient miss sends the request without the header and the backend
+     * answers with a bare "Missing Firebase App Check token."
+     */
+    for (const attemptForceRefresh of forceRefresh ? [true] : [false, true]) {
+      try {
+        const tokenResult = await FirebaseAppCheck.getToken({ forceRefresh: attemptForceRefresh });
+        if (tokenResult.token) {
+          lastAppCheckFailure = null;
+          return tokenResult.token;
+        }
+        lastAppCheckFailure = 'App Check returned an empty token.';
+      } catch (error) {
+        lastAppCheckFailure = error instanceof Error ? error.message : String(error);
+      }
+    }
+    return null;
   },
+
+  /**
+   * The reason the most recent attestation failed, for diagnostics and for the
+   * message shown when managed access cannot be reached. Never the token.
+   */
+  getAppCheckFailureReason: (): string | null => lastAppCheckFailure,
 } as const;

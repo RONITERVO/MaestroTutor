@@ -64,6 +64,17 @@ npm run build
 npx cap sync android
 ```
 
+- [ ] Run `npm run verify:release-config`.
+- [ ] If the Play app-signing or upload certificate changed, register its SHA-1
+      and SHA-256 in Firebase and refresh `android/app/google-services.json`
+      before building. An AAB installed by Play is signed differently from a
+      locally installed release APK.
+- [ ] From a Play-installed release (for example, Internal testing) on a
+      physical Android device, tap **Sign in with Google** and confirm the
+      Google activity either asks for an account or returns a previously
+      authorized account. The button must not remain on **Signing in...**, and
+      the subsequent managed-account refresh must pass App Check.
+
 ## 4) Release Signing (One‑Time Setup)
 ```bash
 keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias maestro
@@ -150,6 +161,10 @@ processed securely by Maestro's cloud service and Google Gemini.
 
 ## Common Gotchas
 - Forgot to bump `versionCode` → upload fails
+- Missing Play app-signing SHA-1 → native Google sign-in can work in the local
+  APK but fail in the Play-installed build
+- Missing Play app-signing SHA-256 → Firebase App Check can reject the
+  Play-installed build
 - Forgot `npm run build` before sync → old UI ships
 - Privacy policy missing → review rejection
 - Data Safety or App Access answers copied from an older architecture → review

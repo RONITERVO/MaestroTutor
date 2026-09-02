@@ -131,9 +131,10 @@ these provider controls distinct:
 - Web App Check uses the domain-restricted reCAPTCHA Enterprise key registered to
   the exact Firebase web app. Production domains only belong on the production key;
   staging domains only belong on staging.
-- Android App Check uses Play Integrity with the existing release and debug SHA-256
-  fingerprints. Accepting the Play Integrity/API terms enables attestation; it does
-  not authorize an alternative payment method.
+- Android App Check uses Play Integrity with the Play app-signing, upload and debug
+  SHA-256 fingerprints. The corresponding SHA-1 fingerprints are registered for
+  native Google sign-in. Accepting the Play Integrity/API terms enables attestation;
+  it does not authorize an alternative payment method.
 - Headless CI uses one named staging App Check debug token. It is a secret and must
   never be enabled for production.
 - `REQUIRE_APPCHECK=true` is the normal deployed state. A temporary emergency

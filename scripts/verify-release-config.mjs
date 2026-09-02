@@ -35,6 +35,20 @@ requireText(
     capacitorUpdate.stderr || capacitorUpdate.stdout || capacitorUpdate.error?.message || 'unknown Capacitor error'
   ).trim()}`,
 );
+const capacitorConfigRead = spawnSync(
+  process.execPath,
+  [capacitorCli, 'config', '--json'],
+  {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  },
+);
+requireText(
+  capacitorConfigRead.status === 0,
+  `Capacitor config could not be resolved: ${(
+    capacitorConfigRead.stderr || capacitorConfigRead.stdout || capacitorConfigRead.error?.message || 'unknown Capacitor error'
+  ).trim()}`,
+);
 const gradleExecutable = isWindows ? (process.env.ComSpec || 'cmd.exe') : './gradlew';
 const gradleArgs = isWindows
   ? ['/d', '/s', '/c', 'gradlew.bat :app:processReleaseManifest --no-daemon']
@@ -83,6 +97,8 @@ const [
   officeTextExtraction,
   headlessAttachmentAdapters,
   replySuggestions,
+  googleServices,
+  androidVariables,
 ] = await Promise.all([
   read('package.json'),
   read('functions/package.json'),
@@ -107,11 +123,35 @@ const [
   read('src/core-sdk/chat/officeTextExtraction.ts'),
   read('src/headless/attachmentUploadAdapters.ts'),
   read('src/core-sdk/chat/suggestions.ts'),
+  read('android/app/google-services.json'),
+  read('android/variables.gradle'),
 ]);
 
 const app = JSON.parse(appPackage);
 const functions = JSON.parse(functionsPackage);
+const nativeConfig = capacitorConfigRead.status === 0
+  ? JSON.parse(capacitorConfigRead.stdout).app.extConfig
+  : {};
+const androidOAuthCertificateHashes = JSON.parse(googleServices).client
+  ?.filter(client => (
+    client.client_info?.android_client_info?.package_name === nativeConfig.appId
+  ))
+  .flatMap(client => client.oauth_client || [])
+  .map(client => client.android_info?.certificate_hash?.toLowerCase())
+  .filter(Boolean) || [];
 requireText(app.scripts?.['maestro:rpc'], 'package.json must expose the JSON-RPC harness.');
+requireText(
+  nativeConfig.plugins?.FirebaseAuthentication?.providers?.includes('google.com'),
+  'Packaged Android config must enable the native Google authentication provider.',
+);
+requireText(
+  /^[ \t]*rgcfaIncludeGoogle[ \t]*=[ \t]*true[ \t]*(?:\/\/.*)?$/m.test(androidVariables),
+  'Android Gradle variables must package the native Google authentication SDKs.',
+);
+requireText(
+  androidOAuthCertificateHashes.includes('5a8dcea2d9069adcb8f521e9be28b9611ae53b01'),
+  'google-services.json must include the Google Play app-signing SHA-1 OAuth client.',
+);
 requireText(!functions.dependencies?.googleapis, 'Functions must not restore the retired Google Play verifier dependency.');
 requireText(!functionsIndex.includes('/billing/google-play/verify'), 'Functions must not expose a second purchase grant route.');
 requireText(

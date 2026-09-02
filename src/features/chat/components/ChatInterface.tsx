@@ -27,6 +27,7 @@ import { selectIsLoadingSuggestions, selectIsSpeaking } from '../../../store/sli
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenSubtype } from '../../../core/config/activityTokens';
 import { ALL_LANGUAGES } from '../../../core/config/languages';
 import { getPrimaryCode } from '../../../shared/utils/languageUtils';
+import { describeManagedAccessError } from '../../../shared/utils/managedAccessErrors';
 import AiContentReportModal from './AiContentReportModal';
 import { buildAiContentReportRequest } from '../../../core-sdk/managedAccount';
 import { maestroManagedAccountController } from '../../../services/account/maestroManagedAccountController';
@@ -139,7 +140,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
       setReportConfirmation(t('chat.report.success'));
       window.setTimeout(() => setReportConfirmation(null), 4000);
     } catch (error) {
-      setReportError(error instanceof Error ? error.message : t('chat.report.failed'));
+      setReportError(describeManagedAccessError(error, t, 'chat.report.failed'));
     } finally {
       setIsSubmittingReport(false);
     }

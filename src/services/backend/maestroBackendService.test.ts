@@ -2,11 +2,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   loadManagedAccessSession: vi.fn(),
   saveManagedAccessSession: vi.fn(),
+  getCurrentIdentity: vi.fn(),
+  getAppCheckToken: vi.fn(),
+  getAppCheckFailureReason: vi.fn(),
 }));
 
 vi.mock('../../core/security/managedAccessSessionStorage', () => ({
@@ -15,11 +18,20 @@ vi.mock('../../core/security/managedAccessSessionStorage', () => ({
 }));
 
 vi.mock('../auth/firebaseAuthBridgeService', () => ({
-  firebaseAuthBridgeService: {},
+  firebaseAuthBridgeService: { getCurrentIdentity: mocks.getCurrentIdentity },
 }));
 
 vi.mock('../firebase/maestroFirebaseService', () => ({
-  maestroFirebaseService: {},
+  maestroFirebaseService: {
+    getAppCheckToken: mocks.getAppCheckToken,
+    getAppCheckFailureReason: mocks.getAppCheckFailureReason,
+  },
+}));
+
+vi.mock('../../core/config/integrations', () => ({
+  MAESTRO_INTEGRATION_CONFIG: {
+    backendBaseUrl: 'https://backend.example',
+  },
 }));
 
 import { readManagedGenerationStream } from './maestroBackendService';
@@ -128,5 +140,60 @@ describe('managed generation stream protocol', () => {
     await iterator.return(undefined);
 
     expect(cancel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('App Check preflight', () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.loadManagedAccessSession.mockResolvedValue(managedSession);
+    mocks.saveManagedAccessSession.mockResolvedValue(undefined);
+    mocks.getCurrentIdentity.mockResolvedValue(null);
+    // The client captures a fetch implementation when it is constructed, so the
+    // stub has to be in place before the module is imported below. It also
+    // keeps this suite off the network entirely: a real .env points the backend
+    // base URL at the deployed API.
+    vi.stubGlobal('fetch', fetchMock);
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const importBackendService = async () => (
+    (await import('./maestroBackendService')).maestroBackendService
+  );
+
+  it('refuses a managed request the device cannot attest, keeping the real reason', async () => {
+    mocks.getAppCheckToken.mockResolvedValue(null);
+    mocks.getAppCheckFailureReason.mockReturnValue('Play Integrity is unavailable on this device.');
+    const backend = await importBackendService();
+
+    await expect(backend.getAccountSummary()).rejects.toMatchObject({
+      status: 401,
+      code: 'app-check/unavailable',
+      message: 'Play Integrity is unavailable on this device.',
+    });
+    // A request without the header can only come back 401, so it never leaves.
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('sends the attestation header once the device can produce one', async () => {
+    mocks.getAppCheckToken.mockResolvedValue('attestation-jwt');
+    fetchMock.mockResolvedValue(new Response(
+      JSON.stringify({ account: { billingSummary: null, entitlements: [] } }),
+      { status: 200 },
+    ));
+    const backend = await importBackendService();
+
+    await backend.getAccountSummary();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const headers = new Headers(fetchMock.mock.calls[0][1].headers);
+    expect(headers.get('X-Firebase-AppCheck')).toBe('attestation-jwt');
+    expect(headers.get('Authorization')).toBe('Bearer token');
   });
 });

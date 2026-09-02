@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "47084692464-rrkqgb1tgkrognpsbpb6bvsu1km74cq8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ronitervo.maestrotutor",
+            "certificate_hash": "5a8dcea2d9069adcb8f521e9be28b9611ae53b01"
+          }
+        },
+        {
           "client_id": "47084692464-a17vgic5l82t23eks2i88vdpjlej03k1.apps.googleusercontent.com",
           "client_type": 3
         }

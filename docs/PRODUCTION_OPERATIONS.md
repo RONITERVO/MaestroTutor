@@ -58,12 +58,20 @@ spending managed credits.
 - The live web origin has minted a token and passed it through browser CORS to
   the backend. A request without App Check is rejected before Firebase Auth.
 
-Registered Android signing fingerprints:
+Registered Android signing fingerprints. Google Play re-signs an uploaded AAB,
+so the Play app-signing key is a separate production identity from the upload
+key used for locally installed release APKs:
 
 | Build | SHA-1 | SHA-256 |
 |---|---|---|
-| Release | `E0:BF:75:8C:4F:98:25:6D:FC:36:37:AE:02:6A:65:AD:FD:25:80:48` | `B1:DD:E2:0B:85:5C:1E:EE:62:63:7A:A7:C2:0C:63:DE:2C:A0:20:AA:FB:2B:BC:01:44:5C:00:E5:48:11:41:02` |
+| Google Play app signing | `5A:8D:CE:A2:D9:06:9A:DC:B8:F5:21:E9:BE:28:B9:61:1A:E5:3B:01` | `68:6E:7F:8C:28:CB:2A:D3:CB:91:12:4A:08:6C:32:2D:26:50:FD:C4:DA:E6:66:65:13:F7:3F:60:C6:B6:A9:DF` |
+| Upload / local release APK | `E0:BF:75:8C:4F:98:25:6D:FC:36:37:AE:02:6A:65:AD:FD:25:80:48` | `B1:DD:E2:0B:85:5C:1E:EE:62:63:7A:A7:C2:0C:63:DE:2C:A0:20:AA:FB:2B:BC:01:44:5C:00:E5:48:11:41:02` |
 | Debug | `78:22:03:9E:20:50:86:68:21:40:24:31:B4:B9:F6:C1:07:94:1E:56` | `06:72:30:B4:E7:1F:3F:DE:79:54:26:45:D9:4E:35:91:20:9A:02:34:2B:9F:F7:3E:1B:8B:C9:E2:DB:D3:2E:8F` |
+
+All three SHA-1 fingerprints must remain registered for native Google sign-in.
+All three SHA-256 fingerprints must remain registered for Android App Check.
+After adding a SHA-1 fingerprint, download the updated `google-services.json`
+so the matching Android OAuth client ships in the next build.
 
 Official references: [web Enterprise App Check](https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider),
 [Android Play Integrity App Check](https://firebase.google.com/docs/app-check/android/play-integrity-provider),
@@ -95,10 +103,18 @@ Official reference: [Stripe webhooks](https://docs.stripe.com/webhooks).
 ### Android distribution and Play Integrity
 
 Google Play is used for distribution and Play Integrity App Check, not for
-managed-credit purchases. The release and debug SHA-256 fingerprints above are
-registered and the Play Integrity/API terms are accepted. Revalidate attestation
-with a signed internal-track build after changing package, certificate or Firebase
-app configuration.
+managed-credit purchases. The Play app-signing, upload and debug SHA-256
+fingerprints above are registered and the Play Integrity/API terms are accepted.
+Revalidate attestation with a signed internal-track build after changing package,
+certificate or Firebase app configuration.
+
+Native Google sign-in deliberately uses the authentication plugin's
+activity-based selector instead of Android Credential Manager. On the tested
+Honor/MagicOS device, Credential Manager resumed its `CredentialChooserActivity`
+without attaching a visible window or transferring focus, leaving the client in
+`Signing in...` indefinitely. The activity-based flow completed Firebase sign-in.
+Android can immediately reuse a previously authorized Google account; the system
+only keeps an account chooser visible when user selection is required.
 
 The old Android Publisher billing-verifier service accounts and API permissions
 are not required by the current application. They are legacy cloud-access cleanup,
@@ -363,8 +379,11 @@ When registering or rotating the web key:
 5. Only then keep `REQUIRE_APPCHECK=true` and deploy `api`.
 
 For Android, register Play Integrity against the Firebase Android app and keep
-both release and debug SHA-256 fingerprints current. If the signing certificate
-changes, register the new fingerprint before publishing that build.
+the Play app-signing, upload and debug SHA-256 fingerprints current. Keep their
+SHA-1 fingerprints current for native Google sign-in. If the Play app-signing,
+upload or debug certificate changes, register its new SHA-1 and SHA-256 before
+the next affected build or publication, then replace
+`android/app/google-services.json` with the newly downloaded Firebase config.
 
 Enforcement check without a token:
 
@@ -373,9 +392,18 @@ curl.exe -sS "https://europe-west1-chatwithmaestro.cloudfunctions.net/api/auth/s
   -H "Origin: https://chatwithmaestro.com"
 ```
 
-It must return `Missing Firebase App Check token.` A real app token should pass
-App Check and then either authenticate normally or, without an ID token, return
-`Missing Authorization bearer token.` Never print an App Check token.
+It must return `Missing Firebase App Check token.` with the code
+`app-check/missing`. A real app token should pass App Check and then either
+authenticate normally or, without an ID token, return
+`Missing Authorization bearer token.` (`auth/missing-token`). Never print an App
+Check token.
+
+The app never reaches this route without a token: a device that cannot attest
+fails the request locally with `app-check/unavailable` and shows what to do
+about it, so a support report of "Missing Firebase App Check token." now means
+the header was stripped in transit rather than never minted. Client-side
+attestation also retries once with a forced refresh, which absorbs the Play
+Integrity misses seen right after a cold start.
 
 Emergency rollback: set `REQUIRE_APPCHECK=false` in the ignored
 `functions/.env`, deploy only `functions:api`, confirm service recovery, and

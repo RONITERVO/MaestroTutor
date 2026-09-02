@@ -5,7 +5,7 @@ This is the canonical color and UI styling reference for contributors.
 ## Overview
 
 - Last updated: 2026-09-02
-- Active color tokens: 314
+- Active color tokens: 316
 - Token groups: 35
 - Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
@@ -155,6 +155,29 @@ When adding or changing a colorized element:
 
 - Tailwind animations are configured in `index.html`.
 - App utility animations are in `src/app/index.css` (`animate-voice-swap`, `animate-voice-ripple`, `animate-flag-wave`).
+
+## Access Card Layout
+
+The API key gate is one card and stays one card. Every access method it offers
+competes for the same two-control budget the Gemini key path already uses: a
+button that goes and gets something, and the field it lands in.
+
+- No prose on the card. Text belongs inside a button that names its action or
+  inside a field. `OR USE YOUR OWN KEY` is the deliberate exception: it marks
+  the boundary between two access methods and nothing else does that job.
+- Controls that act on a field sit inside it, as icons unless the icon alone
+  would be a guess. Buttons keep words only where the word is the explanation.
+- Anything that does not fit — balances, ledgers, purchases, account deletion,
+  status and error prose — opens from a button in a modal. That button may
+  carry a one-value preview (a balance, an estimated spend), never a sentence.
+- Two icons on the card never mean two different things. The API-key help
+  button owns the question mark; managed access uses its own symbol.
+- The card stays within roughly twice the height of the bare key path. Growing
+  past that means something belongs in a modal, not that the card should grow.
+
+`ApiKeyGate`, `ManagedAccessPanel` and `ManagedAccountModal` implement this;
+`ManagedAccessPanel.test.tsx` pins each state's control count so a later
+addition has to make the same choice deliberately.
 
 ## Legacy Migration
 
@@ -390,6 +413,8 @@ Setup screen for API key configuration
 | `--gate-btn-text` | `40 8% 97%` | Setup Action Text | Action button text in setup panel |
 | `--gate-error-text` | `220 5% 42%` | Setup Error Text | Error message text in setup panel |
 | `--gate-accent` | `220 6% 28%` | Setup Icon Accent | Accent color for icons in setup panel |
+| `--gate-ok-border` | `120 40% 60%` | Managed Account Ready Border | Border for a connected managed account |
+| `--gate-error-border` | `0 60% 60%` | Managed Account Error Border | Border for a managed account that needs attention |
 | `--gate-disclaimer-text` | `0 0% 100% / 0.55` | Disclaimer Text | Fine print under the API key form |
 | `--gate-disclaimer-link-hover` | `0 0% 100% / 0.75` | Disclaimer Link (Hover) | A disclaimer link while pointed at |
 | `--gate-disclaimer-underline` | `0 0% 100% / 0.25` | Disclaimer Link Underline | Underline beneath disclaimer links |

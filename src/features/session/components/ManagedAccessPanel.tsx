@@ -1,6 +1,18 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+/**
+ * Managed access, compressed to one row of the API-key card.
+ *
+ * The card's shape is its argument: fetch a key, paste a key. Managed access is
+ * the alternative to that, so it gets the same weight — one control, matching
+ * the row below it, with the balance carried as a preview on the button that
+ * opens the rest. Everything wordy (the account table, purchases, sign-out,
+ * deletion, and the notices explaining them) lives in ManagedAccountModal.
+ *
+ * The Stripe listeners stay here rather than in the modal: a checkout that
+ * returns while the modal is closed must still reconcile.
+ */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
@@ -9,25 +21,16 @@ import { maestroPaymentsService } from '../../../services/payments/maestroPaymen
 import { maestroManagedAccountController } from '../../../services/account/maestroManagedAccountController';
 import { maestroBackendService } from '../../../services/backend/maestroBackendService';
 import type { ManagedAccessSession } from '../../../core/contracts/backend';
+import { IconArrowPath, IconCreditCard, IconExclamationTriangle } from '../../../shared/ui/Icons';
+import { describeManagedAccessError } from '../../../shared/utils/managedAccessErrors';
 import ManagedAccountActivityModal from './ManagedAccountActivityModal';
+import ManagedAccountModal, { formatCredits } from './ManagedAccountModal';
 
 interface ManagedAccessPanelProps {
   session: ManagedAccessSession | null;
 }
 
-const formatCredits = (value: number): string => (
-  value.toLocaleString(undefined, {
-    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
-);
-
-const formatUsd = (value: number): string => (
-  value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-);
+const ROW_BUTTON_CLASS = 'inline-flex h-8 items-center justify-center text-gate-muted-text transition-colors hover:bg-gate-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent disabled:opacity-60 sketchy-border-thin';
 
 const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const { t } = useAppTranslations();
@@ -45,10 +48,21 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const isSignedIn = Boolean(session?.firebaseIdToken);
+
+  /**
+   * The card has no room for a reason, so every failure opens the one surface
+   * that can carry one. Without this an error would only tint an icon.
+   */
+  const reportError = useCallback((error: unknown, fallbackKey: string) => {
+    setErrorMessage(describeManagedAccessError(error, t, fallbackKey));
+    setIsDetailsOpen(true);
+  }, [t]);
 
   const refreshAccount = useCallback(async () => {
     if (!session?.firebaseIdToken) return;
@@ -58,11 +72,11 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     try {
       await maestroManagedAccountController.refreshAccount();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t('managedAccess.refreshFailed'));
+      reportError(error, 'managedAccess.refreshFailed');
     } finally {
       setIsRefreshing(false);
     }
-  }, [session?.firebaseIdToken, t]);
+  }, [reportError, session?.firebaseIdToken]);
   const refreshAccountRef = useRef(refreshAccount);
   const translationRef = useRef(t);
   const activeNativeCheckoutRef = useRef(false);
@@ -87,6 +101,8 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       activeNativeCheckoutRef.current = false;
       setIsPurchasing(false);
       setStatusMessage(translationRef.current('managedAccess.checkoutReturn'));
+      // Reconciliation takes a few seconds and the user just paid: show it.
+      setIsDetailsOpen(true);
       stripeReturnPollRef.current?.cancel();
       stripeReturnPollRef.current = maestroManagedAccountController.startStripeReturnPolling({
         attempts: 15,
@@ -125,11 +141,11 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     try {
       await maestroManagedAccountController.signIn();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t('managedAccess.signInFailed'));
+      reportError(error, 'managedAccess.signInFailed');
     } finally {
       setIsSigningIn(false);
     }
-  }, [refreshAccount, t]);
+  }, [reportError]);
 
   const handleSignOut = useCallback(async () => {
     setErrorMessage(null);
@@ -137,9 +153,9 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     try {
       await maestroManagedAccountController.signOut();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t('managedAccess.signOutFailed'));
+      reportError(error, 'managedAccess.signOutFailed');
     }
-  }, [t]);
+  }, [reportError]);
 
   /**
    * Every enabled platform creates the same Stripe Checkout session. Android
@@ -167,9 +183,9 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     } catch (error) {
       activeNativeCheckoutRef.current = false;
       setIsPurchasing(false);
-      setErrorMessage(error instanceof Error ? error.message : t('managedAccess.purchaseFailed'));
+      reportError(error, 'managedAccess.purchaseFailed');
     }
-  }, [nativeExternalCheckoutEnabled, primaryPackId, session, t]);
+  }, [nativeExternalCheckoutEnabled, primaryPackId, reportError, session, t]);
 
   /*
    * Coming back from Stripe, the credits may not have landed yet: the webhook
@@ -188,6 +204,8 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
 
     setStatusMessage(t('managedAccess.checkoutComplete') || 'Payment received. Adding your credits…');
+    // The redirect reloaded the page, so nothing is open to report progress in.
+    setIsDetailsOpen(true);
     const poll = maestroManagedAccountController.startStripeReturnPolling({
       attempts: 5,
       intervalMs: 2000,
@@ -225,169 +243,115 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
       setIsDeleteConfirmOpen(false);
       setStatusMessage(t('managedAccess.deleteSuccess'));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t('managedAccess.deleteFailed'));
+      reportError(error, 'managedAccess.deleteFailed');
     } finally {
       setIsDeletingAccount(false);
     }
-  }, [deleteConfirmationText, session?.firebaseIdToken, t]);
+  }, [deleteConfirmationText, reportError, session, t]);
+
+  const availableCredits = session?.billingSummary.availableCredits || 0;
+  const detailsLabel = isSignedIn
+    ? t('managedAccess.accountAction', {
+      account: session?.user.email || '',
+      credits: `${formatCredits(availableCredits)} ${t('managedAccess.creditsUnit')}`,
+    })
+    : t('managedAccess.detailsAction');
+  const DetailsIcon = errorMessage ? IconExclamationTriangle : IconCreditCard;
 
   return (
-    <section className="bg-gate-input-bg/70 p-4 text-sm text-gate-text space-y-3 sketchy-border-thin">
-      <div className="space-y-1">
-        <div className="font-medium text-gate-text font-sketch">{t('managedAccess.title')}</div>
-        <p className="text-gate-muted-text">{t('managedAccess.description')}</p>
-      </div>
-
-      <div className="grid gap-2 text-xs sm:text-sm">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-gate-muted-text">{t('managedAccess.statusLabel')}</span>
-          <span className="font-medium">{session?.user.email || t('managedAccess.notSignedIn')}</span>
+    <div className="space-y-3">
+      {isSignedIn ? (
+        <div
+          className={`flex min-h-12 w-full items-center gap-1 bg-gate-input-bg/75 py-2 pl-4 pr-2 sketchy-border-thin ${errorMessage ? 'border-gate-error-border' : 'border-gate-ok-border'}`}
+        >
+          <span className="min-w-0 flex-1 truncate text-sm text-gate-text">{session?.user.email}</span>
+          <button
+            type="button"
+            onClick={() => void refreshAccount()}
+            disabled={isRefreshing}
+            aria-label={t('managedAccess.refresh')}
+            title={t('managedAccess.refresh')}
+            className={`${ROW_BUTTON_CLASS} w-8`}
+          >
+            <IconArrowPath className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsDetailsOpen(true)}
+            aria-label={detailsLabel}
+            title={detailsLabel}
+            className={`${ROW_BUTTON_CLASS} gap-1 px-2 text-xs ${errorMessage ? 'text-notice-error-text' : ''}`}
+          >
+            <DetailsIcon className="h-3.5 w-3.5" />
+            <span>{formatCredits(availableCredits)}</span>
+          </button>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-gate-muted-text">{t('managedAccess.balanceLabel')}</span>
-          <span className="font-medium">
-            {formatCredits(session?.billingSummary.availableCredits || 0)} {t('managedAccess.creditsUnit')}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-gate-muted-text">{t('managedAccess.spentLabel')}</span>
-          <span className="font-medium">
-            {formatCredits(session?.billingSummary.lifetimeSpentCredits || 0)} {t('managedAccess.creditsUnit')}
-            {' / $'}
-            {formatUsd(session?.billingSummary.lifetimeSpentUsd || 0)}
-          </span>
-        </div>
-      </div>
-
-      {statusMessage && (
-        <div className="rounded-md border border-notice-ok-border bg-notice-ok-bg px-3 py-2 text-xs text-notice-ok-text">
-          {statusMessage}
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="rounded-md border border-notice-error-border bg-notice-error-bg px-3 py-2 text-xs text-notice-error-text">
-          {errorMessage}
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {!session?.firebaseIdToken ? (
+      ) : (
+        <div className="flex items-stretch gap-2">
           <button
             type="button"
             onClick={() => void handleSignIn()}
             disabled={isSigningIn}
-            className="bg-gate-btn-bg px-3 py-2 text-gate-btn-text hover:bg-gate-btn-bg/80 disabled:opacity-60 sketchy-border-thin"
+            className="min-h-12 flex-1 bg-gate-btn-bg px-4 py-3 text-left text-sm font-medium text-gate-btn-text hover:bg-gate-btn-bg/80 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
           >
             {isSigningIn ? t('managedAccess.signingIn') : t('managedAccess.signIn')}
           </button>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => void refreshAccount()}
-              disabled={isRefreshing}
-              className="px-3 py-2 text-gate-text hover:bg-gate-bg disabled:opacity-60 sketchy-border-thin"
-            >
-              {isRefreshing ? t('managedAccess.refreshing') : t('managedAccess.refresh')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsActivityOpen(true)}
-              className="px-3 py-2 text-gate-text hover:bg-gate-bg focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
-            >
-              {t('managedAccess.activityAction')}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleSignOut()}
-              className="px-3 py-2 text-gate-text hover:bg-gate-bg sketchy-border-thin"
-            >
-              {t('managedAccess.signOut')}
-            </button>
-          </>
-        )}
-
-        {purchasingAvailable ? (
-          <>
-            <button
-              type="button"
-              onClick={() => void handlePurchase()}
-              disabled={!session?.firebaseIdToken || isPurchasing || !primaryPackId}
-              className="bg-gate-btn-bg px-3 py-2 text-gate-btn-text hover:bg-gate-btn-bg/80 disabled:opacity-60 sketchy-border-thin"
-            >
-              {isPurchasing ? t('managedAccess.purchasing') : t('managedAccess.buyCredits')}
-            </button>
-          </>
-        ) : (
-          <div className="text-xs text-gate-muted-text">{t('managedAccess.androidOnly')}</div>
-        )}
-      </div>
-
-      <div className="text-xs text-gate-muted-text space-y-1">
-        <p>{t('managedAccess.keepByok')}</p>
-        <p>{t('managedAccess.billingNote')}</p>
-      </div>
-
-      {session?.firebaseIdToken && (
-        <div className="rounded-md border border-danger-zone-border bg-danger-zone-bg px-3 py-3 space-y-3">
-          <div className="space-y-1">
-            <div className="font-medium text-danger-zone-text">{t('managedAccess.deleteTitle')}</div>
-            <p className="text-xs text-danger-zone-text/80">{t('managedAccess.deleteDescription')}</p>
-          </div>
-
-          {!isDeleteConfirmOpen ? (
-            <button
-              type="button"
-              onClick={() => {
-                setStatusMessage(null);
-                setErrorMessage(null);
-                setIsDeleteConfirmOpen(true);
-              }}
-              className="px-3 py-2 text-danger-zone-text hover:bg-danger-ghost-hover sketchy-border-thin"
-            >
-              {t('managedAccess.deleteAction')}
-            </button>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-xs text-danger-zone-text/80">{t('managedAccess.deleteConfirmHint')}</p>
-              <input
-                type="text"
-                value={deleteConfirmationText}
-                onChange={(event) => setDeleteConfirmationText(event.target.value)}
-                placeholder="DELETE"
-                className="w-full px-3 py-2 bg-danger-input-bg text-base text-gate-text border border-danger-input-border rounded-none focus:outline-none focus:ring-1 focus:ring-danger-input-ring sm:text-sm"
-              />
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeleteConfirmationText('');
-                    setIsDeleteConfirmOpen(false);
-                    setErrorMessage(null);
-                  }}
-                  className="px-3 py-2 text-gate-text hover:bg-gate-bg sketchy-border-thin"
-                >
-                  {t('managedAccess.deleteCancel')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleDeleteManagedAccount()}
-                  disabled={isDeletingAccount || deleteConfirmationText.trim().toUpperCase() !== 'DELETE'}
-                  className="px-3 py-2 bg-danger-btn-bg text-danger-btn-text hover:bg-danger-btn-hover disabled:opacity-60 sketchy-border-thin"
-                >
-                  {isDeletingAccount ? t('managedAccess.deleting') : t('managedAccess.deleteConfirm')}
-                </button>
-              </div>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => setIsDetailsOpen(true)}
+            aria-label={detailsLabel}
+            title={detailsLabel}
+            className={`min-h-12 w-12 shrink-0 items-center justify-center bg-gate-bg text-gate-muted-text transition-colors hover:bg-gate-input-bg hover:text-gate-text focus:outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin inline-flex ${errorMessage ? 'text-notice-error-text' : ''}`}
+          >
+            {/*
+              * A credit card, not a question mark: the API-key field below has
+              * its own help button, and two identical icons on one card would
+              * be two different explanations behind the same symbol.
+              */}
+            <DetailsIcon className="h-5 w-5" />
+          </button>
         </div>
       )}
+
+      <ManagedAccountModal
+        isOpen={isDetailsOpen}
+        session={session}
+        statusMessage={statusMessage}
+        errorMessage={errorMessage}
+        isSigningIn={isSigningIn}
+        isRefreshing={isRefreshing}
+        isPurchasing={isPurchasing}
+        isDeletingAccount={isDeletingAccount}
+        isDeleteConfirmOpen={isDeleteConfirmOpen}
+        purchasingAvailable={purchasingAvailable}
+        deleteConfirmationText={deleteConfirmationText}
+        onClose={() => setIsDetailsOpen(false)}
+        onSignIn={() => void handleSignIn()}
+        onSignOut={() => void handleSignOut()}
+        onRefresh={() => void refreshAccount()}
+        onPurchase={() => void handlePurchase()}
+        onOpenActivity={() => {
+          setIsDetailsOpen(false);
+          setIsActivityOpen(true);
+        }}
+        onOpenDeleteConfirm={() => {
+          setStatusMessage(null);
+          setErrorMessage(null);
+          setIsDeleteConfirmOpen(true);
+        }}
+        onCancelDelete={() => {
+          setDeleteConfirmationText('');
+          setIsDeleteConfirmOpen(false);
+          setErrorMessage(null);
+        }}
+        onDeleteConfirmationTextChange={setDeleteConfirmationText}
+        onDeleteAccount={() => void handleDeleteManagedAccount()}
+      />
       <ManagedAccountActivityModal
         isOpen={isActivityOpen}
         onClose={() => setIsActivityOpen(false)}
       />
-    </section>
+    </div>
   );
 };
 
