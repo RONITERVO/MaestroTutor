@@ -42,10 +42,10 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-debug-btn-bg shadow-2xl z-[100] flex flex-col border-l border-line-border font-mono text-sm">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-debug-panel-bg shadow-2xl z-[100] flex flex-col border-l border-line-border font-mono text-sm">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 pb-3 bg-debug-btn-bg/90 border-b border-line-border"
+        className="flex items-center justify-between px-4 pb-3 bg-debug-header-bg border-b border-line-border"
         style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}
       >
         <h2 className="text-debug-btn-text font-semibold flex items-center gap-2">
@@ -55,7 +55,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           <button
             onClick={handleClearUploads}
             disabled={isClearingUploads}
-            className="p-1.5 text-debug-btn-muted hover:text-debug-error-alt-text hover:bg-debug-btn-bg/70 rounded transition-colors disabled:cursor-wait disabled:opacity-50"
+            className="p-1.5 text-debug-btn-muted hover:text-debug-error-alt-text hover:bg-debug-row-hover rounded transition-colors disabled:cursor-wait disabled:opacity-50"
             title={t('debugLog.clearUploads') || 'Delete all Gemini uploads for the current API key'}
             aria-label={t('debugLog.clearUploads') || 'Delete all Gemini uploads for the current API key'}
           >
@@ -63,14 +63,14 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           </button>
           <button
             onClick={handleClear}
-            className="p-1.5 text-debug-btn-muted hover:text-correction-pen hover:bg-debug-btn-bg/70 rounded transition-colors"
+            className="p-1.5 text-debug-btn-muted hover:text-correction-pen hover:bg-debug-row-hover rounded transition-colors"
             title={t('debugLog.clearLogs') || 'Clear logs'}
           >
             <IconTrash className="w-4 h-4" />
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 text-debug-btn-muted hover:text-debug-btn-text hover:bg-debug-btn-bg/70 rounded transition-colors"
+            className="p-1.5 text-debug-btn-muted hover:text-debug-btn-text hover:bg-debug-row-hover rounded transition-colors"
             title={t('debugLog.close') || 'Close'}
           >
             <IconXMark className="w-5 h-5" />
@@ -79,7 +79,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
       </div>
 
       {/* Log List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-debug-btn-bg">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-debug-panel-bg">
         {logs.length === 0 && (
           <div className="text-debug-btn-muted text-center py-10 italic">
             {t('debugLog.noTraffic') || 'No traffic recorded yet.'}
@@ -94,7 +94,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           return (
             <div
               key={log.id}
-              className={`rounded border ${isError ? 'border-debug-error-border bg-debug-error-bg' : 'border-line-border bg-debug-btn-bg/70'} overflow-hidden transition-colors`}
+              className={`rounded border ${isError ? 'border-debug-error-border bg-debug-error-bg' : 'border-line-border bg-debug-card-bg'} overflow-hidden transition-colors`}
             >
               <div
                 className="px-3 py-2 cursor-pointer flex items-center justify-between hover:bg-debug-row-hover select-none"

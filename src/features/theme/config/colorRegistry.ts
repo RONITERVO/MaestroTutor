@@ -555,6 +555,9 @@ export const COLOR_GROUPS: ColorGroup[] = [
     groupDescription: 'The developer traffic log panel',
     collapsedByDefault: true,
     colors: [
+      { cssVar: 'debug-panel-bg', friendlyName: 'Debug Panel Background', description: 'Backdrop of the traffic log sheet' },
+      { cssVar: 'debug-header-bg', friendlyName: 'Debug Panel Header', description: 'Header bar of the traffic log sheet' },
+      { cssVar: 'debug-card-bg', friendlyName: 'Debug Log Card', description: 'Background of a single request row' },
       { cssVar: 'debug-ok-text', friendlyName: 'Debug Success Text', description: 'Timing and success markers in the traffic log' },
       { cssVar: 'debug-ok-payload-text', friendlyName: 'Debug Response Text', description: 'Body of a successful response' },
       { cssVar: 'debug-error-text', friendlyName: 'Debug Error Text', description: 'Error markers in the traffic log' },

@@ -371,12 +371,4 @@ export const plTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "Zapisz jako preset",
   "themeCustomizer.title": "Malowanie kolorów",
   "header.aiAccessRequired": "Wymagany dostęp do AI",
-  "themeGallery.title": "Galeria motywów",
-  "themeGallery.close": "Zamknij",
-  "themeGallery.included": "Bezpłatny",
-  "themeGallery.apply": "Zastosuj",
-  "themeGallery.includedDescription": "Dołączony motyw kolorystyczny",
-  "themeGallery.footerNote": "Każdy motyw kolorystyczny jest dołączony i pozostanie bezpłatny.",
-  "themeCustomizer.galleryTitle": "Galeria motywów",
-  "themeCustomizer.galleryDescription": "Przeglądaj dołączone motywy kolorystyczne",
 };

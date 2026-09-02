@@ -367,6 +367,9 @@ export const ORIGINAL_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '220 30% 20%',
+  'debug-header-bg': '220 30% 20%',
+  'debug-card-bg': '220 30% 20%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -725,6 +728,9 @@ export const OCEAN_BLUE_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '210 42% 20%',
+  'debug-header-bg': '210 42% 20%',
+  'debug-card-bg': '210 42% 20%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -1079,6 +1085,9 @@ export const SUNSET_GOLD_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '18 44% 20%',
+  'debug-header-bg': '18 44% 20%',
+  'debug-card-bg': '18 44% 20%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -1433,6 +1442,9 @@ export const DARK_NEON_COLORS: Record<string, string> = {
   'danger-input-ring': '0 78% 60%',
 
   // Debug Log
+  'debug-panel-bg': '230 22% 14%',
+  'debug-header-bg': '230 22% 14%',
+  'debug-card-bg': '230 22% 14%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -1765,6 +1777,9 @@ export const SCHOLAR_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '247 29% 20%',
+  'debug-header-bg': '247 29% 20%',
+  'debug-card-bg': '247 29% 20%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -2152,6 +2167,9 @@ export const PURE_LIGHT_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '0 0% 92%',
+  'debug-header-bg': '0 0% 92%',
+  'debug-card-bg': '0 0% 92%',
   'debug-ok-text': '142 62% 30%',
   'debug-ok-payload-text': '142 55% 26%',
   'debug-error-text': '0 72% 42%',
@@ -2540,6 +2558,9 @@ export const OBSIDIAN_COLORS: Record<string, string> = {
   'danger-input-ring': '0 78% 60%',
 
   // Debug Log
+  'debug-panel-bg': '40 8% 85%',
+  'debug-header-bg': '40 8% 85%',
+  'debug-card-bg': '40 8% 85%',
   'debug-ok-text': '142 62% 30%',
   'debug-ok-payload-text': '142 55% 26%',
   'debug-error-text': '0 72% 42%',
@@ -2894,6 +2915,9 @@ export const FOREST_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '90 25% 20%',
+  'debug-header-bg': '90 25% 20%',
+  'debug-card-bg': '90 25% 20%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -3248,6 +3272,9 @@ export const LAVENDER_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '262 52% 24%',
+  'debug-header-bg': '262 52% 24%',
+  'debug-card-bg': '262 52% 24%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -3602,6 +3629,9 @@ export const SPECTRUM_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '217 60% 26%',
+  'debug-header-bg': '217 60% 26%',
+  'debug-card-bg': '217 60% 26%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',
@@ -3963,6 +3993,9 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'danger-input-ring': '0 91% 71%',
 
   // Debug Log
+  'debug-panel-bg': '220 8% 14%',
+  'debug-header-bg': '220 8% 14%',
+  'debug-card-bg': '220 8% 14%',
   'debug-ok-text': '142 69% 58%',
   'debug-ok-payload-text': '142 77% 73%',
   'debug-error-text': '0 91% 71%',

@@ -5,7 +5,7 @@ This is the canonical color and UI styling reference for contributors.
 ## Overview
 
 - Last updated: 2026-09-02
-- Active color tokens: 306
+- Active color tokens: 309
 - Token groups: 35
 - Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
@@ -22,6 +22,7 @@ This is the canonical color and UI styling reference for contributors.
 - If a mode changes meaningfully (chat mode vs suggestion mode, native vs target, idle vs active), use mode-specific tokens.
 - State-specific styling needs state-specific tokens (`-hover`, `-ring`, `-focus`, `-spinner`, `-glow`, etc.) when that state should be independently themeable.
 - New UI is not complete until token wiring is done across all token source files.
+- A token that must keep its fill in the Clear themes has to be listed in `transparentTheme.ts`; everything with a `-bg` name goes transparent by default.
 
 ## Naming Convention
 
@@ -70,6 +71,36 @@ Writes to the DOM all go through `applyTokenValue` / `clearTokenValue` in
 `src/features/theme/utils/applyTokenValue.ts`, so channels and alpha can never
 get out of step. The grammar itself lives in `utils/tokenValue.ts`.
 
+## Theme Variants
+
+Every included theme ships twice: a **Clear** variant and the **Solid** original.
+Clear drops the fills so the sketch outlines carry the design, and **Clear
+Graphite is the app default**. Both are listed in the theme customizer; there is
+no separate gallery, and every theme is free.
+
+Only the solid palettes are written by hand, in `themeColors.ts`. The Clear
+variants are derived by `makeTransparentPalette` in `config/transparentTheme.ts`,
+so a new token gets a sensible clear value in all eleven themes without anyone
+touching a palette. Two rules make that safe:
+
+- **Some fills stay.** `KEEP_FILLED` and `UNTOUCHED_GROUPS` in that file list
+  what a clear theme must not hollow out - the Maestro flag, the translation
+  highlight, the audio player's controls, the API key gate, the traffic log's
+  header and cards, recording and live state, destructive buttons, and anything
+  drawn over photos, video or a mini-game canvas. The traffic log keeps its
+  backdrop see-through and its header and cards solid, which is why it has
+  `debug-panel-bg` separate from `debug-header-bg` and `debug-card-bg`.
+- **Text follows its surface.** Once a fill goes, whatever sat on it is read
+  against the page instead. Graphite's user bubble is dark with near-white text;
+  drop the bubble and that text would land on near-white paper. Every foreground
+  whose surface went clear is re-checked with `utils/contrast.ts` and walked to a
+  legible lightness, keeping its hue. `transparentTheme.test.ts` fails if any
+  variant leaves a foreground below 4.5:1 for text or 3:1 for a UI mark.
+
+Hover fills become a faint wash rather than disappearing, so the feedback
+survives. To change what a clear theme does, edit the rules in
+`transparentTheme.ts` - never a generated palette.
+
 ## Required Contributor Workflow
 
 When adding or changing a colorized element:
@@ -82,6 +113,9 @@ When adding or changing a colorized element:
 
 ## Recent Token Isolation Updates (2026-09-02)
 
+- Clear theme variants: every theme now ships a fill-less Clear variant, and Clear Graphite is the app default. See [Theme Variants](#theme-variants).
+- Traffic log surfaces split so its backdrop can go see-through while the header and cards stay readable: `debug-panel-bg`, `debug-header-bg`, `debug-card-bg`.
+- The theme gallery sheet was removed; the customizer lists every included theme directly.
 - Per-token opacity: every token now carries an alpha the user can set, composing with developer `/50` modifiers. See [Opacity](#opacity).
 - Overlay scrims isolated: `scrim-modal`, `scrim-gate`, `scrim-panel`, `scrim-busy`.
 - Media overlay isolated: `media-letterbox`, `media-overlay-icon`, `media-overlay-focus`, `media-overlay-shadow`, `media-chip-bg`, `media-chip-text`,
@@ -142,8 +176,8 @@ The full-screen paper and main writing color
 |---|---|---|---|
 | `--page-bg` | `40 8% 97%` | Page Background | Main app background behind everything |
 | `--page-text` | `220 8% 14%` | Page Text | Default text color used across the app |
-| `--paper-surface` | `40 6% 99%` | Paper Surface | Notebook paper areas in the main content |
-| `--paper-stripe` | `40 5% 92%` | Paper Stripe | Darker paper stripes and paper depth |
+| `--paper-surface` | `40 6% 99% / 0` | Paper Surface | Notebook paper areas in the main content |
+| `--paper-stripe` | `40 5% 92% / 0` | Paper Stripe | Darker paper stripes and paper depth |
 | `--deep-ink` | `220 10% 11%` | Deep Ink | Strong deep-ink text and marks |
 | `--link-text` | `224 76% 48%` | Text Link | Inline links in body text, such as the privacy policy link |
 
@@ -153,16 +187,16 @@ Backgrounds and text for each message type
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--user-msg-bg` | `220 8% 14%` | User Message Background | Background of your sent message bubbles |
-| `--user-msg-text` | `40 8% 97%` | User Message Text | Text and icons inside your messages |
-| `--ai-msg-bg` | `40 6% 99%` | AI Message Background | Background of assistant reply bubbles |
+| `--user-msg-bg` | `220 8% 14% / 0` | User Message Background | Background of your sent message bubbles |
+| `--user-msg-text` | `40 8% 43%` | User Message Text | Text and icons inside your messages |
+| `--ai-msg-bg` | `40 6% 99% / 0` | AI Message Background | Background of assistant reply bubbles |
 | `--ai-msg-text` | `220 8% 16%` | AI Message Text | Text inside assistant replies |
-| `--status-msg-bg` | `40 5% 90%` | Status Message Background | Background of system/status messages |
+| `--status-msg-bg` | `40 5% 90% / 0` | Status Message Background | Background of system/status messages |
 | `--status-msg-text` | `220 6% 30%` | Status Message Text | Text inside system/status messages |
-| `--error-msg-bg` | `220 5% 40%` | Error Message Background | Background of error message bubbles |
+| `--error-msg-bg` | `220 5% 40% / 0` | Error Message Background | Background of error message bubbles |
 | `--error-msg-text` | `220 5% 40%` | Error Message Text | Text color for error messages |
-| `--thinking-bubble-bg` | `40 5% 90%` | Thinking Indicator Background | Background of the thinking... bubble |
-| `--thinking-bubble-text` | `220 5% 50%` | Thinking Indicator Text | Text in the thinking... bubble |
+| `--thinking-bubble-bg` | `40 5% 90% / 0` | Thinking Indicator Background | Background of the thinking... bubble |
+| `--thinking-bubble-text` | `220 5% 45%` | Thinking Indicator Text | Text in the thinking... bubble |
 
 ### Message Sub-elements
 
@@ -170,9 +204,9 @@ File attachments, image placeholders, and error indicators within messages
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--ai-msg-placeholder` | `220 6% 32%` | AI Image Placeholder | Placeholder background while AI image loads (focused view) |
-| `--ai-file-bg` | `40 5% 88%` | AI File Attachment | Background of file attachments in assistant messages |
-| `--ai-file-text` | `220 5% 50%` | AI File Text | Text and icon color in assistant file attachments |
+| `--ai-msg-placeholder` | `220 6% 32% / 0` | AI Image Placeholder | Placeholder background while AI image loads (focused view) |
+| `--ai-file-bg` | `40 5% 88% / 0` | AI File Attachment | Background of file attachments in assistant messages |
+| `--ai-file-text` | `220 5% 45%` | AI File Text | Text and icon color in assistant file attachments |
 | `--img-error-text` | `220 5% 42%` | Image Error Text | Error text color for image generation failures |
 
 ### Attachment Transcript Text
@@ -181,18 +215,18 @@ Separate text colors for user and assistant attachment text across inline, audio
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--user-attachment-inline-text` | `40 8% 97%` | User Inline Attachment Text | Your message text and inline attachment labels next to standard attachments |
-| `--user-attachment-audio-text` | `40 8% 97%` | User Audio Attachment Text | Your message text when an audio attachment is shown in the audio shell |
+| `--user-attachment-inline-text` | `40 8% 43%` | User Inline Attachment Text | Your message text and inline attachment labels next to standard attachments |
+| `--user-attachment-audio-text` | `40 8% 43%` | User Audio Attachment Text | Your message text when an audio attachment is shown in the audio shell |
 | `--user-attachment-svg-text` | `220 8% 14%` | User Detached Attachment Text | Your message text shown in detached attachment transcript shells (images, PDFs, SVG, and notebooks) |
 | `--user-attachment-game-text` | `220 8% 14%` | User Game Attachment Text | Your message text shown with mini-game attachment shells and controls |
 | `--attachment-inline-target-text` | `220 8% 16%` | Inline Target Text | Main attachment transcript text shown under attachments, including music replies |
-| `--attachment-inline-native-text` | `220 5% 50%` | Inline Native Text | Secondary or native attachment transcript text shown under attachments, including music replies |
+| `--attachment-inline-native-text` | `220 5% 45%` | Inline Native Text | Secondary or native attachment transcript text shown under attachments, including music replies |
 | `--attachment-audio-target-text` | `220 8% 14%` | Audio Target Text | Main text in the focused assistant audio scroll wheel |
 | `--attachment-audio-native-text` | `220 5% 42%` | Audio Native Text | Secondary or native text in the focused assistant audio scroll wheel |
 | `--attachment-svg-target-text` | `220 8% 14%` | Detached Target Text | Main transcript text in detached attachment transcript shells |
-| `--attachment-svg-native-text` | `220 5% 50%` | Detached Native Text | Secondary or native transcript text in detached attachment transcript shells |
+| `--attachment-svg-native-text` | `220 5% 45%` | Detached Native Text | Secondary or native transcript text in detached attachment transcript shells |
 | `--attachment-game-target-text` | `220 8% 14%` | Game Target Text | Main transcript text when the transcript overlaps a mini-game |
-| `--attachment-game-native-text` | `220 5% 50%` | Game Native Text | Secondary or native transcript text when the transcript overlaps a mini-game |
+| `--attachment-game-native-text` | `220 5% 45%` | Game Native Text | Secondary or native transcript text when the transcript overlaps a mini-game |
 
 ### Chat Input Area
 
@@ -200,29 +234,29 @@ Message composer in chat and suggestion modes
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--chat-input-bg` | `220 8% 12%` | Chat Input Background | Input field background in chat mode |
-| `--chat-input-text` | `40 8% 97%` | Chat Input Text | Text color in chat mode input |
-| `--chat-input-icon` | `40 8% 97%` | Chat Input Icons | Icon button color inside chat input |
-| `--chat-input-icon-hover-bg` | `40 6% 99%` | Chat Icon Hover | Hover background for chat-mode icon buttons |
-| `--sugg-input-bg` | `40 6% 99%` | Suggestion Input Background | Input field background in suggestion mode |
+| `--chat-input-bg` | `220 8% 12% / 0` | Chat Input Background | Input field background in chat mode |
+| `--chat-input-text` | `40 8% 43%` | Chat Input Text | Text color in chat mode input |
+| `--chat-input-icon` | `40 8% 55%` | Chat Input Icons | Icon button color inside chat input |
+| `--chat-input-icon-hover-bg` | `40 6% 99% / 0.14` | Chat Icon Hover | Hover background for chat-mode icon buttons |
+| `--sugg-input-bg` | `40 6% 99% / 0` | Suggestion Input Background | Input field background in suggestion mode |
 | `--sugg-input-text` | `220 8% 16%` | Suggestion Input Text | Text color in suggestion mode input |
 | `--sugg-input-icon` | `220 5% 50%` | Suggestion Input Icons | Icon button color in suggestion mode |
-| `--send-btn-bg` | `40 6% 99%` | Send Button Background | Background of the send message button |
+| `--send-btn-bg` | `40 6% 99% / 0` | Send Button Background | Background of the send message button |
 | `--send-btn-text` | `220 8% 16%` | Send Button Text | Text/icon color on the send button |
-| `--send-sugg-btn-bg` | `220 6% 28%` | Suggest Send Background | Background of the send/create button in suggestion mode |
-| `--send-sugg-btn-text` | `40 8% 97%` | Suggest Send Text | Text/icon color of the suggestion-mode send/create button |
+| `--send-sugg-btn-bg` | `220 6% 28% / 0` | Suggest Send Background | Background of the send/create button in suggestion mode |
+| `--send-sugg-btn-text` | `40 8% 43%` | Suggest Send Text | Text/icon color of the suggestion-mode send/create button |
 | `--input-focus-ring` | `220 7% 30%` | Input Focus Ring | Ring shown when the input field is focused |
-| `--input-error-bg` | `220 5% 40%` | Input Error Background | Background for error messages in the input area |
-| `--input-error-text` | `40 8% 97%` | Input Error Text | Text color for input area error messages |
-| `--snapshot-error-bg` | `220 8% 18%` | Snapshot Error Background | Background tint for snapshot-related input errors |
-| `--chat-outer-bg` | `220 6% 28%` | Chat Mode Container | Outer container background in chat mode |
-| `--chat-outer-text` | `40 8% 97%` | Chat Mode Container Text | Text in the outer chat mode container |
-| `--sugg-outer-bg` | `40 5% 90%` | Suggestion Mode Container | Outer container background in suggestion mode |
-| `--stt-lang-selected-bg` | `0 0% 100% / 0.3` | Speech Language Selected | The chosen speech language while the selector is collapsed |
-| `--stt-lang-selected-sugg-bg` | `0 0% 100% / 0.5` | Speech Language Selected (Suggestion) | The chosen speech language in suggestion mode |
-| `--stt-lang-hover-bg` | `0 0% 100% / 0.2` | Speech Language (Hover) | A speech language option while pointed at |
-| `--stt-lang-sugg-hover-bg` | `0 0% 0% / 0.2` | Speech Language (Hover, Suggestion) | A speech language option in suggestion mode |
-| `--stt-lang-selected-text` | `0 0% 100%` | Speech Language Selected Text | The chosen speech language while expanded |
+| `--input-error-bg` | `220 5% 40% / 0.16` | Input Error Background | Background for error messages in the input area |
+| `--input-error-text` | `40 8% 43%` | Input Error Text | Text color for input area error messages |
+| `--snapshot-error-bg` | `220 8% 18% / 0.16` | Snapshot Error Background | Background tint for snapshot-related input errors |
+| `--chat-outer-bg` | `220 6% 28% / 0` | Chat Mode Container | Outer container background in chat mode |
+| `--chat-outer-text` | `40 8% 43%` | Chat Mode Container Text | Text in the outer chat mode container |
+| `--sugg-outer-bg` | `40 5% 90% / 0` | Suggestion Mode Container | Outer container background in suggestion mode |
+| `--stt-lang-selected-bg` | `0 0% 100% / 0.18` | Speech Language Selected | The chosen speech language while the selector is collapsed |
+| `--stt-lang-selected-sugg-bg` | `0 0% 100% / 0.18` | Speech Language Selected (Suggestion) | The chosen speech language in suggestion mode |
+| `--stt-lang-hover-bg` | `0 0% 100% / 0.14` | Speech Language (Hover) | A speech language option while pointed at |
+| `--stt-lang-sugg-hover-bg` | `0 0% 0% / 0.14` | Speech Language (Hover, Suggestion) | A speech language option in suggestion mode |
+| `--stt-lang-selected-text` | `0 0% 44%` | Speech Language Selected Text | The chosen speech language while expanded |
 
 ### Chat Interface Chrome
 
@@ -230,17 +264,17 @@ History peek, navigation buttons, and suggestion controls
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--history-peek-bg` | `40 5% 90%` | History Peek Background | Background of the message history peek zone |
+| `--history-peek-bg` | `40 5% 90% / 0` | History Peek Background | Background of the message history peek zone |
 | `--history-peek-icon` | `220 5% 55%` | History Peek Eye Icon | Eye icon color in the history peek zone |
-| `--history-btn-bg` | `40 6% 99%` | History Button Background | Background of history navigation buttons |
-| `--history-btn-hover` | `40 5% 92%` | History Button Hover | Hover color for history navigation buttons |
-| `--delete-msg-bg` | `220 6% 28%` | Delete Message Button | Background of the delete message button |
-| `--delete-msg-text` | `40 8% 97%` | Delete Message Text | Icon color on the delete message button |
-| `--save-sugg-bg` | `220 6% 28%` | Save Suggestion Button | Background of the save suggestion button |
-| `--save-sugg-text` | `40 8% 97%` | Save Suggestion Text | Text on the save suggestion button |
-| `--clear-sugg-bg` | `220 5% 50%` | Clear Suggestion Button | Background of the clear suggestion button |
-| `--clear-sugg-text` | `40 8% 97%` | Clear Suggestion Text | Text on the clear suggestion button |
-| `--web-results-bg` | `40 5% 90%` | Web Results Container | Background of the web search results area |
+| `--history-btn-bg` | `40 6% 99% / 0` | History Button Background | Background of history navigation buttons |
+| `--history-btn-hover` | `40 5% 92% / 0.14` | History Button Hover | Hover color for history navigation buttons |
+| `--delete-msg-bg` | `220 6% 28% / 0` | Delete Message Button | Background of the delete message button |
+| `--delete-msg-text` | `40 8% 43%` | Delete Message Text | Icon color on the delete message button |
+| `--save-sugg-bg` | `220 6% 28% / 0` | Save Suggestion Button | Background of the save suggestion button |
+| `--save-sugg-text` | `40 8% 43%` | Save Suggestion Text | Text on the save suggestion button |
+| `--clear-sugg-bg` | `220 5% 50% / 0` | Clear Suggestion Button | Background of the clear suggestion button |
+| `--clear-sugg-text` | `40 8% 43%` | Clear Suggestion Text | Text on the clear suggestion button |
+| `--web-results-bg` | `40 5% 90% / 0` | Web Results Container | Background of the web search results area |
 | `--web-results-link` | `220 7% 30%` | Web Results Link | Link color in web search results |
 
 ### Audio Player
@@ -249,11 +283,11 @@ Playback controls for recorded audio messages
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--audio-player-bg` | `40 5% 90%` | Audio Player Background | Background of the audio playback bar |
+| `--audio-player-bg` | `40 5% 90% / 0` | Audio Player Background | Background of the audio playback bar |
 | `--audio-play-btn` | `220 6% 28%` | Audio Play Button | Background of the play/pause button |
 | `--audio-play-text` | `40 8% 97%` | Audio Play Icon | Icon color on the play/pause button |
 | `--audio-bar` | `220 6% 28%` | Audio Progress Bar | Color of the audio progress bar |
-| `--audio-time-text` | `220 5% 50%` | Audio Time Display | Time text in the audio player |
+| `--audio-time-text` | `220 5% 45%` | Audio Time Display | Time text in the audio player |
 
 ### Bookmark Actions
 
@@ -261,9 +295,9 @@ Bookmark save panel and manage buttons
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--bookmark-bg` | `220 8% 14%` | Bookmark Panel | Background of the bookmark save panel |
-| `--bookmark-text` | `40 8% 97%` | Bookmark Text | Text and button color in bookmark panel |
-| `--bookmark-input-bg` | `40 6% 99%` | Bookmark Input | Background of the bookmark name input field |
+| `--bookmark-bg` | `220 8% 14% / 0` | Bookmark Panel | Background of the bookmark save panel |
+| `--bookmark-text` | `40 8% 43%` | Bookmark Text | Text and button color in bookmark panel |
+| `--bookmark-input-bg` | `40 6% 99% / 0` | Bookmark Input | Background of the bookmark name input field |
 | `--bookmark-input-text` | `220 8% 14%` | Bookmark Input Text | Text color in the bookmark name field |
 | `--bookmark-divider` | `220 5% 60%` | Bookmark Divider | Line divider between bookmark sections |
 
@@ -273,12 +307,12 @@ Translation suggestion items
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--suggestion-bg` | `40 5% 90%` | Suggestion Background | Background of individual suggestion lines |
-| `--suggestion-hover` | `40 5% 86%` | Suggestion Hover | Hover background for suggestion lines |
+| `--suggestion-bg` | `40 5% 90% / 0` | Suggestion Background | Background of individual suggestion lines |
+| `--suggestion-hover` | `40 5% 86% / 0.14` | Suggestion Hover | Hover background for suggestion lines |
 | `--suggestion-ring` | `220 6% 28%` | Suggestion Focus Ring | Focus ring around selected suggestion |
 | `--suggestion-double-ring` | `220 8% 14%` | Suggestion Confirm Ring | Focus ring for suggestions on double-click/confirm interaction |
-| `--suggestion-active-bg` | `220 6% 28%` | Creating Suggestion | Background while a suggestion is being created |
-| `--suggestion-active-text` | `40 8% 97%` | Creating Suggestion Text | Text while a suggestion is being created |
+| `--suggestion-active-bg` | `220 6% 28% / 0.18` | Creating Suggestion | Background while a suggestion is being created |
+| `--suggestion-active-text` | `40 8% 43%` | Creating Suggestion Text | Text while a suggestion is being created |
 
 ### Session Controls
 
@@ -293,14 +327,14 @@ Profile editing, mode toggle, and sidebar controls
 | `--globe-native-accent` | `220 5% 42%` | Globe Native Accent | Border and glow for the native-language marker on the globe |
 | `--globe-target-accent` | `220 6% 28%` | Globe Target Accent | Border and glow for the target-language marker on the globe |
 | `--maestro-avatar-glow` | `220 6% 32%` | Maestro Avatar Glow | Glow color around the maestro avatar when an image is present |
-| `--profile-btn-bg` | `220 8% 14%` | Profile Button | Background of profile edit/label buttons |
-| `--profile-btn-text` | `40 8% 97%` | Profile Button Text | Text on profile edit/label buttons |
-| `--profile-accept-bg` | `220 8% 20%` | Profile Accept Button | Background of the profile accept/confirm button |
-| `--profile-accept-text` | `40 8% 97%` | Profile Accept Text | Text on the profile accept button |
-| `--mode-toggle-bg` | `220 8% 14%` | Mode Toggle Container | Background of the All/This mode toggle |
-| `--mode-toggle-text` | `40 8% 97%` | Mode Toggle Text | Text on mode toggle buttons |
+| `--profile-btn-bg` | `220 8% 14% / 0` | Profile Button | Background of profile edit/label buttons |
+| `--profile-btn-text` | `40 8% 43%` | Profile Button Text | Text on profile edit/label buttons |
+| `--profile-accept-bg` | `220 8% 20% / 0` | Profile Accept Button | Background of the profile accept/confirm button |
+| `--profile-accept-text` | `40 8% 43%` | Profile Accept Text | Text on the profile accept button |
+| `--mode-toggle-bg` | `220 8% 14% / 0` | Mode Toggle Container | Background of the All/This mode toggle |
+| `--mode-toggle-text` | `40 8% 43%` | Mode Toggle Text | Text on mode toggle buttons |
 | `--save-chat-text` | `220 7% 22%` | Save Chat Label | Text color for the save chat action label |
-| `--ctrl-muted-text` | `220 5% 50%` | Controls Muted Text | Dimmed text in session controls |
+| `--ctrl-muted-text` | `220 5% 45%` | Controls Muted Text | Dimmed text in session controls |
 
 ### Header
 
@@ -319,9 +353,9 @@ Live session button when no session is active
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--live-idle-btn-bg` | `220 8% 14%` | Live Idle Button | Live session button background when idle |
-| `--live-idle-btn-text` | `40 8% 97%` | Live Idle Button Text | Live session button text when idle |
-| `--live-idle-sugg-btn-bg` | `40 5% 90%` | Live Suggest Idle Background | Live session button background when idle in suggestion mode |
+| `--live-idle-btn-bg` | `220 8% 14% / 0` | Live Idle Button | Live session button background when idle |
+| `--live-idle-btn-text` | `40 8% 43%` | Live Idle Button Text | Live session button text when idle |
+| `--live-idle-sugg-btn-bg` | `40 5% 90% / 0` | Live Suggest Idle Background | Live session button background when idle in suggestion mode |
 | `--live-idle-sugg-btn-text` | `220 8% 14%` | Live Suggest Idle Text | Live session button text when idle in suggestion mode |
 | `--live-idle-spinner` | `220 6% 28%` | Live Idle Spinner | Spinner color while connecting a live session |
 
@@ -331,14 +365,14 @@ Media preview containers and camera toggle
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--media-chat-bg` | `220 6% 28%` | Media Preview (Chat) | Media attachment preview background in chat mode |
-| `--media-sugg-bg` | `40 5% 90%` | Media Preview (Suggest) | Media attachment preview background in suggestion mode |
-| `--media-empty-bg` | `220 6% 28%` | No Attachment Icon BG | Placeholder icon background when no media attached |
-| `--media-empty-text` | `40 8% 97%` | No Attachment Icon | Placeholder icon color when no media attached |
+| `--media-chat-bg` | `220 6% 28% / 0` | Media Preview (Chat) | Media attachment preview background in chat mode |
+| `--media-sugg-bg` | `40 5% 90% / 0` | Media Preview (Suggest) | Media attachment preview background in suggestion mode |
+| `--media-empty-bg` | `220 6% 28% / 0.08` | No Attachment Icon BG | Placeholder icon background when no media attached |
+| `--media-empty-text` | `40 8% 43%` | No Attachment Icon | Placeholder icon color when no media attached |
 | `--camera-toggle-text` | `220 6% 28%` | Camera Toggle Active | Camera toggle button active text color |
-| `--imagegen-cam-icon` | `270 95% 75%` | Image Camera Icon | Camera icon when the image-generation camera is selected |
+| `--imagegen-cam-icon` | `270 95% 70%` | Image Camera Icon | Camera icon when the image-generation camera is selected |
 | `--imagegen-cam-active-text` | `271 81% 56%` | Image Camera Selected | The image-generation camera in the picker, selected |
-| `--imagegen-cam-text` | `269 97% 85%` | Image Camera Option | The image-generation camera in the picker, unselected |
+| `--imagegen-cam-text` | `269 97% 61%` | Image Camera Option | The image-generation camera in the picker, unselected |
 | `--attachment-toggle-shadow` | `229 84% 5% / 0.28` | Attachment Toggle Shadow | Drop shadow under the compact attachment mode toggle |
 
 ### API Key Gate
@@ -365,12 +399,12 @@ Theme customization panel colors
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--theme-panel-bg` | `40 6% 99%` | Theme Panel Background | Background of the theme customizer panel |
+| `--theme-panel-bg` | `40 6% 99% / 0` | Theme Panel Background | Background of the theme customizer panel |
 | `--theme-panel-text` | `220 8% 16%` | Theme Panel Text | Text in the theme customizer panel |
-| `--theme-muted-text` | `220 5% 50%` | Theme Muted Text | Helper text in the theme customizer |
-| `--theme-input-bg` | `40 8% 97%` | Theme Input Background | Color input field background |
+| `--theme-muted-text` | `220 5% 45%` | Theme Muted Text | Helper text in the theme customizer |
+| `--theme-input-bg` | `40 8% 97% / 0` | Theme Input Background | Color input field background |
 | `--theme-input-border` | `220 4% 76%` | Theme Input Border | Color input field border |
-| `--theme-preset-btn` | `40 8% 97%` | Theme Preset Button | Preset theme selector button background |
+| `--theme-preset-btn` | `40 8% 97% / 0` | Theme Preset Button | Preset theme selector button background |
 
 ### CTA Buttons
 
@@ -378,8 +412,8 @@ Call-to-action buttons in message bubbles
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--cta-btn-bg` | `220 6% 28%` | CTA Button Background | Background of call-to-action buttons like Setup Billing |
-| `--cta-btn-text` | `40 8% 97%` | CTA Button Text | Text on call-to-action buttons |
+| `--cta-btn-bg` | `220 6% 28% / 0` | CTA Button Background | Background of call-to-action buttons like Setup Billing |
+| `--cta-btn-text` | `40 8% 43%` | CTA Button Text | Text on call-to-action buttons |
 
 ### Annotation Save Button
 
@@ -387,9 +421,9 @@ Save/confirm button for image annotations
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--annotation-btn-bg` | `220 8% 18%` | Annotation Save Button | Background of the annotation save button |
-| `--annotation-btn-text` | `40 8% 97%` | Annotation Save Text | Text on the annotation save button |
-| `--annotation-btn-hover` | `220 9% 13%` | Annotation Save Hover | Hover background of the annotation save button |
+| `--annotation-btn-bg` | `220 8% 18% / 0` | Annotation Save Button | Background of the annotation save button |
+| `--annotation-btn-text` | `40 8% 43%` | Annotation Save Text | Text on the annotation save button |
+| `--annotation-btn-hover` | `220 9% 13% / 0.14` | Annotation Save Hover | Hover background of the annotation save button |
 | `--annotation-btn-focus` | `220 6% 28%` | Annotation Save Focus Ring | Focus ring color of the annotation save button |
 
 ### Translation Highlight
@@ -493,12 +527,12 @@ Top-right button that shows key present/missing
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--apikey-ok-bg` | `220 6% 28%` | Key Present Background | API key button background when key exists |
-| `--apikey-ok-hover` | `220 7% 22%` | Key Present Hover | API key button hover color when key exists |
-| `--apikey-ok-text` | `40 8% 97%` | Key Present Text | API key button text/icon when key exists |
-| `--apikey-missing-bg` | `220 5% 50%` | Key Missing Background | API key button background when key is missing |
-| `--apikey-missing-hover` | `220 5% 44%` | Key Missing Hover | API key button hover color when key is missing |
-| `--apikey-missing-text` | `40 8% 97%` | Key Missing Text | API key button text/icon when key is missing |
+| `--apikey-ok-bg` | `220 6% 28% / 0` | Key Present Background | API key button background when key exists |
+| `--apikey-ok-hover` | `220 7% 22% / 0.14` | Key Present Hover | API key button hover color when key exists |
+| `--apikey-ok-text` | `40 8% 43%` | Key Present Text | API key button text/icon when key exists |
+| `--apikey-missing-bg` | `220 5% 50% / 0` | Key Missing Background | API key button background when key is missing |
+| `--apikey-missing-hover` | `220 5% 44% / 0.14` | Key Missing Hover | API key button hover color when key is missing |
+| `--apikey-missing-text` | `40 8% 43%` | Key Missing Text | API key button text/icon when key is missing |
 
 ### Microphone Recording Button
 
@@ -554,20 +588,20 @@ Panels for load, delete, export, combine, and trim actions
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--action-load-bg` | `40 6% 92%` | Load Panel | Panel background for load/import actions |
+| `--action-load-bg` | `40 6% 92% / 0` | Load Panel | Panel background for load/import actions |
 | `--action-load-text` | `220 8% 14%` | Load Panel Text | Text color in load/import panels |
-| `--action-delete-bg` | `220 6% 28%` | Delete Panel | Panel background for delete/reset actions |
-| `--action-delete-text` | `40 8% 97%` | Delete Panel Text | Text color in delete/reset panels |
-| `--action-export-bg` | `40 8% 90%` | Export Panel | Panel background for export actions |
+| `--action-delete-bg` | `220 6% 28% / 0` | Delete Panel | Panel background for delete/reset actions |
+| `--action-delete-text` | `40 8% 43%` | Delete Panel Text | Text color in delete/reset panels |
+| `--action-export-bg` | `40 8% 90% / 0` | Export Panel | Panel background for export actions |
 | `--action-export-text` | `220 8% 14%` | Export Panel Text | Text color in export panels |
-| `--action-combine-bg` | `220 7% 22%` | Combine Panel | Panel background for merge/combine actions |
-| `--action-combine-text` | `40 8% 97%` | Combine Panel Text | Text color in merge/combine panels |
-| `--action-trim-bg` | `220 5% 50%` | Trim Panel | Panel background for trim actions |
-| `--action-trim-text` | `40 8% 97%` | Trim Panel Text | Text color in trim panels |
-| `--delete-shortcut-hover-bg` | `220 6% 34%` | Delete Shortcut Hover Background | Hover background of the small delete shortcut button |
-| `--delete-shortcut-hover-text` | `40 8% 97%` | Delete Shortcut Hover Icon | Hover icon color of the small delete shortcut button |
-| `--trim-shortcut-hover-bg` | `220 5% 56%` | Trim Shortcut Hover Background | Hover background of the small trim shortcut button |
-| `--trim-shortcut-hover-text` | `40 8% 97%` | Trim Shortcut Hover Icon | Hover icon color of the small trim shortcut button |
+| `--action-combine-bg` | `220 7% 22% / 0` | Combine Panel | Panel background for merge/combine actions |
+| `--action-combine-text` | `40 8% 43%` | Combine Panel Text | Text color in merge/combine panels |
+| `--action-trim-bg` | `220 5% 50% / 0` | Trim Panel | Panel background for trim actions |
+| `--action-trim-text` | `40 8% 43%` | Trim Panel Text | Text color in trim panels |
+| `--delete-shortcut-hover-bg` | `220 6% 34% / 0.14` | Delete Shortcut Hover Background | Hover background of the small delete shortcut button |
+| `--delete-shortcut-hover-text` | `40 8% 97% / 0.14` | Delete Shortcut Hover Icon | Hover icon color of the small delete shortcut button |
+| `--trim-shortcut-hover-bg` | `220 5% 56% / 0.14` | Trim Shortcut Hover Background | Hover background of the small trim shortcut button |
+| `--trim-shortcut-hover-text` | `40 8% 97% / 0.14` | Trim Shortcut Hover Icon | Hover icon color of the small trim shortcut button |
 
 ### Voice Identity
 
@@ -644,10 +678,10 @@ Inline success and failure banners
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--notice-ok-bg` | `152 81% 96%` | Success Notice Background | Background of a success banner |
+| `--notice-ok-bg` | `152 81% 96% / 0` | Success Notice Background | Background of a success banner |
 | `--notice-ok-border` | `156 72% 67%` | Success Notice Border | Border around a success banner |
 | `--notice-ok-text` | `164 86% 16%` | Success Notice Text | Text inside a success banner |
-| `--notice-error-bg` | `0 86% 97%` | Error Notice Background | Background of a failure banner |
+| `--notice-error-bg` | `0 86% 97% / 0` | Error Notice Background | Background of a failure banner |
 | `--notice-error-border` | `0 94% 82%` | Error Notice Border | Border around a failure banner |
 | `--notice-error-text` | `0 70% 35%` | Error Notice Text | Text inside a failure banner |
 
@@ -661,11 +695,11 @@ Destructive buttons and the account deletion area
 | `--danger-btn-hover` | `0 70% 35%` | Danger Button (Hover) | Destructive button while pointed at |
 | `--danger-btn-text` | `0 0% 100%` | Danger Button Text | Text on a destructive button |
 | `--danger-icon` | `0 74% 42%` | Danger Icon | Icons that flag a destructive or reporting action |
-| `--danger-zone-bg` | `0 86% 97% / 0.7` | Danger Zone Background | Background of the account deletion area |
+| `--danger-zone-bg` | `0 86% 97% / 0` | Danger Zone Background | Background of the account deletion area |
 | `--danger-zone-border` | `0 94% 82% / 0.8` | Danger Zone Border | Border around the account deletion area |
 | `--danger-zone-text` | `0 63% 31%` | Danger Zone Text | Text inside the account deletion area |
-| `--danger-ghost-hover` | `0 93% 94%` | Danger Ghost Button (Hover) | Outlined destructive button while pointed at |
-| `--danger-input-bg` | `0 0% 100%` | Danger Input Background | The type-DELETE confirmation field |
+| `--danger-ghost-hover` | `0 93% 94% / 0.14` | Danger Ghost Button (Hover) | Outlined destructive button while pointed at |
+| `--danger-input-bg` | `0 0% 100% / 0` | Danger Input Background | The type-DELETE confirmation field |
 | `--danger-input-border` | `0 94% 82%` | Danger Input Border | Border of the confirmation field |
 | `--danger-input-ring` | `0 91% 71%` | Danger Input Focus Ring | Focus ring on the confirmation field |
 
@@ -675,12 +709,15 @@ The developer traffic log panel
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--debug-ok-text` | `142 69% 58%` | Debug Success Text | Timing and success markers in the traffic log |
-| `--debug-ok-payload-text` | `142 77% 73%` | Debug Response Text | Body of a successful response |
-| `--debug-error-text` | `0 91% 71%` | Debug Error Text | Error markers in the traffic log |
-| `--debug-error-alt-text` | `0 94% 82%` | Debug Error Detail Text | Error type and body in the traffic log |
-| `--debug-error-bg` | `0 63% 31% / 0.1` | Debug Error Row | Background of a failed request row |
+| `--debug-panel-bg` | `220 8% 14% / 0` | Debug Panel Background | Backdrop of the traffic log sheet |
+| `--debug-header-bg` | `220 8% 14%` | Debug Panel Header | Header bar of the traffic log sheet |
+| `--debug-card-bg` | `220 8% 14%` | Debug Log Card | Background of a single request row |
+| `--debug-ok-text` | `142 69% 30%` | Debug Success Text | Timing and success markers in the traffic log |
+| `--debug-ok-payload-text` | `142 77% 29%` | Debug Response Text | Body of a successful response |
+| `--debug-error-text` | `0 91% 46%` | Debug Error Text | Error markers in the traffic log |
+| `--debug-error-alt-text` | `0 94% 46%` | Debug Error Detail Text | Error type and body in the traffic log |
+| `--debug-error-bg` | `0 63% 31% / 0` | Debug Error Row | Background of a failed request row |
 | `--debug-error-border` | `0 70% 35%` | Debug Error Row Border | Border of a failed request row |
-| `--debug-row-hover` | `0 0% 100% / 0.05` | Debug Row (Hover) | A traffic log row while pointed at |
-| `--debug-payload-bg` | `0 0% 0% / 0.2` | Debug Payload Background | Background behind request and response bodies |
-| `--debug-section-bg` | `0 0% 0% / 0.1` | Debug Section Background | Background of the response section |
+| `--debug-row-hover` | `0 0% 100% / 0.14` | Debug Row (Hover) | A traffic log row while pointed at |
+| `--debug-payload-bg` | `0 0% 0% / 0` | Debug Payload Background | Background behind request and response bodies |
+| `--debug-section-bg` | `0 0% 0% / 0` | Debug Section Background | Background of the response section |

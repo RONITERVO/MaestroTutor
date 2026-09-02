@@ -370,12 +370,4 @@ export const koTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "프리셋으로 저장",
   "themeCustomizer.title": "색상 설정",
   "header.aiAccessRequired": "AI 액세스 필요",
-  "themeGallery.title": "테마 갤러리",
-  "themeGallery.close": "닫기",
-  "themeGallery.included": "무료",
-  "themeGallery.apply": "적용",
-  "themeGallery.includedDescription": "포함된 색상 테마",
-  "themeGallery.footerNote": "모든 색상 테마가 포함되어 있으며 앞으로도 무료입니다.",
-  "themeCustomizer.galleryTitle": "테마 갤러리",
-  "themeCustomizer.galleryDescription": "포함된 색상 테마 둘러보기",
 };

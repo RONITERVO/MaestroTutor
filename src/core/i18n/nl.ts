@@ -371,12 +371,4 @@ export const nlTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "Opslaan als voorinstelling",
   "themeCustomizer.title": "Kleuren schilderen",
   "header.aiAccessRequired": "AI-toegang vereist",
-  "themeGallery.title": "Themagalerij",
-  "themeGallery.close": "Sluiten",
-  "themeGallery.included": "Gratis",
-  "themeGallery.apply": "Toepassen",
-  "themeGallery.includedDescription": "Inbegrepen kleurenthema",
-  "themeGallery.footerNote": "Elk kleurenthema is inbegrepen en blijft gratis.",
-  "themeCustomizer.galleryTitle": "Themagalerij",
-  "themeCustomizer.galleryDescription": "Blader door inbegrepen kleurenthema's",
 };

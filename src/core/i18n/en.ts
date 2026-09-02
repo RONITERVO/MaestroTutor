@@ -506,12 +506,6 @@ export const enTranslations: Record<string, string> = {
   "camera.observerActive": "Observer active",
 
   // Theme gallery
-  "themeGallery.title": "Theme Gallery",
-  "themeGallery.close": "Close",
-  "themeGallery.included": "Free",
-  "themeGallery.includedDescription": "Included color theme",
-  "themeGallery.apply": "Apply",
-  "themeGallery.footerNote": "Every color theme is included and will remain free.",
 
   // Theme customizer
   "themeCustomizer.title": "Paint Colors",
@@ -527,8 +521,7 @@ export const enTranslations: Record<string, string> = {
   "themeCustomizer.cancel": "Cancel",
   "themeCustomizer.quickThemes": "Quick Themes",
   "themeCustomizer.deletePreset": "Delete saved preset",
-  "themeCustomizer.galleryTitle": "Theme Gallery",
-  "themeCustomizer.galleryDescription": "Browse included color themes",
+  "themeCustomizer.savedPresets": "Your Themes",
 
   // Debug log panel
   "debugLog.title": "Traffic Log",

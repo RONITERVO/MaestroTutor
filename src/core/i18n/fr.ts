@@ -371,12 +371,4 @@ export const frTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "Enregistrer comme préréglage",
   "themeCustomizer.title": "Peindre les couleurs",
   "header.aiAccessRequired": "Accès à l’IA requis",
-  "themeGallery.title": "Galerie de thèmes",
-  "themeGallery.close": "Fermer",
-  "themeGallery.included": "Gratuit",
-  "themeGallery.apply": "Appliquer",
-  "themeGallery.includedDescription": "Thème de couleurs inclus",
-  "themeGallery.footerNote": "Tous les thèmes de couleurs sont inclus et resteront gratuits.",
-  "themeCustomizer.galleryTitle": "Galerie de thèmes",
-  "themeCustomizer.galleryDescription": "Parcourir les thèmes de couleurs inclus",
 };

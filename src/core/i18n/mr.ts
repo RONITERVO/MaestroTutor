@@ -370,12 +370,4 @@ export const mrTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "प्रीसेट म्हणून जतन करा",
   "themeCustomizer.title": "रंग रंगवा",
   "header.aiAccessRequired": "AI प्रवेश आवश्यक आहे",
-  "themeGallery.title": "थीम गॅलरी",
-  "themeGallery.close": "बंद करा",
-  "themeGallery.included": "विनामूल्य",
-  "themeGallery.apply": "लागू करा",
-  "themeGallery.includedDescription": "समाविष्ट रंग थीम",
-  "themeGallery.footerNote": "प्रत्येक रंग थीम समाविष्ट आहे आणि नेहमी विनामूल्य राहील.",
-  "themeCustomizer.galleryTitle": "थीम गॅलरी",
-  "themeCustomizer.galleryDescription": "समाविष्ट रंग थीम ब्राउझ करा",
 };

@@ -370,12 +370,4 @@ export const bnTranslations: Record<string, string> = {
   "themeCustomizer.saveAsPreset": "প্রিসেট হিসেবে সংরক্ষণ করুন",
   "themeCustomizer.title": "রঙ আঁকুন",
   "header.aiAccessRequired": "AI অ্যাক্সেস প্রয়োজন",
-  "themeGallery.title": "থিম গ্যালারি",
-  "themeGallery.close": "বন্ধ করুন",
-  "themeGallery.included": "বিনামূল্যে",
-  "themeGallery.apply": "প্রয়োগ করুন",
-  "themeGallery.includedDescription": "অন্তর্ভুক্ত রঙের থিম",
-  "themeGallery.footerNote": "প্রতিটি রঙের থিম অন্তর্ভুক্ত এবং সবসময় বিনামূল্যে থাকবে।",
-  "themeCustomizer.galleryTitle": "থিম গ্যালারি",
-  "themeCustomizer.galleryDescription": "অন্তর্ভুক্ত রঙের থিমগুলি দেখুন",
 };

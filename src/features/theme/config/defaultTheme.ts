@@ -2,16 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getThemePreset } from './themePresets';
-import { DEFAULT_THEME_ID, THEME_CATALOGUE } from './themeCatalogue';
+import { ALL_THEMES, DEFAULT_THEME_ID } from './themeCatalogue';
 
 const defaultThemePreset = getThemePreset(DEFAULT_THEME_ID);
 if (!defaultThemePreset) {
   throw new Error(`Missing preset for default theme: ${DEFAULT_THEME_ID}`);
 }
 
-const defaultTheme = THEME_CATALOGUE.find(
-  theme => theme.themeId === DEFAULT_THEME_ID,
-);
+const defaultTheme = ALL_THEMES.find(theme => theme.themeId === DEFAULT_THEME_ID);
 if (!defaultTheme) {
   throw new Error(`Missing catalogue metadata for default theme: ${DEFAULT_THEME_ID}`);
 }
