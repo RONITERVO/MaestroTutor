@@ -236,15 +236,15 @@ export const ORIGINAL_COLORS: Record<string, string> = {
   'flag-busy-text': '190 60% 55%',
 
   // Action Confirmation Panels
-  'action-load-bg': '217 91% 60%',
+  'action-load-accent': '217 91% 60%',
   'action-load-text': '214 95% 93%',
-  'action-delete-bg': '0 72% 51%',
+  'action-delete-accent': '0 72% 51%',
   'action-delete-text': '0 86% 97%',
-  'action-export-bg': '188 95% 43%',
+  'action-export-accent': '188 95% 43%',
   'action-export-text': '188 100% 94%',
-  'action-combine-bg': '263 70% 50%',
+  'action-combine-accent': '263 70% 50%',
   'action-combine-text': '263 70% 93%',
-  'action-trim-bg': '25 95% 53%',
+  'action-trim-accent': '25 95% 53%',
   'action-trim-text': '33 100% 96%',
   'delete-shortcut-hover-bg': '0 75% 54%',
   'delete-shortcut-hover-text': '0 86% 97%',
@@ -403,6 +403,13 @@ export const ORIGINAL_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '217 91% 51%',
+  'action-delete-label': '0 72% 50%',
+  'action-export-label': '188 95% 28%',
+  'action-combine-label': '263 70% 50%',
+  'action-trim-label': '25 95% 38%',
 };
 
 // ---------------------------------------------------------------------------
@@ -764,6 +771,13 @@ export const OCEAN_BLUE_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 42%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const SUNSET_GOLD_COLORS: Record<string, string> = {
@@ -1121,6 +1135,13 @@ export const SUNSET_GOLD_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 43%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const DARK_NEON_COLORS: Record<string, string> = {
@@ -1478,6 +1499,13 @@ export const DARK_NEON_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 92%',
+  'action-delete-label': '220 6% 51%',
+  'action-export-label': '40 8% 90%',
+  'action-combine-label': '220 7% 51%',
+  'action-trim-label': '220 5% 51%',
 };
 
 export const SCHOLAR_COLORS: Record<string, string> = {
@@ -1813,6 +1841,13 @@ export const SCHOLAR_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 42%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const PURE_LIGHT_COLORS: Record<string, string> = {
@@ -2081,15 +2116,15 @@ export const PURE_LIGHT_COLORS: Record<string, string> = {
   'overlay-live-error-text': '0 0% 100%',
 
   // Action Confirmation Panels
-  'action-load-bg': '0 0% 96%',
+  'action-load-accent': '0 0% 96%',
   'action-load-text': '0 0% 20%',
-  'action-delete-bg': '350 70% 50%',
+  'action-delete-accent': '350 70% 50%',
   'action-delete-text': '0 0% 100%',
-  'action-export-bg': '0 0% 12%',
+  'action-export-accent': '0 0% 12%',
   'action-export-text': '0 0% 100%',
-  'action-combine-bg': '0 0% 12%',
+  'action-combine-accent': '0 0% 12%',
   'action-combine-text': '0 0% 100%',
-  'action-trim-bg': '0 0% 12%',
+  'action-trim-accent': '0 0% 12%',
   'action-trim-text': '0 0% 100%',
   'delete-shortcut-hover-bg': '350 70% 90%',
   'delete-shortcut-hover-text': '350 70% 30%',
@@ -2203,6 +2238,13 @@ export const PURE_LIGHT_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '0 0% 45%',
+  'action-delete-label': '350 70% 50%',
+  'action-export-label': '0 0% 12%',
+  'action-combine-label': '0 0% 12%',
+  'action-trim-label': '0 0% 12%',
 };
 
 export const OBSIDIAN_COLORS: Record<string, string> = {
@@ -2472,15 +2514,15 @@ export const OBSIDIAN_COLORS: Record<string, string> = {
   'overlay-live-error-text': '220 8% 12%',
 
   // Action Confirmation Panels
-  'action-load-bg': '220 8% 25%',
+  'action-load-accent': '220 8% 25%',
   'action-load-text': '40 8% 90%',
-  'action-delete-bg': '220 15% 30%',
+  'action-delete-accent': '220 15% 30%',
   'action-delete-text': '40 8% 95%',
-  'action-export-bg': '220 8% 25%',
+  'action-export-accent': '220 8% 25%',
   'action-export-text': '40 8% 90%',
-  'action-combine-bg': '220 8% 25%',
+  'action-combine-accent': '220 8% 25%',
   'action-combine-text': '40 8% 90%',
-  'action-trim-bg': '220 8% 25%',
+  'action-trim-accent': '220 8% 25%',
   'action-trim-text': '40 8% 90%',
   'delete-shortcut-hover-bg': '220 15% 35%',
   'delete-shortcut-hover-text': '40 8% 95%',
@@ -2594,6 +2636,13 @@ export const OBSIDIAN_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '220 8% 54%',
+  'action-delete-label': '220 15% 55%',
+  'action-export-label': '220 8% 54%',
+  'action-combine-label': '220 8% 54%',
+  'action-trim-label': '220 8% 54%',
 };
 
 export const FOREST_COLORS: Record<string, string> = {
@@ -2951,6 +3000,13 @@ export const FOREST_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 42%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 44%',
 };
 
 export const LAVENDER_COLORS: Record<string, string> = {
@@ -3308,6 +3364,13 @@ export const LAVENDER_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 43%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 42%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 45%',
 };
 
 export const SPECTRUM_COLORS: Record<string, string> = {
@@ -3665,6 +3728,13 @@ export const SPECTRUM_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 44%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 43%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 46%',
 };
 
 export const GRAPHITE_COLORS: Record<string, string> = {
@@ -3901,15 +3971,15 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'overlay-live-error-hover': '220 7% 30%',
   'overlay-live-error-text': '40 8% 97%',
   // Action confirmation panels
-  'action-load-bg': '40 6% 92%',
+  'action-load-accent': '40 6% 92%',
   'action-load-text': '220 8% 14%',
-  'action-delete-bg': '220 6% 28%',
+  'action-delete-accent': '220 6% 28%',
   'action-delete-text': '40 8% 97%',
-  'action-export-bg': '40 8% 90%',
+  'action-export-accent': '40 8% 90%',
   'action-export-text': '220 8% 14%',
-  'action-combine-bg': '220 7% 22%',
+  'action-combine-accent': '220 7% 22%',
   'action-combine-text': '40 8% 97%',
-  'action-trim-bg': '220 5% 50%',
+  'action-trim-accent': '220 5% 50%',
   'action-trim-text': '40 8% 97%',
   'delete-shortcut-hover-bg': '220 6% 34%',
   'delete-shortcut-hover-text': '40 8% 97%',
@@ -4029,4 +4099,11 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'gate-disclaimer-text': '0 0% 100% / 0.55',
   'gate-disclaimer-link-hover': '0 0% 100% / 0.75',
   'gate-disclaimer-underline': '0 0% 100% / 0.25',
+
+  // Action Confirmation Panels
+  'action-load-label': '40 6% 43%',
+  'action-delete-label': '220 6% 28%',
+  'action-export-label': '40 8% 43%',
+  'action-combine-label': '220 7% 22%',
+  'action-trim-label': '220 5% 45%',
 };

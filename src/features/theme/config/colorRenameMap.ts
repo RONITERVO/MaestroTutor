@@ -127,15 +127,23 @@ export const COLOR_RENAME_MAP: Record<string, string[]> = {
   'live-overlay-button-error-text': ['overlay-live-error-text'],
 
   // Action panel rename
-  'action-load': ['action-load-bg'],
+  // Renamed once it was clear these are accents, not surfaces: they paint
+  // the panel label, border, prompt and button, so a clear theme must not
+  // hollow them out.
+  'action-load-bg': ['action-load-accent'],
+  'action-delete-bg': ['action-delete-accent'],
+  'action-export-bg': ['action-export-accent'],
+  'action-combine-bg': ['action-combine-accent'],
+  'action-trim-bg': ['action-trim-accent'],
+  'action-load': ['action-load-accent'],
   'action-load-text': ['action-load-text'],
-  'action-danger': ['action-delete-bg'],
+  'action-danger': ['action-delete-accent'],
   'action-danger-text': ['action-delete-text'],
-  'action-export': ['action-export-bg'],
+  'action-export': ['action-export-accent'],
   'action-export-text': ['action-export-text'],
-  'action-combine': ['action-combine-bg'],
+  'action-combine': ['action-combine-accent'],
   'action-combine-text': ['action-combine-text'],
-  'action-trim': ['action-trim-bg'],
+  'action-trim': ['action-trim-accent'],
   'action-trim-text': ['action-trim-text'],
   'action-danger-shortcut-hover-bg': ['delete-shortcut-hover-bg'],
   'action-danger-shortcut-hover-text': ['delete-shortcut-hover-text'],

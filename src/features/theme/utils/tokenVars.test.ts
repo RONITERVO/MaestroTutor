@@ -154,6 +154,32 @@ describe('theme token CSS variables', () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * A `-bg` token is a surface, and the Clear themes empty surfaces out. Paint
+   * ink with one and it disappears the moment someone picks a Clear theme -
+   * which is how the save/load confirmation panel lost its label and its
+   * "type SAVE to confirm" prompt.
+   *
+   * Borders, rings and shadows are left out on purpose: a surface's own outline
+   * or drop shadow is a real idiom, and it is correct for those to fade when
+   * the fill they belong to does.
+   */
+  it('never paints ink with a surface token', () => {
+    const INK = 'text|placeholder|caret|decoration|divide|fill|stroke';
+    const inkFromSurface = new RegExp(`\\b(?:${INK})-([a-z0-9-]+-bg)(?:/[0-9]+)?\\b`, 'g');
+
+    const offenders: string[] = [];
+    for (const file of collectSourceFiles(SRC_ROOT)) {
+      if (!/\.tsx?$/.test(file)) continue;
+      for (const hit of readFileSync(file, 'utf8').matchAll(inkFromSurface)) {
+        if (!TOKEN_NAMES.has(hit[1])) continue;
+        offenders.push(`${relative(REPO_ROOT, file)}: ${hit[0]}`);
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
   it('keeps the design system doc in step with the registry', () => {
     // Regenerating a current doc is a no-op, so any drift shows up as a diff.
     expect(buildDoc(), 'run `npm run docs:tokens`').toEqual(readFileSync(DOC_PATH, 'utf8'));

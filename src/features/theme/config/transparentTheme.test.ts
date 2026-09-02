@@ -89,6 +89,39 @@ describe('clear theme derivation', () => {
     expect(unreadableTokens(regressed).map(f => f.cssVar)).toContain('user-msg-text');
   });
 
+  it('keeps the action confirmation panel readable in every theme', () => {
+    // These are painted on the page, not on a fill: the panel's own background
+    // is a 10% tint of its accent. They were previously drawn with the accent
+    // itself, which is a button fill - in most themes that put the heading and
+    // the "type SAVE to confirm" prompt at about 1.1:1 and made them invisible.
+    for (const [themeId, preset] of Object.entries(THEME_PRESETS_BY_ID)) {
+      const page = parseHsl(preset.colors['page-bg'])!;
+      for (const action of ['load', 'delete', 'export', 'combine', 'trim']) {
+        const label = parseHsl(preset.colors[`action-${action}-label`])!;
+        expect(
+          contrastRatio(label, page),
+          `${themeId} action-${action}-label`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+
+  it('leaves the action accents alone, since they are fills', () => {
+    // Darkening an accent to be readable on the page would wreck the button
+    // text sitting on top of it.
+    for (const [themeId, preset] of clearPalettes()) {
+      const solid = THEME_PRESETS_BY_ID[
+        themeId.replace(/_clear$/, '') as keyof typeof THEME_PRESETS_BY_ID
+      ].colors;
+      for (const action of ['load', 'delete', 'export', 'combine', 'trim']) {
+        for (const role of ['accent', 'text']) {
+          const cssVar = `action-${action}-${role}`;
+          expect(preset.colors[cssVar], `${themeId} ${cssVar}`).toBe(solid[cssVar]);
+        }
+      }
+    }
+  });
+
   it('is idempotent', () => {
     const solid = THEME_PRESETS_BY_ID[THEME_IDS.GRAPHITE].colors;
     const once = makeTransparentPalette(solid);

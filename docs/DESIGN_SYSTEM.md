@@ -5,7 +5,7 @@ This is the canonical color and UI styling reference for contributors.
 ## Overview
 
 - Last updated: 2026-09-02
-- Active color tokens: 309
+- Active color tokens: 314
 - Token groups: 35
 - Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
@@ -113,6 +113,7 @@ When adding or changing a colorized element:
 
 ## Recent Token Isolation Updates (2026-09-02)
 
+- Action confirmation panels split by role: `action-*-accent` paints the panel tint, border and button; the new `action-*-label` paints the heading and the type-to-confirm prompt. The accent is a fill, and using it as text left those invisible in most themes.
 - Clear theme variants: every theme now ships a fill-less Clear variant, and Clear Graphite is the app default. See [Theme Variants](#theme-variants).
 - Traffic log surfaces split so its backdrop can go see-through while the header and cards stay readable: `debug-panel-bg`, `debug-header-bg`, `debug-card-bg`.
 - The theme gallery sheet was removed; the customizer lists every included theme directly.
@@ -588,16 +589,21 @@ Panels for load, delete, export, combine, and trim actions
 
 | CSS Variable | Default HSL | Friendly Name | Description |
 |---|---|---|---|
-| `--action-load-bg` | `40 6% 92% / 0` | Load Panel | Panel background for load/import actions |
+| `--action-load-label` | `40 6% 43%` | Load Action Label | Heading and prompt text of the load-all confirmation panel |
+| `--action-delete-label` | `220 6% 28%` | Reset Action Label | Heading and prompt text of the reset confirmation panel |
+| `--action-export-label` | `40 8% 43%` | Save Action Label | Heading and prompt text of the save confirmation panel |
+| `--action-combine-label` | `220 7% 22%` | Combine Action Label | Heading and prompt text of the combine confirmation panel |
+| `--action-trim-label` | `220 5% 45%` | Trim Action Label | Heading and prompt text of the trim confirmation panel |
+| `--action-load-accent` | `40 6% 92%` | Load Panel | Panel background for load/import actions |
 | `--action-load-text` | `220 8% 14%` | Load Panel Text | Text color in load/import panels |
-| `--action-delete-bg` | `220 6% 28% / 0` | Delete Panel | Panel background for delete/reset actions |
-| `--action-delete-text` | `40 8% 43%` | Delete Panel Text | Text color in delete/reset panels |
-| `--action-export-bg` | `40 8% 90% / 0` | Export Panel | Panel background for export actions |
+| `--action-delete-accent` | `220 6% 28%` | Delete Panel | Panel background for delete/reset actions |
+| `--action-delete-text` | `40 8% 97%` | Delete Panel Text | Text color in delete/reset panels |
+| `--action-export-accent` | `40 8% 90%` | Export Panel | Panel background for export actions |
 | `--action-export-text` | `220 8% 14%` | Export Panel Text | Text color in export panels |
-| `--action-combine-bg` | `220 7% 22% / 0` | Combine Panel | Panel background for merge/combine actions |
-| `--action-combine-text` | `40 8% 43%` | Combine Panel Text | Text color in merge/combine panels |
-| `--action-trim-bg` | `220 5% 50% / 0` | Trim Panel | Panel background for trim actions |
-| `--action-trim-text` | `40 8% 43%` | Trim Panel Text | Text color in trim panels |
+| `--action-combine-accent` | `220 7% 22%` | Combine Panel | Panel background for merge/combine actions |
+| `--action-combine-text` | `40 8% 97%` | Combine Panel Text | Text color in merge/combine panels |
+| `--action-trim-accent` | `220 5% 50%` | Trim Panel | Panel background for trim actions |
+| `--action-trim-text` | `40 8% 97%` | Trim Panel Text | Text color in trim panels |
 | `--delete-shortcut-hover-bg` | `220 6% 34% / 0.14` | Delete Shortcut Hover Background | Hover background of the small delete shortcut button |
 | `--delete-shortcut-hover-text` | `40 8% 97% / 0.14` | Delete Shortcut Hover Icon | Hover icon color of the small delete shortcut button |
 | `--trim-shortcut-hover-bg` | `220 5% 56% / 0.14` | Trim Shortcut Hover Background | Hover background of the small trim shortcut button |

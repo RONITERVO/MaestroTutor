@@ -117,10 +117,15 @@ const SURFACE_OF: Readonly<Record<string, string>> = {
 };
 
 /** Decorative colours that are never meant to meet a contrast floor. */
-const DECORATIVE = /(-glow|-shadow|-ring|-focus|-border|-line|-divider|-underline|-wash|-stroke|-pulse-outer|-pulse-inner|-inset|-crease|-wrinkle|-highlight)$/;
+/**
+ * Colours that are never ink, so a contrast floor does not apply. `-accent` is
+ * here because an accent is a fill or a mark the theme author tuned - darkening
+ * one to be readable on the page would wreck the text sitting on top of it.
+ */
+const DECORATIVE = /(-glow|-shadow|-ring|-focus|-border|-line|-divider|-underline|-wash|-stroke|-accent|-pulse-outer|-pulse-inner|-inset|-crease|-wrinkle|-highlight)$/;
 
 /** Roles that read as body text; everything else is treated as a UI mark. */
-const TEXT_ROLE = /(-text|-link|-placeholder)$/;
+const TEXT_ROLE = /(-text|-link|-label|-placeholder)$/;
 
 const TEXT_CONTRAST = 4.5;
 const UI_CONTRAST = 3;
@@ -131,10 +136,14 @@ const isHover = (name: string): boolean => name.endsWith('-hover') || name.inclu
 /** The surface a foreground is drawn on, if the token set has one. */
 function surfaceOf(name: string, palette: Record<string, string>): string | null {
   if (SURFACE_OF[name]) return SURFACE_OF[name];
-  const base = name.replace(/-(text|icon|accent|muted|link|placeholder|dot|spinner)$/, '');
+  const base = name.replace(/-(text|icon|label|muted|link|placeholder|dot|spinner)$/, '');
   if (base === name) return null;
-  const candidate = `${base}-bg`;
-  return candidate in palette ? candidate : null;
+  // `-accent` as well as `-bg`: an action panel's button is painted with its
+  // accent, so its text is read against that rather than against the page.
+  for (const suffix of ['-bg', '-accent']) {
+    if (`${base}${suffix}` in palette) return `${base}${suffix}`;
+  }
+  return null;
 }
 
 /** The fill a hover state belongs to, so a kept fill keeps its hover. */
