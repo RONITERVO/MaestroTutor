@@ -1,9 +1,9 @@
 {
   "text": {
-    "default": "gemini-flash-latest",
-    "aux": "gemini-flash-lite-latest",
-    "translation": "gemini-flash-lite-latest",
-    "fallback": "gemini-flash-lite-latest"
+    "default": "gemini-3.7-flash",
+    "aux": "gemini-3.5-flash-lite",
+    "translation": "gemini-3.5-flash-lite",
+    "fallback": "gemini-3.5-flash-lite"
   },
   "image": {
     "generation": "gemini-2.5-flash-image"
@@ -20,7 +20,7 @@
     "schemaVersion": 1,
     "currency": "USD",
     "estimateBasis": "paid-standard-list",
-    "effectiveAt": "2026-07-21",
+    "effectiveAt": "2026-09-01",
     "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
     "googleSearch": {
       "pricePerThousandQueriesUsd": 14,
@@ -28,12 +28,20 @@
     },
     "models": [
       {
+        "id": "gemini-3.7-flash",
+        "displayName": "Gemini 3.7 Flash",
+        "matches": ["gemini-flash-latest", "gemini-3.7-flash"],
+        "inputPerMillion": { "text": 0.75, "audio": 0.75, "image": 0.75, "video": 0.75, "document": 0.75 },
+        "outputPerMillion": { "text": 3.75, "audio": 3.75, "image": 3.75, "video": 3.75, "document": 3.75 },
+        "cachedInputPerMillion": { "text": 0.075, "audio": 0.075, "image": 0.075, "video": 0.075, "document": 0.075 }
+      },
+      {
         "id": "gemini-3.6-flash",
         "displayName": "Gemini 3.6 Flash",
-        "matches": ["gemini-flash-latest", "gemini-3.6-flash"],
-        "inputPerMillion": { "text": 1.5, "audio": 1.5, "image": 1.5, "video": 1.5, "document": 1.5 },
-        "outputPerMillion": { "text": 7.5, "audio": 7.5, "image": 7.5, "video": 7.5, "document": 7.5 },
-        "cachedInputPerMillion": { "text": 0.15, "audio": 0.15, "image": 0.15, "video": 0.15, "document": 0.15 }
+        "matches": ["gemini-3.6-flash"],
+        "inputPerMillion": { "text": 0.75, "audio": 0.75, "image": 0.75, "video": 0.75, "document": 0.75 },
+        "outputPerMillion": { "text": 3.75, "audio": 3.75, "image": 3.75, "video": 3.75, "document": 3.75 },
+        "cachedInputPerMillion": { "text": 0.075, "audio": 0.075, "image": 0.075, "video": 0.075, "document": 0.075 }
       },
       {
         "id": "gemini-3.5-flash-lite",
