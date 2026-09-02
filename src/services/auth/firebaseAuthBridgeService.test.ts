@@ -72,7 +72,7 @@ describe('firebaseAuthBridgeService native plugin loading', () => {
     });
 
     expect(nativeAuthState.methods.signInWithGoogle).toHaveBeenCalledWith({
-      useCredentialManager: true,
+      useCredentialManager: false,
     });
     expect(nativeAuthState.thenReads.count).toBe(0);
   });

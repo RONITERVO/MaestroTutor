@@ -103,10 +103,18 @@ Official reference: [Stripe webhooks](https://docs.stripe.com/webhooks).
 ### Android distribution and Play Integrity
 
 Google Play is used for distribution and Play Integrity App Check, not for
-managed-credit purchases. The release and debug SHA-256 fingerprints above are
-registered and the Play Integrity/API terms are accepted. Revalidate attestation
-with a signed internal-track build after changing package, certificate or Firebase
-app configuration.
+managed-credit purchases. The Play app-signing, upload and debug SHA-256
+fingerprints above are registered and the Play Integrity/API terms are accepted.
+Revalidate attestation with a signed internal-track build after changing package,
+certificate or Firebase app configuration.
+
+Native Google sign-in deliberately uses the authentication plugin's
+activity-based selector instead of Android Credential Manager. On the tested
+Honor/MagicOS device, Credential Manager resumed its `CredentialChooserActivity`
+without attaching a visible window or transferring focus, leaving the client in
+`Signing in...` indefinitely. The activity-based flow completed Firebase sign-in.
+Android can immediately reuse a previously authorized Google account; the system
+only keeps an account chooser visible when user selection is required.
 
 The old Android Publisher billing-verifier service accounts and API permissions
 are not required by the current application. They are legacy cloud-access cleanup,

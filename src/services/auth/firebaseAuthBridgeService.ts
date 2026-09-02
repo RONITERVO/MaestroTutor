@@ -55,7 +55,11 @@ export const firebaseAuthBridgeService = {
     if (isNativeAndroid) {
       const { FirebaseAuthentication: nativeAuth } = await loadNativeAuth();
       const result = await nativeAuth.signInWithGoogle({
-        useCredentialManager: true,
+        // MagicOS can resume CredentialChooserActivity without attaching a
+        // window or transferring focus, leaving this promise pending behind a
+        // permanent "Signing in..." state. The plugin's activity-based flow
+        // presents the same Google account selector reliably on these devices.
+        useCredentialManager: false,
       });
       if (!result.user) {
         throw new Error('Firebase Google sign-in did not return a user.');

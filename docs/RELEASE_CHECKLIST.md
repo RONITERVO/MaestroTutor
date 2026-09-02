@@ -69,6 +69,9 @@ npx cap sync android
       and SHA-256 in Firebase and refresh `android/app/google-services.json`
       before building. An AAB installed by Play is signed differently from a
       locally installed release APK.
+- [ ] On a physical Android device, tap **Sign in with Google** and confirm the
+      Google activity either asks for an account or returns a previously
+      authorized account. The button must not remain on **Signing in...**.
 
 ## 4) Release Signing (One‑Time Setup)
 ```bash
