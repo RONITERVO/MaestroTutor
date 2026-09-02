@@ -5,7 +5,11 @@ def keystorePropertiesFile = rootProject.file('keystore.properties')
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
-def requiresReleaseKeystore = gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }
+def requestedTasks = gradle.startParameter.taskNames.collect { it.toLowerCase() }
+def onlyProcessesReleaseManifest = !requestedTasks.isEmpty() && requestedTasks.every {
+    it.endsWith('processreleasemanifest')
+}
+def requiresReleaseKeystore = requestedTasks.any { it.contains('release') } && !onlyProcessesReleaseManifest
 if (requiresReleaseKeystore && !keystorePropertiesFile.exists()) {
     throw new GradleException("Missing keystore.properties for release build. See android/keystore.properties.example.")
 }

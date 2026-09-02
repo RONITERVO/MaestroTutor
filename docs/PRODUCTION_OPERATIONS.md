@@ -421,23 +421,33 @@ Use a 100% promotion when an authorized maintainer needs to prove the live
 Checkout/webhook/ledger journey without taking money. Do not add credits by hand:
 that bypasses the route being tested. The user must first start and cancel one
 Checkout so the backend creates and stores the correct mode-specific Stripe
-customer. Then use Application Default Credentials with Firebase Auth/Firestore
-access and load the matching restricted Stripe key without printing it:
+customer. Configure Application Default Credentials for a maintainer with
+Firebase Auth/Firestore access, then load the separate promotion-only restricted
+key without printing it:
 
 ```powershell
-$env:STRIPE_SECRET = gcloud secrets versions access latest --secret=STRIPE_SECRET --project=chatwithmaestro
+gcloud auth application-default login
+$env:STRIPE_PROMOTION_SECRET = gcloud secrets versions access latest --secret=STRIPE_PROMOTION_SECRET --project=chatwithmaestro
 try {
   npm --prefix functions run promotion:create-user -- --project chatwithmaestro --mode live --email maintainer@example.com --expires-hours 24
 } finally {
-  Remove-Item Env:STRIPE_SECRET
+  Remove-Item Env:STRIPE_PROMOTION_SECRET
 }
 ```
 
-The command verifies the Firebase user, canonical managed-account customer id,
-Stripe mode and the customer's Firebase UID metadata. It creates a random code
-restricted to that one customer, with one redemption and a short expiry. Share
-only the generated code through the approved maintainer channel; never share the
-restricted key. In Checkout, expand the promotion-code field, enter the code and
+Provision `STRIPE_PROMOTION_SECRET` as a separate Stripe restricted key with only
+Customers read, Coupons write and Promotion Codes write access. Store it in Secret
+Manager for maintainer use, but never bind it to the Functions runtime or add those
+permissions to the Checkout runtime key. Rotate it like any other provider secret.
+
+The command rejects broad Stripe keys and unknown options, then verifies the
+Firebase user, canonical managed-account customer id, Stripe mode and the
+customer's Firebase UID metadata. It creates a random code restricted to that one
+customer, with one redemption and a short expiry. An interrupted run is safe to
+retry with the same explicit `--code`: it recovers the original coupon and expiry
+instead of creating a second coupon. Share only the generated code through the
+approved maintainer channel; never share the restricted key. In Checkout, expand
+the promotion-code field, enter the code and
 complete the zero-total order. A correct event has an exact full discount, zero
 total and no PaymentIntent. The signed webhook still grants from the immutable
 Checkout snapshot and uses the Checkout session id for idempotency. Confirm one

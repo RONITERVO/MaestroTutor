@@ -22,19 +22,29 @@ const usage = `Usage:
     (--uid <firebase-uid> | --email <firebase-email>) \\
     [--code <customer-code>] [--expires-hours <1-168>]
 
-STRIPE_SECRET must contain the matching live or test restricted key.
+STRIPE_PROMOTION_SECRET must contain the matching live or test restricted key.
 The user must have started Checkout once so the canonical managed account
 already contains its mode-specific Stripe customer id.`;
+
+const supportedOptions = new Set([
+  'project',
+  'mode',
+  'uid',
+  'email',
+  'code',
+  'expires-hours',
+]);
 
 const readArgs = (argv) => {
   const values = new Map();
   for (let index = 0; index < argv.length; index += 1) {
     const key = argv[index];
     if (key === '--help' || key === '-h') return new Map([['help', 'true']]);
-    if (!key.startsWith('--') || index + 1 >= argv.length) {
+    const option = key.startsWith('--') ? key.slice(2) : '';
+    if (!supportedOptions.has(option) || index + 1 >= argv.length) {
       throw new Error(`Invalid argument ${key}.`);
     }
-    values.set(key.slice(2), argv[index + 1]);
+    values.set(option, argv[index + 1]);
     index += 1;
   }
   return values;
@@ -61,7 +71,7 @@ const projectId = args.get('project')?.trim() || '';
 const mode = args.get('mode')?.trim() || '';
 const requestedUid = args.get('uid')?.trim() || '';
 const email = args.get('email')?.trim() || '';
-const secret = process.env.STRIPE_SECRET?.trim() || '';
+const secret = process.env.STRIPE_PROMOTION_SECRET?.trim() || '';
 const expiresHours = Number(args.get('expires-hours') || '24');
 const code = (args.get('code')?.trim() || `MAESTRO-${randomBytes(8).toString('hex')}`).toUpperCase();
 
@@ -73,9 +83,9 @@ if (!Number.isInteger(expiresHours) || expiresHours < 1 || expiresHours > 168) {
   errors.push('--expires-hours must be a whole number from 1 through 168.');
 }
 if (!/^[A-Z0-9-]{4,64}$/.test(code)) errors.push('--code must be 4-64 letters, numbers or dashes.');
-if (!secret) errors.push('STRIPE_SECRET is required in the process environment.');
-if (mode && secret && !secret.startsWith(`rk_${mode}_`) && !secret.startsWith(`sk_${mode}_`)) {
-  errors.push(`STRIPE_SECRET does not match ${mode} mode.`);
+if (!secret) errors.push('STRIPE_PROMOTION_SECRET is required in the process environment.');
+if (mode && secret && !secret.startsWith(`rk_${mode}_`)) {
+  errors.push(`STRIPE_PROMOTION_SECRET must be a restricted key for ${mode} mode.`);
 }
 if (errors.length > 0) {
   fail(errors.join('\n'));
@@ -103,24 +113,82 @@ if (errors.length > 0) {
 
   const uidHash = createHash('sha256').update(uid).digest('hex');
   const operationHash = createHash('sha256').update(`${mode}\0${uid}\0${code}`).digest('hex');
-  const expiresAt = Math.floor(Date.now() / 1000) + (expiresHours * 60 * 60);
-  const metadata = { purpose: 'maintainer-user-credit', firebaseUidHash: uidHash };
-  const coupon = await stripe.coupons.create({
-    percent_off: 100,
-    duration: 'once',
-    max_redemptions: 1,
-    redeem_by: expiresAt,
-    name: 'Maestro one-time 100% credit-pack promotion',
-    metadata,
-  }, { idempotencyKey: `maestro-user-coupon-${operationHash}` });
-  const promotion = await stripe.promotionCodes.create({
-    promotion: { type: 'coupon', coupon: coupon.id },
-    customer: customer.id,
+  const couponId = `maestro-user-${operationHash.slice(0, 40)}`;
+  const requestedExpiresAt = Math.floor(Date.now() / 1000) + (expiresHours * 60 * 60);
+  const metadata = {
+    purpose: 'maintainer-user-credit',
+    firebaseUidHash: uidHash,
+    operationHash,
+  };
+  const isMissingResource = (error) => (
+    error?.code === 'resource_missing' || Number(error?.statusCode) === 404
+  );
+
+  // A deterministic coupon id makes a retry recover the first run's original
+  // expiry instead of changing parameters under a reused idempotency key.
+  let coupon;
+  try {
+    coupon = await stripe.coupons.retrieve(couponId);
+  } catch (error) {
+    if (!isMissingResource(error)) throw error;
+    coupon = await stripe.coupons.create({
+      id: couponId,
+      percent_off: 100,
+      duration: 'once',
+      max_redemptions: 1,
+      redeem_by: requestedExpiresAt,
+      name: 'Maestro one-time 100% credit-pack promotion',
+      metadata,
+    }, { idempotencyKey: `maestro-user-coupon-${operationHash}` });
+  }
+
+  if (
+    coupon.percent_off !== 100
+    || coupon.duration !== 'once'
+    || coupon.max_redemptions !== 1
+    || coupon.metadata?.operationHash !== operationHash
+    || coupon.metadata?.firebaseUidHash !== uidHash
+    || typeof coupon.redeem_by !== 'number'
+    || !coupon.valid
+  ) {
+    throw new Error('The recoverable Stripe coupon does not match this operation. Use a new code; nothing was created.');
+  }
+  const expiresAt = coupon.redeem_by;
+
+  const existingPromotions = await stripe.promotionCodes.list({
     code,
-    expires_at: expiresAt,
-    max_redemptions: 1,
-    metadata,
-  }, { idempotencyKey: `maestro-user-promotion-${operationHash}` });
+    customer: customer.id,
+    limit: 10,
+  });
+  let promotion = existingPromotions.data.find((candidate) => (
+    candidate.metadata?.operationHash === operationHash
+    && candidate.metadata?.firebaseUidHash === uidHash
+  ));
+  if (!promotion) {
+    promotion = await stripe.promotionCodes.create({
+      promotion: { type: 'coupon', coupon: coupon.id },
+      customer: customer.id,
+      code,
+      expires_at: expiresAt,
+      max_redemptions: 1,
+      metadata,
+    }, { idempotencyKey: `maestro-user-promotion-${operationHash}` });
+  }
+
+  const promotionCustomerId = typeof promotion.customer === 'string'
+    ? promotion.customer
+    : promotion.customer?.id ?? null;
+  const promotionCouponId = typeof promotion.promotion.coupon === 'string'
+    ? promotion.promotion.coupon
+    : promotion.promotion.coupon?.id ?? null;
+  if (
+    promotionCustomerId !== customer.id
+    || promotionCouponId !== coupon.id
+    || promotion.max_redemptions !== 1
+    || promotion.expires_at !== expiresAt
+  ) {
+    throw new Error('The recoverable Stripe promotion does not match this operation. Use a new code; nothing was created.');
+  }
 
   process.stdout.write(`${JSON.stringify({
     ok: true,
