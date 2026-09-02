@@ -5,7 +5,11 @@ import { Capacitor } from '@capacitor/core';
 // Loaded on demand alongside the Firebase SDK so BYOK-only sessions do not pay
 // the download/initialization cost for managed authentication.
 // See services/firebase/maestroFirebaseService.ts.
-const loadNativeAuth = async () => (await import('@capacitor-firebase/authentication')).FirebaseAuthentication;
+// Keep the module as the promise result and unwrap the plugin afterwards.
+// Capacitor plugin proxies expose arbitrary method names, including `then`;
+// returning one directly from an async function makes Promise resolution call
+// a nonexistent native `FirebaseAuthentication.then()` method.
+const loadNativeAuth = () => import('@capacitor-firebase/authentication');
 const loadWebAuth = () => import('firebase/auth');
 import type { AppUser } from '../../core/contracts/integrations';
 import { maestroFirebaseService } from '../firebase/maestroFirebaseService';
@@ -49,7 +53,7 @@ export const firebaseAuthBridgeService = {
 
   beginGoogleSignIn: async (): Promise<ManagedAuthIdentity> => {
     if (isNativeAndroid) {
-      const nativeAuth = await loadNativeAuth();
+      const { FirebaseAuthentication: nativeAuth } = await loadNativeAuth();
       const result = await nativeAuth.signInWithGoogle({
         useCredentialManager: true,
       });
@@ -90,7 +94,7 @@ export const firebaseAuthBridgeService = {
 
   getCurrentIdentity: async (forceRefresh = false): Promise<ManagedAuthIdentity | null> => {
     if (isNativeAndroid) {
-      const nativeAuth = await loadNativeAuth();
+      const { FirebaseAuthentication: nativeAuth } = await loadNativeAuth();
       const result = await nativeAuth.getCurrentUser();
       if (!result.user) return null;
       const tokenResult = await nativeAuth.getIdToken({ forceRefresh });
@@ -116,7 +120,8 @@ export const firebaseAuthBridgeService = {
 
   signOut: async (): Promise<void> => {
     if (isNativeAndroid) {
-      await (await loadNativeAuth()).signOut();
+      const { FirebaseAuthentication: nativeAuth } = await loadNativeAuth();
+      await nativeAuth.signOut();
       return;
     }
 

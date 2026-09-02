@@ -7,6 +7,11 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https'
   },
+  plugins: {
+    FirebaseAuthentication: {
+      providers: ['google.com']
+    }
+  },
   android: {
     allowMixedContent: false,
     // Opt-in per build rather than a constant that has to be remembered and
