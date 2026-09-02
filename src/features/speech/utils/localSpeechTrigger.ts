@@ -51,20 +51,12 @@ export const waitForLocalSpeechTrigger = async (options: {
 }): Promise<LocalSpeechTriggerResult> => {
   if (options.signal?.aborted) throw abortError();
   const setPhase = (phase: LocalSpeechTriggerPhase) => options.onPhaseChange?.(phase);
-  setPhase('requesting-microphone');
-  const microphoneStream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      sampleRate: INPUT_SAMPLE_RATE,
-      channelCount: 1,
-      echoCancellation: true,
-      noiseSuppression: true,
-    },
-  });
-
+  let microphoneStream: MediaStream | null = null;
   let context: AudioContext | null = null;
   let worklet: AudioWorkletNode | null = null;
   let packetizer: RealtimePcmPacketizer | null = null;
   let settled = false;
+  let microphoneStopped = false;
 
   const stopCapture = async (keepStream: boolean) => {
     if (worklet) {
@@ -78,23 +70,58 @@ export const waitForLocalSpeechTrigger = async (options: {
       try { await context.close(); } catch { /* teardown is best effort */ }
     }
     context = null;
-    if (!keepStream) {
-      microphoneStream.getTracks().forEach(track => {
+    if (!keepStream && !microphoneStopped) {
+      microphoneStopped = true;
+      microphoneStream?.getTracks().forEach(track => {
         try { track.stop(); } catch { /* already stopped */ }
       });
     }
   };
 
+  let rejectAbort: ((error: Error) => void) | null = null;
+  const abortPromise = new Promise<never>((_, reject) => {
+    rejectAbort = reject;
+  });
+  const onAbort = () => {
+    if (settled) return;
+    settled = true;
+    void stopCapture(false).finally(() => rejectAbort?.(abortError()));
+  };
+  const raceAbort = <T>(promise: Promise<T>): Promise<T> => (
+    options.signal ? Promise.race([promise, abortPromise]) : promise
+  );
+  options.signal?.addEventListener('abort', onAbort, { once: true });
+
   try {
+    setPhase('requesting-microphone');
+    const microphoneRequest = navigator.mediaDevices.getUserMedia({
+      audio: {
+        sampleRate: INPUT_SAMPLE_RATE,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+      },
+    });
+    // getUserMedia itself is not abortable. If it resolves after cancellation,
+    // stop the late stream instead of leaking a microphone track.
+    void microphoneRequest.then(stream => {
+      if (settled) stream.getTracks().forEach(track => track.stop());
+    }, () => undefined);
+    microphoneStream = await raceAbort(microphoneRequest);
+
     setPhase('whisper-loading');
-    await options.detector.initialize();
-    if (options.signal?.aborted) throw abortError();
+    await raceAbort(options.detector.initialize());
 
     const AudioContextCtor: typeof AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     context = new AudioContextCtor({ sampleRate: INPUT_SAMPLE_RATE });
     if (!context.audioWorklet) throw new Error('AudioWorklet is required for local speech detection.');
-    await context.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
-    if (options.signal?.aborted) throw abortError();
+    await raceAbort(context.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL));
+    if (context.state === 'suspended') {
+      await raceAbort(context.resume());
+      if (context.state === 'suspended') {
+        throw new Error('Could not start the local speech AudioContext.');
+      }
+    }
 
     const gate = new SpeechGate({ requireConfirmation: true });
     let bufferedPackets: Int16Array[] = [];
@@ -105,10 +132,8 @@ export const waitForLocalSpeechTrigger = async (options: {
       const rejectOnce = (error: Error) => {
         if (settled) return;
         settled = true;
-        void stopCapture(false).finally(() => reject(error));
+        reject(error);
       };
-      const onAbort = () => rejectOnce(abortError());
-      options.signal?.addEventListener('abort', onAbort, { once: true });
 
       packetizer = new RealtimePcmPacketizer({
         sampleRate: INPUT_SAMPLE_RATE,
@@ -148,11 +173,10 @@ export const waitForLocalSpeechTrigger = async (options: {
               return;
             }
             settled = true;
-            options.signal?.removeEventListener('abort', onAbort);
             setPhase('speech-confirmed');
             const pcm = mergeInt16Arrays(recentPcmPackets(bufferedPackets, PREROLL_SAMPLES));
             await stopCapture(true);
-            resolve({ microphoneStream, pcm, transcript });
+            resolve({ microphoneStream: microphoneStream!, pcm, transcript });
           } catch (error) {
             rejectOnce(error instanceof Error ? error : new Error(String(error)));
           } finally {
@@ -169,14 +193,17 @@ export const waitForLocalSpeechTrigger = async (options: {
         const pcm = event.data;
         if (pcm instanceof Int16Array && pcm.length > 0) packetizer?.push(pcm);
       };
-      const source = context!.createMediaStreamSource(microphoneStream);
+      const source = context!.createMediaStreamSource(microphoneStream!);
       source.connect(worklet);
       setPhase('vad-listening');
     });
 
-    return await result;
+    return await raceAbort(result);
   } catch (error) {
+    settled = true;
     await stopCapture(false);
     throw error;
+  } finally {
+    options.signal?.removeEventListener('abort', onAbort);
   }
 };

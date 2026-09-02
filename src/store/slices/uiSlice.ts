@@ -26,6 +26,7 @@ import {
   buildToken,
   getTokenSubtype,
   isReengagementToken,
+  isSilentObserverActivityToken,
   UI_TOKEN_DISPLAY,
 } from '../../core/config/activityTokens';
 import type { MaestroStore } from '../maestroStore';
@@ -162,11 +163,7 @@ export const selectNonReengagementBusy = (state: { activityTokens: Set<string> }
 export const selectBlocksSilentObserver = (state: { activityTokens: Set<string> }): boolean =>
   [...state.activityTokens].some(token => {
     if (isReengagementToken(token)) return false;
-    if (token.startsWith(`${TOKEN_CATEGORY.VAD}:`) || token.startsWith(`${TOKEN_CATEGORY.WHISPER}:`)) return false;
-    if (
-      token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_CONNECTING)
-      || token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_SESSION)
-    ) return false;
+    if (isSilentObserverActivityToken(token)) return false;
     return true;
   });
 

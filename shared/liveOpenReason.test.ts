@@ -53,6 +53,21 @@ describe('Gemini Live open reasons', () => {
       requestId: 'short',
       requestedAt: 'not-a-date',
     })).toBeNull();
+    expect(parseLiveOpenReason({
+      trigger: LIVE_OPEN_TRIGGER.WHISPER_STT,
+      requestId: 'request-1234',
+      requestedAt: '0',
+    })).toBeNull();
     expect(() => requireLiveOpenReason(undefined)).toThrow(/auditable Gemini Live open reason/);
+  });
+
+  it('falls back to an independent audit ID when a caller ID is unsafe', () => {
+    const reason = createLiveOpenReason(LIVE_OPEN_TRIGGER.TOOL_AUDIO_NOTE, {
+      requestId: 'bad',
+      now: new Date('2026-09-02T12:34:56.000Z'),
+    });
+
+    expect(reason.requestId).toMatch(/^live-/);
+    expect(reason.requestId).not.toBe('bad');
   });
 });

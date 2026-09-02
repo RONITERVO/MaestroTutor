@@ -41,6 +41,7 @@ export interface LiveOpenReason {
 
 const LIVE_OPEN_TRIGGER_SET = new Set<string>(Object.values(LIVE_OPEN_TRIGGER));
 const SAFE_REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$/;
+const RFC3339_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 
 export const isLiveOpenTrigger = (value: unknown): value is LiveOpenTrigger => (
   typeof value === 'string' && LIVE_OPEN_TRIGGER_SET.has(value)
@@ -55,7 +56,7 @@ export const parseLiveOpenReason = (value: unknown): LiveOpenReason | null => {
   const candidate = value as Record<string, unknown>;
   if (!isLiveOpenTrigger(candidate.trigger)) return null;
   if (typeof candidate.requestId !== 'string' || !SAFE_REQUEST_ID.test(candidate.requestId)) return null;
-  if (typeof candidate.requestedAt !== 'string') return null;
+  if (typeof candidate.requestedAt !== 'string' || !RFC3339_TIMESTAMP.test(candidate.requestedAt)) return null;
   const requestedAtMs = Date.parse(candidate.requestedAt);
   if (!Number.isFinite(requestedAtMs)) return null;
   return {
@@ -73,10 +74,13 @@ export const createLiveOpenReason = (
 ): LiveOpenReason => {
   const randomId = typeof globalThis.crypto?.randomUUID === 'function'
     ? globalThis.crypto.randomUUID()
-    : `fallback-${Date.now()}-${++fallbackRequestSequence}`;
+    : `fallback-${Date.now()}-${++fallbackRequestSequence}-${Math.random().toString(36).slice(2, 12).padEnd(10, '0')}`;
+  const requestId = typeof options.requestId === 'string' && SAFE_REQUEST_ID.test(options.requestId)
+    ? options.requestId
+    : `live-${randomId}`;
   const reason = parseLiveOpenReason({
     trigger,
-    requestId: options.requestId || `live-${randomId}`,
+    requestId,
     requestedAt: (options.now || new Date()).toISOString(),
   });
   if (!reason) throw new Error('Could not create a valid Gemini Live open reason.');

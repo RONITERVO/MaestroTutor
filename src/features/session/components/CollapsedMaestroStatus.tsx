@@ -151,6 +151,10 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
       .filter((entry): entry is { token: string; config: TokenDisplayConfig } => Boolean(entry.config))
       .sort((a, b) => (a.config.priority ?? 100) - (b.config.priority ?? 100));
   }, [activeFlagTokens]);
+  const hasSpeechGatePhase = displayTokens.some(({ token }) => {
+    const category = getTokenCategory(token);
+    return category === TOKEN_CATEGORY.VAD || category === TOKEN_CATEGORY.WHISPER;
+  });
 
   const renderUsageBadges = () => {
     if (!showHoldUsageBadge && !showMicUsageBadge) return null;
@@ -196,7 +200,7 @@ const CollapsedMaestroStatus: React.FC<CollapsedMaestroStatusProps> = ({
     );
   };
 
-  if (stage !== 'idle') {
+  if (stage !== 'idle' && !(stage === 'listening' && hasSpeechGatePhase)) {
     const config = STAGE_DISPLAY[stage];
     const IconComponent = Icons[config.icon as keyof typeof Icons];
     return (

@@ -5,10 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { streamGeminiLiveTts } from '../services/geminiLiveTts';
 import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
 import type { SpeechPart, TtsProvider, SpeechCacheDetails } from '../../../core/types';
-import {
-  LIVE_OPEN_TRIGGER,
-  type TtsLiveOpenTrigger,
-} from '../../../../shared/liveOpenReason';
+import type { TtsLiveOpenTrigger } from '../../../../shared/liveOpenReason';
 
 export interface UseTtsEngineOptions {
   onQueueComplete?: () => void;
@@ -35,7 +32,7 @@ export interface UseTtsEngineReturn {
   isSpeechSynthesisSupported: boolean;
   isSpeaking: boolean;
   speakingUtteranceText: string | null;
-  speak: (textOrParts: string | SpeechPart[], defaultLang: string, liveOpenTrigger?: TtsLiveOpenTrigger) => void;
+  speak: (textOrParts: string | SpeechPart[], defaultLang: string, liveOpenTrigger: TtsLiveOpenTrigger) => void;
   stopSpeaking: () => void;
   hasPendingQueueItems: () => boolean;
 }
@@ -166,7 +163,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
         lines,
         audioContext,
         voiceName: geminiLiveItems[0]?.voiceName,
-        liveOpenTrigger: geminiLiveItems[0]?.liveOpenTrigger || LIVE_OPEN_TRIGGER.VOICE_TTS_CLICK,
+        liveOpenTrigger: geminiLiveItems[0].liveOpenTrigger,
         abortSignal: abortController.signal,
         onLineStart: (_, text) => {
           setSpeakingUtteranceText(text);
@@ -265,7 +262,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
   const speak = useCallback((
     textOrParts: string | SpeechPart[],
     defaultLang: string,
-    liveOpenTrigger: TtsLiveOpenTrigger = LIVE_OPEN_TRIGGER.VOICE_TTS_CLICK,
+    liveOpenTrigger: TtsLiveOpenTrigger,
   ) => {
     const parts: SpeechPart[] = typeof textOrParts === 'string' ? [{ text: textOrParts, langCode: defaultLang }] : textOrParts;
     const provider: TtsProvider = 'gemini-live';

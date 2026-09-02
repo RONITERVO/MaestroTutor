@@ -431,7 +431,7 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
   return {
     // TTS
     isSpeaking,
-    speak,
+    speak: speakWrapper,
     stopSpeaking,
     isSpeechSynthesisSupported,
     speakingUtteranceText,

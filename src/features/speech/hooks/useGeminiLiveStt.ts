@@ -482,9 +482,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       streamRef.current = stream;
       localInputPreviewRef.current = localSpeechTrigger.transcript;
       scheduleTranscriptStateUpdate(true);
-      setLocalSpeechTriggerPhase(null);
-      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
-      let pendingInitialPcm: Int16Array | null = localSpeechTrigger.pcm;
 
       // --- 2. Initialize Audio Context & Worklet ---
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -599,14 +596,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                const finalSegment = (
                  interimParrotRef.current.trim()
                  || interimInputRef.current.trim()
-                 || localInputPreviewRef.current.trim()
                );
                if (finalSegment) {
                    const sep = committedTranscriptRef.current ? ' ' : '';
                    committedTranscriptRef.current += sep + finalSegment;
                }
 
-               const inputTranscript = interimInputRef.current.trim() || localInputPreviewRef.current.trim();
+               const inputTranscript = interimInputRef.current.trim();
                const outputTranscript = interimParrotRef.current.trim();
                const turnSamples = turnAudioSamplesRef.current;
                const nextTurnId = turnIdRef.current + 1;
@@ -736,9 +732,44 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       
       // Check if session was invalidated during async connect
       if (currentSessionIdRef.current !== sessionId) {
+        if (sessionRef.current === session) sessionRef.current = null;
         try { session.close(); } catch { /* ignore */ }
         return;
       }
+
+      const encodeAndSend = async (pcm: Int16Array) => {
+        const retained = gateInputOnSpeech ? pcm.slice() : null;
+        const transferBuffer = toTransferableArrayBuffer(pcm);
+        const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
+        if (
+          currentSessionIdRef.current !== sessionId
+          || speechGateEpochRef.current !== speechGateEpoch
+        ) return;
+        const activeSession = sessionRef.current;
+        if (!activeSession) return;
+        activeSession.sendRealtimeInput({
+          audio: {
+            data: base64,
+            mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
+          },
+        });
+        if (retained) {
+          audioChunksRef.current.push(retained);
+          totalAudioSamplesRef.current += retained.length;
+          turnAudioSamplesRef.current += retained.length;
+        }
+      };
+
+      for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+        await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+      }
+      if (currentSessionIdRef.current !== sessionId) {
+        if (sessionRef.current === session) sessionRef.current = null;
+        try { session.close(); } catch { /* ignore */ }
+        return;
+      }
+      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
+      setLocalSpeechTriggerPhase(null);
 
       inputPacketizerRef.current = new RealtimePcmPacketizer({
         sampleRate: INPUT_SAMPLE_RATE,
@@ -751,29 +782,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               || speechGateEpochRef.current !== speechGateEpoch
             ) return;
 
-            const encodeAndSend = async (pcm: Int16Array) => {
-              const retained = gateInputOnSpeech ? pcm.slice() : null;
-              const transferBuffer = toTransferableArrayBuffer(pcm);
-              const base64 = await ensureCodecWorker().encodePcmToBase64(transferBuffer);
-              if (
-                currentSessionIdRef.current !== sessionId
-                || speechGateEpochRef.current !== speechGateEpoch
-              ) return;
-              const activeSession = sessionRef.current;
-              if (!activeSession) return;
-              activeSession.sendRealtimeInput({
-                audio: {
-                  data: base64,
-                  mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}`,
-                },
-              });
-              if (retained) {
-                audioChunksRef.current.push(retained);
-                totalAudioSamplesRef.current += retained.length;
-                turnAudioSamplesRef.current += retained.length;
-              }
-            };
-
             const gate = speechGateRef.current;
             const now = Date.now();
             const energy = measureEnergy(packet);
@@ -781,13 +789,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             const decision = gate ? gate.evaluate(energy, now) : null;
 
             if (!decision || decision.send) {
-              if (pendingInitialPcm && pendingInitialPcm.length > 0) {
-                const initialPcm = pendingInitialPcm;
-                pendingInitialPcm = null;
-                for (let offset = 0; offset < initialPcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
-                  await encodeAndSend(initialPcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
-                }
-              }
               await encodeAndSend(packet);
               return;
             }

@@ -37,9 +37,13 @@ export const TOKEN_SUBTYPE = {
 
   // Local speech trigger
   VAD_LISTEN: 'listen',
+  VAD_OBSERVER_LISTEN: 'observer-listen',
   WHISPER_LOADING: 'loading',
   WHISPER_CHECKING: 'checking',
   WHISPER_TRIGGERED: 'triggered',
+  WHISPER_OBSERVER_LOADING: 'observer-loading',
+  WHISPER_OBSERVER_CHECKING: 'observer-checking',
+  WHISPER_OBSERVER_TRIGGERED: 'observer-triggered',
 
   // UI - User interactions
   HOLD: 'hold',
@@ -81,6 +85,15 @@ export const getTokenSubtype = (token: string): string =>
 export const isReengagementToken = (token: string): boolean =>
   token.startsWith(`${TOKEN_CATEGORY.UI}:${TOKEN_SUBTYPE.REENGAGE_WAIT}`) ||
   token.startsWith(`${TOKEN_CATEGORY.UI}:${TOKEN_SUBTYPE.REENGAGE_COUNTDOWN}`);
+
+/** Activity owned by the passive speech observer itself. */
+export const isSilentObserverActivityToken = (token: string): boolean =>
+  token === buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_LISTEN)
+  || token === buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_LOADING)
+  || token === buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_CHECKING)
+  || token === buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_TRIGGERED)
+  || token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_CONNECTING)
+  || token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_SESSION);
 
 // -----------------------------------------------------------------------------
 // DISPLAY CONFIGURATION
@@ -246,6 +259,33 @@ export const SPEECH_GATE_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
     priority: 1,
   },
   [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_TRIGGERED)]: {
+    icon: 'IconMicrophone',
+    textKey: 'chat.maestro.whisperTriggered',
+    titleKey: 'chat.maestro.title.whisperTriggered',
+    priority: 0,
+  },
+  [buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_LISTEN)]: {
+    icon: 'IconWaveform',
+    textKey: 'chat.maestro.localListening',
+    titleKey: 'chat.maestro.title.localListening',
+    animate: true,
+    priority: 4,
+  },
+  [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_LOADING)]: {
+    icon: 'IconSparkles',
+    textKey: 'chat.maestro.whisperLoading',
+    titleKey: 'chat.maestro.title.whisperLoading',
+    animate: true,
+    priority: 2,
+  },
+  [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_CHECKING)]: {
+    icon: 'IconWaveform',
+    textKey: 'chat.maestro.whisperChecking',
+    titleKey: 'chat.maestro.title.whisperChecking',
+    animate: true,
+    priority: 1,
+  },
+  [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_TRIGGERED)]: {
     icon: 'IconMicrophone',
     textKey: 'chat.maestro.whisperTriggered',
     titleKey: 'chat.maestro.title.whisperTriggered',

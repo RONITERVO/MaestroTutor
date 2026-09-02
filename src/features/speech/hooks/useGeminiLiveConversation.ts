@@ -330,12 +330,12 @@ export function useGeminiLiveConversation(
     callbacksRef.current.onLocalSpeechTriggerPhaseChange?.(phase);
     if (!phase) return;
     const token = phase === 'whisper-loading'
-      ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_LOADING)
+      ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_LOADING)
       : (phase === 'whisper-checking'
-        ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_CHECKING)
+        ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_CHECKING)
         : (phase === 'speech-confirmed'
-          ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_TRIGGERED)
-          : addActivityToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_LISTEN)));
+          ? addActivityToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_TRIGGERED)
+          : addActivityToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_LISTEN)));
     speechTriggerActivityTokenRef.current = token;
   }, [addActivityToken, removeActivityToken]);
 
@@ -879,9 +879,11 @@ export function useGeminiLiveConversation(
           localSpeechTrigger.microphoneStream.getTracks().forEach(track => track.stop());
           return;
         }
+        // Register the retained stream before any further setup awaits so the
+        // shared cleanup path can always stop it after an error.
+        microphoneStreamRef.current = localSpeechTrigger.microphoneStream;
         localInputPreviewRef.current = localSpeechTrigger.transcript;
         emitTurnTranscriptUpdate('pending-user');
-        setLocalSpeechTriggerPhase(null);
       }
 
       // Cleanup deliberately clears all per-session gate state, so initialize
@@ -889,16 +891,12 @@ export function useGeminiLiveConversation(
       speechGateRef.current = gateInputOnSpeech
         ? new SpeechGate({ requireConfirmation: true })
         : null;
-      if (speechGateRef.current && localSpeechTrigger) {
-        speechGateRef.current.openFromConfirmedTrigger(Date.now());
-      }
       gatePrerollRef.current = [];
       playbackUntilRef.current = 0;
       playbackActiveRef.current = false;
       lastWhisperRequestAtRef.current = 0;
       loadingFallbackOnsetAtRef.current = null;
       const speechGateEpoch = speechGateEpochRef.current;
-      let pendingInitialPcm = localSpeechTrigger?.pcm || null;
       updateState('connecting');
 
       if (stream && stream.active) {
@@ -1424,8 +1422,42 @@ export function useGeminiLiveConversation(
       
       // Check if session was invalidated during async connect
       if (currentSessionIdRef.current !== sessionId) {
+        if (sessionRef.current === session) sessionRef.current = null;
         try { session.close(); } catch {}
         return;
+      }
+
+      const encodeAndSend = async (pcm: Int16Array) => {
+        // Encoding transfers the packet buffer to a worker. Preserve a copy
+        // only for gated audio that was truly sent.
+        const retained = gateInputOnSpeech ? pcm.slice() : null;
+        const base64 = await ensureInputCodecWorker().encodePcmToBase64(
+          toTransferableArrayBuffer(pcm),
+        );
+        if (
+          currentSessionIdRef.current !== sessionId
+          || speechGateEpochRef.current !== speechGateEpoch
+        ) return;
+        const activeSession = sessionRef.current;
+        if (!activeSession) return;
+        activeSession.sendRealtimeInput({
+          audio: { data: base64, mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
+        });
+        if (retained) {
+          currentUserAudioChunksRef.current.push(retained);
+          currentUserAudioTotalLengthRef.current += retained.length;
+        }
+      };
+
+      // Consume the confirmed pre-roll exactly once, then start the hangover
+      // clock immediately before normal captured packets begin.
+      if (speechGateRef.current && localSpeechTrigger) {
+        for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+          await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+        }
+        if (await abortIfInvalidated()) return;
+        speechGateRef.current.openFromConfirmedTrigger(Date.now());
+        setLocalSpeechTriggerPhase(null);
       }
 
       inputPacketizerRef.current = new RealtimePcmPacketizer({
@@ -1438,29 +1470,6 @@ export function useGeminiLiveConversation(
               currentSessionIdRef.current !== sessionId
               || speechGateEpochRef.current !== speechGateEpoch
             ) return;
-
-            const encodeAndSend = async (pcm: Int16Array) => {
-              // Encoding transfers the packet buffer to a worker. Preserve a
-              // copy only for gated audio that was truly sent; retaining every
-              // captured packet made the idle observer grow by ~115 MB/hour.
-              const retained = gateInputOnSpeech ? pcm.slice() : null;
-              const base64 = await ensureInputCodecWorker().encodePcmToBase64(
-                toTransferableArrayBuffer(pcm),
-              );
-              if (
-                currentSessionIdRef.current !== sessionId
-                || speechGateEpochRef.current !== speechGateEpoch
-              ) return;
-              const activeSession = sessionRef.current;
-              if (!activeSession) return;
-              activeSession.sendRealtimeInput({
-                audio: { data: base64, mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
-              });
-              if (retained) {
-                currentUserAudioChunksRef.current.push(retained);
-                currentUserAudioTotalLengthRef.current += retained.length;
-              }
-            };
 
             const gate = speechGateRef.current;
             const now = Date.now();
@@ -1482,13 +1491,6 @@ export function useGeminiLiveConversation(
             const decision = gate ? gate.evaluate(energy, now) : null;
 
             if (!decision || decision.send) {
-              if (pendingInitialPcm && pendingInitialPcm.length > 0) {
-                const initialPcm = pendingInitialPcm;
-                pendingInitialPcm = null;
-                for (let offset = 0; offset < initialPcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
-                  await encodeAndSend(initialPcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
-                }
-              }
               await encodeAndSend(packet);
               return;
             }

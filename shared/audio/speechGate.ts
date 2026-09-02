@@ -187,8 +187,9 @@ export class SpeechGate {
 
   /**
    * Seed an already-confirmed utterance captured by the pre-connect Whisper
-   * monitor. This is intentionally separate from `confirmSpeech`: the paid
-   * transport did not exist while the monitor accumulated its candidate.
+   * monitor once the paid transport is ready to receive its buffered audio.
+   * This is intentionally separate from `confirmSpeech`: the paid transport
+   * did not exist while the monitor accumulated its candidate.
    */
   openFromConfirmedTrigger(now: number): boolean {
     if (!this.options.requireConfirmation) return false;
