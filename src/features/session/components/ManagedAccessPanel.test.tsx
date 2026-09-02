@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ManagedAccessPanel from './ManagedAccessPanel';
 import { ServiceHttpError } from '../../../services/shared/serviceErrors';
@@ -49,7 +49,11 @@ vi.mock('../../../services/account/maestroManagedAccountController', () => ({
     startStripeReturnPolling: mocks.startStripeReturnPolling,
   },
 }));
-vi.mock('./ManagedAccountActivityModal', () => ({ default: () => null }));
+vi.mock('./ManagedAccountActivityModal', () => ({
+  default: ({ isOpen }: { isOpen: boolean }) => (
+    isOpen ? <div role="dialog" aria-modal="true" aria-label="Account activity dialog" /> : null
+  ),
+}));
 
 // Vitest runs without globals here, so Testing Library never registers its own
 // auto-cleanup and one test's modal would still be mounted during the next.
@@ -134,6 +138,39 @@ describe('ManagedAccessPanel card footprint', () => {
       .toEqual(['Refresh balance', 'Managed account']);
     // The balance is a preview on the button that opens the rest, not prose.
     expect(screen.getByRole('button', { name: 'Managed account' }).textContent).toBe('100');
+  });
+
+  it('replaces account details with activity instead of stacking modal dialogs', () => {
+    render(<ManagedAccessPanel session={session as any} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Managed account' }));
+    const details = screen.getByRole('dialog');
+    fireEvent.click(within(details).getByRole('button', { name: 'managedAccess.activityAction' }));
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: 'Account activity dialog' })).toBeTruthy();
+  });
+
+  it('traps keyboard focus in account details and restores its opener on close', async () => {
+    render(<ManagedAccessPanel session={null} />);
+    const opener = screen.getByRole('button', { name: 'Managed access details' });
+    opener.focus();
+    fireEvent.click(opener);
+
+    const dialog = screen.getByRole('dialog');
+    await waitFor(() => expect(document.activeElement).toBe(dialog));
+    const close = within(dialog).getByRole('button', { name: 'managedAccess.closeDetails' });
+    const signIn = within(dialog).getByRole('button', { name: 'Sign in with Google' });
+
+    signIn.focus();
+    fireEvent.keyDown(signIn, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(signIn);
+
+    fireEvent.click(close);
+    await waitFor(() => expect(document.activeElement).toBe(opener));
   });
 
   it('explains an attestation failure instead of quoting the backend', async () => {

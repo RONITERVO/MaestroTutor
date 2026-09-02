@@ -85,9 +85,50 @@ const ManagedAccountModal: React.FC<ManagedAccountModalProps> = ({
   const isSignedIn = Boolean(session?.firebaseIdToken);
 
   useEffect(() => {
-    if (!isOpen) return;
-    requestAnimationFrame(() => dialogRef.current?.focus());
+    if (!isOpen) return undefined;
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const focusFrame = requestAnimationFrame(() => dialogRef.current?.focus());
+
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      requestAnimationFrame(() => {
+        if (previouslyFocused?.isConnected) previouslyFocused.focus();
+      });
+    };
   }, [isOpen]);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
+    )).filter(element => element.getAttribute('aria-hidden') !== 'true');
+    if (focusable.length === 0) {
+      event.preventDefault();
+      dialog.focus();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -101,9 +142,7 @@ const ManagedAccountModal: React.FC<ManagedAccountModalProps> = ({
         tabIndex={-1}
         className="flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col bg-gate-bg text-sm text-gate-text shadow-2xl outline-none focus:ring-2 focus:ring-gate-accent sketchy-border-thin"
         onClick={event => event.stopPropagation()}
-        onKeyDown={event => {
-          if (event.key === 'Escape') onClose();
-        }}
+        onKeyDown={handleDialogKeyDown}
       >
         <header className="flex items-center justify-between border-b border-gate-muted-text/20 px-4 py-3">
           <div className="flex items-center gap-2">

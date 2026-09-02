@@ -145,7 +145,7 @@ requireText(
   'Packaged Android config must enable the native Google authentication provider.',
 );
 requireText(
-  /rgcfaIncludeGoogle\s*=\s*true/.test(androidVariables),
+  /^[ \t]*rgcfaIncludeGoogle[ \t]*=[ \t]*true[ \t]*(?:\/\/.*)?$/m.test(androidVariables),
   'Android Gradle variables must package the native Google authentication SDKs.',
 );
 requireText(

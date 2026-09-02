@@ -23,9 +23,10 @@ export const getHttpStatus = (error: unknown, fallback = 500): number => (
 /**
  * Only errors this module created carry a client-facing code. Runtime and
  * library errors also have a `code` (`ENOENT`, `ECONNRESET`, Firestore's
- * numeric codes), and echoing those back would describe the backend's internals
- * to callers instead of naming a condition a client can act on. A numeric
- * `status` is the marker for "deliberately shaped for the client".
+ * string codes such as `not-found`), and echoing those back would describe the
+ * backend's internals to callers instead of naming a condition a client can
+ * act on. A numeric `status` is the marker for "deliberately shaped for the
+ * client".
  */
 export const getHttpErrorCode = (error: unknown): string | undefined => {
   if (typeof error !== 'object' || error === null) return undefined;

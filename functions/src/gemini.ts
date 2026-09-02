@@ -28,7 +28,7 @@ import {
   resolveManagedContentOperation,
   usesManagedGoogleSearch,
 } from './geminiPolicy';
-import { createHttpError, getErrorMessage } from './http';
+import { createHttpError, getErrorMessage, getHttpErrorCode } from './http';
 import {
   MANAGED_RUNTIME_RETENTION_MS,
   accountDeletionClaimRef,
@@ -727,6 +727,7 @@ export const streamManagedContent = async (params: {
           type: 'error',
           message: getErrorMessage(error),
           status: Number((error as { status?: unknown })?.status) || 500,
+          code: getHttpErrorCode(error),
         })}\n`);
         streamFinished = true;
         response.end();

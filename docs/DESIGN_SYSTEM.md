@@ -5,7 +5,7 @@ This is the canonical color and UI styling reference for contributors.
 ## Overview
 
 - Last updated: 2026-09-02
-- Active color tokens: 314
+- Active color tokens: 316
 - Token groups: 35
 - Legacy migration keys supported: 91
 - Token model: one token per visual UI element (1:1 element token mapping)
@@ -413,6 +413,8 @@ Setup screen for API key configuration
 | `--gate-btn-text` | `40 8% 97%` | Setup Action Text | Action button text in setup panel |
 | `--gate-error-text` | `220 5% 42%` | Setup Error Text | Error message text in setup panel |
 | `--gate-accent` | `220 6% 28%` | Setup Icon Accent | Accent color for icons in setup panel |
+| `--gate-ok-border` | `120 40% 60%` | Managed Account Ready Border | Border for a connected managed account |
+| `--gate-error-border` | `0 60% 60%` | Managed Account Error Border | Border for a managed account that needs attention |
 | `--gate-disclaimer-text` | `0 0% 100% / 0.55` | Disclaimer Text | Fine print under the API key form |
 | `--gate-disclaimer-link-hover` | `0 0% 100% / 0.75` | Disclaimer Link (Hover) | A disclaimer link while pointed at |
 | `--gate-disclaimer-underline` | `0 0% 100% / 0.25` | Disclaimer Link Underline | Underline beneath disclaimer links |

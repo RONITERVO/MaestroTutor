@@ -262,8 +262,7 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
     <div className="space-y-3">
       {isSignedIn ? (
         <div
-          className="flex min-h-12 w-full items-center gap-1 bg-gate-input-bg/75 py-2 pl-4 pr-2 sketchy-border-thin"
-          style={{ borderColor: errorMessage ? 'hsl(0 60% 60%)' : 'hsl(120 40% 60%)' }}
+          className={`flex min-h-12 w-full items-center gap-1 bg-gate-input-bg/75 py-2 pl-4 pr-2 sketchy-border-thin ${errorMessage ? 'border-gate-error-border' : 'border-gate-ok-border'}`}
         >
           <span className="min-w-0 flex-1 truncate text-sm text-gate-text">{session?.user.email}</span>
           <button
@@ -331,7 +330,10 @@ const ManagedAccessPanel: React.FC<ManagedAccessPanelProps> = ({ session }) => {
         onSignOut={() => void handleSignOut()}
         onRefresh={() => void refreshAccount()}
         onPurchase={() => void handlePurchase()}
-        onOpenActivity={() => setIsActivityOpen(true)}
+        onOpenActivity={() => {
+          setIsDetailsOpen(false);
+          setIsActivityOpen(true);
+        }}
         onOpenDeleteConfirm={() => {
           setStatusMessage(null);
           setErrorMessage(null);

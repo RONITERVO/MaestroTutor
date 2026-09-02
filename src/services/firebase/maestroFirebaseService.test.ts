@@ -59,6 +59,20 @@ describe('App Check token acquisition', () => {
     expect(service.getAppCheckFailureReason()).toBeNull();
   });
 
+  it('recovers an empty cached token with one forced refresh', async () => {
+    mocks.getToken
+      .mockResolvedValueOnce({ token: '', expireTimeMillis: 0 })
+      .mockResolvedValueOnce({ token: 'refreshed-attestation-jwt', expireTimeMillis: 1 });
+    const service = await importService();
+
+    await expect(service.getAppCheckToken()).resolves.toBe('refreshed-attestation-jwt');
+    expect(mocks.getToken.mock.calls).toEqual([
+      [{ forceRefresh: false }],
+      [{ forceRefresh: true }],
+    ]);
+    expect(service.getAppCheckFailureReason()).toBeNull();
+  });
+
   it('keeps the attestation error when both attempts fail', async () => {
     mocks.getToken.mockRejectedValue(new Error('App is not recognised by Play.'));
     const service = await importService();

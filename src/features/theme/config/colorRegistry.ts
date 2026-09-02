@@ -235,6 +235,8 @@ export const COLOR_GROUPS: ColorGroup[] = [
       { cssVar: 'gate-btn-text', friendlyName: 'Setup Action Text', description: 'Action button text in setup panel' },
       { cssVar: 'gate-error-text', friendlyName: 'Setup Error Text', description: 'Error message text in setup panel' },
       { cssVar: 'gate-accent', friendlyName: 'Setup Icon Accent', description: 'Accent color for icons in setup panel' },
+      { cssVar: 'gate-ok-border', friendlyName: 'Managed Account Ready Border', description: 'Border for a connected managed account' },
+      { cssVar: 'gate-error-border', friendlyName: 'Managed Account Error Border', description: 'Border for a managed account that needs attention' },
       { cssVar: 'gate-disclaimer-text', friendlyName: 'Disclaimer Text', description: 'Fine print under the API key form' },
       { cssVar: 'gate-disclaimer-link-hover', friendlyName: 'Disclaimer Link (Hover)', description: 'A disclaimer link while pointed at' },
       { cssVar: 'gate-disclaimer-underline', friendlyName: 'Disclaimer Link Underline', description: 'Underline beneath disclaimer links' },

@@ -41,6 +41,9 @@ export const describeManagedAccessError = (
   t: TranslationFunction,
   fallbackKey: string,
 ): string => {
+  const code = error instanceof ServiceHttpError ? error.code : undefined;
+  if (code === 'app-check/missing') return t('managedAccess.appCheckMissing');
+  if (code === 'app-check/invalid') return t('managedAccess.appCheckInvalid');
   if (isAppCheckFailure(error)) return t('managedAccess.appCheckFailed');
   return (error instanceof Error && error.message) || t(fallbackKey);
 };

@@ -160,6 +160,8 @@ export const ORIGINAL_COLORS: Record<string, string> = {
   'gate-btn-text': '210 25% 99%',
   'gate-error-text': '350 70% 50%',
   'gate-accent': '220 70% 55%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme Customizer
   'theme-panel-bg': '210 25% 99%',
@@ -559,6 +561,8 @@ export const OCEAN_BLUE_COLORS: Record<string, string> = {
   'gate-btn-text': '198 100% 98%',
   'gate-error-text': '350 67% 52%',
   'gate-accent': '195 72% 46%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme Customizer
   'theme-panel-bg': '196 45% 97%',
@@ -923,6 +927,8 @@ export const SUNSET_GOLD_COLORS: Record<string, string> = {
   'gate-btn-text': '40 100% 98%',
   'gate-error-text': '350 67% 50%',
   'gate-accent': '31 86% 56%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme Customizer
   'theme-panel-bg': '39 83% 97%',
@@ -1287,6 +1293,8 @@ export const DARK_NEON_COLORS: Record<string, string> = {
   'gate-btn-text': '0 0% 100%',
   'gate-error-text': '350 82% 62%',
   'gate-accent': '166 100% 44%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme Customizer
   'theme-panel-bg': '230 20% 13%',
@@ -1639,6 +1647,8 @@ export const SCHOLAR_COLORS: Record<string, string> = {
   'gate-btn-text': '0 0% 100%',
   'gate-error-text': '350 68% 52%',
   'gate-accent': '261 75% 63%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   'theme-panel-bg': '38 44% 97%',
   'theme-panel-text': '247 29% 20%',
@@ -1995,6 +2005,8 @@ export const PURE_LIGHT_COLORS: Record<string, string> = {
   'gate-btn-text': '0 0% 100%',
   'gate-error-text': '350 70% 50%',
   'gate-accent': '215 100% 50%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme customizer
   'theme-panel-bg': '0 0% 100%',
@@ -2393,6 +2405,8 @@ export const OBSIDIAN_COLORS: Record<string, string> = {
   'gate-btn-text': '220 8% 12%',
   'gate-error-text': '220 15% 65%',
   'gate-accent': '40 8% 85%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme customizer
   'theme-panel-bg': '220 8% 16%',
@@ -2788,6 +2802,8 @@ export const FOREST_COLORS: Record<string, string> = {
   'gate-btn-text': '80 15% 98%',
   'gate-error-text': '15 70% 46%',
   'gate-accent': '140 55% 38%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme Customizer
   'theme-panel-bg': '80 18% 98%',
@@ -3152,6 +3168,8 @@ export const LAVENDER_COLORS: Record<string, string> = {
   'gate-btn-text': '267 35% 98%',
   'gate-error-text': '340 62% 48%',
   'gate-accent': '270 58% 56%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme Customizer
   'theme-panel-bg': '267 30% 99%',
@@ -3516,6 +3534,8 @@ export const SPECTRUM_COLORS: Record<string, string> = {
   'gate-btn-text': '0 0% 100%',
   'gate-error-text': '5 70% 48%',
   'gate-accent': '153 76% 38%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
 
   // Theme Customizer
   'theme-panel-bg': '0 0% 100%',
@@ -3869,6 +3889,8 @@ export const GRAPHITE_COLORS: Record<string, string> = {
   'gate-btn-text': '40 8% 97%',
   'gate-error-text': '220 5% 42%',
   'gate-accent': '220 6% 28%',
+  'gate-ok-border': '120 40% 60%',
+  'gate-error-border': '0 60% 60%',
   // Theme customizer
   'theme-panel-bg': '40 6% 99%',
   'theme-panel-text': '220 8% 16%',

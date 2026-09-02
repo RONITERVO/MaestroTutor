@@ -158,6 +158,8 @@ export const enTranslations: Record<string, string> = {
   "managedAccess.accountAction": "Managed account: {account}, {credits}",
   "managedAccess.closeDetails": "Close managed access",
   "managedAccess.appCheckFailed": "Google could not verify this app on this device, so managed access is unavailable. Install the app from Google Play, check your connection, and try again.",
+  "managedAccess.appCheckMissing": "Maestro received the request without its security token. Try again on a different connection; if it continues, update the app.",
+  "managedAccess.appCheckInvalid": "Maestro could not accept this app's security token. Update the app from Google Play, check your connection, and try again.",
   "managedAccess.activityAction": "Account activity",
   "managedAccess.activityTitle": "Managed account activity",
   "managedAccess.activityClose": "Close account activity",
