@@ -37,7 +37,9 @@ export const TOKEN_SUBTYPE = {
 
   // Local speech trigger
   VAD_LISTEN: 'listen',
+  VAD_ACTIVE: 'active',
   VAD_OBSERVER_LISTEN: 'observer-listen',
+  VAD_OBSERVER_ACTIVE: 'observer-active',
   WHISPER_LOADING: 'loading',
   WHISPER_CHECKING: 'checking',
   WHISPER_TRIGGERED: 'triggered',
@@ -89,6 +91,7 @@ export const isReengagementToken = (token: string): boolean =>
 /** Activity owned by the passive speech observer itself. */
 export const isSilentObserverActivityToken = (token: string): boolean =>
   token === buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_LISTEN)
+  || token === buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_ACTIVE)
   || token === buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_LOADING)
   || token === buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_CHECKING)
   || token === buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_TRIGGERED)
@@ -241,8 +244,14 @@ export const SPEECH_GATE_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
     icon: 'IconWaveform',
     textKey: 'chat.maestro.localListening',
     titleKey: 'chat.maestro.title.localListening',
-    animate: true,
     priority: 4,
+  },
+  [buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_ACTIVE)]: {
+    icon: 'IconWaveform',
+    textKey: 'chat.maestro.localListening',
+    titleKey: 'chat.maestro.title.localListening',
+    animate: true,
+    priority: 0,
   },
   [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_LOADING)]: {
     icon: 'IconSparkles',
@@ -268,8 +277,14 @@ export const SPEECH_GATE_TOKEN_DISPLAY: Record<string, TokenDisplayConfig> = {
     icon: 'IconWaveform',
     textKey: 'chat.maestro.localListening',
     titleKey: 'chat.maestro.title.localListening',
-    animate: true,
     priority: 4,
+  },
+  [buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_ACTIVE)]: {
+    icon: 'IconWaveform',
+    textKey: 'chat.maestro.localListening',
+    titleKey: 'chat.maestro.title.localListening',
+    animate: true,
+    priority: 0,
   },
   [buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_LOADING)]: {
     icon: 'IconSparkles',

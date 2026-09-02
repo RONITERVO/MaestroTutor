@@ -72,10 +72,12 @@ describe('local speech trigger', () => {
       transcribe: vi.fn(async () => 'hello from the microphone'),
     };
     const phases: string[] = [];
+    const vadActivity: boolean[] = [];
     let resolved = false;
     const resultPromise = waitForLocalSpeechTrigger({
       detector: detector as any,
       onPhaseChange: phase => phases.push(phase),
+      onVadActivityChange: active => vadActivity.push(active),
     }).then(result => {
       resolved = true;
       return result;
@@ -91,7 +93,7 @@ describe('local speech trigger', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     };
 
-    for (let index = 0; index < 15; index += 1) await emitPacket(silence);
+    for (let index = 0; index < 25; index += 1) await emitPacket(silence);
     expect(detector.transcribe).not.toHaveBeenCalled();
     expect(resolved).toBe(false);
     expect(track.stop).not.toHaveBeenCalled();
@@ -102,13 +104,46 @@ describe('local speech trigger', () => {
 
     expect(result.microphoneStream).toBe(stream);
     expect(result.transcript).toBe('hello from the microphone');
-    expect(result.pcm.length).toBeGreaterThan(0);
+    expect(result.pcm.length).toBe(16_000 * 3);
     expect(detector.transcribe).toHaveBeenCalledOnce();
     expect(track.stop).not.toHaveBeenCalled();
     expect(context.close).toHaveBeenCalledOnce();
     expect(phases).toContain('vad-listening');
     expect(phases).toContain('whisper-checking');
     expect(phases[phases.length - 1]).toBe('speech-confirmed');
+    expect(vadActivity).toEqual([true, false]);
+  });
+
+  it('does not transcribe or send a short utterance even when its buffered window exceeds 1.2 seconds', async () => {
+    let now = 1_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const detector = {
+      initialize: vi.fn(async () => undefined),
+      transcribe: vi.fn(async () => 'hi'),
+    };
+    const controller = new AbortController();
+    const resultPromise = waitForLocalSpeechTrigger({
+      detector: detector as any,
+      signal: controller.signal,
+    });
+
+    await vi.waitFor(() => expect(FakeAudioWorkletNode.instances).toHaveLength(1));
+    const worklet = FakeAudioWorkletNode.instances[0];
+    const silence = new Int16Array(1_600);
+    const speech = new Int16Array(1_600).fill(10_000);
+    const emitPacket = async (pcm: Int16Array) => {
+      now += 100;
+      worklet.emit(pcm);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    };
+
+    for (let index = 0; index < 25; index += 1) await emitPacket(silence);
+    for (let index = 0; index < 4; index += 1) await emitPacket(speech);
+    for (let index = 0; index < 12; index += 1) await emitPacket(silence);
+
+    expect(detector.transcribe).not.toHaveBeenCalled();
+    controller.abort();
+    await expect(resultPromise).rejects.toMatchObject({ name: 'AbortError' });
   });
 
   it('rejects an already-aborted request without opening the microphone', async () => {

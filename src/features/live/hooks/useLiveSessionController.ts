@@ -735,6 +735,9 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
         voiceName,
+        // The user click opens Live immediately, while each microphone turn is
+        // still held until VAD sees enough speech to avoid empty short turns.
+        gateAudioAfterConnect: true,
       });
     } catch (error) {
       releaseLiveSessionCapture();

@@ -5,8 +5,13 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LiveServerMessage, Modality, Session } from '@google/genai';
 import { getAi } from '../../../api/gemini/client';
-import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProcessing';
-import { SpeechGate, measureEnergy } from '../../../../shared/audio/speechGate';
+import { mergeInt16Arrays } from '../../../core-sdk/media/audioProcessing';
+import {
+  DEFAULT_SPEECH_GATE,
+  isSpeechLike,
+  SpeechGate,
+  measureEnergy,
+} from '../../../../shared/audio/speechGate';
 import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
@@ -36,6 +41,7 @@ import {
   LOCAL_WHISPER_REQUEST_INTERVAL_MS,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SpeechActivityTracker,
 } from '../../../core-sdk/media/liveSpeechDetection';
 import { createLiveOpenReason, LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
 import {
@@ -138,6 +144,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const speechTriggerActivityTokenRef = useRef<string | null>(null);
+  const vadActivityTokenRef = useRef<string | null>(null);
   const liveActivityTokenRef = useRef<string | null>(null);
 
   const sessionRef = useRef<Session | null>(null);
@@ -157,6 +164,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const audioTelemetryRef = useRef<SttAudioTelemetry>(createEmptySttAudioTelemetry());
   const speechGateRef = useRef<SpeechGate | null>(null);
   const gatePrerollRef = useRef<Int16Array[]>([]);
+  const speechActivityTrackerRef = useRef<SpeechActivityTracker | null>(null);
   const localWhisperRef = useRef<LocalWhisperClient | null>(null);
   const localWhisperBusyRef = useRef(false);
   const lastWhisperRequestAtRef = useRef(0);
@@ -216,6 +224,15 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     speechTriggerActivityTokenRef.current = token;
   }, [addActivityToken, removeActivityToken]);
 
+  const setVadActivity = useCallback((active: boolean) => {
+    if (vadActivityTokenRef.current && !active) {
+      removeActivityToken(vadActivityTokenRef.current);
+      vadActivityTokenRef.current = null;
+    }
+    if (!active || vadActivityTokenRef.current) return;
+    vadActivityTokenRef.current = addActivityToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_ACTIVE);
+  }, [addActivityToken, removeActivityToken]);
+
   const setLiveActivityPhase = useCallback((phase: 'connecting' | 'active' | null) => {
     if (liveActivityTokenRef.current) {
       removeActivityToken(liveActivityTokenRef.current);
@@ -256,9 +273,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       return null;
     }
     full = full.slice(0, transcriptLinkedSamples);
-    if (full.length > 0) {
-        full = trimSilence(full, INPUT_SAMPLE_RATE);
-    }
+    // These chunks are already limited to confirmed audio sent to Live. Keep
+    // the three-second pre-Whisper lead-in intact in the recorded message.
     // Clear the array to free memory
     audioChunksRef.current = [];
     transcribedAudioSamplesRef.current = 0;
@@ -288,6 +304,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     speechTriggerAbortRef.current = null;
     setLocalSpeechTriggerPhase(null);
     setLiveActivityPhase(null);
+    setVadActivity(false);
     const preserveRecordedAudio = options?.preserveRecordedAudio === true;
     const status = options?.status || 'stopped';
 
@@ -318,6 +335,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     speechGateRef.current?.forceClose();
     speechGateRef.current = null;
     gatePrerollRef.current = [];
+    speechActivityTrackerRef.current = null;
     loadingFallbackOnsetAtRef.current = null;
     speechGateEpochRef.current += 1;
 
@@ -379,7 +397,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     localInputPreviewRef.current = '';
     
     isCleaningUpRef.current = false;
-  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase]);
+  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   const stop = useCallback(async () => {
     await cleanup({ status: 'stopped' });
@@ -453,6 +471,9 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       ? new SpeechGate({ requireConfirmation: true })
       : null;
     gatePrerollRef.current = [];
+    speechActivityTrackerRef.current = gateInputOnSpeech
+      ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE })
+      : null;
     lastWhisperRequestAtRef.current = 0;
     loadingFallbackOnsetAtRef.current = null;
     const speechGateEpoch = speechGateEpochRef.current;
@@ -472,6 +493,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         detector: localWhisperRef.current,
         signal: triggerAbort.signal,
         onPhaseChange: setLocalSpeechTriggerPhase,
+        onVadActivityChange: setVadActivity,
       });
       if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
       const stream = localSpeechTrigger.microphoneStream;
@@ -793,8 +815,22 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             const gate = speechGateRef.current;
             const now = Date.now();
             const energy = measureEnergy(packet);
+            const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
+            const speechActivity = gate && !gate.isOpen
+              ? speechActivityTrackerRef.current?.observe(packet.length, packetIsSpeech, now)
+              : undefined;
+            if (speechActivity?.candidateReset && gate?.isAwaitingConfirmation) {
+              gate.rejectSpeech(now);
+              gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
+            }
             const wasAwaitingConfirmation = gate?.isAwaitingConfirmation ?? false;
             const decision = gate ? gate.evaluate(energy, now) : null;
+            setVadActivity(Boolean(
+              gate
+              && packetIsSpeech
+              && !(decision && !decision.send && decision.reason === 'playback')
+            ));
 
             if (!decision || decision.send) {
               await encodeAndSend(packet);
@@ -811,13 +847,29 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 audioTelemetryRef.current.audioStreamEnds += 1;
               }
               gatePrerollRef.current = [];
+              speechActivityTrackerRef.current?.reset();
               loadingFallbackOnsetAtRef.current = null;
               return;
             }
 
-            if (decision.reason === 'playback' || decision.reason === 'cooldown') {
+            if (decision.reason === 'playback') {
               gatePrerollRef.current = [];
+              speechActivityTrackerRef.current?.reset();
               loadingFallbackOnsetAtRef.current = null;
+              return;
+            }
+            if (decision.reason === 'cooldown') {
+              if (!packetIsSpeech) {
+                gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
+                loadingFallbackOnsetAtRef.current = null;
+                return;
+              }
+              gatePrerollRef.current.push(packet);
+              gatePrerollRef.current = recentPcmPackets(
+                gatePrerollRef.current,
+                SPEECH_GATE_BUFFER_SAMPLES,
+              );
               return;
             }
 
@@ -846,6 +898,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               gatePrerollRef.current = [packet];
             }
 
+            if (!speechActivity?.hasMinimumSpeech) return;
+
             const detector = localWhisperRef.current;
             let confirmed = false;
 
@@ -853,6 +907,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               if (fallback.action === 'expire') {
                 gate.rejectSpeech(now);
                 gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
                 loadingFallbackOnsetAtRef.current = null;
               } else if (fallback.action === 'confirm') {
                 audioTelemetryRef.current.energyFallbacks += 1;
@@ -867,6 +922,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               if (fallback.action === 'expire') {
                 gate.rejectSpeech(now);
                 gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
                 loadingFallbackOnsetAtRef.current = null;
               } else if (fallback.action === 'confirm') {
                 audioTelemetryRef.current.energyFallbacks += 1;
@@ -902,6 +958,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                   audioTelemetryRef.current.whisperRejected += 1;
                   gate.rejectSpeech(resultAt);
                   gatePrerollRef.current = [];
+                  speechActivityTrackerRef.current?.reset();
                   loadingFallbackOnsetAtRef.current = null;
                 }
               } catch (error) {
@@ -915,6 +972,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 if (fallback.action === 'expire') {
                   gate.rejectSpeech(fallbackAt);
                   gatePrerollRef.current = [];
+                  speechActivityTrackerRef.current?.reset();
                   loadingFallbackOnsetAtRef.current = null;
                 } else if (fallback.action === 'confirm') {
                   audioTelemetryRef.current.energyFallbacks += 1;
@@ -934,6 +992,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
             const held = recentPcmPackets(gatePrerollRef.current, SPEECH_GATE_PREROLL_SAMPLES);
             gatePrerollRef.current = [];
+            speechActivityTrackerRef.current?.reset();
             const replay = mergeInt16Arrays(held);
             for (let offset = 0; offset < replay.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
               await encodeAndSend(replay.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
@@ -1005,7 +1064,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase]);
+  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);

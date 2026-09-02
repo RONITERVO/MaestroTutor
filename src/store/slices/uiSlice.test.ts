@@ -9,6 +9,7 @@ describe('silent observer activity blocking', () => {
   it('ignores its own local trigger and observer transport phases', () => {
     const ownTokens = new Set([
       buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_LISTEN),
+      buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_OBSERVER_ACTIVE),
       buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_OBSERVER_CHECKING),
       buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_CONNECTING),
     ]);
@@ -20,6 +21,7 @@ describe('silent observer activity blocking', () => {
     for (const token of [
       buildToken(TOKEN_CATEGORY.STT, TOKEN_SUBTYPE.LISTEN),
       buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_LISTEN),
+      buildToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_ACTIVE),
       buildToken(TOKEN_CATEGORY.WHISPER, TOKEN_SUBTYPE.WHISPER_CHECKING),
       buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.RESPONSE),
       buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.CONNECTING),

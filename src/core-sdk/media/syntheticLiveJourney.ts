@@ -3,7 +3,12 @@
 
 import { Modality } from '@google/genai';
 import { getGeminiModels } from '../../core/config/models';
-import { SpeechGate, measureEnergy } from '../../../shared/audio/speechGate';
+import {
+  DEFAULT_SPEECH_GATE,
+  isSpeechLike,
+  SpeechGate,
+  measureEnergy,
+} from '../../../shared/audio/speechGate';
 import type { CoreGeminiClient } from '../managedGeminiClient';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { mergeInt16Arrays } from './audioProcessing';
@@ -13,7 +18,11 @@ import {
 } from './liveModelCompatibility';
 import { PcmCaptureRouter, type PcmInputSource } from './pcmInput';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
-import { recentPcmPackets } from './observerSpeechDetection';
+import {
+  OBSERVER_SPEECH_PREROLL_MS,
+  recentPcmPackets,
+  SpeechActivityTracker,
+} from './observerSpeechDetection';
 import {
   createLiveOpenReason,
   type HeadlessLiveOpenTrigger,
@@ -22,7 +31,7 @@ import {
 const INPUT_SAMPLE_RATE = 16_000;
 const PACKET_DURATION_MS = 100;
 const PACKET_MAX_WAIT_MS = 120;
-const PREROLL_SAMPLES = INPUT_SAMPLE_RATE * 6;
+const PREROLL_SAMPLES = Math.round(INPUT_SAMPLE_RATE * OBSERVER_SPEECH_PREROLL_MS / 1_000);
 const REPLAY_CHUNK_SAMPLES = 4_096;
 
 const encodePcm16LeBase64 = (pcm: Int16Array): string => {
@@ -62,6 +71,7 @@ export const runSyntheticLiveJourney = async (
   const model = input.model || getGeminiModels().audio.stt;
   const gateEnabled = input.gateInputOnSpeech ?? true;
   const gate = gateEnabled ? new SpeechGate({ requireConfirmation: true }) : null;
+  const speechActivity = gateEnabled ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE }) : null;
   const semanticSpeech = input.semanticSpeech ?? true;
   const heldPackets: Int16Array[] = [];
   const sentPackets: Int16Array[] = [];
@@ -196,7 +206,17 @@ export const runSyntheticLiveJourney = async (
         await sendPacket(packet);
         return;
       }
-      const decision = gate.evaluate(measureEnergy(packet), logicalNow);
+      const energy = measureEnergy(packet);
+      const activity = speechActivity!.observe(
+        packet.length,
+        isSpeechLike(energy, DEFAULT_SPEECH_GATE),
+        logicalNow,
+      );
+      if (activity.candidateReset && gate.isAwaitingConfirmation) {
+        gate.rejectSpeech(logicalNow);
+        heldPackets.length = 0;
+      }
+      const decision = gate.evaluate(energy, logicalNow);
       if (decision.send) {
         await sendPacket(packet);
         return;
@@ -206,24 +226,40 @@ export const runSyntheticLiveJourney = async (
         session.sendRealtimeInput({ audioStreamEnd: true });
         streamEnds += 1;
         heldPackets.length = 0;
+        speechActivity!.reset();
         return;
       }
-      if (decision.reason === 'playback' || decision.reason === 'cooldown') {
+      if (decision.reason === 'playback') {
         heldPackets.length = 0;
+        speechActivity!.reset();
+        return;
+      }
+      if (decision.reason === 'cooldown') {
+        if (!activity.active) {
+          heldPackets.length = 0;
+          speechActivity!.reset();
+          return;
+        }
+        heldPackets.push(packet);
+        const recent = recentPcmPackets(heldPackets, PREROLL_SAMPLES);
+        heldPackets.splice(0, heldPackets.length, ...recent);
         return;
       }
       heldPackets.push(packet);
       const recent = recentPcmPackets(heldPackets, PREROLL_SAMPLES);
       heldPackets.splice(0, heldPackets.length, ...recent);
       if (decision.reason !== 'awaiting-confirmation') return;
+      if (!activity.hasMinimumSpeech) return;
       if (!semanticSpeech) {
         gate.rejectSpeech(logicalNow);
         heldPackets.length = 0;
+        speechActivity!.reset();
         return;
       }
       if (!gate.confirmSpeech(logicalNow)) return;
       const replay = mergeInt16Arrays(heldPackets);
       heldPackets.length = 0;
+      speechActivity!.reset();
       for (let offset = 0; offset < replay.length; offset += REPLAY_CHUNK_SAMPLES) {
         await sendPacket(replay.slice(offset, offset + REPLAY_CHUNK_SAMPLES));
       }
