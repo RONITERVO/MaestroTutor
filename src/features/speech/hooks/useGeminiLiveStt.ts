@@ -49,6 +49,7 @@ import {
 } from '../utils/localSpeechTrigger';
 import { useMaestroStore } from '../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
+import type { SttStartOptions, SttTurnDestination } from '../../../core-sdk/media/sttTurnRouting';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -57,6 +58,7 @@ export interface GeminiLiveSttTurnComplete {
   inputTranscript: string;
   outputTranscript: string;
   audioSamples: number;
+  destination: SttTurnDestination;
 }
 
 export interface UseGeminiLiveSttOptions {
@@ -74,11 +76,7 @@ export interface UseGeminiLiveSttReturn {
   start: (
     languageOrOptions?:
       | string
-      | {
-          language?: string;
-          lastAssistantMessage?: string;
-          replySuggestions?: string[];
-        }
+      | SttStartOptions
   ) => Promise<void>;
   stop: () => Promise<void>;
   transcript: string;
@@ -441,7 +439,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     }, TRANSCRIPT_UPDATE_INTERVAL_MS);
   }, [flushTranscriptState]);
 
-  const start = useCallback(async (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
+  const start = useCallback(async (languageOrOptions?: string | SttStartOptions) => {
+    const opts: SttStartOptions = (
+      typeof languageOrOptions === 'string' || languageOrOptions === undefined
+        ? { language: languageOrOptions }
+        : languageOrOptions
+    );
+    const destination = opts.destination || 'message';
     // If cleanup is in progress, wait for it to complete
     while (isCleaningUpRef.current) {
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -515,10 +519,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       scheduleTranscriptStateUpdate(true);
 
       // --- 2. Connect to Gemini Live API while the trigger capture remains live ---
-      const opts = (typeof languageOrOptions === 'string' || languageOrOptions === undefined)
-        ? { language: languageOrOptions as string | undefined }
-        : (languageOrOptions as { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] });
-
       let { language, lastAssistantMessage, replySuggestions } = opts || {};
 
       // Provide guess start defaults for context if missing
@@ -556,6 +556,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         language: opts?.language,
         replySuggestionsCount: suggestionList.length,
         hasLastAssistantMessage: !!lastAssistantMessage,
+        destination,
       });
 
       const ai = await getAi();
@@ -665,6 +666,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                    inputTranscript,
                    outputTranscript,
                    audioSamples: turnSamples,
+                   destination,
                  };
                  logSttFlow('stt.turnComplete.callback.start', {
                    sessionId,

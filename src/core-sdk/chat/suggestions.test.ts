@@ -61,7 +61,7 @@ describe('reply suggestions', () => {
 
     expect(result.suggestions).toEqual([{ target: 'Hola', native: 'Hello' }]);
     expect(generateGeminiResponse).toHaveBeenCalledWith(
-      expect.any(String),
+      'gemini-3.7-flash',
       expect.any(String),
       [],
       expect.objectContaining({
