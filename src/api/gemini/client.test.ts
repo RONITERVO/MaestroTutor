@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   googleGenAi: vi.fn(),
   generateContent: vi.fn(),
   generateContentStream: vi.fn(),
+  createLiveGatewayTicket: vi.fn(),
+  acceptLiveGatewayBillingSummary: vi.fn(),
   createLiveToken: vi.fn(),
   releaseLiveTokenLease: vi.fn(),
   directConnect: vi.fn(),
@@ -39,6 +41,8 @@ vi.mock('../../services/backend/maestroBackendService', () => ({
   maestroBackendService: {
     generateContent: mocks.generateContent,
     generateContentStream: mocks.generateContentStream,
+    createLiveGatewayTicket: mocks.createLiveGatewayTicket,
+    acceptLiveGatewayBillingSummary: mocks.acceptLiveGatewayBillingSummary,
     createLiveToken: mocks.createLiveToken,
     releaseLiveTokenLease: mocks.releaseLiveTokenLease,
   },
@@ -47,9 +51,47 @@ vi.mock('../../services/backend/maestroBackendService', () => ({
 import { getAi } from './client';
 import { createLiveOpenReason, LIVE_OPEN_TRIGGER } from '../../../shared/liveOpenReason';
 
+class FakeWebSocket {
+  static instances: FakeWebSocket[] = [];
+  readonly url: string;
+  readyState = 0;
+  sent: string[] = [];
+  closeCalls: Array<{ code?: number; reason?: string }> = [];
+  private listeners = new Map<string, Set<(event: any) => void>>();
+
+  constructor(url: string) {
+    this.url = url;
+    FakeWebSocket.instances.push(this);
+  }
+
+  send(data: string) { this.sent.push(data); }
+  close(code?: number, reason?: string) {
+    this.closeCalls.push({ code, reason });
+    this.readyState = 3;
+  }
+  addEventListener(type: string, listener: (event: any) => void) {
+    const listeners = this.listeners.get(type) || new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+  removeEventListener(type: string, listener: (event: any) => void) {
+    this.listeners.get(type)?.delete(listener);
+  }
+  emit(type: string, event: any = {}) {
+    if (type === 'open') this.readyState = 1;
+    if (type === 'close') this.readyState = 3;
+    for (const listener of this.listeners.get(type) || []) listener(event);
+  }
+  serverMessage(message: unknown) {
+    this.emit('message', { data: JSON.stringify(message) });
+  }
+}
+
 describe('Gemini provider routing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    FakeWebSocket.instances = [];
+    vi.stubGlobal('WebSocket', FakeWebSocket);
     mocks.getApiKeyOrThrow.mockResolvedValue('byok-key');
     mocks.generateContent.mockResolvedValue({ text: 'managed response' });
     mocks.generateContentStream.mockResolvedValue({
@@ -57,6 +99,14 @@ describe('Gemini provider routing', () => {
         yield { text: 'managed chunk' };
       },
     });
+    mocks.createLiveGatewayTicket.mockResolvedValue({
+      transport: 'gateway',
+      gatewayUrl: 'wss://managed-live.example.test/live',
+      ticket: 'ticket-id.secret-value',
+      ticketExpiresAt: '2026-09-02T10:00:45.000Z',
+      sessionExpiresAt: '2026-09-02T10:02:00.000Z',
+    });
+    mocks.acceptLiveGatewayBillingSummary.mockResolvedValue(undefined);
     mocks.createLiveToken.mockResolvedValue({
       leaseId: 'lease-1',
       token: 'ephemeral-token',
@@ -121,23 +171,34 @@ describe('Gemini provider routing', () => {
     }, abortSignal);
   });
 
-  it('mints a model-scoped live token and releases its lease exactly once', async () => {
+  it('routes managed Live through a one-use server-metered gateway ticket', async () => {
     mocks.resolveAccessMode.mockResolvedValue('managed');
     const onclose = vi.fn();
+    const onmessage = vi.fn();
     const ai = await getAi({ apiVersion: 'v1alpha' });
 
-    const session = await ai.live.connect({
+    const sessionPromise = ai.live.connect({
       model: 'gemini-3.1-flash-live-preview',
       liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, {
         requestId: 'live-test-request-1',
         now: new Date('2026-09-02T10:00:00.000Z'),
       }),
       config: { responseModalities: ['AUDIO'] },
-      callbacks: { onclose },
+      callbacks: { onclose, onmessage },
     });
-    const wrappedRequest = mocks.tokenConnect.mock.calls[0][0];
+    await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(1));
+    const socket = FakeWebSocket.instances[0];
+    expect(socket.url).toBe('wss://managed-live.example.test/live');
+    expect(socket.url).not.toContain('ticket');
+    socket.emit('open');
+    expect(JSON.parse(socket.sent[0])).toEqual({
+      type: 'authenticate',
+      ticket: 'ticket-id.secret-value',
+    });
+    socket.serverMessage({ type: 'ready', sessionId: 'session-1', deadlineAt: Date.now() + 60_000 });
+    const session = await sessionPromise;
 
-    expect(mocks.createLiveToken).toHaveBeenCalledWith({
+    expect(mocks.createLiveGatewayTicket).toHaveBeenCalledWith({
       purpose: 'live',
       model: 'gemini-3.1-flash-live-preview',
       liveOpenReason: {
@@ -147,20 +208,41 @@ describe('Gemini provider routing', () => {
       },
       config: { responseModalities: ['AUDIO'] },
     });
-    expect(mocks.googleGenAi).toHaveBeenLastCalledWith({
-      apiKey: 'ephemeral-token',
-      apiVersion: 'v1alpha',
-    });
+    expect(mocks.createLiveToken).not.toHaveBeenCalled();
 
-    wrappedRequest.callbacks.onerror(new Error('recoverable callback'));
+    session.sendRealtimeInput({ audioStreamEnd: true });
+    expect(JSON.parse(socket.sent[1])).toEqual({
+      type: 'realtimeInput',
+      input: { audioStreamEnd: true },
+    });
+    socket.serverMessage({ type: 'providerMessage', message: { setupComplete: {} } });
+    await vi.waitFor(() => expect(onmessage).toHaveBeenCalledWith({ setupComplete: {} }));
+    socket.serverMessage({
+      type: 'billing',
+      status: 'settled',
+      billedCredits: 2,
+      billedUsd: 0.002,
+      usefulOutput: true,
+      usageSource: 'provider',
+      billingSummary: {
+        availableCredits: 98,
+        reservedCredits: 0,
+        lifetimePurchasedCredits: 100,
+        lifetimeSpentCredits: 2,
+        lifetimeSpentUsd: 0.002,
+        updatedAt: 1,
+        lastPurchaseAt: 1,
+        lastChargeAt: 1,
+        lastProductId: 'pack',
+      },
+    });
+    await vi.waitFor(() => expect(mocks.acceptLiveGatewayBillingSummary).toHaveBeenCalledOnce());
     expect(mocks.releaseLiveTokenLease).not.toHaveBeenCalled();
     session.close();
-    wrappedRequest.callbacks.onclose({ reason: 'closed' });
-    await vi.waitFor(() => {
-      expect(mocks.releaseLiveTokenLease).toHaveBeenCalledTimes(1);
-    });
-    expect(onclose).toHaveBeenCalledWith({ reason: 'closed' });
-    expect(wrappedRequest.liveOpenReason).toBeUndefined();
+    expect(JSON.parse(socket.sent[socket.sent.length - 1])).toEqual({ type: 'close' });
+    socket.emit('close', { reason: 'closed' });
+    await vi.waitFor(() => expect(onclose).toHaveBeenCalledWith({ reason: 'closed' }));
+    expect(mocks.releaseLiveTokenLease).not.toHaveBeenCalled();
   });
 
   it('rejects an unreasoned managed Live connection before minting a token', async () => {
@@ -171,7 +253,7 @@ describe('Gemini provider routing', () => {
       status: 400,
       code: 'LIVE_OPEN_REASON_REQUIRED',
     });
-    expect(mocks.createLiveToken).not.toHaveBeenCalled();
+    expect(mocks.createLiveGatewayTicket).not.toHaveBeenCalled();
   });
 
   it('fails clearly when neither access path is available', async () => {

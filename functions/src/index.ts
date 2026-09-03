@@ -14,6 +14,10 @@ import { adminDb } from './firebase';
 import { generateManagedContent, streamManagedContent, generateManagedMusic, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
 import { getErrorMessage, getHttpErrorCode, getHttpStatus } from './http';
 import { countExpiredReservations, getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
+import {
+  createManagedLiveGatewayTicket,
+  recoverManagedLiveGatewayBilling,
+} from './managedLiveGateway';
 import type { ManagedRateLimitBucket } from './managedData';
 import { consumeRateLimit } from './rateLimit';
 import { createManagedCheckoutSession, handleStripeWebhook } from './stripeBilling';
@@ -175,6 +179,7 @@ app.get('/health', asyncRoute('none', async (_req, res) => {
     managedCreditPacks: appConfig.creditPacks.map((pack) => pack.id),
     managedGenerationModels: [...appConfig.managedAllowedGeminiModels],
     managedLiveModels: [...appConfig.managedAllowedLiveModels],
+    managedLiveGatewayConfigured: Boolean(appConfig.managedLiveGatewayUrl),
     managedMusicModels: [...appConfig.managedAllowedMusicModels],
   });
 }));
@@ -288,6 +293,10 @@ app.post('/gemini/clear-files', asyncRoute('required', async (_req, res, auth) =
 }));
 
 app.post('/gemini/live-token', asyncRoute('required', async (req, res, auth) => {
+  if (appConfig.managedLiveGatewayUrl) {
+    res.status(410).json({ error: 'Direct managed Live tokens were replaced by the metered gateway.' });
+    return;
+  }
   if (req.body?.purpose === 'music') {
     res.status(400).json({ error: 'Managed music uses the authenticated music generation route.' });
     return;
@@ -304,7 +313,22 @@ app.post('/gemini/live-token', asyncRoute('required', async (req, res, auth) => 
   res.json(result);
 }, 'live-token'));
 
+app.post('/gemini/live-gateway-ticket', asyncRoute('required', async (req, res, auth) => {
+  const result = await createManagedLiveGatewayTicket({
+    uid: auth!.uid,
+    user: auth!.user,
+    model: String(req.body?.model || ''),
+    config: req.body?.config,
+    liveOpenReason: req.body?.liveOpenReason,
+  });
+  res.json(result);
+}, 'live-token'));
+
 app.post('/gemini/live-token/release', asyncRoute('required', async (req, res, auth) => {
+  if (appConfig.managedLiveGatewayUrl) {
+    res.status(410).json({ error: 'Managed Live leases are finalized by the metered gateway.' });
+    return;
+  }
   const leaseId = typeof req.body?.leaseId === 'string' ? req.body.leaseId : '';
   const result = await releaseManagedLiveLease(auth!.uid, leaseId);
   res.json(result);
@@ -357,5 +381,18 @@ export const retryManagedFileCleanup = onSchedule(
   async () => {
     const result = await retryManagedFileCleanupJobs(100);
     console.info('[files] Managed cleanup retry completed.', result);
+  },
+);
+
+export const reconcileManagedLiveGatewayBilling = onSchedule(
+  {
+    region: appConfig.functionRegion,
+    schedule: 'every 1 minutes',
+    timeZone: 'UTC',
+    timeoutSeconds: 540,
+  },
+  async () => {
+    const result = await recoverManagedLiveGatewayBilling(200);
+    console.info('[live-gateway] Billing recovery completed.', result);
   },
 );

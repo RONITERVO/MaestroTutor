@@ -63,6 +63,8 @@ const createFixture = () => {
       releasedReservationCount: 0,
       deletedReservationCount: 0,
       deletedManagedFileCount: 0,
+      deletedLiveGatewayTicketCount: 0,
+      deletedLiveGatewaySessionCount: 0,
       anonymizedPurchaseCount: 0,
       anonymizedReportCount: 0,
       remoteManagedFileFailures: 0,

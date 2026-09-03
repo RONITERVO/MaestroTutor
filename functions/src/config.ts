@@ -118,6 +118,11 @@ export const appConfig = {
   requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, true),
   geminiLiveTokenUses: Math.max(1, parseInteger(process.env.GEMINI_LIVE_TOKEN_USES, 1)),
   managedLiveTokenLifetimeSeconds: Math.min(180, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 180))),
+  managedLiveGatewayUrl: process.env.MANAGED_LIVE_GATEWAY_URL?.trim() || '',
+  managedLiveGatewayTicketSeconds: Math.min(
+    60,
+    Math.max(15, parseInteger(process.env.MANAGED_LIVE_GATEWAY_TICKET_SECONDS, 45)),
+  ),
   managedMaxActiveLiveSockets: Math.min(2, Math.max(1, parseInteger(process.env.MANAGED_MAX_ACTIVE_LIVE_SOCKETS, 2))),
   reservationTtlMinutes: Math.max(5, parseInteger(process.env.RESERVATION_TTL_MINUTES, 30)),
   managedMusicSessionCredits: Math.max(1, parseInteger(process.env.MANAGED_MUSIC_SESSION_CREDITS, 120)),

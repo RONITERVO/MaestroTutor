@@ -10,6 +10,7 @@ const {
   grantPurchasedCredits,
   releaseManagedReservation,
   reserveManagedCredits,
+  settleManagedReservation,
 } = require('../lib/functions/src/managedBilling.js');
 const {
   accountDeletionClaimRef,
@@ -71,8 +72,21 @@ const run = async () => {
   assert.equal((await managedUserRef(uid).get()).exists, true);
   assert.equal((await managedAccountRef(uid).get()).exists, true);
 
+  const deletionRaceReservation = await reserve();
   await accountDeletionClaimRef(uid).create({ createdAt: Date.now(), schemaVersion: 2 });
   await assert.rejects(reserve, (error) => error && error.status === 409);
+  await assert.rejects(
+    settleManagedReservation({
+      uid,
+      reservationId: deletionRaceReservation.reservationId,
+      billedCredits: 1,
+      billedUsd: 0.001,
+      operation: 'late-provider-response',
+      model: 'emulator-model',
+    }),
+    (error) => error && error.status === 409,
+  );
+  await releaseManagedReservation(uid, deletionRaceReservation.reservationId, 'account-deleted');
 };
 
 run()

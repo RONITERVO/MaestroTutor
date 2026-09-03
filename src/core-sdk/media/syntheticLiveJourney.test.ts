@@ -80,6 +80,7 @@ describe('synthetic Live journey', () => {
     expect(result.realtimeEvidence).toEqual({
       required: true,
       inputPacingPassed: true,
+      providerInputPacingPassed: true,
       modelPlaybackPassed: true,
       uiSpeechHandoffPassed: true,
       passed: true,
@@ -104,6 +105,53 @@ describe('synthetic Live journey', () => {
       simulateUiSpeechHandoff: true,
     })).rejects.toThrow('ended before sustained speech was confirmed');
     expect(ai.live.connect).not.toHaveBeenCalled();
+  });
+
+  it('attaches the paid Live request ID and provider evidence to a timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      const session = { sendRealtimeInput: vi.fn(), close: vi.fn() };
+      const ai = {
+        models: {} as CoreGeminiClient['models'],
+        live: {
+          connect: vi.fn(async (request: any) => {
+            request.callbacks.onmessage?.({ setupComplete: {} });
+            return session;
+          }),
+          music: { connect: vi.fn() },
+        },
+      } as CoreGeminiClient;
+      const failure = runSyntheticLiveJourney(ai, {
+        liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+        source: createSyntheticPcmSource({
+          pcm: new Int16Array(16_000).fill(6_000),
+          sampleRate: 16_000,
+          pace: false,
+        }),
+        gateInputOnSpeech: false,
+        timeoutMs: 1_000,
+      }).catch(error => error as Error & {
+        operationId?: string;
+        liveDiagnostics?: Record<string, unknown>;
+      });
+
+      await vi.advanceTimersByTimeAsync(1_100);
+      const error = await failure as Error & {
+        operationId?: string;
+        liveDiagnostics?: Record<string, unknown>;
+      };
+      expect(error.message).toContain('with 1 server messages (setupComplete)');
+      expect(error.operationId).toMatch(/^synthetic-live-/);
+      expect(error.liveDiagnostics).toMatchObject({
+        serverMessageCount: 1,
+        serverMessageKinds: ['setupComplete'],
+        inputTranscriptLength: 0,
+        outputTranscriptLength: 0,
+        modelAudioSampleCount: 0,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('routes PCM through capture, packetizer, speech gate and the real Live client contract', async () => {

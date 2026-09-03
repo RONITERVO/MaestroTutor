@@ -39,6 +39,7 @@ export interface UsageMetadataLike {
   responseTokenCount?: number;
   thoughtsTokenCount?: number;
   toolUsePromptTokenCount?: number;
+  totalTokenCount?: number;
   promptTokensDetails?: ModalityTokenCountLike[];
   cacheTokensDetails?: ModalityTokenCountLike[];
   candidatesTokensDetails?: ModalityTokenCountLike[];

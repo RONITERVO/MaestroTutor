@@ -259,6 +259,10 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       timerFlushes: 0,
       explicitFlushes: 0,
       maxBufferedSamples: 0,
+      maxPacketSamples: 0,
+      pacedOutput: false,
+      outputPacingWaitMs: 0,
+      outputPacingElapsedMs: 0,
     }
   ), []);
 
@@ -782,6 +786,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         sampleRate: INPUT_SAMPLE_RATE,
         packetDurationMs: LIVE_INPUT_PACKET_DURATION_MS,
         maxWaitMs: LIVE_INPUT_PACKET_MAX_WAIT_MS,
+        paceOutput: true,
         onPacket: async (packet) => {
           try {
             if (
@@ -996,19 +1001,21 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       // Replay the confirmed prefix and the samples captured during Whisper,
       // then atomically drain the provider-connection interval into the normal
       // packetizer. The original worklet continues as the session worklet.
+      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
       for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
         if (
           currentSessionIdRef.current !== sessionId
           || speechGateEpochRef.current !== speechGateEpoch
         ) return;
-        await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+        inputPacketizerRef.current.push(
+          localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES),
+        );
       }
       if (currentSessionIdRef.current !== sessionId) {
         if (sessionRef.current === session) sessionRef.current = null;
         try { session.close(); } catch { /* ignore */ }
         return;
       }
-      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
       const handoff = localSpeechTrigger.capture.transferTo((pcm) => {
         void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
       });

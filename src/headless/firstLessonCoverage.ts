@@ -10,7 +10,9 @@ export const FIRST_LESSON_TOOL_KINDS = ['image', 'audio-note', 'music'] as const
 type Evidence = Record<string, any>;
 
 export interface FirstLessonCoverageEvidence {
+  accessMode: 'managed' | 'byok';
   userTurnCount: number;
+  requireToolUploads: boolean;
   turns: Evidence[];
   aftersteps: Evidence[];
   stt: Evidence;
@@ -21,6 +23,7 @@ export interface FirstLessonCoverageEvidence {
   translation: Evidence;
   tts: Evidence;
   reengagement: Evidence;
+  managedBillingEvidence: Evidence;
 }
 
 const hasTranscriptStream = (result: Evidence): boolean => (
@@ -82,6 +85,9 @@ export const evaluateFirstLessonCoverage = (evidence: FirstLessonCoverageEvidenc
         item => Number(item.suggestionCount) > 0 && item.visiblyStreamed === true,
       ),
     tools: FIRST_LESSON_TOOL_KINDS.every(tool => requiredToolKinds.has(tool)),
+    toolUploads: !evidence.requireToolUploads || FIRST_LESSON_TOOL_KINDS.every(tool => (
+      evidence.aftersteps.some(item => item.tool === tool && item.uploaded === true)
+    )),
     translation: Boolean(evidence.translation.translatedText),
     ttsTrigger: Number(evidence.tts.triggerAudioSamplesSent) > 0
       && Number(evidence.tts.triggerPacketCount) > 0
@@ -98,5 +104,12 @@ export const evaluateFirstLessonCoverage = (evidence: FirstLessonCoverageEvidenc
     reengagement: evidence.reengagement.emptyUserRequest === true
       && evidence.reengagement.userMessagePersisted === false
       && evidence.reengagement.turn?.streaming?.visiblyStreamed === true,
+    costAccounting: evidence.accessMode === 'byok'
+      ? evidence.managedBillingEvidence.applicable === false
+        && evidence.managedBillingEvidence.payer === 'byok-api-key-owner'
+      : evidence.managedBillingEvidence.applicable === true
+        && evidence.managedBillingEvidence.passed === true
+        && Number(evidence.managedBillingEvidence.creditsSpent) > 0
+        && Number(evidence.managedBillingEvidence.reservedCreditsAfter) === 0,
   };
 };

@@ -35,7 +35,7 @@
     <p>When you choose managed access, Maestro processes the following data to provide, secure, bill, and maintain the service:</p>
     <ul>
       <li><strong>Account data:</strong> Google/Firebase sign-in identifiers and available profile details such as your name, email address, and profile image.</li>
-      <li><strong>Generation content:</strong> Prompts, responses, and uploaded media pass through Maestro's Firebase/Google Cloud service and then Google Gemini. Maestro does not store ordinary chat history in its managed database. Managed uploads can remain temporarily in Google Gemini Files until deletion or automated cleanup; Maestro stores operational file metadata needed to manage that lifecycle.</li>
+      <li><strong>Generation content:</strong> Prompts, responses, and uploaded media pass through Maestro's Firebase/Google Cloud service and then Google Gemini. Maestro does not store ordinary chat history in its managed database. A one-use Live gateway ticket may hold the Live model setup instructions only until that ticket is consumed or expires; its setup content and secret hash are then removed while non-content operational metadata is retained temporarily. Managed uploads can remain temporarily in Google Gemini Files until deletion or automated cleanup; Maestro stores operational file metadata needed to manage that lifecycle.</li>
       <li><strong>Usage and operations:</strong> Credit balance, entitlements, usage and billing ledger metadata, reservations, rate-limit windows, request identifiers, and file/cleanup state.</li>
       <li><strong>Purchases:</strong> Stripe customer and Checkout references, verification results, and credit-grant records. Stripe processes payment credentials; Maestro does not store raw card details. Stripe Checkout is the only managed-credit purchase provider. Android users can spend a balance purchased on the web; the Android buy action remains unavailable unless Maestro is approved and configured for an applicable Google Play external-checkout programme.</li>
       <li><strong>Content reports:</strong> If you voluntarily report an AI response, Maestro stores the reported content, selected reason, optional notes, surface/model details, and basic request/account metadata so the report can be reviewed.</li>
@@ -44,7 +44,7 @@
     <h2>Retention</h2>
     <ul>
       <li>Rate-limit windows expire two minutes after their window begins.</li>
-      <li>Released live-session and deleted-file metadata is scheduled for deletion after 30 days.</li>
+      <li>Consumed or expired Live ticket metadata, released Live-session metadata, and deleted-file metadata are scheduled for deletion after 30 days. Live ticket setup content and secret hashes are removed when the ticket is consumed or expires.</li>
       <li>Settled or released reservations and checkout-grant snapshots are scheduled for deletion after 90 days.</li>
       <li>AI-content reports are scheduled for deletion after 365 days unless account deletion anonymizes them sooner.</li>
       <li>Managed billing and usage ledgers are kept while the managed account exists. Purchase-claim integrity records are retained to prevent the same external purchase from granting credits twice.</li>

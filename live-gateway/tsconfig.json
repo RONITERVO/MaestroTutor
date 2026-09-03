@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "lib",
+    "rootDir": "..",
+    "strict": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "../functions/src/managedLiveGateway.ts",
+    "../shared/billing/liveGateway.ts",
+    "../shared/liveGatewayProtocol.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ]
+}

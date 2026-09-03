@@ -17,12 +17,13 @@ import { createSyntheticPcmSource, decodePcm16LeBase64 } from '../core-sdk/media
 import { runSyntheticLiveJourney } from '../core-sdk/media/syntheticLiveJourney';
 import { runStripeTestCheckoutJourney } from './billingJourney';
 import { verifyHostedGoogleSignIn } from './hostedBrowser';
-import { createLiveOpenReason, LIVE_OPEN_TRIGGER } from '../../shared/liveOpenReason';
+import { LIVE_OPEN_TRIGGER } from '../../shared/liveOpenReason';
 import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
 import { runHeadlessTranslation } from './translationJourney';
 import { runHeadlessReengagement } from './reengagementJourney';
 import { runHeadlessLiveTurn } from './liveJourney';
 import { runHeadlessFirstLesson } from './firstLessonJourney';
+import { assertHeadlessMethodAvailable } from './accessPolicy';
 
 export class HeadlessDispatchError extends Error {
   constructor(public readonly rpcCode: -32601 | -32602, message: string) {
@@ -42,12 +43,6 @@ const requiredString = (record: Record<string, unknown>, key: string): string =>
     throw new HeadlessDispatchError(-32602, `Parameter "${key}" is required.`);
   }
   return value.trim();
-};
-
-const requireManagedMode = (client: HeadlessClient, method: string) => {
-  if (client.accessMode !== 'managed') {
-    throw new Error(`${method} requires managed access. BYOK mode calls Gemini directly and has no Maestro account or billing session.`);
-  }
 };
 
 const readPcm = (input: Record<string, unknown>, required = true): Int16Array | undefined => {
@@ -113,9 +108,11 @@ export const dispatchHeadlessMethod = async (
   params?: unknown,
 ): Promise<unknown> => {
   const input = asRecord(params);
+  if (method === 'system.describe') return describeHeadlessMethods(client.accessMode);
+  assertHeadlessMethodAvailable(method, client.accessMode);
   switch (method) {
     case 'system.describe':
-      return describeHeadlessMethods();
+      return describeHeadlessMethods(client.accessMode);
     case 'profile.get': {
       const chatSummaries = Object.entries(client.state.chats).map(([languagePairId, messages]) => ({
         languagePairId,
@@ -140,14 +137,12 @@ export const dispatchHeadlessMethod = async (
     case 'auth.status':
       return { accessMode: client.accessMode, ...(await client.credentials.describe()) };
     case 'auth.signIn': {
-      requireManagedMode(client, method);
       const response = await client.account.signIn(
         typeof input.operationId === 'string' ? input.operationId : undefined,
       );
       return { user: response.account.user, billingSummary: response.account.billingSummary };
     }
     case 'auth.signOut':
-      requireManagedMode(client, method);
       await client.account.signOut(typeof input.operationId === 'string' ? input.operationId : undefined);
       return { signedOut: true };
     case 'auth.google.verifyHosted':
@@ -402,13 +397,10 @@ export const dispatchHeadlessMethod = async (
           : undefined,
       });
     case 'account.summary':
-      requireManagedMode(client, method);
       return client.account.refreshAccount(typeof input.operationId === 'string' ? input.operationId : undefined);
     case 'account.ledgers':
-      requireManagedMode(client, method);
       return client.account.listLedgers(optionalNumber(input, 'limit', 50));
     case 'account.delete': {
-      requireManagedMode(client, method);
       const actualUserId = await client.credentials.getUserId();
       if (!actualUserId) throw new Error('Unable to resolve the authenticated Firebase user ID.');
       return client.account.deleteAccount({
@@ -419,12 +411,10 @@ export const dispatchHeadlessMethod = async (
       });
     }
     case 'billing.checkout.create': {
-      requireManagedMode(client, method);
       const result = await client.account.startStripeCheckout(requiredString(input, 'packId'));
       return { ...result, navigationUrl: client.lastNavigationUrl() };
     }
     case 'billing.checkout.reconcile': {
-      requireManagedMode(client, method);
       const poll = client.account.startStripeReturnPolling({
         attempts: optionalNumber(input, 'attempts', 5),
         intervalMs: optionalNumber(input, 'intervalMs', 2000),
@@ -432,7 +422,6 @@ export const dispatchHeadlessMethod = async (
       return poll.completion;
     }
     case 'billing.checkout.completeTest':
-      requireManagedMode(client, method);
       return runStripeTestCheckoutJourney(client, {
         packId: requiredString(input, 'packId'),
         expectedCredits: optionalNumber(input, 'expectedCredits', 1_000),
@@ -444,17 +433,19 @@ export const dispatchHeadlessMethod = async (
         operationId: typeof input.operationId === 'string' ? input.operationId : undefined,
       });
     case 'report.submit':
-      requireManagedMode(client, method);
       return client.account.submitAiContentReport((() => {
         const reason = requiredString(input, 'reason');
         const reasons = new Set(['sexual', 'hate', 'harassment', 'self-harm', 'violent', 'deceptive', 'spam', 'other']);
         if (!reasons.has(reason)) throw new HeadlessDispatchError(-32602, 'Parameter "reason" is not supported.');
-        const accessMode = requiredString(input, 'accessMode');
-        if (accessMode !== 'byok' && accessMode !== 'managed') {
+        const requestedAccessMode = typeof input.accessMode === 'string' ? input.accessMode.trim() : client.accessMode;
+        if (requestedAccessMode !== 'byok' && requestedAccessMode !== 'managed') {
           throw new HeadlessDispatchError(-32602, 'Parameter "accessMode" must be "byok" or "managed".');
         }
+        if (requestedAccessMode !== client.accessMode) {
+          throw new HeadlessDispatchError(-32602, 'Parameter "accessMode" must match the active headless access mode.');
+        }
         return {
-          accessMode,
+          accessMode: client.accessMode,
           messageId: requiredString(input, 'messageId'),
           reason,
           ...(typeof input.assistantText === 'string' ? { assistantText: input.assistantText } : {}),
@@ -502,23 +493,6 @@ export const dispatchHeadlessMethod = async (
       return client.files.delete(requiredString(input, 'nameOrUri'));
     case 'files.clear':
       return client.files.clear();
-    case 'live.token.create':
-      requireManagedMode(client, method);
-      if (input.purpose !== undefined && input.purpose !== 'live') {
-        throw new HeadlessDispatchError(-32602, 'live.token.create purpose must be "live". Use media.music.generate for music.');
-      }
-      return client.backend.createLiveToken({
-        model: requiredString(input, 'model'),
-        purpose: 'live',
-        liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE),
-        ...(input.config && typeof input.config === 'object' && !Array.isArray(input.config)
-          ? { config: input.config as Record<string, unknown> }
-          : {}),
-        ...(typeof input.durationSeconds === 'number' ? { durationSeconds: input.durationSeconds } : {}),
-      });
-    case 'live.token.release':
-      requireManagedMode(client, method);
-      return client.backend.releaseLiveTokenLease({ leaseId: requiredString(input, 'leaseId') });
     default:
       throw new HeadlessDispatchError(-32601, `Unknown headless method: ${method}`);
   }

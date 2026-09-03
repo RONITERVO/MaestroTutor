@@ -63,6 +63,10 @@ export const managedFileQuotaRef = (uid: string) => (
 export const managedLiveQuotaRef = (uid: string) => (
   managedUserRef(uid).collection('runtime').doc('liveQuota')
 );
+export const liveGatewayTicketsCollection = () => adminDb.collection('liveGatewayTickets');
+export const liveGatewayTicketRef = (ticketId: string) => liveGatewayTicketsCollection().doc(ticketId);
+export const liveGatewaySessionsCollection = () => adminDb.collection('liveGatewaySessions');
+export const liveGatewaySessionRef = (sessionId: string) => liveGatewaySessionsCollection().doc(sessionId);
 
 export const purchaseClaimsCollection = () => adminDb.collection('purchaseClaims');
 export const purchaseClaimId = makePurchaseClaimId;

@@ -287,6 +287,7 @@ export const releaseManagedReservation = async (
       productId: null,
       createdAt: currentTime,
       metadata: {
+        ...(reservation.metadata || {}),
         reservationId,
         operation: reservation.operation,
         reason,
@@ -317,10 +318,18 @@ export const settleManagedReservation = async (params: {
   const currentTime = nowMs();
 
   return adminDb.runTransaction(async (transaction) => {
-    const [summarySnapshot, reservationSnapshot] = await Promise.all([
+    const [summarySnapshot, reservationSnapshot, deletionClaim] = await Promise.all([
       transaction.get(summaryRef),
       transaction.get(reservationRef),
+      transaction.get(accountDeletionClaimRef(params.uid)),
     ]);
+
+    // A provider response can race account deletion. Never recreate or charge
+    // a managed account after deletion has claimed the UID; the deletion flow
+    // releases every active reservation itself.
+    if (deletionClaim.exists) {
+      throw createHttpError(409, 'This managed account is being deleted.');
+    }
 
     const currentSummary = mergeBillingSummary(summarySnapshot.data()?.billingSummary);
     if (!reservationSnapshot.exists) {

@@ -92,6 +92,8 @@ export const runSyntheticLiveJourney = async (
   let outputTranscript = '';
   let inputTranscriptDeltaCount = 0;
   let outputTranscriptDeltaCount = 0;
+  let serverMessageCount = 0;
+  const serverMessageKinds = new Set<string>();
   let modelAudioSampleCount = 0;
   let sentVideoFrameCount = 0;
   let videoFramesSent = false;
@@ -117,6 +119,24 @@ export const runSyntheticLiveJourney = async (
     resolveTurn = resolve;
     rejectTurn = reject;
   });
+  const attachLiveFailureEvidence = (value: unknown): Error & {
+    operationId: string;
+    liveDiagnostics: Record<string, unknown>;
+  } => {
+    const error = value instanceof Error ? value : new Error(String(value));
+    return Object.assign(error, {
+      operationId,
+      liveDiagnostics: {
+        serverMessageCount,
+        serverMessageKinds: [...serverMessageKinds].sort(),
+        inputTranscriptLength: inputTranscript.trim().length,
+        outputTranscriptLength: outputTranscript.trim().length,
+        modelAudioSampleCount,
+        providerConnectStartedAt,
+        providerConnectedAt,
+      },
+    });
+  };
 
   const enqueueModelPlayback = (samples: number) => {
     if (!playModelAudioRealtime || samples <= 0) return;
@@ -198,6 +218,19 @@ export const runSyntheticLiveJourney = async (
       onopen: () => runtime.events.emit({ operationId, journey: 'live', phase: 'session.opened' }),
       onmessage: (rawMessage: unknown) => {
         const message = rawMessage as any;
+        serverMessageCount += 1;
+        for (const key of Object.keys(message || {})) serverMessageKinds.add(key);
+        if (message?.setupComplete) {
+          runtime.events.emit({ operationId, journey: 'live', phase: 'session.setup-complete' });
+        }
+        if (message?.goAway) {
+          runtime.events.emit({
+            operationId,
+            journey: 'live',
+            phase: 'session.go-away',
+            data: { hasTimeLeft: Boolean(message.goAway.timeLeft) },
+          });
+        }
         const inputText = message?.serverContent?.inputTranscription?.text;
         const outputText = message?.serverContent?.outputTranscription?.text;
         if (typeof inputText === 'string' && inputText) {
@@ -242,19 +275,19 @@ export const runSyntheticLiveJourney = async (
       onerror: (error: unknown) => {
         if (resolved) return;
         resolved = true;
-        rejectTurn(error instanceof Error ? error : new Error(String(error)));
+        rejectTurn(attachLiveFailureEvidence(error));
       },
       onclose: () => {
         if (resolved) return;
         resolved = true;
-        rejectTurn(new Error('Live session closed before turn completion.'));
+        rejectTurn(attachLiveFailureEvidence(new Error('Live session closed before turn completion.')));
       },
     },
     });
     providerConnectedAt = runtime.clock.now();
   } catch (error) {
     await router?.stop();
-    throw error;
+    throw attachLiveFailureEvidence(error);
   }
 
   const sendVideoFrames = () => {
@@ -300,6 +333,8 @@ export const runSyntheticLiveJourney = async (
     sampleRate: INPUT_SAMPLE_RATE,
     packetDurationMs: PACKET_DURATION_MS,
     maxWaitMs: PACKET_MAX_WAIT_MS,
+    paceOutput: requireRealtimeInputPacing,
+    pacingClock: runtime.clock,
     onPacket: async packet => {
       logicalNow += packet.length / INPUT_SAMPLE_RATE * 1_000;
       if (!gate) {
@@ -395,7 +430,10 @@ export const runSyntheticLiveJourney = async (
     await Promise.race([
       turnComplete,
       new Promise<never>((_, reject) => {
-        timeoutId = globalThis.setTimeout(() => reject(new Error(`Live turn timed out after ${timeoutMs}ms.`)), timeoutMs);
+        timeoutId = globalThis.setTimeout(() => reject(attachLiveFailureEvidence(new Error(
+          `Live turn timed out after ${timeoutMs}ms with ${serverMessageCount} server messages`
+          + ` (${[...serverMessageKinds].sort().join(', ') || 'no message kinds'}).`,
+        ))), timeoutMs);
       }),
     ]).finally(() => {
       if (timeoutId) globalThis.clearTimeout(timeoutId);
@@ -406,7 +444,10 @@ export const runSyntheticLiveJourney = async (
       modelPlaybackDrainWaitMs = Math.max(0, runtime.clock.now() - drainStartedAt);
     }
     if (!outputTranscript.trim() && modelAudioChunks.length === 0) {
-      throw new Error('Live turn completed without model output.');
+      throw new Error(
+        `Live turn completed without model output after ${serverMessageCount} server messages`
+        + ` (${[...serverMessageKinds].sort().join(', ') || 'no message kinds'}).`,
+      );
     }
     const packetStats = packetizer.getStats();
     const sentAudio = mergeInt16Arrays(sentPackets);
@@ -428,15 +469,34 @@ export const runSyntheticLiveJourney = async (
       && modelPlaybackElapsedMs >= modelAudioDurationMs * 0.9
     );
     const uiSpeechHandoffPassed = !simulateUiSpeechHandoff || connectionHandoffSamples > 0;
+    const providerInputExpectedSpanMs = Math.max(
+      0,
+      (packetStats.totalOutputSamples - packetStats.maxPacketSamples) / INPUT_SAMPLE_RATE * 1_000,
+    );
+    const providerInputPacingPassed = !requireRealtimeInputPacing || (
+      packetStats.pacedOutput
+      && packetStats.outputPacingElapsedMs >= providerInputExpectedSpanMs * 0.9
+    );
     const realtimeEvidence = {
       required: requireRealtimeInputPacing || playModelAudioRealtime || simulateUiSpeechHandoff,
       inputPacingPassed,
+      providerInputPacingPassed,
       modelPlaybackPassed,
       uiSpeechHandoffPassed,
-      passed: inputPacingPassed && modelPlaybackPassed && uiSpeechHandoffPassed,
+      passed: inputPacingPassed
+        && providerInputPacingPassed
+        && modelPlaybackPassed
+        && uiSpeechHandoffPassed,
     };
     if (realtimeEvidence.required && !realtimeEvidence.passed) {
-      throw new Error(`Live real-time evidence failed: ${JSON.stringify(realtimeEvidence)}`);
+      throw new Error(`Live real-time evidence failed: ${JSON.stringify({
+        ...realtimeEvidence,
+        serverMessageCount,
+        serverMessageKinds: [...serverMessageKinds].sort(),
+        inputTranscriptLength: inputTranscript.trim().length,
+        outputTranscriptLength: outputTranscript.trim().length,
+        modelAudioSampleCount,
+      })}`);
     }
     const result = {
       operationId,
@@ -449,6 +509,8 @@ export const runSyntheticLiveJourney = async (
       modelAudioSampleCount,
       inputTranscriptDeltaCount,
       outputTranscriptDeltaCount,
+      serverMessageCount,
+      serverMessageKinds: [...serverMessageKinds].sort(),
       sentVideoFrameCount,
       ...(input.includeModelAudio ? { modelAudioChunksBase64: modelAudioChunks } : {}),
       gate: { enabled: gateEnabled, semanticSpeech, gatedPackets, streamEnds },
@@ -490,6 +552,8 @@ export const runSyntheticLiveJourney = async (
       },
     });
     return result;
+  } catch (error) {
+    throw attachLiveFailureEvidence(error);
   } finally {
     await router.stop();
     packetizer.dispose();

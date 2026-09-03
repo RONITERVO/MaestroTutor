@@ -11,6 +11,7 @@ import type {
   BackendFileStatusesResponse,
   BackendGenerateContentRequest,
   BackendGenerateContentResponse,
+  BackendLiveGatewayTicketResponse,
   BackendLiveTokenRequest,
   BackendLiveTokenResponse,
   BackendMediaUploadRequest,
@@ -282,6 +283,18 @@ export const createManagedBackendClient = (options: ManagedBackendClientOptions)
       'gemini/delete-file', { method: 'POST', body: JSON.stringify(payload) },
     ),
     clearFiles: (): Promise<BackendClearFilesResponse> => requestManagedJson('gemini/clear-files', { method: 'POST' }),
+    createLiveGatewayTicket: async (
+      payload: BackendLiveTokenRequest,
+    ): Promise<BackendLiveGatewayTicketResponse> => {
+      const response = await requestManagedJson<BackendLiveGatewayTicketResponse>('gemini/live-gateway-ticket', {
+        method: 'POST', body: JSON.stringify(payload),
+      });
+      await options.session.update({ billingSummary: response.billingSummary || null });
+      return response;
+    },
+    acceptLiveGatewayBillingSummary: (billingSummary: ManagedBillingSummary): Promise<void> => (
+      options.session.update({ billingSummary })
+    ),
     createLiveToken: async (payload: BackendLiveTokenRequest): Promise<BackendLiveTokenResponse> => {
       const response = await requestManagedJson<BackendLiveTokenResponse>('gemini/live-token', {
         method: 'POST', body: JSON.stringify(payload),

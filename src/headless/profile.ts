@@ -21,6 +21,10 @@ export interface HeadlessProfileState {
     billingSummary: ManagedBillingSummary | null;
     entitlements: EntitlementRecord[];
   };
+  byok: {
+    /** Provider files created by this profile and therefore safe to delete. */
+    ownedFiles: string[];
+  };
   updatedAt: number;
 }
 
@@ -38,6 +42,7 @@ export const createEmptyHeadlessProfileState = (now = Date.now()): HeadlessProfi
   chats: {},
   globalProfile: '',
   managed: { billingSummary: null, entitlements: [] },
+  byok: { ownedFiles: [] },
   updatedAt: now,
 });
 
@@ -63,7 +68,17 @@ const validateState = (value: unknown): HeadlessProfileState => {
   if (!record.settings || typeof record.settings !== 'object') throw new Error('Headless profile settings are invalid.');
   if (!record.chats || typeof record.chats !== 'object') throw new Error('Headless profile chats are invalid.');
   if (!record.managed || typeof record.managed !== 'object') throw new Error('Headless profile managed state is invalid.');
-  return { ...record, globalProfile: typeof record.globalProfile === 'string' ? record.globalProfile : '' } as HeadlessProfileState;
+  const rawOwnedFiles = record.byok && typeof record.byok === 'object'
+    ? (record.byok as { ownedFiles?: unknown }).ownedFiles
+    : [];
+  const ownedFiles = Array.isArray(rawOwnedFiles)
+    ? [...new Set(rawOwnedFiles.filter((item): item is string => typeof item === 'string' && Boolean(item.trim())).map(item => item.trim()))]
+    : [];
+  return {
+    ...record,
+    globalProfile: typeof record.globalProfile === 'string' ? record.globalProfile : '',
+    byok: { ownedFiles },
+  } as HeadlessProfileState;
 };
 
 export const openHeadlessProfile = async (options?: {

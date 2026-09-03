@@ -21,6 +21,12 @@ import {
   type HeadlessCredentialOptions,
   type HeadlessCredentialProvider,
 } from './credentials';
+import {
+  describeHeadlessAccessPolicy,
+  HEADLESS_METHOD_ACCESS_POLICY,
+  HEADLESS_METHODS,
+  type HeadlessMethodName,
+} from './accessPolicy';
 
 export interface HeadlessClientOptions extends HeadlessCredentialOptions {
   profileName?: string;
@@ -93,7 +99,17 @@ export const createHeadlessClient = async (options: HeadlessClientOptions = {}):
   const direct = accessMode === 'byok' ? createDirectHeadlessAi(options.geminiApiKey) : null;
   const ai = direct?.ai || createManagedGeminiClient(backend);
   const files = direct
-    ? createDirectHeadlessFilePort(direct.direct)
+    ? createDirectHeadlessFilePort(direct.direct, {
+        list: () => state.byok.ownedFiles,
+        add: async nameOrUri => {
+          if (!state.byok.ownedFiles.includes(nameOrUri)) state.byok.ownedFiles.push(nameOrUri);
+          await profile.save(state);
+        },
+        remove: async nameOrUri => {
+          state.byok.ownedFiles = state.byok.ownedFiles.filter(candidate => candidate !== nameOrUri);
+          await profile.save(state);
+        },
+      })
     : createManagedHeadlessFilePort(backend);
 
   return {
@@ -112,67 +128,17 @@ export const createHeadlessClient = async (options: HeadlessClientOptions = {}):
   };
 };
 
-const HEADLESS_METHODS = [
-  'system.describe',
-  'profile.get',
-  'auth.status',
-  'auth.signIn',
-  'auth.signOut',
-  'auth.google.verifyHosted',
-  'language.list',
-  'language.select',
-  'chat.history',
-  'chat.turn',
-  'chat.attachment.turn',
-  'suggestions.generate',
-  'suggestions.process',
-  'translation.create',
-  'chat.reengage',
-  'media.image.generate',
-  'media.audioNote.generate',
-  'media.music.generate',
-  'speech.synthetic.live',
-  'speech.transcribe',
-  'speech.tts.generate',
-  'live.conversation.turn',
-  'live.observer.turn',
-  'journey.firstLesson',
-  'account.summary',
-  'account.ledgers',
-  'account.delete',
-  'billing.checkout.create',
-  'billing.checkout.reconcile',
-  'billing.checkout.completeTest',
-  'report.submit',
-  'gemini.generate',
-  'gemini.generateStream',
-  'files.upload',
-  'files.status',
-  'files.delete',
-  'files.clear',
-  'live.token.create',
-  'live.token.release',
-] as const;
-
-export const describeHeadlessMethods = () => ({
-  protocolVersion: '1.4.0',
-  transport: 'json-rpc-2.0-ndjson',
-  eventNotification: 'maestro.event',
-  profileDefault: 'isolated-temporary',
-  configuredModels: {
-    text: getGeminiModels().text,
-    image: getGeminiModels().image.generation,
-    live: getGeminiModels().audio,
-    music: getGeminiModels().music.generation,
-  },
-  methods: [...HEADLESS_METHODS],
-  methodInfo: {
+export const describeHeadlessMethods = (accessMode: HeadlessAccessMode = 'managed') => {
+  const methodInfo = {
+    'system.describe': { mutates: false, params: [] },
     'profile.get': { mutates: false, params: ['includeState?'] },
+    'auth.status': { mutates: false, params: [] },
     'auth.signIn': { mutates: true, params: ['operationId?'] },
     'auth.signOut': { mutates: true, params: ['operationId?'] },
     'auth.google.verifyHosted': { mutates: true, params: ['appUrl?', 'headless?', 'timeoutMs?'] },
     'language.list': { mutates: false, params: ['targetLanguageCode?', 'nativeLanguageCode?', 'limit? (1..500, default 100)'] },
     'language.select': { mutates: true, params: ['pairId? | targetLanguageCode + nativeLanguageCode'] },
+    'chat.history': { mutates: false, params: ['languagePairId?'] },
     'chat.turn': { mutates: true, params: ['text', 'languagePairId?', 'useGoogleSearch?', 'requireInvariants?', 'fileParts?'] },
     'chat.attachment.turn': { mutates: true, external: true, params: ['text', 'fixture? (text|image|audio|pdf|svg|video|office) | dataUrl + mimeType', 'displayName?', 'languagePairId?', 'useGoogleSearch?', 'requireInvariants?', 'cleanup?'] },
     'suggestions.generate': { mutates: true, params: ['languagePairId?', 'assistantMessageId?', 'responseSource?', 'includeArtifactContent?'] },
@@ -187,28 +153,50 @@ export const describeHeadlessMethods = () => ({
     'speech.tts.generate': { mutates: true, external: true, params: ['text', 'langCode?', 'voiceName?', 'model?', 'includeDataUrl?'] },
     'live.conversation.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
     'live.observer.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
-    'journey.firstLesson': { mutates: true, external: true, params: ['languagePairId? | targetLanguageCode? + nativeLanguageCode?', 'pcmBase64?', 'expectedTranscript? (required with custom PCM)', 'minTranscriptWordRecall? (0..1, default 0.8)', 'paceLiveAudio?', 'timeoutMs?', 'includeSyntheticToolDecisions?', 'uploadGeneratedMedia?'] },
+    'journey.firstLesson': { mutates: true, external: true, params: ['languagePairId? | targetLanguageCode? + nativeLanguageCode?', 'pcmBase64?', 'expectedTranscript? (required with custom PCM)', 'minTranscriptWordRecall? (0..1, default 0.8)', 'paceLiveAudio?', 'timeoutMs?', 'includeSyntheticToolDecisions?', 'uploadGeneratedMedia? (default true in both access modes)'] },
+    'account.summary': { mutates: false, params: ['operationId?'] },
     'account.ledgers': { mutates: false, params: ['limit?'] },
     'account.delete': { mutates: true, destructive: true, params: ['confirmation=DELETE', 'expectedUserId', 'operationId?'] },
     'billing.checkout.create': { mutates: true, external: true, params: ['packId'] },
     'billing.checkout.reconcile': { mutates: false, params: ['attempts?', 'intervalMs?'] },
     'billing.checkout.completeTest': { mutates: true, external: true, testOnly: true, params: ['packId', 'expectedCredits?', 'email?', 'headless?', 'timeoutMs?', 'attempts?', 'intervalMs?'] },
-    'report.submit': { mutates: true, external: true, params: ['accessMode', 'messageId', 'reason', 'assistantText?', 'rawAssistantResponse?', 'notes?', 'surface?', 'model?', 'createdAtClient?'] },
+    'report.submit': { mutates: true, external: true, params: ['accessMode? (must match active mode)', 'messageId', 'reason', 'assistantText?', 'rawAssistantResponse?', 'notes?', 'surface?', 'model?', 'createdAtClient?'] },
     'gemini.generate': { mutates: true, external: true, params: ['model', 'contents', 'config?'] },
     'gemini.generateStream': { mutates: true, external: true, params: ['model', 'contents', 'config?'] },
     'files.upload': { mutates: true, external: true, params: ['dataUrl', 'mimeType', 'displayName?'] },
     'files.status': { mutates: false, params: ['uris'] },
     'files.delete': { mutates: true, destructive: true, params: ['nameOrUri'] },
     'files.clear': { mutates: true, destructive: true, params: [] },
-    'live.token.create': { mutates: true, external: true, params: ['model', 'purpose? (live only)', 'config?', 'durationSeconds?'] },
-    'live.token.release': { mutates: true, params: ['leaseId'] },
+  } satisfies Record<HeadlessMethodName, Record<string, unknown>>;
+  const access = describeHeadlessAccessPolicy(accessMode);
+  const describedMethodInfo = Object.fromEntries(HEADLESS_METHODS.map(method => [
+    method,
+    { ...methodInfo[method], ...HEADLESS_METHOD_ACCESS_POLICY[method] },
+  ]));
+
+  return {
+  protocolVersion: '1.6.0',
+  transport: 'json-rpc-2.0-ndjson',
+  eventNotification: 'maestro.event',
+  profileDefault: 'isolated-temporary',
+  configuredModels: {
+    text: getGeminiModels().text,
+    image: getGeminiModels().image.generation,
+    live: getGeminiModels().audio,
+    music: getGeminiModels().music.generation,
   },
+  methods: [...HEADLESS_METHODS],
+  methodInfo: describedMethodInfo,
+  access,
   releaseRequirements: [
     'Android external Stripe checkout stays disabled until Play programme enrollment is recorded.',
-    'Managed and BYOK provider journeys must use the same Core SDK boundaries; BYOK keys come only from MAESTRO_GEMINI_API_KEY.',
+    'Every provider-parity method must be green in paired managed and BYOK release proof; BYOK keys come only from MAESTRO_GEMINI_API_KEY.',
+    'BYOK cleanup is restricted to files recorded as owned by the active headless profile.',
     'Every Gemini Live transport requires a reviewed live-open reason; synthetic headless actions are audited as user.headless-live.',
+    'Managed Live must use the server-observed gateway; provider-connected no-output sessions must create no charge and leave no reservation.',
   ],
   deferred: ['mcp'],
-});
+  };
+};
 
 export type HeadlessReportParams = BackendAiContentReportRequest;

@@ -2,12 +2,6 @@ name: Headless staging journey
 
 on:
   workflow_dispatch:
-    inputs:
-      require_byok:
-        description: Fail unless the BYOK provider journey can run
-        required: false
-        default: false
-        type: boolean
   schedule:
     - cron: '17 5 * * 1'
 
@@ -19,7 +13,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gateway-accounting-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+            live-gateway/package-lock.json
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm ci --prefix functions
+      - run: npm ci --prefix live-gateway
+      - name: Prove gateway transport and accounting invariants
+        run: |
+          npm audit --prefix live-gateway --omit=dev
+          npm test --prefix live-gateway
+          npm run test:emulator --prefix functions
+
   managed-provider-smoke:
+    needs: gateway-accounting-safety
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
@@ -54,20 +75,34 @@ jobs:
           npx tsx src/headless/cli.ts auth.signIn --profile staging-ci > auth.json
           npx tsx src/headless/cli.ts account.summary --profile staging-ci > account.json
           node -e "const a=require('./account.json'); if(!a.account?.user?.id) process.exit(1); console.log('Authenticated managed account:', a.account.user.id, 'credits:', a.account.billingSummary.availableCredits)"
+      - name: Prove a provider-connected no-output Live session costs zero
+        run: |
+          npm run --silent smoke:managed-live-no-output -- --profile staging-ci > managed-live-no-output.json
+          node -e "const r=require('./managed-live-no-output.json'); if(!r.passed||r.usageRows!==0||r.chargeRows!==0||r.releaseRows!==1||r.reservedCreditsAfter!==0) process.exit(1); console.log('No-output Live release:',r.releasedCredits,'credits returned with no charge')"
       - name: Complete one controlled Stripe test purchase
         run: |
           npx tsx src/headless/cli.ts billing.checkout.completeTest --profile staging-ci --params "{\"packId\":\"$MAESTRO_TEST_PACK_ID\",\"expectedCredits\":$MAESTRO_TEST_PACK_CREDITS,\"headless\":true}" > checkout.json
           node -e "const c=require('./checkout.json'); if(c.grantedCredits!==Number(process.env.MAESTRO_TEST_PACK_CREDITS)||c.newPurchaseLedgerEntries!==1||!c.purchaseClaimId) process.exit(1); console.log('Stripe session:',c.sessionId,'claim:',c.purchaseClaimId,'grant:',c.grantedCredits)"
       - name: Exercise a complete first lesson through shared UI/Core paths
         run: |
-          npx tsx src/headless/cli.ts journey.firstLesson --profile staging-ci --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > first-lesson.json
-          node -e 'const fs=require("fs"),r=require("./first-lesson.json"); if(!r.passed||r.userTurnCount<10) process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing first-lesson coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,turns:r.turns}; console.log("First lesson turns:",r.userTurnCount,"coverage:",Object.keys(r.coverage).length); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### Managed first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'
+          npx tsx src/headless/cli.ts journey.firstLesson --profile staging-ci --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > managed-first-lesson.json 2> managed-first-lesson.events.jsonl
+          node -e 'const fs=require("fs"),r=require("./managed-first-lesson.json"); if(!r.passed||r.userTurnCount<10||!r.managedBillingEvidence?.passed) process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing first-lesson coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,managedBillingEvidence:r.managedBillingEvidence,turns:r.turns}; console.log("First lesson turns:",r.userTurnCount,"coverage:",Object.keys(r.coverage).length,"charged credits:",r.managedBillingEvidence.creditsSpent); fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### Managed first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'
+      - name: Preserve managed parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: headless-managed-proof
+          path: |
+            managed-first-lesson.json
+            managed-first-lesson.events.jsonl
+            managed-live-no-output.json
+          retention-days: 14
       - name: Exercise the low-level direct and streamed JSON-RPC routes
         run: |
           node -e "const p=require('./protocol.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
           npx tsx src/headless/cli.ts gemini.generate --profile staging-ci --params "$(cat gemini-params.json)" > gemini.json
           npx tsx src/headless/cli.ts gemini.generateStream --profile staging-ci --params "$(cat gemini-stream-params.json)" > gemini-stream.json
-          node -e "const r=require('./gemini-stream.json'); if(!Array.isArray(r.chunks)||!r.chunks.length) process.exit(1)"
+          node -e "const r=require('./gemini.json'),s=require('./gemini-stream.json'); if(!String(r.text||'').toLowerCase().includes('provider-ok')||!Array.isArray(s.chunks)||!s.chunks.length) process.exit(1)"
       - name: Verify ledgers, clear generated files and sign out
         if: always()
         run: |
@@ -78,6 +113,7 @@ jobs:
           npx tsx src/headless/cli.ts auth.signOut --profile staging-ci > signout.json
 
   byok-provider-smoke:
+    needs: gateway-accounting-safety
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
@@ -91,24 +127,52 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - id: access
-        name: Detect the isolated BYOK release credential
+      - name: Require the isolated BYOK release credential
         shell: bash
         run: |
-          if [ -n "$MAESTRO_GEMINI_API_KEY" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::HEADLESS_GEMINI_API_KEY is not configured; BYOK live-provider proof was not run."
-          fi
-      - name: Require BYOK proof when requested
-        if: ${{ inputs.require_byok && steps.access.outputs.configured != 'true' }}
-        run: |
-          echo "HEADLESS_GEMINI_API_KEY is required for this release run." >&2
-          exit 1
+          test -n "$MAESTRO_GEMINI_API_KEY" || { echo "HEADLESS_GEMINI_API_KEY is required; BYOK parity may never be silently skipped." >&2; exit 1; }
       - name: Exercise the full first lesson with direct Gemini access
-        if: ${{ steps.access.outputs.configured == 'true' }}
         run: |
           npx tsx src/headless/cli.ts system.describe --access byok > protocol-byok.json
-          npx tsx src/headless/cli.ts journey.firstLesson --access byok --profile staging-ci-byok --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":false}' > first-lesson-byok.json
-          node -e 'const fs=require("fs"),r=require("./first-lesson-byok.json"); if(r.accessMode!=="byok"||!r.passed||r.userTurnCount<10) process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing BYOK coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,turns:r.turns}; fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### BYOK first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'
+          node -e 'const p=require("./protocol-byok.json"); if(p.access.unavailableMethods.includes("journey.firstLesson")) throw new Error("First lesson unavailable in BYOK"); for(const m of p.access.providerParityMethods) if(!p.access.availableMethods.includes(m)) throw new Error("BYOK missing parity method: "+m)'
+          npx tsx src/headless/cli.ts journey.firstLesson --access byok --profile staging-ci-byok --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > byok-first-lesson.json 2> byok-first-lesson.events.jsonl
+          node -e 'const fs=require("fs"),r=require("./byok-first-lesson.json"); if(r.accessMode!=="byok"||!r.passed||r.userTurnCount<10||r.managedBillingEvidence?.payer!=="byok-api-key-owner") process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing BYOK coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,managedBillingEvidence:r.managedBillingEvidence,turns:r.turns}; fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### BYOK first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'
+      - name: Preserve BYOK parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: headless-byok-proof
+          path: |
+            byok-first-lesson.json
+            byok-first-lesson.events.jsonl
+          retention-days: 14
+      - name: Exercise the low-level direct and streamed JSON-RPC routes
+        run: |
+          node -e "const p=require('./protocol-byok.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
+          npx tsx src/headless/cli.ts gemini.generate --access byok --profile staging-ci-byok --params "$(cat gemini-params.json)" > gemini-byok.json
+          npx tsx src/headless/cli.ts gemini.generateStream --access byok --profile staging-ci-byok --params "$(cat gemini-stream-params.json)" > gemini-stream-byok.json
+          node -e "const r=require('./gemini-byok.json'),s=require('./gemini-stream-byok.json'); if(!String(r.text||'').toLowerCase().includes('provider-ok')||!Array.isArray(s.chunks)||!s.chunks.length) process.exit(1)"
+      - name: Clear only files owned by the BYOK headless profile
+        if: always()
+        run: |
+          npx tsx src/headless/cli.ts files.clear --access byok --profile staging-ci-byok > clear-byok.json
+          node -e "const c=require('./clear-byok.json'); if(c.failedCount!==0) throw new Error('Provider file cleanup failed: '+JSON.stringify(c.failedNames||[]))"
+
+  access-parity:
+    needs: [managed-provider-smoke, byok-provider-smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: headless-*-proof
+          path: parity-proof
+          merge-multiple: true
+      - name: Compare stable managed and BYOK evidence
+        run: npx tsx scripts/compare-headless-access-parity.ts parity-proof/managed-first-lesson.json parity-proof/byok-first-lesson.json

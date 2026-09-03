@@ -24,6 +24,7 @@ Verified on 2026-09-01:
 | GCP project number | `47084692464` |
 | Functions region | `europe-west1` |
 | Managed API | `https://europe-west1-chatwithmaestro.cloudfunctions.net/api` |
+| Managed Live gateway | Cloud Run service `maestrotutor-live-gateway` in `europe-west1` (required by this release; verify its deployed URL) |
 | Firebase web app | `1:47084692464:web:7e83d9b9c36b6c59ac7335` |
 | Firebase Android app | `1:47084692464:android:1f3e885d2a423a63ac7335` |
 | Android package | `com.ronitervo.maestrotutor` |
@@ -34,9 +35,11 @@ Verified on 2026-09-01:
 | Stripe webhook destination | `maestro-managed-billing` (`we_1UAmNP1dnAf99VGWLBHM6tdC`) |
 | Stripe webhook URL | `https://europe-west1-chatwithmaestro.cloudfunctions.net/api/billing/stripe/webhook` |
 
-The API is a Node.js 22, second-generation Cloud Function. Two scheduled
-functions also exist in `europe-west1`: expired reservations run every ten
-minutes and managed file cleanup retries hourly. Firestore rules, indexes and
+The API is a Node.js 22, second-generation Cloud Function. Managed Live also uses
+a Node.js 22 Cloud Run WebSocket gateway with the Gemini key held server-side.
+Three scheduled functions exist in `europe-west1`: expired reservations run every
+ten minutes, managed Live ticket/session reconciliation runs every minute, and
+managed file cleanup retries hourly. Firestore rules, indexes and
 TTL policies are deployed. Artifact Registry deletes old function images after
 30 days.
 
@@ -132,7 +135,7 @@ not turn the service API key into access to an arbitrary or unpriced model.
 Treat a model update as one release: verify the provider name and pricing,
 update the checked-in registry/defaults and pricing tests, update the matching
 server allowlist, deploy Functions, publish the client, and run one managed
-request for every affected surface. Live tokens are constrained to the exact
+request for every affected surface. Live gateway tickets are bound to the exact
 allowlisted model requested by the client.
 
 Managed text traffic is pinned to the stable `gemini-3.7-flash` and
@@ -141,6 +144,19 @@ Functions allowlist: Google can hot-swap an alias to a model with different
 behavior or pricing. The backend maps the two old text aliases to these stable
 IDs so installed clients remain compatible. Settlement uses the provider's
 returned model version and records both requested and resolved IDs in metadata.
+
+Managed Live clients never receive the provider credential. Functions reserve a
+maximum and issue a one-use, hashed-secret gateway ticket bound to the reviewed
+Live-open reason, model, sanitized config, pricing version and account. Cloud Run
+consumes it once, connects to Gemini `v1beta`, checkpoints useful output before
+delivery, and settles observed provider usage. Setup/no-output releases the entire
+reservation. The legacy ephemeral-token routes return 410 whenever the gateway is
+configured; never enable a client fallback around that guard.
+
+The UI/BYOK package and gateway package must exact-pin the same `@google/genai`
+version; `npm run verify:release-config` rejects ranges and mismatches. Both client
+packetization and the gateway pace a retained PCM burst to absolute sample
+deadlines, so a slow connection cannot turn lossless capture into provider flooding.
 
 The checked-in Gemini 3.7 and 3.6 Flash Standard rates were verified on
 2026-09-01. Their promotional input/output/cache rates expire after 2026-12-31
@@ -194,6 +210,9 @@ git clone <repository-url>
 cd MaestroTutor
 npm ci
 cd functions
+npm ci
+cd ..
+cd live-gateway
 npm ci
 cd ..
 ```
@@ -251,6 +270,9 @@ npm run lint
 npm run build
 npm audit --omit=dev --audit-level=critical
 git diff --check
+npm run build --prefix live-gateway
+npm test --prefix live-gateway
+npm audit --prefix live-gateway --omit=dev
 ```
 
 From `functions/`:
@@ -334,7 +356,25 @@ visible, sign in, refresh the account, and sign out. Do not turn App Check off
 merely because Pages propagation is still returning an old asset; wait and
 verify the asset actually changed.
 
-## 7. Deploy the backend
+## 7. Deploy the backend and managed Live gateway
+
+Deploy the Cloud Run image first. It is safe while no Functions issuer points at
+it. Use an immutable candidate/SHA tag, not `latest`; the runtime service account
+must have Firestore access and Secret Manager accessor for `GEMINI_API_KEY`.
+
+```powershell
+$releaseTag = "release-<candidate-short-sha>"
+gcloud builds submit --project chatwithmaestro --config live-gateway/cloudbuild.yaml --substitutions "_REGION=europe-west1,_REPOSITORY=gcf-artifacts,_SERVICE=maestrotutor-live-gateway,_TAG=$releaseTag" .
+gcloud run deploy maestrotutor-live-gateway --project chatwithmaestro --region europe-west1 --image "europe-west1-docker.pkg.dev/chatwithmaestro/gcf-artifacts/maestrotutor-live-gateway:$releaseTag" --allow-unauthenticated --service-account <runtime-service-account> --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest --set-env-vars MANAGED_CREDITS_PER_USD=1000 --memory 512Mi --cpu 1 --concurrency 80 --min-instances 0 --max-instances 10 --timeout 300
+gcloud run services describe maestrotutor-live-gateway --project chatwithmaestro --region europe-west1 --format="value(status.url,status.latestReadyRevisionName)"
+```
+
+Public ingress is intentional: the short-lived one-use ticket authenticates the
+WebSocket. Never place that ticket in a query string or logs. Verify `GET /health`
+returns `service: managed-live-gateway`, `apiVersion: v1beta`, and
+`metering: server-observed`. Put the exact HTTPS service URL in production
+`functions/.env` as `MANAGED_LIVE_GATEWAY_URL`; set
+`MANAGED_LIVE_GATEWAY_TICKET_SECONDS=45`.
 
 Run from `functions/` so the pinned Firebase CLI and package lock are used:
 
@@ -362,10 +402,22 @@ gcloud functions describe api --gen2 --region europe-west1 --project chatwithmae
 ```
 
 Expected health facts are `ok: true`, region `europe-west1`, Firestore ready,
-Gemini and Stripe configured, App Check required, managed product `pack_1000`,
-and model lists matching the deployed registry. The response deliberately says
+Gemini and Stripe configured, App Check required,
+`managedLiveGatewayConfigured:true`, managed product `pack_1000`, and model lists
+matching the deployed registry. The response deliberately says
 `geminiConfigured`, not `geminiReady`: the paid smoke test above is what proves
 the provider balance and generation quota are usable.
+
+After Functions and indexes are live, run the following with the normal production
+headless credentials:
+
+```bash
+npm run --silent smoke:managed-live-no-output -- --profile production-live-canary
+```
+It must preserve available/lifetime spend, create no usage or charge row, create
+one request-correlated reservation-release row and end at zero reserved credits.
+Then run one short real-answer observer fixture and confirm its `liveGateway`
+usage/charge rows use provider metadata and are below the maximum reservation.
 
 ## 8. App Check changes and rollback
 
@@ -567,6 +619,10 @@ budget and alert recipients, then record them in this document.
 - Bad web release: revert the source commit, rebuild, and run `npm run deploy`.
   Do not force-push `gh-pages` unless repository owners explicitly approve it.
 - Bad API revision: revert the source/config change and redeploy `functions:api`.
+- Bad Live gateway revision: point `MANAGED_LIVE_GATEWAY_URL` only at a previously
+  verified compatible gateway revision and redeploy Functions. Do not restore the
+  direct-token client route; if no verified revision exists, leave managed Live
+  fail closed while text/BYOK service remains available.
 - App Check outage: use the temporary rollback in section 8.
 - Stripe failures: leave webhook signature verification fail-closed. Restore the
   correct secret/key and replay failed events from Stripe; idempotency prevents a

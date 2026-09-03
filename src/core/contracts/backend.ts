@@ -75,6 +75,8 @@ export interface BackendDeleteManagedAccountResponse {
   releasedReservationCount: number;
   deletedReservationCount: number;
   deletedManagedFileCount: number;
+  deletedLiveGatewayTicketCount: number;
+  deletedLiveGatewaySessionCount: number;
   anonymizedPurchaseCount: number;
   anonymizedReportCount: number;
   remoteManagedFileFailures: number;
@@ -193,6 +195,15 @@ export interface BackendLiveTokenResponse {
   token: string;
   expiresAt: string | null;
   uses: number;
+  billingSummary?: ManagedBillingSummary;
+}
+
+export interface BackendLiveGatewayTicketResponse {
+  transport: 'gateway';
+  gatewayUrl: string;
+  ticket: string;
+  ticketExpiresAt: string;
+  sessionExpiresAt: string;
   billingSummary?: ManagedBillingSummary;
 }
 
