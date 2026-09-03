@@ -9,9 +9,19 @@ import {
   LOCAL_WHISPER_REQUEST_INTERVAL_MS,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SpeechActivityTracker,
 } from '../../../core-sdk/media/liveSpeechDetection';
 import { RealtimePcmPacketizer } from '../../../core-sdk/media/realtimePcmPacketizer';
-import { SpeechGate, measureEnergy } from '../../../../shared/audio/speechGate';
+import {
+  PcmCaptureHandoff,
+  type PcmCaptureHandoffStats,
+} from '../../../core-sdk/media/pcmInput';
+import {
+  DEFAULT_SPEECH_GATE,
+  isSpeechLike,
+  SpeechGate,
+  measureEnergy,
+} from '../../../../shared/audio/speechGate';
 import { FLOAT_TO_INT16_PROCESSOR_NAME, FLOAT_TO_INT16_PROCESSOR_URL } from '../worklets';
 import type { CaptureWorkletMessage } from './captureWorkletMessaging';
 import type { LocalWhisperClient } from './localWhisperClient';
@@ -31,6 +41,24 @@ export interface LocalSpeechTriggerResult {
   microphoneStream: MediaStream;
   pcm: Int16Array;
   transcript: string;
+  /**
+   * The exact browser capture graph that detected the utterance. It stays
+   * alive while the paid Live transport connects, then transfers every sample
+   * captured in that interval to the normal session pipeline without changing
+   * microphones or AudioContexts.
+   */
+  capture: LocalSpeechCaptureHandoff;
+}
+
+export type LocalSpeechCaptureHandoffStats = PcmCaptureHandoffStats;
+
+export interface LocalSpeechCaptureHandoff {
+  audioContext: AudioContext;
+  workletNode: AudioWorkletNode;
+  /** Route buffered continuation audio first, then all future capture. */
+  transferTo(sink: (pcm: Int16Array) => void): LocalSpeechCaptureHandoffStats;
+  /** Tear down a trigger that could not be transferred to a Live session. */
+  close(options?: { stopMicrophone?: boolean }): Promise<void>;
 }
 
 const abortError = () => {
@@ -48,6 +76,7 @@ export const waitForLocalSpeechTrigger = async (options: {
   detector: LocalWhisperClient;
   signal?: AbortSignal;
   onPhaseChange?: (phase: LocalSpeechTriggerPhase) => void;
+  onVadActivityChange?: (active: boolean) => void;
 }): Promise<LocalSpeechTriggerResult> => {
   if (options.signal?.aborted) throw abortError();
   const setPhase = (phase: LocalSpeechTriggerPhase) => options.onPhaseChange?.(phase);
@@ -57,8 +86,18 @@ export const waitForLocalSpeechTrigger = async (options: {
   let packetizer: RealtimePcmPacketizer | null = null;
   let settled = false;
   let microphoneStopped = false;
+  let vadActive = false;
+  let inferenceTailPackets: Int16Array[] = [];
+  const continuationCapture = new PcmCaptureHandoff();
+
+  const setVadActive = (active: boolean) => {
+    if (vadActive === active) return;
+    vadActive = active;
+    options.onVadActivityChange?.(active);
+  };
 
   const stopCapture = async (keepStream: boolean) => {
+    setVadActive(false);
     if (worklet) {
       worklet.port.onmessage = null;
       try { worklet.disconnect(); } catch { /* already disconnected */ }
@@ -124,6 +163,7 @@ export const waitForLocalSpeechTrigger = async (options: {
     }
 
     const gate = new SpeechGate({ requireConfirmation: true });
+    const speechActivity = new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE });
     let bufferedPackets: Int16Array[] = [];
     let whisperBusy = false;
     let lastWhisperRequestAt = 0;
@@ -142,20 +182,44 @@ export const waitForLocalSpeechTrigger = async (options: {
         onPacket: async packet => {
           if (settled) return;
           const now = Date.now();
-          const decision = gate.evaluate(measureEnergy(packet), now);
-          if (decision.send) return;
-          if (decision.reason === 'cooldown' || decision.reason === 'playback') {
+          const energy = measureEnergy(packet);
+          const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
+          setVadActive(packetIsSpeech);
+          const activity = speechActivity.observe(packet.length, packetIsSpeech, now);
+          if (activity.candidateReset && gate.isAwaitingConfirmation) {
+            gate.rejectSpeech(now);
             bufferedPackets = [];
+          }
+          const decision = gate.evaluate(energy, now);
+          if (decision.send) return;
+          if (decision.reason === 'playback') {
+            bufferedPackets = [];
+            speechActivity.reset();
+            return;
+          }
+          if (decision.reason === 'cooldown') {
+            if (!packetIsSpeech) {
+              bufferedPackets = [];
+              speechActivity.reset();
+              return;
+            }
+            // A person can begin a new turn during the short anti-chatter
+            // cooldown. Retain those first samples even though they cannot yet
+            // reopen the gate.
+            bufferedPackets.push(packet);
+            bufferedPackets = recentPcmPackets(bufferedPackets, BUFFER_SAMPLES);
             return;
           }
           bufferedPackets.push(packet);
           bufferedPackets = recentPcmPackets(bufferedPackets, BUFFER_SAMPLES);
           if (decision.reason !== 'awaiting-confirmation') return;
+          if (!activity.hasMinimumSpeech) return;
           if (whisperBusy || now - lastWhisperRequestAt < LOCAL_WHISPER_REQUEST_INTERVAL_MS) return;
 
           const audio = pcmPacketsToWhisperWindow(bufferedPackets, INPUT_SAMPLE_RATE);
           if (!audio) return;
           whisperBusy = true;
+          inferenceTailPackets = [];
           lastWhisperRequestAt = now;
           setPhase('whisper-checking');
           try {
@@ -165,18 +229,42 @@ export const waitForLocalSpeechTrigger = async (options: {
             if (!isLikelySpeechTranscript(transcript)) {
               gate.rejectSpeech(resultAt);
               bufferedPackets = [];
+              inferenceTailPackets = [];
+              speechActivity.reset();
               setPhase('vad-listening');
               return;
             }
             if (!gate.confirmSpeech(resultAt)) {
+              inferenceTailPackets = [];
               setPhase('vad-listening');
               return;
             }
             settled = true;
+            speechActivity.reset();
             setPhase('speech-confirmed');
-            const pcm = mergeInt16Arrays(recentPcmPackets(bufferedPackets, PREROLL_SAMPLES));
-            await stopCapture(true);
-            resolve({ microphoneStream: microphoneStream!, pcm, transcript });
+            setVadActive(false);
+            packetizer?.dispose();
+            packetizer = null;
+            const pcm = mergeInt16Arrays([
+              ...recentPcmPackets(bufferedPackets, PREROLL_SAMPLES),
+              ...inferenceTailPackets,
+            ]);
+            inferenceTailPackets = [];
+            const retainedContext = context!;
+            const retainedWorklet = worklet!;
+            resolve({
+              microphoneStream: microphoneStream!,
+              pcm,
+              transcript,
+              capture: {
+                audioContext: retainedContext,
+                workletNode: retainedWorklet,
+                transferTo: sink => continuationCapture.transferTo(sink),
+                close: async (closeOptions) => {
+                  await stopCapture(closeOptions?.stopMicrophone === false);
+                },
+              },
+            });
           } catch (error) {
             rejectOnce(error instanceof Error ? error : new Error(String(error)));
           } finally {
@@ -191,7 +279,15 @@ export const waitForLocalSpeechTrigger = async (options: {
       });
       worklet.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
         const pcm = event.data;
-        if (pcm instanceof Int16Array && pcm.length > 0) packetizer?.push(pcm);
+        if (!(pcm instanceof Int16Array) || pcm.length === 0) return;
+        if (settled) {
+          continuationCapture.push(pcm);
+          return;
+        }
+        // Whisper inference is asynchronous. Preserve everything spoken while
+        // it is deciding so the recognized prefix cannot consume the suffix.
+        if (whisperBusy) inferenceTailPackets.push(pcm.slice());
+        packetizer?.push(pcm);
       };
       const source = context!.createMediaStreamSource(microphoneStream!);
       source.connect(worklet);

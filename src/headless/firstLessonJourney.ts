@@ -22,8 +22,14 @@ const defaultSpeechPcm = (): Int16Array => {
   for (let index = 0; index < speech.length; index += 1) {
     speech[index] = source[Math.min(source.length - 1, Math.floor(index * 3 / 2))];
   }
-  const withSilence = new Int16Array(speech.length + 12_000);
-  withSilence.set(speech);
+  // The bundled "Play" clip contains only about 0.5 seconds of VAD-active
+  // speech. Repeat it so the release journey clears the same sustained-speech
+  // guard as a real user while retaining deterministic, known words.
+  const gapSamples = 1_600;
+  const withSilence = new Int16Array((speech.length * 3) + (gapSamples * 2) + 12_000);
+  withSilence.set(speech, 0);
+  withSilence.set(speech, speech.length + gapSamples);
+  withSilence.set(speech, (speech.length * 2) + (gapSamples * 2));
   return withSilence;
 };
 
@@ -44,6 +50,8 @@ const summarizeTurn = (turn: any, kind: string) => ({
   capturedInputSha256: turn?.capturedInputSha256 ?? null,
   capturedModelSamples: turn?.capturedModelSamples ?? null,
   capturedModelSha256: turn?.capturedModelSha256 ?? null,
+  transcriptEvidencePassed: turn?.transcriptEvidence?.passed ?? null,
+  transcriptWordRecall: turn?.transcriptEvidence?.wordRecall ?? null,
   cleanedUp: turn?.cleanedUp ?? null,
   cleanupFailureCount: Array.isArray(turn?.cleanupFailures) ? turn.cleanupFailures.length : null,
 });
@@ -53,6 +61,8 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
   targetLanguageCode?: string;
   nativeLanguageCode?: string;
   pcm?: Int16Array;
+  expectedTranscript?: string;
+  minTranscriptWordRecall?: number;
   paceLiveAudio?: boolean;
   timeoutMs?: number;
   includeSyntheticToolDecisions?: boolean;
@@ -66,6 +76,10 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
       });
   const operationId = client.runtime.ids.create('first-lesson');
   const pcm = input.pcm || defaultSpeechPcm();
+  const expectedTranscript = input.expectedTranscript?.trim() || (input.pcm ? '' : 'Play');
+  if (!expectedTranscript) {
+    throw new Error('journey.firstLesson with custom pcmBase64 requires expectedTranscript so speech understanding is proved.');
+  }
   const turns: Array<Record<string, unknown>> = [];
   const aftersteps: Array<Record<string, unknown>> = [];
   const initialUserTurnCount = (client.state.chats[pair.id] || [])
@@ -160,6 +174,8 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
     languagePairId: pair.id,
     pace: input.paceLiveAudio ?? true,
     timeoutMs: input.timeoutMs,
+    expectedTranscript,
+    minTranscriptWordRecall: input.minTranscriptWordRecall,
   });
   const spokenTurn = await runHeadlessChatTurn(client, {
     text: stt.transcript || 'Play',
@@ -175,6 +191,8 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
     languagePairId: pair.id,
     pace: input.paceLiveAudio ?? true,
     timeoutMs: input.timeoutMs,
+    expectedTranscript,
+    minTranscriptWordRecall: input.minTranscriptWordRecall,
   });
   turns.push(summarizeTurn(liveAudio, 'live-audio'));
   await runAftersteps(liveAudio.assistantMessage.id, 'live');
@@ -185,6 +203,8 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
     languagePairId: pair.id,
     pace: input.paceLiveAudio ?? true,
     timeoutMs: input.timeoutMs,
+    expectedTranscript,
+    minTranscriptWordRecall: input.minTranscriptWordRecall,
     includeVisual: true,
     visualLabel: 'RED APPLE',
     instructionSuffix: 'When the learner says Play, briefly use the visible red apple in the lesson.',
@@ -198,6 +218,8 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
     languagePairId: pair.id,
     pace: input.paceLiveAudio ?? true,
     timeoutMs: input.timeoutMs,
+    expectedTranscript,
+    minTranscriptWordRecall: input.minTranscriptWordRecall,
     instructionSuffix: 'Act as the silent observer. Respond only after detected speech.',
   });
   turns.push(summarizeTurn(observerAudio, 'silent-observer-audio'));
@@ -209,6 +231,8 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
     languagePairId: pair.id,
     pace: input.paceLiveAudio ?? true,
     timeoutMs: input.timeoutMs,
+    expectedTranscript,
+    minTranscriptWordRecall: input.minTranscriptWordRecall,
     includeVisual: true,
     visualLabel: 'RED APPLE',
     instructionSuffix: 'Act as the silent observer. Respond only after detected speech, and use the visible red apple.',

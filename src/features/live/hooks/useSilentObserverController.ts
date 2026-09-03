@@ -82,7 +82,6 @@ export const useSilentObserverController = ({
   const lastStartAttemptRef = useRef<number>(0);
   const startInFlightRef = useRef(false);
   const resumptionHandleRef = useRef<string | undefined>(undefined);
-  const stopObserverInternalRef = useRef<((reason: string, holdMs?: number) => Promise<void>) | null>(null);
   const observerLiveTokenRef = useRef<string | null>(null);
 
   const clearRetryTimer = useCallback(() => {
@@ -135,9 +134,11 @@ export const useSilentObserverController = ({
         console.error('Silent observer turn handler failed:', error);
       });
     },
-    onGoAway: () => {
-      if (!shouldRunRef.current) return;
-      void stopObserverInternalRef.current?.('observer-go-away', 0);
+    onGoAway: (notice) => {
+      // This is an advance warning, not a command to close immediately. The
+      // provider will close after its advertised grace period; the shared Live
+      // lifecycle then drains queued model speech before observer reconnection.
+      console.debug('Silent observer received Live disconnect warning; awaiting provider close.', notice.timeLeft);
     },
     onSessionResumptionUpdate: (update) => {
       if (update.newHandle && update.resumable !== false) {
@@ -229,10 +230,6 @@ export const useSilentObserverController = ({
       // Ignore stop errors; observer lifecycle will reconcile on next effect tick.
     }
   }, [clearRetryTimer, clearSuspendWakeTimer, stopObserverConversation]);
-
-  useEffect(() => {
-    stopObserverInternalRef.current = stopObserverInternal;
-  }, [stopObserverInternal]);
 
   const stopSilentObserver = useCallback(async () => {
     await stopObserverInternal('manual-stop', OBSERVER_MANUAL_STOP_HOLD_MS);

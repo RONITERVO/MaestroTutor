@@ -7,6 +7,7 @@ import {
   isLikelySpeechTranscript,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SpeechActivityTracker,
 } from './observerSpeechDetection';
 
 describe('Whisper trigger transcript filtering', () => {
@@ -67,5 +68,32 @@ describe('Whisper audio windows', () => {
     expect(audio).not.toBeNull();
     expect(audio?.length).toBe(speech.length);
     expect(Math.max(...audio!.slice(0, 100))).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('minimum live speech duration', () => {
+  const RATE = 16_000;
+
+  it('counts VAD-active samples instead of silence in the Whisper window', () => {
+    const tracker = new SpeechActivityTracker({ sampleRate: RATE });
+
+    for (let index = 0; index < 11; index += 1) {
+      expect(tracker.observe(1_600, true, index * 100).hasMinimumSpeech).toBe(false);
+    }
+    expect(tracker.observe(16_000, false, 1_150).hasMinimumSpeech).toBe(false);
+    expect(tracker.observe(1_600, true, 1_200).hasMinimumSpeech).toBe(true);
+  });
+
+  it('expires a short candidate instead of combining separate utterances', () => {
+    const tracker = new SpeechActivityTracker({ sampleRate: RATE });
+    tracker.observe(4_800, true, 100);
+
+    const reset = tracker.observe(1_600, false, 1_700);
+    expect(reset.candidateReset).toBe(true);
+    expect(reset.hasMinimumSpeech).toBe(false);
+
+    for (let index = 0; index < 9; index += 1) {
+      expect(tracker.observe(1_600, true, 1_800 + index * 100).hasMinimumSpeech).toBe(false);
+    }
   });
 });

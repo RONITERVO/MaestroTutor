@@ -84,6 +84,16 @@ unavailable. An energy fallback can preserve later turns only after an authorize
 transport is already active. Full user-started camera Live conversations continue
 to stream directly because their click is an explicit open reason.
 
+## Live output completion contract
+
+Gemini can deliver an entire transcript and PCM response much faster than the
+speaker can play it. `turnComplete`, `goAway`, and socket close are transport
+signals, not audible-completion signals. Live conversation teardown waits for an
+audio-worklet drain acknowledgement plus the device output latency. Triggered TTS
+waits for every scheduled `AudioBufferSourceNode` to emit `ended`. Only an explicit
+user stop may discard queued model speech. Conversation input also defaults to
+`NO_INTERRUPTION` so Android speaker echo cannot barge into the model's response.
+
 See [`docs/GEMINI_LIVE_OPEN_POLICY.md`](../../../docs/GEMINI_LIVE_OPEN_POLICY.md)
 for the complete allowlist, activity phases, backend audit fields and maintainer
 checklist.

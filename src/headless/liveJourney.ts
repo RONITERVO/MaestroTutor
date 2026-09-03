@@ -15,6 +15,7 @@ import { buildLiveSttSystemInstruction } from '../core-sdk/media/liveSessionInst
 import type { HeadlessClient } from './client';
 import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
 import { createSyntheticVisualFrame } from './syntheticVisual';
+import { requireTranscriptEvidence } from './transcriptEvidence';
 import { LIVE_OPEN_TRIGGER } from '../../shared/liveOpenReason';
 
 const decodePcmChunk = (base64: string): Int16Array => {
@@ -25,6 +26,33 @@ const decodePcmChunk = (base64: string): Int16Array => {
 const audioDigest = (pcm: Int16Array): string => createHash('sha256')
   .update(new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength))
   .digest('hex');
+
+export const summarizeLiveMessageForHeadlessOutput = (message: ChatMessage): {
+  message: Record<string, unknown>;
+  omittedInlineData: Record<string, number>;
+} => {
+  const compact: Record<string, any> = { ...message };
+  const omittedInlineData: Record<string, number> = {};
+  if (message.recordedUtterance?.dataUrl) {
+    const { dataUrl, ...recordedUtterance } = message.recordedUtterance;
+    compact.recordedUtterance = recordedUtterance;
+    omittedInlineData.recordedUtteranceDataUrlCharacters = dataUrl.length;
+  }
+  if (typeof message.imageUrl === 'string' && message.imageUrl.startsWith('data:')) {
+    omittedInlineData.imageDataUrlCharacters = message.imageUrl.length;
+    delete compact.imageUrl;
+  }
+  if (Array.isArray(message.ttsAudioCache)) {
+    compact.ttsAudioCache = message.ttsAudioCache.map((entry, index) => {
+      const { audioDataUrl, ...metadata } = entry;
+      if (audioDataUrl) {
+        omittedInlineData[`ttsAudioCache.${index}.audioDataUrlCharacters`] = audioDataUrl.length;
+      }
+      return metadata;
+    });
+  }
+  return { message: compact, omittedInlineData };
+};
 
 export interface HeadlessLiveTurnInput {
   pcm: Int16Array;
@@ -38,6 +66,8 @@ export interface HeadlessLiveTurnInput {
   runSuggestionAftersteps?: boolean;
   uploadVisual?: boolean;
   instructionSuffix?: string;
+  expectedTranscript?: string;
+  minTranscriptWordRecall?: number;
 }
 
 export const runHeadlessLiveTurn = async (
@@ -83,12 +113,24 @@ export const runHeadlessLiveTurn = async (
     model: input.mode === 'stt' ? getGeminiModels().audio.stt : getGeminiModels().audio.conversation,
     thinkingMode: input.mode === 'stt' ? 'minimal' : 'conversation',
     voiceName: client.state.settings.tts?.voiceName || 'Kore',
-    gateInputOnSpeech: input.mode === 'observer',
+    gateInputOnSpeech: input.mode !== 'conversation',
     semanticSpeech: true,
+    // STT and the silent observer start with a browser-local Whisper capture.
+    // Reproduce that ownership transition instead of opening Live first.
+    simulateUiSpeechHandoff: input.mode !== 'conversation',
+    requireRealtimeInputPacing: input.pace === true,
+    // A paced release check must finish the same 24 kHz playback timeline the
+    // user hears, rather than passing as soon as bytes reach the client.
+    playModelAudioRealtime: input.pace === true,
     timeoutMs: input.timeoutMs,
     includeModelAudio: true,
     videoFrames: visual ? [{ dataBase64: visual.dataBase64, mimeType: visual.mimeType }] : undefined,
   }, { runtime: client.runtime });
+  const transcriptEvidence = requireTranscriptEvidence(
+    input.expectedTranscript,
+    result.inputTranscript,
+    input.minTranscriptWordRecall,
+  );
   const modelAudio = mergeInt16Arrays(
     (result.modelAudioChunksBase64 || []).map(decodePcmChunk),
   );
@@ -102,6 +144,7 @@ export const runHeadlessLiveTurn = async (
       capturedInputSha256: audioDigest(input.pcm),
       capturedModelSamples: modelAudio.length,
       capturedModelSha256: modelAudio.length ? audioDigest(modelAudio) : null,
+      transcriptEvidence,
       modelAudioChunksBase64: undefined,
     };
   }
@@ -164,18 +207,25 @@ export const runHeadlessLiveTurn = async (
         assistantMessageId: assistantMessage.id,
         responseSource: 'live',
       });
+  const compactUserMessage = summarizeLiveMessageForHeadlessOutput(userMessage);
+  const compactAssistantMessage = summarizeLiveMessageForHeadlessOutput(assistantMessage);
   return {
     ...result,
     mode: input.mode,
     accessMode: client.accessMode,
-    userMessage,
-    assistantMessage,
+    userMessage: compactUserMessage.message,
+    assistantMessage: compactAssistantMessage.message,
     aftersteps,
     visual: visual ? { width: visual.width, height: visual.height, semanticLabel: visual.semanticLabel } : null,
     capturedInputSamples: input.pcm.length,
     capturedInputSha256: audioDigest(input.pcm),
     capturedModelSamples: modelAudio.length,
     capturedModelSha256: modelAudio.length ? audioDigest(modelAudio) : null,
+    transcriptEvidence,
+    omittedInlineData: {
+      userMessage: compactUserMessage.omittedInlineData,
+      assistantMessage: compactAssistantMessage.omittedInlineData,
+    },
     modelAudioChunksBase64: undefined,
   };
 };

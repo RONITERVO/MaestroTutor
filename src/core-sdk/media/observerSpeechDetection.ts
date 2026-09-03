@@ -10,7 +10,77 @@ export const OBSERVER_WHISPER_WINDOW_MS = 2600;
 export const OBSERVER_WHISPER_MIN_AUDIO_MS = 1200;
 export const OBSERVER_WHISPER_REQUEST_INTERVAL_MS = 900;
 export const OBSERVER_SPEECH_BUFFER_MS = 7000;
-export const OBSERVER_SPEECH_PREROLL_MS = 6000;
+/** Audio retained before local Whisper confirms words, including quiet first syllables. */
+export const OBSERVER_SPEECH_PREROLL_MS = 3000;
+/** A candidate must contain this much VAD-active speech before it may be sent. */
+export const OBSERVER_SPEECH_MIN_ACTIVE_MS = 1200;
+
+export interface SpeechActivityObservation {
+  /** Whether the current packet passes the same energy thresholds as the gate. */
+  active: boolean;
+  /** A stale, short candidate was cleared after a sustained gap. */
+  candidateReset: boolean;
+  /** Whether the current candidate is long enough to reach Whisper/the provider. */
+  hasMinimumSpeech: boolean;
+}
+
+/**
+ * Counts VAD-active audio rather than total buffered time.
+ *
+ * Whisper windows intentionally contain pre-roll and pauses, so their wall-clock
+ * length cannot prove that the user spoke for long enough. Keeping this tracker
+ * beside the shared detector makes browser Live, Live STT and the headless path
+ * enforce the same minimum without trusting a delayed transcript as the onset.
+ */
+export class SpeechActivityTracker {
+  private readonly minimumActiveSamples: number;
+  private readonly resetAfterSilenceMs: number;
+  private activeSamples = 0;
+  private lastActiveAt: number | null = null;
+
+  constructor(options: {
+    sampleRate: number;
+    minimumActiveMs?: number;
+    resetAfterSilenceMs?: number;
+  }) {
+    const sampleRate = Math.max(1, options.sampleRate);
+    const minimumActiveMs = Math.max(0, options.minimumActiveMs ?? OBSERVER_SPEECH_MIN_ACTIVE_MS);
+    this.minimumActiveSamples = Math.ceil(sampleRate * minimumActiveMs / 1000);
+    this.resetAfterSilenceMs = Math.max(
+      0,
+      options.resetAfterSilenceMs ?? DEFAULT_SPEECH_GATE.hangoverMs,
+    );
+  }
+
+  observe(packetSamples: number, active: boolean, now: number): SpeechActivityObservation {
+    let candidateReset = false;
+    if (active) {
+      this.activeSamples += Math.max(0, Math.floor(packetSamples));
+      this.lastActiveAt = now;
+    } else if (
+      this.lastActiveAt !== null
+      && now - this.lastActiveAt > this.resetAfterSilenceMs
+    ) {
+      this.reset();
+      candidateReset = true;
+    }
+
+    return {
+      active,
+      candidateReset,
+      hasMinimumSpeech: this.hasMinimumSpeech,
+    };
+  }
+
+  get hasMinimumSpeech(): boolean {
+    return this.activeSamples >= this.minimumActiveSamples;
+  }
+
+  reset(): void {
+    this.activeSamples = 0;
+    this.lastActiveAt = null;
+  }
+}
 
 /**
  * Whisper's stock output for silence, music and subtitle-like source audio.

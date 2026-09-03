@@ -72,10 +72,12 @@ describe('local speech trigger', () => {
       transcribe: vi.fn(async () => 'hello from the microphone'),
     };
     const phases: string[] = [];
+    const vadActivity: boolean[] = [];
     let resolved = false;
     const resultPromise = waitForLocalSpeechTrigger({
       detector: detector as any,
       onPhaseChange: phase => phases.push(phase),
+      onVadActivityChange: active => vadActivity.push(active),
     }).then(result => {
       resolved = true;
       return result;
@@ -91,7 +93,7 @@ describe('local speech trigger', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     };
 
-    for (let index = 0; index < 15; index += 1) await emitPacket(silence);
+    for (let index = 0; index < 25; index += 1) await emitPacket(silence);
     expect(detector.transcribe).not.toHaveBeenCalled();
     expect(resolved).toBe(false);
     expect(track.stop).not.toHaveBeenCalled();
@@ -102,13 +104,94 @@ describe('local speech trigger', () => {
 
     expect(result.microphoneStream).toBe(stream);
     expect(result.transcript).toBe('hello from the microphone');
-    expect(result.pcm.length).toBeGreaterThan(0);
+    expect(result.pcm.length).toBe(16_000 * 3);
     expect(detector.transcribe).toHaveBeenCalledOnce();
     expect(track.stop).not.toHaveBeenCalled();
-    expect(context.close).toHaveBeenCalledOnce();
+    expect(context.close).not.toHaveBeenCalled();
     expect(phases).toContain('vad-listening');
     expect(phases).toContain('whisper-checking');
     expect(phases[phases.length - 1]).toBe('speech-confirmed');
+    expect(vadActivity).toEqual([true, false]);
+
+    await result.capture.close();
+    expect(context.close).toHaveBeenCalledOnce();
+    expect(track.stop).toHaveBeenCalledOnce();
+  });
+
+  it('preserves speech during Whisper inference and the Live connection handoff', async () => {
+    let now = 1_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    let finishTranscription: ((text: string) => void) | undefined;
+    const detector = {
+      initialize: vi.fn(async () => undefined),
+      transcribe: vi.fn(() => new Promise<string>(resolve => {
+        finishTranscription = resolve;
+      })),
+    };
+    const resultPromise = waitForLocalSpeechTrigger({ detector: detector as any });
+
+    await vi.waitFor(() => expect(FakeAudioWorkletNode.instances).toHaveLength(1));
+    const worklet = FakeAudioWorkletNode.instances[0];
+    const emitPacket = async (value: number) => {
+      now += 100;
+      worklet.emit(new Int16Array(1_600).fill(value));
+      await new Promise(resolve => setTimeout(resolve, 0));
+    };
+
+    for (let index = 0; index < 12; index += 1) await emitPacket(8_000);
+    await vi.waitFor(() => expect(detector.transcribe).toHaveBeenCalledOnce());
+
+    // These are the words spoken after Whisper started recognizing the prefix.
+    for (let index = 0; index < 5; index += 1) await emitPacket(9_000);
+    finishTranscription?.('the whole sentence is still being spoken');
+    const result = await resultPromise;
+
+    expect(result.pcm.slice(-5 * 1_600).every(sample => sample === 9_000)).toBe(true);
+
+    // These arrive while the provider socket is still connecting.
+    for (let index = 0; index < 3; index += 1) await emitPacket(10_000);
+    const transferred: Int16Array[] = [];
+    const stats = result.capture.transferTo(packet => transferred.push(packet.slice()));
+
+    expect(stats).toEqual({ bufferedPackets: 3, bufferedSamples: 4_800 });
+    expect(transferred.flatMap(packet => [...packet])).toHaveLength(4_800);
+    expect(transferred.every(packet => packet.every(sample => sample === 10_000))).toBe(true);
+
+    await emitPacket(11_000);
+    expect(transferred[transferred.length - 1]?.[0]).toBe(11_000);
+    await result.capture.close();
+  });
+
+  it('does not transcribe or send a short utterance even when its buffered window exceeds 1.2 seconds', async () => {
+    let now = 1_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const detector = {
+      initialize: vi.fn(async () => undefined),
+      transcribe: vi.fn(async () => 'hi'),
+    };
+    const controller = new AbortController();
+    const resultPromise = waitForLocalSpeechTrigger({
+      detector: detector as any,
+      signal: controller.signal,
+    });
+
+    await vi.waitFor(() => expect(FakeAudioWorkletNode.instances).toHaveLength(1));
+    const worklet = FakeAudioWorkletNode.instances[0];
+    const silence = new Int16Array(1_600);
+    const speech = new Int16Array(1_600).fill(10_000);
+    const emitPacket = async (pcm: Int16Array) => {
+      now += 100;
+      worklet.emit(pcm);
+      await new Promise(resolve => setTimeout(resolve, 0));
+    };
+
+    for (let index = 0; index < 25; index += 1) await emitPacket(silence);
+    for (let index = 0; index < 4; index += 1) await emitPacket(speech);
+    for (let index = 0; index < 12; index += 1) await emitPacket(silence);
+
+    expect(detector.transcribe).not.toHaveBeenCalled();
+    controller.abort();
+    await expect(resultPromise).rejects.toMatchObject({ name: 'AbortError' });
   });
 
   it('rejects an already-aborted request without opening the microphone', async () => {

@@ -2,7 +2,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ThinkingLevel, type ThinkingConfig } from '@google/genai';
+import {
+  ActivityHandling,
+  EndSensitivity,
+  StartSensitivity,
+  ThinkingLevel,
+  type RealtimeInputConfig,
+  type ThinkingConfig,
+} from '@google/genai';
 
 const normalizeModel = (model: string): string => (
   (model || '').trim().toLowerCase().replace(/^models\//, '')
@@ -26,3 +33,23 @@ export const getLiveConversationThinkingConfig = (model: string): ThinkingConfig
     ? { thinkingBudget: -1, includeThoughts: true }
     : { thinkingLevel: ThinkingLevel.HIGH, includeThoughts: true }
 );
+
+/**
+ * Android/WebView microphone capture can classify the app's own speaker output
+ * as user activity. Keep reliability as the default and require a deliberate
+ * opt-in before activity is allowed to cut off a model response.
+ */
+export const getLiveRealtimeInputConfig = (
+  allowModelInterruptions = false,
+): RealtimeInputConfig => ({
+  activityHandling: allowModelInterruptions
+    ? ActivityHandling.START_OF_ACTIVITY_INTERRUPTS
+    : ActivityHandling.NO_INTERRUPTION,
+  automaticActivityDetection: {
+    disabled: false,
+    startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
+    endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
+    prefixPaddingMs: 120,
+    silenceDurationMs: 600,
+  },
+});

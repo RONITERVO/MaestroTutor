@@ -18,7 +18,8 @@ const live = (videoFrames: number, observer = false) => ({
   capturedInputSha256: hash,
   capturedModelSamples: 24_000,
   capturedModelSha256: hash,
-  gate: { enabled: observer },
+  transcriptEvidence: { passed: true, wordRecall: 1 },
+  gate: { enabled: observer, streamEnds: 1 },
 });
 
 const validEvidence = () => ({
@@ -38,7 +39,13 @@ const validEvidence = () => ({
     suggestionCount: 3,
     visiblyStreamed: true,
   })),
-  stt: { inputTranscript: 'Play', inputTranscriptDeltaCount: 1, capturedInputSamples: 16_000 },
+  stt: {
+    inputTranscript: 'Play',
+    inputTranscriptDeltaCount: 1,
+    capturedInputSamples: 16_000,
+    transcriptEvidence: { passed: true, wordRecall: 1 },
+    gate: { streamEnds: 1 },
+  },
   liveAudio: live(0),
   liveVisual: live(1),
   observerAudio: live(0, true),
@@ -68,12 +75,16 @@ describe('first lesson coverage gate', () => {
     evidence.turns = evidence.turns.filter(turn => turn.kind !== 'attachment-office');
     evidence.aftersteps[0].visiblyStreamed = false;
     evidence.liveVisual.outputTranscriptDeltaCount = 0;
+    evidence.liveAudio.transcriptEvidence = { passed: false, wordRecall: 0 };
     evidence.observerAudio.capturedModelSha256 = '';
+    evidence.observerVisual.gate.streamEnds = 2;
     expect(evaluateFirstLessonCoverage(evidence)).toMatchObject({
       attachments: false,
       suggestionAftersteps: false,
+      liveAudio: false,
       liveVisual: false,
       observerAudio: false,
+      observerVisual: false,
       audioCapture: false,
     });
   });

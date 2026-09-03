@@ -28,6 +28,8 @@ const hasTranscriptStream = (result: Evidence): boolean => (
   && Number(result.outputTranscriptDeltaCount) > 0
   && Boolean(result.inputTranscript)
   && Boolean(result.outputTranscript)
+  && result.transcriptEvidence?.passed === true
+  && Number(result.gate?.streamEnds) === 1
 );
 
 const hasCapturedAudio = (result: Evidence): boolean => (
@@ -60,7 +62,9 @@ export const evaluateFirstLessonCoverage = (evidence: FirstLessonCoverageEvidenc
       && chatTurns.every(turn => turn.streaming?.visiblyStreamed === true),
     stt: Number(evidence.stt.inputTranscriptDeltaCount) > 0
       && Boolean(evidence.stt.inputTranscript)
-      && Number(evidence.stt.capturedInputSamples) > 0,
+      && Number(evidence.stt.capturedInputSamples) > 0
+      && evidence.stt.transcriptEvidence?.passed === true
+      && Number(evidence.stt.gate?.streamEnds) === 1,
     liveAudio: hasTranscriptStream(evidence.liveAudio) && hasCapturedAudio(evidence.liveAudio),
     liveVisual: Number(evidence.liveVisual.sentVideoFrameCount) > 0
       && hasTranscriptStream(evidence.liveVisual)

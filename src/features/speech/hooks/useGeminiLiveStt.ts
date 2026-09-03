@@ -5,14 +5,18 @@ import { useCallback, useRef, useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LiveServerMessage, Modality, Session } from '@google/genai';
 import { getAi } from '../../../api/gemini/client';
-import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProcessing';
-import { SpeechGate, measureEnergy } from '../../../../shared/audio/speechGate';
-import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
+import { mergeInt16Arrays } from '../../../core-sdk/media/audioProcessing';
+import {
+  DEFAULT_SPEECH_GATE,
+  isSpeechLike,
+  SpeechGate,
+  measureEnergy,
+} from '../../../../shared/audio/speechGate';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
-import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import { flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
@@ -36,6 +40,7 @@ import {
   LOCAL_WHISPER_REQUEST_INTERVAL_MS,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SpeechActivityTracker,
 } from '../../../core-sdk/media/liveSpeechDetection';
 import { createLiveOpenReason, LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
 import {
@@ -98,6 +103,9 @@ interface SttAudioTelemetry {
   transcriptLinkedSamples: number;
   gatedPackets: number;
   audioStreamEnds: number;
+  speechTriggerSamples: number;
+  connectionHandoffPackets: number;
+  connectionHandoffSamples: number;
   whisperChecks: number;
   whisperAccepted: number;
   whisperRejected: number;
@@ -110,6 +118,9 @@ const createEmptySttAudioTelemetry = (): SttAudioTelemetry => ({
   transcriptLinkedSamples: 0,
   gatedPackets: 0,
   audioStreamEnds: 0,
+  speechTriggerSamples: 0,
+  connectionHandoffPackets: 0,
+  connectionHandoffSamples: 0,
   whisperChecks: 0,
   whisperAccepted: 0,
   whisperRejected: 0,
@@ -138,6 +149,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
   const removeActivityToken = useMaestroStore(state => state.removeActivityToken);
   const speechTriggerActivityTokenRef = useRef<string | null>(null);
+  const vadActivityTokenRef = useRef<string | null>(null);
   const liveActivityTokenRef = useRef<string | null>(null);
 
   const sessionRef = useRef<Session | null>(null);
@@ -157,6 +169,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const audioTelemetryRef = useRef<SttAudioTelemetry>(createEmptySttAudioTelemetry());
   const speechGateRef = useRef<SpeechGate | null>(null);
   const gatePrerollRef = useRef<Int16Array[]>([]);
+  const speechActivityTrackerRef = useRef<SpeechActivityTracker | null>(null);
   const localWhisperRef = useRef<LocalWhisperClient | null>(null);
   const localWhisperBusyRef = useRef(false);
   const lastWhisperRequestAtRef = useRef(0);
@@ -216,6 +229,15 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     speechTriggerActivityTokenRef.current = token;
   }, [addActivityToken, removeActivityToken]);
 
+  const setVadActivity = useCallback((active: boolean) => {
+    if (vadActivityTokenRef.current && !active) {
+      removeActivityToken(vadActivityTokenRef.current);
+      vadActivityTokenRef.current = null;
+    }
+    if (!active || vadActivityTokenRef.current) return;
+    vadActivityTokenRef.current = addActivityToken(TOKEN_CATEGORY.VAD, TOKEN_SUBTYPE.VAD_ACTIVE);
+  }, [addActivityToken, removeActivityToken]);
+
   const setLiveActivityPhase = useCallback((phase: 'connecting' | 'active' | null) => {
     if (liveActivityTokenRef.current) {
       removeActivityToken(liveActivityTokenRef.current);
@@ -256,9 +278,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       return null;
     }
     full = full.slice(0, transcriptLinkedSamples);
-    if (full.length > 0) {
-        full = trimSilence(full, INPUT_SAMPLE_RATE);
-    }
+    // These chunks are already limited to confirmed audio sent to Live. Keep
+    // the three-second pre-Whisper lead-in intact in the recorded message.
     // Clear the array to free memory
     audioChunksRef.current = [];
     transcribedAudioSamplesRef.current = 0;
@@ -288,6 +309,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     speechTriggerAbortRef.current = null;
     setLocalSpeechTriggerPhase(null);
     setLiveActivityPhase(null);
+    setVadActivity(false);
     const preserveRecordedAudio = options?.preserveRecordedAudio === true;
     const status = options?.status || 'stopped';
 
@@ -318,6 +340,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     speechGateRef.current?.forceClose();
     speechGateRef.current = null;
     gatePrerollRef.current = [];
+    speechActivityTrackerRef.current = null;
     loadingFallbackOnsetAtRef.current = null;
     speechGateEpochRef.current += 1;
 
@@ -379,7 +402,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     localInputPreviewRef.current = '';
     
     isCleaningUpRef.current = false;
-  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase]);
+  }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   const stop = useCallback(async () => {
     await cleanup({ status: 'stopped' });
@@ -414,12 +437,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     }, TRANSCRIPT_UPDATE_INTERVAL_MS);
   }, [flushTranscriptState]);
 
-  // Load the AudioWorklet module (only needs to happen once per AudioContext)
-  const ensureSttWorklet = useCallback(async (ctx: AudioContext) => {
-    if (!ctx.audioWorklet) throw new Error("AudioWorklet not supported");
-    await ctx.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
-  }, []);
-
   const start = useCallback(async (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
     // If cleanup is in progress, wait for it to complete
     while (isCleaningUpRef.current) {
@@ -453,6 +470,9 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       ? new SpeechGate({ requireConfirmation: true })
       : null;
     gatePrerollRef.current = [];
+    speechActivityTrackerRef.current = gateInputOnSpeech
+      ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE })
+      : null;
     lastWhisperRequestAtRef.current = 0;
     loadingFallbackOnsetAtRef.current = null;
     const speechGateEpoch = speechGateEpochRef.current;
@@ -472,31 +492,25 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         detector: localWhisperRef.current,
         signal: triggerAbort.signal,
         onPhaseChange: setLocalSpeechTriggerPhase,
+        onVadActivityChange: setVadActivity,
       });
       if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
       const stream = localSpeechTrigger.microphoneStream;
+      streamRef.current = stream;
+      audioContextRef.current = localSpeechTrigger.capture.audioContext;
+      workletNodeRef.current = localSpeechTrigger.capture.workletNode;
+      audioTelemetryRef.current.speechTriggerSamples = localSpeechTrigger.pcm.length;
       if (currentSessionIdRef.current !== sessionId) {
-        stream.getTracks().forEach(t => t.stop());
+        await localSpeechTrigger.capture.close();
+        if (streamRef.current === stream) streamRef.current = null;
+        if (audioContextRef.current === localSpeechTrigger.capture.audioContext) audioContextRef.current = null;
+        if (workletNodeRef.current === localSpeechTrigger.capture.workletNode) workletNodeRef.current = null;
         return;
       }
-      streamRef.current = stream;
       localInputPreviewRef.current = localSpeechTrigger.transcript;
       scheduleTranscriptStateUpdate(true);
 
-      // --- 2. Initialize Audio Context & Worklet ---
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtx({ sampleRate: INPUT_SAMPLE_RATE });
-      audioContextRef.current = ctx;
-
-      await ensureSttWorklet(ctx);
-
-      if (currentSessionIdRef.current !== sessionId) {
-        stream.getTracks().forEach(t => t.stop());
-        try { ctx.close(); } catch { /* ignore */ }
-        return;
-      }
-
-      // --- 3. Connect to Gemini Live API ---
+      // --- 2. Connect to Gemini Live API while the trigger capture remains live ---
       const opts = (typeof languageOrOptions === 'string' || languageOrOptions === undefined)
         ? { language: languageOrOptions as string | undefined }
         : (languageOrOptions as { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] });
@@ -764,21 +778,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         }
       };
 
-      for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
-        if (
-          currentSessionIdRef.current !== sessionId
-          || speechGateEpochRef.current !== speechGateEpoch
-        ) return;
-        await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
-      }
-      if (currentSessionIdRef.current !== sessionId) {
-        if (sessionRef.current === session) sessionRef.current = null;
-        try { session.close(); } catch { /* ignore */ }
-        return;
-      }
-      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
-      setLocalSpeechTriggerPhase(null);
-
       inputPacketizerRef.current = new RealtimePcmPacketizer({
         sampleRate: INPUT_SAMPLE_RATE,
         packetDurationMs: LIVE_INPUT_PACKET_DURATION_MS,
@@ -793,8 +792,22 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             const gate = speechGateRef.current;
             const now = Date.now();
             const energy = measureEnergy(packet);
+            const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
+            const speechActivity = gate && !gate.isOpen
+              ? speechActivityTrackerRef.current?.observe(packet.length, packetIsSpeech, now)
+              : undefined;
+            if (speechActivity?.candidateReset && gate?.isAwaitingConfirmation) {
+              gate.rejectSpeech(now);
+              gatePrerollRef.current = [];
+              loadingFallbackOnsetAtRef.current = null;
+            }
             const wasAwaitingConfirmation = gate?.isAwaitingConfirmation ?? false;
             const decision = gate ? gate.evaluate(energy, now) : null;
+            setVadActivity(Boolean(
+              gate
+              && packetIsSpeech
+              && !(decision && !decision.send && decision.reason === 'playback')
+            ));
 
             if (!decision || decision.send) {
               await encodeAndSend(packet);
@@ -811,13 +824,29 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 audioTelemetryRef.current.audioStreamEnds += 1;
               }
               gatePrerollRef.current = [];
+              speechActivityTrackerRef.current?.reset();
               loadingFallbackOnsetAtRef.current = null;
               return;
             }
 
-            if (decision.reason === 'playback' || decision.reason === 'cooldown') {
+            if (decision.reason === 'playback') {
               gatePrerollRef.current = [];
+              speechActivityTrackerRef.current?.reset();
               loadingFallbackOnsetAtRef.current = null;
+              return;
+            }
+            if (decision.reason === 'cooldown') {
+              if (!packetIsSpeech) {
+                gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
+                loadingFallbackOnsetAtRef.current = null;
+                return;
+              }
+              gatePrerollRef.current.push(packet);
+              gatePrerollRef.current = recentPcmPackets(
+                gatePrerollRef.current,
+                SPEECH_GATE_BUFFER_SAMPLES,
+              );
               return;
             }
 
@@ -846,6 +875,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               gatePrerollRef.current = [packet];
             }
 
+            if (!speechActivity?.hasMinimumSpeech) return;
+
             const detector = localWhisperRef.current;
             let confirmed = false;
 
@@ -853,6 +884,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               if (fallback.action === 'expire') {
                 gate.rejectSpeech(now);
                 gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
                 loadingFallbackOnsetAtRef.current = null;
               } else if (fallback.action === 'confirm') {
                 audioTelemetryRef.current.energyFallbacks += 1;
@@ -867,6 +899,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               if (fallback.action === 'expire') {
                 gate.rejectSpeech(now);
                 gatePrerollRef.current = [];
+                speechActivityTrackerRef.current?.reset();
                 loadingFallbackOnsetAtRef.current = null;
               } else if (fallback.action === 'confirm') {
                 audioTelemetryRef.current.energyFallbacks += 1;
@@ -902,6 +935,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                   audioTelemetryRef.current.whisperRejected += 1;
                   gate.rejectSpeech(resultAt);
                   gatePrerollRef.current = [];
+                  speechActivityTrackerRef.current?.reset();
                   loadingFallbackOnsetAtRef.current = null;
                 }
               } catch (error) {
@@ -915,6 +949,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
                 if (fallback.action === 'expire') {
                   gate.rejectSpeech(fallbackAt);
                   gatePrerollRef.current = [];
+                  speechActivityTrackerRef.current?.reset();
                   loadingFallbackOnsetAtRef.current = null;
                 } else if (fallback.action === 'confirm') {
                   audioTelemetryRef.current.energyFallbacks += 1;
@@ -934,6 +969,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
             const held = recentPcmPackets(gatePrerollRef.current, SPEECH_GATE_PREROLL_SAMPLES);
             gatePrerollRef.current = [];
+            speechActivityTrackerRef.current?.reset();
             const replay = mergeInt16Arrays(held);
             for (let offset = 0; offset < replay.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
               await encodeAndSend(replay.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
@@ -957,25 +993,28 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         },
       });
 
-      // --- 4. Connect Audio Graph ---
-      const source = ctx.createMediaStreamSource(stream);
-      const workletNode = new AudioWorkletNode(ctx, FLOAT_TO_INT16_PROCESSOR_NAME);
-      workletNodeRef.current = workletNode;
-
-      // Handle audio chunks from the worklet with session validation
-      workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
-        // CRITICAL: Check session is still valid before processing audio
-        if (currentSessionIdRef.current !== sessionId) return;
-        
-        const pcm = event.data;
-        if (pcm instanceof Int16Array && pcm.length > 0) {
-          void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
-        }
-      };
-
-      source.connect(workletNode);
-      // Note: We don't connect to destination since we only need the worklet for processing,
-      // not for audible output. The audio graph runs as long as source is connected.
+      // Replay the confirmed prefix and the samples captured during Whisper,
+      // then atomically drain the provider-connection interval into the normal
+      // packetizer. The original worklet continues as the session worklet.
+      for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+        if (
+          currentSessionIdRef.current !== sessionId
+          || speechGateEpochRef.current !== speechGateEpoch
+        ) return;
+        await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+      }
+      if (currentSessionIdRef.current !== sessionId) {
+        if (sessionRef.current === session) sessionRef.current = null;
+        try { session.close(); } catch { /* ignore */ }
+        return;
+      }
+      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
+      const handoff = localSpeechTrigger.capture.transferTo((pcm) => {
+        void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
+      });
+      audioTelemetryRef.current.connectionHandoffPackets = handoff.bufferedPackets;
+      audioTelemetryRef.current.connectionHandoffSamples = handoff.bufferedSamples;
+      setLocalSpeechTriggerPhase(null);
 
     } catch (e: any) {
       // A stop can dispose the codec worker while confirmed pre-roll is being
@@ -1005,7 +1044,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase]);
+  }, [cleanup, stop, ensureCodecWorker, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
