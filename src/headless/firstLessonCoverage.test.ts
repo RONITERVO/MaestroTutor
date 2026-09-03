@@ -23,7 +23,9 @@ const live = (videoFrames: number, observer = false) => ({
 });
 
 const validEvidence = () => ({
+  accessMode: 'managed' as const,
   userTurnCount: 14,
+  requireToolUploads: true,
   turns: [
     { kind: 'text', streaming: { visiblyStreamed: true } },
     { kind: 'google-search', searchQueryCount: 1, streaming: { visiblyStreamed: true } },
@@ -38,6 +40,7 @@ const validEvidence = () => ({
     tool,
     suggestionCount: 3,
     visiblyStreamed: true,
+    uploaded: true,
   })),
   stt: {
     inputTranscript: 'Play',
@@ -62,6 +65,12 @@ const validEvidence = () => ({
     emptyUserRequest: true,
     userMessagePersisted: false,
     turn: { streaming: { visiblyStreamed: true } },
+  },
+  managedBillingEvidence: {
+    applicable: true,
+    passed: true,
+    creditsSpent: 100,
+    reservedCreditsAfter: 0,
   },
 });
 
@@ -93,5 +102,29 @@ describe('first lesson coverage gate', () => {
     const evidence = validEvidence();
     evidence.reengagement.turn.streaming.visiblyStreamed = false;
     expect(evaluateFirstLessonCoverage(evidence).reengagement).toBe(false);
+  });
+
+  it('requires every generated provider file when upload parity is requested', () => {
+    const evidence = validEvidence();
+    evidence.aftersteps[1].uploaded = false;
+    expect(evaluateFirstLessonCoverage(evidence).toolUploads).toBe(false);
+    evidence.requireToolUploads = false;
+    expect(evaluateFirstLessonCoverage(evidence).toolUploads).toBe(true);
+  });
+
+  it('requires reconciled managed charges while recognizing BYOK provider ownership', () => {
+    const managed = validEvidence();
+    managed.managedBillingEvidence.reservedCreditsAfter = 10;
+    expect(evaluateFirstLessonCoverage(managed).costAccounting).toBe(false);
+
+    const byok = {
+      ...validEvidence(),
+      accessMode: 'byok' as const,
+      managedBillingEvidence: {
+        applicable: false,
+        payer: 'byok-api-key-owner',
+      },
+    };
+    expect(evaluateFirstLessonCoverage(byok).costAccounting).toBe(true);
   });
 });

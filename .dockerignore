@@ -1,0 +1,14 @@
+.git
+.github
+.firebase
+.maestro-debug*
+.maestro-headless
+**/node_modules
+**/lib
+dist
+android
+docs
+*.log
+.env*
+functions/.env*
+functions/.secret.*

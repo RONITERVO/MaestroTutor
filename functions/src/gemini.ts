@@ -150,7 +150,7 @@ const readActiveManagedLiveLeases = (value: unknown, now = Date.now()): ManagedL
     .filter((item): item is ManagedLiveLeaseRecord => Boolean(item));
 };
 
-const reserveManagedLiveLease = async (params: {
+export const reserveManagedLiveLease = async (params: {
   uid: string;
   purpose: 'live' | 'music';
   durationMs: number;

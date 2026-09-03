@@ -32,6 +32,9 @@
     { "collectionGroup": "checkoutGrants", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
     { "collectionGroup": "rateLimitWindows", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
     { "collectionGroup": "reports", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "cleanupJobs", "fieldPath": "purgeAt", "ttl": true, "indexes": [] }
+    { "collectionGroup": "cleanupJobs", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "liveGatewayTickets", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
+    { "collectionGroup": "liveGatewayTickets", "fieldPath": "secretHash", "indexes": [] },
+    { "collectionGroup": "liveGatewaySessions", "fieldPath": "purgeAt", "ttl": true, "indexes": [] }
   ]
 }

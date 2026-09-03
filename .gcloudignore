@@ -1,0 +1,18 @@
+# The gateway image is built from the repository root only because it shares
+# pricing and managed-accounting code. Keep every unrelated app artifact and
+# local credential out of the Cloud Build upload.
+**
+!.gcloudignore
+!.dockerignore
+!live-gateway/
+!live-gateway/**
+live-gateway/node_modules/
+live-gateway/lib/
+!functions/
+!functions/src/
+!functions/src/**
+!shared/
+!shared/**
+**/*.test.ts
+**/*.test.tsx
+**/*.log

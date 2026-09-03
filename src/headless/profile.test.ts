@@ -24,6 +24,22 @@ describe('headless profiles', () => {
       .toBe('es-ES__en-US');
   });
 
+  it('persists BYOK file ownership and migrates older version-one profiles safely', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'maestro-profile-test-'));
+    const profile = await openHeadlessProfile({ name: 'owned-files', dataRoot: root });
+    const state = await profile.load();
+    state.byok.ownedFiles.push('files/headless-one');
+    await profile.save(state);
+    expect((await profile.load()).byok.ownedFiles).toEqual(['files/headless-one']);
+
+    const legacy = JSON.parse(await readFile(join(profile.directory, 'profile.json'), 'utf8'));
+    delete legacy.byok;
+    await import('node:fs/promises').then(({ writeFile }) => (
+      writeFile(join(profile.directory, 'profile.json'), JSON.stringify(legacy), 'utf8')
+    ));
+    expect((await profile.load()).byok.ownedFiles).toEqual([]);
+  });
+
   it('rejects path traversal in profile names', async () => {
     await expect(openHeadlessProfile({ name: '../outside' })).rejects.toThrow('Profile names');
   });

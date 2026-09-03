@@ -75,6 +75,7 @@ const androidManifest = mergedManifestBuild.status === 0
 
 const [
   appPackage,
+  gatewayPackage,
   functionsPackage,
   functionsIndex,
   functionsGemini,
@@ -101,6 +102,7 @@ const [
   androidVariables,
 ] = await Promise.all([
   read('package.json'),
+  read('live-gateway/package.json'),
   read('functions/package.json'),
   read('functions/src/index.ts'),
   read('functions/src/gemini.ts'),
@@ -128,6 +130,7 @@ const [
 ]);
 
 const app = JSON.parse(appPackage);
+const gateway = JSON.parse(gatewayPackage);
 const functions = JSON.parse(functionsPackage);
 const nativeConfig = capacitorConfigRead.status === 0
   ? JSON.parse(capacitorConfigRead.stdout).app.extConfig
@@ -140,6 +143,11 @@ const androidOAuthCertificateHashes = JSON.parse(googleServices).client
   .map(client => client.android_info?.certificate_hash?.toLowerCase())
   .filter(Boolean) || [];
 requireText(app.scripts?.['maestro:rpc'], 'package.json must expose the JSON-RPC harness.');
+requireText(
+  /^\d+\.\d+\.\d+$/.test(app.dependencies?.['@google/genai'] || '')
+    && app.dependencies?.['@google/genai'] === gateway.dependencies?.['@google/genai'],
+  'The UI/BYOK and managed Live gateway must pin the exact same @google/genai version.',
+);
 requireText(
   nativeConfig.plugins?.FirebaseAuthentication?.providers?.includes('google.com'),
   'Packaged Android config must enable the native Google authentication provider.',
@@ -231,9 +239,17 @@ for (const coverageFlag of [
   requireText(firstLessonCoverage.includes(`${coverageFlag}:`), `The first-lesson gate must assert ${coverageFlag}.`);
 }
 requireText(stagingWorkflow.includes('HEADLESS_GEMINI_API_KEY'), 'The staging workflow must accept an isolated BYOK provider credential.');
-requireText(stagingWorkflow.includes('require_byok'), 'A release dispatch must be able to require rather than skip BYOK proof.');
+requireText(
+  stagingWorkflow.includes('test -n "$MAESTRO_GEMINI_API_KEY"')
+    && stagingWorkflow.includes('BYOK parity may never be silently skipped.'),
+  'Every staging dispatch must fail when the required BYOK credential is absent.',
+);
 requireText(stagingWorkflow.match(/journey\.firstLesson/g)?.length >= 2, 'Managed and BYOK jobs must both run the same first-lesson command.');
-requireText(headlessCoverageDoc.includes('A skipped BYOK job is not evidence.'), 'Maintainer docs must explain that skipped BYOK validation is not release proof.');
+requireText(
+  headlessCoverageDoc.includes('absence fails the job instead of turning it into a green skip')
+    && headlessCoverageDoc.includes('access-parity` comparison are green for the same commit'),
+  'Maintainer docs must explain that skipped BYOK validation is not release proof.',
+);
 
 if (failures.length) {
   for (const failure of failures) process.stderr.write(`release-config: ${failure}\n`);

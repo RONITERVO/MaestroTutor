@@ -49,7 +49,8 @@ persisted state transition is mocked in a provider run.
 | Trigger-audio TTS | shared exact `Play` trigger instruction and audio-note Live engine | `speech.tts.generate`; trigger packets/samples and captured model samples |
 | Audio captured correctly | shared WAV encoding and Live audio capture | non-zero input/model sample counts and 64-character SHA-256 values |
 | Coherent first lesson | one persistent language-pair chat and normal aftersteps | `journey.firstLesson`; every boolean in `coverage` must be `true` |
-| Managed and BYOK parity | same Core controllers with different transport/file ports | the same first-lesson command runs once per access mode |
+| Managed and BYOK parity | same Core controllers with different transport/file ports | both mandatory jobs run the same upload-enabled first lesson and raw routes; `access-parity` compares their saved semantic proof |
+| Cost ownership | BYOK bills the supplied Google project; managed reserves/settles Maestro credits | managed balance, usage and charge ledgers reconcile exactly with zero stranded reservations; BYOK proof is labelled as API-key-owner billing |
 
 ## Attachment variants
 
@@ -86,7 +87,10 @@ language-pair history and performs:
 
 The real suggestion creator runs after every assistant response, including Live and
 observer responses. Three turns inject image, audio-note and music decisions at the
-afterstep boundary so CI deterministically exercises all three real executors.
+afterstep boundary so CI deterministically exercises all three real executors. The
+release workflow uploads every generated media type in both access modes, asserts
+those uploads, then clears them. A caller may explicitly disable uploads for a
+diagnostic run, but that output is not accepted as paired release proof.
 
 Suggestion responses use a provider-enforced JSON Schema as well as local semantic
 validation. This matters for artifact-bearing replies: HTML, SVG and JavaScript can
@@ -107,13 +111,34 @@ Paced observer/STT checks additionally fail unless the input duration tracks wal
 time, PCM crossed the pre-connect handoff, and model audio completed a real-time
 24 kHz playback drain.
 
+## Access-mode policy and safe cleanup
+
+`system.describe` is the authoritative, machine-readable policy for every public
+method. `provider-parity` means both modes must expose the command and provide the
+declared paired release proof. `managed-account-only` is reserved for operations
+that truly have no BYOK equivalent: Maestro authentication/account state and
+Stripe credit purchase. One-use managed gateway ticket issuance remains private
+inside the Core transport so JSON-RPC never writes its bearer secret. Tests fail
+when a new method is unclassified or a cost-bearing parity method lacks paired
+proof.
+
+Managed Files endpoints are already scoped to the authenticated Maestro user. The
+direct Files API is key-wide, so a raw list-and-delete implementation could remove
+files created by another app sharing that Google project. Named BYOK profiles now
+persist the provider names returned by their own successful uploads. `files.delete`
+and `files.clear` operate only on that set; if ownership persistence fails after an
+upload, the new remote file is immediately rolled back.
+
 ## Managed provider proof
 
 The managed job in `.github/workflows/headless-staging.yml` signs into the dedicated
 staging Firebase account, completes a real Stripe test-card Checkout, runs the full
 first lesson, verifies low-level generation routes, reads ledgers, clears generated
 files and signs out. It uses a named isolated CI profile and the staging App Check
-debug token. Production credentials are never accepted by the Checkout adapter.
+debug token. The journey refuses to start with an existing credit reservation and
+fails unless its final account spend equals both its new usage entries and charge
+entries with zero credits still reserved. Production credentials are never accepted
+by the Checkout adapter.
 
 Required GitHub Actions configuration:
 
@@ -140,6 +165,44 @@ zero failures and account reconciliation reported zero reserved credits. This is
 historical evidence for that exact SHA; every later release candidate still needs
 its own required dispatch.
 
+### Current branch gateway proof (2026-09-03)
+
+The local BYOK first-lesson journey completed 14 new user turns with all 18 current
+coverage flags true, including generated-media uploads and API-key-owner cost
+attribution. An earlier paired managed diagnostic completed chat, Search, every
+attachment and all generated-media cases, but two final Live attempts reached
+setup without useful output. The legacy token-at-mint transport charged 87 credits
+for each failure. That 174-credit finding was the release blocker that drove the
+gateway architecture; failure evidence still recognizes those historical
+`liveToken` rows.
+
+The replacement gateway was then deployed to staging and tested with the identical
+real 108,203-sample human recording through the normal UI/Core Live client. Managed
+and BYOK both preserved all nine expected words at real input pace and waited for
+actual output playback. The managed run billed 13 credits from 4,510
+provider-reported tokens, released the unused portion of its 87-credit reservation,
+and left zero credits reserved. A provider-connected session with no input/useful
+output then billed zero, created no usage/charge row, returned the full reservation
+and left account spend unchanged. An abandoned issued ticket was also left unused;
+the deployed one-minute reconciler returned its 87-credit reservation without any
+client cooperation or spend delta.
+
+The next paired run exposed a separate delivery invariant: two managed STT attempts
+preserved and delivered all 127,492 input bytes but a slow connection caused the
+retained prefix to reach the provider as a burst, producing no output. Both attempts
+were released with zero charge. Client packetization and the gateway now
+independently pace queued PCM to absolute sample deadlines. The exact short fixture
+then passed every managed Live surface on gateway revision
+`maestrotutor-live-gateway-00005-t4v`. Final managed operation
+`first-lesson-75ff94aa-64a7-4933-a3c7-cd20ae2f5c13` completed 14 turns and all 18
+coverage flags; 48 usage rows matched 48 charge rows totaling 433 credits / USD
+0.413022, with zero credits reserved before and after. UI/BYOK and gateway also
+exact-pin `@google/genai` 1.45.0, and release configuration rejects future drift.
+
+These working-tree staging proofs establish the transport and money-safety
+boundary. A merge/release candidate still requires the checked-in workflow's fresh
+managed and BYOK jobs plus their cross-job comparison on that commit.
+
 ## BYOK provider proof
 
 Create a dedicated, quota-limited Gemini Developer API key for release testing.
@@ -149,10 +212,10 @@ Secrets and variables → Actions → New repository secret**, name it
 `MAESTRO_GEMINI_API_KEY` inside the BYOK job; the CLI rejects API-key command-line
 arguments and never writes the key to a profile or trace.
 
-Dispatch **Headless staging journey**, set **Fail unless the BYOK provider journey
-can run** to true, and run the workflow on the candidate branch. The release is not
-proved until both `managed-provider-smoke` and `byok-provider-smoke` are green for
-the same commit. A skipped BYOK job is not evidence.
+Dispatch **Headless staging journey** on the candidate branch. The BYOK credential
+is mandatory: absence fails the job instead of turning it into a green skip. The
+release is not proved until `managed-provider-smoke`, `byok-provider-smoke`, and the
+cross-job `access-parity` comparison are green for the same commit.
 
 For a local run, create an ignored `.env.headless.local` with restrictive file
 permissions:
@@ -166,11 +229,100 @@ MAESTRO_HEADLESS_HOME=<an isolated local directory>
 Then run:
 
 ```powershell
-npm run maestro -- journey.firstLesson --access byok --env-file .env.headless.local --profile byok-release --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":false}'
+npm run maestro -- journey.firstLesson --access byok --env-file .env.headless.local --profile byok-release --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}'
+npm run maestro -- files.clear --access byok --env-file .env.headless.local --profile byok-release
 ```
 
 Delete the local dotenv file or revoke the dedicated key after validation if it is
 not intended to remain a maintained CI credential.
+
+## Live provider compatibility canary
+
+Gemini Live is still a Preview surface. Managed production traffic no longer
+depends on client-side ephemeral-token behavior: the Cloud Run gateway connects
+with its server-held API key on `v1beta`. The old token/version matrix remains a
+diagnostic for understanding provider regressions, not a shippable transport:
+
+- [Gemini ephemeral-token guide](https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens)
+- [JavaScript SDK Live implementation](https://github.com/googleapis/js-genai/blob/main/src/live.ts)
+- [open SDK connection-hang report](https://github.com/googleapis/js-genai/issues/1257)
+- [open constrained-token field-mask report](https://github.com/googleapis/js-genai/issues/1492)
+
+`scripts/probe-gemini-ephemeral-live.ts` exists to test that historical boundary against the
+real provider. It sends the bundled speech at microphone pace, reproduces the UI
+capture-to-Live handoff, requires the expected final words, receives model audio,
+and waits for the complete 24 kHz playback duration. It can compare `api-key` and
+`ephemeral` authentication, API versions, models, token lifetimes, connection
+windows and constraint shapes without spending a Maestro user's credits. Production
+code cannot select its `legacy-ephemeral` escape hatch.
+
+The 2026-09-03 matrix found provider combinations that could mint a token and
+open a WebSocket yet deliver no usable server response, including constrained
+tokens on the current SDK and a shortened 30-second connection window. Removing
+`liveConnectConstraints` made one probe pass, but would let a modified client
+change the model/config after Maestro approved and priced the lease. The managed
+gateway instead reads the allowlisted model/config from the consumed Firestore
+ticket and ignores client attempts to choose provider credentials or configuration.
+A release remains blocked until the gateway safety tests, deployed no-output canary
+and both full access-mode journeys pass; unit tests alone cannot prove a Preview
+WebSocket contract.
+
+Do not retry a paid managed Live failure blindly. `journey.firstLesson` snapshots
+the account and both ledgers before it starts, waits until reservations settle,
+and emits `firstLesson.failureReconciled` if its bounded Live retry still fails.
+The evidence correlates failed Live operation IDs with paid `liveGateway` and
+historical `liveToken` ledger rows; any failed-attempt charge makes `passed:false` even if totals reconcile and
+no reservation is stranded. Preserve that event with the failure. A release
+candidate is blocked unless the managed and BYOK full journeys both pass from the
+same commit, with matching ordered semantic evidence, zero failed-attempt charges
+and zero managed credits reserved afterward.
+
+### Managed Live billing fairness boundary
+
+Managed Live now reserves a conservative 180-second maximum but does not charge at
+ticket mint. A one-use bearer ticket authenticates the client to Maestro's Cloud
+Run WebSocket gateway. Its hash and sanitized Live setup config exist only while
+the ticket is usable; consumption or expiry scrubs both, and the durable session
+stores no config. The gateway loads the allowlisted model/config in memory, holds
+the Gemini credential, and records
+monotonic input/output/usage checkpoints. The first useful provider output is
+durably checkpointed before it is forwarded, preventing a modified client from
+receiving an answer and then claiming nothing arrived.
+
+Finalization is transactional and idempotent across client close, provider close,
+errors and deadline races. Useful output settles provider `usageMetadata` when
+available, with a conservative observed-audio fallback. Setup/input without useful
+output releases the whole reservation. Issued tickets and live sessions have
+deadlines plus a scheduled recovery pass, and account deletion prevents late
+settlement from recreating or charging a deleted account. The usage/charge/release
+metadata includes ticket, lease and Live request identity, pricing version,
+observed byte counts, usage source and finalization reason.
+
+The invariants are enforced at four layers:
+
+- shared metering/state-machine unit tests cover monotonic observations and race
+  ordering, including server delivery of a buffered burst at 100 ms PCM cadence;
+- the shared UI/headless packetizer tests prove burst replay cadence, normal
+  microphone timing, and provider-send timing evidence;
+- Firestore Emulator tests cover one-use concurrency, no-output release,
+  provider-usage settlement, duplicate finalization, expiry recovery and deletion;
+- every managed staging workflow opens a real provider-connected no-output session
+  and requires unchanged spend, no usage/charge row, one auditable release and zero
+  reserved credits; and
+- the paired real-time observer/full-journey jobs exercise the same Core client used
+  by the visual UI and compare managed against BYOK evidence.
+
+Cloud Run is the deployment surface because it supports WebSockets, bounded
+request timeouts and high connection concurrency:
+
+- [Gemini Live billing is token-based](https://ai.google.dev/gemini-api/docs/live-api/best-practices#pricing-billing)
+- [Gemini failed-request billing](https://ai.google.dev/gemini-api/docs/billing)
+- [Cloud Run WebSocket guidance](https://cloud.google.com/run/docs/triggering/websockets)
+
+Production remains blocked until the gateway image, Functions issuer/reconciler and
+indexes are deployed together and the production no-output plus real-answer
+canaries pass on the release commit. Never restore direct client tokens as a
+fallback: fail closed if the gateway is unavailable.
 
 ## Reading failures
 
@@ -187,6 +339,10 @@ not intended to remain a maintained CI credential.
   must match the table above.
 - `tools`: the deterministic afterstep decisions did not reach all three real
   executors. Never replace this with mocked output.
+- `toolUploads`: at least one generated image, audio note or music result did not
+  traverse the selected mode's real Files transport.
+- `costAccounting`: a managed balance/ledger delta disagreed or a reservation was
+  left behind; stop rather than retrying purchases or provider calls blindly.
 - `ttsTrigger`: the `Play` trigger was not packetized and sent, or no model audio
   was captured.
 

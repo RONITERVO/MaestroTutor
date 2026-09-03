@@ -15,6 +15,12 @@ export interface HeadlessFilePort {
   clear(): Promise<{ deletedCount: number; failedCount: number; failedNames: string[] }>;
 }
 
+export interface HeadlessFileOwnership {
+  list(): readonly string[];
+  add(nameOrUri: string): Promise<void>;
+  remove(nameOrUri: string): Promise<void>;
+}
+
 const normalizeMimeType = (value: string): string => value.split(';', 1)[0]?.trim() || value.trim();
 
 const fileNameFromUri = (nameOrUri: string): string => {
@@ -77,7 +83,38 @@ export const createManagedHeadlessFilePort = (
   clear: () => backend.clearFiles(),
 });
 
-export const createDirectHeadlessFilePort = (ai: GoogleGenAI): HeadlessFilePort => ({
+const createMemoryFileOwnership = (): HeadlessFileOwnership => {
+  const owned = new Set<string>();
+  return {
+    list: () => [...owned],
+    add: async nameOrUri => { owned.add(fileNameFromUri(nameOrUri)); },
+    remove: async nameOrUri => { owned.delete(fileNameFromUri(nameOrUri)); },
+  };
+};
+
+export const createDirectHeadlessFilePort = (
+  ai: GoogleGenAI,
+  ownership: HeadlessFileOwnership = createMemoryFileOwnership(),
+): HeadlessFilePort => {
+  const deleteOwned = async (nameOrUri: string): Promise<{ ok: boolean }> => {
+    const name = fileNameFromUri(nameOrUri);
+    const ownedName = ownership.list().find(candidate => fileNameFromUri(candidate) === name);
+    if (!ownedName) return { ok: false };
+    try {
+      await ai.files.delete({ name });
+      await ownership.remove(ownedName);
+      return { ok: true };
+    } catch (error) {
+      const status = Number((error as { status?: unknown })?.status);
+      if (status === 403 || status === 404) {
+        await ownership.remove(ownedName);
+        return { ok: true };
+      }
+      return { ok: false };
+    }
+  };
+
+  return ({
   async upload(input) {
     const mimeType = normalizeMimeType(input.mimeType);
     const bytes = decodeDataUrl(input.dataUrl);
@@ -90,8 +127,22 @@ export const createDirectHeadlessFilePort = (ai: GoogleGenAI): HeadlessFilePort 
     });
     const uri = typeof uploaded?.uri === 'string' ? uploaded.uri.trim() : '';
     const uploadedMimeType = typeof uploaded?.mimeType === 'string' ? uploaded.mimeType.trim() : '';
-    if (!uri || !uploadedMimeType) throw new Error('Direct Files API upload returned no URI or MIME type.');
-    if (uploaded.state !== 'ACTIVE') await waitForDirectFileActive(ai, uploaded.name || uri);
+    const ownedName = typeof uploaded?.name === 'string' && uploaded.name.trim()
+      ? uploaded.name.trim()
+      : fileNameFromUri(uri);
+    if (!uri || !uploadedMimeType) {
+      if (ownedName) await ai.files.delete({ name: fileNameFromUri(ownedName) }).catch(() => undefined);
+      throw new Error('Direct Files API upload returned no URI or MIME type.');
+    }
+    try {
+      if (uploaded.state !== 'ACTIVE') await waitForDirectFileActive(ai, ownedName);
+      await ownership.add(ownedName);
+    } catch (error) {
+      // If local ownership cannot be made durable, do not leave a provider file
+      // that a later safe cleanup cannot identify.
+      await ai.files.delete({ name: fileNameFromUri(ownedName) }).catch(() => undefined);
+      throw error;
+    }
     return { uri, mimeType: uploadedMimeType };
   },
   async statuses(uris) {
@@ -109,30 +160,21 @@ export const createDirectHeadlessFilePort = (ai: GoogleGenAI): HeadlessFilePort 
     }));
     return statuses;
   },
-  async delete(nameOrUri) {
-    try {
-      await ai.files.delete({ name: fileNameFromUri(nameOrUri) });
-      return { ok: true };
-    } catch {
-      return { ok: false };
-    }
-  },
+  delete: deleteOwned,
   async clear() {
-    const pager = await ai.files.list({ config: { pageSize: 100 } });
     let deletedCount = 0;
     let failedCount = 0;
     const failedNames: string[] = [];
-    for await (const file of pager) {
-      const name = typeof file?.name === 'string' ? file.name.trim() : '';
-      if (!name) continue;
-      try {
-        await ai.files.delete({ name });
+    for (const name of [...new Set(ownership.list().map(fileNameFromUri))]) {
+      const result = await deleteOwned(name);
+      if (result.ok) {
         deletedCount += 1;
-      } catch {
+      } else {
         failedCount += 1;
         failedNames.push(name);
       }
     }
     return { deletedCount, failedCount, failedNames };
   },
-});
+  });
+};

@@ -1,6 +1,6 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { HeadlessClient } from './client';
 import {
   dispatchHeadlessMethod,
@@ -8,7 +8,7 @@ import {
   summarizeHeadlessArtifact,
 } from './dispatcher';
 
-const unusedClient = {} as HeadlessClient;
+const unusedClient = { accessMode: 'managed' } as HeadlessClient;
 
 describe('headless dispatcher contract', () => {
   it('publishes a stable JSON-RPC discovery document', async () => {
@@ -16,10 +16,11 @@ describe('headless dispatcher contract', () => {
       protocolVersion: string;
       transport: string;
       methods: string[];
-      methodInfo: Record<string, { params: string[] }>;
+      methodInfo: Record<string, { params: string[]; accessModes: string[]; parityClass: string }>;
+      access: { accessMode: string; availableMethods: string[]; unavailableMethods: string[] };
       configuredModels: { text: { default: string }; music: string };
     };
-    expect(result.protocolVersion).toBe('1.4.0');
+    expect(result.protocolVersion).toBe('1.6.0');
     expect(result.transport).toBe('json-rpc-2.0-ndjson');
     expect(result.methods).toContain('billing.checkout.completeTest');
     expect(result.methods).toContain('speech.synthetic.live');
@@ -41,8 +42,41 @@ describe('headless dispatcher contract', () => {
     ]));
     expect(result.methodInfo['live.observer.turn'].params.join(' ')).toContain('expectedTranscript');
     expect(result.methodInfo['journey.firstLesson'].params.join(' ')).toContain('required with custom PCM');
+    expect(Object.keys(result.methodInfo).sort()).toEqual([...result.methods].sort());
+    expect(result.methodInfo['chat.turn']).toMatchObject({
+      accessModes: ['managed', 'byok'],
+      parityClass: 'provider-parity',
+    });
+    expect(result.methodInfo['billing.checkout.create']).toMatchObject({
+      accessModes: ['managed'],
+      parityClass: 'managed-account-only',
+    });
+    expect(result.access).toMatchObject({ accessMode: 'managed', unavailableMethods: [] });
     expect(result.configuredModels.text.default).toBeTruthy();
     expect(result.configuredModels.music).toBeTruthy();
+  });
+
+  it('advertises and enforces managed-only methods while allowing BYOK content reports', async () => {
+    const submitAiContentReport = vi.fn(async (request: unknown) => ({ ok: true, reportId: 'report-1', request }));
+    const byokClient = {
+      accessMode: 'byok',
+      account: { submitAiContentReport },
+    } as unknown as HeadlessClient;
+    const description = await dispatchHeadlessMethod(byokClient, 'system.describe') as any;
+    expect(description.access.unavailableMethods).toEqual(expect.arrayContaining([
+      'auth.signIn',
+      'billing.checkout.create',
+    ]));
+    expect(description.access.availableMethods).toContain('report.submit');
+    await expect(dispatchHeadlessMethod(byokClient, 'auth.signIn')).rejects.toThrow('requires managed access');
+    await expect(dispatchHeadlessMethod(byokClient, 'auth.google.verifyHosted')).rejects.toThrow('requires managed access');
+    await expect(dispatchHeadlessMethod(byokClient, 'report.submit', {
+      accessMode: 'managed', messageId: 'message-1', reason: 'other',
+    })).rejects.toMatchObject({ rpcCode: -32602 });
+    await expect(dispatchHeadlessMethod(byokClient, 'report.submit', {
+      messageId: 'message-1', reason: 'other',
+    })).resolves.toMatchObject({ ok: true, reportId: 'report-1' });
+    expect(submitAiContentReport).toHaveBeenCalledWith(expect.objectContaining({ accessMode: 'byok' }));
   });
 
   it('uses the JSON-RPC method-not-found code', async () => {

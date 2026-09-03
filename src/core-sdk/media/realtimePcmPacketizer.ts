@@ -6,6 +6,12 @@ export interface RealtimePcmPacketizerOptions {
   sampleRate: number;
   packetDurationMs?: number;
   maxWaitMs?: number;
+  /** Keep burst-replayed capture at microphone cadence before provider send. */
+  paceOutput?: boolean;
+  pacingClock?: {
+    now(): number;
+    sleep(milliseconds: number): Promise<void>;
+  };
   onPacket: (packet: Int16Array) => void | Promise<void>;
 }
 
@@ -17,6 +23,10 @@ export interface RealtimePcmPacketizerStats {
   timerFlushes: number;
   explicitFlushes: number;
   maxBufferedSamples: number;
+  maxPacketSamples: number;
+  pacedOutput: boolean;
+  outputPacingWaitMs: number;
+  outputPacingElapsedMs: number;
 }
 
 /**
@@ -28,12 +38,19 @@ export interface RealtimePcmPacketizerStats {
 export class RealtimePcmPacketizer {
   private readonly targetPacketSamples: number;
   private readonly maxWaitMs: number;
+  private readonly sampleRate: number;
+  private readonly paceOutput: boolean;
+  private readonly now: () => number;
+  private readonly sleep: (milliseconds: number) => Promise<void>;
   private readonly onPacket: (packet: Int16Array) => void | Promise<void>;
 
   private bufferedChunks: Int16Array[] = [];
   private bufferedSamples = 0;
   private flushTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
   private sendQueue: Promise<void> = Promise.resolve();
+  private outputSamplesScheduled = 0;
+  private outputPacingStartedAt: number | null = null;
+  private outputPacingLastSentAt: number | null = null;
   private stats: RealtimePcmPacketizerStats = {
     totalInputSamples: 0,
     totalOutputSamples: 0,
@@ -42,15 +59,26 @@ export class RealtimePcmPacketizer {
     timerFlushes: 0,
     explicitFlushes: 0,
     maxBufferedSamples: 0,
+    maxPacketSamples: 0,
+    pacedOutput: false,
+    outputPacingWaitMs: 0,
+    outputPacingElapsedMs: 0,
   };
 
   constructor(options: RealtimePcmPacketizerOptions) {
+    this.sampleRate = Math.max(1, options.sampleRate);
     const packetDurationMs = Math.max(20, options.packetDurationMs ?? 100);
     this.targetPacketSamples = Math.max(
       1,
-      Math.round((options.sampleRate * packetDurationMs) / 1000)
+      Math.round((this.sampleRate * packetDurationMs) / 1000)
     );
     this.maxWaitMs = Math.max(packetDurationMs, options.maxWaitMs ?? packetDurationMs + 20);
+    this.paceOutput = options.paceOutput === true;
+    this.now = options.pacingClock ? () => options.pacingClock!.now() : () => Date.now();
+    this.sleep = options.pacingClock
+      ? milliseconds => options.pacingClock!.sleep(milliseconds)
+      : milliseconds => new Promise(resolve => globalThis.setTimeout(resolve, milliseconds));
+    this.stats.pacedOutput = this.paceOutput;
     this.onPacket = options.onPacket;
   }
 
@@ -84,6 +112,9 @@ export class RealtimePcmPacketizer {
     return {
       ...this.stats,
       maxBufferedSamples: Math.max(this.stats.maxBufferedSamples, this.bufferedSamples),
+      outputPacingElapsedMs: this.outputPacingStartedAt === null || this.outputPacingLastSentAt === null
+        ? 0
+        : Math.max(0, this.outputPacingLastSentAt - this.outputPacingStartedAt),
     };
   }
 
@@ -122,6 +153,7 @@ export class RealtimePcmPacketizer {
     if (packet.length === 0) return;
     this.stats.packetsSent += 1;
     this.stats.totalOutputSamples += packet.length;
+    this.stats.maxPacketSamples = Math.max(this.stats.maxPacketSamples, packet.length);
     if (packet.length < this.targetPacketSamples) {
       this.stats.partialPacketsSent += 1;
     }
@@ -131,10 +163,23 @@ export class RealtimePcmPacketizer {
     if (reason === 'flush') {
       this.stats.explicitFlushes += 1;
     }
+    const precedingSamples = this.outputSamplesScheduled;
+    this.outputSamplesScheduled += packet.length;
     this.sendQueue = this.sendQueue
       .catch(() => undefined)
       .then(async () => {
+        if (this.paceOutput) {
+          this.outputPacingStartedAt ??= this.now();
+          const dueAt = this.outputPacingStartedAt
+            + (precedingSamples / this.sampleRate) * 1_000;
+          const delayMs = dueAt - this.now();
+          if (delayMs > 0) {
+            this.stats.outputPacingWaitMs += delayMs;
+            await this.sleep(delayMs);
+          }
+        }
         await this.onPacket(packet);
+        if (this.paceOutput) this.outputPacingLastSentAt = this.now();
       });
   }
 

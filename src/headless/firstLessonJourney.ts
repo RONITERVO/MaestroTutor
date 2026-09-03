@@ -15,6 +15,12 @@ import {
   evaluateFirstLessonCoverage,
   FIRST_LESSON_ATTACHMENT_KINDS,
 } from './firstLessonCoverage';
+import {
+  captureManagedJourneyBilling,
+  evaluateManagedJourneyBilling,
+  evaluateManagedJourneyFailureBilling,
+  waitForManagedJourneyBillingSettlement,
+} from './managedJourneyBilling';
 
 const defaultSpeechPcm = (): Int16Array => {
   const source = decodePcm16LeBase64(TRIGGER_AUDIO_PCM_24K);
@@ -52,6 +58,9 @@ const summarizeTurn = (turn: any, kind: string) => ({
   capturedModelSha256: turn?.capturedModelSha256 ?? null,
   transcriptEvidencePassed: turn?.transcriptEvidence?.passed ?? null,
   transcriptWordRecall: turn?.transcriptEvidence?.wordRecall ?? null,
+  providerInputPacingPassed: turn?.realtimeEvidence?.providerInputPacingPassed ?? null,
+  providerInputPacingElapsedMs: turn?.packetizer?.outputPacingElapsedMs ?? null,
+  providerInputPacingWaitMs: turn?.packetizer?.outputPacingWaitMs ?? null,
   cleanedUp: turn?.cleanedUp ?? null,
   cleanupFailureCount: Array.isArray(turn?.cleanupFailures) ? turn.cleanupFailures.length : null,
 });
@@ -75,6 +84,12 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
         nativeLanguageCode: input.nativeLanguageCode || 'en-US',
       });
   const operationId = client.runtime.ids.create('first-lesson');
+  const managedBillingBefore = client.accessMode === 'managed'
+    ? await captureManagedJourneyBilling(client, operationId)
+    : null;
+  if (managedBillingBefore?.account.account.billingSummary.reservedCredits) {
+    throw new Error('Refusing to start managed parity proof while another operation has credits reserved.');
+  }
   const pcm = input.pcm || defaultSpeechPcm();
   const expectedTranscript = input.expectedTranscript?.trim() || (input.pcm ? '' : 'Play');
   if (!expectedTranscript) {
@@ -82,6 +97,7 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
   }
   const turns: Array<Record<string, unknown>> = [];
   const aftersteps: Array<Record<string, unknown>> = [];
+  const uploadGeneratedMedia = input.uploadGeneratedMedia ?? true;
   const initialUserTurnCount = (client.state.chats[pair.id] || [])
     .filter(message => message.role === 'user').length;
 
@@ -95,8 +111,11 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
       assistantMessageId,
       responseSource,
       syntheticDecision: input.includeSyntheticToolDecisions === false ? undefined : syntheticDecision,
-      uploadGeneratedMedia: input.uploadGeneratedMedia ?? client.accessMode === 'managed',
+      uploadGeneratedMedia,
     });
+    const toolResult = result.toolResult && typeof result.toolResult === 'object'
+      ? result.toolResult as { uploaded?: { uri?: unknown } | null }
+      : null;
     aftersteps.push({
       assistantMessageId,
       responseSource,
@@ -106,19 +125,53 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
       hasArtifact: Boolean(result.artifact),
       tool: result.toolRequest?.tool || null,
       toolMessageId: result.toolMessageId,
+      uploaded: result.toolRequest ? Boolean(toolResult?.uploaded?.uri) : null,
     });
     return result;
   };
   const runLiveWithRetry = async (params: Parameters<typeof runHeadlessLiveTurn>[1]) => {
     let lastError: unknown;
+    const failedLiveRequestIds: string[] = [];
     for (let attempt = 1; attempt <= 2; attempt += 1) {
       try {
         return await runHeadlessLiveTurn(client, { ...params, runSuggestionAftersteps: false });
       } catch (error) {
         lastError = error;
+        const failedRequestId = error && typeof error === 'object'
+          && typeof (error as { operationId?: unknown }).operationId === 'string'
+          ? (error as { operationId: string }).operationId
+          : '';
+        if (failedRequestId) failedLiveRequestIds.push(failedRequestId);
         client.runtime.events.emit({
           operationId, journey: 'live', phase: attempt < 2 ? 'firstLesson.retrying' : 'firstLesson.failed',
           data: { attempt, mode: params.mode, hasVisual: params.includeVisual === true },
+        });
+      }
+    }
+    if (managedBillingBefore) {
+      try {
+        const managedBillingEvidence = evaluateManagedJourneyFailureBilling(
+          managedBillingBefore,
+          await waitForManagedJourneyBillingSettlement(client, operationId),
+          failedLiveRequestIds,
+        );
+        client.runtime.events.emit({
+          operationId,
+          journey: 'billing',
+          phase: 'firstLesson.failureReconciled',
+          data: { ...managedBillingEvidence },
+        });
+        if (lastError && typeof lastError === 'object') {
+          Object.assign(lastError, { managedBillingEvidence });
+        }
+      } catch (billingError) {
+        client.runtime.events.emit({
+          operationId,
+          journey: 'billing',
+          phase: 'firstLesson.failureReconciliationFailed',
+          data: {
+            errorMessage: billingError instanceof Error ? billingError.message : String(billingError),
+          },
         });
       }
     }
@@ -254,11 +307,25 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
     runSuggestionAftersteps: true,
   });
 
+  const managedBillingEvidence = managedBillingBefore
+    ? evaluateManagedJourneyBilling(
+        managedBillingBefore,
+        await waitForManagedJourneyBillingSettlement(client, operationId),
+      )
+    : {
+        applicable: false as const,
+        passed: true,
+        payer: 'byok-api-key-owner' as const,
+        reason: 'Direct Gemini billing is owned by the supplied API-key project, outside Maestro credits.',
+      };
+
   const history = client.state.chats[pair.id] || [];
   const totalUserTurnCount = history.filter(message => message.role === 'user').length;
   const userTurnCount = totalUserTurnCount - initialUserTurnCount;
   const coverage = evaluateFirstLessonCoverage({
+    accessMode: client.accessMode,
     userTurnCount,
+    requireToolUploads: uploadGeneratedMedia,
     turns,
     aftersteps,
     stt,
@@ -269,6 +336,7 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
     translation,
     tts,
     reengagement,
+    managedBillingEvidence,
   });
   const passed = Object.values(coverage).every(Boolean);
   client.runtime.events.emit({
@@ -283,6 +351,8 @@ export const runHeadlessFirstLesson = async (client: HeadlessClient, input: {
   return {
     operationId,
     accessMode: client.accessMode,
+    uploadGeneratedMedia,
+    managedBillingEvidence,
     languagePairId: pair.id,
     userTurnCount,
     totalUserTurnCount,

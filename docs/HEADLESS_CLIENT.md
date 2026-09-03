@@ -74,8 +74,9 @@ metadata. Secrets, bearer tokens, App Check tokens, raw payment details and full
 provider payloads must never be included in traces.
 
 Protocol 1.2 also requires every Gemini Live transport to have a reviewed open
-reason. Headless Live and raw-token commands derive `user.headless-live`; callers
-cannot claim a browser Whisper or UI trigger. See
+reason. Headless Live commands derive `user.headless-live`; callers cannot claim a
+browser Whisper or UI trigger, and protocol 1.6 exposes no raw ticket/token method.
+See
 [`GEMINI_LIVE_OPEN_POLICY.md`](./GEMINI_LIVE_OPEN_POLICY.md).
 
 Protocol 1.3 adds semantic input evidence to `speech.transcribe`,
@@ -89,10 +90,56 @@ Protocol 1.4 adds real-time and browser-handoff evidence. `speech.transcribe` an
 `live.observer.turn` now start paced capture before the Live transport, retain all
 PCM produced while local speech recognition and the provider connection are in
 flight, and transfer it through the same lossless handoff primitive used by the
-browser. With `pace:true`, the harness also drains a 24 kHz playback clock for the
-model response before returning. `realtimeEvidence.passed` is therefore required;
-receiving a transcript or audio bytes alone is not a timing pass. See
+browser. Retained packets are delivered to the provider on absolute PCM deadlines;
+`realtimeEvidence.providerInputPacingPassed` fails if capture was real-time but the
+post-connect queue was burst-sent. With `pace:true`, the harness also drains a 24
+kHz playback clock for the model response before returning.
+`realtimeEvidence.passed` is therefore required; receiving a transcript or audio
+bytes alone is not a timing pass. See
 [`LIVE_OBSERVER_AUDIO_RELIABILITY.md`](./LIVE_OBSERVER_AUDIO_RELIABILITY.md).
+
+Protocol 1.5 makes access parity an executable contract. `system.describe` now
+classifies every command as `local-parity`, `provider-parity`, or
+`managed-account-only`, lists its allowed access modes, cost class and required
+release proof, and reports which commands are available for the active client.
+Every provider-parity command is available through both managed credits and BYOK.
+The only mode-specific commands are honest Maestro-account boundaries: sign-in,
+account/ledger/deletion, Stripe Checkout and hosted Google verification. BYOK
+content reports remain supported because the real report route is optional-auth.
+A supplied report mode must match the active client. Managed gateway ticket
+issuance is internal transport plumbing, not a public headless command whose bearer
+secret could leak through JSON-RPC output.
+
+Protocol 1.6 removes raw managed provider-token creation and release from the
+public contract. Managed UI and headless Live sessions now receive a one-use,
+short-lived Maestro gateway ticket; neither a Gemini credential nor an internal
+lease ID reaches the client. The ticket is sent in the first secure WebSocket
+frame, never in its URL. The gateway keeps the provider key server-side, observes
+input/output and provider usage, commits the first useful output before forwarding
+it, and settles only that observed use. Setup-only or no-output sessions release
+the complete reservation. A scheduled reconciler handles unused tickets and
+abandoned sessions. See the billing and recovery invariants in
+[`HEADLESS_COVERAGE.md`](./HEADLESS_COVERAGE.md).
+
+`provider-parity` still does not mean the user pays the same currency or provider:
+BYOK charges the supplied Google project, while managed converts observed provider
+cost to Maestro credits. It does mean a failed/no-output managed session cannot be
+silently charged a fixed connection window. Failure evidence checks both current
+`liveGateway` rows and historical `liveToken` rows so an old deployment cannot
+regress unnoticed.
+
+The paired staging gate can no longer skip BYOK when its key is missing. Both jobs
+run the same generated-media upload cases and raw generation routes, retain their
+proof artifacts, and a third job compares stable coverage, turn order and tool
+uploads. Managed proof additionally reconciles account balance, usage ledger and
+charge ledger deltas and requires zero credits reserved before and after the
+journey. Direct BYOK cleanup never lists or deletes arbitrary provider files: a
+named profile persists only files it created, and delete/clear refuse everything
+outside that ownership set.
+
+The UI/BYOK client and managed gateway exact-pin the same `@google/genai` version.
+`verify:release-config` rejects a version range or mismatch so independently
+installed package trees cannot silently exercise different Live transports.
 
 AI output is asserted by invariant rather than exact wording. Release checks verify
 the route and model used, ordered state transitions, message roles, non-empty visible
@@ -132,7 +179,10 @@ The harness is release-ready only when:
 5. a Stripe test-card checkout produces exactly one credit grant and the updated
    balance is observed through the normal account-refresh path;
 6. destructive tests operate only on a disposable staging identity; and
-7. command, profile, staging and failure-recovery procedures are documented for a
+7. every cost-bearing provider-parity path passes in both access modes for the same
+   commit, and managed journey charges reconcile with both ledgers, charge no
+   failed Live attempt and leave no reservation; and
+8. command, profile, staging and failure-recovery procedures are documented for a
    maintainer who has repository and provider-console access but no project history.
 
 ## Current staging inventory
@@ -428,7 +478,33 @@ user with a new random password, add new Secret Manager/GitHub secret versions, 
 retrieve its fresh UID with `account.summary` immediately before the next destructive
 run. Do not hard-code or reuse a prior UID, and never point this command at production.
 
-## Validated staging baseline (2026-09-01)
+## Validated staging baseline
+
+On 2026-09-03, the server-observed gateway candidate was deployed to staging and
+exercised through the normal managed Core client with the same real 108,203-sample
+human recording used by BYOK. Both access modes transcribed all nine expected
+words, including the final “I am doing great” clause, while input was streamed at
+microphone pace and complete model audio was played at its real 24 kHz pace before
+the commands returned. The managed ledger settled 4,510 provider-reported tokens
+at 13 credits instead of charging the 87-credit maximum reservation, and finished
+with zero reserved credits. A second provider-connected session sent no input and
+produced no useful output; it released all 87 reserved credits, created no usage or
+charge row, and left available/lifetime balances unchanged. The exact evidence is
+recorded in [`LIVE_OBSERVER_AUDIO_RELIABILITY.md`](./LIVE_OBSERVER_AUDIO_RELIABILITY.md).
+
+The final burst-pacing regression used exact-pinned gateway revision
+`maestrotutor-live-gateway-00005-t4v` and the same short fixture that had twice
+failed when a slow connection drained 127,492 buffered PCM bytes in a burst.
+Managed operation `first-lesson-75ff94aa-64a7-4933-a3c7-cd20ae2f5c13`
+passed all 18 coverage flags and 14 turns. Its 48 usage rows matched 48 charges
+totaling 433 credits / USD 0.413022, with zero reserved before and after. The
+gateway and UI share exact-pinned `@google/genai` 1.45.0.
+
+This is local evidence for the current working tree and staging deployment. It is
+not a substitute for the required managed/BYOK workflow and production canary on
+the final release commit.
+
+### Historical 2026-09-01/02 baseline
 
 The expanded managed parity gate was also run locally against staging on
 2026-09-02. It passed all 16 coverage flags with 14 new user turns after a

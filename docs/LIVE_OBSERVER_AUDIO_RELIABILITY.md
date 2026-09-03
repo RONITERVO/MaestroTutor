@@ -19,6 +19,16 @@ after every processed frame, so JSON event output and encoding overhead accumula
 on top of the audio duration. A nominal real-time fixture could therefore run much
 slower than a real microphone without failing.
 
+A later managed/BYOK parity run exposed a third failure mode. The lossless handoff
+initially drained its retained prefix as fast as encoding and WebSocket writes
+allowed. A slow managed connection could therefore preserve every sample yet send
+several seconds of PCM to Gemini as a burst. Gemini's realtime-input path is
+latency-oriented and does not promise deterministic ordering under bursts; two
+managed runs each delivered all 127,492 bytes after setup but produced no output.
+Both correctly cost zero. The identical direct run, whose connection completed
+before the queue grew, succeeded. This explains why byte-count-only tests could be
+green while a real turn was silent.
+
 ## Long-term fix
 
 The browser now transfers ownership of the original capture graph instead of
@@ -29,16 +39,25 @@ replacing it:
 3. The same worklet continues buffering while video, playback and Live transport
    setup run.
 4. Once the normal PCM router and packetizer are ready, `PcmCaptureHandoff` drains
-   the connection buffer in order and routes every future packet directly.
+   the connection buffer in order. The packetizer schedules that retained prefix
+   on absolute PCM deadlines instead of flooding the provider, then routes every
+   future packet on the same timeline.
 5. The same `AudioContext`, worklet and microphone stream remain in use until normal
    session cleanup. Both silent-observer conversation and Live STT use this path.
+
+The managed gateway independently applies the same PCM-cadence limit before its
+provider socket. That protects older managed clients and makes billing observation
+and provider delivery share one ordered queue. UI/BYOK and gateway package manifests
+also exact-pin the same `@google/genai` version; the release-config verifier fails
+if those versions diverge.
 
 The Core headless observer/STT path now mirrors the important ownership order:
 capture starts, sustained speech is confirmed, Live connects while capture
 continues, and the shared `PcmCaptureHandoff` drains into the real packetizer. Paced
-input uses absolute sample deadlines, so work done between frames does not change
-the speaker's effective rate. Model PCM is queued on a 24 kHz real-time playback
-clock and the command waits for that clock to drain after provider turn completion.
+input capture and provider delivery use absolute sample deadlines, so work done
+between frames or a slow connection does not change the speaker's effective rate.
+Model PCM is queued on a 24 kHz real-time playback clock and the command waits for
+that clock to drain after provider turn completion.
 
 This follows Google's Live contract: input is raw PCM16 audio, automatic VAD may be
 finalized with `audioStreamEnd`, and model audio output is 24 kHz. Google also
@@ -60,6 +79,10 @@ The following checks are intentionally complementary:
 - `pcmInput.test.ts` requires the shared handoff to preserve order and requires a
   paced synthetic microphone to stay on absolute audio deadlines despite per-frame
   processing time.
+- `realtimePcmPacketizer.test.ts` injects a five-packet burst and requires sends at
+  PCM cadence while proving already microphone-paced packets gain no extra delay.
+- The gateway state-machine suite injects buffered 100 ms packets and requires
+  provider delivery at 0/100/200 ms, independently of client behavior.
 - `syntheticLiveJourney.test.ts` starts capture before a deliberately delayed Live
   connection, requires the complete suffix transcript, and waits for model playback
   duration rather than only model bytes or `turnComplete`.
@@ -68,6 +91,7 @@ The following checks are intentionally complementary:
   local Whisper preview text or the assistant response.
 - A paced provider run must return all of:
   `transcriptEvidence.passed`, `realtimeEvidence.passed`,
+  `realtimeEvidence.providerInputPacingPassed`,
   `timing.uiSpeechHandoff:true`, non-zero connection-handoff samples, non-zero model
   PCM and hashes, one completed audio boundary, and input/playback wall-clock
   durations within their declared tolerances.
@@ -106,6 +130,62 @@ Timing and media evidence from operation
 The command returned only after both the paced user capture and the paced model
 playback completed. The input and model PCM SHA-256 values were also non-empty and
 stable for the bytes observed by that run.
+
+### Same-fixture access parity replay through the server-observed gateway
+
+The identical 108,203-sample human recording was replayed through both managed
+and BYOK on 2026-09-03. Both provider paths transcribed all nine expected words,
+including the final “I am doing great” clause (`wordRecall:1`), and returned only
+after their complete model-audio playback clocks drained:
+
+| Evidence | Managed | BYOK |
+| --- | ---: | ---: |
+| Input capture for 6,762.7 ms PCM | 6,772 ms | 6,768 ms |
+| Provider connection | 1,904 ms | 200 ms |
+| PCM retained across UI handoff | 75,840 samples / 237 packets | 48,640 samples / 152 packets |
+| PCM sent after gating | 107,200 samples | 107,200 samples |
+| Model PCM | 537,135 samples | 298,095 samples |
+| Model audio / actual playback | 22,380.6 / 22,947 ms | 12,420.6 / 12,696 ms |
+| Provider messages | 81 | 50 |
+| Transcript recall | 1.0 / pass | 1.0 / pass |
+
+Both runs observed setup, server-content, session-resumption and usage metadata.
+The managed operation was
+`synthetic-live-a894f8b8-8e84-4698-9f5c-b4777e98fcf1`; BYOK was
+`synthetic-live-e5dbc922-e37a-4d34-bfe4-6668f1dc1ffc`.
+The managed ledger recorded 4,510 provider tokens, billed 13 credits / USD
+0.012719, released the rest of the 87-credit maximum reservation and finished at
+zero reserved credits. BYOK attributed provider billing to the supplied key owner.
+Response length is intentionally not compared because model wording and audio are
+nondeterministic. This is the same recording and semantic assertion at the same
+real-time boundaries, not a comparison between synthetic transcripts or
+differently paced fixtures.
+
+The fixed-window flaw was also retested directly after the gateway deployment. A
+second managed ticket was consumed, the provider connected, and the client closed
+without sending input or receiving useful output. The result was `released`, zero
+credits/USD, `usefulOutput:false`, no usage row, no charge row, unchanged available
+and lifetime-spent balances, and zero reserved credits. A separate unused issued
+ticket reserved 87 credits and was then recovered by the deployed one-minute
+scheduler without client cooperation or spend. The long-term accounting and deployment gates are in
+[`HEADLESS_COVERAGE.md`](./HEADLESS_COVERAGE.md).
+
+### Burst-pacing reproduction and final full-journey proof
+
+Before provider-send pacing, two isolated managed first-lesson runs failed the STT
+stage after setup. Each attempt contained all 127,492 input bytes, four provider
+messages, no turn completion/output, and an auditable zero-credit release. After
+client and gateway pacing were enabled, the same short `Play. Play. Play.` fixture
+completed on every managed Live surface.
+
+Against exact-pinned staging gateway revision `maestrotutor-live-gateway-00005-t4v`,
+managed operation `first-lesson-75ff94aa-64a7-4933-a3c7-cd20ae2f5c13`
+completed 14 user turns with all 18 coverage flags true. STT, Live audio, Live
+audio/video, observer audio and observer audio/video all had full input-transcript
+recall; each visual mode sent a frame and each response's complete PCM playback was
+awaited. Its 48 usage rows matched 48 charge rows and 433 credits / USD 0.413022,
+with zero reservation before and after. This was the exact fixture that had exposed
+the burst failure, not a relaxed replacement.
 
 ## Maintainer runbook
 
@@ -147,5 +227,7 @@ answer these questions in tests:
    stream-end signal?
 5. Does the semantic assertion include words recorded after the trigger point?
 6. Does a paced check use wall-clock deadlines and wait for audible output drain?
+7. Is retained PCM paced at the provider-send boundary, including after a slow
+   connection, rather than merely captured at real time?
 
 Run the focused audio tests plus the full suite and production build before merging.

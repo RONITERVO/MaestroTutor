@@ -9,7 +9,7 @@ component mounting are not reasons.
 Every `live.connect` request crosses the Core SDK boundary with a
 `liveOpenReason`. The client validates the reason even in BYOK mode. Managed
 access validates it again in Cloud Functions before it reserves credits, creates
-a lease or asks Gemini for an ephemeral token. The reason is client policy and is
+a lease or issues a one-use gateway ticket. The reason is client policy and is
 removed before the request reaches Google's SDK.
 
 The only allowed triggers are defined in `shared/liveOpenReason.ts`:
@@ -19,7 +19,7 @@ The only allowed triggers are defined in `shared/liveOpenReason.ts`:
 | `whisper.observer` | Local VAD followed by a non-empty local Whisper transcript | passive observer |
 | `whisper.stt` | Local VAD followed by a non-empty local Whisper transcript | speech-to-text |
 | `user.camera-live` | User presses the camera Live control | visual Live conversation |
-| `user.headless-live` | Explicit JSON-RPC/CLI Live command | synthetic/headless Live journey and raw token command |
+| `user.headless-live` | Explicit JSON-RPC/CLI Live command | synthetic/headless Live journey and gateway-ticket command |
 | `tool.audio-note` | Chat afterstep/tool selects audio-note generation | audio-note generator |
 | `voice.tts-click` | User explicitly requests playback | clicked/read-aloud TTS and exact headless TTS |
 | `voice.tts-auto-message` | A newly arrived assistant message is configured to auto-play | automatic response TTS |
@@ -38,7 +38,7 @@ local microphone
   -> local Whisper checks the bounded PCM window
   -> transcript is shown as a local pending-user preview
   -> reviewed live-open reason is created
-  -> BYOK validation or managed token/credit reservation
+  -> BYOK validation or managed gateway/credit reservation
   -> Gemini Live transport opens
   -> retained pre-roll is replayed, then current PCM continues
 ```
@@ -88,18 +88,13 @@ calling Google so provider request compatibility stays unchanged.
 
 ## Rollout compatibility
 
-The managed `/gemini/live-token` request contract is intentionally fail closed.
-Clients built before this policy do not send a reason and receive HTTP 400 after
-the strict backend is deployed. Do not add an `unknown`, inferred or legacy
-reason to keep an old client connecting: the backend cannot truthfully recover
-which user/product event happened.
-
-For a release with installed native clients, ship the reason-capable client and
-coordinate the Functions cutover according to the supported-version policy. If
-old native versions must remain usable, keep the old backend revision serving
-them at a versioned endpoint until their support window ends; do not weaken the
-new endpoint. Web clients should deploy in the same release operation as the
-backend so they adopt the new contract immediately.
+When `MANAGED_LIVE_GATEWAY_URL` is configured, the legacy
+`/gemini/live-token` and `/gemini/live-token/release` routes intentionally return
+HTTP 410. There is no fallback from the gateway to a raw provider token: such a
+fallback would restore fixed-window billing and expose a provider credential to
+the client. Old native clients must be handled through an explicitly versioned,
+time-bounded compatibility policy or prompted to update; do not weaken the new
+endpoint. Web, gateway and Functions changes ship as one coordinated release.
 
 ## Headless behavior
 
@@ -109,9 +104,10 @@ that browser Whisper heard a person. It is therefore audited as
 honest and prevents synthetic commands from impersonating a real local Whisper
 decision.
 
-`live.token.create` also derives `user.headless-live` internally. The JSON-RPC
-caller cannot supply an arbitrary trigger string. Protocol 1.2 documents this
-durable behavior.
+High-level headless Live commands derive `user.headless-live` internally. The
+JSON-RPC caller cannot supply an arbitrary trigger string, and raw ticket issuance
+is deliberately not a public headless method. Headless and UI Core clients obtain
+the one-use ticket internally and never receive a provider credential.
 
 ## Adding or changing a Live entry point
 
@@ -121,7 +117,7 @@ durable behavior.
    add one constant to `shared/liveOpenReason.ts` and update this table.
 3. Pass the typed trigger at the product boundary. Create the full reason at the
    last moment before `live.connect`, not when the screen first renders.
-4. For a managed route, keep server validation before lease/credit/token work and
+4. For a managed route, keep server validation before lease/credit/ticket work and
    record the standard audit metadata.
 5. Add contract tests for allowlisting, provider-field stripping and the caller's
    state transition. For Whisper-gated paths, prove silence and failed inference
@@ -151,5 +147,5 @@ or the gated browser access adapter is a policy bypass and should block release.
   Check permission, worker/model loading and the activity flag; do not force a
   connection as a recovery path.
 - Stuck in `connecting` means authorization occurred and transport setup began.
-  Inspect the managed lease/token response or BYOK provider error using normal
+  Inspect the managed gateway/session response or BYOK provider error using normal
   redacted traffic logs.

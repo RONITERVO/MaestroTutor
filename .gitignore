@@ -141,6 +141,7 @@ node_modules/
 
 # Firebase Functions build output
 functions/lib/
+live-gateway/lib/
 .firebase/
 
 # Headless browser/profile artifacts (may contain session cookies)

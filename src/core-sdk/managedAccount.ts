@@ -288,6 +288,8 @@ export const createManagedAccountController = (dependencies: {
         emit(id, 'account', 'delete.backendSucceeded', {
           deletedAt: result.deletedAt,
           deletedManagedFileCount: result.deletedManagedFileCount,
+          deletedLiveGatewayTicketCount: result.deletedLiveGatewayTicketCount,
+          deletedLiveGatewaySessionCount: result.deletedLiveGatewaySessionCount,
           anonymizedPurchaseCount: result.anonymizedPurchaseCount,
         });
         await dependencies.identity.signOut();

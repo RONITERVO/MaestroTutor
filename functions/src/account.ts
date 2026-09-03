@@ -14,6 +14,8 @@ import {
   MANAGED_SCHEMA_VERSION,
   accountDeletionClaimRef,
   checkoutGrantsCollection,
+  liveGatewaySessionsCollection,
+  liveGatewayTicketsCollection,
   managedFilesCollection,
   managedReservationsCollection,
   managedUserRef,
@@ -33,6 +35,8 @@ export interface ManagedAccountDeletionResult {
   releasedReservationCount: number;
   deletedReservationCount: number;
   deletedManagedFileCount: number;
+  deletedLiveGatewayTicketCount: number;
+  deletedLiveGatewaySessionCount: number;
   anonymizedPurchaseCount: number;
   anonymizedReportCount: number;
   remoteManagedFileFailures: number;
@@ -224,6 +228,14 @@ export const deleteManagedAccount = async (params: {
   // only Firestore would therefore not be a complete account deletion.
   const deletedStripeCustomerCount = await deleteManagedStripeCustomers(params.uid);
 
+  // Invalidate gateway capabilities before releasing reservations. A socket
+  // already connected may still finish provider shutdown, but checkpoint and
+  // finalization transactions can no longer charge or recreate this account.
+  const [deletedLiveGatewayTicketCount, deletedLiveGatewaySessionCount] = await Promise.all([
+    deleteQueryDocuments(() => liveGatewayTicketsCollection().where('uid', '==', params.uid)),
+    deleteQueryDocuments(() => liveGatewaySessionsCollection().where('uid', '==', params.uid)),
+  ]);
+
   await sweepExpiredReservationsForUser(params.uid);
   const releasedReservationCount = await releaseActiveReservationsForUser(params.uid);
   const [managedFileCleanup, legacyManagedFileCleanup] = await Promise.all([
@@ -339,6 +351,8 @@ export const deleteManagedAccount = async (params: {
     releasedReservationCount,
     deletedReservationCount,
     deletedManagedFileCount,
+    deletedLiveGatewayTicketCount,
+    deletedLiveGatewaySessionCount,
     anonymizedPurchaseCount,
     anonymizedReportCount,
     remoteManagedFileFailures: managedFileCleanup.failedCount + legacyManagedFileCleanup.failedCount,

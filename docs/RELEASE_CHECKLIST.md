@@ -15,6 +15,16 @@
       the candidate commit.
 - [ ] The full `journey.firstLesson` coverage object is green in both managed and
       BYOK jobs for the same commit; a skipped BYOK job does not count.
+- [ ] Live evidence includes `providerInputPacingPassed:true` for STT and observer
+      handoffs, and release configuration confirms the UI/BYOK and gateway
+      `@google/genai` versions are identical exact pins.
+- [ ] The production managed Live gateway image and Functions issuer/reconciler are
+      deployed from the candidate commit. `/health` must report
+      `managedLiveGatewayConfigured:true`; the old token endpoints must fail closed.
+- [ ] The production provider-connected no-output canary reports unchanged spend,
+      zero usage/charge rows, exactly one auditable reservation release and zero
+      reserved credits. A real-answer run must settle provider-observed usage below
+      its conservative maximum. Staging evidence alone does not check these boxes.
 - [ ] Web reCAPTCHA Enterprise and Android Play Integrity App Check remain
       enforced for the exact production apps/domains/fingerprints.
 - [ ] `VITE_ANDROID_EXTERNAL_STRIPE_CHECKOUT_ENABLED` matches recorded Play
