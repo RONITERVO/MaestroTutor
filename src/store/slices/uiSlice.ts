@@ -26,6 +26,7 @@ import {
   buildToken,
   getTokenSubtype,
   isReengagementToken,
+  isSilentObserverCompatibleActivityToken,
   isSilentObserverActivityToken,
   UI_TOKEN_DISPLAY,
 } from '../../core/config/activityTokens';
@@ -164,6 +165,11 @@ export const selectBlocksSilentObserver = (state: { activityTokens: Set<string> 
   [...state.activityTokens].some(token => {
     if (isReengagementToken(token)) return false;
     if (isSilentObserverActivityToken(token)) return false;
+    // Live turn completion starts reply-suggestion post-processing as soon as
+    // all provider audio bytes are decoded. Device playback can still be
+    // draining at that point, so this background token must not tear down the
+    // observer and discard the remaining audible speech.
+    if (isSilentObserverCompatibleActivityToken(token)) return false;
     return true;
   });
 

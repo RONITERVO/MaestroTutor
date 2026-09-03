@@ -98,6 +98,10 @@ export const isSilentObserverActivityToken = (token: string): boolean =>
   || token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_CONNECTING)
   || token === buildToken(TOKEN_CATEGORY.LIVE, TOKEN_SUBTYPE.OBSERVER_SESSION);
 
+/** Background work that may run while the passive observer drains or listens. */
+export const isSilentObserverCompatibleActivityToken = (token: string): boolean =>
+  token === buildToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS);
+
 // -----------------------------------------------------------------------------
 // DISPLAY CONFIGURATION
 // -----------------------------------------------------------------------------
