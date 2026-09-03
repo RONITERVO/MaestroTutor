@@ -85,6 +85,15 @@ contains at least 80% of the expected words (configurable with
 `minTranscriptWordRecall`). Punctuation and common contraction differences are
 normalized, so this verifies what Live heard without asserting exact model output.
 
+Protocol 1.4 adds real-time and browser-handoff evidence. `speech.transcribe` and
+`live.observer.turn` now start paced capture before the Live transport, retain all
+PCM produced while local speech recognition and the provider connection are in
+flight, and transfer it through the same lossless handoff primitive used by the
+browser. With `pace:true`, the harness also drains a 24 kHz playback clock for the
+model response before returning. `realtimeEvidence.passed` is therefore required;
+receiving a transcript or audio bytes alone is not a timing pass. See
+[`LIVE_OBSERVER_AUDIO_RELIABILITY.md`](./LIVE_OBSERVER_AUDIO_RELIABILITY.md).
+
 AI output is asserted by invariant rather than exact wording. Release checks verify
 the route and model used, ordered state transitions, message roles, non-empty visible
 output, media metadata, persistence, final accounting events and credit-ledger
@@ -230,6 +239,13 @@ for the video variants. A passing result includes `transcriptEvidence.passed`,
 non-zero model audio, audio hashes and (for video) a sent-frame count. Live result
 messages omit persisted inline WAV/JPEG base64 and instead report character counts
 under `omittedInlineData`, keeping JSON-RPC and CI logs bounded.
+
+For `speech.transcribe` and `live.observer.turn`, a paced result must additionally
+contain `realtimeEvidence.passed:true`, `timing.uiSpeechHandoff:true`, a non-zero
+`timing.connectionHandoffSamples`, input elapsed time close to the source duration,
+and model playback elapsed time at least as long as the 24 kHz audio duration. Put
+distinctive words at the end of `expectedTranscript`; a prefix-only expectation
+cannot detect the original suffix-loss regression.
 
 Named profiles resolve below `%LOCALAPPDATA%\MaestroTutor\headless` on Windows and
 `~/.maestrotutor/headless` elsewhere, unless `MAESTRO_HEADLESS_HOME` is set. Names

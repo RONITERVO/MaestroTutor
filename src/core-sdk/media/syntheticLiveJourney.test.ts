@@ -10,6 +10,102 @@ import { runSyntheticLiveJourney } from './syntheticLiveJourney';
 import { LIVE_OPEN_TRIGGER } from '../../../shared/liveOpenReason';
 
 describe('synthetic Live journey', () => {
+  it('captures through a delayed UI handoff and drains model audio at playback pace', async () => {
+    const sent: any[] = [];
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    let finishConnect: ((session: any) => void) | undefined;
+    const modelPcmBase64 = btoa(String.fromCharCode(...new Uint8Array(4_800)));
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        sent.push(message);
+        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: 'the final words are preserved' },
+            outputTranscription: { text: 'I heard the final words.' },
+            modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: modelPcmBase64 } }] },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn((request: any) => {
+          callbacks = request.callbacks;
+          return new Promise<any>(resolve => { finishConnect = resolve; });
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    let now = 1_000;
+    const sleeps: number[] = [];
+    const runtime = createCoreRuntime({
+      clock: {
+        now: () => now,
+        sleep: async (ms) => {
+          sleeps.push(ms);
+          now += ms;
+        },
+        setInterval: () => 0,
+        clearInterval: () => undefined,
+      },
+    });
+    const pcm = new Int16Array(32_000).fill(7_000);
+    const journey = runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm, sampleRate: 16_000, pace: true, runtime }),
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+      simulateUiSpeechHandoff: true,
+      requireRealtimeInputPacing: true,
+      playModelAudioRealtime: true,
+    }, { runtime });
+
+    await vi.waitFor(() => expect(ai.live.connect).toHaveBeenCalledOnce());
+    expect(sent).toHaveLength(0);
+    finishConnect?.(session);
+    const result = await journey;
+
+    expect(result.inputTranscript).toContain('final words');
+    expect(result.sentSamples).toBe(pcm.length);
+    expect(result.timing.uiSpeechHandoff).toBe(true);
+    expect(result.timing.connectionHandoffSamples).toBeGreaterThanOrEqual(19_200);
+    expect(result.timing.inputCaptureElapsedMs).toBeGreaterThanOrEqual(1_900);
+    expect(result.timing.modelPlaybackRealtime).toBe(true);
+    expect(result.timing.modelAudioDurationMs).toBe(100);
+    expect(result.timing.modelPlaybackElapsedMs).toBe(100);
+    expect(sleeps.some(ms => ms === 100)).toBe(true);
+    expect(result.realtimeEvidence).toEqual({
+      required: true,
+      inputPacingPassed: true,
+      modelPlaybackPassed: true,
+      uiSpeechHandoffPassed: true,
+      passed: true,
+    });
+  });
+
+  it('does not open Live when the UI-style pre-connect capture never confirms speech', async () => {
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    const silence = new Int16Array(16_000);
+
+    await expect(runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm: silence, sampleRate: 16_000, pace: false }),
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+      simulateUiSpeechHandoff: true,
+    })).rejects.toThrow('ended before sustained speech was confirmed');
+    expect(ai.live.connect).not.toHaveBeenCalled();
+  });
+
   it('routes PCM through capture, packetizer, speech gate and the real Live client contract', async () => {
     const sent: any[] = [];
     let callbacks: Record<string, (...args: any[]) => void> = {};

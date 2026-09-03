@@ -113,8 +113,15 @@ export const runHeadlessLiveTurn = async (
     model: input.mode === 'stt' ? getGeminiModels().audio.stt : getGeminiModels().audio.conversation,
     thinkingMode: input.mode === 'stt' ? 'minimal' : 'conversation',
     voiceName: client.state.settings.tts?.voiceName || 'Kore',
-    gateInputOnSpeech: input.mode === 'observer',
+    gateInputOnSpeech: input.mode !== 'conversation',
     semanticSpeech: true,
+    // STT and the silent observer start with a browser-local Whisper capture.
+    // Reproduce that ownership transition instead of opening Live first.
+    simulateUiSpeechHandoff: input.mode !== 'conversation',
+    requireRealtimeInputPacing: input.pace === true,
+    // A paced release check must finish the same 24 kHz playback timeline the
+    // user hears, rather than passing as soon as bytes reach the client.
+    playModelAudioRealtime: input.pace === true,
     timeoutMs: input.timeoutMs,
     includeModelAudio: true,
     videoFrames: visual ? [{ dataBase64: visual.dataBase64, mimeType: visual.mimeType }] : undefined,

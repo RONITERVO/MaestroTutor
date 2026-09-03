@@ -16,7 +16,7 @@ import {
   getLiveConversationThinkingConfig,
   getLiveMinimalThinkingConfig,
 } from './liveModelCompatibility';
-import { PcmCaptureRouter, type PcmInputSource } from './pcmInput';
+import { PcmCaptureHandoff, PcmCaptureRouter, type PcmInputSource } from './pcmInput';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
 import {
   OBSERVER_SPEECH_PREROLL_MS,
@@ -53,6 +53,12 @@ export interface SyntheticLiveJourneyInput {
   semanticSpeech?: boolean;
   timeoutMs?: number;
   includeModelAudio?: boolean;
+  /** Begin capture before Live connects, matching browser Whisper/STT ownership. */
+  simulateUiSpeechHandoff?: boolean;
+  /** Fail unless input capture elapsed at real microphone pace. */
+  requireRealtimeInputPacing?: boolean;
+  /** Pace the model's 24 kHz PCM through a real-time headless playback sink. */
+  playModelAudioRealtime?: boolean;
   videoFrames?: Array<{ dataBase64: string; mimeType?: string }>;
   thinkingMode?: 'minimal' | 'conversation';
   voiceName?: string;
@@ -73,6 +79,12 @@ export const runSyntheticLiveJourney = async (
   const gate = gateEnabled ? new SpeechGate({ requireConfirmation: true }) : null;
   const speechActivity = gateEnabled ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE }) : null;
   const semanticSpeech = input.semanticSpeech ?? true;
+  const simulateUiSpeechHandoff = input.simulateUiSpeechHandoff === true;
+  const playModelAudioRealtime = input.playModelAudioRealtime === true;
+  const requireRealtimeInputPacing = input.requireRealtimeInputPacing === true;
+  if (simulateUiSpeechHandoff && (!gateEnabled || !semanticSpeech)) {
+    throw new Error('UI speech handoff requires the semantic speech gate.');
+  }
   const heldPackets: Int16Array[] = [];
   const sentPackets: Int16Array[] = [];
   const modelAudioChunks: string[] = [];
@@ -87,6 +99,17 @@ export const runSyntheticLiveJourney = async (
   let gatedPackets = 0;
   let streamEnds = 0;
   let audioSentSinceLastStreamEnd = false;
+  let inputCaptureStartedAt: number | null = null;
+  let inputCaptureEndedAt: number | null = null;
+  let localTriggerAt: number | null = null;
+  let providerConnectStartedAt: number | null = null;
+  let providerConnectedAt: number | null = null;
+  let connectionHandoffPackets = 0;
+  let connectionHandoffSamples = 0;
+  let modelPlaybackQueue: Promise<void> = Promise.resolve();
+  let modelPlaybackStartedAt: number | null = null;
+  let modelPlaybackCompletedAt: number | null = null;
+  let modelPlaybackDrainWaitMs = 0;
   let resolved = false;
   let resolveTurn!: () => void;
   let rejectTurn!: (error: Error) => void;
@@ -95,13 +118,67 @@ export const runSyntheticLiveJourney = async (
     rejectTurn = reject;
   });
 
+  const enqueueModelPlayback = (samples: number) => {
+    if (!playModelAudioRealtime || samples <= 0) return;
+    modelPlaybackQueue = modelPlaybackQueue.then(async () => {
+      modelPlaybackStartedAt ??= runtime.clock.now();
+      await runtime.clock.sleep(samples / 24_000 * 1_000);
+      modelPlaybackCompletedAt = runtime.clock.now();
+    });
+  };
+
+  let router: PcmCaptureRouter | null = null;
+  let sourceRun: Promise<void> | null = null;
+  let uiCaptureHandoff: PcmCaptureHandoff | null = null;
+
+  if (simulateUiSpeechHandoff) {
+    uiCaptureHandoff = new PcmCaptureHandoff();
+    const triggerActivity = new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE });
+    let triggerResolved = false;
+    let resolveTrigger!: () => void;
+    const triggerReady = new Promise<void>(resolve => { resolveTrigger = resolve; });
+    let triggerNow = runtime.clock.now();
+    inputCaptureStartedAt = triggerNow;
+    router = new PcmCaptureRouter({
+      runtime,
+      operationId,
+      sink: frame => {
+        uiCaptureHandoff!.push(frame.pcm);
+        if (triggerResolved) return;
+        triggerNow += frame.pcm.length / INPUT_SAMPLE_RATE * 1_000;
+        const active = isSpeechLike(measureEnergy(frame.pcm), DEFAULT_SPEECH_GATE);
+        if (triggerActivity.observe(frame.pcm.length, active, triggerNow).hasMinimumSpeech) {
+          triggerResolved = true;
+          localTriggerAt = runtime.clock.now();
+          runtime.events.emit({
+            operationId,
+            journey: 'live',
+            phase: 'speech.local-trigger',
+            data: { capturedSamples: Math.round((triggerNow - inputCaptureStartedAt!) * INPUT_SAMPLE_RATE / 1_000) },
+          });
+          resolveTrigger();
+        }
+      },
+    });
+    sourceRun = router.attach(input.source);
+    await Promise.race([
+      triggerReady,
+      sourceRun.then(() => {
+        if (!triggerResolved) throw new Error('Synthetic UI flow ended before sustained speech was confirmed.');
+      }),
+    ]);
+  }
+
   runtime.events.emit({
     operationId,
     journey: 'live',
     phase: 'session.connecting',
     data: { model, gateInputOnSpeech: gateEnabled, source: input.source.kind },
   });
-  const session = await ai.live.connect({
+  providerConnectStartedAt = runtime.clock.now();
+  let session: Awaited<ReturnType<CoreGeminiClient['live']['connect']>>;
+  try {
+    session = await ai.live.connect({
     model,
     liveOpenReason: createLiveOpenReason(input.liveOpenTrigger, { requestId: operationId }),
     config: {
@@ -149,6 +226,7 @@ export const runSyntheticLiveJourney = async (
               const byteLength = Math.floor(globalThis.atob(data).length / 2) * 2;
               const samples = byteLength / 2;
               modelAudioSampleCount += samples;
+              enqueueModelPlayback(samples);
               runtime.events.emit({
                 operationId, journey: 'live', phase: 'audio.output-chunk',
                 data: { samples, totalSamples: modelAudioSampleCount },
@@ -172,7 +250,12 @@ export const runSyntheticLiveJourney = async (
         rejectTurn(new Error('Live session closed before turn completion.'));
       },
     },
-  });
+    });
+    providerConnectedAt = runtime.clock.now();
+  } catch (error) {
+    await router?.stop();
+    throw error;
+  }
 
   const sendVideoFrames = () => {
     if (videoFramesSent) return;
@@ -281,14 +364,30 @@ export const runSyntheticLiveJourney = async (
       }
     },
   });
-  const router = new PcmCaptureRouter({
+  router ??= new PcmCaptureRouter({
     runtime,
     operationId,
     sink: frame => packetizer.push(frame.pcm),
   });
 
   try {
-    await router.attach(input.source);
+    if (uiCaptureHandoff && sourceRun) {
+      gate!.openFromConfirmedTrigger(logicalNow);
+      const handoff = uiCaptureHandoff.transferTo(pcm => packetizer.push(pcm));
+      connectionHandoffPackets = handoff.bufferedPackets;
+      connectionHandoffSamples = handoff.bufferedSamples;
+      runtime.events.emit({
+        operationId,
+        journey: 'live',
+        phase: 'speech.capture-handoff',
+        data: { ...handoff },
+      });
+      await sourceRun;
+    } else {
+      inputCaptureStartedAt = runtime.clock.now();
+      await router.attach(input.source);
+    }
+    inputCaptureEndedAt = runtime.clock.now();
     await packetizer.flushPending();
     endAudioStream('source-ended');
     const timeoutMs = Math.max(1_000, input.timeoutMs ?? 45_000);
@@ -301,11 +400,44 @@ export const runSyntheticLiveJourney = async (
     ]).finally(() => {
       if (timeoutId) globalThis.clearTimeout(timeoutId);
     });
+    if (playModelAudioRealtime) {
+      const drainStartedAt = runtime.clock.now();
+      await modelPlaybackQueue;
+      modelPlaybackDrainWaitMs = Math.max(0, runtime.clock.now() - drainStartedAt);
+    }
     if (!outputTranscript.trim() && modelAudioChunks.length === 0) {
       throw new Error('Live turn completed without model output.');
     }
     const packetStats = packetizer.getStats();
     const sentAudio = mergeInt16Arrays(sentPackets);
+    const inputAudioDurationMs = packetStats.totalInputSamples / INPUT_SAMPLE_RATE * 1_000;
+    const inputCaptureElapsedMs = inputCaptureStartedAt === null || inputCaptureEndedAt === null
+      ? null
+      : Math.max(0, inputCaptureEndedAt - inputCaptureStartedAt);
+    const modelAudioDurationMs = modelAudioSampleCount / 24_000 * 1_000;
+    const modelPlaybackElapsedMs = modelPlaybackStartedAt === null || modelPlaybackCompletedAt === null
+      ? 0
+      : Math.max(0, modelPlaybackCompletedAt - modelPlaybackStartedAt);
+    const inputPacingPassed = !requireRealtimeInputPacing || (
+      inputCaptureElapsedMs !== null
+      && inputCaptureElapsedMs >= inputAudioDurationMs * 0.9
+      && inputCaptureElapsedMs <= inputAudioDurationMs * 1.1 + 250
+    );
+    const modelPlaybackPassed = !playModelAudioRealtime || (
+      modelAudioSampleCount > 0
+      && modelPlaybackElapsedMs >= modelAudioDurationMs * 0.9
+    );
+    const uiSpeechHandoffPassed = !simulateUiSpeechHandoff || connectionHandoffSamples > 0;
+    const realtimeEvidence = {
+      required: requireRealtimeInputPacing || playModelAudioRealtime || simulateUiSpeechHandoff,
+      inputPacingPassed,
+      modelPlaybackPassed,
+      uiSpeechHandoffPassed,
+      passed: inputPacingPassed && modelPlaybackPassed && uiSpeechHandoffPassed,
+    };
+    if (realtimeEvidence.required && !realtimeEvidence.passed) {
+      throw new Error(`Live real-time evidence failed: ${JSON.stringify(realtimeEvidence)}`);
+    }
     const result = {
       operationId,
       inputTranscript: inputTranscript.trim(),
@@ -321,6 +453,26 @@ export const runSyntheticLiveJourney = async (
       ...(input.includeModelAudio ? { modelAudioChunksBase64: modelAudioChunks } : {}),
       gate: { enabled: gateEnabled, semanticSpeech, gatedPackets, streamEnds },
       packetizer: packetStats,
+      realtimeEvidence,
+      timing: {
+        inputAudioDurationMs,
+        inputCaptureElapsedMs,
+        uiSpeechHandoff: simulateUiSpeechHandoff,
+        localTriggerAt,
+        providerConnectStartedAt,
+        providerConnectedAt,
+        providerConnectMs: providerConnectStartedAt === null || providerConnectedAt === null
+          ? null
+          : Math.max(0, providerConnectedAt - providerConnectStartedAt),
+        connectionHandoffPackets,
+        connectionHandoffSamples,
+        modelAudioDurationMs,
+        modelPlaybackRealtime: playModelAudioRealtime,
+        modelPlaybackStartedAt,
+        modelPlaybackCompletedAt,
+        modelPlaybackElapsedMs,
+        modelPlaybackDrainWaitMs,
+      },
     };
     runtime.events.emit({
       operationId,

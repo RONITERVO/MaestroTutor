@@ -11,7 +11,9 @@ BYOK mode uses the Google Gemini SDK and Files API directly, as the BYOK UI does
 
 Only device or browser boundaries differ:
 
-- the microphone is replaced after capture with deterministic 16 kHz PCM16 mono;
+- the microphone device is replaced with deterministic 16 kHz PCM16 mono, while
+  observer/STT capture begins before Live connects and uses the shared lossless
+  capture-handoff contract;
 - the camera is replaced with a real, decodable JPEG frame;
 - local attachment selection is replaced with deterministic valid files;
 - browser video-frame capture is replaced with a deterministic JPEG keyframe,
@@ -31,7 +33,7 @@ persisted state transition is mocked in a provider run.
 | --- | --- | --- |
 | Text-only chat | `runTutorTextTurn`, strict response parser, history persistence | `chat.turn`; `streaming.visiblyStreamed` |
 | Chat with attachments | shared attachment strategy and upload planner, Files API, normal tutor turn | `chat.attachment.turn` with `text`, `image`, `audio`, `pdf`, `svg`, `video`, or `office` |
-| Speech to text | shared Live STT instruction, PCM router and packetizer | `speech.transcribe`; expected-word recall, input transcript deltas and input-audio hash |
+| Speech to text | shared Live STT instruction, PCM handoff, router and packetizer | `speech.transcribe`; expected-word recall, pre-connect handoff and real-time pacing evidence, input transcript deltas and input-audio hash |
 | Streamed text response | shared streaming generator and Core delta events | every first-lesson chat turn requires a text delta |
 | Google Search response | normal tutor tool configuration | search turn requires provider `searchQueryCount > 0` |
 | Suggestion creator stream | `runReplySuggestions` and the same assistant-message context | `suggestions.process`; suggestions plus visible text deltas |
@@ -40,7 +42,7 @@ persisted state transition is mocked in a provider run.
 | Live audio conversation | shared context, Live model compatibility, PCM stream and audio response | `live.conversation.turn`; expected-word recall, input/output transcript deltas, audio samples and SHA-256 values |
 | Live audio plus visual | same Live path with a real JPEG frame at the video stream boundary | `includeVisual:true`; sent-frame count plus transcript/audio evidence |
 | Post-Live aftersteps | same suggestion creator and dispatcher as chat | `runSuggestionAftersteps:true` or `journey.firstLesson` |
-| Silent observer audio | shared `SpeechGate`, retained PCM preroll and semantic confirmation | `live.observer.turn`; expected-word recall, one completed audio boundary, gate enabled, no video frames, transcript/audio evidence |
+| Silent observer audio | shared `SpeechGate`, retained PCM preroll, lossless pre-connect handoff and semantic confirmation | `live.observer.turn`; expected-word recall (including suffix), one completed audio boundary, real-time input/output playback evidence, gate enabled, no video frames, transcript/audio hashes |
 | Silent observer plus visual | same observer path plus real JPEG stream injection | `includeVisual:true`; gate and sent-frame evidence |
 | Translation | the same `translateText` request with an injected managed/BYOK client | `translation.create`; translated text, optionally attached to suggestions |
 | Empty-input re-engagement | the UI-equivalent `"..."` provider prompt without a user bubble | `chat.reengage`; no user bubble and at least one visible streamed text delta |
@@ -101,6 +103,9 @@ The bundled first-lesson audio repeats the known word `Play` long enough to clea
 the sustained-speech gate and now asserts that Live actually transcribed that word.
 A custom `pcmBase64` is accepted only with `expectedTranscript`; this prevents a
 green response/audio check from hiding clipped or misunderstood user speech.
+Paced observer/STT checks additionally fail unless the input duration tracks wall
+time, PCM crossed the pre-connect handoff, and model audio completed a real-time
+24 kHz playback drain.
 
 ## Managed provider proof
 

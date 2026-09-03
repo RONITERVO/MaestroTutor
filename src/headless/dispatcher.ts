@@ -339,6 +339,9 @@ export const dispatchHeadlessMethod = async (
         model: typeof input.model === 'string' ? input.model : undefined,
         gateInputOnSpeech: typeof input.gateInputOnSpeech === 'boolean' ? input.gateInputOnSpeech : undefined,
         semanticSpeech: typeof input.semanticSpeech === 'boolean' ? input.semanticSpeech : undefined,
+        simulateUiSpeechHandoff: input.simulateUiSpeechHandoff === true,
+        requireRealtimeInputPacing: input.requireRealtimeInputPacing === true,
+        playModelAudioRealtime: input.playModelAudioRealtime === true,
         timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
         includeModelAudio: input.includeModelAudio === true,
       }, { runtime: client.runtime });

@@ -12,6 +12,44 @@ export interface PcmInputFrame {
 
 export type PcmInputSink = (frame: PcmInputFrame) => void | Promise<void>;
 
+export interface PcmCaptureHandoffStats {
+  bufferedPackets: number;
+  bufferedSamples: number;
+}
+
+/**
+ * Lossless, single-use bridge between an early capture owner and its final
+ * consumer. Capture may begin before a provider socket exists; transfer drains
+ * the queued prefix in order and then routes future packets directly.
+ */
+export class PcmCaptureHandoff {
+  private bufferedPackets: Int16Array[] = [];
+  private sink: ((pcm: Int16Array) => void) | null = null;
+  private transferred = false;
+
+  push(pcm: Int16Array): void {
+    if (!(pcm instanceof Int16Array) || pcm.length === 0) return;
+    if (this.sink) {
+      this.sink(pcm);
+      return;
+    }
+    this.bufferedPackets.push(pcm.slice());
+  }
+
+  transferTo(sink: (pcm: Int16Array) => void): PcmCaptureHandoffStats {
+    if (this.transferred) throw new Error('PCM capture has already been transferred.');
+    this.transferred = true;
+    this.sink = sink;
+    const queued = this.bufferedPackets;
+    this.bufferedPackets = [];
+    for (const packet of queued) sink(packet);
+    return {
+      bufferedPackets: queued.length,
+      bufferedSamples: queued.reduce((total, packet) => total + packet.length, 0),
+    };
+  }
+}
+
 export interface PcmInputSource {
   readonly sampleRate: number;
   readonly kind: 'device' | 'synthetic';
@@ -85,12 +123,22 @@ export const createSyntheticPcmSource = (options: {
     kind: 'synthetic',
     async start(sink) {
       stopped = false;
+      const startedAt = runtime.clock.now();
+      let scheduledSamples = 0;
       for (let offset = 0; offset < options.pcm.length && !stopped; offset += samplesPerChunk) {
         const pcm = options.pcm.slice(offset, Math.min(options.pcm.length, offset + samplesPerChunk));
-        await sink({ pcm, sampleRate: options.sampleRate, source: 'synthetic' });
-        if (options.pace !== false && offset + samplesPerChunk < options.pcm.length) {
-          await runtime.clock.sleep((pcm.length / options.sampleRate) * 1_000);
+        scheduledSamples += pcm.length;
+        if (options.pace !== false) {
+          // A microphone is driven by its hardware clock; callback/logging work
+          // does not add a fresh frame-duration delay every iteration. Pace to
+          // absolute sample deadlines so processing overhead cannot accumulate
+          // into a synthetic user who speaks progressively slower than reality.
+          const dueAt = startedAt + scheduledSamples / options.sampleRate * 1_000;
+          const delayMs = dueAt - runtime.clock.now();
+          if (delayMs > 0) await runtime.clock.sleep(delayMs);
         }
+        if (stopped) break;
+        await sink({ pcm, sampleRate: options.sampleRate, source: 'synthetic' });
       }
     },
     async stop() {

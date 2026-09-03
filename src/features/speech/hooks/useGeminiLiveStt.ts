@@ -12,12 +12,11 @@ import {
   SpeechGate,
   measureEnergy,
 } from '../../../../shared/audio/speechGate';
-import { FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME } from '../worklets';
 import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
-import { type CaptureWorkletMessage, flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import { flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import {
   RealtimePcmPacketizer,
   type RealtimePcmPacketizerStats,
@@ -104,6 +103,9 @@ interface SttAudioTelemetry {
   transcriptLinkedSamples: number;
   gatedPackets: number;
   audioStreamEnds: number;
+  speechTriggerSamples: number;
+  connectionHandoffPackets: number;
+  connectionHandoffSamples: number;
   whisperChecks: number;
   whisperAccepted: number;
   whisperRejected: number;
@@ -116,6 +118,9 @@ const createEmptySttAudioTelemetry = (): SttAudioTelemetry => ({
   transcriptLinkedSamples: 0,
   gatedPackets: 0,
   audioStreamEnds: 0,
+  speechTriggerSamples: 0,
+  connectionHandoffPackets: 0,
+  connectionHandoffSamples: 0,
   whisperChecks: 0,
   whisperAccepted: 0,
   whisperRejected: 0,
@@ -432,12 +437,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     }, TRANSCRIPT_UPDATE_INTERVAL_MS);
   }, [flushTranscriptState]);
 
-  // Load the AudioWorklet module (only needs to happen once per AudioContext)
-  const ensureSttWorklet = useCallback(async (ctx: AudioContext) => {
-    if (!ctx.audioWorklet) throw new Error("AudioWorklet not supported");
-    await ctx.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
-  }, []);
-
   const start = useCallback(async (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
     // If cleanup is in progress, wait for it to complete
     while (isCleaningUpRef.current) {
@@ -497,28 +496,21 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       });
       if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
       const stream = localSpeechTrigger.microphoneStream;
+      streamRef.current = stream;
+      audioContextRef.current = localSpeechTrigger.capture.audioContext;
+      workletNodeRef.current = localSpeechTrigger.capture.workletNode;
+      audioTelemetryRef.current.speechTriggerSamples = localSpeechTrigger.pcm.length;
       if (currentSessionIdRef.current !== sessionId) {
-        stream.getTracks().forEach(t => t.stop());
+        await localSpeechTrigger.capture.close();
+        if (streamRef.current === stream) streamRef.current = null;
+        if (audioContextRef.current === localSpeechTrigger.capture.audioContext) audioContextRef.current = null;
+        if (workletNodeRef.current === localSpeechTrigger.capture.workletNode) workletNodeRef.current = null;
         return;
       }
-      streamRef.current = stream;
       localInputPreviewRef.current = localSpeechTrigger.transcript;
       scheduleTranscriptStateUpdate(true);
 
-      // --- 2. Initialize Audio Context & Worklet ---
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtx({ sampleRate: INPUT_SAMPLE_RATE });
-      audioContextRef.current = ctx;
-
-      await ensureSttWorklet(ctx);
-
-      if (currentSessionIdRef.current !== sessionId) {
-        stream.getTracks().forEach(t => t.stop());
-        try { ctx.close(); } catch { /* ignore */ }
-        return;
-      }
-
-      // --- 3. Connect to Gemini Live API ---
+      // --- 2. Connect to Gemini Live API while the trigger capture remains live ---
       const opts = (typeof languageOrOptions === 'string' || languageOrOptions === undefined)
         ? { language: languageOrOptions as string | undefined }
         : (languageOrOptions as { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] });
@@ -786,21 +778,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         }
       };
 
-      for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
-        if (
-          currentSessionIdRef.current !== sessionId
-          || speechGateEpochRef.current !== speechGateEpoch
-        ) return;
-        await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
-      }
-      if (currentSessionIdRef.current !== sessionId) {
-        if (sessionRef.current === session) sessionRef.current = null;
-        try { session.close(); } catch { /* ignore */ }
-        return;
-      }
-      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
-      setLocalSpeechTriggerPhase(null);
-
       inputPacketizerRef.current = new RealtimePcmPacketizer({
         sampleRate: INPUT_SAMPLE_RATE,
         packetDurationMs: LIVE_INPUT_PACKET_DURATION_MS,
@@ -1016,25 +993,28 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         },
       });
 
-      // --- 4. Connect Audio Graph ---
-      const source = ctx.createMediaStreamSource(stream);
-      const workletNode = new AudioWorkletNode(ctx, FLOAT_TO_INT16_PROCESSOR_NAME);
-      workletNodeRef.current = workletNode;
-
-      // Handle audio chunks from the worklet with session validation
-      workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
-        // CRITICAL: Check session is still valid before processing audio
-        if (currentSessionIdRef.current !== sessionId) return;
-        
-        const pcm = event.data;
-        if (pcm instanceof Int16Array && pcm.length > 0) {
-          void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
-        }
-      };
-
-      source.connect(workletNode);
-      // Note: We don't connect to destination since we only need the worklet for processing,
-      // not for audible output. The audio graph runs as long as source is connected.
+      // Replay the confirmed prefix and the samples captured during Whisper,
+      // then atomically drain the provider-connection interval into the normal
+      // packetizer. The original worklet continues as the session worklet.
+      for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+        if (
+          currentSessionIdRef.current !== sessionId
+          || speechGateEpochRef.current !== speechGateEpoch
+        ) return;
+        await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+      }
+      if (currentSessionIdRef.current !== sessionId) {
+        if (sessionRef.current === session) sessionRef.current = null;
+        try { session.close(); } catch { /* ignore */ }
+        return;
+      }
+      speechGateRef.current?.openFromConfirmedTrigger(Date.now());
+      const handoff = localSpeechTrigger.capture.transferTo((pcm) => {
+        void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
+      });
+      audioTelemetryRef.current.connectionHandoffPackets = handoff.bufferedPackets;
+      audioTelemetryRef.current.connectionHandoffSamples = handoff.bufferedSamples;
+      setLocalSpeechTriggerPhase(null);
 
     } catch (e: any) {
       // A stop can dispose the codec worker while confirmed pre-roll is being
@@ -1064,7 +1044,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, ensureSttWorklet, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
+  }, [cleanup, stop, ensureCodecWorker, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);

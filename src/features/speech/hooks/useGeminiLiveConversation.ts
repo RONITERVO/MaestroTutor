@@ -201,6 +201,9 @@ interface LiveInputAudioTelemetry {
   encodeErrors: number;
   gatedPackets: number;
   audioStreamEnds: number;
+  speechTriggerSamples: number;
+  connectionHandoffPackets: number;
+  connectionHandoffSamples: number;
   whisperChecks: number;
   whisperAccepted: number;
   whisperRejected: number;
@@ -226,6 +229,9 @@ const createEmptyInputAudioTelemetry = (): LiveInputAudioTelemetry => ({
   encodeErrors: 0,
   gatedPackets: 0,
   audioStreamEnds: 0,
+  speechTriggerSamples: 0,
+  connectionHandoffPackets: 0,
+  connectionHandoffSamples: 0,
   whisperChecks: 0,
   whisperAccepted: 0,
   whisperRejected: 0,
@@ -957,13 +963,14 @@ export function useGeminiLiveConversation(
           onVadActivityChange: active => setVadActivity(active, observerActivity),
         });
         if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
-        if (await abortIfInvalidated()) {
-          localSpeechTrigger.microphoneStream.getTracks().forEach(track => track.stop());
-          return;
-        }
-        // Register the retained stream before any further setup awaits so the
-        // shared cleanup path can always stop it after an error.
+        // Transfer ownership immediately. The same graph keeps capturing while
+        // video, playback and the paid transport are initialized, so words
+        // spoken after Whisper recognizes the prefix cannot fall into a gap.
         microphoneStreamRef.current = localSpeechTrigger.microphoneStream;
+        inputAudioContextRef.current = localSpeechTrigger.capture.audioContext;
+        workletNodeRef.current = localSpeechTrigger.capture.workletNode;
+        inputAudioTelemetryRef.current.speechTriggerSamples = localSpeechTrigger.pcm.length;
+        if (await abortIfInvalidated()) return;
         localInputPreviewRef.current = localSpeechTrigger.transcript;
         emitTurnTranscriptUpdate('pending-user');
       }
@@ -995,21 +1002,25 @@ export function useGeminiLiveConversation(
 
       // Audio Setup
       const AudioContextCtor: typeof AudioContext = (window.AudioContext || (window as any).webkitAudioContext);
-      
-      const inputCtx = new AudioContextCtor({ sampleRate: INPUT_SAMPLE_RATE });
-      inputAudioContextRef.current = inputCtx;
-      
-      // Use a new dedicated stream for audio to avoid conflicts
       const micStream = localSpeechTrigger?.microphoneStream
         || await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
       microphoneStreamRef.current = micStream;
       if (await abortIfInvalidated()) return;
-      
-      const source = inputCtx.createMediaStreamSource(micStream);
-      await ensureCaptureWorklet(inputCtx);
-      if (await abortIfInvalidated()) return;
-      const workletNode = new AudioWorkletNode(inputCtx, FLOAT_TO_INT16_PROCESSOR_NAME, { numberOfInputs: 1, numberOfOutputs: 0 });
-      workletNodeRef.current = workletNode;
+
+      let inputSource: MediaStreamAudioSourceNode | null = null;
+      let workletNode = localSpeechTrigger?.capture.workletNode || null;
+      if (!localSpeechTrigger) {
+        const inputCtx = new AudioContextCtor({ sampleRate: INPUT_SAMPLE_RATE });
+        inputAudioContextRef.current = inputCtx;
+        inputSource = inputCtx.createMediaStreamSource(micStream);
+        await ensureCaptureWorklet(inputCtx);
+        if (await abortIfInvalidated()) return;
+        workletNode = new AudioWorkletNode(inputCtx, FLOAT_TO_INT16_PROCESSOR_NAME, {
+          numberOfInputs: 1,
+          numberOfOutputs: 0,
+        });
+        workletNodeRef.current = workletNode;
+      }
 
       if (playModelAudio) {
         let outputCtx: AudioContext;
@@ -1554,17 +1565,6 @@ export function useGeminiLiveConversation(
         }
       };
 
-      // Consume the confirmed pre-roll exactly once, then start the hangover
-      // clock immediately before normal captured packets begin.
-      if (speechGateRef.current && localSpeechTrigger) {
-        for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
-          await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
-        }
-        if (await abortIfInvalidated()) return;
-        speechGateRef.current.openFromConfirmedTrigger(Date.now());
-        setLocalSpeechTriggerPhase(null);
-      }
-
       inputPacketizerRef.current = new RealtimePcmPacketizer({
         sampleRate: INPUT_SAMPLE_RATE,
         packetDurationMs: LIVE_INPUT_PACKET_DURATION_MS,
@@ -1805,8 +1805,24 @@ export function useGeminiLiveConversation(
         },
       });
 
-      // Audio Streaming Loop (Worklet) with session validation
-      workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
+      // Replay the semantically confirmed prefix plus anything captured while
+      // Whisper was running. Capture remained live throughout the provider
+      // connection and is transferred only after the normal router is ready.
+      if (speechGateRef.current && localSpeechTrigger) {
+        for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+          await encodeAndSend(localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
+        }
+        if (await abortIfInvalidated()) return;
+        speechGateRef.current.openFromConfirmedTrigger(Date.now());
+        const handoff = localSpeechTrigger.capture.transferTo((pcm) => {
+          void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
+        });
+        inputAudioTelemetryRef.current.connectionHandoffPackets = handoff.bufferedPackets;
+        inputAudioTelemetryRef.current.connectionHandoffSamples = handoff.bufferedSamples;
+        setLocalSpeechTriggerPhase(null);
+      } else if (workletNode && inputSource) {
+        // User-started sessions do not have a pre-connect capture to transfer.
+        workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
           // CRITICAL: Check session is still valid before processing audio
           if (currentSessionIdRef.current !== sessionId) return;
           
@@ -1814,8 +1830,9 @@ export function useGeminiLiveConversation(
           if (!(pcm instanceof Int16Array) || !pcm.length) return;
           
           void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
-      };
-      source.connect(workletNode);
+        };
+        inputSource.connect(workletNode);
+      }
 
       if (stream && stream.active) {
         startVideoFrameLoop(sessionId);
