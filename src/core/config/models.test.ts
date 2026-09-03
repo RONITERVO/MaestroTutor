@@ -20,7 +20,7 @@ describe('Gemini model registry', () => {
   it('pins production text traffic to stable model ids', () => {
     expect(defaults.text).toEqual({
       default: 'gemini-3.7-flash',
-      aux: 'gemini-3.5-flash-lite',
+      aux: 'gemini-3.7-flash',
       translation: 'gemini-3.5-flash-lite',
       fallback: 'gemini-3.5-flash-lite',
     });
@@ -47,11 +47,11 @@ describe('Gemini model registry', () => {
     );
   });
 
-  it('uses Gemini 2.5 for TTS and the latest Live model for STT and conversations', () => {
+  it('uses Gemini 2.5 for every Live audio purpose', () => {
     expect(defaults.audio).toEqual({
       tts: 'gemini-2.5-flash-native-audio-preview-12-2025',
-      stt: 'gemini-3.1-flash-live-preview',
-      conversation: 'gemini-3.1-flash-live-preview',
+      stt: 'gemini-2.5-flash-native-audio-preview-12-2025',
+      conversation: 'gemini-2.5-flash-native-audio-preview-12-2025',
     });
   });
 

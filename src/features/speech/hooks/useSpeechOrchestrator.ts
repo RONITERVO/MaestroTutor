@@ -29,6 +29,7 @@ import { selectIsResponsePending } from '../../../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { createSmartRef, createWritableSmartRef } from '../../../shared/utils/smartRef';
 import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
+import type { SttStartOptions } from '../../../core-sdk/media/sttTurnRouting';
 
 export interface UseSpeechOrchestratorConfig {
   upsertMessageTtsCache: (messageId: string, entry: TtsAudioCacheEntry) => void;
@@ -49,7 +50,7 @@ export interface UseSpeechOrchestratorReturn {
   // STT State
   isListening: boolean;
   transcript: string;
-  startListening: (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => void;
+  startListening: (languageOrOptions?: string | SttStartOptions) => void;
   stopListening: () => Promise<void>;
   sttError: string | null;
   isSpeechRecognitionSupported: boolean;
@@ -215,11 +216,15 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
     const replySuggestions = (replySuggestionsRef.current || [])
       .map(s => s?.target || s?.native)
       .filter(Boolean) as string[];
-    return { lastAssistantMessage, replySuggestions };
+    return {
+      lastAssistantMessage,
+      replySuggestions,
+      destination: settingsRef.current.isSuggestionMode ? 'translation' as const : 'message' as const,
+    };
   }, []);
 
   const startListeningWithContext = useCallback(
-    (languageOrOptions?: string | { language?: string; lastAssistantMessage?: string; replySuggestions?: string[] }) => {
+    (languageOrOptions?: string | SttStartOptions) => {
       const context = getSttContext();
       if (typeof languageOrOptions === 'string' || languageOrOptions === undefined) {
         startListening({ language: languageOrOptions, ...context });

@@ -57,12 +57,12 @@ export const MODEL_REGISTRY_URL_STORAGE_KEY = 'maestro_gemini_models_url';
 export const DEFAULT_MODEL_REGISTRY_URL = 'https://chatwithmaestro.com/gemini-models.json';
 const DEFAULT_TEXT_FALLBACK_MODEL = 'gemini-3.5-flash-lite';
 const DEFAULT_TTS_LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
-const DEFAULT_GENERAL_LIVE_MODEL = 'gemini-3.1-flash-live-preview';
+const DEFAULT_GENERAL_LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 
 const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   text: {
     default: 'gemini-3.7-flash',
-    aux: 'gemini-3.5-flash-lite',
+    aux: 'gemini-3.7-flash',
     translation: 'gemini-3.5-flash-lite',
     fallback: DEFAULT_TEXT_FALLBACK_MODEL,
   },

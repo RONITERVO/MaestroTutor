@@ -26,6 +26,7 @@ export * from './media/pcmInput';
 export * from './media/observerSpeechDetection';
 export * from './media/liveSpeechDetection';
 export * from './media/liveModelCompatibility';
+export * from './media/sttTurnRouting';
 export * from './media/liveSessionInstructions';
 export * from './media/triggeredTts';
 export * from './media/syntheticLiveJourney';

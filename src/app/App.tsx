@@ -50,6 +50,7 @@ import { useApiKey } from '../shared/hooks/useApiKey';
 import { useManagedAccess } from '../shared/hooks/useManagedAccess';
 import { logSttFlow, warnSttFlow } from '../shared/utils/sttFlowDebug';
 import { SmallSpinner } from '../shared/ui/SmallSpinner';
+import { resolveSttTurnDestination } from '../core-sdk/media/sttTurnRouting';
 
 /** Delay in ms before restarting STT after language change */
 const STT_RESTART_DELAY_MS = 250;
@@ -301,7 +302,12 @@ const App: React.FC = () => {
       return;
     }
 
-    if (state.settings.isSuggestionMode) {
+    const destination = resolveSttTurnDestination(
+      turn.destination,
+      state.settings.isSuggestionMode,
+    );
+
+    if (destination === 'translation') {
       logSttFlow('app.turnComplete.suggestionMode.start', {
         turnId: turn.turnId,
         textLength: turnText.length,
