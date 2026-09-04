@@ -56,6 +56,7 @@ export interface ManagedUsageLedgerEntry {
 }
 
 export interface ManagedUsageLedgerResponse {
+  nextCursor?: string | null;
   entries: ManagedUsageLedgerEntry[];
 }
 
@@ -74,6 +75,7 @@ export interface ManagedBillingLedgerEntry {
 }
 
 export interface ManagedBillingLedgerResponse {
+  nextCursor?: string | null;
   entries: ManagedBillingLedgerEntry[];
 }
 

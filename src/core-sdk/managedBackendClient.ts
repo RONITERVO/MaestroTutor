@@ -239,11 +239,11 @@ export const createManagedBackendClient = (options: ManagedBackendClientOptions)
       await options.session.update({ billingSummary: response.account.billingSummary, entitlements: response.account.entitlements });
       return response;
     },
-    listUsageLedger: (limit = 50): Promise<ManagedUsageLedgerResponse> => requestManagedJson(
-      `account/usage-ledger?limit=${Math.max(1, Math.min(200, Math.floor(limit)))}`, { method: 'GET' },
+    listUsageLedger: (limit = 50, after?: string): Promise<ManagedUsageLedgerResponse> => requestManagedJson(
+      `account/usage-ledger?limit=${Math.max(1, Math.min(200, Math.floor(limit)))}${after ? `&after=${encodeURIComponent(after)}` : ''}`, { method: 'GET' },
     ),
-    listBillingLedger: (limit = 50): Promise<ManagedBillingLedgerResponse> => requestManagedJson(
-      `account/billing-ledger?limit=${Math.max(1, Math.min(200, Math.floor(limit)))}`, { method: 'GET' },
+    listBillingLedger: (limit = 50, after?: string): Promise<ManagedBillingLedgerResponse> => requestManagedJson(
+      `account/billing-ledger?limit=${Math.max(1, Math.min(200, Math.floor(limit)))}${after ? `&after=${encodeURIComponent(after)}` : ''}`, { method: 'GET' },
     ),
     deleteManagedAccount: (): Promise<BackendDeleteManagedAccountResponse> => requestManagedJson(
       'account/delete', { method: 'POST' },

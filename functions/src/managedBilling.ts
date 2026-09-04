@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { AppUser } from './auth';
+import { FieldPath, type CollectionReference } from 'firebase-admin/firestore';
 import { getReservationTtlMs } from './config';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
@@ -163,21 +164,36 @@ export const getManagedAccountState = async (uid: string, user: AppUser) => {
   return { user, billingSummary, entitlements };
 };
 
-export const listManagedUsageLedger = async (uid: string, limit?: number) => {
-  const snapshot = await managedUsageEventsCollection(uid)
-    .orderBy('createdAt', 'desc')
-    .limit(clampLimit(limit))
-    .get();
-  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+const ledgerPage = async (collection: CollectionReference, limit?: number, after?: string) => {
+  const pageSize = clampLimit(limit);
+  let query = collection.orderBy('createdAt', 'desc').orderBy(FieldPath.documentId(), 'desc');
+  if (after !== undefined) {
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(after)) throw createHttpError(400, 'Invalid ledger cursor.');
+    // Resolve within this authenticated user's collection, never a client-supplied path.
+    const cursor = await collection.doc(after).get();
+    if (!cursor.exists) throw createHttpError(400, 'Ledger cursor no longer exists. Refresh the ledger.');
+    query = query.startAfter(cursor);
+  }
+  const snapshot = await query.limit(pageSize + 1).get();
+  const docs = snapshot.docs.slice(0, pageSize);
+  return {
+    entries: docs.map(doc => ({ ...doc.data(), id: doc.id })),
+    nextCursor: snapshot.size > pageSize ? docs[docs.length - 1].id : null,
+  };
 };
 
-export const listManagedBillingLedger = async (uid: string, limit?: number) => {
-  const snapshot = await managedBillingEventsCollection(uid)
-    .orderBy('createdAt', 'desc')
-    .limit(clampLimit(limit))
-    .get();
-  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-};
+export const listManagedUsageLedgerPage = (uid: string, limit?: number, after?: string) => (
+  ledgerPage(managedUsageEventsCollection(uid), limit, after)
+);
+export const listManagedBillingLedgerPage = (uid: string, limit?: number, after?: string) => (
+  ledgerPage(managedBillingEventsCollection(uid), limit, after)
+);
+export const listManagedUsageLedger = async (uid: string, limit?: number) => (
+  (await listManagedUsageLedgerPage(uid, limit)).entries
+);
+export const listManagedBillingLedger = async (uid: string, limit?: number) => (
+  (await listManagedBillingLedgerPage(uid, limit)).entries
+);
 
 export const reserveManagedCredits = async (params: {
   uid: string;

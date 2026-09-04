@@ -1,6 +1,22 @@
 {
   "indexes": [
     {
+      "collectionGroup": "liveGatewayTickets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "liveGatewaySessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "deadlineAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "reservations",
       "queryScope": "COLLECTION",
       "fields": [
@@ -26,6 +42,13 @@
     }
   ],
   "fieldOverrides": [
+    { "collectionGroup": "usageEvents", "fieldPath": "createdAt", "indexes": [
+      { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" },
+      { "order": "ASCENDING", "queryScope": "COLLECTION" },
+      { "order": "DESCENDING", "queryScope": "COLLECTION" }
+    ] },
+    { "collectionGroup": "liveGatewayTickets", "fieldPath": "config", "indexes": [] },
+    { "collectionGroup": "liveGatewaySessions", "fieldPath": "checkpoint", "indexes": [] },
     { "collectionGroup": "reservations", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
     { "collectionGroup": "files", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },
     { "collectionGroup": "liveLeases", "fieldPath": "purgeAt", "ttl": true, "indexes": [] },

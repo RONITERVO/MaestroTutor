@@ -88,6 +88,16 @@ const createFixture = () => {
 };
 
 describe('managed account controller', () => {
+  it('continues each ledger with its own cursor and preserves the next cursors', async () => {
+    const { controller, backend } = createFixture();
+    backend.listUsageLedger.mockResolvedValue({ entries: [], nextCursor: 'usage-next' });
+    backend.listBillingLedger.mockResolvedValue({ entries: [], nextCursor: null });
+    const result = await controller.listLedgers(10, 'page-2', { usageAfter: 'usage-last', billingAfter: 'billing-last' });
+    expect(backend.listUsageLedger).toHaveBeenCalledWith(10, 'usage-last');
+    expect(backend.listBillingLedger).toHaveBeenCalledWith(10, 'billing-last');
+    expect(result.usage.nextCursor).toBe('usage-next');
+    expect(result.billing.nextCursor).toBeNull();
+  });
   it('uses the shared sign-in, account-refresh and event path', async () => {
     const fixture = createFixture();
     await expect(fixture.controller.signIn('sign-in-op')).resolves.toEqual(summary());

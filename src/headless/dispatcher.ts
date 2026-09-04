@@ -458,7 +458,10 @@ export const dispatchHeadlessMethod = async (
     case 'account.summary':
       return client.account.refreshAccount(typeof input.operationId === 'string' ? input.operationId : undefined);
     case 'account.ledgers':
-      return client.account.listLedgers(optionalNumber(input, 'limit', 50));
+      return client.account.listLedgers(optionalNumber(input, 'limit', 50), undefined, {
+        usageAfter: typeof input.usageAfter === 'string' ? input.usageAfter : undefined,
+        billingAfter: typeof input.billingAfter === 'string' ? input.billingAfter : undefined,
+      });
     case 'account.delete': {
       const actualUserId = await client.credentials.getUserId();
       if (!actualUserId) throw new Error('Unable to resolve the authenticated Firebase user ID.');

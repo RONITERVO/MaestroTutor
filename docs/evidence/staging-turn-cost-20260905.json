@@ -1,0 +1,62 @@
+{
+  "project": "chatwithmaestro-staging",
+  "start": "2026-09-04T00:00:00Z",
+  "end": "2026-09-04T21:00:00Z",
+  "model": {
+    "operations": 301,
+    "completedLiveTurns": 74,
+    "providerUsd": 3.458808999999998,
+    "liveProviderUsd": 0.6019059999999999,
+    "incompleteLiveOperations": 34
+  },
+  "liveProviderUsdPerCompletedTurn": 0.008133864864864865,
+  "infrastructure": {
+    "firestoreDocumentReads": {
+      "total": 222131,
+      "samples": 3777,
+      "allocatedPerCompletedLiveTurn": 3001.7702702702704
+    },
+    "firestoreDocumentWrites": {
+      "total": 4206,
+      "samples": 740,
+      "allocatedPerCompletedLiveTurn": 56.83783783783784
+    },
+    "firestoreDocumentDeletes": {
+      "total": null,
+      "samples": 0,
+      "allocatedPerCompletedLiveTurn": null
+    },
+    "gatewayBillableInstanceSeconds": {
+      "total": 2932.715528340602,
+      "samples": 256,
+      "allocatedPerCompletedLiveTurn": 39.63129092352165
+    },
+    "gatewayCpuSeconds": {
+      "total": 2989.143010456687,
+      "samples": 259,
+      "allocatedPerCompletedLiveTurn": 40.39382446563091
+    },
+    "gatewayMemoryGiBSeconds": {
+      "total": 1468.0733323309798,
+      "samples": 259,
+      "allocatedPerCompletedLiveTurn": 19.838828815283513
+    },
+    "gatewayReceivedBytes": {
+      "total": 99420262,
+      "samples": 768,
+      "allocatedPerCompletedLiveTurn": 1343517.054054054
+    },
+    "gatewaySentBytes": {
+      "total": 134618875,
+      "samples": 768,
+      "allocatedPerCompletedLiveTurn": 1819173.9864864864
+    }
+  },
+  "interpretation": [
+    "Provider USD is the application pricing estimate, not an invoice reconciliation.",
+    "Infrastructure allocation includes idle, failed and other work in the window. Firestore covers the entire default database.",
+    "Null means no available samples or no completed turns; it never means free.",
+    "Network bytes are measured traffic, not billable egress. Apply region/destination SKUs using Cloud Billing export.",
+    "Run after monitoring ingestion has settled. This read-only report itself consumes Firestore reads."
+  ]
+}

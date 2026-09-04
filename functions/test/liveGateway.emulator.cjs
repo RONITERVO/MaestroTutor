@@ -188,7 +188,11 @@ const run = async () => {
   const abandonedTicket = await issueTicket();
   const abandonedTicketId = abandonedTicket.ticket.split('.')[0];
   await liveGatewayTicketRef(abandonedTicketId).set({ expiresAt: Date.now() - 1 }, { merge: true });
-  const abandonedRecovery = await recoverManagedLiveGatewayBilling(100);
+  // Finished records used to fill the query limit before status filtering.
+  await liveGatewayTicketsCollection().doc(`finished-${uid}`).set({
+    uid, status: 'expired', expiresAt: 1,
+  });
+  const abandonedRecovery = await recoverManagedLiveGatewayBilling(1);
   assert.ok(abandonedRecovery.expiredTickets >= 1);
   const abandonedTicketData = (await liveGatewayTicketRef(abandonedTicketId).get()).data();
   assert.equal('secretHash' in abandonedTicketData, false, 'recovered ticket secret hash must be scrubbed');
@@ -213,7 +217,10 @@ const run = async () => {
     deadlineAt: Date.now() - 1,
     checkpoint: recoveryCheckpoint,
   }, { merge: true });
-  const recovery = await recoverManagedLiveGatewayBilling(100);
+  await liveGatewaySessionsCollection().doc(`finished-${uid}`).set({
+    uid, status: 'settled', deadlineAt: 1,
+  });
+  const recovery = await recoverManagedLiveGatewayBilling(1);
   assert.ok(recovery.finalizedSessions >= 1);
   const recovered = await finalizeManagedLiveGatewaySession(
     recoverySession.sessionId,

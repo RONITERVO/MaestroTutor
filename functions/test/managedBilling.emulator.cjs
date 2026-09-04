@@ -11,11 +11,13 @@ const {
   releaseManagedReservation,
   reserveManagedCredits,
   settleManagedReservation,
+  listManagedUsageLedgerPage,
 } = require('../lib/functions/src/managedBilling.js');
 const {
   accountDeletionClaimRef,
   managedAccountRef,
   managedUserRef,
+  managedUsageEventsCollection,
   purchaseClaimId,
   purchaseClaimsCollection,
 } = require('../lib/functions/src/managedData.js');
@@ -71,6 +73,18 @@ const run = async () => {
 
   assert.equal((await managedUserRef(uid).get()).exists, true);
   assert.equal((await managedAccountRef(uid).get()).exists, true);
+
+  // Equal timestamps must not skip or repeat rows across page boundaries.
+  for (const id of ['page-a', 'page-b', 'page-c']) {
+    await managedUsageEventsCollection(uid).doc(id).set({ createdAt: 1, operation: 'pagination-test' });
+  }
+  const firstPage = await listManagedUsageLedgerPage(uid, 2);
+  const secondPage = await listManagedUsageLedgerPage(uid, 2, firstPage.nextCursor);
+  assert.deepEqual(firstPage.entries.map(row => row.id), ['page-c', 'page-b']);
+  assert.deepEqual(secondPage.entries.map(row => row.id), ['page-a']);
+  assert.equal(secondPage.nextCursor, null);
+  await assert.rejects(listManagedUsageLedgerPage(uid, 2, '../other-user'), error => error.status === 400);
+  await assert.rejects(listManagedUsageLedgerPage(uid, 2, 'missing-row'), error => error.status === 400);
 
   const deletionRaceReservation = await reserve();
   await accountDeletionClaimRef(uid).create({ createdAt: Date.now(), schemaVersion: 2 });
