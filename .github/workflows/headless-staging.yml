@@ -88,6 +88,12 @@ jobs:
           npx tsx scripts/create-connected-live-fixture.ts > connected-live-params.json
           npx tsx src/headless/cli.ts speech.synthetic.live --profile staging-ci --params-file connected-live-params.json > managed-connected-live.json 2> managed-connected-live.events.jsonl
           node -e 'const r=require("./managed-connected-live.json"); if(r.connectedTurnCount!==2||r.turns?.length!==2||!r.realtimeEvidence?.passed) throw new Error("Persistent managed Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete managed Live turn: "+JSON.stringify(t)); console.log("Managed connected Live turns:",r.turns.map(t=>({input:t.inputTranscript,sentSamples:t.sentSamples,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
+      - name: Exercise the low-level direct and streamed JSON-RPC routes
+        run: |
+          node -e "const p=require('./protocol.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
+          npx tsx src/headless/cli.ts gemini.generate --profile staging-ci --params "$(cat gemini-params.json)" > gemini.json
+          npx tsx src/headless/cli.ts gemini.generateStream --profile staging-ci --params "$(cat gemini-stream-params.json)" > gemini-stream.json
+          node -e "const r=require('./gemini.json'),s=require('./gemini-stream.json'),ok=String(r.text||'').toLowerCase().includes('provider-ok')&&Array.isArray(s.chunks)&&s.chunks.length; if(!ok) throw new Error('Managed JSON-RPC proof failed: '+JSON.stringify({text:r.text||null,streamChunks:Array.isArray(s.chunks)?s.chunks.length:null}))"
       - name: Exercise a complete first lesson through shared UI/Core paths
         run: |
           npx tsx src/headless/cli.ts journey.firstLesson --profile staging-ci --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > managed-first-lesson.json 2> managed-first-lesson.events.jsonl
@@ -104,12 +110,6 @@ jobs:
             managed-connected-live.json
             managed-connected-live.events.jsonl
           retention-days: 14
-      - name: Exercise the low-level direct and streamed JSON-RPC routes
-        run: |
-          node -e "const p=require('./protocol.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
-          npx tsx src/headless/cli.ts gemini.generate --profile staging-ci --params "$(cat gemini-params.json)" > gemini.json
-          npx tsx src/headless/cli.ts gemini.generateStream --profile staging-ci --params "$(cat gemini-stream-params.json)" > gemini-stream.json
-          node -e "const r=require('./gemini.json'),s=require('./gemini-stream.json'); if(!String(r.text||'').toLowerCase().includes('provider-ok')||!Array.isArray(s.chunks)||!s.chunks.length) process.exit(1)"
       - name: Verify ledgers, clear generated files and sign out
         if: always()
         run: |
@@ -138,15 +138,23 @@ jobs:
         shell: bash
         run: |
           test -n "$MAESTRO_GEMINI_API_KEY" || { echo "HEADLESS_GEMINI_API_KEY is required; BYOK parity may never be silently skipped." >&2; exit 1; }
+      - name: Verify the direct JSON-RPC contract
+        run: |
+          npx tsx src/headless/cli.ts system.describe --access byok > protocol-byok.json
+          node -e 'const p=require("./protocol-byok.json"); if(p.access.unavailableMethods.includes("journey.firstLesson")) throw new Error("First lesson unavailable in BYOK"); for(const m of p.access.providerParityMethods) if(!p.access.availableMethods.includes(m)) throw new Error("BYOK missing parity method: "+m)'
       - name: Prove a short second observer turn over one BYOK Live socket
         run: |
           npx tsx scripts/create-connected-live-fixture.ts > connected-live-params.json
           npx tsx src/headless/cli.ts speech.synthetic.live --access byok --profile staging-ci-byok --params-file connected-live-params.json > byok-connected-live.json 2> byok-connected-live.events.jsonl
           node -e 'const r=require("./byok-connected-live.json"); if(r.connectedTurnCount!==2||r.turns?.length!==2||!r.realtimeEvidence?.passed) throw new Error("Persistent BYOK Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete BYOK Live turn: "+JSON.stringify(t)); console.log("BYOK connected Live turns:",r.turns.map(t=>({input:t.inputTranscript,sentSamples:t.sentSamples,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
+      - name: Exercise the low-level direct and streamed JSON-RPC routes
+        run: |
+          node -e "const p=require('./protocol-byok.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
+          npx tsx src/headless/cli.ts gemini.generate --access byok --profile staging-ci-byok --params "$(cat gemini-params.json)" > gemini-byok.json
+          npx tsx src/headless/cli.ts gemini.generateStream --access byok --profile staging-ci-byok --params "$(cat gemini-stream-params.json)" > gemini-stream-byok.json
+          node -e "const r=require('./gemini-byok.json'),s=require('./gemini-stream-byok.json'),ok=String(r.text||'').toLowerCase().includes('provider-ok')&&Array.isArray(s.chunks)&&s.chunks.length; if(!ok) throw new Error('BYOK JSON-RPC proof failed: '+JSON.stringify({text:r.text||null,streamChunks:Array.isArray(s.chunks)?s.chunks.length:null}))"
       - name: Exercise the full first lesson with direct Gemini access
         run: |
-          npx tsx src/headless/cli.ts system.describe --access byok > protocol-byok.json
-          node -e 'const p=require("./protocol-byok.json"); if(p.access.unavailableMethods.includes("journey.firstLesson")) throw new Error("First lesson unavailable in BYOK"); for(const m of p.access.providerParityMethods) if(!p.access.availableMethods.includes(m)) throw new Error("BYOK missing parity method: "+m)'
           npx tsx src/headless/cli.ts journey.firstLesson --access byok --profile staging-ci-byok --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > byok-first-lesson.json 2> byok-first-lesson.events.jsonl
           node -e 'const fs=require("fs"),r=require("./byok-first-lesson.json"); if(r.accessMode!=="byok"||!r.passed||r.userTurnCount<10||r.managedBillingEvidence?.payer!=="byok-api-key-owner") process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing BYOK coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,managedBillingEvidence:r.managedBillingEvidence,turns:r.turns}; fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### BYOK first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'
       - name: Preserve BYOK parity evidence
@@ -160,12 +168,6 @@ jobs:
             byok-connected-live.json
             byok-connected-live.events.jsonl
           retention-days: 14
-      - name: Exercise the low-level direct and streamed JSON-RPC routes
-        run: |
-          node -e "const p=require('./protocol-byok.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
-          npx tsx src/headless/cli.ts gemini.generate --access byok --profile staging-ci-byok --params "$(cat gemini-params.json)" > gemini-byok.json
-          npx tsx src/headless/cli.ts gemini.generateStream --access byok --profile staging-ci-byok --params "$(cat gemini-stream-params.json)" > gemini-stream-byok.json
-          node -e "const r=require('./gemini-byok.json'),s=require('./gemini-stream-byok.json'); if(!String(r.text||'').toLowerCase().includes('provider-ok')||!Array.isArray(s.chunks)||!s.chunks.length) process.exit(1)"
       - name: Clear only files owned by the BYOK headless profile
         if: always()
         run: |
