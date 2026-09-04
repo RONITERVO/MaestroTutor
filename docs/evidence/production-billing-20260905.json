@@ -1,0 +1,9 @@
+{
+  "spentCreditsDelta": 49,
+  "usageChargedCredits": 49.0,
+  "chargeLedgerCredits": 49.0,
+  "usageRows": 15,
+  "chargeRows": 15,
+  "reservedCredits": 0,
+  "passed": true
+}

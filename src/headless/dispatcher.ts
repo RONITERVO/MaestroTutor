@@ -339,7 +339,7 @@ export const dispatchHeadlessMethod = async (
       const sampleRate = optionalNumber(input, 'sampleRate', 16_000);
       const rawBase64 = requiredString(input, 'pcmBase64').replace(/^data:audio\/[^;]+;base64,/i, '');
       const pcm = decodePcm16LeBase64(rawBase64);
-      const connectedTurns = optionalBoundedInteger(input, 'connectedTurns', 1, 1, 6);
+      const connectedTurns = optionalBoundedInteger(input, 'connectedTurns', 1, 1, 1);
       const sourceOptions = {
         pcm,
         sampleRate,
@@ -371,7 +371,7 @@ export const dispatchHeadlessMethod = async (
         simulateUiSpeechHandoff: input.simulateUiSpeechHandoff === true,
         requireRealtimeInputPacing: input.requireRealtimeInputPacing === true,
         playModelAudioRealtime: input.playModelAudioRealtime === true,
-        timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
+        timeoutMs: optionalNumber(input, 'timeoutMs', 120_000),
         includeModelAudio: input.includeModelAudio === true,
         ...(visual ? {
           videoFramesByTurn: Array.from(
@@ -406,7 +406,7 @@ export const dispatchHeadlessMethod = async (
         mode: 'stt',
         languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
         pace: input.pace === true,
-        timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
+        timeoutMs: optionalNumber(input, 'timeoutMs', 120_000),
         expectedTranscript: typeof input.expectedTranscript === 'string' ? input.expectedTranscript : undefined,
         minTranscriptWordRecall: typeof input.minTranscriptWordRecall === 'number' ? input.minTranscriptWordRecall : undefined,
       });
@@ -428,7 +428,7 @@ export const dispatchHeadlessMethod = async (
         mode: method === 'live.observer.turn' ? 'observer' : 'conversation',
         languagePairId: typeof input.languagePairId === 'string' ? input.languagePairId : undefined,
         pace: input.pace === true,
-        timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
+        timeoutMs: optionalNumber(input, 'timeoutMs', 120_000),
         includeVisual: input.includeVisual === true,
         visualLabel: typeof input.visualLabel === 'string' ? input.visualLabel : undefined,
         instructionSuffix: typeof input.instructionSuffix === 'string' ? input.instructionSuffix : undefined,
@@ -458,7 +458,10 @@ export const dispatchHeadlessMethod = async (
     case 'account.summary':
       return client.account.refreshAccount(typeof input.operationId === 'string' ? input.operationId : undefined);
     case 'account.ledgers':
-      return client.account.listLedgers(optionalNumber(input, 'limit', 50));
+      return client.account.listLedgers(optionalNumber(input, 'limit', 50), undefined, {
+        usageAfter: typeof input.usageAfter === 'string' ? input.usageAfter : undefined,
+        billingAfter: typeof input.billingAfter === 'string' ? input.billingAfter : undefined,
+      });
     case 'account.delete': {
       const actualUserId = await client.credentials.getUserId();
       if (!actualUserId) throw new Error('Unable to resolve the authenticated Firebase user ID.');

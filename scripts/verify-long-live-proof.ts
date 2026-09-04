@@ -36,7 +36,8 @@ const payerPassed = access === 'managed'
 const passed = result?.transcriptEvidence?.passed === true
   && payerPassed
   && result?.connectedTurnCount === 1
-  && result?.sentVideoFrameCount === 1
+  && result?.sentVideoFrameCount === (params.includeVisual ? 1 : 0)
+  && result?.realtimeEvidence?.passed === true
   && translatedPairs >= expectedPairs
   && spokenLineCount >= expectedPairs * 2
   && result?.turns?.[0]?.playbackCompletedAfterLastByte === true

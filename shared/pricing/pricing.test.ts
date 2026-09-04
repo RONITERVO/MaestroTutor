@@ -189,11 +189,11 @@ describe('live windows', () => {
     expect(wayOverCapped).toBe(capped);
   });
 
-  it('reserves for six re-billed turns, low-resolution camera input and text overhead', () => {
+  it('reserves for one 120-second turn, low-resolution camera input and text overhead', () => {
     const gateway = calculateLiveGatewayWindowUsd(120);
     const oldSinglePassEstimate = calculateLiveWindowUsd(120);
 
-    expect(gateway).toBe(0.454925);
-    expect(gateway).toBeGreaterThan(oldSinglePassEstimate * 4);
+    expect(gateway).toBe(0.155813);
+    expect(gateway).toBeGreaterThan(oldSinglePassEstimate);
   });
 });

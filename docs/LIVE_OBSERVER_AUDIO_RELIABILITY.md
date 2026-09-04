@@ -188,12 +188,12 @@ awaited. Its 48 usage rows matched 48 charge rows and 433 credits / USD 0.413022
 with zero reservation before and after. This was the exact fixture that had exposed
 the burst failure, not a relaxed replacement.
 
-### Pending six-turn and long-audio release gate
+### Single-turn and long-audio release gate
 
-The current candidate expands the connected-socket proof from two to six turns in
-both managed and BYOK modes and sends one low-resolution visual frame on each turn.
+Each managed and BYOK socket now handles one turn, with an optional low-resolution
+visual frame. Continuing chat uses a new connection with rebuilt context.
 The managed proof correlates the socket request ID with exactly one usage row and
-one charge row, checks all six provider usage snapshots are included, recalculates
+one charge row, checks the provider usage snapshots are included, recalculates
 the charge from the checked-in price registry, and requires zero shortfall or
 stranded reservation. This prevents later turns from being accidentally free or
 charged as a fixed maximum.

@@ -269,10 +269,10 @@ describe('managed Live gateway connection', () => {
     await harness.close();
   });
 
-  it('refuses a seventh turn before it reaches the provider', async () => {
+  it('refuses a second turn before it reaches the provider', async () => {
     const harness = createHarness();
     await harness.authenticate();
-    for (let turn = 0; turn < 7; turn += 1) {
+    for (let turn = 0; turn < 2; turn += 1) {
       harness.connection.receive(JSON.stringify({
         type: 'realtimeInput',
         input: { audioStreamEnd: true },
@@ -280,9 +280,40 @@ describe('managed Live gateway connection', () => {
     }
     await harness.connection.whenIdle();
 
-    assert.equal(harness.provider.realtimeInputs.length, 6);
+    assert.equal(harness.provider.realtimeInputs.length, 1);
     assert.equal(harness.billing.finalizations.length, 1);
-    assert.equal(harness.billing.finalizations[0].checkpoint.clientTurnBoundaryCount, 6);
+    assert.equal(harness.billing.finalizations[0].checkpoint.clientTurnBoundaryCount, 1);
+  });
+
+  it('rejects new microphone input after the single input boundary', async () => {
+    const harness = createHarness();
+    await harness.authenticate();
+    harness.connection.receive(JSON.stringify({ type: 'realtimeInput', input: { audioStreamEnd: true } }));
+    harness.connection.receive(JSON.stringify({ type: 'realtimeInput', input: {
+      audio: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=16000' },
+    } }));
+    await harness.connection.whenIdle();
+    assert.equal(harness.provider.realtimeInputs.length, 1);
+    assert.equal(harness.billing.finalizations[0].checkpoint.inputAudioBytes, 0);
+  });
+
+  it('retains late provider audio and usage after turnComplete until the client closes', async () => {
+    const harness = createHarness();
+    await harness.authenticate();
+    harness.provider.callbacks!.onmessage({ serverContent: { turnComplete: true } });
+    await harness.connection.whenIdle();
+    assert.equal(harness.provider.closeCount, 0);
+    harness.provider.callbacks!.onmessage({
+      serverContent: { modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: 'AQIDBA==' } }] } },
+      usageMetadata: { promptTokenCount: 10, responseTokenCount: 5, totalTokenCount: 15 },
+    });
+    await harness.connection.whenIdle();
+    assert.equal(harness.billing.finalizations.length, 0);
+    await harness.close();
+    const checkpoint = harness.billing.finalizations[0].checkpoint;
+    assert.equal(checkpoint.outputAudioBytes, 4);
+    assert.equal(checkpoint.providerTurnUsage.length, 1);
+    assert.equal(checkpoint.providerUsageMetadata?.totalTokenCount, 15);
   });
 
   it('releases a consumed ticket when the provider connection fails', async () => {

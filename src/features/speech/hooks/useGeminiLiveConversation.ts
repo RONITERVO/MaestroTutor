@@ -8,7 +8,6 @@ import {
   Modality,
   LiveServerGoAway,
   LiveServerSessionResumptionUpdate,
-  SessionResumptionConfig,
 } from '@google/genai';
 import { getAi } from '../../../api/gemini/client';
 import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProcessing';
@@ -71,6 +70,7 @@ import {
 } from '../utils/playbackDrain';
 import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
 import { LiveTurnFinalizer } from '../utils/liveTurnFinalizer';
+import { hasCameraConsent } from '../../../core-sdk/media/cameraConsent';
 
 export type LiveSessionState = 'idle' | 'armed' | 'connecting' | 'active' | 'error';
 
@@ -132,6 +132,7 @@ export interface StartLiveConversationOptions {
   /** Keep the paid transport open, but start/end continuous microphone turns locally. */
   gateAudioAfterConnect?: boolean;
   systemInstruction?: string;
+  buildSystemInstruction?: () => Promise<string>;
   stream?: MediaStream | null;
   videoElement?: HTMLVideoElement | null;
   voiceName?: string;
@@ -140,7 +141,6 @@ export interface StartLiveConversationOptions {
   emitTurns?: boolean;
   /** Deliberately opt into barge-in. Disabled by default for Android reliability. */
   allowModelInterruptions?: boolean;
-  sessionResumption?: SessionResumptionConfig;
   costFeature?: 'liveConversation' | 'reengagement';
 }
 
@@ -596,6 +596,7 @@ export function useGeminiLiveConversation(
     if (!playbackNode || !outputContext || !playbackPendingRef.current) return;
 
     const startedAt = Date.now();
+    const decodeCheckpoint = getModelAudioDecodeCheckpoint();
     const result = await playbackDrainCoordinatorRef.current.request(playbackNode.port);
     playbackTelemetryRef.current.lastDrainWaitMs = Date.now() - startedAt;
     if (result !== 'drained') {
@@ -603,11 +604,18 @@ export function useGeminiLiveConversation(
       return;
     }
 
-    playbackPendingRef.current = false;
+    // An acknowledgement can race with a late PCM chunk. It must not clear
+    // that newer chunk's pending flag or the next settlement could skip it.
+    const latestCheckpoint = getModelAudioDecodeCheckpoint();
+    if (
+      latestCheckpoint.sessionId === decodeCheckpoint.sessionId
+      && latestCheckpoint.turnId === decodeCheckpoint.turnId
+      && latestCheckpoint.lastJobId === decodeCheckpoint.lastJobId
+    ) playbackPendingRef.current = false;
     playbackTelemetryRef.current.drains += 1;
     if (outputAudioContextRef.current !== outputContext || outputContext.state === 'closed') return;
     await new Promise(resolve => window.setTimeout(resolve, getAudioOutputTailDelayMs(outputContext)));
-  }, []);
+  }, [getModelAudioDecodeCheckpoint]);
 
   const stopVideoFrameLoop = useCallback(() => {
     if (frameIntervalRef.current !== null) {
@@ -846,6 +854,7 @@ export function useGeminiLiveConversation(
       if (currentSessionIdRef.current !== sessionId) return;
 
       // A gated session sends no paid video while nobody is speaking. A frame
+      if (!hasCameraConsent(useMaestroStore.getState().settings)) return;
       // per second of an empty room buys nothing: what the model needs to see
       // is the person who just started talking, and the gate is open by then.
       const boundary = speechTurnBoundaryRef.current;
@@ -874,6 +883,8 @@ export function useGeminiLiveConversation(
             if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
               const b64 = await blobToBase64(blob);
               if (currentSessionIdRef.current !== sessionId) return;
+              if (!hasCameraConsent(useMaestroStore.getState().settings)) return;
+              if (speechTurnBoundaryRef.current && !speechTurnBoundaryRef.current.isOpen) return;
               sessionRef.current.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
             }
           } finally {
@@ -923,7 +934,6 @@ export function useGeminiLiveConversation(
       playModelAudio = true,
       emitTurns = true,
       allowModelInterruptions = false,
-      sessionResumption,
       costFeature = 'liveConversation',
       gateInputOnSpeech = false,
       gateAudioAfterConnect = gateInputOnSpeech,
@@ -1123,6 +1133,10 @@ export function useGeminiLiveConversation(
       });
 
       const ai = await getAi();
+      const freshSystemInstruction = opts.buildSystemInstruction
+        ? await opts.buildSystemInstruction()
+        : systemInstruction;
+      if (await abortIfInvalidated()) return;
       let transportTerminalHandled = false;
       const finishTransportLifecycle = async (
         terminalState: 'idle' | 'error',
@@ -1142,6 +1156,9 @@ export function useGeminiLiveConversation(
         if (currentSessionIdRef.current !== sessionId) return;
         await waitForPlaybackDrain();
         if (currentSessionIdRef.current !== sessionId) return;
+        // One response owns one usage snapshot, including late accounting
+        // callbacks. Flush only after the ordered queue and playback settle.
+        usageTracker.flush();
 
         if (logRef.current && !logFinalizedRef.current) {
           logFinalizedRef.current = true;
@@ -1162,10 +1179,13 @@ export function useGeminiLiveConversation(
         await cleanup();
         updateState(terminalState);
       };
-      const turnFinalizer = new LiveTurnFinalizer();
+      const turnFinalizer = new LiveTurnFinalizer(async () => {
+        await serverMessageQueueRef.current.catch(() => undefined);
+        await waitForModelAudioDecodeCheckpoint(getModelAudioDecodeCheckpoint());
+        await waitForPlaybackDrain();
+      });
       const finalizeProviderTurn = async () => {
         if (currentSessionIdRef.current !== sessionId) return;
-        usageTracker.completeTurn();
         const modelAudioCheckpoint = getModelAudioDecodeCheckpoint();
         await waitForModelAudioDecodeCheckpoint(modelAudioCheckpoint);
         if (
@@ -1265,7 +1285,7 @@ export function useGeminiLiveConversation(
                 modelAudioLines
               );
               if (callbackResult instanceof Promise) {
-                void callbackResult.catch((error) => {
+                await callbackResult.catch((error) => {
                   console.error('Live turn completion callback rejected:', error);
                 });
               }
@@ -1323,7 +1343,10 @@ export function useGeminiLiveConversation(
           emitTurnTranscriptUpdate(completionReason);
         }
       };
+      let turnFinalizationStarted = false;
       const enqueueTurnFinalization = () => {
+        if (currentSessionIdRef.current !== sessionId || turnFinalizationStarted) return;
+        turnFinalizationStarted = true;
         serverMessageQueueRef.current = serverMessageQueueRef.current
           .catch(() => undefined)
           .then(finalizeProviderTurn)
@@ -1331,6 +1354,9 @@ export function useGeminiLiveConversation(
             if (currentSessionIdRef.current !== sessionId) return;
             console.warn('Live turn finalization failed', error);
           });
+        // Never await lifecycle teardown inside the message queue: it drains
+        // that queue itself. One connection owns exactly one response.
+        void serverMessageQueueRef.current.then(() => finishTransportLifecycle('idle'));
       };
       const session = await ai.live.connect({
         model,
@@ -1338,7 +1364,7 @@ export function useGeminiLiveConversation(
         config: {
           ...getLiveCostControlConfig(),
           responseModalities,
-          systemInstruction: systemInstruction,
+          systemInstruction: freshSystemInstruction,
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},
@@ -1346,7 +1372,6 @@ export function useGeminiLiveConversation(
           thinkingConfig: getLiveConversationThinkingConfig(model),
           // Voice configuration for the live conversation
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
-          sessionResumption,
         },
         callbacks: {
           onopen: () => {
@@ -1543,15 +1568,21 @@ export function useGeminiLiveConversation(
               });
           },
           onclose: () => {
+            if (currentSessionIdRef.current !== sessionId) {
+              usageTracker.flush();
+              return;
+            }
             turnFinalizer.flush();
-            usageTracker.flush();
             void finishTransportLifecycle('idle').catch((error) => {
               console.warn('Live playback drain after close failed:', error);
             });
           },
           onerror: (err: any) => {
+            if (currentSessionIdRef.current !== sessionId) {
+              usageTracker.flush();
+              return;
+            }
             turnFinalizer.flush();
-            usageTracker.flush();
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
             let message = "Connection error";

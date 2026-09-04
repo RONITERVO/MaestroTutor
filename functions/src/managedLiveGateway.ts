@@ -512,8 +512,10 @@ export const recoverManagedLiveGatewayBilling = async (limit = 100): Promise<{
   const currentTime = Date.now();
   const boundedLimit = Math.max(1, Math.min(200, Math.floor(limit)));
   const [ticketSnapshot, sessionSnapshot] = await Promise.all([
-    liveGatewayTicketsCollection().where('expiresAt', '<=', currentTime).limit(boundedLimit).get(),
-    liveGatewaySessionsCollection().where('deadlineAt', '<=', currentTime).limit(boundedLimit).get(),
+    liveGatewayTicketsCollection().where('status', '==', 'issued')
+      .where('expiresAt', '<=', currentTime).orderBy('expiresAt').limit(boundedLimit).get(),
+    liveGatewaySessionsCollection().where('status', 'in', ['active', 'finalizing'])
+      .where('deadlineAt', '<=', currentTime).orderBy('deadlineAt').limit(boundedLimit).get(),
   ]);
   let expiredTickets = 0;
   let finalizedSessions = 0;

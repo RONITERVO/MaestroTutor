@@ -12,8 +12,8 @@ import { type AuthContext, applyCors, getOptionalAuthContext, requireAuthContext
 import { appConfig, getJsonBodyLimitBytes } from './config';
 import { adminDb } from './firebase';
 import { generateManagedContent, streamManagedContent, generateManagedMusic, uploadManagedMedia, getManagedFileStatuses, deleteManagedFile, clearManagedFiles, createManagedLiveToken, releaseManagedLiveLease, retryManagedFileCleanupJobs } from './gemini';
-import { getErrorMessage, getHttpErrorCode, getHttpStatus } from './http';
-import { countExpiredReservations, getManagedAccountState, listManagedBillingLedger, listManagedUsageLedger, sweepExpiredReservations } from './managedBilling';
+import { createHttpError, getErrorMessage, getHttpErrorCode, getHttpStatus } from './http';
+import { countExpiredReservations, getManagedAccountState, listManagedBillingLedgerPage, listManagedUsageLedgerPage, sweepExpiredReservations } from './managedBilling';
 import {
   createManagedLiveGatewayTicket,
   recoverManagedLiveGatewayBilling,
@@ -196,14 +196,14 @@ app.get('/account/summary', asyncRoute('required', async (_req, res, auth) => {
 
 app.get('/account/usage-ledger', asyncRoute('required', async (req, res, auth) => {
   const limit = Number(req.query.limit || 50);
-  const entries = await listManagedUsageLedger(auth!.uid, limit);
-  res.json({ entries });
+  if (req.query.after !== undefined && typeof req.query.after !== 'string') throw createHttpError(400, 'Invalid ledger cursor.');
+  res.json(await listManagedUsageLedgerPage(auth!.uid, limit, req.query.after));
 }));
 
 app.get('/account/billing-ledger', asyncRoute('required', async (req, res, auth) => {
   const limit = Number(req.query.limit || 50);
-  const entries = await listManagedBillingLedger(auth!.uid, limit);
-  res.json({ entries });
+  if (req.query.after !== undefined && typeof req.query.after !== 'string') throw createHttpError(400, 'Invalid ledger cursor.');
+  res.json(await listManagedBillingLedgerPage(auth!.uid, limit, req.query.after));
 }));
 
 app.post('/account/delete', asyncRoute('required', async (_req, res, auth) => {

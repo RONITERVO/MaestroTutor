@@ -12,8 +12,10 @@ import {
   getMaestroProfileImageDB,
   setMaestroProfileImageDB,
 } from '../../core/db/assets';
-import { uploadMediaToFiles } from '../../api/gemini/files';
-import { loadApiKey } from '../../core/security/apiKeyStorage';
+import { ensureMaestroAvatarUris, invalidateMaestroAvatarCache } from '../../api/gemini/maestroAvatarEnsure';
+import { maestroAccessService } from '../../services/access/maestroAccessService';
+import { getAvatarAccessScope } from '../../api/gemini/avatarAccessScope';
+import { MANAGED_ACCESS_CHANGED_EVENT } from '../../core/security/managedAccessSessionStorage';
 
 const MAESTRO_URI_REFRESH_MS = (48 * 60 * 60 * 1000) - (5 * 60 * 1000);
 const API_KEY_CHANGED_EVENT = 'maestro-api-key-changed';
@@ -40,6 +42,7 @@ export const useAppAssets = ({
   const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
@@ -63,23 +66,13 @@ export const useAppAssets = ({
     const shouldRefresh = !!forceUpload || !asset.uri || ageMs > MAESTRO_URI_REFRESH_MS;
     if (!shouldRefresh) return;
 
-    const apiKey = await loadApiKey();
-    if (!apiKey) return;
+    if (await maestroAccessService.resolveAccessMode() === 'none') return;
+    const scope = await getAvatarAccessScope();
 
     try {
-      const mimeForUpload = asset.mimeType || displayMime || 'image/png';
-      const uploaded = await uploadMediaToFiles(asset.dataUrl, mimeForUpload, 'maestro-avatar');
-      const refreshed = {
-        dataUrl: asset.dataUrl,
-        mimeType: uploaded.mimeType || mimeForUpload,
-        uri: uploaded.uri,
-        updatedAt: Date.now(),
-      };
-      await setMaestroProfileImageDB(refreshed);
-      applyAvatarState(displayUrl || refreshed.dataUrl || uploaded.uri, refreshed.mimeType || null, uploaded.uri);
-      try {
-        window.dispatchEvent(new CustomEvent('maestro-avatar-updated', { detail: refreshed }));
-      } catch { /* ignore */ }
+      const uploaded = await ensureMaestroAvatarUris();
+      if (scope !== await getAvatarAccessScope()) return;
+      applyAvatarState(displayUrl || asset.dataUrl, uploaded.rawMimeType || displayMime, uploaded.rawUri);
     } catch {
       // Ignore upload failures (missing key, offline, etc.)
     }
@@ -130,22 +123,33 @@ export const useAppAssets = ({
   }, [applyAvatarState, refreshMaestroUriIfNeeded]);
 
   useEffect(() => {
-    hydrateMaestroAvatar();
+    hydrateMaestroAvatar({ forceUpload: true, dropUri: true });
   }, [hydrateMaestroAvatar]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const handler = (event: any) => {
-      const hasKey = !!event?.detail?.hasKey;
-      if (hasKey) {
-        hydrateMaestroAvatar({ forceUpload: true });
-      } else {
-        hydrateMaestroAvatar({ dropUri: true });
-      }
+    let lastScope: string | undefined;
+    let checkVersion = 0;
+    const handler = () => {
+      const version = ++checkVersion;
+      void getAvatarAccessScope().then(scope => {
+        if (version !== checkVersion || scope === lastScope) return;
+        lastScope = scope;
+        maestroAvatarUriRef.current = null;
+        maestroAvatarMimeTypeRef.current = null;
+        invalidateMaestroAvatarCache();
+        void hydrateMaestroAvatar({ forceUpload: true, dropUri: true });
+      });
     };
+    void getAvatarAccessScope().then(scope => { if (!checkVersion) lastScope = scope; });
     window.addEventListener(API_KEY_CHANGED_EVENT, handler as any);
-    return () => window.removeEventListener(API_KEY_CHANGED_EVENT, handler as any);
-  }, [hydrateMaestroAvatar]);
+    window.addEventListener(MANAGED_ACCESS_CHANGED_EVENT, handler);
+    return () => {
+      checkVersion += 1;
+      window.removeEventListener(API_KEY_CHANGED_EVENT, handler as any);
+      window.removeEventListener(MANAGED_ACCESS_CHANGED_EVENT, handler);
+    };
+  }, [hydrateMaestroAvatar, maestroAvatarUriRef, maestroAvatarMimeTypeRef]);
 
   useEffect(() => {
     const handler = (event: any) => {

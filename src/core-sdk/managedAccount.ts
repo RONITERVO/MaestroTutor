@@ -14,8 +14,8 @@ import { createCoreRuntime, type CoreRuntime } from './runtime';
 
 export interface ManagedAccountBackendPort {
   getAccountSummary(): Promise<ManagedAccountSummaryResponse>;
-  listUsageLedger(limit?: number): Promise<ManagedUsageLedgerResponse>;
-  listBillingLedger(limit?: number): Promise<ManagedBillingLedgerResponse>;
+  listUsageLedger(limit?: number, after?: string): Promise<ManagedUsageLedgerResponse>;
+  listBillingLedger(limit?: number, after?: string): Promise<ManagedBillingLedgerResponse>;
   createStripeCheckoutSession(packId: string): Promise<{ url: string; sessionId: string }>;
   submitAiContentReport(payload: BackendAiContentReportRequest): Promise<BackendAiContentReportResponse>;
   deleteManagedAccount(): Promise<BackendDeleteManagedAccountResponse>;
@@ -40,7 +40,7 @@ export interface ManagedAccountController {
   signIn(operationId?: string): Promise<ManagedAccountSummaryResponse>;
   signOut(operationId?: string): Promise<void>;
   refreshAccount(operationId?: string): Promise<ManagedAccountSummaryResponse>;
-  listLedgers(limit?: number, operationId?: string): Promise<{
+  listLedgers(limit?: number, operationId?: string, cursors?: { usageAfter?: string; billingAfter?: string }): Promise<{
     usage: ManagedUsageLedgerResponse;
     billing: ManagedBillingLedgerResponse;
   }>;
@@ -161,14 +161,14 @@ export const createManagedAccountController = (dependencies: {
 
     refreshAccount,
 
-    async listLedgers(limit = 50, givenOperationId) {
+    async listLedgers(limit = 50, givenOperationId, cursors) {
       const id = operationId(givenOperationId, 'account-ledgers');
       const boundedLimit = Math.max(1, Math.min(200, Math.floor(limit)));
       emit(id, 'account', 'ledgers.started', { limit: boundedLimit });
       try {
         const [usage, billing] = await Promise.all([
-          dependencies.backend.listUsageLedger(boundedLimit),
-          dependencies.backend.listBillingLedger(boundedLimit),
+          cursors?.usageAfter ? dependencies.backend.listUsageLedger(boundedLimit, cursors.usageAfter) : dependencies.backend.listUsageLedger(boundedLimit),
+          cursors?.billingAfter ? dependencies.backend.listBillingLedger(boundedLimit, cursors.billingAfter) : dependencies.backend.listBillingLedger(boundedLimit),
         ]);
         emit(id, 'account', 'ledgers.succeeded', {
           usageEntries: usage.entries.length,

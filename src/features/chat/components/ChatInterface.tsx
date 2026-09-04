@@ -325,7 +325,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
 
   const liveSessionState = useMaestroStore(state => state.liveSessionState);
   const [suggestionPracticeTarget, setSuggestionPracticeTarget] = useState<string | null>(null);
-  const isLiveSession = liveSessionState === 'active' || liveSessionState === 'connecting';
+  const isLiveSession = liveSessionState === 'active' || liveSessionState === 'connecting' || liveSessionState === 'armed';
   const handleEndSuggestionPractice = useCallback(() => {
     setSuggestionPracticeTarget(null);
   }, []);

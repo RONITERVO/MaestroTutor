@@ -323,7 +323,7 @@ const InputArea: React.FC<InputAreaProps> = ({
 
   const showLiveFeed = Boolean(liveVideoStream && (useVisualContextForReengagementEnabled || sendWithSnapshotEnabled) && !isImageGenCameraSelected && !languageSelectionOpen);
   const isTwoUp = Boolean(attachedImageBase64 && showLiveFeed);
-  const isLive = liveSessionState === 'active' || liveSessionState === 'connecting';
+  const isLive = liveSessionState === 'active' || liveSessionState === 'connecting' || liveSessionState === 'armed';
 
   // Auto-scroll to bottom when live feed appears
   const prevShowLiveFeedRef = useRef(showLiveFeed);

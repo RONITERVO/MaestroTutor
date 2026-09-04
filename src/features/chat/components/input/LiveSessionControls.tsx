@@ -21,7 +21,7 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
   onStartLiveSession,
   onStopLiveSession,
 }) => {
-  const liveSessionActive = liveSessionState === 'active';
+  const liveSessionActive = liveSessionState === 'active' || liveSessionState === 'armed';
   const liveSessionConnecting = liveSessionState === 'connecting';
   const liveSessionErrored = liveSessionState === 'error';
 

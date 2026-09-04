@@ -109,6 +109,10 @@ export const runHeadlessLiveTurn = async (
   if (input.instructionSuffix?.trim()) {
     systemInstruction += `\n\n${input.instructionSuffix.trim()}`;
   }
+  const contextEvidence = {
+    historyMessageCount: history.length,
+    systemInstructionSha256: createHash('sha256').update(systemInstruction).digest('hex'),
+  };
   const result = await runSyntheticLiveJourney(client.ai, {
     // Synthetic stream injection is an explicit headless user action. Never
     // claim that local Whisper fired when no browser Whisper worker ran.
@@ -166,6 +170,7 @@ export const runHeadlessLiveTurn = async (
   if (input.mode === 'stt') {
     return {
       ...result,
+      contextEvidence,
       mode: input.mode,
       accessMode: client.accessMode,
       capturedInputSamples: input.pcm.length,
@@ -240,6 +245,7 @@ export const runHeadlessLiveTurn = async (
   const compactAssistantMessage = summarizeLiveMessageForHeadlessOutput(assistantMessage);
   return {
     ...result,
+    contextEvidence,
     mode: input.mode,
     accessMode: client.accessMode,
     userMessage: compactUserMessage.message,

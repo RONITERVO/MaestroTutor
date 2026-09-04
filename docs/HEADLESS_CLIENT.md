@@ -121,14 +121,14 @@ the complete reservation. A scheduled reconciler handles unused tickets and
 abandoned sessions. See the billing and recovery invariants in
 [`HEADLESS_COVERAGE.md`](./HEADLESS_COVERAGE.md).
 
-Protocol 1.7 adds persistent connected-turn proof to `speech.synthetic.live`.
-Set `connectedTurns` from 1 through 6 to replay the supplied PCM as distinct user
-turns over one Live socket. The result contains one entry per turn and proves that
-each reply finishes real-time playback after the last model-audio byte. The
-staging workflow requires six turns in both managed and BYOK modes, specifically
-covering later short-utterance paths that a fresh connection cannot exercise. It
-sends a visual frame on every turn and reports the provider's latest snapshot for
-each turn plus the correctly summed billable usage for the socket.
+Live transports now own exactly one response. `speech.synthetic.live` accepts
+only `connectedTurns:1`. For a continuing conversation, repeat
+`live.conversation.turn` or `live.observer.turn` with the same profile. Each call
+persists its messages, opens a fresh connection, and rebuilds context from the
+saved chat. `contextEvidence` reports the history count and prompt digest for
+checking this progression without exposing prompt text. Playback and late
+callbacks must settle before a turn returns. The 120-second timeout is a failure
+bound, never the success criterion.
 
 `provider-parity` still does not mean the user pays the same currency or provider:
 BYOK charges the supplied Google project, while managed converts observed provider
@@ -306,10 +306,10 @@ and model playback elapsed time at least as long as the 24 kHz audio duration. P
 distinctive words at the end of `expectedTranscript`; a prefix-only expectation
 cannot detect the original suffix-loss regression.
 
-For the lower-level persistent observer regression, use the same PCM with
-`"connectedTurns":6`, `"simulateUiSpeechHandoff":true`,
+For the lower-level single-turn observer regression, use the same PCM with
+`"connectedTurns":1`, `"simulateUiSpeechHandoff":true`,
 `"requireRealtimeInputPacing":true`, and `"playModelAudioRealtime":true`.
-There must be six completed turn records, and all must report
+There must be one completed turn record reporting
 `playbackCompletedAfterLastByte:true`.
 
 `scripts/create-long-live-fixture.ts` accepts either `--audio <path>` for a WAV or

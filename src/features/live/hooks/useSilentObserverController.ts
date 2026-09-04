@@ -81,7 +81,6 @@ export const useSilentObserverController = ({
   const suspendWakeTimerRef = useRef<number | null>(null);
   const lastStartAttemptRef = useRef<number>(0);
   const startInFlightRef = useRef(false);
-  const resumptionHandleRef = useRef<string | undefined>(undefined);
   const observerLiveTokenRef = useRef<string | null>(null);
 
   const clearRetryTimer = useCallback(() => {
@@ -130,7 +129,7 @@ export const useSilentObserverController = ({
     },
     onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines) => {
       if (!onTurnComplete) return;
-      void Promise.resolve(onTurnComplete(userText, modelText, userAudioPcm, modelAudioLines)).catch((error) => {
+      return Promise.resolve(onTurnComplete(userText, modelText, userAudioPcm, modelAudioLines)).catch((error) => {
         console.error('Silent observer turn handler failed:', error);
       });
     },
@@ -139,11 +138,6 @@ export const useSilentObserverController = ({
       // provider will close after its advertised grace period; the shared Live
       // lifecycle then drains queued model speech before observer reconnection.
       console.debug('Silent observer received Live disconnect warning; awaiting provider close.', notice.timeLeft);
-    },
-    onSessionResumptionUpdate: (update) => {
-      if (update.newHandle && update.resumable !== false) {
-        resumptionHandleRef.current = update.newHandle;
-      }
     },
   });
 
@@ -155,6 +149,8 @@ export const useSilentObserverController = ({
       resolveBookmarkContextSummary,
     });
   }, [computeHistorySubsetForMedia, currentSystemPromptText, messagesRef, resolveBookmarkContextSummary]);
+  const instructionBuilderRef = useRef(buildObserverInstruction);
+  instructionBuilderRef.current = buildObserverInstruction;
 
   const startObserverInternal = useCallback(async () => {
     if (startInFlightRef.current) return;
@@ -169,20 +165,17 @@ export const useSilentObserverController = ({
 
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
       const activeStream = liveVideoStream && liveVideoStream.active ? liveVideoStream : null;
-      const sessionResumption = resumptionHandleRef.current
-        ? { handle: resumptionHandleRef.current }
-        : {};
 
       await startObserverConversation({
         liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER,
         stream: activeStream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
+        buildSystemInstruction: () => instructionBuilderRef.current(),
         voiceName,
         responseModalities: [Modality.AUDIO],
         playModelAudio: true,
         emitTurns: Boolean(onTurnComplete),
-        sessionResumption,
         costFeature: 'reengagement',
         // The observer is locally armed without a provider transport. VAD plus
         // Whisper must find words before it may open one.
@@ -236,8 +229,6 @@ export const useSilentObserverController = ({
   }, [stopObserverInternal]);
 
   const resetSilentObserver = useCallback(async () => {
-    // Drop session resumption so a language switch cannot resume old-context state.
-    resumptionHandleRef.current = undefined;
     setSilentObserverError(null);
     await stopObserverInternal('reset', 0);
     setLifecycleTick(prev => prev + 1);

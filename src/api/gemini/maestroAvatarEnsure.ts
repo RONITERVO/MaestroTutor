@@ -4,6 +4,7 @@
 import { getMaestroProfileImageDB, setMaestroProfileImageDB } from '../../core/db/assets';
 import { checkFileStatuses, uploadMediaToFiles } from './files';
 import { createAvatarWithOverlay } from '../../features/vision';
+import { getAvatarAccessScope } from './avatarAccessScope';
 
 const MAESTRO_URI_REFRESH_MS = (48 * 60 * 60 * 1000) - (5 * 60 * 1000); // 47h 55m
 
@@ -14,6 +15,9 @@ let cachedRawUpdatedAt = 0;
 let cachedOverlayUri: string | null = null;
 let cachedOverlayMimeType: string | null = null;
 let cachedOverlayUpdatedAt = 0;
+let cachedScope: string | null = null;
+let cacheRevision = 0;
+let inFlight: { scope: string; revision: number; promise: Promise<EnsuredAvatarResult> } | null = null;
 
 export interface EnsuredAvatarResult {
   rawUri: string | null;
@@ -54,6 +58,9 @@ const findFirstActiveGeminiFileUri = async (candidates: Array<string | null | un
 };
 
 export const invalidateMaestroAvatarCache = (): void => {
+  cacheRevision += 1;
+  inFlight = null;
+  cachedScope = null;
   cachedRawUri = null;
   cachedRawMimeType = null;
   cachedRawUpdatedAt = 0;
@@ -63,6 +70,26 @@ export const invalidateMaestroAvatarCache = (): void => {
 };
 
 export const ensureMaestroAvatarUris = async (): Promise<EnsuredAvatarResult> => {
+  const scope = await getAvatarAccessScope();
+  if (cachedScope !== scope) invalidateMaestroAvatarCache();
+  cachedScope = scope;
+  const revision = cacheRevision;
+  if (inFlight?.scope === scope && inFlight.revision === revision) return inFlight.promise;
+  const promise = ensureForAccess(scope, revision);
+  inFlight = { scope, revision, promise };
+  try {
+    return await promise;
+  } finally {
+    if (inFlight?.promise === promise) inFlight = null;
+  }
+};
+
+const ensureForAccess = async (scope: string, revision: number): Promise<EnsuredAvatarResult> => {
+  const assertCurrentAccess = async () => {
+    if (scope !== await getAvatarAccessScope() || revision !== cacheRevision) {
+      throw new Error('Avatar access changed while refreshing; retry with current access.');
+    }
+  };
   const asset = await getMaestroProfileImageDB();
   if (!asset?.dataUrl) return NULL_RESULT;
 
@@ -79,7 +106,7 @@ export const ensureMaestroAvatarUris = async (): Promise<EnsuredAvatarResult> =>
   }
 
   if (!rawUri || rawAge > MAESTRO_URI_REFRESH_MS) {
-    const existingRawUri = await findFirstActiveGeminiFileUri([rawUri, asset.uri]);
+    const existingRawUri = await findFirstActiveGeminiFileUri([rawUri, asset.accessScope === scope ? asset.uri : null]);
 
     if (existingRawUri) {
       rawUri = existingRawUri;
@@ -88,19 +115,17 @@ export const ensureMaestroAvatarUris = async (): Promise<EnsuredAvatarResult> =>
       const uploaded = await uploadMediaToFiles(asset.dataUrl, mimeType, 'maestro-avatar');
       rawUri = uploaded.uri;
       rawMimeType = uploaded.mimeType || mimeType;
+      await assertCurrentAccess();
       await setMaestroProfileImageDB({
+        accessScope: scope,
         dataUrl: asset.dataUrl,
         mimeType: rawMimeType,
         uri: rawUri,
         updatedAt: Date.now(),
       });
-      try {
-        window.dispatchEvent(new CustomEvent('maestro-avatar-updated', {
-          detail: { dataUrl: asset.dataUrl, mimeType: rawMimeType, uri: rawUri },
-        }));
-      } catch { /* ignore */ }
     }
 
+    await assertCurrentAccess();
     cachedRawUri = rawUri;
     cachedRawMimeType = rawMimeType;
     cachedRawUpdatedAt = Date.now();
@@ -121,11 +146,12 @@ export const ensureMaestroAvatarUris = async (): Promise<EnsuredAvatarResult> =>
     const uploaded = await uploadMediaToFiles(overlay.dataUrl, overlay.mimeType, 'maestro-avatar-overlay');
     overlayUri = uploaded.uri;
     overlayMimeType = uploaded.mimeType || overlay.mimeType;
-
+    await assertCurrentAccess();
     cachedOverlayUri = overlayUri;
     cachedOverlayMimeType = overlayMimeType;
     cachedOverlayUpdatedAt = Date.now();
   }
 
+  await assertCurrentAccess();
   return { rawUri, rawMimeType, overlayUri, overlayMimeType };
 };

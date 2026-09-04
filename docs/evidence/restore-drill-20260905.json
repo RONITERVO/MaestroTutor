@@ -1,0 +1,104 @@
+{
+  "project": "chatwithmaestro",
+  "restoredDatabase": "restore-drill-20260905",
+  "snapshotTime": "2026-09-04T21:28:00Z",
+  "passed": true,
+  "results": [
+    {
+      "collection": "users",
+      "source": {
+        "count": 1,
+        "sha256": "0e966d18ce4ffafcdba85bc9315f5c87820e7f8be7a17d38224103b0515d5a5b"
+      },
+      "restored": {
+        "count": 1,
+        "sha256": "0e966d18ce4ffafcdba85bc9315f5c87820e7f8be7a17d38224103b0515d5a5b"
+      },
+      "matches": true
+    },
+    {
+      "collection": "managedAccounts",
+      "source": {
+        "count": 1,
+        "sha256": "4d7c48da0cc5509099cd189bccac7cca2961048afa82c8862a3d19990d0c23c3"
+      },
+      "restored": {
+        "count": 1,
+        "sha256": "4d7c48da0cc5509099cd189bccac7cca2961048afa82c8862a3d19990d0c23c3"
+      },
+      "matches": true
+    },
+    {
+      "collection": "entitlements",
+      "source": {
+        "count": 5,
+        "sha256": "a31ecc6c86d4bea77b05bb2cfe55fa28c2e1f6d830bd281f99d73c9e21b04e6b"
+      },
+      "restored": {
+        "count": 5,
+        "sha256": "a31ecc6c86d4bea77b05bb2cfe55fa28c2e1f6d830bd281f99d73c9e21b04e6b"
+      },
+      "matches": true
+    },
+    {
+      "collection": "billingEvents",
+      "source": {
+        "count": 341,
+        "sha256": "4eefee5f771b5811c8e586a3bb2424a4565730d2a95006e594c5ccbb8efc7187"
+      },
+      "restored": {
+        "count": 341,
+        "sha256": "4eefee5f771b5811c8e586a3bb2424a4565730d2a95006e594c5ccbb8efc7187"
+      },
+      "matches": true
+    },
+    {
+      "collection": "usageEvents",
+      "source": {
+        "count": 334,
+        "sha256": "7f27cb467e48d882db27b1b793b088e35d86826565b30b4d80b42e258ac615e1"
+      },
+      "restored": {
+        "count": 334,
+        "sha256": "7f27cb467e48d882db27b1b793b088e35d86826565b30b4d80b42e258ac615e1"
+      },
+      "matches": true
+    },
+    {
+      "collection": "reservations",
+      "source": {
+        "count": 336,
+        "sha256": "06e000319f3a96c26a9c4775cc1b19804bd0e0e683a52011082656f8bc92c207"
+      },
+      "restored": {
+        "count": 336,
+        "sha256": "06e000319f3a96c26a9c4775cc1b19804bd0e0e683a52011082656f8bc92c207"
+      },
+      "matches": true
+    },
+    {
+      "collection": "purchaseClaims",
+      "source": {
+        "count": 5,
+        "sha256": "e1e8c960a3827653d167f7fc5ad3e891b39ab8487619ac57b005e57a19edef9b"
+      },
+      "restored": {
+        "count": 5,
+        "sha256": "e1e8c960a3827653d167f7fc5ad3e891b39ab8487619ac57b005e57a19edef9b"
+      },
+      "matches": true
+    },
+    {
+      "collection": "accountDeletionClaims",
+      "source": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "restored": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "matches": true
+    }
+  ]
+}
