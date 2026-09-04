@@ -128,6 +128,7 @@ export const runSyntheticLiveJourney = async (
   let streamEnds = 0;
   let audioSentSinceLastStreamEnd = false;
   let inputCaptureStartedAt: number | null = null;
+  let initialSourceEndedAt: number | null = null;
   let localTriggerAt: number | null = null;
   let providerConnectStartedAt: number | null = null;
   let providerConnectedAt: number | null = null;
@@ -233,7 +234,9 @@ export const runSyntheticLiveJourney = async (
         }
       },
     });
-    sourceRun = router.attach(input.source);
+    sourceRun = router.attach(input.source).then(() => {
+      initialSourceEndedAt = runtime.clock.now();
+    });
     await Promise.race([
       triggerReady,
       sourceRun.then(() => {
@@ -509,7 +512,10 @@ export const runSyntheticLiveJourney = async (
         inputCaptureStartedAt ??= turnCaptureStartedAt;
         await router.attach(source);
       }
-      const turnCaptureEndedAt = runtime.clock.now();
+      // Capture can finish while connection setup is still pending. Its duration
+      // must not include the subsequent wait for the provider/handoff.
+      const turnCaptureEndedAt = turnIndex === 0 && initialSourceEndedAt !== null
+        ? initialSourceEndedAt : runtime.clock.now();
       totalInputCaptureElapsedMs += Math.max(0, turnCaptureEndedAt - turnCaptureStartedAt);
       await packetizer.flushPending();
       endAudioStream('source-ended');

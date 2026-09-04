@@ -98,6 +98,10 @@ webSockets.on('connection', (webSocket) => {
     provider,
     providerConnectTimeoutMs,
     log: (level, message, details) => {
+      if (message === 'Live turn timing') {
+        console.info(JSON.stringify({ severity: 'INFO', message, timing: details }));
+        return;
+      }
       const payload = details === undefined ? [message] : [message, details];
       if (level === 'error') console.error(...payload);
       else if (level === 'warn') console.warn(...payload);
