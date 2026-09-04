@@ -37,6 +37,18 @@ const asRecord = (value: unknown): Record<string, unknown> => {
   return value as Record<string, unknown>;
 };
 
+/**
+ * The Google SDK exposes response.text through a prototype getter. JSON-RPC
+ * serialization only sees own enumerable properties, so materialize the getter
+ * to keep direct-key and managed headless responses equivalent.
+ */
+const materializeModelResponseText = (value: unknown): unknown => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const response = value as Record<string, unknown> & { text?: unknown };
+  const text = response.text;
+  return typeof text === 'string' ? { ...response, text } : { ...response };
+};
+
 const requiredString = (record: Record<string, unknown>, key: string): string => {
   const value = record[key];
   if (typeof value !== 'string' || !value.trim()) {
@@ -466,13 +478,13 @@ export const dispatchHeadlessMethod = async (
         } as BackendAiContentReportRequest;
       })());
     case 'gemini.generate':
-      return client.ai.models.generateContent({
+      return materializeModelResponseText(await client.ai.models.generateContent({
         model: requiredString(input, 'model'),
         contents: input.contents,
         ...(input.config && typeof input.config === 'object' && !Array.isArray(input.config)
           ? { config: input.config as Record<string, unknown> }
           : {}),
-      });
+      }));
     case 'gemini.generateStream': {
       const chunks: unknown[] = [];
       for await (const chunk of await client.ai.models.generateContentStream({
@@ -482,7 +494,7 @@ export const dispatchHeadlessMethod = async (
           ? { config: input.config as Record<string, unknown> }
           : {}),
       })) {
-        chunks.push(chunk);
+        chunks.push(materializeModelResponseText(chunk));
       }
       return { chunks };
     }
