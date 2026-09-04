@@ -189,6 +189,22 @@ const waitFor = async <T>(promise: Promise<T>, timeoutMs: number, label: string)
 
 /** One WebSocket's ordered, testable state machine. */
 export class LiveGatewayConnection {
+  private readonly timingStartedAt = performance.now();
+  private readonly timingEvents: Array<{ name: string; elapsedMs: number; metrics?: Record<string, number> }> = [];
+  private readonly timingSeen = new Set<string>();
+  private lastAudioReceivedAt = 0;
+  private lastAudioForwardedAt = 0;
+  private maxInputQueueWaitMs = 0;
+
+  private markTiming(name: string, metrics?: Record<string, number>, at = performance.now()): void {
+    if (this.timingEvents.length < 40) this.timingEvents.push({ name, elapsedMs: at - this.timingStartedAt, ...(metrics ? { metrics } : {}) });
+  }
+
+  private markTimingOnce(name: string, at = performance.now()): void {
+    if (this.timingSeen.has(name)) return;
+    this.timingSeen.add(name);
+    this.markTiming(name, undefined, at);
+  }
   private phase: Phase = 'unauthenticated';
   private serial: Promise<void> = Promise.resolve();
   private ticketSession: GatewayTicketSession | null = null;
@@ -212,7 +228,8 @@ export class LiveGatewayConnection {
   }
 
   receive(text: string): void {
-    this.enqueue(() => this.handleClientMessage(parseClientMessage(text)));
+    const receivedAt = performance.now();
+    this.enqueue(() => this.handleClientMessage(parseClientMessage(text), receivedAt));
   }
 
   /** Allows graceful process shutdowns and deterministic state-machine tests. */
@@ -260,7 +277,7 @@ export class LiveGatewayConnection {
     this.deadlineTimer = null;
   }
 
-  private async handleClientMessage(message: LiveGatewayClientMessage): Promise<void> {
+  private async handleClientMessage(message: LiveGatewayClientMessage, receivedAt: number): Promise<void> {
     if (message.type === 'authenticate') {
       if (this.phase !== 'unauthenticated') throw new Error('Authentication may only be sent once.');
       await this.authenticate(message.ticket);
@@ -275,6 +292,12 @@ export class LiveGatewayConnection {
     }
     if (message.type === 'realtimeInput') {
       validateRealtimeInput(message.input);
+      if (message.input.audio) {
+        this.markTimingOnce('input.first-audio-received', receivedAt);
+        this.lastAudioReceivedAt = receivedAt;
+        this.maxInputQueueWaitMs = Math.max(this.maxInputQueueWaitMs, performance.now() - receivedAt);
+      }
+      if (message.input.activityEnd) this.markTiming('input.activity-end-received', undefined, receivedAt);
       const hasNewMediaOrTurn = Boolean(
         message.input.audio
         || message.input.video
@@ -298,6 +321,15 @@ export class LiveGatewayConnection {
       await this.paceProviderAudio(addedAudioBytes, this.checkpointState.inputAudioSampleRate);
       await this.paceProviderVideo(addedVideoFrames);
       await this.providerSession.sendRealtimeInput(message.input);
+      if (message.input.audio) {
+        this.markTimingOnce('input.first-audio-forwarded');
+        this.lastAudioForwardedAt = performance.now();
+      }
+      if (message.input.activityEnd) {
+        this.markTiming('input.last-audio-received', undefined, this.lastAudioReceivedAt);
+        this.markTiming('input.last-audio-forwarded', undefined, this.lastAudioForwardedAt);
+        this.markTiming('input.activity-end-forwarded', { maxInputQueueWaitMs: this.maxInputQueueWaitMs });
+      }
       if (isAudioBoundary(message.input)) await this.persistCheckpoint();
       return;
     }
@@ -350,10 +382,17 @@ export class LiveGatewayConnection {
     }
 
     const callbacks: LiveProviderCallbacks = {
-      onmessage: (message) => this.enqueue(() => this.handleProviderMessage(message)),
+      onmessage: (message) => {
+        const content = (message as { serverContent?: { inputTranscription?: unknown; outputTranscription?: unknown; modelTurn?: { parts?: Array<{ inlineData?: unknown }> } } })?.serverContent;
+        if (content?.inputTranscription) this.markTimingOnce('input.first-provider-transcript-received');
+        if (content?.outputTranscription) this.markTimingOnce('response.first-transcript-received');
+        if (content?.modelTurn?.parts?.some(part => part.inlineData)) this.markTimingOnce('response.first-audio-received');
+        this.enqueue(() => this.handleProviderMessage(message));
+      },
       onerror: (error) => this.enqueue(() => this.handleProviderError(error)),
       onclose: (event) => this.enqueue(() => this.handleProviderClose(event)),
     };
+    this.markTiming('provider.connect-start');
     const connectPromise = this.options.provider.connect({
       model: this.ticketSession.model,
       ...(this.ticketSession.config ? { config: this.ticketSession.config } : {}),
@@ -398,6 +437,7 @@ export class LiveGatewayConnection {
       await this.persistCheckpoint();
     }
     this.send({ type: 'providerMessage', message });
+    if (firstUsefulOutput) this.markTimingOnce('response.first-useful-output-forwarded');
   }
 
   private async handleProviderError(error: unknown): Promise<void> {
@@ -430,6 +470,12 @@ export class LiveGatewayConnection {
   }
 
   private async performShutdown(reason: string, closeProvider: boolean): Promise<void> {
+    this.markTiming('session.closing');
+    if (this.ticketSession) this.options.log?.('info', 'Live turn timing', {
+      sessionId: this.ticketSession.sessionId,
+      clock: 'gateway-monotonic',
+      events: this.timingEvents,
+    });
     this.phase = 'closing';
     this.clearTimers();
     if (closeProvider && this.providerSession && !this.providerClosed) {

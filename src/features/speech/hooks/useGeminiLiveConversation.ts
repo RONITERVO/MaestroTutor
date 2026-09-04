@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { beginTurnTiming } from '../../../core-sdk/turnTiming';
 import {
   LiveServerMessage,
   Modality,
@@ -85,6 +86,7 @@ export type LiveTurnTranscriptUpdateReason =
 
 export interface LiveTurnTranscriptUpdate {
   userText: string;
+  speechPreviewProgress?: number;
   modelText: string;
   reason: LiveTurnTranscriptUpdateReason;
   thinkingTrace?: string[];
@@ -311,6 +313,9 @@ export function useGeminiLiveConversation(
   // Transcription & Audio Accumulators
   const currentInputTranscriptionRef = useRef<string>('');
   const localInputPreviewRef = useRef<string>('');
+  const concealedSpeechProgressRef = useRef(0);
+  const concealedSpeechSamplesRef = useRef(0);
+  const turnTimingRef = useRef<ReturnType<typeof beginTurnTiming> | null>(null);
   const currentOutputTranscriptionRef = useRef<string>('');
   const currentUserAudioChunksRef = useRef<Int16Array[]>([]);
   const currentModelAudioChunksRef = useRef<Int16Array[]>([]);
@@ -475,13 +480,14 @@ export function useGeminiLiveConversation(
     const pendingUserText = pendingUserTurnRef.current?.text?.trim() ?? '';
     const currentUserText = (
       currentInputTranscriptionRef.current.trim()
-      || localInputPreviewRef.current.trim()
     );
     const thinkingTrace = currentModelThinkingTraceRef.current.length > 0
       ? [...currentModelThinkingTraceRef.current]
       : undefined;
     const nextUpdate: LiveTurnTranscriptUpdate = {
       userText: [pendingUserText, currentUserText].filter(Boolean).join('\n').trim(),
+      speechPreviewProgress: !currentUserText && localInputPreviewRef.current
+        ? Math.max(3, concealedSpeechProgressRef.current) : undefined,
       modelText: currentOutputTranscriptionRef.current.trim(),
       reason,
       thinkingTrace,
@@ -492,6 +498,7 @@ export function useGeminiLiveConversation(
     if (
       previousUpdate
       && previousUpdate.userText === nextUpdate.userText
+      && previousUpdate.speechPreviewProgress === nextUpdate.speechPreviewProgress
       && previousUpdate.modelText === nextUpdate.modelText
       && previousUpdate.reason === nextUpdate.reason
       && (previousUpdate.thinkingPhase || '') === (nextUpdate.thinkingPhase || '')
@@ -951,6 +958,9 @@ export function useGeminiLiveConversation(
 
     // Generate a new session ID for this start call
     const sessionId = ++liveConversationSessionCounter;
+    concealedSpeechProgressRef.current = 0;
+    concealedSpeechSamplesRef.current = 0;
+    turnTimingRef.current = beginTurnTiming(crypto.randomUUID());
     currentSessionIdRef.current = sessionId;
     startNextModelAudioTurn(sessionId);
     serverMessageQueueRef.current = Promise.resolve();
@@ -993,6 +1003,15 @@ export function useGeminiLiveConversation(
           detector: observerWhisperRef.current!,
           signal: triggerAbort.signal,
           onPhaseChange: setLocalSpeechTriggerPhase,
+          onPendingSpeechSamples: samples => {
+            if (currentSessionIdRef.current !== sessionId) return;
+            concealedSpeechSamplesRef.current += samples;
+            const progress = Math.min(24, 3 + Math.floor(concealedSpeechSamplesRef.current / INPUT_SAMPLE_RATE));
+            if (progress !== concealedSpeechProgressRef.current) {
+              concealedSpeechProgressRef.current = progress;
+              emitTurnTranscriptUpdate('input');
+            }
+          },
           onVadActivityChange: active => setVadActivity(active, observerActivity),
         });
         if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
@@ -1005,6 +1024,9 @@ export function useGeminiLiveConversation(
         inputAudioTelemetryRef.current.speechTriggerSamples = localSpeechTrigger.pcm.length;
         if (await abortIfInvalidated()) return;
         localInputPreviewRef.current = localSpeechTrigger.transcript;
+        turnTimingRef.current?.mark('speech.whisper-trigger', {
+          capturedAudioMs: localSpeechTrigger.pcm.length / INPUT_SAMPLE_RATE * 1000,
+        });
         emitTurnTranscriptUpdate('pending-user');
       }
 
@@ -1101,6 +1123,7 @@ export function useGeminiLiveConversation(
           if (playbackDrainCoordinatorRef.current.handleMessage(telemetryMessage)) return;
           if (!telemetryMessage || telemetryMessage.type !== 'telemetry') return;
           if (telemetryMessage.event === 'started') {
+            turnTimingRef.current?.markOnce('playback.first-render-notified');
             playbackTelemetryRef.current.starts += 1;
             return;
           }
@@ -1358,7 +1381,9 @@ export function useGeminiLiveConversation(
         // that queue itself. One connection owns exactly one response.
         void serverMessageQueueRef.current.then(() => finishTransportLifecycle('idle'));
       };
+      turnTimingRef.current?.mark('provider.connect-start');
       const session = await ai.live.connect({
+        turnTiming: turnTimingRef.current ?? undefined,
         model,
         liveOpenReason: createLiveOpenReason(liveOpenTrigger),
         config: {
@@ -1436,6 +1461,8 @@ export function useGeminiLiveConversation(
                   ?? [];
 
                 for (const inlineAudio of inlineAudioParts) {
+                  turnTimingRef.current?.markLatest('response.last-audio-received');
+                  turnTimingRef.current?.markOnce('response.first-audio-received');
                   const turnId = currentModelAudioTurnIdRef.current;
                   const jobId = nextModelAudioDecodeJobIdRef.current++;
                   const job: ModelAudioDecodeJob = {
@@ -1496,6 +1523,7 @@ export function useGeminiLiveConversation(
 
                 // 2. Handle Transcript Accumulation & Split Point Detection
                 if (msg.serverContent?.inputTranscription?.text) {
+                  turnTimingRef.current?.markOnce('input.first-provider-transcript');
                   localInputPreviewRef.current = '';
                   currentInputTranscriptionRef.current += msg.serverContent.inputTranscription.text;
                   currentUserTranscriptAudioLengthRef.current = currentUserAudioTotalLengthRef.current;
@@ -1505,6 +1533,7 @@ export function useGeminiLiveConversation(
                   currentTurnWaitingForInputRef.current = true;
                 }
                 if (msg.serverContent?.outputTranscription?.text) {
+                  turnTimingRef.current?.markOnce('response.first-provider-transcript');
                   const textPart = msg.serverContent.outputTranscription.text;
                   currentOutputTranscriptionRef.current += textPart;
                   currentTurnWaitingForInputRef.current = false;
@@ -1605,6 +1634,7 @@ export function useGeminiLiveConversation(
       });
       
       sessionRef.current = session;
+      turnTimingRef.current?.mark('provider.connected');
       
       // Check if session was invalidated during async connect
       if (currentSessionIdRef.current !== sessionId) {
@@ -1690,7 +1720,9 @@ export function useGeminiLiveConversation(
         const closingBoundary = boundary;
         const closingPacketizer = inputPacketizerRef.current;
         const closePromise = (async () => {
+          turnTimingRef.current?.mark('speech.close-start', { queuedAudioMs: closingPacketizer?.getQueuedAudioMs() ?? 0 });
           await closingPacketizer?.flushPending();
+          turnTimingRef.current?.mark('input.queue-drained');
           if (
             currentSessionIdRef.current !== sessionId
             || speechGateEpochRef.current !== speechGateEpoch
@@ -1700,6 +1732,7 @@ export function useGeminiLiveConversation(
           const activeSession = sessionRef.current;
           if (!activeSession) return;
           activeSession.sendRealtimeInput({ activityEnd: {} });
+          turnTimingRef.current?.mark('input.activity-end-sent');
           activeSession.sendRealtimeInput({ audioStreamEnd: true });
           inputAudioTelemetryRef.current.audioStreamEnds += 1;
           closingPacketizer?.resetPacingEpoch();
@@ -1757,6 +1790,7 @@ export function useGeminiLiveConversation(
           if (isLikelySpeechTranscript(text)) {
             inputAudioTelemetryRef.current.whisperAccepted += 1;
             if (checkKind === 'boundary') {
+              turnTimingRef.current?.mark('speech.whisper-confirmed');
               boundary.refreshConfirmedSpeech(resultAt);
               return;
             }
@@ -1842,6 +1876,15 @@ export function useGeminiLiveConversation(
 
         const energy = measureEnergy(pcm);
         const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
+        if (packetIsSpeech) turnTimingRef.current?.markLatest('speech.last-energy-detected');
+        if (packetIsSpeech && localInputPreviewRef.current && !currentInputTranscriptionRef.current) {
+          concealedSpeechSamplesRef.current += pcm.length;
+          const progress = Math.min(24, 3 + Math.floor(concealedSpeechSamplesRef.current / INPUT_SAMPLE_RATE));
+          if (progress !== concealedSpeechProgressRef.current) {
+            concealedSpeechProgressRef.current = progress;
+            emitTurnTranscriptUpdate('input');
+          }
+        }
         setVadActivity(packetIsSpeech, observerActivity);
         speechCapture.append(pcm);
 

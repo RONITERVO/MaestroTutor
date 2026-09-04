@@ -71,6 +71,7 @@ export const waitForLocalSpeechTrigger = async (options: {
   signal?: AbortSignal;
   onPhaseChange?: (phase: LocalSpeechTriggerPhase) => void;
   onVadActivityChange?: (active: boolean) => void;
+  onPendingSpeechSamples?: (samples: number) => void;
 }): Promise<LocalSpeechTriggerResult> => {
   if (options.signal?.aborted) throw abortError();
   const setPhase = (phase: LocalSpeechTriggerPhase) => options.onPhaseChange?.(phase);
@@ -83,6 +84,7 @@ export const waitForLocalSpeechTrigger = async (options: {
   let vadActive = false;
   let inferenceTailPackets: Int16Array[] = [];
   const continuationCapture = new PcmCaptureHandoff();
+  let captureTransferred = false;
 
   const setVadActive = (active: boolean) => {
     if (vadActive === active) return;
@@ -230,7 +232,10 @@ export const waitForLocalSpeechTrigger = async (options: {
               capture: {
                 audioContext: retainedContext,
                 workletNode: retainedWorklet,
-                transferTo: sink => continuationCapture.transferTo(sink),
+                transferTo: sink => {
+                  captureTransferred = true;
+                  return continuationCapture.transferTo(sink);
+                },
                 close: async (closeOptions) => {
                   await stopCapture(closeOptions?.stopMicrophone === false);
                 },
@@ -252,6 +257,9 @@ export const waitForLocalSpeechTrigger = async (options: {
         const pcm = event.data;
         if (!(pcm instanceof Int16Array) || pcm.length === 0) return;
         if (settled) {
+          if (!captureTransferred && isSpeechLike(measureEnergy(pcm), DEFAULT_SPEECH_GATE)) {
+            options.onPendingSpeechSamples?.(pcm.length);
+          }
           continuationCapture.push(pcm);
           return;
         }

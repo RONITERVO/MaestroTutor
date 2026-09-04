@@ -5,6 +5,22 @@ import { describe, expect, it } from 'vitest';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
 
 describe('RealtimePcmPacketizer output pacing', () => {
+  it('reports queued audio until the asynchronous send actually finishes', async () => {
+    let finish!: () => void;
+    const packetizer = new RealtimePcmPacketizer({
+      sampleRate: 1000, packetDurationMs: 20,
+      onPacket: () => new Promise<void>(resolve => { finish = resolve; }),
+    });
+    packetizer.push(new Int16Array(20));
+    const drain = packetizer.flushPending();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(packetizer.getQueuedAudioMs()).toBe(20);
+    finish();
+    await drain;
+    expect(packetizer.getQueuedAudioMs()).toBe(0);
+    packetizer.dispose();
+  });
   it('replays a burst at PCM cadence while preserving packet order', async () => {
     let now = 1_000;
     const sentAt: number[] = [];

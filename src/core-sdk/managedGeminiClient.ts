@@ -22,6 +22,7 @@ import {
 } from '../../shared/liveOpenReason';
 
 export interface CoreLiveConnectRequest extends Record<string, unknown> {
+  turnTiming?: { mark(name: string): void; linkGateway(sessionId: string): void };
   model: string;
   liveOpenReason: LiveOpenReason;
   config?: Record<string, unknown>;
@@ -116,7 +117,7 @@ const splitLiveConnectRequest = (rawRequest: unknown): {
   } catch {
     throw createLiveOpenReasonRequiredError();
   }
-  const { liveOpenReason: _clientOnlyReason, ...providerRequest } = request;
+  const { liveOpenReason: _clientOnlyReason, turnTiming: _clientOnlyTiming, ...providerRequest } = request;
   return { providerRequest, liveOpenReason };
 };
 
@@ -195,6 +196,7 @@ const createManagedGatewaySession = async (params: {
   callbacks: Record<string, (...args: unknown[]) => unknown>;
   createSocket: (url: string) => ManagedGatewaySocket;
   connectTimeoutMs: number;
+  timing?: CoreLiveConnectRequest['turnTiming'];
   warn: (message: string, error: unknown) => void;
 }): Promise<Record<string, (...args: any[]) => unknown>> => {
   const gatewayUrl = assertGatewayUrl(params.ticketLease.gatewayUrl);
@@ -263,6 +265,7 @@ const createManagedGatewaySession = async (params: {
     const handleMessage = async (event: { data?: unknown }) => {
       const message = await parseGatewayMessage(event.data);
       if (message.type === 'ready') {
+        params.timing?.linkGateway(message.sessionId);
         if (ready) throw gatewayError('Managed Live gateway sent duplicate readiness.', 'LIVE_GATEWAY_PROTOCOL');
         ready = true;
         completed = true;
@@ -424,13 +427,17 @@ export const createManagedGeminiClient = (
       throw createCodedError('This runtime does not provide WebSocket support.', 500, 'LIVE_GATEWAY_UNSUPPORTED');
     }
     const { model, config, callbacks, liveOpenReason } = requireLiveRequest(rawRequest);
+    const timing = asRequest(rawRequest).turnTiming as CoreLiveConnectRequest['turnTiming'];
+    timing?.mark('gateway.ticket-start');
     const ticketLease = await backend.createLiveGatewayTicket({
       purpose: 'live',
       model,
       liveOpenReason,
       ...(config ? { config } : {}),
     });
+    timing?.mark('gateway.ticket-ready');
     return createManagedGatewaySession({
+      timing,
       backend,
       ticketLease,
       callbacks,

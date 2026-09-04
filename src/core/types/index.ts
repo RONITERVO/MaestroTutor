@@ -23,6 +23,8 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system' | 'error' | 'status' | 'system_selection';
   maestroToolKind?: 'image' | 'audio-note' | 'music';
   text?: string;
+  /** Ephemeral ink feedback while the provider transcript is pending; never speech text. */
+  speechPreviewProgress?: number;
   recordedUtterance?: RecordedUtterance;
   /** Translation pairs using generic field names to support all language combinations */
   translations?: Array<{

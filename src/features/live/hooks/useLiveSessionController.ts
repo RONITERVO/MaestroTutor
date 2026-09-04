@@ -585,13 +585,14 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     const modelText = update.modelText.trim();
     const shouldKeepUserDraft = update.reason !== 'no-model-response';
 
-    if (userText && shouldKeepUserDraft) {
+    if ((userText || update.speechPreviewProgress) && shouldKeepUserDraft) {
       const meta = ensureLiveDraftMeta('user');
       upsertLiveTranscriptMessage({
         id: meta.id,
         timestamp: meta.timestamp,
         role: 'user',
         text: update.userText,
+        speechPreviewProgress: update.speechPreviewProgress,
       } as ChatMessage);
     } else if (update.reason === 'no-model-response') {
       dropUserDraftMessage();

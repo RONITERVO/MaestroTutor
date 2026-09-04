@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { ConcealedSpeech } from './ConcealedSpeech';
 import { ChatMessage, EmbedBox, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconPaperclip, IconXMark, IconPencil, IconUndo, IconGripCorner, IconCheck, IconChevronLeft, IconChevronRight, IconSpeaker, IconVolumeOff } from '../../../shared/ui/Icons';
@@ -710,7 +711,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
 
   const bubbleShapeStyle = useMemo(() => sketchShapeStyle(messageIndex), [messageIndex]);
   const tapeLayout = useMemo(() => generateTapeLayout(messageIndex), [messageIndex]);
-  const hasTextContent = message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
+  const hasTextContent = message.speechPreviewProgress || message.text || (message.translations && message.translations.some(tr => tr.target || tr.native)) || message.rawAssistantResponse;
 
   const applyFocusedImageStyles = isFocusedMode && (isImageSuccessfullyDisplayed || isAttachmentLoading || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || usesAudioAttachmentShell || isPdfSuccessfullyDisplayed);
   const hasVisibleAttachment = shouldShowAudioAttachmentPlaceholder || isAttachmentLoading || isImageSuccessfullyDisplayed || isFileSuccessfullyDisplayed || isOfficeFileSuccessfullyDisplayed || isTextFileSuccessfullyDisplayed || isTextFileRemoteOnly || isVideoSuccessfullyDisplayed || isAudioSuccessfullyDisplayed || isPdfSuccessfullyDisplayed;
@@ -829,7 +830,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const sanitizedUserText = message.text ? message.text.replace(/\*/g, '') : '';
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
   const shouldUseUserTranscriptShell = isUser && !!message.text && applyFocusedImageStyles && shouldUseAttachmentTranscriptShell;
-  const userMessageTextNode = isUser && message.text ? (
+  const userMessageTextNode = isUser && message.speechPreviewProgress ? (
+    <ConcealedSpeech progress={message.speechPreviewProgress} />
+  ) : isUser && message.text ? (
     <p
       className={`${shouldUseUserTranscriptShell ? '' : 'mb-1 '}whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors pointer-events-auto ${userAttachmentTextClass} ${isUserLineSpeaking ? userAttachmentSpeakingSurfaceClass : userAttachmentHoverSurfaceClass}`.trim()}
       style={{ fontSize: '3.8cqw', lineHeight: 1.35 }}
