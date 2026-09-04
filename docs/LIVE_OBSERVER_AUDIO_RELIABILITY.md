@@ -52,7 +52,7 @@ also exact-pin the same `@google/genai` version; the release-config verifier fai
 if those versions diverge.
 
 The Core headless observer/STT path now mirrors the important ownership order:
-capture starts, sustained speech is confirmed, Live connects while capture
+capture starts, semantic speech is confirmed from an intact elapsed-audio window, Live connects while capture
 continues, and the shared `PcmCaptureHandoff` drains into the real packetizer. Paced
 input capture and provider delivery use absolute sample deadlines, so work done
 between frames or a slow connection does not change the speaker's effective rate.
@@ -84,8 +84,9 @@ The following checks are intentionally complementary:
 - The gateway state-machine suite injects buffered 100 ms packets and requires
   provider delivery at 0/100/200 ms, independently of client behavior.
 - `syntheticLiveJourney.test.ts` starts capture before a deliberately delayed Live
-  connection, requires the complete suffix transcript, and waits for model playback
-  duration rather than only model bytes or `turnComplete`.
+  connection, requires the complete suffix transcript, keeps the socket for a short
+  second turn, and waits for every model byte to finish real-time playback even
+  when another byte arrives after playback has already begun.
 - Every real release fixture supplies the full `expectedTranscript`, with distinctive
   final words. Word recall is computed against the provider input transcript, not
   local Whisper preview text or the assistant response.
@@ -93,7 +94,7 @@ The following checks are intentionally complementary:
   `transcriptEvidence.passed`, `realtimeEvidence.passed`,
   `realtimeEvidence.providerInputPacingPassed`,
   `timing.uiSpeechHandoff:true`, non-zero connection-handoff samples, non-zero model
-  PCM and hashes, one completed audio boundary, and input/playback wall-clock
+  PCM and hashes, the expected completed audio boundaries, and input/playback wall-clock
   durations within their declared tolerances.
 
 Do not weaken these checks to “some transcript arrived”, “some model audio arrived”,
@@ -187,6 +188,31 @@ awaited. Its 48 usage rows matched 48 charge rows and 433 credits / USD 0.413022
 with zero reservation before and after. This was the exact fixture that had exposed
 the burst failure, not a relaxed replacement.
 
+### Pending six-turn and long-audio release gate
+
+The current candidate expands the connected-socket proof from two to six turns in
+both managed and BYOK modes and sends one low-resolution visual frame on each turn.
+The managed proof correlates the socket request ID with exactly one usage row and
+one charge row, checks all six provider usage snapshots are included, recalculates
+the charge from the checked-in price registry, and requires zero shortfall or
+stranded reservation. This prevents later turns from being accidentally free or
+charged as a fixed maximum.
+
+The long fixture is based on the 37.55-second English question recorded with a
+Finnish accent in `Tallenne (14).m4a`. Local Whisper `large-v3-turbo` with English
+forced recovered the whole question, ending with “what is the main reason for
+this”. The checked-in transcript evidence includes segment and word timestamps;
+the personal recording itself is not committed. CI instead reuses one checked-in,
+non-personal generated WAV with the same wording and a 400 ms mid-sentence
+hesitation. Its exact bytes previously reached 47/48-word recall in both access
+modes, avoiding per-run TTS truncation and needless fixture-generation cost. Each
+run must transcribe the complete question and finish playing five English/Finnish
+response pairs. The observer continues to exercise its real local semantic gate.
+For the finite long conversation check, CI disables provider VAD and explicitly
+marks the recording's start and end. This isolates long-audio delivery and output
+playback from provider endpoint timing; `journey.firstLesson` separately keeps the
+normal product conversation on automatic VAD.
+
 ## Maintainer runbook
 
 Use a real spoken fixture converted to signed PCM16 mono at 16 kHz. Put base64 in a
@@ -229,5 +255,7 @@ answer these questions in tests:
 6. Does a paced check use wall-clock deadlines and wait for audible output drain?
 7. Is retained PCM paced at the provider-send boundary, including after a slow
    connection, rather than merely captured at real time?
+8. Does the same connected session pass a short second utterance after the first
+   reply has audibly drained?
 
 Run the focused audio tests plus the full suite and production build before merging.

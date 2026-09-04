@@ -35,6 +35,7 @@ import {
   type TtsLiveOpenTrigger,
 } from '../../../../shared/liveOpenReason';
 import { ScheduledPlaybackDrain } from '../utils/playbackDrain';
+import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
 
 // ============================================================================
 // TYPES
@@ -163,6 +164,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
   const model = getGeminiModels().audio.tts;
   const usageTracker = createLiveUsageTracker({ feature: 'tts', configuredModel: model });
   const config = {
+    ...getLiveCostControlConfig(),
     responseModalities: [Modality.AUDIO],
     speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
     systemInstruction: { parts: [{ text: systemInstructionText }] },
@@ -436,6 +438,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
             if (msg.usageMetadata) {
               usageTracker.trackSnapshot(msg.usageMetadata);
             }
+            if (msg.serverContent?.turnComplete) usageTracker.completeTurn();
 
             // 1. Handle Audio Response - stream immediately for playback
             const inlineAudioParts = msg.serverContent?.modelTurn?.parts
@@ -542,6 +545,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
             }
           },
           onclose: () => {
+            usageTracker.flush();
             if (terminalHandled) return;
             const finalizedResult = finalizeAudioSegments('closed');
             void finishAfterPlayback({
@@ -551,6 +555,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
             }, 'closed', true);
           },
           onerror: (err: any) => {
+            usageTracker.flush();
             const errorMsg = err?.message || 'Connection error';
             const finalizedResult = finalizeAudioSegments('error');
             void finishAfterPlayback({

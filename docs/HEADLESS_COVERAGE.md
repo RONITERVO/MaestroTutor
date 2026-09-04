@@ -42,7 +42,7 @@ persisted state transition is mocked in a provider run.
 | Live audio conversation | shared context, Live model compatibility, PCM stream and audio response | `live.conversation.turn`; expected-word recall, input/output transcript deltas, audio samples and SHA-256 values |
 | Live audio plus visual | same Live path with a real JPEG frame at the video stream boundary | `includeVisual:true`; sent-frame count plus transcript/audio evidence |
 | Post-Live aftersteps | same suggestion creator and dispatcher as chat | `runSuggestionAftersteps:true` or `journey.firstLesson` |
-| Silent observer audio | shared `SpeechGate`, retained PCM preroll, lossless pre-connect handoff and semantic confirmation | `live.observer.turn`; expected-word recall (including suffix), one completed audio boundary, real-time input/output playback evidence, gate enabled, no video frames, transcript/audio hashes |
+| Silent observer audio | shared `SpeechGate`, retained raw PCM, lossless pre-connect handoff and semantic confirmation | `live.observer.turn`; expected-word recall (including suffix), real-time input/output playback evidence, gate enabled, no video frames, transcript/audio hashes; `speech.synthetic.live` also requires a short second turn over the same socket |
 | Silent observer plus visual | same observer path plus real JPEG stream injection | `includeVisual:true`; gate and sent-frame evidence |
 | Translation | the same `translateText` request with an injected managed/BYOK client | `translation.create`; translated text, optionally attached to suggestions |
 | Empty-input re-engagement | the UI-equivalent `"..."` provider prompt without a user bubble | `chat.reengage`; no user bubble and at least one visible streamed text delta |
@@ -103,13 +103,31 @@ messages and every coverage flag to be true. Every synthetic attachment turn mus
 also report confirmed provider deletion with zero cleanup failures; a best-effort
 cleanup attempt alone is not release evidence.
 
-The bundled first-lesson audio repeats the known word `Play` long enough to clear
-the sustained-speech gate and now asserts that Live actually transcribed that word.
+The bundled first-lesson audio repeats the known word `Play` and now asserts that
+Live actually transcribed that word. The local detector waits for a 1.2-second
+intact audio window, not 1.2 seconds of VAD-selected speech.
 A custom `pcmBase64` is accepted only with `expectedTranscript`; this prevents a
 green response/audio check from hiding clipped or misunderstood user speech.
 Paced observer/STT checks additionally fail unless the input duration tracks wall
 time, PCM crossed the pre-connect handoff, and model audio completed a real-time
 24 kHz playback drain.
+
+The scheduled staging workflow additionally sends the short bundled `Play` clip
+six times over one still-connected socket in managed and BYOK modes, with one
+low-resolution camera frame on every turn. It rejects the run unless every input
+transcript and response is non-empty, all six manual audio boundaries carry
+samples, and playback for every turn completes after its final network audio byte.
+It also runs one shared long English fixture through observer-camera and
+conversation mode in both access modes. That fixture includes a 400 ms hesitation,
+requires the complete question transcript, and forces five English/Finnish response
+pairs so truncated input, output, playback, or translation cannot pass unnoticed.
+The checked-in WAV is non-personal generated speech whose exact bytes previously
+reached 47/48-word recall in both access modes; versioning it prevents a truncated
+TTS generation from silently changing what a release run sends.
+The finite long conversation fixture disables provider VAD and sends one explicit
+activity boundary around the whole recording, making this transport proof
+independent of provider endpoint timing. The ordinary short conversation in
+`journey.firstLesson` remains the automatic-VAD gate for the product chat path.
 
 ## Access-mode policy and safe cleanup
 
@@ -279,13 +297,16 @@ and zero managed credits reserved afterward.
 
 ### Managed Live billing fairness boundary
 
-Managed Live now reserves a conservative 180-second maximum but does not charge at
+Managed Live now reserves a conservative 120-second, six-turn maximum but does not charge at
 ticket mint. A one-use bearer ticket authenticates the client to Maestro's Cloud
 Run WebSocket gateway. Its hash and sanitized Live setup config exist only while
 the ticket is usable; consumption or expiry scrubs both, and the durable session
 stores no config. The gateway loads the allowlisted model/config in memory, holds
 the Gemini credential, and records
-monotonic input/output/usage checkpoints. The first useful provider output is
+monotonic input/output/usage checkpoints. Provider usage is retained as one latest
+snapshot per completed turn and then summed, because retained Live context is billed
+again on later turns; treating the final snapshot as the whole socket would
+undercharge multi-turn sessions. The first useful provider output is
 durably checkpointed before it is forwarded, preventing a modified client from
 receiving an answer and then claiming nothing arrived.
 
@@ -312,10 +333,21 @@ The invariants are enforced at four layers:
 - the paired real-time observer/full-journey jobs exercise the same Core client used
   by the visual UI and compare managed against BYOK evidence.
 
+The gateway enforces the same boundary used by its temporary hold: at most 120
+seconds, six turns, one camera frame per second, low media resolution, and bounded
+configuration size. At the current 1,000 credits/USD conversion the worst-case hold
+is 455 credits. This is not a fixed charge: successful sessions settle from summed
+provider turn usage and return the remainder; no-output sessions return the whole
+hold. The staging proof additionally requires one correlated usage row, one matching
+charge row, zero shortfall, zero stranded reservation, and exact agreement between
+provider metadata, the checked-in pricing table, both ledgers, and the account
+balance delta.
+
 Cloud Run is the deployment surface because it supports WebSockets, bounded
 request timeouts and high connection concurrency:
 
 - [Gemini Live billing is token-based](https://ai.google.dev/gemini-api/docs/live-api/best-practices#pricing-billing)
+- [Gemini Live session and connection limits](https://ai.google.dev/gemini-api/docs/live-api/session-management)
 - [Gemini failed-request billing](https://ai.google.dev/gemini-api/docs/billing)
 - [Cloud Run WebSocket guidance](https://cloud.google.com/run/docs/triggering/websockets)
 

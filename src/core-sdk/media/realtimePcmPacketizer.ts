@@ -51,6 +51,7 @@ export class RealtimePcmPacketizer {
   private outputSamplesScheduled = 0;
   private outputPacingStartedAt: number | null = null;
   private outputPacingLastSentAt: number | null = null;
+  private completedPacingElapsedMs = 0;
   private stats: RealtimePcmPacketizerStats = {
     totalInputSamples: 0,
     totalOutputSamples: 0,
@@ -108,13 +109,35 @@ export class RealtimePcmPacketizer {
     await this.sendQueue.catch(() => undefined);
   }
 
+  /**
+   * Start a fresh real-time clock after an explicit turn boundary.
+   *
+   * A gated session can be silent for minutes between turns. Reusing the first
+   * turn's absolute sample schedule would make later audio appear overdue and
+   * burst it into Live. Call only after `flushPending()` has ordered every
+   * packet from the previous turn.
+   */
+  resetPacingEpoch(): void {
+    if (this.outputPacingStartedAt !== null && this.outputPacingLastSentAt !== null) {
+      this.completedPacingElapsedMs += Math.max(
+        0,
+        this.outputPacingLastSentAt - this.outputPacingStartedAt,
+      );
+    }
+    this.outputSamplesScheduled = 0;
+    this.outputPacingStartedAt = null;
+    this.outputPacingLastSentAt = null;
+  }
+
   getStats(): RealtimePcmPacketizerStats {
     return {
       ...this.stats,
       maxBufferedSamples: Math.max(this.stats.maxBufferedSamples, this.bufferedSamples),
-      outputPacingElapsedMs: this.outputPacingStartedAt === null || this.outputPacingLastSentAt === null
-        ? 0
-        : Math.max(0, this.outputPacingLastSentAt - this.outputPacingStartedAt),
+      outputPacingElapsedMs: this.completedPacingElapsedMs + (
+        this.outputPacingStartedAt === null || this.outputPacingLastSentAt === null
+          ? 0
+          : Math.max(0, this.outputPacingLastSentAt - this.outputPacingStartedAt)
+      ),
     };
   }
 

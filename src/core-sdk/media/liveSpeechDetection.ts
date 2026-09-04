@@ -13,6 +13,7 @@ import {
   OBSERVER_WHISPER_MIN_AUDIO_MS,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SemanticSpeechCapture,
   SpeechActivityTracker,
 } from './observerSpeechDetection';
 import {
@@ -61,5 +62,6 @@ export {
   isLikelySpeechTranscript,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SemanticSpeechCapture,
   SpeechActivityTracker,
 };

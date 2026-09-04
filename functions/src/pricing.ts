@@ -21,6 +21,7 @@ import { DEFAULT_GEMINI_PRICING } from '../../shared/pricing/registry';
 import {
   type ManagedOperation,
   calculateLiveWindowUsd,
+  calculateLiveGatewayWindowUsd,
   creditsToUsd as sharedCreditsToUsd,
   estimateOperationUsd,
   roundUsd,
@@ -28,6 +29,7 @@ import {
   usdToCredits as sharedUsdToCredits,
   LIVE_AUDIO_TOKENS_PER_SECOND,
   DEFAULT_LIVE_WINDOW_RATES,
+  getLiveGatewayWindowTokenBudget,
 } from '../../shared/pricing/credits';
 import { calculateGeminiUsageCost } from '../../shared/pricing/usage';
 import { appConfig } from './config';
@@ -64,8 +66,8 @@ export const getManagedLiveWindowTokenBudget = (durationSeconds: number) => {
   const seconds = Math.max(1, Math.floor(durationSeconds));
   const budget = seconds * LIVE_AUDIO_TOKENS_PER_SECOND;
   return {
-    audioInputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.maxInputTokens, budget),
-    audioOutputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.maxOutputTokens, budget),
+    audioInputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.reservationInputTokenCeiling, budget),
+    audioOutputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.reservationOutputTokenCeiling, budget),
   };
 };
 
@@ -75,6 +77,18 @@ export const calculateManagedLiveWindowUsd = (durationSeconds: number): number =
 
 export const calculateManagedLiveWindowCredits = (durationSeconds: number): number => (
   usdToCredits(calculateManagedLiveWindowUsd(durationSeconds))
+);
+
+export const getManagedLiveGatewayTokenBudget = (durationSeconds: number) => (
+  getLiveGatewayWindowTokenBudget(durationSeconds)
+);
+
+export const calculateManagedLiveGatewayWindowUsd = (durationSeconds: number): number => (
+  calculateLiveGatewayWindowUsd(durationSeconds)
+);
+
+export const calculateManagedLiveGatewayWindowCredits = (durationSeconds: number): number => (
+  usdToCredits(calculateManagedLiveGatewayWindowUsd(durationSeconds))
 );
 
 export const estimateReservationUsd = (params: {

@@ -47,9 +47,9 @@ import {
   type ManagedBillingSummary,
 } from './managedBilling';
 import {
-  calculateManagedLiveWindowCredits,
-  calculateManagedLiveWindowUsd,
-  getManagedLiveWindowTokenBudget,
+  calculateManagedLiveGatewayWindowCredits,
+  calculateManagedLiveGatewayWindowUsd,
+  getManagedLiveGatewayTokenBudget,
   pricingEffectiveAt,
   usageMetadataToUsd,
 } from './pricing';
@@ -181,9 +181,9 @@ export const createManagedLiveGatewayTicket = async (params: {
   );
   const config = requireSafeManagedLiveConfig(params.config);
   const windowSeconds = appConfig.managedLiveTokenLifetimeSeconds;
-  const estimatedCredits = calculateManagedLiveWindowCredits(windowSeconds);
-  const estimatedUsd = calculateManagedLiveWindowUsd(windowSeconds);
-  const budget = getManagedLiveWindowTokenBudget(windowSeconds);
+  const estimatedCredits = calculateManagedLiveGatewayWindowCredits(windowSeconds);
+  const estimatedUsd = calculateManagedLiveGatewayWindowUsd(windowSeconds);
+  const budget = getManagedLiveGatewayTokenBudget(windowSeconds);
   const ticketId = randomUUID();
   const secret = randomBytes(TICKET_SECRET_BYTES).toString('base64url');
   const currentTime = Date.now();
@@ -446,7 +446,12 @@ export const finalizeManagedLiveGatewaySession = async (
             pricingEffectiveAt: session.pricingEffectiveAt || pricingEffectiveAt,
             providerMessageCount: session.checkpoint.providerMessageCount,
             providerTurnComplete: session.checkpoint.providerTurnComplete,
+            providerTurnCompleteCount: session.checkpoint.providerTurnCompleteCount,
+            providerUsageTurnCount: session.checkpoint.providerTurnUsage?.length || 0,
+            clientTurnBoundaryCount: session.checkpoint.clientTurnBoundaryCount || 0,
             inputAudioBytes: session.checkpoint.inputAudioBytes,
+            inputVideoBytes: session.checkpoint.inputVideoBytes || 0,
+            inputVideoFrameCount: session.checkpoint.inputVideoFrameCount || 0,
             outputAudioBytes: session.checkpoint.outputAudioBytes,
             ...session.metadata,
             ...billable.usageMetadata,

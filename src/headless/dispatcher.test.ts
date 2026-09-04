@@ -20,7 +20,7 @@ describe('headless dispatcher contract', () => {
       access: { accessMode: string; availableMethods: string[]; unavailableMethods: string[] };
       configuredModels: { text: { default: string }; music: string };
     };
-    expect(result.protocolVersion).toBe('1.6.0');
+    expect(result.protocolVersion).toBe('1.7.0');
     expect(result.transport).toBe('json-rpc-2.0-ndjson');
     expect(result.methods).toContain('billing.checkout.completeTest');
     expect(result.methods).toContain('speech.synthetic.live');
@@ -89,6 +89,37 @@ describe('headless dispatcher contract', () => {
     await expect(dispatchHeadlessMethod(unusedClient, 'chat.turn', {})).rejects.toMatchObject({
       name: 'HeadlessDispatchError', rpcCode: -32602,
     } satisfies Partial<HeadlessDispatchError>);
+  });
+
+  it('materializes SDK text getters for JSON-safe BYOK generate responses', async () => {
+    const responseWithTextGetter = (text: string) => {
+      const response = Object.create({
+        get text() { return text; },
+      }) as Record<string, unknown>;
+      response.candidates = [{ content: { parts: [{ text }] } }];
+      return response;
+    };
+    const client = {
+      accessMode: 'byok',
+      ai: {
+        models: {
+          generateContent: vi.fn(async () => responseWithTextGetter('provider-ok')),
+          generateContentStream: vi.fn(async function* () {
+            yield responseWithTextGetter('stream-ok');
+          }),
+        },
+      },
+    } as unknown as HeadlessClient;
+
+    const generated = await dispatchHeadlessMethod(client, 'gemini.generate', {
+      model: 'test-model', contents: 'test',
+    });
+    const streamed = await dispatchHeadlessMethod(client, 'gemini.generateStream', {
+      model: 'test-model', contents: 'test',
+    }) as { chunks: unknown[] };
+
+    expect(JSON.parse(JSON.stringify(generated))).toMatchObject({ text: 'provider-ok' });
+    expect(JSON.parse(JSON.stringify(streamed.chunks[0]))).toMatchObject({ text: 'stream-ok' });
   });
 
   it.each([

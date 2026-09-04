@@ -24,6 +24,12 @@ import { runHeadlessReengagement } from './reengagementJourney';
 import { runHeadlessLiveTurn } from './liveJourney';
 import { runHeadlessFirstLesson } from './firstLessonJourney';
 import { assertHeadlessMethodAvailable } from './accessPolicy';
+import { createSyntheticVisualFrame } from './syntheticVisual';
+import {
+  captureManagedJourneyBilling,
+  evaluateManagedLiveBilling,
+  waitForManagedJourneyBillingSettlement,
+} from './managedJourneyBilling';
 
 export class HeadlessDispatchError extends Error {
   constructor(public readonly rpcCode: -32601 | -32602, message: string) {
@@ -35,6 +41,18 @@ export class HeadlessDispatchError extends Error {
 const asRecord = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
   return value as Record<string, unknown>;
+};
+
+/**
+ * The Google SDK exposes response.text through a prototype getter. JSON-RPC
+ * serialization only sees own enumerable properties, so materialize the getter
+ * to keep direct-key and managed headless responses equivalent.
+ */
+const materializeModelResponseText = (value: unknown): unknown => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const response = value as Record<string, unknown> & { text?: unknown };
+  const text = response.text;
+  return typeof text === 'string' ? { ...response, text } : { ...response };
 };
 
 const requiredString = (record: Record<string, unknown>, key: string): string => {
@@ -320,16 +338,32 @@ export const dispatchHeadlessMethod = async (
     case 'speech.synthetic.live': {
       const sampleRate = optionalNumber(input, 'sampleRate', 16_000);
       const rawBase64 = requiredString(input, 'pcmBase64').replace(/^data:audio\/[^;]+;base64,/i, '');
-      const source = createSyntheticPcmSource({
-        pcm: decodePcm16LeBase64(rawBase64),
+      const pcm = decodePcm16LeBase64(rawBase64);
+      const connectedTurns = optionalBoundedInteger(input, 'connectedTurns', 1, 1, 6);
+      const sourceOptions = {
+        pcm,
         sampleRate,
         chunkDurationMs: optionalNumber(input, 'chunkDurationMs', 20),
         pace: input.pace === true,
         runtime: client.runtime,
-      });
-      return runSyntheticLiveJourney(client.ai, {
+      };
+      const source = createSyntheticPcmSource(sourceOptions);
+      const operationId = client.runtime.ids.create('synthetic-live');
+      const billingBefore = client.accessMode === 'managed'
+        ? await captureManagedJourneyBilling(client, operationId)
+        : null;
+      const visual = input.includeVisual === true
+        ? await createSyntheticVisualFrame(
+            typeof input.visualLabel === 'string' ? input.visualLabel : 'RED APPLE',
+          )
+        : null;
+      const result = await runSyntheticLiveJourney(client.ai, {
         liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
         source,
+        additionalSources: Array.from(
+          { length: connectedTurns - 1 },
+          () => createSyntheticPcmSource(sourceOptions),
+        ),
         systemInstruction: typeof input.systemInstruction === 'string' ? input.systemInstruction : undefined,
         model: typeof input.model === 'string' ? input.model : undefined,
         gateInputOnSpeech: typeof input.gateInputOnSpeech === 'boolean' ? input.gateInputOnSpeech : undefined,
@@ -339,7 +373,31 @@ export const dispatchHeadlessMethod = async (
         playModelAudioRealtime: input.playModelAudioRealtime === true,
         timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
         includeModelAudio: input.includeModelAudio === true,
-      }, { runtime: client.runtime });
+        ...(visual ? {
+          videoFramesByTurn: Array.from(
+            { length: connectedTurns },
+            () => [{ dataBase64: visual.dataBase64, mimeType: visual.mimeType }],
+          ),
+        } : {}),
+      }, { runtime: client.runtime, operationId });
+      const managedBillingEvidence = billingBefore
+        ? evaluateManagedLiveBilling(
+            billingBefore,
+            await waitForManagedJourneyBillingSettlement(client, operationId, 30, 500),
+            operationId,
+            {
+              connectedTurns: result.connectedTurnCount,
+              sentAudioBytes: result.sentSamples * 2,
+              sentVideoFrames: result.sentVideoFrameCount,
+              receivedAudioBytes: result.modelAudioSampleCount * 2,
+            },
+          )
+        : {
+            applicable: false as const,
+            passed: true,
+            payer: 'byok-api-key-owner' as const,
+          };
+      return { ...result, managedBillingEvidence };
     }
     case 'speech.transcribe':
       return runHeadlessLiveTurn(client, {
@@ -374,6 +432,7 @@ export const dispatchHeadlessMethod = async (
         includeVisual: input.includeVisual === true,
         visualLabel: typeof input.visualLabel === 'string' ? input.visualLabel : undefined,
         instructionSuffix: typeof input.instructionSuffix === 'string' ? input.instructionSuffix : undefined,
+        manualActivityBoundaries: input.manualActivityBoundaries === true,
         expectedTranscript: typeof input.expectedTranscript === 'string' ? input.expectedTranscript : undefined,
         minTranscriptWordRecall: typeof input.minTranscriptWordRecall === 'number' ? input.minTranscriptWordRecall : undefined,
         runSuggestionAftersteps: typeof input.runSuggestionAftersteps === 'boolean' ? input.runSuggestionAftersteps : undefined,
@@ -459,13 +518,13 @@ export const dispatchHeadlessMethod = async (
         } as BackendAiContentReportRequest;
       })());
     case 'gemini.generate':
-      return client.ai.models.generateContent({
+      return materializeModelResponseText(await client.ai.models.generateContent({
         model: requiredString(input, 'model'),
         contents: input.contents,
         ...(input.config && typeof input.config === 'object' && !Array.isArray(input.config)
           ? { config: input.config as Record<string, unknown> }
           : {}),
-      });
+      }));
     case 'gemini.generateStream': {
       const chunks: unknown[] = [];
       for await (const chunk of await client.ai.models.generateContentStream({
@@ -475,7 +534,7 @@ export const dispatchHeadlessMethod = async (
           ? { config: input.config as Record<string, unknown> }
           : {}),
       })) {
-        chunks.push(chunk);
+        chunks.push(materializeModelResponseText(chunk));
       }
       return { chunks };
     }

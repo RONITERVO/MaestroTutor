@@ -43,3 +43,7 @@ export type LiveGatewayServerMessage =
 export const LIVE_GATEWAY_AUTH_TIMEOUT_MS = 5_000;
 export const LIVE_GATEWAY_CONNECT_TIMEOUT_MS = 20_000;
 export const LIVE_GATEWAY_MAX_MESSAGE_BYTES = 2_000_000;
+/** A managed socket ends after this many complete user/model exchanges. */
+export const LIVE_GATEWAY_MAX_TURNS = 6;
+/** Camera input is admitted at the same one-frame-per-second cadence as the app. */
+export const LIVE_GATEWAY_VIDEO_FRAME_INTERVAL_MS = 1_000;

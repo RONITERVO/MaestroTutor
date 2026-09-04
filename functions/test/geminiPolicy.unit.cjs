@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
-  applyManagedGenerationLimits,
+  prepareManagedGenerationConfig,
   buildManagedPromptTokenCountInputs,
   collectGeminiFileUris,
   requireAllowedManagedModel,
@@ -62,17 +62,14 @@ test('managed config allows only server-priced tools and no transport overrides'
     () => requireSafeManagedGenerationConfig({ tools: [{ codeExecution: {} }] }),
     (error) => error.status === 400 && /Google Search/.test(error.message),
   );
+  assert.equal(prepareManagedGenerationConfig({ maxOutputTokens: 50_000 }), undefined);
   assert.deepEqual(
-    applyManagedGenerationLimits({ maxOutputTokens: 50_000 }, 8_192),
-    { maxOutputTokens: 8_192 },
-  );
-  assert.deepEqual(
-    applyManagedGenerationLimits({ maxOutputTokens: 512 }, 8_192),
-    { maxOutputTokens: 512 },
+    prepareManagedGenerationConfig({ maxOutputTokens: 512, responseMimeType: 'text/plain' }),
+    { responseMimeType: 'text/plain' },
   );
   for (const unsupported of ['candidateCount', 'temperature', 'topP', 'topK']) {
     assert.throws(
-      () => applyManagedGenerationLimits({ [unsupported]: 1 }, 8_192),
+      () => prepareManagedGenerationConfig({ [unsupported]: 1 }),
       (error) => error.status === 400 && error.message.includes(unsupported),
     );
   }
@@ -87,20 +84,30 @@ test('prompt token counting separates Developer API-incompatible config', () => 
   const inputs = buildManagedPromptTokenCountInputs(contents, {
     systemInstruction: 'Teach Finnish.',
     tools: [{ googleSearch: {} }],
-    maxOutputTokens: 512,
   });
   assert.equal(inputs[0], contents);
   assert.equal(inputs[1], 'Teach Finnish.');
   assert.match(inputs[2], /googleSearch/);
-  assert.match(inputs[2], /maxOutputTokens/);
+  assert.doesNotMatch(inputs[2], /maxOutputTokens/);
 });
 
 test('managed Live config is scopeable but cannot mint tool-enabled tokens', () => {
   const liveConfig = { responseModalities: ['AUDIO'], systemInstruction: 'Be concise.' };
-  assert.equal(requireSafeManagedLiveConfig(liveConfig), liveConfig);
+  assert.deepEqual(requireSafeManagedLiveConfig(liveConfig), {
+    ...liveConfig,
+    contextWindowCompression: {
+      triggerTokens: '25000',
+      slidingWindow: { targetTokens: '8000' },
+    },
+    mediaResolution: 'MEDIA_RESOLUTION_LOW',
+  });
   assert.throws(
     () => requireSafeManagedLiveConfig({ tools: [{ googleSearch: {} }] }),
     (error) => error.status === 400 && /tools/.test(error.message),
+  );
+  assert.throws(
+    () => requireSafeManagedLiveConfig({ systemInstruction: 'x'.repeat(33 * 1024) }),
+    (error) => error.status === 400 && /32 KiB/.test(error.message),
   );
 });
 

@@ -46,6 +46,10 @@ export interface ManagedUsageLedgerEntry {
   operation: string;
   model: string;
   billedCredits: number;
+  /** Credits actually removed from the prepaid balance. */
+  chargedCredits?: number;
+  /** Provider cost not covered by the reservation and remaining balance. */
+  shortfallCredits?: number;
   billedUsd: number;
   createdAt: number;
   metadata?: Record<string, unknown>;
@@ -59,6 +63,10 @@ export interface ManagedBillingLedgerEntry {
   id: string;
   kind: 'purchase' | 'charge' | 'reservation-release';
   credits: number;
+  /** Full provider-derived cost before balance protection, for charge rows. */
+  billedCredits?: number;
+  /** Provider cost deliberately not taken past a zero balance. */
+  shortfallCredits?: number;
   usd: number;
   productId: string | null;
   createdAt: number;

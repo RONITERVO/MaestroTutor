@@ -1,7 +1,10 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { LIVE_AUDIO_TOKENS_PER_SECOND } from '../pricing/credits';
+import {
+  LIVE_AUDIO_TOKENS_PER_SECOND,
+  LIVE_VIDEO_TOKENS_PER_FRAME_LOW,
+} from '../pricing/credits';
 import type {
   ModalityTokenCountLike,
   UsageMetadataLike,
@@ -9,13 +12,25 @@ import type {
 
 export interface LiveGatewayUsageCheckpoint {
   inputAudioBytes: number;
+  inputVideoBytes: number;
+  inputVideoFrameCount: number;
+  /** User turn boundaries accepted by the gateway. */
+  clientTurnBoundaryCount: number;
   outputAudioBytes: number;
   inputAudioSampleRate: number;
   outputAudioSampleRate: number;
   setupComplete: boolean;
   usefulOutput: boolean;
   providerTurnComplete: boolean;
+  /** Number of completed model turns observed over this one provider socket. */
+  providerTurnCompleteCount: number;
   providerMessageCount: number;
+  /** Latest provider usage snapshot for each billable turn. */
+  providerTurnUsage: Array<{
+    turn: number;
+    usageMetadata: UsageMetadataLike;
+  }>;
+  /** Sum of the per-turn snapshots, including re-billed retained context. */
   providerUsageMetadata: UsageMetadataLike | null;
 }
 
@@ -101,33 +116,120 @@ const mergeProviderUsage = (
   return Object.keys(merged).length > 0 ? merged : previous;
 };
 
+const addDetails = (
+  entries: Array<ModalityTokenCountLike[] | undefined>,
+): ModalityTokenCountLike[] | undefined => {
+  const totals = new Map<string, number>();
+  for (const details of entries) {
+    for (const detail of details || []) {
+      const modality = String(detail?.modality || 'TEXT').toUpperCase();
+      totals.set(modality, (totals.get(modality) || 0) + finiteCount(detail?.tokenCount ?? detail?.tokens));
+    }
+  }
+  return totals.size > 0
+    ? [...totals.entries()].map(([modality, tokenCount]) => ({ modality, tokenCount }))
+    : undefined;
+};
+
+const addProviderUsage = (values: UsageMetadataLike[]): UsageMetadataLike | null => {
+  if (values.length === 0) return null;
+  const sum: UsageMetadataLike = {};
+  const numericKeys: Array<keyof UsageMetadataLike> = [
+    'promptTokenCount',
+    'cachedContentTokenCount',
+    'thoughtsTokenCount',
+    'toolUsePromptTokenCount',
+    'totalTokenCount',
+  ];
+  for (const key of numericKeys) {
+    const total = values.reduce((result, value) => result + finiteCount(value[key]), 0);
+    if (total > 0) Object.assign(sum, { [key]: total });
+  }
+  const outputTotal = values.reduce((result, value) => (
+    result + finiteCount(value.candidatesTokenCount ?? value.responseTokenCount)
+  ), 0);
+  if (outputTotal > 0) sum.responseTokenCount = outputTotal;
+  const detailKeys: Array<keyof UsageMetadataLike> = [
+    'promptTokensDetails',
+    'cacheTokensDetails',
+    'toolUsePromptTokensDetails',
+  ];
+  for (const key of detailKeys) {
+    const details = addDetails(values.map(value => (
+      value[key] as ModalityTokenCountLike[] | undefined
+    )));
+    if (details) Object.assign(sum, { [key]: details });
+  }
+  const outputDetails = addDetails(values.map(value => (
+    value.candidatesTokensDetails ?? value.responseTokensDetails
+  )));
+  if (outputDetails) sum.responseTokensDetails = outputDetails;
+  return Object.keys(sum).length > 0 ? sum : null;
+};
+
+const mergeTurnUsage = (
+  previous: LiveGatewayUsageCheckpoint['providerTurnUsage'] | undefined,
+  next: LiveGatewayUsageCheckpoint['providerTurnUsage'] | undefined,
+): LiveGatewayUsageCheckpoint['providerTurnUsage'] => {
+  const byTurn = new Map<number, UsageMetadataLike>();
+  for (const entry of [...(previous || []), ...(next || [])]) {
+    const turn = finiteCount(entry?.turn);
+    if (turn <= 0 || !entry?.usageMetadata) continue;
+    byTurn.set(turn, mergeProviderUsage(byTurn.get(turn) || null, entry.usageMetadata) || {});
+  }
+  return [...byTurn.entries()]
+    .sort(([left], [right]) => left - right)
+    .map(([turn, usageMetadata]) => ({ turn, usageMetadata }));
+};
+
+export const mergeLiveProviderTurnUsage = mergeTurnUsage;
+
+export const sumLiveProviderTurnUsage = (
+  entries: LiveGatewayUsageCheckpoint['providerTurnUsage'],
+): UsageMetadataLike | null => addProviderUsage(entries.map(entry => entry.usageMetadata));
+
 export const mergeLiveGatewayUsageCheckpoints = (
   previous: LiveGatewayUsageCheckpoint,
   next: LiveGatewayUsageCheckpoint,
-): LiveGatewayUsageCheckpoint => ({
-  inputAudioBytes: Math.max(previous.inputAudioBytes, next.inputAudioBytes),
-  outputAudioBytes: Math.max(previous.outputAudioBytes, next.outputAudioBytes),
-  inputAudioSampleRate: next.inputAudioSampleRate || previous.inputAudioSampleRate,
-  outputAudioSampleRate: next.outputAudioSampleRate || previous.outputAudioSampleRate,
-  setupComplete: previous.setupComplete || next.setupComplete,
-  usefulOutput: previous.usefulOutput || next.usefulOutput,
-  providerTurnComplete: previous.providerTurnComplete || next.providerTurnComplete,
-  providerMessageCount: Math.max(previous.providerMessageCount, next.providerMessageCount),
-  providerUsageMetadata: mergeProviderUsage(
-    previous.providerUsageMetadata,
-    next.providerUsageMetadata,
-  ),
-});
+): LiveGatewayUsageCheckpoint => {
+  const providerTurnUsage = mergeTurnUsage(previous.providerTurnUsage, next.providerTurnUsage);
+  return {
+    inputAudioBytes: Math.max(previous.inputAudioBytes, next.inputAudioBytes),
+    inputVideoBytes: Math.max(previous.inputVideoBytes || 0, next.inputVideoBytes || 0),
+    inputVideoFrameCount: Math.max(previous.inputVideoFrameCount || 0, next.inputVideoFrameCount || 0),
+    clientTurnBoundaryCount: Math.max(previous.clientTurnBoundaryCount || 0, next.clientTurnBoundaryCount || 0),
+    outputAudioBytes: Math.max(previous.outputAudioBytes, next.outputAudioBytes),
+    inputAudioSampleRate: next.inputAudioSampleRate || previous.inputAudioSampleRate,
+    outputAudioSampleRate: next.outputAudioSampleRate || previous.outputAudioSampleRate,
+    setupComplete: previous.setupComplete || next.setupComplete,
+    usefulOutput: previous.usefulOutput || next.usefulOutput,
+    providerTurnComplete: previous.providerTurnComplete || next.providerTurnComplete,
+    providerTurnCompleteCount: Math.max(
+      previous.providerTurnCompleteCount || 0,
+      next.providerTurnCompleteCount || 0,
+    ),
+    providerMessageCount: Math.max(previous.providerMessageCount, next.providerMessageCount),
+    providerTurnUsage,
+    providerUsageMetadata: providerTurnUsage.length > 0
+      ? addProviderUsage(providerTurnUsage.map(entry => entry.usageMetadata))
+      : mergeProviderUsage(previous.providerUsageMetadata, next.providerUsageMetadata),
+  };
+};
 
 export const createLiveGatewayUsageCheckpoint = (): LiveGatewayUsageCheckpoint => ({
   inputAudioBytes: 0,
+  inputVideoBytes: 0,
+  inputVideoFrameCount: 0,
+  clientTurnBoundaryCount: 0,
   outputAudioBytes: 0,
   inputAudioSampleRate: 16_000,
   outputAudioSampleRate: 24_000,
   setupComplete: false,
   usefulOutput: false,
   providerTurnComplete: false,
+  providerTurnCompleteCount: 0,
   providerMessageCount: 0,
+  providerTurnUsage: [],
   providerUsageMetadata: null,
 });
 
@@ -136,16 +238,23 @@ export const observeLiveGatewayClientMessage = (
   messageValue: unknown,
 ): LiveGatewayUsageCheckpoint => {
   if (!messageValue || typeof messageValue !== 'object' || Array.isArray(messageValue)) return checkpoint;
-  const message = messageValue as { audio?: { data?: unknown; mimeType?: unknown } };
-  const bytes = base64ByteLength(message.audio?.data);
-  if (bytes <= 0) return checkpoint;
+  const message = messageValue as {
+    audio?: { data?: unknown; mimeType?: unknown };
+    video?: { data?: unknown };
+    audioStreamEnd?: unknown;
+  };
+  const audioBytes = base64ByteLength(message.audio?.data);
+  const videoBytes = base64ByteLength(message.video?.data);
   return {
     ...checkpoint,
-    inputAudioBytes: checkpoint.inputAudioBytes + bytes,
-    inputAudioSampleRate: sampleRateFromMimeType(
-      message.audio?.mimeType,
-      checkpoint.inputAudioSampleRate,
-    ),
+    inputAudioBytes: checkpoint.inputAudioBytes + audioBytes,
+    inputVideoBytes: (checkpoint.inputVideoBytes || 0) + videoBytes,
+    inputVideoFrameCount: (checkpoint.inputVideoFrameCount || 0) + (videoBytes > 0 ? 1 : 0),
+    clientTurnBoundaryCount: (checkpoint.clientTurnBoundaryCount || 0)
+      + (message.audioStreamEnd ? 1 : 0),
+    inputAudioSampleRate: audioBytes > 0
+      ? sampleRateFromMimeType(message.audio?.mimeType, checkpoint.inputAudioSampleRate)
+      : checkpoint.inputAudioSampleRate,
   };
 };
 
@@ -183,18 +292,32 @@ export const observeLiveGatewayProviderMessage = (
     outputAudioBytes += bytes;
     outputAudioSampleRate = sampleRateFromMimeType(part.inlineData.mimeType, outputAudioSampleRate);
   }
+  const turnComplete = Boolean(message.serverContent?.turnComplete);
+  let providerTurnUsage = checkpoint.providerTurnUsage || [];
+  if (message.usageMetadata && typeof message.usageMetadata === 'object') {
+    const providerTurn = turnComplete
+      ? checkpoint.providerTurnCompleteCount + 1
+      : checkpoint.clientTurnBoundaryCount <= checkpoint.providerTurnCompleteCount
+        ? Math.max(1, checkpoint.providerTurnCompleteCount)
+        : checkpoint.providerTurnCompleteCount + 1;
+    providerTurnUsage = mergeTurnUsage(providerTurnUsage, [{
+      turn: providerTurn,
+      usageMetadata: message.usageMetadata as UsageMetadataLike,
+    }]);
+  }
   return {
     ...checkpoint,
     outputAudioBytes,
     outputAudioSampleRate,
     setupComplete: checkpoint.setupComplete || Boolean(message.setupComplete),
     usefulOutput,
-    providerTurnComplete: checkpoint.providerTurnComplete || Boolean(message.serverContent?.turnComplete),
+    providerTurnComplete: checkpoint.providerTurnComplete || turnComplete,
+    providerTurnCompleteCount: checkpoint.providerTurnCompleteCount + (turnComplete ? 1 : 0),
     providerMessageCount: checkpoint.providerMessageCount + 1,
-    providerUsageMetadata: mergeProviderUsage(
-      checkpoint.providerUsageMetadata,
-      message.usageMetadata,
-    ),
+    providerTurnUsage,
+    providerUsageMetadata: providerTurnUsage.length > 0
+      ? addProviderUsage(providerTurnUsage.map(entry => entry.usageMetadata))
+      : checkpoint.providerUsageMetadata,
   };
 };
 
@@ -233,6 +356,7 @@ const detailsTotal = (details: ModalityTokenCountLike[] | undefined): number => 
 const addTransportBreakdown = (
   provider: UsageMetadataLike,
   transport: UsageMetadataLike,
+  checkpoint: LiveGatewayUsageCheckpoint,
 ): UsageMetadataLike => {
   const result: UsageMetadataLike = { ...provider };
   const providerInput = finiteCount(provider.promptTokenCount);
@@ -241,13 +365,6 @@ const addTransportBreakdown = (
   const transportOutput = finiteCount(transport.responseTokenCount);
   if (providerInput === 0 && transportInput > 0) {
     result.promptTokenCount = transportInput;
-    result.promptTokensDetails = [{ modality: 'AUDIO', tokenCount: transportInput }];
-  } else if (providerInput > 0 && detailsTotal(provider.promptTokensDetails) === 0) {
-    const audio = Math.min(providerInput, finiteCount(transport.promptTokenCount));
-    result.promptTokensDetails = [
-      ...(audio > 0 ? [{ modality: 'AUDIO', tokenCount: audio }] : []),
-      ...(providerInput > audio ? [{ modality: 'TEXT', tokenCount: providerInput - audio }] : []),
-    ];
   }
   if (providerOutput === 0 && transportOutput > 0) {
     result.responseTokenCount = transportOutput;
@@ -267,12 +384,35 @@ const addTransportBreakdown = (
     + finiteCount(result.toolUsePromptTokenCount);
   const providerTotal = finiteCount(provider.totalTokenCount);
   if (providerTotal > minimumTotal) {
-    // Some periodic Live usage messages expose only a total. Attribute the
-    // unexplained remainder to text input (the lower of the relevant rates)
-    // instead of silently treating paid provider tokens as free.
+    // Some periodic Live usage messages expose only a total. Preserve the
+    // unexplained remainder as input so paid provider tokens are not dropped.
     mergedInput += providerTotal - minimumTotal;
     result.promptTokenCount = mergedInput;
     minimumTotal = providerTotal;
+  }
+  if (mergedInput > 0 && detailsTotal(provider.promptTokensDetails) === 0) {
+    const billedTurns = Math.max(
+      1,
+      checkpoint.providerTurnUsage?.length || 0,
+      checkpoint.providerTurnCompleteCount || 0,
+    );
+    // Retained user and model audio can both re-enter the paid prompt on later
+    // turns. Camera frames use the enforced low-resolution token allocation.
+    const audio = Math.min(
+      mergedInput,
+      transportInput * billedTurns + transportOutput * Math.max(0, billedTurns - 1),
+    );
+    const video = Math.min(
+      mergedInput - audio,
+      (checkpoint.inputVideoFrameCount || 0) * LIVE_VIDEO_TOKENS_PER_FRAME_LOW * billedTurns,
+    );
+    result.promptTokensDetails = [
+      ...(audio > 0 ? [{ modality: 'AUDIO', tokenCount: audio }] : []),
+      ...(video > 0 ? [{ modality: 'VIDEO', tokenCount: video }] : []),
+      ...(mergedInput > audio + video
+        ? [{ modality: 'TEXT', tokenCount: mergedInput - audio - video }]
+        : []),
+    ];
   }
   if (minimumTotal > finiteCount(result.totalTokenCount)) result.totalTokenCount = minimumTotal;
   return result;
@@ -296,7 +436,7 @@ export const getLiveGatewayBillableUsage = (
     return {
       billable: true,
       source: needsTransportBreakdown ? 'provider+transport' : 'provider',
-      usageMetadata: addTransportBreakdown(provider, observedTransport),
+      usageMetadata: addTransportBreakdown(provider, observedTransport, checkpoint),
     };
   }
   return {

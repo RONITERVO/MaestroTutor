@@ -7,6 +7,9 @@ import type {
   ManagedUsageLedgerEntry,
 } from '../core/contracts/backend';
 import type { HeadlessClient } from './client';
+import { DEFAULT_GEMINI_PRICING } from '../../shared/pricing/registry';
+import { calculateGeminiUsageCost } from '../../shared/pricing/usage';
+import { usdToCredits } from '../../shared/pricing/credits';
 
 export interface ManagedJourneyBillingSnapshot {
   account: ManagedAccountSummaryResponse;
@@ -34,12 +37,44 @@ export interface ManagedJourneyFailureBillingEvidence extends ManagedJourneyBill
   failedLiveCredits: number;
 }
 
+export interface ManagedLiveBillingEvidence {
+  applicable: true;
+  passed: boolean;
+  mismatches: string[];
+  requestId: string;
+  usageRows: number;
+  chargeRows: number;
+  releaseRows: number;
+  billedCredits: number;
+  chargedCredits: number;
+  shortfallCredits: number;
+  billedUsd: number;
+  recalculatedUsd: number;
+  creditsSpent: number;
+  availableCreditsSpent: number;
+  reservedCreditsBefore: number;
+  reservedCreditsAfter: number;
+  usageSource: string | null;
+  providerTurnCompleteCount: number;
+  providerUsageTurnCount: number;
+  clientTurnBoundaryCount: number;
+  inputAudioBytes: number;
+  inputVideoFrameCount: number;
+  outputAudioBytes: number;
+  providerTotalTokenCount: number;
+}
+
 const sum = <T>(items: T[], select: (item: T) => number): number => items.reduce(
   (total, item) => total + (Number.isFinite(select(item)) ? select(item) : 0),
   0,
 );
 
 const roundUsd = (value: number): number => Math.round(value * 1_000_000) / 1_000_000;
+
+const metadataNumber = (metadata: Record<string, unknown> | undefined, key: string): number => {
+  const value = Number(metadata?.[key] || 0);
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+};
 
 export const captureManagedJourneyBilling = async (
   client: HeadlessClient,
@@ -123,6 +158,153 @@ export const evaluateManagedJourneyBilling = (
     chargeCredits,
     reservedCreditsBefore: beforeSummary.reservedCredits,
     reservedCreditsAfter: afterSummary.reservedCredits,
+  };
+};
+
+/**
+ * Correlate one provider-backed Live socket with the exact usage and balance
+ * rows it produced. Broad journey reconciliation can pass even when a
+ * particular persistent socket was omitted, duplicated, or undercharged.
+ */
+export const evaluateManagedLiveBilling = (
+  before: ManagedJourneyBillingSnapshot,
+  after: ManagedJourneyBillingSnapshot,
+  requestId: string,
+  expected: {
+    connectedTurns: number;
+    sentAudioBytes: number;
+    sentVideoFrames: number;
+    receivedAudioBytes: number;
+  },
+): ManagedLiveBillingEvidence => {
+  const beforeSummary = before.account.account.billingSummary;
+  const afterSummary = after.account.account.billingSummary;
+  const priorUsageIds = new Set(before.usageEntries.map(entry => entry.id));
+  const priorBillingIds = new Set(before.billingEntries.map(entry => entry.id));
+  const matchesRequest = (metadata: Record<string, unknown> | undefined): boolean => (
+    metadata?.liveOpenRequestId === requestId
+  );
+  const usageRows = after.usageEntries.filter(entry => (
+    !priorUsageIds.has(entry.id)
+    && entry.operation === 'liveGateway'
+    && matchesRequest(entry.metadata)
+  ));
+  const chargeRows = after.billingEntries.filter(entry => (
+    !priorBillingIds.has(entry.id)
+    && entry.kind === 'charge'
+    && entry.metadata?.operation === 'liveGateway'
+    && matchesRequest(entry.metadata)
+  ));
+  const releaseRows = after.billingEntries.filter(entry => (
+    !priorBillingIds.has(entry.id)
+    && entry.kind === 'reservation-release'
+    && entry.metadata?.operation === 'liveGateway'
+    && matchesRequest(entry.metadata)
+  ));
+  const usage = usageRows[0];
+  const charge = chargeRows[0];
+  const metadata = usage?.metadata;
+  const billedCredits = Number(usage?.billedCredits || 0);
+  const chargedCredits = Number(usage?.chargedCredits ?? charge?.credits ?? 0);
+  const shortfallCredits = Number(usage?.shortfallCredits ?? charge?.shortfallCredits ?? 0);
+  const billedUsd = roundUsd(Number(usage?.billedUsd || 0));
+  const creditsSpent = afterSummary.lifetimeSpentCredits - beforeSummary.lifetimeSpentCredits;
+  const availableCreditsSpent = beforeSummary.availableCredits - afterSummary.availableCredits;
+  const usageSource = typeof metadata?.usageSource === 'string' ? metadata.usageSource : null;
+  const providerTurnCompleteCount = metadataNumber(metadata, 'providerTurnCompleteCount');
+  const providerUsageTurnCount = metadataNumber(metadata, 'providerUsageTurnCount');
+  const clientTurnBoundaryCount = metadataNumber(metadata, 'clientTurnBoundaryCount');
+  const inputAudioBytes = metadataNumber(metadata, 'inputAudioBytes');
+  const inputVideoFrameCount = metadataNumber(metadata, 'inputVideoFrameCount');
+  const outputAudioBytes = metadataNumber(metadata, 'outputAudioBytes');
+  const providerTotalTokenCount = metadataNumber(metadata, 'totalTokenCount');
+  const creditsPerUsd = metadataNumber(metadata, 'creditsPerUsd');
+  const recalculated = usage
+    ? calculateGeminiUsageCost({
+        configuredModel: usage.model,
+        usageMetadata: metadata,
+      }, DEFAULT_GEMINI_PRICING).modelCostUsd
+    : 0;
+  const recalculatedUsd = roundUsd(recalculated);
+  const recalculatedCredits = creditsPerUsd > 0
+    ? usdToCredits(recalculatedUsd, creditsPerUsd)
+    : 0;
+  const mismatches: string[] = [];
+
+  if (beforeSummary.reservedCredits !== 0) mismatches.push('The managed Live proof began with reserved credits.');
+  if (afterSummary.reservedCredits !== 0) mismatches.push('The managed Live proof left reserved credits behind.');
+  if (usageRows.length !== 1) mismatches.push(`Expected one request-correlated Live usage row, found ${usageRows.length}.`);
+  if (chargeRows.length !== 1) mismatches.push(`Expected one request-correlated Live charge row, found ${chargeRows.length}.`);
+  if (releaseRows.length !== 0) mismatches.push(`Successful Live proof unexpectedly produced ${releaseRows.length} release row(s).`);
+  if (billedCredits <= 0 || billedUsd <= 0) mismatches.push('The successful Live proof did not record a positive provider-derived cost.');
+  if (shortfallCredits !== 0 || chargedCredits !== billedCredits) {
+    mismatches.push('The Live reservation did not fully cover the provider-derived charge.');
+  }
+  if (creditsSpent !== chargedCredits || availableCreditsSpent !== chargedCredits) {
+    mismatches.push('The Live account balance delta does not equal its correlated charge.');
+  }
+  if (Number(charge?.credits || 0) !== chargedCredits || roundUsd(Number(charge?.usd || 0)) !== billedUsd) {
+    mismatches.push('The Live charge ledger does not match its usage ledger.');
+  }
+  if (recalculatedUsd !== billedUsd || recalculatedCredits !== billedCredits) {
+    mismatches.push('The Live charge does not match the checked-in pricing registry and credit conversion.');
+  }
+  if (!usageSource || usageSource === 'none') mismatches.push('The Live usage row has no billable evidence source.');
+  if (providerTurnCompleteCount !== expected.connectedTurns) {
+    mismatches.push(
+      `The gateway accounted for ${providerTurnCompleteCount} completed provider turn(s), expected ${expected.connectedTurns}.`,
+    );
+  }
+  if (providerUsageTurnCount !== expected.connectedTurns) {
+    mismatches.push(
+      `The gateway priced ${providerUsageTurnCount} provider turn snapshot(s), expected ${expected.connectedTurns}.`,
+    );
+  }
+  if (clientTurnBoundaryCount !== expected.connectedTurns) {
+    mismatches.push(
+      `The gateway accepted ${clientTurnBoundaryCount} client turn boundary/boundaries, expected ${expected.connectedTurns}.`,
+    );
+  }
+  if (inputAudioBytes !== expected.sentAudioBytes) {
+    mismatches.push(`The gateway accounted for ${inputAudioBytes} input byte(s), expected ${expected.sentAudioBytes}.`);
+  }
+  if (inputVideoFrameCount !== expected.sentVideoFrames) {
+    mismatches.push(
+      `The gateway accounted for ${inputVideoFrameCount} video frame(s), expected ${expected.sentVideoFrames}.`,
+    );
+  }
+  if (outputAudioBytes !== expected.receivedAudioBytes) {
+    mismatches.push(`The gateway accounted for ${outputAudioBytes} output byte(s), expected ${expected.receivedAudioBytes}.`);
+  }
+  if (usageSource?.startsWith('provider') && providerTotalTokenCount <= 0) {
+    mismatches.push('Provider-priced Live usage did not include a positive cumulative token total.');
+  }
+
+  return {
+    applicable: true,
+    passed: mismatches.length === 0,
+    mismatches,
+    requestId,
+    usageRows: usageRows.length,
+    chargeRows: chargeRows.length,
+    releaseRows: releaseRows.length,
+    billedCredits,
+    chargedCredits,
+    shortfallCredits,
+    billedUsd,
+    recalculatedUsd,
+    creditsSpent,
+    availableCreditsSpent,
+    reservedCreditsBefore: beforeSummary.reservedCredits,
+    reservedCreditsAfter: afterSummary.reservedCredits,
+    usageSource,
+    providerTurnCompleteCount,
+    providerUsageTurnCount,
+    clientTurnBoundaryCount,
+    inputAudioBytes,
+    inputVideoFrameCount,
+    outputAudioBytes,
+    providerTotalTokenCount,
   };
 };
 

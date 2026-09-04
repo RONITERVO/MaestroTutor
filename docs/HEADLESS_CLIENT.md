@@ -121,6 +121,15 @@ the complete reservation. A scheduled reconciler handles unused tickets and
 abandoned sessions. See the billing and recovery invariants in
 [`HEADLESS_COVERAGE.md`](./HEADLESS_COVERAGE.md).
 
+Protocol 1.7 adds persistent connected-turn proof to `speech.synthetic.live`.
+Set `connectedTurns` from 1 through 6 to replay the supplied PCM as distinct user
+turns over one Live socket. The result contains one entry per turn and proves that
+each reply finishes real-time playback after the last model-audio byte. The
+staging workflow requires six turns in both managed and BYOK modes, specifically
+covering later short-utterance paths that a fresh connection cannot exercise. It
+sends a visual frame on every turn and reports the provider's latest snapshot for
+each turn plus the correctly summed billable usage for the socket.
+
 `provider-parity` still does not mean the user pays the same currency or provider:
 BYOK charges the supplied Google project, while managed converts observed provider
 cost to Maestro credits. It does mean a failed/no-output managed session cannot be
@@ -296,6 +305,21 @@ contain `realtimeEvidence.passed:true`, `timing.uiSpeechHandoff:true`, a non-zer
 and model playback elapsed time at least as long as the 24 kHz audio duration. Put
 distinctive words at the end of `expectedTranscript`; a prefix-only expectation
 cannot detect the original suffix-loss regression.
+
+For the lower-level persistent observer regression, use the same PCM with
+`"connectedTurns":6`, `"simulateUiSpeechHandoff":true`,
+`"requireRealtimeInputPacing":true`, and `"playModelAudioRealtime":true`.
+There must be six completed turn records, and all must report
+`playbackCompletedAfterLastByte:true`.
+
+`scripts/create-long-live-fixture.ts` accepts either `--audio <path>` for a WAV or
+other decodable recording, or `--tts-json <path>` for generated TTS output. It produces
+16 kHz PCM parameters with an expected transcript, a deliberate pause, one visual
+frame, and an instruction requiring exactly five English lines followed by five
+`[FI]` translations. The staging workflow uses the versioned, non-personal
+`test-fixtures/audio/long-live-generated.wav` bytes for managed and paid-BYOK
+observer-camera and conversation checks; it does not regenerate an unverified TTS
+clip on each run.
 
 Named profiles resolve below `%LOCALAPPDATA%\MaestroTutor\headless` on Windows and
 `~/.maestrotutor/headless` elsewhere, unless `MAESTRO_HEADLESS_HOME` is set. Names
@@ -503,6 +527,12 @@ gateway and UI share exact-pinned `@google/genai` 1.45.0.
 This is local evidence for the current working tree and staging deployment. It is
 not a substitute for the required managed/BYOK workflow and production canary on
 the final release commit.
+
+The release-only long conversation fixture sets `manualActivityBoundaries: true`
+to wrap its finite PCM source in one explicit Live activity. Do not use that option
+as a substitute for the automatic-VAD conversation exercised by
+`journey.firstLesson`; it exists to make long transport and transcript fidelity
+deterministic.
 
 ### Historical 2026-09-01/02 baseline
 

@@ -1,0 +1,80 @@
+{
+  "sourceFile": "Tallenne (14).m4a",
+  "durationSeconds": 37.547896,
+  "detectedLanguage": "en",
+  "transcriber": "whisper-large-v3-turbo",
+  "transcript": "Hello! How are you doing? I was wondering how are Chinese speakers able to distinguish between the different Chinese words when they speak like don't they sound very similar and why do they use subtitles in Chinese movies so much what is the main reason for this",
+  "ciFixture": {
+    "file": "long-live-generated.wav",
+    "kind": "non-personal generated speech derived from this transcript",
+    "durationSeconds": 22.04,
+    "sha256": "c71e9792914f2f8a83b6d616ee30d7dc533c348e64e106227e446f2da7773144",
+    "semanticProof": "staging run 33898826044: managed and BYOK Live each recovered 47/48 expected words"
+  },
+  "segments": [
+    {
+      "start": 0.88,
+      "end": 11.9,
+      "text": "Hello! How are you doing? I was wondering how are Chinese speakers able to distinguish between"
+    },
+    {
+      "start": 12.64,
+      "end": 25.5,
+      "text": "the different Chinese words when they speak like don't they sound very similar and"
+    },
+    {
+      "start": 25.5,
+      "end": 36.3,
+      "text": "why do they use subtitles in Chinese movies so much what is the main reason for this"
+    }
+  ],
+  "words": [
+    { "word": "Hello!", "start": 0.46, "end": 1.16 },
+    { "word": "How", "start": 1.62, "end": 2.26 },
+    { "word": "are", "start": 2.26, "end": 2.46 },
+    { "word": "you", "start": 2.46, "end": 2.56 },
+    { "word": "doing?", "start": 2.56, "end": 2.82 },
+    { "word": "I", "start": 3.7, "end": 3.92 },
+    { "word": "was", "start": 3.92, "end": 4.4 },
+    { "word": "wondering", "start": 4.4, "end": 5.04 },
+    { "word": "how", "start": 5.04, "end": 5.94 },
+    { "word": "are", "start": 5.94, "end": 6.42 },
+    { "word": "Chinese", "start": 6.42, "end": 7.0 },
+    { "word": "speakers", "start": 7.0, "end": 8.14 },
+    { "word": "able", "start": 8.14, "end": 9.72 },
+    { "word": "to", "start": 9.72, "end": 10.28 },
+    { "word": "distinguish", "start": 10.28, "end": 10.98 },
+    { "word": "between", "start": 10.98, "end": 11.9 },
+    { "word": "the", "start": 12.2, "end": 12.9 },
+    { "word": "different", "start": 12.9, "end": 13.74 },
+    { "word": "Chinese", "start": 13.74, "end": 15.68 },
+    { "word": "words", "start": 15.68, "end": 16.88 },
+    { "word": "when", "start": 16.88, "end": 17.5 },
+    { "word": "they", "start": 17.5, "end": 17.86 },
+    { "word": "speak", "start": 17.86, "end": 18.56 },
+    { "word": "like", "start": 18.56, "end": 19.6 },
+    { "word": "don't", "start": 19.6, "end": 20.94 },
+    { "word": "they", "start": 20.94, "end": 21.38 },
+    { "word": "sound", "start": 21.38, "end": 22.04 },
+    { "word": "very", "start": 22.04, "end": 23.46 },
+    { "word": "similar", "start": 23.46, "end": 24.4 },
+    { "word": "and", "start": 24.4, "end": 25.5 },
+    { "word": "why", "start": 25.5, "end": 27.58 },
+    { "word": "do", "start": 27.58, "end": 27.76 },
+    { "word": "they", "start": 27.76, "end": 28.0 },
+    { "word": "use", "start": 28.0, "end": 28.56 },
+    { "word": "subtitles", "start": 28.56, "end": 29.14 },
+    { "word": "in", "start": 29.14, "end": 29.94 },
+    { "word": "Chinese", "start": 29.94, "end": 30.38 },
+    { "word": "movies", "start": 30.38, "end": 30.92 },
+    { "word": "so", "start": 30.92, "end": 31.86 },
+    { "word": "much", "start": 31.86, "end": 32.28 },
+    { "word": "what", "start": 32.28, "end": 33.38 },
+    { "word": "is", "start": 33.38, "end": 33.7 },
+    { "word": "the", "start": 33.7, "end": 34.0 },
+    { "word": "main", "start": 34.0, "end": 34.84 },
+    { "word": "reason", "start": 34.84, "end": 35.44 },
+    { "word": "for", "start": 35.44, "end": 36.04 },
+    { "word": "this", "start": 36.04, "end": 36.3 }
+  ]
+}

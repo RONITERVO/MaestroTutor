@@ -148,11 +148,11 @@ export const describeHeadlessMethods = (accessMode: HeadlessAccessMode = 'manage
     'media.image.generate': { mutates: true, params: ['contextText', 'languagePairId?', 'assistantMessageId?', 'maxAttempts? (1..7, default 2)', 'upload?', 'includeDataUrl?'] },
     'media.audioNote.generate': { mutates: true, external: true, params: ['text', 'langCode?', 'voiceName?', 'model?', 'upload?', 'includeDataUrl?'] },
     'media.music.generate': { mutates: true, external: true, params: ['prompt', 'durationSeconds? (8..20)', 'model?', 'upload?', 'includeDataUrl?'] },
-    'speech.synthetic.live': { mutates: true, params: ['pcmBase64', 'sampleRate?', 'chunkDurationMs?', 'pace?', 'systemInstruction?', 'model?', 'gateInputOnSpeech?', 'semanticSpeech?', 'simulateUiSpeechHandoff?', 'requireRealtimeInputPacing?', 'playModelAudioRealtime?', 'timeoutMs?', 'includeModelAudio?'] },
+    'speech.synthetic.live': { mutates: true, params: ['pcmBase64', 'sampleRate?', 'chunkDurationMs?', 'pace?', 'connectedTurns? (1..6, same PCM over one socket)', 'systemInstruction?', 'model?', 'gateInputOnSpeech?', 'semanticSpeech?', 'simulateUiSpeechHandoff?', 'requireRealtimeInputPacing?', 'playModelAudioRealtime?', 'includeVisual?', 'visualLabel?', 'timeoutMs?', 'includeModelAudio?'] },
     'speech.transcribe': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)'] },
     'speech.tts.generate': { mutates: true, external: true, params: ['text', 'langCode?', 'voiceName?', 'model?', 'includeDataUrl?'] },
-    'live.conversation.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
-    'live.observer.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'runSuggestionAftersteps?'] },
+    'live.conversation.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'instructionSuffix?', 'manualActivityBoundaries?', 'runSuggestionAftersteps?'] },
+    'live.observer.turn': { mutates: true, external: true, params: ['pcmBase64', 'sampleRate?', 'pace?', 'timeoutMs?', 'expectedTranscript?', 'minTranscriptWordRecall? (0..1, default 0.8)', 'includeVisual?', 'visualLabel?', 'instructionSuffix?', 'manualActivityBoundaries?', 'runSuggestionAftersteps?'] },
     'journey.firstLesson': { mutates: true, external: true, params: ['languagePairId? | targetLanguageCode? + nativeLanguageCode?', 'pcmBase64?', 'expectedTranscript? (required with custom PCM)', 'minTranscriptWordRecall? (0..1, default 0.8)', 'paceLiveAudio?', 'timeoutMs?', 'includeSyntheticToolDecisions?', 'uploadGeneratedMedia? (default true in both access modes)'] },
     'account.summary': { mutates: false, params: ['operationId?'] },
     'account.ledgers': { mutates: false, params: ['limit?'] },
@@ -175,7 +175,7 @@ export const describeHeadlessMethods = (accessMode: HeadlessAccessMode = 'manage
   ]));
 
   return {
-  protocolVersion: '1.6.0',
+  protocolVersion: '1.7.0',
   transport: 'json-rpc-2.0-ndjson',
   eventNotification: 'maestro.event',
   profileDefault: 'isolated-temporary',

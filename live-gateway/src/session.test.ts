@@ -166,15 +166,13 @@ describe('managed Live gateway connection', () => {
     await harness.close();
   });
 
-  it('forwards every supported client method and settles from provider usage metadata', async () => {
+  it('forwards validated realtime input and settles from provider usage metadata', async () => {
     const harness = createHarness();
     await harness.authenticate();
     harness.connection.receive(JSON.stringify({
       type: 'realtimeInput',
       input: { audio: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=16000' }, audioStreamEnd: true },
     }));
-    harness.connection.receive(JSON.stringify({ type: 'clientContent', input: { turns: [] } }));
-    harness.connection.receive(JSON.stringify({ type: 'toolResponse', input: { functionResponses: [] } }));
     await harness.connection.whenIdle();
     harness.provider.callbacks!.onmessage({
       usageMetadata: {
@@ -190,13 +188,30 @@ describe('managed Live gateway connection', () => {
     await harness.close();
 
     assert.equal(harness.provider.realtimeInputs.length, 1);
-    assert.equal(harness.provider.clientContents.length, 1);
-    assert.equal(harness.provider.toolResponses.length, 1);
+    assert.equal(harness.provider.clientContents.length, 0);
+    assert.equal(harness.provider.toolResponses.length, 0);
     assert.equal(harness.billing.finalizations[0].checkpoint.inputAudioBytes, 4);
     assert.equal(harness.billing.finalizations[0].checkpoint.providerUsageMetadata?.totalTokenCount, 14);
     assert.equal(harness.transport.messages.some(
       (message) => message.type === 'billing' && message.usageSource === 'provider',
     ), true);
+  });
+
+  it('rejects unmetered client-content and tool-response methods', async () => {
+    for (const message of [
+      { type: 'clientContent', input: { turns: [] } },
+      { type: 'toolResponse', input: { functionResponses: [] } },
+    ]) {
+      const harness = createHarness();
+      await harness.authenticate();
+      harness.connection.receive(JSON.stringify(message));
+      await harness.connection.whenIdle();
+
+      assert.equal(harness.billing.finalizations.length, 1);
+      assert.equal(harness.billing.finalizations[0].reason, 'gateway-error');
+      assert.equal(harness.provider.clientContents.length, 0);
+      assert.equal(harness.provider.toolResponses.length, 0);
+    }
   });
 
   it('paces a burst of buffered PCM before forwarding it to the provider', async () => {
@@ -225,6 +240,49 @@ describe('managed Live gateway connection', () => {
     assert.deepEqual(sentAt, [1_000, 1_100, 1_200]);
     assert.equal(provider.realtimeInputs.length, 3);
     await harness.close();
+  });
+
+  it('paces camera frames at one frame per second', async () => {
+    let now = 1_000;
+    const sentAt: number[] = [];
+    const provider = new FakeProvider();
+    provider.session.sendRealtimeInput = (input) => {
+      provider.realtimeInputs.push(input);
+      sentAt.push(now);
+    };
+    const harness = createHarness({
+      provider,
+      now: () => now,
+      sleep: async milliseconds => { now += milliseconds; },
+    });
+    await harness.authenticate();
+    for (let index = 0; index < 3; index += 1) {
+      harness.connection.receive(JSON.stringify({
+        type: 'realtimeInput',
+        input: { video: { data: 'AA==', mimeType: 'image/jpeg' } },
+      }));
+    }
+    await harness.connection.whenIdle();
+
+    assert.deepEqual(sentAt, [1_000, 2_000, 3_000]);
+    assert.equal(harness.billing.finalizations.length, 0);
+    await harness.close();
+  });
+
+  it('refuses a seventh turn before it reaches the provider', async () => {
+    const harness = createHarness();
+    await harness.authenticate();
+    for (let turn = 0; turn < 7; turn += 1) {
+      harness.connection.receive(JSON.stringify({
+        type: 'realtimeInput',
+        input: { audioStreamEnd: true },
+      }));
+    }
+    await harness.connection.whenIdle();
+
+    assert.equal(harness.provider.realtimeInputs.length, 6);
+    assert.equal(harness.billing.finalizations.length, 1);
+    assert.equal(harness.billing.finalizations[0].checkpoint.clientTurnBoundaryCount, 6);
   });
 
   it('releases a consumed ticket when the provider connection fails', async () => {

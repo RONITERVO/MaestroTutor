@@ -117,7 +117,7 @@ export const appConfig = {
   managedCreditsPerUsd: Math.max(1, parseInteger(process.env.MANAGED_CREDITS_PER_USD, 1000)),
   requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, true),
   geminiLiveTokenUses: Math.max(1, parseInteger(process.env.GEMINI_LIVE_TOKEN_USES, 1)),
-  managedLiveTokenLifetimeSeconds: Math.min(180, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 180))),
+  managedLiveTokenLifetimeSeconds: Math.min(120, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 120))),
   managedLiveGatewayUrl: process.env.MANAGED_LIVE_GATEWAY_URL?.trim() || '',
   managedLiveGatewayTicketSeconds: Math.min(
     60,
@@ -147,10 +147,6 @@ export const appConfig = {
   managedSearchReservationQueries: Math.min(
     100,
     Math.max(1, parseInteger(process.env.MANAGED_SEARCH_RESERVATION_QUERIES, 10)),
-  ),
-  managedMaxOutputTokens: Math.min(
-    65_536,
-    Math.max(256, parseInteger(process.env.MANAGED_MAX_OUTPUT_TOKENS, 8_192)),
   ),
   /** Requests per minute per user, per class of operation. See rateLimit.ts. */
   rateLimitPerMinute: Math.max(1, parseInteger(process.env.MANAGED_RATE_LIMIT_PER_MINUTE, 60)),

@@ -14,6 +14,7 @@
 
 import type { GeminiPricingRegistry } from './registry';
 import { resolvePricingRule } from './registry';
+import { LIVE_GATEWAY_MAX_TURNS } from '../liveGatewayProtocol';
 
 /** A managed operation, as named by both the client and the backend. */
 export type ManagedOperation =
@@ -49,19 +50,24 @@ export const uploadBytesToCredits = (bytes: number, creditsPerMb: number): numbe
 
 /** Gemini Live bills audio per token; this is the published token rate per second. */
 export const LIVE_AUDIO_TOKENS_PER_SECOND = 32;
+/** Low media resolution is enforced for managed Live camera frames. */
+export const LIVE_VIDEO_TOKENS_PER_FRAME_LOW = 70;
+export const LIVE_GATEWAY_MAX_BILLABLE_TURNS = LIVE_GATEWAY_MAX_TURNS;
 
 export interface LiveWindowRates {
   inputAudioPerMillion: number;
   outputAudioPerMillion: number;
-  maxInputTokens: number;
-  maxOutputTokens: number;
+  /** Billing reservation bound only; never sent to the model provider. */
+  reservationInputTokenCeiling: number;
+  /** Billing reservation bound only; never sent to the model provider. */
+  reservationOutputTokenCeiling: number;
 }
 
 export const DEFAULT_LIVE_WINDOW_RATES: LiveWindowRates = {
   inputAudioPerMillion: 3,
   outputAudioPerMillion: 12,
-  maxInputTokens: 131_072,
-  maxOutputTokens: 8_192,
+  reservationInputTokenCeiling: 131_072,
+  reservationOutputTokenCeiling: 8_192,
 };
 
 export const calculateLiveWindowUsd = (
@@ -70,12 +76,79 @@ export const calculateLiveWindowUsd = (
 ): number => {
   const seconds = Math.max(1, Math.floor(durationSeconds));
   const budget = seconds * LIVE_AUDIO_TOKENS_PER_SECOND;
-  const input = Math.min(rates.maxInputTokens, budget);
-  const output = Math.min(rates.maxOutputTokens, budget);
+  const input = Math.min(rates.reservationInputTokenCeiling, budget);
+  const output = Math.min(rates.reservationOutputTokenCeiling, budget);
   return roundUsd(
     (input / 1_000_000) * rates.inputAudioPerMillion
     + (output / 1_000_000) * rates.outputAudioPerMillion,
   );
+};
+
+export interface LiveGatewayWindowRates extends LiveWindowRates {
+  inputTextPerMillion: number;
+  inputVideoPerMillion: number;
+  outputTextPerMillion: number;
+  maxBillableTurns: number;
+  videoTokensPerFrame: number;
+  inputTextTokensPerTurn: number;
+  outputTextTokenHeadroom: number;
+  reservationHeadroomMultiplier: number;
+}
+
+export const DEFAULT_LIVE_GATEWAY_WINDOW_RATES: LiveGatewayWindowRates = {
+  ...DEFAULT_LIVE_WINDOW_RATES,
+  // Use the most expensive enabled Live model's rates for reservation. The
+  // checked-in model registry still prices settlement from actual modalities.
+  inputTextPerMillion: 0.75,
+  inputVideoPerMillion: 3,
+  outputTextPerMillion: 4.5,
+  maxBillableTurns: LIVE_GATEWAY_MAX_BILLABLE_TURNS,
+  videoTokensPerFrame: LIVE_VIDEO_TOKENS_PER_FRAME_LOW,
+  // Covers the system instruction and transcription/thinking text that the
+  // transport byte counters cannot predict.
+  inputTextTokensPerTurn: 8_192,
+  outputTextTokenHeadroom: 8_192,
+  reservationHeadroomMultiplier: 1.1,
+};
+
+export const getLiveGatewayWindowTokenBudget = (
+  durationSeconds: number,
+  rates: LiveGatewayWindowRates = DEFAULT_LIVE_GATEWAY_WINDOW_RATES,
+) => {
+  const seconds = Math.max(1, Math.floor(durationSeconds));
+  const turns = Math.max(1, Math.floor(rates.maxBillableTurns));
+  const oneDirectionAudioTokens = seconds * LIVE_AUDIO_TOKENS_PER_SECOND;
+  return {
+    // Earlier input and model audio can both re-enter the prompt on each turn.
+    audioInputTokens: Math.min(
+      rates.reservationInputTokenCeiling * turns,
+      oneDirectionAudioTokens * 2 * turns,
+    ),
+    videoInputTokens: seconds * rates.videoTokensPerFrame * turns,
+    textInputTokens: rates.inputTextTokensPerTurn * turns,
+    audioOutputTokens: Math.min(rates.reservationOutputTokenCeiling, oneDirectionAudioTokens),
+    textOutputTokens: rates.outputTextTokenHeadroom + (seconds * 8),
+    maxBillableTurns: turns,
+  };
+};
+
+/**
+ * Reservation for the metered gateway, where Google re-bills retained context
+ * on every turn. The gateway enforces the same turn, duration, video cadence,
+ * media-resolution, and message-shape bounds used by this estimate.
+ */
+export const calculateLiveGatewayWindowUsd = (
+  durationSeconds: number,
+  rates: LiveGatewayWindowRates = DEFAULT_LIVE_GATEWAY_WINDOW_RATES,
+): number => {
+  const budget = getLiveGatewayWindowTokenBudget(durationSeconds, rates);
+  const subtotal =
+    (budget.audioInputTokens / 1_000_000) * rates.inputAudioPerMillion
+    + (budget.videoInputTokens / 1_000_000) * rates.inputVideoPerMillion
+    + (budget.textInputTokens / 1_000_000) * rates.inputTextPerMillion
+    + (budget.audioOutputTokens / 1_000_000) * rates.outputAudioPerMillion
+    + (budget.textOutputTokens / 1_000_000) * rates.outputTextPerMillion;
+  return roundUsd(subtotal * Math.max(1, rates.reservationHeadroomMultiplier));
 };
 
 /**

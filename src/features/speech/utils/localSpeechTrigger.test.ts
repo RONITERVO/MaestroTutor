@@ -98,13 +98,13 @@ describe('local speech trigger', () => {
     expect(resolved).toBe(false);
     expect(track.stop).not.toHaveBeenCalled();
 
-    for (let index = 0; index < 12; index += 1) await emitPacket(speech);
+    for (let index = 0; index < 3; index += 1) await emitPacket(speech);
     const result = await resultPromise;
     const context = FakeAudioContext.instances[0];
 
     expect(result.microphoneStream).toBe(stream);
     expect(result.transcript).toBe('hello from the microphone');
-    expect(result.pcm.length).toBe(16_000 * 3);
+    expect(result.pcm.length).toBe(28 * 1_600);
     expect(detector.transcribe).toHaveBeenCalledOnce();
     expect(track.stop).not.toHaveBeenCalled();
     expect(context.close).not.toHaveBeenCalled();
@@ -141,12 +141,16 @@ describe('local speech trigger', () => {
     for (let index = 0; index < 12; index += 1) await emitPacket(8_000);
     await vi.waitFor(() => expect(detector.transcribe).toHaveBeenCalledOnce());
 
-    // These are the words spoken after Whisper started recognizing the prefix.
-    for (let index = 0; index < 5; index += 1) await emitPacket(9_000);
+    // These are more than three seconds of words spoken after Whisper started
+    // recognizing the prefix. A sliding replay window used to discard the
+    // entire beginning by the time a slow mobile worker returned.
+    for (let index = 0; index < 35; index += 1) await emitPacket(9_000);
     finishTranscription?.('the whole sentence is still being spoken');
     const result = await resultPromise;
 
-    expect(result.pcm.slice(-5 * 1_600).every(sample => sample === 9_000)).toBe(true);
+    expect(result.pcm).toHaveLength(47 * 1_600);
+    expect(result.pcm.slice(0, 12 * 1_600).every(sample => sample === 8_000)).toBe(true);
+    expect(result.pcm.slice(-35 * 1_600).every(sample => sample === 9_000)).toBe(true);
 
     // These arrive while the provider socket is still connecting.
     for (let index = 0; index < 3; index += 1) await emitPacket(10_000);
@@ -162,17 +166,15 @@ describe('local speech trigger', () => {
     await result.capture.close();
   });
 
-  it('does not transcribe or send a short utterance even when its buffered window exceeds 1.2 seconds', async () => {
+  it('lets a short utterance reach Whisper after 1.2 seconds of intact audio', async () => {
     let now = 1_000;
     vi.spyOn(Date, 'now').mockImplementation(() => now);
     const detector = {
       initialize: vi.fn(async () => undefined),
       transcribe: vi.fn(async () => 'hi'),
     };
-    const controller = new AbortController();
     const resultPromise = waitForLocalSpeechTrigger({
       detector: detector as any,
-      signal: controller.signal,
     });
 
     await vi.waitFor(() => expect(FakeAudioWorkletNode.instances).toHaveLength(1));
@@ -185,13 +187,14 @@ describe('local speech trigger', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     };
 
-    for (let index = 0; index < 25; index += 1) await emitPacket(silence);
-    for (let index = 0; index < 4; index += 1) await emitPacket(speech);
     for (let index = 0; index < 12; index += 1) await emitPacket(silence);
+    for (let index = 0; index < 3; index += 1) await emitPacket(speech);
+    const result = await resultPromise;
 
-    expect(detector.transcribe).not.toHaveBeenCalled();
-    controller.abort();
-    await expect(resultPromise).rejects.toMatchObject({ name: 'AbortError' });
+    expect(detector.transcribe).toHaveBeenCalledOnce();
+    expect(result.transcript).toBe('hi');
+    expect(result.pcm.slice(-3 * 1_600).every(sample => sample === 10_000)).toBe(true);
+    await result.capture.close();
   });
 
   it('rejects an already-aborted request without opening the microphone', async () => {

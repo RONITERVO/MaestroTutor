@@ -92,7 +92,15 @@ export class PcmCaptureRouter {
       phase: 'input.started',
       data: { source: source.kind, sampleRate: source.sampleRate },
     });
-    await source.start(frame => this.push(frame.pcm, frame.sampleRate, frame.source));
+    try {
+      await source.start(frame => this.push(frame.pcm, frame.sampleRate, frame.source));
+    } finally {
+      // A finite synthetic microphone turn may finish while the Live socket
+      // intentionally stays connected. Release only this completed source so
+      // the same router can attach the next turn, matching the browser's one
+      // long-lived capture route.
+      if (this.source === source) this.source = null;
+    }
   }
 
   async stop() {
