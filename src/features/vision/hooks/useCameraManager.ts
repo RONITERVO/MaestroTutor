@@ -15,7 +15,7 @@ import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
 import { getFacingModeFromLabel, isAuxiliaryCameraSensor } from '../utils/mediaUtils';
 import { useMaestroStore } from '../../../store';
 import { errorSttFlow, logSttFlow, warnSttFlow } from '../../../shared/utils/sttFlowDebug';
-import { hasCameraConsent } from '../../../core-sdk/media/cameraConsent';
+import { hasCameraConsent, DEFAULT_CAMERA_ID, cameraVideoConstraints } from '../../../core-sdk/media/cameraConsent';
 
 export interface UseCameraManagerConfig {
   t: TranslationFunction;
@@ -146,7 +146,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           device => !isAuxiliaryCameraSensor(device.label)
         );
         const cameraList: CameraDevice[] = usableDevices.map((device, index) => ({
-          deviceId: device.deviceId,
+          deviceId: device.deviceId || DEFAULT_CAMERA_ID,
           label: device.label || `Camera ${index + 1}`,
           facingMode: getFacingModeFromLabel(device.label)
         }));
@@ -199,9 +199,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           visualContextStreamRef.current.getTracks().forEach(track => track.stop());
         }
 
-        const videoConstraints: MediaStreamConstraints['video'] = selectedCameraId
-          ? { deviceId: { exact: selectedCameraId } }
-          : true;
+        const videoConstraints = cameraVideoConstraints(selectedCameraId);
 
         let stream: MediaStream;
         try {
@@ -247,6 +245,10 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
         visualContextStreamRef.current = stream;
         setLiveVideoStream(stream);
+        if (selectedCameraId === DEFAULT_CAMERA_ID) {
+          const actualDeviceId = stream.getVideoTracks()[0]?.getSettings()?.deviceId;
+          if (actualDeviceId) updateSetting('selectedCameraId', actualDeviceId);
+        }
         if (visualContextVideoRef.current) {
           const videoElement = visualContextVideoRef.current;
           videoElement.srcObject = stream;
@@ -427,9 +429,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
           errorSetter(isForReengagement ? t('error.visualContextCameraAccessNotSupported') : t('error.snapshotCameraAccessNotSupported'));
           return null;
         }
-        const videoConstraints: MediaStreamConstraints['video'] = selectedCameraId
-          ? { deviceId: { exact: selectedCameraId } }
-          : true;
+        const videoConstraints = cameraVideoConstraints(selectedCameraId);
 
         logSttFlow('camera.capture.tempStream.start', {
           selectedCameraId: selectedCameraId || 'none',

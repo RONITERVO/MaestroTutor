@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useRef, useMemo } from 'react';
+import { cameraVideoConstraints } from '../../../core-sdk/media/cameraConsent';
 import { 
   ChatMessage, 
   AppSettings,
@@ -697,9 +698,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error(t('error.cameraAccessNotSupported'));
         }
-        const videoConstraints: MediaStreamConstraints['video'] = settingsRef.current.selectedCameraId
-          ? { deviceId: { exact: settingsRef.current.selectedCameraId } }
-          : true;
+        const videoConstraints = cameraVideoConstraints(settingsRef.current.selectedCameraId);
 
         // Request BOTH permissions upfront to avoid double prompts or late mic requests
         stream = await navigator.mediaDevices.getUserMedia({
