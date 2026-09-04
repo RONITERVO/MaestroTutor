@@ -206,7 +206,11 @@ the personal recording itself is not committed. CI generates the same wording on
 with the paid BYOK key, inserts a 400 ms mid-sentence hesitation, and reuses those
 exact PCM bytes for managed and BYOK observer-camera and conversation runs. Each
 run must transcribe the complete question and finish playing five English/Finnish
-response pairs.
+response pairs. The observer continues to exercise its real local semantic gate.
+For the finite long conversation check, CI disables provider VAD and explicitly
+marks the recording's start and end. This isolates long-audio delivery and output
+playback from provider endpoint timing; `journey.firstLesson` separately keeps the
+normal product conversation on automatic VAD.
 
 ## Maintainer runbook
 

@@ -432,6 +432,7 @@ export const dispatchHeadlessMethod = async (
         includeVisual: input.includeVisual === true,
         visualLabel: typeof input.visualLabel === 'string' ? input.visualLabel : undefined,
         instructionSuffix: typeof input.instructionSuffix === 'string' ? input.instructionSuffix : undefined,
+        manualActivityBoundaries: input.manualActivityBoundaries === true,
         expectedTranscript: typeof input.expectedTranscript === 'string' ? input.expectedTranscript : undefined,
         minTranscriptWordRecall: typeof input.minTranscriptWordRecall === 'number' ? input.minTranscriptWordRecall : undefined,
         runSuggestionAftersteps: typeof input.runSuggestionAftersteps === 'boolean' ? input.runSuggestionAftersteps : undefined,

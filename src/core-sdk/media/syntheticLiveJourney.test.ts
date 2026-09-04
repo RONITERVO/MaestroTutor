@@ -355,6 +355,63 @@ describe('synthetic Live journey', () => {
     }));
   });
 
+  it('can explicitly bound a finite conversation fixture without the speech gate', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const sent: any[] = [];
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        sent.push(message);
+        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: 'One deliberately bounded sentence.' },
+            outputTranscription: { text: 'I heard the whole sentence.' },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (params: any) => {
+          callbacks = params.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({
+        pcm: new Int16Array(32_000).fill(6_000),
+        sampleRate: 16_000,
+        pace: false,
+      }),
+      gateInputOnSpeech: false,
+      manualActivityBoundaries: true,
+    });
+
+    expect(result.sentSamples).toBe(32_000);
+    expect(sent.filter(message => message.activityStart)).toHaveLength(1);
+    expect(sent.filter(message => message.activityEnd)).toHaveLength(1);
+    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+    expect(sent.findIndex(message => message.activityStart)).toBeLessThan(
+      sent.findIndex(message => message.audio),
+    );
+    expect(sent.findIndex(message => message.activityEnd)).toBeLessThan(
+      sent.findIndex(message => message.audioStreamEnd),
+    );
+    expect(ai.live.connect).toHaveBeenCalledWith(expect.objectContaining({
+      config: expect.objectContaining({
+        realtimeInputConfig: expect.objectContaining({
+          automaticActivityDetection: { disabled: true },
+        }),
+      }),
+    }));
+  });
+
   it('keeps one Live connection across six audio-video turns and sums cumulative provider usage', async () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
     const sent: any[] = [];

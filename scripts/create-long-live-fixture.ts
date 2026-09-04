@@ -136,6 +136,7 @@ process.stdout.write(JSON.stringify({
   expectedTranscript: EXPECTED_TRANSCRIPT,
   minTranscriptWordRecall: 0.75,
   includeVisual: true,
+  manualActivityBoundaries: true,
   visualLabel: 'RED APPLE',
   runSuggestionAftersteps: false,
   instructionSuffix,

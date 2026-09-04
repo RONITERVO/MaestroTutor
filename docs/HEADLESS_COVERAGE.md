@@ -121,6 +121,10 @@ It also runs one shared long English fixture through observer-camera and
 conversation mode in both access modes. That fixture includes a 400 ms hesitation,
 requires the complete question transcript, and forces five English/Finnish response
 pairs so truncated input, output, playback, or translation cannot pass unnoticed.
+The finite long conversation fixture disables provider VAD and sends one explicit
+activity boundary around the whole recording, making this transport proof
+independent of provider endpoint timing. The ordinary short conversation in
+`journey.firstLesson` remains the automatic-VAD gate for the product chat path.
 
 ## Access-mode policy and safe cleanup
 
@@ -340,6 +344,7 @@ Cloud Run is the deployment surface because it supports WebSockets, bounded
 request timeouts and high connection concurrency:
 
 - [Gemini Live billing is token-based](https://ai.google.dev/gemini-api/docs/live-api/best-practices#pricing-billing)
+- [Gemini Live session and connection limits](https://ai.google.dev/gemini-api/docs/live-api/session-management)
 - [Gemini failed-request billing](https://ai.google.dev/gemini-api/docs/billing)
 - [Cloud Run WebSocket guidance](https://cloud.google.com/run/docs/triggering/websockets)
 

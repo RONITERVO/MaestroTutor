@@ -71,6 +71,7 @@ export interface HeadlessLiveTurnInput {
   runSuggestionAftersteps?: boolean;
   uploadVisual?: boolean;
   instructionSuffix?: string;
+  manualActivityBoundaries?: boolean;
   expectedTranscript?: string;
   minTranscriptWordRecall?: number;
 }
@@ -123,6 +124,7 @@ export const runHeadlessLiveTurn = async (
     thinkingMode: input.mode === 'stt' ? 'minimal' : 'conversation',
     voiceName: client.state.settings.tts?.voiceName || 'Kore',
     gateInputOnSpeech: input.mode !== 'conversation',
+    manualActivityBoundaries: input.manualActivityBoundaries,
     semanticSpeech: true,
     // STT and the silent observer start with a browser-local Whisper capture.
     // Reproduce that ownership transition instead of opening Live first.

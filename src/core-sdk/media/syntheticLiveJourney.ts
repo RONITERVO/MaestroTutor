@@ -58,6 +58,8 @@ export interface SyntheticLiveJourneyInput {
   systemInstruction?: string;
   model?: string;
   gateInputOnSpeech?: boolean;
+  /** Disable provider VAD and bound each finite synthetic source explicitly. */
+  manualActivityBoundaries?: boolean;
   semanticSpeech?: boolean;
   timeoutMs?: number;
   includeModelAudio?: boolean;
@@ -87,6 +89,7 @@ export const runSyntheticLiveJourney = async (
   const operationId = options.operationId || runtime.ids.create('synthetic-live');
   const model = input.model || getGeminiModels().audio.stt;
   const gateEnabled = input.gateInputOnSpeech ?? true;
+  const manualActivityBoundaries = gateEnabled || input.manualActivityBoundaries === true;
   const gate = gateEnabled ? new SpeechGate({ requireConfirmation: true }) : null;
   const boundary = gateEnabled ? new ContinuousLiveTurnBoundary() : null;
   const pendingSpeech = gateEnabled ? new SemanticSpeechCapture({ sampleRate: INPUT_SAMPLE_RATE }) : null;
@@ -248,7 +251,7 @@ export const runSyntheticLiveJourney = async (
       responseModalities: [Modality.AUDIO],
       inputAudioTranscription: {},
       outputAudioTranscription: {},
-      realtimeInputConfig: getLiveRealtimeInputConfig(false, gateEnabled),
+      realtimeInputConfig: getLiveRealtimeInputConfig(false, manualActivityBoundaries),
       thinkingConfig: input.thinkingMode === 'conversation'
         ? getLiveConversationThinkingConfig(model)
         : getLiveMinimalThinkingConfig(model),
@@ -381,6 +384,8 @@ export const runSyntheticLiveJourney = async (
     if (boundary?.isOpen) {
       session.sendRealtimeInput({ activityEnd: {} });
       boundary.reset();
+    } else if (input.manualActivityBoundaries === true) {
+      session.sendRealtimeInput({ activityEnd: {} });
     }
     session.sendRealtimeInput({ audioStreamEnd: true });
     streamEnds += 1;
@@ -471,6 +476,9 @@ export const runSyntheticLiveJourney = async (
         ? inputCaptureStartedAt
         : runtime.clock.now();
 
+      if (!gateEnabled && input.manualActivityBoundaries === true) {
+        session.sendRealtimeInput({ activityStart: {} });
+      }
       if (turnIndex === 0 && uiCaptureHandoff && sourceRun) {
         gate!.openFromConfirmedTrigger(logicalNow);
         boundary!.openFromConfirmedSpeech(logicalNow);

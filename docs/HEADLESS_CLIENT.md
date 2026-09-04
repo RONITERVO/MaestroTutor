@@ -526,6 +526,12 @@ This is local evidence for the current working tree and staging deployment. It i
 not a substitute for the required managed/BYOK workflow and production canary on
 the final release commit.
 
+The release-only long conversation fixture sets `manualActivityBoundaries: true`
+to wrap its finite PCM source in one explicit Live activity. Do not use that option
+as a substitute for the automatic-VAD conversation exercised by
+`journey.firstLesson`; it exists to make long transport and transcript fidelity
+deterministic.
+
 ### Historical 2026-09-01/02 baseline
 
 The expanded managed parity gate was also run locally against staging on
