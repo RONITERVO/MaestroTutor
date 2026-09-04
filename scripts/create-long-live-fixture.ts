@@ -84,9 +84,9 @@ const insertNaturalPause = (pcm: Int16Array, sampleRate: number): Int16Array => 
       bestOffset = offset + Math.floor(window / 2);
     }
   }
-  // Exercise a meaningful mid-sentence pause without crossing the four-second
-  // idle + post-roll boundary. Multi-turn behavior has its own six-turn test.
-  const insertedSilence = new Int16Array(sampleRate * 2);
+  // Exercise a slight hesitation without crossing conversation mode's 600 ms
+  // automatic-VAD boundary. Multi-turn behavior has its own six-turn test.
+  const insertedSilence = new Int16Array(Math.floor(sampleRate * 0.4));
   const leadingSilence = new Int16Array(sampleRate);
   const trailingSilence = new Int16Array(sampleRate * 2);
   const result = new Int16Array(

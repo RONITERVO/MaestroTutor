@@ -203,7 +203,7 @@ Finnish accent in `Tallenne (14).m4a`. Local Whisper `large-v3-turbo` with Engli
 forced recovered the whole question, ending with “what is the main reason for
 this”. The checked-in transcript evidence includes segment and word timestamps;
 the personal recording itself is not committed. CI generates the same wording once
-with the paid BYOK key, inserts a two-second mid-sentence pause, and reuses those
+with the paid BYOK key, inserts a 400 ms mid-sentence hesitation, and reuses those
 exact PCM bytes for managed and BYOK observer-camera and conversation runs. Each
 run must transcribe the complete question and finish playing five English/Finnish
 response pairs.
