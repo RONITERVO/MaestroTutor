@@ -42,7 +42,7 @@ persisted state transition is mocked in a provider run.
 | Live audio conversation | shared context, Live model compatibility, PCM stream and audio response | `live.conversation.turn`; expected-word recall, input/output transcript deltas, audio samples and SHA-256 values |
 | Live audio plus visual | same Live path with a real JPEG frame at the video stream boundary | `includeVisual:true`; sent-frame count plus transcript/audio evidence |
 | Post-Live aftersteps | same suggestion creator and dispatcher as chat | `runSuggestionAftersteps:true` or `journey.firstLesson` |
-| Silent observer audio | shared `SpeechGate`, retained PCM preroll, lossless pre-connect handoff and semantic confirmation | `live.observer.turn`; expected-word recall (including suffix), one completed audio boundary, real-time input/output playback evidence, gate enabled, no video frames, transcript/audio hashes |
+| Silent observer audio | shared `SpeechGate`, retained raw PCM, lossless pre-connect handoff and semantic confirmation | `live.observer.turn`; expected-word recall (including suffix), real-time input/output playback evidence, gate enabled, no video frames, transcript/audio hashes; `speech.synthetic.live` also requires a short second turn over the same socket |
 | Silent observer plus visual | same observer path plus real JPEG stream injection | `includeVisual:true`; gate and sent-frame evidence |
 | Translation | the same `translateText` request with an injected managed/BYOK client | `translation.create`; translated text, optionally attached to suggestions |
 | Empty-input re-engagement | the UI-equivalent `"..."` provider prompt without a user bubble | `chat.reengage`; no user bubble and at least one visible streamed text delta |
@@ -103,13 +103,20 @@ messages and every coverage flag to be true. Every synthetic attachment turn mus
 also report confirmed provider deletion with zero cleanup failures; a best-effort
 cleanup attempt alone is not release evidence.
 
-The bundled first-lesson audio repeats the known word `Play` long enough to clear
-the sustained-speech gate and now asserts that Live actually transcribed that word.
+The bundled first-lesson audio repeats the known word `Play` and now asserts that
+Live actually transcribed that word. The local detector waits for a 1.2-second
+intact audio window, not 1.2 seconds of VAD-selected speech.
 A custom `pcmBase64` is accepted only with `expectedTranscript`; this prevents a
 green response/audio check from hiding clipped or misunderstood user speech.
 Paced observer/STT checks additionally fail unless the input duration tracks wall
 time, PCM crossed the pre-connect handoff, and model audio completed a real-time
 24 kHz playback drain.
+
+The scheduled staging workflow additionally sends the short bundled `Play` clip
+twice over one still-connected socket in managed and BYOK modes. It rejects the
+run unless both input transcripts and responses are non-empty, both manual audio
+boundaries carry samples, and playback for each turn completes after its final
+network audio byte.
 
 ## Access-mode policy and safe cleanup
 

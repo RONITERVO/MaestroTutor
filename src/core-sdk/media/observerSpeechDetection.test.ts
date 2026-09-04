@@ -7,6 +7,7 @@ import {
   isLikelySpeechTranscript,
   pcmPacketsToWhisperWindow,
   recentPcmPackets,
+  SemanticSpeechCapture,
   SpeechActivityTracker,
 } from './observerSpeechDetection';
 
@@ -68,6 +69,46 @@ describe('Whisper audio windows', () => {
     expect(audio).not.toBeNull();
     expect(audio?.length).toBe(speech.length);
     expect(Math.max(...audio!.slice(0, 100))).toBeLessThanOrEqual(1);
+  });
+
+  it('allows a short utterance once the intact audio window is long enough', () => {
+    const silence = new Int16Array(RATE);
+    const shortSpeech = new Int16Array(RATE / 5).fill(10_000);
+    const audio = pcmPacketsToWhisperWindow([silence, shortSpeech], RATE);
+
+    expect(audio).not.toBeNull();
+    expect(audio).toHaveLength(RATE * 1.2);
+    expect(audio?.slice(0, RATE).every(sample => sample === 0)).toBe(true);
+  });
+});
+
+describe('semantic speech capture', () => {
+  it('protects the complete candidate and inference tail until accepted', () => {
+    const capture = new SemanticSpeechCapture({ sampleRate: 1_000, preRollMs: 1_200 });
+    capture.append(new Int16Array(1_000));
+    capture.append(new Int16Array(200).fill(8_000));
+
+    expect(capture.beginWhisperCheck(1_000)).not.toBeNull();
+    capture.append(new Int16Array(2_000).fill(9_000));
+
+    const confirmed = capture.takeConfirmedPackets().flatMap(packet => [...packet]);
+    expect(confirmed).toHaveLength(3_200);
+    expect(confirmed.slice(-2_000).every(sample => sample === 9_000)).toBe(true);
+    expect(capture.sampleCount).toBe(0);
+    expect(capture.isWhisperCheckPending).toBe(false);
+  });
+
+  it('returns to bounded rolling pre-roll after a rejected check', () => {
+    const capture = new SemanticSpeechCapture({ sampleRate: 1_000, preRollMs: 1_200 });
+    capture.append(new Int16Array(1_200).fill(8_000));
+    expect(capture.beginWhisperCheck(1_000)).not.toBeNull();
+    capture.append(new Int16Array(2_000).fill(9_000));
+
+    capture.finishWhisperCheck();
+
+    expect(capture.sampleCount).toBe(1_200);
+    expect(capture.takeConfirmedPackets().flatMap(packet => [...packet])
+      .every(sample => sample === 9_000)).toBe(true);
   });
 });
 

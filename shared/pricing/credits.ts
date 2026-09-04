@@ -53,15 +53,17 @@ export const LIVE_AUDIO_TOKENS_PER_SECOND = 32;
 export interface LiveWindowRates {
   inputAudioPerMillion: number;
   outputAudioPerMillion: number;
-  maxInputTokens: number;
-  maxOutputTokens: number;
+  /** Billing reservation bound only; never sent to the model provider. */
+  reservationInputTokenCeiling: number;
+  /** Billing reservation bound only; never sent to the model provider. */
+  reservationOutputTokenCeiling: number;
 }
 
 export const DEFAULT_LIVE_WINDOW_RATES: LiveWindowRates = {
   inputAudioPerMillion: 3,
   outputAudioPerMillion: 12,
-  maxInputTokens: 131_072,
-  maxOutputTokens: 8_192,
+  reservationInputTokenCeiling: 131_072,
+  reservationOutputTokenCeiling: 8_192,
 };
 
 export const calculateLiveWindowUsd = (
@@ -70,8 +72,8 @@ export const calculateLiveWindowUsd = (
 ): number => {
   const seconds = Math.max(1, Math.floor(durationSeconds));
   const budget = seconds * LIVE_AUDIO_TOKENS_PER_SECOND;
-  const input = Math.min(rates.maxInputTokens, budget);
-  const output = Math.min(rates.maxOutputTokens, budget);
+  const input = Math.min(rates.reservationInputTokenCeiling, budget);
+  const output = Math.min(rates.reservationOutputTokenCeiling, budget);
   return roundUsd(
     (input / 1_000_000) * rates.inputAudioPerMillion
     + (output / 1_000_000) * rates.outputAudioPerMillion,

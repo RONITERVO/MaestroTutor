@@ -4,12 +4,8 @@
 import { mergeInt16Arrays } from '../../../core-sdk/media/audioProcessing';
 import {
   isLikelySpeechTranscript,
-  LOCAL_SPEECH_BUFFER_MS,
-  LOCAL_SPEECH_PREROLL_MS,
   LOCAL_WHISPER_REQUEST_INTERVAL_MS,
-  pcmPacketsToWhisperWindow,
-  recentPcmPackets,
-  SpeechActivityTracker,
+  SemanticSpeechCapture,
 } from '../../../core-sdk/media/liveSpeechDetection';
 import { RealtimePcmPacketizer } from '../../../core-sdk/media/realtimePcmPacketizer';
 import {
@@ -27,8 +23,6 @@ import type { CaptureWorkletMessage } from './captureWorkletMessaging';
 import type { LocalWhisperClient } from './localWhisperClient';
 
 const INPUT_SAMPLE_RATE = 16_000;
-const BUFFER_SAMPLES = Math.round(INPUT_SAMPLE_RATE * LOCAL_SPEECH_BUFFER_MS / 1_000);
-const PREROLL_SAMPLES = Math.round(INPUT_SAMPLE_RATE * LOCAL_SPEECH_PREROLL_MS / 1_000);
 
 export type LocalSpeechTriggerPhase =
   | 'requesting-microphone'
@@ -163,8 +157,7 @@ export const waitForLocalSpeechTrigger = async (options: {
     }
 
     const gate = new SpeechGate({ requireConfirmation: true });
-    const speechActivity = new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE });
-    let bufferedPackets: Int16Array[] = [];
+    const pendingSpeech = new SemanticSpeechCapture({ sampleRate: INPUT_SAMPLE_RATE });
     let whisperBusy = false;
     let lastWhisperRequestAt = 0;
 
@@ -185,38 +178,17 @@ export const waitForLocalSpeechTrigger = async (options: {
           const energy = measureEnergy(packet);
           const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
           setVadActive(packetIsSpeech);
-          const activity = speechActivity.observe(packet.length, packetIsSpeech, now);
-          if (activity.candidateReset && gate.isAwaitingConfirmation) {
-            gate.rejectSpeech(now);
-            bufferedPackets = [];
-          }
+          pendingSpeech.append(packet);
           const decision = gate.evaluate(energy, now);
           if (decision.send) return;
-          if (decision.reason === 'playback') {
-            bufferedPackets = [];
-            speechActivity.reset();
-            return;
-          }
-          if (decision.reason === 'cooldown') {
-            if (!packetIsSpeech) {
-              bufferedPackets = [];
-              speechActivity.reset();
-              return;
-            }
-            // A person can begin a new turn during the short anti-chatter
-            // cooldown. Retain those first samples even though they cannot yet
-            // reopen the gate.
-            bufferedPackets.push(packet);
-            bufferedPackets = recentPcmPackets(bufferedPackets, BUFFER_SAMPLES);
-            return;
-          }
-          bufferedPackets.push(packet);
-          bufferedPackets = recentPcmPackets(bufferedPackets, BUFFER_SAMPLES);
+          if (decision.reason === 'playback' || decision.reason === 'cooldown') return;
           if (decision.reason !== 'awaiting-confirmation') return;
-          if (!activity.hasMinimumSpeech) return;
           if (whisperBusy || now - lastWhisperRequestAt < LOCAL_WHISPER_REQUEST_INTERVAL_MS) return;
 
-          const audio = pcmPacketsToWhisperWindow(bufferedPackets, INPUT_SAMPLE_RATE);
+          // The minimum is elapsed audio in this intact window, not 1.2 seconds
+          // of packets individually selected by VAD. This is the same boundary
+          // Ariadne uses and lets short sentences reach semantic detection.
+          const audio = pendingSpeech.beginWhisperCheck(INPUT_SAMPLE_RATE);
           if (!audio) return;
           whisperBusy = true;
           inferenceTailPackets = [];
@@ -228,25 +200,24 @@ export const waitForLocalSpeechTrigger = async (options: {
             const resultAt = Date.now();
             if (!isLikelySpeechTranscript(transcript)) {
               gate.rejectSpeech(resultAt);
-              bufferedPackets = [];
+              pendingSpeech.finishWhisperCheck();
               inferenceTailPackets = [];
-              speechActivity.reset();
               setPhase('vad-listening');
               return;
             }
             if (!gate.confirmSpeech(resultAt)) {
+              pendingSpeech.finishWhisperCheck();
               inferenceTailPackets = [];
               setPhase('vad-listening');
               return;
             }
             settled = true;
-            speechActivity.reset();
             setPhase('speech-confirmed');
             setVadActive(false);
             packetizer?.dispose();
             packetizer = null;
             const pcm = mergeInt16Arrays([
-              ...recentPcmPackets(bufferedPackets, PREROLL_SAMPLES),
+              ...pendingSpeech.takeConfirmedPackets(),
               ...inferenceTailPackets,
             ]);
             inferenceTailPackets = [];

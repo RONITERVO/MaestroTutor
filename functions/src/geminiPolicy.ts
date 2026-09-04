@@ -107,15 +107,6 @@ export const requireSafeManagedGenerationConfig = (
   if (typeof config !== 'object' || Array.isArray(config)) {
     throw createHttpError(400, 'Managed generation config must be an object.');
   }
-  if (
-    config.maxOutputTokens !== undefined
-    && (
-      !Number.isSafeInteger(config.maxOutputTokens)
-      || Number(config.maxOutputTokens) <= 0
-    )
-  ) {
-    throw createHttpError(400, 'Managed maxOutputTokens must be a positive integer.');
-  }
   for (const key of Object.keys(config)) {
     if (FORBIDDEN_MANAGED_CONFIG_KEYS.has(key)) {
       throw createHttpError(400, `Managed generation config does not allow "${key}".`);
@@ -143,18 +134,21 @@ export const requireSafeManagedGenerationConfig = (
   return config;
 };
 
-export const applyManagedGenerationLimits = (
+/**
+ * Return the provider config without any application-imposed output limit.
+ *
+ * Older clients may still send `maxOutputTokens`. Ignoring it here keeps those
+ * clients compatible while ensuring that neither managed nor BYOK users get a
+ * shorter answer because of Maestro. The provider's model/context limits remain
+ * the only limits.
+ */
+export const prepareManagedGenerationConfig = (
   config: Record<string, unknown> | undefined,
-  maxOutputTokens: number,
-): Record<string, unknown> => {
-  const safeConfig = requireSafeManagedGenerationConfig(config) || {};
-  const requestedOutputTokens = safeConfig.maxOutputTokens === undefined
-    ? maxOutputTokens
-    : Number(safeConfig.maxOutputTokens);
-  return {
-    ...safeConfig,
-    maxOutputTokens: Math.min(maxOutputTokens, requestedOutputTokens),
-  };
+): Record<string, unknown> | undefined => {
+  const safeConfig = requireSafeManagedGenerationConfig(config);
+  if (!safeConfig) return undefined;
+  const { maxOutputTokens: _ignoredLegacyLimit, ...uncappedConfig } = safeConfig;
+  return Object.keys(uncappedConfig).length > 0 ? uncappedConfig : undefined;
 };
 
 export const usesManagedGoogleSearch = (

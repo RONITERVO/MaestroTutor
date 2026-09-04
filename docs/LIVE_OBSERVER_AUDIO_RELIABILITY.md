@@ -52,7 +52,7 @@ also exact-pin the same `@google/genai` version; the release-config verifier fai
 if those versions diverge.
 
 The Core headless observer/STT path now mirrors the important ownership order:
-capture starts, sustained speech is confirmed, Live connects while capture
+capture starts, semantic speech is confirmed from an intact elapsed-audio window, Live connects while capture
 continues, and the shared `PcmCaptureHandoff` drains into the real packetizer. Paced
 input capture and provider delivery use absolute sample deadlines, so work done
 between frames or a slow connection does not change the speaker's effective rate.
@@ -84,8 +84,9 @@ The following checks are intentionally complementary:
 - The gateway state-machine suite injects buffered 100 ms packets and requires
   provider delivery at 0/100/200 ms, independently of client behavior.
 - `syntheticLiveJourney.test.ts` starts capture before a deliberately delayed Live
-  connection, requires the complete suffix transcript, and waits for model playback
-  duration rather than only model bytes or `turnComplete`.
+  connection, requires the complete suffix transcript, keeps the socket for a short
+  second turn, and waits for every model byte to finish real-time playback even
+  when another byte arrives after playback has already begun.
 - Every real release fixture supplies the full `expectedTranscript`, with distinctive
   final words. Word recall is computed against the provider input transcript, not
   local Whisper preview text or the assistant response.
@@ -93,7 +94,7 @@ The following checks are intentionally complementary:
   `transcriptEvidence.passed`, `realtimeEvidence.passed`,
   `realtimeEvidence.providerInputPacingPassed`,
   `timing.uiSpeechHandoff:true`, non-zero connection-handoff samples, non-zero model
-  PCM and hashes, one completed audio boundary, and input/playback wall-clock
+  PCM and hashes, the expected completed audio boundaries, and input/playback wall-clock
   durations within their declared tolerances.
 
 Do not weaken these checks to “some transcript arrived”, “some model audio arrived”,
@@ -229,5 +230,7 @@ answer these questions in tests:
 6. Does a paced check use wall-clock deadlines and wait for audible output drain?
 7. Is retained PCM paced at the provider-send boundary, including after a slow
    connection, rather than merely captured at real time?
+8. Does the same connected session pass a short second utterance after the first
+   reply has audibly drained?
 
 Run the focused audio tests plus the full suite and production build before merging.

@@ -10,9 +10,19 @@ export const OBSERVER_WHISPER_WINDOW_MS = 2600;
 export const OBSERVER_WHISPER_MIN_AUDIO_MS = 1200;
 export const OBSERVER_WHISPER_REQUEST_INTERVAL_MS = 900;
 export const OBSERVER_SPEECH_BUFFER_MS = 7000;
-/** Audio retained before local Whisper confirms words, including quiet first syllables. */
-export const OBSERVER_SPEECH_PREROLL_MS = 3000;
-/** A candidate must contain this much VAD-active speech before it may be sent. */
+/**
+ * Audio retained before local Whisper confirms words, including quiet first
+ * syllables and every packet recorded while inference is in flight.
+ *
+ * This deliberately matches Ariadne's provider pre-roll. It is a time window,
+ * not a VAD-selected collection of packets.
+ */
+export const OBSERVER_SPEECH_PREROLL_MS = 6000;
+/**
+ * Legacy active-speech duration retained for callers that explicitly want a
+ * duration meter. It must not gate Whisper: Ariadne requires a 1.2 second
+ * *audio window*, not 1.2 seconds that individually pass VAD.
+ */
 export const OBSERVER_SPEECH_MIN_ACTIVE_MS = 1200;
 
 export interface SpeechActivityObservation {
@@ -79,6 +89,77 @@ export class SpeechActivityTracker {
   reset(): void {
     this.activeSamples = 0;
     this.lastActiveAt = null;
+  }
+}
+
+/**
+ * Lossless ownership of microphone PCM while a semantic speech check is
+ * pending.
+ *
+ * In rolling mode this retains the same bounded pre-roll used by Ariadne. Once
+ * Whisper starts, trimming stops until its result is handled, so a slow worker
+ * cannot move the replay window past a short utterance or the beginning of a
+ * long sentence. VAD may decide when to request Whisper, but it never removes
+ * packets from the candidate.
+ */
+export class SemanticSpeechCapture {
+  private readonly maxRollingSamples: number;
+  private packets: Int16Array[] = [];
+  private protectedByWhisper = false;
+
+  constructor(options: { sampleRate: number; preRollMs?: number }) {
+    const sampleRate = Math.max(1, options.sampleRate);
+    const preRollMs = Math.max(0, options.preRollMs ?? OBSERVER_SPEECH_PREROLL_MS);
+    this.maxRollingSamples = Math.round(sampleRate * preRollMs / 1000);
+  }
+
+  get isWhisperCheckPending(): boolean {
+    return this.protectedByWhisper;
+  }
+
+  get sampleCount(): number {
+    return this.packets.reduce((total, packet) => total + packet.length, 0);
+  }
+
+  append(pcm: Int16Array): void {
+    if (!pcm.length) return;
+    this.packets.push(pcm.slice());
+    if (!this.protectedByWhisper) this.trimToRollingWindow();
+  }
+
+  /**
+   * Freeze the replay candidate and return an intact recent Whisper window.
+   * Returns null without freezing when the window is too short or too quiet.
+   */
+  beginWhisperCheck(sampleRate: number): Float32Array | null {
+    if (this.protectedByWhisper) return null;
+    const audio = pcmPacketsToWhisperWindow(this.packets, sampleRate);
+    if (!audio) return null;
+    this.protectedByWhisper = true;
+    return audio;
+  }
+
+  /** Keep recent raw PCM after a rejection so speech recorded during inference can retry. */
+  finishWhisperCheck(): void {
+    this.protectedByWhisper = false;
+    this.trimToRollingWindow();
+  }
+
+  /** Transfer every protected packet exactly once after semantic acceptance. */
+  takeConfirmedPackets(): Int16Array[] {
+    const confirmed = this.packets;
+    this.packets = [];
+    this.protectedByWhisper = false;
+    return confirmed;
+  }
+
+  reset(): void {
+    this.packets = [];
+    this.protectedByWhisper = false;
+  }
+
+  private trimToRollingWindow(): void {
+    this.packets = recentPcmPackets(this.packets, this.maxRollingSamples);
   }
 }
 

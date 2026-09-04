@@ -17,7 +17,7 @@ import {
 import { appConfig } from './config';
 import { adminDb } from './firebase';
 import {
-  applyManagedGenerationLimits,
+  prepareManagedGenerationConfig,
   buildManagedPromptTokenCountInputs,
   collectGeminiFileUris,
   requireAllowedManagedModel,
@@ -473,7 +473,6 @@ const withManagedReservation = async <T>(params: {
     promptTokens,
     operation: params.operation,
     searchQueries: reservedSearchQueries,
-    expectedOutputTokens: Number(params.config?.maxOutputTokens || 0),
   });
   const estimatedCredits = usdToCredits(estimatedUsd);
 
@@ -487,7 +486,7 @@ const withManagedReservation = async <T>(params: {
     metadata: {
       promptTokens,
       reservedSearchQueries,
-      maxOutputTokens: Number(params.config?.maxOutputTokens || 0),
+      outputReservation: 'uncapped-provider-default',
     },
   });
 
@@ -519,10 +518,7 @@ export const generateManagedContent = async (params: {
       'generation',
     ),
   );
-  const config = applyManagedGenerationLimits(
-    params.config,
-    appConfig.managedMaxOutputTokens,
-  );
+  const config = prepareManagedGenerationConfig(params.config);
   const operation = resolveManagedContentOperation(config, false, model);
   await requireOwnedManagedContentFiles(params.uid, params.contents, config);
 
@@ -590,10 +586,7 @@ export const streamManagedContent = async (params: {
       'streaming generation',
     ),
   );
-  const config = applyManagedGenerationLimits(
-    params.config,
-    appConfig.managedMaxOutputTokens,
-  );
+  const config = prepareManagedGenerationConfig(params.config);
   const operation = resolveManagedContentOperation(config, true, model);
   await requireOwnedManagedContentFiles(params.uid, params.contents, config);
   await sweepExpiredReservationsForUser(params.uid);
@@ -607,7 +600,6 @@ export const streamManagedContent = async (params: {
     promptTokens,
     operation,
     searchQueries: reservedSearchQueries,
-    expectedOutputTokens: Number(config.maxOutputTokens || 0),
   });
   const estimatedCredits = usdToCredits(estimatedUsd);
 
@@ -621,7 +613,7 @@ export const streamManagedContent = async (params: {
     metadata: {
       promptTokens,
       reservedSearchQueries,
-      maxOutputTokens: Number(config.maxOutputTokens || 0),
+      outputReservation: 'uncapped-provider-default',
     },
   });
 

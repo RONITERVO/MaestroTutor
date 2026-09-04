@@ -320,16 +320,23 @@ export const dispatchHeadlessMethod = async (
     case 'speech.synthetic.live': {
       const sampleRate = optionalNumber(input, 'sampleRate', 16_000);
       const rawBase64 = requiredString(input, 'pcmBase64').replace(/^data:audio\/[^;]+;base64,/i, '');
-      const source = createSyntheticPcmSource({
-        pcm: decodePcm16LeBase64(rawBase64),
+      const pcm = decodePcm16LeBase64(rawBase64);
+      const connectedTurns = optionalBoundedInteger(input, 'connectedTurns', 1, 1, 4);
+      const sourceOptions = {
+        pcm,
         sampleRate,
         chunkDurationMs: optionalNumber(input, 'chunkDurationMs', 20),
         pace: input.pace === true,
         runtime: client.runtime,
-      });
+      };
+      const source = createSyntheticPcmSource(sourceOptions);
       return runSyntheticLiveJourney(client.ai, {
         liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
         source,
+        additionalSources: Array.from(
+          { length: connectedTurns - 1 },
+          () => createSyntheticPcmSource(sourceOptions),
+        ),
         systemInstruction: typeof input.systemInstruction === 'string' ? input.systemInstruction : undefined,
         model: typeof input.model === 'string' ? input.model : undefined,
         gateInputOnSpeech: typeof input.gateInputOnSpeech === 'boolean' ? input.gateInputOnSpeech : undefined,

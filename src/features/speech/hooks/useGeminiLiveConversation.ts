@@ -42,13 +42,9 @@ import {
 } from '../utils/localSpeechTrigger';
 import {
   isLikelySpeechTranscript,
-  OBSERVER_SPEECH_BUFFER_MS,
-  OBSERVER_SPEECH_PREROLL_MS,
   OBSERVER_WHISPER_MODEL,
   OBSERVER_WHISPER_REQUEST_INTERVAL_MS,
-  pcmPacketsToWhisperWindow,
-  recentPcmPackets,
-  SpeechActivityTracker,
+  SemanticSpeechCapture,
 } from '../../../core-sdk/media/observerSpeechDetection';
 import { evaluateFreshSpeechFallback } from '../../../core-sdk/media/liveSpeechDetection';
 import {
@@ -152,8 +148,6 @@ const TRANSCRIPT_UPDATE_INTERVAL_MS = 60;
 const MAX_LIVE_FRAME_DIMENSION = 640;
 const LIVE_INPUT_PACKET_DURATION_MS = 100;
 const LIVE_INPUT_PACKET_MAX_WAIT_MS = 120;
-const SPEECH_GATE_BUFFER_SAMPLES = Math.round(INPUT_SAMPLE_RATE * OBSERVER_SPEECH_BUFFER_MS / 1000);
-const SPEECH_GATE_PREROLL_SAMPLES = Math.round(INPUT_SAMPLE_RATE * OBSERVER_SPEECH_PREROLL_MS / 1000);
 /** Ariadne's capture cadence: fewer worker round-trips when replaying pre-roll. */
 const SPEECH_GATE_REPLAY_CHUNK_SAMPLES = 4096;
 /** Do not leave first-run users deaf forever on a slow or blocked model CDN. */
@@ -345,8 +339,7 @@ export function useGeminiLiveConversation(
   /** Manual boundary around continuous audio once the semantic wake gate opens. */
   const speechTurnBoundaryRef = useRef<ContinuousLiveTurnBoundary | null>(null);
   /** Raw detector window; closed-turn packets are replayed once, open-turn packets are already sent. */
-  const gatePrerollRef = useRef<Int16Array[]>([]);
-  const speechActivityTrackerRef = useRef<SpeechActivityTracker | null>(null);
+  const semanticSpeechCaptureRef = useRef<SemanticSpeechCapture | null>(null);
   /** Shared with Live STT so Android never holds two copies of Whisper. */
   const observerWhisperRef = useRef<LocalWhisperClient | null>(null);
   const observerWhisperBusyRef = useRef(false);
@@ -695,8 +688,8 @@ export function useGeminiLiveConversation(
     playbackActiveRef.current = false;
     speechGateRef.current = null;
     speechTurnBoundaryRef.current = null;
-    gatePrerollRef.current = [];
-    speechActivityTrackerRef.current = null;
+    semanticSpeechCaptureRef.current?.reset();
+    semanticSpeechCaptureRef.current = null;
     loadingFallbackOnsetAtRef.current = null;
     awaitingModelTurnRef.current = false;
     boundaryClosePromiseRef.current = null;
@@ -1011,9 +1004,8 @@ export function useGeminiLiveConversation(
       speechTurnBoundaryRef.current = speechGateEnabled
         ? new ContinuousLiveTurnBoundary()
         : null;
-      gatePrerollRef.current = [];
-      speechActivityTrackerRef.current = speechGateEnabled
-        ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE })
+      semanticSpeechCaptureRef.current = speechGateEnabled
+        ? new SemanticSpeechCapture({ sampleRate: INPUT_SAMPLE_RATE })
         : null;
       playbackUntilRef.current = 0;
       playbackActiveRef.current = false;
@@ -1638,8 +1630,7 @@ export function useGeminiLiveConversation(
       };
 
       const replayConfirmedPrefix = () => {
-        const held = recentPcmPackets(gatePrerollRef.current, SPEECH_GATE_PREROLL_SAMPLES);
-        speechActivityTrackerRef.current?.reset();
+        const held = semanticSpeechCaptureRef.current?.takeConfirmedPackets() || [];
         const replay = mergeInt16Arrays(held);
         for (let offset = 0; offset < replay.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
           inputPacketizerRef.current?.push(
@@ -1672,8 +1663,7 @@ export function useGeminiLiveConversation(
           closingPacketizer?.resetPacingEpoch();
           closingBoundary.finishClosing();
           speechGateRef.current?.rejectSpeech(Date.now());
-          gatePrerollRef.current = [];
-          speechActivityTrackerRef.current?.reset();
+          semanticSpeechCaptureRef.current?.reset();
           loadingFallbackOnsetAtRef.current = null;
         })().finally(() => {
           if (boundaryClosePromiseRef.current === closePromise) {
@@ -1690,14 +1680,16 @@ export function useGeminiLiveConversation(
         fallback: ReturnType<typeof evaluateFreshSpeechFallback> | null,
       ) => {
         const detector = observerWhisperRef.current;
+        const capture = semanticSpeechCaptureRef.current;
         if (
           !detector
+          || !capture
           || detector.status !== 'ready'
           || observerWhisperBusyRef.current
           || now - lastWhisperRequestAtRef.current < OBSERVER_WHISPER_REQUEST_INTERVAL_MS
         ) return;
 
-        const audio = pcmPacketsToWhisperWindow(gatePrerollRef.current, INPUT_SAMPLE_RATE);
+        const audio = capture.beginWhisperCheck(INPUT_SAMPLE_RATE);
         if (!audio) return;
 
         const checkKind = boundary.isOpen ? 'boundary' : 'wake';
@@ -1713,10 +1705,11 @@ export function useGeminiLiveConversation(
         void detector.transcribe(audio).then((text) => {
           if (
             currentSessionIdRef.current !== sessionId
-            || speechGateEpochRef.current !== speechGateEpoch
-            || speechGateRef.current !== gate
-            || speechTurnBoundaryRef.current !== boundary
-          ) return;
+              || speechGateEpochRef.current !== speechGateEpoch
+              || speechGateRef.current !== gate
+              || speechTurnBoundaryRef.current !== boundary
+              || semanticSpeechCaptureRef.current !== capture
+            ) return;
 
           const resultAt = Date.now();
           if (isLikelySpeechTranscript(text)) {
@@ -1741,16 +1734,15 @@ export function useGeminiLiveConversation(
           // positive result still owns its full idle plus post-roll boundary.
           if (checkKind === 'boundary') return;
           gate.rejectSpeech(resultAt);
-          gatePrerollRef.current = [];
-          speechActivityTrackerRef.current?.reset();
           loadingFallbackOnsetAtRef.current = null;
         }).catch((error) => {
           if (
             currentSessionIdRef.current !== sessionId
-            || speechGateEpochRef.current !== speechGateEpoch
-            || speechGateRef.current !== gate
-            || speechTurnBoundaryRef.current !== boundary
-          ) return;
+              || speechGateEpochRef.current !== speechGateEpoch
+              || speechGateRef.current !== gate
+              || speechTurnBoundaryRef.current !== boundary
+              || semanticSpeechCaptureRef.current !== capture
+            ) return;
           inputAudioTelemetryRef.current.whisperErrors += 1;
           if (checkKind === 'wake' && fallback?.action === 'confirm') {
             const fallbackAt = Date.now();
@@ -1765,6 +1757,7 @@ export function useGeminiLiveConversation(
             console.warn('Local Whisper check failed; using the energy-only fallback.', error);
           }
         }).finally(() => {
+          if (semanticSpeechCaptureRef.current === capture) capture.finishWhisperCheck();
           observerWhisperBusyRef.current = false;
         });
       };
@@ -1774,12 +1767,14 @@ export function useGeminiLiveConversation(
         inputAudioTelemetryRef.current.capturedSamples += pcm.length;
         const gate = speechGateRef.current;
         const boundary = speechTurnBoundaryRef.current;
+        const speechCapture = semanticSpeechCaptureRef.current;
         if (!gate || !boundary) {
           currentUserAudioChunksRef.current.push(pcm);
           currentUserAudioTotalLengthRef.current += pcm.length;
           inputPacketizerRef.current?.push(pcm);
           return;
         }
+        if (!speechCapture) return;
 
         const now = Date.now();
         // Evaluate echo suppression on the capture clock. Old paced packets
@@ -1791,8 +1786,7 @@ export function useGeminiLiveConversation(
         }
         if (speaking || awaitingModelTurnRef.current || boundary.isClosing) {
           inputAudioTelemetryRef.current.gatedPackets += 1;
-          gatePrerollRef.current = [];
-          speechActivityTrackerRef.current?.reset();
+          speechCapture.reset();
           loadingFallbackOnsetAtRef.current = null;
           setVadActivity(false, observerActivity);
           return;
@@ -1807,11 +1801,7 @@ export function useGeminiLiveConversation(
         const energy = measureEnergy(pcm);
         const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
         setVadActivity(packetIsSpeech, observerActivity);
-        gatePrerollRef.current.push(pcm);
-        gatePrerollRef.current = recentPcmPackets(
-          gatePrerollRef.current,
-          SPEECH_GATE_BUFFER_SAMPLES,
-        );
+        speechCapture.append(pcm);
 
         if (boundary.isOpen) {
           // The boundary surrounds a continuous stream. Silence, stutters and
@@ -1837,17 +1827,6 @@ export function useGeminiLiveConversation(
         }
 
         inputAudioTelemetryRef.current.gatedPackets += 1;
-        const speechActivity = speechActivityTrackerRef.current?.observe(
-          pcm.length,
-          packetIsSpeech,
-          now,
-        );
-        if (speechActivity?.candidateReset && gate.isAwaitingConfirmation) {
-          gate.rejectSpeech(now);
-          gatePrerollRef.current = [];
-          loadingFallbackOnsetAtRef.current = null;
-        }
-        const wasAwaitingConfirmation = gate.isAwaitingConfirmation;
         const decision = gate.evaluate(energy, now);
         if (decision.send) {
           // The onset gate must never independently outlive the continuous
@@ -1856,20 +1835,15 @@ export function useGeminiLiveConversation(
           return;
         }
         if (decision.reason === 'playback') {
-          gatePrerollRef.current = [];
-          speechActivityTrackerRef.current?.reset();
+          speechCapture.reset();
           loadingFallbackOnsetAtRef.current = null;
           return;
         }
         if (decision.reason === 'cooldown') {
-          if (!packetIsSpeech) {
-            gatePrerollRef.current = [];
-            speechActivityTrackerRef.current?.reset();
-            loadingFallbackOnsetAtRef.current = null;
-          }
+          if (!packetIsSpeech) loadingFallbackOnsetAtRef.current = null;
           return;
         }
-        if (decision.reason !== 'awaiting-confirmation' || !speechActivity?.hasMinimumSpeech) return;
+        if (decision.reason !== 'awaiting-confirmation') return;
 
         const previousFallbackOnset = loadingFallbackOnsetAtRef.current;
         const fallback = evaluateFreshSpeechFallback(
@@ -1878,14 +1852,6 @@ export function useGeminiLiveConversation(
           now,
         );
         loadingFallbackOnsetAtRef.current = fallback.onsetAt;
-        if (
-          wasAwaitingConfirmation
-          && previousFallbackOnset === null
-          && fallback.action === 'wait'
-        ) {
-          gatePrerollRef.current = [pcm];
-        }
-
         const detector = observerWhisperRef.current;
         const detectorUnavailable = !detector
           || detector.status === 'failed'
@@ -1898,8 +1864,6 @@ export function useGeminiLiveConversation(
         if (detectorUnavailable) {
           if (fallback.action === 'expire') {
             gate.rejectSpeech(now);
-            gatePrerollRef.current = [];
-            speechActivityTrackerRef.current?.reset();
             loadingFallbackOnsetAtRef.current = null;
           } else if (fallback.action === 'confirm') {
             inputAudioTelemetryRef.current.energyFallbacks += 1;

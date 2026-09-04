@@ -148,10 +148,6 @@ export const appConfig = {
     100,
     Math.max(1, parseInteger(process.env.MANAGED_SEARCH_RESERVATION_QUERIES, 10)),
   ),
-  managedMaxOutputTokens: Math.min(
-    65_536,
-    Math.max(256, parseInteger(process.env.MANAGED_MAX_OUTPUT_TOKENS, 8_192)),
-  ),
   /** Requests per minute per user, per class of operation. See rateLimit.ts. */
   rateLimitPerMinute: Math.max(1, parseInteger(process.env.MANAGED_RATE_LIMIT_PER_MINUTE, 60)),
   anonymousReportRateLimitPerMinute: Math.max(

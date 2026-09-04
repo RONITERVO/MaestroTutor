@@ -64,8 +64,8 @@ export const getManagedLiveWindowTokenBudget = (durationSeconds: number) => {
   const seconds = Math.max(1, Math.floor(durationSeconds));
   const budget = seconds * LIVE_AUDIO_TOKENS_PER_SECOND;
   return {
-    audioInputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.maxInputTokens, budget),
-    audioOutputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.maxOutputTokens, budget),
+    audioInputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.reservationInputTokenCeiling, budget),
+    audioOutputTokens: Math.min(DEFAULT_LIVE_WINDOW_RATES.reservationOutputTokenCeiling, budget),
   };
 };
 

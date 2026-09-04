@@ -103,7 +103,7 @@ describe('synthetic Live journey', () => {
       gateInputOnSpeech: true,
       semanticSpeech: true,
       simulateUiSpeechHandoff: true,
-    })).rejects.toThrow('ended before sustained speech was confirmed');
+    })).rejects.toThrow('ended before semantic speech was confirmed');
     expect(ai.live.connect).not.toHaveBeenCalled();
   });
 
@@ -353,6 +353,160 @@ describe('synthetic Live journey', () => {
         }),
       }),
     }));
+  });
+
+  it('keeps one Live connection across turns and preserves a short connected follow-up', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const sent: any[] = [];
+    let completedTurns = 0;
+    const modelPcmBase64 = btoa(String.fromCharCode(...new Uint8Array(4_800)));
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        sent.push(message);
+        if (!message.audioStreamEnd) return;
+        completedTurns += 1;
+        const turn = completedTurns;
+        queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: turn === 1 ? 'The first turn.' : 'Works?' },
+            outputTranscription: { text: turn === 1 ? 'First reply.' : 'Second reply.' },
+            modelTurn: {
+              parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: modelPcmBase64 } }],
+            },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (params: any) => {
+          callbacks = params.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    let now = 1_000;
+    const runtime = createCoreRuntime({
+      clock: {
+        now: () => now,
+        sleep: async (ms) => { now += ms; },
+        setInterval: () => 0,
+        clearInterval: () => undefined,
+      },
+    });
+    const first = new Int16Array(32_000).fill(6_000);
+    const shortFollowup = new Int16Array(24_000);
+    shortFollowup.fill(6_000, 9_600, 14_400);
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm: first, sampleRate: 16_000, pace: true, runtime }),
+      additionalSources: [
+        createSyntheticPcmSource({ pcm: shortFollowup, sampleRate: 16_000, pace: true, runtime }),
+      ],
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+      simulateUiSpeechHandoff: true,
+      // The single-turn pacing test above owns strict microphone-clock proof.
+      // This deterministic clock also advances for provider output, so this
+      // test focuses on the connected-turn and playback-order invariants.
+      requireRealtimeInputPacing: false,
+      playModelAudioRealtime: true,
+    }, { runtime });
+
+    expect(ai.live.connect).toHaveBeenCalledOnce();
+    expect(result.connectedTurnCount).toBe(2);
+    expect(result.turns).toHaveLength(2);
+    expect(result.turns[1]).toMatchObject({
+      inputTranscript: 'Works?',
+      outputTranscript: 'Second reply.',
+      sentSamples: shortFollowup.length,
+      playbackCompletedAfterLastByte: true,
+    });
+    expect(sent.filter(message => message.activityStart)).toHaveLength(2);
+    expect(sent.filter(message => message.activityEnd)).toHaveLength(2);
+    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(2);
+    expect(session.close).toHaveBeenCalledOnce();
+  });
+
+  it('waits for every model byte to play when more audio arrives during playback', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const playbackSleeps: Array<() => void> = [];
+    let now = 1_000;
+    const runtime = createCoreRuntime({
+      clock: {
+        now: () => now,
+        sleep: (ms) => new Promise<void>(resolve => {
+          playbackSleeps.push(() => {
+            now += ms;
+            resolve();
+          });
+        }),
+        setInterval: () => 0,
+        clearInterval: () => undefined,
+      },
+    });
+    const pcmChunk = btoa(String.fromCharCode(...new Uint8Array(4_800)));
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        if (!message.audioStreamEnd) return;
+        callbacks.onmessage?.({
+          serverContent: {
+            modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: pcmChunk } }] },
+            outputTranscription: { text: 'One ' },
+          },
+        });
+        queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: pcmChunk } }] },
+            outputTranscription: { text: 'two.' },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (params: any) => {
+          callbacks = params.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    let settled = false;
+    const journey = runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({
+        pcm: new Int16Array(16_000).fill(6_000),
+        sampleRate: 16_000,
+        pace: false,
+        runtime,
+      }),
+      gateInputOnSpeech: false,
+      playModelAudioRealtime: true,
+    }, { runtime }).finally(() => { settled = true; });
+
+    await vi.waitFor(() => expect(playbackSleeps).toHaveLength(1));
+    expect(settled).toBe(false);
+    playbackSleeps.shift()?.();
+    await vi.waitFor(() => expect(playbackSleeps).toHaveLength(1));
+    expect(settled).toBe(false);
+    playbackSleeps.shift()?.();
+
+    const result = await journey;
+    expect(result.modelAudioSampleCount).toBe(4_800);
+    expect(result.timing.modelPlaybackElapsedMs).toBe(200);
+    expect(result.turns[0]).toMatchObject({
+      modelAudioSampleCount: 4_800,
+      playbackCompletedAfterLastByte: true,
+    });
   });
 
   it('keeps closed-turn silence out of the packetizer pacing queue', async () => {

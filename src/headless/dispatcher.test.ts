@@ -20,7 +20,7 @@ describe('headless dispatcher contract', () => {
       access: { accessMode: string; availableMethods: string[]; unavailableMethods: string[] };
       configuredModels: { text: { default: string }; music: string };
     };
-    expect(result.protocolVersion).toBe('1.6.0');
+    expect(result.protocolVersion).toBe('1.7.0');
     expect(result.transport).toBe('json-rpc-2.0-ndjson');
     expect(result.methods).toContain('billing.checkout.completeTest');
     expect(result.methods).toContain('speech.synthetic.live');

@@ -121,6 +121,13 @@ the complete reservation. A scheduled reconciler handles unused tickets and
 abandoned sessions. See the billing and recovery invariants in
 [`HEADLESS_COVERAGE.md`](./HEADLESS_COVERAGE.md).
 
+Protocol 1.7 adds persistent connected-turn proof to `speech.synthetic.live`.
+Set `connectedTurns` from 1 through 4 to replay the supplied PCM as distinct user
+turns over one Live socket. The result contains one entry per turn and proves that
+each reply finishes real-time playback after the last model-audio byte. The
+staging workflow requires two turns in both managed and BYOK modes, specifically
+covering the short-second-utterance path that a fresh connection cannot exercise.
+
 `provider-parity` still does not mean the user pays the same currency or provider:
 BYOK charges the supplied Google project, while managed converts observed provider
 cost to Maestro credits. It does mean a failed/no-output managed session cannot be
@@ -296,6 +303,12 @@ contain `realtimeEvidence.passed:true`, `timing.uiSpeechHandoff:true`, a non-zer
 and model playback elapsed time at least as long as the 24 kHz audio duration. Put
 distinctive words at the end of `expectedTranscript`; a prefix-only expectation
 cannot detect the original suffix-loss regression.
+
+For the lower-level persistent observer regression, use the same PCM with
+`"connectedTurns":2`, `"simulateUiSpeechHandoff":true`,
+`"requireRealtimeInputPacing":true`, and `"playModelAudioRealtime":true`.
+There must be two completed turn records, and both must report
+`playbackCompletedAfterLastByte:true`.
 
 Named profiles resolve below `%LOCALAPPDATA%\MaestroTutor\headless` on Windows and
 `~/.maestrotutor/headless` elsewhere, unless `MAESTRO_HEADLESS_HOME` is set. Names

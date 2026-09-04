@@ -21,9 +21,7 @@ import { ContinuousLiveTurnBoundary } from './continuousLiveTurnBoundary';
 import { PcmCaptureHandoff, PcmCaptureRouter, type PcmInputSource } from './pcmInput';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
 import {
-  OBSERVER_SPEECH_PREROLL_MS,
-  recentPcmPackets,
-  SpeechActivityTracker,
+  SemanticSpeechCapture,
 } from './observerSpeechDetection';
 import {
   createLiveOpenReason,
@@ -33,7 +31,6 @@ import {
 const INPUT_SAMPLE_RATE = 16_000;
 const PACKET_DURATION_MS = 100;
 const PACKET_MAX_WAIT_MS = 120;
-const PREROLL_SAMPLES = Math.round(INPUT_SAMPLE_RATE * OBSERVER_SPEECH_PREROLL_MS / 1_000);
 const REPLAY_CHUNK_SAMPLES = 4_096;
 
 const encodePcm16LeBase64 = (pcm: Int16Array): string => {
@@ -49,6 +46,8 @@ const encodePcm16LeBase64 = (pcm: Int16Array): string => {
 export interface SyntheticLiveJourneyInput {
   liveOpenTrigger: HeadlessLiveOpenTrigger;
   source: PcmInputSource;
+  /** Additional microphone turns sent over the same connected Live session. */
+  additionalSources?: PcmInputSource[];
   systemInstruction?: string;
   model?: string;
   gateInputOnSpeech?: boolean;
@@ -71,7 +70,8 @@ export const runSyntheticLiveJourney = async (
   input: SyntheticLiveJourneyInput,
   options: { runtime?: CoreRuntime } = {},
 ) => {
-  if (input.source.sampleRate !== INPUT_SAMPLE_RATE) {
+  const sources = [input.source, ...(input.additionalSources || [])];
+  if (sources.some(source => source.sampleRate !== INPUT_SAMPLE_RATE)) {
     throw new Error(`Synthetic Live input must be ${INPUT_SAMPLE_RATE} Hz PCM16 mono.`);
   }
   const runtime = options.runtime || createCoreRuntime();
@@ -80,7 +80,7 @@ export const runSyntheticLiveJourney = async (
   const gateEnabled = input.gateInputOnSpeech ?? true;
   const gate = gateEnabled ? new SpeechGate({ requireConfirmation: true }) : null;
   const boundary = gateEnabled ? new ContinuousLiveTurnBoundary() : null;
-  const speechActivity = gateEnabled ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE }) : null;
+  const pendingSpeech = gateEnabled ? new SemanticSpeechCapture({ sampleRate: INPUT_SAMPLE_RATE }) : null;
   const semanticSpeech = input.semanticSpeech ?? true;
   const simulateUiSpeechHandoff = input.simulateUiSpeechHandoff === true;
   const playModelAudioRealtime = input.playModelAudioRealtime === true;
@@ -88,7 +88,6 @@ export const runSyntheticLiveJourney = async (
   if (simulateUiSpeechHandoff && (!gateEnabled || !semanticSpeech)) {
     throw new Error('UI speech handoff requires the semantic speech gate.');
   }
-  const heldPackets: Int16Array[] = [];
   const sentPackets: Int16Array[] = [];
   const modelAudioChunks: string[] = [];
   let inputTranscript = '';
@@ -105,7 +104,6 @@ export const runSyntheticLiveJourney = async (
   let streamEnds = 0;
   let audioSentSinceLastStreamEnd = false;
   let inputCaptureStartedAt: number | null = null;
-  let inputCaptureEndedAt: number | null = null;
   let localTriggerAt: number | null = null;
   let providerConnectStartedAt: number | null = null;
   let providerConnectedAt: number | null = null;
@@ -115,13 +113,25 @@ export const runSyntheticLiveJourney = async (
   let modelPlaybackStartedAt: number | null = null;
   let modelPlaybackCompletedAt: number | null = null;
   let modelPlaybackDrainWaitMs = 0;
-  let resolved = false;
-  let resolveTurn!: () => void;
-  let rejectTurn!: (error: Error) => void;
-  const turnComplete = new Promise<void>((resolve, reject) => {
-    resolveTurn = resolve;
-    rejectTurn = reject;
-  });
+  let completedTurnCount = 0;
+  let terminalError: Error | null = null;
+  const turnWaiters = new Map<number, { resolve: () => void; reject: (error: Error) => void }>();
+  const waitForTurn = (turnNumber: number): Promise<void> => {
+    if (completedTurnCount >= turnNumber) return Promise.resolve();
+    if (terminalError) return Promise.reject(terminalError);
+    return new Promise<void>((resolve, reject) => {
+      turnWaiters.set(turnNumber, { resolve, reject });
+    });
+  };
+  const failSession = (error: Error) => {
+    if (terminalError) return;
+    terminalError = error;
+    for (const waiter of turnWaiters.values()) waiter.reject(error);
+    turnWaiters.clear();
+  };
+  const turnCompletionTimes: number[] = [];
+  const lastModelAudioByteTimes: Array<number | null> = [];
+  const turnResults: Array<Record<string, unknown>> = [];
   const attachLiveFailureEvidence = (value: unknown): Error & {
     operationId: string;
     liveDiagnostics: Record<string, unknown>;
@@ -143,6 +153,7 @@ export const runSyntheticLiveJourney = async (
 
   const enqueueModelPlayback = (samples: number) => {
     if (!playModelAudioRealtime || samples <= 0) return;
+    gate?.notePlayback(true, logicalNow);
     modelPlaybackQueue = modelPlaybackQueue.then(async () => {
       modelPlaybackStartedAt ??= runtime.clock.now();
       await runtime.clock.sleep(samples / 24_000 * 1_000);
@@ -156,7 +167,7 @@ export const runSyntheticLiveJourney = async (
 
   if (simulateUiSpeechHandoff) {
     uiCaptureHandoff = new PcmCaptureHandoff();
-    const triggerActivity = new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE });
+    const triggerCapture = new SemanticSpeechCapture({ sampleRate: INPUT_SAMPLE_RATE });
     let triggerResolved = false;
     let resolveTrigger!: () => void;
     const triggerReady = new Promise<void>(resolve => { resolveTrigger = resolve; });
@@ -169,8 +180,8 @@ export const runSyntheticLiveJourney = async (
         uiCaptureHandoff!.push(frame.pcm);
         if (triggerResolved) return;
         triggerNow += frame.pcm.length / INPUT_SAMPLE_RATE * 1_000;
-        const active = isSpeechLike(measureEnergy(frame.pcm), DEFAULT_SPEECH_GATE);
-        if (triggerActivity.observe(frame.pcm.length, active, triggerNow).hasMinimumSpeech) {
+        triggerCapture.append(frame.pcm);
+        if (triggerCapture.beginWhisperCheck(INPUT_SAMPLE_RATE)) {
           triggerResolved = true;
           localTriggerAt = runtime.clock.now();
           runtime.events.emit({
@@ -187,7 +198,7 @@ export const runSyntheticLiveJourney = async (
     await Promise.race([
       triggerReady,
       sourceRun.then(() => {
-        if (!triggerResolved) throw new Error('Synthetic UI flow ended before sustained speech was confirmed.');
+        if (!triggerResolved) throw new Error('Synthetic UI flow ended before semantic speech was confirmed.');
       }),
     ]);
   }
@@ -262,7 +273,8 @@ export const runSyntheticLiveJourney = async (
               modelAudioChunks.push(data);
               const byteLength = Math.floor(globalThis.atob(data).length / 2) * 2;
               const samples = byteLength / 2;
-              modelAudioSampleCount += samples;
+               modelAudioSampleCount += samples;
+               lastModelAudioByteTimes[completedTurnCount] = runtime.clock.now();
               enqueueModelPlayback(samples);
               runtime.events.emit({
                 operationId, journey: 'live', phase: 'audio.output-chunk',
@@ -271,20 +283,18 @@ export const runSyntheticLiveJourney = async (
             }
           }
         }
-        if (message?.serverContent?.turnComplete && !resolved) {
-          resolved = true;
-          resolveTurn();
+        if (message?.serverContent?.turnComplete) {
+          completedTurnCount += 1;
+          turnCompletionTimes[completedTurnCount - 1] = runtime.clock.now();
+          turnWaiters.get(completedTurnCount)?.resolve();
+          turnWaiters.delete(completedTurnCount);
         }
       },
       onerror: (error: unknown) => {
-        if (resolved) return;
-        resolved = true;
-        rejectTurn(attachLiveFailureEvidence(error));
+        failSession(attachLiveFailureEvidence(error));
       },
       onclose: () => {
-        if (resolved) return;
-        resolved = true;
-        rejectTurn(attachLiveFailureEvidence(new Error('Live session closed before turn completion.')));
+        failSession(attachLiveFailureEvidence(new Error('Live session closed before all turn completions.')));
       },
     },
     });
@@ -362,8 +372,7 @@ export const runSyntheticLiveJourney = async (
       packetizer.resetPacingEpoch();
       boundary.finishClosing();
       gate.rejectSpeech(logicalNow);
-      heldPackets.length = 0;
-      speechActivity!.reset();
+      pendingSpeech!.reset();
       gatedPackets += 1;
       return;
     }
@@ -375,37 +384,24 @@ export const runSyntheticLiveJourney = async (
       return;
     }
 
-    const activity = speechActivity!.observe(packet.length, packetIsSpeech, logicalNow);
-    if (activity.candidateReset && gate.isAwaitingConfirmation) {
-      gate.rejectSpeech(logicalNow);
-      heldPackets.length = 0;
-    }
+    pendingSpeech!.append(packet);
     const decision = gate.evaluate(energy, logicalNow);
     gatedPackets += 1;
     if (decision.send) {
       gate.forceClose();
       return;
     }
-    if (decision.reason === 'cooldown' && !activity.active) {
-      heldPackets.length = 0;
-      speechActivity!.reset();
-      return;
-    }
-    heldPackets.push(packet);
-    const recent = recentPcmPackets(heldPackets, PREROLL_SAMPLES);
-    heldPackets.splice(0, heldPackets.length, ...recent);
-    if (decision.reason !== 'awaiting-confirmation' || !activity.hasMinimumSpeech) return;
+    if (decision.reason === 'cooldown') return;
+    if (decision.reason !== 'awaiting-confirmation') return;
+    if (!pendingSpeech!.beginWhisperCheck(INPUT_SAMPLE_RATE)) return;
     if (!semanticSpeech) {
       gate.rejectSpeech(logicalNow);
-      heldPackets.length = 0;
-      speechActivity!.reset();
+      pendingSpeech!.finishWhisperCheck();
       return;
     }
     if (!gate.confirmSpeech(logicalNow) || !boundary.openFromConfirmedSpeech(logicalNow)) return;
     session.sendRealtimeInput({ activityStart: {} });
-    const replay = mergeInt16Arrays(heldPackets);
-    heldPackets.length = 0;
-    speechActivity!.reset();
+    const replay = mergeInt16Arrays(pendingSpeech!.takeConfirmedPackets());
     for (let offset = 0; offset < replay.length; offset += REPLAY_CHUNK_SAMPLES) {
       packetizer.push(replay.slice(offset, offset + REPLAY_CHUNK_SAMPLES));
     }
@@ -417,57 +413,104 @@ export const runSyntheticLiveJourney = async (
   });
 
   try {
-    if (uiCaptureHandoff && sourceRun) {
-      gate!.openFromConfirmedTrigger(logicalNow);
-      boundary!.openFromConfirmedSpeech(logicalNow);
-      session.sendRealtimeInput({ activityStart: {} });
-      const handoff = uiCaptureHandoff.transferTo(pcm => packetizer.push(pcm));
-      connectionHandoffPackets = handoff.bufferedPackets;
-      connectionHandoffSamples = handoff.bufferedSamples;
-      runtime.events.emit({
-        operationId,
-        journey: 'live',
-        phase: 'speech.capture-handoff',
-        data: { ...handoff },
+    let totalInputCaptureElapsedMs = 0;
+    for (let turnIndex = 0; turnIndex < sources.length; turnIndex += 1) {
+      const source = sources[turnIndex];
+      const transcriptStart = inputTranscript.length;
+      const outputTranscriptStart = outputTranscript.length;
+      const modelAudioSamplesStart = modelAudioSampleCount;
+      const sentSamplesStart = sentPackets.reduce((total, packet) => total + packet.length, 0);
+      const turnCaptureStartedAt = turnIndex === 0 && inputCaptureStartedAt !== null
+        ? inputCaptureStartedAt
+        : runtime.clock.now();
+
+      if (turnIndex === 0 && uiCaptureHandoff && sourceRun) {
+        gate!.openFromConfirmedTrigger(logicalNow);
+        boundary!.openFromConfirmedSpeech(logicalNow);
+        session.sendRealtimeInput({ activityStart: {} });
+        // After the one-time pre-connect handoff, keep every later microphone
+        // packet on the same gated route used by the browser's persistent
+        // observer. Routing directly to the packetizer here would make the
+        // second headless turn bypass semantic gating entirely.
+        const handoff = uiCaptureHandoff.transferTo(pcm => { void routeCapturedPacket(pcm); });
+        connectionHandoffPackets = handoff.bufferedPackets;
+        connectionHandoffSamples = handoff.bufferedSamples;
+        runtime.events.emit({
+          operationId,
+          journey: 'live',
+          phase: 'speech.capture-handoff',
+          data: { ...handoff },
+        });
+        await sourceRun;
+      } else {
+        inputCaptureStartedAt ??= turnCaptureStartedAt;
+        await router.attach(source);
+      }
+      const turnCaptureEndedAt = runtime.clock.now();
+      totalInputCaptureElapsedMs += Math.max(0, turnCaptureEndedAt - turnCaptureStartedAt);
+      await packetizer.flushPending();
+      endAudioStream('source-ended');
+
+      const timeoutMs = Math.max(1_000, input.timeoutMs ?? 45_000);
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        waitForTurn(turnIndex + 1),
+        new Promise<never>((_, reject) => {
+          timeoutId = globalThis.setTimeout(() => reject(attachLiveFailureEvidence(new Error(
+            `Live turn ${turnIndex + 1}/${sources.length} timed out after ${timeoutMs}ms with ${serverMessageCount} server messages`
+            + ` (${[...serverMessageKinds].sort().join(', ') || 'no message kinds'}).`,
+          ))), timeoutMs);
+        }),
+      ]).finally(() => {
+        if (timeoutId) globalThis.clearTimeout(timeoutId);
       });
-      await sourceRun;
-    } else {
-      inputCaptureStartedAt = runtime.clock.now();
-      await router.attach(input.source);
-    }
-    inputCaptureEndedAt = runtime.clock.now();
-    await packetizer.flushPending();
-    endAudioStream('source-ended');
-    const timeoutMs = Math.max(1_000, input.timeoutMs ?? 45_000);
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([
-      turnComplete,
-      new Promise<never>((_, reject) => {
-        timeoutId = globalThis.setTimeout(() => reject(attachLiveFailureEvidence(new Error(
-          `Live turn timed out after ${timeoutMs}ms with ${serverMessageCount} server messages`
+
+      let turnPlaybackDrainWaitMs = 0;
+      if (playModelAudioRealtime) {
+        const drainStartedAt = runtime.clock.now();
+        const playbackThroughTurn = modelPlaybackQueue;
+        await playbackThroughTurn;
+        turnPlaybackDrainWaitMs = Math.max(0, runtime.clock.now() - drainStartedAt);
+        modelPlaybackDrainWaitMs += turnPlaybackDrainWaitMs;
+        gate?.notePlayback(false, logicalNow);
+      }
+
+      const turnInputTranscript = inputTranscript.slice(transcriptStart).trim();
+      const turnOutputTranscript = outputTranscript.slice(outputTranscriptStart).trim();
+      const turnModelAudioSampleCount = modelAudioSampleCount - modelAudioSamplesStart;
+      if (!turnOutputTranscript && turnModelAudioSampleCount === 0) {
+        throw new Error(
+          `Live turn completed without model output (${turnIndex + 1}/${sources.length}) after ${serverMessageCount} server messages`
           + ` (${[...serverMessageKinds].sort().join(', ') || 'no message kinds'}).`,
-        ))), timeoutMs);
-      }),
-    ]).finally(() => {
-      if (timeoutId) globalThis.clearTimeout(timeoutId);
-    });
-    if (playModelAudioRealtime) {
-      const drainStartedAt = runtime.clock.now();
-      await modelPlaybackQueue;
-      modelPlaybackDrainWaitMs = Math.max(0, runtime.clock.now() - drainStartedAt);
-    }
-    if (!outputTranscript.trim() && modelAudioChunks.length === 0) {
-      throw new Error(
-        `Live turn completed without model output after ${serverMessageCount} server messages`
-        + ` (${[...serverMessageKinds].sort().join(', ') || 'no message kinds'}).`,
-      );
+        );
+      }
+      const playbackCompletedAt = playModelAudioRealtime ? runtime.clock.now() : null;
+      const lastModelAudioByteAt = lastModelAudioByteTimes[turnIndex] ?? null;
+      turnResults.push({
+        turn: turnIndex + 1,
+        inputTranscript: turnInputTranscript,
+        outputTranscript: turnOutputTranscript,
+        sentSamples: sentPackets.reduce((total, packet) => total + packet.length, 0) - sentSamplesStart,
+        modelAudioSampleCount: turnModelAudioSampleCount,
+        turnCompleteAt: turnCompletionTimes[turnIndex] ?? null,
+        lastModelAudioByteAt,
+        playbackCompletedAt,
+        playbackDrainWaitMs: turnPlaybackDrainWaitMs,
+        playbackCompletedAfterLastByte: !playModelAudioRealtime
+          || (lastModelAudioByteAt !== null && playbackCompletedAt !== null && playbackCompletedAt >= lastModelAudioByteAt),
+      });
+
+      if (turnIndex + 1 < sources.length) {
+        boundary?.reset();
+        gate?.rejectSpeech(logicalNow);
+        pendingSpeech?.reset();
+        packetizer.resetPacingEpoch();
+      }
     }
     const packetStats = packetizer.getStats();
     const sentAudio = mergeInt16Arrays(sentPackets);
     const inputAudioDurationMs = packetStats.totalInputSamples / INPUT_SAMPLE_RATE * 1_000;
-    const inputCaptureElapsedMs = inputCaptureStartedAt === null || inputCaptureEndedAt === null
-      ? null
-      : Math.max(0, inputCaptureEndedAt - inputCaptureStartedAt);
+    const inputCaptureElapsedMs = totalInputCaptureElapsedMs;
     const modelAudioDurationMs = modelAudioSampleCount / 24_000 * 1_000;
     const modelPlaybackElapsedMs = modelPlaybackStartedAt === null || modelPlaybackCompletedAt === null
       ? 0
@@ -509,6 +552,10 @@ export const runSyntheticLiveJourney = async (
         inputTranscriptLength: inputTranscript.trim().length,
         outputTranscriptLength: outputTranscript.trim().length,
         modelAudioSampleCount,
+        inputAudioDurationMs,
+        inputCaptureElapsedMs,
+        modelAudioDurationMs,
+        modelPlaybackElapsedMs,
       })}`);
     }
     const result = {
@@ -524,6 +571,8 @@ export const runSyntheticLiveJourney = async (
       outputTranscriptDeltaCount,
       serverMessageCount,
       serverMessageKinds: [...serverMessageKinds].sort(),
+      connectedTurnCount: turnResults.length,
+      turns: turnResults,
       sentVideoFrameCount,
       ...(input.includeModelAudio ? { modelAudioChunksBase64: modelAudioChunks } : {}),
       gate: { enabled: gateEnabled, semanticSpeech, gatedPackets, streamEnds },
