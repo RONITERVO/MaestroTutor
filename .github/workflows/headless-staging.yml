@@ -136,7 +136,6 @@ jobs:
           }
           run_long_live_proof observer
           run_long_live_proof conversation
-          node -e 'const p=require("./long-live-params.json"); for(const name of ["observer","conversation"]){const r=require("./managed-long-"+name+".json"),fi=(r.outputTranscript.match(/\[(?:FI|fi-FI)\]/g)||[]).length,ratio=r.timing.modelAudioDurationMs/(p.fixture.inputDurationSeconds*1000); if(!r.transcriptEvidence?.passed||!r.managedBillingEvidence?.passed||r.connectedTurnCount!==1||r.sentVideoFrameCount!==1||fi<5||r.outputTranscript.trim().split(/\n+/).length<10||!r.turns?.[0]?.playbackCompletedAfterLastByte||ratio<1.5||ratio>5) throw new Error("Incomplete managed long "+name+" proof: "+JSON.stringify({transcript:r.transcriptEvidence,billing:r.managedBillingEvidence,fi,ratio,timing:r.timing,turn:r.turns?.[0]})); console.log("Managed long",name,{fi,ratio,input:r.inputTranscript,output:r.outputTranscript,billing:r.managedBillingEvidence});}'
       - name: Exercise the low-level direct and streamed JSON-RPC routes
         run: |
           node -e "const p=require('./protocol.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
@@ -221,7 +220,6 @@ jobs:
           }
           run_long_live_proof observer
           run_long_live_proof conversation
-          node -e 'const p=require("./long-live-params.json"); for(const name of ["observer","conversation"]){const r=require("./byok-long-"+name+".json"),fi=(r.outputTranscript.match(/\[(?:FI|fi-FI)\]/g)||[]).length,ratio=r.timing.modelAudioDurationMs/(p.fixture.inputDurationSeconds*1000); if(!r.transcriptEvidence?.passed||r.managedBillingEvidence?.payer!=="byok-api-key-owner"||r.connectedTurnCount!==1||r.sentVideoFrameCount!==1||fi<5||r.outputTranscript.trim().split(/\n+/).length<10||!r.turns?.[0]?.playbackCompletedAfterLastByte||ratio<1.5||ratio>5) throw new Error("Incomplete BYOK long "+name+" proof: "+JSON.stringify({transcript:r.transcriptEvidence,payer:r.managedBillingEvidence,fi,ratio,timing:r.timing,turn:r.turns?.[0]})); console.log("BYOK long",name,{fi,ratio,input:r.inputTranscript,output:r.outputTranscript});}'
       - name: Exercise the low-level direct and streamed JSON-RPC routes
         run: |
           node -e "const p=require('./protocol-byok.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"

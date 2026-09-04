@@ -22,7 +22,11 @@ const params = JSON.parse(readFileSync(paramsPath, 'utf8')) as any;
 const expectedPairs = Number(params?.fixture?.expectedTranslationPairs || 5);
 const inputDurationSeconds = Number(params?.fixture?.inputDurationSeconds || 0);
 const outputTranscript = String(result?.outputTranscript || '');
-const translatedPairs = (outputTranscript.match(/\[(?:FI|fi-FI)\]/g) || []).length;
+const taggedTranslationPairs = (outputTranscript.match(/\[(?:FI|fi-FI)\]/g) || []).length;
+const parsedTranslationPairs = Array.isArray(result?.assistantMessage?.translations)
+  ? result.assistantMessage.translations.length
+  : 0;
+const translatedPairs = Math.max(taggedTranslationPairs, parsedTranslationPairs);
 const spokenLineCount = outputTranscript.trim().split(/\n+/).filter(Boolean).length;
 const outputAudioRatio = Number(result?.timing?.modelAudioDurationMs || 0)
   / Math.max(1, inputDurationSeconds * 1_000);
@@ -43,6 +47,8 @@ const evidence = {
   transcript: result?.transcriptEvidence,
   billing: result?.managedBillingEvidence,
   translatedPairs,
+  taggedTranslationPairs,
+  parsedTranslationPairs,
   expectedPairs,
   spokenLineCount,
   outputAudioRatio,
