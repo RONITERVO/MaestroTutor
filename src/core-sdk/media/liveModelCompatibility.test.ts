@@ -58,7 +58,7 @@ describe('Live model compatibility', () => {
         startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
         endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
         prefixPaddingMs: 120,
-        silenceDurationMs: 600,
+        silenceDurationMs: 1_000,
       },
     });
     expect(getLiveRealtimeInputConfig(true).activityHandling).toBe(

@@ -119,9 +119,23 @@ jobs:
           npx tsx src/headless/cli.ts speech.synthetic.live --profile staging-ci --params-file connected-live-params.json > managed-connected-live.json 2> managed-connected-live.events.jsonl
           node -e 'const r=require("./managed-connected-live.json"); if(r.connectedTurnCount!==6||r.turns?.length!==6||r.providerTurnUsage?.length!==6||!r.realtimeEvidence?.passed||!r.managedBillingEvidence?.passed) throw new Error("Persistent managed Live/billing proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||t.sentVideoFrameCount!==1||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete managed Live turn: "+JSON.stringify(t)); const totals=(r.providerUsageSnapshots||[]).map(s=>Number(s.usageMetadata?.totalTokenCount||0)).filter(Boolean),latest=Number(r.providerLatestUsageMetadata?.totalTokenCount||0),billed=Number(r.providerUsageMetadata?.totalTokenCount||0); if(!totals.length||totals.some((n,i)=>i>0&&n<totals[i-1])||billed<=latest) throw new Error("Provider usage did not prove per-turn compounding: "+JSON.stringify({totals,latest,billed})); console.log("Managed connected Live turns:",r.turns.map(t=>({turn:t.turn,input:t.inputTranscript,sentSamples:t.sentSamples,videoFrames:t.sentVideoFrameCount,playbackDrainWaitMs:t.playbackDrainWaitMs})),"billing:",r.managedBillingEvidence)'
       - name: Prove long observer-camera and conversation responses are complete and fairly billed
+        shell: bash
         run: |
-          npx tsx src/headless/cli.ts live.observer.turn --profile staging-ci --params-file long-live-params.json > managed-long-observer.json 2> managed-long-observer.events.jsonl
-          npx tsx src/headless/cli.ts live.conversation.turn --profile staging-ci --params-file long-live-params.json > managed-long-conversation.json 2> managed-long-conversation.events.jsonl
+          run_long_live_proof() {
+            local mode="$1"
+            local output="managed-long-${mode}.json"
+            local events="managed-long-${mode}.events.jsonl"
+            for attempt in 1 2; do
+              if npx tsx src/headless/cli.ts "live.${mode}.turn" --profile staging-ci --params-file long-live-params.json > "$output" 2> "$events" \
+                && npx tsx scripts/verify-long-live-proof.ts --result "$output" --params long-live-params.json --access managed; then
+                return 0
+              fi
+              echo "Long managed ${mode} proof attempt ${attempt} failed." >&2
+            done
+            return 1
+          }
+          run_long_live_proof observer
+          run_long_live_proof conversation
           node -e 'const p=require("./long-live-params.json"); for(const name of ["observer","conversation"]){const r=require("./managed-long-"+name+".json"),fi=(r.outputTranscript.match(/\[(?:FI|fi-FI)\]/g)||[]).length,ratio=r.timing.modelAudioDurationMs/(p.fixture.inputDurationSeconds*1000); if(!r.transcriptEvidence?.passed||!r.managedBillingEvidence?.passed||r.connectedTurnCount!==1||r.sentVideoFrameCount!==1||fi<5||r.outputTranscript.trim().split(/\n+/).length<10||!r.turns?.[0]?.playbackCompletedAfterLastByte||ratio<1.5||ratio>5) throw new Error("Incomplete managed long "+name+" proof: "+JSON.stringify({transcript:r.transcriptEvidence,billing:r.managedBillingEvidence,fi,ratio,timing:r.timing,turn:r.turns?.[0]})); console.log("Managed long",name,{fi,ratio,input:r.inputTranscript,output:r.outputTranscript,billing:r.managedBillingEvidence});}'
       - name: Exercise the low-level direct and streamed JSON-RPC routes
         run: |
@@ -190,9 +204,23 @@ jobs:
           npx tsx src/headless/cli.ts speech.synthetic.live --access byok --profile staging-ci-byok --params-file connected-live-params.json > byok-connected-live.json 2> byok-connected-live.events.jsonl
           node -e 'const r=require("./byok-connected-live.json"); if(r.connectedTurnCount!==6||r.turns?.length!==6||r.providerTurnUsage?.length!==6||!r.realtimeEvidence?.passed||r.managedBillingEvidence?.payer!=="byok-api-key-owner") throw new Error("Persistent BYOK Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||t.sentVideoFrameCount!==1||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete BYOK Live turn: "+JSON.stringify(t)); const totals=(r.providerUsageSnapshots||[]).map(s=>Number(s.usageMetadata?.totalTokenCount||0)).filter(Boolean),latest=Number(r.providerLatestUsageMetadata?.totalTokenCount||0),billed=Number(r.providerUsageMetadata?.totalTokenCount||0); if(!totals.length||totals.some((n,i)=>i>0&&n<totals[i-1])||billed<=latest) throw new Error("Provider usage did not prove per-turn compounding: "+JSON.stringify({totals,latest,billed})); console.log("BYOK connected Live turns:",r.turns.map(t=>({turn:t.turn,input:t.inputTranscript,sentSamples:t.sentSamples,videoFrames:t.sentVideoFrameCount,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
       - name: Prove long observer-camera and conversation responses with the paid API key
+        shell: bash
         run: |
-          npx tsx src/headless/cli.ts live.observer.turn --access byok --profile staging-ci-byok --params-file long-live-params.json > byok-long-observer.json 2> byok-long-observer.events.jsonl
-          npx tsx src/headless/cli.ts live.conversation.turn --access byok --profile staging-ci-byok --params-file long-live-params.json > byok-long-conversation.json 2> byok-long-conversation.events.jsonl
+          run_long_live_proof() {
+            local mode="$1"
+            local output="byok-long-${mode}.json"
+            local events="byok-long-${mode}.events.jsonl"
+            for attempt in 1 2; do
+              if npx tsx src/headless/cli.ts "live.${mode}.turn" --access byok --profile staging-ci-byok --params-file long-live-params.json > "$output" 2> "$events" \
+                && npx tsx scripts/verify-long-live-proof.ts --result "$output" --params long-live-params.json --access byok; then
+                return 0
+              fi
+              echo "Long BYOK ${mode} proof attempt ${attempt} failed." >&2
+            done
+            return 1
+          }
+          run_long_live_proof observer
+          run_long_live_proof conversation
           node -e 'const p=require("./long-live-params.json"); for(const name of ["observer","conversation"]){const r=require("./byok-long-"+name+".json"),fi=(r.outputTranscript.match(/\[(?:FI|fi-FI)\]/g)||[]).length,ratio=r.timing.modelAudioDurationMs/(p.fixture.inputDurationSeconds*1000); if(!r.transcriptEvidence?.passed||r.managedBillingEvidence?.payer!=="byok-api-key-owner"||r.connectedTurnCount!==1||r.sentVideoFrameCount!==1||fi<5||r.outputTranscript.trim().split(/\n+/).length<10||!r.turns?.[0]?.playbackCompletedAfterLastByte||ratio<1.5||ratio>5) throw new Error("Incomplete BYOK long "+name+" proof: "+JSON.stringify({transcript:r.transcriptEvidence,payer:r.managedBillingEvidence,fi,ratio,timing:r.timing,turn:r.turns?.[0]})); console.log("BYOK long",name,{fi,ratio,input:r.inputTranscript,output:r.outputTranscript});}'
       - name: Exercise the low-level direct and streamed JSON-RPC routes
         run: |

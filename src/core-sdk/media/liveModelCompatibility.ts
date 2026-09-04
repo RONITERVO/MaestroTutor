@@ -58,7 +58,10 @@ export const getLiveRealtimeInputConfig = (
           startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
           endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
           prefixPaddingMs: 120,
-          silenceDurationMs: 600,
+          // Leave enough room for an ordinary hesitation or short stutter. A
+          // 600 ms cutoff can end a turn on roughly half a second of low-energy
+          // speech plus the natural quiet around it.
+          silenceDurationMs: 1_000,
         },
       }),
 });
