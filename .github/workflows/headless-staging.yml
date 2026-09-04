@@ -42,10 +42,6 @@ jobs:
   long-audio-fixture:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      MAESTRO_GEMINI_API_KEY: ${{ secrets.HEADLESS_GEMINI_API_KEY }}
-      MAESTRO_HEADLESS_ACCESS_MODE: byok
-      MAESTRO_HEADLESS_HOME: /tmp/maestro-headless-fixture
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -53,12 +49,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Generate one shared long English speech fixture
+      - name: Prepare the versioned long English speech fixture
         shell: bash
         run: |
-          test -n "$MAESTRO_GEMINI_API_KEY" || { echo "HEADLESS_GEMINI_API_KEY is required." >&2; exit 1; }
-          npx tsx src/headless/cli.ts speech.tts.generate --access byok --profile fixture --params '{"text":"Hello! How are you doing? I was wondering how are Chinese speakers able to distinguish between the different Chinese words when they speak, like, don'"'"'t they sound very similar, and why do they use subtitles in Chinese movies so much? What is the main reason for this?","langCode":"en-US","includeDataUrl":true}' > long-input-tts.json
-          npx tsx scripts/create-long-live-fixture.ts --tts-json long-input-tts.json > long-live-params.json
+          npx tsx scripts/create-long-live-fixture.ts --audio test-fixtures/audio/long-live-generated.wav --fixture-kind generated-long-speech > long-live-params.json
           node -e 'const p=require("./long-live-params.json"); if(p.sampleRate!==16000||p.fixture?.inputDurationSeconds<15||p.fixture?.expectedTranslationPairs!==5) throw new Error("Invalid long fixture: "+JSON.stringify(p.fixture)); console.log("Long fixture seconds:",p.fixture.inputDurationSeconds,"expected:",p.expectedTranscript)'
       - uses: actions/upload-artifact@v4
         with:

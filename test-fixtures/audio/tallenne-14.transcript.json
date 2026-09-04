@@ -4,6 +4,13 @@
   "detectedLanguage": "en",
   "transcriber": "whisper-large-v3-turbo",
   "transcript": "Hello! How are you doing? I was wondering how are Chinese speakers able to distinguish between the different Chinese words when they speak like don't they sound very similar and why do they use subtitles in Chinese movies so much what is the main reason for this",
+  "ciFixture": {
+    "file": "long-live-generated.wav",
+    "kind": "non-personal generated speech derived from this transcript",
+    "durationSeconds": 22.04,
+    "sha256": "c71e9792914f2f8a83b6d616ee30d7dc533c348e64e106227e446f2da7773144",
+    "semanticProof": "staging run 33898826044: managed and BYOK Live each recovered 47/48 expected words"
+  },
   "segments": [
     {
       "start": 0.88,

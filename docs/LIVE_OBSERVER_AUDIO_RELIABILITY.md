@@ -202,9 +202,10 @@ The long fixture is based on the 37.55-second English question recorded with a
 Finnish accent in `Tallenne (14).m4a`. Local Whisper `large-v3-turbo` with English
 forced recovered the whole question, ending with “what is the main reason for
 this”. The checked-in transcript evidence includes segment and word timestamps;
-the personal recording itself is not committed. CI generates the same wording once
-with the paid BYOK key, inserts a 400 ms mid-sentence hesitation, and reuses those
-exact PCM bytes for managed and BYOK observer-camera and conversation runs. Each
+the personal recording itself is not committed. CI instead reuses one checked-in,
+non-personal generated WAV with the same wording and a 400 ms mid-sentence
+hesitation. Its exact bytes previously reached 47/48-word recall in both access
+modes, avoiding per-run TTS truncation and needless fixture-generation cost. Each
 run must transcribe the complete question and finish playing five English/Finnish
 response pairs. The observer continues to exercise its real local semantic gate.
 For the finite long conversation check, CI disables provider VAD and explicitly

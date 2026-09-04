@@ -121,6 +121,9 @@ It also runs one shared long English fixture through observer-camera and
 conversation mode in both access modes. That fixture includes a 400 ms hesitation,
 requires the complete question transcript, and forces five English/Finnish response
 pairs so truncated input, output, playback, or translation cannot pass unnoticed.
+The checked-in WAV is non-personal generated speech whose exact bytes previously
+reached 47/48-word recall in both access modes; versioning it prevents a truncated
+TTS generation from silently changing what a release run sends.
 The finite long conversation fixture disables provider VAD and sends one explicit
 activity boundary around the whole recording, making this transport proof
 independent of provider endpoint timing. The ordinary short conversation in

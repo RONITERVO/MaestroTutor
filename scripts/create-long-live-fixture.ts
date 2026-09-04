@@ -25,7 +25,7 @@ const argument = (name: string): string | undefined => {
 
 const decodeWavPcm16Mono = (bytes: Buffer): { pcm: Int16Array; sampleRate: number } => {
   if (bytes.toString('ascii', 0, 4) !== 'RIFF' || bytes.toString('ascii', 8, 12) !== 'WAVE') {
-    throw new Error('TTS fixture is not a RIFF/WAVE file.');
+    throw new Error('Audio fixture is not a RIFF/WAVE file.');
   }
   let offset = 12;
   let sampleRate = 0;
@@ -49,7 +49,7 @@ const decodeWavPcm16Mono = (bytes: Buffer): { pcm: Int16Array; sampleRate: numbe
     offset = start + length + (length % 2);
   }
   if (format !== 1 || channels !== 1 || bitsPerSample !== 16 || !sampleRate || !data) {
-    throw new Error('TTS fixture must be mono 16-bit PCM WAV.');
+    throw new Error('Audio fixture must be mono 16-bit PCM WAV.');
   }
   return {
     pcm: new Int16Array(data.buffer, data.byteOffset, Math.floor(data.byteLength / 2)).slice(),
@@ -84,8 +84,8 @@ const insertNaturalPause = (pcm: Int16Array, sampleRate: number): Int16Array => 
       bestOffset = offset + Math.floor(window / 2);
     }
   }
-  // Exercise a slight hesitation without crossing conversation mode's 600 ms
-  // automatic-VAD boundary. Multi-turn behavior has its own six-turn test.
+  // Exercise a slight hesitation inside the fixture's explicit activity boundary.
+  // Multi-turn behavior has its own six-turn test.
   const insertedSilence = new Int16Array(Math.floor(sampleRate * 0.4));
   const leadingSilence = new Int16Array(sampleRate);
   const trailingSilence = new Int16Array(sampleRate * 2);
@@ -109,18 +109,28 @@ const fromTtsJson = (path: string): Int16Array => {
 };
 
 const fromAudioFile = (path: string): Int16Array => {
+  const bytes = readFileSync(path);
+  if (bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WAVE') {
+    const decoded = decodeWavPcm16Mono(bytes);
+    return resample(decoded.pcm, decoded.sampleRate);
+  }
   const ffmpeg = spawnSync('ffmpeg', [
     '-v', 'error', '-i', path, '-f', 's16le', '-acodec', 'pcm_s16le', '-ac', '1', '-ar', '16000', 'pipe:1',
   ], { encoding: null, maxBuffer: 20 * 1024 * 1024 });
   if (ffmpeg.status !== 0) {
     throw new Error(`ffmpeg could not decode the fixture: ${String(ffmpeg.stderr || '').trim()}`);
   }
-  const bytes = ffmpeg.stdout as Buffer;
-  return new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2)).slice();
+  const decodedBytes = ffmpeg.stdout as Buffer;
+  return new Int16Array(
+    decodedBytes.buffer,
+    decodedBytes.byteOffset,
+    Math.floor(decodedBytes.byteLength / 2),
+  ).slice();
 };
 
 const audioPath = argument('--audio');
 const ttsJsonPath = argument('--tts-json');
+const fixtureKind = argument('--fixture-kind');
 if (Boolean(audioPath) === Boolean(ttsJsonPath)) {
   throw new Error('Pass exactly one of --audio <path> or --tts-json <path>.');
 }
@@ -141,7 +151,7 @@ process.stdout.write(JSON.stringify({
   runSuggestionAftersteps: false,
   instructionSuffix,
   fixture: {
-    kind: audioPath ? 'finnish-accent-recording' : 'generated-long-speech',
+    kind: fixtureKind || (audioPath ? 'recorded-long-speech' : 'generated-long-speech'),
     inputDurationSeconds: pcm.length / 16_000,
     expectedTranslationPairs: 5,
   },
