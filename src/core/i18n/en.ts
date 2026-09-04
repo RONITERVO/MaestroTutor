@@ -531,6 +531,8 @@ export const enTranslations: Record<string, string> = {
 
   // Debug log panel
   "debugLog.title": "Traffic Log",
+  "debugLog.exportTimings": "Export turn timings",
+  "chat.speechPending": "Speech received; preparing transcript",
   "debugLog.clearUploads": "Delete all Gemini uploads for the current API key",
   "debugLog.clearLogs": "Clear logs",
   "debugLog.close": "Close",

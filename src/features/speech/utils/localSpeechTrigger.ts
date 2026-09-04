@@ -71,6 +71,8 @@ export const waitForLocalSpeechTrigger = async (options: {
   signal?: AbortSignal;
   onPhaseChange?: (phase: LocalSpeechTriggerPhase) => void;
   onVadActivityChange?: (active: boolean) => void;
+  onPendingSpeechSamples?: (samples: number) => void;
+  onCaptureStarted?: () => void;
 }): Promise<LocalSpeechTriggerResult> => {
   if (options.signal?.aborted) throw abortError();
   const setPhase = (phase: LocalSpeechTriggerPhase) => options.onPhaseChange?.(phase);
@@ -230,7 +232,9 @@ export const waitForLocalSpeechTrigger = async (options: {
               capture: {
                 audioContext: retainedContext,
                 workletNode: retainedWorklet,
-                transferTo: sink => continuationCapture.transferTo(sink),
+                transferTo: sink => {
+                  return continuationCapture.transferTo(sink);
+                },
                 close: async (closeOptions) => {
                   await stopCapture(closeOptions?.stopMicrophone === false);
                 },
@@ -252,6 +256,9 @@ export const waitForLocalSpeechTrigger = async (options: {
         const pcm = event.data;
         if (!(pcm instanceof Int16Array) || pcm.length === 0) return;
         if (settled) {
+          if (isSpeechLike(measureEnergy(pcm), DEFAULT_SPEECH_GATE)) {
+            options.onPendingSpeechSamples?.(pcm.length);
+          }
           continuationCapture.push(pcm);
           return;
         }
@@ -262,6 +269,7 @@ export const waitForLocalSpeechTrigger = async (options: {
       };
       const source = context!.createMediaStreamSource(microphoneStream!);
       source.connect(worklet);
+      options.onCaptureStarted?.();
       setPhase('vad-listening');
     });
 

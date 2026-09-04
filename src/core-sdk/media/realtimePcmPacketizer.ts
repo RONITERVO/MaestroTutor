@@ -46,6 +46,7 @@ export class RealtimePcmPacketizer {
 
   private bufferedChunks: Int16Array[] = [];
   private bufferedSamples = 0;
+  private pendingSendSamples = 0;
   private flushTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
   private sendQueue: Promise<void> = Promise.resolve();
   private outputSamplesScheduled = 0;
@@ -141,6 +142,10 @@ export class RealtimePcmPacketizer {
     };
   }
 
+  getQueuedAudioMs(): number {
+    return (this.bufferedSamples + this.pendingSendSamples) / this.sampleRate * 1000;
+  }
+
   dispose() {
     this.clearFlushTimer();
     this.bufferedChunks = [];
@@ -174,6 +179,8 @@ export class RealtimePcmPacketizer {
 
   private enqueuePacket(packet: Int16Array, reason: 'full' | 'timer' | 'flush') {
     if (packet.length === 0) return;
+    // The codec may transfer/detach the buffer during onPacket.
+    const packetSamples = packet.length;
     this.stats.packetsSent += 1;
     this.stats.totalOutputSamples += packet.length;
     this.stats.maxPacketSamples = Math.max(this.stats.maxPacketSamples, packet.length);
@@ -187,6 +194,7 @@ export class RealtimePcmPacketizer {
       this.stats.explicitFlushes += 1;
     }
     const precedingSamples = this.outputSamplesScheduled;
+    this.pendingSendSamples += packet.length;
     this.outputSamplesScheduled += packet.length;
     this.sendQueue = this.sendQueue
       .catch(() => undefined)
@@ -203,7 +211,7 @@ export class RealtimePcmPacketizer {
         }
         await this.onPacket(packet);
         if (this.paceOutput) this.outputPacingLastSentAt = this.now();
-      });
+      }).finally(() => { this.pendingSendSamples -= packetSamples; });
   }
 
   private takeSamples(sampleCount: number): Int16Array {

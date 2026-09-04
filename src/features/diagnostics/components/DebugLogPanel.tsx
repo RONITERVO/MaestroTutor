@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect } from 'react';
 import { debugLogService, type LogEntry } from '../../../core-sdk/diagnostics';
+import { exportTurnTimings, clearTurnTimings } from '../../../core-sdk/turnTiming';
 import { clearAllGeminiFiles } from '../../../api/gemini';
 import { IconCloudSlash, IconXMark, IconTrash } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
@@ -25,6 +26,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
 
   const handleClear = () => {
     debugLogService.clear();
+    clearTurnTimings();
   };
 
   const handleClearUploads = async () => {
@@ -52,6 +54,19 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
           <span className="text-debug-ok-text">➜</span> {t('debugLog.title') || 'Traffic Log'}
         </h2>
         <div className="flex items-center gap-2">
+          <button
+            className="p-1.5 text-debug-btn-muted hover:text-debug-btn-text rounded"
+            aria-label={t('debugLog.exportTimings')}
+            title={t('debugLog.exportTimings')}
+            onClick={() => {
+              const url = URL.createObjectURL(new Blob([exportTurnTimings()], { type: 'application/json' }));
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `maestro-turn-timings-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+              link.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }}
+          >↓ ms</button>
           <button
             onClick={handleClearUploads}
             disabled={isClearingUploads}

@@ -17,6 +17,7 @@
     "smoke:managed-live-no-output": "tsx scripts/probe-managed-live-gateway.ts",
     "verify:release-config": "node scripts/verify-release-config.mjs",
     "test": "vitest run",
+    "test:live:ui": "node scripts/run-live-ui-replay.mjs",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "cap:sync": "npm run build && npx cap sync",
     "cap:android": "npm run build && npx cap sync android",
