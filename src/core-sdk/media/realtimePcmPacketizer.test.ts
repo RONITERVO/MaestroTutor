@@ -62,4 +62,32 @@ describe('RealtimePcmPacketizer output pacing', () => {
     expect(sentAt).toEqual([1_000, 1_020]);
     expect(packetizer.getStats().outputPacingWaitMs).toBe(0);
   });
+
+  it('starts a fresh pacing epoch after an ordered turn boundary', async () => {
+    let now = 1_000;
+    const sentAt: number[] = [];
+    const packetizer = new RealtimePcmPacketizer({
+      sampleRate: 1_000,
+      packetDurationMs: 20,
+      paceOutput: true,
+      pacingClock: {
+        now: () => now,
+        sleep: async milliseconds => { now += milliseconds; },
+      },
+      onPacket: () => { sentAt.push(now); },
+    });
+
+    packetizer.push(new Int16Array(20));
+    packetizer.push(new Int16Array(20));
+    await packetizer.flushPending();
+    packetizer.resetPacingEpoch();
+
+    now += 10_000;
+    packetizer.push(new Int16Array(20));
+    packetizer.push(new Int16Array(20));
+    await packetizer.flushPending();
+
+    expect(sentAt).toEqual([1_000, 1_020, 11_020, 11_040]);
+    expect(packetizer.getStats().outputPacingElapsedMs).toBe(40);
+  });
 });

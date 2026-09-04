@@ -305,6 +305,97 @@ describe('synthetic Live journey', () => {
     expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
   });
 
+  it('streams every packet across a two-second pause under one manual activity boundary', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const sent: any[] = [];
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        sent.push(message);
+        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: 'The first clause and the second clause.' },
+            outputTranscription: { text: 'The first clause and the second clause.' },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (params: any) => {
+          callbacks = params.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    const pcm = new Int16Array(96_000);
+    pcm.fill(6_000, 0, 24_000);
+    pcm.fill(6_000, 56_000, 72_000);
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm, sampleRate: 16_000, pace: false }),
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+    });
+
+    expect(result.sentSamples).toBe(pcm.length);
+    expect(sent.filter(message => message.activityStart)).toHaveLength(1);
+    expect(sent.filter(message => message.activityEnd)).toHaveLength(1);
+    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+    expect(ai.live.connect).toHaveBeenCalledWith(expect.objectContaining({
+      config: expect.objectContaining({
+        realtimeInputConfig: expect.objectContaining({
+          automaticActivityDetection: { disabled: true },
+        }),
+      }),
+    }));
+  });
+
+  it('keeps closed-turn silence out of the packetizer pacing queue', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const sent: any[] = [];
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        sent.push(message);
+        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: 'One complete sentence.' },
+            outputTranscription: { text: 'One complete sentence.' },
+            turnComplete: true,
+          },
+        }));
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (params: any) => {
+          callbacks = params.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+    const pcm = new Int16Array(104_000);
+    pcm.fill(6_000, 0, 24_000);
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({ pcm, sampleRate: 16_000, pace: false }),
+      gateInputOnSpeech: true,
+      semanticSpeech: true,
+    });
+
+    expect(result.packetizer.totalInputSamples).toBeLessThan(pcm.length);
+    expect(result.packetizer.totalInputSamples).toBe(result.sentSamples);
+    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+  });
+
   it('does not send a second empty boundary after the gate already closed', async () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
     const sent: any[] = [];

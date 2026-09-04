@@ -8,6 +8,7 @@ import {
   EndSensitivity,
   StartSensitivity,
   ThinkingLevel,
+  TurnCoverage,
 } from '@google/genai';
 import {
   getLiveConversationThinkingConfig,
@@ -63,5 +64,13 @@ describe('Live model compatibility', () => {
     expect(getLiveRealtimeInputConfig(true).activityHandling).toBe(
       ActivityHandling.START_OF_ACTIVITY_INTERRUPTS,
     );
+  });
+
+  it('uses one manual all-input boundary for locally detected continuous turns', () => {
+    expect(getLiveRealtimeInputConfig(false, true)).toEqual({
+      activityHandling: ActivityHandling.NO_INTERRUPTION,
+      automaticActivityDetection: { disabled: true },
+      turnCoverage: TurnCoverage.TURN_INCLUDES_ALL_INPUT,
+    });
   });
 });

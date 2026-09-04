@@ -7,6 +7,7 @@ import {
   EndSensitivity,
   StartSensitivity,
   ThinkingLevel,
+  TurnCoverage,
   type RealtimeInputConfig,
   type ThinkingConfig,
 } from '@google/genai';
@@ -41,15 +42,23 @@ export const getLiveConversationThinkingConfig = (model: string): ThinkingConfig
  */
 export const getLiveRealtimeInputConfig = (
   allowModelInterruptions = false,
+  manualActivityBoundaries = false,
 ): RealtimeInputConfig => ({
   activityHandling: allowModelInterruptions
     ? ActivityHandling.START_OF_ACTIVITY_INTERRUPTS
     : ActivityHandling.NO_INTERRUPTION,
-  automaticActivityDetection: {
-    disabled: false,
-    startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
-    endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
-    prefixPaddingMs: 120,
-    silenceDurationMs: 600,
-  },
+  ...(manualActivityBoundaries
+    ? {
+        automaticActivityDetection: { disabled: true },
+        turnCoverage: TurnCoverage.TURN_INCLUDES_ALL_INPUT,
+      }
+    : {
+        automaticActivityDetection: {
+          disabled: false,
+          startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_LOW,
+          endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_LOW,
+          prefixPaddingMs: 120,
+          silenceDurationMs: 600,
+        },
+      }),
 });

@@ -56,6 +56,7 @@ import {
   type RealtimePcmPacketizerStats,
 } from '../../../core-sdk/media/realtimePcmPacketizer';
 import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
+import { ContinuousLiveTurnBoundary } from '../../../core-sdk/media/continuousLiveTurnBoundary';
 import {
   getLiveConversationThinkingConfig,
   getLiveRealtimeInputConfig,
@@ -130,7 +131,7 @@ export interface StartLiveConversationOptions {
    * sessions leave this off: the click already declared intent.
    */
   gateInputOnSpeech?: boolean;
-  /** Keep the paid transport open, but hold each microphone turn behind the local gate. */
+  /** Keep the paid transport open, but start/end continuous microphone turns locally. */
   gateAudioAfterConnect?: boolean;
   systemInstruction?: string;
   stream?: MediaStream | null;
@@ -199,12 +200,16 @@ interface ModelAudioDecodeCheckpoint {
 
 interface LiveInputAudioTelemetry {
   encodeErrors: number;
+  capturedSamples: number;
   gatedPackets: number;
+  activityStarts: number;
   audioStreamEnds: number;
   speechTriggerSamples: number;
   connectionHandoffPackets: number;
   connectionHandoffSamples: number;
   whisperChecks: number;
+  whisperWakeChecks: number;
+  whisperBoundaryChecks: number;
   whisperAccepted: number;
   whisperRejected: number;
   whisperErrors: number;
@@ -227,12 +232,16 @@ interface LivePlaybackTelemetry {
 
 const createEmptyInputAudioTelemetry = (): LiveInputAudioTelemetry => ({
   encodeErrors: 0,
+  capturedSamples: 0,
   gatedPackets: 0,
+  activityStarts: 0,
   audioStreamEnds: 0,
   speechTriggerSamples: 0,
   connectionHandoffPackets: 0,
   connectionHandoffSamples: 0,
   whisperChecks: 0,
+  whisperWakeChecks: 0,
+  whisperBoundaryChecks: 0,
   whisperAccepted: 0,
   whisperRejected: 0,
   whisperErrors: 0,
@@ -333,7 +342,9 @@ export function useGeminiLiveConversation(
   const playbackPendingRef = useRef(false);
   /** Non-null only for sessions that opted into speech gating. */
   const speechGateRef = useRef<SpeechGate | null>(null);
-  /** Raw packets held back while the gate is shut, encoded only if it opens. */
+  /** Manual boundary around continuous audio once the semantic wake gate opens. */
+  const speechTurnBoundaryRef = useRef<ContinuousLiveTurnBoundary | null>(null);
+  /** Raw detector window; closed-turn packets are replayed once, open-turn packets are already sent. */
   const gatePrerollRef = useRef<Int16Array[]>([]);
   const speechActivityTrackerRef = useRef<SpeechActivityTracker | null>(null);
   /** Shared with Live STT so Android never holds two copies of Whisper. */
@@ -348,6 +359,10 @@ export function useGeminiLiveConversation(
   const playbackUntilRef = useRef(0);
   /** Last playback state handed to the gate, so it is only told about changes. */
   const playbackActiveRef = useRef(false);
+  /** Blocks a second manual activity until Live completes the preceding response. */
+  const awaitingModelTurnRef = useRef(false);
+  /** Ordered drain plus activity-end operation, if a boundary is currently closing. */
+  const boundaryClosePromiseRef = useRef<Promise<void> | null>(null);
 
   const callbacksRef = useRef(callbacks);
   useEffect(() => { callbacksRef.current = callbacks; }, [callbacks]);
@@ -679,9 +694,12 @@ export function useGeminiLiveConversation(
     playbackUntilRef.current = 0;
     playbackActiveRef.current = false;
     speechGateRef.current = null;
+    speechTurnBoundaryRef.current = null;
     gatePrerollRef.current = [];
     speechActivityTrackerRef.current = null;
     loadingFallbackOnsetAtRef.current = null;
+    awaitingModelTurnRef.current = false;
+    boundaryClosePromiseRef.current = null;
     if (!wasSpeechGated) {
       speechGateEpochRef.current += 1;
     }
@@ -835,8 +853,8 @@ export function useGeminiLiveConversation(
       // A gated session sends no paid video while nobody is speaking. A frame
       // per second of an empty room buys nothing: what the model needs to see
       // is the person who just started talking, and the gate is open by then.
-      const gate = speechGateRef.current;
-      if (gate && !gate.isOpen) return;
+      const boundary = speechTurnBoundaryRef.current;
+      if (boundary && !boundary.isOpen) return;
 
       const activeSession = sessionRef.current;
       const activeVideo = captureVideoRef.current;
@@ -952,16 +970,22 @@ export function useGeminiLiveConversation(
         throw new Error('The Whisper observer reason requires a completed local speech gate.');
       }
       let localSpeechTrigger: LocalSpeechTriggerResult | null = null;
-      if (gateInputOnSpeech) {
-        updateState('armed');
+      if (speechGateEnabled) {
         observerWhisperRef.current ??= acquireLocalWhisperClient({
           model: OBSERVER_WHISPER_MODEL,
           allowFp32Fallback: !Capacitor.isNativePlatform(),
         });
+        // User-opened Live sessions do not pass through the pre-connect helper,
+        // so warm the shared detector here as well. Capture remains available
+        // and the documented energy fallback takes over after the grace period.
+        void observerWhisperRef.current.initialize().catch(() => undefined);
+      }
+      if (gateInputOnSpeech) {
+        updateState('armed');
         const triggerAbort = new AbortController();
         speechTriggerAbortRef.current = triggerAbort;
         localSpeechTrigger = await waitForLocalSpeechTrigger({
-          detector: observerWhisperRef.current,
+          detector: observerWhisperRef.current!,
           signal: triggerAbort.signal,
           onPhaseChange: setLocalSpeechTriggerPhase,
           onVadActivityChange: active => setVadActivity(active, observerActivity),
@@ -983,6 +1007,9 @@ export function useGeminiLiveConversation(
       // it only after the local pre-connect trigger has completed.
       speechGateRef.current = speechGateEnabled
         ? new SpeechGate({ requireConfirmation: true })
+        : null;
+      speechTurnBoundaryRef.current = speechGateEnabled
+        ? new ContinuousLiveTurnBoundary()
         : null;
       gatePrerollRef.current = [];
       speechActivityTrackerRef.current = speechGateEnabled
@@ -1087,7 +1114,10 @@ export function useGeminiLiveConversation(
 
       const model = getGeminiModels().audio.conversation;
       const usageTracker = createLiveUsageTracker({ feature: costFeature, configuredModel: model });
-      const realtimeInputConfig = getLiveRealtimeInputConfig(allowModelInterruptions);
+      const realtimeInputConfig = getLiveRealtimeInputConfig(
+        allowModelInterruptions,
+        speechGateEnabled,
+      );
       modelRef.current = model;
       logFinalizedRef.current = false;
       logRef.current = debugLogService.logRequest('useGeminiLiveConversation', model, {
@@ -1468,6 +1498,7 @@ export function useGeminiLiveConversation(
                   lastNewlineCountRef.current = 0;
                   lastTranscriptUpdateRef.current = null;
                   startNextModelAudioTurn(sessionId);
+                  awaitingModelTurnRef.current = false;
 
                   if (!modelText) {
                     const completionReason: LiveTurnTranscriptUpdateReason = currentTurnWaitingForInputRef.current
@@ -1503,6 +1534,7 @@ export function useGeminiLiveConversation(
                   lastNewlineCountRef.current = 0;
                   currentTurnWaitingForInputRef.current = false;
                   startNextModelAudioTurn(sessionId);
+                  awaitingModelTurnRef.current = false;
                   emitTurnTranscriptUpdate('interrupted');
                 }
               })
@@ -1580,218 +1612,7 @@ export function useGeminiLiveConversation(
               currentSessionIdRef.current !== sessionId
               || speechGateEpochRef.current !== speechGateEpoch
             ) return;
-
-            const gate = speechGateRef.current;
-            const now = Date.now();
-
-            if (gate) {
-              // The playback worklet reports no start or stop, so speaking is
-              // derived from what has been queued into it: each pushed chunk
-              // extends the expected end by its own duration, and playback is
-              // over once that time passes with nothing further queued.
-              const speaking = now < playbackUntilRef.current;
-              if (speaking !== playbackActiveRef.current) {
-                playbackActiveRef.current = speaking;
-                gate.notePlayback(speaking, now);
-              }
-            }
-
-            const energy = measureEnergy(packet);
-            const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
-            const speechActivity = gate && !gate.isOpen
-              ? speechActivityTrackerRef.current?.observe(packet.length, packetIsSpeech, now)
-              : undefined;
-            if (speechActivity?.candidateReset && gate?.isAwaitingConfirmation) {
-              gate.rejectSpeech(now);
-              gatePrerollRef.current = [];
-              loadingFallbackOnsetAtRef.current = null;
-            }
-            const wasAwaitingConfirmation = gate?.isAwaitingConfirmation ?? false;
-            const decision = gate ? gate.evaluate(energy, now) : null;
-            setVadActivity(
-              Boolean(
-                gate
-                && packetIsSpeech
-                && !(decision && !decision.send && decision.reason === 'playback')
-              ),
-              observerActivity,
-            );
-
-            if (!decision || decision.send) {
-              await encodeAndSend(packet);
-              return;
-            }
-            if (!gate) return;
-
-            inputAudioTelemetryRef.current.gatedPackets += 1;
-
-            if (decision.closing) {
-              // A gap in websocket packets is not an explicit end-of-turn. The
-              // Live API provides this signal so server VAD can finish the turn
-              // while the client goes back to sending nothing.
-              sessionRef.current?.sendRealtimeInput({ audioStreamEnd: true });
-              inputAudioTelemetryRef.current.audioStreamEnds += 1;
-              gatePrerollRef.current = [];
-              speechActivityTrackerRef.current?.reset();
-              loadingFallbackOnsetAtRef.current = null;
-              return;
-            }
-
-            // Never let the app's own voice survive in pre-roll and leak into
-            // the next confirmed user turn.
-            if (decision.reason === 'playback') {
-              gatePrerollRef.current = [];
-              speechActivityTrackerRef.current?.reset();
-              loadingFallbackOnsetAtRef.current = null;
-              return;
-            }
-            if (decision.reason === 'cooldown') {
-              if (!packetIsSpeech) {
-                gatePrerollRef.current = [];
-                speechActivityTrackerRef.current?.reset();
-                loadingFallbackOnsetAtRef.current = null;
-                return;
-              }
-              gatePrerollRef.current.push(packet);
-              gatePrerollRef.current = recentPcmPackets(
-                gatePrerollRef.current,
-                SPEECH_GATE_BUFFER_SAMPLES,
-              );
-              return;
-            }
-
-            gatePrerollRef.current.push(packet);
-            gatePrerollRef.current = recentPcmPackets(
-              gatePrerollRef.current,
-              SPEECH_GATE_BUFFER_SAMPLES,
-            );
-
-            if (decision.reason !== 'awaiting-confirmation') return;
-
-            const previousFallbackOnset = loadingFallbackOnsetAtRef.current;
-            const fallback = evaluateFreshSpeechFallback(
-              energy,
-              previousFallbackOnset,
-              now,
-            );
-            loadingFallbackOnsetAtRef.current = fallback.onsetAt;
-            if (
-              wasAwaitingConfirmation
-              && previousFallbackOnset === null
-              && fallback.action === 'wait'
-            ) {
-              // Fresh speech after a stale candidate: do not replay the old
-              // sound, but retain this packet as the new utterance's pre-roll.
-              gatePrerollRef.current = [packet];
-            }
-
-            if (!speechActivity?.hasMinimumSpeech) return;
-
-            const detector = observerWhisperRef.current;
-            let confirmed = false;
-
-            if (!detector || detector.status === 'failed' || detector.status === 'disposed') {
-              // A model/CDN/WASM failure must not make the observer deaf. This
-              // retains the cheap energy, cooldown and playback protections.
-              if (fallback.action === 'expire') {
-                gate.rejectSpeech(now);
-                gatePrerollRef.current = [];
-                speechActivityTrackerRef.current?.reset();
-                loadingFallbackOnsetAtRef.current = null;
-              } else if (fallback.action === 'confirm') {
-                inputAudioTelemetryRef.current.energyFallbacks += 1;
-                confirmed = gate.confirmSpeech(now);
-                loadingFallbackOnsetAtRef.current = null;
-              }
-            } else if (
-              (detector.status === 'idle' || detector.status === 'loading')
-              && detector.loadingStartedAt > 0
-              && now - detector.loadingStartedAt >= OBSERVER_WHISPER_LOAD_GRACE_MS
-            ) {
-              // First model load may be slow on mobile data. Continue loading
-              // in the background, but preserve re-engagement after the grace
-              // period with the same energy-only fallback used for failures.
-              if (fallback.action === 'expire') {
-                gate.rejectSpeech(now);
-                gatePrerollRef.current = [];
-                speechActivityTrackerRef.current?.reset();
-                loadingFallbackOnsetAtRef.current = null;
-              } else if (fallback.action === 'confirm') {
-                inputAudioTelemetryRef.current.energyFallbacks += 1;
-                confirmed = gate.confirmSpeech(now);
-                loadingFallbackOnsetAtRef.current = null;
-              }
-            } else if (detector.status === 'ready') {
-              if (
-                observerWhisperBusyRef.current
-                || now - lastWhisperRequestAtRef.current < OBSERVER_WHISPER_REQUEST_INTERVAL_MS
-              ) return;
-
-              const audio = pcmPacketsToWhisperWindow(gatePrerollRef.current, INPUT_SAMPLE_RATE);
-              if (!audio) return;
-
-              observerWhisperBusyRef.current = true;
-              lastWhisperRequestAtRef.current = now;
-              inputAudioTelemetryRef.current.whisperChecks += 1;
-              try {
-                const text = await detector.transcribe(audio);
-                if (
-                  currentSessionIdRef.current !== sessionId
-                  || speechGateEpochRef.current !== speechGateEpoch
-                  || speechGateRef.current !== gate
-                ) return;
-
-                const resultAt = Date.now();
-                if (isLikelySpeechTranscript(text)) {
-                  inputAudioTelemetryRef.current.whisperAccepted += 1;
-                  confirmed = gate.confirmSpeech(resultAt);
-                  loadingFallbackOnsetAtRef.current = null;
-                } else {
-                  inputAudioTelemetryRef.current.whisperRejected += 1;
-                  gate.rejectSpeech(resultAt);
-                  gatePrerollRef.current = [];
-                  speechActivityTrackerRef.current?.reset();
-                  loadingFallbackOnsetAtRef.current = null;
-                }
-              } catch (error) {
-                if (
-                  currentSessionIdRef.current !== sessionId
-                  || speechGateEpochRef.current !== speechGateEpoch
-                  || speechGateRef.current !== gate
-                ) return;
-                inputAudioTelemetryRef.current.whisperErrors += 1;
-                const fallbackAt = Date.now();
-                if (fallback.action === 'expire') {
-                  gate.rejectSpeech(fallbackAt);
-                  gatePrerollRef.current = [];
-                  speechActivityTrackerRef.current?.reset();
-                  loadingFallbackOnsetAtRef.current = null;
-                } else if (fallback.action === 'confirm') {
-                  inputAudioTelemetryRef.current.energyFallbacks += 1;
-                  confirmed = gate.confirmSpeech(fallbackAt);
-                  loadingFallbackOnsetAtRef.current = null;
-                }
-                if (!whisperFailureWarnedRef.current) {
-                  whisperFailureWarnedRef.current = true;
-                  console.warn('Local Whisper check failed; using the energy-only fallback.', error);
-                }
-              } finally {
-                observerWhisperBusyRef.current = false;
-              }
-            }
-
-            // While the model is loading, keep collecting the bounded raw
-            // buffer. The first packet after readiness will check the whole
-            // recent window instead of opening prematurely.
-            if (!confirmed) return;
-
-            const held = recentPcmPackets(gatePrerollRef.current, SPEECH_GATE_PREROLL_SAMPLES);
-            gatePrerollRef.current = [];
-            speechActivityTrackerRef.current?.reset();
-            const replay = mergeInt16Arrays(held);
-            for (let offset = 0; offset < replay.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
-              await encodeAndSend(replay.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES));
-            }
+            await encodeAndSend(packet);
           } catch (error) {
             if (currentSessionIdRef.current !== sessionId) return;
             inputAudioTelemetryRef.current.encodeErrors += 1;
@@ -1799,14 +1620,301 @@ export function useGeminiLiveConversation(
           }
         },
       });
+
+      const openContinuousTurn = (now: number): boolean => {
+        const boundary = speechTurnBoundaryRef.current;
+        const activeSession = sessionRef.current;
+        if (
+          !boundary
+          || !activeSession
+          || awaitingModelTurnRef.current
+          || now < playbackUntilRef.current
+          || !boundary.openFromConfirmedSpeech(now)
+        ) return false;
+
+        activeSession.sendRealtimeInput({ activityStart: {} });
+        inputAudioTelemetryRef.current.activityStarts += 1;
+        return true;
+      };
+
+      const replayConfirmedPrefix = () => {
+        const held = recentPcmPackets(gatePrerollRef.current, SPEECH_GATE_PREROLL_SAMPLES);
+        speechActivityTrackerRef.current?.reset();
+        const replay = mergeInt16Arrays(held);
+        for (let offset = 0; offset < replay.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+          inputPacketizerRef.current?.push(
+            replay.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES),
+          );
+        }
+      };
+
+      const closeContinuousTurn = (now: number) => {
+        const boundary = speechTurnBoundaryRef.current;
+        if (!boundary?.beginClosing(now) || boundaryClosePromiseRef.current) return;
+
+        awaitingModelTurnRef.current = true;
+        setVadActivity(false, observerActivity);
+        const closingBoundary = boundary;
+        const closingPacketizer = inputPacketizerRef.current;
+        const closePromise = (async () => {
+          await closingPacketizer?.flushPending();
+          if (
+            currentSessionIdRef.current !== sessionId
+            || speechGateEpochRef.current !== speechGateEpoch
+            || speechTurnBoundaryRef.current !== closingBoundary
+          ) return;
+
+          const activeSession = sessionRef.current;
+          if (!activeSession) return;
+          activeSession.sendRealtimeInput({ activityEnd: {} });
+          activeSession.sendRealtimeInput({ audioStreamEnd: true });
+          inputAudioTelemetryRef.current.audioStreamEnds += 1;
+          closingPacketizer?.resetPacingEpoch();
+          closingBoundary.finishClosing();
+          speechGateRef.current?.rejectSpeech(Date.now());
+          gatePrerollRef.current = [];
+          speechActivityTrackerRef.current?.reset();
+          loadingFallbackOnsetAtRef.current = null;
+        })().finally(() => {
+          if (boundaryClosePromiseRef.current === closePromise) {
+            boundaryClosePromiseRef.current = null;
+          }
+        });
+        boundaryClosePromiseRef.current = closePromise;
+      };
+
+      const requestWhisperCheck = (
+        now: number,
+        gate: SpeechGate,
+        boundary: ContinuousLiveTurnBoundary,
+        fallback: ReturnType<typeof evaluateFreshSpeechFallback> | null,
+      ) => {
+        const detector = observerWhisperRef.current;
+        if (
+          !detector
+          || detector.status !== 'ready'
+          || observerWhisperBusyRef.current
+          || now - lastWhisperRequestAtRef.current < OBSERVER_WHISPER_REQUEST_INTERVAL_MS
+        ) return;
+
+        const audio = pcmPacketsToWhisperWindow(gatePrerollRef.current, INPUT_SAMPLE_RATE);
+        if (!audio) return;
+
+        const checkKind = boundary.isOpen ? 'boundary' : 'wake';
+        observerWhisperBusyRef.current = true;
+        lastWhisperRequestAtRef.current = now;
+        inputAudioTelemetryRef.current.whisperChecks += 1;
+        if (checkKind === 'boundary') {
+          inputAudioTelemetryRef.current.whisperBoundaryChecks += 1;
+        } else {
+          inputAudioTelemetryRef.current.whisperWakeChecks += 1;
+        }
+
+        void detector.transcribe(audio).then((text) => {
+          if (
+            currentSessionIdRef.current !== sessionId
+            || speechGateEpochRef.current !== speechGateEpoch
+            || speechGateRef.current !== gate
+            || speechTurnBoundaryRef.current !== boundary
+          ) return;
+
+          const resultAt = Date.now();
+          if (isLikelySpeechTranscript(text)) {
+            inputAudioTelemetryRef.current.whisperAccepted += 1;
+            if (checkKind === 'boundary') {
+              boundary.refreshConfirmedSpeech(resultAt);
+              return;
+            }
+            if (
+              !awaitingModelTurnRef.current
+              && gate.confirmSpeech(resultAt)
+              && openContinuousTurn(resultAt)
+            ) {
+              loadingFallbackOnsetAtRef.current = null;
+              replayConfirmedPrefix();
+            }
+            return;
+          }
+
+          inputAudioTelemetryRef.current.whisperRejected += 1;
+          // A negative refresh does not cut an already-open stream. The last
+          // positive result still owns its full idle plus post-roll boundary.
+          if (checkKind === 'boundary') return;
+          gate.rejectSpeech(resultAt);
+          gatePrerollRef.current = [];
+          speechActivityTrackerRef.current?.reset();
+          loadingFallbackOnsetAtRef.current = null;
+        }).catch((error) => {
+          if (
+            currentSessionIdRef.current !== sessionId
+            || speechGateEpochRef.current !== speechGateEpoch
+            || speechGateRef.current !== gate
+            || speechTurnBoundaryRef.current !== boundary
+          ) return;
+          inputAudioTelemetryRef.current.whisperErrors += 1;
+          if (checkKind === 'wake' && fallback?.action === 'confirm') {
+            const fallbackAt = Date.now();
+            inputAudioTelemetryRef.current.energyFallbacks += 1;
+            if (gate.confirmSpeech(fallbackAt) && openContinuousTurn(fallbackAt)) {
+              loadingFallbackOnsetAtRef.current = null;
+              replayConfirmedPrefix();
+            }
+          }
+          if (!whisperFailureWarnedRef.current) {
+            whisperFailureWarnedRef.current = true;
+            console.warn('Local Whisper check failed; using the energy-only fallback.', error);
+          }
+        }).finally(() => {
+          observerWhisperBusyRef.current = false;
+        });
+      };
+
+      const handleCapturedPcm = (pcm: Int16Array) => {
+        if (currentSessionIdRef.current !== sessionId || !pcm.length) return;
+        inputAudioTelemetryRef.current.capturedSamples += pcm.length;
+        const gate = speechGateRef.current;
+        const boundary = speechTurnBoundaryRef.current;
+        if (!gate || !boundary) {
+          currentUserAudioChunksRef.current.push(pcm);
+          currentUserAudioTotalLengthRef.current += pcm.length;
+          inputPacketizerRef.current?.push(pcm);
+          return;
+        }
+
+        const now = Date.now();
+        // Evaluate echo suppression on the capture clock. Old paced packets
+        // must never be classified using the speaker state of a later moment.
+        const speaking = now < playbackUntilRef.current;
+        if (speaking !== playbackActiveRef.current) {
+          playbackActiveRef.current = speaking;
+          gate.notePlayback(speaking, now);
+        }
+        if (speaking || awaitingModelTurnRef.current || boundary.isClosing) {
+          inputAudioTelemetryRef.current.gatedPackets += 1;
+          gatePrerollRef.current = [];
+          speechActivityTrackerRef.current?.reset();
+          loadingFallbackOnsetAtRef.current = null;
+          setVadActivity(false, observerActivity);
+          return;
+        }
+
+        if (boundary.shouldBeginClosing(now)) {
+          inputAudioTelemetryRef.current.gatedPackets += 1;
+          closeContinuousTurn(now);
+          return;
+        }
+
+        const energy = measureEnergy(pcm);
+        const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
+        setVadActivity(packetIsSpeech, observerActivity);
+        gatePrerollRef.current.push(pcm);
+        gatePrerollRef.current = recentPcmPackets(
+          gatePrerollRef.current,
+          SPEECH_GATE_BUFFER_SAMPLES,
+        );
+
+        if (boundary.isOpen) {
+          // The boundary surrounds a continuous stream. Silence, stutters and
+          // quiet syllables inside it are data and must reach Gemini unchanged.
+          inputPacketizerRef.current?.push(pcm);
+          const detector = observerWhisperRef.current;
+          const detectorUnavailable = !detector
+            || detector.status === 'failed'
+            || detector.status === 'disposed'
+            || (
+              (detector.status === 'idle' || detector.status === 'loading')
+              && detector.loadingStartedAt > 0
+              && now - detector.loadingStartedAt >= OBSERVER_WHISPER_LOAD_GRACE_MS
+            );
+          if (detectorUnavailable) {
+            // Once speech was semantically confirmed, energy may safely keep
+            // its boundary alive if Whisper later becomes unavailable.
+            if (packetIsSpeech) boundary.refreshConfirmedSpeech(now);
+          } else {
+            requestWhisperCheck(now, gate, boundary, null);
+          }
+          return;
+        }
+
+        inputAudioTelemetryRef.current.gatedPackets += 1;
+        const speechActivity = speechActivityTrackerRef.current?.observe(
+          pcm.length,
+          packetIsSpeech,
+          now,
+        );
+        if (speechActivity?.candidateReset && gate.isAwaitingConfirmation) {
+          gate.rejectSpeech(now);
+          gatePrerollRef.current = [];
+          loadingFallbackOnsetAtRef.current = null;
+        }
+        const wasAwaitingConfirmation = gate.isAwaitingConfirmation;
+        const decision = gate.evaluate(energy, now);
+        if (decision.send) {
+          // The onset gate must never independently outlive the continuous
+          // turn it opened. Recover closed rather than leaking unbounded audio.
+          gate.forceClose();
+          return;
+        }
+        if (decision.reason === 'playback') {
+          gatePrerollRef.current = [];
+          speechActivityTrackerRef.current?.reset();
+          loadingFallbackOnsetAtRef.current = null;
+          return;
+        }
+        if (decision.reason === 'cooldown') {
+          if (!packetIsSpeech) {
+            gatePrerollRef.current = [];
+            speechActivityTrackerRef.current?.reset();
+            loadingFallbackOnsetAtRef.current = null;
+          }
+          return;
+        }
+        if (decision.reason !== 'awaiting-confirmation' || !speechActivity?.hasMinimumSpeech) return;
+
+        const previousFallbackOnset = loadingFallbackOnsetAtRef.current;
+        const fallback = evaluateFreshSpeechFallback(
+          energy,
+          previousFallbackOnset,
+          now,
+        );
+        loadingFallbackOnsetAtRef.current = fallback.onsetAt;
+        if (
+          wasAwaitingConfirmation
+          && previousFallbackOnset === null
+          && fallback.action === 'wait'
+        ) {
+          gatePrerollRef.current = [pcm];
+        }
+
+        const detector = observerWhisperRef.current;
+        const detectorUnavailable = !detector
+          || detector.status === 'failed'
+          || detector.status === 'disposed'
+          || (
+            (detector.status === 'idle' || detector.status === 'loading')
+            && detector.loadingStartedAt > 0
+            && now - detector.loadingStartedAt >= OBSERVER_WHISPER_LOAD_GRACE_MS
+          );
+        if (detectorUnavailable) {
+          if (fallback.action === 'expire') {
+            gate.rejectSpeech(now);
+            gatePrerollRef.current = [];
+            speechActivityTrackerRef.current?.reset();
+            loadingFallbackOnsetAtRef.current = null;
+          } else if (fallback.action === 'confirm') {
+            inputAudioTelemetryRef.current.energyFallbacks += 1;
+            if (gate.confirmSpeech(now) && openContinuousTurn(now)) {
+              loadingFallbackOnsetAtRef.current = null;
+              replayConfirmedPrefix();
+            }
+          }
+          return;
+        }
+        requestWhisperCheck(now, gate, boundary, fallback);
+      };
       pcmCaptureRouterRef.current = new PcmCaptureRouter({
         sink: ({ pcm }) => {
-          if (currentSessionIdRef.current !== sessionId) return;
-          if (!speechGateEnabled) {
-            currentUserAudioChunksRef.current.push(pcm);
-            currentUserAudioTotalLengthRef.current += pcm.length;
-          }
-          inputPacketizerRef.current?.push(pcm);
+          handleCapturedPcm(pcm);
         },
       });
 
@@ -1814,11 +1922,16 @@ export function useGeminiLiveConversation(
       // Whisper was running. Capture remained live throughout the provider
       // connection and is transferred only after the normal router is ready.
       if (speechGateRef.current && localSpeechTrigger) {
-        speechGateRef.current.openFromConfirmedTrigger(Date.now());
-        for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
-          inputPacketizerRef.current.push(
-            localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES),
-          );
+        const confirmedAt = Date.now();
+        if (
+          speechGateRef.current.openFromConfirmedTrigger(confirmedAt)
+          && openContinuousTurn(confirmedAt)
+        ) {
+          for (let offset = 0; offset < localSpeechTrigger.pcm.length; offset += SPEECH_GATE_REPLAY_CHUNK_SAMPLES) {
+            handleCapturedPcm(
+              localSpeechTrigger.pcm.slice(offset, offset + SPEECH_GATE_REPLAY_CHUNK_SAMPLES),
+            );
+          }
         }
         if (await abortIfInvalidated()) return;
         const handoff = localSpeechTrigger.capture.transferTo((pcm) => {

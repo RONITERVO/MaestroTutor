@@ -15,7 +15,9 @@ import { mergeInt16Arrays } from './audioProcessing';
 import {
   getLiveConversationThinkingConfig,
   getLiveMinimalThinkingConfig,
+  getLiveRealtimeInputConfig,
 } from './liveModelCompatibility';
+import { ContinuousLiveTurnBoundary } from './continuousLiveTurnBoundary';
 import { PcmCaptureHandoff, PcmCaptureRouter, type PcmInputSource } from './pcmInput';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
 import {
@@ -77,6 +79,7 @@ export const runSyntheticLiveJourney = async (
   const model = input.model || getGeminiModels().audio.stt;
   const gateEnabled = input.gateInputOnSpeech ?? true;
   const gate = gateEnabled ? new SpeechGate({ requireConfirmation: true }) : null;
+  const boundary = gateEnabled ? new ContinuousLiveTurnBoundary() : null;
   const speechActivity = gateEnabled ? new SpeechActivityTracker({ sampleRate: INPUT_SAMPLE_RATE }) : null;
   const semanticSpeech = input.semanticSpeech ?? true;
   const simulateUiSpeechHandoff = input.simulateUiSpeechHandoff === true;
@@ -205,6 +208,7 @@ export const runSyntheticLiveJourney = async (
       responseModalities: [Modality.AUDIO],
       inputAudioTranscription: {},
       outputAudioTranscription: {},
+      realtimeInputConfig: getLiveRealtimeInputConfig(false, gateEnabled),
       thinkingConfig: input.thinkingMode === 'conversation'
         ? getLiveConversationThinkingConfig(model)
         : getLiveMinimalThinkingConfig(model),
@@ -319,6 +323,10 @@ export const runSyntheticLiveJourney = async (
     // empty boundary when the finite source finishes can make Live complete an
     // empty turn before returning the model response for the heard speech.
     if (streamEnds > 0 && !audioSentSinceLastStreamEnd) return;
+    if (boundary?.isOpen) {
+      session.sendRealtimeInput({ activityEnd: {} });
+      boundary.reset();
+    }
     session.sendRealtimeInput({ audioStreamEnd: true });
     streamEnds += 1;
     audioSentSinceLastStreamEnd = false;
@@ -335,79 +343,84 @@ export const runSyntheticLiveJourney = async (
     maxWaitMs: PACKET_MAX_WAIT_MS,
     paceOutput: requireRealtimeInputPacing,
     pacingClock: runtime.clock,
-    onPacket: async packet => {
-      logicalNow += packet.length / INPUT_SAMPLE_RATE * 1_000;
-      if (!gate) {
-        await sendPacket(packet);
-        return;
-      }
-      const energy = measureEnergy(packet);
-      const activity = speechActivity!.observe(
-        packet.length,
-        isSpeechLike(energy, DEFAULT_SPEECH_GATE),
-        logicalNow,
-      );
-      if (activity.candidateReset && gate.isAwaitingConfirmation) {
-        gate.rejectSpeech(logicalNow);
-        heldPackets.length = 0;
-      }
-      const decision = gate.evaluate(energy, logicalNow);
-      if (decision.send) {
-        await sendPacket(packet);
-        return;
-      }
-      gatedPackets += 1;
-      if (decision.closing) {
-        endAudioStream('gate-closed');
-        heldPackets.length = 0;
-        speechActivity!.reset();
-        return;
-      }
-      if (decision.reason === 'playback') {
-        heldPackets.length = 0;
-        speechActivity!.reset();
-        return;
-      }
-      if (decision.reason === 'cooldown') {
-        if (!activity.active) {
-          heldPackets.length = 0;
-          speechActivity!.reset();
-          return;
-        }
-        heldPackets.push(packet);
-        const recent = recentPcmPackets(heldPackets, PREROLL_SAMPLES);
-        heldPackets.splice(0, heldPackets.length, ...recent);
-        return;
-      }
-      heldPackets.push(packet);
-      const recent = recentPcmPackets(heldPackets, PREROLL_SAMPLES);
-      heldPackets.splice(0, heldPackets.length, ...recent);
-      if (decision.reason !== 'awaiting-confirmation') return;
-      if (!activity.hasMinimumSpeech) return;
-      if (!semanticSpeech) {
-        gate.rejectSpeech(logicalNow);
-        heldPackets.length = 0;
-        speechActivity!.reset();
-        return;
-      }
-      if (!gate.confirmSpeech(logicalNow)) return;
-      const replay = mergeInt16Arrays(heldPackets);
+    onPacket: sendPacket,
+  });
+  const routeCapturedPacket = async (packet: Int16Array) => {
+    logicalNow += packet.length / INPUT_SAMPLE_RATE * 1_000;
+    if (!gate || !boundary) {
+      packetizer.push(packet);
+      return;
+    }
+
+    const energy = measureEnergy(packet);
+    const packetIsSpeech = isSpeechLike(energy, DEFAULT_SPEECH_GATE);
+    if (boundary.shouldBeginClosing(logicalNow)) {
+      boundary.beginClosing(logicalNow);
+      await packetizer.flushPending();
+      session.sendRealtimeInput({ activityEnd: {} });
+      endAudioStream('gate-closed');
+      packetizer.resetPacingEpoch();
+      boundary.finishClosing();
+      gate.rejectSpeech(logicalNow);
       heldPackets.length = 0;
       speechActivity!.reset();
-      for (let offset = 0; offset < replay.length; offset += REPLAY_CHUNK_SAMPLES) {
-        await sendPacket(replay.slice(offset, offset + REPLAY_CHUNK_SAMPLES));
-      }
-    },
-  });
+      gatedPackets += 1;
+      return;
+    }
+    if (boundary.isOpen) {
+      // A semantic speech result owns the boundary; VAD may extend it but never
+      // filters packets inside the already-confirmed continuous turn.
+      if (packetIsSpeech) boundary.refreshConfirmedSpeech(logicalNow);
+      packetizer.push(packet);
+      return;
+    }
+
+    const activity = speechActivity!.observe(packet.length, packetIsSpeech, logicalNow);
+    if (activity.candidateReset && gate.isAwaitingConfirmation) {
+      gate.rejectSpeech(logicalNow);
+      heldPackets.length = 0;
+    }
+    const decision = gate.evaluate(energy, logicalNow);
+    gatedPackets += 1;
+    if (decision.send) {
+      gate.forceClose();
+      return;
+    }
+    if (decision.reason === 'cooldown' && !activity.active) {
+      heldPackets.length = 0;
+      speechActivity!.reset();
+      return;
+    }
+    heldPackets.push(packet);
+    const recent = recentPcmPackets(heldPackets, PREROLL_SAMPLES);
+    heldPackets.splice(0, heldPackets.length, ...recent);
+    if (decision.reason !== 'awaiting-confirmation' || !activity.hasMinimumSpeech) return;
+    if (!semanticSpeech) {
+      gate.rejectSpeech(logicalNow);
+      heldPackets.length = 0;
+      speechActivity!.reset();
+      return;
+    }
+    if (!gate.confirmSpeech(logicalNow) || !boundary.openFromConfirmedSpeech(logicalNow)) return;
+    session.sendRealtimeInput({ activityStart: {} });
+    const replay = mergeInt16Arrays(heldPackets);
+    heldPackets.length = 0;
+    speechActivity!.reset();
+    for (let offset = 0; offset < replay.length; offset += REPLAY_CHUNK_SAMPLES) {
+      packetizer.push(replay.slice(offset, offset + REPLAY_CHUNK_SAMPLES));
+    }
+  };
   router ??= new PcmCaptureRouter({
     runtime,
     operationId,
-    sink: frame => packetizer.push(frame.pcm),
+    sink: frame => routeCapturedPacket(frame.pcm),
   });
 
   try {
     if (uiCaptureHandoff && sourceRun) {
       gate!.openFromConfirmedTrigger(logicalNow);
+      boundary!.openFromConfirmedSpeech(logicalNow);
+      session.sendRealtimeInput({ activityStart: {} });
       const handoff = uiCaptureHandoff.transferTo(pcm => packetizer.push(pcm));
       connectionHandoffPackets = handoff.bufferedPackets;
       connectionHandoffSamples = handoff.bufferedSamples;
