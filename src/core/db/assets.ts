@@ -7,6 +7,7 @@ const LEGACY_LOADING_GIFS_KEY = 'loadingGifs';
 const MAESTRO_PROFILE_KEY = 'maestroProfileImage';
 
 export type MaestroProfileAsset = {
+  accessScope?: string;
   dataUrl?: string;
   mimeType?: string;
   uri?: string;

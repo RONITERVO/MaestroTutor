@@ -248,7 +248,7 @@ const MediaAttachments: React.FC<MediaAttachmentsProps> = ({
 
   if (!attachedImageBase64 && !showLiveFeed) return null;
 
-  const liveSessionActive = liveSessionState === 'active';
+  const liveSessionActive = liveSessionState === 'active' || liveSessionState === 'armed';
   const liveSessionConnecting = liveSessionState === 'connecting';
   const liveSessionErrored = liveSessionState === 'error';
   const panelWidthClass = isTwoUp

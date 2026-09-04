@@ -15,6 +15,7 @@ import { IMAGE_GEN_CAMERA_ID } from '../../../core/config/app';
 import { getFacingModeFromLabel, isAuxiliaryCameraSensor } from '../utils/mediaUtils';
 import { useMaestroStore } from '../../../store';
 import { errorSttFlow, logSttFlow, warnSttFlow } from '../../../shared/utils/sttFlowDebug';
+import { hasCameraConsent } from '../../../core-sdk/media/cameraConsent';
 
 export interface UseCameraManagerConfig {
   t: TranslationFunction;
@@ -127,8 +128,10 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
           // Requesting stream triggers permission prompt if not granted
-          const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
-          tempStream.getTracks().forEach(track => track.stop());
+          if (hasCameraConsent(useMaestroStore.getState().settings)) {
+            const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            tempStream.getTracks().forEach(track => track.stop());
+          }
         } catch (permError) {
           console.warn("Could not get temporary video stream for robust device enumeration:", permError);
         }
@@ -364,6 +367,9 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
     const errorSetter = isForReengagement ? setVisualContextCameraError : setSnapshotUserError;
     errorSetter(null);
 
+    // Read current consent, including changes made while a Live turn was running.
+    if (!hasCameraConsent(useMaestroStore.getState().settings)) return null;
+
     const videoElement = visualContextVideoRef.current;
     logSttFlow('camera.capture.start', {
       isForReengagement,
@@ -469,6 +475,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         });
       }
 
+      if (!hasCameraConsent(useMaestroStore.getState().settings)) return null;
       const canvas = document.createElement('canvas');
       canvas.width = videoElement.videoWidth;
       canvas.height = videoElement.videoHeight;

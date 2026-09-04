@@ -285,7 +285,7 @@ export class LiveGatewayConnection {
         throw new Error(`Managed Live sessions are limited to ${LIVE_GATEWAY_MAX_TURNS} turns.`);
       }
       if (
-        message.input.audioStreamEnd
+        hasNewMediaOrTurn
         && this.checkpointState.clientTurnBoundaryCount >= LIVE_GATEWAY_MAX_TURNS
       ) {
         throw new Error(`Managed Live sessions are limited to ${LIVE_GATEWAY_MAX_TURNS} turns.`);

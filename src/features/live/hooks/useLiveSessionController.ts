@@ -183,6 +183,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   const liveSessionCaptureRef = useRef<{ stream: MediaStream; created: boolean } | null>(null);
   const liveUiTokenRef = useRef<string | null>(null);
   const isFinalizingLiveTurnRef = useRef(false);
+  const continueLiveRef = useRef(false);
+  const restartLiveRef = useRef<(() => Promise<void>) | null>(null);
   const liveDraftMessageMetaRef = useRef<{
     user: { id: string | null; timestamp: number | null };
     assistant: { id: string | null; timestamp: number | null };
@@ -305,6 +307,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       resolveBookmarkContextSummary,
     });
   }, [currentSystemPromptText, resolveBookmarkContextSummary, computeHistorySubsetForMedia, messagesRef]);
+  const liveInstructionBuilderRef = useRef(generateLiveSystemInstruction);
+  liveInstructionBuilderRef.current = generateLiveSystemInstruction;
 
   /**
    * Handle a completed live turn (user spoke, model responded)
@@ -634,6 +638,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   // --- Initialize useGeminiLiveConversation ---
   const { start: startLiveConversation, stop: stopLiveConversation } = useGeminiLiveConversation({
     onStateChange: (state) => {
+      // Keep the user-owned Live mode selected while re-arming; publishing idle
+      // here would let the passive observer acquire the microphone in between.
+      if (state === 'idle' && continueLiveRef.current) {
+        void restartLiveRef.current?.();
+        return;
+      }
       setLiveSessionState(state);
       if (state === 'connecting') {
         setLiveSessionError(null);
@@ -649,6 +659,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         );
       }
       if (state === 'idle' || state === 'error') {
+        continueLiveRef.current = false;
         restoreSttAfterLiveSession();
         releaseLiveSessionCapture();
       }
@@ -667,7 +678,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    * Start a new Gemini Live conversation session
    */
   const handleStartLiveSession = useCallback(async () => {
-    if (liveSessionState === 'connecting' || liveSessionState === 'active') return;
+    if (liveSessionState === 'connecting' || liveSessionState === 'active' || liveSessionState === 'armed') return;
 
     setLiveSessionError(null);
 
@@ -711,6 +722,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       }
 
       liveSessionCaptureRef.current = { stream, created: createdStream };
+      continueLiveRef.current = true;
 
       if (settingsRef.current.stt.enabled) {
         liveSessionShouldRestoreSttRef.current = true;
@@ -729,17 +741,31 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       const liveSystemInstruction = await generateLiveSystemInstruction();
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
+      restartLiveRef.current = async () => {
+        if (!continueLiveRef.current) return;
+        await startLiveConversation({
+          liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+          stream: liveSessionCaptureRef.current?.stream,
+          videoElement: visualContextVideoRef.current,
+          buildSystemInstruction: () => liveInstructionBuilderRef.current(),
+          voiceName,
+          gateInputOnSpeech: true,
+        });
+      };
+
       await startLiveConversation({
         liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
         stream,
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
+        buildSystemInstruction: () => liveInstructionBuilderRef.current(),
         voiceName,
         // The user click opens Live immediately, while each microphone turn is
         // still held until VAD sees enough speech to avoid empty short turns.
         gateAudioAfterConnect: true,
       });
     } catch (error) {
+      continueLiveRef.current = false;
       releaseLiveSessionCapture();
       restoreSttAfterLiveSession();
       const message = error instanceof Error ? error.message : t('general.error');
@@ -769,6 +795,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    * Stop the current Gemini Live conversation session
    */
   const handleStopLiveSession = useCallback(async (options?: { scheduleReengagement?: boolean }) => {
+    continueLiveRef.current = false;
     const scheduleStopReengagement = options?.scheduleReengagement ?? true;
     try {
       await stopLiveConversation();

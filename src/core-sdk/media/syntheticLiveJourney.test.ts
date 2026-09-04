@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it, vi } from 'vitest';
+import { LIVE_TURN_CALLBACK_QUIET_MS } from './liveTurnFinalizer';
 import { createCoreEventJournal } from '../events';
 import type { CoreGeminiClient } from '../managedGeminiClient';
 import { createCoreRuntime } from '../runtime';
@@ -412,102 +413,16 @@ describe('synthetic Live journey', () => {
     }));
   });
 
-  it('keeps one Live connection across six audio-video turns and sums cumulative provider usage', async () => {
-    let callbacks: Record<string, (...args: any[]) => void> = {};
-    const sent: any[] = [];
-    let completedTurns = 0;
-    const modelPcmBase64 = btoa(String.fromCharCode(...new Uint8Array(4_800)));
-    const session = {
-      sendRealtimeInput: vi.fn((message: any) => {
-        sent.push(message);
-        if (!message.audioStreamEnd) return;
-        completedTurns += 1;
-        const turn = completedTurns;
-        queueMicrotask(() => callbacks.onmessage?.({
-          usageMetadata: {
-            promptTokenCount: turn * 100,
-            responseTokenCount: 10,
-            totalTokenCount: turn * 100 + 10,
-          },
-          serverContent: {
-            inputTranscription: { text: `Input ${turn}.` },
-            outputTranscription: { text: `Reply ${turn}.` },
-            modelTurn: {
-              parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: modelPcmBase64 } }],
-            },
-            turnComplete: true,
-          },
-        }));
-      }),
-      close: vi.fn(),
-    };
-    const ai = {
-      models: {} as CoreGeminiClient['models'],
-      live: {
-        connect: vi.fn(async (params: any) => {
-          callbacks = params.callbacks;
-          return session;
-        }),
-        music: { connect: vi.fn() },
-      },
-    } as CoreGeminiClient;
-    let now = 1_000;
-    const runtime = createCoreRuntime({
-      clock: {
-        now: () => now,
-        sleep: async (ms) => { now += ms; },
-        setInterval: () => 0,
-        clearInterval: () => undefined,
-      },
-    });
-    const first = new Int16Array(32_000).fill(6_000);
-    const shortFollowup = new Int16Array(24_000);
-    shortFollowup.fill(6_000, 9_600, 14_400);
-
-    const result = await runSyntheticLiveJourney(ai, {
+  it('rejects additional turns before opening a paid connection', async () => {
+    const connect = vi.fn();
+    const ai = { live: { connect } } as unknown as CoreGeminiClient;
+    const source = createSyntheticPcmSource({ pcm: new Int16Array(16_000), sampleRate: 16_000, pace: false });
+    await expect(runSyntheticLiveJourney(ai, {
       liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
-      source: createSyntheticPcmSource({ pcm: first, sampleRate: 16_000, pace: true, runtime }),
-      additionalSources: Array.from(
-        { length: 5 },
-        () => createSyntheticPcmSource({ pcm: shortFollowup, sampleRate: 16_000, pace: true, runtime }),
-      ),
-      gateInputOnSpeech: true,
-      semanticSpeech: true,
-      simulateUiSpeechHandoff: true,
-      // The single-turn pacing test above owns strict microphone-clock proof.
-      // This deterministic clock also advances for provider output, so this
-      // test focuses on the connected-turn and playback-order invariants.
-      requireRealtimeInputPacing: false,
-      playModelAudioRealtime: true,
-      videoFramesByTurn: Array.from(
-        { length: 6 },
-        () => [{ dataBase64: 'data:image/png;base64,AA==' }],
-      ),
-    }, { runtime });
-
-    expect(ai.live.connect).toHaveBeenCalledOnce();
-    expect(result.connectedTurnCount).toBe(6);
-    expect(result.turns).toHaveLength(6);
-    expect(result.turns[5]).toMatchObject({
-      inputTranscript: 'Input 6.',
-      outputTranscript: 'Reply 6.',
-      sentSamples: shortFollowup.length,
-      sentVideoFrameCount: 1,
-      playbackCompletedAfterLastByte: true,
-    });
-    expect(result.providerTurnUsage).toHaveLength(6);
-    expect(result.providerUsageMetadata).toMatchObject({
-      promptTokenCount: 2_100,
-      responseTokenCount: 60,
-      totalTokenCount: 2_160,
-    });
-    expect(sent.filter(message => message.activityStart)).toHaveLength(6);
-    expect(sent.filter(message => message.activityEnd)).toHaveLength(6);
-    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(6);
-    expect(sent.filter(message => message.video)).toHaveLength(6);
-    expect(session.close).toHaveBeenCalledOnce();
+      source, additionalSources: [source],
+    })).rejects.toThrow('one turn');
+    expect(connect).not.toHaveBeenCalled();
   });
-
   it('waits for every model byte to play when more audio arrives during playback', async () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
     const playbackSleeps: Array<{ ms: number; resolve: () => void }> = [];
@@ -574,8 +489,8 @@ describe('synthetic Live journey', () => {
     await vi.waitFor(() => expect(playbackSleeps.some(item => item.ms === 100)).toBe(true));
     expect(settled).toBe(false);
     playbackSleeps.splice(playbackSleeps.findIndex(item => item.ms === 100), 1)[0]?.resolve();
-    await vi.waitFor(() => expect(playbackSleeps.some(item => item.ms === 250)).toBe(true));
-    playbackSleeps.splice(playbackSleeps.findIndex(item => item.ms === 250), 1)[0]?.resolve();
+    await vi.waitFor(() => expect(playbackSleeps.some(item => item.ms === LIVE_TURN_CALLBACK_QUIET_MS)).toBe(true));
+    playbackSleeps.splice(playbackSleeps.findIndex(item => item.ms === LIVE_TURN_CALLBACK_QUIET_MS), 1)[0]?.resolve();
 
     const result = await journey;
     expect(result.modelAudioSampleCount).toBe(4_800);

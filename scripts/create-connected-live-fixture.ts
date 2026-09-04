@@ -10,7 +10,7 @@ for (let index = 0; index < speech.length; index += 1) {
   speech[index] = source[Math.min(source.length - 1, Math.floor(index * 3 / 2))];
 }
 
-// The 625 ms prefix starts the second turn outside the speaker-settle window.
+// The 625 ms prefix gives the local detector a quiet baseline.
 // The one-second suffix gives Live an unambiguous boundary while the spoken
 // content itself stays the short, bundled "Play" recording.
 const pcm = new Int16Array(10_000 + speech.length + 16_000);
@@ -20,7 +20,7 @@ process.stdout.write(JSON.stringify({
   pcmBase64: Buffer.from(pcm.buffer, pcm.byteOffset, pcm.byteLength).toString('base64'),
   sampleRate: 16_000,
   pace: true,
-  connectedTurns: 6,
+  connectedTurns: 1,
   gateInputOnSpeech: true,
   semanticSpeech: true,
   simulateUiSpeechHandoff: true,

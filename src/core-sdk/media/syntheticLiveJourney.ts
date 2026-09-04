@@ -33,12 +33,13 @@ import {
   type LiveGatewayUsageCheckpoint,
 } from '../../../shared/billing/liveGateway';
 import { getLiveCostControlConfig } from '../../../shared/liveCostControls';
+import { LIVE_TURN_CALLBACK_QUIET_MS } from './liveTurnFinalizer';
 
 const INPUT_SAMPLE_RATE = 16_000;
 const PACKET_DURATION_MS = 100;
 const PACKET_MAX_WAIT_MS = 120;
 const REPLAY_CHUNK_SAMPLES = 4_096;
-const PROVIDER_TURN_QUIET_MS = 250;
+const PROVIDER_TURN_QUIET_MS = LIVE_TURN_CALLBACK_QUIET_MS;
 
 const encodePcm16LeBase64 = (pcm: Int16Array): string => {
   const bytes = new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength);
@@ -53,7 +54,7 @@ const encodePcm16LeBase64 = (pcm: Int16Array): string => {
 export interface SyntheticLiveJourneyInput {
   liveOpenTrigger: HeadlessLiveOpenTrigger;
   source: PcmInputSource;
-  /** Additional microphone turns sent over the same connected Live session. */
+  /** @deprecated A transport owns one turn; additional sources are rejected. */
   additionalSources?: PcmInputSource[];
   systemInstruction?: string;
   model?: string;
@@ -82,6 +83,9 @@ export const runSyntheticLiveJourney = async (
   options: { runtime?: CoreRuntime; operationId?: string } = {},
 ) => {
   const sources = [input.source, ...(input.additionalSources || [])];
+  if (sources.length !== 1) {
+    throw new Error('Live connections accept one turn. Start a fresh chat turn to rebuild context.');
+  }
   if (sources.some(source => source.sampleRate !== INPUT_SAMPLE_RATE)) {
     throw new Error(`Synthetic Live input must be ${INPUT_SAMPLE_RATE} Hz PCM16 mono.`);
   }
@@ -143,14 +147,18 @@ export const runSyntheticLiveJourney = async (
       turnWaiters.set(turnNumber, { resolve, reject });
     });
   };
-  const waitForProviderTurnCallbacks = async (): Promise<void> => {
+  const waitForProviderTurnCallbacks = async (): Promise<number> => {
     // The SDK can dispatch transcription/audio callbacks that were already in
     // flight after the callback carrying turnComplete. Wait for one quiet
     // window before snapshotting transcripts or the playback queue.
     let observedSequence = providerActivitySequence;
+    let drainWaitMs = 0;
     while (true) {
       await runtime.clock.sleep(PROVIDER_TURN_QUIET_MS);
-      if (providerActivitySequence === observedSequence) return;
+      const drainStartedAt = runtime.clock.now();
+      await modelPlaybackQueue;
+      drainWaitMs += Math.max(0, runtime.clock.now() - drainStartedAt);
+      if (providerActivitySequence === observedSequence) return drainWaitMs;
       observedSequence = providerActivitySequence;
     }
   };
@@ -319,7 +327,7 @@ export const runSyntheticLiveJourney = async (
               const byteLength = Math.floor(globalThis.atob(data).length / 2) * 2;
               const samples = byteLength / 2;
                modelAudioSampleCount += samples;
-               lastModelAudioByteTimes[completedTurnCount] = runtime.clock.now();
+               lastModelAudioByteTimes[activeTurnIndex] = runtime.clock.now();
               enqueueModelPlayback(samples);
               runtime.events.emit({
                 operationId, journey: 'live', phase: 'audio.output-chunk',
@@ -506,7 +514,7 @@ export const runSyntheticLiveJourney = async (
       await packetizer.flushPending();
       endAudioStream('source-ended');
 
-      const timeoutMs = Math.max(1_000, input.timeoutMs ?? 45_000);
+      const timeoutMs = Math.max(1_000, input.timeoutMs ?? 120_000);
       let timeoutId: ReturnType<typeof setTimeout> | undefined;
       await Promise.race([
         waitForTurn(turnIndex + 1),
@@ -519,15 +527,15 @@ export const runSyntheticLiveJourney = async (
       ]).finally(() => {
         if (timeoutId) globalThis.clearTimeout(timeoutId);
       });
-      await waitForProviderTurnCallbacks();
-
-      let turnPlaybackDrainWaitMs = 0;
+      let turnPlaybackDrainWaitMs = await waitForProviderTurnCallbacks();
+      modelPlaybackDrainWaitMs += turnPlaybackDrainWaitMs;
       if (playModelAudioRealtime) {
         const drainStartedAt = runtime.clock.now();
         const playbackThroughTurn = modelPlaybackQueue;
         await playbackThroughTurn;
-        turnPlaybackDrainWaitMs = Math.max(0, runtime.clock.now() - drainStartedAt);
-        modelPlaybackDrainWaitMs += turnPlaybackDrainWaitMs;
+        const additionalDrainWaitMs = Math.max(0, runtime.clock.now() - drainStartedAt);
+        turnPlaybackDrainWaitMs += additionalDrainWaitMs;
+        modelPlaybackDrainWaitMs += additionalDrainWaitMs;
         gate?.notePlayback(false, logicalNow);
       }
 

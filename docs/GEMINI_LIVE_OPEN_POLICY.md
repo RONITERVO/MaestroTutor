@@ -54,6 +54,15 @@ successful trigger. This avoids a second permission prompt and preserves the
 utterance that authorized the connection. Stopping, foreground work or another
 session aborts the monitor and stops its tracks.
 
+Each conversation transport owns one response. After provider turn completion,
+the app waits for callback quiescence and audio decoding/playback to drain,
+persists the chat turn, then closes the transport. The next utterance starts a
+fresh transport with newly built system instructions and chat history; observer
+sessions do not resume the previous provider context. User camera Live remains
+selected but locally armed between responses. This continuation of the user's
+Live selection opens a paid connection only after local speech confirmation.
+Managed sockets enforce one turn and retain their 120-second maximum window.
+
 ## Visible activity
 
 Activity tokens make the delay observable instead of appearing frozen:

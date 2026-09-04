@@ -11,6 +11,11 @@ import {
 const unusedClient = { accessMode: 'managed' } as HeadlessClient;
 
 describe('headless dispatcher contract', () => {
+  it('rejects multi-turn sockets before any provider or billing work', async () => {
+    await expect(dispatchHeadlessMethod(unusedClient, 'speech.synthetic.live', {
+      pcmBase64: 'AAA=', connectedTurns: 2,
+    })).rejects.toThrow('between 1 and 1');
+  });
   it('publishes a stable JSON-RPC discovery document', async () => {
     const result = await dispatchHeadlessMethod(unusedClient, 'system.describe') as {
       protocolVersion: string;
@@ -20,7 +25,7 @@ describe('headless dispatcher contract', () => {
       access: { accessMode: string; availableMethods: string[]; unavailableMethods: string[] };
       configuredModels: { text: { default: string }; music: string };
     };
-    expect(result.protocolVersion).toBe('1.7.0');
+    expect(result.protocolVersion).toBe('1.8.0');
     expect(result.transport).toBe('json-rpc-2.0-ndjson');
     expect(result.methods).toContain('billing.checkout.completeTest');
     expect(result.methods).toContain('speech.synthetic.live');
