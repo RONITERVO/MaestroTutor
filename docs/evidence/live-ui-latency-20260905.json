@@ -1,0 +1,246 @@
+{
+  "environment": "staging-backend-local-full-app",
+  "recordingDurationMs": 9920,
+  "setup": {
+    "historyMessages": 240
+  },
+  "concealedTextEmpty": true,
+  "progress": [
+    {
+      "at": 1788565096350,
+      "marks": 3
+    },
+    {
+      "at": 1788565097403,
+      "marks": 4
+    },
+    {
+      "at": 1788565098227,
+      "marks": 5
+    },
+    {
+      "at": 1788565099539,
+      "marks": 6
+    },
+    {
+      "at": 1788565100336,
+      "marks": 7
+    },
+    {
+      "at": 1788565101423,
+      "marks": 8
+    }
+  ],
+  "exportAndReloadPassed": true,
+  "pageErrors": [],
+  "client": {
+    "schemaVersion": 1,
+    "exportedAt": "2026-09-04T23:39:05.644Z",
+    "reports": [
+      {
+        "turnId": "93616b8b-02fc-43d6-ac88-3db144a6dd7c",
+        "startedAt": "2026-09-04T23:37:52.381Z",
+        "clock": "client-monotonic",
+        "events": [
+          {
+            "name": "turn.started",
+            "elapsedMs": 0.09999999403953552
+          },
+          {
+            "name": "capture.started",
+            "elapsedMs": 18062.29999999702
+          },
+          {
+            "name": "speech.whisper-trigger",
+            "elapsedMs": 23397.5,
+            "metrics": {
+              "capturedAudioMs": 4900
+            }
+          },
+          {
+            "name": "context.build-start",
+            "elapsedMs": 23480.09999999404
+          },
+          {
+            "name": "context.ready",
+            "elapsedMs": 23481.09999999404,
+            "metrics": {
+              "instructionCharacters": 10181
+            }
+          },
+          {
+            "name": "provider.connect-start",
+            "elapsedMs": 23481.09999999404
+          },
+          {
+            "name": "gateway.ticket-start",
+            "elapsedMs": 23481.29999999702
+          },
+          {
+            "name": "gateway.ticket-ready",
+            "elapsedMs": 23934
+          },
+          {
+            "name": "gateway.ready",
+            "elapsedMs": 24139.09999999404
+          },
+          {
+            "name": "provider.connected",
+            "elapsedMs": 24164.29999999702
+          },
+          {
+            "name": "input.first-audio-sent",
+            "elapsedMs": 24196.79999999702
+          },
+          {
+            "name": "speech.whisper-confirmed",
+            "elapsedMs": 25882.59999999404
+          },
+          {
+            "name": "speech.whisper-confirmed",
+            "elapsedMs": 27761.59999999404
+          },
+          {
+            "name": "input.first-provider-transcript",
+            "elapsedMs": 29094.59999999404
+          },
+          {
+            "name": "speech.last-capture-energy-detected",
+            "elapsedMs": 29357.39999999851
+          },
+          {
+            "name": "speech.last-energy-detected",
+            "elapsedMs": 29357.39999999851
+          },
+          {
+            "name": "speech.whisper-confirmed",
+            "elapsedMs": 29665.79999999702
+          },
+          {
+            "name": "speech.whisper-confirmed",
+            "elapsedMs": 31694.69999999553
+          },
+          {
+            "name": "speech.close-start",
+            "elapsedMs": 35752.19999999553,
+            "metrics": {
+              "queuedAudioMs": 5600
+            }
+          },
+          {
+            "name": "input.last-audio-sent",
+            "elapsedMs": 41299.39999999851
+          },
+          {
+            "name": "input.queue-drained",
+            "elapsedMs": 41299.39999999851
+          },
+          {
+            "name": "input.activity-end-sent",
+            "elapsedMs": 41299.39999999851
+          },
+          {
+            "name": "response.first-provider-transcript",
+            "elapsedMs": 45072.39999999851
+          },
+          {
+            "name": "response.first-audio-received",
+            "elapsedMs": 45421.5
+          },
+          {
+            "name": "playback.first-render-notified",
+            "elapsedMs": 45429.59999999404
+          },
+          {
+            "name": "response.last-audio-received",
+            "elapsedMs": 56283.09999999404
+          },
+          {
+            "name": "playback.drained",
+            "elapsedMs": 72953.5
+          }
+        ],
+        "gatewaySessionId": "bd06b2c2-996e-46a4-a22b-ed7c28482f37"
+      },
+      {
+        "turnId": "477d74e2-dce1-46db-9445-7c465f050c39",
+        "startedAt": "2026-09-04T23:39:05.607Z",
+        "clock": "client-monotonic",
+        "events": [
+          {
+            "name": "turn.started",
+            "elapsedMs": 0
+          }
+        ]
+      }
+    ],
+    "historyMessageCount": 242,
+    "finalWordPresent": true
+  },
+  "gateway": {
+    "clock": "gateway-monotonic",
+    "events": [
+      {
+        "elapsedMs": 85.56691600001068,
+        "name": "provider.connect-start"
+      },
+      {
+        "elapsedMs": 195.1944819999917,
+        "name": "input.first-audio-received"
+      },
+      {
+        "elapsedMs": 195.5868420000188,
+        "name": "input.first-audio-forwarded"
+      },
+      {
+        "elapsedMs": 5051.625334000011,
+        "name": "input.first-provider-transcript-received"
+      },
+      {
+        "elapsedMs": 17296.14076500002,
+        "name": "input.activity-end-received"
+      },
+      {
+        "elapsedMs": 17296.126724,
+        "name": "input.last-audio-received"
+      },
+      {
+        "elapsedMs": 17296.579805000016,
+        "name": "input.last-audio-forwarded"
+      },
+      {
+        "elapsedMs": 17296.656409000017,
+        "metrics": {
+          "maxInputQueueWaitMs": 0.3128819999983534
+        },
+        "name": "input.activity-end-forwarded"
+      },
+      {
+        "elapsedMs": 18865.250249000004,
+        "name": "response.first-useful-output-forwarded"
+      },
+      {
+        "elapsedMs": 21029.676887999987,
+        "name": "response.first-transcript-received"
+      },
+      {
+        "elapsedMs": 21338.902127999987,
+        "name": "response.first-audio-received"
+      },
+      {
+        "elapsedMs": 49071.952420999995,
+        "name": "session.closing"
+      }
+    ],
+    "sessionId": "bd06b2c2-996e-46a4-a22b-ed7c28482f37"
+  },
+  "billing": {
+    "status": "settled",
+    "credits": 11,
+    "providerCostUsd": 0.01081,
+    "usageSource": "provider",
+    "remainingReservedCredits": 0,
+    "providerTurns": 1,
+    "inputVideoFrames": 0
+  }
+}

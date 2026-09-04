@@ -5,6 +5,15 @@ import { describe, expect, it } from 'vitest';
 import { RealtimePcmPacketizer } from './realtimePcmPacketizer';
 
 describe('RealtimePcmPacketizer output pacing', () => {
+  it('accounts for packets whose buffers are transferred to an encoder worker', async () => {
+    const packetizer = new RealtimePcmPacketizer({ sampleRate: 1000, packetDurationMs: 20,
+      onPacket: packet => { structuredClone(packet, { transfer: [packet.buffer] }); },
+    });
+    packetizer.push(new Int16Array(40));
+    await packetizer.flushPending();
+    expect(packetizer.getQueuedAudioMs()).toBe(0);
+    packetizer.dispose();
+  });
   it('reports queued audio until the asynchronous send actually finishes', async () => {
     let finish!: () => void;
     const packetizer = new RealtimePcmPacketizer({

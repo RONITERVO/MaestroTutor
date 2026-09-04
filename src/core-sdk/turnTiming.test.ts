@@ -1,6 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
 
 describe('turn timing evidence', () => {
+  it('sorts latest-event timestamps and clears persisted diagnostics', async () => {
+    vi.resetModules();
+    const timing = await import('./turnTiming');
+    timing.clearTurnTimings();
+    let now = 0;
+    const turn = timing.beginTurnTiming('ordered', () => now);
+    turn.markLatest('speech.last');
+    now = 10;
+    turn.mark('input.first');
+    now = 20;
+    turn.markLatest('speech.last');
+    const events = JSON.parse(timing.exportTurnTimings()).reports[0].events;
+    expect(events.map((event: {elapsedMs: number}) => event.elapsedMs)).toEqual([0, 10, 20]);
+    timing.clearTurnTimings();
+    expect(JSON.parse(timing.exportTurnTimings()).reports).toEqual([]);
+  });
   it('uses elapsed monotonic time, deduplicates first-output events, and persists across reloads', async () => {
     vi.resetModules();
     const values = new Map<string, string>();

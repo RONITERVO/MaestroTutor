@@ -831,7 +831,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   const isUserLineSpeaking = isUser && sanitizedUserText && speakingUtteranceText === sanitizedUserText;
   const shouldUseUserTranscriptShell = isUser && !!message.text && applyFocusedImageStyles && shouldUseAttachmentTranscriptShell;
   const userMessageTextNode = isUser && message.speechPreviewProgress ? (
-    <ConcealedSpeech progress={message.speechPreviewProgress} />
+    <ConcealedSpeech progress={message.speechPreviewProgress} label={t('chat.speechPending')} />
   ) : isUser && message.text ? (
     <p
       className={`${shouldUseUserTranscriptShell ? '' : 'mb-1 '}whitespace-pre-wrap rounded-sm px-1 -mx-1 cursor-pointer transition-colors pointer-events-auto ${userAttachmentTextClass} ${isUserLineSpeaking ? userAttachmentSpeakingSurfaceClass : userAttachmentHoverSurfaceClass}`.trim()}

@@ -179,6 +179,8 @@ export class RealtimePcmPacketizer {
 
   private enqueuePacket(packet: Int16Array, reason: 'full' | 'timer' | 'flush') {
     if (packet.length === 0) return;
+    // The codec may transfer/detach the buffer during onPacket.
+    const packetSamples = packet.length;
     this.stats.packetsSent += 1;
     this.stats.totalOutputSamples += packet.length;
     this.stats.maxPacketSamples = Math.max(this.stats.maxPacketSamples, packet.length);
@@ -209,7 +211,7 @@ export class RealtimePcmPacketizer {
         }
         await this.onPacket(packet);
         if (this.paceOutput) this.outputPacingLastSentAt = this.now();
-      }).finally(() => { this.pendingSendSamples -= packet.length; });
+      }).finally(() => { this.pendingSendSamples -= packetSamples; });
   }
 
   private takeSamples(sampleCount: number): Int16Array {

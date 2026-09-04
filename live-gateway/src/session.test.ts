@@ -106,6 +106,7 @@ const createHarness = (overrides: {
   const transport = new FakeTransport();
   const billing = new FakeBilling();
   const provider = overrides.provider || new FakeProvider();
+  const timingLogs: unknown[] = [];
   const connection = new LiveGatewayConnection({
     transport,
     billing,
@@ -113,6 +114,7 @@ const createHarness = (overrides: {
     authTimeoutMs: overrides.authTimeoutMs,
     now: overrides.now,
     sleep: overrides.sleep,
+    log: (_level, message, details) => { if (message === 'Live turn timing') timingLogs.push(details); },
   });
   const authenticate = async () => {
     connection.receive(JSON.stringify({ type: 'authenticate', ticket: 'ticket.secret-value' }));
@@ -122,10 +124,36 @@ const createHarness = (overrides: {
     connection.receive(JSON.stringify({ type: 'close' }));
     await connection.whenIdle();
   };
-  return { transport, billing, provider, connection, authenticate, close };
+  return { transport, billing, provider, connection, authenticate, close, timingLogs };
 };
 
 describe('managed Live gateway connection', () => {
+  it('records correlated boundary/output timings without copying speech or tickets', async () => {
+    const h = createHarness();
+    await h.authenticate();
+    h.connection.receive(JSON.stringify({ type: 'realtimeInput', input: {
+      audio: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=16000' },
+    } }));
+    h.connection.receive(JSON.stringify({ type: 'realtimeInput', input: { activityEnd: {} } }));
+    await h.connection.whenIdle();
+    h.provider.callbacks!.onmessage({ serverContent: {
+      inputTranscription: { text: 'private spoken input' },
+      modelTurn: { parts: [{ inlineData: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=24000' } }] },
+    } });
+    await h.connection.whenIdle();
+    await h.close();
+    const report = h.timingLogs[0] as { sessionId: string; events: Array<{name: string; elapsedMs: number}> };
+    assert.ok(report.sessionId);
+    const names = report.events.map(event => event.name);
+    for (const name of ['input.first-audio-received', 'input.last-audio-forwarded', 'input.activity-end-forwarded',
+      'input.first-provider-transcript-received', 'response.first-audio-received', 'response.first-useful-output-forwarded']) {
+      assert.ok(names.includes(name), name);
+    }
+    assert.ok(report.events.every(event => event.elapsedMs >= 0));
+    assert.ok(names.indexOf('response.first-audio-received') < names.indexOf('response.first-useful-output-forwarded'));
+    const serialized = JSON.stringify(report);
+    for (const secret of ['private spoken input', 'ticket.secret-value', 'AQIDBA==']) assert.ok(!serialized.includes(secret));
+  });
   it('releases the full reservation when setup succeeds but no useful output arrives', async () => {
     const harness = createHarness();
     await harness.authenticate();

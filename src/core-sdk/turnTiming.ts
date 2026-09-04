@@ -11,7 +11,7 @@ export interface TurnTimingReport {
   turnId: string;
   gatewaySessionId?: string;
   startedAt: string;
-  clock: 'browser-monotonic';
+  clock: 'client-monotonic';
   events: TurnTimingEvent[];
 }
 
@@ -21,6 +21,24 @@ const MAX_EVENTS = 120;
 const reports: TurnTimingReport[] = [];
 let loaded = false;
 let pendingSave: ReturnType<typeof setTimeout> | undefined;
+
+function cleanEvent(value: unknown): TurnTimingEvent | null {
+  if (!value || typeof value !== 'object') return null;
+  const event = value as TurnTimingEvent;
+  if (typeof event.name !== 'string' || !/^[a-z][a-z0-9.-]{0,79}$/.test(event.name)
+    || !Number.isFinite(event.elapsedMs) || event.elapsedMs < 0) return null;
+  const metrics = event.metrics && typeof event.metrics === 'object'
+    ? Object.fromEntries(Object.entries(event.metrics).slice(0, 12).filter(([key, number]) =>
+      /^[a-zA-Z][a-zA-Z0-9]{0,59}$/.test(key) && typeof number === 'number' && Number.isFinite(number)))
+    : undefined;
+  return { name: event.name, elapsedMs: event.elapsedMs, ...(metrics ? { metrics } : {}) };
+}
+
+export function clearTurnTimings() {
+  load();
+  reports.length = 0;
+  flushTurnTimings();
+}
 
 function storage(): Storage | undefined {
   try { return typeof localStorage === 'undefined' ? undefined : localStorage; }
@@ -34,11 +52,11 @@ function load() {
     const saved: unknown = JSON.parse(storage()?.getItem(STORAGE_KEY) || '[]');
     if (Array.isArray(saved)) {
       for (const report of saved.slice(-MAX_REPORTS)) {
-        if (report?.clock === 'browser-monotonic' && typeof report.turnId === 'string'
+        if ((report?.clock === 'client-monotonic' || report?.clock === 'browser-monotonic') && typeof report.turnId === 'string'
           && typeof report.startedAt === 'string' && Array.isArray(report.events)) {
           reports.push({ turnId: report.turnId, startedAt: report.startedAt,
             ...(typeof report.gatewaySessionId === 'string' ? { gatewaySessionId: report.gatewaySessionId } : {}),
-            clock: 'browser-monotonic', events: report.events.slice(0, MAX_EVENTS) });
+            clock: 'client-monotonic', events: report.events.slice(0, MAX_EVENTS).map(cleanEvent).filter((event: TurnTimingEvent | null): event is TurnTimingEvent => event !== null) });
         }
       }
     }
@@ -61,7 +79,7 @@ if (typeof window !== 'undefined') {
 
 export function exportTurnTimings(): string {
   load();
-  return JSON.stringify({ schemaVersion: 1, exportedAt: new Date().toISOString(), reports }, null, 2);
+  return JSON.stringify({ schemaVersion: 1, exportedAt: new Date().toISOString(), reports: reports.map(report => ({ ...report, events: [...report.events].sort((a, b) => a.elapsedMs - b.elapsedMs) })) }, null, 2);
 }
 
 /** Only event names and numeric measurements belong here; never pass speech or credentials. */
@@ -69,7 +87,7 @@ export function beginTurnTiming(turnId: string, now = () => performance.now()) {
   load();
   const start = now();
   const report: TurnTimingReport = { turnId, startedAt: new Date().toISOString(),
-    clock: 'browser-monotonic', events: [] };
+    clock: 'client-monotonic', events: [] };
   reports.push(report);
   if (reports.length > MAX_REPORTS) reports.splice(0, reports.length - MAX_REPORTS);
   const once = new Set<string>();

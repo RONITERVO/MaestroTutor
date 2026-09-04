@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useEffect } from 'react';
 import { debugLogService, type LogEntry } from '../../../core-sdk/diagnostics';
-import { exportTurnTimings } from '../../../core-sdk/turnTiming';
+import { exportTurnTimings, clearTurnTimings } from '../../../core-sdk/turnTiming';
 import { clearAllGeminiFiles } from '../../../api/gemini';
 import { IconCloudSlash, IconXMark, IconTrash } from '../../../shared/ui/Icons';
 import { useAppTranslations } from '../../../shared/hooks/useAppTranslations';
@@ -26,6 +26,7 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
 
   const handleClear = () => {
     debugLogService.clear();
+    clearTurnTimings();
   };
 
   const handleClearUploads = async () => {
@@ -55,8 +56,8 @@ const DebugLogPanel: React.FC<DebugLogPanelProps> = ({ onClose }) => {
         <div className="flex items-center gap-2">
           <button
             className="p-1.5 text-debug-btn-muted hover:text-debug-btn-text rounded"
-            aria-label="Export turn timings"
-            title="Export turn timings"
+            aria-label={t('debugLog.exportTimings')}
+            title={t('debugLog.exportTimings')}
             onClick={() => {
               const url = URL.createObjectURL(new Blob([exportTurnTimings()], { type: 'application/json' }));
               const link = document.createElement('a');
