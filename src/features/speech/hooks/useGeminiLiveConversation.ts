@@ -70,6 +70,7 @@ import {
   WorkletPlaybackDrainCoordinator,
 } from '../utils/playbackDrain';
 import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
+import { LiveTurnFinalizer } from '../utils/liveTurnFinalizer';
 
 export type LiveSessionState = 'idle' | 'armed' | 'connecting' | 'active' | 'error';
 
@@ -1161,6 +1162,176 @@ export function useGeminiLiveConversation(
         await cleanup();
         updateState(terminalState);
       };
+      const turnFinalizer = new LiveTurnFinalizer();
+      const finalizeProviderTurn = async () => {
+        if (currentSessionIdRef.current !== sessionId) return;
+        usageTracker.completeTurn();
+        const modelAudioCheckpoint = getModelAudioDecodeCheckpoint();
+        await waitForModelAudioDecodeCheckpoint(modelAudioCheckpoint);
+        if (
+          currentSessionIdRef.current !== sessionId
+          || currentModelAudioTurnIdRef.current !== modelAudioCheckpoint.turnId
+        ) {
+          return;
+        }
+
+        const completedTurnId = modelAudioCheckpoint.turnId;
+        const userText = (
+          currentInputTranscriptionRef.current.trim()
+          || localInputPreviewRef.current.trim()
+        );
+        const modelText = currentOutputTranscriptionRef.current.trim();
+        const userAudioFull = getTranscriptLinkedUserAudio();
+        const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
+        const modelAudioLines: Int16Array[] = [];
+
+        if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
+          let startSample = 0;
+          const points = modelAudioSplitPointsRef.current
+            .slice()
+            .sort((a, b) => a - b)
+            .filter((point) => point < modelAudioFull.length);
+
+          for (const point of points) {
+            if (point > startSample) {
+              modelAudioLines.push(modelAudioFull.slice(startSample, point));
+              startSample = point;
+            } else {
+              modelAudioLines.push(new Int16Array(0));
+            }
+          }
+
+          if (startSample < modelAudioFull.length) {
+            modelAudioLines.push(modelAudioFull.slice(startSample));
+          }
+        } else if (modelAudioFull.length > 0) {
+          modelAudioLines.push(modelAudioFull);
+        }
+
+        const inputTranscript = currentInputTranscriptionRef.current || localInputPreviewRef.current;
+        const outputTranscript = currentOutputTranscriptionRef.current;
+        const completionReason: LiveTurnTranscriptUpdateReason = currentTurnWaitingForInputRef.current
+          ? 'waiting-for-input'
+          : 'no-model-response';
+
+        if (!modelText) {
+          if (userText || userAudioFull.length > 0 || inputTranscript) {
+            if (pendingUserTurnRef.current) {
+              const prev = pendingUserTurnRef.current;
+              const mergedText = [prev.text, userText].filter(Boolean).join('\n').trim();
+              const mergedTranscript = [prev.transcript, inputTranscript].filter(Boolean).join(' ').trim();
+              const mergedAudio = mergeInt16Arrays([prev.audio, userAudioFull]);
+              pendingUserTurnRef.current = { text: mergedText, transcript: mergedTranscript, audio: mergedAudio };
+            } else {
+              pendingUserTurnRef.current = {
+                text: userText,
+                transcript: inputTranscript,
+                audio: userAudioFull,
+              };
+            }
+          }
+          if (logRef.current && !logFinalizedRef.current) {
+            logRef.current.complete({
+              status: completionReason,
+              userText,
+              inputTranscript,
+              modelAudioLinesCount: modelAudioLines.length,
+              userAudioSamples: userAudioFull.length,
+              audioTelemetry: getAudioTelemetrySnapshot(),
+            });
+          }
+        } else {
+          let finalUserText = userText;
+          let finalUserAudio = userAudioFull;
+          let finalInputTranscript = inputTranscript;
+          const pending = pendingUserTurnRef.current;
+          if (pending) {
+            finalUserText = pending.text || userText;
+            finalInputTranscript = pending.transcript || inputTranscript;
+            if (pending.audio.length > 0 && userAudioFull.length > 0) {
+              finalUserAudio = mergeInt16Arrays([pending.audio, userAudioFull]);
+            } else if (pending.audio.length > 0) {
+              finalUserAudio = pending.audio;
+            }
+            pendingUserTurnRef.current = null;
+          }
+
+          if (emitTurns) {
+            try {
+              const callbackResult = callbacksRef.current.onTurnComplete?.(
+                finalUserText,
+                modelText,
+                finalUserAudio,
+                modelAudioLines
+              );
+              if (callbackResult instanceof Promise) {
+                void callbackResult.catch((error) => {
+                  console.error('Live turn completion callback rejected:', error);
+                });
+              }
+            } catch (error) {
+              console.error('Live turn completion callback failed:', error);
+            }
+          }
+          if (logRef.current && !logFinalizedRef.current) {
+            logRef.current.complete({
+              status: 'turn-complete',
+              userText: finalUserText,
+              modelText,
+              inputTranscript: finalInputTranscript,
+              outputTranscript,
+              modelAudioLinesCount: modelAudioLines.length,
+              userAudioSamples: finalUserAudio.length,
+              audioTelemetry: getAudioTelemetrySnapshot(),
+            });
+          }
+          const turnLog = debugLogService.logRequest('useGeminiLiveConversation.turn', modelRef.current || 'gemini-live', {
+            inputTranscript: finalInputTranscript,
+            outputTranscript,
+          });
+          turnLog.complete({
+            status: 'turn-complete',
+            userText: finalUserText,
+            modelText,
+            inputTranscript: finalInputTranscript,
+            outputTranscript,
+            modelAudioLinesCount: modelAudioLines.length,
+            userAudioSamples: finalUserAudio.length,
+            audioTelemetry: getAudioTelemetrySnapshot(),
+          });
+        }
+
+        cancelModelAudioDecodeJobs(sessionId, completedTurnId);
+        currentInputTranscriptionRef.current = '';
+        localInputPreviewRef.current = '';
+        currentOutputTranscriptionRef.current = '';
+        currentUserAudioChunksRef.current = [];
+        currentUserAudioTotalLengthRef.current = 0;
+        currentUserTranscriptAudioLengthRef.current = 0;
+        currentModelAudioChunksRef.current = [];
+        currentModelAudioTotalLengthRef.current = 0;
+        modelAudioSplitPointsRef.current = [];
+        lastNewlineCountRef.current = 0;
+        lastTranscriptUpdateRef.current = null;
+        startNextModelAudioTurn(sessionId);
+        awaitingModelTurnRef.current = false;
+        currentModelThinkingTraceRef.current = [];
+        currentModelThinkingPhaseRef.current = undefined;
+        currentModelThinkingStatusLineRef.current = undefined;
+        currentTurnWaitingForInputRef.current = false;
+        if (!modelText) {
+          emitTurnTranscriptUpdate(completionReason);
+        }
+      };
+      const enqueueTurnFinalization = () => {
+        serverMessageQueueRef.current = serverMessageQueueRef.current
+          .catch(() => undefined)
+          .then(finalizeProviderTurn)
+          .catch((error) => {
+            if (currentSessionIdRef.current !== sessionId) return;
+            console.warn('Live turn finalization failed', error);
+          });
+      };
       const session = await ai.live.connect({
         model,
         liveOpenReason: createLiveOpenReason(liveOpenTrigger),
@@ -1184,6 +1355,7 @@ export function useGeminiLiveConversation(
             updateState('active');
           },
           onmessage: (msg: LiveServerMessage) => {
+            turnFinalizer.touch();
             serverMessageQueueRef.current = serverMessageQueueRef.current
               .catch(() => undefined)
               .then(async () => {
@@ -1193,8 +1365,6 @@ export function useGeminiLiveConversation(
                 if (msg.usageMetadata) {
                   usageTracker.trackSnapshot(msg.usageMetadata);
                 }
-                if (msg.serverContent?.turnComplete) usageTracker.completeTurn();
-
                 if (msg.goAway) {
                   callbacksRef.current.onGoAway?.(msg.goAway);
                 }
@@ -1341,179 +1511,13 @@ export function useGeminiLiveConversation(
                   emitTurnTranscriptUpdate('output');
                 }
 
-                // 3. Handle Turn Completion (Exchange Finished)
+                // 3. Finalize only after already-dispatched provider callbacks settle.
                 if (msg.serverContent?.turnComplete) {
-                  const modelAudioCheckpoint = getModelAudioDecodeCheckpoint();
-                  await waitForModelAudioDecodeCheckpoint(modelAudioCheckpoint);
-                  if (
-                    currentSessionIdRef.current !== sessionId
-                    || currentModelAudioTurnIdRef.current !== modelAudioCheckpoint.turnId
-                  ) {
-                    return;
-                  }
-
-                  const completedTurnId = modelAudioCheckpoint.turnId;
-                  const userText = (
-                    currentInputTranscriptionRef.current.trim()
-                    || localInputPreviewRef.current.trim()
-                  );
-                  const modelText = currentOutputTranscriptionRef.current.trim();
-
-                  const userAudioFull = getTranscriptLinkedUserAudio();
-
-                  const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
-                  const modelAudioLines: Int16Array[] = [];
-
-                  if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
-                    let startSample = 0;
-                    const points = modelAudioSplitPointsRef.current
-                      .slice()
-                      .sort((a, b) => a - b)
-                      .filter((point) => point < modelAudioFull.length);
-
-                    for (const point of points) {
-                      if (point > startSample) {
-                        modelAudioLines.push(modelAudioFull.slice(startSample, point));
-                        startSample = point;
-                      } else {
-                        modelAudioLines.push(new Int16Array(0));
-                      }
-                    }
-
-                    if (startSample < modelAudioFull.length) {
-                      modelAudioLines.push(modelAudioFull.slice(startSample));
-                    }
-                  } else if (modelAudioFull.length > 0) {
-                    modelAudioLines.push(modelAudioFull);
-                  }
-
-                  const inputTranscript = currentInputTranscriptionRef.current || localInputPreviewRef.current;
-                  const outputTranscript = currentOutputTranscriptionRef.current;
-
-                  if (!modelText) {
-                    const completionReason: LiveTurnTranscriptUpdateReason = currentTurnWaitingForInputRef.current
-                      ? 'waiting-for-input'
-                      : 'no-model-response';
-                    if (userText || userAudioFull.length > 0 || inputTranscript) {
-                      if (pendingUserTurnRef.current) {
-                        const prev = pendingUserTurnRef.current;
-                        const mergedText = [prev.text, userText].filter(Boolean).join('\n').trim();
-                        const mergedTranscript = [prev.transcript, inputTranscript].filter(Boolean).join(' ').trim();
-                        const mergedAudio = mergeInt16Arrays([prev.audio, userAudioFull]);
-                        pendingUserTurnRef.current = { text: mergedText, transcript: mergedTranscript, audio: mergedAudio };
-                      } else {
-                        pendingUserTurnRef.current = {
-                          text: userText,
-                          transcript: inputTranscript,
-                          audio: userAudioFull,
-                        };
-                      }
-                    }
-                    if (logRef.current && !logFinalizedRef.current) {
-                      logRef.current.complete({
-                        status: completionReason,
-                        userText,
-                        inputTranscript,
-                        modelAudioLinesCount: modelAudioLines.length,
-                        userAudioSamples: userAudioFull.length,
-                        audioTelemetry: getAudioTelemetrySnapshot(),
-                      });
-                    }
-                  } else {
-                    let finalUserText = userText;
-                    let finalUserAudio = userAudioFull;
-                    let finalInputTranscript = inputTranscript;
-                    const pending = pendingUserTurnRef.current;
-                    if (pending) {
-                      finalUserText = pending.text || userText;
-                      finalInputTranscript = pending.transcript || inputTranscript;
-                      if (pending.audio.length > 0 && userAudioFull.length > 0) {
-                        finalUserAudio = mergeInt16Arrays([pending.audio, userAudioFull]);
-                      } else if (pending.audio.length > 0) {
-                        finalUserAudio = pending.audio;
-                      }
-                      pendingUserTurnRef.current = null;
-                    }
-
-                    if (emitTurns) {
-                      try {
-                        const callbackResult = callbacksRef.current.onTurnComplete?.(
-                          finalUserText,
-                          modelText,
-                          finalUserAudio,
-                          modelAudioLines
-                        );
-                        if (callbackResult instanceof Promise) {
-                          void callbackResult.catch((error) => {
-                            console.error('Live turn completion callback rejected:', error);
-                          });
-                        }
-                      } catch (error) {
-                        console.error('Live turn completion callback failed:', error);
-                      }
-                    }
-                    if (logRef.current && !logFinalizedRef.current) {
-                      logRef.current.complete({
-                        status: 'turn-complete',
-                        userText: finalUserText,
-                        modelText,
-                        inputTranscript: finalInputTranscript,
-                        outputTranscript,
-                        modelAudioLinesCount: modelAudioLines.length,
-                        userAudioSamples: finalUserAudio.length,
-                        audioTelemetry: getAudioTelemetrySnapshot(),
-                      });
-                    }
-                    const turnLog = debugLogService.logRequest('useGeminiLiveConversation.turn', modelRef.current || 'gemini-live', {
-                      inputTranscript: finalInputTranscript,
-                      outputTranscript,
-                    });
-                    turnLog.complete({
-                      status: 'turn-complete',
-                      userText: finalUserText,
-                      modelText,
-                      inputTranscript: finalInputTranscript,
-                      outputTranscript,
-                      modelAudioLinesCount: modelAudioLines.length,
-                      userAudioSamples: finalUserAudio.length,
-                      audioTelemetry: getAudioTelemetrySnapshot(),
-                    });
-                  }
-
-                  cancelModelAudioDecodeJobs(sessionId, completedTurnId);
-                  currentInputTranscriptionRef.current = '';
-                  localInputPreviewRef.current = '';
-                  currentOutputTranscriptionRef.current = '';
-                  currentUserAudioChunksRef.current = [];
-                  currentUserAudioTotalLengthRef.current = 0;
-                  currentUserTranscriptAudioLengthRef.current = 0;
-                  currentModelAudioChunksRef.current = [];
-                  currentModelAudioTotalLengthRef.current = 0;
-                  modelAudioSplitPointsRef.current = [];
-                  lastNewlineCountRef.current = 0;
-                  lastTranscriptUpdateRef.current = null;
-                  startNextModelAudioTurn(sessionId);
-                  awaitingModelTurnRef.current = false;
-
-                  if (!modelText) {
-                    const completionReason: LiveTurnTranscriptUpdateReason = currentTurnWaitingForInputRef.current
-                      ? 'waiting-for-input'
-                      : 'no-model-response';
-                    emitTurnTranscriptUpdate(completionReason);
-                    currentModelThinkingTraceRef.current = [];
-                    currentModelThinkingPhaseRef.current = undefined;
-                    currentModelThinkingStatusLineRef.current = undefined;
-                    currentTurnWaitingForInputRef.current = false;
-                  } else {
-                    currentModelThinkingTraceRef.current = [];
-                    currentModelThinkingPhaseRef.current = undefined;
-                    currentModelThinkingStatusLineRef.current = undefined;
-                    currentTurnWaitingForInputRef.current = false;
-                  }
+                  turnFinalizer.schedule(enqueueTurnFinalization);
                 }
-
                 // 4. Handle Interruption
                 if (msg.serverContent?.interrupted) {
+                  turnFinalizer.cancel();
                   const interruptedTurnId = currentModelAudioTurnIdRef.current;
                   cancelModelAudioDecodeJobs(sessionId, interruptedTurnId);
                   if (playModelAudio) {
@@ -1539,12 +1543,14 @@ export function useGeminiLiveConversation(
               });
           },
           onclose: () => {
+            turnFinalizer.flush();
             usageTracker.flush();
             void finishTransportLifecycle('idle').catch((error) => {
               console.warn('Live playback drain after close failed:', error);
             });
           },
           onerror: (err: any) => {
+            turnFinalizer.flush();
             usageTracker.flush();
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;

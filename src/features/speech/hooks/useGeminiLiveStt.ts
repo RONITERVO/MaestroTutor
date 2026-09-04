@@ -51,6 +51,7 @@ import { useMaestroStore } from '../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 import type { SttStartOptions, SttTurnDestination } from '../../../core-sdk/media/sttTurnRouting';
 import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
+import { LiveTurnFinalizer } from '../utils/liveTurnFinalizer';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -576,6 +577,106 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       });
 
       const ai = await getAi();
+      const turnFinalizer = new LiveTurnFinalizer();
+      const finalizeProviderTurn = () => {
+        if (currentSessionIdRef.current !== sessionId) return;
+        usageTracker.completeTurn();
+        awaitingModelTurnRef.current = false;
+        // Use the parrot if available, otherwise fallback to input.
+        const finalSegment = (
+          interimParrotRef.current.trim()
+          || interimInputRef.current.trim()
+        );
+        if (finalSegment) {
+          const sep = committedTranscriptRef.current ? ' ' : '';
+          committedTranscriptRef.current += sep + finalSegment;
+        }
+
+        const inputTranscript = interimInputRef.current.trim();
+        const outputTranscript = interimParrotRef.current.trim();
+        const turnSamples = turnAudioSamplesRef.current;
+        const nextTurnId = turnIdRef.current + 1;
+        logSttFlow('stt.turnComplete.received', {
+          sessionId,
+          turnId: nextTurnId,
+          finalLength: finalSegment.length,
+          committedLength: committedTranscriptRef.current.length,
+          inputLength: inputTranscript.length,
+          outputLength: outputTranscript.length,
+          audioSamples: turnSamples,
+          autoStop: autoStopAfterTurnCompleteRef.current,
+        });
+        if (inputTranscript || outputTranscript || turnSamples > 0) {
+          const turnLog = debugLogService.logRequest('useGeminiLiveStt.turn', model, {
+            inputTranscript,
+            outputTranscript,
+            audioSamples: turnSamples,
+          });
+          turnLog.complete({
+            status: 'turn-complete',
+            inputTranscript,
+            outputTranscript,
+            audioSamples: turnSamples,
+            committedTranscript: committedTranscriptRef.current,
+            audioTelemetry: getAudioTelemetrySnapshot(),
+          });
+        }
+        turnAudioSamplesRef.current = 0;
+
+        interimInputRef.current = '';
+        localInputPreviewRef.current = '';
+        interimParrotRef.current = '';
+        scheduleTranscriptStateUpdate(true);
+
+        if (finalSegment) {
+          const turnPayload: GeminiLiveSttTurnComplete = {
+            turnId: ++turnIdRef.current,
+            turnTranscript: finalSegment,
+            committedTranscript: committedTranscriptRef.current,
+            inputTranscript,
+            outputTranscript,
+            audioSamples: turnSamples,
+            destination,
+          };
+          logSttFlow('stt.turnComplete.callback.start', {
+            sessionId,
+            turnId: turnPayload.turnId,
+          });
+          void Promise.resolve(onTurnCompleteRef.current?.(turnPayload))
+            .then(() => {
+              logSttFlow('stt.turnComplete.callback.done', {
+                sessionId,
+                turnId: turnPayload.turnId,
+              });
+            })
+            .catch((callbackError) => {
+              errorSttFlow('stt.turnComplete.callback.error', {
+                sessionId,
+                turnId: turnPayload.turnId,
+                message: callbackError instanceof Error ? callbackError.message : String(callbackError),
+              });
+              console.error('STT turn-complete handler failed', callbackError);
+            });
+        }
+
+        if (autoStopAfterTurnCompleteRef.current) {
+          void (async () => {
+            try {
+              logSttFlow('stt.turnComplete.cleanup.start', {
+                sessionId,
+                turnId: turnIdRef.current,
+              });
+              await cleanup({ preserveRecordedAudio: true, status: 'turn-complete' });
+              logSttFlow('stt.turnComplete.cleanup.done', {
+                sessionId,
+                turnId: turnIdRef.current,
+              });
+            } finally {
+              setIsListening(false);
+            }
+          })();
+        }
+      };
       setLiveActivityPhase('connecting');
       const session = await ai.live.connect({
         model,
@@ -597,14 +698,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             setIsListening(true);
           },
           onmessage: (msg: LiveServerMessage) => {
+            turnFinalizer.touch();
             // Check session is still valid before processing message
             if (currentSessionIdRef.current !== sessionId) return;
 
             if (msg.usageMetadata) {
               usageTracker.trackSnapshot(msg.usageMetadata);
             }
-            if (msg.serverContent?.turnComplete) usageTracker.completeTurn();
-            
             // 1. Capture User Input (ASR) - Low Latency, potentially inaccurate
             if (msg.serverContent?.inputTranscription) {
               const text = msg.serverContent.inputTranscription.text;
@@ -628,107 +728,13 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
               }
             }
 
-            // 3. Commit Turn
+            // 3. Finalize after late provider transcript callbacks settle.
             if (msg.serverContent?.turnComplete) {
-               awaitingModelTurnRef.current = false;
-               // Use the parrot if available, otherwise fallback to input
-               const finalSegment = (
-                 interimParrotRef.current.trim()
-                 || interimInputRef.current.trim()
-               );
-               if (finalSegment) {
-                   const sep = committedTranscriptRef.current ? ' ' : '';
-                   committedTranscriptRef.current += sep + finalSegment;
-               }
-
-               const inputTranscript = interimInputRef.current.trim();
-               const outputTranscript = interimParrotRef.current.trim();
-               const turnSamples = turnAudioSamplesRef.current;
-               const nextTurnId = turnIdRef.current + 1;
-               logSttFlow('stt.turnComplete.received', {
-                 sessionId,
-                 turnId: nextTurnId,
-                 finalLength: finalSegment.length,
-                 committedLength: committedTranscriptRef.current.length,
-                 inputLength: inputTranscript.length,
-                 outputLength: outputTranscript.length,
-                 audioSamples: turnSamples,
-                 autoStop: autoStopAfterTurnCompleteRef.current,
-               });
-               if (inputTranscript || outputTranscript || turnSamples > 0) {
-                 const turnLog = debugLogService.logRequest('useGeminiLiveStt.turn', model, {
-                   inputTranscript,
-                   outputTranscript,
-                   audioSamples: turnSamples,
-                 });
-                 turnLog.complete({
-                   status: 'turn-complete',
-                   inputTranscript,
-                   outputTranscript,
-                   audioSamples: turnSamples,
-                   committedTranscript: committedTranscriptRef.current,
-                   audioTelemetry: getAudioTelemetrySnapshot(),
-                 });
-               }
-               turnAudioSamplesRef.current = 0;
-               
-               // Reset interim buffers for next turn
-               interimInputRef.current = '';
-               localInputPreviewRef.current = '';
-               interimParrotRef.current = '';
-               scheduleTranscriptStateUpdate(true);
-
-               if (finalSegment) {
-                 const turnPayload: GeminiLiveSttTurnComplete = {
-                   turnId: ++turnIdRef.current,
-                   turnTranscript: finalSegment,
-                   committedTranscript: committedTranscriptRef.current,
-                   inputTranscript,
-                   outputTranscript,
-                   audioSamples: turnSamples,
-                   destination,
-                 };
-                 logSttFlow('stt.turnComplete.callback.start', {
-                   sessionId,
-                   turnId: turnPayload.turnId,
-                 });
-                 void Promise.resolve(onTurnCompleteRef.current?.(turnPayload))
-                   .then(() => {
-                     logSttFlow('stt.turnComplete.callback.done', {
-                       sessionId,
-                       turnId: turnPayload.turnId,
-                     });
-                   })
-                   .catch((callbackError) => {
-                     errorSttFlow('stt.turnComplete.callback.error', {
-                       sessionId,
-                       turnId: turnPayload.turnId,
-                       message: callbackError instanceof Error ? callbackError.message : String(callbackError),
-                     });
-                     console.error('STT turn-complete handler failed', callbackError);
-                   });
-               }
-
-               if (autoStopAfterTurnCompleteRef.current) {
-                 void (async () => {
-                   try {
-                     logSttFlow('stt.turnComplete.cleanup.start', {
-                       sessionId,
-                       turnId: turnIdRef.current,
-                     });
-                     await cleanup({ preserveRecordedAudio: true, status: 'turn-complete' });
-                     logSttFlow('stt.turnComplete.cleanup.done', {
-                       sessionId,
-                       turnId: turnIdRef.current,
-                     });
-                   } finally {
-                     setIsListening(false);
-                   }
-                 })();
-               }
+              turnFinalizer.schedule(finalizeProviderTurn);
             }
           },
           onclose: (event: any) => {
+            turnFinalizer.flush();
             usageTracker.flush();
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
@@ -751,6 +757,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             setIsListening(false);
           },
           onerror: (err: any) => {
+            turnFinalizer.flush();
             usageTracker.flush();
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
