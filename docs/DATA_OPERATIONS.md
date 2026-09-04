@@ -17,11 +17,24 @@
   and zero stranded reservation. A completed headless Live turn returned `Play`,
   passed realtime pacing/playback/handoff checks, billed one credit (provider
   estimate USD 0.000486), and left zero reserved credits.
-- Browser camera permission fix was confirmed by the owner. Physical STT and
-  full speaker/repeated-turn confirmation for the release is pending.
-- Production application promotion is pending the browser gate. Production
-  protection/index configuration has been applied; production app code has not
-  yet been promoted as part of this data-operations change.
+- The owner confirmed the browser camera permission fix and physical STT trailing
+  words/single-send, speaker playback, and repeated-turn checks passed on staging.
+- Runtime candidate `38c44bc` was promoted to production Functions, gateway and
+  both hosting surfaces. `chatwithmaestro.com` uses GitHub Pages (`gh-pages`);
+  `chatwithmaestro.web.app` uses Firebase Hosting. Both were verified against
+  their corresponding build asset hashes. The gateway revision
+  `maestrotutor-live-gateway-release-38c44bc` serves 100% of traffic.
+- A production browser request returned `OK!`, played speech, and completed
+  suggestions. Its existing chat rebuilt media context; total test spend was
+  49 credits over 15 operations. Account spend, usage charges and billing charges
+  matched exactly, with zero reserved credits afterward.
+  [Reconciliation evidence](evidence/production-billing-20260905.json).
+- An operator-token headless production canary was unavailable because the
+  operator lacks IAM `signBlob`. No new permissions or App Check bypasses were
+  added; the existing authenticated browser flow supplied production evidence.
+- [Production baseline report](evidence/production-turn-cost-20260905.json)
+  provides the same measured units as the staging report. These windows predate
+  the query fix and must not be presented as its post-release performance.
 
 ## Protection policy
 
@@ -133,8 +146,10 @@ session checkpoint maps are exempt from indexing.
 4. Check browser microphone permission, STT trailing words and single-send,
    camera-off, camera permission, complete speaker playback and repeated turns.
    Simulated audio tests do not prove physical speaker/microphone behavior.
-5. Record the tested commit and evidence. Promote that exact commit to production,
-   repeat health/asset and billing smoke checks, and inspect error/recovery logs.
+5. Record the tested commit and evidence. Promote that exact commit to production
+   Functions/gateway, Firebase Hosting, and GitHub Pages (`npm run deploy`). Wait
+   for the Pages build and verify the custom domain separately. Repeat
+   health/asset and billing smoke checks, and inspect error/recovery logs.
 6. Only then mark the PR merge-ready. Changes after testing restart affected gates.
 
 References: [backups](https://firebase.google.com/docs/firestore/backups),

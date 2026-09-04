@@ -27,6 +27,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             functions/package-lock.json
+            live-gateway/package-lock.json
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
@@ -36,6 +37,8 @@ jobs:
         run: npm ci
       - name: Install Functions dependencies
         run: npm --prefix functions ci
+      - name: Install Live gateway dependencies
+        run: npm --prefix live-gateway ci
 
       # Root runtime audit currently contains reviewed high-severity findings in
       # Node-only Transformers dependencies that are not shipped in the browser.
@@ -61,3 +64,7 @@ jobs:
         run: npm --prefix functions test
       - name: Test Firestore billing invariants
         run: npm --prefix functions run test:emulator
+      - name: Test and build Live gateway
+        run: |
+          npm --prefix live-gateway test
+          npm --prefix live-gateway run build
