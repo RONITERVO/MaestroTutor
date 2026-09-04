@@ -138,17 +138,17 @@ jobs:
         shell: bash
         run: |
           test -n "$MAESTRO_GEMINI_API_KEY" || { echo "HEADLESS_GEMINI_API_KEY is required; BYOK parity may never be silently skipped." >&2; exit 1; }
+      - name: Prove a short second observer turn over one BYOK Live socket
+        run: |
+          npx tsx scripts/create-connected-live-fixture.ts > connected-live-params.json
+          npx tsx src/headless/cli.ts speech.synthetic.live --access byok --profile staging-ci-byok --params-file connected-live-params.json > byok-connected-live.json 2> byok-connected-live.events.jsonl
+          node -e 'const r=require("./byok-connected-live.json"); if(r.connectedTurnCount!==2||r.turns?.length!==2||!r.realtimeEvidence?.passed) throw new Error("Persistent BYOK Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete BYOK Live turn: "+JSON.stringify(t)); console.log("BYOK connected Live turns:",r.turns.map(t=>({input:t.inputTranscript,sentSamples:t.sentSamples,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
       - name: Exercise the full first lesson with direct Gemini access
         run: |
           npx tsx src/headless/cli.ts system.describe --access byok > protocol-byok.json
           node -e 'const p=require("./protocol-byok.json"); if(p.access.unavailableMethods.includes("journey.firstLesson")) throw new Error("First lesson unavailable in BYOK"); for(const m of p.access.providerParityMethods) if(!p.access.availableMethods.includes(m)) throw new Error("BYOK missing parity method: "+m)'
           npx tsx src/headless/cli.ts journey.firstLesson --access byok --profile staging-ci-byok --params '{"targetLanguageCode":"es-ES","nativeLanguageCode":"en-US","paceLiveAudio":true,"timeoutMs":60000,"includeSyntheticToolDecisions":true,"uploadGeneratedMedia":true}' > byok-first-lesson.json 2> byok-first-lesson.events.jsonl
           node -e 'const fs=require("fs"),r=require("./byok-first-lesson.json"); if(r.accessMode!=="byok"||!r.passed||r.userTurnCount<10||r.managedBillingEvidence?.payer!=="byok-api-key-owner") process.exit(1); for(const [name,passed] of Object.entries(r.coverage)) if(!passed) throw new Error("Missing BYOK coverage: "+name); const proof={accessMode:r.accessMode,userTurnCount:r.userTurnCount,coverage:r.coverage,managedBillingEvidence:r.managedBillingEvidence,turns:r.turns}; fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,"### BYOK first-lesson proof\n\n```json\n"+JSON.stringify(proof,null,2)+"\n```\n")'
-      - name: Prove a short second observer turn over one BYOK Live socket
-        run: |
-          npx tsx scripts/create-connected-live-fixture.ts > connected-live-params.json
-          npx tsx src/headless/cli.ts speech.synthetic.live --access byok --profile staging-ci-byok --params-file connected-live-params.json > byok-connected-live.json 2> byok-connected-live.events.jsonl
-          node -e 'const r=require("./byok-connected-live.json"); if(r.connectedTurnCount!==2||r.turns?.length!==2||!r.realtimeEvidence?.passed) throw new Error("Persistent BYOK Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete BYOK Live turn: "+JSON.stringify(t)); console.log("BYOK connected Live turns:",r.turns.map(t=>({input:t.inputTranscript,sentSamples:t.sentSamples,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
       - name: Preserve BYOK parity evidence
         if: always()
         uses: actions/upload-artifact@v4
