@@ -118,7 +118,7 @@ low-resolution camera frame on every turn. It rejects the run unless every input
 transcript and response is non-empty, all six manual audio boundaries carry
 samples, and playback for every turn completes after its final network audio byte.
 It also runs one shared long English fixture through observer-camera and
-conversation mode in both access modes. That fixture includes a four-second pause,
+conversation mode in both access modes. That fixture includes a two-second pause,
 requires the complete question transcript, and forces five English/Finnish response
 pairs so truncated input, output, playback, or translation cannot pass unnoticed.
 

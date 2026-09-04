@@ -38,6 +38,7 @@ const INPUT_SAMPLE_RATE = 16_000;
 const PACKET_DURATION_MS = 100;
 const PACKET_MAX_WAIT_MS = 120;
 const REPLAY_CHUNK_SAMPLES = 4_096;
+const PROVIDER_TURN_QUIET_MS = 250;
 
 const encodePcm16LeBase64 = (pcm: Int16Array): string => {
   const bytes = new Uint8Array(pcm.buffer, pcm.byteOffset, pcm.byteLength);
@@ -103,6 +104,7 @@ export const runSyntheticLiveJourney = async (
   let inputTranscriptDeltaCount = 0;
   let outputTranscriptDeltaCount = 0;
   let serverMessageCount = 0;
+  let providerActivitySequence = 0;
   const serverMessageKinds = new Set<string>();
   const providerUsageSnapshots: Array<{
     turn: number;
@@ -137,6 +139,17 @@ export const runSyntheticLiveJourney = async (
     return new Promise<void>((resolve, reject) => {
       turnWaiters.set(turnNumber, { resolve, reject });
     });
+  };
+  const waitForProviderTurnCallbacks = async (): Promise<void> => {
+    // The SDK can dispatch transcription/audio callbacks that were already in
+    // flight after the callback carrying turnComplete. Wait for one quiet
+    // window before snapshotting transcripts or the playback queue.
+    let observedSequence = providerActivitySequence;
+    while (true) {
+      await runtime.clock.sleep(PROVIDER_TURN_QUIET_MS);
+      if (providerActivitySequence === observedSequence) return;
+      observedSequence = providerActivitySequence;
+    }
   };
   const failSession = (error: Error) => {
     if (terminalError) return;
@@ -249,6 +262,7 @@ export const runSyntheticLiveJourney = async (
       onopen: () => runtime.events.emit({ operationId, journey: 'live', phase: 'session.opened' }),
       onmessage: (rawMessage: unknown) => {
         const message = rawMessage as any;
+        providerActivitySequence += 1;
         serverMessageCount += 1;
         for (const key of Object.keys(message || {})) serverMessageKinds.add(key);
         if (message?.usageMetadata && typeof message.usageMetadata === 'object') {
@@ -497,6 +511,7 @@ export const runSyntheticLiveJourney = async (
       ]).finally(() => {
         if (timeoutId) globalThis.clearTimeout(timeoutId);
       });
+      await waitForProviderTurnCallbacks();
 
       let turnPlaybackDrainWaitMs = 0;
       if (playModelAudioRealtime) {

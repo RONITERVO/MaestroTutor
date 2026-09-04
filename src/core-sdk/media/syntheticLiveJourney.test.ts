@@ -453,16 +453,16 @@ describe('synthetic Live journey', () => {
 
   it('waits for every model byte to play when more audio arrives during playback', async () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
-    const playbackSleeps: Array<() => void> = [];
+    const playbackSleeps: Array<{ ms: number; resolve: () => void }> = [];
     let now = 1_000;
     const runtime = createCoreRuntime({
       clock: {
         now: () => now,
         sleep: (ms) => new Promise<void>(resolve => {
-          playbackSleeps.push(() => {
+          playbackSleeps.push({ ms, resolve: () => {
             now += ms;
             resolve();
-          });
+          } });
         }),
         setInterval: () => 0,
         clearInterval: () => undefined,
@@ -511,18 +511,78 @@ describe('synthetic Live journey', () => {
       playModelAudioRealtime: true,
     }, { runtime }).finally(() => { settled = true; });
 
-    await vi.waitFor(() => expect(playbackSleeps).toHaveLength(1));
+    await vi.waitFor(() => expect(playbackSleeps.some(item => item.ms === 100)).toBe(true));
     expect(settled).toBe(false);
-    playbackSleeps.shift()?.();
-    await vi.waitFor(() => expect(playbackSleeps).toHaveLength(1));
+    playbackSleeps.splice(playbackSleeps.findIndex(item => item.ms === 100), 1)[0]?.resolve();
+    await vi.waitFor(() => expect(playbackSleeps.some(item => item.ms === 100)).toBe(true));
     expect(settled).toBe(false);
-    playbackSleeps.shift()?.();
+    playbackSleeps.splice(playbackSleeps.findIndex(item => item.ms === 100), 1)[0]?.resolve();
+    await vi.waitFor(() => expect(playbackSleeps.some(item => item.ms === 250)).toBe(true));
+    playbackSleeps.splice(playbackSleeps.findIndex(item => item.ms === 250), 1)[0]?.resolve();
 
     const result = await journey;
     expect(result.modelAudioSampleCount).toBe(4_800);
     expect(result.timing.modelPlaybackElapsedMs).toBe(200);
     expect(result.turns[0]).toMatchObject({
       modelAudioSampleCount: 4_800,
+      playbackCompletedAfterLastByte: true,
+    });
+  });
+
+  it('retains transcription and audio callbacks dispatched after turnComplete', async () => {
+    let callbacks: Record<string, (...args: any[]) => void> = {};
+    const pcmChunk = btoa(String.fromCharCode(...new Uint8Array(2_400)));
+    const session = {
+      sendRealtimeInput: vi.fn((message: any) => {
+        if (!message.audioStreamEnd) return;
+        callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: 'The first half ' },
+            outputTranscription: { text: 'One ' },
+            modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: pcmChunk } }] },
+            turnComplete: true,
+          },
+        });
+        setTimeout(() => callbacks.onmessage?.({
+          serverContent: {
+            inputTranscription: { text: 'and the final words.' },
+            outputTranscription: { text: 'two.' },
+            modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: pcmChunk } }] },
+          },
+        }), 10);
+      }),
+      close: vi.fn(),
+    };
+    const ai = {
+      models: {} as CoreGeminiClient['models'],
+      live: {
+        connect: vi.fn(async (params: any) => {
+          callbacks = params.callbacks;
+          return session;
+        }),
+        music: { connect: vi.fn() },
+      },
+    } as CoreGeminiClient;
+
+    const result = await runSyntheticLiveJourney(ai, {
+      liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
+      source: createSyntheticPcmSource({
+        pcm: new Int16Array(1_600).fill(6_000),
+        sampleRate: 16_000,
+        pace: false,
+      }),
+      gateInputOnSpeech: false,
+      playModelAudioRealtime: true,
+    });
+
+    expect(result.inputTranscript).toBe('The first half and the final words.');
+    expect(result.outputTranscript).toBe('One two.');
+    expect(result.modelAudioSampleCount).toBe(2_400);
+    expect(result.realtimeEvidence.modelPlaybackPassed).toBe(true);
+    expect(result.turns[0]).toMatchObject({
+      inputTranscript: 'The first half and the final words.',
+      outputTranscript: 'One two.',
+      modelAudioSampleCount: 2_400,
       playbackCompletedAfterLastByte: true,
     });
   });
