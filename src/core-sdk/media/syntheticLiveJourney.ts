@@ -27,6 +27,12 @@ import {
   createLiveOpenReason,
   type HeadlessLiveOpenTrigger,
 } from '../../../shared/liveOpenReason';
+import {
+  mergeLiveProviderTurnUsage,
+  sumLiveProviderTurnUsage,
+  type LiveGatewayUsageCheckpoint,
+} from '../../../shared/billing/liveGateway';
+import { getLiveCostControlConfig } from '../../../shared/liveCostControls';
 
 const INPUT_SAMPLE_RATE = 16_000;
 const PACKET_DURATION_MS = 100;
@@ -61,6 +67,8 @@ export interface SyntheticLiveJourneyInput {
   /** Pace the model's 24 kHz PCM through a real-time headless playback sink. */
   playModelAudioRealtime?: boolean;
   videoFrames?: Array<{ dataBase64: string; mimeType?: string }>;
+  /** Camera frames to send once for each corresponding microphone turn. */
+  videoFramesByTurn?: Array<Array<{ dataBase64: string; mimeType?: string }>>;
   thinkingMode?: 'minimal' | 'conversation';
   voiceName?: string;
 }
@@ -68,14 +76,14 @@ export interface SyntheticLiveJourneyInput {
 export const runSyntheticLiveJourney = async (
   ai: CoreGeminiClient,
   input: SyntheticLiveJourneyInput,
-  options: { runtime?: CoreRuntime } = {},
+  options: { runtime?: CoreRuntime; operationId?: string } = {},
 ) => {
   const sources = [input.source, ...(input.additionalSources || [])];
   if (sources.some(source => source.sampleRate !== INPUT_SAMPLE_RATE)) {
     throw new Error(`Synthetic Live input must be ${INPUT_SAMPLE_RATE} Hz PCM16 mono.`);
   }
   const runtime = options.runtime || createCoreRuntime();
-  const operationId = runtime.ids.create('synthetic-live');
+  const operationId = options.operationId || runtime.ids.create('synthetic-live');
   const model = input.model || getGeminiModels().audio.stt;
   const gateEnabled = input.gateInputOnSpeech ?? true;
   const gate = gateEnabled ? new SpeechGate({ requireConfirmation: true }) : null;
@@ -96,9 +104,16 @@ export const runSyntheticLiveJourney = async (
   let outputTranscriptDeltaCount = 0;
   let serverMessageCount = 0;
   const serverMessageKinds = new Set<string>();
+  const providerUsageSnapshots: Array<{
+    turn: number;
+    afterCompletedTurns: number;
+    usageMetadata: Record<string, unknown>;
+  }> = [];
+  let providerTurnUsage: LiveGatewayUsageCheckpoint['providerTurnUsage'] = [];
   let modelAudioSampleCount = 0;
   let sentVideoFrameCount = 0;
-  let videoFramesSent = false;
+  const videoFramesSentForTurns = new Set<number>();
+  let activeTurnIndex = 0;
   let logicalNow = runtime.clock.now();
   let gatedPackets = 0;
   let streamEnds = 0;
@@ -216,6 +231,7 @@ export const runSyntheticLiveJourney = async (
     model,
     liveOpenReason: createLiveOpenReason(input.liveOpenTrigger, { requestId: operationId }),
     config: {
+      ...getLiveCostControlConfig(),
       responseModalities: [Modality.AUDIO],
       inputAudioTranscription: {},
       outputAudioTranscription: {},
@@ -235,6 +251,18 @@ export const runSyntheticLiveJourney = async (
         const message = rawMessage as any;
         serverMessageCount += 1;
         for (const key of Object.keys(message || {})) serverMessageKinds.add(key);
+        if (message?.usageMetadata && typeof message.usageMetadata === 'object') {
+          const providerTurn = activeTurnIndex + 1;
+          providerUsageSnapshots.push({
+            turn: providerTurn,
+            afterCompletedTurns: completedTurnCount + (message?.serverContent?.turnComplete ? 1 : 0),
+            usageMetadata: { ...message.usageMetadata },
+          });
+          providerTurnUsage = mergeLiveProviderTurnUsage(providerTurnUsage, [{
+            turn: providerTurn,
+            usageMetadata: message.usageMetadata,
+          }]);
+        }
         if (message?.setupComplete) {
           runtime.events.emit({ operationId, journey: 'live', phase: 'session.setup-complete' });
         }
@@ -305,9 +333,12 @@ export const runSyntheticLiveJourney = async (
   }
 
   const sendVideoFrames = () => {
-    if (videoFramesSent) return;
-    videoFramesSent = true;
-    for (const frame of input.videoFrames || []) {
+    if (videoFramesSentForTurns.has(activeTurnIndex)) return;
+    videoFramesSentForTurns.add(activeTurnIndex);
+    const frames = input.videoFramesByTurn?.[activeTurnIndex]
+      ?? (activeTurnIndex === 0 ? input.videoFrames : undefined)
+      ?? [];
+    for (const frame of frames) {
       const data = frame.dataBase64.replace(/^data:[^;]+;base64,/i, '');
       if (!data) continue;
       const inferredMimeType = /^data:([^;,]+)(?:;[^,]*)?,/i.exec(frame.dataBase64)?.[1];
@@ -415,11 +446,13 @@ export const runSyntheticLiveJourney = async (
   try {
     let totalInputCaptureElapsedMs = 0;
     for (let turnIndex = 0; turnIndex < sources.length; turnIndex += 1) {
+      activeTurnIndex = turnIndex;
       const source = sources[turnIndex];
       const transcriptStart = inputTranscript.length;
       const outputTranscriptStart = outputTranscript.length;
       const modelAudioSamplesStart = modelAudioSampleCount;
       const sentSamplesStart = sentPackets.reduce((total, packet) => total + packet.length, 0);
+      const sentVideoFramesStart = sentVideoFrameCount;
       const turnCaptureStartedAt = turnIndex === 0 && inputCaptureStartedAt !== null
         ? inputCaptureStartedAt
         : runtime.clock.now();
@@ -492,6 +525,7 @@ export const runSyntheticLiveJourney = async (
         outputTranscript: turnOutputTranscript,
         sentSamples: sentPackets.reduce((total, packet) => total + packet.length, 0) - sentSamplesStart,
         modelAudioSampleCount: turnModelAudioSampleCount,
+        sentVideoFrameCount: sentVideoFrameCount - sentVideoFramesStart,
         turnCompleteAt: turnCompletionTimes[turnIndex] ?? null,
         lastModelAudioByteAt,
         playbackCompletedAt,
@@ -571,6 +605,12 @@ export const runSyntheticLiveJourney = async (
       outputTranscriptDeltaCount,
       serverMessageCount,
       serverMessageKinds: [...serverMessageKinds].sort(),
+      providerUsageSnapshots,
+      providerTurnUsage,
+      providerUsageMetadata: sumLiveProviderTurnUsage(providerTurnUsage),
+      providerLatestUsageMetadata: providerUsageSnapshots.length > 0
+        ? providerUsageSnapshots[providerUsageSnapshots.length - 1].usageMetadata
+        : null,
       connectedTurnCount: turnResults.length,
       turns: turnResults,
       sentVideoFrameCount,

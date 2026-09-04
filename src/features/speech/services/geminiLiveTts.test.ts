@@ -36,7 +36,11 @@ vi.mock('../../../core-sdk/media/triggerAudioAsset', () => ({
 }));
 
 vi.mock('../../../shared/utils/costTracker', () => ({
-  createLiveUsageTracker: () => ({ trackSnapshot: vi.fn() }),
+  createLiveUsageTracker: () => ({
+    trackSnapshot: vi.fn(),
+    completeTurn: vi.fn(),
+    flush: vi.fn(),
+  }),
 }));
 
 vi.mock('../../../../shared/liveOpenReason', () => ({

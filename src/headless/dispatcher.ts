@@ -24,6 +24,12 @@ import { runHeadlessReengagement } from './reengagementJourney';
 import { runHeadlessLiveTurn } from './liveJourney';
 import { runHeadlessFirstLesson } from './firstLessonJourney';
 import { assertHeadlessMethodAvailable } from './accessPolicy';
+import { createSyntheticVisualFrame } from './syntheticVisual';
+import {
+  captureManagedJourneyBilling,
+  evaluateManagedLiveBilling,
+  waitForManagedJourneyBillingSettlement,
+} from './managedJourneyBilling';
 
 export class HeadlessDispatchError extends Error {
   constructor(public readonly rpcCode: -32601 | -32602, message: string) {
@@ -333,7 +339,7 @@ export const dispatchHeadlessMethod = async (
       const sampleRate = optionalNumber(input, 'sampleRate', 16_000);
       const rawBase64 = requiredString(input, 'pcmBase64').replace(/^data:audio\/[^;]+;base64,/i, '');
       const pcm = decodePcm16LeBase64(rawBase64);
-      const connectedTurns = optionalBoundedInteger(input, 'connectedTurns', 1, 1, 4);
+      const connectedTurns = optionalBoundedInteger(input, 'connectedTurns', 1, 1, 6);
       const sourceOptions = {
         pcm,
         sampleRate,
@@ -342,7 +348,16 @@ export const dispatchHeadlessMethod = async (
         runtime: client.runtime,
       };
       const source = createSyntheticPcmSource(sourceOptions);
-      return runSyntheticLiveJourney(client.ai, {
+      const operationId = client.runtime.ids.create('synthetic-live');
+      const billingBefore = client.accessMode === 'managed'
+        ? await captureManagedJourneyBilling(client, operationId)
+        : null;
+      const visual = input.includeVisual === true
+        ? await createSyntheticVisualFrame(
+            typeof input.visualLabel === 'string' ? input.visualLabel : 'RED APPLE',
+          )
+        : null;
+      const result = await runSyntheticLiveJourney(client.ai, {
         liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
         source,
         additionalSources: Array.from(
@@ -358,7 +373,31 @@ export const dispatchHeadlessMethod = async (
         playModelAudioRealtime: input.playModelAudioRealtime === true,
         timeoutMs: optionalNumber(input, 'timeoutMs', 45_000),
         includeModelAudio: input.includeModelAudio === true,
-      }, { runtime: client.runtime });
+        ...(visual ? {
+          videoFramesByTurn: Array.from(
+            { length: connectedTurns },
+            () => [{ dataBase64: visual.dataBase64, mimeType: visual.mimeType }],
+          ),
+        } : {}),
+      }, { runtime: client.runtime, operationId });
+      const managedBillingEvidence = billingBefore
+        ? evaluateManagedLiveBilling(
+            billingBefore,
+            await waitForManagedJourneyBillingSettlement(client, operationId, 30, 500),
+            operationId,
+            {
+              connectedTurns: result.connectedTurnCount,
+              sentAudioBytes: result.sentSamples * 2,
+              sentVideoFrames: result.sentVideoFrameCount,
+              receivedAudioBytes: result.modelAudioSampleCount * 2,
+            },
+          )
+        : {
+            applicable: false as const,
+            passed: true,
+            payer: 'byok-api-key-owner' as const,
+          };
+      return { ...result, managedBillingEvidence };
     }
     case 'speech.transcribe':
       return runHeadlessLiveTurn(client, {

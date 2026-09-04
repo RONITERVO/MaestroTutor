@@ -39,8 +39,35 @@ jobs:
           npm test --prefix live-gateway
           npm run test:emulator --prefix functions
 
+  long-audio-fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MAESTRO_GEMINI_API_KEY: ${{ secrets.HEADLESS_GEMINI_API_KEY }}
+      MAESTRO_HEADLESS_ACCESS_MODE: byok
+      MAESTRO_HEADLESS_HOME: /tmp/maestro-headless-fixture
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generate one shared long English speech fixture
+        shell: bash
+        run: |
+          test -n "$MAESTRO_GEMINI_API_KEY" || { echo "HEADLESS_GEMINI_API_KEY is required." >&2; exit 1; }
+          npx tsx src/headless/cli.ts speech.tts.generate --access byok --profile fixture --params '{"text":"Hello! How are you doing? I was wondering how are Chinese speakers able to distinguish between the different Chinese words when they speak, like, don'"'"'t they sound very similar, and why do they use subtitles in Chinese movies so much? What is the main reason for this?","langCode":"en-US","includeDataUrl":true}' > long-input-tts.json
+          npx tsx scripts/create-long-live-fixture.ts --tts-json long-input-tts.json > long-live-params.json
+          node -e 'const p=require("./long-live-params.json"); if(p.sampleRate!==16000||p.fixture?.inputDurationSeconds<15||p.fixture?.expectedTranslationPairs!==5) throw new Error("Invalid long fixture: "+JSON.stringify(p.fixture)); console.log("Long fixture seconds:",p.fixture.inputDurationSeconds,"expected:",p.expectedTranscript)'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: long-live-audio-fixture
+          path: long-live-params.json
+          retention-days: 1
+
   managed-provider-smoke:
-    needs: gateway-accounting-safety
+    needs: [gateway-accounting-safety, long-audio-fixture]
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
@@ -65,6 +92,9 @@ jobs:
           java-version: 21
 
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: long-live-audio-fixture
       - name: Verify release configuration and JSON-RPC contract
         run: |
           npm run verify:release-config
@@ -83,11 +113,16 @@ jobs:
         run: |
           npx tsx src/headless/cli.ts billing.checkout.completeTest --profile staging-ci --params "{\"packId\":\"$MAESTRO_TEST_PACK_ID\",\"expectedCredits\":$MAESTRO_TEST_PACK_CREDITS,\"headless\":true}" > checkout.json
           node -e "const c=require('./checkout.json'); if(c.grantedCredits!==Number(process.env.MAESTRO_TEST_PACK_CREDITS)||c.newPurchaseLedgerEntries!==1||!c.purchaseClaimId) process.exit(1); console.log('Stripe session:',c.sessionId,'claim:',c.purchaseClaimId,'grant:',c.grantedCredits)"
-      - name: Prove a short second observer turn over one managed Live socket
+      - name: Prove six observer and camera turns plus exact billing over one managed Live socket
         run: |
           npx tsx scripts/create-connected-live-fixture.ts > connected-live-params.json
           npx tsx src/headless/cli.ts speech.synthetic.live --profile staging-ci --params-file connected-live-params.json > managed-connected-live.json 2> managed-connected-live.events.jsonl
-          node -e 'const r=require("./managed-connected-live.json"); if(r.connectedTurnCount!==2||r.turns?.length!==2||!r.realtimeEvidence?.passed) throw new Error("Persistent managed Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete managed Live turn: "+JSON.stringify(t)); console.log("Managed connected Live turns:",r.turns.map(t=>({input:t.inputTranscript,sentSamples:t.sentSamples,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
+          node -e 'const r=require("./managed-connected-live.json"); if(r.connectedTurnCount!==6||r.turns?.length!==6||r.providerTurnUsage?.length!==6||!r.realtimeEvidence?.passed||!r.managedBillingEvidence?.passed) throw new Error("Persistent managed Live/billing proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||t.sentVideoFrameCount!==1||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete managed Live turn: "+JSON.stringify(t)); const totals=(r.providerUsageSnapshots||[]).map(s=>Number(s.usageMetadata?.totalTokenCount||0)).filter(Boolean),latest=Number(r.providerLatestUsageMetadata?.totalTokenCount||0),billed=Number(r.providerUsageMetadata?.totalTokenCount||0); if(!totals.length||totals.some((n,i)=>i>0&&n<totals[i-1])||billed<=latest) throw new Error("Provider usage did not prove per-turn compounding: "+JSON.stringify({totals,latest,billed})); console.log("Managed connected Live turns:",r.turns.map(t=>({turn:t.turn,input:t.inputTranscript,sentSamples:t.sentSamples,videoFrames:t.sentVideoFrameCount,playbackDrainWaitMs:t.playbackDrainWaitMs})),"billing:",r.managedBillingEvidence)'
+      - name: Prove long observer-camera and conversation responses are complete and fairly billed
+        run: |
+          npx tsx src/headless/cli.ts live.observer.turn --profile staging-ci --params-file long-live-params.json > managed-long-observer.json 2> managed-long-observer.events.jsonl
+          npx tsx src/headless/cli.ts live.conversation.turn --profile staging-ci --params-file long-live-params.json > managed-long-conversation.json 2> managed-long-conversation.events.jsonl
+          node -e 'const p=require("./long-live-params.json"); for(const name of ["observer","conversation"]){const r=require("./managed-long-"+name+".json"),fi=(r.outputTranscript.match(/\[(?:FI|fi-FI)\]/g)||[]).length,ratio=r.timing.modelAudioDurationMs/(p.fixture.inputDurationSeconds*1000); if(!r.transcriptEvidence?.passed||!r.managedBillingEvidence?.passed||r.connectedTurnCount!==1||r.sentVideoFrameCount!==1||fi<5||r.outputTranscript.trim().split(/\n+/).length<10||!r.turns?.[0]?.playbackCompletedAfterLastByte||ratio<0.8||ratio>3.5) throw new Error("Incomplete managed long "+name+" proof: "+JSON.stringify({transcript:r.transcriptEvidence,billing:r.managedBillingEvidence,fi,ratio,timing:r.timing,turn:r.turns?.[0]})); console.log("Managed long",name,{fi,ratio,input:r.inputTranscript,output:r.outputTranscript,billing:r.managedBillingEvidence});}'
       - name: Exercise the low-level direct and streamed JSON-RPC routes
         run: |
           node -e "const p=require('./protocol.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
@@ -109,6 +144,10 @@ jobs:
             managed-live-no-output.json
             managed-connected-live.json
             managed-connected-live.events.jsonl
+            managed-long-observer.json
+            managed-long-observer.events.jsonl
+            managed-long-conversation.json
+            managed-long-conversation.events.jsonl
           retention-days: 14
       - name: Verify ledgers, clear generated files and sign out
         if: always()
@@ -120,7 +159,7 @@ jobs:
           npx tsx src/headless/cli.ts auth.signOut --profile staging-ci > signout.json
 
   byok-provider-smoke:
-    needs: gateway-accounting-safety
+    needs: [gateway-accounting-safety, long-audio-fixture]
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
@@ -134,6 +173,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: long-live-audio-fixture
       - name: Require the isolated BYOK release credential
         shell: bash
         run: |
@@ -142,11 +184,16 @@ jobs:
         run: |
           npx tsx src/headless/cli.ts system.describe --access byok > protocol-byok.json
           node -e 'const p=require("./protocol-byok.json"); if(p.access.unavailableMethods.includes("journey.firstLesson")) throw new Error("First lesson unavailable in BYOK"); for(const m of p.access.providerParityMethods) if(!p.access.availableMethods.includes(m)) throw new Error("BYOK missing parity method: "+m)'
-      - name: Prove a short second observer turn over one BYOK Live socket
+      - name: Prove six observer and camera turns over one paid BYOK Live socket
         run: |
           npx tsx scripts/create-connected-live-fixture.ts > connected-live-params.json
           npx tsx src/headless/cli.ts speech.synthetic.live --access byok --profile staging-ci-byok --params-file connected-live-params.json > byok-connected-live.json 2> byok-connected-live.events.jsonl
-          node -e 'const r=require("./byok-connected-live.json"); if(r.connectedTurnCount!==2||r.turns?.length!==2||!r.realtimeEvidence?.passed) throw new Error("Persistent BYOK Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete BYOK Live turn: "+JSON.stringify(t)); console.log("BYOK connected Live turns:",r.turns.map(t=>({input:t.inputTranscript,sentSamples:t.sentSamples,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
+          node -e 'const r=require("./byok-connected-live.json"); if(r.connectedTurnCount!==6||r.turns?.length!==6||r.providerTurnUsage?.length!==6||!r.realtimeEvidence?.passed||r.managedBillingEvidence?.payer!=="byok-api-key-owner") throw new Error("Persistent BYOK Live proof failed: "+JSON.stringify(r)); for(const t of r.turns) if(!t.inputTranscript||!t.outputTranscript||!t.sentSamples||t.sentVideoFrameCount!==1||!t.playbackCompletedAfterLastByte) throw new Error("Incomplete BYOK Live turn: "+JSON.stringify(t)); const totals=(r.providerUsageSnapshots||[]).map(s=>Number(s.usageMetadata?.totalTokenCount||0)).filter(Boolean),latest=Number(r.providerLatestUsageMetadata?.totalTokenCount||0),billed=Number(r.providerUsageMetadata?.totalTokenCount||0); if(!totals.length||totals.some((n,i)=>i>0&&n<totals[i-1])||billed<=latest) throw new Error("Provider usage did not prove per-turn compounding: "+JSON.stringify({totals,latest,billed})); console.log("BYOK connected Live turns:",r.turns.map(t=>({turn:t.turn,input:t.inputTranscript,sentSamples:t.sentSamples,videoFrames:t.sentVideoFrameCount,playbackDrainWaitMs:t.playbackDrainWaitMs})))'
+      - name: Prove long observer-camera and conversation responses with the paid API key
+        run: |
+          npx tsx src/headless/cli.ts live.observer.turn --access byok --profile staging-ci-byok --params-file long-live-params.json > byok-long-observer.json 2> byok-long-observer.events.jsonl
+          npx tsx src/headless/cli.ts live.conversation.turn --access byok --profile staging-ci-byok --params-file long-live-params.json > byok-long-conversation.json 2> byok-long-conversation.events.jsonl
+          node -e 'const p=require("./long-live-params.json"); for(const name of ["observer","conversation"]){const r=require("./byok-long-"+name+".json"),fi=(r.outputTranscript.match(/\[(?:FI|fi-FI)\]/g)||[]).length,ratio=r.timing.modelAudioDurationMs/(p.fixture.inputDurationSeconds*1000); if(!r.transcriptEvidence?.passed||r.managedBillingEvidence?.payer!=="byok-api-key-owner"||r.connectedTurnCount!==1||r.sentVideoFrameCount!==1||fi<5||r.outputTranscript.trim().split(/\n+/).length<10||!r.turns?.[0]?.playbackCompletedAfterLastByte||ratio<0.8||ratio>3.5) throw new Error("Incomplete BYOK long "+name+" proof: "+JSON.stringify({transcript:r.transcriptEvidence,payer:r.managedBillingEvidence,fi,ratio,timing:r.timing,turn:r.turns?.[0]})); console.log("BYOK long",name,{fi,ratio,input:r.inputTranscript,output:r.outputTranscript});}'
       - name: Exercise the low-level direct and streamed JSON-RPC routes
         run: |
           node -e "const p=require('./protocol-byok.json'),m=p.configuredModels.text.aux; require('fs').writeFileSync('gemini-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with exactly: provider-ok'}]}]})); require('fs').writeFileSync('gemini-stream-params.json',JSON.stringify({model:m,contents:[{role:'user',parts:[{text:'Reply with one short word.'}]}]}))"
@@ -167,6 +214,10 @@ jobs:
             byok-first-lesson.events.jsonl
             byok-connected-live.json
             byok-connected-live.events.jsonl
+            byok-long-observer.json
+            byok-long-observer.events.jsonl
+            byok-long-conversation.json
+            byok-long-conversation.events.jsonl
           retention-days: 14
       - name: Clear only files owned by the BYOK headless profile
         if: always()

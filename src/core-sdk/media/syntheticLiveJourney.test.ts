@@ -355,7 +355,7 @@ describe('synthetic Live journey', () => {
     }));
   });
 
-  it('keeps one Live connection across turns and preserves a short connected follow-up', async () => {
+  it('keeps one Live connection across six audio-video turns and sums cumulative provider usage', async () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
     const sent: any[] = [];
     let completedTurns = 0;
@@ -367,9 +367,14 @@ describe('synthetic Live journey', () => {
         completedTurns += 1;
         const turn = completedTurns;
         queueMicrotask(() => callbacks.onmessage?.({
+          usageMetadata: {
+            promptTokenCount: turn * 100,
+            responseTokenCount: 10,
+            totalTokenCount: turn * 100 + 10,
+          },
           serverContent: {
-            inputTranscription: { text: turn === 1 ? 'The first turn.' : 'Works?' },
-            outputTranscription: { text: turn === 1 ? 'First reply.' : 'Second reply.' },
+            inputTranscription: { text: `Input ${turn}.` },
+            outputTranscription: { text: `Reply ${turn}.` },
             modelTurn: {
               parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: modelPcmBase64 } }],
             },
@@ -405,9 +410,10 @@ describe('synthetic Live journey', () => {
     const result = await runSyntheticLiveJourney(ai, {
       liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_HEADLESS_LIVE,
       source: createSyntheticPcmSource({ pcm: first, sampleRate: 16_000, pace: true, runtime }),
-      additionalSources: [
-        createSyntheticPcmSource({ pcm: shortFollowup, sampleRate: 16_000, pace: true, runtime }),
-      ],
+      additionalSources: Array.from(
+        { length: 5 },
+        () => createSyntheticPcmSource({ pcm: shortFollowup, sampleRate: 16_000, pace: true, runtime }),
+      ),
       gateInputOnSpeech: true,
       semanticSpeech: true,
       simulateUiSpeechHandoff: true,
@@ -416,20 +422,32 @@ describe('synthetic Live journey', () => {
       // test focuses on the connected-turn and playback-order invariants.
       requireRealtimeInputPacing: false,
       playModelAudioRealtime: true,
+      videoFramesByTurn: Array.from(
+        { length: 6 },
+        () => [{ dataBase64: 'data:image/png;base64,AA==' }],
+      ),
     }, { runtime });
 
     expect(ai.live.connect).toHaveBeenCalledOnce();
-    expect(result.connectedTurnCount).toBe(2);
-    expect(result.turns).toHaveLength(2);
-    expect(result.turns[1]).toMatchObject({
-      inputTranscript: 'Works?',
-      outputTranscript: 'Second reply.',
+    expect(result.connectedTurnCount).toBe(6);
+    expect(result.turns).toHaveLength(6);
+    expect(result.turns[5]).toMatchObject({
+      inputTranscript: 'Input 6.',
+      outputTranscript: 'Reply 6.',
       sentSamples: shortFollowup.length,
+      sentVideoFrameCount: 1,
       playbackCompletedAfterLastByte: true,
     });
-    expect(sent.filter(message => message.activityStart)).toHaveLength(2);
-    expect(sent.filter(message => message.activityEnd)).toHaveLength(2);
-    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(2);
+    expect(result.providerTurnUsage).toHaveLength(6);
+    expect(result.providerUsageMetadata).toMatchObject({
+      promptTokenCount: 2_100,
+      responseTokenCount: 60,
+      totalTokenCount: 2_160,
+    });
+    expect(sent.filter(message => message.activityStart)).toHaveLength(6);
+    expect(sent.filter(message => message.activityEnd)).toHaveLength(6);
+    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(6);
+    expect(sent.filter(message => message.video)).toHaveLength(6);
     expect(session.close).toHaveBeenCalledOnce();
   });
 

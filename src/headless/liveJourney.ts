@@ -17,6 +17,11 @@ import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
 import { createSyntheticVisualFrame } from './syntheticVisual';
 import { requireTranscriptEvidence } from './transcriptEvidence';
 import { LIVE_OPEN_TRIGGER } from '../../shared/liveOpenReason';
+import {
+  captureManagedJourneyBilling,
+  evaluateManagedLiveBilling,
+  waitForManagedJourneyBillingSettlement,
+} from './managedJourneyBilling';
 
 const decodePcmChunk = (base64: string): Int16Array => {
   const bytes = Uint8Array.from(globalThis.atob(base64), character => character.charCodeAt(0));
@@ -76,6 +81,10 @@ export const runHeadlessLiveTurn = async (
 ): Promise<any> => {
   const sampleRate = input.sampleRate ?? 16_000;
   if (sampleRate !== 16_000) throw new Error('Headless Live journeys require 16 kHz PCM16 mono input.');
+  const operationId = client.runtime.ids.create(`headless-live-${input.mode}`);
+  const billingBefore = client.accessMode === 'managed'
+    ? await captureManagedJourneyBilling(client, operationId)
+    : null;
   const pair = resolveLanguagePair({
     pairId: input.languagePairId || client.state.settings.selectedLanguagePairId,
   });
@@ -125,7 +134,7 @@ export const runHeadlessLiveTurn = async (
     timeoutMs: input.timeoutMs,
     includeModelAudio: true,
     videoFrames: visual ? [{ dataBase64: visual.dataBase64, mimeType: visual.mimeType }] : undefined,
-  }, { runtime: client.runtime });
+  }, { runtime: client.runtime, operationId });
   const transcriptEvidence = requireTranscriptEvidence(
     input.expectedTranscript,
     result.inputTranscript,
@@ -134,6 +143,23 @@ export const runHeadlessLiveTurn = async (
   const modelAudio = mergeInt16Arrays(
     (result.modelAudioChunksBase64 || []).map(decodePcmChunk),
   );
+  const managedBillingEvidence = billingBefore
+    ? evaluateManagedLiveBilling(
+        billingBefore,
+        await waitForManagedJourneyBillingSettlement(client, operationId, 30, 500),
+        operationId,
+        {
+          connectedTurns: result.connectedTurnCount,
+          sentAudioBytes: result.sentSamples * 2,
+          sentVideoFrames: result.sentVideoFrameCount,
+          receivedAudioBytes: result.modelAudioSampleCount * 2,
+        },
+      )
+    : {
+        applicable: false as const,
+        passed: true,
+        payer: 'byok-api-key-owner' as const,
+      };
 
   if (input.mode === 'stt') {
     return {
@@ -145,6 +171,7 @@ export const runHeadlessLiveTurn = async (
       capturedModelSamples: modelAudio.length,
       capturedModelSha256: modelAudio.length ? audioDigest(modelAudio) : null,
       transcriptEvidence,
+      managedBillingEvidence,
       modelAudioChunksBase64: undefined,
     };
   }
@@ -222,6 +249,7 @@ export const runHeadlessLiveTurn = async (
     capturedModelSamples: modelAudio.length,
     capturedModelSha256: modelAudio.length ? audioDigest(modelAudio) : null,
     transcriptEvidence,
+    managedBillingEvidence,
     omittedInlineData: {
       userMessage: compactUserMessage.omittedInlineData,
       assistantMessage: compactAssistantMessage.omittedInlineData,

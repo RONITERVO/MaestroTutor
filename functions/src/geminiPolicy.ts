@@ -5,6 +5,7 @@
 import { createHttpError } from './http';
 import { DEFAULT_GEMINI_PRICING, resolvePricingRule } from '../../shared/pricing/registry';
 import { requireLiveOpenReason, type LiveOpenReason } from '../../shared/liveOpenReason';
+import { applyLiveCostControls } from '../../shared/liveCostControls';
 
 export type ManagedContentOperation = 'generateContent' | 'streamContent' | 'generateImage';
 
@@ -183,9 +184,12 @@ export const buildManagedPromptTokenCountInputs = (
 export const requireSafeManagedLiveConfig = (
   config: Record<string, unknown> | undefined,
 ): Record<string, unknown> | undefined => {
-  if (!config) return undefined;
+  if (!config) return applyLiveCostControls(undefined);
   if (typeof config !== 'object' || Array.isArray(config)) {
     throw createHttpError(400, 'Managed Live config must be an object.');
+  }
+  if (Buffer.byteLength(JSON.stringify(config), 'utf8') > 32 * 1024) {
+    throw createHttpError(400, 'Managed Live config exceeds the 32 KiB safety limit.');
   }
   for (const key of Object.keys(config)) {
     if (FORBIDDEN_MANAGED_CONFIG_KEYS.has(key) || key === 'tools' || key === 'toolConfig') {
@@ -195,7 +199,7 @@ export const requireSafeManagedLiveConfig = (
   if (collectGeminiFileUris(config).length > 0) {
     throw createHttpError(400, 'Managed Live config cannot reference Gemini Files API URIs.');
   }
-  return config;
+  return applyLiveCostControls(config);
 };
 
 /** Collect every Files API URI referenced anywhere in a request payload. */

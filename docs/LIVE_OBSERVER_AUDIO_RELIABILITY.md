@@ -188,6 +188,26 @@ awaited. Its 48 usage rows matched 48 charge rows and 433 credits / USD 0.413022
 with zero reservation before and after. This was the exact fixture that had exposed
 the burst failure, not a relaxed replacement.
 
+### Pending six-turn and long-audio release gate
+
+The current candidate expands the connected-socket proof from two to six turns in
+both managed and BYOK modes and sends one low-resolution visual frame on each turn.
+The managed proof correlates the socket request ID with exactly one usage row and
+one charge row, checks all six provider usage snapshots are included, recalculates
+the charge from the checked-in price registry, and requires zero shortfall or
+stranded reservation. This prevents later turns from being accidentally free or
+charged as a fixed maximum.
+
+The long fixture is based on the 37.55-second English question recorded with a
+Finnish accent in `Tallenne (14).m4a`. Local Whisper `large-v3-turbo` with English
+forced recovered the whole question, ending with “what is the main reason for
+this”. The checked-in transcript evidence includes segment and word timestamps;
+the personal recording itself is not committed. CI generates the same wording once
+with the paid BYOK key, inserts a four-second mid-sentence pause, and reuses those
+exact PCM bytes for managed and BYOK observer-camera and conversation runs. Each
+run must transcribe the complete question and finish playing five English/Finnish
+response pairs.
+
 ## Maintainer runbook
 
 Use a real spoken fixture converted to signed PCM16 mono at 16 kHz. Put base64 in a

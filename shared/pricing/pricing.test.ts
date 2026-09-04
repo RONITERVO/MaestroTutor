@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_GEMINI_PRICING, resolvePricingRule } from './registry';
 import { calculateGeminiUsageCost } from './usage';
 import {
+  calculateLiveGatewayWindowUsd,
   calculateLiveWindowUsd,
   creditsToUsd,
   estimateOperationUsd,
@@ -186,5 +187,13 @@ describe('live windows', () => {
     const capped = calculateLiveWindowUsd(5_000);
     const wayOverCapped = calculateLiveWindowUsd(86_400);
     expect(wayOverCapped).toBe(capped);
+  });
+
+  it('reserves for six re-billed turns, low-resolution camera input and text overhead', () => {
+    const gateway = calculateLiveGatewayWindowUsd(120);
+    const oldSinglePassEstimate = calculateLiveWindowUsd(120);
+
+    expect(gateway).toBe(0.454925);
+    expect(gateway).toBeGreaterThan(oldSinglePassEstimate * 4);
   });
 });

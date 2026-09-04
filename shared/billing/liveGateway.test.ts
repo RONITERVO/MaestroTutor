@@ -24,6 +24,7 @@ describe('managed Live gateway usage evidence', () => {
       inputAudioBytes: 32_000,
       setupComplete: true,
       usefulOutput: false,
+      providerTurnCompleteCount: 0,
       providerMessageCount: 1,
     });
     expect(getLiveGatewayBillableUsage(checkpoint)).toEqual({
@@ -72,6 +73,39 @@ describe('managed Live gateway usage evidence', () => {
         responseTokensDetails: [{ modality: 'AUDIO', tokenCount: 30 }],
       }),
     });
+    expect(checkpoint.providerTurnCompleteCount).toBe(1);
+  });
+
+  it('counts every completed turn and sums re-billed context on one provider socket', () => {
+    let checkpoint = createLiveGatewayUsageCheckpoint();
+    for (let turn = 1; turn <= 6; turn += 1) {
+      checkpoint = observeLiveGatewayProviderMessage(checkpoint, {
+        serverContent: { turnComplete: true },
+        usageMetadata: { totalTokenCount: turn * 100 },
+      });
+    }
+
+    expect(checkpoint.providerTurnComplete).toBe(true);
+    expect(checkpoint.providerTurnCompleteCount).toBe(6);
+    expect(checkpoint.providerTurnUsage).toHaveLength(6);
+    expect(checkpoint.providerUsageMetadata?.totalTokenCount).toBe(2_100);
+  });
+
+  it('associates provider usage sent after turn-complete with the completed turn', () => {
+    let checkpoint = createLiveGatewayUsageCheckpoint();
+    checkpoint = observeLiveGatewayClientMessage(checkpoint, { audioStreamEnd: true });
+    checkpoint = observeLiveGatewayProviderMessage(checkpoint, {
+      serverContent: { turnComplete: true },
+    });
+    checkpoint = observeLiveGatewayProviderMessage(checkpoint, {
+      usageMetadata: { promptTokenCount: 80, responseTokenCount: 20, totalTokenCount: 100 },
+    });
+
+    expect(checkpoint.providerTurnUsage).toEqual([{
+      turn: 1,
+      usageMetadata: expect.objectContaining({ totalTokenCount: 100 }),
+    }]);
+    expect(checkpoint.providerUsageMetadata?.totalTokenCount).toBe(100);
   });
 
   it('falls back to server-observed PCM duration when a useful response has no usage metadata', () => {
@@ -171,7 +205,10 @@ describe('managed Live gateway usage evidence', () => {
         promptTokenCount: 84,
         responseTokenCount: 16,
         totalTokenCount: 100,
-        promptTokensDetails: [{ modality: 'AUDIO', tokenCount: 32 }],
+        promptTokensDetails: [
+          { modality: 'AUDIO', tokenCount: 32 },
+          { modality: 'TEXT', tokenCount: 52 },
+        ],
         responseTokensDetails: [{ modality: 'AUDIO', tokenCount: 16 }],
       }),
     });

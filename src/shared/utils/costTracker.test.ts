@@ -206,17 +206,31 @@ describe('calculateGeminiUsageCost', () => {
 });
 
 describe('cost tracking storage', () => {
-  it('persists Live usage deltas instead of summing cumulative snapshots', () => {
+  it('prices each Live turn including its re-billed retained context', () => {
     const tracker = createLiveUsageTracker({
       feature: 'liveConversation',
       configuredModel: 'gemini-3.1-flash-live-preview',
     });
     tracker.trackSnapshot({ promptTokenCount: 10 });
+    tracker.completeTurn();
     tracker.trackSnapshot({ promptTokenCount: 25 });
+    tracker.completeTurn();
 
     const entry = getCostSummary().entries[0];
-    expect(entry.inputTokens).toBe(25);
+    expect(entry.inputTokens).toBe(35);
     expect(entry.requests).toBe(1);
+  });
+
+  it('keeps only the latest periodic snapshot inside one Live turn', () => {
+    const tracker = createLiveUsageTracker({
+      feature: 'stt',
+      configuredModel: 'gemini-3.1-flash-live-preview',
+    });
+    tracker.trackSnapshot({ promptTokenCount: 10 });
+    tracker.trackSnapshot({ promptTokenCount: 25 });
+    tracker.completeTurn();
+
+    expect(getCostSummary().entries[0].inputTokens).toBe(25);
   });
 
   it('preserves the old unverifiable estimate separately during migration', () => {

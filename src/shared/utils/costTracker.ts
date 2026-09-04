@@ -18,6 +18,7 @@ import {
   normalizePersistedModalityTotals,
   toModalityTotals,
 } from '../../../shared/pricing/usage';
+import { mergeLiveProviderTurnUsage } from '../../../shared/billing/liveGateway';
 
 export type { CalculatedUsageCost, ModalityTokenCountLike, UsageMetadataLike };
 
@@ -277,55 +278,6 @@ const normalizeUsageSnapshot = (metadata: UsageMetadataLike): UsageMetadataLike 
   toolUsePromptTokensDetails: normalizeUsageDetails(metadata.toolUsePromptTokensDetails),
 });
 
-const usageCountDelta = (current: unknown, previous: unknown): number => {
-  const currentCount = asCount(current);
-  const previousCount = asCount(previous);
-  return currentCount >= previousCount ? currentCount - previousCount : currentCount;
-};
-
-const usageDetailsDelta = (
-  current: ModalityTokenCountLike[] | undefined,
-  previous: ModalityTokenCountLike[] | undefined
-): ModalityTokenCountLike[] | undefined => {
-  if (!current) return undefined;
-  const currentTotals = toModalityTotals(current, 0);
-  const previousTotals = toModalityTotals(previous, 0);
-  const delta = (Object.keys(currentTotals) as BillingModality[])
-    .map(modality => ({
-      modality,
-      tokenCount: usageCountDelta(currentTotals[modality], previousTotals[modality]),
-    }))
-    .filter(detail => detail.tokenCount > 0);
-  return delta.length > 0 ? delta : undefined;
-};
-
-const usageSnapshotDelta = (
-  current: UsageMetadataLike,
-  previous?: UsageMetadataLike
-): UsageMetadataLike => ({
-  promptTokenCount: usageCountDelta(current.promptTokenCount, previous?.promptTokenCount),
-  cachedContentTokenCount: usageCountDelta(
-    current.cachedContentTokenCount,
-    previous?.cachedContentTokenCount
-  ),
-  candidatesTokenCount: usageCountDelta(current.candidatesTokenCount, previous?.candidatesTokenCount),
-  thoughtsTokenCount: usageCountDelta(current.thoughtsTokenCount, previous?.thoughtsTokenCount),
-  toolUsePromptTokenCount: usageCountDelta(
-    current.toolUsePromptTokenCount,
-    previous?.toolUsePromptTokenCount
-  ),
-  promptTokensDetails: usageDetailsDelta(current.promptTokensDetails, previous?.promptTokensDetails),
-  cacheTokensDetails: usageDetailsDelta(current.cacheTokensDetails, previous?.cacheTokensDetails),
-  candidatesTokensDetails: usageDetailsDelta(
-    current.candidatesTokensDetails,
-    previous?.candidatesTokensDetails
-  ),
-  toolUsePromptTokensDetails: usageDetailsDelta(
-    current.toolUsePromptTokensDetails,
-    previous?.toolUsePromptTokensDetails
-  ),
-});
-
 const usageDetailsTotal = (details: ModalityTokenCountLike[] | undefined): number => (
   Object.values(toModalityTotals(details, 0)).reduce((sum, count) => sum + count, 0)
 );
@@ -346,21 +298,34 @@ const hasUsage = (metadata: UsageMetadataLike): boolean => (
 );
 
 export const createLiveUsageTracker = (options: LiveUsageTrackingOptions) => {
-  let previous: UsageMetadataLike | undefined;
+  let pendingTurn: UsageMetadataLike | undefined;
   let hasRecordedRequest = false;
+  const completeTurn = (): void => {
+    if (!pendingTurn || !hasUsage(pendingTurn)) {
+      pendingTurn = undefined;
+      return;
+    }
+    trackGeminiUsage({
+      ...options,
+      // Gemini Live re-bills the retained context on every turn. Record the
+      // latest snapshot for this turn in full rather than subtracting the
+      // previous turn's smaller context.
+      usageMetadata: pendingTurn,
+      requestCount: hasRecordedRequest ? 0 : 1,
+    });
+    hasRecordedRequest = true;
+    pendingTurn = undefined;
+  };
   return {
     trackSnapshot(metadata: UsageMetadataLike): void {
       const normalized = normalizeUsageSnapshot(metadata);
-      const delta = usageSnapshotDelta(normalized, previous);
-      previous = normalized;
-      if (!hasUsage(delta)) return;
-      trackGeminiUsage({
-        ...options,
-        usageMetadata: delta,
-        requestCount: hasRecordedRequest ? 0 : 1,
-      });
-      hasRecordedRequest = true;
+      pendingTurn = mergeLiveProviderTurnUsage(
+        pendingTurn ? [{ turn: 1, usageMetadata: pendingTurn }] : [],
+        [{ turn: 1, usageMetadata: normalized }],
+      )[0]?.usageMetadata;
     },
+    completeTurn,
+    flush: completeTurn,
   };
 };
 

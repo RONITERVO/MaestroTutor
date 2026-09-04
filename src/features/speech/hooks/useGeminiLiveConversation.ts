@@ -69,6 +69,7 @@ import {
   getAudioOutputTailDelayMs,
   WorkletPlaybackDrainCoordinator,
 } from '../utils/playbackDrain';
+import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
 
 export type LiveSessionState = 'idle' | 'armed' | 'connecting' | 'active' | 'error';
 
@@ -1164,6 +1165,7 @@ export function useGeminiLiveConversation(
         model,
         liveOpenReason: createLiveOpenReason(liveOpenTrigger),
         config: {
+          ...getLiveCostControlConfig(),
           responseModalities,
           systemInstruction: systemInstruction,
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
@@ -1191,6 +1193,7 @@ export function useGeminiLiveConversation(
                 if (msg.usageMetadata) {
                   usageTracker.trackSnapshot(msg.usageMetadata);
                 }
+                if (msg.serverContent?.turnComplete) usageTracker.completeTurn();
 
                 if (msg.goAway) {
                   callbacksRef.current.onGoAway?.(msg.goAway);
@@ -1536,11 +1539,13 @@ export function useGeminiLiveConversation(
               });
           },
           onclose: () => {
+            usageTracker.flush();
             void finishTransportLifecycle('idle').catch((error) => {
               console.warn('Live playback drain after close failed:', error);
             });
           },
           onerror: (err: any) => {
+            usageTracker.flush();
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
             let message = "Connection error";

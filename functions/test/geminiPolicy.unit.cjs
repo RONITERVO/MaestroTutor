@@ -93,10 +93,21 @@ test('prompt token counting separates Developer API-incompatible config', () => 
 
 test('managed Live config is scopeable but cannot mint tool-enabled tokens', () => {
   const liveConfig = { responseModalities: ['AUDIO'], systemInstruction: 'Be concise.' };
-  assert.equal(requireSafeManagedLiveConfig(liveConfig), liveConfig);
+  assert.deepEqual(requireSafeManagedLiveConfig(liveConfig), {
+    ...liveConfig,
+    contextWindowCompression: {
+      triggerTokens: '25000',
+      slidingWindow: { targetTokens: '8000' },
+    },
+    mediaResolution: 'MEDIA_RESOLUTION_LOW',
+  });
   assert.throws(
     () => requireSafeManagedLiveConfig({ tools: [{ googleSearch: {} }] }),
     (error) => error.status === 400 && /tools/.test(error.message),
+  );
+  assert.throws(
+    () => requireSafeManagedLiveConfig({ systemInstruction: 'x'.repeat(33 * 1024) }),
+    (error) => error.status === 400 && /32 KiB/.test(error.message),
   );
 });
 

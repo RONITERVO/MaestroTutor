@@ -181,6 +181,15 @@ usage. Do not “simplify” this by passing the full generation request to
 reservation for an incomplete answer is a billing incident. Client disconnects are
 consumed to provider completion so actual usage can still be settled.
 
+Gemini Live provider usage is recorded per completed model turn. Do not replace
+that with a single maximum or final-session snapshot: retained context is billed
+again on later turns, so the six-turn total is the sum of each turn's latest usage
+metadata. The managed gateway limits a socket to 120 seconds and six turns, forces
+low media resolution, paces camera input at one frame per second, and enables
+context compression. Its current worst-case temporary reservation is 455 credits
+at 1,000 credits/USD; actual provider-derived cost is charged and the unused hold
+is returned.
+
 ## 3. Access a maintainer needs
 
 A maintainer can complete the entire runbook with:

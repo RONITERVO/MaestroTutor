@@ -113,10 +113,14 @@ time, PCM crossed the pre-connect handoff, and model audio completed a real-time
 24 kHz playback drain.
 
 The scheduled staging workflow additionally sends the short bundled `Play` clip
-twice over one still-connected socket in managed and BYOK modes. It rejects the
-run unless both input transcripts and responses are non-empty, both manual audio
-boundaries carry samples, and playback for each turn completes after its final
-network audio byte.
+six times over one still-connected socket in managed and BYOK modes, with one
+low-resolution camera frame on every turn. It rejects the run unless every input
+transcript and response is non-empty, all six manual audio boundaries carry
+samples, and playback for every turn completes after its final network audio byte.
+It also runs one shared long English fixture through observer-camera and
+conversation mode in both access modes. That fixture includes a four-second pause,
+requires the complete question transcript, and forces five English/Finnish response
+pairs so truncated input, output, playback, or translation cannot pass unnoticed.
 
 ## Access-mode policy and safe cleanup
 
@@ -286,13 +290,16 @@ and zero managed credits reserved afterward.
 
 ### Managed Live billing fairness boundary
 
-Managed Live now reserves a conservative 180-second maximum but does not charge at
+Managed Live now reserves a conservative 120-second, six-turn maximum but does not charge at
 ticket mint. A one-use bearer ticket authenticates the client to Maestro's Cloud
 Run WebSocket gateway. Its hash and sanitized Live setup config exist only while
 the ticket is usable; consumption or expiry scrubs both, and the durable session
 stores no config. The gateway loads the allowlisted model/config in memory, holds
 the Gemini credential, and records
-monotonic input/output/usage checkpoints. The first useful provider output is
+monotonic input/output/usage checkpoints. Provider usage is retained as one latest
+snapshot per completed turn and then summed, because retained Live context is billed
+again on later turns; treating the final snapshot as the whole socket would
+undercharge multi-turn sessions. The first useful provider output is
 durably checkpointed before it is forwarded, preventing a modified client from
 receiving an answer and then claiming nothing arrived.
 
@@ -318,6 +325,16 @@ The invariants are enforced at four layers:
   reserved credits; and
 - the paired real-time observer/full-journey jobs exercise the same Core client used
   by the visual UI and compare managed against BYOK evidence.
+
+The gateway enforces the same boundary used by its temporary hold: at most 120
+seconds, six turns, one camera frame per second, low media resolution, and bounded
+configuration size. At the current 1,000 credits/USD conversion the worst-case hold
+is 455 credits. This is not a fixed charge: successful sessions settle from summed
+provider turn usage and return the remainder; no-output sessions return the whole
+hold. The staging proof additionally requires one correlated usage row, one matching
+charge row, zero shortfall, zero stranded reservation, and exact agreement between
+provider metadata, the checked-in pricing table, both ledgers, and the account
+balance delta.
 
 Cloud Run is the deployment surface because it supports WebSockets, bounded
 request timeouts and high connection concurrency:

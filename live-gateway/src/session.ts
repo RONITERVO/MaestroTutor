@@ -3,6 +3,8 @@
 
 import {
   LIVE_GATEWAY_AUTH_TIMEOUT_MS,
+  LIVE_GATEWAY_MAX_TURNS,
+  LIVE_GATEWAY_VIDEO_FRAME_INTERVAL_MS,
   type LiveGatewayClientMessage,
   type LiveGatewayBillingSummary,
   type LiveGatewayServerMessage,
@@ -128,6 +130,49 @@ const isAudioBoundary = (input: Record<string, unknown>): boolean => (
   Boolean(input.audioStreamEnd)
 );
 
+const isBase64Payload = (value: unknown): value is string => (
+  typeof value === 'string'
+  && value.length > 0
+  && value.length % 4 === 0
+  && /^[A-Za-z0-9+/]*={0,2}$/.test(value)
+);
+
+const validateRealtimeInput = (input: Record<string, unknown>): void => {
+  const allowed = new Set(['audio', 'video', 'activityStart', 'activityEnd', 'audioStreamEnd']);
+  const keys = Object.keys(input);
+  if (keys.length === 0 || keys.some(key => !allowed.has(key))) {
+    throw new Error('Managed Live realtime input contains unsupported fields.');
+  }
+  if (input.audio !== undefined) {
+    const audio = asObject(input.audio);
+    if (
+      !audio
+      || !isBase64Payload(audio.data)
+      || !/^audio\/pcm;rate=(?:16000|24000)$/i.test(String(audio.mimeType || ''))
+    ) {
+      throw new Error('Managed Live audio must be base64 PCM at 16 kHz or 24 kHz.');
+    }
+  }
+  if (input.video !== undefined) {
+    const video = asObject(input.video);
+    if (
+      !video
+      || !isBase64Payload(video.data)
+      || !/^image\/(?:jpeg|png|webp)$/i.test(String(video.mimeType || ''))
+    ) {
+      throw new Error('Managed Live video must be a base64 JPEG, PNG, or WebP frame.');
+    }
+  }
+  for (const key of ['activityStart', 'activityEnd']) {
+    if (input[key] !== undefined && !asObject(input[key])) {
+      throw new Error(`Managed Live ${key} must be an object signal.`);
+    }
+  }
+  if (input.audioStreamEnd !== undefined && input.audioStreamEnd !== true) {
+    throw new Error('Managed Live audioStreamEnd must be true.');
+  }
+};
+
 const waitFor = async <T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> => {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -156,6 +201,8 @@ export class LiveGatewayConnection {
   private finalization: Promise<void> | null = null;
   private providerInputPacingStartedAt: number | null = null;
   private providerInputDurationScheduledMs = 0;
+  private providerVideoPacingStartedAt: number | null = null;
+  private providerVideoFramesScheduled = 0;
 
   constructor(private readonly options: LiveGatewayConnectionOptions) {
     this.authTimer = setTimeout(
@@ -227,21 +274,37 @@ export class LiveGatewayConnection {
       return;
     }
     if (message.type === 'realtimeInput') {
+      validateRealtimeInput(message.input);
+      const hasNewMediaOrTurn = Boolean(
+        message.input.audio
+        || message.input.video
+        || message.input.activityStart
+        || message.input.audioStreamEnd,
+      );
+      if (this.checkpointState.providerTurnCompleteCount >= LIVE_GATEWAY_MAX_TURNS && hasNewMediaOrTurn) {
+        throw new Error(`Managed Live sessions are limited to ${LIVE_GATEWAY_MAX_TURNS} turns.`);
+      }
+      if (
+        message.input.audioStreamEnd
+        && this.checkpointState.clientTurnBoundaryCount >= LIVE_GATEWAY_MAX_TURNS
+      ) {
+        throw new Error(`Managed Live sessions are limited to ${LIVE_GATEWAY_MAX_TURNS} turns.`);
+      }
       const previousInputBytes = this.checkpointState.inputAudioBytes;
+      const previousVideoFrames = this.checkpointState.inputVideoFrameCount;
       this.checkpointState = observeLiveGatewayClientMessage(this.checkpointState, message.input);
       const addedAudioBytes = this.checkpointState.inputAudioBytes - previousInputBytes;
+      const addedVideoFrames = this.checkpointState.inputVideoFrameCount - previousVideoFrames;
       await this.paceProviderAudio(addedAudioBytes, this.checkpointState.inputAudioSampleRate);
+      await this.paceProviderVideo(addedVideoFrames);
       await this.providerSession.sendRealtimeInput(message.input);
       if (isAudioBoundary(message.input)) await this.persistCheckpoint();
       return;
     }
     if (message.type === 'clientContent') {
-      if (!this.providerSession.sendClientContent) throw new Error('Provider does not support client content.');
-      await this.providerSession.sendClientContent(message.input);
-      return;
+      throw new Error('Managed Live client content is not supported.');
     }
-    if (!this.providerSession.sendToolResponse) throw new Error('Provider does not support tool responses.');
-    await this.providerSession.sendToolResponse(message.input);
+    throw new Error('Managed Live tool responses are not supported.');
   }
 
   /**
@@ -255,6 +318,20 @@ export class LiveGatewayConnection {
     this.providerInputPacingStartedAt ??= now;
     const dueAt = this.providerInputPacingStartedAt + this.providerInputDurationScheduledMs;
     this.providerInputDurationScheduledMs += (audioBytes / 2 / sampleRate) * 1_000;
+    const delayMs = dueAt - now;
+    if (delayMs <= 0) return;
+    const sleep = this.options.sleep
+      || ((milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds)));
+    await sleep(delayMs);
+  }
+
+  private async paceProviderVideo(frameCount: number): Promise<void> {
+    if (frameCount <= 0) return;
+    const now = this.options.now?.() ?? Date.now();
+    this.providerVideoPacingStartedAt ??= now;
+    const dueAt = this.providerVideoPacingStartedAt
+      + this.providerVideoFramesScheduled * LIVE_GATEWAY_VIDEO_FRAME_INTERVAL_MS;
+    this.providerVideoFramesScheduled += frameCount;
     const delayMs = dueAt - now;
     if (delayMs <= 0) return;
     const sleep = this.options.sleep

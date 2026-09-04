@@ -117,7 +117,7 @@ export const appConfig = {
   managedCreditsPerUsd: Math.max(1, parseInteger(process.env.MANAGED_CREDITS_PER_USD, 1000)),
   requireAppCheck: parseBoolean(process.env.REQUIRE_APPCHECK, true),
   geminiLiveTokenUses: Math.max(1, parseInteger(process.env.GEMINI_LIVE_TOKEN_USES, 1)),
-  managedLiveTokenLifetimeSeconds: Math.min(180, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 180))),
+  managedLiveTokenLifetimeSeconds: Math.min(120, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 120))),
   managedLiveGatewayUrl: process.env.MANAGED_LIVE_GATEWAY_URL?.trim() || '',
   managedLiveGatewayTicketSeconds: Math.min(
     60,

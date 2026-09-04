@@ -10,6 +10,7 @@ import {
   createLiveOpenReason,
   type AudioNoteLiveOpenTrigger,
 } from '../../../shared/liveOpenReason';
+import { getLiveCostControlConfig } from '../../../shared/liveCostControls';
 
 const OUTPUT_SAMPLE_RATE = 24_000;
 const SESSION_TIMEOUT_MS = 180_000;
@@ -157,6 +158,7 @@ export const runCoreAudioNoteGeneration = async (params: {
       model,
       liveOpenReason: createLiveOpenReason(params.liveOpenTrigger, { requestId: operationId }),
       config: {
+        ...getLiveCostControlConfig(),
         responseModalities: [Modality.AUDIO],
         speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
         systemInstruction: { parts: [{ text: systemInstruction }] },

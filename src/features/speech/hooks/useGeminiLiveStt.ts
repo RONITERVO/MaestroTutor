@@ -50,6 +50,7 @@ import {
 import { useMaestroStore } from '../../../store';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
 import type { SttStartOptions, SttTurnDestination } from '../../../core-sdk/media/sttTurnRouting';
+import { getLiveCostControlConfig } from '../../../../shared/liveCostControls';
 
 export interface GeminiLiveSttTurnComplete {
   turnId: number;
@@ -580,6 +581,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         model,
         liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.WHISPER_STT),
         config: {
+          ...getLiveCostControlConfig(),
           responseModalities: [Modality.AUDIO], // Required by API even if we only care about transcription
           inputAudioTranscription: {}, // Enable Input Transcription
           outputAudioTranscription: {}, // Enable Output Transcription (The Parrot)
@@ -601,6 +603,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             if (msg.usageMetadata) {
               usageTracker.trackSnapshot(msg.usageMetadata);
             }
+            if (msg.serverContent?.turnComplete) usageTracker.completeTurn();
             
             // 1. Capture User Input (ASR) - Low Latency, potentially inaccurate
             if (msg.serverContent?.inputTranscription) {
@@ -726,6 +729,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             }
           },
           onclose: (event: any) => {
+            usageTracker.flush();
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
 
@@ -747,6 +751,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             setIsListening(false);
           },
           onerror: (err: any) => {
+            usageTracker.flush();
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
             setLiveActivityPhase(null);
