@@ -473,6 +473,7 @@ const withManagedReservation = async <T>(params: {
     promptTokens,
     operation: params.operation,
     searchQueries: reservedSearchQueries,
+    expectedOutputTokens: Number(params.config?.maxOutputTokens),
   });
   const estimatedCredits = usdToCredits(estimatedUsd);
 
@@ -486,7 +487,8 @@ const withManagedReservation = async <T>(params: {
     metadata: {
       promptTokens,
       reservedSearchQueries,
-      outputReservation: 'uncapped-provider-default',
+      outputReservation: 'published-model-ceiling',
+      maxOutputTokens: params.config?.maxOutputTokens,
     },
   });
 
@@ -518,7 +520,7 @@ export const generateManagedContent = async (params: {
       'generation',
     ),
   );
-  const config = prepareManagedGenerationConfig(params.config);
+  const config = prepareManagedGenerationConfig(params.config, model);
   const operation = resolveManagedContentOperation(config, false, model);
   await requireOwnedManagedContentFiles(params.uid, params.contents, config);
 
@@ -586,7 +588,7 @@ export const streamManagedContent = async (params: {
       'streaming generation',
     ),
   );
-  const config = prepareManagedGenerationConfig(params.config);
+  const config = prepareManagedGenerationConfig(params.config, model);
   const operation = resolveManagedContentOperation(config, true, model);
   await requireOwnedManagedContentFiles(params.uid, params.contents, config);
   await sweepExpiredReservationsForUser(params.uid);
@@ -600,6 +602,7 @@ export const streamManagedContent = async (params: {
     promptTokens,
     operation,
     searchQueries: reservedSearchQueries,
+    expectedOutputTokens: Number(config.maxOutputTokens),
   });
   const estimatedCredits = usdToCredits(estimatedUsd);
 
@@ -613,7 +616,8 @@ export const streamManagedContent = async (params: {
     metadata: {
       promptTokens,
       reservedSearchQueries,
-      outputReservation: 'uncapped-provider-default',
+      outputReservation: 'published-model-ceiling',
+      maxOutputTokens: config.maxOutputTokens,
     },
   });
 

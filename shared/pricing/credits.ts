@@ -170,22 +170,23 @@ export const estimateOperationUsd = (params: {
   const rule = resolvePricingRule(params.model, params.pricing);
   const promptTokens = Math.max(0, params.promptTokens);
 
-  // An image is charged as a flat amount per image, not per output token, so
-  // its floor has to be that amount or the reservation cannot cover settlement.
+  // The total output allowance includes images and is priced at the highest
+  // modality rate. The image fallback is a floor, not an additional output cost.
   if (params.operation === 'generateImage') {
     const perImage = rule?.generatedImageUsdFallback ?? 0.039;
-    const inputRate = rule?.inputPerMillion?.text ?? 0;
-    const outputRate = rule?.outputPerMillion?.text ?? 0;
+    const inputRate = Math.max(0, ...Object.values(rule?.inputPerMillion || {}));
+    const outputRate = Math.max(0, ...Object.values(rule?.outputPerMillion || {}));
     const outputTokens = Math.max(0, Number(params.expectedOutputTokens || 0));
     return roundUsd(
-      perImage
-      + (promptTokens / 1_000_000) * inputRate
-      + (outputTokens / 1_000_000) * outputRate
+      (promptTokens / 1_000_000) * inputRate
+      + Math.max(perImage, (outputTokens / 1_000_000) * outputRate)
     );
   }
 
-  const inputRate = rule?.inputPerMillion?.text ?? 0;
-  const outputRate = rule?.outputPerMillion?.text ?? 0;
+  const longRates = rule?.longContext && promptTokens > rule.longContext.abovePromptTokens
+    ? rule.longContext : rule;
+  const inputRate = Math.max(0, ...Object.values(longRates?.inputPerMillion || {}));
+  const outputRate = Math.max(0, ...Object.values(longRates?.outputPerMillion || {}));
 
   const configuredOutputTokens = Number(params.expectedOutputTokens);
   const expectedOutputTokens = Number.isFinite(configuredOutputTokens) && configuredOutputTokens >= 0

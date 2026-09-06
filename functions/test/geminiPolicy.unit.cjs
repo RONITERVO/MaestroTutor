@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   prepareManagedGenerationConfig,
+  managedGenerationOutputLimit,
   buildManagedPromptTokenCountInputs,
   collectGeminiFileUris,
   requireAllowedManagedModel,
@@ -19,6 +20,8 @@ const {
 } = require('../lib/functions/src/geminiPolicy.js');
 const {
   googleSearchQueriesToUsd,
+  estimateReservationUsd,
+  calculateManagedLiveSpendAdmissionUsd,
   usageMetadataToUsd,
 } = require('../lib/functions/src/pricing.js');
 const { appConfig } = require('../lib/functions/src/config.js');
@@ -62,12 +65,12 @@ test('managed config allows only server-priced tools and no transport overrides'
     () => requireSafeManagedGenerationConfig({ tools: [{ codeExecution: {} }] }),
     (error) => error.status === 400 && /Google Search/.test(error.message),
   );
-  assert.equal(prepareManagedGenerationConfig({ maxOutputTokens: 50_000 }), undefined);
+  assert.deepEqual(prepareManagedGenerationConfig({ maxOutputTokens: 50_000 }), { maxOutputTokens: 65_536 });
   assert.deepEqual(
     prepareManagedGenerationConfig({ maxOutputTokens: 512, responseMimeType: 'text/plain' }),
-    { responseMimeType: 'text/plain' },
+    { responseMimeType: 'text/plain', maxOutputTokens: 65_536 },
   );
-  for (const unsupported of ['candidateCount', 'temperature', 'topP', 'topK']) {
+  for (const unsupported of ['candidateCount', 'temperature', 'topP', 'topK', 'serviceTier', 'routingConfig', 'modelSelectionConfig', 'cachedContent', 'unknownFutureField']) {
     assert.throws(
       () => prepareManagedGenerationConfig({ [unsupported]: 1 }),
       (error) => error.status === 400 && error.message.includes(unsupported),
@@ -77,6 +80,28 @@ test('managed config allows only server-priced tools and no transport overrides'
     () => requireSafeManagedGenerationConfig({ httpOptions: { baseUrl: 'https://example.test' } }),
     (error) => error.status === 400 && /httpOptions/.test(error.message),
   );
+});
+
+test('full model output and multimodal rates are covered before generation', () => {
+  assert.ok(calculateManagedLiveSpendAdmissionUsd() >= (131072 * 3 + 65536 * 12) / 1e6);
+  for (const [model, expectedOutputTokens] of [['gemini-3.8-flash', 65536], ['gemini-3.5-flash-lite', 65536], ['gemini-2.5-flash-image', 32768]]) {
+    assert.equal(managedGenerationOutputLimit(model), expectedOutputTokens);
+    const operation = model.includes('image') ? 'generateImage' : 'generateContent';
+    const reserved = estimateReservationUsd({ model, promptTokens: 100, operation, expectedOutputTokens });
+    const billed = usageMetadataToUsd(model, { promptTokenCount: 100, candidatesTokenCount: expectedOutputTokens }, operation, 0, 0);
+    assert.ok(reserved >= billed, `${model}: ${reserved} must cover ${billed}`);
+    if (operation === 'generateImage') {
+      assert.ok(reserved >= 32768 * 30 / 1e6);
+      assert.ok(Math.ceil(reserved * 1000) <= 1000, 'the full image output budget fits a fresh 1000-credit pack');
+      const imageCost = usageMetadataToUsd(model, {
+        promptTokenCount: 100,
+        candidatesTokenCount: 32768,
+        candidatesTokensDetails: [{ modality: 'IMAGE', tokenCount: 32768 }],
+      }, operation, 25, 0);
+      assert.ok(reserved >= imageCost, 'the full output allowance already includes images');
+    }
+  }
+  assert.throws(() => managedGenerationOutputLimit('gemini-unreviewed'), error => error.status === 500);
 });
 
 test('prompt token counting separates Developer API-incompatible config', () => {

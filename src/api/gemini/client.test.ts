@@ -66,6 +66,9 @@ class FakeWebSocket {
 
   send(data: string) { this.sent.push(data); }
   close(code?: number, reason?: string) {
+    if (code !== undefined && code !== 1000 && (code < 3000 || code > 4999)) {
+      throw new DOMException('Invalid client WebSocket close code', 'InvalidAccessError');
+    }
     this.closeCalls.push({ code, reason });
     this.readyState = 3;
   }
@@ -256,11 +259,64 @@ describe('Gemini provider routing', () => {
     expect(mocks.createLiveGatewayTicket).not.toHaveBeenCalled();
   });
 
+  it('stops upstream microphone input after a server handoff while delivering the reply and allowing close', async () => {
+    mocks.resolveAccessMode.mockResolvedValue('managed');
+    const oninputturnended = vi.fn();
+    const onmessage = vi.fn();
+    const onerror = vi.fn();
+    const ai = await getAi();
+    const pending = ai.live.connect({
+      model: 'gemini-3.1-flash-live-preview',
+      liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE),
+      callbacks: { oninputturnended, onmessage, onerror },
+    });
+    await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(1));
+    const socket = FakeWebSocket.instances[0];
+    socket.emit('open');
+    socket.serverMessage({ type: 'ready', sessionId: 'session-1', deadlineAt: Date.now() + 120_000 });
+    const session = await pending;
+    const handoff = { reason: 'duration-limit', maxDurationMs: 60_000 };
+    socket.serverMessage({ type: 'providerMessage', message: {}, inputTurnEnded: handoff });
+    await vi.waitFor(() => expect(oninputturnended).toHaveBeenCalledWith(handoff));
+    const sentBefore = socket.sent.length;
+    session.sendRealtimeInput({ audio: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=16000' } });
+    session.sendRealtimeInput({ activityEnd: {} });
+    expect(socket.sent).toHaveLength(sentBefore);
+    expect(socket.closeCalls).toHaveLength(0);
+    const reply = { serverContent: { modelTurn: { parts: [{ text: 'Your answer.' }] }, turnComplete: true } };
+    socket.serverMessage({ type: 'providerMessage', message: reply });
+    await vi.waitFor(() => expect(onmessage).toHaveBeenCalledWith(reply));
+    expect(onerror).not.toHaveBeenCalled();
+    session.close();
+    expect(JSON.parse(socket.sent[socket.sent.length - 1])).toEqual({ type: 'close' });
+    socket.emit('close', {});
+  });
+
   it('fails clearly when neither access path is available', async () => {
     mocks.resolveAccessMode.mockResolvedValue('none');
     await expect(getAi()).rejects.toMatchObject({
       status: 401,
       code: 'MISSING_ACCESS',
     });
+  });
+
+  it.each([
+    [{ type: 'error', message: 'Provider failed', code: 'LIVE_PROVIDER_ERROR' }, 4003],
+    [{ type: 'unknown' }, 4004],
+  ])('closes a failed ready socket with a browser-valid application code', async (message, code) => {
+    mocks.resolveAccessMode.mockResolvedValue('managed');
+    const onerror = vi.fn();
+    const ai = await getAi();
+    const pending = ai.live.connect({ model: 'gemini-3.1-flash-live-preview',
+      liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE), callbacks: { onerror } });
+    await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(1));
+    const socket = FakeWebSocket.instances[0];
+    socket.emit('open');
+    socket.serverMessage({ type: 'ready', sessionId: 'session-error', deadlineAt: Date.now() + 120000 });
+    await pending;
+    socket.serverMessage(message);
+    await vi.waitFor(() => expect(socket.closeCalls[0]?.code).toBe(code));
+    expect(onerror).toHaveBeenCalledTimes(1);
+    socket.emit('close', {});
   });
 });

@@ -15,6 +15,7 @@
     "maestro": "tsx src/headless/cli.ts",
     "maestro:rpc": "tsx src/headless/cli.ts rpc",
     "smoke:managed-live-no-output": "tsx scripts/probe-managed-live-gateway.ts",
+    "smoke:managed-live-turn-limit": "tsx scripts/probe-managed-live-turn-limit.ts",
     "verify:release-config": "node scripts/verify-release-config.mjs",
     "test": "vitest run",
     "test:live:ui": "node scripts/run-live-ui-replay.mjs",

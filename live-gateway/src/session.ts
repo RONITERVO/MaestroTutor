@@ -3,7 +3,12 @@
 
 import {
   LIVE_GATEWAY_AUTH_TIMEOUT_MS,
+  LIVE_GATEWAY_MAX_MESSAGE_BYTES,
+  LIVE_GATEWAY_MAX_QUEUED_BYTES,
+  LIVE_GATEWAY_MAX_QUEUED_MESSAGES,
   LIVE_GATEWAY_MAX_TURNS,
+  LIVE_GATEWAY_REPLY_RESERVE_MS,
+  LIVE_USER_TURN_MAX_MS,
   LIVE_GATEWAY_VIDEO_FRAME_INTERVAL_MS,
   type LiveGatewayClientMessage,
   type LiveGatewayBillingSummary,
@@ -126,10 +131,6 @@ const hasProviderAccountingBoundary = (value: unknown): boolean => {
   return Boolean(message.usageMetadata) || Boolean(serverContent?.turnComplete);
 };
 
-const isAudioBoundary = (input: Record<string, unknown>): boolean => (
-  Boolean(input.audioStreamEnd)
-);
-
 const isBase64Payload = (value: unknown): value is string => (
   typeof value === 'string'
   && value.length > 0
@@ -219,6 +220,19 @@ export class LiveGatewayConnection {
   private providerInputDurationScheduledMs = 0;
   private providerVideoPacingStartedAt: number | null = null;
   private providerVideoFramesScheduled = 0;
+  private inputTimer: ReturnType<typeof setTimeout> | null = null;
+  private inputEnded = false;
+  private inputStartedAt: number | null = null;
+  private inputDeadlineAt: number | null = null;
+  private inputDeadlineReason: 'duration-limit' | 'reply-window' = 'duration-limit';
+  private inputAudioDurationMs = 0;
+  private inputSampleRate: number | null = null;
+  private manualActivityStarted = false;
+  private closingRequested = false;
+  private queuedBytes = 0;
+  private queuedMessages = 0;
+  private readonly pacingCancellations = new Set<() => void>();
+  private providerClose: Promise<void> | null = null;
 
   constructor(private readonly options: LiveGatewayConnectionOptions) {
     this.authTimer = setTimeout(
@@ -228,19 +242,78 @@ export class LiveGatewayConnection {
   }
 
   receive(text: string): void {
+    if (this.closingRequested || this.phase === 'closed') return;
     const receivedAt = performance.now();
-    this.enqueue(() => this.handleClientMessage(parseClientMessage(text), receivedAt));
+    const bytes = Buffer.byteLength(text, 'utf8');
+    try {
+      if (bytes > LIVE_GATEWAY_MAX_MESSAGE_BYTES) throw new Error('Managed Live message is too large.');
+      const message = parseClientMessage(text);
+      if (message.type === 'close') {
+        this.requestShutdown('client-close');
+        return;
+      }
+      if (message.type === 'realtimeInput' && this.inputEnded) return;
+      if (this.queuedBytes + bytes > LIVE_GATEWAY_MAX_QUEUED_BYTES
+        || this.queuedMessages >= LIVE_GATEWAY_MAX_QUEUED_MESSAGES) {
+        if (this.phase === 'ready') void this.endInput('buffer-limit').catch(error => this.handleFatal(error));
+        else this.requestShutdown('input-buffer-limit');
+        return;
+      }
+      this.queuedBytes += bytes;
+      this.queuedMessages += 1;
+      this.enqueue(async () => {
+        try {
+          if (!this.closingRequested) await this.handleClientMessage(message, receivedAt);
+        } finally {
+          this.queuedBytes -= bytes;
+          this.queuedMessages -= 1;
+        }
+      });
+    } catch (error) {
+      this.inputEnded = true;
+      this.cancelPacing();
+      this.enqueue(() => this.handleFatal(error));
+    }
   }
 
   /** Allows graceful process shutdowns and deterministic state-machine tests. */
-  whenIdle(): Promise<void> {
-    return this.serial;
+  async whenIdle(): Promise<void> {
+    let current: Promise<void>;
+    do {
+      current = this.serial;
+      await current;
+    } while (current !== this.serial);
   }
 
   disconnect(): void {
     this.transportDisconnected = true;
+    this.requestShutdown('client-disconnect');
+  }
+
+  /** Stop paid work immediately; ledger finalization still follows observed output. */
+  private requestShutdown(reason: string): void {
+    if (this.closingRequested || this.phase === 'closed') return;
+    this.closingRequested = true;
+    this.inputEnded = true;
     this.clearTimers();
-    this.enqueue(() => this.shutdown('client-disconnect', true));
+    this.cancelPacing();
+    void this.closeProvider();
+    this.enqueue(() => this.shutdown(reason, true));
+  }
+
+  private closeProvider(): Promise<void> {
+    if (this.providerClose) return this.providerClose;
+    if (!this.providerSession || this.providerClosed) return Promise.resolve();
+    this.providerClosed = true;
+    try {
+      this.providerClose = Promise.resolve(this.providerSession.close()).then(() => undefined).catch(error => {
+        this.options.log?.('warn', 'Gemini Live provider close failed.', getErrorMessage(error));
+      });
+    } catch (error) {
+      this.options.log?.('warn', 'Gemini Live provider close failed.', getErrorMessage(error));
+      this.providerClose = Promise.resolve();
+    }
+    return this.providerClose;
   }
 
   private enqueue(task: () => Promise<void> | void): void {
@@ -273,8 +346,98 @@ export class LiveGatewayConnection {
   private clearTimers(): void {
     if (this.authTimer) clearTimeout(this.authTimer);
     if (this.deadlineTimer) clearTimeout(this.deadlineTimer);
+    if (this.inputTimer) clearTimeout(this.inputTimer);
     this.authTimer = null;
     this.deadlineTimer = null;
+    this.inputTimer = null;
+  }
+
+  private now(): number { return this.options.now?.() ?? Date.now(); }
+
+  private usesManualActivity(): boolean {
+    const realtime = asObject(this.ticketSession?.config?.realtimeInputConfig);
+    return asObject(realtime?.automaticActivityDetection)?.disabled === true;
+  }
+
+  private cancelPacing(): void {
+    for (const cancel of this.pacingCancellations) cancel();
+  }
+
+  private waitForPacing(delayMs: number): Promise<boolean> {
+    if (this.inputEnded || this.closingRequested) return Promise.resolve(false);
+    if (delayMs <= 0) return Promise.resolve(true);
+    return new Promise((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const finish = (ready: boolean) => {
+        if (timer) clearTimeout(timer);
+        this.pacingCancellations.delete(cancel);
+        resolve(ready);
+      };
+      const cancel = () => finish(false);
+      this.pacingCancellations.add(cancel);
+      if (this.options.sleep) {
+        void this.options.sleep(delayMs).then(() => finish(true), error => {
+          this.pacingCancellations.delete(cancel);
+          reject(error);
+        });
+      } else timer = setTimeout(() => finish(true), delayMs);
+    });
+  }
+
+  private startInputWindow(): void {
+    if (this.inputStartedAt !== null) return;
+    this.inputStartedAt = this.now();
+    const durationDeadline = this.inputStartedAt + LIVE_USER_TURN_MAX_MS;
+    const remainingMs = Math.max(0, this.ticketSession!.deadlineAt - this.inputStartedAt);
+    // Short configured windows still get an input turn; divide their remaining
+    // time instead of ending before the first sample has reached the model.
+    const replyReserveMs = Math.min(LIVE_GATEWAY_REPLY_RESERVE_MS, remainingMs / 2);
+    const replyDeadline = this.ticketSession!.deadlineAt - replyReserveMs;
+    this.inputDeadlineAt = Math.min(durationDeadline, replyDeadline);
+    this.inputDeadlineReason = replyDeadline < durationDeadline ? 'reply-window' : 'duration-limit';
+    this.inputTimer = setTimeout(
+      () => { void this.endInput(this.inputDeadlineReason).catch(error => this.handleFatal(error)); },
+      Math.max(0, this.inputDeadlineAt - this.now()),
+    );
+  }
+
+  private async canForwardInput(): Promise<boolean> {
+    if (this.closingRequested || this.inputEnded || this.phase !== 'ready') return false;
+    if (this.now() >= this.ticketSession!.deadlineAt) {
+      this.requestShutdown('session-deadline');
+      return false;
+    }
+    if (this.inputDeadlineAt !== null && this.now() >= this.inputDeadlineAt) {
+      await this.endInput(this.inputDeadlineReason);
+      return false;
+    }
+    return true;
+  }
+
+  private async forwardInput(input: Record<string, unknown>): Promise<void> {
+    if (!await this.canForwardInput()) return;
+    await this.providerSession!.sendRealtimeInput(input);
+    this.checkpointState = observeLiveGatewayClientMessage(this.checkpointState, input);
+  }
+
+  /** End the user's turn without closing the connection or cutting off the answer. */
+  private async endInput(reason: 'client-end' | 'duration-limit' | 'reply-window' | 'buffer-limit'): Promise<void> {
+    if (this.inputEnded || this.closingRequested || this.phase !== 'ready') return;
+    this.inputEnded = true;
+    if (this.inputTimer) clearTimeout(this.inputTimer);
+    this.inputTimer = null;
+    this.cancelPacing();
+    const end = this.usesManualActivity() ? { activityEnd: {} } : { audioStreamEnd: true };
+    await this.providerSession!.sendRealtimeInput(end);
+    // One logical boundary, regardless of the provider's automatic/manual VAD mode.
+    this.checkpointState = observeLiveGatewayClientMessage(this.checkpointState, { audioStreamEnd: true });
+    this.markTiming('input.last-audio-received', undefined, this.lastAudioReceivedAt);
+    this.markTiming('input.last-audio-forwarded', undefined, this.lastAudioForwardedAt);
+    this.markTiming('input.activity-end-forwarded', { inputAudioDurationMs: this.inputAudioDurationMs });
+    if (reason !== 'client-end') {
+      this.send({ type: 'providerMessage', message: {}, inputTurnEnded: { reason, maxDurationMs: LIVE_USER_TURN_MAX_MS } });
+    }
+    this.enqueue(() => this.persistCheckpoint());
   }
 
   private async handleClientMessage(message: LiveGatewayClientMessage, receivedAt: number): Promise<void> {
@@ -291,6 +454,7 @@ export class LiveGatewayConnection {
       return;
     }
     if (message.type === 'realtimeInput') {
+      if (this.inputEnded) return;
       validateRealtimeInput(message.input);
       if (message.input.audio) {
         this.markTimingOnce('input.first-audio-received', receivedAt);
@@ -313,24 +477,42 @@ export class LiveGatewayConnection {
       ) {
         throw new Error(`Managed Live sessions are limited to ${LIVE_GATEWAY_MAX_TURNS} turns.`);
       }
-      const previousInputBytes = this.checkpointState.inputAudioBytes;
-      const previousVideoFrames = this.checkpointState.inputVideoFrameCount;
-      this.checkpointState = observeLiveGatewayClientMessage(this.checkpointState, message.input);
-      const addedAudioBytes = this.checkpointState.inputAudioBytes - previousInputBytes;
-      const addedVideoFrames = this.checkpointState.inputVideoFrameCount - previousVideoFrames;
-      await this.paceProviderAudio(addedAudioBytes, this.checkpointState.inputAudioSampleRate);
-      await this.paceProviderVideo(addedVideoFrames);
-      await this.providerSession.sendRealtimeInput(message.input);
+      if (message.input.audio || message.input.video || message.input.activityStart) this.startInputWindow();
+      if (!await this.canForwardInput()) return;
+      if (this.usesManualActivity() && !this.manualActivityStarted
+        && (message.input.activityStart || message.input.audio || message.input.video)) {
+        this.manualActivityStarted = true;
+        await this.forwardInput({ activityStart: {} });
+      }
       if (message.input.audio) {
-        this.markTimingOnce('input.first-audio-forwarded');
-        this.lastAudioForwardedAt = performance.now();
+        const audio = message.input.audio as { data: string; mimeType: string };
+        const sampleRate = Number(audio.mimeType.split('=')[1]);
+        if (this.inputSampleRate !== null && this.inputSampleRate !== sampleRate) {
+          throw new Error('Managed Live audio sample rate cannot change within a turn.');
+        }
+        this.inputSampleRate = sampleRate;
+        const pcm = Buffer.from(audio.data, 'base64');
+        if (pcm.length % 2 !== 0) throw new Error('Managed Live PCM must contain complete 16-bit samples.');
+        // Split large client frames so each pacing wait is at microphone cadence.
+        const packetBytes = sampleRate / 10 * 2;
+        for (let offset = 0; offset < pcm.length; offset += packetBytes) {
+          if (!await this.canForwardInput()) return;
+          const remainingBytes = Math.max(0, Math.round((LIVE_USER_TURN_MAX_MS - this.inputAudioDurationMs) * sampleRate / 1000)) * 2;
+          const packet = pcm.subarray(offset, offset + Math.min(packetBytes, remainingBytes));
+          if (!packet.length) { await this.endInput('duration-limit'); return; }
+          if (!await this.paceProviderAudio(packet.length, sampleRate) || !await this.canForwardInput()) return;
+          await this.forwardInput({ audio: { data: packet.toString('base64'), mimeType: audio.mimeType } });
+          this.inputAudioDurationMs += packet.length / 2 / sampleRate * 1000;
+          this.markTimingOnce('input.first-audio-forwarded');
+          this.lastAudioForwardedAt = performance.now();
+          if (this.inputAudioDurationMs >= LIVE_USER_TURN_MAX_MS) { await this.endInput('duration-limit'); return; }
+        }
       }
-      if (message.input.activityEnd) {
-        this.markTiming('input.last-audio-received', undefined, this.lastAudioReceivedAt);
-        this.markTiming('input.last-audio-forwarded', undefined, this.lastAudioForwardedAt);
-        this.markTiming('input.activity-end-forwarded', { maxInputQueueWaitMs: this.maxInputQueueWaitMs });
+      if (message.input.video) {
+        if (!await this.paceProviderVideo(1) || !await this.canForwardInput()) return;
+        await this.forwardInput({ video: message.input.video });
       }
-      if (isAudioBoundary(message.input)) await this.persistCheckpoint();
+      if (message.input.activityEnd || message.input.audioStreamEnd) await this.endInput('client-end');
       return;
     }
     if (message.type === 'clientContent') {
@@ -344,31 +526,25 @@ export class LiveGatewayConnection {
    * guarantee under bursts. A slow model/socket handoff can queue seconds of
    * microphone PCM, so replay that queue at its captured cadence.
    */
-  private async paceProviderAudio(audioBytes: number, sampleRate: number): Promise<void> {
-    if (audioBytes <= 0 || sampleRate <= 0) return;
+  private async paceProviderAudio(audioBytes: number, sampleRate: number): Promise<boolean> {
+    if (audioBytes <= 0 || sampleRate <= 0) return true;
     const now = this.options.now?.() ?? Date.now();
     this.providerInputPacingStartedAt ??= now;
     const dueAt = this.providerInputPacingStartedAt + this.providerInputDurationScheduledMs;
     this.providerInputDurationScheduledMs += (audioBytes / 2 / sampleRate) * 1_000;
     const delayMs = dueAt - now;
-    if (delayMs <= 0) return;
-    const sleep = this.options.sleep
-      || ((milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds)));
-    await sleep(delayMs);
+    return this.waitForPacing(delayMs);
   }
 
-  private async paceProviderVideo(frameCount: number): Promise<void> {
-    if (frameCount <= 0) return;
+  private async paceProviderVideo(frameCount: number): Promise<boolean> {
+    if (frameCount <= 0) return true;
     const now = this.options.now?.() ?? Date.now();
     this.providerVideoPacingStartedAt ??= now;
     const dueAt = this.providerVideoPacingStartedAt
       + this.providerVideoFramesScheduled * LIVE_GATEWAY_VIDEO_FRAME_INTERVAL_MS;
     this.providerVideoFramesScheduled += frameCount;
     const delayMs = dueAt - now;
-    if (delayMs <= 0) return;
-    const sleep = this.options.sleep
-      || ((milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds)));
-    await sleep(delayMs);
+    return this.waitForPacing(delayMs);
   }
 
   private async authenticate(ticket: string): Promise<void> {
@@ -376,17 +552,28 @@ export class LiveGatewayConnection {
     if (this.authTimer) clearTimeout(this.authTimer);
     this.authTimer = null;
     this.ticketSession = await this.options.billing.consumeTicket(ticket);
-    if (this.transportDisconnected) {
+    if (this.transportDisconnected || this.closingRequested) {
       await this.shutdown('client-disconnect-before-provider', false);
       return;
     }
 
     const callbacks: LiveProviderCallbacks = {
       onmessage: (message) => {
-        const content = (message as { serverContent?: { inputTranscription?: unknown; outputTranscription?: unknown; modelTurn?: { parts?: Array<{ inlineData?: unknown }> } } })?.serverContent;
+        const content = (message as { serverContent?: { turnComplete?: boolean; inputTranscription?: unknown; outputTranscription?: unknown; modelTurn?: { parts?: Array<{ inlineData?: unknown }> } } })?.serverContent;
         if (content?.inputTranscription) this.markTimingOnce('input.first-provider-transcript-received');
         if (content?.outputTranscription) this.markTimingOnce('response.first-transcript-received');
         if (content?.modelTurn?.parts?.some(part => part.inlineData)) this.markTimingOnce('response.first-audio-received');
+        // Automatic VAD can start/finish a reply while captured tail silence is
+        // still queued. One transport owns one answer: discard that tail before
+        // it can interrupt output or trigger a second-turn protocol failure.
+        if (!this.inputEnded && this.phase === 'ready'
+          && (observeLiveGatewayProviderMessage(this.checkpointState, message).usefulOutput || content?.turnComplete)) {
+          this.inputEnded = true;
+          if (this.inputTimer) clearTimeout(this.inputTimer);
+          this.inputTimer = null;
+          this.cancelPacing();
+          this.send({ type: 'providerMessage', message: {}, inputTurnEnded: { reason: 'model-reply', maxDurationMs: LIVE_USER_TURN_MAX_MS } });
+        }
         this.enqueue(() => this.handleProviderMessage(message));
       },
       onerror: (error) => this.enqueue(() => this.handleProviderError(error)),
@@ -408,14 +595,14 @@ export class LiveGatewayConnection {
       Math.max(1_000, this.options.providerConnectTimeoutMs ?? 20_000),
       'Gemini Live provider connection',
     );
-    if (this.transportDisconnected) {
+    if (this.transportDisconnected || this.closingRequested) {
       await this.shutdown('client-disconnect-before-ready', true);
       return;
     }
     this.phase = 'ready';
     const deadlineDelay = Math.max(0, this.ticketSession.deadlineAt - (this.options.now?.() ?? Date.now()));
     this.deadlineTimer = setTimeout(
-      () => this.enqueue(() => this.shutdown('session-deadline', true)),
+      () => this.requestShutdown('session-deadline'),
       Math.min(deadlineDelay, 2_147_483_647),
     );
     this.send({
@@ -477,15 +664,11 @@ export class LiveGatewayConnection {
       events: this.timingEvents,
     });
     this.phase = 'closing';
+    this.closingRequested = true;
+    this.inputEnded = true;
     this.clearTimers();
-    if (closeProvider && this.providerSession && !this.providerClosed) {
-      this.providerClosed = true;
-      try {
-        await this.providerSession.close();
-      } catch (error) {
-        this.options.log?.('warn', 'Gemini Live provider close failed.', getErrorMessage(error));
-      }
-    }
+    this.cancelPacing();
+    if (closeProvider) await this.closeProvider();
     if (this.ticketSession) {
       const result = await this.options.billing.finalize(
         this.ticketSession.sessionId,

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { describe, expect, it } from 'vitest';
+import { LIVE_USER_TURN_MAX_MS } from '../../../shared/liveGatewayProtocol';
 import {
   ContinuousLiveTurnBoundary,
   LIVE_SPEECH_IDLE_MS,
@@ -9,6 +10,22 @@ import {
 } from './continuousLiveTurnBoundary';
 
 describe('ContinuousLiveTurnBoundary', () => {
+  it('ends continuous speech after one minute even if Whisper keeps confirming words', () => {
+    const boundary = new ContinuousLiveTurnBoundary();
+    const openedAt = 1000;
+    boundary.openFromConfirmedSpeech(openedAt);
+    for (let elapsed = 1000; elapsed < LIVE_USER_TURN_MAX_MS; elapsed += 1000) {
+      boundary.refreshConfirmedSpeech(openedAt + elapsed);
+      expect(boundary.shouldBeginClosing(openedAt + elapsed)).toBe(false);
+    }
+    expect(boundary.closeDeadline).toBe(openedAt + LIVE_USER_TURN_MAX_MS);
+    expect(boundary.beginClosing(openedAt + LIVE_USER_TURN_MAX_MS)).toBe(true);
+    boundary.finishClosing();
+    boundary.openFromConfirmedSpeech(100_000);
+    boundary.refreshConfirmedSpeech(159_000);
+    expect(boundary.closeDeadline).toBe(160_000);
+  });
+
   it('keeps one continuous turn open through the full idle and post-roll tail', () => {
     const boundary = new ContinuousLiveTurnBoundary();
     const openedAt = 1_000;

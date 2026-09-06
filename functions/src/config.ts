@@ -148,6 +148,9 @@ export const appConfig = {
     100,
     Math.max(1, parseInteger(process.env.MANAGED_SEARCH_RESERVATION_QUERIES, 10)),
   ),
+  /** Owner-selected conservative daily admission allowance; refunds do not reset it. */
+  managedDailySpendLimitUsd: process.env.MANAGED_DAILY_SPEND_LIMIT_USD === undefined
+    ? 100 : Number(process.env.MANAGED_DAILY_SPEND_LIMIT_USD),
   /** Requests per minute per user, per class of operation. See rateLimit.ts. */
   rateLimitPerMinute: Math.max(1, parseInteger(process.env.MANAGED_RATE_LIMIT_PER_MINUTE, 60)),
   anonymousReportRateLimitPerMinute: Math.max(

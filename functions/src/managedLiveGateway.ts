@@ -49,6 +49,7 @@ import {
 import {
   calculateManagedLiveGatewayWindowCredits,
   calculateManagedLiveGatewayWindowUsd,
+  calculateManagedLiveSpendAdmissionUsd,
   getManagedLiveGatewayTokenBudget,
   pricingEffectiveAt,
   usageMetadataToUsd,
@@ -205,6 +206,7 @@ export const createManagedLiveGatewayTicket = async (params: {
       model,
       estimatedCredits,
       estimatedUsd,
+      admissionUsd: calculateManagedLiveSpendAdmissionUsd(),
       metadata: {
         purpose: 'live',
         leaseId: lease.leaseId,

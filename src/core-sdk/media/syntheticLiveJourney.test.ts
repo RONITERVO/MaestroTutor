@@ -19,7 +19,7 @@ describe('synthetic Live journey', () => {
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
         sent.push(message);
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: {
             inputTranscription: { text: 'the final words are preserved' },
             outputTranscription: { text: 'I heard the final words.' },
@@ -162,7 +162,7 @@ describe('synthetic Live journey', () => {
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
         sent.push(message);
-        if (message.audioStreamEnd && !completed) {
+        if ((message.audioStreamEnd || message.activityEnd) && !completed) {
           completed = true;
           queueMicrotask(() => callbacks.onmessage?.({
             serverContent: {
@@ -230,7 +230,7 @@ describe('synthetic Live journey', () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: {
             outputTranscription: { text: 'No audio received.' },
             turnComplete: true,
@@ -269,7 +269,7 @@ describe('synthetic Live journey', () => {
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
         sent.push(message);
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: {
             inputTranscription: { text: 'Hello, how are you doing? I am doing great.' },
             outputTranscription: { text: 'I am glad you are doing great.' },
@@ -303,7 +303,7 @@ describe('synthetic Live journey', () => {
     expect(result.inputTranscript).toContain('doing great');
     expect(result.sentSamples).toBe(64_000);
     expect(result.gate.streamEnds).toBe(1);
-    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+    expect(sent.filter(message => message.audioStreamEnd || message.activityEnd)).toHaveLength(1);
   });
 
   it('streams every packet across a two-second pause under one manual activity boundary', async () => {
@@ -312,7 +312,7 @@ describe('synthetic Live journey', () => {
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
         sent.push(message);
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: {
             inputTranscription: { text: 'The first clause and the second clause.' },
             outputTranscription: { text: 'The first clause and the second clause.' },
@@ -346,7 +346,7 @@ describe('synthetic Live journey', () => {
     expect(result.sentSamples).toBe(pcm.length);
     expect(sent.filter(message => message.activityStart)).toHaveLength(1);
     expect(sent.filter(message => message.activityEnd)).toHaveLength(1);
-    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+    expect(sent.filter(message => message.audioStreamEnd || message.activityEnd)).toHaveLength(1);
     expect(ai.live.connect).toHaveBeenCalledWith(expect.objectContaining({
       config: expect.objectContaining({
         realtimeInputConfig: expect.objectContaining({
@@ -362,7 +362,7 @@ describe('synthetic Live journey', () => {
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
         sent.push(message);
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: {
             inputTranscription: { text: 'One deliberately bounded sentence.' },
             outputTranscription: { text: 'I heard the whole sentence.' },
@@ -397,13 +397,11 @@ describe('synthetic Live journey', () => {
     expect(result.sentSamples).toBe(32_000);
     expect(sent.filter(message => message.activityStart)).toHaveLength(1);
     expect(sent.filter(message => message.activityEnd)).toHaveLength(1);
-    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+    expect(sent.filter(message => message.audioStreamEnd || message.activityEnd)).toHaveLength(1);
     expect(sent.findIndex(message => message.activityStart)).toBeLessThan(
       sent.findIndex(message => message.audio),
     );
-    expect(sent.findIndex(message => message.activityEnd)).toBeLessThan(
-      sent.findIndex(message => message.audioStreamEnd),
-    );
+    expect(sent.some(message => message.audioStreamEnd)).toBe(false);
     expect(ai.live.connect).toHaveBeenCalledWith(expect.objectContaining({
       config: expect.objectContaining({
         realtimeInputConfig: expect.objectContaining({
@@ -443,7 +441,7 @@ describe('synthetic Live journey', () => {
     const pcmChunk = btoa(String.fromCharCode(...new Uint8Array(4_800)));
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
-        if (!message.audioStreamEnd) return;
+        if (!message.audioStreamEnd && !message.activityEnd) return;
         callbacks.onmessage?.({
           serverContent: {
             modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: pcmChunk } }] },
@@ -506,7 +504,7 @@ describe('synthetic Live journey', () => {
     const pcmChunk = btoa(String.fromCharCode(...new Uint8Array(2_400)));
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
-        if (!message.audioStreamEnd) return;
+        if (!message.audioStreamEnd && !message.activityEnd) return;
         callbacks.onmessage?.({
           serverContent: {
             inputTranscription: { text: 'The first half ' },
@@ -565,7 +563,7 @@ describe('synthetic Live journey', () => {
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
         sent.push(message);
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: {
             inputTranscription: { text: 'One complete sentence.' },
             outputTranscription: { text: 'One complete sentence.' },
@@ -597,7 +595,7 @@ describe('synthetic Live journey', () => {
 
     expect(result.packetizer.totalInputSamples).toBeLessThan(pcm.length);
     expect(result.packetizer.totalInputSamples).toBe(result.sentSamples);
-    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+    expect(sent.filter(message => message.audioStreamEnd || message.activityEnd)).toHaveLength(1);
   });
 
   it('does not send a second empty boundary after the gate already closed', async () => {
@@ -606,7 +604,7 @@ describe('synthetic Live journey', () => {
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
         sent.push(message);
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: {
             outputTranscription: { text: 'I heard the completed turn.' },
             turnComplete: true,
@@ -636,14 +634,14 @@ describe('synthetic Live journey', () => {
     });
 
     expect(result.gate.streamEnds).toBe(1);
-    expect(sent.filter(message => message.audioStreamEnd)).toHaveLength(1);
+    expect(sent.filter(message => message.audioStreamEnd || message.activityEnd)).toHaveLength(1);
   });
 
   it('rejects a provider turn that completes without model output', async () => {
     let callbacks: Record<string, (...args: any[]) => void> = {};
     const session = {
       sendRealtimeInput: vi.fn((message: any) => {
-        if (message.audioStreamEnd) queueMicrotask(() => callbacks.onmessage?.({
+        if (message.audioStreamEnd || message.activityEnd) queueMicrotask(() => callbacks.onmessage?.({
           serverContent: { inputTranscription: { text: 'Play' }, turnComplete: true },
         }));
       }),

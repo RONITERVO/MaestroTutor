@@ -63,6 +63,31 @@ selected but locally armed between responses. This continuation of the user's
 Live selection opens a paid connection only after local speech confirmation.
 Managed sockets enforce one turn and retain their 120-second maximum window.
 
+The user input turn lasts at most 60 seconds. Normal silence closes it earlier;
+continuing speech or repeated activity-start signals cannot extend it. The client
+speech boundary applies this limit for managed and BYOK conversation/STT flows.
+The managed gateway separately caps both elapsed input time and decoded PCM
+duration, so a modified client or a burst of retained audio cannot bypass it.
+
+At the limit, the gateway stops forwarding audio/video and sends `activityEnd`
+for manual VAD, or `audioStreamEnd` for automatic VAD. It keeps the transport
+open for Gemini's answer. Input ends earlier if necessary to reserve 30 seconds
+before the existing session deadline; if less than a minute remains when input
+starts, the remaining time is split equally between input and reply. A full or
+successful answer still depends on the provider. A reply-window limit does not
+extend the billed reservation.
+Additional microphone input and duplicate end signals are ignored while the
+answer is pending, rather than closing the transport and losing the reply.
+
+The gateway sends an `inputTurnEnded` annotation on an empty `providerMessage`
+envelope. New clients stop capture forwarding immediately; older installed
+clients understand the envelope and can continue receiving the answer. The
+server enforces the limit regardless of client support. Pending media is bounded
+to 4 MiB and 1,024 messages; overflow also hands the turn to Gemini. Deadline and
+disconnect cancellation interrupts pacing and closes the provider without waiting
+behind queued audio. Only forwarded media enters usage accounting. The existing
+no-useful-output reservation release policy remains unchanged.
+
 ## Visible activity
 
 Activity tokens make the delay observable instead of appearing frozen:
