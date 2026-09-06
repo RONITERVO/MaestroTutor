@@ -29,7 +29,7 @@ const MAX_MANAGED_UPLOAD_BYTES = Math.floor(
 ) * 3;
 
 const DEFAULT_MANAGED_GENERATION_MODELS = [
-  'gemini-3.7-flash',
+  'gemini-3.8-flash',
   'gemini-3.5-flash-lite',
   'gemini-2.5-flash-image',
 ] as const;
@@ -125,7 +125,7 @@ export const appConfig = {
   ),
   managedMaxActiveLiveSockets: Math.min(2, Math.max(1, parseInteger(process.env.MANAGED_MAX_ACTIVE_LIVE_SOCKETS, 2))),
   reservationTtlMinutes: Math.max(5, parseInteger(process.env.RESERVATION_TTL_MINUTES, 30)),
-  managedMusicSessionCredits: Math.max(1, parseInteger(process.env.MANAGED_MUSIC_SESSION_CREDITS, 120)),
+  managedMusicSessionCredits: Math.max(1, parseInteger(process.env.MANAGED_MUSIC_SESSION_CREDITS, 1)),
   managedMaxActiveFilesPerUser: Math.max(1, parseInteger(process.env.MANAGED_MAX_ACTIVE_FILES_PER_USER, 20)),
   managedUploadCreditsPerMb: Math.max(1, parseInteger(process.env.MANAGED_UPLOAD_CREDITS_PER_MB, 10)),
   managedMaxUploadBytes: Math.min(

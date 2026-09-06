@@ -19,8 +19,8 @@ afterEach(() => {
 describe('Gemini model registry', () => {
   it('pins production text traffic to stable model ids', () => {
     expect(defaults.text).toEqual({
-      default: 'gemini-3.7-flash',
-      aux: 'gemini-3.7-flash',
+      default: 'gemini-3.8-flash',
+      aux: 'gemini-3.8-flash',
       translation: 'gemini-3.5-flash-lite',
       fallback: 'gemini-3.5-flash-lite',
     });
@@ -43,7 +43,7 @@ describe('Gemini model registry', () => {
       .split(/\r?\n/)
       .find(line => line.startsWith('MANAGED_ALLOWED_GEMINI_MODELS='));
     expect(allowlist).toBe(
-      'MANAGED_ALLOWED_GEMINI_MODELS=gemini-3.7-flash,gemini-3.5-flash-lite,gemini-2.5-flash-image',
+      'MANAGED_ALLOWED_GEMINI_MODELS=gemini-3.8-flash,gemini-3.5-flash-lite,gemini-2.5-flash-image',
     );
   });
 

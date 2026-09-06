@@ -1,0 +1,21 @@
+{
+  "billing": {
+    "chargedCredits": 1,
+    "billedCredits": 1,
+    "reservationStatus": "settled",
+    "shortfallCredits": 0
+  },
+  "music": {
+    "operationId": "music-generate-20e13554-0a19-4c99-bd52-fe0101d4a815",
+    "mimeType": "audio/wav",
+    "durationSeconds": 8,
+    "sampleRate": 48000,
+    "channels": 2,
+    "sampleCount": 768000,
+    "dataUrlLength": 2048082,
+    "dataSha256": "ab531064b216761ce6945be358c7941ccef9639663cd9f267117e314b2a51fa8",
+    "accessMode": "managed",
+    "assistantMessageId": null,
+    "uploaded": null
+  }
+}

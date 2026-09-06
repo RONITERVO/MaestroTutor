@@ -138,7 +138,7 @@ server allowlist, deploy Functions, publish the client, and run one managed
 request for every affected surface. Live gateway tickets are bound to the exact
 allowlisted model requested by the client.
 
-Managed text traffic is pinned to the stable `gemini-3.7-flash` and
+Managed text traffic is pinned to the stable `gemini-3.8-flash` and
 `gemini-3.5-flash-lite` IDs. Do not put provider-owned `*-latest` aliases in the
 Functions allowlist: Google can hot-swap an alias to a model with different
 behavior or pricing. The backend maps the two old text aliases to these stable
@@ -166,7 +166,7 @@ Grounded Gemini 3 requests are settled per reported Search query at list price,
 with ten queries reserved before the call by default.
 
 Provider release gate passed on 2026-09-01: the production secret successfully
-ran `countTokens` and a paid `gemini-3.7-flash` generation, returned visible text,
+ran `countTokens` and a paid `gemini-3.8-flash` generation, returned visible text,
 and reported prompt, output and thinking usage. Re-run `npm run smoke:gemini`
 before every backend release; a configured secret or successful `countTokens`
 alone is not evidence that provider billing is usable.

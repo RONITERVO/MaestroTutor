@@ -21,6 +21,7 @@ import type { MaestroStore } from '../maestroStore';
 export interface SpeechSlice {
   // STT State (data only - activity tracked via tokens)
   transcript: string;
+  sttSpeechPreviewProgress: number;
   sttError: string | null;
   isSpeechRecognitionSupported: boolean;
   recordedUtterancePending: RecordedUtterance | null;
@@ -65,6 +66,7 @@ export const createSpeechSlice: StateCreator<
 > = (set, get) => ({
   // Initial STT State (data only - activity tracked via tokens in uiSlice)
   transcript: '',
+  sttSpeechPreviewProgress: 0,
   sttError: null,
   isSpeechRecognitionSupported: typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia,
   recordedUtterancePending: null,

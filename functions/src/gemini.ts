@@ -1494,6 +1494,8 @@ export const generateManagedMusic = async (params: {
       Math.round(Number(params.durationSeconds) || MANAGED_MUSIC_MIN_DURATION_SECONDS),
     ),
   );
+  // Lyria RealTime has no published provider tariff. This is the explicit
+  // managed-service fee, not an invented provider usage estimate.
   const fixedCredits = appConfig.managedMusicSessionCredits;
   const billedUsd = creditsToUsd(fixedCredits);
   const lease = await reserveManagedLiveLease({
@@ -1511,7 +1513,7 @@ export const generateManagedMusic = async (params: {
       model,
       estimatedCredits: fixedCredits,
       estimatedUsd: billedUsd,
-      metadata: { purpose: 'music', leaseId: lease.leaseId, requestedDurationSeconds: durationSeconds },
+      metadata: { purpose: 'music', chargeBasis: 'managed-service-fee', leaseId: lease.leaseId, requestedDurationSeconds: durationSeconds },
     });
   } catch (error) {
     await releaseManagedLiveLease(params.uid, lease.leaseId).catch(() => undefined);
@@ -1529,6 +1531,7 @@ export const generateManagedMusic = async (params: {
       model,
       metadata: {
         purpose: 'music',
+        chargeBasis: 'managed-service-fee',
         leaseId: lease.leaseId,
         requestedDurationSeconds: durationSeconds,
         generatedDurationSeconds: generated.durationSeconds,

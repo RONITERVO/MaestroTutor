@@ -19,7 +19,8 @@ export const requireManagedLiveOpenReason = (value: unknown): LiveOpenReason => 
 };
 
 const LEGACY_MANAGED_GENERATION_MODEL_PINS = new Map<string, string>([
-  ['gemini-flash-latest', 'gemini-3.7-flash'],
+  ['gemini-flash-latest', 'gemini-3.8-flash'],
+  ['gemini-3.7-flash', 'gemini-3.8-flash'],
   ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite'],
 ]);
 

@@ -5,7 +5,7 @@ import { googleAuthService } from '../../src/services/auth/googleAuthService';
 import { useMaestroStore } from '../../src/store';
 import { exportTurnTimings } from '../../src/core-sdk/turnTiming';
 
-export async function prepare(email: string, password: string) {
+export async function prepare(email: string, password: string, sttMode = false) {
   if (!import.meta.env.DEV || import.meta.env.VITE_FIREBASE_PROJECT_ID !== 'chatwithmaestro-staging') {
     throw new Error('This fixture requires a local development server configured for staging.');
   }
@@ -29,7 +29,9 @@ export async function prepare(email: string, password: string) {
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const deadline = performance.now() + 10000;
   while (useMaestroStore.getState().isLoadingHistory && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 25));
+  if (sttMode) store.setSettings(previous => ({ ...previous, stt: { ...previous.stt, language: 'fi-FI', enabled: false } }));
   store.setMessages(messages);
+  store.setNeedsLanguageSelection(false);
   return { historyMessages: useMaestroStore.getState().messages.length };
 }
 
