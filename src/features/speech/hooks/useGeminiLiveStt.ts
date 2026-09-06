@@ -82,6 +82,7 @@ export interface UseGeminiLiveSttReturn {
   ) => Promise<void>;
   stop: () => Promise<void>;
   transcript: string;
+  speechPreviewProgress: number;
   isListening: boolean;
   error: string | null;
   getRecordedAudio: () => Int16Array | null;
@@ -150,6 +151,16 @@ const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
  */
 export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLiveSttReturn {
   const [transcript, setTranscript] = useState('');
+  const [speechPreviewProgress, setSpeechPreviewProgress] = useState(0);
+  const previewSamplesRef = useRef(0);
+  const previewPendingRef = useRef(false);
+  const addPreviewSamples = useCallback((samples: number) => {
+    if (!previewPendingRef.current) return;
+    const previous = Math.min(24, 3 + Math.floor(previewSamplesRef.current / INPUT_SAMPLE_RATE));
+    previewSamplesRef.current += samples;
+    const next = Math.min(24, 3 + Math.floor(previewSamplesRef.current / INPUT_SAMPLE_RATE));
+    if (next !== previous) setSpeechPreviewProgress(next);
+  }, []);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const addActivityToken = useMaestroStore(state => state.addActivityToken);
@@ -201,7 +212,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   // Transcription State Refs
   const committedTranscriptRef = useRef('');
   const interimInputRef = useRef('');
-  const localInputPreviewRef = useRef('');
   const interimParrotRef = useRef('');
 
   useEffect(() => {
@@ -416,7 +426,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       transcribedAudioSamplesRef.current = 0;
       audioTelemetryRef.current.transcriptLinkedSamples = 0;
     }
-    localInputPreviewRef.current = '';
+    previewPendingRef.current = false;
+    setSpeechPreviewProgress(0);
     
     isCleaningUpRef.current = false;
   }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
@@ -433,7 +444,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     const currentSegment = (
       interimParrotRef.current.trim()
       || interimInputRef.current.trim()
-      || localInputPreviewRef.current.trim()
     );
     const separator = (committed && currentSegment) ? ' ' : '';
     const nextTranscript = committed + separator + currentSegment;
@@ -518,6 +528,9 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         signal: triggerAbort.signal,
         onPhaseChange: setLocalSpeechTriggerPhase,
         onVadActivityChange: setVadActivity,
+        onPendingSpeechSamples: samples => {
+          if (currentSessionIdRef.current === sessionId) addPreviewSamples(samples);
+        },
       });
       if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
       const stream = localSpeechTrigger.microphoneStream;
@@ -532,7 +545,9 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         if (workletNodeRef.current === localSpeechTrigger.capture.workletNode) workletNodeRef.current = null;
         return;
       }
-      localInputPreviewRef.current = localSpeechTrigger.transcript;
+      previewPendingRef.current = true;
+      previewSamplesRef.current = 0;
+      setSpeechPreviewProgress(3);
       scheduleTranscriptStateUpdate(true);
 
       // --- 2. Connect to Gemini Live API while the trigger capture remains live ---
@@ -624,7 +639,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         turnAudioSamplesRef.current = 0;
 
         interimInputRef.current = '';
-        localInputPreviewRef.current = '';
+        previewPendingRef.current = false;
+        setSpeechPreviewProgress(0);
         interimParrotRef.current = '';
         scheduleTranscriptStateUpdate(true);
 
@@ -709,7 +725,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             if (msg.serverContent?.inputTranscription) {
               const text = msg.serverContent.inputTranscription.text;
               if (text) {
-                 localInputPreviewRef.current = '';
+                 previewPendingRef.current = false;
+                 setSpeechPreviewProgress(0);
                  interimInputRef.current += text;
                  transcribedAudioSamplesRef.current = totalAudioSamplesRef.current;
                  audioTelemetryRef.current.transcriptLinkedSamples = transcribedAudioSamplesRef.current;
@@ -721,6 +738,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
             if (msg.serverContent?.outputTranscription) {
               const text = msg.serverContent.outputTranscription.text;
               if (text) {
+                 previewPendingRef.current = false;
+                 setSpeechPreviewProgress(0);
                  interimParrotRef.current += text;
                  transcribedAudioSamplesRef.current = totalAudioSamplesRef.current;
                  audioTelemetryRef.current.transcriptLinkedSamples = transcribedAudioSamplesRef.current;
@@ -842,6 +861,11 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           || awaitingModelTurnRef.current
           || !boundary.openFromConfirmedSpeech(now)
         ) return false;
+        if (!previewPendingRef.current && !interimInputRef.current && !interimParrotRef.current) {
+          previewPendingRef.current = true;
+          previewSamplesRef.current = 0;
+          setSpeechPreviewProgress(3);
+        }
         activeSession.sendRealtimeInput({ activityStart: {} });
         audioTelemetryRef.current.activityStarts += 1;
         return true;
@@ -1121,7 +1145,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       setIsListening(false);
       cleanup();
     }
-  }, [cleanup, stop, ensureCodecWorker, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
+  }, [addPreviewSamples, cleanup, stop, ensureCodecWorker, scheduleTranscriptStateUpdate, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
@@ -1143,5 +1167,5 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     };
   }, []); // Empty deps - only runs on unmount
 
-  return { start, stop, transcript, isListening, error, getRecordedAudio };
+  return { start, stop, transcript, speechPreviewProgress, isListening, error, getRecordedAudio };
 }

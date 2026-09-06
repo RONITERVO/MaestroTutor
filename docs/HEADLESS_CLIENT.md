@@ -585,7 +585,7 @@ deleted. Both React and headless image/chat paths now call the same verified-med
 sanitizer and strip inactive history references before generation. The current
 message's active attachment still travels through the normal multimodal route.
 
-At the time of this baseline, `gemini-3.7-flash` intermittently returned provider
+At the time of this baseline, `gemini-3.8-flash` intermittently returned provider
 high-demand errors. The primary reservation was released and the configured
 `gemini-3.5-flash-lite` fallback completed. Treat repeated fallback use as provider
 health telemetry, not as permission to hide failures or bill failed streams.

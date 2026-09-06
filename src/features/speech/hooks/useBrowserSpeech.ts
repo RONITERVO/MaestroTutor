@@ -26,6 +26,7 @@ interface UseBrowserSpeechReturn {
   isSpeechSynthesisSupported: boolean;
   isListening: boolean;
   transcript: string;
+  speechPreviewProgress: number;
   startListening: (languageOrOptions?: string | SttStartOptions) => void;
   stopListening: () => Promise<void>;
   sttError: string | null;
@@ -153,6 +154,7 @@ const useBrowserSpeech = (props?: UseBrowserSpeechProps): UseBrowserSpeechReturn
 
   return {
       isSpeaking, speak, stopSpeaking, isSpeechSynthesisSupported,
+      speechPreviewProgress: geminiStt.speechPreviewProgress,
       isListening, transcript, startListening, stopListening, sttError,
       isSpeechRecognitionSupported, clearTranscript, speakingUtteranceText, claimRecordedUtterance,
       hasPendingQueueItems

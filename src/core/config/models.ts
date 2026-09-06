@@ -61,8 +61,8 @@ const DEFAULT_GENERAL_LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-202
 
 const DEFAULT_GEMINI_MODELS: GeminiModelRegistry = {
   text: {
-    default: 'gemini-3.7-flash',
-    aux: 'gemini-3.7-flash',
+    default: 'gemini-3.8-flash',
+    aux: 'gemini-3.8-flash',
     translation: 'gemini-3.5-flash-lite',
     fallback: DEFAULT_TEXT_FALLBACK_MODEL,
   },

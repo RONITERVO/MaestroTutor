@@ -26,7 +26,7 @@ const { appConfig } = require('../lib/functions/src/config.js');
 test('managed generation defaults pin provider-stable model ids', () => {
   assert.deepEqual(
     [...appConfig.managedAllowedGeminiModels],
-    ['gemini-3.7-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash-image'],
+    ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash-image'],
   );
 });
 
@@ -45,8 +45,8 @@ test('billing operation is derived from server-visible request shape', () => {
 
 test('prepaid generation rejects allowlisted models without a rate', () => {
   assert.equal(
-    requirePricedManagedGenerationModel('gemini-3.7-flash'),
-    'gemini-3.7-flash',
+    requirePricedManagedGenerationModel('gemini-3.8-flash'),
+    'gemini-3.8-flash',
   );
   assert.throws(
     () => requirePricedManagedGenerationModel('unpriced-preview'),
@@ -164,14 +164,14 @@ test('settlement prices the provider-resolved model version', () => {
     'generateContent',
     0,
     0,
-    'gemini-3.7-flash',
+    'gemini-3.8-flash',
   );
   assert.equal(billedUsd, 4.5);
 });
 
 test('managed models are allowlisted, including SDK-qualified names', () => {
-  const allowed = new Set(['gemini-3.7-flash', 'gemini-3.5-flash-lite', 'lyria-realtime-exp']);
-  assert.equal(resolvePinnedManagedGenerationModel('gemini-flash-latest'), 'gemini-3.7-flash');
+  const allowed = new Set(['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'lyria-realtime-exp']);
+  assert.equal(resolvePinnedManagedGenerationModel('gemini-flash-latest'), 'gemini-3.8-flash');
   assert.equal(resolvePinnedManagedGenerationModel('models/gemini-flash-lite-latest'), 'gemini-3.5-flash-lite');
   assert.equal(
     requireAllowedManagedModel(
@@ -179,7 +179,7 @@ test('managed models are allowlisted, including SDK-qualified names', () => {
       allowed,
       'generation',
     ),
-    'gemini-3.7-flash',
+    'gemini-3.8-flash',
   );
   assert.equal(
     requireAllowedManagedModel('models/lyria-realtime-exp', allowed, 'music'),
@@ -209,4 +209,9 @@ test('every nested file URI is discovered once', () => {
       'files/two',
     ]),
   );
+});
+
+ test('installed 3.7 clients migrate to the priced 3.8 model', () => {
+  assert.equal(resolvePinnedManagedGenerationModel('models/gemini-3.7-flash'), 'gemini-3.8-flash');
+  assert.equal(appConfig.managedMusicSessionCredits, 1);
 });

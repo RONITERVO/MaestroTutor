@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { ConcealedSpeech } from './ConcealedSpeech';
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { ALL_LANGUAGES } from '../../../core/config/languages';
 import { IconXMark, IconUndo, IconCheck, IconSend, IconPlus, IconChevronLeft, IconChevronRight } from '../../../shared/ui/Icons';
@@ -181,6 +182,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   const attachedFileName = useMaestroStore(state => state.attachedFileName);
   const sendPrep = useMaestroStore(state => state.sendPrep);
   const transcript = useMaestroStore(state => state.transcript);
+  const sttSpeechPreviewProgress = useMaestroStore(state => state.sttSpeechPreviewProgress);
   const sttError = useMaestroStore(state => state.sttError);
   const liveVideoStream = useMaestroStore(state => state.liveVideoStream);
   const liveSessionState = useMaestroStore(state => state.liveSessionState);
@@ -1054,6 +1056,10 @@ const InputArea: React.FC<InputAreaProps> = ({
                   : t('chat.drawMessage')}
                 drawButtonClassName={iconButtonStyle}
               />
+            )}
+
+            {isListening && sttSpeechPreviewProgress > 0 && (
+              <div className="px-4"><ConcealedSpeech progress={sttSpeechPreviewProgress} /></div>
             )}
 
             <div className="flex items-center justify-between px-2 pb-2">

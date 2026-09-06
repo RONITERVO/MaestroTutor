@@ -56,13 +56,13 @@ describe('generated images are billed as images', () => {
 });
 
 describe('model rates come from the registry, not a fallback', () => {
-  it('uses the current Gemini 3.7 Flash promotional Standard rate', () => {
+  it('uses the current Gemini 3.8 Flash promotional Standard rate', () => {
     const flash = resolvePricingRule('gemini-flash-latest', pricing);
-    expect(pricing.effectiveAt).toBe('2026-09-01');
+    expect(pricing.effectiveAt).toBe('2026-09-06');
     expect(flash?.inputPerMillion?.text).toBe(0.75);
     expect(flash?.outputPerMillion?.text).toBe(3.75);
     expect(flash?.cachedInputPerMillion?.text).toBe(0.075);
-    expect(flash?.id).toBe('gemini-3.7-flash');
+    expect(flash?.id).toBe('gemini-3.8-flash');
   });
 
   it('prices a lite model well below the pro rate', () => {

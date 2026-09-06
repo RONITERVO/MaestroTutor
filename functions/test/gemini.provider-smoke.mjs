@@ -9,7 +9,7 @@ if (!apiKey) {
   throw new Error('GEMINI_API_KEY must be present in this process environment.');
 }
 
-const model = process.env.MANAGED_GEMINI_SMOKE_MODEL?.trim() || 'gemini-3.7-flash';
+const model = process.env.MANAGED_GEMINI_SMOKE_MODEL?.trim() || 'gemini-3.8-flash';
 const client = new GoogleGenAI({ apiKey });
 const request = {
   model,

@@ -8,7 +8,8 @@ const base = process.env.MAESTRO_UI_REPLAY_URL || 'http://localhost:5173';
 if (!['localhost', '127.0.0.1'].includes(new URL(base).hostname)) throw new Error('Replay requires localhost');
 const wav = process.env.MAESTRO_UI_REPLAY_WAV;
 if (!wav || !process.env.MAESTRO_FIREBASE_EMAIL || !process.env.MAESTRO_FIREBASE_PASSWORD) throw new Error('Supply replay WAV and staging credentials');
-const out = resolve('.maestro-debug/full-ui-replay');
+const sttMode = process.env.MAESTRO_UI_REPLAY_MODE === 'stt';
+const out = resolve(sttMode ? '.maestro-debug/stt-ui-replay' : '.maestro-debug/full-ui-replay');
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'chrome', headless: true,
   args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
@@ -26,6 +27,11 @@ try {
     return fixture.prepare(email, password);
   }, { email: process.env.MAESTRO_FIREBASE_EMAIL.trim(), password: process.env.MAESTRO_FIREBASE_PASSWORD.trim() });
   console.log(JSON.stringify({ phase: 'prepared', ...setup }));
+  if (sttMode) {
+    const confirm = page.getByRole('button', { name: 'Confirm language selection' });
+    if (await confirm.isVisible()) await confirm.press('Enter');
+    await page.getByRole('button', { name: /Ota STT|Enable STT/i }).press('Enter');
+  }
   const preview = page.getByTestId('concealed-speech');
   await preview.waitFor({ timeout: 120000 });
   await page.screenshot({ path: `${out}/concealed.png` });
@@ -43,11 +49,15 @@ try {
   const deadline = Date.now() + 120000;
   do {
     timing = await page.evaluate(async () => (await import('/test-fixtures/browser/liveReplaySetup.ts')).evidence());
-    if (timing.reports.some(report => report.events.some(event => event.name === 'playback.drained'))) break;
+    if (sttMode ? timing.finalWordPresent : timing.reports.some(report => report.events.some(event => event.name === 'playback.drained'))) break;
     await new Promise(resolve => setTimeout(resolve, 500));
   } while (Date.now() < deadline);
   await page.screenshot({ path: `${out}/completed.png` });
   await writeFile(`${out}/evidence.json`, JSON.stringify({setup, previewText, initialMarks, progress, timing, errors, persisted: false}, null, 2));
+  if (sttMode) {
+    if (previewText.trim() || initialMarks < 3 || errors.length || !timing.finalWordPresent || progress.length < 2) throw new Error('STT UI replay evidence failed');
+    console.log(JSON.stringify({ phase: 'passed', mode: 'stt', progress, evidence: `${out}/evidence.json` }));
+  } else {
   await page.getByRole('button', {name: /liikenneloki|traffic log/i}).press('Enter');
   const downloadReady = page.waitForEvent('download', {timeout: 15000});
   await page.getByRole('button', {name: 'Export turn timings', exact: true}).press('Enter');
@@ -61,6 +71,7 @@ try {
   await writeFile(`${out}/evidence.json`, JSON.stringify({ setup, previewText, initialMarks, progress, persisted, timing, errors }, null, 2));
   if (previewText.trim() || initialMarks < 3 || errors.length || !persisted || !timing.finalWordPresent || progress.length < 2 || timing.historyMessageCount < 240 || !timing.reports.some(report => report.events.some(event => event.name === 'playback.drained'))) throw new Error('UI replay evidence failed');
   console.log(JSON.stringify({ phase: 'passed', reports: timing.reports.length, evidence: `${out}/evidence.json` }));
+  }
 } catch (error) {
   if (page) {
     await page.screenshot({path: `${out}/failure.png`}).catch(() => {});

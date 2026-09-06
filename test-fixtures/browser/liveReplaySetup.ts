@@ -30,6 +30,7 @@ export async function prepare(email: string, password: string) {
   const deadline = performance.now() + 10000;
   while (useMaestroStore.getState().isLoadingHistory && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 25));
   store.setMessages(messages);
+  store.setNeedsLanguageSelection(false);
   return { historyMessages: useMaestroStore.getState().messages.length };
 }
 

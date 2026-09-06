@@ -150,7 +150,8 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
     stopSpeaking, 
     isSpeechSynthesisSupported,
     isListening, 
-    transcript, 
+    transcript,
+    speechPreviewProgress,
     startListening, 
     stopListening, 
     sttError, 
@@ -256,6 +257,11 @@ export const useSpeechOrchestrator = (config: UseSpeechOrchestratorConfig): UseS
       listeningTokenRef.current = null;
     }
   }, [isListening, addActivityToken, removeActivityToken]);
+
+  useEffect(() => {
+    useMaestroStore.setState({ sttSpeechPreviewProgress: speechPreviewProgress });
+    return () => { useMaestroStore.setState({ sttSpeechPreviewProgress: 0 }); };
+  }, [speechPreviewProgress]);
 
   useEffect(() => {
     setStoreTranscript(transcript);
