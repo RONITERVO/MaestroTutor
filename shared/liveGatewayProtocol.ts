@@ -28,7 +28,12 @@ export type LiveGatewayClientMessage =
 
 export type LiveGatewayServerMessage =
   | { type: 'ready'; sessionId: string; deadlineAt: number }
-  | { type: 'providerMessage'; message: unknown }
+  | {
+      type: 'providerMessage';
+      message: unknown;
+      /** Empty provider envelope keeps older clients connected for the answer. */
+      inputTurnEnded?: { reason: 'duration-limit' | 'reply-window' | 'buffer-limit'; maxDurationMs: number };
+    }
   | {
       type: 'billing';
       status: 'finalizing' | 'settled' | 'released';
@@ -43,6 +48,12 @@ export type LiveGatewayServerMessage =
 export const LIVE_GATEWAY_AUTH_TIMEOUT_MS = 5_000;
 export const LIVE_GATEWAY_CONNECT_TIMEOUT_MS = 20_000;
 export const LIVE_GATEWAY_MAX_MESSAGE_BYTES = 2_000_000;
+/** One minute of input, followed by time for the model to answer. */
+export const LIVE_USER_TURN_MAX_MS = 60_000;
+export const LIVE_GATEWAY_REPLY_RESERVE_MS = 30_000;
+/** Bound retained work even when a client sends faster than microphone cadence. */
+export const LIVE_GATEWAY_MAX_QUEUED_BYTES = 4 * 1024 * 1024;
+export const LIVE_GATEWAY_MAX_QUEUED_MESSAGES = 1024;
 /** A managed socket ends after this many complete user/model exchanges. */
 export const LIVE_GATEWAY_MAX_TURNS = 1;
 /** Camera input is admitted at the same one-frame-per-second cadence as the app. */

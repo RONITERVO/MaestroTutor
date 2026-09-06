@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from 'node:assert/strict';
-import { describe, it } from 'vitest';
+import { afterEach, describe, it, vi } from 'vitest';
+import { LIVE_USER_TURN_MAX_MS, LIVE_GATEWAY_MAX_QUEUED_MESSAGES } from '../../shared/liveGatewayProtocol';
 import type { LiveGatewayUsageCheckpoint } from '../../shared/billing/liveGateway';
 import type { LiveGatewayServerMessage } from '../../shared/liveGatewayProtocol';
 import {
@@ -36,6 +37,8 @@ class FakeTransport implements GatewayTransportPort {
 }
 
 class FakeBilling implements LiveGatewayBillingPort {
+  config: Record<string, unknown> = { responseModalities: ['AUDIO'] };
+  lifetimeMs = 120_000;
   checkpoints: LiveGatewayUsageCheckpoint[] = [];
   finalizations: Array<{ reason: string; checkpoint: LiveGatewayUsageCheckpoint }> = [];
   events: string[] = [];
@@ -46,8 +49,8 @@ class FakeBilling implements LiveGatewayBillingPort {
       sessionId: 'session-1',
       uid: 'user-1',
       model: 'gemini-live-test',
-      config: { responseModalities: ['AUDIO'] },
-      deadlineAt: Date.now() + 60_000,
+      config: this.config,
+      deadlineAt: Date.now() + this.lifetimeMs,
     };
   }
   async checkpoint(_sessionId: string, checkpoint: LiveGatewayUsageCheckpoint) {
@@ -128,6 +131,7 @@ const createHarness = (overrides: {
 };
 
 describe('managed Live gateway connection', () => {
+  afterEach(() => { vi.useRealTimers(); });
   it('records correlated boundary/output timings without copying speech or tickets', async () => {
     const h = createHarness();
     await h.authenticate();
@@ -215,7 +219,7 @@ describe('managed Live gateway connection', () => {
     await harness.connection.whenIdle();
     await harness.close();
 
-    assert.equal(harness.provider.realtimeInputs.length, 1);
+    assert.equal(harness.provider.realtimeInputs.length, 2);
     assert.equal(harness.provider.clientContents.length, 0);
     assert.equal(harness.provider.toolResponses.length, 0);
     assert.equal(harness.billing.finalizations[0].checkpoint.inputAudioBytes, 4);
@@ -297,7 +301,7 @@ describe('managed Live gateway connection', () => {
     await harness.close();
   });
 
-  it('refuses a second turn before it reaches the provider', async () => {
+  it('ignores repeated input boundaries while keeping the answer connection open', async () => {
     const harness = createHarness();
     await harness.authenticate();
     for (let turn = 0; turn < 2; turn += 1) {
@@ -309,11 +313,13 @@ describe('managed Live gateway connection', () => {
     await harness.connection.whenIdle();
 
     assert.equal(harness.provider.realtimeInputs.length, 1);
-    assert.equal(harness.billing.finalizations.length, 1);
+    assert.equal(harness.billing.finalizations.length, 0);
+    assert.equal(harness.provider.closeCount, 0);
+    await harness.close();
     assert.equal(harness.billing.finalizations[0].checkpoint.clientTurnBoundaryCount, 1);
   });
 
-  it('rejects new microphone input after the single input boundary', async () => {
+  it('ignores new microphone input after the single input boundary without losing the answer', async () => {
     const harness = createHarness();
     await harness.authenticate();
     harness.connection.receive(JSON.stringify({ type: 'realtimeInput', input: { audioStreamEnd: true } }));
@@ -322,7 +328,180 @@ describe('managed Live gateway connection', () => {
     } }));
     await harness.connection.whenIdle();
     assert.equal(harness.provider.realtimeInputs.length, 1);
+    assert.equal(harness.provider.closeCount, 0);
+    harness.provider.callbacks!.onmessage({
+      serverContent: { modelTurn: { parts: [{ text: 'Here is my answer.' }] }, turnComplete: true },
+      usageMetadata: { promptTokenCount: 20, responseTokenCount: 10, totalTokenCount: 30 },
+    });
+    await harness.connection.whenIdle();
+    assert.ok(harness.transport.messages.some(message => message.type === 'providerMessage'
+      && JSON.stringify(message.message).includes('Here is my answer.')));
+    await harness.close();
     assert.equal(harness.billing.finalizations[0].checkpoint.inputAudioBytes, 0);
+    assert.equal(harness.billing.finalizations[0].checkpoint.providerUsageMetadata?.totalTokenCount, 30);
+  });
+
+  it('hands continuous speech to the model after 60 seconds and delivers the paid answer', async () => {
+    vi.useFakeTimers();
+    const h = createHarness();
+    h.billing.config = { realtimeInputConfig: { automaticActivityDetection: { disabled: true } } };
+    await h.authenticate();
+    const audio = Buffer.alloc(3200).toString('base64');
+    for (let packet = 0; packet < 610; packet++) h.connection.receive(JSON.stringify({
+      type: 'realtimeInput', input: { audio: { data: audio, mimeType: 'audio/pcm;rate=16000' } },
+    }));
+    await vi.advanceTimersByTimeAsync(LIVE_USER_TURN_MAX_MS);
+    await h.connection.whenIdle();
+    assert.equal(h.provider.realtimeInputs.filter(input => input.audio).length, 600);
+    assert.equal(h.provider.realtimeInputs.filter(input => input.activityStart).length, 1);
+    assert.equal(h.provider.realtimeInputs.filter(input => input.activityEnd).length, 1);
+    assert.equal(h.provider.realtimeInputs.filter(input => input.audioStreamEnd).length, 0);
+    assert.equal(h.provider.closeCount, 0);
+    assert.equal(h.billing.finalizations.length, 0);
+    assert.ok(h.transport.messages.some(message => message.type === 'providerMessage'
+      && message.inputTurnEnded?.reason === 'duration-limit'));
+    h.provider.callbacks!.onmessage({ serverContent: {
+      modelTurn: { parts: [{ text: 'My reply to your first minute.' }] }, turnComplete: true,
+    }, usageMetadata: { promptTokenCount: 1920, responseTokenCount: 20, totalTokenCount: 1940 } });
+    await h.connection.whenIdle();
+    await h.close();
+    assert.equal(h.billing.finalizations[0].checkpoint.inputAudioBytes, 60 * 16000 * 2);
+    assert.equal(h.billing.finalizations[0].checkpoint.usefulOutput, true);
+    assert.equal(h.billing.finalizations[0].checkpoint.providerUsageMetadata?.totalTokenCount, 1940);
+  });
+
+  it('caps decoded audio duration even if supplied frames race the wall clock', async () => {
+    const h = createHarness({ now: () => 1000, sleep: async () => {} });
+    await h.authenticate();
+    for (const seconds of [20, 20, 21]) h.connection.receive(JSON.stringify({
+      type: 'realtimeInput', input: { audio: {
+        data: Buffer.alloc(seconds * 24000 * 2).toString('base64'), mimeType: 'audio/pcm;rate=24000',
+      } },
+    }));
+    await h.connection.whenIdle();
+    const bytes = h.provider.realtimeInputs.reduce((sum, input) => sum + (input.audio
+      ? Buffer.from((input.audio as { data: string }).data, 'base64').length : 0), 0);
+    assert.equal(bytes, 60 * 24000 * 2);
+    assert.deepEqual(h.provider.realtimeInputs.at(-1), { audioStreamEnd: true });
+    assert.equal(h.provider.closeCount, 0);
+    await h.close();
+  });
+
+  it('ends sparse input on wall time rather than waiting for another microphone packet', async () => {
+    vi.useFakeTimers();
+    const h = createHarness();
+    await h.authenticate();
+    h.connection.receive(JSON.stringify({ type: 'realtimeInput', input: {
+      audio: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=16000' },
+    } }));
+    await h.connection.whenIdle();
+    await vi.advanceTimersByTimeAsync(60_000);
+    await h.connection.whenIdle();
+    assert.deepEqual(h.provider.realtimeInputs.at(-1), { audioStreamEnd: true });
+    assert.equal(h.provider.closeCount, 0);
+    await h.close();
+    assert.equal(h.billing.finalizations[0].checkpoint.usefulOutput, false);
+    assert.ok(h.transport.messages.some(message => message.type === 'billing' && message.status === 'released'));
+  });
+
+  it('reserves reply time even for a short session window', async () => {
+    vi.useFakeTimers();
+    const h = createHarness();
+    h.billing.lifetimeMs = 40_000;
+    await h.authenticate();
+    h.connection.receive(JSON.stringify({ type: 'realtimeInput', input: {
+      audio: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=16000' },
+    } }));
+    await h.connection.whenIdle();
+    await vi.advanceTimersByTimeAsync(20_000);
+    await h.connection.whenIdle();
+    assert.deepEqual(h.provider.realtimeInputs.at(-1), { audioStreamEnd: true });
+    assert.ok(h.transport.messages.some(message => message.type === 'providerMessage'
+      && message.inputTurnEnded?.reason === 'reply-window'));
+    await vi.advanceTimersByTimeAsync(19_999);
+    assert.equal(h.provider.closeCount, 0);
+    await vi.advanceTimersByTimeAsync(1);
+    await h.connection.whenIdle();
+    assert.equal(h.provider.closeCount, 1);
+    assert.equal(h.billing.finalizations[0].reason, 'session-deadline');
+  });
+
+  it('interrupts a blocked pacing wait on disconnect and never sends queued audio afterwards', async () => {
+    const h = createHarness({ sleep: () => new Promise(() => {}) });
+    await h.authenticate();
+    const audio = Buffer.alloc(3200).toString('base64');
+    for (let i = 0; i < 3; i++) h.connection.receive(JSON.stringify({
+      type: 'realtimeInput', input: { audio: { data: audio, mimeType: 'audio/pcm;rate=16000' } },
+    }));
+    await tick();
+    assert.equal(h.provider.realtimeInputs.length, 1);
+    h.connection.disconnect();
+    assert.equal(h.provider.closeCount, 1);
+    await h.connection.whenIdle();
+    assert.equal(h.provider.realtimeInputs.length, 1);
+    assert.equal(h.billing.finalizations.length, 1);
+    assert.equal(h.billing.finalizations[0].checkpoint.inputAudioBytes, 3200);
+  });
+
+  it('hands off on time even when queued audio is blocked in a pacing wait', async () => {
+    vi.useFakeTimers();
+    const h = createHarness({ sleep: () => new Promise(() => {}) });
+    await h.authenticate();
+    const audio = Buffer.alloc(3200).toString('base64');
+    for (let i = 0; i < 3; i++) h.connection.receive(JSON.stringify({
+      type: 'realtimeInput', input: { audio: { data: audio, mimeType: 'audio/pcm;rate=16000' } },
+    }));
+    await vi.advanceTimersByTimeAsync(60_000);
+    await h.connection.whenIdle();
+    assert.equal(h.provider.realtimeInputs.filter(input => input.audio).length, 1);
+    assert.deepEqual(h.provider.realtimeInputs.at(-1), { audioStreamEnd: true });
+    assert.equal(h.provider.closeCount, 0);
+    await h.close();
+    assert.equal(h.billing.finalizations[0].checkpoint.inputAudioBytes, 3200);
+  });
+
+  it('normalizes older manual clients that send both end signals into one boundary', async () => {
+    const h = createHarness();
+    h.billing.config = { realtimeInputConfig: { automaticActivityDetection: { disabled: true } } };
+    await h.authenticate();
+    for (const input of [{ activityStart: {} }, { activityEnd: {} }, { audioStreamEnd: true }]) {
+      h.connection.receive(JSON.stringify({ type: 'realtimeInput', input }));
+    }
+    await h.connection.whenIdle();
+    assert.deepEqual(h.provider.realtimeInputs, [{ activityStart: {} }, { activityEnd: {} }]);
+    assert.equal(h.provider.closeCount, 0);
+    await h.close();
+    assert.equal(h.billing.finalizations[0].checkpoint.clientTurnBoundaryCount, 1);
+  });
+
+  it('closes the provider at the hard deadline even while accounting is blocked', async () => {
+    vi.useFakeTimers();
+    const h = createHarness();
+    await h.authenticate();
+    let release!: () => void;
+    h.billing.checkpoint = () => new Promise<void>(resolve => { release = resolve; });
+    h.provider.callbacks!.onmessage({ serverContent: { modelTurn: { parts: [{ text: 'An answer.' }] } } });
+    await vi.advanceTimersByTimeAsync(1);
+    await vi.advanceTimersByTimeAsync(120_000);
+    assert.equal(h.provider.closeCount, 1);
+    release();
+    await h.connection.whenIdle();
+    assert.equal(h.billing.finalizations[0].checkpoint.usefulOutput, true);
+    assert.equal(h.billing.finalizations.length, 1);
+  });
+
+  it('hands off on queue overflow instead of retaining unlimited client messages', async () => {
+    const h = createHarness();
+    await h.authenticate();
+    for (let i = 0; i <= LIVE_GATEWAY_MAX_QUEUED_MESSAGES; i++) h.connection.receive(JSON.stringify({
+      type: 'realtimeInput', input: { audio: { data: 'AQIDBA==', mimeType: 'audio/pcm;rate=16000' } },
+    }));
+    await h.connection.whenIdle();
+    assert.deepEqual(h.provider.realtimeInputs, [{ audioStreamEnd: true }]);
+    assert.equal(h.provider.closeCount, 0);
+    assert.ok(h.transport.messages.some(message => message.type === 'providerMessage'
+      && message.inputTurnEnded?.reason === 'buffer-limit'));
+    await h.close();
   });
 
   it('retains late provider audio and usage after turnComplete until the client closes', async () => {

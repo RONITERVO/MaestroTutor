@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { LIVE_USER_TURN_MAX_MS } from '../../../shared/liveGatewayProtocol';
+
 /** Ariadne's proven semantic-speech boundary, split into idle and post-roll. */
 export const LIVE_SPEECH_IDLE_MS = 2_500;
 export const LIVE_SPEECH_POST_ROLL_MS = 1_500;
@@ -13,12 +15,14 @@ export type ContinuousLiveTurnBoundaryState = 'closed' | 'open' | 'closing';
  *
  * VAD/Whisper decide when a turn exists and when its tail is complete; they do
  * not decide which packets inside an open turn reach Live. Once opened, every
- * packet is forwarded until the full idle plus post-roll deadline has elapsed.
+ * packet is forwarded until the idle plus post-roll deadline or the one-minute
+ * turn limit, whichever comes first. Repeated speech cannot extend that limit.
  */
 export class ContinuousLiveTurnBoundary {
   private readonly tailMs: number;
   private state: ContinuousLiveTurnBoundaryState = 'closed';
   private closeAt: number | null = null;
+  private hardCloseAt: number | null = null;
 
   constructor(options: { idleMs?: number; postRollMs?: number } = {}) {
     const idleMs = Math.max(0, options.idleMs ?? LIVE_SPEECH_IDLE_MS);
@@ -45,6 +49,7 @@ export class ContinuousLiveTurnBoundary {
   openFromConfirmedSpeech(now: number): boolean {
     if (this.state !== 'closed') return false;
     this.state = 'open';
+    this.hardCloseAt = now + LIVE_USER_TURN_MAX_MS;
     this.refreshConfirmedSpeech(now);
     return true;
   }
@@ -52,7 +57,7 @@ export class ContinuousLiveTurnBoundary {
   /** A later semantic speech result extends the same continuous turn. */
   refreshConfirmedSpeech(now: number): boolean {
     if (this.state !== 'open') return false;
-    this.closeAt = now + this.tailMs;
+    this.closeAt = Math.min(now + this.tailMs, this.hardCloseAt!);
     return true;
   }
 
@@ -75,6 +80,7 @@ export class ContinuousLiveTurnBoundary {
   reset(): void {
     this.state = 'closed';
     this.closeAt = null;
+    this.hardCloseAt = null;
   }
 }
 

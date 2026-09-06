@@ -194,6 +194,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   const whisperFailureWarnedRef = useRef(false);
   const speechGateEpochRef = useRef(0);
   const awaitingModelTurnRef = useRef(false);
+  const inputClosedByServerRef = useRef(false);
   const boundaryClosePromiseRef = useRef<Promise<void> | null>(null);
   const transcriptUpdateTimerRef = useRef<number | null>(null);
   const lastRenderedTranscriptRef = useRef('');
@@ -348,8 +349,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       if (speechTurnBoundaryRef.current?.isOpen && sessionRef.current) {
         try {
           sessionRef.current.sendRealtimeInput({ activityEnd: {} });
-          sessionRef.current.sendRealtimeInput({ audioStreamEnd: true });
-          audioTelemetryRef.current.audioStreamEnds += 1;
         } catch {
           // The Live socket may already be closing; teardown must still finish.
         }
@@ -368,6 +367,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     semanticSpeechCaptureRef.current = null;
     loadingFallbackOnsetAtRef.current = null;
     awaitingModelTurnRef.current = false;
+    inputClosedByServerRef.current = false;
     boundaryClosePromiseRef.current = null;
     speechGateEpochRef.current += 1;
 
@@ -707,6 +707,16 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           systemInstruction: augmentedSystemInstruction,
         },
         callbacks: {
+          oninputturnended: () => {
+            if (currentSessionIdRef.current !== sessionId) return;
+            inputClosedByServerRef.current = true;
+            awaitingModelTurnRef.current = true;
+            speechTurnBoundaryRef.current?.reset();
+            inputPacketizerRef.current?.dispose();
+            inputPacketizerRef.current = null;
+            semanticSpeechCaptureRef.current?.reset();
+            setVadActivity(false);
+          },
           onopen: () => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
@@ -806,6 +816,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       }
 
       const encodeAndSend = async (pcm: Int16Array) => {
+        if (inputClosedByServerRef.current) return;
         if (
           currentSessionIdRef.current !== sessionId
           || speechGateEpochRef.current !== speechGateEpoch
@@ -818,7 +829,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           || speechGateEpochRef.current !== speechGateEpoch
         ) return;
         const activeSession = sessionRef.current;
-        if (!activeSession) return;
+        if (!activeSession || inputClosedByServerRef.current) return;
         activeSession.sendRealtimeInput({
           audio: {
             data: base64,
@@ -898,8 +909,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
           const activeSession = sessionRef.current;
           if (!activeSession) return;
           activeSession.sendRealtimeInput({ activityEnd: {} });
-          activeSession.sendRealtimeInput({ audioStreamEnd: true });
-          audioTelemetryRef.current.audioStreamEnds += 1;
           closingPacketizer?.resetPacingEpoch();
           closingBoundary.finishClosing();
           speechGateRef.current?.rejectSpeech(Date.now());
@@ -993,6 +1002,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
       const handleCapturedPcm = (pcm: Int16Array) => {
         if (currentSessionIdRef.current !== sessionId || !pcm.length) return;
+        if (awaitingModelTurnRef.current) return;
         audioTelemetryRef.current.capturedSamples += pcm.length;
         const gate = speechGateRef.current;
         const boundary = speechTurnBoundaryRef.current;

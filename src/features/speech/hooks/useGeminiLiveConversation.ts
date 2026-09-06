@@ -361,6 +361,7 @@ export function useGeminiLiveConversation(
   const playbackActiveRef = useRef(false);
   /** Blocks a second manual activity until Live completes the preceding response. */
   const awaitingModelTurnRef = useRef(false);
+  const inputClosedByServerRef = useRef(false);
   /** Ordered drain plus activity-end operation, if a boundary is currently closing. */
   const boundaryClosePromiseRef = useRef<Promise<void> | null>(null);
 
@@ -963,6 +964,7 @@ export function useGeminiLiveConversation(
     concealedSpeechSamplesRef.current = 0;
     turnTimingRef.current = beginTurnTiming(crypto.randomUUID());
     currentSessionIdRef.current = sessionId;
+    inputClosedByServerRef.current = false;
     startNextModelAudioTurn(sessionId);
     serverMessageQueueRef.current = Promise.resolve();
     resetAudioTelemetry();
@@ -1402,6 +1404,18 @@ export function useGeminiLiveConversation(
           speechConfig: voiceName ? { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } : undefined,
         },
         callbacks: {
+          oninputturnended: () => {
+            if (currentSessionIdRef.current !== sessionId) return;
+            inputClosedByServerRef.current = true;
+            awaitingModelTurnRef.current = true;
+            speechTurnBoundaryRef.current?.reset();
+            inputPacketizerRef.current?.dispose();
+            inputPacketizerRef.current = null;
+            semanticSpeechCaptureRef.current?.reset();
+            setVadActivity(false, observerActivity);
+            currentTurnWaitingForInputRef.current = false;
+            turnTimingRef.current?.mark('input.server-ended-turn');
+          },
           onopen: () => {
             // Check session is still valid before updating state
             if (currentSessionIdRef.current !== sessionId) return;
@@ -1647,6 +1661,7 @@ export function useGeminiLiveConversation(
       }
 
       const encodeAndSend = async (pcm: Int16Array) => {
+        if (inputClosedByServerRef.current) return;
         // Encoding transfers the packet buffer to a worker. Preserve a copy
         // only for gated audio that was truly sent.
         const retained = speechGateEnabled ? pcm.slice() : null;
@@ -1658,7 +1673,7 @@ export function useGeminiLiveConversation(
           || speechGateEpochRef.current !== speechGateEpoch
         ) return;
         const activeSession = sessionRef.current;
-        if (!activeSession) return;
+        if (!activeSession || inputClosedByServerRef.current) return;
         activeSession.sendRealtimeInput({
           audio: { data: base64, mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
         });
@@ -1741,8 +1756,6 @@ export function useGeminiLiveConversation(
           if (!activeSession) return;
           activeSession.sendRealtimeInput({ activityEnd: {} });
           turnTimingRef.current?.mark('input.activity-end-sent');
-          activeSession.sendRealtimeInput({ audioStreamEnd: true });
-          inputAudioTelemetryRef.current.audioStreamEnds += 1;
           closingPacketizer?.resetPacingEpoch();
           closingBoundary.finishClosing();
           speechGateRef.current?.rejectSpeech(Date.now());
@@ -1848,6 +1861,7 @@ export function useGeminiLiveConversation(
 
       const handleCapturedPcm = (pcm: Int16Array) => {
         if (currentSessionIdRef.current !== sessionId || !pcm.length) return;
+        if (awaitingModelTurnRef.current) return;
         inputAudioTelemetryRef.current.capturedSamples += pcm.length;
         const gate = speechGateRef.current;
         const boundary = speechTurnBoundaryRef.current;

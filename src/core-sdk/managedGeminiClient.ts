@@ -204,6 +204,7 @@ const createManagedGatewaySession = async (params: {
   let ready = false;
   let closed = false;
   let closeRequested = false;
+  let inputEnded = false;
   let closeFallback: ReturnType<typeof globalThis.setTimeout> | null = null;
   let inbound = Promise.resolve();
 
@@ -221,7 +222,9 @@ const createManagedGatewaySession = async (params: {
   };
 
   const session = {
-    sendRealtimeInput: (input: Record<string, unknown>) => send({ type: 'realtimeInput', input }),
+    sendRealtimeInput: (input: Record<string, unknown>) => {
+      if (!inputEnded) send({ type: 'realtimeInput', input });
+    },
     sendClientContent: (input: Record<string, unknown>) => send({ type: 'clientContent', input }),
     sendToolResponse: (input: Record<string, unknown>) => send({ type: 'toolResponse', input }),
     close: () => {
@@ -276,6 +279,11 @@ const createManagedGatewaySession = async (params: {
       }
       if (message.type === 'providerMessage') {
         if (!ready) throw gatewayError('Managed Live gateway sent provider data before readiness.', 'LIVE_GATEWAY_PROTOCOL');
+        if (message.inputTurnEnded) {
+          inputEnded = true;
+          await invoke('oninputturnended', message.inputTurnEnded);
+          return;
+        }
         await invoke('onmessage', message.message);
         return;
       }
