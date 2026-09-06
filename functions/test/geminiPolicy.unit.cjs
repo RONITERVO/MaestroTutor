@@ -21,6 +21,7 @@ const {
 const {
   googleSearchQueriesToUsd,
   estimateReservationUsd,
+  calculateManagedLiveSpendAdmissionUsd,
   usageMetadataToUsd,
 } = require('../lib/functions/src/pricing.js');
 const { appConfig } = require('../lib/functions/src/config.js');
@@ -82,6 +83,7 @@ test('managed config allows only server-priced tools and no transport overrides'
 });
 
 test('full model output and multimodal rates are covered before generation', () => {
+  assert.ok(calculateManagedLiveSpendAdmissionUsd() >= (131072 * 3 + 65536 * 12) / 1e6);
   for (const [model, expectedOutputTokens] of [['gemini-3.8-flash', 65536], ['gemini-3.5-flash-lite', 65536], ['gemini-2.5-flash-image', 32768]]) {
     assert.equal(managedGenerationOutputLimit(model), expectedOutputTokens);
     const operation = model.includes('image') ? 'generateImage' : 'generateContent';

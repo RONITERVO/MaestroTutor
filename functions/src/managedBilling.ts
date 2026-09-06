@@ -203,6 +203,8 @@ export const reserveManagedCredits = async (params: {
   model: string;
   estimatedCredits: number;
   estimatedUsd: number;
+  /** Owner exposure may be more conservative than the refundable customer hold. */
+  admissionUsd?: number;
   metadata?: Record<string, unknown>;
 }): Promise<{ reservationId: string; billingSummary: ManagedBillingSummary }> => {
   if (params.estimatedCredits <= 0) {
@@ -217,6 +219,7 @@ export const reserveManagedCredits = async (params: {
   const expiresAt = currentTime + getReservationTtlMs();
   const spendDay = new Date(currentTime).toISOString().slice(0, 10);
   const spendRef = adminDb.collection('managedSpendBudgets').doc(spendDay);
+  const admissionUsd = Math.max(params.estimatedUsd, params.admissionUsd ?? params.estimatedUsd);
 
   const billingSummary = await adminDb.runTransaction(async (transaction) => {
     const [summarySnapshot, deletionClaim, spendSnapshot] = await Promise.all([
@@ -238,7 +241,7 @@ export const reserveManagedCredits = async (params: {
     }
     const nextSummary = outcome.summary;
     const admittedMicros = admitManagedSpend(
-      spendSnapshot.data()?.admittedMicros, params.estimatedUsd, appConfig.managedDailySpendLimitUsd,
+      spendSnapshot.data()?.admittedMicros, admissionUsd, appConfig.managedDailySpendLimitUsd,
     );
     // Keep this allowance consumed on failure/refund: provider input and partial
     // work can cost money even when our product returns all customer credits.
@@ -259,7 +262,7 @@ export const reserveManagedCredits = async (params: {
       reservedUsd: params.estimatedUsd,
       createdAt: currentTime,
       expiresAt,
-      metadata: { ...params.metadata, spendDay, admittedUsd: params.estimatedUsd },
+      metadata: { ...params.metadata, spendDay, admittedUsd: admissionUsd },
     } satisfies ReservationRecord);
 
     return nextSummary;

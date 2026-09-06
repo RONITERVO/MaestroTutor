@@ -25,6 +25,14 @@ USD 100 of actual provider spend; monitor the budget document when diagnosing
 the daily-allowance error. Changing the limit is an owner/operator deployment.
 Do not delete the current day record to bypass the guard.
 
+For Live, operator admission separately covers the largest enabled model's full
+131,072-token context and 65,536-token output at the highest applicable modality
+rates, plus 10% headroom (USD 1.297613 per admitted session). Gemini can generate
+audio faster than its playback duration, so a socket-duration estimate alone
+does not bound that exposure. The customer's existing refundable Live window
+hold stays separate. A day of only Live sessions therefore admits at most 77
+sessions, even when actual spend is much lower. This is deliberately conservative.
+
 Generation now reserves the full reviewed model output ceiling, including the
 most expensive output modality and applicable long-context input/output rates.
 Unused customer credits are returned at normal settlement. Tiny balances may

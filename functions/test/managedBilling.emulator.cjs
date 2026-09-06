@@ -95,17 +95,17 @@ const run = async () => {
   await grantPurchasedCredits({ uid: budgetUid, user: budgetUser, purchaseToken: budgetToken,
     productId: 'emulator-pack', orderId: null, creditsGranted: 100, rawPurchase: {}, rawVerification: {} });
   try {
-    await spendRef.set({ admittedMicros: 99_950_000 });
+    await spendRef.set({ admittedMicros: 99_920_000 });
     const candidates = [user, budgetUser];
     const attempts = await Promise.allSettled(candidates.map(candidate => reserveManagedCredits({
       uid: candidate.id, user: candidate, model: 'emulator-model', operation: 'budget-test',
-      estimatedCredits: 40, estimatedUsd: 0.04,
+      estimatedCredits: 40, estimatedUsd: 0.04, admissionUsd: 0.06,
     })));
     assert.equal(attempts.filter(result => result.status === 'fulfilled').length, 1);
     assert.equal(attempts.filter(result => result.status === 'rejected')[0].reason.status, 503);
     const winner = attempts.findIndex(result => result.status === 'fulfilled');
     await releaseManagedReservation(candidates[winner].id, attempts[winner].value.reservationId, 'no-output');
-    assert.equal((await spendRef.get()).data().admittedMicros, 99_990_000);
+    assert.equal((await spendRef.get()).data().admittedMicros, 99_980_000);
     await assert.rejects(reserveManagedCredits({ uid, user, model: 'emulator-model', operation: 'retry',
       estimatedCredits: 40, estimatedUsd: 0.04 }), error => error.status === 503);
   } finally { await spendRef.set(previousSpend); }

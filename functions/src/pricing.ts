@@ -91,6 +91,15 @@ export const calculateManagedLiveGatewayWindowCredits = (durationSeconds: number
   usdToCredits(calculateManagedLiveGatewayWindowUsd(durationSeconds))
 );
 
+/**
+ * Live can generate audio faster than playback. Daily admission therefore covers
+ * the full largest enabled model context/output, independently of socket time.
+ * This is operator exposure, not the customer's refundable window reservation.
+ */
+export const calculateManagedLiveSpendAdmissionUsd = (): number => roundUsd(
+  ((131_072 * 3 + 65_536 * 12) / 1_000_000) * 1.1,
+);
+
 export const estimateReservationUsd = (params: {
   model: string;
   promptTokens: number;
