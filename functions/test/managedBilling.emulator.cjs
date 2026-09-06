@@ -26,6 +26,9 @@ const uid = `emulator-${randomUUID()}`;
 const token = `purchase-${randomUUID()}`;
 const secondToken = `purchase-${randomUUID()}`;
 const user = { id: uid, email: null, displayName: null, photoUrl: null };
+const budgetUid = `budget-${randomUUID()}`;
+const budgetToken = `budget-purchase-${randomUUID()}`;
+const budgetUser = { ...user, id: budgetUid };
 
 const grant = (purchaseToken = token) => grantPurchasedCredits({
   uid,
@@ -86,6 +89,27 @@ const run = async () => {
   await assert.rejects(listManagedUsageLedgerPage(uid, 2, '../other-user'), error => error.status === 400);
   await assert.rejects(listManagedUsageLedgerPage(uid, 2, 'missing-row'), error => error.status === 400);
 
+  // Competing accounts share one atomic allowance; a refund cannot replenish it.
+  const spendRef = adminDb.collection('managedSpendBudgets').doc(new Date().toISOString().slice(0, 10));
+  const previousSpend = (await spendRef.get()).data();
+  await grantPurchasedCredits({ uid: budgetUid, user: budgetUser, purchaseToken: budgetToken,
+    productId: 'emulator-pack', orderId: null, creditsGranted: 100, rawPurchase: {}, rawVerification: {} });
+  try {
+    await spendRef.set({ admittedMicros: 99_950_000 });
+    const candidates = [user, budgetUser];
+    const attempts = await Promise.allSettled(candidates.map(candidate => reserveManagedCredits({
+      uid: candidate.id, user: candidate, model: 'emulator-model', operation: 'budget-test',
+      estimatedCredits: 40, estimatedUsd: 0.04,
+    })));
+    assert.equal(attempts.filter(result => result.status === 'fulfilled').length, 1);
+    assert.equal(attempts.filter(result => result.status === 'rejected')[0].reason.status, 503);
+    const winner = attempts.findIndex(result => result.status === 'fulfilled');
+    await releaseManagedReservation(candidates[winner].id, attempts[winner].value.reservationId, 'no-output');
+    assert.equal((await spendRef.get()).data().admittedMicros, 99_990_000);
+    await assert.rejects(reserveManagedCredits({ uid, user, model: 'emulator-model', operation: 'retry',
+      estimatedCredits: 40, estimatedUsd: 0.04 }), error => error.status === 503);
+  } finally { await spendRef.set(previousSpend); }
+
   const deletionRaceReservation = await reserve();
   await accountDeletionClaimRef(uid).create({ createdAt: Date.now(), schemaVersion: 2 });
   await assert.rejects(reserve, (error) => error && error.status === 409);
@@ -108,6 +132,8 @@ run()
   .finally(async () => {
     await Promise.all([
       adminDb.recursiveDelete(managedUserRef(uid)).catch(() => undefined),
+      adminDb.recursiveDelete(managedUserRef(budgetUid)).catch(() => undefined),
+      purchaseClaimsCollection().doc(purchaseClaimId('stripe', budgetToken)).delete().catch(() => undefined),
       accountDeletionClaimRef(uid).delete().catch(() => undefined),
       purchaseClaimsCollection().doc(purchaseClaimId('stripe', token)).delete().catch(() => undefined),
       purchaseClaimsCollection().doc(purchaseClaimId('stripe', secondToken)).delete().catch(() => undefined),

@@ -99,7 +99,24 @@ const FORBIDDEN_MANAGED_CONFIG_KEYS = new Set([
   'timeout',
   'topK',
   'topP',
+  'serviceTier',
+  'routingConfig',
+  'modelSelectionConfig',
 ]);
+
+const ALLOWED_MANAGED_GENERATION_CONFIG_KEYS = new Set([
+  'systemInstruction', 'maxOutputTokens', 'stopSequences', 'responseMimeType',
+  'responseSchema', 'responseJsonSchema', 'safetySettings', 'tools', 'toolConfig',
+  'responseModalities', 'mediaResolution', 'thinkingConfig', 'imageConfig',
+]);
+
+/** Reviewed provider ceilings. Unknown models fail closed instead of estimating. */
+export const managedGenerationOutputLimit = (model: string): number => {
+  const id = resolvePinnedManagedGenerationModel(model).replace(/^models\//, '');
+  if (id === 'gemini-3.8-flash' || id === 'gemini-3.5-flash-lite') return 65_536;
+  if (id === 'gemini-2.5-flash-image') return 32_768;
+  throw createHttpError(500, `Managed model "${model}" has no reviewed output budget.`);
+};
 
 /** Prevent callers from altering backend transport or enabling unpriced tools. */
 export const requireSafeManagedGenerationConfig = (
@@ -110,7 +127,7 @@ export const requireSafeManagedGenerationConfig = (
     throw createHttpError(400, 'Managed generation config must be an object.');
   }
   for (const key of Object.keys(config)) {
-    if (FORBIDDEN_MANAGED_CONFIG_KEYS.has(key)) {
+    if (!ALLOWED_MANAGED_GENERATION_CONFIG_KEYS.has(key)) {
       throw createHttpError(400, `Managed generation config does not allow "${key}".`);
     }
   }
@@ -137,20 +154,15 @@ export const requireSafeManagedGenerationConfig = (
 };
 
 /**
- * Return the provider config without any application-imposed output limit.
- *
- * Older clients may still send `maxOutputTokens`. Ignoring it here keeps those
- * clients compatible while ensuring that neither managed nor BYOK users get a
- * shorter answer because of Maestro. The provider's model/context limits remain
- * the only limits.
+ * Pin the published model ceiling and reserve that entire output budget. Legacy
+ * client limits cannot shorten answers or understate the backend reservation.
  */
 export const prepareManagedGenerationConfig = (
   config: Record<string, unknown> | undefined,
-): Record<string, unknown> | undefined => {
+  model = 'gemini-3.8-flash',
+): Record<string, unknown> => {
   const safeConfig = requireSafeManagedGenerationConfig(config);
-  if (!safeConfig) return undefined;
-  const { maxOutputTokens: _ignoredLegacyLimit, ...uncappedConfig } = safeConfig;
-  return Object.keys(uncappedConfig).length > 0 ? uncappedConfig : undefined;
+  return { ...safeConfig, maxOutputTokens: managedGenerationOutputLimit(model) };
 };
 
 export const usesManagedGoogleSearch = (

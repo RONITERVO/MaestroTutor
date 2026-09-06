@@ -16,7 +16,7 @@ describe('headless Live result output', () => {
       const session = {
         close: vi.fn(),
         sendRealtimeInput: vi.fn((message: any) => {
-          if (message.audioStreamEnd) params.callbacks.onmessage({ serverContent: {
+          if (message.audioStreamEnd || message.activityEnd) params.callbacks.onmessage({ serverContent: {
             inputTranscription: { text: `Question ${turn}` },
             outputTranscription: { text: `Answer ${turn}` },
             turnComplete: true,

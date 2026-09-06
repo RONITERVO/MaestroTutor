@@ -174,8 +174,8 @@ export const estimateOperationUsd = (params: {
   // its floor has to be that amount or the reservation cannot cover settlement.
   if (params.operation === 'generateImage') {
     const perImage = rule?.generatedImageUsdFallback ?? 0.039;
-    const inputRate = rule?.inputPerMillion?.text ?? 0;
-    const outputRate = rule?.outputPerMillion?.text ?? 0;
+    const inputRate = Math.max(0, ...Object.values(rule?.inputPerMillion || {}));
+    const outputRate = Math.max(0, ...Object.values(rule?.outputPerMillion || {}));
     const outputTokens = Math.max(0, Number(params.expectedOutputTokens || 0));
     return roundUsd(
       perImage
@@ -184,8 +184,10 @@ export const estimateOperationUsd = (params: {
     );
   }
 
-  const inputRate = rule?.inputPerMillion?.text ?? 0;
-  const outputRate = rule?.outputPerMillion?.text ?? 0;
+  const longRates = rule?.longContext && promptTokens > rule.longContext.abovePromptTokens
+    ? rule.longContext : rule;
+  const inputRate = Math.max(0, ...Object.values(longRates?.inputPerMillion || {}));
+  const outputRate = Math.max(0, ...Object.values(longRates?.outputPerMillion || {}));
 
   const configuredOutputTokens = Number(params.expectedOutputTokens);
   const expectedOutputTokens = Number.isFinite(configuredOutputTokens) && configuredOutputTokens >= 0

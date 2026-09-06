@@ -127,6 +127,7 @@ export const runSyntheticLiveJourney = async (
   let gatedPackets = 0;
   let streamEnds = 0;
   let audioSentSinceLastStreamEnd = false;
+  let inputTurnEnded = false;
   let inputCaptureStartedAt: number | null = null;
   let initialSourceEndedAt: number | null = null;
   let localTriggerAt: number | null = null;
@@ -274,6 +275,13 @@ export const runSyntheticLiveJourney = async (
     },
     callbacks: {
       onopen: () => runtime.events.emit({ operationId, journey: 'live', phase: 'session.opened' }),
+      oninputturnended: (event: unknown) => {
+        inputTurnEnded = true;
+        boundary?.reset();
+        packetizer.dispose();
+        streamEnds += 1;
+        runtime.events.emit({ operationId, journey: 'live', phase: 'audio.input-forced-end', data: { event } });
+      },
       onmessage: (rawMessage: unknown) => {
         const message = rawMessage as any;
         providerActivitySequence += 1;
@@ -380,6 +388,7 @@ export const runSyntheticLiveJourney = async (
     }
   };
   const sendPacket = async (pcm: Int16Array) => {
+    if (inputTurnEnded) return;
     sendVideoFrames();
     sentPackets.push(pcm.slice());
     audioSentSinceLastStreamEnd = true;
@@ -391,14 +400,10 @@ export const runSyntheticLiveJourney = async (
     // A gate close may already have ended the only audio turn. Sending another
     // empty boundary when the finite source finishes can make Live complete an
     // empty turn before returning the model response for the heard speech.
-    if (streamEnds > 0 && !audioSentSinceLastStreamEnd) return;
-    if (boundary?.isOpen) {
-      session.sendRealtimeInput({ activityEnd: {} });
-      boundary.reset();
-    } else if (input.manualActivityBoundaries === true) {
-      session.sendRealtimeInput({ activityEnd: {} });
-    }
-    session.sendRealtimeInput({ audioStreamEnd: true });
+    if (inputTurnEnded || (streamEnds > 0 && !audioSentSinceLastStreamEnd)) return;
+    inputTurnEnded = true;
+    session.sendRealtimeInput(manualActivityBoundaries ? { activityEnd: {} } : { audioStreamEnd: true });
+    boundary?.reset();
     streamEnds += 1;
     audioSentSinceLastStreamEnd = false;
     runtime.events.emit({
@@ -417,6 +422,7 @@ export const runSyntheticLiveJourney = async (
     onPacket: sendPacket,
   });
   const routeCapturedPacket = async (packet: Int16Array) => {
+    if (inputTurnEnded) return;
     logicalNow += packet.length / INPUT_SAMPLE_RATE * 1_000;
     if (!gate || !boundary) {
       packetizer.push(packet);
@@ -428,7 +434,6 @@ export const runSyntheticLiveJourney = async (
     if (boundary.shouldBeginClosing(logicalNow)) {
       boundary.beginClosing(logicalNow);
       await packetizer.flushPending();
-      session.sendRealtimeInput({ activityEnd: {} });
       endAudioStream('gate-closed');
       packetizer.resetPacingEpoch();
       boundary.finishClosing();

@@ -103,6 +103,8 @@ jobs:
         run: |
           npm run --silent smoke:managed-live-no-output -- --profile staging-ci > managed-live-no-output.json
           node -e "const r=require('./managed-live-no-output.json'); if(!r.passed||r.usageRows!==0||r.chargeRows!==0||r.releaseRows!==1||r.reservedCreditsAfter!==0) process.exit(1); console.log('No-output Live release:',r.releasedCredits,'credits returned with no charge')"
+      - name: Prove the gateway hands 60 seconds of speech to Gemini for a reply
+        run: npm run --silent smoke:managed-live-turn-limit > managed-live-turn-limit.json
       - name: Complete one controlled Stripe test purchase
         run: |
           npx tsx src/headless/cli.ts billing.checkout.completeTest --profile staging-ci --params "{\"packId\":\"$MAESTRO_TEST_PACK_ID\",\"expectedCredits\":$MAESTRO_TEST_PACK_CREDITS,\"headless\":true}" > checkout.json
@@ -149,6 +151,7 @@ jobs:
             managed-first-lesson.json
             managed-first-lesson.events.jsonl
             managed-live-no-output.json
+            managed-live-turn-limit.json
             managed-connected-live.json
             managed-connected-live.events.jsonl
             managed-long-observer.json

@@ -4,7 +4,8 @@
 
 import type { AppUser } from './auth';
 import { FieldPath, type CollectionReference } from 'firebase-admin/firestore';
-import { getReservationTtlMs } from './config';
+import { appConfig, getReservationTtlMs } from './config';
+import { admitManagedSpend } from './spendAdmission';
 import { adminDb } from './firebase';
 import { createHttpError } from './http';
 import {
@@ -214,11 +215,14 @@ export const reserveManagedCredits = async (params: {
   const reservationRef = managedReservationsCollection(params.uid).doc();
   const currentTime = nowMs();
   const expiresAt = currentTime + getReservationTtlMs();
+  const spendDay = new Date(currentTime).toISOString().slice(0, 10);
+  const spendRef = adminDb.collection('managedSpendBudgets').doc(spendDay);
 
   const billingSummary = await adminDb.runTransaction(async (transaction) => {
-    const [summarySnapshot, deletionClaim] = await Promise.all([
+    const [summarySnapshot, deletionClaim, spendSnapshot] = await Promise.all([
       transaction.get(summaryRef),
       transaction.get(accountDeletionClaimRef(params.uid)),
+      transaction.get(spendRef),
     ]);
     if (deletionClaim.exists) {
       throw createHttpError(409, 'This managed account is being deleted.');
@@ -233,6 +237,12 @@ export const reserveManagedCredits = async (params: {
       );
     }
     const nextSummary = outcome.summary;
+    const admittedMicros = admitManagedSpend(
+      spendSnapshot.data()?.admittedMicros, params.estimatedUsd, appConfig.managedDailySpendLimitUsd,
+    );
+    // Keep this allowance consumed on failure/refund: provider input and partial
+    // work can cost money even when our product returns all customer credits.
+    transaction.set(spendRef, { admittedMicros, limitUsd: appConfig.managedDailySpendLimitUsd, updatedAt: currentTime });
 
     transaction.set(summaryRef, {
       billingSummary: nextSummary,
@@ -249,7 +259,7 @@ export const reserveManagedCredits = async (params: {
       reservedUsd: params.estimatedUsd,
       createdAt: currentTime,
       expiresAt,
-      metadata: params.metadata || {},
+      metadata: { ...params.metadata, spendDay, admittedUsd: params.estimatedUsd },
     } satisfies ReservationRecord);
 
     return nextSummary;
