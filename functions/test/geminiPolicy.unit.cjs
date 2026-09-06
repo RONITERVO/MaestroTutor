@@ -90,7 +90,16 @@ test('full model output and multimodal rates are covered before generation', () 
     const reserved = estimateReservationUsd({ model, promptTokens: 100, operation, expectedOutputTokens });
     const billed = usageMetadataToUsd(model, { promptTokenCount: 100, candidatesTokenCount: expectedOutputTokens }, operation, 0, 0);
     assert.ok(reserved >= billed, `${model}: ${reserved} must cover ${billed}`);
-    if (operation === 'generateImage') assert.ok(reserved >= 32768 * 30 / 1e6);
+    if (operation === 'generateImage') {
+      assert.ok(reserved >= 32768 * 30 / 1e6);
+      assert.ok(Math.ceil(reserved * 1000) <= 1000, 'the full image output budget fits a fresh 1000-credit pack');
+      const imageCost = usageMetadataToUsd(model, {
+        promptTokenCount: 100,
+        candidatesTokenCount: 32768,
+        candidatesTokensDetails: [{ modality: 'IMAGE', tokenCount: 32768 }],
+      }, operation, 25, 0);
+      assert.ok(reserved >= imageCost, 'the full output allowance already includes images');
+    }
   }
   assert.throws(() => managedGenerationOutputLimit('gemini-unreviewed'), error => error.status === 500);
 });
