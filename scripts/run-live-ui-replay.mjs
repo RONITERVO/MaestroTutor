@@ -22,10 +22,10 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(base);
   await page.waitForSelector('main', { timeout: 60000 });
-  const setup = await page.evaluate(async ({ email, password }) => {
+  const setup = await page.evaluate(async ({ email, password, sttMode }) => {
     const fixture = await import('/test-fixtures/browser/liveReplaySetup.ts');
-    return fixture.prepare(email, password);
-  }, { email: process.env.MAESTRO_FIREBASE_EMAIL.trim(), password: process.env.MAESTRO_FIREBASE_PASSWORD.trim() });
+    return fixture.prepare(email, password, sttMode);
+  }, { email: process.env.MAESTRO_FIREBASE_EMAIL.trim(), password: process.env.MAESTRO_FIREBASE_PASSWORD.trim(), sttMode });
   console.log(JSON.stringify({ phase: 'prepared', ...setup }));
   if (sttMode) {
     const confirm = page.getByRole('button', { name: 'Confirm language selection' });
