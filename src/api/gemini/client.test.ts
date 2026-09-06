@@ -66,6 +66,9 @@ class FakeWebSocket {
 
   send(data: string) { this.sent.push(data); }
   close(code?: number, reason?: string) {
+    if (code !== undefined && code !== 1000 && (code < 3000 || code > 4999)) {
+      throw new DOMException('Invalid client WebSocket close code', 'InvalidAccessError');
+    }
     this.closeCalls.push({ code, reason });
     this.readyState = 3;
   }
@@ -295,5 +298,25 @@ describe('Gemini provider routing', () => {
       status: 401,
       code: 'MISSING_ACCESS',
     });
+  });
+
+  it.each([
+    [{ type: 'error', message: 'Provider failed', code: 'LIVE_PROVIDER_ERROR' }, 4003],
+    [{ type: 'unknown' }, 4004],
+  ])('closes a failed ready socket with a browser-valid application code', async (message, code) => {
+    mocks.resolveAccessMode.mockResolvedValue('managed');
+    const onerror = vi.fn();
+    const ai = await getAi();
+    const pending = ai.live.connect({ model: 'gemini-3.1-flash-live-preview',
+      liveOpenReason: createLiveOpenReason(LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE), callbacks: { onerror } });
+    await vi.waitFor(() => expect(FakeWebSocket.instances).toHaveLength(1));
+    const socket = FakeWebSocket.instances[0];
+    socket.emit('open');
+    socket.serverMessage({ type: 'ready', sessionId: 'session-error', deadlineAt: Date.now() + 120000 });
+    await pending;
+    socket.serverMessage(message);
+    await vi.waitFor(() => expect(socket.closeCalls[0]?.code).toBe(code));
+    expect(onerror).toHaveBeenCalledTimes(1);
+    socket.emit('close', {});
   });
 });

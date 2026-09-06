@@ -559,10 +559,21 @@ export class LiveGatewayConnection {
 
     const callbacks: LiveProviderCallbacks = {
       onmessage: (message) => {
-        const content = (message as { serverContent?: { inputTranscription?: unknown; outputTranscription?: unknown; modelTurn?: { parts?: Array<{ inlineData?: unknown }> } } })?.serverContent;
+        const content = (message as { serverContent?: { turnComplete?: boolean; inputTranscription?: unknown; outputTranscription?: unknown; modelTurn?: { parts?: Array<{ inlineData?: unknown }> } } })?.serverContent;
         if (content?.inputTranscription) this.markTimingOnce('input.first-provider-transcript-received');
         if (content?.outputTranscription) this.markTimingOnce('response.first-transcript-received');
         if (content?.modelTurn?.parts?.some(part => part.inlineData)) this.markTimingOnce('response.first-audio-received');
+        // Automatic VAD can start/finish a reply while captured tail silence is
+        // still queued. One transport owns one answer: discard that tail before
+        // it can interrupt output or trigger a second-turn protocol failure.
+        if (!this.inputEnded && this.phase === 'ready'
+          && (observeLiveGatewayProviderMessage(this.checkpointState, message).usefulOutput || content?.turnComplete)) {
+          this.inputEnded = true;
+          if (this.inputTimer) clearTimeout(this.inputTimer);
+          this.inputTimer = null;
+          this.cancelPacing();
+          this.send({ type: 'providerMessage', message: {}, inputTurnEnded: { reason: 'model-reply', maxDurationMs: LIVE_USER_TURN_MAX_MS } });
+        }
         this.enqueue(() => this.handleProviderMessage(message));
       },
       onerror: (error) => this.enqueue(() => this.handleProviderError(error)),

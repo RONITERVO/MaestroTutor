@@ -6,6 +6,11 @@ earlier to leave reply time inside the existing session deadline. App, STT, and
 headless clients stop forwarding when notified. Manual activity sends only
 `activityEnd`; automatic VAD uses `audioStreamEnd`.
 
+When automatic VAD starts replying before the client finishes sending silence,
+the gateway also stops input immediately. This preserves the first answer and
+prevents trailing packets from being treated as a second turn. Client error
+closures use application codes accepted by browser and Node WebSocket APIs.
+
 The gateway cancels queued pacing immediately on disconnect/deadline. Only
 forwarded media enters fallback accounting. No useful output still returns the
 customer's reserved credits.

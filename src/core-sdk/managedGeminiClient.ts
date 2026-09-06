@@ -300,7 +300,7 @@ const createManagedGatewaySession = async (params: {
           return;
         }
         await invoke('onerror', error);
-        socket.close(1011, 'gateway-error');
+        socket.close(4003, 'gateway-error');
         return;
       }
       throw gatewayError('Managed Live gateway returned an unknown message.', 'LIVE_GATEWAY_PROTOCOL');
@@ -322,7 +322,7 @@ const createManagedGatewaySession = async (params: {
           return;
         }
         await invoke('onerror', normalized);
-        socket.close(1002, 'protocol-error');
+        socket.close(4004, 'protocol-error');
       });
     }
 

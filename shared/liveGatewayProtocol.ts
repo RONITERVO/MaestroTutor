@@ -32,7 +32,7 @@ export type LiveGatewayServerMessage =
       type: 'providerMessage';
       message: unknown;
       /** Empty provider envelope keeps older clients connected for the answer. */
-      inputTurnEnded?: { reason: 'duration-limit' | 'reply-window' | 'buffer-limit'; maxDurationMs: number };
+      inputTurnEnded?: { reason: 'duration-limit' | 'reply-window' | 'buffer-limit' | 'model-reply'; maxDurationMs: number };
     }
   | {
       type: 'billing';

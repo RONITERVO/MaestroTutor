@@ -132,6 +132,28 @@ const createHarness = (overrides: {
 
 describe('managed Live gateway connection', () => {
   afterEach(() => { vi.useRealTimers(); });
+  it('discards queued and late automatic-VAD tail audio as soon as the model replies', async () => {
+    const h = createHarness({ sleep: () => new Promise(() => undefined) });
+    await h.authenticate();
+    const audio = JSON.stringify({ type: 'realtimeInput', input: {
+      audio: { data: Buffer.alloc(3200).toString('base64'), mimeType: 'audio/pcm;rate=16000' },
+    } });
+    h.connection.receive(audio);
+    h.connection.receive(audio);
+    await tick();
+    h.provider.callbacks!.onmessage({ serverContent: { modelTurn: { parts: [{ text: 'I heard you.' }] } } });
+    await h.connection.whenIdle();
+    h.connection.receive(audio);
+    h.provider.callbacks!.onmessage({ serverContent: { turnComplete: true } });
+    await h.connection.whenIdle();
+    assert.equal(h.provider.realtimeInputs.length, 1);
+    assert.equal(h.provider.closeCount, 0);
+    assert.ok(h.transport.messages.some(message => message.type === 'providerMessage' && message.inputTurnEnded?.reason === 'model-reply'));
+    assert.ok(!h.transport.messages.some(message => message.type === 'error'));
+    await h.close();
+    assert.equal(h.billing.finalizations[0].checkpoint.providerTurnCompleteCount, 1);
+    assert.equal(h.billing.finalizations[0].checkpoint.inputAudioBytes, 3200);
+  });
   it('records correlated boundary/output timings without copying speech or tickets', async () => {
     const h = createHarness();
     await h.authenticate();
