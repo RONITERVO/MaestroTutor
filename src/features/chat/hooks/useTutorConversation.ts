@@ -49,6 +49,7 @@ import {
   normalizeSuggestionCreatorToolRequest as normalizeCoreSuggestionCreatorToolRequest,
 } from '../../../core-sdk/chat/suggestionAftersteps';
 import { runMaestroImageGeneration } from '../../../core-sdk/chat/imageGeneration';
+import { ART_STYLE_REFERENCE_TEXT } from '../../../core-sdk/chat/artStyleReference';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -2372,6 +2373,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         maxMediaToKeep: MAX_MEDIA_TO_KEEP,
         contextSummary: resolveBookmarkContextSummary() || undefined,
         globalProfileText,
+        // Text turns (and now recently also audio turn transcript) are the ones that can emit an artifact.
+        // The image-generation path might pick this up. But this must be included at least on text turns with Maestro.
+        artStyleReferenceText: ART_STYLE_REFERENCE_TEXT,
         avatarOverlayFileUri,
         avatarOverlayMimeType,
       });
