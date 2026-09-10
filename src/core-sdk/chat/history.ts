@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { MAX_MEDIA_TO_KEEP } from '../../core/config/app';
+import { ART_STYLE_REFERENCE_MAX_CHARS } from './artStyleReference';
 import type { ChatMessage } from '../../core/types';
 import { selectUploadedAttachmentParts } from './uploadedAttachmentVariants';
 
@@ -22,6 +23,7 @@ export interface DeriveHistoryOptions {
   maxMediaToKeep?: number;
   contextSummary?: string;
   globalProfileText?: string;
+  artStyleReferenceText?: string;
   placeholderLatestUserMessage?: string;
   avatarOverlayFileUri?: string;
   avatarOverlayMimeType?: string;
@@ -87,6 +89,7 @@ export const deriveHistoryForApi = (
     maxMediaToKeep = MAX_MEDIA_TO_KEEP,
     contextSummary,
     globalProfileText,
+    artStyleReferenceText,
     placeholderLatestUserMessage,
     avatarOverlayFileUri,
     avatarOverlayMimeType,
@@ -128,6 +131,11 @@ export const deriveHistoryForApi = (
   }
   if (contextSummary?.trim()) {
     contextParts.push(`Conversation Summary:\n${contextSummary.trim().slice(0, 10_000)}`);
+  }
+  // Art direction goes last, and carries no framing beyond its own opening
+  // line: it is reference material the tutor may drift within, not a rule.
+  if (artStyleReferenceText?.trim()) {
+    contextParts.push(artStyleReferenceText.trim().slice(0, ART_STYLE_REFERENCE_MAX_CHARS));
   }
   if (contextParts.length > 0) {
     const prefaceText = contextParts.join('\n\n');

@@ -49,6 +49,7 @@ import {
   normalizeSuggestionCreatorToolRequest as normalizeCoreSuggestionCreatorToolRequest,
 } from '../../../core-sdk/chat/suggestionAftersteps';
 import { runMaestroImageGeneration } from '../../../core-sdk/chat/imageGeneration';
+import { ART_STYLE_REFERENCE_TEXT } from '../../../core-sdk/chat/artStyleReference';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -2372,6 +2373,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         maxMediaToKeep: MAX_MEDIA_TO_KEEP,
         contextSummary: resolveBookmarkContextSummary() || undefined,
         globalProfileText,
+        // Text turns are the ones that can emit an artifact, so the sketchbook
+        // reference rides along here only. The image-generation path below
+        // stays cinematic and must not pick this up.
+        artStyleReferenceText: ART_STYLE_REFERENCE_TEXT,
         avatarOverlayFileUri,
         avatarOverlayMimeType,
       });
