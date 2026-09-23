@@ -48,7 +48,8 @@ describe('browser provider boundary characterization', () => {
       yield { text: 'Hola mundo' };
     } as any);
     mocks.getAi.mockImplementation(async () => { trace.push('resolve'); return aiClient; });
-    const runtime = createCoreRuntime({ events: { emit: event => { trace.push(event.phase); } } });
+    const journal = createCoreRuntime().events;
+    const runtime = createCoreRuntime({ events: { ...journal, emit: event => { trace.push(event.phase); return journal.emit(event); } } });
     const deltas: string[][] = [];
     const result = await runTutorTextTurn({ model: 'model', prompt: 'Hola', history: [],
       nativeLanguageCode: 'en', systemInstruction: 'system' }, { runtime,

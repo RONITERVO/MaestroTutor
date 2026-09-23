@@ -3,13 +3,13 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LanguagePair } from '../../core/types';
-import { generateGeminiResponse } from '../../api/gemini/generative';
+import { generateGeminiResponse } from '../gemini/generative';
 import {
   REPLY_SUGGESTIONS_RESPONSE_SCHEMA,
   runReplySuggestions,
 } from './suggestions';
 
-vi.mock('../../api/gemini/generative', () => ({
+vi.mock('../gemini/generative', () => ({
   generateGeminiResponse: vi.fn(),
 }));
 
@@ -57,7 +57,7 @@ describe('reply suggestions', () => {
       lastTutorMessage: 'Hola',
       history: [{ id: 'assistant-1', role: 'assistant', text: 'Hola', timestamp: 1 }],
       languagePair,
-    });
+    }, { resolveAiClient: vi.fn() });
 
     expect(result.suggestions).toEqual([{ target: 'Hola', native: 'Hello' }]);
     expect(generateGeminiResponse).toHaveBeenCalledWith(
@@ -92,7 +92,7 @@ describe('reply suggestions', () => {
       lastTutorMessage: 'Hola',
       history: [{ id: 'assistant-1', role: 'assistant', text: 'Hola', timestamp: 1 }],
       languagePair,
-    });
+    }, { resolveAiClient: vi.fn() });
 
     expect(result.suggestions).toEqual([{ target: 'Sí', native: 'Yes' }]);
     expect(generateGeminiResponse).toHaveBeenCalledTimes(2);

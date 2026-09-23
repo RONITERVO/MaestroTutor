@@ -3,12 +3,12 @@
 
 import { LIVE_REPLY_SUGGESTIONS_SUFFIX, REPLY_SUGGESTIONS_RESPONSE_SCHEMA, PROMPT_CONTEXT_TEXT } from '../../core/config/prompts';
 
-import { generateGeminiResponse, type GeminiRequestLifecycleHooks } from '../../api/gemini/generative';
-import { getGeminiModels } from '../../core/config/models';
+import { generateGeminiResponse, type GeminiRequestLifecycleHooks } from '../gemini/generative';
+import { getGeminiModels } from '../modelRegistry';
 import type { ChatMessage, LanguagePair, ReplySuggestion } from '../../core/types';
 import { groupAdjacentRoleItems } from '../../shared/utils/conversationTurns';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
-import type { CoreGeminiClient } from '../managedGeminiClient';
+import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clientSource';
 import { buildCompactAssistantHistoryText } from './assistantMessageContext';
 
 export interface ReplySuggestionsInput {
@@ -20,9 +20,8 @@ export interface ReplySuggestionsInput {
   responseSource?: 'chat' | 'live';
 }
 
-export interface ReplySuggestionsOptions {
+export type ReplySuggestionsOptions = GeminiClientSource & {
   runtime?: CoreRuntime;
-  aiClient?: CoreGeminiClient;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   retries?: number;
 }
@@ -134,7 +133,7 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): strin
 
 export const runReplySuggestions = async (
   input: ReplySuggestionsInput,
-  options: ReplySuggestionsOptions = {},
+  options: ReplySuggestionsOptions,
 ): Promise<ReplySuggestionsResult> => {
   const runtime = options.runtime || createCoreRuntime();
   const operationId = runtime.ids.create('suggestions');
@@ -151,7 +150,7 @@ export const runReplySuggestions = async (
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await generateGeminiResponse(getGeminiModels().text.aux, prompt, [], {
-        aiClient: options.aiClient,
+        ...pickGeminiClientSource(options),
         configOverrides: {
           responseMimeType: 'application/json',
           responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA,

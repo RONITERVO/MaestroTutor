@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createHash } from 'node:crypto';
-import { getGeminiModels } from '../core/config/models';
+import { getGeminiModels } from '../core-sdk/modelRegistry';
 import {
   runCoreManagedMusicGeneration,
   runCoreMusicGeneration,

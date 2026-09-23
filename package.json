@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:prompts": "vitest run src/core-sdk/prompts src/core-sdk/media/musicGeneration.test.ts src/features/speech/services/geminiLiveTts.test.ts src/features/vision/utils/mediaUtils.prompt.test.ts",
     "verify:prompt-ownership": "node scripts/prompt-ownership.mjs",
+    "verify:core-boundaries": "node scripts/core-boundaries.mjs",
     "test:live:ui": "node scripts/run-live-ui-replay.mjs",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "cap:sync": "npm run build && npx cap sync",

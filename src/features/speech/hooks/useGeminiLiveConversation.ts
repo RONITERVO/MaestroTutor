@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { beginTurnTiming } from '../../../core-sdk/turnTiming';
+import { beginTurnTiming } from '../../../platform/browser/turnTiming';
 import {
   LiveServerMessage,
   Modality,

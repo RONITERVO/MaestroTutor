@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { getGeminiModels } from '../core/config/models';
+import { getGeminiModels } from '../core-sdk/modelRegistry';
 import { LIVE_OPEN_TRIGGER, createLiveOpenReason } from '../../shared/liveOpenReason';
 import type { HeadlessClient } from './client';
 import {

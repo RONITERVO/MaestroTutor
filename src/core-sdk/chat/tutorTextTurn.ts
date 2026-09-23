@@ -5,8 +5,8 @@ import {
   generateGeminiResponse,
   type GeminiRequestLifecycleHooks,
   type GenerateGeminiResponseOptions,
-} from '../../api/gemini/generative';
-import type { CoreGeminiClient } from '../managedGeminiClient';
+} from '../gemini/generative';
+import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clientSource';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { formatStreamingTutorDraftText, parseStrictTutorResponseText } from './tutorResponse';
 
@@ -22,10 +22,9 @@ export interface TutorTextTurnInput {
   timeoutMs?: number;
 }
 
-export interface TutorTextTurnOptions {
+export type TutorTextTurnOptions = GeminiClientSource & {
   runtime?: CoreRuntime;
   operationId?: string;
-  aiClient?: CoreGeminiClient;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   onGoogleSearchUnavailable?: () => void;
 }
@@ -40,7 +39,7 @@ export type TutorTextTurnResult = {
 
 export const runTutorTextTurn = async (
   input: TutorTextTurnInput,
-  options: TutorTextTurnOptions = {},
+  options: TutorTextTurnOptions,
 ): Promise<TutorTextTurnResult> => {
   const runtime = options.runtime || createCoreRuntime();
   const operationId = options.operationId || runtime.ids.create('chat-turn');
@@ -68,7 +67,7 @@ export const runTutorTextTurn = async (
         useGoogleSearch: input.useGoogleSearch,
         configOverrides: input.configOverrides,
         timeoutMs: input.timeoutMs,
-        aiClient: options.aiClient,
+        ...pickGeminiClientSource(options),
         onGoogleSearchUnavailable: options.onGoogleSearchUnavailable,
         lifecycleHooks: {
           onProgress: event => {
