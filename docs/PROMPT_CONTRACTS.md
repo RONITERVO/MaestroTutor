@@ -29,6 +29,9 @@ The baseline is the shipped `ab2923d` implementation. Golden snapshots were
 recorded and committed **before** moving prompt definitions (`a115850`). The
 centralization then passed those same snapshots without updating them. Exact
 wording, whitespace, JSON schema, role order and media placement all matter.
+Local `AbortSignal` cancellation metadata is serialized by its public aborted
+state; private Node-version-specific symbols are excluded because they are not
+sent to the model. No prompt text is normalized or removed from the snapshots.
 Do not clean up spelling, change language-tag handling or strengthen instructions
 as part of an unrelated refactor.
 

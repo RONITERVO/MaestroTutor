@@ -124,15 +124,7 @@ exports[`Maestro model input contracts > preserves browser text request parts an
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "systemInstruction": "You are Maestro, a friendly, patient, and highly engaging **Spanish (ES)** language tutor AI.
 Your primary mission is to create a natural, encouraging, and continuous learning conversation to help the user practice **Spanish (ES)**. The user may communicate in **English (US)**, **Spanish (ES)**, or a mix of both.
 
@@ -386,15 +378,7 @@ exports[`Maestro model input contracts > preserves browser text request parts an
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "systemInstruction": "You are Maestro, a friendly, patient, and highly engaging **Japanese** language tutor AI.
 Your primary mission is to create a natural, encouraging, and continuous learning conversation to help the user practice **Japanese**. The user may communicate in **Finnish**, **Japanese**, or a mix of both.
 
@@ -648,15 +632,7 @@ exports[`Maestro model input contracts > preserves chat suggestions request and 
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "responseJsonSchema": {
           "additionalProperties": false,
           "properties": {
@@ -898,15 +874,7 @@ exports[`Maestro model input contracts > preserves chat suggestions request and 
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "responseJsonSchema": {
           "additionalProperties": false,
           "properties": {
@@ -2039,15 +2007,7 @@ exports[`Maestro model input contracts > preserves live suggestions request and 
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "responseJsonSchema": {
           "additionalProperties": false,
           "properties": {
@@ -2291,15 +2251,7 @@ exports[`Maestro model input contracts > preserves live suggestions request and 
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "responseJsonSchema": {
           "additionalProperties": false,
           "properties": {
@@ -3003,15 +2955,7 @@ exports[`Maestro model input contracts > preserves the actual headless text and 
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "systemInstruction": "You are Maestro, a friendly, patient, and highly engaging **Spanish (ES)** language tutor AI.
 Your primary mission is to create a natural, encouraging, and continuous learning conversation to help the user practice **Spanish (ES)**. The user may communicate in **English (US)**, **Spanish (ES)**, or a mix of both.
 
@@ -3192,15 +3136,7 @@ Your Response: "[contemplative] Hmm... that's a really deep question. I think it
   [
     {
       "config": {
-        "abortSignal": AbortSignal {
-          Symbol(kEvents): Map {},
-          Symbol(events.maxEventTargetListeners): 0,
-          Symbol(events.maxEventTargetListenersWarned): false,
-          Symbol(kHandlers): Map {},
-          Symbol(kAborted): false,
-          Symbol(kReason): undefined,
-          Symbol(kComposite): false,
-        },
+        "abortSignal": AbortSignal { aborted: false },
         "systemInstruction": "You are Maestro, a friendly, patient, and highly engaging **Spanish (ES)** language tutor AI.
 Your primary mission is to create a natural, encouraging, and continuous learning conversation to help the user practice **Spanish (ES)**. The user may communicate in **English (US)**, **Spanish (ES)**, or a mix of both.
 

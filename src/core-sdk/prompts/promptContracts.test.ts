@@ -31,6 +31,13 @@ vi.mock('../../features/session', () => ({ getGlobalProfileDB: async () => ({ te
 vi.mock('../diagnostics', () => ({ debugLogService: { logRequest: () => ({ complete() {}, error() {} }) } }));
 vi.mock('../../shared/utils/costTracker', () => ({ trackGeminiUsage() {} }));
 
+// AbortSignal is local cancellation metadata, not model input. Node 22/25 have
+// different private symbols; keep its presence/state without freezing internals.
+expect.addSnapshotSerializer({
+  test: value => value instanceof AbortSignal,
+  serialize: value => `AbortSignal { aborted: ${(value as AbortSignal).aborted} }`,
+});
+
 const pairFor = (target: string, native: string) => createLanguagePairObject(
   ALL_LANGUAGES.find(language => language.langCode === target)!,
   ALL_LANGUAGES.find(language => language.langCode === native)!,
