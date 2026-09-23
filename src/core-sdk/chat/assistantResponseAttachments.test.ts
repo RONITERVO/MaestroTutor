@@ -24,4 +24,12 @@ describe('inline artifact fences', () => {
     expect(parsed.cleanedText).toBe('Bonjour\n[en] Hello');
     expect(atob(parsed.attachment!.dataUrl.split(',')[1])).toBe(body);
   });
+
+  it('keeps backticks inside raw HTML scripts in their HTML attachment', () => {
+    const body = '<html><body><script>\nconst example = "```nested";\n</script></body></html>';
+    const parsed = parseAssistantResponseForAttachment(`Bonjour\n[en] Hello\n${body}`);
+    expect(parsed.cleanedText).toBe('Bonjour\n[en] Hello');
+    expect(parsed.attachment?.mimeType).toBe('text/html');
+    expect(atob(parsed.attachment!.dataUrl.split(',')[1])).toContain('const example = "```nested";');
+  });
 });

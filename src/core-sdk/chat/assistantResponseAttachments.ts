@@ -46,20 +46,21 @@ const extractFencedBlocks = (source: string): FencedBlock[] => {
 
   while (i < lines.length) {
     const line = lines[i];
-    // A model may start the fence immediately after its last translation.
-    // Keep that prose outside the attachment's source range.
-    const openMatch = /(`{3,}|~{3,})([^\n]*)$/.exec(line);
+    // A model may start the fence immediately after its tagged translation.
+    // Limit inline openings to language lines so backticks inside raw HTML/JS
+    // are not mistaken for a separate attachment.
+    const openMatch = /^(\s{0,3}|\s*\[[a-z]{2,3}\][^\n]*?)(`{3,}|~{3,})([^\n]*)$/i.exec(line);
     if (!openMatch) {
       cursor += line.length + 1;
       i++;
       continue;
     }
 
-    const fenceToken = openMatch[1];
+    const fenceToken = openMatch[2];
     const fenceLen = fenceToken.length;
     const fenceChar = fenceToken[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const rawInfo = openMatch[2];
-    const blockStart = cursor + openMatch.index;
+    const rawInfo = openMatch[3];
+    const blockStart = cursor + openMatch[1].length;
     const bodyLines: string[] = [];
 
     cursor += line.length + 1;
