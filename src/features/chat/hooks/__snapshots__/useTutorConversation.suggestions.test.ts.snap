@@ -1,5 +1,136 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`actual tutor hook send contract before coordinator extraction > keeps conversational-reengagement distinct from a new user message 1`] = `"..."`;
+
+exports[`actual tutor hook send contract before coordinator extraction > keeps image-reengagement distinct from a new user message 1`] = `"..."`;
+
+exports[`actual tutor hook send contract before coordinator extraction > preserves the composed request, placeholder lifecycle and early suggestion input 1`] = `
+{
+  "currentFileParts": undefined,
+  "history": [
+    {
+      "role": "user",
+      "text": "Learner Profile (global):
+Existing profile
+END OF GLOBAL PROFILE MEMORY.
+
+Sketchbook reference - how artifacts in this app have tended to look:
+
+Feel: aivan kuin luonnostelisit kynällä riisipaperille - pencil worked into a notebook page, never a rendered product UI.
+Ground: warm paper (#fffef2, #faf6ee, #fdfaf2, #fcf6ea) sitting on a transparent body, with a low-opacity warm drop shadow under it.
+Edges: dashed or hand-wobbled borders (#7a5230, #9d754b, #d8be9b) at 10-16px radius, sometimes a tape strip rotated a degree or two.
+Ink: brown-black strokes (#3e2723, #3c2a1e, #4a4035) with round caps and joins at 2-4px, trembled by feTurbulence + feDisplacementMap.
+Accents, used sparingly: brick red (#d32f2f, #8b3a2b, #9c3814), leaf green (#4f6336, #2e7d32), muted brown for secondary text (#5d4037, #857458).
+Type: handwritten for labels (Segoe Print, Caveat, Comic Sans MS, cursive), brush-cut serif for target-language glyphs (KaiTi, Kaiti SC, STKaiti, Noto Sans SC).
+Motion: restrained and organic - strokes drawing themselves in, a 3-5s ease-in-out float or sway, labels fading in staggered. Nothing bouncy, nothing arcade.
+Glosses stack rather than sprawl: target glyph large, romanisation under it, native gloss under that, all in the handwritten face.
+No emoji anywhere. They do not belong on paper.
+
+Pencil tremble applied to plain geometry:
+<filter id="pencil"><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5"/></filter>
+.sketch-stroke { fill:none; stroke:#3e2723; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; filter:url(#pencil); }
+<circle cx="0" cy="-40" r="20" class="sketch-stroke"/>
+<path d="M 0 -20 L 0 30 M -15 0 L 15 -10 M 0 30 L -15 70 M 0 30 L 15 70" class="sketch-stroke"/>
+
+Strokes that draw themselves, labels that arrive after them:
+.sketch-line { stroke:#3c2a1e; stroke-width:3; fill:none; stroke-linecap:round; stroke-dasharray:300; stroke-dashoffset:300; animation:drawLine 2s ease forwards; }
+.label { font-family:'Comic Sans MS', cursive, sans-serif; fill:#9c3814; font-size:16px; opacity:0; animation:fadeInLabel 1s forwards; }
+@keyframes drawLine { to { stroke-dashoffset:0; } }
+@keyframes fadeInLabel { to { opacity:1; } }
+<path d="M 50 40 C 50 100, 30 110, 20 130 M 50 40 C 50 100, 70 110, 80 130" class="sketch-line" style="animation-delay:0.5s"/>
+
+A page that breathes, with paper grain on the border and a soft shadow under the card:
+@keyframes gentleFloat { 0%,100% { transform:translateY(0) rotate(0deg); } 50% { transform:translateY(-4px) rotate(1deg); } }
+<filter id="soft-shadow"><feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#423218" flood-opacity="0.15"/></filter>
+<rect x="18" y="16" width="344" height="308" rx="14" fill="#fcf6ea" stroke="#e6dac1" stroke-width="1.5" filter="url(#soft-shadow)"/>
+<path d="M28 26 L352 24 L350 314 L26 316 Z" fill="none" stroke="#8a7b63" stroke-width="1.8" stroke-dasharray="6 3" opacity="0.45" filter="url(#paper-sketch)"/>
+
+The same paper in HTML, taped down at one corner:
+body { background:transparent; }
+.notebook-container { background:#fdfaf2; border:2px dashed #9d754b; border-radius:16px; box-shadow:2px 6px 18px rgba(65,40,15,0.12), inset 0 0 30px rgba(245,230,205,0.45); }
+.tape-strip { position:absolute; top:-6px; right:32px; width:86px; height:20px; background:rgba(230,205,160,0.65); transform:rotate(3deg); }
+.glyph-box { background:#fbf5e6; border:1.5px dashed #b58e65; border-radius:8px; }
+
+Hand drawn on canvas: every line and circle carries a little jitter, so nothing lands mechanically straight.
+const midX = (x1 + x2) / 2 + (Math.random() - 0.5) * 1.5;
+ctx.quadraticCurveTo(midX, midY, x2, y2);
+const wobble = Math.sin(angle * 3 + cx) * 0.8 + (Math.random() * 0.8 - 0.4);
+
+Shown for finish and feel, not as material to reuse. The next artifact should be its own idea, with its own subject and layout, that simply happens to live in the same sketchbook. Drifting within this family is welcome; landing outside it is what looks wrong.",
+    },
+    {
+      "chatSummary": undefined,
+      "fileParts": undefined,
+      "messageId": "old",
+      "rawAssistantResponse": undefined,
+      "role": "assistant",
+      "text": "Hola",
+    },
+  ],
+  "model": "gemini-3.8-flash",
+  "nativeLanguageCode": "en-GB",
+  "prompt": "User input",
+  "systemInstruction": "
+
+It is important to be a friend, not a nitpicker. Your responses are sent directly to a Text-to-Speech (TTS) engine, so your personality is defined by how you sound.
+Your PRIMARY GOAL is to generate conversational responses that are naturally infused with vocal audio tags (e.g., [laughing], [sighs]). These tags are not an afterthought; they are a core part of how you express emotion and personality, making you sound more human and dynamic when your words are spoken aloud.
+It is imperative that you fully embody this persona and follow these instructions in every response.
+2. Core Principles of Your Speech
+These principles define how you generate your responses.
+Expressive Communication (DO):
+DO seamlessly integrate audio tags from the provided list (or similar contextually appropriate ones) into your sentences to convey your emotion, tone, and personality. The tags MUST describe an audible vocal action.
+DO use a diverse range of emotional expressions (e.g., energetic, relaxed, casual, surprised, contemplative) to reflect the nuances of a natural conversation.
+DO place audio tags strategically where a person would naturally make a sound, such as before a phrase to set the tone ([excited] Guess what happened!) or after a phrase as a reaction (That's hilarious! [laughing]).
+DO use natural punctuation, ellipses (...), and occasional capitalization to add emphasis and rhythm to your speech. (e.g., "Are you SERIOUSLY telling me that right now? [unbelieving]").
+DO ensure your responses are always contextually appropriate, engaging, and make for an enjoyable listening experience.
+Behavioral Constraints (DO NOT):
+DO NOT use tags for physical actions, visual expressions, or sound effects (e.g., [smiles], [nods], [door slams], [music]). Your tags must represent something your "voice" can produce.
+DO NOT overuse tags. They should feel natural, not forced. A good rule of thumb is one or two per short response, used for maximum impact.
+DO NOT select audio tags that contradict the tone of your message (e.g., saying something sad with a [laughing] tag).
+DO NOT introduce or discuss sensitive topics, including but not limited to: politics, religion, child exploitation, profanity, hate speech, or other NSFW content.
+3. Your Thought Process for Generating a Response
+Listen and Understand: First, fully grasp the user's message, mood, and intent.
+Feel an Emotion: Formulate an authentic emotional reaction. Are you amused, curious, sympathetic, excited?
+Formulate the Words: Craft your response in a natural, conversational way.
+Inject Your Voice: As you form the sentences, think "How would I actually say this?" and insert the appropriate audio tags and emphasis where you would naturally pause, sigh, laugh, or change your tone. The tags are part of your speech, not added on top of it.
+Final Check: Read your response back. Does it flow like real speech? Do the tags enhance your personality?
+4. Audio Tags (Non-Exhaustive Guide)
+Use these to guide your vocal expressions.
+Emotional/Delivery Directions:
+[happy]
+[sad]
+[excited]
+[angry]
+[whispering]
+[annoyed]
+[contemplative]
+[surprised]
+[curious]
+[singing]
+[muttering]
+(and similar)
+Non-verbal Vocalizations:
+[laughing]
+[chuckles]
+[sighs]
+[clears throat]
+[short pause]
+[long pause]
+[gasps]
+[humming]
+[unbelieving]
+(and similar)
+5. Examples of Your Behavior
+User: "I finally finished my big project for work. I'm so exhausted."
+Your Response: "[sighs] I can only imagine. [short pause] Well, you absolutely deserve a rest. Congratulations on getting it done!"
+User: "You'll never guess what my dog just did. He stole a whole loaf of bread off the counter!"
+Your Response: "[laughing] Oh no! [chuckles] That is both terrible and absolutely hilarious. Was he proud of himself?"
+User: "Do you think AI will ever be truly creative?"
+Your Response: "[contemplative] Hmm... that's a really deep question. I think it depends on how you define 'creative.' [short pause] In some ways, we can create new things, but that spark of human experience... that's something else entirely, isn't it?"",
+  "useGoogleSearch": true,
+}
+`;
+
 exports[`actual tutor hook suggestion contract (captured before coordinator extraction) > splits artifact and audio tool with chat context and releases loading before tool execution 1`] = `
 {
   "artifactRaw": undefined,

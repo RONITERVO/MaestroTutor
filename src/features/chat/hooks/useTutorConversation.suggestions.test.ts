@@ -9,17 +9,18 @@ const ports = vi.hoisted(() => ({
   runSuggestions: vi.fn(), getProfile: vi.fn(), saveProfile: vi.fn(),
   saveHistory: vi.fn(), saveSettings: vi.fn(), usage: vi.fn(),
   audioNote: vi.fn(), upload: vi.fn(), optimize: vi.fn(),
+  runText: vi.fn(), runImage: vi.fn(), sanitizeHistory: vi.fn(), fileStatuses: vi.fn(), avatar: vi.fn(),
 }));
 vi.mock('../../../api/gemini/journeys', () => ({
-  runReplySuggestions: ports.runSuggestions, runTutorTextTurn: vi.fn(), runMaestroImageGeneration: vi.fn(),
+  runReplySuggestions: ports.runSuggestions, runTutorTextTurn: ports.runText, runMaestroImageGeneration: ports.runImage,
 }));
-vi.mock('../../../api/gemini/client', () => ({ ApiError: class extends Error {} }));
+vi.mock('../../../api/gemini/client', async () => ({ ApiError: (await import('../../../core-sdk/errors')).ApiError }));
 vi.mock('../../../api/gemini/generative', () => ({ translateText: vi.fn() }));
 vi.mock('../../../api/gemini/files', () => ({
-  uploadMediaToFiles: ports.upload, checkFileStatuses: vi.fn(), sanitizeHistoryWithVerifiedUris: vi.fn(),
+  uploadMediaToFiles: ports.upload, checkFileStatuses: ports.fileStatuses, sanitizeHistoryWithVerifiedUris: ports.sanitizeHistory,
 }));
 vi.mock('../../../api/gemini/music', () => ({ generateMusic: vi.fn() }));
-vi.mock('../../../api/gemini/maestroAvatarEnsure', () => ({ ensureMaestroAvatarUris: vi.fn(), invalidateMaestroAvatarCache: vi.fn() }));
+vi.mock('../../../api/gemini/maestroAvatarEnsure', () => ({ ensureMaestroAvatarUris: ports.avatar, invalidateMaestroAvatarCache: vi.fn() }));
 vi.mock('../../session', () => ({
   getGlobalProfileDB: ports.getProfile, setGlobalProfileDB: ports.saveProfile,
   setAppSettingsDB: ports.saveSettings, getAppSettingsDB: vi.fn(),
@@ -30,11 +31,12 @@ vi.mock('..', () => ({
 }));
 vi.mock('../../vision', () => ({ processMediaForUpload: ports.optimize, createKeyframeFromVideoDataUrl: vi.fn() }));
 vi.mock('../../speech/services/geminiLiveAudioNote', () => ({ synthesizeGeminiAudioNote: ports.audioNote }));
-vi.mock('../../../shared/utils/costTracker', () => ({ trackGeminiUsage: ports.usage, hasCostWarningShown: vi.fn(), setCostWarningShown: vi.fn() }));
+vi.mock('../../../shared/utils/costTracker', () => ({ trackGeminiUsage: ports.usage, hasShownCostWarning: vi.fn(() => true), setCostWarningShown: vi.fn() }));
 
 import { useMaestroStore, initialSettings, allGeneratedLanguagePairs } from '../../../store';
 import { selectIsLoadingSuggestions } from '../../../store/slices/uiSlice';
 import { useTutorConversation, type UseTutorConversationConfig } from './useTutorConversation';
+import { ApiError } from '../../../core-sdk/errors';
 
 const suggestion = { target: 'Hola', native: 'Hello' };
 const message = (id: string, extra: Partial<ChatMessage> = {}): ChatMessage => ({
@@ -45,7 +47,7 @@ let events: string[];
 let savedHistory: ChatMessage[];
 const pair = allGeneratedLanguagePairs[0];
 
-function harness(messages: ChatMessage[]) {
+function harness(messages: ChatMessage[], overrides: Partial<UseTutorConversationConfig> = {}) {
   useMaestroStore.setState({ messages });
   const state = useMaestroStore.getState();
   const config: UseTutorConversationConfig = {
@@ -60,10 +62,12 @@ function harness(messages: ChatMessage[]) {
     transcript: '', currentSystemPromptText: '', currentReplySuggestionsPromptText: '',
     setReplySuggestions: state.setReplySuggestions, handleToggleSuggestionModeRef: { current: vi.fn() },
     maestroAvatarUriRef: { current: null }, maestroAvatarMimeTypeRef: { current: null },
+    ...overrides,
   };
   const hook = renderHook(() => useTutorConversation(config));
   return {
     ...hook,
+    config,
     fetch: (id = 'a', text = 'Hola', source?: 'chat' | 'live') => act(async () => {
       await hook.result.current.fetchAndSetReplySuggestions(id, text, messages, { responseSource: source });
     }),
@@ -90,6 +94,14 @@ beforeEach(() => {
   });
   ports.optimize.mockResolvedValue({ dataUrl: 'data:audio/wav;base64,AQ==', mimeType: 'audio/wav' });
   ports.upload.mockResolvedValue({ uri: 'https://files/audio', mimeType: 'audio/wav' });
+  ports.sanitizeHistory.mockImplementation(async history => history);
+  ports.fileStatuses.mockResolvedValue({});
+  ports.avatar.mockResolvedValue({});
+  ports.runText.mockResolvedValue({
+    response: { text: 'Hola', modelUsed: 'model', usageMetadata: { promptTokenCount: 1 } },
+    rawResponse: 'Hola', searchQueryCount: 0,
+    parsed: { visibleText: 'Hola', translations: [], hasSkippedNonLanguageContent: false },
+  });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
@@ -178,3 +190,114 @@ describe('actual tutor hook suggestion contract (captured before coordinator ext
     expect({ artifactRaw: artifact.llmRawResponse, toolRaw: tool.llmRawResponse }).toMatchSnapshot();
   });
 });
+
+describe('actual tutor hook send contract before coordinator extraction', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    useMaestroStore.setState({
+      settings: { ...initialSettings, selectedLanguagePairId: pair.id, selectedCameraId: 'camera', sendWithSnapshotEnabled: false },
+      isLoadingHistory: false, sttInterruptedBySend: false, recordedUtterancePending: null,
+      pendingRecordedAudioMessageId: null, attachedImageBase64: null, attachedImageMimeType: null, attachedFileName: null,
+    });
+  });
+
+  const send = async (hook: ReturnType<typeof harness>, text = 'User input', image?: string, mime?: string, kind: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user', stt = false) => {
+    let result = false;
+    await act(async () => { result = await hook.result.current.handleSendMessageInternal(text, image, mime, kind, { triggeredByStt: stt }); });
+    return result;
+  };
+
+  it('preserves the composed request, placeholder lifecycle and early suggestion input', async () => {
+    const h = harness([message('u', { role: 'user', text: 'Before' }), message('old', { isLoadingArtifact: false })]);
+    expect(await send(h)).toBe(true);
+    expect(ports.runText.mock.calls[0][0]).toMatchSnapshot();
+    const messages = useMaestroStore.getState().messages;
+    expect(messages.slice(-2).map(({ role, text, thinking }) => ({ role, text, thinking }))).toEqual([
+      { role: 'user', text: 'User input', thinking: undefined }, { role: 'assistant', text: 'Hola', thinking: false },
+    ]);
+    expect(ports.runSuggestions).toHaveBeenCalledTimes(1);
+    expect(ports.runSuggestions.mock.calls[0][0]).toMatchObject({ lastTutorMessage: 'Hola' });
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+    expect(useMaestroStore.getState().sendPrep).toBeNull();
+    expect(h.config.cancelReengagementRef.current).toHaveBeenCalledOnce();
+    expect(h.config.scheduleReengagementRef.current).toHaveBeenCalledWith('send-complete');
+  });
+
+  it.each(['loading', 'speaking', 'pending', 'empty', 'no-pair'] as const)('rejects %s before provider access', async reason => {
+    if (reason === 'loading') useMaestroStore.setState({ isLoadingHistory: true });
+    if (reason === 'speaking') useMaestroStore.getState().addActivityToken('tts', 'speak');
+    if (reason === 'pending') useMaestroStore.getState().addActivityToken('gen', 'response');
+    if (reason === 'no-pair') useMaestroStore.setState({ selectedLanguagePair: undefined, settings: { ...initialSettings } });
+    const h = harness([]);
+    expect(await send(h, reason === 'empty' ? '' : 'Hello')).toBe(false);
+    expect(ports.runText).not.toHaveBeenCalled();
+    expect(ports.getProfile).not.toHaveBeenCalled();
+    expect(useMaestroStore.getState().messages.length).toBe(reason === 'no-pair' ? 1 : 0);
+  });
+
+  it.each([
+    { code: 'MISSING_API_KEY', status: undefined, message: 'missing', text: 'error.apiKeyMissing', gate: 'missing' },
+    { code: 'INVALID_ARGUMENT', status: 400, message: 'API_KEY_INVALID', text: 'error.apiKeyInvalid', gate: 'invalid' },
+    { code: 'RESOURCE_EXHAUSTED', status: 429, message: 'quota', text: 'error.apiQuotaExceeded', gate: undefined },
+    { code: 'INTERNAL', status: 500, message: '{"error":{"message":"Server error"}}', text: 'Server error', gate: undefined },
+  ])('clears the placeholder and token on $code without changing error actions', async error => {
+    const gate = vi.fn();
+    ports.runText.mockRejectedValue(new ApiError(error.message, { code: error.code, status: error.status }));
+    const h = harness([], { onApiKeyGateOpen: gate });
+    expect(await send(h)).toBe(false);
+    expect(useMaestroStore.getState().messages.slice(-1)[0]).toMatchObject({ role: 'error', text: error.text, thinking: false, isLoadingArtifact: false });
+    expect(useMaestroStore.getState().messages.slice(-1)[0]?.errorAction).toBe(error.status === 429 ? 'quota' : undefined);
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+    expect(useMaestroStore.getState().sendPrep).toBeNull();
+    expect(h.config.scheduleReengagementRef.current).toHaveBeenCalledWith('send-error');
+    if (error.gate) expect(gate).toHaveBeenCalledWith({ reason: error.gate, instructionIndex: 0 });
+    else expect(gate).not.toHaveBeenCalled();
+  });
+
+  it.each(['success', 'failure'] as const)('hands STT back after %s and preserves pending-queue arbitration', async outcome => {
+    const state = useMaestroStore.getState();
+    state.setSettings(previous => ({ ...previous, stt: { ...previous.stt, enabled: true } }));
+    state.addActivityToken('stt', 'listen');
+    const h = harness([], { stopListening: vi.fn(async () => { events.push('stop'); useMaestroStore.getState().removeActivityToken('stt:listen'); }), startListening: vi.fn(() => { events.push('start'); }) });
+    if (outcome === 'failure') ports.runText.mockRejectedValue(new Error('provider down'));
+    expect(await send(h, 'Speech', undefined, undefined, 'user', true)).toBe(outcome === 'success');
+    expect(h.config.stopListening).toHaveBeenCalledOnce();
+    expect(h.config.clearTranscript).toHaveBeenCalledOnce();
+    expect(h.config.startListening).toHaveBeenCalledWith(useMaestroStore.getState().settings.stt.language);
+    expect(useMaestroStore.getState().sttInterruptedBySend).toBe(false);
+    expect(events[0]).toBe('stop');
+    expect(events.slice(-1)[0]).toBe('start');
+  });
+
+  it('uploads original current media, keeps optimized bytes local, and sends file parts only', async () => {
+    const original = 'data:image/png;base64,AQID';
+    ports.optimize.mockResolvedValue({ dataUrl: 'data:image/jpeg;base64,AQ==', mimeType: 'image/jpeg' });
+    ports.upload.mockResolvedValue({ uri: 'https://files/photo', mimeType: 'image/png' });
+    const h = harness([]);
+    expect(await send(h, 'Picture', original, 'image/png')).toBe(true);
+    expect(ports.upload.mock.calls[0].slice(0, 2)).toEqual([original, 'image/png']);
+    expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual([{ fileUri: 'https://files/photo', mimeType: 'image/png' }]);
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: original, storageOptimizedImageUrl: 'data:image/jpeg;base64,AQ==' });
+  });
+
+  it('fails before generation when a current attachment cannot be uploaded', async () => {
+    ports.upload.mockRejectedValue(new Error('upload failed'));
+    const h = harness([]);
+    expect(await send(h, 'Picture', 'data:image/png;base64,AQID', 'image/png')).toBe(false);
+    expect(ports.runText).not.toHaveBeenCalled();
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+    expect(useMaestroStore.getState().messages.slice(-1)[0]?.role).toBe('error');
+  });
+
+  it.each(['conversational-reengagement', 'image-reengagement'] as const)('keeps %s distinct from a new user message', async kind => {
+    ports.upload.mockResolvedValue({ uri: 'https://files/snapshot', mimeType: 'image/png' });
+    const h = harness([]);
+    expect(await send(h, '', 'data:image/png;base64,AQID', 'image/png', kind)).toBe(true);
+    expect(useMaestroStore.getState().messages.every(m => m.role !== 'user')).toBe(true);
+    expect(ports.runText.mock.calls[0][0].prompt).toMatchSnapshot();
+    expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(kind === 'image-reengagement' ? [{ fileUri: 'https://files/snapshot', mimeType: 'image/png' }] : undefined);
+  });
+});
+

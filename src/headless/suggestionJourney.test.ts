@@ -21,7 +21,7 @@ describe('headless afterstep application contract before sharing decisions', () 
   ])('preserves raw context and legacy attachment fields: %j', async ({ artifact, tool }) => {
     const history: ChatMessage[] = [{ id: 'a', role: 'assistant', timestamp: 1, text: 'Visible', llmRawResponse: 'Original model context',
       isLoadingArtifact: true, artifactLoadStartTime: 123, storageOptimizedImageUrl: 'old', storageOptimizedImageMimeType: 'image/png',
-      uploadedFileVariants: [{ id: 'primary', uri: 'old-uri', mimeType: 'image/png', targets: ['text'], source: 'original', order: 10 }] }];
+      uploadedFileVariants: [{ id: 'primary', uri: 'old-uri', mimeType: 'image/png', targets: ['chat'], source: 'original', order: 10 }] }];
     const events: unknown[] = [];
     const client = {
       state: { settings: { selectedLanguagePairId: pairId }, chats: { [pairId]: history } },
@@ -43,4 +43,5 @@ describe('headless afterstep application contract before sharing decisions', () 
     expect(history[0].uploadedFileVariants?.[0].uri).toBe('old-uri');
   });
 });
+
 

@@ -5,7 +5,8 @@ import type { ChatMessage, LanguagePair, ReplySuggestion } from '../../../core/t
 import type { GeminiProgressEvent } from '../../../core-sdk/gemini/generative';
 import type { ReplySuggestionsInput, ReplySuggestionsOptions, ReplySuggestionsResult } from '../../../core-sdk/chat/suggestions';
 import type { NormalizedSuggestionArtifact, NormalizedSuggestionToolRequest } from '../../../core-sdk/chat/suggestionAftersteps';
-import { buildCompactAssistantRawText, getVisibleAssistantMessageText } from '../../../core-sdk/chat/assistantMessageContext';
+import { getVisibleAssistantMessageText } from '../../../core-sdk/chat/assistantMessageContext';
+import { planSuggestionAftersteps } from '../../../core-sdk/chat/suggestionAfterstepPlan';
 import { getGeminiModels } from '../../../core-sdk/modelRegistry';
 import type { trackGeminiUsage as trackUsage } from '../../../shared/utils/costTracker';
 
@@ -50,286 +51,227 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
     setReplySuggestions, setSuggestionsLoadingStreamText, getHistoryRespectingBookmark,
     handleReengagementThresholdChange, formatGeminiStatusLine, trackGeminiUsage } = ports;
 
-  const finalizeAssistantArtifact = (id: string, artifact: NormalizedSuggestionArtifact | null) => {
-    const patch: Partial<ChatMessage> = { isLoadingArtifact: false, artifactLoadStartTime: undefined };
-    if (artifact) {
-      Object.assign(patch, {
-        imageUrl: artifact.dataUrl, imageMimeType: artifact.mimeType, attachmentName: artifact.fileName,
-        storageOptimizedImageUrl: undefined, storageOptimizedImageMimeType: undefined, uploadedFileVariants: undefined,
-      });
-    }
-    updateMessage(id, patch);
-  };
-
   return async function fetchAndSetReplySuggestions(
     assistantMessageId: string, lastTutorMessage: string, history: ChatMessage[],
     options?: { responseSource?: 'chat' | 'live' },
   ): Promise<void> {
-  let resolvedArtifact: unknown = null;
-  let resolvedToolRequest: ReturnType<typeof normalizeSuggestionCreatorToolRequest> = null;
+    let resolvedArtifact: unknown = null;
+    let resolvedToolRequest: ReturnType<typeof normalizeSuggestionCreatorToolRequest> = null;
 
-  const finishReplySuggestionsRequest = async () => {
-    setSuggestionsLoadingStreamText('');
-    activity.finish();
-    const normalizedArtifact = normalizeSuggestionCreatorArtifact(resolvedArtifact);
-    const hasRenderableArtifact = Boolean(normalizedArtifact);
-    const isLiveSuggestionSource = options?.responseSource === 'live';
-    const assistantMessage = state.getMessages().find(message => message.id === assistantMessageId);
-    const visibleAssistantText = getVisibleAssistantMessageText(assistantMessage) || lastTutorMessage;
-    const buildLiveToolRawText = (
-      baseText: string,
-      toolRequest: NonNullable<ReturnType<typeof normalizeSuggestionCreatorToolRequest>>
-    ) => {
-      const normalizedBaseText = baseText.trim();
-      const promptText = toolRequest.tool === 'image'
-        ? (toolRequest.prompt || '').trim()
-        : '';
-      const rawSegments = [normalizedBaseText];
-      if (promptText && !rawSegments.includes(promptText)) {
-        rawSegments.push(promptText);
-      }
-      return buildCompactAssistantRawText(rawSegments.filter(Boolean).join('\n\n'), {
-        toolRequest: {
-          ...toolRequest,
-          source: 'live-suggestion-creator',
-        },
+    const finishReplySuggestionsRequest = async () => {
+      setSuggestionsLoadingStreamText('');
+      activity.finish();
+      const normalizedArtifact = normalizeSuggestionCreatorArtifact(resolvedArtifact);
+      const assistantMessage = state.getMessages().find(message => message.id === assistantMessageId);
+      const plan = planSuggestionAftersteps({
+        mode: options?.responseSource === 'live' ? 'browser-live' : 'browser-chat',
+        contextText: getVisibleAssistantMessageText(assistantMessage) || lastTutorMessage,
+        artifact: normalizedArtifact, toolRequest: resolvedToolRequest,
       });
+      for (const patch of plan.assistantPatches) updateMessage(assistantMessageId, patch);
+      if (resolvedToolRequest) {
+        const toolMessageId = plan.splitToolMessage ? addMessage(plan.splitToolMessage) : assistantMessageId;
+        await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
+      }
     };
 
-    if (isLiveSuggestionSource && (hasRenderableArtifact || resolvedToolRequest)) {
-      const compactLiveRawText = hasRenderableArtifact
-        ? buildCompactAssistantRawText(visibleAssistantText, {
-            artifact: normalizedArtifact
-              ? {
-                  mimeType: normalizedArtifact.mimeType,
-                  fileName: normalizedArtifact.fileName,
-                  dataUrl: normalizedArtifact.dataUrl,
-                  source: 'live-suggestion-creator',
-                }
-              : null,
-          })
-        : (resolvedToolRequest
-            ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
-            : '');
-
-      if (compactLiveRawText) {
-        updateMessage(assistantMessageId, { llmRawResponse: compactLiveRawText });
-      }
+    // Check if already loading using token state
+    if (state.isLoading()) {
+      return;
+    }
+    if (!lastTutorMessage.trim() || !state.getLanguagePair()) {
+      setReplySuggestions([]);
+      await finishReplySuggestionsRequest();
+      return;
     }
 
-    if (hasRenderableArtifact || !resolvedToolRequest) {
-      finalizeAssistantArtifact(assistantMessageId, normalizedArtifact);
-    }
-    if (resolvedToolRequest) {
-      const toolMessageId = hasRenderableArtifact
-        ? addMessage({
-            role: 'assistant',
-            llmRawResponse: isLiveSuggestionSource
-              ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
-              : undefined,
-          })
-        : assistantMessageId;
-      await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
-    }
-  };
+    const hasStoredReplySuggestions = (message?: ChatMessage | null): boolean => (
+      Boolean(message && Array.isArray(message.replySuggestions) && message.replySuggestions.length > 0)
+    );
 
-  // Check if already loading using token state
-  if (state.isLoading()) {
-    return;
-  }
-  if (!lastTutorMessage.trim() || !state.getLanguagePair()) {
-    setReplySuggestions([]);
-    await finishReplySuggestionsRequest();
-    return;
-  }
+    // Check if suggestions already exist on message
+    {
+      const allMsgs = state.getMessages();
+      const targetIdx = allMsgs.findIndex(m => m.id === assistantMessageId);
+      if (targetIdx !== -1) {
+        const target = allMsgs[targetIdx];
+        if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
+          const hasExistingAttachment = !!(
+            (target.imageUrl && target.imageMimeType) ||
+            (Array.isArray(target.uploadedFileVariants) && target.uploadedFileVariants.length > 0)
+          );
+          const visibleText = getVisibleAssistantMessageText(target).trim();
+          const hasStructuredTail = !!(
+            target.llmRawResponse &&
+            target.llmRawResponse.trim() &&
+            target.llmRawResponse.trim() !== visibleText
+          );
+          if (hasExistingAttachment || !hasStructuredTail) {
+            state.setSuggestionOwner(target.id);
+            setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
+            await finishReplySuggestionsRequest();
+            return;
+          }
+        }
 
-  const hasStoredReplySuggestions = (message?: ChatMessage | null): boolean => (
-    Boolean(message && Array.isArray(message.replySuggestions) && message.replySuggestions.length > 0)
-  );
+        // Suggestions are owned by a whole assistant-only block, not just one
+        // message object. The assistant can emit multiple adjacent messages when
+        // tools/artifacts are split out, and we must not regenerate suggestions
+        // for every sibling in that block once one already has them.
+        let previousUserIdx = -1;
+        for (let i = targetIdx - 1; i >= 0; i--) {
+          if (allMsgs[i].role === 'user') {
+            previousUserIdx = i;
+            break;
+          }
+        }
+        let nextUserIdx = allMsgs.length;
+        for (let i = targetIdx + 1; i < allMsgs.length; i++) {
+          if (allMsgs[i].role === 'user') {
+            nextUserIdx = i;
+            break;
+          }
+        }
 
-  // Check if suggestions already exist on message
-  {
-    const allMsgs = state.getMessages();
-    const targetIdx = allMsgs.findIndex(m => m.id === assistantMessageId);
-    if (targetIdx !== -1) {
-      const target = allMsgs[targetIdx];
-      if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
-        const hasExistingAttachment = !!(
-          (target.imageUrl && target.imageMimeType) ||
-          (Array.isArray(target.uploadedFileVariants) && target.uploadedFileVariants.length > 0)
-        );
-        const visibleText = getVisibleAssistantMessageText(target).trim();
-        const hasStructuredTail = !!(
-          target.llmRawResponse &&
-          target.llmRawResponse.trim() &&
-          target.llmRawResponse.trim() !== visibleText
-        );
-        if (hasExistingAttachment || !hasStructuredTail) {
-          state.setSuggestionOwner(target.id);
-          setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
+        let blockSuggestionOwner: ChatMessage | null = null;
+        for (let i = nextUserIdx - 1; i > previousUserIdx; i--) {
+          const candidate = allMsgs[i];
+          if (
+            i !== targetIdx
+            && candidate.role === 'assistant'
+            && hasStoredReplySuggestions(candidate)
+          ) {
+            blockSuggestionOwner = candidate;
+            break;
+          }
+        }
+
+        if (blockSuggestionOwner?.replySuggestions) {
+          state.setSuggestionOwner(blockSuggestionOwner.id);
+          setReplySuggestions(blockSuggestionOwner.replySuggestions);
           await finishReplySuggestionsRequest();
           return;
         }
       }
-
-      // Suggestions are owned by a whole assistant-only block, not just one
-      // message object. The assistant can emit multiple adjacent messages when
-      // tools/artifacts are split out, and we must not regenerate suggestions
-      // for every sibling in that block once one already has them.
-      let previousUserIdx = -1;
-      for (let i = targetIdx - 1; i >= 0; i--) {
-        if (allMsgs[i].role === 'user') {
-          previousUserIdx = i;
-          break;
-        }
-      }
-      let nextUserIdx = allMsgs.length;
-      for (let i = targetIdx + 1; i < allMsgs.length; i++) {
-        if (allMsgs[i].role === 'user') {
-          nextUserIdx = i;
-          break;
-        }
-      }
-
-      let blockSuggestionOwner: ChatMessage | null = null;
-      for (let i = nextUserIdx - 1; i > previousUserIdx; i--) {
-        const candidate = allMsgs[i];
-        if (
-          i !== targetIdx
-          && candidate.role === 'assistant'
-          && hasStoredReplySuggestions(candidate)
-        ) {
-          blockSuggestionOwner = candidate;
-          break;
-        }
-      }
-
-      if (blockSuggestionOwner?.replySuggestions) {
-        state.setSuggestionOwner(blockSuggestionOwner.id);
-        setReplySuggestions(blockSuggestionOwner.replySuggestions);
-        await finishReplySuggestionsRequest();
-        return;
-      }
     }
-  }
 
-  // Add token for loading suggestions
-  activity.begin();
-  setReplySuggestions([]);
-  setSuggestionsLoadingStreamText('');
+    // Add token for loading suggestions
+    activity.begin();
+    setReplySuggestions([]);
+    setSuggestionsLoadingStreamText('');
 
-  const suggestionHistory = getHistoryRespectingBookmark(history);
-  let existingGlobalProfile = '';
-  try {
-    existingGlobalProfile = (await persistence.getProfile())?.text || '';
-  } catch {
-    existingGlobalProfile = '';
-  }
-
-  // Retry and structured-response validation now live in the shared Core SDK.
-  const MAX_RETRIES = 0;
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const suggestionHistory = getHistoryRespectingBookmark(history);
+    let existingGlobalProfile = '';
     try {
-      let thoughtText = '';
-      let outputText = '';
-      const flushSuggestionsLoadingText = () => {
-        // Show whichever stream is latest, condensed to a short single-line status
-        const condensedThought = thoughtText.replace(/\s+/g, ' ').trim();
-        const condensedOutput = outputText.replace(/\s+/g, ' ').trim();
-        // Prefer output stream if available, otherwise show thought stream
-        const active = condensedOutput || condensedThought;
-        if (active) {
-          const label = condensedOutput ? '' : 'thinking: ';
-          const display = active.length > 48 ? `\u2026${active.slice(-48)}` : active;
-          setSuggestionsLoadingStreamText(`${label}${display}`);
-        }
-      };
+      existingGlobalProfile = (await persistence.getProfile())?.text || '';
+    } catch {
+      existingGlobalProfile = '';
+    }
 
-      const parsedResponse = await runReplySuggestions(
-        {
-          assistantMessageId,
-          lastTutorMessage,
-          history: suggestionHistory,
-          languagePair: state.getLanguagePair()!,
-          existingGlobalProfile,
-          responseSource: options?.responseSource,
-        },
-        {
-          lifecycleHooks: {
-            onProgress: (event) => {
-              const progressLine = formatGeminiStatusLine(event);
-              if (progressLine && !thoughtText.trim() && !outputText.trim()) {
-                setSuggestionsLoadingStreamText(progressLine);
-              }
-            },
-            onThoughtDelta: (_, fullThought) => {
-              thoughtText = fullThought || thoughtText;
-              flushSuggestionsLoadingText();
-            },
-            onTextDelta: (_, fullText) => {
-              outputText = fullText || outputText;
-              flushSuggestionsLoadingText();
+    // Retry and structured-response validation now live in the shared Core SDK.
+    const MAX_RETRIES = 0;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        let thoughtText = '';
+        let outputText = '';
+        const flushSuggestionsLoadingText = () => {
+          // Show whichever stream is latest, condensed to a short single-line status
+          const condensedThought = thoughtText.replace(/\s+/g, ' ').trim();
+          const condensedOutput = outputText.replace(/\s+/g, ' ').trim();
+          // Prefer output stream if available, otherwise show thought stream
+          const active = condensedOutput || condensedThought;
+          if (active) {
+            const label = condensedOutput ? '' : 'thinking: ';
+            const display = active.length > 48 ? `\u2026${active.slice(-48)}` : active;
+            setSuggestionsLoadingStreamText(`${label}${display}`);
+          }
+        };
+
+        const parsedResponse = await runReplySuggestions(
+          {
+            assistantMessageId,
+            lastTutorMessage,
+            history: suggestionHistory,
+            languagePair: state.getLanguagePair()!,
+            existingGlobalProfile,
+            responseSource: options?.responseSource,
+          },
+          {
+            lifecycleHooks: {
+              onProgress: (event) => {
+                const progressLine = formatGeminiStatusLine(event);
+                if (progressLine && !thoughtText.trim() && !outputText.trim()) {
+                  setSuggestionsLoadingStreamText(progressLine);
+                }
+              },
+              onThoughtDelta: (_, fullThought) => {
+                thoughtText = fullThought || thoughtText;
+                flushSuggestionsLoadingText();
+              },
+              onTextDelta: (_, fullText) => {
+                outputText = fullText || outputText;
+                flushSuggestionsLoadingText();
+              },
             },
           },
-        },
-      );
+        );
 
-      trackGeminiUsage({
-        feature: 'suggestions',
-        configuredModel: parsedResponse.modelUsed || getGeminiModels().text.aux,
-        modelVersion: parsedResponse.modelVersion,
-        usageMetadata: parsedResponse.usageMetadata,
-      });
-      resolvedArtifact = parsedResponse?.artifact ?? null;
-      resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
+        trackGeminiUsage({
+          feature: 'suggestions',
+          configuredModel: parsedResponse.modelUsed || getGeminiModels().text.aux,
+          modelVersion: parsedResponse.modelVersion,
+          usageMetadata: parsedResponse.usageMetadata,
+        });
+        resolvedArtifact = parsedResponse?.artifact ?? null;
+        resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
 
-      if (Array.isArray(parsedResponse.suggestions) &&
-        parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
-        const suggestions = parsedResponse.suggestions as ReplySuggestion[];
-        setReplySuggestions(suggestions);
-        updateMessage(assistantMessageId, { replySuggestions: suggestions });
-        try { 
-          const pid = state.getPairId(); 
-          if (pid) { await persistence.saveHistory(pid, state.getMessages()); } 
-        } catch {}
-      } else {
-        console.warn("Parsed suggestions not in expected format:", parsedResponse.suggestions);
-        setReplySuggestions([]);
-      }
-
-      if (typeof parsedResponse.reengagementSeconds === 'number' && parsedResponse.reengagementSeconds >= 5) {
-        handleReengagementThresholdChange(parsedResponse.reengagementSeconds);
-      }
-
-      // Update chat summary on the message
-      const newChatSummary = typeof parsedResponse.chatSummary === 'string' ? parsedResponse.chatSummary.trim() : '';
-      if (newChatSummary) {
-        updateMessage(assistantMessageId, { chatSummary: newChatSummary });
-      }
-
-      // Update global profile directly from the single API response (no second API call needed)
-      try {
-        const newGlobalProfile = typeof parsedResponse.globalProfile === 'string' ? parsedResponse.globalProfile.trim().slice(0, 10000) : '';
-        if (newGlobalProfile) {
-          await persistence.saveProfile(newGlobalProfile);
-          // Notify UI components that the global profile was updated
-          try { persistence.notifyProfileUpdated(); } catch {}
+        if (Array.isArray(parsedResponse.suggestions) &&
+          parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
+          const suggestions = parsedResponse.suggestions as ReplySuggestion[];
+          setReplySuggestions(suggestions);
+          updateMessage(assistantMessageId, { replySuggestions: suggestions });
+          try { 
+            const pid = state.getPairId(); 
+            if (pid) { await persistence.saveHistory(pid, state.getMessages()); } 
+          } catch {}
+        } else {
+          console.warn("Parsed suggestions not in expected format:", parsedResponse.suggestions);
+          setReplySuggestions([]);
         }
-      } catch (e) {
-        console.warn('Failed to update global profile:', e);
-      }
 
-      break;
+        if (typeof parsedResponse.reengagementSeconds === 'number' && parsedResponse.reengagementSeconds >= 5) {
+          handleReengagementThresholdChange(parsedResponse.reengagementSeconds);
+        }
 
-    } catch (error) {
-      console.error(`Error fetching reply suggestions (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
-      if (attempt < MAX_RETRIES) {
-        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
-      } else {
-        setReplySuggestions([]);
+        // Update chat summary on the message
+        const newChatSummary = typeof parsedResponse.chatSummary === 'string' ? parsedResponse.chatSummary.trim() : '';
+        if (newChatSummary) {
+          updateMessage(assistantMessageId, { chatSummary: newChatSummary });
+        }
+
+        // Update global profile directly from the single API response (no second API call needed)
+        try {
+          const newGlobalProfile = typeof parsedResponse.globalProfile === 'string' ? parsedResponse.globalProfile.trim().slice(0, 10000) : '';
+          if (newGlobalProfile) {
+            await persistence.saveProfile(newGlobalProfile);
+            // Notify UI components that the global profile was updated
+            try { persistence.notifyProfileUpdated(); } catch {}
+          }
+        } catch (e) {
+          console.warn('Failed to update global profile:', e);
+        }
+
+        break;
+
+      } catch (error) {
+        console.error(`Error fetching reply suggestions (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
+        if (attempt < MAX_RETRIES) {
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+        } else {
+          setReplySuggestions([]);
+        }
       }
     }
-  }
-  await finishReplySuggestionsRequest();
+    await finishReplySuggestionsRequest();
   };
 }

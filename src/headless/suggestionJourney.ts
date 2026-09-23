@@ -10,6 +10,7 @@ import {
   type SuggestionCreatorArtifact,
   type SuggestionCreatorToolRequest,
 } from '../core-sdk/chat/suggestionAftersteps';
+import { planSuggestionAftersteps } from '../core-sdk/chat/suggestionAfterstepPlan';
 import { resolveLanguagePair } from '../core-sdk/chat/language';
 import { runHeadlessAudioNoteGeneration } from './audioNoteJourney';
 import type { HeadlessClient } from './client';
@@ -64,22 +65,15 @@ export const runHeadlessSuggestionAftersteps = async (client: HeadlessClient, in
     fallbackText,
   );
 
-  if (artifact) {
-    selected.imageUrl = artifact.dataUrl;
-    selected.imageMimeType = artifact.mimeType;
-    selected.attachmentName = artifact.fileName;
-    selected.isLoadingArtifact = false;
-  } else if (!toolRequest) {
-    selected.isLoadingArtifact = false;
-  }
+  const plan = planSuggestionAftersteps({ mode: 'headless', contextText: fallbackText, artifact, toolRequest });
+  for (const patch of plan.assistantPatches) Object.assign(selected, patch);
 
   let toolMessage: ChatMessage = selected;
-  if (artifact && toolRequest) {
+  if (plan.splitToolMessage) {
     toolMessage = {
       id: client.runtime.ids.create('message-assistant'),
-      role: 'assistant',
+      ...plan.splitToolMessage,
       timestamp: client.runtime.clock.now(),
-      rawAssistantResponse: fallbackText || undefined,
     };
     history.push(toolMessage);
   }

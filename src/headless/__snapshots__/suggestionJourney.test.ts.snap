@@ -43,7 +43,7 @@ exports[`headless afterstep application contract before sharing decisions > pres
           "order": 10,
           "source": "original",
           "targets": [
-            "text",
+            "chat",
           ],
           "uri": "old-uri",
         },
@@ -104,7 +104,7 @@ exports[`headless afterstep application contract before sharing decisions > pres
           "order": 10,
           "source": "original",
           "targets": [
-            "text",
+            "chat",
           ],
           "uri": "old-uri",
         },
@@ -162,7 +162,7 @@ exports[`headless afterstep application contract before sharing decisions > pres
           "order": 10,
           "source": "original",
           "targets": [
-            "text",
+            "chat",
           ],
           "uri": "old-uri",
         },
@@ -226,7 +226,7 @@ exports[`headless afterstep application contract before sharing decisions > pres
           "order": 10,
           "source": "original",
           "targets": [
-            "text",
+            "chat",
           ],
           "uri": "old-uri",
         },
