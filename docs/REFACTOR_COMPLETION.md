@@ -11,7 +11,7 @@ contracts, not outputs to regenerate when a structural change fails them.
 | --- | --- | --- | --- |
 | Chat suggestions, persistence and aftersteps | Actual-hook cache, failure, save-order, Live split and translation fixtures | Suggestion and translation coordinators with typed ports | Hook contracts and pre-move snapshots pass |
 | Chat send, media and generated tools | Actual-hook request, busy/error/STT/media/re-engagement fixtures | Separate send, request preparation, capture, response, uploads, generated-image and tool owners | Hook contracts pass; full root suite 693 tests, lint/build passed before final diagnostic-port guard and translation extraction |
-| Live session, capture and playback lifecycle | Pending | Pending | Pending |
+| Live session, capture and playback lifecycle | Actual-hook connect, stop races, stale callbacks, decode cancellation, drain, transcripts, capture handoff and video fixtures | Session controller with separate capture, provider callback, playback, transcript, telemetry and cleanup owners; explicit browser runtime | 10 hook tests preserve baseline; full root suite 709 tests, lint/build and boundary guard pass |
 | Browser/headless afterstep decisions and explicit differences | Actual browser and headless entry-point snapshots captured first | Core afterstep plan with explicit browser-chat, browser-live and headless policies | Entry-point snapshots unchanged; dedicated policy tests pass |
 | Managed generation, files, cleanup and Live leases | Pending | Pending | Pending |
 | App speech/idle feature handoffs | Pending | Pending | Pending |
@@ -49,3 +49,20 @@ The four pre-existing behavior findings in the audit remain separate decisions:
 text timeout cancellation, additional image context parts, registry mutability,
 and direct model-setter normalization. This structural refactor must not change
 those behaviors implicitly.
+
+## Live ownership completed
+
+`src/features/speech/live/` owns one session controller per hook instance. The
+React hook only binds callbacks, activity tokens and controller disposal. Device
+constructors, provider access, camera consent and browser video encoding enter
+through explicit runtime ports. Capture/Whisper handoff, provider callbacks,
+transcripts, decode/playback and cleanup retain their original ordering and
+session/turn fences. The transitive architecture check rejects browser/store
+imports into the controller graph while allowing the explicit browser adapters.
+
+The initial eight hook lifecycle tests were committed in `ac1be72` before moves.
+Two additional video/go-away cases also passed against a saved original hook
+before accepting the extraction. All ten pass after extraction, with unchanged
+connection snapshots. Full root verification passes 709 tests across 106 files,
+lint and production build. These fixtures cover deterministic lifecycle behavior;
+physical-device capture/playback remains part of release validation.

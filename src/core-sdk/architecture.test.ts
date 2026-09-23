@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error Development-only source scanner, also usable as a CLI.
-import { auditChatCoordinatorBoundaries, auditCoreBoundaries, inspectCoreSource } from '../../scripts/core-boundaries.mjs';
+import { auditChatCoordinatorBoundaries, auditCoreBoundaries, auditLiveControllerBoundaries, inspectCoreSource } from '../../scripts/core-boundaries.mjs';
 
 describe('Core architecture boundary', () => {
   it('keeps the whole Core dependency graph independent of browser adapters', () => {
@@ -13,6 +13,19 @@ describe('Core architecture boundary', () => {
   });
   it('keeps chat coordinators independent of React, store and device diagnostics', () => {
     expect(auditChatCoordinatorBoundaries()).toEqual([]);
+  });
+  it('keeps Live controllers independent of their browser/native adapters', () => {
+    expect(auditLiveControllerBoundaries()).toEqual([]);
+  });
+  it('does not permit an excluded browser owner to be imported back into a Live controller', () => {
+    const root = mkdtempSync(join(tmpdir(), 'maestro-live-boundary-'));
+    try {
+      mkdirSync(join(root, 'src/features/speech/live'), { recursive: true });
+      writeFileSync(join(root, 'src/features/speech/live/controller.ts'), 'import "./browserRuntime";');
+      writeFileSync(join(root, 'src/features/speech/live/browserRuntime.ts'), 'window.addEventListener("event", () => {});');
+      expect(auditLiveControllerBoundaries(root).map((item: { reason: string }) => item.reason))
+        .toEqual(['Browser runtime reference: window']);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
   it('follows coordinator-to-coordinator imports and rejects an indirect store dependency', () => {
     const root = mkdtempSync(join(tmpdir(), 'maestro-chat-boundary-'));

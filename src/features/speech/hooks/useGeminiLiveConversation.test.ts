@@ -9,12 +9,13 @@ const ports = vi.hoisted(() => ({
   flushCapture: vi.fn(), trigger: vi.fn(), acquireWhisper: vi.fn(), releaseWhisper: vi.fn(),
   trackUsage: vi.fn(), flushUsage: vi.fn(), completeLog: vi.fn(), errorLog: vi.fn(),
   tokens: new Set<string>(),
+  cameraConsent: true,
 }));
 vi.mock('../../../api/gemini/client', () => ({ getAi: ports.getAi }));
-vi.mock('../../../store', () => ({ useMaestroStore: (selector: (state: unknown) => unknown) => selector({
+vi.mock('../../../store', () => ({ useMaestroStore: Object.assign((selector: (state: unknown) => unknown) => selector({
   addActivityToken: (category: string, subtype: string) => { const key = `${category}:${subtype}`; ports.tokens.add(key); return key; },
   removeActivityToken: (token: string) => ports.tokens.delete(token),
-}) }));
+}), { getState: () => ({ settings: { selectedCameraId: ports.cameraConsent ? 'camera' : null, sendWithSnapshotEnabled: true, smartReengagement: { useVisualContext: true } } }) }) }));
 vi.mock('../../diagnostics', () => ({ debugLogService: { logRequest: () => ({ complete: ports.completeLog, error: ports.errorLog }) } }));
 vi.mock('../../../platform/browser/turnTiming', () => ({ beginTurnTiming: () => ({ mark: vi.fn(), markOnce: vi.fn(), markLatest: vi.fn() }) }));
 vi.mock('../../../shared/utils/costTracker', () => ({ createLiveUsageTracker: () => ({ trackSnapshot: ports.trackUsage, flush: ports.flushUsage }) }));
@@ -65,7 +66,7 @@ function harness() {
 
 beforeEach(() => {
   vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(new Date('2026-09-23T12:00:00Z'));
-  order = []; contexts = []; nodes = []; connections = []; sessions = []; ports.tokens.clear();
+  order = []; contexts = []; nodes = []; connections = []; sessions = []; ports.tokens.clear(); ports.cameraConsent = true;
   stopTrack = vi.fn(() => { order.push('track.stop'); });
   vi.stubGlobal('AudioContext', FakeAudioContext); vi.stubGlobal('AudioWorkletNode', FakeWorklet);
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: ports.getUserMedia } });
@@ -189,5 +190,46 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     expect(ports.flushCapture).not.toHaveBeenCalled();
     expect(stopTrack).toHaveBeenCalledOnce();
     expect(input.close).toHaveBeenCalledOnce();
+  });
+
+  it('keeps a supplied video element attached and rechecks camera consent before sending encoded frames', async () => {
+    const video = document.createElement('video'); const stream = { active: true } as MediaStream;
+    video.srcObject = stream;
+    Object.defineProperties(video, { readyState: { value: 4 }, videoWidth: { value: 1280 }, videoHeight: { value: 720 } });
+    document.body.appendChild(video);
+    const drawing = { drawImage: vi.fn(), imageSmoothingEnabled: false, imageSmoothingQuality: '' };
+    const contextMock = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(drawing as unknown as CanvasRenderingContext2D);
+    let encodeFrame!: BlobCallback;
+    let finishRead!: () => void;
+    vi.stubGlobal('FileReader', class {
+      result = 'data:image/jpeg;base64,ZnJhbWU=';
+      onloadend: (() => void) | null = null;
+      readAsDataURL() { finishRead = () => { this.onloadend?.(); }; }
+    });
+    const blobMock = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(callback => { encodeFrame = callback; });
+    const pause = vi.spyOn(video, 'pause').mockImplementation(() => {});
+    const h = harness();
+    await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false, stream, videoElement: video }); });
+    await advance(1000);
+    expect(drawing.drawImage).toHaveBeenCalledWith(video, 0, 0, 640, 360);
+    encodeFrame(new Blob(['frame'], { type: 'image/jpeg' })); finishRead(); await flush();
+    expect(sessions[0].sendRealtimeInput).toHaveBeenCalledWith({ video: { data: 'ZnJhbWU=', mimeType: 'image/jpeg' } });
+    sessions[0].sendRealtimeInput.mockClear();
+    await advance(1000);
+    encodeFrame(new Blob(['frame'], { type: 'image/jpeg' }));
+    ports.cameraConsent = false;
+    finishRead(); await flush();
+    expect(sessions[0].sendRealtimeInput.mock.calls.some(([input]) => input.video)).toBe(false);
+    await act(async () => { await h.result.current.stop(); });
+    expect(video.srcObject).toBe(stream); expect(document.body.contains(video)).toBe(true); expect(pause).not.toHaveBeenCalled();
+    video.remove(); contextMock.mockRestore(); blobMock.mockRestore(); pause.mockRestore();
+  });
+
+  it('treats go-away as an advance notice and leaves the transport open', async () => {
+    const h = harness(); await h.start();
+    connections[0].callbacks.onmessage({ goAway: { timeLeft: '10s' } }); await flush();
+    expect(h.callbacks.onGoAway).toHaveBeenCalledWith({ timeLeft: '10s' });
+    expect(sessions[0].close).not.toHaveBeenCalled();
+    expect(stopTrack).not.toHaveBeenCalled();
   });
 });
