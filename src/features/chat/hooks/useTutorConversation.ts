@@ -1,7 +1,12 @@
+import { createTextResponseCoordinator } from '../coordinators/textResponse';
+import { createUserMessageCoordinator } from '../coordinators/userMessage';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { createAttachmentUploads, getMessageAttachmentSource, type HistoryMediaOverride } from '../coordinators/attachmentUploads';
+import type { UseTutorConversationConfig, UseTutorConversationReturn } from '../coordinators/conversationContracts';
+export type { UseTutorConversationConfig, UseTutorConversationReturn } from '../coordinators/conversationContracts';
 import { createSuggestionCoordinator } from '../coordinators/suggestions';
 import { REENGAGEMENT_PROMPT } from '../../../core/config/prompts';
 /**
@@ -19,11 +24,8 @@ import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { 
   ChatMessage, 
   ReplySuggestion, 
-  GroundingChunk,
-  MaestroActivityStage,
   AppSettings,
   RecordedUtterance,
-  UploadedAttachmentVariant,
 } from '../../../core/types';
 import { ApiError } from '../../../api/gemini/client';
 import { translateText, type GeminiProgressEvent } from '../../../api/gemini/generative';
@@ -39,7 +41,6 @@ import {
   getVisibleAssistantMessageText,
 } from '../../../core-sdk/chat/assistantMessageContext';
 import {
-  formatStreamingTutorDraftText,
   parseStrictTutorResponseText,
   type StrictParsedTutorResponse,
 } from '../../../core-sdk/chat/tutorResponse';
@@ -53,10 +54,7 @@ import { deriveBrowserTutorHistory } from '../../../core-sdk/chat/history';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
-  normalizeUploadedAttachmentVariants,
   PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID,
-  selectUploadedAttachmentParts,
-  upsertUploadedAttachmentVariant,
 } from '../../../core-sdk/chat/uploadedAttachmentVariants';
 import { 
   IMAGE_GEN_CAMERA_ID,
@@ -115,41 +113,7 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
   return msg.includes('api_key_invalid') || msg.includes('api key not valid');
 };
 
-const MAX_THINKING_TRACE_LINES = 8;
-const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
 
-type HistoryMediaOverride = {
-  newVariants?: UploadedAttachmentVariant[];
-  transient?: boolean;
-  omitFromHistory?: boolean;
-};
-
-const getMessageAttachmentSource = (
-  message: Pick<ChatMessage, 'imageUrl' | 'imageMimeType' | 'storageOptimizedImageUrl' | 'storageOptimizedImageMimeType' | 'attachmentName'>
-): { dataUrl: string; mimeType: string; attachmentName?: string } | null => {
-  if (typeof message.imageUrl === 'string' && message.imageUrl && typeof message.imageMimeType === 'string' && message.imageMimeType) {
-    return {
-      dataUrl: message.imageUrl,
-      mimeType: message.imageMimeType,
-      attachmentName: message.attachmentName,
-    };
-  }
-
-  if (
-    typeof message.storageOptimizedImageUrl === 'string' &&
-    message.storageOptimizedImageUrl &&
-    typeof message.storageOptimizedImageMimeType === 'string' &&
-    message.storageOptimizedImageMimeType
-  ) {
-    return {
-      dataUrl: message.storageOptimizedImageUrl,
-      mimeType: message.storageOptimizedImageMimeType,
-      attachmentName: message.attachmentName,
-    };
-  }
-
-  return null;
-};
 
 const buildAttachmentUploadPlans = (
   source: { dataUrl: string; mimeType: string; attachmentName?: string },
@@ -183,107 +147,6 @@ const truncateForToolPrompt = (value: string, maxChars: number = 420): string =>
   if (!normalized) return '';
   return normalized.length > maxChars ? `${normalized.slice(0, maxChars - 1)}…` : normalized;
 };
-
-export interface UseTutorConversationConfig {
-  // Translation function
-  t: TranslationFunction;
-  
-  // Settings
-  setSettings: (settings: AppSettings | ((prev: AppSettings) => AppSettings)) => void;
-  
-  // Chat store
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'> & Partial<Pick<ChatMessage, 'id' | 'timestamp'>>) => string;
-  updateMessage: (messageId: string, updates: Partial<ChatMessage>) => void;
-  setMessages: (messages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
-  getHistoryRespectingBookmark: (arr: ChatMessage[]) => ChatMessage[];
-  computeMaxMessagesForArray: (arr: ChatMessage[]) => number | undefined;
-  
-  // Hardware
-  captureSnapshot: (options?: boolean | {
-    isForReengagement?: boolean;
-    requireReadyFrame?: boolean;
-  }) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string } | null>;
-  
-  // Speech
-  speakMessage: (message: ChatMessage) => void;
-  isSpeechSynthesisSupported: boolean;
-  stopListening: () => Promise<void>;
-  startListening: (lang: string) => void;
-  clearTranscript: () => void;
-  hasPendingQueueItems: () => boolean;
-  claimRecordedUtterance: () => RecordedUtterance | null;
-  
-  // Re-engagement - using refs to allow late binding
-  scheduleReengagementRef: React.MutableRefObject<(reason: string, delayOverrideMs?: number) => void>;
-  cancelReengagementRef: React.MutableRefObject<() => void>;
-  
-  // UI State
-  transcript: string;
-  
-  // Prompts
-  currentSystemPromptText: string;
-  currentReplySuggestionsPromptText: string;
-  
-  // Reply suggestions (managed by useChatStore, passed through)
-  setReplySuggestions: (suggestions: ReplySuggestion[] | ((prev: ReplySuggestion[]) => ReplySuggestion[])) => void;
-  
-  // Toggle suggestion mode callback - using ref to allow late binding
-  handleToggleSuggestionModeRef?: React.MutableRefObject<((forceState?: boolean) => void) | undefined>;
-  
-  // Maestro avatar refs - passed from App.tsx where the avatar is loaded
-  maestroAvatarUriRef: React.MutableRefObject<string | null>;
-  maestroAvatarMimeTypeRef: React.MutableRefObject<string | null>;
-  
-  // Hardware errors
-  setSnapshotUserError?: React.Dispatch<React.SetStateAction<string | null>>;
-
-  // Api key gate
-  onApiKeyGateOpen?: (options?: { reason?: 'missing' | 'invalid' | 'quota'; instructionIndex?: number }) => void;
-}
-
-export interface UseTutorConversationReturn {
-  // State
-  isSending: boolean;
-  isSendingRef: React.MutableRefObject<boolean>;
-  sendPrep: { active: boolean; label: string; done?: number; total?: number; etaMs?: number } | null;
-  latestGroundingChunks: GroundingChunk[] | undefined;
-  maestroActivityStage: MaestroActivityStage;
-  isCreatingSuggestion: boolean;
-  imageLoadDurations: number[];
-  
-  // Main handlers
-  handleSendMessageInternal: (
-    text: string,
-    passedImageBase64?: string,
-    passedImageMimeType?: string,
-    messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement',
-    options?: { triggeredByStt?: boolean }
-  ) => Promise<boolean>;
-  handleSendMessageInternalRef: React.MutableRefObject<any>;
-  
-  // Suggestion handlers
-  fetchAndSetReplySuggestions: (
-    assistantMessageId: string,
-    lastTutorMessage: string,
-    history: ChatMessage[],
-    options?: { responseSource?: 'chat' | 'live' }
-  ) => Promise<void>;
-  handleCreateSuggestion: (textToTranslate: string) => Promise<void>;
-  handleSuggestionInteraction: (suggestion: ReplySuggestion, langType: 'target' | 'native') => void;
-  
-  // Activity stage
-  setMaestroActivityStage: (stage: MaestroActivityStage) => void;
-  
-  // Parsing
-  parseGeminiResponse: (responseText: string | undefined) => Array<{ target: string; native: string }>;
-  
-  // Utilities
-  resolveBookmarkContextSummary: () => string | null;
-  ensureUrisForHistoryForSend: (arr: ChatMessage[], onProgress?: (done: number, total: number, etaMs?: number) => void) => Promise<Record<string, HistoryMediaOverride>>;
-  computeHistorySubsetForMedia: (arr: ChatMessage[]) => ChatMessage[];
-  handleReengagementThresholdChange: (newThreshold: number) => void;
-  calculateEstimatedImageLoadTime: () => number;
-}
 
 /**
  * Main orchestration hook for the Maestro Language Tutor.
@@ -448,31 +311,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     return normalizeCoreSuggestionCreatorToolRequest(toolRequest, fallbackText);
   }, [messagesRef, settingsRef]);
 
-  const appendThinkingTrace = useCallback((messageId: string, line: string) => {
-    const cleanedLine = line.trim();
-    if (!cleanedLine) return;
+  
 
-    const current = messagesRef.current.find(m => m.id === messageId);
-    if (!current || !current.thinking) return;
-
-    const prevTrace = Array.isArray(current.thinkingTrace)
-      ? current.thinkingTrace.filter(item => typeof item === 'string' && item.trim().length > 0)
-      : [];
-    if (prevTrace[prevTrace.length - 1] === cleanedLine) return;
-
-    const nextTrace = [...prevTrace, cleanedLine].slice(-MAX_THINKING_TRACE_LINES);
-    updateMessage(messageId, { thinkingTrace: nextTrace });
-  }, [messagesRef, updateMessage]);
-
-  const setThinkingStatusLine = useCallback((messageId: string, line?: string) => {
-    const cleanedLine = typeof line === 'string' ? line.trim() : '';
-    const current = messagesRef.current.find(m => m.id === messageId);
-    if (!current || !current.thinking) return;
-
-    const nextValue = cleanedLine || undefined;
-    if ((current.thinkingStatusLine || undefined) === nextValue) return;
-    updateMessage(messageId, { thinkingStatusLine: nextValue });
-  }, [messagesRef, updateMessage]);
+  
 
   const formatGeminiStatusLine = useCallback((event: GeminiProgressEvent): string | undefined => {
     const elapsedSeconds = typeof event.elapsedMs === 'number'
@@ -551,221 +392,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     return base;
   }, [getHistoryRespectingBookmark, computeMaxMessagesForArray]);
 
-  const ensureUploadedAttachmentVariantsForMessage = useCallback(async (
-    message: ChatMessage,
-    knownStatuses?: Record<string, { deleted: boolean; active: boolean }>
-  ): Promise<{ variants: UploadedAttachmentVariant[]; chatFileParts: Array<{ fileUri: string; mimeType: string }> }> => {
-    let nextVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
-    if (knownStatuses) {
-      nextVariants = nextVariants.filter(variant => !knownStatuses[variant.uri]?.deleted);
-    }
-    const source = getMessageAttachmentSource(message);
-    const plans = source ? buildAttachmentUploadPlans(source, t) : [];
-
-    if (plans.length > 0) {
-      let cachedStatuses: Record<string, { deleted: boolean; active: boolean }> = knownStatuses || {};
-      const plannedVariantIds = new Set(plans.map(plan => plan.id));
-      const existingUris = nextVariants
-        .filter(variant => plannedVariantIds.has(variant.id))
-        .map(variant => variant.uri);
-
-      const urisNeedingStatusCheck = !knownStatuses
-        ? Array.from(new Set(existingUris))
-        : Array.from(new Set(existingUris.filter(uri => !cachedStatuses[uri])));
-
-      if (urisNeedingStatusCheck.length > 0) {
-        try {
-          const refreshedStatuses = await checkFileStatuses(urisNeedingStatusCheck);
-          cachedStatuses = {
-            ...cachedStatuses,
-            ...refreshedStatuses,
-          };
-        } catch {
-          if (!knownStatuses) {
-            cachedStatuses = {};
-          }
-        }
-      }
-
-      for (const plan of plans) {
-        const existingVariant = nextVariants.find(variant => variant.id === plan.id);
-        const existingDeleted = !!(existingVariant && cachedStatuses[existingVariant.uri]?.deleted);
-        if (existingVariant && !existingDeleted) {
-          nextVariants = upsertUploadedAttachmentVariant(nextVariants, {
-            ...existingVariant,
-            id: plan.id,
-            source: plan.source,
-            targets: plan.targets,
-            order: plan.order,
-          });
-          continue;
-        }
-
-        if (!source) continue;
-
-        try {
-          const uploadSource = await plan.build();
-          const upload = await uploadMediaToFiles(
-            uploadSource.dataUrl,
-            uploadSource.mimeType,
-            uploadSource.displayName || message.attachmentName || 'send-history'
-          );
-          nextVariants = upsertUploadedAttachmentVariant(nextVariants, {
-            id: plan.id,
-            uri: upload.uri,
-            mimeType: upload.mimeType,
-            targets: plan.targets,
-            source: plan.source,
-            order: plan.order,
-          });
-        } catch (error) {
-          console.warn(`[ensureUploads] Failed to upload ${plan.id} variant for message ${message.id}.`, error);
-          nextVariants = nextVariants.filter(variant => variant.id !== plan.id);
-        }
-      }
-    }
-
-    const normalizedState = buildUploadedAttachmentState(nextVariants);
-    const normalizedCurrentVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
-    const variantsChanged = JSON.stringify(normalizedCurrentVariants) !== JSON.stringify(normalizedState.uploadedFileVariants || []);
-
-    if (variantsChanged) {
-      updateMessage(message.id, normalizedState);
-      message.uploadedFileVariants = normalizedState.uploadedFileVariants;
-    }
-
-    return {
-      variants: normalizedState.uploadedFileVariants || [],
-      chatFileParts: selectUploadedAttachmentParts(normalizedState, 'chat'),
-    };
-  }, [t, updateMessage]);
-
-  const uploadAttachmentVariantsForSource = useCallback(async (
-    source: { dataUrl: string; mimeType: string; attachmentName?: string },
-    fallbackDisplayName: string
-  ): Promise<Array<{ fileUri: string; mimeType: string }>> => {
-    const plans = buildAttachmentUploadPlans(source, t);
-    const uploadedVariants: UploadedAttachmentVariant[] = [];
-
-    for (const plan of plans) {
-      try {
-        const uploadSource = await plan.build();
-        const upload = await uploadMediaToFiles(
-          uploadSource.dataUrl,
-          uploadSource.mimeType,
-          uploadSource.displayName || source.attachmentName || fallbackDisplayName
-        );
-        uploadedVariants.push({
-          id: plan.id,
-          uri: upload.uri,
-          mimeType: upload.mimeType,
-          targets: plan.targets,
-          source: plan.source,
-          order: plan.order,
-        });
-      } catch (error) {
-        console.warn(`[uploadAttachmentVariantsForSource] Failed to upload ${plan.id} for ${fallbackDisplayName}.`, error);
-      }
-    }
-
-    return selectUploadedAttachmentParts(buildUploadedAttachmentState(uploadedVariants), 'chat');
-  }, [t]);
-
-  const ensureUrisForHistoryForSend = useCallback(async (
-    arr: ChatMessage[], 
-    onProgress?: (done: number, total: number, etaMs?: number) => void
-  ): Promise<Record<string, HistoryMediaOverride>> => {
-    const candidates = computeHistorySubsetForMedia(arr);
-
-    const mediaIndices: number[] = [];
-    for (let i = 0; i < candidates.length; i++) {
-      const m = candidates[i];
-      const hasMedia = !!getMessageAttachmentSource(m) || normalizeUploadedAttachmentVariants(m.uploadedFileVariants).length > 0;
-      if (hasMedia) mediaIndices.push(i);
-    }
-    const maxMedia = MAX_MEDIA_TO_KEEP;
-    const keepMediaIdx = new Set<number>(mediaIndices.slice(-maxMedia));
-
-    const cachedUrisToCheck: string[] = [];
-    for (let i = 0; i < candidates.length; i++) {
-      if (!keepMediaIdx.has(i)) continue;
-      const m0 = candidates[i];
-      normalizeUploadedAttachmentVariants(m0.uploadedFileVariants).forEach((variant) => {
-        if (variant.uri) cachedUrisToCheck.push(variant.uri);
-      });
-    }
-    let cachedStatuses: Record<string, { deleted: boolean; active: boolean }> = {};
-    try {
-      const uniqUris = Array.from(new Set(cachedUrisToCheck));
-      if (uniqUris.length) cachedStatuses = await checkFileStatuses(uniqUris);
-    } catch { cachedStatuses = {}; }
-
-    let totalToEnsure = 0;
-    const indicesNeedingUpload = new Set<number>();
-    for (let i = 0; i < candidates.length; i++) {
-      if (!keepMediaIdx.has(i)) continue;
-      const message = candidates[i];
-      const source = getMessageAttachmentSource(message);
-      if (!source) continue;
-
-      const plans = buildAttachmentUploadPlans(source, t);
-      const existingVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
-      const needsUpload = plans.some((plan) => {
-        const existingVariant = existingVariants.find(variant => variant.id === plan.id);
-        if (!existingVariant) return true;
-        return !!cachedStatuses[existingVariant.uri]?.deleted;
-      });
-
-      if (needsUpload) {
-        totalToEnsure++;
-        indicesNeedingUpload.add(i);
-      }
-    }
-
-    let doneCount = 0;
-    const startTs = Date.now();
-    const tick = () => {
-      if (!onProgress) return;
-      const elapsed = Date.now() - startTs;
-      const avg = doneCount > 0 ? elapsed / doneCount : undefined;
-      const remaining = Math.max(0, totalToEnsure - doneCount);
-      const eta = avg !== undefined ? Math.round(avg * remaining) : undefined;
-      onProgress(doneCount, totalToEnsure, eta);
-    };
-    if (totalToEnsure > 0) tick();
-
-    const updatedUriMap: Record<string, HistoryMediaOverride> = {};
-    for (let idx = 0; idx < candidates.length; idx++) {
-      if (!keepMediaIdx.has(idx)) continue;
-      const m = candidates[idx];
-      const previousVariants = normalizeUploadedAttachmentVariants(m.uploadedFileVariants);
-      const localSource = getMessageAttachmentSource(m);
-      const ensured = await ensureUploadedAttachmentVariantsForMessage(m, cachedStatuses);
-      const nextState = buildUploadedAttachmentState(ensured.variants);
-      const chatFileParts = ensured.chatFileParts;
-
-      if (chatFileParts.length === 0 && localSource) {
-        throw new Error(t('streaming.failedToPrepareAttachment', { name: m.attachmentName || 'attachment' }) || `Failed to prepare recent attachment "${m.attachmentName || 'attachment'}" for send. Try again or reattach the file.`);
-      }
-
-      if (chatFileParts.length === 0 && previousVariants.length > 0) {
-        console.warn(`[ensureUris] Message ${m.id} has no valid uploaded file variants and will be omitted from request history.`);
-        updatedUriMap[m.id] = {
-          transient: true,
-          omitFromHistory: true,
-        };
-      } else if (JSON.stringify(previousVariants) !== JSON.stringify(nextState.uploadedFileVariants || [])) {
-        updatedUriMap[m.id] = {
-          newVariants: nextState.uploadedFileVariants,
-        };
-      }
-      if (indicesNeedingUpload.has(idx)) {
-        try { doneCount++; tick(); } catch {}
-      }
-      await new Promise(r => setTimeout(r, 0));
-    }
-    return updatedUriMap;
-  }, [computeHistorySubsetForMedia, ensureUploadedAttachmentVariantsForMessage, t]);
+  const { ensureUploadedAttachmentVariantsForMessage, uploadAttachmentVariantsForSource, ensureUrisForHistoryForSend } = useMemo(() => createAttachmentUploads({
+    t, updateMessage, computeHistorySubsetForMedia, checkFileStatuses, uploadMediaToFiles, buildAttachmentUploadPlans,
+  }), [t, updateMessage, computeHistorySubsetForMedia]);
 
   const handleReengagementThresholdChange = useCallback((newThreshold: number) => {
     setSettings(prev => {
@@ -1084,322 +713,9 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     }
   }
 
-  const createUserMessage = useCallback(async (params: {
-    text: string;
-    passedImageBase64?: string;
-    passedImageMimeType?: string;
-    messageType: 'user' | 'conversational-reengagement' | 'image-reengagement';
-    shouldGenerateUserImage: boolean;
-    currentSettingsVal: AppSettings;
-    triggeredByStt?: boolean;
-  }) => {
-    let userMessageId: string | null = null;
-    let userMessageText = params.text;
-    let recordedSpeechForMessage: RecordedUtterance | null = null;
-    let userImageToProcessBase64: string | undefined = (typeof params.passedImageBase64 === 'string' && params.passedImageBase64)
-      ? params.passedImageBase64
-      : undefined;
-    let userImageToProcessMimeType: string | undefined = (typeof params.passedImageMimeType === 'string' && params.passedImageMimeType)
-      ? params.passedImageMimeType
-      : undefined;
-    let userImageToProcessStorageOptimizedBase64: string | undefined = undefined;
-    let userImageToProcessStorageOptimizedMimeType: string | undefined = undefined;
-    logSttFlow('send.createUserMessage.start', {
-      messageType: params.messageType,
-      textLength: params.text.length,
-      triggeredByStt: params.triggeredByStt === true,
-      hasPassedImage: Boolean(userImageToProcessBase64),
-      sendWithSnapshotEnabled: params.currentSettingsVal.sendWithSnapshotEnabled,
-      shouldGenerateUserImage: params.shouldGenerateUserImage,
-    });
+  const createUserMessage = useMemo(() => createUserMessageCoordinator({ t, addMessage, captureSnapshot, claimRecordedUtterance, attachedImageBase64, attachedImageMimeType, attachedFileName, recordedUtterancePendingRef, sendWithFileUploadInProgressRef, setSendPrep, processMediaForUpload, INLINE_CAP_AUDIO }), [t, addMessage, captureSnapshot, claimRecordedUtterance, attachedImageBase64, attachedImageMimeType, attachedFileName, recordedUtterancePendingRef, sendWithFileUploadInProgressRef, setSendPrep, processMediaForUpload, INLINE_CAP_AUDIO]);
 
-    if (params.messageType !== 'user') {
-      logSttFlow('send.createUserMessage.skip.nonUser', {
-        messageType: params.messageType,
-      });
-      return {
-        userMessageId,
-        userMessageText,
-        recordedSpeechForMessage,
-        userImageToProcessBase64,
-        userImageToProcessMimeType,
-        userImageToProcessStorageOptimizedBase64,
-        userImageToProcessStorageOptimizedMimeType,
-      };
-    }
-
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const claimed = typeof claimRecordedUtterance === 'function' ? claimRecordedUtterance() : null;
-      if (claimed && typeof claimed.dataUrl === 'string' && claimed.dataUrl.length > 0) {
-        recordedSpeechForMessage = claimed;
-        recordedUtterancePendingRef.current = null;
-        break;
-      }
-      if (recordedUtterancePendingRef.current && typeof recordedUtterancePendingRef.current.dataUrl === 'string' && recordedUtterancePendingRef.current.dataUrl.length > 0) {
-        recordedSpeechForMessage = recordedUtterancePendingRef.current;
-        recordedUtterancePendingRef.current = null;
-        break;
-      }
-      if (attempt === 0) {
-        await new Promise((resolve) => setTimeout(resolve, 60));
-      }
-    }
-    if (recordedSpeechForMessage && recordedSpeechForMessage.dataUrl.length > INLINE_CAP_AUDIO) {
-      recordedSpeechForMessage = null;
-    }
-
-    if (params.currentSettingsVal.sendWithSnapshotEnabled && !userImageToProcessBase64 && !params.shouldGenerateUserImage) {
-      logSttFlow('send.createUserMessage.snapshot.start', {
-        triggeredByStt: params.triggeredByStt === true,
-      });
-      const snapshotResult = await captureSnapshot({
-        isForReengagement: false,
-        requireReadyFrame: params.triggeredByStt === true,
-      });
-      logSttFlow('send.createUserMessage.snapshot.done', {
-        triggeredByStt: params.triggeredByStt === true,
-        capturedImage: Boolean(snapshotResult),
-      });
-      if (snapshotResult) {
-        userImageToProcessBase64 = snapshotResult.base64;
-        userImageToProcessMimeType = snapshotResult.mimeType;
-        userImageToProcessStorageOptimizedBase64 = snapshotResult.storageOptimizedBase64;
-        userImageToProcessStorageOptimizedMimeType = snapshotResult.storageOptimizedMimeType;
-      }
-    }
-
-    if (!userImageToProcessStorageOptimizedBase64 && attachedImageBase64 && attachedImageMimeType) {
-      try {
-        if (!sendWithFileUploadInProgressRef.current) {
-          sendWithFileUploadInProgressRef.current = true;
-        }
-        setSendPrep({ active: true, label: t('chat.sendPrep.optimizingImage') || 'Optimizing...' });
-        const optimized = await processMediaForUpload(attachedImageBase64, attachedImageMimeType, {
-          t,
-          onProgress: (label, done, total, etaMs) => {
-            setSendPrep({ active: true, label, done, total, etaMs });
-          }
-        });
-        userImageToProcessStorageOptimizedBase64 = optimized.dataUrl;
-        userImageToProcessStorageOptimizedMimeType = optimized.mimeType;
-      } catch {}
-    }
-
-    userMessageId = addMessage({
-      role: 'user',
-      text: userMessageText,
-      recordedUtterance: recordedSpeechForMessage || undefined,
-      imageUrl: userImageToProcessBase64,
-      imageMimeType: userImageToProcessMimeType,
-      attachmentName: attachedFileName || undefined,
-      storageOptimizedImageUrl: userImageToProcessStorageOptimizedBase64,
-      storageOptimizedImageMimeType: userImageToProcessStorageOptimizedMimeType,
-    });
-    logSttFlow('send.createUserMessage.done', {
-      userMessageId,
-      hasRecordedAudio: Boolean(recordedSpeechForMessage),
-      hasImage: Boolean(userImageToProcessBase64),
-      hasStorageOptimizedImage: Boolean(userImageToProcessStorageOptimizedBase64),
-    });
-
-    return {
-      userMessageId,
-      userMessageText,
-      recordedSpeechForMessage,
-      userImageToProcessBase64,
-      userImageToProcessMimeType,
-      userImageToProcessStorageOptimizedBase64,
-      userImageToProcessStorageOptimizedMimeType,
-    };
-  }, [
-    addMessage,
-    attachedImageBase64,
-    attachedImageMimeType,
-    attachedFileName,
-    captureSnapshot,
-    claimRecordedUtterance,
-    recordedUtterancePendingRef,
-    sendWithFileUploadInProgressRef,
-    setSendPrep,
-    t,
-    updateMessage,
-  ]);
-
-  const handleGeminiResponse = useCallback(async (params: {
-    thinkingMessageId: string;
-    geminiPromptText: string;
-    sanitizedDerivedHistory: any[];
-    systemInstructionForGemini: string;
-    imageForGeminiContextFileUri?: Array<{ fileUri: string; mimeType: string }>;
-    currentSettingsVal: AppSettings;
-  }) => {
-    let geminiStage = 'gemini.prepare.start';
-    const markGeminiStage = (stage: string, details?: Record<string, unknown>) => {
-      geminiStage = stage;
-      logSttFlow(stage, details);
-    };
-    let lastProcessingBucket = -1;
-    let streamingDraftText = '';
-    let lastDraftFlushAt = 0;
-    let thoughtBuffer = '';
-    let lastThoughtFlushAt = 0;
-    let currentPhaseLabel = '';
-    let hasVisibleModelOutput = false;
-
-    const flushThinkingDraft = (force = false) => {
-      const now = Date.now();
-      if (!force && now - lastDraftFlushAt < THINKING_DRAFT_FLUSH_INTERVAL_MS) return;
-      lastDraftFlushAt = now;
-      const draftToShow = formatStreamingTutorDraftText(
-        streamingDraftText,
-        selectedLanguagePairRef.current?.nativeLanguageCode
-      );
-      const current = messagesRef.current.find(m => m.id === params.thinkingMessageId);
-      if (!current || !current.thinking) return;
-      if ((current.thinkingDraftText || '') === draftToShow) return;
-      updateMessage(params.thinkingMessageId, { thinkingDraftText: draftToShow });
-    };
-
-    const flushThoughtTrace = (force = false) => {
-      const condensed = thoughtBuffer.replace(/\s+/g, ' ').trim();
-      if (!condensed) return;
-      const now = Date.now();
-      if (!force && condensed.length < 80 && now - lastThoughtFlushAt < 2000) return;
-      appendThinkingTrace(params.thinkingMessageId, condensed.slice(0, 220));
-      thoughtBuffer = '';
-      lastThoughtFlushAt = now;
-    };
-
-    try {
-      markGeminiStage('gemini.request.start', {
-        thinkingMessageId: params.thinkingMessageId,
-        promptLength: params.geminiPromptText.length,
-        historyCount: params.sanitizedDerivedHistory.length,
-        filePartCount: params.imageForGeminiContextFileUri?.length || 0,
-        useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
-      });
-      const turn = await runTutorTextTurn(
-        {
-          model: getGeminiModels().text.default,
-          prompt: params.geminiPromptText,
-          history: params.sanitizedDerivedHistory,
-          nativeLanguageCode: selectedLanguagePairRef.current?.nativeLanguageCode || '',
-          systemInstruction: params.systemInstructionForGemini,
-          currentFileParts: params.imageForGeminiContextFileUri,
-          useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
-        },
-        {
-          onGoogleSearchUnavailable: () => {
-            setSettings(prev => prev.enableGoogleSearch
-              ? { ...prev, enableGoogleSearch: false }
-              : prev
-            );
-          },
-          lifecycleHooks: {
-            onProgress: (event) => {
-              if (event.phase === 'attempt-processing') {
-                const bucket = Math.floor((event.elapsedMs || 0) / 12000);
-                if (bucket > 0 && bucket !== lastProcessingBucket) {
-                  lastProcessingBucket = bucket;
-                  markGeminiStage('gemini.request.processing', {
-                    thinkingMessageId: params.thinkingMessageId,
-                    elapsedMs: event.elapsedMs || 0,
-                    bucket,
-                  });
-                }
-              }
-              const phaseLabel = formatGeminiPhaseLabel(event);
-              if (phaseLabel && phaseLabel !== currentPhaseLabel) {
-                currentPhaseLabel = phaseLabel;
-                updateMessage(params.thinkingMessageId, { thinkingPhase: phaseLabel });
-              }
-              if (!hasVisibleModelOutput) {
-                const line = formatGeminiStatusLine(event);
-                if (line) {
-                  setThinkingStatusLine(params.thinkingMessageId, line);
-                }
-              }
-            },
-            onTextDelta: (_, fullText) => {
-              hasVisibleModelOutput = true;
-              streamingDraftText = fullText || streamingDraftText;
-              setThinkingStatusLine(params.thinkingMessageId, undefined);
-              flushThinkingDraft(false);
-            },
-            onThoughtDelta: (deltaThought) => {
-              hasVisibleModelOutput = true;
-              thoughtBuffer += deltaThought;
-              setThinkingStatusLine(params.thinkingMessageId, undefined);
-              if (currentPhaseLabel !== 'Thinking') {
-                currentPhaseLabel = 'Thinking';
-                updateMessage(params.thinkingMessageId, { thinkingPhase: t('streaming.phaseThinking') || 'Thinking' });
-              }
-              flushThoughtTrace(false);
-            },
-          },
-        },
-      );
-      const response = turn.response;
-
-      markGeminiStage('gemini.request.done', {
-        thinkingMessageId: params.thinkingMessageId,
-        responseTextLength: response.text?.length || 0,
-      });
-      flushThinkingDraft(true);
-      flushThoughtTrace(true);
-
-      const searchQueries = turn.searchQueryCount;
-      trackGeminiUsage({
-        feature: 'tutor',
-        configuredModel: response.modelUsed || getGeminiModels().text.default,
-        modelVersion: response.modelVersion,
-        usageMetadata: response.usageMetadata,
-        searchQueries,
-      });
-
-      const accumulatedFullText = turn.rawResponse;
-      const strictParsedResponse = turn.parsed;
-      const responseTextForConversation = strictParsedResponse.visibleText;
-      const parsedTranslationsOnComplete = strictParsedResponse.translations;
-      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks as GroundingChunk[] | undefined;
-      if (groundingChunks?.length) {
-        setLatestGroundingChunks(groundingChunks);
-      }
-
-      const finalMessageUpdates: Partial<ChatMessage> = {
-        thinking: false,
-        thinkingTrace: undefined,
-        thinkingDraftText: undefined,
-        thinkingPhase: undefined,
-        thinkingStatusLine: undefined,
-        translations: parsedTranslationsOnComplete.length > 0 ? parsedTranslationsOnComplete : undefined,
-        llmRawResponse: accumulatedFullText,
-        rawAssistantResponse: responseTextForConversation || undefined,
-        text: parsedTranslationsOnComplete.length === 0 ? (responseTextForConversation || undefined) : undefined,
-        isLoadingArtifact: strictParsedResponse.hasSkippedNonLanguageContent,
-        artifactLoadStartTime: strictParsedResponse.hasSkippedNonLanguageContent ? Date.now() : undefined,
-      };
-      updateMessage(params.thinkingMessageId, finalMessageUpdates);
-      markGeminiStage('gemini.response.applied', {
-        thinkingMessageId: params.thinkingMessageId,
-        hasAttachmentCandidate: strictParsedResponse.hasSkippedNonLanguageContent,
-        translationCount: parsedTranslationsOnComplete.length,
-      });
-
-      return {
-        accumulatedFullText: responseTextForConversation,
-        finalMessageUpdates,
-        hasAttachmentCandidate: strictParsedResponse.hasSkippedNonLanguageContent,
-      };
-    } catch (error) {
-      errorSttFlow('gemini.request.error', {
-        stage: geminiStage,
-        thinkingMessageId: params.thinkingMessageId,
-        message: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }, [appendThinkingTrace, formatGeminiPhaseLabel, formatGeminiStatusLine, parseStrictTutorResponse, setLatestGroundingChunks, setSettings, setThinkingStatusLine, updateMessage]);
+  const handleGeminiResponse = useMemo(() => createTextResponseCoordinator({ t, setSettings, updateMessage, messagesRef, selectedLanguagePairRef, runTutorTextTurn, trackGeminiUsage, setLatestGroundingChunks, formatGeminiPhaseLabel, formatGeminiStatusLine }), [t, setSettings, updateMessage, messagesRef, selectedLanguagePairRef, runTutorTextTurn, trackGeminiUsage, setLatestGroundingChunks, formatGeminiPhaseLabel, formatGeminiStatusLine]);
 
   const runUserImageGeneration = useCallback(async (params: {
     shouldGenerateUserImage: boolean;

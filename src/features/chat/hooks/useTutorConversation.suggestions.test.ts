@@ -299,5 +299,25 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
     expect(ports.runText.mock.calls[0][0].prompt).toMatchSnapshot();
     expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(kind === 'image-reengagement' ? [{ fileUri: 'https://files/snapshot', mimeType: 'image/png' }] : undefined);
   });
+
+  it.each([false, true])('preserves generated user images when upload fails: %s', async fails => {
+    useMaestroStore.getState().setSettings(previous => ({ ...previous, selectedCameraId: 'image-gen-camera', sendWithSnapshotEnabled: true }));
+    ports.runImage.mockResolvedValue({ base64Image: 'data:image/png;base64,AQID', mimeType: 'image/png' });
+    if (fails) ports.upload.mockRejectedValue(new Error('upload'));
+    else ports.upload.mockResolvedValue({ uri: 'https://files/generated', mimeType: 'image/png' });
+    const h = harness([]);
+    expect(await send(h, 'Draw this')).toBe(true);
+    expect(ports.runImage.mock.calls[0][0]).toMatchObject({ contextText: 'Draw this', maestroAvatarUri: undefined, maestroAvatarMimeType: undefined });
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:image/png;base64,AQID', isGeneratingImage: false, imageGenError: null });
+    expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(fails ? undefined : [{ fileUri: 'https://files/generated', mimeType: 'image/png' }]);
+  });
+
+  it('keeps a generated audio note visible when its upload fails', async () => {
+    ports.runSuggestions.mockResolvedValue({ suggestions: [suggestion], toolRequest: { tool: 'audio-note', text: 'Speak' } });
+    ports.upload.mockRejectedValue(new Error('upload'));
+    await harness([message('a')]).fetch();
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:audio/wav;base64,AQID', imageMimeType: 'audio/wav', maestroToolKind: 'audio-note', isGeneratingToolAttachment: false });
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+  });
 });
 
