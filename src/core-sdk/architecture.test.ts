@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error Development-only source scanner, also usable as a CLI.
-import { auditChatCoordinatorBoundaries, auditCoreBoundaries, auditLiveControllerBoundaries, inspectCoreSource } from '../../scripts/core-boundaries.mjs';
+import { auditAppCoordinatorBoundaries, auditChatCoordinatorBoundaries, auditCoreBoundaries, auditLiveControllerBoundaries, inspectCoreSource } from '../../scripts/core-boundaries.mjs';
 
 describe('Core architecture boundary', () => {
   it('keeps the whole Core dependency graph independent of browser adapters', () => {
@@ -16,6 +16,19 @@ describe('Core architecture boundary', () => {
   });
   it('keeps Live controllers independent of their browser/native adapters', () => {
     expect(auditLiveControllerBoundaries()).toEqual([]);
+  });
+  it('keeps App handoff coordinators independent of React and their store adapters', () => {
+    expect(auditAppCoordinatorBoundaries()).toEqual([]);
+  });
+  it('rejects a runtime import from an App coordinator back into its state adapter', () => {
+    const root = mkdtempSync(join(tmpdir(), 'maestro-app-boundary-'));
+    try {
+      mkdirSync(join(root, 'src/app/coordinators'), { recursive: true });
+      writeFileSync(join(root, 'src/app/coordinators/sttTurn.ts'), 'import "../speechRoutingState";');
+      writeFileSync(join(root, 'src/app/speechRoutingState.ts'), 'export {};');
+      expect(auditAppCoordinatorBoundaries(root).map((item: { reason: string }) => item.reason))
+        .toEqual(['Runtime boundary reaches adapter: src/app/speechRoutingState.ts']);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
   it('does not permit an excluded browser owner to be imported back into a Live controller', () => {
     const root = mkdtempSync(join(tmpdir(), 'maestro-live-boundary-'));

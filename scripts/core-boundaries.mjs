@@ -130,8 +130,18 @@ export function auditLiveControllerBoundaries(root = fileURLToPath(new URL('../'
   });
 }
 
+export function auditAppCoordinatorBoundaries(root = fileURLToPath(new URL('../', import.meta.url))) {
+  return auditCoreBoundaries(root, {
+    entryDirectories: ['src/app/coordinators'],
+    allowedAdapterDirectories: ['src/app/coordinators/'],
+  });
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const violations = [...auditCoreBoundaries(), ...auditChatCoordinatorBoundaries(), ...auditLiveControllerBoundaries()];
+  const violations = [
+    ...auditCoreBoundaries(), ...auditChatCoordinatorBoundaries(),
+    ...auditLiveControllerBoundaries(), ...auditAppCoordinatorBoundaries(),
+  ];
   if (violations.length) { console.error(JSON.stringify(violations, null, 2)); process.exitCode = 1; }
-  else console.log('Core, chat coordinator and Live controller runtime boundary checks passed.');
+  else console.log('Core, chat, Live and App coordinator runtime boundary checks passed.');
 }

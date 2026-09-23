@@ -10,11 +10,11 @@ contracts, not outputs to regenerate when a structural change fails them.
 | Boundary | Characterization before changes | Implementation | Verification |
 | --- | --- | --- | --- |
 | Chat suggestions, persistence and aftersteps | Actual-hook cache, failure, save-order, Live split and translation fixtures | Suggestion and translation coordinators with typed ports | Hook contracts and pre-move snapshots pass |
-| Chat send, media and generated tools | Actual-hook request, busy/error/STT/media/re-engagement fixtures | Separate send, request preparation, capture, response, uploads, generated-image and tool owners | Hook contracts pass; full root suite 693 tests, lint/build passed before final diagnostic-port guard and translation extraction |
+| Chat send, media and generated tools | Actual-hook request, busy/error/STT/media/re-engagement fixtures | Separate send, request preparation, capture, response, uploads, generated-image and tool owners | Hook contracts and unchanged snapshots pass in the full 737-test suite |
 | Live session, capture and playback lifecycle | Actual-hook connect, stop races, stale callbacks, decode cancellation, drain, transcripts, capture handoff and video fixtures | Session controller with separate capture, provider callback, playback, transcript, telemetry and cleanup owners; explicit browser runtime | 10 hook tests preserve baseline; full root suite 709 tests, lint/build and boundary guard pass |
 | Browser/headless afterstep decisions and explicit differences | Actual browser and headless entry-point snapshots captured first | Core afterstep plan with explicit browser-chat, browser-live and headless policies | Entry-point snapshots unchanged; dedicated policy tests pass |
 | Managed generation, files, cleanup and Live leases | Public-facade emulator tests freeze quota races, rollback, retries, ownership, provider requests and stream disconnect settlement | Separate generation, file quota/lifecycle/upload/cleanup, lease, token and music owners behind the existing facade | 24 Functions unit tests, billing/gateway emulator suites and all 16 new backend cases pass; 49 moved declaration bodies match baseline AST |
-| App speech/idle feature handoffs | Pending | Pending | Pending |
+| App speech/idle feature handoffs | Actual App render with real store and idle hook: 26 baseline handoff/guard/error/timing cases | Pure STT, speech-mode, reengagement and language-change coordinators, with explicit state/action ports and React lifecycle adapter | All 26 baseline cases pass; transitive guard passes; full root suite 737 tests, lint and build pass |
 
 Release acceptance: unchanged model-input contracts; root tests, lint and build;
 Functions unit and billing/lease/file emulator tests; gateway tests/build;
@@ -85,3 +85,21 @@ request bytes, disconnected stream usage settlement, token failure rollback and
 music sample completion. They now run in the existing release and staging CI
 emulator gate. All 49 moved declaration bodies also match the original AST;
 transaction boundaries, request settings and error handling were preserved.
+
+## App handoffs completed
+
+`src/app/coordinators/` owns speech destination routing, microphone/translation
+mode actions, reengagement capture/fallback and language-context reset ordering.
+App composes those operations with the existing feature APIs; `speechRoutingState`
+projects fresh store state and `useLanguageSessionReset` owns React effect
+cancellation. The coordinator graph cannot import those adapters, React, the
+store or browser globals.
+
+The 26 actual-App cases in `73f2b1f` passed before extraction and pass unchanged
+after it. They cover captured/current translation destinations, attachment
+forwarding, busy guards, stop/translation failures, fresh-state restart checks,
+capture overlap and failure, history-load barriers, observer/Live handoffs,
+250ms language restarts and cancellation, microphone toggles and idle scheduling.
+After this extraction the full app gate passes 737 tests in 107 files, lint,
+production build and the expanded transitive boundary guard. Deployment and
+release artifacts still require the final acceptance evidence below.
