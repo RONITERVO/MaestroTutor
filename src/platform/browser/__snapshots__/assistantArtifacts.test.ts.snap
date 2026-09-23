@@ -1,0 +1,50 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`browser SVG artifact contract before adapter extraction > preserves SVG content in the actual suggestion request and Live context 1`] = `
+{
+  "live": "system
+
+--- CURRENT CONVERSATION CONTEXT (History) ---
+Maestro: Hola
+
+[Earlier assistant turn artifact preview; compact history only]
+file: generated.svg
+mimeType: image/svg+xml
+source: assistant-raw
+\`\`\`svg
+<svg xmlns="http://www.w3.org/2000/svg"><style>@media (min-width:1px){.spin {animation: spin 1s infinite}}</style><g transform="translate(10 20)"><g class="spin"><circle r="3"/></g></g><g transform="scale(2)"><rect><animateTransform attributeName="transform" type="rotate"/></rect></g></svg>
+\`\`\`
+--- END CONTEXT ---",
+  "requests": [
+    [
+      {
+        "parts": [
+          {
+            "text": "Tutor: Hola
+
+[Earlier assistant turn artifact preview; compact history only]
+file: generated.svg
+mimeType: image/svg+xml
+source: assistant-raw
+\`\`\`svg
+<svg xmlns="http://www.w3.org/2000/svg"><style>@media (min-width:1px){.spin {animation: spin 1s infinite}}</style><g transform="translate(10 20)"><g class="spin"><circle r="3"/></g></g><g transform="scale(2)"><rect><animateTransform attributeName="transform" type="rotate"/></rect></g></svg>
+\`\`\`",
+          },
+        ],
+        "role": "user",
+      },
+    ],
+  ],
+}
+`;
+
+exports[`browser SVG artifact contract before adapter extraction > preserves serialized SVG attachments from fenced, inline and suggestion output 1`] = `
+{
+  "cleaned": "Hola
+[en] Hello",
+  "dataUrl": "<svg xmlns="http://www.w3.org/2000/svg"><style>@media (min-width:1px){.spin {animation: spin 1s infinite}}</style><g transform="translate(10 20)"><g class="spin"><circle r="3"/></g></g><g transform="scale(2)"><rect><animateTransform attributeName="transform" type="rotate"/></rect></g></svg>",
+  "fence": "<svg xmlns="http://www.w3.org/2000/svg"><style>@media (min-width:1px){.spin {animation: spin 1s infinite}}</style><g transform="translate(10 20)"><g class="spin"><circle r="3"/></g></g><g transform="scale(2)"><rect><animateTransform attributeName="transform" type="rotate"/></rect></g></svg>",
+  "inline": "<style>@media (min-width:1px){.spin {animation: spin 1s infinite}}</style>",
+  "suggestion": "<svg xmlns="http://www.w3.org/2000/svg"><style>@media (min-width:1px){.spin {animation: spin 1s infinite}}</style><g transform="translate(10 20)"><g class="spin"><circle r="3"/></g></g><g transform="scale(2)"><rect><animateTransform attributeName="transform" type="rotate"/></rect></g></svg>",
+}
+`;
