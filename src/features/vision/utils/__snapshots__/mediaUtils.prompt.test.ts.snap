@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`preserves the identity instruction actually drawn into the model avatar 1`] = `
+[
+  [
+    "This is you Gemini, Maestro. When you see this avatar in images it is not the user, it is you.",
+    256,
+    500,
+    488,
+  ],
+]
+`;

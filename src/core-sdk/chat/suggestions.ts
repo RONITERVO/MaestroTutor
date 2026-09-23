@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { LIVE_REPLY_SUGGESTIONS_SUFFIX, REPLY_SUGGESTIONS_RESPONSE_SCHEMA, PROMPT_CONTEXT_TEXT } from '../../core/config/prompts';
+
 import { generateGeminiResponse, type GeminiRequestLifecycleHooks } from '../../api/gemini/generative';
 import { getGeminiModels } from '../../core/config/models';
 import type { ChatMessage, LanguagePair, ReplySuggestion } from '../../core/types';
@@ -45,77 +47,7 @@ export interface ReplySuggestionsResult {
  * HTML or JavaScript containing quotes), which used to make both the UI and
  * headless first-lesson journey abandon suggestion processing after retries.
  */
-export const REPLY_SUGGESTIONS_RESPONSE_SCHEMA = {
-  type: 'object',
-  additionalProperties: false,
-  propertyOrdering: [
-    'suggestions',
-    'reengagementSeconds',
-    'chatSummary',
-    'globalProfile',
-    'artifact',
-    'toolRequest',
-  ],
-  required: [
-    'suggestions',
-    'reengagementSeconds',
-    'chatSummary',
-    'globalProfile',
-    'artifact',
-    'toolRequest',
-  ],
-  properties: {
-    suggestions: {
-      type: 'array',
-      minItems: 1,
-      maxItems: 4,
-      items: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['target', 'native'],
-        properties: {
-          target: { type: 'string' },
-          native: { type: 'string' },
-        },
-      },
-    },
-    reengagementSeconds: { type: 'integer', minimum: 5, maximum: 86_400 },
-    chatSummary: { type: 'string' },
-    globalProfile: { type: 'string' },
-    artifact: {
-      anyOf: [
-        { type: 'null' },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['mimeType', 'fileName', 'encoding', 'content'],
-          properties: {
-            mimeType: { type: 'string' },
-            fileName: { type: 'string' },
-            encoding: { type: 'string', enum: ['text', 'data-url'] },
-            content: { type: 'string' },
-          },
-        },
-      ],
-    },
-    toolRequest: {
-      anyOf: [
-        { type: 'null' },
-        {
-          type: 'object',
-          additionalProperties: false,
-          required: ['tool'],
-          properties: {
-            tool: { type: 'string', enum: ['image', 'audio-note', 'music'] },
-            prompt: { type: 'string' },
-            text: { type: 'string' },
-            durationSeconds: { type: 'integer', minimum: 8, maximum: 20 },
-          },
-        },
-      ],
-    },
-  },
-} as const;
+export { REPLY_SUGGESTIONS_RESPONSE_SCHEMA } from '../../core/config/prompts';
 
 const extractJsonObject = (responseText: string): Record<string, unknown> => {
   let json = responseText.trim();
@@ -157,11 +89,11 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): strin
     .map(group => {
       if (group.role === 'user') {
         const userText = group.items
-          .map(message => message.text?.trim() || '(sent an image)')
+          .map(message => message.text?.trim() || PROMPT_CONTEXT_TEXT.sentImage)
           .filter(Boolean)
           .join('\n\n')
           .trim();
-        return userText ? `User: ${userText}` : '';
+        return userText ? `${PROMPT_CONTEXT_TEXT.user}: ${userText}` : '';
       }
       const tutorText = group.items
         .map(message => (
@@ -169,12 +101,12 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): strin
           || message.translations?.[0]?.target
           || message.rawAssistantResponse
           || message.text
-          || '(sent an image)'
+          || PROMPT_CONTEXT_TEXT.sentImage
         ))
         .filter(Boolean)
         .join('\n\n')
         .trim();
-      return tutorText ? `Tutor: ${tutorText}` : '';
+      return tutorText ? `${PROMPT_CONTEXT_TEXT.tutor}: ${tutorText}` : '';
     })
     .filter(Boolean)
     .join('\n');
@@ -191,11 +123,11 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): strin
 
   let prompt = input.languagePair.baseReplySuggestionsPrompt
     .replace('{tutor_message_placeholder}', input.lastTutorMessage)
-    .replace('{conversation_history_placeholder}', historyForPrompt || 'No history yet.')
+    .replace('{conversation_history_placeholder}', historyForPrompt || PROMPT_CONTEXT_TEXT.noHistory)
     .replace('{previous_chat_summary_placeholder}', previousChatSummary)
-    .replace('{existing_global_profile_placeholder}', input.existingGlobalProfile?.trim() || '(none)');
+    .replace('{existing_global_profile_placeholder}', input.existingGlobalProfile?.trim() || PROMPT_CONTEXT_TEXT.noProfile);
   if (input.responseSource === 'live') {
-    prompt += '\n\nIMPORTANT: This latest tutor message came from the live audio model. Its transcript will not contain fenced artifact blocks or maestro-tool JSON even when an artifact or tool would improve the turn. For this live turn, decide yourself whether to synthesize an "artifact" object and/or a "toolRequest" object from the tutor transcript using the same quality bar as the main chat path. Artifacts, an image tool request, an audio-note tool request, a music tool request, or null are all allowed. Do not default to images or audio-note. Do consider creating different artifact, not repeating same that is already in the ui, if this is likely a followup to already created artifact on previous message. If artifact or tool does not materially improve the response, return null for them.';
+    prompt += LIVE_REPLY_SUGGESTIONS_SUFFIX;
   }
   return prompt;
 };

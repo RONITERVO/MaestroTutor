@@ -231,6 +231,7 @@ requireText(officeTextExtraction.includes('JSZip.loadAsync'), 'Shared Office ext
 requireText(replySuggestions.includes('responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA'), 'Suggestion creation must enforce provider-side JSON structure for artifact-bearing replies.');
 requireText(liveSystemInstruction.includes('buildCoreLiveSystemInstruction'), 'The visual UI must use shared Live context serialization.');
 requireText(liveStt.includes('buildLiveSttSystemInstruction'), 'The visual UI must use the shared STT instruction contract.');
+requireText(tutorConversation.includes('deriveBrowserTutorHistory('), 'Browser tutor history must use the prompt-contract-tested composition policy.');
 for (const coverageFlag of [
   'chatStreaming', 'stt', 'liveAudio', 'liveVisual', 'observerAudio',
   'observerVisual', 'suggestionAftersteps', 'translation', 'ttsTrigger',

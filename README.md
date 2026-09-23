@@ -313,6 +313,7 @@ Contributions are welcome. The codebase follows a strict feature-slice architect
 - Read [`docs/DESIGN_SYSTEM.md`](./docs/DESIGN_SYSTEM.md) — every color in the UI is a named CSS token. New elements require new tokens, not hardcoded values.
 - Check [`docs/DEV_CHEATSHEET.md`](./docs/DEV_CHEATSHEET.md) for patterns around state management, ref synchronization, and audio lifecycle.
 - Managed-service maintainers must follow [`docs/PRODUCTION_OPERATIONS.md`](./docs/PRODUCTION_OPERATIONS.md); architecture and billing invariants are in [`docs/MANAGED_BACKEND.md`](./docs/MANAGED_BACKEND.md).
+- Model instructions are owned by [`shared/prompts/`](./shared/prompts/). Read [`docs/PROMPT_CONTRACTS.md`](./docs/PROMPT_CONTRACTS.md) and run `npm run test:prompts` before changing prompt composition or provider transports.
 
 **Key architectural notes:**
 

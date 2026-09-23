@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { buildMusicPrompt } from '../../core/config/prompts';
+
 import type { CoreGeminiClient } from '../managedGeminiClient';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { mergeInt16Arrays, pcmToWav } from './audioProcessing';
@@ -294,7 +296,7 @@ export const runCoreMusicGeneration = async (params: {
       try {
         await session.setWeightedPrompts({
           weightedPrompts: [{
-            text: `${prompt}. Instrumental only. No vocals, no lyrics, no copyrighted melodies. Original educational backing track.`,
+            text: buildMusicPrompt(prompt),
             weight: 1,
           }],
         });

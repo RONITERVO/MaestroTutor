@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { buildMusicPrompt } from '../../shared/prompts/music';
+
 import { createHash, randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
@@ -1372,7 +1374,7 @@ const generateMusicPcm = async (params: {
     try {
       await session.setWeightedPrompts({
         weightedPrompts: [{
-          text: `${params.prompt}. Instrumental only. No vocals, no lyrics, no copyrighted melodies. Original educational backing track.`,
+          text: buildMusicPrompt(params.prompt),
           weight: 1,
         }],
       });

@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { appendLiveHistoryContext, PROMPT_CONTEXT_TEXT } from '../../core/config/prompts';
+
 import type { ChatMessage } from '../../core/types';
 import { groupAdjacentRoleItems } from '../../shared/utils/conversationTurns';
 import { buildCompactAssistantHistoryText } from './assistantMessageContext';
@@ -24,21 +26,19 @@ export const buildCoreLiveSystemInstruction = (input: {
     .find(entry => entry.role === 'assistant')?.messageId;
   const historyContext = groupAdjacentRoleItems(apiHistory)
     .map(group => {
-      const role = group.role === 'user' ? 'User' : 'Maestro';
+      const role = group.role === 'user' ? PROMPT_CONTEXT_TEXT.user : PROMPT_CONTEXT_TEXT.maestro;
       const text = group.items.map(entry => {
         const source = entry.messageId ? sourceMessagesById.get(entry.messageId) : undefined;
         return entry.role === 'assistant'
           ? (buildCompactAssistantHistoryText(source, {
               includeArtifact: entry.messageId === latestAssistantEntryId,
               includeToolRequest: entry.messageId === latestAssistantEntryId,
-            }) || entry.rawAssistantResponse || entry.text || '(assistant attachment)')
-          : (entry.rawAssistantResponse || entry.text || '(image)');
+            }) || entry.rawAssistantResponse || entry.text || PROMPT_CONTEXT_TEXT.assistantAttachment)
+          : (entry.rawAssistantResponse || entry.text || PROMPT_CONTEXT_TEXT.image);
       }).filter((value): value is string => Boolean(value?.trim())).join('\n\n').trim();
       return text ? `${role}: ${text}` : '';
     })
     .filter(Boolean)
     .join('\n');
-  return historyContext
-    ? `${input.basePrompt}\n\n--- CURRENT CONVERSATION CONTEXT (History) ---\n${historyContext}\n--- END CONTEXT ---`
-    : input.basePrompt;
+  return appendLiveHistoryContext(input.basePrompt, historyContext);
 };

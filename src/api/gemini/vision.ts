@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+
+import { appendImageRequestNonce, formatOmittedMediaContext, formatImageConversationSummary, PROMPT_CONTEXT_TEXT } from '../../core/config/prompts';
 import { debugLogService } from '../../core-sdk/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
@@ -21,7 +23,7 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
 const addNoise = (text: string): string => {
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(2, 8);
-  return `${text} <!-- ${timestamp}_${randomId} -->`;
+  return appendImageRequestNonce(text, timestamp, randomId);
 };
 
 export type ImageGenerationResult =
@@ -67,13 +69,13 @@ export const generateImage = async (params: {
         const firstMime = typeof h.fileParts[0]?.mimeType === 'string' ? h.fileParts[0].mimeType.toLowerCase() : '';
         h.fileParts = undefined;
         const type = firstMime.split('/')[0] || 'File';
-        const note = ` [${type} context omitted]`;
+        const note = formatOmittedMediaContext(type);
         if (h.rawAssistantResponse) h.rawAssistantResponse += note;
         else h.text = (h.text || '') + note;
       } else {
         if (imageCount >= 3) {
           h.fileParts = undefined;
-          const note = ' [Previous image context omitted]';
+          const note = PROMPT_CONTEXT_TEXT.omittedImage;
           if (h.rawAssistantResponse) h.rawAssistantResponse += note;
           else h.text = (h.text || '') + note;
         } else {
@@ -117,7 +119,7 @@ export const generateImage = async (params: {
 
       // Prepend contextSummary to the first user message when history was trimmed
       if (contextSummary && idx === 0 && h.role === 'user') {
-        const summaryPrefix = `[Conversation Summary from earlier context]\n${contextSummary}\n\n`;
+        const summaryPrefix = `${formatImageConversationSummary(contextSummary)}\n\n`;
         textContent = summaryPrefix + (textContent || '');
       }
 
@@ -145,7 +147,7 @@ export const generateImage = async (params: {
 
   // If history was trimmed and contextSummary exists but first message wasn't user, prepend summary as separate turn
   if (contextSummary && processedHistory.length > 0 && processedHistory[0]?.role !== 'user') {
-    const summaryText = `[Conversation Summary from earlier context]\n${contextSummary}`;
+    const summaryText = formatImageConversationSummary(contextSummary);
     rawContents.unshift({ role: 'user', parts: [{ text: summaryText }] });
   }
 

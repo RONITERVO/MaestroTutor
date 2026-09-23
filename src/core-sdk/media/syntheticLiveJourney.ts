@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { SYNTHETIC_LIVE_FALLBACK_INSTRUCTION } from '../../core/config/prompts';
+
 import { Modality } from '@google/genai';
 import { getGeminiModels } from '../../core/config/models';
 import {
@@ -271,7 +273,7 @@ export const runSyntheticLiveJourney = async (
         ? { voiceConfig: { prebuiltVoiceConfig: { voiceName: input.voiceName } } }
         : undefined,
       systemInstruction: input.systemInstruction
-        || 'You are a smart parrot. Listen to the user input and repeat it back, correcting errors while preserving the original language. Do not answer questions; return only the corrected utterance.',
+        || SYNTHETIC_LIVE_FALLBACK_INSTRUCTION,
     },
     callbacks: {
       onopen: () => runtime.events.emit({ operationId, journey: 'live', phase: 'session.opened' }),

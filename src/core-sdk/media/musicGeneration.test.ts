@@ -48,6 +48,8 @@ describe('core music generation', () => {
     expect(connect).toHaveBeenCalledWith(expect.objectContaining({ model: 'models/lyria-realtime-exp' }));
     expect(setWeightedPrompts).toHaveBeenCalledOnce();
     expect(setMusicGenerationConfig).toHaveBeenCalledOnce();
+    // Provider payload baseline captured before prompt centralization (ab2923d).
+    expect({ prompts: setWeightedPrompts.mock.calls, config: setMusicGenerationConfig.mock.calls }).toMatchSnapshot();
     expect(play).toHaveBeenCalledOnce();
     expect(result).toMatchObject({
       mimeType: 'audio/wav',

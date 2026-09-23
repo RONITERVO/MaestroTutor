@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+
+import { AVATAR_IDENTITY_OVERLAY } from '../../../core/config/prompts';
 /**
  * Detects auxiliary camera sensors (depth, IR, ToF, etc.) that Android devices
  * enumerate but cannot be independently accessed via getUserMedia.
@@ -220,7 +222,7 @@ export const createAvatarWithOverlay = async (
     dataUrl: string,
     opts?: { maxDim?: number; quality?: number; overlayText?: string }
 ): Promise<{ dataUrl: string; mimeType: string }> => {
-  const { maxDim = 512, quality = 0.7, overlayText = 'This is you Gemini, Maestro. When you see this avatar in images it is not the user, it is you.' } = opts || {};
+  const { maxDim = 512, quality = 0.7, overlayText = AVATAR_IDENTITY_OVERLAY } = opts || {};
     const img = new Image();
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();

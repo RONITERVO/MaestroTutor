@@ -117,6 +117,8 @@ describe('Gemini Live TTS audible completion', () => {
     });
 
     await vi.waitFor(() => expect(mocks.callbacks).not.toBeNull());
+    // Preserve what the browser actually sends, not just the standalone builder.
+    expect(mocks.connect.mock.calls[0][0].config).toMatchSnapshot();
     mocks.callbacks!.onmessage({
       serverContent: { modelTurn: { parts: [{ inlineData: { data: pcmBase64(2_400) } }] } },
     });

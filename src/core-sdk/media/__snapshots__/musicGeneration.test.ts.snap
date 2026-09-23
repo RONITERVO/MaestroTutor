@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`core music generation > drives the Lyria stream and produces a deterministic WAV without a browser 1`] = `
+{
+  "config": [
+    [
+      {
+        "musicGenerationConfig": {
+          "guidance": 4,
+          "musicGenerationMode": "QUALITY",
+          "temperature": 1.1,
+        },
+      },
+    ],
+  ],
+  "prompts": [
+    [
+      {
+        "weightedPrompts": [
+          {
+            "text": "A calm scale exercise. Instrumental only. No vocals, no lyrics, no copyrighted melodies. Original educational backing track.",
+            "weight": 1,
+          },
+        ],
+      },
+    ],
+  ],
+}
+`;

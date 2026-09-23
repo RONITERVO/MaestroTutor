@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { buildAudioNoteSystemInstruction } from '../../core/config/prompts';
+
 import { Modality } from '@google/genai';
 import type { CoreGeminiClient } from '../managedGeminiClient';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
@@ -70,15 +72,7 @@ export const runCoreAudioNoteGeneration = async (params: {
   const operationId = params.operationId || runtime.ids.create('audio-note');
   const model = params.model.trim();
   const voiceName = (params.voiceName || 'Kore').trim() || 'Kore';
-  const systemInstruction = params.systemInstruction || [
-    'You are a professional text-to-speech engine.',
-    'Read the provided text aloud exactly as written.',
-    'Do not add any intro, explanation, or extra words.',
-    'Keep the delivery warm and clear.',
-    params.langCode ? `Language hint: ${params.langCode}` : '',
-    'TEXT TO READ:',
-    text,
-  ].filter(Boolean).join('\n');
+  const systemInstruction = params.systemInstruction || buildAudioNoteSystemInstruction(text, params.langCode);
   const emit = (phase: string, data?: Record<string, unknown>) => runtime.events.emit({
     operationId,
     journey: 'media',
