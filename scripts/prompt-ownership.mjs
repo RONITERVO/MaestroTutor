@@ -20,19 +20,38 @@ export function inlinePromptViolations(source, fileName = 'input.ts') {
   const visit = node => {
     const literal = ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node);
     if (literal && instructionLanguage.test(node.text)) flag(node, 'Authored instruction belongs in shared/prompts.');
-    if (literal && naturalText(node.text)) {
+    else if (literal && naturalText(node.text)) {
       let parent = node.parent;
       // Walk through expressions, but do not confuse a call's data/lookup keys,
-      // an error message or a function body with a prompt assignment.
-      while (parent && !ts.isStatement(parent) && !ts.isCallExpression(parent) && !ts.isFunctionLike(parent)) {
+      // an error message or a function body with a prompt assignment. Prompt
+      // setters/builders are instruction boundaries too; ordinary calls stop us.
+      while (parent && !ts.isStatement(parent) && !ts.isFunctionLike(parent)) {
         const name = ts.isVariableDeclaration(parent) || ts.isPropertyAssignment(parent) ? parent.name.getText(ast)
-          : ts.isBinaryExpression(parent) ? parent.left.getText(ast).split('.').at(-1) : '';
+          : ts.isBinaryExpression(parent) ? parent.left.getText(ast).split('.').at(-1)
+          : ts.isCallExpression(parent) ? parent.expression.getText(ast).split('.').at(-1) : '';
         if (promptName.test(name.replace(/^['"]|['"]$/g, ''))) {
           flag(node, 'Inline prompt text/suffix must use the shared catalogue.');
           break;
         }
+        if (ts.isCallExpression(parent)) break;
         parent = parent.parent;
       }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  return violations;
+}
+
+export function catalogueRuntimeViolations(source, fileName = 'input.ts') {
+  const ast = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true);
+  const violations = [];
+  const visit = node => {
+    if (ts.isIdentifier(node) && /^(?:window|document|process|navigator|localStorage|sessionStorage)$/.test(node.text)) {
+      // Property names and authored string examples are not global references.
+      const parent = node.parent;
+      const propertyName = (ts.isPropertyAssignment(parent) || (ts.isPropertyAccessExpression(parent) && parent.expression.getText(ast) !== 'globalThis')) && parent.name === node;
+      if (!propertyName) violations.push({ file: fileName, line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1, reason: `Runtime-specific reference: ${node.text}` });
     }
     ts.forEachChild(node, visit);
   };
