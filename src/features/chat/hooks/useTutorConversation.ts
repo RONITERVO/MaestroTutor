@@ -1,9 +1,9 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { logSttFlow, warnSttFlow, errorSttFlow } from '../../../shared/utils/sttFlowDebug';
-// Copyright 2025 Roni Tervo
-// SPDX-License-Identifier: Apache-2.0
+import { createSuggestionTranslation } from '../coordinators/suggestionTranslation';
+
+import { errorSttFlow, logSttFlow, warnSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 import { createAssistantTools } from '../coordinators/assistantTools';
 import { createGeneratedImages } from '../coordinators/generatedImages';
@@ -42,7 +42,6 @@ import {
   type StrictParsedTutorResponse,
 } from '../../../core-sdk/chat/tutorResponse';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
-import { getGeminiModels } from '../../../core/config/models';
 import {
   ChatMessage,
   RecordedUtterance,
@@ -51,7 +50,6 @@ import {
 import { normalizeSuggestionCreatorArtifact as normalizeCoreSuggestionCreatorArtifact } from '../../../platform/browser/assistantArtifacts';
 import { isRealChatMessage } from '../../../shared/utils/common';
 import { hasShownCostWarning, setCostWarningShown, trackGeminiUsage } from '../../../shared/utils/costTracker';
-import { getPrimarySubtag } from '../../../shared/utils/languageUtils';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { useMaestroStore } from '../../../store';
 import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
@@ -433,83 +431,19 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     lastFetchedSuggestionsForRef, updateMessage,
   ]);
 
-  const handleCreateSuggestion = useCallback(async (textToTranslate: string) => {
-
-    if (!textToTranslate || !selectedLanguagePairRef.current) return;
-
-    // Add token for creating suggestion
-    createSuggestionTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.CREATE_SUGGESTION);
-
-    const sttLang = settingsRef.current.stt.language;
-    const sttLangCode = getPrimarySubtag(sttLang);
-    const targetLangCode = getPrimarySubtag(selectedLanguagePairRef.current.targetLanguageCode);
-
-    let fromLangName: string;
-    let toLangName: string;
-    let originalTextIsTarget: boolean;
-
-    if (sttLangCode === targetLangCode) {
-      fromLangName = selectedLanguagePairRef.current.targetLanguageName;
-      toLangName = selectedLanguagePairRef.current.nativeLanguageName;
-      originalTextIsTarget = true;
-    } else {
-      fromLangName = selectedLanguagePairRef.current.nativeLanguageName;
-      toLangName = selectedLanguagePairRef.current.targetLanguageName;
-      originalTextIsTarget = false;
-    }
-
-    try {
-      const { translatedText, usageMetadata, modelVersion, modelUsed } = await translateText(textToTranslate, fromLangName, toLangName);
-      trackGeminiUsage({
-        feature: 'translation',
-        configuredModel: modelUsed || getGeminiModels().text.translation,
-        modelVersion,
-        usageMetadata,
-      });
-      const newSuggestion: ReplySuggestion = {
-        target: originalTextIsTarget ? textToTranslate : translatedText,
-        native: originalTextIsTarget ? translatedText : textToTranslate,
-      };
-
-      const isDuplicate = (s: ReplySuggestion) => s.target === newSuggestion.target && s.native === newSuggestion.native;
-
-      setReplySuggestions(prev => {
-        if (prev.some(isDuplicate)) return prev;
-        return [newSuggestion, ...prev];
-      });
-
-      const targetMsgId = lastFetchedSuggestionsForRef.current ||
-        messagesRef.current.slice().reverse().find(m => m.role === 'assistant' && !m.thinking)?.id;
-
-      if (targetMsgId) {
-        if (!lastFetchedSuggestionsForRef.current) {
-          lastFetchedSuggestionsForRef.current = targetMsgId;
-        }
-        setMessages(prev => prev.map(m => {
-          if (m.id === targetMsgId) {
-            const existing = m.replySuggestions || [];
-            if (existing.some(isDuplicate)) return m;
-            return { ...m, replySuggestions: [newSuggestion, ...existing] };
-          }
-          return m;
-        }));
-      }
-
-    } catch (error) {
-      console.error("Failed to create suggestion via translation:", error);
-      addMessage({ role: 'error', text: t('error.translationFailed') });
-    } finally {
-      // Remove creating suggestion token
-      if (createSuggestionTokenRef.current) {
-        removeActivityToken(createSuggestionTokenRef.current);
-        createSuggestionTokenRef.current = null;
-      }
-      // Exit suggestion mode after creating suggestion (matches original behavior)
-      if (handleToggleSuggestionModeRef?.current) {
-        handleToggleSuggestionModeRef.current(false);
-      }
-    }
-  }, [addMessage, t, selectedLanguagePairRef, settingsRef, lastFetchedSuggestionsForRef, messagesRef, setMessages, setReplySuggestions, handleToggleSuggestionModeRef, addActivityToken, removeActivityToken]);
+  const handleCreateSuggestion = useMemo(() => createSuggestionTranslation({
+    addMessage, t, selectedLanguagePairRef,
+    settingsRef, lastFetchedSuggestionsForRef, messagesRef,
+    setMessages, setReplySuggestions, handleToggleSuggestionModeRef,
+    addActivityToken, removeActivityToken, createSuggestionTokenRef,
+    translateText, trackGeminiUsage,
+  }), [
+    addMessage, t, selectedLanguagePairRef,
+    settingsRef, lastFetchedSuggestionsForRef, messagesRef,
+    setMessages, setReplySuggestions, handleToggleSuggestionModeRef,
+    addActivityToken, removeActivityToken, createSuggestionTokenRef,
+    translateText, trackGeminiUsage,
+  ]);
 
   const handleSuggestionInteraction = useCallback((suggestion: ReplySuggestion, langType: 'target' | 'native') => {
     if (!selectedLanguagePairRef.current) return;
