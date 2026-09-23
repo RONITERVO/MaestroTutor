@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`actual tutor hook suggestion contract (captured before coordinator extraction) > splits artifact and audio tool with chat context and releases loading before tool execution 1`] = `
+{
+  "artifactRaw": undefined,
+  "toolRaw": undefined,
+}
+`;
+
+exports[`actual tutor hook suggestion contract (captured before coordinator extraction) > splits artifact and audio tool with live context and releases loading before tool execution 1`] = `
+{
+  "artifactRaw": "Hola
+
+[Earlier assistant turn artifact preview; compact history only]
+file: lesson.md
+mimeType: text/markdown
+source: live-suggestion-creator
+\`\`\`markdown
+# Lesson
+\`\`\`",
+  "toolRaw": "Hola
+
+[Earlier assistant turn used this tool; compact history only]
+\`\`\`maestro-tool
+{"tool":"audio-note","compactHistory":true,"alreadyUsed":true,"text":"Speak this","source":"live-suggestion-creator"}
+\`\`\`",
+}
+`;
