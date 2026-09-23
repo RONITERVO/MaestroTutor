@@ -43,14 +43,12 @@ import {
   parseStrictTutorResponseText,
   type StrictParsedTutorResponse,
 } from '../../../core-sdk/chat/tutorResponse';
-import { runTutorTextTurn } from '../../../core-sdk/chat/tutorTextTurn';
-import { runReplySuggestions } from '../../../core-sdk/chat/suggestions';
+import { runTutorTextTurn, runReplySuggestions, runMaestroImageGeneration } from '../../../api/gemini/journeys';
 import {
   executeSuggestionToolRequest,
-  normalizeSuggestionCreatorArtifact as normalizeCoreSuggestionCreatorArtifact,
   normalizeSuggestionCreatorToolRequest as normalizeCoreSuggestionCreatorToolRequest,
 } from '../../../core-sdk/chat/suggestionAftersteps';
-import { runMaestroImageGeneration } from '../../../core-sdk/chat/imageGeneration';
+import { normalizeSuggestionCreatorArtifact as normalizeCoreSuggestionCreatorArtifact } from '../../../platform/browser/assistantArtifacts';
 import { deriveBrowserTutorHistory } from '../../../core-sdk/chat/history';
 import {
   buildUploadedAttachmentState,

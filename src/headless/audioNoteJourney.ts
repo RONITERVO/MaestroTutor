@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createHash } from 'node:crypto';
-import { getGeminiModels } from '../core/config/models';
+import { getGeminiModels } from '../core-sdk/modelRegistry';
 import { runCoreAudioNoteGeneration } from '../core-sdk/media/audioNoteGeneration';
 import { TRIGGER_AUDIO_PCM_24K, TRIGGER_SAMPLE_RATE } from '../core-sdk/media/triggerAudioAsset';
 import type { HeadlessClient } from './client';

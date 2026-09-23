@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { sanitizeSvgAnimationStructure } from './sanitizeSvgAnimationStructure';
+import { sanitizeSvgArtifact, type AssistantArtifactOptions } from './artifactOptions';
 
 interface AttachmentCandidate {
   start: number;
@@ -628,10 +628,10 @@ const chartJsonToCsv = (input: any): string | null => {
   return null;
 };
 
-const createSvgAttachment = (svgText: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
+const createSvgAttachment = (svgText: string, fileNameHint?: string, options?: AssistantArtifactOptions): ParsedAssistantAttachment | null => {
   const normalized = normalizeAttachmentText(svgText);
   if (!normalized || !STANDALONE_SVG_REGEX.test(normalized)) return null;
-  const sanitized = sanitizeSvgAnimationStructure(normalized);
+  const sanitized = sanitizeSvgArtifact(normalized, options);
   return {
     kind: 'svg',
     dataUrl: toUtf8DataUrl('image/svg+xml', sanitized),
@@ -737,7 +737,7 @@ const extractInlineSvgArtifact = (source: string): { start: number; end: number;
   };
 };
 
-const parseFenceAttachment = (lang: string, content: string, fileNameHint?: string): ParsedAssistantAttachment | null => {
+const parseFenceAttachment = (lang: string, content: string, fileNameHint?: string, options?: AssistantArtifactOptions): ParsedAssistantAttachment | null => {
   const normalizedLang = (lang || '').trim().toLowerCase();
   const mimeToken = normalizedLang.split(';')[0].trim();
   const langToken = mimeToken.includes('/') ? mimeToken : normalizedLang;
@@ -780,7 +780,7 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
 
   if (langToken === 'svg' || mimeToken === 'image/svg+xml' || /<svg[\s>]/i.test(normalizedContent)) {
     const svgArtifact = extractInlineSvgArtifact(normalizedContent);
-    const svgAttachment = createSvgAttachment(svgArtifact?.svg || normalizedContent, fileNameHint);
+    const svgAttachment = createSvgAttachment(svgArtifact?.svg || normalizedContent, fileNameHint, options);
     if (svgAttachment) return svgAttachment;
   }
 
@@ -816,7 +816,7 @@ const parseFenceAttachment = (lang: string, content: string, fileNameHint?: stri
     }
     if (/<svg[\s>]/i.test(normalizedContent)) {
       const svgArtifact = extractInlineSvgArtifact(normalizedContent);
-      const svgAttachment = createSvgAttachment(svgArtifact?.svg || normalizedContent, fileNameHint);
+      const svgAttachment = createSvgAttachment(svgArtifact?.svg || normalizedContent, fileNameHint, options);
       if (svgAttachment) return svgAttachment;
     }
     return createCodeAttachment('txt', normalizedContent, fileNameHint || 'generated.txt');
@@ -1125,7 +1125,7 @@ const computeCandidateScore = (
   return score;
 };
 
-const parseAttachmentFromSingleSource = (source: string): ParsedAssistantResponse => {
+const parseAttachmentFromSingleSource = (source: string, options?: AssistantArtifactOptions): ParsedAssistantResponse => {
   if (!source.trim()) return { cleanedText: '' };
 
   const candidates: AttachmentCandidate[] = [];
@@ -1133,7 +1133,7 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
   for (const block of fencedBlocks) {
     const { lang, fileNameHint, descriptiveName, inlineContent } = parseFenceInfo(block.info);
     const effectiveBody = inlineContent ? inlineContent + '\n' + block.body : block.body;
-    const attachment = parseFenceAttachment(lang, effectiveBody, fileNameHint);
+    const attachment = parseFenceAttachment(lang, effectiveBody, fileNameHint, options);
     if (!attachment) continue;
 
     if (descriptiveName && !fileNameHint) {
@@ -1216,7 +1216,7 @@ const parseAttachmentFromSingleSource = (source: string): ParsedAssistantRespons
   if (candidates.length === 0) {
     const inlineSvg = extractInlineSvgArtifact(source);
     if (inlineSvg) {
-      const attachment = createSvgAttachment(inlineSvg.svg, 'generated.svg');
+      const attachment = createSvgAttachment(inlineSvg.svg, 'generated.svg', options);
       if (attachment) {
         candidates.push({
           start: inlineSvg.start,
@@ -1297,7 +1297,7 @@ const scoreAttachmentParse = (parsed: ParsedAssistantResponse): number => {
   return score;
 };
 
-export const parseAssistantResponseForAttachment = (responseText?: string | null): ParsedAssistantResponse => {
+export const parseAssistantResponseForAttachment = (responseText?: string | null, options?: AssistantArtifactOptions): ParsedAssistantResponse => {
   const rawSource = (responseText || '').toString();
   const variants = collectSourceVariants(rawSource);
   if (variants.length === 0) return { cleanedText: '' };
@@ -1305,7 +1305,7 @@ export const parseAssistantResponseForAttachment = (responseText?: string | null
   const parsedByVariant = variants.map((variant, variantIndex) => ({
     variantIndex,
     variant,
-    parsed: parseAttachmentFromSingleSource(variant.source),
+    parsed: parseAttachmentFromSingleSource(variant.source, options),
   }));
 
   const attachmentParses = parsedByVariant.filter((entry) => Boolean(entry.parsed.attachment));

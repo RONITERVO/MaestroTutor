@@ -4,7 +4,7 @@
 import { SYNTHETIC_LIVE_FALLBACK_INSTRUCTION } from '../../core/config/prompts';
 
 import { Modality } from '@google/genai';
-import { getGeminiModels } from '../../core/config/models';
+import { getGeminiModels } from '../modelRegistry';
 import {
   DEFAULT_SPEECH_GATE,
   isSpeechLike,

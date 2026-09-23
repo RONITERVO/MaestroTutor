@@ -306,7 +306,7 @@ Requires Android Studio with a connected device or emulator.
 
 ## Contributing
 
-Contributions are welcome. The codebase follows a strict feature-slice architecture — all logic lives in `src/features/`, the app shell is a pure composition root with no business logic.
+Contributions are welcome. UI features live in `src/features/`, shared journeys and media engines in `src/core-sdk/`, and cross-runtime prompts and billing contracts in `shared/`. Browser adapters connect the UI to that shared logic. Some chat, Live, and app-shell orchestration still needs clearer ownership; [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) maps the boundaries and the next refactors.
 
 **Before you start:**
 
@@ -314,6 +314,7 @@ Contributions are welcome. The codebase follows a strict feature-slice architect
 - Check [`docs/DEV_CHEATSHEET.md`](./docs/DEV_CHEATSHEET.md) for patterns around state management, ref synchronization, and audio lifecycle.
 - Managed-service maintainers must follow [`docs/PRODUCTION_OPERATIONS.md`](./docs/PRODUCTION_OPERATIONS.md); architecture and billing invariants are in [`docs/MANAGED_BACKEND.md`](./docs/MANAGED_BACKEND.md).
 - Model instructions are owned by [`shared/prompts/`](./shared/prompts/). Read [`docs/PROMPT_CONTRACTS.md`](./docs/PROMPT_CONTRACTS.md) and run `npm run test:prompts` before changing prompt composition or provider transports.
+- Run `npm run verify:core-boundaries` when changing dependencies. Core must not reach browser APIs through a helper or a lazy import; the same check runs in `npm test` and CI.
 
 **Key architectural notes:**
 

@@ -73,6 +73,9 @@ The tests cover:
   provider adapter; they do not simulate every React user interaction.
 - Empty and populated suggestion context, multilingual/quoted text, compact
   artifact/tool history and truncation, image history pruning and retries.
+- Browser SVG serialization in actual suggestion requests and Live context,
+  captured before moving DOM animation repair into its browser adapter. These
+  fixtures also preserve raw headless SVG and do not update the earlier baselines.
 - Actual audio-note connections, browser triggered-TTS configuration, music
   weighted prompts/configuration, and the text actually drawn on avatar pixels.
 - Managed client forwarding, Functions prompt/schema preservation and the

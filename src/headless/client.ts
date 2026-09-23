@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import type { BackendAiContentReportRequest } from '../core/contracts/backend';
-import { getGeminiModels } from '../core/config/models';
+import { getGeminiModels } from '../core-sdk/modelRegistry';
 import { createCoreEventJournal, type CoreEventListener } from '../core-sdk/events';
 import { createManagedAccountController } from '../core-sdk/managedAccount';
 import { createManagedBackendClient } from '../core-sdk/managedBackendClient';

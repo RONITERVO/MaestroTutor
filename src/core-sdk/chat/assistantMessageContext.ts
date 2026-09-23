@@ -5,6 +5,7 @@
 import { PROMPT_CONTEXT_TEXT } from '../../core/config/prompts';
 
 import type { ChatMessage } from '../../core/types';
+import type { AssistantArtifactOptions } from './artifactOptions';
 import { parseAssistantResponseForAttachment } from './assistantResponseAttachments';
 import { decodeTextFromDataUrl, isTextLikeAttachment } from './fileAttachments';
 
@@ -368,6 +369,7 @@ export const buildCompactAssistantHistoryText = (
   message?: AssistantMessageLike | null,
   options?: {
     includeArtifact?: boolean;
+    sanitizeSvg?: AssistantArtifactOptions['sanitizeSvg'];
     includeToolRequest?: boolean;
   }
 ): string => {
@@ -385,7 +387,7 @@ export const buildCompactAssistantHistoryText = (
   const toolRequestFromRaw = extractLastToolRequestFromRaw(rawText);
   const rawWithoutToolBlocks = stripToolBlocksFromRaw(rawText);
   const parsedAttachment = rawWithoutToolBlocks
-    ? parseAssistantResponseForAttachment(rawWithoutToolBlocks)
+    ? parseAssistantResponseForAttachment(rawWithoutToolBlocks, options)
     : { cleanedText: '', attachment: undefined };
 
   const effectiveVisibleText = visibleText || parsedAttachment.cleanedText || message.text || '';

@@ -3,7 +3,7 @@
 
 import { createHash } from 'node:crypto';
 import { composeMaestroSystemInstruction } from '../core/config/prompts';
-import { getGeminiModels } from '../core/config/models';
+import { getGeminiModels } from '../core-sdk/modelRegistry';
 import type { ChatMessage } from '../core/types';
 import { buildCoreLiveSystemInstruction } from '../core-sdk/chat/liveContext';
 import { resolveLanguagePair } from '../core-sdk/chat/language';

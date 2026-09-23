@@ -3,12 +3,13 @@
 
 import { LIVE_REPLY_SUGGESTIONS_SUFFIX, REPLY_SUGGESTIONS_RESPONSE_SCHEMA, PROMPT_CONTEXT_TEXT } from '../../core/config/prompts';
 
-import { generateGeminiResponse, type GeminiRequestLifecycleHooks } from '../../api/gemini/generative';
-import { getGeminiModels } from '../../core/config/models';
+import { generateGeminiResponse, type GeminiRequestLifecycleHooks } from '../gemini/generative';
+import { getGeminiModels } from '../modelRegistry';
 import type { ChatMessage, LanguagePair, ReplySuggestion } from '../../core/types';
 import { groupAdjacentRoleItems } from '../../shared/utils/conversationTurns';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
-import type { CoreGeminiClient } from '../managedGeminiClient';
+import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clientSource';
+import type { AssistantArtifactOptions } from './artifactOptions';
 import { buildCompactAssistantHistoryText } from './assistantMessageContext';
 
 export interface ReplySuggestionsInput {
@@ -20,9 +21,8 @@ export interface ReplySuggestionsInput {
   responseSource?: 'chat' | 'live';
 }
 
-export interface ReplySuggestionsOptions {
+export type ReplySuggestionsOptions = GeminiClientSource & AssistantArtifactOptions & {
   runtime?: CoreRuntime;
-  aiClient?: CoreGeminiClient;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   retries?: number;
 }
@@ -81,7 +81,7 @@ const normalizeSuggestions = (value: unknown): ReplySuggestion[] => {
   return suggestions;
 };
 
-export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): string => {
+export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput, options?: AssistantArtifactOptions): string => {
   const historyForPrompt = groupAdjacentRoleItems(
     input.history.filter(message => message.role === 'user' || message.role === 'assistant'),
   )
@@ -97,7 +97,7 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): strin
       }
       const tutorText = group.items
         .map(message => (
-          buildCompactAssistantHistoryText(message)
+          buildCompactAssistantHistoryText(message, options)
           || message.translations?.[0]?.target
           || message.rawAssistantResponse
           || message.text
@@ -134,11 +134,11 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): strin
 
 export const runReplySuggestions = async (
   input: ReplySuggestionsInput,
-  options: ReplySuggestionsOptions = {},
+  options: ReplySuggestionsOptions,
 ): Promise<ReplySuggestionsResult> => {
   const runtime = options.runtime || createCoreRuntime();
   const operationId = runtime.ids.create('suggestions');
-  const prompt = buildReplySuggestionsPrompt(input);
+  const prompt = buildReplySuggestionsPrompt(input, options);
   const retries = Math.max(0, Math.min(5, Math.floor(options.retries ?? 2)));
   runtime.events.emit({
     operationId,
@@ -151,7 +151,7 @@ export const runReplySuggestions = async (
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await generateGeminiResponse(getGeminiModels().text.aux, prompt, [], {
-        aiClient: options.aiClient,
+        ...pickGeminiClientSource(options),
         configOverrides: {
           responseMimeType: 'application/json',
           responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA,

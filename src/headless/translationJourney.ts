@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { translateText } from '../api/gemini/generative';
+import { translateText } from '../core-sdk/gemini/generative';
 import type { ReplySuggestion } from '../core/types';
 import { resolveLanguagePair } from '../core-sdk/chat/language';
 import type { HeadlessClient } from './client';

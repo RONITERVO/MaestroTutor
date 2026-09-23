@@ -1,13 +1,13 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
-import { generateImage } from '../../api/gemini/vision';
+import { generateImage, type ImageUsageSink } from '../gemini/vision';
 import {
   IMAGE_GEN_COPYRIGHT_AVOIDANCE_INSTRUCTION,
   IMAGE_GEN_SYSTEM_INSTRUCTION,
   IMAGE_GEN_USER_PROMPT_TEMPLATE,
 } from '../../core/config/prompts';
-import type { CoreGeminiClient } from '../managedGeminiClient';
+import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clientSource';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 
 export interface MaestroImageGenerationInput {
@@ -18,15 +18,15 @@ export interface MaestroImageGenerationInput {
   maxAttempts?: number;
 }
 
-export interface MaestroImageGenerationOptions {
+export type MaestroImageGenerationOptions = GeminiClientSource & {
   runtime?: CoreRuntime;
-  aiClient?: CoreGeminiClient;
+  onUsage?: ImageUsageSink;
   onAttempt?: (attempt: number, totalAttempts: number) => void;
 }
 
 export const runMaestroImageGeneration = async (
   input: MaestroImageGenerationInput,
-  options: MaestroImageGenerationOptions = {},
+  options: MaestroImageGenerationOptions,
 ) => {
   const runtime = options.runtime || createCoreRuntime();
   const operationId = runtime.ids.create('image-generation');
@@ -57,7 +57,8 @@ export const runMaestroImageGeneration = async (
       systemInstruction: IMAGE_GEN_SYSTEM_INSTRUCTION,
       maestroAvatarUri: input.maestroAvatarUri,
       maestroAvatarMimeType: input.maestroAvatarMimeType,
-      aiClient: options.aiClient,
+      ...pickGeminiClientSource(options),
+      onUsage: options.onUsage,
     });
     if ('base64Image' in finalResult) {
       runtime.events.emit({

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { composeMaestroSystemInstruction } from '../core/config/prompts';
-import { getGeminiModels } from '../core/config/models';
+import { getGeminiModels } from '../core-sdk/modelRegistry';
 import type { ChatMessage, UploadedAttachmentVariant } from '../core/types';
 import { assertTutorTurnInvariants } from '../core-sdk/assertions';
 import { deriveHistoryForApi, sanitizeHistoryWithVerifiedMedia } from '../core-sdk/chat/history';

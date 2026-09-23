@@ -43,8 +43,12 @@ CLI / JSON-RPC ---+                                  \-> shared state + events
 ```
 
 Code under the Core SDK must not import React, Zustand's React bindings, Capacitor,
-DOM globals or a concrete persistence implementation. Platform adapters may use
-those dependencies. The following are ports rather than globals:
+DOM globals or a concrete persistence implementation, including through local
+transitive dependencies. Platform adapters may use those dependencies.
+`npm run verify:core-boundaries` and the normal test suite enforce this boundary.
+See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for ownership, preserved contracts and
+remaining orchestration work. The following capabilities are supplied at the
+client boundary:
 
 - credentials and Firebase App Check tokens;
 - application settings, conversations and secrets;
@@ -53,6 +57,26 @@ those dependencies. The following are ports rather than globals:
 - microphone PCM and timestamped video frames;
 - generated audio and artifact sinks;
 - external browser navigation.
+
+Text, suggestions, translation and image requests require a `GeminiClientSource`:
+an `aiClient`, or a lazy `resolveAiClient` callback. Browser callers use
+`src/api/gemini/journeys.ts` (or the generative/vision facades), which preserves
+browser access selection at request time. Headless callers pass their client
+directly to Core. Image usage display is an explicit `onUsage` callback; managed
+charging still belongs to the backend. The in-memory model registry is shared by
+both clients; browser cache loading and remote refresh stay in the configuration
+adapter. Turn timing uses a recorder factory; only the browser adapter owns
+localStorage and page lifecycle listeners.
+
+SVG animation repair is another explicit capability: browser artifact/context
+facades supply `sanitizeSvg`, while headless preserves its existing raw SVG data.
+Core must not discover DOMParser or XMLSerializer through ambient globals.
+
+Core uses portable runtime defaults such as timers, fetch, performance and
+crypto where a port is omitted. This does not imply every clock or source of
+randomness is injected. UI suggestion aftersteps and device capture/playback
+remain client orchestration; their mode-specific behavior must be characterized
+before further extraction.
 
 The browser shell supplies IndexedDB, secure-storage, microphone/camera,
 AudioContext and hosted-page navigation adapters. The headless shell supplies

@@ -20,7 +20,7 @@ import CameraControls from './input/CameraControls';
 import SessionControls from '../../session/components/SessionControls';
 import { usePdfAnnotation } from '../hooks/usePdfAnnotation';
 import { normalizeAttachmentMimeType } from '../../../core-sdk/chat/fileAttachments';
-import { parseAssistantResponseForAttachment } from '../../../core-sdk/chat/assistantResponseAttachments';
+import { parseAssistantResponseForAttachment } from '../../../platform/browser/assistantArtifacts';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import {
   getNextSuggestionPracticeStep,
