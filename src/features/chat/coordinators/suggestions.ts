@@ -230,10 +230,10 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
           const suggestions = parsedResponse.suggestions as ReplySuggestion[];
           setReplySuggestions(suggestions);
           updateMessage(assistantMessageId, { replySuggestions: suggestions });
-          try { 
-            const pid = state.getPairId(); 
-            if (pid) { await persistence.saveHistory(pid, state.getMessages()); } 
-          } catch {}
+          try {
+            const pid = state.getPairId();
+            if (pid) { await persistence.saveHistory(pid, state.getMessages()); }
+          } catch { }
         } else {
           console.warn("Parsed suggestions not in expected format:", parsedResponse.suggestions);
           setReplySuggestions([]);
@@ -255,7 +255,7 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
           if (newGlobalProfile) {
             await persistence.saveProfile(newGlobalProfile);
             // Notify UI components that the global profile was updated
-            try { persistence.notifyProfileUpdated(); } catch {}
+            try { persistence.notifyProfileUpdated(); } catch { }
           }
         } catch (e) {
           console.warn('Failed to update global profile:', e);

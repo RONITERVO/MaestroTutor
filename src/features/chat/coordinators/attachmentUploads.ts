@@ -143,7 +143,7 @@ export function createAttachmentUploads(ports: AttachmentUploadPorts) {
   };
 
   const ensureUrisForHistoryForSend = async (
-    arr: ChatMessage[], 
+    arr: ChatMessage[],
     onProgress?: (done: number, total: number, etaMs?: number) => void
   ): Promise<Record<string, HistoryMediaOverride>> => {
     const candidates = computeHistorySubsetForMedia(arr);
@@ -231,7 +231,7 @@ export function createAttachmentUploads(ports: AttachmentUploadPorts) {
         };
       }
       if (indicesNeedingUpload.has(idx)) {
-        try { doneCount++; tick(); } catch {}
+        try { doneCount++; tick(); } catch { }
       }
       await new Promise(r => setTimeout(r, 0));
     }

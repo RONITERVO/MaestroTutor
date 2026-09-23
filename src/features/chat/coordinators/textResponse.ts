@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { ConversationDiagnostics } from './conversationContracts';
 import type { AppSettings, ChatMessage, GroundingChunk, LanguagePair } from '../../../core/types';
 import type { GeminiProgressEvent } from '../../../core-sdk/gemini/generative';
 import type { UseTutorConversationConfig, MutableValue } from './conversationContracts';
@@ -7,11 +8,11 @@ import type { runTutorTextTurn as runText } from '../../../api/gemini/journeys';
 import type { trackGeminiUsage as trackUsage } from '../../../shared/utils/costTracker';
 import { getGeminiModels } from '../../../core-sdk/modelRegistry';
 import { formatStreamingTutorDraftText } from '../../../core-sdk/chat/tutorResponse';
-import { logSttFlow, errorSttFlow } from '../../../shared/utils/sttFlowDebug';
 const MAX_THINKING_TRACE_LINES = 8;
 const THINKING_DRAFT_FLUSH_INTERVAL_MS = 120;
 
 export interface TextResponsePorts extends Pick<UseTutorConversationConfig, 't' | 'setSettings' | 'updateMessage'> {
+  diagnostics: Pick<ConversationDiagnostics, 'logSttFlow' | 'errorSttFlow'>;
   messagesRef: MutableValue<ChatMessage[]>;
   selectedLanguagePairRef: MutableValue<LanguagePair | undefined>;
   runTutorTextTurn: typeof runText;
@@ -24,6 +25,7 @@ export interface TextResponsePorts extends Pick<UseTutorConversationConfig, 't' 
 /** Streaming projection and completion: preserves throttle windows, visible
  * thinking state, usage order and the raw response retained for later prompts. */
 export function createTextResponseCoordinator(ports: TextResponsePorts) {
+  const { logSttFlow, errorSttFlow } = ports.diagnostics;
   const { t, setSettings, updateMessage, messagesRef, selectedLanguagePairRef, runTutorTextTurn,
     trackGeminiUsage, setLatestGroundingChunks, formatGeminiPhaseLabel, formatGeminiStatusLine } = ports;
   const appendThinkingTrace = (messageId: string, line: string) => {

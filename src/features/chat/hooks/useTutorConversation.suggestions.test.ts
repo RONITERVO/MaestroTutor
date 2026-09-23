@@ -10,12 +10,13 @@ const ports = vi.hoisted(() => ({
   saveHistory: vi.fn(), saveSettings: vi.fn(), usage: vi.fn(),
   audioNote: vi.fn(), upload: vi.fn(), optimize: vi.fn(),
   runText: vi.fn(), runImage: vi.fn(), sanitizeHistory: vi.fn(), fileStatuses: vi.fn(), avatar: vi.fn(),
+  translate: vi.fn(),
 }));
 vi.mock('../../../api/gemini/journeys', () => ({
   runReplySuggestions: ports.runSuggestions, runTutorTextTurn: ports.runText, runMaestroImageGeneration: ports.runImage,
 }));
 vi.mock('../../../api/gemini/client', async () => ({ ApiError: (await import('../../../core-sdk/errors')).ApiError }));
-vi.mock('../../../api/gemini/generative', () => ({ translateText: vi.fn() }));
+vi.mock('../../../api/gemini/generative', () => ({ translateText: ports.translate }));
 vi.mock('../../../api/gemini/files', () => ({
   uploadMediaToFiles: ports.upload, checkFileStatuses: ports.fileStatuses, sanitizeHistoryWithVerifiedUris: ports.sanitizeHistory,
 }));
@@ -188,6 +189,33 @@ describe('actual tutor hook suggestion contract (captured before coordinator ext
     expect(events).toContain('audio:false');
     expect(ports.audioNote).toHaveBeenCalledWith({ text: 'Speak this', langCode: pair.targetLanguageCode.split('-')[0], voiceName: 'Kore' });
     expect({ artifactRaw: artifact.llmRawResponse, toolRaw: tool.llmRawResponse }).toMatchSnapshot();
+  });
+});
+
+describe('actual tutor hook suggestion translation contract', () => {
+  it('translates from the STT language, deduplicates and attaches to the last completed assistant', async () => {
+    useMaestroStore.getState().setSettings(previous => ({ ...previous, stt: { ...previous.stt, language: pair.targetLanguageCode } }));
+    ports.translate.mockResolvedValue({ translatedText: 'Translation' });
+    const h = harness([message('a'), message('pending', { thinking: true })]);
+    await act(async () => { await h.result.current.handleCreateSuggestion('Original'); });
+    await act(async () => { await h.result.current.handleCreateSuggestion('Original'); });
+    expect(ports.translate).toHaveBeenCalledWith('Original', pair.targetLanguageName, pair.nativeLanguageName);
+    expect(useMaestroStore.getState().replySuggestions).toEqual([{ target: 'Original', native: 'Translation' }]);
+    expect(useMaestroStore.getState().messages[0].replySuggestions).toEqual([{ target: 'Original', native: 'Translation' }]);
+    expect(useMaestroStore.getState().lastFetchedSuggestionsFor).toBe('a');
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+    expect(h.config.handleToggleSuggestionModeRef?.current).toHaveBeenCalledTimes(2);
+    expect(h.config.handleToggleSuggestionModeRef?.current).toHaveBeenLastCalledWith(false);
+  });
+
+  it('releases creation activity and exits suggestion mode on translation failure', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    ports.translate.mockRejectedValue(new Error('translation'));
+    const h = harness([]);
+    await act(async () => { await h.result.current.handleCreateSuggestion('Original'); });
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ role: 'error', text: 'error.translationFailed' });
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+    expect(h.config.handleToggleSuggestionModeRef?.current).toHaveBeenCalledWith(false);
   });
 });
 

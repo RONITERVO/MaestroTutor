@@ -1,11 +1,12 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { ConversationDiagnostics } from './conversationContracts';
 import type { AppSettings, RecordedUtterance } from '../../../core/types';
 import type { UseTutorConversationConfig, UseTutorConversationReturn, MutableValue } from './conversationContracts';
 import type { processMediaForUpload as processMedia } from '../../vision';
-import { logSttFlow } from '../../../shared/utils/sttFlowDebug';
 
 export interface UserMessagePorts extends Pick<UseTutorConversationConfig, 't' | 'addMessage' | 'captureSnapshot' | 'claimRecordedUtterance'> {
+  diagnostics: Pick<ConversationDiagnostics, 'logSttFlow'>;
   attachedImageBase64: string | null;
   attachedImageMimeType: string | null;
   attachedFileName: string | null;
@@ -19,6 +20,7 @@ export interface UserMessagePorts extends Pick<UseTutorConversationConfig, 't' |
 /** Capture and assemble a user message before request preparation. Captured
  * render values and mutable speech ownership are intentionally distinct ports. */
 export function createUserMessageCoordinator(ports: UserMessagePorts) {
+  const { logSttFlow } = ports.diagnostics;
   const { t, addMessage, captureSnapshot, claimRecordedUtterance, attachedImageBase64,
     attachedImageMimeType, attachedFileName, recordedUtterancePendingRef,
     sendWithFileUploadInProgressRef, setSendPrep, processMediaForUpload, INLINE_CAP_AUDIO } = ports;
@@ -120,7 +122,7 @@ export function createUserMessageCoordinator(ports: UserMessagePorts) {
         });
         userImageToProcessStorageOptimizedBase64 = optimized.dataUrl;
         userImageToProcessStorageOptimizedMimeType = optimized.mimeType;
-      } catch {}
+      } catch { }
     }
 
     userMessageId = addMessage({

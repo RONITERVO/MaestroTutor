@@ -5,11 +5,28 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error Development-only source scanner, also usable as a CLI.
-import { auditCoreBoundaries, inspectCoreSource } from '../../scripts/core-boundaries.mjs';
+import { auditChatCoordinatorBoundaries, auditCoreBoundaries, inspectCoreSource } from '../../scripts/core-boundaries.mjs';
 
 describe('Core architecture boundary', () => {
   it('keeps the whole Core dependency graph independent of browser adapters', () => {
     expect(auditCoreBoundaries()).toEqual([]);
+  });
+  it('keeps chat coordinators independent of React, store and device diagnostics', () => {
+    expect(auditChatCoordinatorBoundaries()).toEqual([]);
+  });
+  it('follows coordinator-to-coordinator imports and rejects an indirect store dependency', () => {
+    const root = mkdtempSync(join(tmpdir(), 'maestro-chat-boundary-'));
+    try {
+      mkdirSync(join(root, 'src/features/chat/coordinators'), { recursive: true });
+      mkdirSync(join(root, 'src/shared'), { recursive: true });
+      mkdirSync(join(root, 'src/store'), { recursive: true });
+      writeFileSync(join(root, 'src/features/chat/coordinators/send.ts'), 'export * from "./capture";');
+      writeFileSync(join(root, 'src/features/chat/coordinators/capture.ts'), 'import "../../../shared/log";');
+      writeFileSync(join(root, 'src/shared/log.ts'), 'import "../store";');
+      writeFileSync(join(root, 'src/store/index.ts'), 'export {};');
+      expect(auditChatCoordinatorBoundaries(root).map((item: { reason: string }) => item.reason))
+        .toEqual(['Runtime boundary reaches adapter: src/store/index.ts']);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
   it.each(['window.addEventListener("pagehide", fn)', 'document.visibilityState', 'localStorage.getItem("key")',
     'globalThis.window', 'globalThis["indexedDB"]', 'new AudioContext()', 'const { navigator } = globalThis',
@@ -38,7 +55,7 @@ describe('Core architecture boundary', () => {
       writeFileSync(join(root, 'src/api/client.ts'), 'export {};');
       const violations = auditCoreBoundaries(root);
       expect(violations.map((item: { reason: string }) => item.reason)).toEqual([
-        'Browser runtime reference: localStorage', 'Browser package: react', 'Browser package: @firebase/app', 'Core reaches adapter: src/api/client.ts',
+        'Browser runtime reference: localStorage', 'Browser package: react', 'Browser package: @firebase/app', 'Runtime boundary reaches adapter: src/api/client.ts',
       ]);
       expect(violations[0].chain).toEqual(['src/core-sdk/index.ts', 'src/shared/barrel.ts', 'src/shared/hidden.ts']);
     } finally { rmSync(root, { recursive: true, force: true }); }
