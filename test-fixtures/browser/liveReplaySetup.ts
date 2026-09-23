@@ -3,7 +3,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { maestroFirebaseService } from '../../src/services/firebase/maestroFirebaseService';
 import { googleAuthService } from '../../src/services/auth/googleAuthService';
 import { useMaestroStore } from '../../src/store';
-import { exportTurnTimings } from '../../src/core-sdk/turnTiming';
+import { exportTurnTimings } from '../../src/platform/browser/turnTiming';
 
 export async function prepare(email: string, password: string, sttMode = false) {
   if (!import.meta.env.DEV || import.meta.env.VITE_FIREBASE_PROJECT_ID !== 'chatwithmaestro-staging') {
