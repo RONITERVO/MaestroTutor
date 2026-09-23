@@ -11,8 +11,15 @@ export interface StrictParsedTutorResponse {
 }
 
 const TUTOR_FENCE_OPEN_REGEX = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/;
-const INLINE_ARTIFACT_START_REGEX = /`{3,}|~{3,}|<(?:\/?[a-z]|!|\?xml)/i;
 const MARKUP_LINE_TAG_REGEX = /<\/?[a-z][\w:-]*(?:\s+[^<>]*)?\/?>/i;
+// Recognize complete tags and unfinished artifact roots, while leaving prose
+// such as "x <alpha" alone until there is evidence of actual markup.
+const INLINE_ARTIFACT_START_REGEX = new RegExp(
+  '`{3,}|~{3,}|' + MARKUP_LINE_TAG_REGEX.source
+    + '|<!--|<!doctype\\b|<!\\[CDATA\\[|<\\?xml\\b'
+    + '|<\\/?(?:svg|html|head|body|main|section|article|aside|nav|div|canvas|button|form|table|ul|ol|script|style|template)\\b',
+  'i',
+);
 const MARKUP_DECLARATION_OR_COMMENT_REGEX = /<!--|-->|^<!doctype\b|^<!\[CDATA\[|^\]\]>$|^<\?xml\b|^\?>$/i;
 const MARKUP_ATTRIBUTE_ONLY_LINE_REGEX = /^(?:[a-z_:][\w:.-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>/]+)\s*)+\/?>?$/i;
 const MARKUP_STYLE_DECLARATION_LINE_REGEX = /^[a-z-]+\s*:\s*[^;]+;?$/i;

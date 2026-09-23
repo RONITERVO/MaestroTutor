@@ -88,10 +88,11 @@ describe('tutor response parsing', () => {
   });
 
   it('keeps punctuation, comparisons and inline code in ordinary translations', () => {
-    const response = 'Un exemple\n[en] Use `hello`, [brackets], ~waves~ & 1 < 2!';
-    expect(formatStreamingTutorDraftText(response, 'en')).toBe(response.replace('[en]', '[EN]'));
+    const response = 'Un exemple\n[en] Use `hello`, [brackets], ~waves~ & 1 < 2 or x <alpha!\nMerci\n[en] Thank you';
+    expect(formatStreamingTutorDraftText(response, 'en')).toBe(response.replace(/\[en\]/g, '[EN]'));
     expect(parseStrictTutorResponseText(response, 'en').translations).toEqual([
-      { target: 'Un exemple', native: 'Use `hello`, [brackets], ~waves~ & 1 < 2!' },
+      { target: 'Un exemple', native: 'Use `hello`, [brackets], ~waves~ & 1 < 2 or x <alpha!' },
+      { target: 'Merci', native: 'Thank you' },
     ]);
   });
 });
