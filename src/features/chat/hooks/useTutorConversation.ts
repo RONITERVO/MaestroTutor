@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+
+import { REENGAGEMENT_PROMPT } from '../../../core/config/prompts';
 /**
  * useTutorConversation - The main orchestration hook for the Maestro tutor.
  * 
@@ -49,7 +51,7 @@ import {
   normalizeSuggestionCreatorToolRequest as normalizeCoreSuggestionCreatorToolRequest,
 } from '../../../core-sdk/chat/suggestionAftersteps';
 import { runMaestroImageGeneration } from '../../../core-sdk/chat/imageGeneration';
-import { ART_STYLE_REFERENCE_TEXT } from '../../../core-sdk/chat/artStyleReference';
+import { deriveBrowserTutorHistory } from '../../../core-sdk/chat/history';
 import {
   buildUploadedAttachmentState,
   inferUploadedAttachmentTargetsForMimeType,
@@ -2219,10 +2221,10 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
 
       switch (messageType) {
         case 'image-reengagement':
-          geminiPromptText = "...";
+          geminiPromptText = REENGAGEMENT_PROMPT;
           break;
         case 'conversational-reengagement':
-          geminiPromptText = "...";
+          geminiPromptText = REENGAGEMENT_PROMPT;
           imageForGeminiContextBase64 = undefined;
           imageForGeminiContextMimeType = undefined;
           break;
@@ -2368,14 +2370,11 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
         console.warn('Failed to ensure Maestro avatar URIs:', e);
       }
 
-      const derivedHistory = deriveHistoryForApi(historySubsetForSendFinal, {
+      const derivedHistory = deriveBrowserTutorHistory(historySubsetForSendFinal, {
         maxMessages: computeMaxMessagesForArray(historySubsetForSendFinal.filter((m: ChatMessage) => m.role === 'user' || m.role === 'assistant')),
         maxMediaToKeep: MAX_MEDIA_TO_KEEP,
         contextSummary: resolveBookmarkContextSummary() || undefined,
         globalProfileText,
-        // Text turns (and now recently also audio turn transcript) are the ones that can emit an artifact.
-        // The image-generation path might pick this up. But this must be included at least on text turns with Maestro.
-        artStyleReferenceText: ART_STYLE_REFERENCE_TEXT,
         avatarOverlayFileUri,
         avatarOverlayMimeType,
       });

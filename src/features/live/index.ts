@@ -7,3 +7,4 @@
  */
 export { useLiveSessionController } from './hooks/useLiveSessionController';
 export { useSilentObserverController } from './hooks/useSilentObserverController';
+export { buildLiveSystemInstruction } from './utils/liveSystemInstruction';

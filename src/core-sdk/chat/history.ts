@@ -1,8 +1,10 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { formatLearnerProfileContext, formatConversationSummary } from '../../core/config/prompts';
+
 import { MAX_MEDIA_TO_KEEP } from '../../core/config/app';
-import { ART_STYLE_REFERENCE_MAX_CHARS } from './artStyleReference';
+import { ART_STYLE_REFERENCE_MAX_CHARS, ART_STYLE_REFERENCE_TEXT } from './artStyleReference';
 import type { ChatMessage } from '../../core/types';
 import { selectUploadedAttachmentParts } from './uploadedAttachmentVariants';
 
@@ -127,10 +129,10 @@ export const deriveHistoryForApi = (
 
   const contextParts: string[] = [];
   if (globalProfileText?.trim()) {
-    contextParts.push(`Learner Profile (global):\n${globalProfileText.trim().slice(0, 10_000)}\nEND OF GLOBAL PROFILE MEMORY.`);
+    contextParts.push(formatLearnerProfileContext(globalProfileText.trim().slice(0, 10_000)));
   }
   if (contextSummary?.trim()) {
-    contextParts.push(`Conversation Summary:\n${contextSummary.trim().slice(0, 10_000)}`);
+    contextParts.push(formatConversationSummary(contextSummary.trim().slice(0, 10_000)));
   }
   // Art direction goes last, and carries no framing beyond its own opening
   // line: it is reference material the tutor may drift within, not a rule.
@@ -151,3 +153,14 @@ export const deriveHistoryForApi = (
   }
   return history;
 };
+
+/** Browser text-chat compatibility policy, exercised by the provider contract tests.
+ * Headless and Live callers intentionally use deriveHistoryForApi without this reference.
+ */
+export const deriveBrowserTutorHistory = (
+  history: ChatMessage[],
+  options: Omit<DeriveHistoryOptions, 'artStyleReferenceText'>,
+): DerivedHistoryItem[] => deriveHistoryForApi(history, {
+  ...options,
+  artStyleReferenceText: ART_STYLE_REFERENCE_TEXT,
+});

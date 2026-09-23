@@ -132,6 +132,22 @@ const createHarness = (overrides: {
 
 describe('managed Live gateway connection', () => {
   afterEach(() => { vi.useRealTimers(); });
+  it('preserves the ticket instruction and configuration when connecting the provider', async () => {
+    const h = createHarness();
+    h.billing.config = {
+      systemInstruction: { parts: [{ text: 'Exact words.\n\n[FI] Ääkköset — 日本語' }] },
+      responseModalities: ['AUDIO'], inputAudioTranscription: {}, outputAudioTranscription: {},
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
+      thinkingConfig: { thinkingBudget: 0 },
+    };
+    const original = structuredClone(h.billing.config);
+    const connect = vi.spyOn(h.provider, 'connect');
+    await h.authenticate();
+    assert.equal(connect.mock.calls.length, 1);
+    assert.deepEqual((connect.mock.calls[0][0] as any).config, original);
+    assert.deepEqual(h.billing.config, original);
+    await h.close();
+  });
   it('discards queued and late automatic-VAD tail audio as soon as the model replies', async () => {
     const h = createHarness({ sleep: () => new Promise(() => undefined) });
     await h.authenticate();

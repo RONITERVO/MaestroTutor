@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+
+import { buildTranslationPrompt } from '../../core/config/prompts';
 import { ThinkingLevel } from '@google/genai';
 import { debugLogService } from '../../core-sdk/diagnostics';
 import { getGeminiModels } from '../../core/config/models';
@@ -613,7 +615,7 @@ export const translateText = async (
   options: { aiClient?: CoreGeminiClient; lifecycleHooks?: GeminiRequestLifecycleHooks } = {},
 ) => {
   const ai = options.aiClient || await (await import('./client')).getAi();
-  const prompt = `Translate the following text from ${from} to ${to}. Return ONLY the translation. Text: "${text}"`;
+  const prompt = buildTranslationPrompt(text, from, to);
   const model = getGeminiModels().text.translation;
   const fallbackModel = resolveFallbackTextModel(model);
 

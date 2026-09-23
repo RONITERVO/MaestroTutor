@@ -8,10 +8,10 @@ import { createLanguagePairObject } from '../../shared/utils/languageUtils';
 import type { ChatMessage } from '../../core/types';
 import { generateGeminiResponse, translateText } from '../../api/gemini/generative';
 import { runReplySuggestions } from '../chat/suggestions';
-import { deriveHistoryForApi } from '../chat/history';
+import { deriveBrowserTutorHistory } from '../chat/history';
 import { ART_STYLE_REFERENCE_TEXT } from '../chat/artStyleReference';
 import { buildCompactAssistantHistoryText } from '../chat/assistantMessageContext';
-import { buildLiveSystemInstruction } from '../../features/live/utils/liveSystemInstruction';
+import { buildLiveSystemInstruction } from '../../features/live';
 import { buildLiveSttSystemInstruction } from '../media/liveSessionInstructions';
 import { buildTriggeredTtsSystemInstruction } from '../media/triggeredTts';
 import { runCoreAudioNoteGeneration } from '../media/audioNoteGeneration';
@@ -94,8 +94,8 @@ describe('Maestro model input contracts', () => {
     it(`preserves browser text request parts and configuration (${target}/${native})`, async () => {
       const pair = pairFor(target, native);
       const ai = makeTextClient();
-      await generateGeminiResponse('gemini-3.6-flash', text, deriveHistoryForApi(history, {
-        globalProfileText: profile, contextSummary: summary, artStyleReferenceText: ART_STYLE_REFERENCE_TEXT,
+      await generateGeminiResponse('gemini-3.6-flash', text, deriveBrowserTutorHistory(history, {
+        globalProfileText: profile, contextSummary: summary,
         avatarOverlayFileUri: 'files/avatar', avatarOverlayMimeType: 'image/jpeg',
       }), { aiClient: ai, systemInstruction: prompts.composeMaestroSystemInstruction(pair.baseSystemPrompt),
         currentFileParts: [{ fileUri: 'files/current-document', mimeType: 'application/pdf' }], useGoogleSearch: true });

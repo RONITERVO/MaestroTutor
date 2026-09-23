@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { PROMPT_CONTEXT_TEXT } from '../../core/config/prompts';
+
 import type { ChatMessage } from '../../core/types';
 import { parseAssistantResponseForAttachment } from './assistantResponseAttachments';
 import { decodeTextFromDataUrl, isTextLikeAttachment } from './fileAttachments';
@@ -92,7 +94,7 @@ const truncateMultiline = (value: string, maxChars: number): string => {
   const normalized = normalizeMultiline(value);
   if (!normalized) return '';
   if (normalized.length <= maxChars) return normalized;
-  return `${normalized.slice(0, maxChars).trimEnd()}\n... [truncated for compact history]`;
+  return `${normalized.slice(0, maxChars).trimEnd()}${PROMPT_CONTEXT_TEXT.compactTruncation}`;
 };
 
 const truncatePlainSegment = (value: string, maxChars: number): string => {
@@ -224,7 +226,7 @@ const buildArtifactPreviewBody = (artifact: CompactAssistantArtifact): string =>
   if (truncatedPreview) return truncatedPreview;
 
   const lines = [
-    '[compact history artifact preview unavailable]',
+    PROMPT_CONTEXT_TEXT.compactArtifactUnavailable,
     artifact.fileName ? `file: ${artifact.fileName}` : '',
     artifact.mimeType ? `mimeType: ${artifact.mimeType}` : '',
     artifact.source ? `source: ${artifact.source}` : '',
@@ -266,7 +268,7 @@ const joinAssistantContextParts = (visibleText: string, extraParts: Array<string
     break;
   }
 
-  const truncationSuffix = '\n... [truncated for compact history]';
+  const truncationSuffix = PROMPT_CONTEXT_TEXT.compactTruncation;
   if (!wasTruncated) {
     return appended.map(segment => segment.text).join('\n\n').trim();
   }
@@ -307,7 +309,7 @@ export const serializeCompactAssistantArtifactBlock = (artifact: CompactAssistan
   const fenceLabel = getFenceLabelForArtifact(artifact.mimeType, artifact.fileName);
   const fence = getFenceToken(body);
   const header = [
-    '[Earlier assistant turn artifact preview; compact history only]',
+    PROMPT_CONTEXT_TEXT.compactArtifact,
     artifact.fileName ? `file: ${artifact.fileName}` : '',
     artifact.mimeType ? `mimeType: ${artifact.mimeType}` : '',
     artifact.source ? `source: ${artifact.source}` : '',
@@ -343,7 +345,7 @@ export const serializeCompactAssistantToolBlock = (toolRequest: CompactAssistant
   const fence = getFenceToken(payload);
 
   return [
-    '[Earlier assistant turn used this tool; compact history only]',
+    PROMPT_CONTEXT_TEXT.compactTool,
     `${fence}maestro-tool`,
     payload,
     fence,

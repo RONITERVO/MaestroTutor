@@ -21,8 +21,8 @@ android {
         applicationId "com.ronitervo.maestrotutor"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 82
-        versionName "2.6.8"
+        versionCode 83
+        versionName "2.6.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     androidResources {

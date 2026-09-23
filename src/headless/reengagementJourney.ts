@@ -1,6 +1,8 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { REENGAGEMENT_PROMPT } from '../core/config/prompts';
+
 import type { HeadlessClient } from './client';
 import { runHeadlessChatTurn } from './chatJourney';
 import { runHeadlessSuggestionAftersteps } from './suggestionJourney';
@@ -11,7 +13,7 @@ export const runHeadlessReengagement = async (client: HeadlessClient, input: {
   runSuggestionAftersteps?: boolean;
 }) => {
   const turn = await runHeadlessChatTurn(client, {
-    text: '...',
+    text: REENGAGEMENT_PROMPT,
     languagePairId: input.languagePairId,
     persistUserMessage: false,
     requireInvariants: true,
@@ -26,7 +28,7 @@ export const runHeadlessReengagement = async (client: HeadlessClient, input: {
   return {
     operationId: turn.operationId,
     emptyUserRequest: true,
-    providerPrompt: '...',
+    providerPrompt: REENGAGEMENT_PROMPT,
     userMessagePersisted: false,
     autoTriggered: true,
     turn,
