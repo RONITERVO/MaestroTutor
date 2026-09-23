@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ChatMessage } from '../../../core/types';
 import { getGlobalProfileDB } from '../../session';
-import { buildCoreLiveSystemInstruction } from '../../../core-sdk/chat/liveContext';
+import { buildCoreLiveSystemInstruction } from '../../../platform/browser/assistantArtifacts';
 
 export interface BuildLiveSystemInstructionParams {
   basePrompt: string;

@@ -3,7 +3,7 @@
 
 import type { ChatMessage } from '../../core/types';
 import { decodeTextFromDataUrl, normalizeAttachmentMimeType } from './fileAttachments';
-import { sanitizeSvgAnimationStructure } from './sanitizeSvgAnimationStructure';
+import { sanitizeSvgArtifact, type AssistantArtifactOptions } from './artifactOptions';
 
 export type SuggestionToolKind = NonNullable<ChatMessage['maestroToolKind']>;
 
@@ -70,7 +70,7 @@ const toUtf8Base64DataUrl = (mimeType: string, text: string): string => {
 
 const truncate = (value: string, max: number): string => value.trim().slice(0, max);
 
-export const normalizeSuggestionCreatorArtifact = (artifact: unknown): NormalizedSuggestionArtifact | null => {
+export const normalizeSuggestionCreatorArtifact = (artifact: unknown, options?: AssistantArtifactOptions): NormalizedSuggestionArtifact | null => {
   if (!artifact || typeof artifact !== 'object' || Array.isArray(artifact)) return null;
   const candidate = artifact as SuggestionCreatorArtifact;
   const rawContent = typeof candidate.content === 'string' ? candidate.content : '';
@@ -86,7 +86,7 @@ export const normalizeSuggestionCreatorArtifact = (artifact: unknown): Normalize
     mimeType = mimeType || inferMimeTypeFromDataUrl(dataUrl) || '';
     if (mimeType === 'image/svg+xml') {
       const decoded = decodeTextFromDataUrl(dataUrl);
-      if (decoded) dataUrl = toUtf8Base64DataUrl(mimeType, sanitizeSvgAnimationStructure(decoded));
+      if (decoded) dataUrl = toUtf8Base64DataUrl(mimeType, sanitizeSvgArtifact(decoded, options));
     }
   } else {
     mimeType = mimeType || normalizeAttachmentMimeType({
@@ -95,7 +95,7 @@ export const normalizeSuggestionCreatorArtifact = (artifact: unknown): Normalize
     });
     let content = rawContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
     if (!content || (mimeType.startsWith('image/') && mimeType !== 'image/svg+xml')) return null;
-    if (mimeType === 'image/svg+xml') content = sanitizeSvgAnimationStructure(content);
+    if (mimeType === 'image/svg+xml') content = sanitizeSvgArtifact(content, options);
     dataUrl = toUtf8Base64DataUrl(mimeType || 'text/plain', content);
   }
 

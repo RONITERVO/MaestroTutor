@@ -9,6 +9,7 @@ import type { ChatMessage, LanguagePair, ReplySuggestion } from '../../core/type
 import { groupAdjacentRoleItems } from '../../shared/utils/conversationTurns';
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clientSource';
+import type { AssistantArtifactOptions } from './artifactOptions';
 import { buildCompactAssistantHistoryText } from './assistantMessageContext';
 
 export interface ReplySuggestionsInput {
@@ -20,7 +21,7 @@ export interface ReplySuggestionsInput {
   responseSource?: 'chat' | 'live';
 }
 
-export type ReplySuggestionsOptions = GeminiClientSource & {
+export type ReplySuggestionsOptions = GeminiClientSource & AssistantArtifactOptions & {
   runtime?: CoreRuntime;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   retries?: number;
@@ -80,7 +81,7 @@ const normalizeSuggestions = (value: unknown): ReplySuggestion[] => {
   return suggestions;
 };
 
-export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): string => {
+export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput, options?: AssistantArtifactOptions): string => {
   const historyForPrompt = groupAdjacentRoleItems(
     input.history.filter(message => message.role === 'user' || message.role === 'assistant'),
   )
@@ -96,7 +97,7 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput): strin
       }
       const tutorText = group.items
         .map(message => (
-          buildCompactAssistantHistoryText(message)
+          buildCompactAssistantHistoryText(message, options)
           || message.translations?.[0]?.target
           || message.rawAssistantResponse
           || message.text
@@ -137,7 +138,7 @@ export const runReplySuggestions = async (
 ): Promise<ReplySuggestionsResult> => {
   const runtime = options.runtime || createCoreRuntime();
   const operationId = runtime.ids.create('suggestions');
-  const prompt = buildReplySuggestionsPrompt(input);
+  const prompt = buildReplySuggestionsPrompt(input, options);
   const retries = Math.max(0, Math.min(5, Math.floor(options.retries ?? 2)));
   runtime.events.emit({
     operationId,

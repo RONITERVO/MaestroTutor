@@ -7,6 +7,8 @@ import { runReplySuggestions } from '../../api/gemini/journeys';
 import { decodeTextFromDataUrl } from '../../core-sdk/chat/fileAttachments';
 import type { CoreGeminiClient } from '../../core-sdk/managedGeminiClient';
 import type { LanguagePair } from '../../core/types';
+import { parseAssistantResponseForAttachment as parseCoreAttachment } from '../../core-sdk/chat/assistantResponseAttachments';
+import { normalizeSuggestionCreatorArtifact as normalizeCoreArtifact } from '../../core-sdk/chat/suggestionAftersteps';
 
 const svg = '<svg xmlns="http://www.w3.org/2000/svg"><style>@media (min-width:1px){.spin {animation: spin 1s infinite}}</style><g transform="translate(10 20)" class="spin"><circle r="3"/></g><rect transform="scale(2)"><animateTransform attributeName="transform" type="rotate"/></rect></svg>';
 const response = `Hola\n[en] Hello\n\`\`\`svg\n${svg}\n\`\`\``;
@@ -43,5 +45,17 @@ describe('browser SVG artifact contract before adapter extraction', () => {
     vi.stubGlobal('DOMParser', undefined);
     try { expect(decodeTextFromDataUrl(artifact(svg)!.dataUrl)).toBe(svg); }
     finally { vi.unstubAllGlobals(); }
+  });
+  it('keeps headless SVG data unchanged without consulting ambient DOM constructors', () => {
+    const parse = vi.fn(() => { throw new Error('Core must not access DOMParser'); });
+    const serialize = vi.fn(() => { throw new Error('Core must not access XMLSerializer'); });
+    vi.stubGlobal('DOMParser', parse);
+    vi.stubGlobal('XMLSerializer', serialize);
+    try {
+      expect(decodeTextFromDataUrl(parseCoreAttachment(response).attachment!.dataUrl)).toBe(svg);
+      expect(decodeTextFromDataUrl(normalizeCoreArtifact({ mimeType: 'image/svg+xml', content: svg })!.dataUrl)).toBe(svg);
+      expect(parse).not.toHaveBeenCalled();
+      expect(serialize).not.toHaveBeenCalled();
+    } finally { vi.unstubAllGlobals(); }
   });
 });

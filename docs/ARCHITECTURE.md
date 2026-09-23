@@ -17,6 +17,7 @@ tests are the foundation for incremental changes.
 | Browser model cache, URL migration and remote refresh | `src/core/config/models.ts` | Compatibility facade over the registry; owns localStorage and fetch lifecycle. |
 | Timing reports and bounded event history | `src/core-sdk/turnTiming.ts` | Recorder factory with an optional storage port; no import-time browser effects. |
 | Timing persistence and visibility/page-hide flushing | `src/platform/browser/turnTiming.ts` | One browser recorder with the existing storage key, schema and listeners. |
+| SVG animation repair and browser artifact/context composition | `src/platform/browser/sanitizeSvgAnimationStructure.ts`, `assistantArtifacts.ts` | The browser supplies an explicit `sanitizeSvg` function to Core artifact parsing and history builders. Headless preserves raw SVG. |
 | UI, activity tokens, device capture/playback, user actions | `src/features/` | Features expose public APIs; hooks bind state and hardware to shared operations. Some hooks still own too much orchestration, detailed below. |
 | Filesystem profiles, fixtures, CLI/RPC and artifact output | `src/headless/` | Calls Core with explicit clients and adapters. It is a separate application shell. |
 | Prices, usage calculations, Live controls and protocol contracts | `shared/pricing/`, `shared/billing/`, `shared/live*` | Shared pure contracts/math. Browser estimates do not authorize backend charges. |
@@ -26,7 +27,8 @@ tests are the foundation for incremental changes.
 
 Core imports may reach pure `src/core/config`, `src/core/types`, or shared helpers.
 Folder names alone do not prove purity: the dependency check follows runtime
-imports and re-exports, including literal dynamic imports and `@/` aliases.
+imports and re-exports, including literal dynamic imports, `@/` aliases and
+baseUrl imports. Browser-only package detection includes scoped Firebase modules.
 
 ## Findings and priority
 
@@ -42,6 +44,7 @@ claim that every function is now independently tested.
 | 1 — addressed here | Core text/suggestions/image journeys imported browser `api/gemini` implementations. Those implementations selected browser access implicitly when no client was supplied; image generation also reached localStorage through cost tracking. Headless isolation depended on avoiding dormant paths. | Provider algorithms now live in Core with required typed client sources. Browser facades supply access and usage sinks. Characterization tests preserve selection timing, error behavior, stream deltas, image retries and usage order; existing provider payload snapshots remain unchanged. |
 | 1 — addressed here | `core/config/models.ts` combined shared values with browser cache and remote refresh. Moving only Gemini transports would leave Core transitively coupled to browser storage. | One pure registry now owns values/validation; the old configuration module remains the browser persistence facade. Tests preserve cache recovery, invalid data handling, URL migration and remote update behavior. |
 | 1 — addressed here | `core-sdk/turnTiming.ts` read localStorage and registered browser lifecycle listeners at import time. Its singleton lifetime was inseparable from persistence. | Core creates independent recorders; the browser owns the singleton and lifecycle hooks. Existing timing tests now exercise the browser facade, with additional tests for recorder isolation, legacy data, debounce and lifecycle flushing. |
+| 1 — addressed here | Core SVG normalization constructed DOMParser/XMLSerializer when available and silently returned raw SVG in headless mode. A first guard pass missed those globals. | The unchanged DOM algorithm now belongs to the browser adapter, passed explicitly to artifact parsing, suggestions and Live context. Browser snapshots captured before extraction freeze serialized attachment bytes and model context; a headless test rejects ambient DOM access. The guard now detects both constructors. |
 | 2 — next | `features/chat/hooks/useTutorConversation.ts` coordinates attachment uploads, provider calls, suggestion reuse, activity tokens, summaries/profile writes, generated artifacts/tools and history persistence. Its `fetchAndSetReplySuggestions` path (~300 lines) has no direct hook-level characterization tests. | Characterize the actual hook first: direct/sibling suggestion reuse, structured-tail regeneration, Live artifact/tool splitting, loading-token release, history/profile save order and errors. Then extract a suggestion coordinator with explicit state/persistence/tool ports. Keep React/store refs in the adapter. Do not merely relocate the whole hook. |
 | 2 — next | `features/speech/hooks/useGeminiLiveConversation.ts` combines setup, capture, transcript accumulation, codec/worklet state, provider callbacks, playback and cleanup. Existing Core speech gates, packetizers and finalizers already own important parts of this behavior. | Add hook-level fixtures for stop during connect/decode, stale session callbacks, final transcript flush, capture handoff and playback drain. Then extract one session controller using existing Core primitives. Preserve session IDs and cleanup ordering. Physical capture/playback still needs device proof. |
 | 3 | Suggestion artifact/tool aftersteps exist in both the chat hook and `headless/suggestionJourney.ts`. Shared normalization/dispatch already exists in `core-sdk/chat/suggestionAftersteps.ts`, but raw context and persistence choices differ by mode. | Document and freeze the differences before extracting more shared decisions. Browser Live compact raw text and headless fallback raw text must not be silently harmonized. Share decisions only when their inputs and effects are equivalent. |
@@ -63,6 +66,10 @@ claim that every function is now independently tested.
   it into per-profile or per-request configuration.
 - Timing retains `maestro.turn-timings.v1`, schema version 1, legacy clock migration,
   30 reports, 120 events, one-second write debounce, and page-hide/hidden flushing.
+- SVG repair retains the existing browser serialization and raw headless content.
+  The `sanitizeSvg` port reaches suggestion and Live history so moving DOM code
+  does not change the artifact text sent back to the model. Text-only tutor
+  parsing consumes cleaned text and does not require SVG rendering capabilities.
 - Chat/profile persistence, attachment upload/reuse, Live media lifecycle, billing
   reservations and credit limits retain their existing owners and algorithms.
 
@@ -92,3 +99,23 @@ claim that every function is now independently tested.
 Deliver each next priority as its own reviewed, verified change. No new framework,
 repository-wide rewrite, formatting campaign or arbitrary file-size target is
 needed to follow this plan.
+
+## Existing behavior findings requiring separate decisions
+
+Review also identified four behaviors present in `a3a9187`, before these moves.
+They are recorded here rather than changed inside a behavior-preserving refactor:
+
+- The overall text timeout races the stream without itself aborting it. A separate
+  cancellation fix should characterize delayed chunks and usage/cleanup after a
+  deadline before changing stream lifetime.
+- Image context currently includes the first selected image part per history item.
+  Including additional parts changes model input and needs deliberate prompt
+  contract review, including multi-image and multi-variant fixtures.
+- The initial active registry shallowly shares nested defaults, and its getter
+  exposes those objects. Separating or freezing them should first cover callers
+  that retain references, then establish an explicit immutability contract.
+- Direct model setters retain untrimmed/empty string overrides; browser cache and
+  remote refresh validate input before calling the setter. Setter validation is
+  an API behavior change requiring invalid-input and migration tests.
+
+These are follow-up behavior changes, not regressions introduced by the extraction.

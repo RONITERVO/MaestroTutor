@@ -12,7 +12,8 @@ describe('Core architecture boundary', () => {
     expect(auditCoreBoundaries()).toEqual([]);
   });
   it.each(['window.addEventListener("pagehide", fn)', 'document.visibilityState', 'localStorage.getItem("key")',
-    'globalThis.window', 'globalThis["indexedDB"]', 'new AudioContext()', 'const { navigator } = globalThis'])
+    'globalThis.window', 'globalThis["indexedDB"]', 'new AudioContext()', 'const { navigator } = globalThis',
+    'new DOMParser()', 'new XMLSerializer()'])
   ('detects browser runtime access: %s', source => {
     expect(inspectCoreSource(source).violations.length).toBeGreaterThan(0);
   });
@@ -33,11 +34,11 @@ describe('Core architecture boundary', () => {
       mkdirSync(join(root, 'src/api'), { recursive: true });
       writeFileSync(join(root, 'src/core-sdk/index.ts'), 'export * from "../shared/barrel";');
       writeFileSync(join(root, 'src/shared/barrel.ts'), 'export const open = () => import("@/shared/hidden");');
-      writeFileSync(join(root, 'src/shared/hidden.ts'), 'import "react"; import "../api/client"; localStorage.getItem("key");');
+      writeFileSync(join(root, 'src/shared/hidden.ts'), 'import "react"; import "@firebase/app"; import "src/api/client"; localStorage.getItem("key");');
       writeFileSync(join(root, 'src/api/client.ts'), 'export {};');
       const violations = auditCoreBoundaries(root);
       expect(violations.map((item: { reason: string }) => item.reason)).toEqual([
-        'Browser runtime reference: localStorage', 'Browser package: react', 'Core reaches adapter: src/api/client.ts',
+        'Browser runtime reference: localStorage', 'Browser package: react', 'Browser package: @firebase/app', 'Core reaches adapter: src/api/client.ts',
       ]);
       expect(violations[0].chain).toEqual(['src/core-sdk/index.ts', 'src/shared/barrel.ts', 'src/shared/hidden.ts']);
     } finally { rmSync(root, { recursive: true, force: true }); }

@@ -68,6 +68,10 @@ both clients; browser cache loading and remote refresh stay in the configuration
 adapter. Turn timing uses a recorder factory; only the browser adapter owns
 localStorage and page lifecycle listeners.
 
+SVG animation repair is another explicit capability: browser artifact/context
+facades supply `sanitizeSvg`, while headless preserves its existing raw SVG data.
+Core must not discover DOMParser or XMLSerializer through ambient globals.
+
 Core uses portable runtime defaults such as timers, fetch, performance and
 crypto where a port is omitted. This does not imply every clock or source of
 randomness is injected. UI suggestion aftersteps and device capture/playback

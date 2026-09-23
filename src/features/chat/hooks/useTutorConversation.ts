@@ -46,9 +46,9 @@ import {
 import { runTutorTextTurn, runReplySuggestions, runMaestroImageGeneration } from '../../../api/gemini/journeys';
 import {
   executeSuggestionToolRequest,
-  normalizeSuggestionCreatorArtifact as normalizeCoreSuggestionCreatorArtifact,
   normalizeSuggestionCreatorToolRequest as normalizeCoreSuggestionCreatorToolRequest,
 } from '../../../core-sdk/chat/suggestionAftersteps';
+import { normalizeSuggestionCreatorArtifact as normalizeCoreSuggestionCreatorArtifact } from '../../../platform/browser/assistantArtifacts';
 import { deriveBrowserTutorHistory } from '../../../core-sdk/chat/history';
 import {
   buildUploadedAttachmentState,

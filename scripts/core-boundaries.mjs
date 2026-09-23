@@ -6,8 +6,9 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
 const browserGlobals = new Set(['window', 'document', 'navigator', 'localStorage', 'sessionStorage',
-  'indexedDB', 'AudioContext', 'webkitAudioContext', 'AudioWorkletNode', 'MediaRecorder', 'FileReader']);
-const browserPackage = /^(?:react(?:-dom)?(?:\/|$)|zustand(?:\/|$)|@capacitor(?:-firebase)?\/|firebase(?:\/|$))/;
+  'indexedDB', 'AudioContext', 'webkitAudioContext', 'AudioWorkletNode', 'MediaRecorder', 'FileReader',
+  'DOMParser', 'XMLSerializer']);
+const browserPackage = /^(?:react(?:-dom)?(?:\/|$)|zustand(?:\/|$)|@capacitor(?:-firebase)?\/|@?firebase(?:\/|$))/;
 const browserPath = /^src\/(?:api|features|platform|store|services|headless|app)\//;
 const normalize = path => path.replaceAll('\\', '/');
 const productionFile = file => /\.[cm]?[jt]sx?$/.test(file) && !/\.(?:test|spec)\./.test(file) && !file.endsWith('.d.ts');
@@ -74,9 +75,15 @@ export function auditCoreBoundaries(root = fileURLToPath(new URL('../', import.m
     for (const item of inspected.imports) {
       const flag = reason => violations.push({ file, line: item.line, reason, chain });
       if (browserPackage.test(item.specifier)) { flag(`Browser package: ${item.specifier}`); continue; }
-      if (!item.specifier.startsWith('.') && !item.specifier.startsWith('@/')) continue;
       const resolved = ts.resolveModuleName(item.specifier, absolute, options, ts.sys).resolvedModule?.resolvedFileName;
-      if (!resolved) { flag(`Unresolved local dependency: ${item.specifier}`); continue; }
+      if (!resolved) {
+        if (item.specifier.startsWith('.') || item.specifier.startsWith('@/') || item.specifier.startsWith('src/') || item.specifier.startsWith('shared/')) {
+          flag(`Unresolved local dependency: ${item.specifier}`);
+        }
+        continue;
+      }
+      // Resolve baseUrl imports too, but never traverse third-party implementation code.
+      if (resolved.includes('/node_modules/') || resolved.includes('\\node_modules\\')) continue;
       const target = normalize(relative(root, resolved));
       if (browserPath.test(target)) { flag(`Core reaches adapter: ${target}`); continue; }
       if (productionFile(target)) visit(resolve(resolved), [...chain, target]);

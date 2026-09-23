@@ -9,7 +9,8 @@ describe('Core turn timing recorder', () => {
   it('isolates clients without consulting browser storage', () => {
     vi.useFakeTimers();
     const getItem = vi.fn(() => { throw new Error('browser storage must not be read'); });
-    vi.stubGlobal('localStorage', { getItem });
+    const setItem = vi.fn(() => { throw new Error('browser storage must not be written'); });
+    vi.stubGlobal('localStorage', { getItem, setItem });
     const first = createTurnTimingRecorder();
     const second = createTurnTimingRecorder();
     first.beginTurnTiming('first', () => 0).linkGateway('gateway');
@@ -17,6 +18,7 @@ describe('Core turn timing recorder', () => {
     expect(JSON.parse(first.exportTurnTimings()).reports[0]).toMatchObject({ turnId: 'first', gatewaySessionId: 'gateway' });
     first.flushTurnTimings();
     expect(getItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it('reads the legacy schema and debounces writes using the original storage key', () => {

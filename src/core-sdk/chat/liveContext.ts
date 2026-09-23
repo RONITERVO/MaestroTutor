@@ -6,10 +6,11 @@ import { appendLiveHistoryContext, PROMPT_CONTEXT_TEXT } from '../../core/config
 import type { ChatMessage } from '../../core/types';
 import { groupAdjacentRoleItems } from '../../shared/utils/conversationTurns';
 import { buildCompactAssistantHistoryText } from './assistantMessageContext';
+import type { AssistantArtifactOptions } from './artifactOptions';
 import { deriveHistoryForApi } from './history';
 
 /** Shared live/observer context serialization used before the browser media adapter. */
-export const buildCoreLiveSystemInstruction = (input: {
+export const buildCoreLiveSystemInstruction = (input: AssistantArtifactOptions & {
   basePrompt: string;
   messages: ChatMessage[];
   contextSummary?: string;
@@ -31,6 +32,7 @@ export const buildCoreLiveSystemInstruction = (input: {
         const source = entry.messageId ? sourceMessagesById.get(entry.messageId) : undefined;
         return entry.role === 'assistant'
           ? (buildCompactAssistantHistoryText(source, {
+              sanitizeSvg: input.sanitizeSvg,
               includeArtifact: entry.messageId === latestAssistantEntryId,
               includeToolRequest: entry.messageId === latestAssistantEntryId,
             }) || entry.rawAssistantResponse || entry.text || PROMPT_CONTEXT_TEXT.assistantAttachment)
