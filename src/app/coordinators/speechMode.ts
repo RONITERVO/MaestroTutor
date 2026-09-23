@@ -5,7 +5,7 @@ import { STT_RESTART_DELAY_MS, type SpeechModePorts } from './contracts';
 
 /** User-driven language/microphone actions shared by the app's UI handoffs. */
 export const createSpeechModeActions = ({
-  pendingEnableRef,
+  pendingEnableRef, resetSilentObserverRef,
   isListening, stopListening, startListening, clearTranscript, settingsRef,
   selectedLanguagePairRef, setSettings, stopSilentObserverRef, setSttError, delay, warn,
 }: SpeechModePorts) => {
@@ -52,6 +52,8 @@ export const createSpeechModeActions = ({
     // The owner survives coordinator recreation and fences older continuations.
     if (pendingEnableRef.current !== null) {
       pendingEnableRef.current = null;
+      try { await resetSilentObserverRef.current(); }
+      catch (error) { warn('Failed to reset silent observer after cancelling STT start', error); }
       return;
     }
     // If enabled, turn it OFF (regardless of error state). This allows clearing stuck states.

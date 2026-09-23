@@ -4,40 +4,31 @@
 /** Owned-file validation and remote eviction. Quota transactions belong to fileQuota. */
 
 import { appConfig } from '../config';
-import { FieldPath } from 'firebase-admin/firestore';
 import { adminDb } from '../firebase';
 import {
   collectGeminiFileUris
 } from '../geminiPolicy';
 import { createHttpError } from '../http';
 import {
-  managedFileRef,
-  managedFilesCollection
+  managedFileRef
 } from '../managedData';
 import { getGeminiClient } from './client';
 import { hasManagedFileExpired, isNotFoundError, normalizeGeminiFileName } from './fileIdentity';
-import { markManagedFileDeleted } from './fileQuota';
+import { markManagedFileDeleted, UPLOAD_SLOT_LIFETIME_MS } from './fileQuota';
 import { queueManagedFileCleanupJobs } from './fileCleanupJobs';
+import { listActiveManagedFileSnapshots } from './fileInventory';
 
 const MAX_REFERENCED_FILE_URIS = 20;
 
 const listActiveManagedFilesForUser = async (uid: string) => {
-  const documents: FirebaseFirestore.QueryDocumentSnapshot[] = [];
-  let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined;
-  while (true) {
-    let query = managedFilesCollection(uid).where('deletedAt', '==', null)
-      .orderBy(FieldPath.documentId()).limit(200);
-    if (cursor) query = query.startAfter(cursor);
-    const page = await query.get();
-    documents.push(...page.docs);
-    if (page.size < 200) break;
-    cursor = page.docs[page.docs.length - 1];
-  }
+  const documents = await listActiveManagedFileSnapshots(uid);
   return documents.map((doc) => ({
     ref: doc.ref,
     name: typeof doc.data().name === 'string' ? doc.data().name as string : '',
     createdAt: Number(doc.data().createdAt || 0),
     lastCheckedAt: Number(doc.data().lastCheckedAt || 0),
+    processing: doc.data().state === 'processing',
+    cleanupPending: doc.data().cleanupPending === true,
   }));
 };
 
@@ -78,7 +69,8 @@ export const evictManagedFilesForUpload = async (uid: string, slotsNeeded = 1): 
   }
 
   const evictionCandidates = activeFiles
-    .filter((file) => file.name)
+    .filter((file) => file.name && (!file.processing || file.cleanupPending
+      || file.createdAt + UPLOAD_SLOT_LIFETIME_MS <= Date.now()))
     .sort((left, right) => {
       const leftKey = left.lastCheckedAt || left.createdAt || 0;
       const rightKey = right.lastCheckedAt || right.createdAt || 0;

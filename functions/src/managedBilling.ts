@@ -133,6 +133,26 @@ const listEntitlements = async (uid: string): Promise<EntitlementRecord[]> => {
   return snapshot.docs.map((doc: any) => doc.data() as EntitlementRecord);
 };
 
+const reconcileExpiredReservation = async (uid: string, reservationId: string, reservation: ReservationRecord): Promise<boolean> => {
+  try {
+    if (reservation.pendingSettlement) {
+      try {
+        await settleManagedReservation({ ...reservation.pendingSettlement, uid, reservationId });
+      } catch (error) {
+        // Deletion can claim the account before or during settlement. Its tombstone
+        // forbids charges, but must not block deletion or the sweep for other users.
+        if (Number((error as { status?: unknown })?.status) !== 409
+          || !(await accountDeletionClaimRef(uid).get()).exists) throw error;
+        await releaseManagedReservation(uid, reservationId, 'account-deleted');
+      }
+    } else await releaseManagedReservation(uid, reservationId, 'expired');
+    return true;
+  } catch (error) {
+    console.warn('[billing] Expired reservation recovery deferred.', { reservationId, error: String(error) });
+    return false;
+  }
+};
+
 export const sweepExpiredReservationsForUser = async (uid: string): Promise<void> => {
   const snapshot = await managedReservationsCollection(uid)
     .where('status', '==', 'active')
@@ -142,9 +162,7 @@ export const sweepExpiredReservationsForUser = async (uid: string): Promise<void
 
   for (const doc of snapshot.docs) {
     const reservation = doc.data() as ReservationRecord;
-    if (reservation.pendingSettlement) {
-      await settleManagedReservation({ ...reservation.pendingSettlement, uid, reservationId: doc.id });
-    } else await releaseManagedReservation(uid, doc.id, 'expired');
+    await reconcileExpiredReservation(uid, doc.id, reservation);
   }
 };
 
@@ -155,14 +173,14 @@ export const sweepExpiredReservations = async (limit = 50): Promise<number> => {
     .limit(clampLimit(limit, 50))
     .get();
 
+  let recoveredCount = 0;
   for (const doc of snapshot.docs) {
     const reservation = doc.data() as ReservationRecord;
-    if (reservation.pendingSettlement) {
-      await settleManagedReservation({ ...reservation.pendingSettlement, uid: reservation.uid, reservationId: doc.id });
-    } else await releaseManagedReservation(reservation.uid, doc.id, 'expired');
+    if (await reconcileExpiredReservation(reservation.uid, doc.id, reservation)) recoveredCount++;
   }
 
-  return snapshot.size;
+  // A failed full batch must not make the scheduler loop forever over the same rows.
+  return recoveredCount;
 };
 
 export const countExpiredReservations = async (): Promise<number> => {

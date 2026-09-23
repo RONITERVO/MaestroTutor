@@ -13,9 +13,9 @@ import {
   ensureManagedUserDocument,
   managedFileQuotaRef,
   managedFileRef,
-  managedFilesCollection,
   timestampFromMillis
 } from '../managedData';
+import { listActiveManagedFileSnapshots } from './fileInventory';
 
 const readActiveManagedFileCount = (value: unknown): number => {
   const parsed = Number(value);
@@ -24,7 +24,7 @@ const readActiveManagedFileCount = (value: unknown): number => {
 };
 
 // Longer than the Functions request lifetime, but finite after a crashed upload.
-const UPLOAD_SLOT_LIFETIME_MS = 15 * 60 * 1000;
+export const UPLOAD_SLOT_LIFETIME_MS = 15 * 60 * 1000;
 interface UploadSlot { id: string; expiresAt: number }
 const readUploadSlots = (value: unknown): UploadSlot[] => Array.isArray(value)
   ? value.filter((slot): slot is UploadSlot => typeof slot?.id === 'string' && Number.isFinite(slot.expiresAt))
@@ -38,16 +38,14 @@ export const reserveManagedUploadSlot = async (uid: string): Promise<string> => 
     const [summarySnapshot, deletionClaim, files] = await Promise.all([
       transaction.get(summaryRef),
       transaction.get(accountDeletionClaimRef(uid)),
-      // The query also repairs anonymous counters left by older crashed uploads.
-      // cap+1 is enough to deny admission without reading an unbounded history.
-      transaction.get(managedFilesCollection(uid).where('deletedAt', '==', null)
-        .limit(appConfig.managedMaxActiveFilesPerUser + 1)),
+      // Include legacy records and stop once enough active files deny admission.
+      listActiveManagedFileSnapshots(uid, transaction, appConfig.managedMaxActiveFilesPerUser + 1),
     ]);
     if (deletionClaim.exists) {
       throw createHttpError(409, 'This managed account is being deleted.');
     }
     const slots = readUploadSlots(summarySnapshot.data()?.pendingUploadSlots).filter(slot => slot.expiresAt > Date.now());
-    const currentCount = files.size + slots.length;
+    const currentCount = files.length + slots.length;
     if (currentCount >= appConfig.managedMaxActiveFilesPerUser) {
       throw createHttpError(
         403,

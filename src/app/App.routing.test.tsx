@@ -261,6 +261,7 @@ describe('actual App speech and idle routing (baseline before extraction)', () =
   it.each(['second-toggle', 'unmount'])('cancels a pending microphone enable on %s', async cancellation => {
     setStt({ enabled: false });
     const app = mount();
+    ports.resetObserver.mockClear();
     const stopped = deferred();
     ports.stopObserver.mockReturnValueOnce(stopped.promise);
     await act(async () => {
@@ -272,6 +273,7 @@ describe('actual App speech and idle routing (baseline before extraction)', () =
     });
     expect(ports.startListening).not.toHaveBeenCalled();
     expect(useMaestroStore.getState().settings.stt.enabled).toBe(false);
+    expect(ports.resetObserver).toHaveBeenCalledTimes(cancellation === 'second-toggle' ? 1 : 0);
   });
 
   it('an older cancelled microphone enable cannot complete a newer request', async () => {

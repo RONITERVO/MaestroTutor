@@ -47,9 +47,22 @@ remain explicit future behavior changes, as documented in the architecture guide
 
 ## Verification and operations
 
+The follow-up review of `58c3241` produced 11 more annotations. All three
+reviewers completed again before the follow-up batch was pushed. Every new
+annotation is addressed:
+
+| Review comments | Correction and evidence |
+| --- | --- |
+| `4088278960`, `4088299990`, `4088283010` | Expiry recovery releases pending settlements after a deletion claim, isolates failed rows, and reports successful recoveries so the scheduler cannot loop forever over a failed full batch. Emulator cases exercise complete account deletion and retry, unrelated accounts, and recovery after transient settlement failures. |
+| `4088283025` | Both recording and settling completed work retry once; deletion conflicts remain terminal. Direct/stream tests assert one provider execution and one charge. |
+| `4088300018` | A transient BYOK status lookup now rejects like the managed path. Coordinators retain cached variants; final history verification fails explicitly instead of silently omitting media from model context. Real-adapter tests cover both paths and preserve confirmed inactive-file behavior. |
+| `4088300024`, `4088300042` | Quota and eviction share paginated inventory including records without `deletedAt`. Processing files remain protected for the upload reservation window, while abandoned processing records can eventually be evicted. Tests cover mixed and entirely processing inventories. |
+| `4088300037` | Successful detached cleanup resolves any surviving canonical file owner by opaque provider name, then releases its quota transactionally before completing the job. Jobs still retain no UID and cannot recreate deleted metadata. Requires the added `files.name` collection-group index before Functions deployment. |
+| `4088300031`, `4088300051`, `4088300009` | Cancelling microphone startup resets the observer hold; actual-App tests distinguish cancellation from unmount. The Live test now asserts exact cached audio. Pending release receipts are described in future tense. |
+
 Regression cases were exercised against the faulty paths before applying their
 fixes. Existing prompt/provider snapshots were not regenerated. The final local
-gate contains 785 root tests and 31 managed-Gemini emulator cases, in addition
+gate contains 788 root tests and 41 managed-Gemini emulator cases, in addition
 to the existing Functions unit, billing/gateway emulator and gateway test suites.
 Exact CI, staging, production and Android artifact receipts belong to the release
 PR; local tests alone do not establish live deployment or physical-device behavior.
@@ -60,5 +73,5 @@ quota summaries, optional provider `expirationTime` on file metadata, and
 accounting fields, not generated content. The existing expiry sweeper recovers
 them and keeps settlement idempotent; account deletion can still release holds
 without charging a deleted account. Provider files whose deletion fails remain
-counted until deletion/expiry is confirmed, and background cleanup retries their
-opaque names. Subsequent status checks or eviction reconcile their local records.
+counted until deletion/expiry is confirmed. Background cleanup retries their
+opaque names and reconciles surviving local records and quota before completing.

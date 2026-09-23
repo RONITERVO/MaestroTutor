@@ -337,7 +337,7 @@ const App: React.FC = () => {
   }, [deleteMessage]);
 
   const { handleToggleSuggestionMode, sttMasterToggle } = useMemo(() => createSpeechModeActions({
-    pendingEnableRef: pendingSttEnableRef,
+    pendingEnableRef: pendingSttEnableRef, resetSilentObserverRef,
     isListening, stopListening, startListening, clearTranscript, settingsRef,
     selectedLanguagePairRef, setSettings, stopSilentObserverRef,
     setSttError: error => useMaestroStore.getState().setSttError(error),

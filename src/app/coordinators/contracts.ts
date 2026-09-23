@@ -40,6 +40,7 @@ export type SttTurnHandler = (turn: GeminiLiveSttTurnComplete) => Promise<void>;
 export const STT_RESTART_DELAY_MS = 250;
 export interface SpeechModePorts extends SpeechActions {
   pendingEnableRef: CurrentValue<symbol | null>;
+  resetSilentObserverRef: CurrentValue<() => Promise<void>>;
   settingsRef: CurrentValue<AppSettings>;
   selectedLanguagePairRef: CurrentValue<LanguagePair | undefined>;
   stopSilentObserverRef: CurrentValue<() => Promise<void>>;

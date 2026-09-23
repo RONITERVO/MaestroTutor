@@ -50,6 +50,7 @@ it.each(['', 'A transcribed answer'])('retains the model audio after completion 
     expect(messages[0].rawAssistantResponse).toBe(modelText);
     expect(messages[0].imageUrl).toBeUndefined();
     expect(ports.cache).toHaveBeenCalledOnce();
+    expect(ports.cache).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ audioDataUrl: 'data:audio/wav;base64,retained' }));
     expect(ports.suggestions).toHaveBeenCalledOnce();
   } else {
     expect(messages[0]).toMatchObject({ imageUrl: 'data:audio/wav;base64,retained', imageMimeType: 'audio/wav', attachmentName: 'live-response.wav' });

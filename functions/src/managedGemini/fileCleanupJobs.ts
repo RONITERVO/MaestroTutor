@@ -5,9 +5,10 @@
 import { createHash } from 'node:crypto';
 import { adminDb } from '../firebase';
 import { getErrorMessage } from '../http';
-import { MANAGED_RUNTIME_RETENTION_MS, cleanupJobsCollection, timestampFromMillis } from '../managedData';
+import { MANAGED_RUNTIME_RETENTION_MS, cleanupJobsCollection, managedFileRef, timestampFromMillis } from '../managedData';
 import { getGeminiClient } from './client';
 import { hasManagedFileExpired, isNotFoundError, normalizeGeminiFileName } from './fileIdentity';
+import { markManagedFileDeleted } from './fileQuota';
 
 const FILE_CLEANUP_BATCH_SIZE = 200;
 
@@ -66,6 +67,16 @@ export const retryManagedFileCleanupJobs = async (limit = 50): Promise<{
         if (!hasManagedFileExpired(data)) await getGeminiClient().files.delete({ name });
       } catch (error) {
         if (!isNotFoundError(error)) throw error;
+      }
+
+      // Jobs retain no user identifier. Resolve any surviving canonical owner
+      // only after remote absence is confirmed; deleted accounts stay absent.
+      const owners = await adminDb.collectionGroup('files').where('name', '==', name).get();
+      for (const owner of owners.docs) {
+        const uid = owner.data().uid;
+        if (typeof uid === 'string' && uid && owner.ref.path === managedFileRef(uid, name).path) {
+          await markManagedFileDeleted(uid, name);
+        }
       }
 
       const completedAt = Date.now();

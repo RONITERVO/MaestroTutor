@@ -314,6 +314,50 @@ test('partial file cleanup records failures; detached retry jobs back off and co
   assert.deepEqual(await api.retryManagedFileCleanupJobs(), { attempted: 1, completed: 1 });
   assert.deepEqual(await api.retryManagedFileCleanupJobs(), { attempted: 0, completed: 0 });
   assert.equal((await job.get()).data().status, 'completed');
+  assert.equal(await quota(owner.uid), 0, 'completed remote cleanup must release the owned quota slot');
+  assert.ok((await data.managedFileRef(owner.uid, bad.name).get()).data().deletedAt);
+});
+
+test('legacy records without deletedAt count toward quota and remain eligible for eviction', async () => {
+  const owner = await account();
+  const oldest = await activeFile(owner.uid, 'legacy-without-delete-field', { createdAt: Date.now() - 10000 });
+  await data.managedFileRef(owner.uid, oldest.name).update({ deletedAt: require('firebase-admin/firestore').FieldValue.delete() });
+  await activeFile(owner.uid, 'current-with-delete-field');
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 2 });
+  await assert.rejects(fileQuota.reserveManagedUploadSlot(owner.uid), { status: 403 });
+  handlers['files.delete'] = async () => {};
+  handlers['files.upload'] = async () => ({ name: 'files/legacy-replacement', uri: 'https://generativelanguage.googleapis.com/v1beta/files/legacy-replacement', mimeType: 'image/png', state: 'ACTIVE' });
+  await api.uploadManagedMedia(upload(owner));
+  assert.deepEqual(calls.filter(call => call.method === 'files.delete').map(call => call.args.name), [oldest.name]);
+  assert.equal(await quota(owner.uid), 2);
+});
+
+test('upload eviction skips provider files that another upload is still processing', async () => {
+  const owner = await account();
+  const processing = await activeFile(owner.uid, 'concurrent-processing', { createdAt: Date.now() - 10000, state: 'processing' });
+  const active = await activeFile(owner.uid, 'evictable-active');
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 2 });
+  handlers['files.delete'] = async () => {};
+  handlers['files.upload'] = async () => ({ name: 'files/concurrent-replacement', uri: 'https://generativelanguage.googleapis.com/v1beta/files/concurrent-replacement', mimeType: 'image/png', state: 'ACTIVE' });
+  await api.uploadManagedMedia(upload(owner));
+  assert.deepEqual(calls.filter(call => call.method === 'files.delete').map(call => call.args.name), [active.name]);
+  assert.equal((await data.managedFileRef(owner.uid, processing.name).get()).data().deletedAt, null);
+  assert.equal(await quota(owner.uid), 2);
+});
+
+test('all-processing inventory denies another upload until an abandoned processing claim expires', async () => {
+  const owner = await account();
+  await activeFile(owner.uid, 'processing-one', { state: 'processing' });
+  await activeFile(owner.uid, 'processing-two', { state: 'processing' });
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 2 });
+  handlers['files.delete'] = async () => {};
+  await assert.rejects(api.uploadManagedMedia(upload(owner)), { status: 403 });
+  assert.equal(calls.length, 0);
+  await data.managedFileRef(owner.uid, 'files/processing-one').update({ createdAt: Date.now() - 16 * 60 * 1000 });
+  handlers['files.upload'] = async () => ({ name: 'files/abandoned-replacement', uri: 'https://generativelanguage.googleapis.com/v1beta/files/abandoned-replacement', mimeType: 'image/png', state: 'ACTIVE' });
+  await api.uploadManagedMedia(upload(owner));
+  assert.deepEqual(calls.filter(call => call.method === 'files.delete').map(call => call.args.name), ['files/processing-one']);
+  assert.equal(await quota(owner.uid), 2);
 });
 
 test('upload slots are individually released, recover after crashes, and never recreate deleted runtime metadata', async () => {
@@ -429,6 +473,43 @@ for (const streaming of [false, true]) test(`completed ${streaming ? 'stream' : 
   assert.equal((await summary(owner)).reservedCredits, 0);
 });
 
+for (const streaming of [false, true]) test(`completed ${streaming ? 'stream' : 'generation'} retries a transient accounting-record failure without repeating provider work`, async () => {
+  const owner = await account(); const response = new StreamResponse();
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  const completed = { text: 'answer', candidates: [], usageMetadata: providerUsage, modelVersion: 'gemini-3.8-flash' };
+  handlers.generateContent = async () => completed;
+  handlers.generateContentStream = async function* () { yield completed; };
+  const record = billing.recordPendingManagedSettlement; let attempts = 0;
+  billing.recordPendingManagedSettlement = async params => {
+    if (++attempts === 1) throw new Error('transient accounting-record failure');
+    return record(params);
+  };
+  try {
+    if (streaming) {
+      await api.streamManagedContent({ ...generation(owner), response });
+      assert.equal(response.chunks.at(-1).type, 'final');
+    } else assert.equal((await api.generateManagedContent(generation(owner))).text, 'answer');
+  } finally { billing.recordPendingManagedSettlement = record; }
+  assert.equal(attempts, 2);
+  assert.equal(calls.filter(call => call.method === (streaming ? 'generateContentStream' : 'generateContent')).length, 1);
+  assert.equal((await reservations(owner.uid))[0].status, 'settled');
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 1);
+});
+
+test('completed-operation accounting does not retry an account-deletion conflict', async () => {
+  const owner = await account();
+  const held = await billing.reserveManagedCredits({ ...owner, operation: 'test-completion', model: 'test', estimatedCredits: 5, estimatedUsd: 0.005 });
+  await data.accountDeletionClaimRef(owner.uid).set({ createdAt: Date.now() });
+  const record = billing.recordPendingManagedSettlement; let attempts = 0;
+  billing.recordPendingManagedSettlement = async params => { attempts++; return record(params); };
+  try {
+    const { settleCompletedManagedOperation } = require('../lib/functions/src/managedGemini/settlement.js');
+    await assert.rejects(settleCompletedManagedOperation({ uid: owner.uid, reservationId: held.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' }), { status: 409 });
+  } finally { billing.recordPendingManagedSettlement = record; }
+  assert.equal(attempts, 1);
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 0);
+});
+
 test('a failed stream refund preserves the provider error frame and closes the response', async () => {
   const owner = await account(); const response = new StreamResponse();
   handlers.countTokens = async () => ({ totalTokens: 10 });
@@ -539,6 +620,74 @@ test('account deletion can release pending settlement without recreating a charg
   await billing.releaseManagedReservation(owner.uid, held.reservationId, 'account-deleted');
   assert.equal((await reservations(owner.uid))[0].status, 'released');
   assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 0);
+});
+
+test('account deletion completes with an expired pending settlement and is retryable', async () => {
+  const owner = await account();
+  const held = await billing.reserveManagedCredits({ ...owner, operation: 'test-completion', model: 'test', estimatedCredits: 5, estimatedUsd: 0.005 });
+  await billing.recordPendingManagedSettlement({ uid: owner.uid, reservationId: held.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' });
+  await data.managedReservationRef(owner.uid, held.reservationId).update({ expiresAt: 0 });
+  const { adminAuth } = require('../lib/functions/src/firebase.js');
+  const stripe = require('../lib/functions/src/stripeBilling.js');
+  const deleteAuth = adminAuth.deleteUser;
+  const deleteCustomers = stripe.deleteManagedStripeCustomers;
+  const deletedAuthUsers = [];
+  adminAuth.deleteUser = async uid => { deletedAuthUsers.push(uid); };
+  stripe.deleteManagedStripeCustomers = async () => 0;
+  try {
+    const { deleteManagedAccount } = require('../lib/functions/src/account.js');
+    assert.equal((await deleteManagedAccount(owner)).ok, true);
+    assert.equal((await data.managedUserRef(owner.uid).get()).exists, false);
+    assert.equal((await data.accountDeletionClaimRef(owner.uid).get()).exists, true);
+    assert.equal((await data.managedAccountRef(owner.uid).get()).exists, false);
+    assert.deepEqual(await reservations(owner.uid), []);
+    assert.deepEqual(await billing.listManagedUsageLedger(owner.uid, 100), []);
+    assert.equal((await deleteManagedAccount(owner)).ok, true);
+    assert.deepEqual(deletedAuthUsers, [owner.uid, owner.uid]);
+  } finally { adminAuth.deleteUser = deleteAuth; stripe.deleteManagedStripeCustomers = deleteCustomers; }
+});
+
+test('global expiry recovery releases deletion-claimed pending settlement without blocking other accounts', async () => {
+  const deleting = await account(); const active = await account();
+  for (const owner of [deleting, active]) {
+    const held = await billing.reserveManagedCredits({ ...owner, operation: 'test-completion', model: 'test', estimatedCredits: 5, estimatedUsd: 0.005 });
+    await billing.recordPendingManagedSettlement({ uid: owner.uid, reservationId: held.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' });
+    await data.managedReservationRef(owner.uid, held.reservationId).update({ expiresAt: 0 });
+  }
+  await data.accountDeletionClaimRef(deleting.uid).set({ createdAt: Date.now() });
+  await billing.sweepExpiredReservations(200);
+  const deletedReservation = (await reservations(deleting.uid))[0];
+  assert.equal(deletedReservation.status, 'released');
+  assert.equal(deletedReservation.metadata.releaseReason, 'account-deleted');
+  assert.equal((await billing.listManagedUsageLedger(deleting.uid, 100)).length, 0);
+  assert.equal((await data.managedAccountRef(deleting.uid).get()).data().billingSummary.reservedCredits, 0);
+  assert.equal((await reservations(active.uid))[0].status, 'settled');
+  assert.equal((await summary(active)).availableCredits, 998);
+});
+
+for (const global of [false, true]) test(`${global ? 'global' : 'per-user'} expiry recovery isolates a failed settlement and retains it for retry`, async () => {
+  const owner = await account(); const held = [];
+  for (let index = 0; index < 2; index++) {
+    const reservation = await billing.reserveManagedCredits({ ...owner, operation: 'test-completion', model: 'test', estimatedCredits: 5, estimatedUsd: 0.005 });
+    await billing.recordPendingManagedSettlement({ uid: owner.uid, reservationId: reservation.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' });
+    await data.managedReservationRef(owner.uid, reservation.reservationId).update({ expiresAt: index });
+    held.push(reservation.reservationId);
+  }
+  const settle = billing.settleManagedReservation;
+  billing.settleManagedReservation = async params => {
+    if (params.reservationId === held[0]) throw new Error('transient settlement contention');
+    return settle(params);
+  };
+  try {
+    if (global) assert.ok(await billing.sweepExpiredReservations(200) >= 1);
+    else await billing.sweepExpiredReservationsForUser(owner.uid);
+  } finally { billing.settleManagedReservation = settle; }
+  assert.equal((await data.managedReservationRef(owner.uid, held[0]).get()).data().status, 'active');
+  assert.equal((await data.managedReservationRef(owner.uid, held[1]).get()).data().status, 'settled');
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 1);
+  await billing.sweepExpiredReservationsForUser(owner.uid);
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 2);
+  assert.equal((await summary(owner)).reservedCredits, 0);
 });
 
 test('music connection failure closes the lease and releases its reservation', async () => {

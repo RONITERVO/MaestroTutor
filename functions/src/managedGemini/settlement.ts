@@ -4,13 +4,17 @@ import { recordPendingManagedSettlement, settleManagedReservation, type ManagedS
 
 /** A completed provider operation may retry accounting, never provider generation.
  * The ordinary expiry sweeper settles this durable usage if retries still fail. */
-export const settleCompletedManagedOperation = async (params: ManagedSettlement) => {
-  await recordPendingManagedSettlement(params);
+const retryAccountingOnce = async <T>(operation: () => Promise<T>): Promise<T> => {
   try {
-    return await settleManagedReservation(params);
+    return await operation();
   } catch (error) {
     if (Number((error as { status?: unknown })?.status) === 409) throw error;
     await new Promise(resolve => setTimeout(resolve, 100));
-    return settleManagedReservation(params);
+    return operation();
   }
+};
+
+export const settleCompletedManagedOperation = async (params: ManagedSettlement) => {
+  await retryAccountingOnce(() => recordPendingManagedSettlement(params));
+  return retryAccountingOnce(() => settleManagedReservation(params));
 };

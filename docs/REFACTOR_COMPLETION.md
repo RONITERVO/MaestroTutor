@@ -112,7 +112,7 @@ finished on `4030d48`. [The review record](./REFACTOR_REVIEW.md) distinguishes t
 corrections from suggestions intentionally declined to preserve known behavior.
 The counts below supersede the historical extraction milestones above.
 
-- App after review hardening: 785 tests in 115 files, lint and production build pass.
+- App after review hardening: 788 tests in 116 files, lint and production build pass.
 - Prompt/artifact focused suite: 64 tests pass with unchanged snapshots.
 - Functions: 24 unit tests and the billing, gateway and 31-case managed Gemini
   emulator suites validate the extracted services and review fixes.
@@ -132,5 +132,5 @@ The initial staging allowance was nearly exhausted (99.483622 of 100 USD on
 2026-09-23). With the user's explicit authorization, staging's daily admission
 limit was increased to 150 USD and deployed; the production limit remains 100.
 Paid staging and production results, deployment revisions and signed bundle
-identity are recorded in the release PR/receipt. These local checks do not claim
+identity will be recorded in the release PR/receipt after verification. These local checks do not claim
 that this candidate is already live.
