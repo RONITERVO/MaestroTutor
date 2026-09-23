@@ -377,9 +377,15 @@ must have Firestore access and Secret Manager accessor for `GEMINI_API_KEY`.
 ```powershell
 $releaseTag = "release-<candidate-short-sha>"
 gcloud builds submit --project chatwithmaestro --config live-gateway/cloudbuild.yaml --substitutions "_REGION=europe-west1,_REPOSITORY=gcf-artifacts,_SERVICE=maestrotutor-live-gateway,_TAG=$releaseTag" .
-gcloud run deploy maestrotutor-live-gateway --project chatwithmaestro --region europe-west1 --image "europe-west1-docker.pkg.dev/chatwithmaestro/gcf-artifacts/maestrotutor-live-gateway:$releaseTag" --allow-unauthenticated --service-account <runtime-service-account> --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest --set-env-vars MANAGED_CREDITS_PER_USD=1000 --memory 512Mi --cpu 1 --concurrency 80 --min-instances 0 --max-instances 10 --timeout 300
-gcloud run services describe maestrotutor-live-gateway --project chatwithmaestro --region europe-west1 --format="value(status.url,status.latestReadyRevisionName)"
+gcloud run deploy maestrotutor-live-gateway --project chatwithmaestro --region europe-west1 --image "europe-west1-docker.pkg.dev/chatwithmaestro/gcf-artifacts/maestrotutor-live-gateway:$releaseTag" --revision-suffix $releaseTag --allow-unauthenticated --service-account <runtime-service-account> --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest --set-env-vars MANAGED_CREDITS_PER_USD=1000 --memory 512Mi --cpu 1 --concurrency 80 --min-instances 0 --max-instances 10 --timeout 300
+gcloud run services update-traffic maestrotutor-live-gateway --project chatwithmaestro --region europe-west1 --to-revisions "maestrotutor-live-gateway-$releaseTag=100"
+gcloud run services describe maestrotutor-live-gateway --project chatwithmaestro --region europe-west1 --format="json(status.url,status.latestReadyRevisionName,status.traffic)"
 ```
+
+Verify that `status.traffic` assigns 100% to the candidate revision. A successful
+deployment and `latestReadyRevisionName` alone do not prove it is serving traffic:
+an existing revision pin can keep all requests on the previous release. Apply
+the same explicit traffic check in staging before running paid acceptance tests.
 
 Public ingress is intentional: the short-lived one-use ticket authenticates the
 WebSocket. Never place that ticket in a query string or logs. Verify `GET /health`
