@@ -103,3 +103,27 @@ capture overlap and failure, history-load barriers, observer/Live handoffs,
 After this extraction the full app gate passes 737 tests in 107 files, lint,
 production build and the expanded transitive boundary guard. Deployment and
 release artifacts still require the final acceptance evidence below.
+
+## Release candidate checks
+
+- App: 737 tests in 107 files, lint and production build pass.
+- Prompt/artifact focused suite: 64 tests pass with unchanged snapshots.
+- Functions: 24 unit tests and the billing, gateway and 16-case managed Gemini
+  emulator suites pass against the extracted services.
+- Gateway: 24 tests and TypeScript build pass.
+- Release configuration and headless `system.describe` pass. The configuration
+  verifier now checks the new music, tool and request owners and their public
+  wiring; it retains the same behavioral requirements.
+- Dependency audit thresholds pass. Existing lockfiles are unchanged: the app
+  reports four high advisories in its Node tooling path, Functions reports nine
+  moderate advisories through `qs`/`uuid`, and the gateway reports none. No force
+  dependency upgrades are bundled into this structural refactor.
+- Android candidate is 2.6.10 (84), reserved for a new signed bundle. No ADB
+  device was connected during offline checks; hardware/Play validation is not
+  implied by the automated lifecycle fixtures.
+
+Managed staging's 2026-09-23 admission record was read without mutation:
+99,483,622 of 100,000,000 microdollars admitted. A Live admission cannot fit until
+the next UTC day. Final paid staging and production evidence, deployment
+revisions and signed bundle identity belong in the release PR and receipt;
+none of the offline results above claims that this candidate is already live.
