@@ -114,7 +114,7 @@ The counts below supersede the historical extraction milestones above.
 
 - App after review hardening: 788 tests in 116 files, lint and production build pass.
 - Prompt/artifact focused suite: 64 tests pass with unchanged snapshots.
-- Functions: 24 unit tests and the billing, gateway and 31-case managed Gemini
+- Functions: 24 unit tests and the billing, gateway and 43-case managed Gemini
   emulator suites validate the extracted services and review fixes.
 - Gateway: 24 tests and TypeScript build pass.
 - Release configuration and headless `system.describe` pass. The configuration

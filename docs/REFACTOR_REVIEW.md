@@ -60,14 +60,23 @@ annotation is addressed:
 | `4088300037` | Successful detached cleanup resolves any surviving canonical file owner by opaque provider name, then releases its quota transactionally before completing the job. Jobs still retain no UID and cannot recreate deleted metadata. Requires the added `files.name` collection-group index before Functions deployment. |
 | `4088300031`, `4088300051`, `4088300009` | Cancelling microphone startup resets the observer hold; actual-App tests distinguish cancellation from unmount. The Live test now asserts exact cached audio. Pending release receipts are described in future tense. |
 
+The review of `83978e1` completed before the next push. Codex Cloud reported no
+major issues. Cubic `4088374547` identified repeated reads of retained deleted-file
+history during upload admission. A one-time, deletion-fenced normalization now
+adds `deletedAt: null` to legacy active records and records `fileInventoryVersion`
+on the quota summary. Subsequent admission queries read only active files, bounded
+by the quota. Regression tests reproduce 206 reads before the correction, verify
+bounded reads afterwards, and prevent migration from recreating deleted metadata.
+
 Regression cases were exercised against the faulty paths before applying their
 fixes. Existing prompt/provider snapshots were not regenerated. The final local
-gate contains 788 root tests and 41 managed-Gemini emulator cases, in addition
+gate contains 788 root tests and 43 managed-Gemini emulator cases, in addition
 to the existing Functions unit, billing/gateway emulator and gateway test suites.
 Exact CI, staging, production and Android artifact receipts belong to the release
 PR; local tests alone do not establish live deployment or physical-device behavior.
 
-The schema additions are internal and additive: `pendingUploadSlots` on file
+The schema additions are internal and additive: `pendingUploadSlots` and the
+one-time `fileInventoryVersion` marker on file
 quota summaries, optional provider `expirationTime` on file metadata, and
 `pendingSettlement` accounting on reservations. Pending settlements contain
 accounting fields, not generated content. The existing expiry sweeper recovers

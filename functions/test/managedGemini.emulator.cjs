@@ -332,6 +332,50 @@ test('legacy records without deletedAt count toward quota and remain eligible fo
   assert.equal(await quota(owner.uid), 2);
 });
 
+test('file admission reads stay bounded after one-time legacy inventory normalization', async () => {
+  const owner = await account();
+  await Promise.all(Array.from({ length: 205 }, (_, index) => activeFile(owner.uid, `deleted-history-${index}`, { deletedAt: Date.now(), state: 'deleted' })));
+  await activeFile(owner.uid, 'only-active-file');
+  const first = await fileQuota.reserveManagedUploadSlot(owner.uid);
+  await fileQuota.releaseManagedUploadSlot(owner.uid, first);
+  const runTransaction = adminDb.runTransaction;
+  const queriedDocuments = [];
+  adminDb.runTransaction = function (update, options) {
+    return runTransaction.call(this, transaction => {
+      const get = transaction.get.bind(transaction);
+      transaction.get = async (...args) => {
+        const snapshot = await get(...args);
+        if (Array.isArray(snapshot.docs)) queriedDocuments.push(snapshot.size);
+        return snapshot;
+      };
+      return update(transaction);
+    }, options);
+  };
+  try {
+    const second = await fileQuota.reserveManagedUploadSlot(owner.uid);
+    await fileQuota.releaseManagedUploadSlot(owner.uid, second);
+  } finally { adminDb.runTransaction = runTransaction; }
+  assert.ok(queriedDocuments.length > 0, 'measure the quota inventory query');
+  assert.ok(queriedDocuments.reduce((sum, count) => sum + count, 0) <= 3, `admission reread retained history: ${queriedDocuments}`);
+});
+
+test('inventory normalization cannot recreate runtime metadata if deletion claims the final migration write', async () => {
+  const owner = await account();
+  const { ensureManagedFileInventory } = require('../lib/functions/src/managedGemini/fileInventory.js');
+  const runTransaction = adminDb.runTransaction; let transactions = 0;
+  adminDb.runTransaction = async function (update, options) {
+    if (++transactions === 2) {
+      await data.accountDeletionClaimRef(owner.uid).set({ createdAt: Date.now() });
+      await adminDb.recursiveDelete(data.managedUserRef(owner.uid));
+    }
+    return runTransaction.call(this, update, options);
+  };
+  try { await assert.rejects(ensureManagedFileInventory(owner.uid), { status: 409 }); }
+  finally { adminDb.runTransaction = runTransaction; }
+  assert.equal((await data.managedUserRef(owner.uid).get()).exists, false);
+  assert.equal((await data.managedFileQuotaRef(owner.uid).get()).exists, false);
+});
+
 test('upload eviction skips provider files that another upload is still processing', async () => {
   const owner = await account();
   const processing = await activeFile(owner.uid, 'concurrent-processing', { createdAt: Date.now() - 10000, state: 'processing' });

@@ -15,7 +15,7 @@ import {
   managedFileRef,
   timestampFromMillis
 } from '../managedData';
-import { listActiveManagedFileSnapshots } from './fileInventory';
+import { ensureManagedFileInventory, listActiveManagedFileSnapshots } from './fileInventory';
 
 const readActiveManagedFileCount = (value: unknown): number => {
   const parsed = Number(value);
@@ -32,6 +32,7 @@ const readUploadSlots = (value: unknown): UploadSlot[] => Array.isArray(value)
 
 export const reserveManagedUploadSlot = async (uid: string): Promise<string> => {
   await ensureManagedUserDocument(uid);
+  await ensureManagedFileInventory(uid);
   const slotId = randomUUID();
   return adminDb.runTransaction(async (transaction: any) => {
     const summaryRef = managedFileQuotaRef(uid);
