@@ -11,6 +11,7 @@ export interface StrictParsedTutorResponse {
 }
 
 const TUTOR_FENCE_OPEN_REGEX = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/;
+const INLINE_ARTIFACT_START_REGEX = /`{3,}|~{3,}|<(?:\/?[a-z]|!|\?xml)/i;
 const MARKUP_LINE_TAG_REGEX = /<\/?[a-z][\w:-]*(?:\s+[^<>]*)?\/?>/i;
 const MARKUP_DECLARATION_OR_COMMENT_REGEX = /<!--|-->|^<!doctype\b|^<!\[CDATA\[|^\]\]>$|^<\?xml\b|^\?>$/i;
 const MARKUP_ATTRIBUTE_ONLY_LINE_REGEX = /^(?:[a-z_:][\w:.-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>/]+)\s*)+\/?>?$/i;
@@ -55,13 +56,13 @@ const stripTutorVisibleLines = (responseText: string): {
   let activeMarkupBlock: { tag: string; inOpeningTag: boolean } | null = null;
   let activeMarkupComment = false;
 
-  for (const rawLine of normalizedLines) {
+  for (let rawLine of normalizedLines) {
     if (activeFence) {
       hasSkippedNonLanguageContent = true;
       if (isMatchingTutorFenceClose(rawLine, activeFence)) activeFence = null;
       continue;
     }
-    const trimmed = rawLine.trim();
+    let trimmed = rawLine.trim();
     if (activeMarkupComment) {
       hasSkippedNonLanguageContent = true;
       if (trimmed.includes('-->')) activeMarkupComment = false;
@@ -78,6 +79,18 @@ const stripTutorVisibleLines = (responseText: string): {
         activeMarkupBlock = null;
       }
       continue;
+    }
+    // Models sometimes append an artifact directly to a translation. Keep the
+    // prose before its delimiter, then feed the remainder through the same
+    // block tracking used for artifacts that start on their own line. This
+    // also works before the attachment parser has a complete artifact to extract.
+    const inlineArtifactStart = rawLine.search(INLINE_ARTIFACT_START_REGEX);
+    if (inlineArtifactStart > 0) {
+      const visiblePrefix = rawLine.slice(0, inlineArtifactStart).trim();
+      if (visiblePrefix) lines.push(visiblePrefix);
+      rawLine = rawLine.slice(inlineArtifactStart);
+      trimmed = rawLine.trim();
+      hasSkippedNonLanguageContent = true;
     }
     const openMatch = TUTOR_FENCE_OPEN_REGEX.exec(rawLine);
     if (openMatch) {
