@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { createSuggestionCoordinator } from '../coordinators/suggestions';
 import { REENGAGEMENT_PROMPT } from '../../../core/config/prompts';
 /**
  * useTutorConversation - The main orchestration hook for the Maestro tutor.
@@ -35,7 +36,6 @@ import { processMediaForUpload, createKeyframeFromVideoDataUrl } from '../../vis
 import { extractOfficeTextForUpload } from '../../../core-sdk/chat/officeTextExtraction';
 import { buildAttachmentUploadPlans as buildCoreAttachmentUploadPlans } from '../../../core-sdk/chat/attachmentUploadPlans';
 import {
-  buildCompactAssistantRawText,
   getVisibleAssistantMessageText,
 } from '../../../core-sdk/chat/assistantMessageContext';
 import {
@@ -310,7 +310,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     cancelReengagementRef,
     transcript,
     currentSystemPromptText,
-    currentReplySuggestionsPromptText,
     setReplySuggestions,
     handleToggleSuggestionModeRef,
     maestroAvatarUriRef,
@@ -448,27 +447,6 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     const fallbackText = truncateForToolPrompt(getVisibleAssistantMessageText(assistantMessage), 500);
     return normalizeCoreSuggestionCreatorToolRequest(toolRequest, fallbackText);
   }, [messagesRef, settingsRef]);
-
-  const finalizeAssistantArtifact = useCallback((
-    assistantMessageId: string,
-    normalizedArtifact: ReturnType<typeof normalizeSuggestionCreatorArtifact>
-  ) => {
-    const updates: Partial<ChatMessage> = {
-      isLoadingArtifact: false,
-      artifactLoadStartTime: undefined,
-    };
-
-    if (normalizedArtifact) {
-      updates.imageUrl = normalizedArtifact.dataUrl;
-      updates.imageMimeType = normalizedArtifact.mimeType;
-      updates.attachmentName = normalizedArtifact.fileName;
-      updates.storageOptimizedImageUrl = undefined;
-      updates.storageOptimizedImageMimeType = undefined;
-      updates.uploadedFileVariants = undefined;
-    }
-
-    updateMessage(assistantMessageId, updates);
-  }, [updateMessage]);
 
   const appendThinkingTrace = useCallback((messageId: string, line: string) => {
     const cleanedLine = line.trim();
@@ -811,302 +789,39 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     return 15;
   }, [imageLoadDurations]);
 
-  // Reply suggestions - token-based loading state management
-  const fetchAndSetReplySuggestions = useCallback(async (
-    assistantMessageId: string, 
-    lastTutorMessage: string, 
-    history: ChatMessage[],
-    options?: { responseSource?: 'chat' | 'live' }
-  ) => {
-    let resolvedArtifact: unknown = null;
-    let resolvedToolRequest: ReturnType<typeof normalizeSuggestionCreatorToolRequest> = null;
-
-    const finishReplySuggestionsRequest = async () => {
-      setSuggestionsLoadingStreamText('');
-      if (suggestionsTokenRef.current) {
-        removeActivityToken(suggestionsTokenRef.current);
-        suggestionsTokenRef.current = null;
-      }
-      const normalizedArtifact = normalizeSuggestionCreatorArtifact(resolvedArtifact);
-      const hasRenderableArtifact = Boolean(normalizedArtifact);
-      const isLiveSuggestionSource = options?.responseSource === 'live';
-      const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
-      const visibleAssistantText = getVisibleAssistantMessageText(assistantMessage) || lastTutorMessage;
-      const buildLiveToolRawText = (
-        baseText: string,
-        toolRequest: NonNullable<ReturnType<typeof normalizeSuggestionCreatorToolRequest>>
-      ) => {
-        const normalizedBaseText = baseText.trim();
-        const promptText = toolRequest.tool === 'image'
-          ? (toolRequest.prompt || '').trim()
-          : '';
-        const rawSegments = [normalizedBaseText];
-        if (promptText && !rawSegments.includes(promptText)) {
-          rawSegments.push(promptText);
+  // React/store adapter: orchestration is independently owned by the coordinator.
+  const fetchAndSetReplySuggestions = useMemo(() => createSuggestionCoordinator({
+    state: {
+      getMessages: () => messagesRef.current,
+      getLanguagePair: () => selectedLanguagePairRef.current,
+      getPairId: () => settingsRef.current.selectedLanguagePairId,
+      // Preserve the render-time loading guard; fresh reads remain explicit above.
+      isLoading: () => isLoadingSuggestions,
+      setSuggestionOwner: id => { lastFetchedSuggestionsForRef.current = id; },
+    },
+    activity: {
+      begin: () => { suggestionsTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS); },
+      finish: () => {
+        if (suggestionsTokenRef.current) {
+          removeActivityToken(suggestionsTokenRef.current);
+          suggestionsTokenRef.current = null;
         }
-        return buildCompactAssistantRawText(rawSegments.filter(Boolean).join('\n\n'), {
-          toolRequest: {
-            ...toolRequest,
-            source: 'live-suggestion-creator',
-          },
-        });
-      };
-
-      if (isLiveSuggestionSource && (hasRenderableArtifact || resolvedToolRequest)) {
-        const compactLiveRawText = hasRenderableArtifact
-          ? buildCompactAssistantRawText(visibleAssistantText, {
-              artifact: normalizedArtifact
-                ? {
-                    mimeType: normalizedArtifact.mimeType,
-                    fileName: normalizedArtifact.fileName,
-                    dataUrl: normalizedArtifact.dataUrl,
-                    source: 'live-suggestion-creator',
-                  }
-                : null,
-            })
-          : (resolvedToolRequest
-              ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
-              : '');
-
-        if (compactLiveRawText) {
-          updateMessage(assistantMessageId, { llmRawResponse: compactLiveRawText });
-        }
-      }
-
-      if (hasRenderableArtifact || !resolvedToolRequest) {
-        finalizeAssistantArtifact(assistantMessageId, normalizedArtifact);
-      }
-      if (resolvedToolRequest) {
-        const toolMessageId = hasRenderableArtifact
-          ? addMessage({
-              role: 'assistant',
-              llmRawResponse: isLiveSuggestionSource
-                ? buildLiveToolRawText(visibleAssistantText, resolvedToolRequest)
-                : undefined,
-            })
-          : assistantMessageId;
-        await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
-      }
-    };
-
-    // Check if already loading using token state
-    if (isLoadingSuggestions) {
-      return;
-    }
-    if (!lastTutorMessage.trim() || !selectedLanguagePairRef.current) {
-      setReplySuggestions([]);
-      await finishReplySuggestionsRequest();
-      return;
-    }
-
-    const hasStoredReplySuggestions = (message?: ChatMessage | null): boolean => (
-      Boolean(message && Array.isArray(message.replySuggestions) && message.replySuggestions.length > 0)
-    );
-
-    // Check if suggestions already exist on message
-    {
-      const allMsgs = messagesRef.current;
-      const targetIdx = allMsgs.findIndex(m => m.id === assistantMessageId);
-      if (targetIdx !== -1) {
-        const target = allMsgs[targetIdx];
-        if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
-          const hasExistingAttachment = !!(
-            (target.imageUrl && target.imageMimeType) ||
-            (Array.isArray(target.uploadedFileVariants) && target.uploadedFileVariants.length > 0)
-          );
-          const visibleText = getVisibleAssistantMessageText(target).trim();
-          const hasStructuredTail = !!(
-            target.llmRawResponse &&
-            target.llmRawResponse.trim() &&
-            target.llmRawResponse.trim() !== visibleText
-          );
-          if (hasExistingAttachment || !hasStructuredTail) {
-            lastFetchedSuggestionsForRef.current = target.id;
-            setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
-            await finishReplySuggestionsRequest();
-            return;
-          }
-        }
-
-        // Suggestions are owned by a whole assistant-only block, not just one
-        // message object. The assistant can emit multiple adjacent messages when
-        // tools/artifacts are split out, and we must not regenerate suggestions
-        // for every sibling in that block once one already has them.
-        let previousUserIdx = -1;
-        for (let i = targetIdx - 1; i >= 0; i--) {
-          if (allMsgs[i].role === 'user') {
-            previousUserIdx = i;
-            break;
-          }
-        }
-        let nextUserIdx = allMsgs.length;
-        for (let i = targetIdx + 1; i < allMsgs.length; i++) {
-          if (allMsgs[i].role === 'user') {
-            nextUserIdx = i;
-            break;
-          }
-        }
-
-        let blockSuggestionOwner: ChatMessage | null = null;
-        for (let i = nextUserIdx - 1; i > previousUserIdx; i--) {
-          const candidate = allMsgs[i];
-          if (
-            i !== targetIdx
-            && candidate.role === 'assistant'
-            && hasStoredReplySuggestions(candidate)
-          ) {
-            blockSuggestionOwner = candidate;
-            break;
-          }
-        }
-
-        if (blockSuggestionOwner?.replySuggestions) {
-          lastFetchedSuggestionsForRef.current = blockSuggestionOwner.id;
-          setReplySuggestions(blockSuggestionOwner.replySuggestions);
-          await finishReplySuggestionsRequest();
-          return;
-        }
-      }
-    }
-
-    // Add token for loading suggestions
-    suggestionsTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.SUGGESTIONS);
-    setReplySuggestions([]);
-    setSuggestionsLoadingStreamText('');
-
-    const suggestionHistory = getHistoryRespectingBookmark(history);
-    let existingGlobalProfile = '';
-    try {
-      existingGlobalProfile = (await getGlobalProfileDB())?.text || '';
-    } catch {
-      existingGlobalProfile = '';
-    }
-
-    // Retry and structured-response validation now live in the shared Core SDK.
-    const MAX_RETRIES = 0;
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        let thoughtText = '';
-        let outputText = '';
-        const flushSuggestionsLoadingText = () => {
-          // Show whichever stream is latest, condensed to a short single-line status
-          const condensedThought = thoughtText.replace(/\s+/g, ' ').trim();
-          const condensedOutput = outputText.replace(/\s+/g, ' ').trim();
-          // Prefer output stream if available, otherwise show thought stream
-          const active = condensedOutput || condensedThought;
-          if (active) {
-            const label = condensedOutput ? '' : 'thinking: ';
-            const display = active.length > 48 ? `\u2026${active.slice(-48)}` : active;
-            setSuggestionsLoadingStreamText(`${label}${display}`);
-          }
-        };
-
-        const parsedResponse = await runReplySuggestions(
-          {
-            assistantMessageId,
-            lastTutorMessage,
-            history: suggestionHistory,
-            languagePair: selectedLanguagePairRef.current!,
-            existingGlobalProfile,
-            responseSource: options?.responseSource,
-          },
-          {
-            lifecycleHooks: {
-              onProgress: (event) => {
-                const progressLine = formatGeminiStatusLine(event);
-                if (progressLine && !thoughtText.trim() && !outputText.trim()) {
-                  setSuggestionsLoadingStreamText(progressLine);
-                }
-              },
-              onThoughtDelta: (_, fullThought) => {
-                thoughtText = fullThought || thoughtText;
-                flushSuggestionsLoadingText();
-              },
-              onTextDelta: (_, fullText) => {
-                outputText = fullText || outputText;
-                flushSuggestionsLoadingText();
-              },
-            },
-          },
-        );
-
-        trackGeminiUsage({
-          feature: 'suggestions',
-          configuredModel: parsedResponse.modelUsed || getGeminiModels().text.aux,
-          modelVersion: parsedResponse.modelVersion,
-          usageMetadata: parsedResponse.usageMetadata,
-        });
-        resolvedArtifact = parsedResponse?.artifact ?? null;
-        resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
-
-        if (Array.isArray(parsedResponse.suggestions) &&
-          parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
-          const suggestions = parsedResponse.suggestions as ReplySuggestion[];
-          setReplySuggestions(suggestions);
-          updateMessage(assistantMessageId, { replySuggestions: suggestions });
-          try { 
-            const pid = settingsRef.current.selectedLanguagePairId; 
-            if (pid) { await safeSaveChatHistoryDB(pid, messagesRef.current); } 
-          } catch {}
-        } else {
-          console.warn("Parsed suggestions not in expected format:", parsedResponse.suggestions);
-          setReplySuggestions([]);
-        }
-
-        if (typeof parsedResponse.reengagementSeconds === 'number' && parsedResponse.reengagementSeconds >= 5) {
-          handleReengagementThresholdChange(parsedResponse.reengagementSeconds);
-        }
-
-        // Update chat summary on the message
-        const newChatSummary = typeof parsedResponse.chatSummary === 'string' ? parsedResponse.chatSummary.trim() : '';
-        if (newChatSummary) {
-          updateMessage(assistantMessageId, { chatSummary: newChatSummary });
-        }
-
-        // Update global profile directly from the single API response (no second API call needed)
-        try {
-          const newGlobalProfile = typeof parsedResponse.globalProfile === 'string' ? parsedResponse.globalProfile.trim().slice(0, 10000) : '';
-          if (newGlobalProfile) {
-            await setGlobalProfileDB(newGlobalProfile);
-            // Notify UI components that the global profile was updated
-            try { window.dispatchEvent(new CustomEvent('globalProfileUpdated')); } catch {}
-          }
-        } catch (e) {
-          console.warn('Failed to update global profile:', e);
-        }
-
-        break;
-
-      } catch (error) {
-        console.error(`Error fetching reply suggestions (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
-        if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
-        } else {
-          setReplySuggestions([]);
-        }
-      }
-    }
-    await finishReplySuggestionsRequest();
-  }, [
-    currentReplySuggestionsPromptText, 
-    executeAssistantToolRequest,
-    finalizeAssistantArtifact,
-    handleReengagementThresholdChange, 
-    getHistoryRespectingBookmark,
-    messagesRef,
-    normalizeSuggestionCreatorToolRequest,
-    normalizeSuggestionCreatorArtifact,
-    selectedLanguagePairRef,
-    settingsRef,
-    isLoadingSuggestions,
-    addMessage,
-    addActivityToken,
-    removeActivityToken,
-    setReplySuggestions,
-    setSuggestionsLoadingStreamText,
-    formatGeminiStatusLine,
-    lastFetchedSuggestionsForRef,
-    updateMessage
+      },
+    },
+    persistence: {
+      getProfile: getGlobalProfileDB, saveHistory: safeSaveChatHistoryDB, saveProfile: setGlobalProfileDB,
+      notifyProfileUpdated: () => { window.dispatchEvent(new CustomEvent('globalProfileUpdated')); },
+    },
+    runReplySuggestions, normalizeSuggestionCreatorArtifact, normalizeSuggestionCreatorToolRequest,
+    executeAssistantToolRequest, addMessage, updateMessage, setReplySuggestions,
+    setSuggestionsLoadingStreamText, getHistoryRespectingBookmark, handleReengagementThresholdChange,
+    formatGeminiStatusLine, trackGeminiUsage,
+  }), [
+    executeAssistantToolRequest, handleReengagementThresholdChange, getHistoryRespectingBookmark,
+    messagesRef, normalizeSuggestionCreatorToolRequest, normalizeSuggestionCreatorArtifact,
+    selectedLanguagePairRef, settingsRef, isLoadingSuggestions, addMessage, addActivityToken,
+    removeActivityToken, setReplySuggestions, setSuggestionsLoadingStreamText, formatGeminiStatusLine,
+    lastFetchedSuggestionsForRef, updateMessage,
   ]);
 
   const handleCreateSuggestion = useCallback(async (textToTranslate: string) => {

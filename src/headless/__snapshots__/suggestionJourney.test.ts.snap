@@ -1,0 +1,245 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`headless afterstep application contract before sharing decisions > preserves raw context and legacy attachment fields: {"artifact":false,"tool":false} 1`] = `
+{
+  "events": [
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "responseSource": "live",
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.started",
+    },
+    "save",
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "decisionSource": "synthetic-boundary",
+        "hasArtifact": false,
+        "tool": null,
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.completed",
+    },
+  ],
+  "history": [
+    {
+      "artifactLoadStartTime": 123,
+      "id": "a",
+      "isLoadingArtifact": false,
+      "llmRawResponse": "Original model context",
+      "role": "assistant",
+      "storageOptimizedImageMimeType": "image/png",
+      "storageOptimizedImageUrl": "old",
+      "text": "Visible",
+      "timestamp": 1,
+      "uploadedFileVariants": [
+        {
+          "id": "primary",
+          "mimeType": "image/png",
+          "order": 10,
+          "source": "original",
+          "targets": [
+            "text",
+          ],
+          "uri": "old-uri",
+        },
+      ],
+    },
+  ],
+  "toolMessageId": null,
+  "toolResult": null,
+}
+`;
+
+exports[`headless afterstep application contract before sharing decisions > preserves raw context and legacy attachment fields: {"artifact":false,"tool":true} 1`] = `
+{
+  "events": [
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "responseSource": "live",
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.started",
+    },
+    {
+      "assistantMessageId": "a",
+      "contextText": "Original model context",
+      "languagePairId": "en-US-en-GB",
+      "upload": false,
+    },
+    "save",
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "decisionSource": "synthetic-boundary",
+        "hasArtifact": false,
+        "tool": "image",
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.completed",
+    },
+  ],
+  "history": [
+    {
+      "artifactLoadStartTime": 123,
+      "id": "a",
+      "isLoadingArtifact": true,
+      "llmRawResponse": "Original model context",
+      "role": "assistant",
+      "storageOptimizedImageMimeType": "image/png",
+      "storageOptimizedImageUrl": "old",
+      "text": "Visible",
+      "timestamp": 1,
+      "uploadedFileVariants": [
+        {
+          "id": "primary",
+          "mimeType": "image/png",
+          "order": 10,
+          "source": "original",
+          "targets": [
+            "text",
+          ],
+          "uri": "old-uri",
+        },
+      ],
+    },
+  ],
+  "toolMessageId": "a",
+  "toolResult": "image-result",
+}
+`;
+
+exports[`headless afterstep application contract before sharing decisions > preserves raw context and legacy attachment fields: {"artifact":true,"tool":false} 1`] = `
+{
+  "events": [
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "responseSource": "live",
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.started",
+    },
+    "save",
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "decisionSource": "synthetic-boundary",
+        "hasArtifact": true,
+        "tool": null,
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.completed",
+    },
+  ],
+  "history": [
+    {
+      "artifactLoadStartTime": 123,
+      "attachmentName": "lesson.md",
+      "id": "a",
+      "imageMimeType": "text/markdown",
+      "imageUrl": "data:text/markdown;charset=utf-8;base64,IyBMZXNzb24=",
+      "isLoadingArtifact": false,
+      "llmRawResponse": "Original model context",
+      "role": "assistant",
+      "storageOptimizedImageMimeType": "image/png",
+      "storageOptimizedImageUrl": "old",
+      "text": "Visible",
+      "timestamp": 1,
+      "uploadedFileVariants": [
+        {
+          "id": "primary",
+          "mimeType": "image/png",
+          "order": 10,
+          "source": "original",
+          "targets": [
+            "text",
+          ],
+          "uri": "old-uri",
+        },
+      ],
+    },
+  ],
+  "toolMessageId": null,
+  "toolResult": null,
+}
+`;
+
+exports[`headless afterstep application contract before sharing decisions > preserves raw context and legacy attachment fields: {"artifact":true,"tool":true} 1`] = `
+{
+  "events": [
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "responseSource": "live",
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.started",
+    },
+    {
+      "assistantMessageId": "message-assistant-id",
+      "contextText": "Original model context",
+      "languagePairId": "en-US-en-GB",
+      "upload": false,
+    },
+    "save",
+    {
+      "data": {
+        "assistantMessageId": "a",
+        "decisionSource": "synthetic-boundary",
+        "hasArtifact": true,
+        "tool": "image",
+      },
+      "journey": "suggestions",
+      "operationId": "suggestion-aftersteps-id",
+      "phase": "aftersteps.completed",
+    },
+  ],
+  "history": [
+    {
+      "artifactLoadStartTime": 123,
+      "attachmentName": "lesson.md",
+      "id": "a",
+      "imageMimeType": "text/markdown",
+      "imageUrl": "data:text/markdown;charset=utf-8;base64,IyBMZXNzb24=",
+      "isLoadingArtifact": false,
+      "llmRawResponse": "Original model context",
+      "role": "assistant",
+      "storageOptimizedImageMimeType": "image/png",
+      "storageOptimizedImageUrl": "old",
+      "text": "Visible",
+      "timestamp": 1,
+      "uploadedFileVariants": [
+        {
+          "id": "primary",
+          "mimeType": "image/png",
+          "order": 10,
+          "source": "original",
+          "targets": [
+            "text",
+          ],
+          "uri": "old-uri",
+        },
+      ],
+    },
+    {
+      "id": "message-assistant-id",
+      "rawAssistantResponse": "Visible",
+      "role": "assistant",
+      "timestamp": 100,
+    },
+  ],
+  "toolMessageId": "message-assistant-id",
+  "toolResult": "image-result",
+}
+`;
