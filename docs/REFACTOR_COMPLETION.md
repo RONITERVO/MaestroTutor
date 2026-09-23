@@ -13,7 +13,7 @@ contracts, not outputs to regenerate when a structural change fails them.
 | Chat send, media and generated tools | Actual-hook request, busy/error/STT/media/re-engagement fixtures | Separate send, request preparation, capture, response, uploads, generated-image and tool owners | Hook contracts pass; full root suite 693 tests, lint/build passed before final diagnostic-port guard and translation extraction |
 | Live session, capture and playback lifecycle | Actual-hook connect, stop races, stale callbacks, decode cancellation, drain, transcripts, capture handoff and video fixtures | Session controller with separate capture, provider callback, playback, transcript, telemetry and cleanup owners; explicit browser runtime | 10 hook tests preserve baseline; full root suite 709 tests, lint/build and boundary guard pass |
 | Browser/headless afterstep decisions and explicit differences | Actual browser and headless entry-point snapshots captured first | Core afterstep plan with explicit browser-chat, browser-live and headless policies | Entry-point snapshots unchanged; dedicated policy tests pass |
-| Managed generation, files, cleanup and Live leases | Pending | Pending | Pending |
+| Managed generation, files, cleanup and Live leases | Public-facade emulator tests freeze quota races, rollback, retries, ownership, provider requests and stream disconnect settlement | Separate generation, file quota/lifecycle/upload/cleanup, lease, token and music owners behind the existing facade | 24 Functions unit tests, billing/gateway emulator suites and all 16 new backend cases pass; 49 moved declaration bodies match baseline AST |
 | App speech/idle feature handoffs | Pending | Pending | Pending |
 
 Release acceptance: unchanged model-input contracts; root tests, lint and build;
@@ -66,3 +66,22 @@ before accepting the extraction. All ten pass after extraction, with unchanged
 connection snapshots. Full root verification passes 709 tests across 106 files,
 lint and production build. These fixtures cover deterministic lifecycle behavior;
 physical-device capture/playback remains part of release validation.
+
+## Backend ownership completed
+
+`functions/src/gemini.ts` remains the public route facade with its same 13
+exports. `managedGemini/` separates generation and stream settlement, transactional
+file quota, file ownership/eviction, upload rollback, status checks, account and
+detached cleanup, shared Live/music concurrency leases, scoped token minting and
+music generation. Existing `managedBilling`, `managedData`, pricing and policy
+modules retain authority over charging and persisted paths.
+
+The 16 new public-entry-point emulator cases were committed in `de7f3b2` before
+extraction. They substitute only provider transport while using real Firestore
+transactions and billing. Baseline and extracted runs both pass, including
+competing leases, failed processing and cleanup, deletion during settlement,
+oldest-file eviction, repeated deletion, detached retry backoff, generation
+request bytes, disconnected stream usage settlement, token failure rollback and
+music sample completion. They now run in the existing release and staging CI
+emulator gate. All 49 moved declaration bodies also match the original AST;
+transaction boundaries, request settings and error handling were preserved.
