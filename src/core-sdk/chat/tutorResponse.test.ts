@@ -87,6 +87,16 @@ describe('tutor response parsing', () => {
     expect(parseStrictTutorResponseText(response, 'en').visibleText).toBe(expected);
   });
 
+  it.each([
+    '```maestro-tool {"tool":"music","prompt":"cheerful spanish guitar","durationSeconds":15}```',
+    '~~~svg <svg><text>Hidden</text></svg>~~~',
+    '```svg```',
+  ])('keeps replies following a single-line block: %s', artifact => {
+    const response = artifact + '\n\n' + visibleReply;
+    expect(formatStreamingTutorDraftText(response, 'en')).toBe(expectedVisibleReply);
+    expect(parseStrictTutorResponseText(response, 'en').translations).toEqual(expectedTranslations);
+  });
+
   it('keeps punctuation, comparisons and inline code in ordinary translations', () => {
     const response = 'Un exemple\n[en] Use `hello`, [brackets], ~waves~ & 1 < 2 or x <alpha!\nMerci\n[en] Thank you';
     expect(formatStreamingTutorDraftText(response, 'en')).toBe(response.replace(/\[en\]/g, '[EN]'));

@@ -101,7 +101,9 @@ const stripTutorVisibleLines = (responseText: string): {
     }
     const openMatch = TUTOR_FENCE_OPEN_REGEX.exec(rawLine);
     if (openMatch) {
-      activeFence = { char: openMatch[2][0] as '`' | '~', length: openMatch[2].length };
+      const fence = { char: openMatch[2][0] as '`' | '~', length: openMatch[2].length };
+      const closesOnSameLine = new RegExp(`${fence.char}{${fence.length},}\\s*$`).test(openMatch[3]);
+      if (!closesOnSameLine) activeFence = fence;
       hasSkippedNonLanguageContent = true;
       continue;
     }

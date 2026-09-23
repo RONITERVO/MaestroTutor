@@ -32,4 +32,12 @@ describe('inline artifact fences', () => {
     expect(parsed.attachment?.mimeType).toBe('text/html');
     expect(atob(parsed.attachment!.dataUrl.split(',')[1])).toContain('const example = "```nested";');
   });
+
+  it('extracts a single-line fenced payload without consuming the reply below', () => {
+    const body = '<svg><text>Hidden</text></svg>';
+    const parsed = parseAssistantResponseForAttachment('Bonjour\n[en] Hello```svg ' + body + '```\nMerci\n[en] Thank you');
+    expect(parsed.cleanedText).toBe('Bonjour\n[en] Hello\n\nMerci\n[en] Thank you');
+    expect(parsed.attachment?.mimeType).toBe('image/svg+xml');
+    expect(atob(parsed.attachment!.dataUrl.split(',')[1])).toBe(body);
+  });
 });

@@ -61,6 +61,20 @@ const extractFencedBlocks = (source: string): FencedBlock[] => {
     const fenceChar = fenceToken[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const rawInfo = openMatch[3];
     const blockStart = cursor + openMatch[1].length;
+    const inlineClose = new RegExp(fenceChar + '{' + fenceLen + ',}\\s*$').exec(rawInfo);
+    if (inlineClose) {
+      const inlineContent = rawInfo.slice(0, inlineClose.index).trim();
+      const inlineLanguage = /^([a-z][\w+./#-]*)\s*/i.exec(inlineContent);
+      blocks.push({
+        start: blockStart,
+        end: cursor + line.length,
+        info: inlineLanguage?.[1] || '',
+        body: inlineContent.slice(inlineLanguage?.[0].length || 0),
+      });
+      cursor += line.length + 1;
+      i++;
+      continue;
+    }
     const bodyLines: string[] = [];
 
     cursor += line.length + 1;
