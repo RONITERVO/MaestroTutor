@@ -12,6 +12,14 @@ export interface StrictParsedTutorResponse {
 
 const TUTOR_FENCE_OPEN_REGEX = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/;
 const MARKUP_LINE_TAG_REGEX = /<\/?[a-z][\w:-]*(?:\s+[^<>]*)?\/?>/i;
+// Recognize complete tags and unfinished artifact roots, while leaving prose
+// such as "x <alpha" alone until there is evidence of actual markup.
+const INLINE_ARTIFACT_START_REGEX = new RegExp(
+  '`{3,}|~{3,}|' + MARKUP_LINE_TAG_REGEX.source
+    + '|<!--|<!doctype\\b|<!\\[CDATA\\[|<\\?xml\\b'
+    + '|<\\/?(?:svg|html|head|body|main|section|article|aside|nav|div|canvas|button|form|table|ul|ol|script|style|template)\\b',
+  'i',
+);
 const MARKUP_DECLARATION_OR_COMMENT_REGEX = /<!--|-->|^<!doctype\b|^<!\[CDATA\[|^\]\]>$|^<\?xml\b|^\?>$/i;
 const MARKUP_ATTRIBUTE_ONLY_LINE_REGEX = /^(?:[a-z_:][\w:.-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>/]+)\s*)+\/?>?$/i;
 const MARKUP_STYLE_DECLARATION_LINE_REGEX = /^[a-z-]+\s*:\s*[^;]+;?$/i;
@@ -55,13 +63,13 @@ const stripTutorVisibleLines = (responseText: string): {
   let activeMarkupBlock: { tag: string; inOpeningTag: boolean } | null = null;
   let activeMarkupComment = false;
 
-  for (const rawLine of normalizedLines) {
+  for (let rawLine of normalizedLines) {
     if (activeFence) {
       hasSkippedNonLanguageContent = true;
       if (isMatchingTutorFenceClose(rawLine, activeFence)) activeFence = null;
       continue;
     }
-    const trimmed = rawLine.trim();
+    let trimmed = rawLine.trim();
     if (activeMarkupComment) {
       hasSkippedNonLanguageContent = true;
       if (trimmed.includes('-->')) activeMarkupComment = false;
@@ -79,9 +87,23 @@ const stripTutorVisibleLines = (responseText: string): {
       }
       continue;
     }
+    // Models sometimes append an artifact directly to a translation. Keep the
+    // prose before its delimiter, then feed the remainder through the same
+    // block tracking used for artifacts that start on their own line. This
+    // also works before the attachment parser has a complete artifact to extract.
+    const inlineArtifactStart = rawLine.search(INLINE_ARTIFACT_START_REGEX);
+    if (inlineArtifactStart > 0) {
+      const visiblePrefix = rawLine.slice(0, inlineArtifactStart).trim();
+      if (visiblePrefix) lines.push(visiblePrefix);
+      rawLine = rawLine.slice(inlineArtifactStart);
+      trimmed = rawLine.trim();
+      hasSkippedNonLanguageContent = true;
+    }
     const openMatch = TUTOR_FENCE_OPEN_REGEX.exec(rawLine);
     if (openMatch) {
-      activeFence = { char: openMatch[2][0] as '`' | '~', length: openMatch[2].length };
+      const fence = { char: openMatch[2][0] as '`' | '~', length: openMatch[2].length };
+      const closesOnSameLine = new RegExp(`${fence.char}{${fence.length},}\\s*$`).test(openMatch[3]);
+      if (!closesOnSameLine) activeFence = fence;
       hasSkippedNonLanguageContent = true;
       continue;
     }

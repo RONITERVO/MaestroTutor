@@ -46,7 +46,10 @@ const extractFencedBlocks = (source: string): FencedBlock[] => {
 
   while (i < lines.length) {
     const line = lines[i];
-    const openMatch = /^(\s{0,3})(`{3,}|~{3,})([^\n]*)$/.exec(line);
+    // A model may start the fence immediately after its tagged translation.
+    // Limit inline openings to language lines so backticks inside raw HTML/JS
+    // are not mistaken for a separate attachment.
+    const openMatch = /^(\s{0,3}|\s*\[[a-z]{2,3}\][^\n]*?)(`{3,}|~{3,})([^\n]*)$/i.exec(line);
     if (!openMatch) {
       cursor += line.length + 1;
       i++;
@@ -57,7 +60,21 @@ const extractFencedBlocks = (source: string): FencedBlock[] => {
     const fenceLen = fenceToken.length;
     const fenceChar = fenceToken[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const rawInfo = openMatch[3];
-    const blockStart = cursor;
+    const blockStart = cursor + openMatch[1].length;
+    const inlineClose = new RegExp(fenceChar + '{' + fenceLen + ',}\\s*$').exec(rawInfo);
+    if (inlineClose) {
+      const inlineContent = rawInfo.slice(0, inlineClose.index).trim();
+      const inlineLanguage = /^([a-z][\w+./#-]*)\s*/i.exec(inlineContent);
+      blocks.push({
+        start: blockStart,
+        end: cursor + line.length,
+        info: inlineLanguage?.[1] || '',
+        body: inlineContent.slice(inlineLanguage?.[0].length || 0),
+      });
+      cursor += line.length + 1;
+      i++;
+      continue;
+    }
     const bodyLines: string[] = [];
 
     cursor += line.length + 1;
