@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from '@testing-library/react';
+import { createElement, StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ports = vi.hoisted(() => ({
@@ -81,6 +82,19 @@ beforeEach(() => {
 afterEach(async () => { cleanup(); await flush(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('actual Live hook lifecycle before session-controller extraction', () => {
+  it('remains usable after React StrictMode rehearses effect cleanup', async () => {
+    const hook = renderHook(() => useGeminiLiveConversation(), {
+      wrapper: ({ children }) => createElement(StrictMode, null, children),
+    });
+    expect(ports.getUserMedia).not.toHaveBeenCalled();
+    expect(ports.connect).not.toHaveBeenCalled();
+    await act(async () => { await hook.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false }); });
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].close).not.toHaveBeenCalled();
+    await act(async () => { await hook.result.current.stop(); });
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+    expect(stopTrack).toHaveBeenCalledOnce();
+  });
   it('preserves the connect configuration and closes resources after capture is flushed', async () => {
     const h = harness(); await h.start();
     expect({ model: connections[0].model, config: connections[0].config, trigger: connections[0].liveOpenReason.trigger }).toMatchSnapshot();
@@ -132,6 +146,72 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     expect(ports.flushUsage).toHaveBeenCalledTimes(2);
   });
 
+  it('a stale microphone permission result releases only its own stream', async () => {
+    const pending = deferred<any>();
+    const staleStop = vi.fn();
+    ports.getUserMedia.mockReturnValueOnce(pending.promise);
+    const h = harness(); let older!: Promise<void>;
+    act(() => { older = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false }); });
+    await flush();
+    await h.start();
+    await act(async () => { pending.resolve({ getTracks: () => [{ stop: staleStop }] }); await older; });
+    expect(staleStop).toHaveBeenCalledOnce();
+    expect(stopTrack).not.toHaveBeenCalled();
+    expect(sessions[0].close).not.toHaveBeenCalled();
+    expect(contexts[0].state).toBe('running');
+    await act(async () => { await h.result.current.stop(); });
+    expect(stopTrack).toHaveBeenCalledOnce();
+  });
+
+  it('a stale transport connect cannot replace the newer session', async () => {
+    const pending = deferred<ReturnType<typeof makeSession>>();
+    ports.connect.mockImplementationOnce(options => { connections.push(options); return pending.promise; });
+    const h = harness(); let older!: Promise<void>;
+    act(() => { older = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false }); });
+    await flush(); await h.start();
+    const stale = makeSession();
+    await act(async () => { pending.resolve(stale); await older; });
+    expect(stale.close).toHaveBeenCalledOnce();
+    expect(sessions[0].close).not.toHaveBeenCalled();
+    await act(async () => { await h.result.current.stop(); });
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+  });
+
+  it('all concurrent stops wait for the same resource cleanup', async () => {
+    const h = harness(); await h.start();
+    const pending = deferred<void>(); ports.flushCapture.mockReturnValueOnce(pending.promise);
+    const finished = vi.fn();
+    let first!: Promise<void>; let second!: Promise<void>;
+    act(() => { first = h.result.current.stop(); second = h.result.current.stop().then(finished); });
+    await flush(); expect(finished).not.toHaveBeenCalled();
+    await act(async () => { pending.resolve(); await Promise.all([first, second]); });
+    expect(finished).toHaveBeenCalledOnce();
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+    expect(stopTrack).toHaveBeenCalledOnce();
+  });
+
+  it('capture flush failure still closes hardware and allows a later start', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const h = harness(); await h.start();
+    ports.flushCapture.mockRejectedValueOnce(new Error('capture flush failed'));
+    await act(async () => { await h.result.current.stop().catch(() => {}); });
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+    expect(stopTrack).toHaveBeenCalledOnce();
+    await h.start();
+    expect(sessions).toHaveLength(2);
+  });
+
+  it('an error callback cannot prevent transport cleanup or the terminal state', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const h = harness(); await h.start();
+    h.callbacks.onError.mockImplementation(() => { throw new Error('UI callback failed'); });
+    connections[0].callbacks.onerror(new Error('transport failed'));
+    await flush();
+    expect(stopTrack).toHaveBeenCalledOnce();
+    expect(contexts[0].state).toBe('closed');
+    expect(h.callbacks.onStateChange).toHaveBeenLastCalledWith('error');
+  });
+
   it('cancels pending decoded output on stop before it can enqueue or complete a turn', async () => {
     const decode = deferred<ArrayBuffer>(); ports.decode.mockReturnValue(decode.promise);
     const h = harness(); await h.start(true);
@@ -173,6 +253,17 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     expect(ports.trackUsage).toHaveBeenCalledWith({ totalTokenCount: 3 });
     expect(ports.flushUsage).toHaveBeenCalledOnce();
     expect(h.callbacks.onTurnTranscriptUpdate.mock.calls.map(([update]) => update)).toMatchSnapshot();
+  });
+
+  it('completes an audio response even when the provider omits output transcription', async () => {
+    const h = harness(); await h.start();
+    connections[0].callbacks.onmessage({ serverContent: {
+      inputTranscription: { text: 'User' },
+      modelTurn: { parts: [{ inlineData: { data: 'AQID' } }] }, turnComplete: true,
+    } });
+    await flush(); await advance(1500);
+    expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('User', '', new Int16Array(), [new Int16Array([100, 200, 300])]);
+    expect(ports.completeLog.mock.calls.some(([details]) => details.status === 'no-model-response')).toBe(false);
   });
 
   it('transfers confirmed pre-connect capture once and keeps the same microphone graph', async () => {

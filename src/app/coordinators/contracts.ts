@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { AppSettings, LanguagePair, ReplySuggestion } from '../../core/types';
 import type { GeminiLiveSttTurnComplete } from '../../features/speech';
+import type { LiveSessionState } from '../../store/slices/liveSessionSlice';
 
 export interface CurrentValue<T> { current: T }
 export type SetSettings = (settings: AppSettings | ((previous: AppSettings) => AppSettings)) => void;
@@ -19,7 +20,7 @@ export interface SpeechRoutingState {
   listening: boolean;
   attachedImageBase64: string | null;
   attachedImageMimeType: string | null;
-  liveSessionState: string;
+  liveSessionState: LiveSessionState;
 }
 export interface SpeechActions {
   stopListening: () => Promise<void>;
@@ -38,6 +39,7 @@ export type SttTurnHandler = (turn: GeminiLiveSttTurnComplete) => Promise<void>;
 
 export const STT_RESTART_DELAY_MS = 250;
 export interface SpeechModePorts extends SpeechActions {
+  pendingEnableRef: CurrentValue<symbol | null>;
   settingsRef: CurrentValue<AppSettings>;
   selectedLanguagePairRef: CurrentValue<LanguagePair | undefined>;
   stopSilentObserverRef: CurrentValue<() => Promise<void>>;

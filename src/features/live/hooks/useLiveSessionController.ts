@@ -15,6 +15,7 @@
 
 import { useCallback, useRef, useMemo } from 'react';
 import { cameraVideoConstraints } from '../../../core-sdk/media/cameraConsent';
+import { mergeInt16Arrays } from '../../../core-sdk/media/audioProcessing';
 import { 
   ChatMessage, 
   AppSettings,
@@ -326,6 +327,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     modelAudioLines?: Int16Array[]
   ) => {
     isFinalizingLiveTurnRef.current = true;
+    const hasModelAudio = Boolean(modelAudioLines?.some(segment => segment.length > 0));
     try {
       const userDraftMeta = liveDraftMessageMetaRef.current.user;
       let userMessageId = userDraftMeta.id || '';
@@ -427,6 +429,20 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       }
 
       // 2. Add Model Message
+      if (!modelText.trim() && hasModelAudio) {
+        // Transcription can be omitted even after valid audio was received.
+        // Keep that response replayable without inventing text for future prompts.
+        const audioResponse = {
+          imageUrl: pcmToWav(mergeInt16Arrays(modelAudioLines!), 24000),
+          imageMimeType: 'audio/wav',
+          attachmentName: 'live-response.wav',
+        };
+        if (findExistingMessageId(assistantId)) updateMessage(assistantId, audioResponse);
+        else {
+          const meta = assistantId ? { id: assistantId, timestamp: assistantTimestamp } : ensureLiveDraftMeta('assistant');
+          assistantId = addMessage({ ...meta, role: 'assistant', ...audioResponse });
+        }
+      }
       if (modelText) {
         if (findExistingMessageId(assistantId)) {
           updateMessage(assistantId, {
@@ -554,7 +570,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       console.error('Failed to process live turn completion:', error);
     } finally {
       isFinalizingLiveTurnRef.current = false;
-      if (modelText.trim()) {
+      if (modelText.trim() || hasModelAudio) {
         clearAllLiveDraftMessages();
       }
     }

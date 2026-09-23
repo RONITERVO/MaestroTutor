@@ -19,7 +19,6 @@ import { createHttpError, getErrorMessage, getHttpErrorCode } from '../http';
 import {
   releaseManagedReservation,
   reserveManagedCredits,
-  settleManagedReservation,
   sweepExpiredReservationsForUser,
 } from '../managedBilling';
 import {
@@ -28,6 +27,7 @@ import {
   usdToCredits
 } from '../pricing';
 import { getGeminiClient } from './client';
+import { settleCompletedManagedOperation } from './settlement';
 import { requireOwnedManagedContentFiles } from './fileLifecycle';
 
 const STREAM_CONTENT_TYPE = 'application/x-ndjson; charset=utf-8';
@@ -114,16 +114,17 @@ const serializeGenerateContentChunk = (chunk: any): Record<string, unknown> => {
   return serialized;
 };
 
-const withManagedReservation = async <T>(params: {
+interface ManagedGenerationAdmission {
   uid: string;
   user: AppUser;
   operation: string;
   model: string;
   contents: unknown;
   config?: Record<string, unknown>;
-  execute: (reservationId: string) => Promise<T>;
-  finalize: (reservationId: string, result: T) => Promise<{ result: T; billingSummary: unknown }>;
-}): Promise<{ result: T; billingSummary: unknown }> => {
+}
+
+/** One pricing/reservation policy for direct and streaming generation. */
+const reserveGenerationCredits = async (params: ManagedGenerationAdmission) => {
   await sweepExpiredReservationsForUser(params.uid);
 
   const promptTokens = await countPromptTokens(params.model, params.contents, params.config);
@@ -154,18 +155,25 @@ const withManagedReservation = async <T>(params: {
     },
   });
 
+  return reservation;
+};
+
+const withManagedReservation = async <T>(params: ManagedGenerationAdmission & {
+  execute: (reservationId: string) => Promise<T>;
+  finalize: (reservationId: string, result: T) => Promise<{ result: T; billingSummary: unknown }>;
+}): Promise<{ result: T; billingSummary: unknown }> => {
+  const reservation = await reserveGenerationCredits(params);
+  let result: T;
   try {
-    const result = await params.execute(reservation.reservationId);
-    const finalized = await params.finalize(reservation.reservationId, result);
-    return finalized;
+    result = await params.execute(reservation.reservationId);
   } catch (error) {
-    try {
-      await releaseManagedReservation(params.uid, reservation.reservationId, 'request-failed');
-    } catch {
-      // Preserve the original request failure.
-    }
+    try { await releaseManagedReservation(params.uid, reservation.reservationId, 'request-failed'); }
+    catch { /* Preserve the provider failure; expiry can release an uncompleted request. */ }
     throw error;
   }
+  // Provider completion and accounting failure are different outcomes. The
+  // finalizer persists actual usage; never refund this as a provider failure.
+  return params.finalize(reservation.reservationId, result);
 };
 
 export const generateManagedContent = async (params: {
@@ -212,7 +220,7 @@ export const generateManagedContent = async (params: {
         resolvedModelVersion,
       );
       const billedCredits = usdToCredits(billedUsd);
-      const billingSummary = await settleManagedReservation({
+      const billingSummary = await settleCompletedManagedOperation({
         uid: params.uid,
         reservationId,
         billedCredits,
@@ -253,35 +261,7 @@ export const streamManagedContent = async (params: {
   const config = prepareManagedGenerationConfig(params.config, model);
   const operation = resolveManagedContentOperation(config, true, model);
   await requireOwnedManagedContentFiles(params.uid, params.contents, config);
-  await sweepExpiredReservationsForUser(params.uid);
-
-  const promptTokens = await countPromptTokens(model, params.contents, config);
-  const reservedSearchQueries = usesManagedGoogleSearch(config)
-    ? appConfig.managedSearchReservationQueries
-    : 0;
-  const estimatedUsd = estimateReservationUsd({
-    model,
-    promptTokens,
-    operation,
-    searchQueries: reservedSearchQueries,
-    expectedOutputTokens: Number(config.maxOutputTokens),
-  });
-  const estimatedCredits = usdToCredits(estimatedUsd);
-
-  const reservation = await reserveManagedCredits({
-    uid: params.uid,
-    user: params.user,
-    operation,
-    model,
-    estimatedCredits,
-    estimatedUsd,
-    metadata: {
-      promptTokens,
-      reservedSearchQueries,
-      outputReservation: 'published-model-ceiling',
-      maxOutputTokens: config.maxOutputTokens,
-    },
-  });
+  const reservation = await reserveGenerationCredits({ ...params, model, operation, config });
 
   response.setHeader('Content-Type', STREAM_CONTENT_TYPE);
   response.setHeader('Cache-Control', 'no-store, no-transform');
@@ -296,6 +276,7 @@ export const streamManagedContent = async (params: {
   let streamedSearchQueryCount = 0;
   let clientDisconnected = false;
   let streamFinished = false;
+  let providerCompleted = false;
 
   const markDisconnected = () => {
     if (!streamFinished) {
@@ -338,6 +319,7 @@ export const streamManagedContent = async (params: {
       deliveredAnyChunk = true;
     }
 
+    providerCompleted = true;
     const usageMetadata = latestChunk?.usageMetadata as Record<string, unknown> | undefined;
     const billedUsd = usageMetadataToUsd(
       model,
@@ -348,7 +330,7 @@ export const streamManagedContent = async (params: {
       resolvedModelVersion,
     );
     const billedCredits = usdToCredits(billedUsd);
-    const billingSummary = await settleManagedReservation({
+    const billingSummary = await settleCompletedManagedOperation({
       uid: params.uid,
       reservationId: reservation.reservationId,
       billedCredits,
@@ -378,7 +360,10 @@ export const streamManagedContent = async (params: {
       response.end();
     }
   } catch (error) {
-    await releaseManagedReservation(params.uid, reservation.reservationId, 'provider-stream-failed');
+    if (!providerCompleted) {
+      try { await releaseManagedReservation(params.uid, reservation.reservationId, 'provider-stream-failed'); }
+      catch (releaseError) { console.error('Managed stream reservation release failed:', releaseError); }
+    }
     if (deliveredAnyChunk || clientDisconnected || response.headersSent) {
       if (!response.destroyed && response.writable && !response.writableEnded) {
         response.write(`${JSON.stringify({

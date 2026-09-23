@@ -63,6 +63,8 @@ const App: React.FC = () => {
   const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
   const cancelReengagementRef = useRef<() => void>(() => {});
   const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
+  const pendingSttEnableRef = useRef<symbol | null>(null);
+  useEffect(() => () => { pendingSttEnableRef.current = null; }, []);
   const resetSilentObserverRef = useRef<() => Promise<void>>(async () => {});
   const stopLiveSessionForHistoryLoadRef = useRef<() => Promise<void>>(async () => {});
   const handleToggleSuggestionModeRef = useRef<((forceState?: boolean) => void) | undefined>(undefined);
@@ -184,10 +186,6 @@ const App: React.FC = () => {
     const pair = state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
     return pair?.baseSystemPrompt || '';
   });
-  const currentReplySuggestionsPromptText = useMaestroStore(state => {
-    const pair = state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
-    return pair?.baseReplySuggestionsPrompt || '';
-  });
 
   const setTransitioningImageId = useMaestroStore(state => state.setTransitioningImageId);
   const setShowDebugLogs = useMaestroStore(state => state.setShowDebugLogs);
@@ -250,7 +248,6 @@ const App: React.FC = () => {
     cancelReengagementRef,
     transcript,
     currentSystemPromptText,
-    currentReplySuggestionsPromptText,
     setReplySuggestions,
     handleToggleSuggestionModeRef,
     maestroAvatarUriRef,
@@ -340,6 +337,7 @@ const App: React.FC = () => {
   }, [deleteMessage]);
 
   const { handleToggleSuggestionMode, sttMasterToggle } = useMemo(() => createSpeechModeActions({
+    pendingEnableRef: pendingSttEnableRef,
     isListening, stopListening, startListening, clearTranscript, settingsRef,
     selectedLanguagePairRef, setSettings, stopSilentObserverRef,
     setSttError: error => useMaestroStore.getState().setSttError(error),

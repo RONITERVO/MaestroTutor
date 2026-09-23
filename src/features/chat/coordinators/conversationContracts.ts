@@ -46,7 +46,6 @@ export interface UseTutorConversationConfig {
 
   // Prompts
   currentSystemPromptText: string;
-  currentReplySuggestionsPromptText: string;
 
   // Reply suggestions (managed by useChatStore, passed through)
   setReplySuggestions: (suggestions: ReplySuggestion[] | ((prev: ReplySuggestion[]) => ReplySuggestion[])) => void;

@@ -116,7 +116,7 @@ export function createSendCoordinator(ports: SendCoordinatorPorts) {
       return false;
     }
 
-    if (isResponsePendingRef.current || speechIsSpeakingRef.current) {
+    if (sendingTokenRef.current || isResponsePendingRef.current || speechIsSpeakingRef.current) {
       warnSttFlow('send.skip.busy', {
         responsePending: isResponsePendingRef.current,
         speaking: speechIsSpeakingRef.current,
@@ -434,4 +434,3 @@ const isInvalidApiKeyError = (error: ApiError): boolean => {
   // Check for both the RPC reason and the message content
   return msg.includes('api_key_invalid') || msg.includes('api key not valid');
 };
-

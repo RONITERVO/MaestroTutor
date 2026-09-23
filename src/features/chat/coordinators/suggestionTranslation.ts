@@ -24,7 +24,7 @@ export function createSuggestionTranslation(ports: SuggestionTranslationPorts) {
   const { addMessage, t, selectedLanguagePairRef, settingsRef, lastFetchedSuggestionsForRef, messagesRef, setMessages, setReplySuggestions, handleToggleSuggestionModeRef, addActivityToken, removeActivityToken, createSuggestionTokenRef, translateText, trackGeminiUsage } = ports;
   return async (textToTranslate: string) => {
 
-    if (!textToTranslate || !selectedLanguagePairRef.current) return;
+    if (!textToTranslate || !selectedLanguagePairRef.current || createSuggestionTokenRef.current) return;
 
     // Add token for creating suggestion
     createSuggestionTokenRef.current = addActivityToken(TOKEN_CATEGORY.GEN, TOKEN_SUBTYPE.CREATE_SUGGESTION);

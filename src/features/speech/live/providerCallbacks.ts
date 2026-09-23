@@ -14,11 +14,12 @@ import type { LiveSessionData } from './state';
 import { type createLiveTelemetry } from './telemetry';
 import { type createLiveTranscripts } from './transcripts';
 import { type LiveTurnTranscriptUpdateReason } from './types';
+import { notifyLiveConsumer } from './notifications';
 
 export interface LiveProviderPorts {
   activity: Pick<ReturnType<typeof createLiveActivity>, 'setVadActivity' | 'updateState'>;
   audio: ReturnType<typeof createLiveModelAudio>;
-  transcripts: Pick<ReturnType<typeof createLiveTranscripts>, 'getTranscriptLinkedUserAudio' | 'emitTurnTranscriptUpdate'>;
+  transcripts: Pick<ReturnType<typeof createLiveTranscripts>, 'getTranscriptLinkedUserAudio' | 'emitTurnTranscriptUpdate' | 'flushPendingTranscriptUpdate'>;
   cleanup: ReturnType<typeof createLiveLifecycle>['cleanup'];
   getAudioTelemetrySnapshot: ReturnType<typeof createLiveTelemetry>['getAudioTelemetrySnapshot'];
   debugLogService: LiveRuntimePorts['debugLogService'];
@@ -59,7 +60,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
     waitForModelAudioDecodeCheckpoint, waitForPlaybackDrain, startNextModelAudioTurn,
     stopAllAudio,
   } = ports.audio;
-  const { getTranscriptLinkedUserAudio, emitTurnTranscriptUpdate } = ports.transcripts;
+  const { getTranscriptLinkedUserAudio, emitTurnTranscriptUpdate, flushPendingTranscriptUpdate } = ports.transcripts;
   const { cleanup, getAudioTelemetrySnapshot, debugLogService } = ports;
   const { sessionId, playModelAudio, emitTurns, observerActivity, usageTracker } = session;
   let transportTerminalHandled = false;
@@ -99,10 +100,10 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
       }
     }
     if (terminalState === 'error') {
-      callbacksRef.current.onError?.(errorMessage || 'Connection error');
+      notifyLiveConsumer(() => callbacksRef.current.onError?.(errorMessage || 'Connection error'));
     }
     await cleanup();
-    updateState(terminalState);
+    if (currentSessionIdRef.current === 0) updateState(terminalState);
   };
   const turnFinalizer = new LiveTurnFinalizer(async () => {
     await serverMessageQueueRef.current.catch(() => undefined);
@@ -125,6 +126,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
     const modelText = currentOutputTranscriptionRef.current.trim();
     const userAudioFull = getTranscriptLinkedUserAudio();
     const modelAudioFull = mergeInt16Arrays(currentModelAudioChunksRef.current);
+    const hasModelResponse = Boolean(modelText || modelAudioFull.length);
     const modelAudioLines: Int16Array[] = [];
 
     if (modelAudioSplitPointsRef.current.length > 0 && modelAudioFull.length > 0) {
@@ -156,7 +158,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
       ? 'waiting-for-input'
       : 'no-model-response';
 
-    if (!modelText) {
+    if (!hasModelResponse) {
       if (userText || userAudioFull.length > 0 || inputTranscript) {
         if (pendingUserTurnRef.current) {
           const prev = pendingUserTurnRef.current;
@@ -199,6 +201,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
       }
 
       if (emitTurns) {
+        flushPendingTranscriptUpdate();
         try {
           const callbackResult = callbacksRef.current.onTurnComplete?.(
             finalUserText,
@@ -261,7 +264,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
     currentModelThinkingPhaseRef.current = undefined;
     currentModelThinkingStatusLineRef.current = undefined;
     currentTurnWaitingForInputRef.current = false;
-    if (!modelText) {
+    if (!hasModelResponse) {
       emitTurnTranscriptUpdate(completionReason);
     }
   };
@@ -311,10 +314,10 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
             usageTracker.trackSnapshot(msg.usageMetadata);
           }
           if (msg.goAway) {
-            callbacksRef.current.onGoAway?.(msg.goAway);
+            notifyLiveConsumer(() => callbacksRef.current.onGoAway?.(msg.goAway!));
           }
           if (msg.sessionResumptionUpdate) {
-            callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate);
+            notifyLiveConsumer(() => callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate!));
           }
 
           // 1. Handle Audio Output

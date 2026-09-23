@@ -27,6 +27,15 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
     currentModelAudioTotalLengthRef,
   } = state;
   const { setTimeout, createCodecWorker } = ports;
+  let pendingDrain: {
+    checkpoint: ModelAudioDecodeCheckpoint;
+    node: AudioWorkletNode;
+    context: AudioContext;
+    promise: Promise<void>;
+  } | null = null;
+  const sameCheckpoint = (a: ModelAudioDecodeCheckpoint, b: ModelAudioDecodeCheckpoint) => (
+    a.sessionId === b.sessionId && a.turnId === b.turnId && a.lastJobId === b.lastJobId
+  );
   const startNextModelAudioTurn = (sessionId: number) => {
     currentModelAudioTurnIdRef.current = sessionId > 0 ? nextModelAudioTurnIdRef.current++ : 0;
   };
@@ -70,6 +79,7 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
   };
 
   const stopAllAudio = () => {
+    pendingDrain = null;
     playbackDrainCoordinatorRef.current.cancelAll();
     playbackPendingRef.current = false;
     if (playbackNodeRef.current) {
@@ -83,32 +93,42 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
     }
   };
 
-  const waitForPlaybackDrain = async () => {
+  const waitForPlaybackDrain = (): Promise<void> => {
     const playbackNode = playbackNodeRef.current;
     const outputContext = outputAudioContextRef.current;
-    if (!playbackNode || !outputContext || !playbackPendingRef.current) return;
-
-    const startedAt = Date.now();
     const decodeCheckpoint = getModelAudioDecodeCheckpoint();
-    const result = await playbackDrainCoordinatorRef.current.request(playbackNode.port);
-    playbackTelemetryRef.current.lastDrainWaitMs = Date.now() - startedAt;
-    if (result !== 'drained') {
-      playbackTelemetryRef.current.drainCancellations += 1;
-      return;
+    if (pendingDrain && pendingDrain.node === playbackNode && pendingDrain.context === outputContext
+      && sameCheckpoint(pendingDrain.checkpoint, decodeCheckpoint)) {
+      return pendingDrain.promise;
     }
+    if (!playbackNode || !outputContext || !playbackPendingRef.current) return Promise.resolve();
 
-    // An acknowledgement can race with a late PCM chunk. It must not clear
-    // that newer chunk's pending flag or the next settlement could skip it.
-    const latestCheckpoint = getModelAudioDecodeCheckpoint();
-    if (
-      latestCheckpoint.sessionId === decodeCheckpoint.sessionId
-      && latestCheckpoint.turnId === decodeCheckpoint.turnId
-      && latestCheckpoint.lastJobId === decodeCheckpoint.lastJobId
-    ) playbackPendingRef.current = false;
-    playbackTelemetryRef.current.drains += 1;
-    if (outputAudioContextRef.current !== outputContext || outputContext.state === 'closed') return;
-    await new Promise(resolve => setTimeout(resolve, getAudioOutputTailDelayMs(outputContext)));
-    turnTimingRef.current?.markLatest('playback.drained');
+    const drain = { checkpoint: decodeCheckpoint, node: playbackNode, context: outputContext, promise: Promise.resolve() };
+    pendingDrain = drain;
+    const timing = turnTimingRef.current;
+    const isCurrent = () => outputAudioContextRef.current === outputContext
+      && currentSessionIdRef.current === decodeCheckpoint.sessionId
+      && currentModelAudioTurnIdRef.current === decodeCheckpoint.turnId;
+    drain.promise = (async () => {
+      const startedAt = Date.now();
+      const result = await playbackDrainCoordinatorRef.current.request(playbackNode.port);
+      if (!isCurrent()) return;
+      playbackTelemetryRef.current.lastDrainWaitMs = Date.now() - startedAt;
+      if (result !== 'drained') {
+        playbackTelemetryRef.current.drainCancellations += 1;
+        return;
+      }
+      playbackTelemetryRef.current.drains += 1;
+      if (outputContext.state === 'closed') return;
+      await new Promise(resolve => setTimeout(resolve, getAudioOutputTailDelayMs(outputContext)));
+      if (!isCurrent()) return;
+      // A late PCM chunk still owns its own drain, even after this tail finishes.
+      if (sameCheckpoint(getModelAudioDecodeCheckpoint(), decodeCheckpoint)) {
+        playbackPendingRef.current = false;
+        timing?.markLatest('playback.drained');
+      }
+    })().finally(() => { if (pendingDrain === drain) pendingDrain = null; });
+    return drain.promise;
   };
 
   const ensureInputCodecWorker = () => {

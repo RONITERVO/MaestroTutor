@@ -240,6 +240,56 @@ describe('actual App speech and idle routing (baseline before extraction)', () =
     expect(completed).toBe(true);
   });
 
+  it('admits one reengagement while observer shutdown is pending and releases ownership after failure', async () => {
+    mount();
+    const stopped = deferred();
+    ports.stopObserver.mockReturnValueOnce(stopped.promise);
+    await act(async () => {
+      const first = ports.smartConfig.triggerReengagementSequence();
+      const second = ports.smartConfig.triggerReengagementSequence();
+      stopped.resolve();
+      await Promise.all([first, second]);
+    });
+    expect(ports.stopObserver).toHaveBeenCalledOnce();
+    expect(ports.send).toHaveBeenCalledOnce();
+    ports.stopObserver.mockRejectedValueOnce(new Error('stop failed'));
+    await act(async () => { await expect(ports.smartConfig.triggerReengagementSequence()).rejects.toThrow('stop failed'); });
+    await act(async () => { await ports.smartConfig.triggerReengagementSequence(); });
+    expect(ports.send).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['second-toggle', 'unmount'])('cancels a pending microphone enable on %s', async cancellation => {
+    setStt({ enabled: false });
+    const app = mount();
+    const stopped = deferred();
+    ports.stopObserver.mockReturnValueOnce(stopped.promise);
+    await act(async () => {
+      const first = ports.chatProps.onSttToggle();
+      if (cancellation === 'second-toggle') await ports.chatProps.onSttToggle();
+      else app.unmount();
+      stopped.resolve();
+      await first;
+    });
+    expect(ports.startListening).not.toHaveBeenCalled();
+    expect(useMaestroStore.getState().settings.stt.enabled).toBe(false);
+  });
+
+  it('an older cancelled microphone enable cannot complete a newer request', async () => {
+    setStt({ enabled: false });
+    mount();
+    const older = deferred(); const newer = deferred();
+    ports.stopObserver.mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+    await act(async () => {
+      const first = ports.chatProps.onSttToggle();
+      const cancel = ports.chatProps.onSttToggle();
+      const third = ports.chatProps.onSttToggle();
+      older.resolve(); await first;
+      expect(ports.startListening).not.toHaveBeenCalled();
+      newer.resolve(); await third; await cancel;
+    });
+    expect(ports.startListening).toHaveBeenCalledExactlyOnceWith('es');
+  });
+
   it('manual Live starts after observer stop, and observer completion schedules only after turn persistence', async () => {
     mount();
     await act(async () => { await ports.chatProps.onStartLiveSession(); });
@@ -287,6 +337,35 @@ describe('actual App speech and idle routing (baseline before extraction)', () =
     expect(ports.stopLive).toHaveBeenCalledWith({ scheduleReengagement: false });
     await act(async () => { await vi.advanceTimersByTimeAsync(250); });
     expect(ports.startListening).toHaveBeenCalledExactlyOnceWith('fi');
+  });
+
+  it.each(['stopping', 'delayed'])('keeps a language reset alive across callback changes while %s', async phase => {
+    const app = mount();
+    const stopped = deferred();
+    if (phase === 'stopping') ports.stopLive.mockReturnValueOnce(stopped.promise);
+    await act(async () => {
+      const state = useMaestroStore.getState();
+      useMaestroStore.setState({ settings: { ...state.settings, selectedLanguagePairId: nextPair.id, stt: { ...state.settings.stt, language: 'fi' } } });
+    });
+    const latestStart = vi.fn();
+    ports.speech.startListening = latestStart;
+    app.rerender(<App />);
+    await act(async () => { stopped.resolve(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(250); });
+    expect(ports.startListening).not.toHaveBeenCalled();
+    expect(latestStart).toHaveBeenCalledExactlyOnceWith('fi');
+    expect(ports.stopLive).toHaveBeenCalledOnce();
+  });
+
+  it('uses the current language after translation mode changes again during a delayed restart', async () => {
+    ports.speech.isListening = true;
+    mount();
+    act(() => { ports.chatProps.onToggleSuggestionMode(true); });
+    act(() => { ports.chatProps.onToggleSuggestionMode(false); });
+    const currentLanguage = useMaestroStore.getState().settings.stt.language;
+    await act(async () => { await vi.advanceTimersByTimeAsync(250); });
+    expect(ports.startListening).toHaveBeenCalledTimes(2);
+    expect(ports.startListening.mock.calls.map(([language]) => language)).toEqual([currentLanguage, currentLanguage]);
   });
 
   it.each(['unmount', 'live-active', 'disabled'])('suppresses delayed language restart after %s', async reason => {

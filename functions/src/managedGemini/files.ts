@@ -8,7 +8,7 @@ import {
   managedFileRef
 } from '../managedData';
 import { getGeminiClient } from './client';
-import { isNotFoundError, normalizeGeminiFileName } from './fileIdentity';
+import { hasManagedFileExpired, isNotFoundError, normalizeGeminiFileName } from './fileIdentity';
 import { deleteManagedFileByName } from './fileLifecycle';
 import { markManagedFileDeleted } from './fileQuota';
 
@@ -20,7 +20,7 @@ export const getManagedFileStatuses = async (uid: string, uris: string[]) => {
   if (uris.length > MAX_FILE_STATUS_URIS) {
     throw createHttpError(400, `At most ${MAX_FILE_STATUS_URIS} file URIs may be checked at once.`);
   }
-  const statuses: Record<string, { deleted: boolean; active: boolean }> = {};
+  const statuses: Record<string, { deleted: boolean; active: boolean }> = Object.create(null);
 
   for (let index = 0; index < uris.length; index += FILE_STATUS_BATCH_SIZE) {
     const batch = uris.slice(index, index + FILE_STATUS_BATCH_SIZE);
@@ -37,6 +37,11 @@ export const getManagedFileStatuses = async (uid: string, uris: string[]) => {
         statuses[uri] = { deleted: true, active: false };
         return;
       }
+      if (hasManagedFileExpired(data)) {
+        await markManagedFileDeleted(uid, fileName);
+        statuses[uri] = { deleted: true, active: false };
+        return;
+      }
 
       try {
         const file = await getGeminiClient().files.get({ name: fileName });
@@ -45,12 +50,13 @@ export const getManagedFileStatuses = async (uid: string, uris: string[]) => {
         statuses[uri] = { deleted, active };
 
         if (deleted) {
-          await markManagedFileDeleted(uid, fileName);
+          await snapshot.ref.update({ state: 'failed', lastCheckedAt: Date.now() });
+          await deleteManagedFileByName(uid, fileName);
         } else {
-          await managedFileRef(uid, fileName).set({
+          await snapshot.ref.update({
             lastCheckedAt: Date.now(),
             state: active ? 'active' : 'processing',
-          }, { merge: true });
+          });
         }
       } catch (error) {
         if (isNotFoundError(error)) {

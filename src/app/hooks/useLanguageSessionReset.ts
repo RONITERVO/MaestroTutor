@@ -9,25 +9,21 @@ type LanguageSessionResetConfig = Omit<LanguageChangePorts, 'readState' | 'delay
   selectedLanguagePairId: string | null;
 };
 
-/** React owns pair-transition detection and effect cancellation; the coordinator
- * owns stop/restart ordering. Initial selection from null is a real transition. */
-export const useLanguageSessionReset = ({
-  selectedLanguagePairId, settingsRef, cancelReengagement, clearTranscript,
-  handleStopLiveSession, resetSilentObserver, setSttError, startListening,
-  stopListening, stopSpeaking,
-}: LanguageSessionResetConfig) => {
+/** Pair changes and unmount cancel a reset; refreshed feature callbacks do not.
+ * The delayed restart must use the latest committed speech callback. */
+export const useLanguageSessionReset = (config: LanguageSessionResetConfig) => {
+  const { selectedLanguagePairId } = config;
+  const latestConfigRef = useRef(config);
+  useEffect(() => { latestConfigRef.current = config; });
   const previousLanguagePairIdRef = useRef<string | null>(selectedLanguagePairId);
   useEffect(() => {
     if (selectedLanguagePairId === previousLanguagePairIdRef.current) return;
     previousLanguagePairIdRef.current = selectedLanguagePairId;
     return beginLanguageChangeReset({
-      cancelReengagement, settingsRef, stopSpeaking, stopListening, clearTranscript,
-      setSttError, resetSilentObserver, handleStopLiveSession, startListening,
+      ...latestConfigRef.current,
+      startListening: language => latestConfigRef.current.startListening(language),
       readState: readSpeechRoutingState,
       delay: (callback, milliseconds) => window.setTimeout(callback, milliseconds),
     });
-  }, [
-    cancelReengagement, clearTranscript, handleStopLiveSession, resetSilentObserver,
-    selectedLanguagePairId, settingsRef, setSttError, startListening, stopListening, stopSpeaking,
-  ]);
+  }, [selectedLanguagePairId]);
 };

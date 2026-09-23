@@ -50,11 +50,7 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     startNextModelAudioTurn, stopAllAudio, stopVideoFrameLoop,
     updateState, getAudioTelemetrySnapshot, flushCaptureWorkletNode,
   } = ports;
-  const cleanup = async () => {
-    // Prevent concurrent cleanup operations
-    if (isCleaningUpRef.current) return;
-    isCleaningUpRef.current = true;
-
+  const release = async () => {
     speechTriggerAbortRef.current?.abort();
     speechTriggerAbortRef.current = null;
     setLocalSpeechTriggerPhase(null);
@@ -68,17 +64,20 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     }
     const activeCaptureNode = workletNodeRef.current;
     if (activeCaptureNode && !wasSpeechGated) {
-      await flushCaptureWorkletNode(activeCaptureNode);
+      try { await flushCaptureWorkletNode(activeCaptureNode); }
+      catch (error) { console.warn('Live capture flush during cleanup failed:', error); }
     }
     if (inputPacketizerRef.current) {
       if (!wasSpeechGated) {
-        await inputPacketizerRef.current.flushPending();
+        try { await inputPacketizerRef.current.flushPending(); }
+        catch (error) { console.warn('Live packet flush during cleanup failed:', error); }
       }
-      inputPacketizerRef.current.dispose();
+      try { inputPacketizerRef.current.dispose(); } catch (error) { console.warn('Live packetizer disposal failed:', error); }
       inputPacketizerRef.current = null;
     }
     if (pcmCaptureRouterRef.current) {
-      await pcmCaptureRouterRef.current.stop();
+      try { await pcmCaptureRouterRef.current.stop(); }
+      catch (error) { console.warn('Live capture router stop failed:', error); }
       pcmCaptureRouterRef.current = null;
     }
 
@@ -155,11 +154,11 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     }
 
     if (inputCodecWorkerRef.current) {
-      inputCodecWorkerRef.current.dispose();
+      try { inputCodecWorkerRef.current.dispose(); } catch (error) { console.warn('Live input codec disposal failed:', error); }
       inputCodecWorkerRef.current = null;
     }
     if (outputCodecWorkerRef.current) {
-      outputCodecWorkerRef.current.dispose();
+      try { outputCodecWorkerRef.current.dispose(); } catch (error) { console.warn('Live output codec disposal failed:', error); }
       outputCodecWorkerRef.current = null;
     }
 
@@ -183,13 +182,25 @@ export function createLiveLifecycle(state: Pick<LiveSessionData,
     lastTranscriptUpdateRef.current = null;
     pendingUserTurnRef.current = null;
 
-    isCleaningUpRef.current = false;
+  };
+
+  let cleanupPromise: Promise<void> | null = null;
+  const cleanup = (): Promise<void> => {
+    if (cleanupPromise) return cleanupPromise;
+    isCleaningUpRef.current = true;
+    // Publish the promise before invoking any callback, including synchronous ones.
+    cleanupPromise = Promise.resolve().then(release).finally(() => {
+      isCleaningUpRef.current = false;
+      cleanupPromise = null;
+    });
+    return cleanupPromise;
   };
 
   const stop = async () => {
     updateState('idle');
     if (inputPacketizerRef.current && !speechGateRef.current) {
-      await inputPacketizerRef.current.flushPending();
+      try { await inputPacketizerRef.current.flushPending(); }
+      catch (error) { console.warn('Live packet flush during stop failed:', error); }
     }
     if (logRef.current && !logFinalizedRef.current) {
       logFinalizedRef.current = true;

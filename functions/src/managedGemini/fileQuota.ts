@@ -4,6 +4,7 @@
 /** Transactional file quota and deletion accounting. Keep record/quota writes atomic. */
 
 import { appConfig } from '../config';
+import { randomUUID } from 'node:crypto';
 import { adminDb } from '../firebase';
 import { createHttpError } from '../http';
 import {
@@ -12,6 +13,7 @@ import {
   ensureManagedUserDocument,
   managedFileQuotaRef,
   managedFileRef,
+  managedFilesCollection,
   timestampFromMillis
 } from '../managedData';
 
@@ -21,18 +23,31 @@ const readActiveManagedFileCount = (value: unknown): number => {
   return Math.floor(parsed);
 };
 
-export const reserveManagedUploadSlot = async (uid: string): Promise<void> => {
+// Longer than the Functions request lifetime, but finite after a crashed upload.
+const UPLOAD_SLOT_LIFETIME_MS = 15 * 60 * 1000;
+interface UploadSlot { id: string; expiresAt: number }
+const readUploadSlots = (value: unknown): UploadSlot[] => Array.isArray(value)
+  ? value.filter((slot): slot is UploadSlot => typeof slot?.id === 'string' && Number.isFinite(slot.expiresAt))
+  : [];
+
+export const reserveManagedUploadSlot = async (uid: string): Promise<string> => {
   await ensureManagedUserDocument(uid);
-  await adminDb.runTransaction(async (transaction: any) => {
+  const slotId = randomUUID();
+  return adminDb.runTransaction(async (transaction: any) => {
     const summaryRef = managedFileQuotaRef(uid);
-    const [summarySnapshot, deletionClaim] = await Promise.all([
+    const [summarySnapshot, deletionClaim, files] = await Promise.all([
       transaction.get(summaryRef),
       transaction.get(accountDeletionClaimRef(uid)),
+      // The query also repairs anonymous counters left by older crashed uploads.
+      // cap+1 is enough to deny admission without reading an unbounded history.
+      transaction.get(managedFilesCollection(uid).where('deletedAt', '==', null)
+        .limit(appConfig.managedMaxActiveFilesPerUser + 1)),
     ]);
     if (deletionClaim.exists) {
       throw createHttpError(409, 'This managed account is being deleted.');
     }
-    const currentCount = readActiveManagedFileCount(summarySnapshot.data()?.activeManagedFileCount);
+    const slots = readUploadSlots(summarySnapshot.data()?.pendingUploadSlots).filter(slot => slot.expiresAt > Date.now());
+    const currentCount = files.size + slots.length;
     if (currentCount >= appConfig.managedMaxActiveFilesPerUser) {
       throw createHttpError(
         403,
@@ -42,20 +57,45 @@ export const reserveManagedUploadSlot = async (uid: string): Promise<void> => {
 
     transaction.set(summaryRef, {
       activeManagedFileCount: currentCount + 1,
+      pendingUploadSlots: [...slots, { id: slotId, expiresAt: Date.now() + UPLOAD_SLOT_LIFETIME_MS }],
       updatedAt: Date.now(),
     }, { merge: true });
+    return slotId;
   });
 };
 
-export const releaseManagedUploadSlot = async (uid: string): Promise<void> => {
+export const releaseManagedUploadSlot = async (uid: string, slotId: string): Promise<void> => {
   await adminDb.runTransaction(async (transaction: any) => {
     const summaryRef = managedFileQuotaRef(uid);
     const summarySnapshot = await transaction.get(summaryRef);
+    // A delayed failure must not recreate a deleted account's runtime subtree.
+    if (!summarySnapshot.exists) return;
+    const slots = readUploadSlots(summarySnapshot.data()?.pendingUploadSlots);
+    if (!slots.some(slot => slot.id === slotId)) return;
     const currentCount = readActiveManagedFileCount(summarySnapshot.data()?.activeManagedFileCount);
-    transaction.set(summaryRef, {
+    transaction.update(summaryRef, {
       activeManagedFileCount: Math.max(0, currentCount - 1),
+      pendingUploadSlots: slots.filter(slot => slot.id !== slotId),
       updatedAt: Date.now(),
-    }, { merge: true });
+    });
+  });
+};
+
+/** Transfer the counted slot to durable provider metadata in the same transaction. */
+export const commitManagedUploadSlot = async (
+  uid: string, slotId: string, fileName: string, metadata: Record<string, unknown>,
+): Promise<void> => {
+  await adminDb.runTransaction(async (transaction: any) => {
+    const summaryRef = managedFileQuotaRef(uid);
+    const [summary, deletionClaim] = await Promise.all([
+      transaction.get(summaryRef), transaction.get(accountDeletionClaimRef(uid)),
+    ]);
+    if (deletionClaim.exists) throw createHttpError(409, 'This managed account is being deleted.');
+    const slots = readUploadSlots(summary.data()?.pendingUploadSlots);
+    const slot = slots.find(value => value.id === slotId);
+    if (!slot || slot.expiresAt <= Date.now()) throw createHttpError(409, 'The managed upload reservation expired.');
+    transaction.set(managedFileRef(uid, fileName), { ...metadata, uid, name: fileName }, { merge: true });
+    transaction.update(summaryRef, { pendingUploadSlots: slots.filter(value => value.id !== slotId), updatedAt: Date.now() });
   });
 };
 
@@ -82,10 +122,12 @@ export const markManagedFileDeleted = async (uid: string, fileName: string): Pro
       cleanupLastError: null,
       purgeAt: timestampFromMillis(Date.now() + MANAGED_RUNTIME_RETENTION_MS),
     }, { merge: true });
-    transaction.set(summaryRef, {
-      activeManagedFileCount: Math.max(0, currentCount - 1),
-      updatedAt: Date.now(),
-    }, { merge: true });
+    if (summarySnapshot.exists) {
+      transaction.update(summaryRef, {
+        activeManagedFileCount: Math.max(0, currentCount - 1),
+        updatedAt: Date.now(),
+      });
+    }
     return true;
   })
 );

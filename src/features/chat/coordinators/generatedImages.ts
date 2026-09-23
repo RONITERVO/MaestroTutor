@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { AppSettings, ChatMessage } from '../../../core/types';
 import type { UseTutorConversationConfig, UseTutorConversationReturn, MutableValue } from './conversationContracts';
-import type { createMediaPersistence, SetSendPrep } from './mediaPersistence';
+import type { createMediaPersistence, OptimizedMedia, SetSendPrep } from './mediaPersistence';
 import type { runMaestroImageGeneration as generateImage } from '../../../api/gemini/journeys';
 import type { sanitizeHistoryWithVerifiedUris as sanitizeHistory } from '../../../api/gemini/files';
 import type { deriveHistoryForApi as deriveHistory } from '..';
@@ -56,12 +56,19 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
     });
 
     const sanitizedUserHistoryForImage = params.sanitizedDerivedHistory as any;
-    const finalResult = await runMaestroImageGeneration({
-      contextText: params.userMessageText,
-      history: sanitizedUserHistoryForImage,
-      maestroAvatarUri: maestroAvatarUriRef.current || undefined,
-      maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
-    });
+    let finalResult: Awaited<ReturnType<typeof runMaestroImageGeneration>>;
+    try {
+      finalResult = await runMaestroImageGeneration({
+        contextText: params.userMessageText,
+        history: sanitizedUserHistoryForImage,
+        maestroAvatarUri: maestroAvatarUriRef.current || undefined,
+        maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
+      });
+    } catch (error) {
+      console.warn('Optional user image generation failed.', error);
+      updateMessage(params.userMessageId, { isGeneratingImage: false, imageGenerationStartTime: undefined });
+      return {};
+    }
 
     if (finalResult && 'base64Image' in finalResult) {
       const duration = Date.now() - userImageGenStartTime;
@@ -70,11 +77,13 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
         setCostWarningShown();
         addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
       }
+      let optimizedMedia: OptimizedMedia | undefined;
       try {
         const { optimized, upload } = await optimizeAndUploadMedia({
           dataUrl: finalResult.base64Image as string,
           mimeType: finalResult.mimeType as string,
           displayName: 'user-generated',
+          onOptimized: media => { optimizedMedia = media; },
         });
         const uploadedAttachmentState = buildUploadedAttachmentState([
           {
@@ -104,6 +113,7 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
         updateMessage(params.userMessageId, {
           imageUrl: finalResult.base64Image,
           imageMimeType: finalResult.mimeType,
+          ...(optimizedMedia ? { storageOptimizedImageUrl: optimizedMedia.dataUrl, storageOptimizedImageMimeType: optimizedMedia.mimeType } : {}),
           isGeneratingImage: false,
           imageGenError: null,
           imageGenerationStartTime: undefined
@@ -184,13 +194,19 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
       globalProfileText: gpTextForAssistant,
       placeholderLatestUserMessage: DEFAULT_IMAGE_GEN_EXTRA_USER_MESSAGE,
     });
-    const sanitizedAssistantHistoryForImage = await sanitizeHistoryWithVerifiedUris(assistantHistory as any);
-    const assistantImgGenResult = await runMaestroImageGeneration({
-      contextText: params.accumulatedFullText,
-      history: sanitizedAssistantHistoryForImage,
-      maestroAvatarUri: maestroAvatarUriRef.current || undefined,
-      maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
-    });
+    let assistantImgGenResult: Awaited<ReturnType<typeof runMaestroImageGeneration>>;
+    try {
+      const sanitizedAssistantHistoryForImage = await sanitizeHistoryWithVerifiedUris(assistantHistory as any);
+      assistantImgGenResult = await runMaestroImageGeneration({
+        contextText: params.accumulatedFullText,
+        history: sanitizedAssistantHistoryForImage,
+        maestroAvatarUri: maestroAvatarUriRef.current || undefined,
+        maestroAvatarMimeType: maestroAvatarMimeTypeRef.current || undefined,
+      });
+    } catch (error) {
+      updateMessage(params.thinkingMessageId, { isGeneratingImage: false, imageGenerationStartTime: undefined });
+      throw error;
+    }
 
     if ('base64Image' in assistantImgGenResult) {
       const duration = Date.now() - assistantStartTime;
@@ -199,12 +215,14 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
         setCostWarningShown();
         addMessage({ role: 'error', text: t('error.imageGenCostWarning'), errorAction: 'imageGenCost' });
       }
+      let optimizedMedia: OptimizedMedia | undefined;
       try {
         const { optimized, upload } = await optimizeAndUploadMedia({
           dataUrl: assistantImgGenResult.base64Image,
           mimeType: assistantImgGenResult.mimeType,
           displayName: 'assistant-generated',
           setUploadPrepLabel: false,
+          onOptimized: media => { optimizedMedia = media; },
         });
         const uploadedAttachmentState = buildUploadedAttachmentState([
           {
@@ -233,6 +251,7 @@ export function createGeneratedImages(ports: GeneratedImagesPorts) {
           imageUrl: assistantImgGenResult.base64Image,
           imageMimeType: assistantImgGenResult.mimeType,
           attachmentName: 'assistant-generated.jpg',
+          ...(optimizedMedia ? { storageOptimizedImageUrl: optimizedMedia.dataUrl, storageOptimizedImageMimeType: optimizedMedia.mimeType } : {}),
           isGeneratingImage: false,
           imageGenError: null,
           imageGenerationStartTime: undefined,

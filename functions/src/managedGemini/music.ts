@@ -3,7 +3,6 @@
 
 /** Managed Lyria capture, sample completion, service-fee settlement and lease cleanup. */
 
-import { GoogleGenAI } from '@google/genai';
 import { buildMusicPrompt } from '../../../shared/prompts/music';
 import type { AppUser } from '../auth';
 import { appConfig } from '../config';
@@ -14,7 +13,6 @@ import { createHttpError } from '../http';
 import {
   releaseManagedReservation,
   reserveManagedCredits,
-  settleManagedReservation
 } from '../managedBilling';
 import {
   MANAGED_MUSIC_GENERATION_TIMEOUT_MS,
@@ -26,6 +24,8 @@ import {
   creditsToUsd
 } from '../pricing';
 import { releaseManagedLiveLease, reserveManagedLiveLease } from './liveLeases';
+import { getGeminiClient } from './client';
+import { settleCompletedManagedOperation } from './settlement';
 
 const MANAGED_MUSIC_MIN_DURATION_SECONDS = 8;
 
@@ -56,6 +56,7 @@ const parseMusicMimeInteger = (mimeType: string | undefined, name: string): numb
 };
 
 const generateMusicPcm = async (params: {
+  client: ReturnType<typeof getGeminiClient>;
   model: string;
   prompt: string;
   durationSeconds: number;
@@ -66,10 +67,7 @@ const generateMusicPcm = async (params: {
   channels: number;
   sampleCount: number;
 }> => new Promise((resolve, reject) => {
-  const client = new GoogleGenAI({
-    apiKey: appConfig.geminiApiKey,
-    apiVersion: 'v1alpha',
-  });
+  const client = params.client;
   let session: any = null;
   let settled = false;
   let setupComplete = false;
@@ -244,9 +242,7 @@ export const generateManagedMusic = async (params: {
   prompt: string;
   durationSeconds?: number;
 }) => {
-  if (!appConfig.geminiApiKey) {
-    throw createHttpError(500, 'GEMINI_API_KEY is not configured on the backend.');
-  }
+  const client = getGeminiClient('v1alpha');
   const prompt = params.prompt.trim();
   if (!prompt) throw createHttpError(400, 'Music prompt is empty.');
   if (prompt.length > 4_000) throw createHttpError(400, 'Music prompt is too long.');
@@ -288,9 +284,11 @@ export const generateManagedMusic = async (params: {
     throw error;
   }
 
+  let providerCompleted = false;
   try {
-    const generated = await generateMusicPcm({ model, prompt, durationSeconds });
-    const billingSummary = await settleManagedReservation({
+    const generated = await generateMusicPcm({ client, model, prompt, durationSeconds });
+    providerCompleted = true;
+    const billingSummary = await settleCompletedManagedOperation({
       uid: params.uid,
       reservationId: reservation.reservationId,
       billedCredits: fixedCredits,
@@ -309,8 +307,10 @@ export const generateManagedMusic = async (params: {
     });
     return { ...generated, billingSummary };
   } catch (error) {
-    await releaseManagedReservation(params.uid, reservation.reservationId, 'music-generation-failed')
-      .catch(() => undefined);
+    if (!providerCompleted) {
+      await releaseManagedReservation(params.uid, reservation.reservationId, 'music-generation-failed')
+        .catch(() => undefined);
+    }
     throw error;
   } finally {
     await releaseManagedLiveLease(params.uid, lease.leaseId).catch(() => undefined);

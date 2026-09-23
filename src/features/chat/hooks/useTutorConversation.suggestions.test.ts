@@ -38,6 +38,7 @@ import { useMaestroStore, initialSettings, allGeneratedLanguagePairs } from '../
 import { selectIsLoadingSuggestions } from '../../../store/slices/uiSlice';
 import { useTutorConversation, type UseTutorConversationConfig } from './useTutorConversation';
 import { ApiError } from '../../../core-sdk/errors';
+import { PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID } from '../../../core-sdk/chat/uploadedAttachmentVariants';
 
 const suggestion = { target: 'Hola', native: 'Hello' };
 const message = (id: string, extra: Partial<ChatMessage> = {}): ChatMessage => ({
@@ -60,7 +61,7 @@ function harness(messages: ChatMessage[], overrides: Partial<UseTutorConversatio
     stopListening: vi.fn().mockResolvedValue(undefined), startListening: vi.fn(), clearTranscript: vi.fn(),
     hasPendingQueueItems: () => false, claimRecordedUtterance: () => null,
     scheduleReengagementRef: { current: vi.fn() }, cancelReengagementRef: { current: vi.fn() },
-    transcript: '', currentSystemPromptText: '', currentReplySuggestionsPromptText: '',
+    transcript: '', currentSystemPromptText: '',
     setReplySuggestions: state.setReplySuggestions, handleToggleSuggestionModeRef: { current: vi.fn() },
     maestroAvatarUriRef: { current: null }, maestroAvatarMimeTypeRef: { current: null },
     ...overrides,
@@ -147,6 +148,16 @@ describe('actual tutor hook suggestion contract (captured before coordinator ext
     } finally { window.removeEventListener('globalProfileUpdated', onProfile); }
   });
 
+  it('does not reuse a sibling whose structured attachment has not been completed', async () => {
+    ports.runSuggestions.mockResolvedValue({ suggestions: [suggestion] });
+    const h = harness([message('a'), message('sibling', {
+      replySuggestions: [suggestion], llmRawResponse: 'Hola\nstructured tail',
+    })]);
+    await h.fetch();
+    expect(ports.runSuggestions).toHaveBeenCalledOnce();
+    expect(useMaestroStore.getState().messages[0].replySuggestions).toEqual([suggestion]);
+  });
+
   it('keeps suggestion loading until completion, condenses stream status, and releases it on provider failure', async () => {
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
     ports.runSuggestions.mockImplementation(async (_input, options) => {
@@ -217,6 +228,18 @@ describe('actual tutor hook suggestion translation contract', () => {
     expect(useMaestroStore.getState().activityTokens.size).toBe(0);
     expect(h.config.handleToggleSuggestionModeRef?.current).toHaveBeenCalledWith(false);
   });
+
+  it('rejects overlapping translations before they can share an activity token', async () => {
+    ports.translate.mockResolvedValue({ translatedText: 'Translated' });
+    const h = harness([]);
+    await act(async () => { await Promise.all([
+      h.result.current.handleCreateSuggestion('First'),
+      h.result.current.handleCreateSuggestion('Second'),
+    ]); });
+    expect(ports.translate).toHaveBeenCalledOnce();
+    expect(h.config.handleToggleSuggestionModeRef?.current).toHaveBeenCalledExactlyOnceWith(false);
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+  });
 });
 
 describe('actual tutor hook send contract before coordinator extraction', () => {
@@ -251,6 +274,42 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
     expect(useMaestroStore.getState().sendPrep).toBeNull();
     expect(h.config.cancelReengagementRef.current).toHaveBeenCalledOnce();
     expect(h.config.scheduleReengagementRef.current).toHaveBeenCalledWith('send-complete');
+  });
+
+  it('admits only one send before React synchronizes the busy state', async () => {
+    const h = harness([]);
+    let results: boolean[] = [];
+    await act(async () => { results = await Promise.all([
+      h.result.current.handleSendMessageInternal('First'),
+      h.result.current.handleSendMessageInternal('Second'),
+    ]); });
+    expect(results).toEqual([true, false]);
+    expect(ports.runText).toHaveBeenCalledOnce();
+    expect(useMaestroStore.getState().messages.filter(item => item.role === 'user')).toHaveLength(1);
+    expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+  });
+
+  it('continues a tutor send when optional profile storage is unavailable', async () => {
+    ports.getProfile.mockRejectedValue(new Error('IndexedDB unavailable'));
+    expect(await send(harness([]))).toBe(true);
+    expect(ports.runText).toHaveBeenCalledOnce();
+    expect(useMaestroStore.getState().messages.some(item => item.role === 'error')).toBe(false);
+  });
+
+  it('continues the tutor send and clears the spinner when optional user image generation rejects', async () => {
+    useMaestroStore.getState().setSettings(previous => ({ ...previous, selectedCameraId: 'image-gen-camera', sendWithSnapshotEnabled: true }));
+    ports.runImage.mockRejectedValue(new Error('image transport failed'));
+    expect(await send(harness([]))).toBe(true);
+    expect(ports.runText).toHaveBeenCalledOnce();
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ isGeneratingImage: false, imageGenerationStartTime: undefined });
+  });
+
+  it.each(['verification', 'generation'])('clears assistant image loading when %s rejects', async failure => {
+    ports.runSuggestions.mockResolvedValue({ suggestions: [suggestion], toolRequest: { tool: 'image', prompt: 'A picture' } });
+    if (failure === 'verification') ports.sanitizeHistory.mockRejectedValue(new Error('file verification failed'));
+    else ports.runImage.mockRejectedValue(new Error('image transport failed'));
+    await harness([message('a')]).fetch();
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ isGeneratingImage: false, imageGenerationStartTime: undefined });
   });
 
   it.each(['loading', 'speaking', 'pending', 'empty', 'no-pair'] as const)('rejects %s before provider access', async reason => {
@@ -331,12 +390,14 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
   it.each([false, true])('preserves generated user images when upload fails: %s', async fails => {
     useMaestroStore.getState().setSettings(previous => ({ ...previous, selectedCameraId: 'image-gen-camera', sendWithSnapshotEnabled: true }));
     ports.runImage.mockResolvedValue({ base64Image: 'data:image/png;base64,AQID', mimeType: 'image/png' });
+    ports.optimize.mockResolvedValue({ dataUrl: 'data:image/webp;base64,AQ==', mimeType: 'image/webp' });
     if (fails) ports.upload.mockRejectedValue(new Error('upload'));
     else ports.upload.mockResolvedValue({ uri: 'https://files/generated', mimeType: 'image/png' });
     const h = harness([]);
     expect(await send(h, 'Draw this')).toBe(true);
     expect(ports.runImage.mock.calls[0][0]).toMatchObject({ contextText: 'Draw this', maestroAvatarUri: undefined, maestroAvatarMimeType: undefined });
     expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:image/png;base64,AQID', isGeneratingImage: false, imageGenError: null });
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ storageOptimizedImageUrl: 'data:image/webp;base64,AQ==', storageOptimizedImageMimeType: 'image/webp' });
     expect(ports.runText.mock.calls[0][0].currentFileParts).toEqual(fails ? undefined : [{ fileUri: 'https://files/generated', mimeType: 'image/png' }]);
   });
 
@@ -345,7 +406,39 @@ describe('actual tutor hook send contract before coordinator extraction', () => 
     ports.upload.mockRejectedValue(new Error('upload'));
     await harness([message('a')]).fetch();
     expect(useMaestroStore.getState().messages[0]).toMatchObject({ imageUrl: 'data:audio/wav;base64,AQID', imageMimeType: 'audio/wav', maestroToolKind: 'audio-note', isGeneratingToolAttachment: false });
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({ storageOptimizedImageUrl: 'data:audio/wav;base64,AQ==', storageOptimizedImageMimeType: 'audio/wav' });
     expect(useMaestroStore.getState().activityTokens.size).toBe(0);
+  });
+
+  it('keeps optimized assistant image bytes when provider upload fails', async () => {
+    ports.runSuggestions.mockResolvedValue({ suggestions: [suggestion], toolRequest: { tool: 'image', prompt: 'A picture' } });
+    ports.runImage.mockResolvedValue({ base64Image: 'data:image/png;base64,AQID', mimeType: 'image/png' });
+    ports.optimize.mockResolvedValue({ dataUrl: 'data:image/webp;base64,AQ==', mimeType: 'image/webp' });
+    ports.upload.mockRejectedValue(new Error('upload'));
+    await harness([message('a')]).fetch();
+    expect(useMaestroStore.getState().messages[0]).toMatchObject({
+      imageUrl: 'data:image/png;base64,AQID', storageOptimizedImageUrl: 'data:image/webp;base64,AQ==',
+      storageOptimizedImageMimeType: 'image/webp', isGeneratingImage: false,
+    });
+  });
+
+  it.each([true, false])('reuses only active cached attachment variants: active=%s', async active => {
+    const original = 'data:image/png;base64,AQID';
+    const history = [message('skip'), message('photo', {
+      role: 'user', imageUrl: original, imageMimeType: 'image/png',
+      uploadedFileVariants: [{ id: PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID, uri: 'https://files/cached', mimeType: 'image/png', targets: ['chat'], source: 'original' }],
+    })];
+    ports.fileStatuses.mockResolvedValue({ 'https://files/cached': { deleted: false, active } });
+    ports.upload.mockResolvedValue({ uri: 'https://files/replacement', mimeType: 'image/png' });
+    const progress = vi.fn();
+    const h = harness(history);
+    await act(async () => { await h.result.current.ensureUrisForHistoryForSend(history, progress); });
+    expect(ports.upload).toHaveBeenCalledTimes(active ? 0 : 1);
+    if (!active) {
+      expect(ports.upload.mock.calls[0].slice(0, 2)).toEqual([original, 'image/png']);
+      expect(progress.mock.calls.map(([done, total]) => [done, total])).toEqual([[0, 1], [1, 1]]);
+      expect(useMaestroStore.getState().messages[1].uploadedFileVariants?.[0].uri).toBe('https://files/replacement');
+    }
   });
 });
 

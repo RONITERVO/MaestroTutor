@@ -54,6 +54,9 @@ export function createSendRequestPreparer(ports: SendRequestPorts) {
     try {
       markSendStage('send.systemInstruction.globalProfile.start');
       await getGlobalProfileDB();
+    } catch {
+      // Keep the existing preflight boundary, but optional profile storage must
+      // not prevent a tutor turn. The enrichment read below has the same policy.
     } finally {
       systemInstructionForGemini = composeMaestroSystemInstruction(systemInstructionForGemini);
       markSendStage('send.systemInstruction.globalProfile.done', {

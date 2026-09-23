@@ -75,6 +75,13 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
   } = state;
   const { ensureInputCodecWorker, setVadActivity, setLocalSpeechTriggerPhase, emitTurnTranscriptUpdate } = ports;
   const { sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, workletNode, inputSource } = session;
+  const isDetectorUnavailable = (now: number) => {
+    const detector = observerWhisperRef.current;
+    return !detector || detector.status === 'failed' || detector.status === 'disposed'
+      || ((detector.status === 'idle' || detector.status === 'loading')
+        && detector.loadingStartedAt > 0
+        && now - detector.loadingStartedAt >= OBSERVER_WHISPER_LOAD_GRACE_MS);
+  };
   const encodeAndSend = async (pcm: Int16Array) => {
     if (inputClosedByServerRef.current) return;
     // Encoding transfers the packet buffer to a worker. Preserve a copy
@@ -170,6 +177,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       const activeSession = sessionRef.current;
       if (!activeSession) return;
       activeSession.sendRealtimeInput({ activityEnd: {} });
+      inputAudioTelemetryRef.current.audioStreamEnds += 1;
       turnTimingRef.current?.mark('input.activity-end-sent');
       closingPacketizer?.resetPacingEpoch();
       closingBoundary.finishClosing();
@@ -297,7 +305,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       playbackActiveRef.current = speaking;
       gate.notePlayback(speaking, now);
     }
-    if (speaking || awaitingModelTurnRef.current || boundary.isClosing) {
+    if (speaking || gate.isPlaybackSuppressed(now) || awaitingModelTurnRef.current || boundary.isClosing) {
       inputAudioTelemetryRef.current.gatedPackets += 1;
       speechCapture.reset();
       loadingFallbackOnsetAtRef.current = null;
@@ -329,16 +337,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       // The boundary surrounds a continuous stream. Silence, stutters and
       // quiet syllables inside it are data and must reach Gemini unchanged.
       inputPacketizerRef.current?.push(pcm);
-      const detector = observerWhisperRef.current;
-      const detectorUnavailable = !detector
-        || detector.status === 'failed'
-        || detector.status === 'disposed'
-        || (
-          (detector.status === 'idle' || detector.status === 'loading')
-          && detector.loadingStartedAt > 0
-          && now - detector.loadingStartedAt >= OBSERVER_WHISPER_LOAD_GRACE_MS
-        );
-      if (detectorUnavailable) {
+      if (isDetectorUnavailable(now)) {
         // Once speech was semantically confirmed, energy may safely keep
         // its boundary alive if Whisper later becomes unavailable.
         if (packetIsSpeech) boundary.refreshConfirmedSpeech(now);
@@ -374,16 +373,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       now,
     );
     loadingFallbackOnsetAtRef.current = fallback.onsetAt;
-    const detector = observerWhisperRef.current;
-    const detectorUnavailable = !detector
-      || detector.status === 'failed'
-      || detector.status === 'disposed'
-      || (
-        (detector.status === 'idle' || detector.status === 'loading')
-        && detector.loadingStartedAt > 0
-        && now - detector.loadingStartedAt >= OBSERVER_WHISPER_LOAD_GRACE_MS
-      );
-    if (detectorUnavailable) {
+    if (isDetectorUnavailable(now)) {
       if (fallback.action === 'expire') {
         gate.rejectSpeech(now);
         loadingFallbackOnsetAtRef.current = null;

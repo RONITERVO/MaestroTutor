@@ -14,6 +14,15 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
     currentSessionIdRef, speechTurnBoundaryRef,
   } = state;
   const { hasCameraConsent } = ports;
+  const ownedVideos = new Set<HTMLVideoElement>();
+  let cancelPreparation: (() => void) | null = null;
+  let frameOwner: symbol | null = null;
+  const releaseOwnedVideo = (video: HTMLVideoElement) => {
+    if (!ownedVideos.delete(video)) return;
+    try { video.pause(); } catch { }
+    video.srcObject = null;
+    video.remove();
+  };
   const blobToBase64 = (blob: Blob): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -26,6 +35,8 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
   });
 
   const stopVideoFrameLoop = () => {
+    frameOwner = null;
+    videoFrameInFlightRef.current = false;
     if (frameIntervalRef.current !== null) {
       window.clearInterval(frameIntervalRef.current);
       frameIntervalRef.current = null;
@@ -33,21 +44,18 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
   };
 
   const detachCaptureVideo = () => {
-    if (!captureVideoRef.current) return;
-    try {
-      // Only fully detach if we created this hidden element.
-      if (captureVideoRef.current.parentElement === document.body && captureVideoRef.current.style.position === 'fixed') {
-        captureVideoRef.current.pause();
-        captureVideoRef.current.srcObject = null;
-        document.body.removeChild(captureVideoRef.current);
-      }
-    } catch {
-      // Ignore detach errors.
-    }
+    cancelPreparation?.();
+    cancelPreparation = null;
+    for (const video of ownedVideos) releaseOwnedVideo(video);
     captureVideoRef.current = null;
   };
 
-  const ensureVideoElementReady = async (stream: MediaStream, providedElement?: HTMLVideoElement | null) => {
+  const ensureVideoElementReady = async (
+    stream: MediaStream, providedElement?: HTMLVideoElement | null,
+    updateVersion = ++videoUpdateVersionRef.current,
+  ) => {
+    stopVideoFrameLoop();
+    detachCaptureVideo();
     if (
       providedElement &&
       providedElement.srcObject === stream &&
@@ -63,18 +71,39 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
     video.playsInline = true;
     video.srcObject = stream;
     if (!providedElement) {
+      ownedVideos.add(video);
       video.style.position = 'fixed';
       video.style.width = '0px';
       video.style.height = '0px';
       video.style.opacity = '0';
       document.body.appendChild(video);
     }
-    await video.play().catch(() => undefined);
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      await new Promise<void>((resolve) => {
-        const handler = () => { video.removeEventListener('loadedmetadata', handler); resolve(); };
-        video.addEventListener('loadedmetadata', handler);
-      });
+    // Camera metadata/playback are optional. A stalled browser must not prevent
+    // the audio session from starting, and superseding updates cancel immediately.
+    const ready = await new Promise<boolean>(resolve => {
+      let finished = false;
+      let playSettled = false;
+      const finish = (usable: boolean) => {
+        if (finished) return;
+        finished = true;
+        window.clearTimeout(timer);
+        video.removeEventListener('loadedmetadata', check);
+        video.removeEventListener('error', fail);
+        if (cancelPreparation === cancel) cancelPreparation = null;
+        resolve(usable);
+      };
+      const check = () => { if (playSettled && video.videoWidth > 0 && video.videoHeight > 0) finish(true); };
+      const fail = () => finish(false);
+      const cancel = () => finish(false);
+      const timer = window.setTimeout(fail, 5000);
+      cancelPreparation = cancel;
+      video.addEventListener('loadedmetadata', check);
+      video.addEventListener('error', fail);
+      Promise.resolve().then(() => video.play()).catch(() => undefined).then(() => { playSettled = true; check(); });
+    });
+    if (!ready || updateVersion !== videoUpdateVersionRef.current) {
+      releaseOwnedVideo(video);
+      return null;
     }
     captureVideoRef.current = video;
     return video;
@@ -99,6 +128,10 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
       if (!activeSession || !activeVideo || !activeCanvas) return;
       if (activeVideo.videoWidth === 0) return;
       if (videoFrameInFlightRef.current) return;
+      const updateVersion = videoUpdateVersionRef.current;
+      const isCurrentFrame = () => currentSessionIdRef.current === sessionId
+        && videoUpdateVersionRef.current === updateVersion
+        && sessionRef.current === activeSession && captureVideoRef.current === activeVideo;
 
       const ctx = activeCanvas.getContext('2d');
       if (!ctx) return;
@@ -110,18 +143,25 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
       ctx.drawImage(activeVideo, 0, 0, activeCanvas.width, activeCanvas.height);
 
       videoFrameInFlightRef.current = true;
+      const owner = Symbol('video-frame');
+      frameOwner = owner;
       activeCanvas.toBlob((blob) => {
         void (async () => {
           try {
-            if (blob && sessionRef.current && currentSessionIdRef.current === sessionId) {
+            if (blob && isCurrentFrame()) {
               const b64 = await blobToBase64(blob);
-              if (currentSessionIdRef.current !== sessionId) return;
+              if (!isCurrentFrame()) return;
               if (!hasCameraConsent()) return;
               if (speechTurnBoundaryRef.current && !speechTurnBoundaryRef.current.isOpen) return;
-              sessionRef.current.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
+              activeSession.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
             }
+          } catch (error) {
+            if (isCurrentFrame()) console.warn('Live video frame encoding failed:', error);
           } finally {
-            videoFrameInFlightRef.current = false;
+            if (frameOwner === owner) {
+              frameOwner = null;
+              videoFrameInFlightRef.current = false;
+            }
           }
         })();
       }, 'image/jpeg', 0.5);
@@ -140,11 +180,8 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
       return;
     }
 
-    await ensureVideoElementReady(stream, providedElement);
-    if (updateVersion !== videoUpdateVersionRef.current) {
-      detachCaptureVideo();
-      return;
-    }
+    const video = await ensureVideoElementReady(stream, providedElement, updateVersion);
+    if (!video || updateVersion !== videoUpdateVersionRef.current) return;
 
     if (!canvasRef.current) {
       canvasRef.current = document.createElement('canvas');

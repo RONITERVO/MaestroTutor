@@ -25,7 +25,10 @@ import {
 import { getGeminiClient } from './client';
 import { normalizeGeminiFileName } from './fileIdentity';
 import { evictManagedFilesForUpload } from './fileLifecycle';
-import { markManagedFileDeleted, releaseManagedUploadSlot, reserveManagedUploadSlot } from './fileQuota';
+import { deleteManagedFileByName } from './fileLifecycle';
+import { queueManagedFileCleanupJobs } from './fileCleanupJobs';
+import { isNotFoundError } from './fileIdentity';
+import { commitManagedUploadSlot, releaseManagedUploadSlot, reserveManagedUploadSlot } from './fileQuota';
 
 const FILE_ACTIVE_TIMEOUT_MS = 60_000;
 
@@ -93,22 +96,9 @@ export const uploadManagedMedia = async (params: {
 
   let fileName: string | null = null;
   let reservationId = '';
-  let slotReserved = false;
+  let slotId = '';
   let fileRecordCreated = false;
   try {
-    await evictManagedFilesForUpload(params.uid, 1);
-    try {
-      await reserveManagedUploadSlot(params.uid);
-    } catch (error) {
-      if (Number((error as { status?: unknown })?.status) === 403) {
-        await evictManagedFilesForUpload(params.uid, 1);
-        await reserveManagedUploadSlot(params.uid);
-      } else {
-        throw error;
-      }
-    }
-    slotReserved = true;
-
     const reservation = await reserveManagedCredits({
       uid: params.uid,
       user: actingUser,
@@ -123,6 +113,16 @@ export const uploadManagedMedia = async (params: {
     });
     reservationId = reservation.reservationId;
 
+    // Denied billing/account admission must not evict the user's existing media.
+    await evictManagedFilesForUpload(params.uid, 1);
+    try {
+      slotId = await reserveManagedUploadSlot(params.uid);
+    } catch (error) {
+      if (Number((error as { status?: unknown })?.status) !== 403) throw error;
+      await evictManagedFilesForUpload(params.uid, 1);
+      slotId = await reserveManagedUploadSlot(params.uid);
+    }
+
     const uploaded = await getGeminiClient().files.upload({
       file: tempFile.path,
       config: {
@@ -136,11 +136,7 @@ export const uploadManagedMedia = async (params: {
       throw createHttpError(500, 'Gemini upload did not return the expected file metadata.');
     }
 
-    if (uploaded.state !== 'ACTIVE') {
-      await waitForManagedFileActive(fileName);
-    }
-
-    await managedFileRef(params.uid, fileName).set({
+    await commitManagedUploadSlot(params.uid, slotId, fileName, {
       uid: params.uid,
       name: fileName,
       uri: uploaded.uri,
@@ -148,11 +144,17 @@ export const uploadManagedMedia = async (params: {
       displayName: tempFile.filename,
       sizeBytes: tempFile.sizeBytes,
       createdAt: Date.now(),
+      ...(typeof uploaded.expirationTime === 'string' ? { expirationTime: uploaded.expirationTime } : {}),
       lastCheckedAt: Date.now(),
       deletedAt: null,
-      state: 'active',
-    }, { merge: true });
+      state: uploaded.state === 'ACTIVE' ? 'active' : 'processing',
+    });
     fileRecordCreated = true;
+
+    if (uploaded.state !== 'ACTIVE') {
+      await waitForManagedFileActive(fileName);
+      await managedFileRef(params.uid, fileName).update({ state: 'active', lastCheckedAt: Date.now() });
+    }
 
     const billingSummary = await settleManagedReservation({
       uid: params.uid,
@@ -176,20 +178,23 @@ export const uploadManagedMedia = async (params: {
   } catch (error) {
     if (fileName) {
       try {
-        await getGeminiClient().files.delete({ name: fileName });
-      } catch {
-        // Ignore cleanup failures and preserve the original error.
+        if (fileRecordCreated) await deleteManagedFileByName(params.uid, fileName);
+        else {
+          try { await getGeminiClient().files.delete({ name: fileName }); }
+          catch (cleanupError) { if (!isNotFoundError(cleanupError)) throw cleanupError; }
+        }
+      } catch (cleanupError) {
+        // Preserve both the request error and a durable owner for remote cleanup.
+        await queueManagedFileCleanupJobs([fileName]).catch(queueError => {
+          console.error('Failed to persist managed upload cleanup:', queueError, cleanupError);
+        });
       }
     }
 
-    if (fileRecordCreated && fileName) {
-      const didRelease = await markManagedFileDeleted(params.uid, fileName).catch(() => false);
-      if (didRelease) {
-        slotReserved = false;
-      }
-    }
-    if (slotReserved) {
-      await releaseManagedUploadSlot(params.uid).catch(() => undefined);
+    // After transfer only the file record may release quota; a repeated slot
+    // release cannot decrement some other concurrent file/upload reservation.
+    if (slotId && !fileRecordCreated) {
+      await releaseManagedUploadSlot(params.uid, slotId).catch(() => undefined);
     }
 
     if (reservationId) {

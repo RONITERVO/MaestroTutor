@@ -85,9 +85,16 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
       return;
     }
 
-    const hasStoredReplySuggestions = (message?: ChatMessage | null): boolean => (
-      Boolean(message && Array.isArray(message.replySuggestions) && message.replySuggestions.length > 0)
-    );
+    const hasReusableReplySuggestions = (message: ChatMessage): boolean => {
+      if (!Array.isArray(message.replySuggestions) || !message.replySuggestions.length) return false;
+      const hasAttachment = Boolean(
+        (message.imageUrl && message.imageMimeType)
+        || (Array.isArray(message.uploadedFileVariants) && message.uploadedFileVariants.length),
+      );
+      const raw = message.llmRawResponse?.trim();
+      const hasStructuredTail = Boolean(raw && raw !== getVisibleAssistantMessageText(message).trim());
+      return hasAttachment || !hasStructuredTail;
+    };
 
     // Check if suggestions already exist on message
     {
@@ -95,23 +102,11 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
       const targetIdx = allMsgs.findIndex(m => m.id === assistantMessageId);
       if (targetIdx !== -1) {
         const target = allMsgs[targetIdx];
-        if (target && Array.isArray((target as any).replySuggestions) && (target as any).replySuggestions.length > 0) {
-          const hasExistingAttachment = !!(
-            (target.imageUrl && target.imageMimeType) ||
-            (Array.isArray(target.uploadedFileVariants) && target.uploadedFileVariants.length > 0)
-          );
-          const visibleText = getVisibleAssistantMessageText(target).trim();
-          const hasStructuredTail = !!(
-            target.llmRawResponse &&
-            target.llmRawResponse.trim() &&
-            target.llmRawResponse.trim() !== visibleText
-          );
-          if (hasExistingAttachment || !hasStructuredTail) {
-            state.setSuggestionOwner(target.id);
-            setReplySuggestions((target as any).replySuggestions as ReplySuggestion[]);
-            await finishReplySuggestionsRequest();
-            return;
-          }
+        if (hasReusableReplySuggestions(target)) {
+          state.setSuggestionOwner(target.id);
+          setReplySuggestions(target.replySuggestions!);
+          await finishReplySuggestionsRequest();
+          return;
         }
 
         // Suggestions are owned by a whole assistant-only block, not just one
@@ -139,7 +134,7 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
           if (
             i !== targetIdx
             && candidate.role === 'assistant'
-            && hasStoredReplySuggestions(candidate)
+            && hasReusableReplySuggestions(candidate)
           ) {
             blockSuggestionOwner = candidate;
             break;
@@ -169,108 +164,99 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
     }
 
     // Retry and structured-response validation now live in the shared Core SDK.
-    const MAX_RETRIES = 0;
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        let thoughtText = '';
-        let outputText = '';
-        const flushSuggestionsLoadingText = () => {
-          // Show whichever stream is latest, condensed to a short single-line status
-          const condensedThought = thoughtText.replace(/\s+/g, ' ').trim();
-          const condensedOutput = outputText.replace(/\s+/g, ' ').trim();
-          // Prefer output stream if available, otherwise show thought stream
-          const active = condensedOutput || condensedThought;
-          if (active) {
-            const label = condensedOutput ? '' : 'thinking: ';
-            const display = active.length > 48 ? `\u2026${active.slice(-48)}` : active;
-            setSuggestionsLoadingStreamText(`${label}${display}`);
-          }
-        };
+    try {
+      let thoughtText = '';
+      let outputText = '';
+      const flushSuggestionsLoadingText = () => {
+        // Show whichever stream is latest, condensed to a short single-line status
+        const condensedThought = thoughtText.replace(/\s+/g, ' ').trim();
+        const condensedOutput = outputText.replace(/\s+/g, ' ').trim();
+        // Prefer output stream if available, otherwise show thought stream
+        const active = condensedOutput || condensedThought;
+        if (active) {
+          const label = condensedOutput ? '' : 'thinking: ';
+          const display = active.length > 48 ? `\u2026${active.slice(-48)}` : active;
+          setSuggestionsLoadingStreamText(`${label}${display}`);
+        }
+      };
 
-        const parsedResponse = await runReplySuggestions(
-          {
-            assistantMessageId,
-            lastTutorMessage,
-            history: suggestionHistory,
-            languagePair: state.getLanguagePair()!,
-            existingGlobalProfile,
-            responseSource: options?.responseSource,
-          },
-          {
-            lifecycleHooks: {
-              onProgress: (event) => {
-                const progressLine = formatGeminiStatusLine(event);
-                if (progressLine && !thoughtText.trim() && !outputText.trim()) {
-                  setSuggestionsLoadingStreamText(progressLine);
-                }
-              },
-              onThoughtDelta: (_, fullThought) => {
-                thoughtText = fullThought || thoughtText;
-                flushSuggestionsLoadingText();
-              },
-              onTextDelta: (_, fullText) => {
-                outputText = fullText || outputText;
-                flushSuggestionsLoadingText();
-              },
+      const parsedResponse = await runReplySuggestions(
+        {
+          assistantMessageId,
+          lastTutorMessage,
+          history: suggestionHistory,
+          languagePair: state.getLanguagePair()!,
+          existingGlobalProfile,
+          responseSource: options?.responseSource,
+        },
+        {
+          lifecycleHooks: {
+            onProgress: (event) => {
+              const progressLine = formatGeminiStatusLine(event);
+              if (progressLine && !thoughtText.trim() && !outputText.trim()) {
+                setSuggestionsLoadingStreamText(progressLine);
+              }
+            },
+            onThoughtDelta: (_, fullThought) => {
+              thoughtText = fullThought || thoughtText;
+              flushSuggestionsLoadingText();
+            },
+            onTextDelta: (_, fullText) => {
+              outputText = fullText || outputText;
+              flushSuggestionsLoadingText();
             },
           },
-        );
+        },
+      );
 
-        trackGeminiUsage({
-          feature: 'suggestions',
-          configuredModel: parsedResponse.modelUsed || getGeminiModels().text.aux,
-          modelVersion: parsedResponse.modelVersion,
-          usageMetadata: parsedResponse.usageMetadata,
-        });
-        resolvedArtifact = parsedResponse?.artifact ?? null;
-        resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
+      trackGeminiUsage({
+        feature: 'suggestions',
+        configuredModel: parsedResponse.modelUsed || getGeminiModels().text.aux,
+        modelVersion: parsedResponse.modelVersion,
+        usageMetadata: parsedResponse.usageMetadata,
+      });
+      resolvedArtifact = parsedResponse?.artifact ?? null;
+      resolvedToolRequest = normalizeSuggestionCreatorToolRequest(parsedResponse?.toolRequest ?? null, assistantMessageId);
 
-        if (Array.isArray(parsedResponse.suggestions) &&
-          parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
-          const suggestions = parsedResponse.suggestions as ReplySuggestion[];
-          setReplySuggestions(suggestions);
-          updateMessage(assistantMessageId, { replySuggestions: suggestions });
-          try {
-            const pid = state.getPairId();
-            if (pid) { await persistence.saveHistory(pid, state.getMessages()); }
-          } catch { }
-        } else {
-          console.warn("Parsed suggestions not in expected format:", parsedResponse.suggestions);
-          setReplySuggestions([]);
-        }
-
-        if (typeof parsedResponse.reengagementSeconds === 'number' && parsedResponse.reengagementSeconds >= 5) {
-          handleReengagementThresholdChange(parsedResponse.reengagementSeconds);
-        }
-
-        // Update chat summary on the message
-        const newChatSummary = typeof parsedResponse.chatSummary === 'string' ? parsedResponse.chatSummary.trim() : '';
-        if (newChatSummary) {
-          updateMessage(assistantMessageId, { chatSummary: newChatSummary });
-        }
-
-        // Update global profile directly from the single API response (no second API call needed)
+      if (Array.isArray(parsedResponse.suggestions) &&
+        parsedResponse.suggestions.every((s: any) => typeof s === 'object' && s !== null && 'target' in s && 'native' in s && typeof s.target === 'string' && typeof s.native === 'string')) {
+        const suggestions = parsedResponse.suggestions as ReplySuggestion[];
+        setReplySuggestions(suggestions);
+        updateMessage(assistantMessageId, { replySuggestions: suggestions });
         try {
-          const newGlobalProfile = typeof parsedResponse.globalProfile === 'string' ? parsedResponse.globalProfile.trim().slice(0, 10000) : '';
-          if (newGlobalProfile) {
-            await persistence.saveProfile(newGlobalProfile);
-            // Notify UI components that the global profile was updated
-            try { persistence.notifyProfileUpdated(); } catch { }
-          }
-        } catch (e) {
-          console.warn('Failed to update global profile:', e);
-        }
-
-        break;
-
-      } catch (error) {
-        console.error(`Error fetching reply suggestions (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
-        if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
-        } else {
-          setReplySuggestions([]);
-        }
+          const pid = state.getPairId();
+          if (pid) { await persistence.saveHistory(pid, state.getMessages()); }
+        } catch { }
+      } else {
+        console.warn("Parsed suggestions not in expected format:", parsedResponse.suggestions);
+        setReplySuggestions([]);
       }
+
+      if (typeof parsedResponse.reengagementSeconds === 'number' && parsedResponse.reengagementSeconds >= 5) {
+        handleReengagementThresholdChange(parsedResponse.reengagementSeconds);
+      }
+
+      // Update chat summary on the message
+      const newChatSummary = typeof parsedResponse.chatSummary === 'string' ? parsedResponse.chatSummary.trim() : '';
+      if (newChatSummary) {
+        updateMessage(assistantMessageId, { chatSummary: newChatSummary });
+      }
+
+      // Update global profile directly from the single API response (no second API call needed)
+      try {
+        const newGlobalProfile = typeof parsedResponse.globalProfile === 'string' ? parsedResponse.globalProfile.trim().slice(0, 10000) : '';
+        if (newGlobalProfile) {
+          await persistence.saveProfile(newGlobalProfile);
+          // Notify UI components that the global profile was updated
+          try { persistence.notifyProfileUpdated(); } catch { }
+        }
+      } catch (e) {
+        console.warn('Failed to update global profile:', e);
+      }
+
+    } catch (error) {
+      console.error('Error fetching reply suggestions:', error);
+      setReplySuggestions([]);
     }
     await finishReplySuggestionsRequest();
   };

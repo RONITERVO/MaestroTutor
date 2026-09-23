@@ -85,9 +85,10 @@ export const createManagedLiveToken = async (params: {
     throw error;
   }
 
-  const expireTime = new Date(Date.now() + liveWindowSeconds * 1000).toISOString();
+  const expireTime = new Date(lease.expiresAt).toISOString();
 
   try {
+    if (lease.expiresAt <= Date.now()) throw createHttpError(409, 'The managed Live lease expired before token creation.');
     const tokenResponse = await getGeminiClient().authTokens.create({
       config: {
         uses: appConfig.geminiLiveTokenUses,

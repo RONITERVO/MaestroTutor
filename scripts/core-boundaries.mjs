@@ -87,7 +87,9 @@ export function auditCoreBoundaries(root = fileURLToPath(new URL('../', import.m
       // Resolve baseUrl imports too, but never traverse third-party implementation code.
       if (resolved.includes('/node_modules/') || resolved.includes('\\node_modules\\')) continue;
       const target = normalize(relative(root, resolved));
-      if (browserPath.test(target) && !allowedAdapterDirectories.some(directory => target.startsWith(directory))) {
+      const allowedAdapter = allowedAdapterDirectories.some(path => path.endsWith('/')
+        ? target.startsWith(path) : target === path);
+      if (browserPath.test(target) && !allowedAdapter) {
         flag(`Runtime boundary reaches adapter: ${target}`); continue;
       }
       if (productionFile(target)) visit(resolve(resolved), [...chain, target]);

@@ -9,6 +9,7 @@ import type { buildAttachmentUploadPlans as buildPlans } from '../../../core-sdk
 
 export type HistoryMediaOverride = { newVariants?: UploadedAttachmentVariant[]; transient?: boolean; omitFromHistory?: boolean };
 export type AttachmentSource = { dataUrl: string; mimeType: string; attachmentName?: string };
+const isUnavailable = (status?: { deleted: boolean; active: boolean }) => Boolean(status && (status.deleted || !status.active));
 export interface AttachmentUploadPorts {
   t: TranslationFunction;
   updateMessage(id: string, patch: Partial<ChatMessage>): void;
@@ -28,7 +29,7 @@ export function createAttachmentUploads(ports: AttachmentUploadPorts) {
   ): Promise<{ variants: UploadedAttachmentVariant[]; chatFileParts: Array<{ fileUri: string; mimeType: string }> }> => {
     let nextVariants = normalizeUploadedAttachmentVariants(message.uploadedFileVariants);
     if (knownStatuses) {
-      nextVariants = nextVariants.filter(variant => !knownStatuses[variant.uri]?.deleted);
+      nextVariants = nextVariants.filter(variant => !isUnavailable(knownStatuses[variant.uri]));
     }
     const source = getMessageAttachmentSource(message);
     const plans = source ? buildAttachmentUploadPlans(source, t) : [];
@@ -60,8 +61,8 @@ export function createAttachmentUploads(ports: AttachmentUploadPorts) {
 
       for (const plan of plans) {
         const existingVariant = nextVariants.find(variant => variant.id === plan.id);
-        const existingDeleted = !!(existingVariant && cachedStatuses[existingVariant.uri]?.deleted);
-        if (existingVariant && !existingDeleted) {
+        const existingUnavailable = !!(existingVariant && isUnavailable(cachedStatuses[existingVariant.uri]));
+        if (existingVariant && !existingUnavailable) {
           nextVariants = upsertUploadedAttachmentVariant(nextVariants, {
             ...existingVariant,
             id: plan.id,
@@ -184,7 +185,7 @@ export function createAttachmentUploads(ports: AttachmentUploadPorts) {
       const needsUpload = plans.some((plan) => {
         const existingVariant = existingVariants.find(variant => variant.id === plan.id);
         if (!existingVariant) return true;
-        return !!cachedStatuses[existingVariant.uri]?.deleted;
+        return isUnavailable(cachedStatuses[existingVariant.uri]);
       });
 
       if (needsUpload) {

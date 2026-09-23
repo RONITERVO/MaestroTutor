@@ -7,6 +7,7 @@ import type { uploadMediaToFiles as uploadMedia } from '../../../api/gemini/file
 import { buildUploadedAttachmentState, PRIMARY_UPLOADED_ATTACHMENT_VARIANT_ID, inferUploadedAttachmentTargetsForMimeType } from '../../../core-sdk/chat/uploadedAttachmentVariants';
 type MaestroToolKind = NonNullable<ChatMessage['maestroToolKind']>;
 type SendPrep = UseTutorConversationReturn['sendPrep'];
+export type OptimizedMedia = Awaited<ReturnType<typeof processMedia>>;
 export type SetSendPrep = (value: SendPrep | ((previous: SendPrep) => SendPrep)) => void;
 export interface MediaPersistencePorts extends Pick<UseTutorConversationConfig, 't' | 'updateMessage'> {
   sendWithFileUploadInProgressRef: MutableValue<boolean>;
@@ -23,10 +24,12 @@ export function createMediaPersistence(ports: MediaPersistencePorts) {
     mimeType: string;
     displayName: string;
     onProgress?: (label: string, done?: number, total?: number, etaMs?: number) => void;
+    onOptimized?: (media: OptimizedMedia) => void;
     setUploadPrepLabel?: boolean;
   }) => {
     // Create optimized version for local storage (reduces DB size)
     const optimized = await processMediaForUpload(params.dataUrl, params.mimeType, { t, onProgress: params.onProgress });
+    params.onOptimized?.(optimized);
     sendWithFileUploadInProgressRef.current = true;
     if (params.setUploadPrepLabel !== false) {
       setSendPrep(prev => (prev && prev.active
@@ -46,12 +49,14 @@ export function createMediaPersistence(ports: MediaPersistencePorts) {
     mimeType: string;
     attachmentName: string;
   }) => {
+    let optimizedMedia: OptimizedMedia | undefined;
     try {
       const { optimized, upload } = await optimizeAndUploadMedia({
         dataUrl: params.dataUrl,
         mimeType: params.mimeType,
         displayName: params.attachmentName,
         setUploadPrepLabel: false,
+        onOptimized: media => { optimizedMedia = media; },
       });
       const uploadedAttachmentState = buildUploadedAttachmentState([
         {
@@ -82,6 +87,7 @@ export function createMediaPersistence(ports: MediaPersistencePorts) {
         imageUrl: params.dataUrl,
         imageMimeType: params.mimeType,
         attachmentName: params.attachmentName,
+        ...(optimizedMedia ? { storageOptimizedImageUrl: optimizedMedia.dataUrl, storageOptimizedImageMimeType: optimizedMedia.mimeType } : {}),
         isGeneratingToolAttachment: false,
         toolAttachmentStartTime: undefined,
         toolAttachmentPhase: undefined,

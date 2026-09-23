@@ -4,6 +4,7 @@
 /** Owned-file validation and remote eviction. Quota transactions belong to fileQuota. */
 
 import { appConfig } from '../config';
+import { FieldPath } from 'firebase-admin/firestore';
 import { adminDb } from '../firebase';
 import {
   collectGeminiFileUris
@@ -14,18 +15,25 @@ import {
   managedFilesCollection
 } from '../managedData';
 import { getGeminiClient } from './client';
-import { isNotFoundError, normalizeGeminiFileName } from './fileIdentity';
+import { hasManagedFileExpired, isNotFoundError, normalizeGeminiFileName } from './fileIdentity';
 import { markManagedFileDeleted } from './fileQuota';
+import { queueManagedFileCleanupJobs } from './fileCleanupJobs';
 
 const MAX_REFERENCED_FILE_URIS = 20;
 
 const listActiveManagedFilesForUser = async (uid: string) => {
-  const snapshot = await managedFilesCollection(uid)
-    .where('deletedAt', '==', null)
-    .limit(appConfig.managedMaxActiveFilesPerUser + 5)
-    .get();
-
-  return snapshot.docs.map((doc) => ({
+  const documents: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+  let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+  while (true) {
+    let query = managedFilesCollection(uid).where('deletedAt', '==', null)
+      .orderBy(FieldPath.documentId()).limit(200);
+    if (cursor) query = query.startAfter(cursor);
+    const page = await query.get();
+    documents.push(...page.docs);
+    if (page.size < 200) break;
+    cursor = page.docs[page.docs.length - 1];
+  }
+  return documents.map((doc) => ({
     ref: doc.ref,
     name: typeof doc.data().name === 'string' ? doc.data().name as string : '',
     createdAt: Number(doc.data().createdAt || 0),
@@ -44,9 +52,16 @@ export const deleteManagedFileByName = async (uid: string, fileName: string): Pr
   }
 
   try {
-    await getGeminiClient().files.delete({ name: fileName });
+    if (!hasManagedFileExpired(data)) await getGeminiClient().files.delete({ name: fileName });
   } catch (error) {
     if (!isNotFoundError(error)) {
+      const persisted = await Promise.allSettled([
+        queueManagedFileCleanupJobs([fileName]),
+        snapshot.ref.update({ cleanupPending: true }),
+      ]);
+      for (const result of persisted) {
+        if (result.status === 'rejected') console.error('Could not persist managed file cleanup:', result.reason);
+      }
       throw error;
     }
   }

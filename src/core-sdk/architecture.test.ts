@@ -40,6 +40,19 @@ describe('Core architecture boundary', () => {
         .toEqual(['Browser runtime reference: window']);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
+  it('matches Live utility file exceptions exactly instead of allowing similarly named siblings', () => {
+    const root = mkdtempSync(join(tmpdir(), 'maestro-live-file-boundary-'));
+    try {
+      mkdirSync(join(root, 'src/features/speech/live'), { recursive: true });
+      mkdirSync(join(root, 'src/features/speech/utils'), { recursive: true });
+      writeFileSync(join(root, 'src/features/speech/live/controller.ts'), 'import "../utils/playbackDrain";');
+      writeFileSync(join(root, 'src/features/speech/utils/playbackDrain.tsx'), 'export {};');
+      expect(auditLiveControllerBoundaries(root).map((item: { reason: string }) => item.reason))
+        .toEqual(['Runtime boundary reaches adapter: src/features/speech/utils/playbackDrain.tsx']);
+      writeFileSync(join(root, 'src/features/speech/utils/playbackDrain.ts'), 'export {};');
+      expect(auditLiveControllerBoundaries(root)).toEqual([]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
   it('follows coordinator-to-coordinator imports and rejects an indirect store dependency', () => {
     const root = mkdtempSync(join(tmpdir(), 'maestro-chat-boundary-'));
     try {

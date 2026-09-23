@@ -4,7 +4,7 @@
 // Exercise the public facade with real Firestore transactions and billing.
 // Only the provider transport is replaced. Never run these writes remotely.
 const assert = require('node:assert/strict');
-const { test, beforeEach, after } = require('node:test');
+const { test, beforeEach, afterEach, after } = require('node:test');
 const { randomUUID, createHash } = require('node:crypto');
 const { EventEmitter } = require('node:events');
 const fs = require('node:fs/promises');
@@ -13,9 +13,13 @@ assert.match(process.env.GCLOUD_PROJECT || '', /^demo-/, 'A demo project is requ
 process.env.GEMINI_API_KEY = 'emulator-no-network';
 process.env.MANAGED_MAX_ACTIVE_FILES_PER_USER = '2';
 process.env.MANAGED_MAX_ACTIVE_LIVE_SOCKETS = '2';
+// Even a legacy multi-use setting must not authorize more sockets than its lease.
+process.env.GEMINI_LIVE_TOKEN_USES = '5';
+process.env.MANAGED_MUSIC_SESSION_CREDITS = '1';
 
 let handlers = {};
 let calls = [];
+let clientConfigurations = [];
 const invoke = (method, args) => {
   calls.push({ method, args });
   assert.equal(typeof handlers[method], 'function', `Unexpected provider call: ${method}`);
@@ -24,7 +28,8 @@ const invoke = (method, args) => {
 const sdkPath = require.resolve('@google/genai');
 require.cache[sdkPath] = { id: sdkPath, filename: sdkPath, loaded: true, exports: {
   GoogleGenAI: class {
-    constructor() {
+    constructor(options) {
+      clientConfigurations.push(options);
       this.models = Object.fromEntries(['countTokens', 'generateContent', 'generateContentStream']
         .map((method) => [method, (args) => invoke(method, args)]));
       this.files = Object.fromEntries(['upload', 'get', 'delete']
@@ -39,9 +44,11 @@ const api = require('../lib/functions/src/gemini.js');
 const { adminDb } = require('../lib/functions/src/firebase.js');
 const data = require('../lib/functions/src/managedData.js');
 const billing = require('../lib/functions/src/managedBilling.js');
+const fileQuota = require('../lib/functions/src/managedGemini/fileQuota.js');
 const created = [];
 const jobRefs = [];
-beforeEach(() => { calls = []; handlers = {}; });
+beforeEach(() => { calls = []; handlers = {}; clientConfigurations = []; });
+afterEach(async () => { await Promise.all(jobRefs.splice(0).map(ref => ref.delete())); });
 const account = async (credits = 1000) => {
   const uid = `gemini-emulator-${randomUUID()}`;
   const user = { id: uid, email: null, displayName: null, photoUrl: null };
@@ -60,7 +67,7 @@ const quota = async (uid) => (await data.managedFileQuotaRef(uid).get()).data()?
 const activeFile = async (uid, suffix, extra = {}) => {
   const name = `files/${suffix}`;
   const uri = `https://generativelanguage.googleapis.com/v1beta/${name}`;
-  await data.managedFileRef(uid, name).set({ uid, name, uri, state: 'active', deletedAt: null, createdAt: 1, ...extra });
+  await data.managedFileRef(uid, name).set({ uid, name, uri, state: 'active', deletedAt: null, createdAt: Date.now(), ...extra });
   return { name, uri, mimeType: 'image/png', state: 'ACTIVE' };
 };
 const generation = (owner, extra = {}) => ({
@@ -127,18 +134,26 @@ test('upload preserves bytes, records ownership, settles once and deletes idempo
   assert.equal((await reservations(owner.uid))[0].status, 'settled');
 });
 
-test('failed processing preserves its error even if remote cleanup fails, releasing credits and slot', async () => {
+test('failed processing preserves its error and retains remote ownership until cleanup succeeds', async () => {
   const owner = await account();
   let tempPath;
   handlers['files.upload'] = async ({ file }) => { tempPath = file; return { name: 'files/failed', uri: 'https://example/files/failed', mimeType: 'image/png', state: 'PROCESSING' }; };
   handlers['files.get'] = async () => ({ state: 'FAILED' });
   handlers['files.delete'] = async () => { throw new Error('cleanup unavailable'); };
+  const job = data.cleanupJobsCollection().doc(createHash('sha256').update('files/failed').digest('hex'));
+  jobRefs.push(job);
   await assert.rejects(api.uploadManagedMedia(upload(owner)), /Uploaded Gemini file failed processing/);
   await assert.rejects(fs.stat(tempPath), { code: 'ENOENT' });
-  assert.equal(await quota(owner.uid), 0);
+  assert.equal(await quota(owner.uid), 1);
+  assert.equal((await job.get()).data().status, 'pending');
+  assert.equal((await data.managedFileRef(owner.uid, 'files/failed').get()).data().cleanupPending, true);
   assert.equal((await summary(owner)).availableCredits, 1000);
   assert.equal((await reservations(owner.uid))[0].status, 'released');
   assert.deepEqual(calls.map(({ method }) => method), ['files.upload', 'files.get', 'files.delete']);
+  handlers['files.delete'] = async () => { throw Object.assign(new Error('gone'), { status: 404 }); };
+  await api.retryManagedFileCleanupJobs();
+  await api.deleteManagedFile(owner.uid, 'files/failed');
+  assert.equal(await quota(owner.uid), 0);
 });
 
 test('insufficient credits and deletion fences release upload slots before provider access', async () => {
@@ -151,7 +166,7 @@ test('insufficient credits and deletion fences release upload slots before provi
   assert.equal(calls.length, 0);
 });
 
-test('settlement failure after upload releases the recorded file and quota exactly once', async () => {
+test('deletion claimed during upload prevents new ownership metadata and releases its pending slot', async () => {
   const owner = await account();
   const remote = { name: 'files/settlement-race', uri: 'https://example/files/settlement-race', mimeType: 'image/png', state: 'ACTIVE' };
   handlers['files.upload'] = async () => {
@@ -161,15 +176,15 @@ test('settlement failure after upload releases the recorded file and quota exact
   handlers['files.delete'] = async ({ name }) => assert.equal(name, remote.name);
   await assert.rejects(api.uploadManagedMedia(upload(owner)), { status: 409 });
   assert.equal(await quota(owner.uid), 0);
-  assert.equal((await data.managedFileRef(owner.uid, remote.name).get()).data().state, 'deleted');
+  assert.equal((await data.managedFileRef(owner.uid, remote.name).get()).exists, false);
   assert.equal((await reservations(owner.uid))[0].status, 'released');
   assert.deepEqual(calls.map(({ method }) => method), ['files.upload', 'files.delete']);
 });
 
 test('full upload quota evicts the least recently checked file before reserving a new slot', async () => {
   const owner = await account();
-  const older = await activeFile(owner.uid, 'older', { createdAt: 1, lastCheckedAt: 3 });
-  await activeFile(owner.uid, 'newer', { createdAt: 2, lastCheckedAt: 8 });
+  const older = await activeFile(owner.uid, 'older', { createdAt: Date.now() - 10000, lastCheckedAt: 3 });
+  await activeFile(owner.uid, 'newer', { createdAt: Date.now() - 9000, lastCheckedAt: 8 });
   await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 2 });
   handlers['files.delete'] = async ({ name }) => assert.equal(name, older.name);
   handlers['files.upload'] = async () => ({ name: 'files/replacement', uri: 'https://example/files/replacement', mimeType: 'image/png', state: 'ACTIVE' });
@@ -184,13 +199,86 @@ test('file status checks avoid foreign metadata and release quota once for missi
   const remote = await activeFile(owner.uid, 'status-file');
   const foreign = await activeFile(owner.uid, 'foreign-file', { uid: 'another-user' });
   await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 1 });
-  handlers['files.get'] = async () => { throw Object.assign(new Error('not authorized'), { status: 403 }); };
+  handlers['files.get'] = async () => { throw Object.assign(new Error('missing'), { status: 404 }); };
   const expected = { statuses: { invalid: { deleted: true, active: false }, [remote.uri]: { deleted: true, active: false }, [foreign.uri]: { deleted: true, active: false } } };
-  assert.deepEqual(await api.getManagedFileStatuses(owner.uid, ['invalid', remote.uri, foreign.uri]), expected);
+  assert.deepEqual(JSON.parse(JSON.stringify(await api.getManagedFileStatuses(owner.uid, ['invalid', remote.uri, foreign.uri]))), expected);
   assert.equal(await quota(owner.uid), 0);
-  assert.deepEqual(await api.getManagedFileStatuses(owner.uid, [remote.uri]), { statuses: { [remote.uri]: { deleted: true, active: false } } });
+  assert.deepEqual(JSON.parse(JSON.stringify(await api.getManagedFileStatuses(owner.uid, [remote.uri]))), { statuses: { [remote.uri]: { deleted: true, active: false } } });
   assert.equal(calls.length, 1);
   await assert.rejects(api.getManagedFileStatuses(owner.uid, Array(101).fill(remote.uri)), { status: 400 });
+});
+
+test('permission failures preserve remote ownership and quota instead of declaring a file missing', async () => {
+  const owner = await account();
+  const remote = await activeFile(owner.uid, `permission-${randomUUID()}`);
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 1 });
+  handlers['files.get'] = async () => { throw Object.assign(new Error('Forbidden'), { status: 403 }); };
+  await assert.rejects(api.getManagedFileStatuses(owner.uid, [remote.uri]), { status: 403 });
+  handlers['files.delete'] = handlers['files.get'];
+  await assert.rejects(api.deleteManagedFile(owner.uid, remote.uri), { status: 403 });
+  assert.equal((await data.managedFileRef(owner.uid, remote.name).get()).data().deletedAt, null);
+  assert.equal(await quota(owner.uid), 1);
+  const job = data.cleanupJobsCollection().doc(createHash('sha256').update(remote.name).digest('hex'));
+  jobRefs.push(job);
+});
+
+test('status serialization retains every caller key including __proto__', async () => {
+  const owner = await account();
+  const result = await api.getManagedFileStatuses(owner.uid, ['__proto__', 'constructor', 'invalid']);
+  assert.deepEqual(Object.keys(JSON.parse(JSON.stringify(result)).statuses).sort(), ['__proto__', 'constructor', 'invalid']);
+  assert.equal(calls.length, 0);
+});
+
+test('failed provider files are remotely deleted before their slot is released', async () => {
+  const owner = await account(); const remote = await activeFile(owner.uid, `failed-status-${randomUUID()}`);
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 1 });
+  handlers['files.get'] = async () => ({ state: 'FAILED' });
+  handlers['files.delete'] = async ({ name }) => {
+    assert.equal(name, remote.name); assert.equal(await quota(owner.uid), 1);
+  };
+  await api.getManagedFileStatuses(owner.uid, [remote.uri]);
+  assert.deepEqual(calls.map(call => call.method), ['files.get', 'files.delete']);
+  assert.equal(await quota(owner.uid), 0);
+});
+
+test('an unfunded upload does not evict existing files', async () => {
+  const owner = await account(0);
+  await activeFile(owner.uid, 'unfunded-one'); await activeFile(owner.uid, 'unfunded-two');
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 2 });
+  handlers['files.delete'] = async () => {};
+  await assert.rejects(api.uploadManagedMedia(upload(owner)), { status: 402 });
+  assert.equal(calls.length, 0);
+  assert.equal(await quota(owner.uid), 2);
+});
+
+test('a lowered file limit evicts across all pages in least-recently-used order', async () => {
+  const owner = await account(); const createdAt = Date.now() - 10000;
+  // Cross the 200-document page boundary, with LRU order unrelated to document hashes.
+  const files = await Promise.all(Array.from({ length: 205 }, (_, index) => activeFile(owner.uid, `overflow-${index}`, { createdAt: createdAt + index })));
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: files.length });
+  handlers['files.delete'] = async () => {};
+  handlers['files.upload'] = async () => ({ name: 'files/overflow-new', uri: 'https://example/files/overflow-new', mimeType: 'image/png', state: 'ACTIVE' });
+  await api.uploadManagedMedia(upload(owner));
+  assert.deepEqual(calls.filter(call => call.method === 'files.delete').map(call => call.args.name), files.slice(0, 204).map(file => file.name));
+  assert.equal(await quota(owner.uid), 2);
+});
+
+test('a concurrent deletion and upload rollback cannot release another file slot', async () => {
+  const owner = await account();
+  await activeFile(owner.uid, 'unrelated-kept');
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 1 });
+  const remote = { name: 'files/delete-during-settlement', uri: 'https://example/files/delete-during-settlement', mimeType: 'image/png', state: 'ACTIVE' };
+  handlers['files.upload'] = async () => remote;
+  handlers['files.delete'] = async () => {};
+  const settle = billing.settleManagedReservation;
+  billing.settleManagedReservation = async () => {
+    await api.deleteManagedFile(owner.uid, remote.name);
+    throw new Error('settlement unavailable');
+  };
+  try { await assert.rejects(api.uploadManagedMedia(upload(owner)), /settlement unavailable/); }
+  finally { billing.settleManagedReservation = settle; }
+  assert.equal(await quota(owner.uid), 1);
+  assert.equal((await data.managedFileRef(owner.uid, 'files/unrelated-kept').get()).data().deletedAt, null);
 });
 
 test('partial file cleanup records failures; detached retry jobs back off and complete idempotently', async () => {
@@ -210,18 +298,62 @@ test('partial file cleanup records failures; detached retry jobs back off and co
   assert.equal(await quota(owner.uid), 1);
   const job = data.cleanupJobsCollection().doc(createHash('sha256').update(bad.name).digest('hex'));
   jobRefs.push(job);
+  assert.equal((await job.get()).data()?.status, 'pending', 'clear-files must enqueue its own failed remote deletions');
   assert.equal(await api.queueManagedFileCleanupJobs([bad.name, ` ${bad.name} `, '']), 1);
   assert.deepEqual(await api.retryManagedFileCleanupJobs(), { attempted: 1, completed: 0 });
   const pending = (await job.get()).data();
   assert.equal(pending.attempts, 1);
   assert.equal(pending.retryAt.toMillis() - pending.lastAttemptAt, 120000);
   assert.equal('uid' in pending, false);
+  await api.queueManagedFileCleanupJobs([bad.name]);
+  assert.equal((await job.get()).data().attempts, 1);
+  assert.equal((await job.get()).data().retryAt.toMillis(), pending.retryAt.toMillis());
   assert.deepEqual(await api.retryManagedFileCleanupJobs(), { attempted: 0, completed: 0 });
   await job.set({ retryAt: data.timestampFromMillis(0) }, { merge: true });
   handlers['files.delete'] = async () => { throw Object.assign(new Error('gone'), { status: 404 }); };
   assert.deepEqual(await api.retryManagedFileCleanupJobs(), { attempted: 1, completed: 1 });
   assert.deepEqual(await api.retryManagedFileCleanupJobs(), { attempted: 0, completed: 0 });
   assert.equal((await job.get()).data().status, 'completed');
+});
+
+test('upload slots are individually released, recover after crashes, and never recreate deleted runtime metadata', async () => {
+  const owner = await account();
+  // Migrate an anonymous counter left by a previous process without metadata.
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 99 });
+  const first = await fileQuota.reserveManagedUploadSlot(owner.uid);
+  const second = await fileQuota.reserveManagedUploadSlot(owner.uid);
+  assert.equal(await quota(owner.uid), 2);
+  await assert.rejects(fileQuota.reserveManagedUploadSlot(owner.uid), { status: 403 });
+  await fileQuota.releaseManagedUploadSlot(owner.uid, first);
+  await fileQuota.releaseManagedUploadSlot(owner.uid, first);
+  assert.equal(await quota(owner.uid), 1);
+  const ref = data.managedFileQuotaRef(owner.uid);
+  await ref.update({ pendingUploadSlots: [{ id: second, expiresAt: Date.now() - 1 }] });
+  const replacement = await fileQuota.reserveManagedUploadSlot(owner.uid);
+  await fileQuota.releaseManagedUploadSlot(owner.uid, second);
+  assert.equal(await quota(owner.uid), 1);
+  await data.accountDeletionClaimRef(owner.uid).set({ createdAt: Date.now() });
+  await ref.delete();
+  await fileQuota.releaseManagedUploadSlot(owner.uid, replacement);
+  assert.equal((await ref.get()).exists, false);
+});
+
+test('a stale upload cannot claim a recovered slot or write file metadata', async () => {
+  const owner = await account();
+  const slot = await fileQuota.reserveManagedUploadSlot(owner.uid);
+  await data.managedFileQuotaRef(owner.uid).update({ pendingUploadSlots: [{ id: slot, expiresAt: Date.now() - 1 }] });
+  await assert.rejects(fileQuota.commitManagedUploadSlot(owner.uid, slot, 'files/expired-slot', { deletedAt: null }), { status: 409 });
+  assert.equal((await data.managedFileRef(owner.uid, 'files/expired-slot').get()).exists, false);
+});
+
+test('documented provider expiry releases legacy metadata without suppressing fresh-file permission failures', async () => {
+  const owner = await account();
+  const expired = await activeFile(owner.uid, 'expired-legacy', { createdAt: Date.now() - 49 * 60 * 60 * 1000 });
+  await data.managedFileQuotaRef(owner.uid).set({ activeManagedFileCount: 1 });
+  const result = await api.getManagedFileStatuses(owner.uid, [expired.uri]);
+  assert.deepEqual(result.statuses[expired.uri], { deleted: true, active: false });
+  assert.equal(await quota(owner.uid), 0);
+  assert.equal(calls.length, 0);
 });
 
 test('generation preserves counted inputs, pinned model, provider config and exact settlement', async () => {
@@ -265,6 +397,50 @@ class StreamResponse extends EventEmitter {
   write(value) { this.headersSent = true; this.chunks.push(JSON.parse(value)); }
   end() { this.writableEnded = true; this.emit('close'); }
 }
+
+for (const streaming of [false, true]) test(`completed ${streaming ? 'stream' : 'generation'} keeps exact settlement recoverable after billing failure`, async () => {
+  const owner = await account(); const response = new StreamResponse();
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  const completed = { text: 'answer', candidates: [], usageMetadata: providerUsage, modelVersion: 'gemini-3.8-flash' };
+  handlers.generateContent = async () => completed;
+  handlers.generateContentStream = async function* () { yield completed; };
+  const settle = billing.settleManagedReservation;
+  billing.settleManagedReservation = async () => { throw new Error('billing temporarily unavailable'); };
+  try {
+    if (streaming) {
+      await api.streamManagedContent({ ...generation(owner), response });
+      assert.equal(response.chunks[response.chunks.length - 1].type, 'error');
+      assert.equal(response.writableEnded, true);
+    } else await assert.rejects(api.generateManagedContent(generation(owner)), /billing temporarily unavailable/);
+  } finally { billing.settleManagedReservation = settle; }
+  const snapshot = await data.managedReservationsCollection(owner.uid).get();
+  const reservation = snapshot.docs[0];
+  assert.equal(reservation.data().status, 'active');
+  assert.ok(reservation.data().pendingSettlement.billedCredits > 0);
+  await billing.releaseManagedReservation(owner.uid, reservation.id, 'expired');
+  assert.equal((await reservation.ref.get()).data().status, 'active');
+  await reservation.ref.update({ expiresAt: 0 });
+  await billing.sweepExpiredReservationsForUser(owner.uid);
+  await billing.sweepExpiredReservationsForUser(owner.uid);
+  assert.equal((await reservation.ref.get()).data().status, 'settled');
+  const usage = await billing.listManagedUsageLedger(owner.uid, 100);
+  assert.equal(usage.length, 1);
+  assert.equal(usage[0].billedCredits, reservation.data().pendingSettlement.billedCredits);
+  assert.equal((await summary(owner)).reservedCredits, 0);
+});
+
+test('a failed stream refund preserves the provider error frame and closes the response', async () => {
+  const owner = await account(); const response = new StreamResponse();
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  handlers.generateContentStream = async function* () { yield { text: 'partial' }; throw Object.assign(new Error('upstream failed'), { status: 502 }); };
+  const release = billing.releaseManagedReservation;
+  billing.releaseManagedReservation = async () => { throw new Error('refund temporarily unavailable'); };
+  try { await api.streamManagedContent({ ...generation(owner), response }); }
+  finally { billing.releaseManagedReservation = release; }
+  assert.deepEqual(response.chunks[1], { type: 'error', message: 'upstream failed', status: 502 });
+  assert.equal(response.writableEnded, true);
+  assert.equal(response.listenerCount('close'), 0);
+});
 
 test('client disconnect still drains provider usage and settles, without writing a final to the closed client', async () => {
   const owner = await account();
@@ -337,8 +513,32 @@ test('Live token scopes provider config, settles and retains the lease until exp
     } },
   } });
   assert.equal((await leases(owner.uid))[0].leaseId, result.leaseId);
+  assert.equal(Date.parse(result.expiresAt), (await leases(owner.uid))[0].expiresAt);
   assert.equal((await reservations(owner.uid))[0].status, 'settled');
   await api.releaseManagedLiveLease(owner.uid, result.leaseId);
+});
+
+test('billing admission latency cannot extend a token beyond its reserved lease', async () => {
+  const owner = await account(); const clock = Date.now; let now = clock();
+  const reserve = billing.reserveManagedCredits;
+  Date.now = () => now;
+  billing.reserveManagedCredits = async params => { const result = await reserve(params); now += 30000; return result; };
+  handlers['authTokens.create'] = async () => ({ name: 'tokens/delayed' });
+  try {
+    const result = await api.createManagedLiveToken(live(owner));
+    assert.equal(Date.parse(result.expiresAt), (await leases(owner.uid))[0].expiresAt);
+    assert.equal(calls[0].args.config.expireTime, result.expiresAt);
+  } finally { Date.now = clock; billing.reserveManagedCredits = reserve; }
+});
+
+test('account deletion can release pending settlement without recreating a charge', async () => {
+  const owner = await account();
+  const held = await billing.reserveManagedCredits({ ...owner, operation: 'test-completion', model: 'test', estimatedCredits: 5, estimatedUsd: 0.005 });
+  await billing.recordPendingManagedSettlement({ uid: owner.uid, reservationId: held.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' });
+  await data.accountDeletionClaimRef(owner.uid).set({ createdAt: Date.now() });
+  await billing.releaseManagedReservation(owner.uid, held.reservationId, 'account-deleted');
+  assert.equal((await reservations(owner.uid))[0].status, 'released');
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 0);
 });
 
 test('music connection failure closes the lease and releases its reservation', async () => {
@@ -370,6 +570,7 @@ test('music preserves prompt/config, trims excess PCM, settles once and releases
     };
   };
   const result = await api.generateManagedMusic({ ...owner, model: 'lyria-realtime-exp', prompt: ' gentle ', durationSeconds: 3 });
+  assert.deepEqual(clientConfigurations, [{ apiKey: 'emulator-no-network', apiVersion: 'v1alpha' }]);
   assert.deepEqual(events, [
     ['prompts', { weightedPrompts: [{ text: 'gentle. Instrumental only. No vocals, no lyrics, no copyrighted melodies. Original educational backing track.', weight: 1 }] }],
     ['config', { musicGenerationConfig: { musicGenerationMode: 'QUALITY', temperature: 1.1, guidance: 4 } }],
@@ -381,6 +582,32 @@ test('music preserves prompt/config, trims excess PCM, settles once and releases
   assert.equal(result.billingSummary.availableCredits, 999);
   assert.equal(result.billingSummary.reservedCredits, 0);
   assert.deepEqual(await leases(owner.uid), []);
+  assert.equal((await reservations(owner.uid))[0].status, 'settled');
+});
+
+test('completed music retains its fixed fee for recovery when settlement fails', async () => {
+  const owner = await account(); const closed = [];
+  handlers['music.connect'] = async ({ callbacks }) => {
+    queueMicrotask(() => callbacks.onmessage({ setupComplete: {} }));
+    return {
+      setWeightedPrompts: async () => {}, setMusicGenerationConfig: async () => {},
+      play: () => queueMicrotask(() => callbacks.onmessage({ serverContent: { audioChunks: [{
+        data: Buffer.alloc(8 * 48000 * 2 * 2).toString('base64'), mimeType: 'audio/pcm;rate=48000;channels=2',
+      }] } })), pause: () => {}, close: () => closed.push(true),
+    };
+  };
+  const settle = billing.settleManagedReservation;
+  billing.settleManagedReservation = async () => { throw new Error('accounting unavailable'); };
+  try { await assert.rejects(api.generateManagedMusic({ ...owner, model: 'lyria-realtime-exp', prompt: 'gentle' }), /accounting unavailable/); }
+  finally { billing.settleManagedReservation = settle; }
+  assert.equal(closed.length, 1);
+  assert.deepEqual(await leases(owner.uid), []);
+  const reservation = (await data.managedReservationsCollection(owner.uid).get()).docs[0];
+  assert.equal(reservation.data().status, 'active');
+  assert.equal(reservation.data().pendingSettlement.billedCredits, 1);
+  await reservation.ref.update({ expiresAt: 0 });
+  await billing.sweepExpiredReservationsForUser(owner.uid);
+  assert.equal((await summary(owner)).availableCredits, 999);
   assert.equal((await reservations(owner.uid))[0].status, 'settled');
 });
 

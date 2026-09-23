@@ -7,9 +7,9 @@ import { GoogleGenAI } from '@google/genai';
 import { appConfig } from '../config';
 import { createHttpError } from '../http';
 
-export const getGeminiClient = (): GoogleGenAI => {
+export const getGeminiClient = (apiVersion?: string): GoogleGenAI => {
   if (!appConfig.geminiApiKey) {
     throw createHttpError(500, 'GEMINI_API_KEY is not configured on the backend.');
   }
-  return new GoogleGenAI({ apiKey: appConfig.geminiApiKey });
+  return new GoogleGenAI({ apiKey: appConfig.geminiApiKey, ...(apiVersion ? { apiVersion } : {}) });
 };

@@ -115,6 +115,7 @@ export function createAssistantTools(ports: AssistantToolPorts) {
     } catch (error) {
       console.warn(`[MaestroTool] ${toolRequest.tool} generation failed.`, error);
       updateMessage(assistantMessageId, {
+        ...(toolRequest.tool === 'image' ? { isGeneratingImage: false, imageGenerationStartTime: undefined } : {}),
         isGeneratingToolAttachment: false,
         toolAttachmentStartTime: undefined,
         toolAttachmentPhase: undefined,

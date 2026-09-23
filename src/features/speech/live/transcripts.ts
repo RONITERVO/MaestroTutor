@@ -3,6 +3,7 @@
 import { mergeInt16Arrays, trimSilence } from '../../../core-sdk/media/audioProcessing';
 import type { LiveTimerPorts } from './ports';
 import type { LiveSessionData } from './state';
+import { notifyLiveConsumer } from './notifications';
 import { INPUT_SAMPLE_RATE, type LiveTurnTranscriptUpdate, type LiveTurnTranscriptUpdateReason, TRANSCRIPT_UPDATE_INTERVAL_MS } from './types';
 
 export function createLiveTranscripts(state: Pick<LiveSessionData,
@@ -57,7 +58,7 @@ export function createLiveTranscripts(state: Pick<LiveSessionData,
     if (!pendingUpdate) return;
     pendingTranscriptUpdateRef.current = null;
     lastTranscriptUpdateRef.current = pendingUpdate;
-    callbacksRef.current.onTurnTranscriptUpdate?.(pendingUpdate);
+    notifyLiveConsumer(() => callbacksRef.current.onTurnTranscriptUpdate?.(pendingUpdate));
   };
 
   const emitTurnTranscriptUpdate = (reason: LiveTurnTranscriptUpdateReason) => {
@@ -87,7 +88,8 @@ export function createLiveTranscripts(state: Pick<LiveSessionData,
       && previousUpdate.reason === nextUpdate.reason
       && (previousUpdate.thinkingPhase || '') === (nextUpdate.thinkingPhase || '')
       && (previousUpdate.thinkingStatusLine || '') === (nextUpdate.thinkingStatusLine || '')
-      && (previousUpdate.thinkingTrace || []).join('\n') === (nextUpdate.thinkingTrace || []).join('\n')
+      && (previousUpdate.thinkingTrace?.length ?? 0) === (nextUpdate.thinkingTrace?.length ?? 0)
+      && (previousUpdate.thinkingTrace || []).every((entry, index) => entry === nextUpdate.thinkingTrace?.[index])
     ) {
       return;
     }
@@ -115,14 +117,14 @@ export function createLiveTranscripts(state: Pick<LiveSessionData,
     clearTranscriptUpdateTimer();
     pendingTranscriptUpdateRef.current = null;
     lastTranscriptUpdateRef.current = null;
-    callbacksRef.current.onTurnTranscriptUpdate?.({
+    notifyLiveConsumer(() => callbacksRef.current.onTurnTranscriptUpdate?.({
       userText: '',
       modelText: '',
       reason: 'session-reset',
       thinkingTrace: undefined,
       thinkingPhase: undefined,
       thinkingStatusLine: undefined,
-    });
+    }));
   };
   return { getTranscriptLinkedUserAudio, clearTranscriptUpdateTimer, flushPendingTranscriptUpdate, emitTurnTranscriptUpdate, emitTurnTranscriptReset };
 }

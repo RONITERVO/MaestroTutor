@@ -10,11 +10,11 @@ contracts, not outputs to regenerate when a structural change fails them.
 | Boundary | Characterization before changes | Implementation | Verification |
 | --- | --- | --- | --- |
 | Chat suggestions, persistence and aftersteps | Actual-hook cache, failure, save-order, Live split and translation fixtures | Suggestion and translation coordinators with typed ports | Hook contracts and pre-move snapshots pass |
-| Chat send, media and generated tools | Actual-hook request, busy/error/STT/media/re-engagement fixtures | Separate send, request preparation, capture, response, uploads, generated-image and tool owners | Hook contracts and unchanged snapshots pass in the full 737-test suite |
-| Live session, capture and playback lifecycle | Actual-hook connect, stop races, stale callbacks, decode cancellation, drain, transcripts, capture handoff and video fixtures | Session controller with separate capture, provider callback, playback, transcript, telemetry and cleanup owners; explicit browser runtime | 10 hook tests preserve baseline; full root suite 709 tests, lint/build and boundary guard pass |
+| Chat send, media and generated tools | Actual-hook request, busy/error/STT/media/re-engagement fixtures | Separate send, request preparation, capture, response, uploads, generated-image and tool owners | Initial extraction: hook contracts and unchanged snapshots passed in the 737-test suite |
+| Live session, capture and playback lifecycle | Actual-hook connect, stop races, stale callbacks, decode cancellation, drain, transcripts, capture handoff and video fixtures | Session controller with separate capture, provider callback, playback, transcript, telemetry and cleanup owners; explicit browser runtime | Live extraction milestone: 10 hook tests and 709 root tests passed, along with lint/build and boundary guard |
 | Browser/headless afterstep decisions and explicit differences | Actual browser and headless entry-point snapshots captured first | Core afterstep plan with explicit browser-chat, browser-live and headless policies | Entry-point snapshots unchanged; dedicated policy tests pass |
-| Managed generation, files, cleanup and Live leases | Public-facade emulator tests freeze quota races, rollback, retries, ownership, provider requests and stream disconnect settlement | Separate generation, file quota/lifecycle/upload/cleanup, lease, token and music owners behind the existing facade | 24 Functions unit tests, billing/gateway emulator suites and all 16 new backend cases pass; 49 moved declaration bodies match baseline AST |
-| App speech/idle feature handoffs | Actual App render with real store and idle hook: 26 baseline handoff/guard/error/timing cases | Pure STT, speech-mode, reengagement and language-change coordinators, with explicit state/action ports and React lifecycle adapter | All 26 baseline cases pass; transitive guard passes; full root suite 737 tests, lint and build pass |
+| Managed generation, files, cleanup and Live leases | Public-facade emulator tests freeze quota races, rollback, retries, ownership, provider requests and stream disconnect settlement | Separate generation, file quota/lifecycle/upload/cleanup, lease, token and music owners behind the existing facade | Initial extraction: 24 unit tests and emulator suites (16 new cases) passed; all 49 moved bodies matched baseline AST before review hardening |
+| App speech/idle feature handoffs | Actual App render with real store and idle hook: 26 baseline handoff/guard/error/timing cases | Pure STT, speech-mode, reengagement and language-change coordinators, with explicit state/action ports and React lifecycle adapter | App extraction milestone: 26 baseline cases and 737 root tests passed, along with lint/build and transitive guard |
 
 Release acceptance: unchanged model-input contracts; root tests, lint and build;
 Functions unit and billing/lease/file emulator tests; gateway tests/build;
@@ -63,8 +63,8 @@ imports into the controller graph while allowing the explicit browser adapters.
 The initial eight hook lifecycle tests were committed in `ac1be72` before moves.
 Two additional video/go-away cases also passed against a saved original hook
 before accepting the extraction. All ten pass after extraction, with unchanged
-connection snapshots. Full root verification passes 709 tests across 106 files,
-lint and production build. These fixtures cover deterministic lifecycle behavior;
+connection snapshots. At the Live extraction milestone, root verification passed
+709 tests across 106 files, lint and production build. These fixtures cover deterministic lifecycle behavior;
 physical-device capture/playback remains part of release validation.
 
 ## Backend ownership completed
@@ -83,8 +83,9 @@ competing leases, failed processing and cleanup, deletion during settlement,
 oldest-file eviction, repeated deletion, detached retry backoff, generation
 request bytes, disconnected stream usage settlement, token failure rollback and
 music sample completion. They now run in the existing release and staging CI
-emulator gate. All 49 moved declaration bodies also match the original AST;
-transaction boundaries, request settings and error handling were preserved.
+emulator gate. Before review hardening, all 49 moved declaration bodies matched
+the original AST. The subsequent verified failure fixes are described in
+[the review record](./REFACTOR_REVIEW.md); normal provider request contracts remain unchanged.
 
 ## App handoffs completed
 
@@ -100,16 +101,21 @@ after it. They cover captured/current translation destinations, attachment
 forwarding, busy guards, stop/translation failures, fresh-state restart checks,
 capture overlap and failure, history-load barriers, observer/Live handoffs,
 250ms language restarts and cancellation, microphone toggles and idle scheduling.
-After this extraction the full app gate passes 737 tests in 107 files, lint,
+At the App extraction milestone, the full gate passed 737 tests in 107 files, lint,
 production build and the expanded transitive boundary guard. Deployment and
 release artifacts still require the final acceptance evidence below.
 
-## Release candidate checks
+## Review hardening and release candidate checks
 
-- App: 737 tests in 107 files, lint and production build pass.
+The user authorized targeted fixes for verified failures after all three reviews
+finished on `4030d48`. [The review record](./REFACTOR_REVIEW.md) distinguishes those
+corrections from suggestions intentionally declined to preserve known behavior.
+The counts below supersede the historical extraction milestones above.
+
+- App after review hardening: 785 tests in 115 files, lint and production build pass.
 - Prompt/artifact focused suite: 64 tests pass with unchanged snapshots.
-- Functions: 24 unit tests and the billing, gateway and 16-case managed Gemini
-  emulator suites pass against the extracted services.
+- Functions: 24 unit tests and the billing, gateway and 31-case managed Gemini
+  emulator suites validate the extracted services and review fixes.
 - Gateway: 24 tests and TypeScript build pass.
 - Release configuration and headless `system.describe` pass. The configuration
   verifier now checks the new music, tool and request owners and their public
@@ -122,8 +128,9 @@ release artifacts still require the final acceptance evidence below.
   device was connected during offline checks; hardware/Play validation is not
   implied by the automated lifecycle fixtures.
 
-Managed staging's 2026-09-23 admission record was read without mutation:
-99,483,622 of 100,000,000 microdollars admitted. A Live admission cannot fit until
-the next UTC day. Final paid staging and production evidence, deployment
-revisions and signed bundle identity belong in the release PR and receipt;
-none of the offline results above claims that this candidate is already live.
+The initial staging allowance was nearly exhausted (99.483622 of 100 USD on
+2026-09-23). With the user's explicit authorization, staging's daily admission
+limit was increased to 150 USD and deployed; the production limit remains 100.
+Paid staging and production results, deployment revisions and signed bundle
+identity are recorded in the release PR/receipt. These local checks do not claim
+that this candidate is already live.

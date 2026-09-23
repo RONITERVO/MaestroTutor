@@ -80,6 +80,7 @@ const [
   functionsIndex,
   functionsGemini,
   functionsMusic,
+  functionsClient,
   androidBuild,
   mainActivity,
   stagingEnv,
@@ -111,6 +112,7 @@ const [
   read('functions/src/index.ts'),
   read('functions/src/gemini.ts'),
   read('functions/src/managedGemini/music.ts'),
+  read('functions/src/managedGemini/client.ts'),
   read('android/app/build.gradle'),
   read('android/app/src/main/java/com/ronitervo/maestrotutor/MainActivity.java'),
   read('.env.staging'),
@@ -178,7 +180,12 @@ requireText(
   functionsGemini.includes("export { generateManagedMusic } from './managedGemini/music'"),
   'The managed music route facade must expose the verified music service.',
 );
-requireText(functionsMusic.includes("apiVersion: 'v1alpha'"), 'The Lyria backend adapter must use its supported v1alpha WebSocket endpoint.');
+requireText(
+  functionsMusic.includes("getGeminiClient('v1alpha')")
+    && functionsMusic.includes('generateMusicPcm({ client,')
+    && functionsClient.includes('...(apiVersion ? { apiVersion } : {})'),
+  'The Lyria backend adapter must pass its supported v1alpha WebSocket endpoint through the configured client.',
+);
 requireText(
   /music:\s*\{\s*connect:\s*async\s*\(\)\s*=>\s*\{\s*throw new Error\(/s.test(managedGeminiClient),
   'Managed music connect must throw instead of minting an unsupported ephemeral Lyria token.',

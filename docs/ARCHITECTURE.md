@@ -117,8 +117,11 @@ parsing consumes cleaned text without requiring SVG rendering capabilities.
 
 Managed generation retains output ceilings, ownership checks before provider
 access, admission/credit transactions and usage settlement. File deletion updates
-metadata and quota atomically. Live/music share the existing lease cap. Routes,
-Firestore schemas, prices and billing policies are unchanged.
+metadata and quota atomically. Live/music share the existing lease cap. Review
+hardening adds expiring upload-slot ownership, provider expiry metadata and
+recoverable accounting for completed work. These additive Firestore fields
+retain the existing paths, routes, prices and normal provider payloads. See the
+[review decisions](./REFACTOR_REVIEW.md) for intentional failure-path corrections.
 
 ## Existing behavior findings requiring separate decisions
 

@@ -5,6 +5,7 @@ import { STT_RESTART_DELAY_MS, type SpeechModePorts } from './contracts';
 
 /** User-driven language/microphone actions shared by the app's UI handoffs. */
 export const createSpeechModeActions = ({
+  pendingEnableRef,
   isListening, stopListening, startListening, clearTranscript, settingsRef,
   selectedLanguagePairRef, setSettings, stopSilentObserverRef, setSttError, delay, warn,
 }: SpeechModePorts) => {
@@ -38,7 +39,7 @@ export const createSpeechModeActions = ({
       delay(() => {
         if (settingsRef.current.stt.enabled) {
           clearTranscript();
-          startListening(newSttLang);
+          startListening(settingsRef.current.stt.language);
         }
       }, STT_RESTART_DELAY_MS);
     } else if (langDidChange) {
@@ -47,6 +48,12 @@ export const createSpeechModeActions = ({
 
   };
   const sttMasterToggle = async () => {
+    // A second click cancels an enable that is still waiting for the observer.
+    // The owner survives coordinator recreation and fences older continuations.
+    if (pendingEnableRef.current !== null) {
+      pendingEnableRef.current = null;
+      return;
+    }
     // If enabled, turn it OFF (regardless of error state). This allows clearing stuck states.
     if (settingsRef.current.stt.enabled) {
       const nextSettings = { ...settingsRef.current, stt: { ...settingsRef.current.stt, enabled: false } };
@@ -60,11 +67,15 @@ export const createSpeechModeActions = ({
     }
 
     // If disabled, turn it ON.
+    const enableOwner = Symbol('stt-enable');
+    pendingEnableRef.current = enableOwner;
     try {
       await Promise.resolve(stopSilentObserverRef.current?.());
     } catch (error) {
       warn('Failed to stop silent observer before STT start', error);
     }
+    if (pendingEnableRef.current !== enableOwner) return;
+    pendingEnableRef.current = null;
     const currentSttSettings = settingsRef.current.stt;
     const nextSettings = { ...settingsRef.current, stt: { ...currentSttSettings, enabled: true } };
     setSettings(nextSettings);
