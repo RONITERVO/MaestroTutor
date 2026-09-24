@@ -167,19 +167,28 @@ export const sweepExpiredReservationsForUser = async (uid: string): Promise<void
 };
 
 export const sweepExpiredReservations = async (limit = 50): Promise<number> => {
-  const snapshot = await adminDb.collectionGroup('reservations')
-    .where('status', '==', 'active')
-    .where('expiresAt', '<=', nowMs())
-    .limit(clampLimit(limit, 50))
-    .get();
-
+  const pageSize = clampLimit(limit, 50);
+  const sweepAt = nowMs();
+  let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined;
   let recoveredCount = 0;
-  for (const doc of snapshot.docs) {
-    const reservation = doc.data() as ReservationRecord;
-    if (await reconcileExpiredReservation(reservation.uid, doc.id, reservation)) recoveredCount++;
+  while (true) {
+    let query = adminDb.collectionGroup('reservations')
+      .where('status', '==', 'active')
+      .where('expiresAt', '<=', sweepAt)
+      .orderBy('expiresAt')
+      .orderBy(FieldPath.documentId())
+      .limit(pageSize);
+    if (cursor) query = query.startAfter(cursor);
+    const snapshot = await query.get();
+    for (const doc of snapshot.docs) {
+      const reservation = doc.data() as ReservationRecord;
+      if (await reconcileExpiredReservation(reservation.uid, doc.id, reservation)) recoveredCount++;
+    }
+    if (snapshot.size < pageSize) break;
+    // Advance past failures as well as successes: each row is attempted once
+    // this sweep, without trapping the backlog behind a failed first page.
+    cursor = snapshot.docs[snapshot.docs.length - 1];
   }
-
-  // A failed full batch must not make the scheduler loop forever over the same rows.
   return recoveredCount;
 };
 

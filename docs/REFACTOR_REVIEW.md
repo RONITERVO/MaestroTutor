@@ -68,9 +68,23 @@ on the quota summary. Subsequent admission queries read only active files, bound
 by the quota. Regression tests reproduce 206 reads before the correction, verify
 bounded reads afterwards, and prevent migration from recreating deleted metadata.
 
+Codex Cloud's review of `942fd93` added two verified accounting cases:
+
+- `4088494964`: after durable usage is recorded, a transient settlement outage
+  must not discard a completed answer or music result and invite a paid retry.
+  Direct, streaming and music regressions now require the completed output,
+  one provider operation, and later exact settlement. Failed durable recording
+  and account-deletion conflicts still reject.
+- `4088494967`: global expiry recovery now owns cursor pagination at a fixed
+  cutoff. It visits failed rows once per sweep and continues into later pages;
+  the scheduler no longer infers completeness from successful-row counts.
+  A multi-page regression leaves one failed reservation retryable while settling
+  every unrelated row. The ordered query uses existing indexes, verified in both
+  staging and production.
+
 Regression cases were exercised against the faulty paths before applying their
 fixes. Existing prompt/provider snapshots were not regenerated. The final local
-gate contains 788 root tests and 43 managed-Gemini emulator cases, in addition
+gate contains 788 root tests and 46 managed-Gemini emulator cases, in addition
 to the existing Functions unit, billing/gateway emulator and gateway test suites.
 Exact CI, staging, production and Android artifact receipts belong to the release
 PR; local tests alone do not establish live deployment or physical-device behavior.

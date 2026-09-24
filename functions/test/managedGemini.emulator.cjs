@@ -486,7 +486,7 @@ class StreamResponse extends EventEmitter {
   end() { this.writableEnded = true; this.emit('close'); }
 }
 
-for (const streaming of [false, true]) test(`completed ${streaming ? 'stream' : 'generation'} keeps exact settlement recoverable after billing failure`, async () => {
+for (const streaming of [false, true]) test(`completed ${streaming ? 'stream' : 'generation'} returns output and keeps exact settlement recoverable after billing failure`, async () => {
   const owner = await account(); const response = new StreamResponse();
   handlers.countTokens = async () => ({ totalTokens: 10 });
   const completed = { text: 'answer', candidates: [], usageMetadata: providerUsage, modelVersion: 'gemini-3.8-flash' };
@@ -497,10 +497,12 @@ for (const streaming of [false, true]) test(`completed ${streaming ? 'stream' : 
   try {
     if (streaming) {
       await api.streamManagedContent({ ...generation(owner), response });
-      assert.equal(response.chunks[response.chunks.length - 1].type, 'error');
+      assert.equal(response.chunks.at(-1).type, 'final');
+      assert.equal(response.chunks.at(-1).result.text, 'answer');
       assert.equal(response.writableEnded, true);
-    } else await assert.rejects(api.generateManagedContent(generation(owner)), /billing temporarily unavailable/);
+    } else assert.equal((await api.generateManagedContent(generation(owner))).text, 'answer');
   } finally { billing.settleManagedReservation = settle; }
+  assert.equal(calls.filter(call => call.method === (streaming ? 'generateContentStream' : 'generateContent')).length, 1);
   const snapshot = await data.managedReservationsCollection(owner.uid).get();
   const reservation = snapshot.docs[0];
   assert.equal(reservation.data().status, 'active');
@@ -551,6 +553,32 @@ test('completed-operation accounting does not retry an account-deletion conflict
     await assert.rejects(settleCompletedManagedOperation({ uid: owner.uid, reservationId: held.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' }), { status: 409 });
   } finally { billing.recordPendingManagedSettlement = record; }
   assert.equal(attempts, 1);
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 0);
+});
+
+test('completed output cannot claim deferred accounting without a durable settlement record', async () => {
+  const owner = await account();
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  handlers.generateContent = async () => ({ text: 'answer', usageMetadata: providerUsage });
+  const record = billing.recordPendingManagedSettlement; let attempts = 0;
+  billing.recordPendingManagedSettlement = async () => { attempts++; throw new Error('durable storage unavailable'); };
+  try { await assert.rejects(api.generateManagedContent(generation(owner)), /durable storage unavailable/); }
+  finally { billing.recordPendingManagedSettlement = record; }
+  assert.equal(attempts, 2);
+  assert.equal(calls.filter(call => call.method === 'generateContent').length, 1);
+  assert.equal((await reservations(owner.uid))[0].pendingSettlement, undefined);
+});
+
+test('completed output still rejects deletion conflicts after recording settlement', async () => {
+  const owner = await account();
+  handlers.countTokens = async () => ({ totalTokens: 10 });
+  handlers.generateContent = async () => ({ text: 'answer', usageMetadata: providerUsage });
+  const settle = billing.settleManagedReservation; let attempts = 0;
+  billing.settleManagedReservation = async () => { attempts++; throw Object.assign(new Error('account deleted'), { status: 409 }); };
+  try { await assert.rejects(api.generateManagedContent(generation(owner)), { status: 409 }); }
+  finally { billing.settleManagedReservation = settle; }
+  assert.equal(attempts, 1);
+  assert.ok((await reservations(owner.uid))[0].pendingSettlement);
   assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 0);
 });
 
@@ -734,6 +762,29 @@ for (const global of [false, true]) test(`${global ? 'global' : 'per-user'} expi
   assert.equal((await summary(owner)).reservedCredits, 0);
 });
 
+test('global expiry recovery pages past failed rows and attempts each failure once', async () => {
+  const owner = await account(); const held = [];
+  for (let index = 0; index < 5; index++) {
+    const reservation = await billing.reserveManagedCredits({ ...owner, operation: 'test-completion', model: 'test', estimatedCredits: 5, estimatedUsd: 0.005 });
+    await billing.recordPendingManagedSettlement({ uid: owner.uid, reservationId: reservation.reservationId, billedCredits: 2, billedUsd: 0.002, operation: 'test-completion', model: 'test' });
+    await data.managedReservationRef(owner.uid, reservation.reservationId).update({ expiresAt: index });
+    held.push(reservation.reservationId);
+  }
+  const settle = billing.settleManagedReservation; let failedAttempts = 0;
+  billing.settleManagedReservation = async params => {
+    if (params.reservationId === held[0]) { failedAttempts++; throw new Error('persistent settlement contention'); }
+    return settle(params);
+  };
+  try { assert.equal(await billing.sweepExpiredReservations(2), 4); }
+  finally { billing.settleManagedReservation = settle; }
+  assert.equal(failedAttempts, 1);
+  assert.equal((await data.managedReservationRef(owner.uid, held[0]).get()).data().status, 'active');
+  assert.equal((await billing.listManagedUsageLedger(owner.uid, 100)).length, 4);
+  assert.equal((await data.managedAccountRef(owner.uid).get()).data().billingSummary.reservedCredits, 5);
+  assert.equal(await billing.sweepExpiredReservations(2), 1);
+  assert.equal((await summary(owner)).reservedCredits, 0);
+});
+
 test('music connection failure closes the lease and releases its reservation', async () => {
   const owner = await account();
   handlers['music.connect'] = async () => { throw new Error('music unavailable'); };
@@ -778,7 +829,7 @@ test('music preserves prompt/config, trims excess PCM, settles once and releases
   assert.equal((await reservations(owner.uid))[0].status, 'settled');
 });
 
-test('completed music retains its fixed fee for recovery when settlement fails', async () => {
+test('completed music returns audio and retains its fixed fee for recovery when settlement fails', async () => {
   const owner = await account(); const closed = [];
   handlers['music.connect'] = async ({ callbacks }) => {
     queueMicrotask(() => callbacks.onmessage({ setupComplete: {} }));
@@ -791,8 +842,13 @@ test('completed music retains its fixed fee for recovery when settlement fails',
   };
   const settle = billing.settleManagedReservation;
   billing.settleManagedReservation = async () => { throw new Error('accounting unavailable'); };
-  try { await assert.rejects(api.generateManagedMusic({ ...owner, model: 'lyria-realtime-exp', prompt: 'gentle' }), /accounting unavailable/); }
+  try {
+    const result = await api.generateManagedMusic({ ...owner, model: 'lyria-realtime-exp', prompt: 'gentle' });
+    assert.equal(result.sampleCount, 8 * 48000 * 2);
+    assert.equal(Buffer.from(result.pcmBase64, 'base64').byteLength, 8 * 48000 * 2 * 2);
+  }
   finally { billing.settleManagedReservation = settle; }
+  assert.equal(calls.filter(call => call.method === 'music.connect').length, 1);
   assert.equal(closed.length, 1);
   assert.deepEqual(await leases(owner.uid), []);
   const reservation = (await data.managedReservationsCollection(owner.uid).get()).docs[0];
