@@ -62,7 +62,9 @@ export function inspectCoreSource(source, file = 'input.ts') {
   return { imports, violations };
 }
 
-export function auditCoreBoundaries(root = fileURLToPath(new URL('../', import.meta.url))) {
+export function auditCoreBoundaries(root = fileURLToPath(new URL('../', import.meta.url)), {
+  entryDirectories = ['src/core-sdk'], allowedAdapterDirectories = [], excludedEntryFiles = [],
+} = {}) {
   const violations = [];
   const visited = new Set();
   const options = { moduleResolution: ts.ModuleResolutionKind.Bundler, baseUrl: root, paths: { '@/*': ['src/*'] }, allowJs: true };
@@ -85,7 +87,11 @@ export function auditCoreBoundaries(root = fileURLToPath(new URL('../', import.m
       // Resolve baseUrl imports too, but never traverse third-party implementation code.
       if (resolved.includes('/node_modules/') || resolved.includes('\\node_modules\\')) continue;
       const target = normalize(relative(root, resolved));
-      if (browserPath.test(target)) { flag(`Core reaches adapter: ${target}`); continue; }
+      const allowedAdapter = allowedAdapterDirectories.some(path => path.endsWith('/')
+        ? target.startsWith(path) : target === path);
+      if (browserPath.test(target) && !allowedAdapter) {
+        flag(`Runtime boundary reaches adapter: ${target}`); continue;
+      }
       if (productionFile(target)) visit(resolve(resolved), [...chain, target]);
     }
   };
@@ -93,15 +99,51 @@ export function auditCoreBoundaries(root = fileURLToPath(new URL('../', import.m
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const file = resolve(directory, entry.name);
       if (entry.isDirectory()) { if (entry.name !== '__snapshots__') walk(file); }
-      else if (productionFile(file)) visit(file, [normalize(relative(root, file))]);
+      else if (productionFile(file) && !excludedEntryFiles.includes(normalize(relative(root, file)))) {
+        visit(file, [normalize(relative(root, file))]);
+      }
     }
   };
-  walk(resolve(root, 'src/core-sdk'));
+  for (const directory of entryDirectories) walk(resolve(root, directory));
   return violations;
 }
 
+/** Feature coordinators can compose each other and Core, but their runtime graph
+ * must stay independent of React, the store and browser/provider adapters. */
+export function auditChatCoordinatorBoundaries(root = fileURLToPath(new URL('../', import.meta.url))) {
+  return auditCoreBoundaries(root, {
+    entryDirectories: ['src/features/chat/coordinators'],
+    allowedAdapterDirectories: ['src/features/chat/coordinators/'],
+  });
+}
+
+export function auditLiveControllerBoundaries(root = fileURLToPath(new URL('../', import.meta.url))) {
+  return auditCoreBoundaries(root, {
+    entryDirectories: ['src/features/speech/live'],
+    allowedAdapterDirectories: [
+      'src/features/speech/live/',
+      'src/features/speech/utils/playbackDrain.ts',
+      'src/features/speech/utils/transcriptParsing.ts',
+      'src/features/speech/utils/liveTurnFinalizer.ts',
+    ],
+    // These are the intentional browser composition and DOM/video owners.
+    // They are still traversed if a controller imports either at runtime.
+    excludedEntryFiles: ['src/features/speech/live/browserRuntime.ts', 'src/features/speech/live/browserVideo.ts'],
+  });
+}
+
+export function auditAppCoordinatorBoundaries(root = fileURLToPath(new URL('../', import.meta.url))) {
+  return auditCoreBoundaries(root, {
+    entryDirectories: ['src/app/coordinators'],
+    allowedAdapterDirectories: ['src/app/coordinators/'],
+  });
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const violations = auditCoreBoundaries();
+  const violations = [
+    ...auditCoreBoundaries(), ...auditChatCoordinatorBoundaries(),
+    ...auditLiveControllerBoundaries(), ...auditAppCoordinatorBoundaries(),
+  ];
   if (violations.length) { console.error(JSON.stringify(violations, null, 2)); process.exitCode = 1; }
-  else console.log('Core runtime boundary check passed.');
+  else console.log('Core, chat, Live and App coordinator runtime boundary checks passed.');
 }

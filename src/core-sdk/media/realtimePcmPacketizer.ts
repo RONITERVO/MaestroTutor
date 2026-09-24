@@ -29,6 +29,20 @@ export interface RealtimePcmPacketizerStats {
   outputPacingElapsedMs: number;
 }
 
+export const createEmptyRealtimePcmPacketizerStats = (): RealtimePcmPacketizerStats => ({
+  totalInputSamples: 0,
+  totalOutputSamples: 0,
+  packetsSent: 0,
+  partialPacketsSent: 0,
+  timerFlushes: 0,
+  explicitFlushes: 0,
+  maxBufferedSamples: 0,
+  maxPacketSamples: 0,
+  pacedOutput: false,
+  outputPacingWaitMs: 0,
+  outputPacingElapsedMs: 0,
+});
+
 /**
  * Coalesces incoming PCM chunks into steadier packets before they are encoded
  * and sent to the live API. This reduces message churn, keeps packet ordering
@@ -53,19 +67,7 @@ export class RealtimePcmPacketizer {
   private outputPacingStartedAt: number | null = null;
   private outputPacingLastSentAt: number | null = null;
   private completedPacingElapsedMs = 0;
-  private stats: RealtimePcmPacketizerStats = {
-    totalInputSamples: 0,
-    totalOutputSamples: 0,
-    packetsSent: 0,
-    partialPacketsSent: 0,
-    timerFlushes: 0,
-    explicitFlushes: 0,
-    maxBufferedSamples: 0,
-    maxPacketSamples: 0,
-    pacedOutput: false,
-    outputPacingWaitMs: 0,
-    outputPacingElapsedMs: 0,
-  };
+  private stats = createEmptyRealtimePcmPacketizerStats();
 
   constructor(options: RealtimePcmPacketizerOptions) {
     this.sampleRate = Math.max(1, options.sampleRate);

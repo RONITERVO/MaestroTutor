@@ -19,6 +19,7 @@ import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import { flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
 import {
   RealtimePcmPacketizer,
+  createEmptyRealtimePcmPacketizerStats,
   type RealtimePcmPacketizerStats,
 } from '../../../core-sdk/media/realtimePcmPacketizer';
 import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
@@ -270,19 +271,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   }, [addActivityToken, removeActivityToken]);
 
   const getInputPacketizerStats = useCallback((): RealtimePcmPacketizerStats => (
-    inputPacketizerRef.current?.getStats() ?? {
-      totalInputSamples: 0,
-      totalOutputSamples: 0,
-      packetsSent: 0,
-      partialPacketsSent: 0,
-      timerFlushes: 0,
-      explicitFlushes: 0,
-      maxBufferedSamples: 0,
-      maxPacketSamples: 0,
-      pacedOutput: false,
-      outputPacingWaitMs: 0,
-      outputPacingElapsedMs: 0,
-    }
+    inputPacketizerRef.current?.getStats() ?? createEmptyRealtimePcmPacketizerStats()
   ), []);
 
   const getAudioTelemetrySnapshot = useCallback(() => ({

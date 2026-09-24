@@ -1,0 +1,77 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`actual Live hook lifecycle before session-controller extraction > collects late transcripts and usage before finalizing, and invokes the latest callback 1`] = `
+[
+  {
+    "modelText": "",
+    "reason": "session-reset",
+    "thinkingPhase": undefined,
+    "thinkingStatusLine": undefined,
+    "thinkingTrace": undefined,
+    "userText": "",
+  },
+  {
+    "modelText": "First",
+    "reason": "output",
+    "speechPreviewProgress": undefined,
+    "thinkingPhase": "Final response",
+    "thinkingStatusLine": undefined,
+    "thinkingTrace": undefined,
+    "userText": "User",
+  },
+  {
+    "modelText": "First late",
+    "reason": "output",
+    "speechPreviewProgress": undefined,
+    "thinkingPhase": "Final response",
+    "thinkingStatusLine": undefined,
+    "thinkingTrace": undefined,
+    "userText": "User",
+  },
+  {
+    "modelText": "",
+    "reason": "session-reset",
+    "thinkingPhase": undefined,
+    "thinkingStatusLine": undefined,
+    "thinkingTrace": undefined,
+    "userText": "",
+  },
+]
+`;
+
+exports[`actual Live hook lifecycle before session-controller extraction > preserves the connect configuration and closes resources after capture is flushed 1`] = `
+{
+  "config": {
+    "contextWindowCompression": {
+      "slidingWindow": {
+        "targetTokens": "8000",
+      },
+      "triggerTokens": "25000",
+    },
+    "inputAudioTranscription": {},
+    "mediaResolution": "MEDIA_RESOLUTION_LOW",
+    "outputAudioTranscription": {},
+    "realtimeInputConfig": {
+      "activityHandling": "NO_INTERRUPTION",
+      "automaticActivityDetection": {
+        "disabled": false,
+        "endOfSpeechSensitivity": "END_SENSITIVITY_LOW",
+        "prefixPaddingMs": 120,
+        "silenceDurationMs": 1000,
+        "startOfSpeechSensitivity": "START_SENSITIVITY_LOW",
+      },
+    },
+    "responseModalities": [
+      "AUDIO",
+    ],
+    "speechConfig": undefined,
+    "systemInstruction": "Existing instruction",
+    "thinkingConfig": {
+      "includeThoughts": true,
+      "thinkingBudget": -1,
+    },
+  },
+  "model": "gemini-2.5-flash-native-audio-preview-12-2025",
+  "trigger": "user.camera-live",
+}
+`;

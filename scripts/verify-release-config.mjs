@@ -79,6 +79,8 @@ const [
   functionsPackage,
   functionsIndex,
   functionsGemini,
+  functionsMusic,
+  functionsClient,
   androidBuild,
   mainActivity,
   stagingEnv,
@@ -88,6 +90,9 @@ const [
   headlessAccess,
   firstLessonJourney,
   tutorConversation,
+  assistantTools,
+  sendCoordinator,
+  sendRequest,
   liveSystemInstruction,
   liveStt,
   attachmentUploadPlans,
@@ -106,6 +111,8 @@ const [
   read('functions/package.json'),
   read('functions/src/index.ts'),
   read('functions/src/gemini.ts'),
+  read('functions/src/managedGemini/music.ts'),
+  read('functions/src/managedGemini/client.ts'),
   read('android/app/build.gradle'),
   read('android/app/src/main/java/com/ronitervo/maestrotutor/MainActivity.java'),
   read('.env.staging'),
@@ -115,6 +122,9 @@ const [
   read('src/headless/access.ts'),
   read('src/headless/firstLessonJourney.ts'),
   read('src/features/chat/hooks/useTutorConversation.ts'),
+  read('src/features/chat/coordinators/assistantTools.ts'),
+  read('src/features/chat/coordinators/send.ts'),
+  read('src/features/chat/coordinators/sendRequest.ts'),
   read('src/features/live/utils/liveSystemInstruction.ts'),
   read('src/features/speech/hooks/useGeminiLiveStt.ts'),
   read('src/core-sdk/chat/attachmentUploadPlans.ts'),
@@ -166,14 +176,23 @@ requireText(
   /app\.post\(\s*['"]\/gemini\/generate-music['"]\s*,\s*asyncRoute\(\s*['"]required['"]/.test(functionsIndex),
   'Functions must expose managed music through an authenticated required-auth route.',
 );
-requireText(functionsGemini.includes("apiVersion: 'v1alpha'"), 'The Lyria backend adapter must use its supported v1alpha WebSocket endpoint.');
+requireText(
+  functionsGemini.includes("export { generateManagedMusic } from './managedGemini/music'"),
+  'The managed music route facade must expose the verified music service.',
+);
+requireText(
+  functionsMusic.includes("getGeminiClient('v1alpha')")
+    && functionsMusic.includes('generateMusicPcm({ client,')
+    && functionsClient.includes('...(apiVersion ? { apiVersion } : {})'),
+  'The Lyria backend adapter must pass its supported v1alpha WebSocket endpoint through the configured client.',
+);
 requireText(
   /music:\s*\{\s*connect:\s*async\s*\(\)\s*=>\s*\{\s*throw new Error\(/s.test(managedGeminiClient),
   'Managed music connect must throw instead of minting an unsupported ephemeral Lyria token.',
 );
-requireText(functionsGemini.includes('trimMusicPcmChunk'), 'Managed music must trim PCM to the requested duration.');
-requireText(functionsGemini.includes('isCompleteMusicSampleCount'), 'Managed music must reject partial provider closes.');
-requireText(functionsGemini.includes('getManagedMusicLeaseDurationMs'), 'Managed music leases must cover the full provider timeout.');
+requireText(functionsMusic.includes('trimMusicPcmChunk'), 'Managed music must trim PCM to the requested duration.');
+requireText(functionsMusic.includes('isCompleteMusicSampleCount'), 'Managed music must reject partial provider closes.');
+requireText(functionsMusic.includes('getManagedMusicLeaseDurationMs'), 'Managed music leases must cover the full provider timeout.');
 requireText(!androidBuild.includes('com.android.billingclient'), 'Android must not ship a second purchase SDK.');
 requireText(!androidManifest.includes('com.android.vending.BILLING'), 'Android merged release manifest must not contain the retired Play Billing permission.');
 requireText(!mainActivity.includes('ManagedBillingPlugin'), 'Android must not register the retired billing plugin.');
@@ -220,7 +239,10 @@ requireText(firstLessonJourney.includes("mode: 'observer'"), 'The first-lesson j
 requireText(firstLessonJourney.includes('useGoogleSearch: false'), 'Non-Search first-lesson turns must not inherit the earlier Search toggle.');
 requireText(firstLessonCoverage.includes('cleanupFailureCount'), 'The first-lesson attachment gate must require confirmed cleanup.');
 requireText(firstLessonCoverage.includes('visiblyStreamed'), 'The first-lesson reengagement gate must require visible streaming.');
-requireText(tutorConversation.includes('executeSuggestionToolRequest'), 'The visual UI must use the shared suggestion afterstep dispatcher.');
+requireText(
+  tutorConversation.includes('createAssistantTools(') && assistantTools.includes('executeSuggestionToolRequest('),
+  'The visual UI tool coordinator must use the shared suggestion afterstep dispatcher.',
+);
 requireText(tutorConversation.includes('normalizeCoreSuggestionCreatorArtifact'), 'The visual UI must use shared artifact normalization.');
 requireText(tutorConversation.includes('buildCoreAttachmentUploadPlans'), 'The visual UI must use the shared attachment upload planner.');
 requireText(headlessAttachmentJourney.includes('buildHeadlessAttachmentUploadPlans'), 'The headless client must use the shared attachment upload planner through its runtime adapters.');
@@ -231,7 +253,12 @@ requireText(officeTextExtraction.includes('JSZip.loadAsync'), 'Shared Office ext
 requireText(replySuggestions.includes('responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA'), 'Suggestion creation must enforce provider-side JSON structure for artifact-bearing replies.');
 requireText(liveSystemInstruction.includes('buildCoreLiveSystemInstruction'), 'The visual UI must use shared Live context serialization.');
 requireText(liveStt.includes('buildLiveSttSystemInstruction'), 'The visual UI must use the shared STT instruction contract.');
-requireText(tutorConversation.includes('deriveBrowserTutorHistory('), 'Browser tutor history must use the prompt-contract-tested composition policy.');
+requireText(
+  tutorConversation.includes('createSendCoordinator(')
+    && sendCoordinator.includes('createSendRequestPreparer(')
+    && sendRequest.includes('deriveBrowserTutorHistory('),
+  'Browser tutor history must use the prompt-contract-tested composition policy through its send coordinators.',
+);
 for (const coverageFlag of [
   'chatStreaming', 'stt', 'liveAudio', 'liveVisual', 'observerAudio',
   'observerVisual', 'suggestionAftersteps', 'translation', 'ttsTrigger',

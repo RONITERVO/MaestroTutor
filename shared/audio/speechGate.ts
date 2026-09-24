@@ -136,6 +136,11 @@ export class SpeechGate {
     return this.awaitingConfirmation;
   }
 
+  /** Continuous turns also honor the echo suppression tail without re-running onset detection. */
+  isPlaybackSuppressed(now: number): boolean {
+    return now < this.playbackMutedUntil;
+  }
+
   /**
    * Hold the gate shut while the app is speaking, and for a moment afterwards.
    *
@@ -222,7 +227,7 @@ export class SpeechGate {
     // Playback is checked first and reported distinctly: "the app is talking"
     // and "this noise just stopped" are different conditions, and collapsing
     // them makes the gate impossible to reason about from a log.
-    if (now < this.playbackMutedUntil) {
+    if (this.isPlaybackSuppressed(now)) {
       this.forceClose();
       return { send: false, reason: 'playback' };
     }

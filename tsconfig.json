@@ -20,6 +20,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "index.tsx", "App.tsx", "hooks", "types.ts", "constants.tsx", "translations", "services"],
+  "include": ["src", "test-fixtures/browser", "index.tsx", "App.tsx", "hooks", "types.ts", "constants.tsx", "translations", "services"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

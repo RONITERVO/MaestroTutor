@@ -2,15 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 /**
- * App.tsx - The Composition Root
- * 
- * This component is a "Hollow Shell" that:
- * 1. Composes all the orchestration hooks
- * 2. Passes data/handlers to the UI layer
- * 3. Contains minimal business logic
- * 
- * The actual logic has been extracted into specialized hooks in src/app/hooks/
- * and src/features/ /hooks.
+ * App composition and UI wiring. Feature hooks own their workflows; speech
+ * routing and idle handoffs live in app/coordinators with explicit state/action
+ * ports. React lifecycle and store projection remain in the app adapters.
  */
  
 import React, { useEffect, useCallback, useRef, useMemo, useState } from 'react';
@@ -37,7 +31,7 @@ import { setChatMetaDB } from '../features/chat';
 
 // --- Config ---
 import { IMAGE_GEN_CAMERA_ID } from '../core/config/app';
-import { selectBlocksSilentObserver, selectIsListening, selectIsResponsePending, selectIsSpeaking, selectNonReengagementBusy } from '../store/slices/uiSlice';
+import { selectBlocksSilentObserver, selectNonReengagementBusy } from '../store/slices/uiSlice';
 import { selectSelectedLanguagePair } from '../store/slices/settingsSlice';
 
 // --- Types ---
@@ -50,10 +44,11 @@ import { useApiKey } from '../shared/hooks/useApiKey';
 import { useManagedAccess } from '../shared/hooks/useManagedAccess';
 import { logSttFlow, warnSttFlow } from '../shared/utils/sttFlowDebug';
 import { SmallSpinner } from '../shared/ui/SmallSpinner';
-import { resolveSttTurnDestination } from '../core-sdk/media/sttTurnRouting';
-
-/** Delay in ms before restarting STT after language change */
-const STT_RESTART_DELAY_MS = 250;
+import { createSttTurnHandler } from './coordinators/sttTurn';
+import { createReengagementSequence } from './coordinators/reengagement';
+import { createSpeechModeActions } from './coordinators/speechMode';
+import { readSpeechRoutingState } from './speechRoutingState';
+import { useLanguageSessionReset } from './hooks/useLanguageSessionReset';
 
 const App: React.FC = () => {
   // ============================================================
@@ -68,6 +63,8 @@ const App: React.FC = () => {
   const scheduleReengagementRef = useRef<(reason: string, delayOverrideMs?: number) => void>(() => {});
   const cancelReengagementRef = useRef<() => void>(() => {});
   const stopSilentObserverRef = useRef<() => Promise<void>>(async () => {});
+  const pendingSttEnableRef = useRef<symbol | null>(null);
+  useEffect(() => () => { pendingSttEnableRef.current = null; }, []);
   const resetSilentObserverRef = useRef<() => Promise<void>>(async () => {});
   const stopLiveSessionForHistoryLoadRef = useRef<() => Promise<void>>(async () => {});
   const handleToggleSuggestionModeRef = useRef<((forceState?: boolean) => void) | undefined>(undefined);
@@ -189,10 +186,6 @@ const App: React.FC = () => {
     const pair = state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
     return pair?.baseSystemPrompt || '';
   });
-  const currentReplySuggestionsPromptText = useMaestroStore(state => {
-    const pair = state.languagePairs.find(p => p.id === state.settings.selectedLanguagePairId);
-    return pair?.baseReplySuggestionsPrompt || '';
-  });
 
   const setTransitioningImageId = useMaestroStore(state => state.setTransitioningImageId);
   const setShowDebugLogs = useMaestroStore(state => state.setShowDebugLogs);
@@ -255,7 +248,6 @@ const App: React.FC = () => {
     cancelReengagementRef,
     transcript,
     currentSystemPromptText,
-    currentReplySuggestionsPromptText,
     setReplySuggestions,
     handleToggleSuggestionModeRef,
     maestroAvatarUriRef,
@@ -270,92 +262,11 @@ const App: React.FC = () => {
     getHistoryRespectingBookmark,
   });
   
-  const handleSttTurnComplete = useCallback(async (turn: GeminiLiveSttTurnComplete) => {
-    const turnText = (turn.turnTranscript || turn.committedTranscript || '').trim();
-    logSttFlow('app.turnComplete.received', {
-      turnId: turn.turnId,
-      textLength: turnText.length,
-      committedLength: turn.committedTranscript.length,
-      audioSamples: turn.audioSamples,
-    });
-    if (turnText.length < 2) {
-      warnSttFlow('app.turnComplete.skip.short', {
-        turnId: turn.turnId,
-        textLength: turnText.length,
-      });
-      return;
-    }
-
-    const state = useMaestroStore.getState();
-    if (!state.settings.stt.enabled) {
-      warnSttFlow('app.turnComplete.skip.sttDisabled', {
-        turnId: turn.turnId,
-      });
-      return;
-    }
-    if (selectIsResponsePending(state) || selectIsSpeaking(state)) {
-      warnSttFlow('app.turnComplete.skip.busy', {
-        turnId: turn.turnId,
-        responsePending: selectIsResponsePending(state),
-        speaking: selectIsSpeaking(state),
-      });
-      return;
-    }
-
-    const destination = resolveSttTurnDestination(
-      turn.destination,
-      state.settings.isSuggestionMode,
-    );
-
-    if (destination === 'translation') {
-      logSttFlow('app.turnComplete.suggestionMode.start', {
-        turnId: turn.turnId,
-        textLength: turnText.length,
-      });
-      try {
-        await Promise.resolve(stopListening());
-      } catch (error) {
-        console.warn('Failed to stop STT before creating suggestion', error);
-      }
-
-      clearTranscript();
-      await handleCreateSuggestion(turnText);
-
-      const nextState = useMaestroStore.getState();
-      if (
-        nextState.settings.stt.enabled &&
-        !selectIsResponsePending(nextState) &&
-        !selectIsSpeaking(nextState) &&
-        !selectIsListening(nextState)
-      ) {
-        logSttFlow('app.turnComplete.suggestionMode.restartStt', {
-          turnId: turn.turnId,
-        });
-        startListening(nextState.settings.stt.language);
-      }
-      logSttFlow('app.turnComplete.suggestionMode.done', {
-        turnId: turn.turnId,
-      });
-      return;
-    }
-
-    logSttFlow('app.turnComplete.send.start', {
-      turnId: turn.turnId,
-      textLength: turnText.length,
-      hasAttachedImage: Boolean(state.attachedImageBase64),
-    });
-    const sendResult = await handleSendMessageInternal(
-      turnText,
-      state.attachedImageBase64 || undefined,
-      state.attachedImageMimeType || undefined,
-      'user',
-      { triggeredByStt: true }
-    );
-    logSttFlow('app.turnComplete.send.done', {
-      turnId: turn.turnId,
-      sendResult,
-    });
-  }, [clearTranscript, handleCreateSuggestion, handleSendMessageInternal, startListening, stopListening]);
+  const handleSttTurnComplete = useMemo(() => createSttTurnHandler({
+    readState: readSpeechRoutingState, stopListening, startListening, clearTranscript,
+    handleCreateSuggestion, handleSendMessageInternal, logSttFlow, warnSttFlow,
+    warn: console.warn,
+  }), [clearTranscript, handleCreateSuggestion, handleSendMessageInternal, startListening, stopListening]);
 
   useEffect(() => {
     handleSttTurnCompleteRef.current = handleSttTurnComplete;
@@ -363,44 +274,12 @@ const App: React.FC = () => {
   
   // --- Smart Reengagement ---
   // NOTE: Moved AFTER useMaestroController to have access to isSending, isSpeaking
-  const triggerReengagementSequence = useCallback(async () => {
-    // Guard conditions - don't re-engage if busy
-    if (isLoadingHistoryRef.current || isSendingRef.current || speechIsSpeakingRef.current || isCurrentlyPerformingVisualContextCaptureRef.current) {
-      return;
-    }
-    await stopSilentObserverRef.current();
-
-    setReplySuggestions([]);
-    // Note: isLoadingSuggestions is now managed via tokens in useMaestroController
-    // Clearing suggestions above is sufficient; token will be removed when generation completes
-    setLastFetchedSuggestionsFor(null);
-
-    let visualReengagementShown = false;
-    const currentReengageSettings = settingsRef.current.smartReengagement;
-    
-    // Try visual re-engagement first if enabled and camera is active
-    if (currentReengageSettings.useVisualContext && visualContextStreamRef.current && visualContextStreamRef.current.active) {
-      isCurrentlyPerformingVisualContextCaptureRef.current = true;
-      try {
-        const imageResult = await captureSnapshot(true);
-        if (imageResult && handleSendMessageInternal) {
-          visualReengagementShown = await handleSendMessageInternal(
-            '',
-            imageResult.base64,
-            imageResult.mimeType,
-            'image-reengagement'
-          );
-        }
-      } finally {
-        isCurrentlyPerformingVisualContextCaptureRef.current = false;
-      }
-    }
-
-    // Fallback to conversational re-engagement if visual didn't work
-    if (!visualReengagementShown && handleSendMessageInternal) {
-      await handleSendMessageInternal('', undefined, undefined, 'conversational-reengagement');
-    }
-  }, [captureSnapshot, settingsRef, visualContextStreamRef, handleSendMessageInternal, isLoadingHistoryRef, isSendingRef, speechIsSpeakingRef, setReplySuggestions, setLastFetchedSuggestionsFor]);
+  const triggerReengagementSequence = useMemo(() => createReengagementSequence({
+    isLoadingHistoryRef, isSendingRef, speechIsSpeakingRef,
+    isCurrentlyPerformingVisualContextCaptureRef, stopSilentObserverRef,
+    settingsRef, visualContextStreamRef, captureSnapshot, handleSendMessageInternal,
+    setReplySuggestions, setLastFetchedSuggestionsFor,
+  }), [captureSnapshot, settingsRef, visualContextStreamRef, handleSendMessageInternal, isLoadingHistoryRef, isSendingRef, speechIsSpeakingRef, setReplySuggestions, setLastFetchedSuggestionsFor]);
 
   const {
     reengagementPhase,
@@ -457,78 +336,20 @@ const App: React.FC = () => {
     deleteMessage(messageId);
   }, [deleteMessage]);
 
-  const handleToggleSuggestionMode = useCallback((forceState?: boolean) => {
-    const newIsSuggestionMode = typeof forceState === 'boolean' ? forceState : !settingsRef.current.isSuggestionMode;
-    if (newIsSuggestionMode === settingsRef.current.isSuggestionMode) return;
-
-    const currentSttSettings = settingsRef.current.stt;
-    const sttShouldBeActive = currentSttSettings.enabled;
-    let newSttLang = currentSttSettings.language;
-
-    if (selectedLanguagePairRef.current) {
-      newSttLang = newIsSuggestionMode
-        ? getPrimaryCode(selectedLanguagePairRef.current.nativeLanguageCode)
-        : getPrimaryCode(selectedLanguagePairRef.current.targetLanguageCode);
-    }
-
-    const langDidChange = newSttLang !== currentSttSettings.language;
-
-    setSettings(prev => ({
-      ...prev,
-      isSuggestionMode: newIsSuggestionMode,
-      stt: {
-        ...prev.stt,
-        language: newSttLang
-      }
-    }));
-
-    if (langDidChange && sttShouldBeActive && isListening) {
-      stopListening();
-      setTimeout(() => {
-        if (settingsRef.current.stt.enabled) {
-          clearTranscript();
-          startListening(newSttLang);
-        }
-      }, STT_RESTART_DELAY_MS);
-    } else if (langDidChange) {
-      clearTranscript();
-    }
-  }, [isListening, stopListening, startListening, clearTranscript, settingsRef, selectedLanguagePairRef, setSettings]);
+  const { handleToggleSuggestionMode, sttMasterToggle } = useMemo(() => createSpeechModeActions({
+    pendingEnableRef: pendingSttEnableRef, resetSilentObserverRef,
+    isListening, stopListening, startListening, clearTranscript, settingsRef,
+    selectedLanguagePairRef, setSettings, stopSilentObserverRef,
+    setSttError: error => useMaestroStore.getState().setSttError(error),
+    delay: (callback, milliseconds) => setTimeout(callback, milliseconds), warn: console.warn,
+  }), [isListening, stopListening, startListening, clearTranscript, settingsRef, selectedLanguagePairRef, setSettings]);
 
   // CRITICAL: Sync handleToggleSuggestionMode to ref for useMaestroController
   useEffect(() => {
     handleToggleSuggestionModeRef.current = handleToggleSuggestionMode;
   }, [handleToggleSuggestionMode]);
 
-  const sttMasterToggle = useCallback(async () => {
-    // If enabled, turn it OFF (regardless of error state). This allows clearing stuck states.
-    if (settingsRef.current.stt.enabled) {
-      const nextSettings = { ...settingsRef.current, stt: { ...settingsRef.current.stt, enabled: false } };
-      setSettings(nextSettings);
 
-      // Also clear any STT Error when manually turning off
-      useMaestroStore.getState().setSttError(null);
-
-      stopListening();
-      return;
-    }
-
-    // If disabled, turn it ON.
-    try {
-      await Promise.resolve(stopSilentObserverRef.current?.());
-    } catch (error) {
-      console.warn('Failed to stop silent observer before STT start', error);
-    }
-    const currentSttSettings = settingsRef.current.stt;
-    const nextSettings = { ...settingsRef.current, stt: { ...currentSttSettings, enabled: true } };
-    setSettings(nextSettings);
-
-    // Clear old error messages before starting fresh
-    useMaestroStore.getState().setSttError(null);
-    clearTranscript();
-    startListening(currentSttSettings.language);
-
-  }, [clearTranscript, startListening, stopListening, settingsRef, setSettings]);
 
   const handleToggleSendWithSnapshot = useCallback(() => {
     handleSettingsChange('sendWithSnapshotEnabled', !settingsRef.current.sendWithSnapshotEnabled);
@@ -645,63 +466,11 @@ const App: React.FC = () => {
     await handleStartLiveSession();
   }, [handleStartLiveSession, stopSilentObserver]);
 
-  const previousLanguagePairIdRef = useRef<string | null>(settings.selectedLanguagePairId);
-  useEffect(() => {
-    const currentPairId = settings.selectedLanguagePairId;
-    const previousPairId = previousLanguagePairIdRef.current;
-
-    // Any pair transition, including first-time selection from null, changes the
-    // system prompt context for live and silent-observer sessions.
-    if (currentPairId === previousPairId) {
-      return;
-    }
-    previousLanguagePairIdRef.current = currentPairId;
-
-    let cancelled = false;
-
-    const resetLiveSystemsForLanguageChange = async () => {
-      cancelReengagement();
-
-      const shouldRestartStt = settingsRef.current.stt.enabled;
-      stopSpeaking();
-      stopListening();
-      clearTranscript();
-      setSttError(null);
-
-      await Promise.allSettled([
-        Promise.resolve(resetSilentObserver()),
-        handleStopLiveSession({ scheduleReengagement: false }),
-      ]);
-
-      if (!shouldRestartStt || cancelled) return;
-
-      window.setTimeout(() => {
-        if (cancelled) return;
-        const state = useMaestroStore.getState();
-        const liveState = state.liveSessionState;
-        if (state.settings.stt.enabled && (liveState === 'idle' || liveState === 'error')) {
-          startListening(settingsRef.current.stt.language);
-        }
-      }, STT_RESTART_DELAY_MS);
-    };
-
-    void resetLiveSystemsForLanguageChange();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    cancelReengagement,
-    clearTranscript,
-    handleStopLiveSession,
-    resetSilentObserver,
-    settings.selectedLanguagePairId,
-    settingsRef,
-    setSttError,
-    startListening,
-    stopListening,
-    stopSpeaking,
-  ]);
+  useLanguageSessionReset({
+    selectedLanguagePairId: settings.selectedLanguagePairId, settingsRef,
+    cancelReengagement, clearTranscript, handleStopLiveSession, resetSilentObserver,
+    setSttError, startListening, stopListening, stopSpeaking,
+  });
 
   // ============================================================
   // QUOTA ERROR ACTIONS
@@ -888,4 +657,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

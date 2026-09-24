@@ -55,6 +55,16 @@ export interface EntitlementRecord {
   createdAt: number;
 }
 
+export interface ManagedSettlement {
+  uid: string;
+  reservationId: string;
+  billedCredits: number;
+  billedUsd: number;
+  operation: string;
+  model: string;
+  metadata?: Record<string, unknown>;
+}
+
 interface ReservationRecord {
   uid: string;
   status: 'active' | 'settled' | 'released';
@@ -69,6 +79,7 @@ interface ReservationRecord {
   billedCredits?: number;
   billedUsd?: number;
   metadata?: Record<string, unknown>;
+  pendingSettlement?: Omit<ManagedSettlement, 'uid' | 'reservationId'>;
 }
 
 const nowMs = (): number => Date.now();
@@ -122,6 +133,26 @@ const listEntitlements = async (uid: string): Promise<EntitlementRecord[]> => {
   return snapshot.docs.map((doc: any) => doc.data() as EntitlementRecord);
 };
 
+const reconcileExpiredReservation = async (uid: string, reservationId: string, reservation: ReservationRecord): Promise<boolean> => {
+  try {
+    if (reservation.pendingSettlement) {
+      try {
+        await settleManagedReservation({ ...reservation.pendingSettlement, uid, reservationId });
+      } catch (error) {
+        // Deletion can claim the account before or during settlement. Its tombstone
+        // forbids charges, but must not block deletion or the sweep for other users.
+        if (Number((error as { status?: unknown })?.status) !== 409
+          || !(await accountDeletionClaimRef(uid).get()).exists) throw error;
+        await releaseManagedReservation(uid, reservationId, 'account-deleted');
+      }
+    } else await releaseManagedReservation(uid, reservationId, 'expired');
+    return true;
+  } catch (error) {
+    console.warn('[billing] Expired reservation recovery deferred.', { reservationId, error: String(error) });
+    return false;
+  }
+};
+
 export const sweepExpiredReservationsForUser = async (uid: string): Promise<void> => {
   const snapshot = await managedReservationsCollection(uid)
     .where('status', '==', 'active')
@@ -130,23 +161,35 @@ export const sweepExpiredReservationsForUser = async (uid: string): Promise<void
     .get();
 
   for (const doc of snapshot.docs) {
-    await releaseManagedReservation(uid, doc.id, 'expired');
+    const reservation = doc.data() as ReservationRecord;
+    await reconcileExpiredReservation(uid, doc.id, reservation);
   }
 };
 
 export const sweepExpiredReservations = async (limit = 50): Promise<number> => {
-  const snapshot = await adminDb.collectionGroup('reservations')
-    .where('status', '==', 'active')
-    .where('expiresAt', '<=', nowMs())
-    .limit(clampLimit(limit, 50))
-    .get();
-
-  for (const doc of snapshot.docs) {
-    const reservation = doc.data() as ReservationRecord;
-    await releaseManagedReservation(reservation.uid, doc.id, 'expired');
+  const pageSize = clampLimit(limit, 50);
+  const sweepAt = nowMs();
+  let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+  let recoveredCount = 0;
+  while (true) {
+    let query = adminDb.collectionGroup('reservations')
+      .where('status', '==', 'active')
+      .where('expiresAt', '<=', sweepAt)
+      .orderBy('expiresAt')
+      .orderBy(FieldPath.documentId())
+      .limit(pageSize);
+    if (cursor) query = query.startAfter(cursor);
+    const snapshot = await query.get();
+    for (const doc of snapshot.docs) {
+      const reservation = doc.data() as ReservationRecord;
+      if (await reconcileExpiredReservation(reservation.uid, doc.id, reservation)) recoveredCount++;
+    }
+    if (snapshot.size < pageSize) break;
+    // Advance past failures as well as successes: each row is attempted once
+    // this sweep, without trapping the backlog behind a failed first page.
+    cursor = snapshot.docs[snapshot.docs.length - 1];
   }
-
-  return snapshot.size;
+  return recoveredCount;
 };
 
 export const countExpiredReservations = async (): Promise<number> => {
@@ -296,6 +339,9 @@ export const releaseManagedReservation = async (
     if (reservation.uid !== uid || reservation.status !== 'active') {
       return currentSummary;
     }
+    // Completed provider work has an authoritative usage record awaiting an
+    // idempotent settlement. Account deletion remains allowed to release it.
+    if (reservation.pendingSettlement && reason !== 'account-deleted') return currentSummary;
 
     const nextSummary = applyRelease(currentSummary, reservation.reservedCredits, currentTime);
 
@@ -327,15 +373,22 @@ export const releaseManagedReservation = async (
   });
 };
 
-export const settleManagedReservation = async (params: {
-  uid: string;
-  reservationId: string;
-  billedCredits: number;
-  billedUsd: number;
-  operation: string;
-  model: string;
-  metadata?: Record<string, unknown>;
-}): Promise<ManagedBillingSummary> => {
+/** Persist only accounting fields, never model output, before settling completed work. */
+export const recordPendingManagedSettlement = async (params: ManagedSettlement): Promise<void> => {
+  const { uid, reservationId, ...pendingSettlement } = params;
+  await adminDb.runTransaction(async transaction => {
+    const ref = managedReservationRef(uid, reservationId);
+    const [snapshot, deletionClaim] = await Promise.all([
+      transaction.get(ref), transaction.get(accountDeletionClaimRef(uid)),
+    ]);
+    if (deletionClaim.exists) throw createHttpError(409, 'This managed account is being deleted.');
+    const reservation = snapshot.data() as ReservationRecord | undefined;
+    if (reservation?.uid !== uid || reservation.status !== 'active') return;
+    transaction.update(ref, { pendingSettlement });
+  });
+};
+
+export const settleManagedReservation = async (params: ManagedSettlement): Promise<ManagedBillingSummary> => {
   if (!params.reservationId) {
     throw createHttpError(500, 'Missing managed reservation id.');
   }

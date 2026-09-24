@@ -306,7 +306,7 @@ Requires Android Studio with a connected device or emulator.
 
 ## Contributing
 
-Contributions are welcome. UI features live in `src/features/`, shared journeys and media engines in `src/core-sdk/`, and cross-runtime prompts and billing contracts in `shared/`. Browser adapters connect the UI to that shared logic. Some chat, Live, and app-shell orchestration still needs clearer ownership; [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) maps the boundaries and the next refactors.
+Contributions are welcome. UI features live in `src/features/`, shared journeys and media engines in `src/core-sdk/`, and cross-runtime prompts and billing contracts in `shared/`. Browser adapters connect the UI to that shared logic. Chat coordinators, Live session owners, app handoffs and managed backend services now have explicit boundaries; [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) maps those owners and the tests to run before changing them.
 
 **Before you start:**
 

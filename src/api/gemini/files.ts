@@ -135,7 +135,9 @@ export const checkFileStatuses = async (uris: string[]): Promise<Record<string, 
             out[uri] = { deleted: true, active: false };
             knownExpiredUris.add(uri);
           } else {
-            out[uri] = { deleted: false, active: false };
+            // An unavailable lookup says nothing about the cached file. Callers
+            // may retain their cache, but must not silently strip model context.
+            throw e;
           }
         }
       })

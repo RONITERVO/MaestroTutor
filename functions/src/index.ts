@@ -354,13 +354,7 @@ export const releaseExpiredReservations = onSchedule(
     timeoutSeconds: 540,
   },
   async () => {
-    const batchLimit = 200;
-    let releasedCount = 0;
-    let batchCount = 0;
-    do {
-      batchCount = await sweepExpiredReservations(batchLimit);
-      releasedCount += batchCount;
-    } while (batchCount === batchLimit);
+    const releasedCount = await sweepExpiredReservations(200);
 
     const remainingCount = await countExpiredReservations();
     console.info('[billing] Expired reservation sweep completed.', {
