@@ -143,11 +143,18 @@ namespace Maestro.Quest.Editor
         {
             const string modelPath = "Assets/Maestro/Resources/Avatars/DefaultMaestro.fbx";
             AssetDatabase.ImportAsset(modelPath, ImportAssetOptions.ForceUpdate);
+            var importer = (ModelImporter)AssetImporter.GetAtPath(modelPath);
+            if (!importer.clipAnimations.Any(clip => clip.name == "Walk"))
+            {
+                var walk = importer.defaultClipAnimations.First(clip => clip.takeName.Split('|').Last() == "Walk");
+                walk.name = "Walk"; walk.loopTime = true;
+                importer.clipAnimations = importer.clipAnimations.Append(walk).ToArray(); importer.SaveAndReimport();
+            }
             var clips = AssetDatabase.LoadAllAssetsAtPath(modelPath).OfType<AnimationClip>().Where(clip => !clip.name.StartsWith("__preview__")).ToArray();
             const string path = "Assets/Maestro/Resources/Avatars/MaestroAnimations.controller";
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(path) ?? AnimatorController.CreateAnimatorControllerAtPath(path);
             var machine = controller.layers[0].stateMachine;
-            foreach (var name in new[] { "Idle", "Listening", "Speaking", "Greeting", "Pointing" })
+            foreach (var name in new[] { "Idle", "Listening", "Speaking", "Greeting", "Pointing", "Walk" })
             {
                 var clip = clips.FirstOrDefault(value => value.name.Split('|').Last() == name);
                 if (!clip) throw new InvalidOperationException("Missing included animation: " + name + ". Found: " + string.Join(", ", clips.Select(value => value.name)));

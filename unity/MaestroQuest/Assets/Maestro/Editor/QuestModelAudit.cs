@@ -76,6 +76,7 @@ namespace Maestro.Quest.Editor
                             var posed = new GameObject("Retargeted " + skin.name,typeof(MeshFilter),typeof(MeshRenderer)); posed.transform.SetParent(skin.transform,false);
                             var mesh = new Mesh(); skin.BakeMesh(mesh,true); posed.GetComponent<MeshFilter>().sharedMesh = mesh;
                             posed.GetComponent<MeshRenderer>().sharedMaterials = skin.sharedMaterials; skin.enabled = false; poses.Add(posed);
+                            Debug.Log("MAESTRO_RETARGET_BOUNDS gesture="+gesture+" mesh="+mesh.bounds+" scale="+skin.transform.lossyScale+" world="+posed.GetComponent<MeshRenderer>().bounds+" root="+model.Instance.transform.position+" head="+model.Humanoid.GetBoneTransform(HumanBodyBones.Head).position);
                         }
                         camera.Render(); RenderTexture.active = texture; pixels.ReadPixels(new Rect(0,0,1400,1600),0,0); pixels.Apply();
                         File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(output),"custom-maestro-"+gesture.ToLowerInvariant()+".png"),pixels.EncodeToPNG());

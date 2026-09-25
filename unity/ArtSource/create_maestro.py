@@ -1,4 +1,4 @@
-"""Create Maestro's original included mesh, rig, and five reusable animations.
+"""Create Maestro's original included mesh, rig, and six reusable animations.
 
 Run with Blender 4.5 LTS: blender --background --python this_file.py -- <repo>
 All geometry is authored here; no downloaded model or motion assets are used.
@@ -324,7 +324,7 @@ for obj in joined:
 scene=bpy.context.scene
 scene.render.fps=30
 rig.animation_data_create()
-durations={'Idle':120,'Listening':90,'Speaking':90,'Greeting':75,'Pointing':90}
+durations={'Idle':120,'Listening':90,'Speaking':90,'Greeting':75,'Pointing':90,'Walk':31}
 for name,last in durations.items():
     action=bpy.data.actions.new(name)
     action.use_fake_user=True
@@ -355,6 +355,14 @@ for name,last in durations.items():
             rig.pose.bones['LeftUpperArm'].rotation_euler.x=-.67
             rig.pose.bones['LeftLowerArm'].rotation_euler.x=-.35
             rig.pose.bones['Head'].rotation_euler.z=-.12
+        if name=='Walk':
+            for side,phase in [('Left',0),('Right',math.pi)]:
+                swing=math.sin(p*math.tau+phase)
+                rig.pose.bones[side+'UpperLeg'].rotation_euler.x=.30*swing
+                rig.pose.bones[side+'LowerLeg'].rotation_euler.x=-.45*max(0,-swing)
+                rig.pose.bones[side+'Foot'].rotation_euler.x=-.15*swing
+                rig.pose.bones[side+'UpperArm'].rotation_euler.x=-.20*swing
+                rig.pose.bones[side+'LowerArm'].rotation_euler.x=-.16
         for pb in rig.pose.bones:
             pb.keyframe_insert(data_path='rotation_euler',frame=frame,group=pb.name)
     # Close looping gestures exactly; greeting also returns to a neutral rest.

@@ -37,7 +37,7 @@ namespace Maestro.Quest.Rules
                 var sequence = Selected;
                 if (sequence == null) return "No action sequence selected";
                 var step = sequence.steps[Mathf.Clamp(stepIndex,0,sequence.steps.Length-1)];
-                string action = step.action == RuleActionKind.RecordedAnimation ? "Play recording" : step.action == RuleActionKind.ThrowRecording ? "Play then throw" : step.action == RuleActionKind.Gesture ? step.gesture.ToString() : "Wait";
+                string action = step.action switch { RuleActionKind.RecordedAnimation => "Play recording",RuleActionKind.ThrowRecording => "Play then throw",RuleActionKind.Gesture => step.gesture.ToString(),RuleActionKind.LookAtUser => "Look at user",RuleActionKind.FollowUser => "Follow user",_ => "Wait" };
                 string target = step.action == RuleActionKind.Wait ? "" : " · " + TargetName(step.targetId);
                 string source = RuleDocument.IsObjectEvent(trigger) ? " on " + TargetName(sourceId) : "";
                 string policy = sequence.interruption == RuleInterruption.QueueLatest ? "Queue latest" : sequence.interruption.ToString();
@@ -97,11 +97,11 @@ namespace Maestro.Quest.Rules
             if (Selected == null) { Say("Create an action first"); return; }
             Edit(value => action(value.sequences[sequenceIndex].steps[stepIndex]),message);
         }
-        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%4); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; },"Action type changed");
+        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; },"Action type changed");
         public void UseTarget()
         {
             var id = editor.SelectedId; if (id == null) { Say("Select a room object first"); return; }
-            EditStep(step => { if (step.action == RuleActionKind.Gesture && id != "maestro") { Say("Gestures target Maestro"); return; } step.targetId = id; },"Target assigned from your room selection");
+            EditStep(step => { if ((step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) && id != "maestro") { Say("This action targets Maestro"); return; } step.targetId = id; },"Target assigned from your room selection");
         }
         public void Step(int direction) { if (Selected == null) return; stepIndex = (stepIndex + direction + Selected.steps.Length) % Selected.steps.Length; Changed?.Invoke(); }
         public void AddStep()

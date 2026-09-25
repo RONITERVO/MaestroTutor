@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle }
     public enum RuleInterruption { Restart, Ignore, QueueLatest }
     public enum RuleEventKind { Speaking, Listening, Thinking, Idle, ItemTapped, ItemGrabbed, ItemReleased }
@@ -61,6 +61,7 @@ namespace Maestro.Quest.Rules
         public static bool IsId(string value) => Guid.TryParseExact(value,"N",out _);
         public static bool IsTarget(string value) => value == "maestro" || value == "book" || IsId(value);
         public static bool IsObjectEvent(RuleEventKind kind) => kind >= RuleEventKind.ItemTapped;
+        public static bool IsSpatial(RuleActionKind kind) => kind == RuleActionKind.LookAtUser || kind == RuleActionKind.FollowUser;
         public static string Activity(RuleEventKind kind) => kind switch { RuleEventKind.Speaking => "speaking",RuleEventKind.Listening => "listening",RuleEventKind.Thinking => "thinking",RuleEventKind.Idle => "idle",_ => null };
         public static bool ConditionMatches(RuleCondition condition, string activity) => condition == RuleCondition.Any || condition.ToString().ToLowerInvariant() == activity;
 
@@ -78,7 +79,7 @@ namespace Maestro.Quest.Rules
                     if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.seconds < .1f) return false;
                     if (step.action == RuleActionKind.ThrowRecording && (step.loop || step.seconds != 0)) return false;
                     if (step.action != RuleActionKind.Wait && !IsTarget(step.targetId)) return false;
-                    if (step.action == RuleActionKind.Gesture && step.targetId != "maestro") return false;
+                    if ((step.action == RuleActionKind.Gesture || IsSpatial(step.action)) && step.targetId != "maestro") return false;
                 }
             }
             foreach (var binding in bindings)

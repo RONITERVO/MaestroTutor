@@ -10,9 +10,11 @@ param(
     [switch]$RenderPhysics,
     [string]$ModelAuditDirectory,
     [string]$ModelPreview,
+    [switch]$ModelAsMaestro,
     [string]$PageCapture
 )
 $ErrorActionPreference = 'Stop'
+if ($ModelAsMaestro -and !$ModelPreview) { throw 'ModelAsMaestro requires a local ModelPreview file.' }
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $sourceProject = Join-Path $repoRoot 'unity/MaestroQuest'
@@ -76,13 +78,14 @@ Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProject
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
 [xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 31) { throw 'Unity test results did not satisfy the current development checks.' }
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 33) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 $env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
 $env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $ModelPreview).Path } else { '' }
+$env:MAESTRO_REQUIRE_HUMANOID = if ($ModelAsMaestro) { '1' } else { '' }
 Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
 [xml]$playReport = Get-Content -LiteralPath $playResult
-if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 24) { throw 'Unity interaction tests did not pass.' }
+if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.passed -lt 30) { throw 'Unity interaction tests did not pass.' }
 if ($ModelAuditDirectory) {
     $env:MAESTRO_MODEL_DIRECTORY = (Resolve-Path -LiteralPath $ModelAuditDirectory).Path
     $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'

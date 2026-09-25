@@ -45,7 +45,7 @@ namespace Maestro.Quest.Tests
             rightAnchor = new GameObject("Right controller pose"); rightAnchor.transform.SetParent(root.transform,false); rightAnchor.transform.position = new Vector3(3,1,1);
             runtime = root.AddComponent<RoomRules>(); runtime.Initialize(workshop,editor,animations,null,room,null,index => { var anchor = index == 0 ? leftAnchor : rightAnchor; return anchor && anchor.activeSelf ? anchor.transform : null; });
             workshop.NewSequence();
-            for (int i = 0; i < 4 && workshop.Selected.steps[0].action != RuleActionKind.RecordedAnimation; i++) workshop.CycleAction();
+            for (int i = 0; i < System.Enum.GetValues(typeof(RuleActionKind)).Length && workshop.Selected.steps[0].action != RuleActionKind.RecordedAnimation; i++) workshop.CycleAction();
             Assert.That(workshop.Selected.steps[0].action,Is.EqualTo(RuleActionKind.RecordedAnimation));
             workshop.UseTarget(); sequenceId = workshop.Selected.id;
             yield return null;

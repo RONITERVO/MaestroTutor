@@ -90,7 +90,7 @@ namespace Maestro.Quest.Imports
             try { await preview.LoadAsync(asset); }
             catch { if (preview) Destroy(preview.gameObject); preview = null; throw; }
             if (!this || disposed) return;
-            pending = asset; clip = 0; page = 0; ShowDetails(); Say("Preview ready — choose Add model" + (asset.Inspection.IsAvatar ? " or Use Maestro" : ""));
+            pending = asset; clip = 0; page = 0; ShowDetails(); Say("Preview ready — choose Add model" + (preview.IsHumanoid ? " or Use Maestro" : ""));
         }
         public async void Accept() => await AcceptAsync();
         public async Task<bool> AcceptAsync()
@@ -108,14 +108,14 @@ namespace Maestro.Quest.Imports
             finally { busy = false; }
         }
         public void Cancel() { if (Busy) { Say("Please wait for the model check to finish"); return; } ClearPreview(); Say("Import cancelled"); }
-        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; Details = "Select an imported object to play its clips.\nUse Maestro selects a compatible VRM as your tutor."; Changed?.Invoke(); }
+        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; Details = "Select an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
         public async void UseMaestro() => await UseMaestroAsync();
         public async Task<bool> UseMaestroAsync()
         {
             if (Busy || !maestro || maestro.ModelBusy) return false;
             if (editor.AnyHeld) { Say("Release the object before changing Maestro"); return false; }
             var target = Target;
-            if (!target || !target.Ready || !target.IsHumanoid) { Say("Preview or select a VRM humanoid, then choose Use Maestro"); return false; }
+            if (!target || !target.Ready || !target.IsHumanoid) { Say(target?.HumanoidIssue ?? "Preview or select a GLB or VRM humanoid, then choose Use Maestro"); return false; }
             string hash = HasPreview ? pending.Hash : editor.Read(editor.SelectedId)?.modelHash;
             busy = true;
             try
@@ -148,7 +148,7 @@ namespace Maestro.Quest.Imports
         {
             if (pending == null) { var created = editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>(); Details = created?.ModelStatus ?? "Import a model to view its information."; Changed?.Invoke(); return; }
             var info = pending.Inspection;
-            string text = pending.Name + "\n" + info.Vertices + " vertices / " + info.Triangles + " triangles\n" + info.Clips + " embedded clips\n" + (info.IsAvatar ? "VRM: Add as an object, or Use Maestro as your tutor.\n" : "") + "Author and use terms:\n" + info.Attribution;
+            string text = pending.Name + "\n" + info.Vertices + " vertices / " + info.Triangles + " triangles\n" + info.Clips + " embedded clips\n" + (preview && preview.IsHumanoid ? "Humanoid: Add as an object, or Use Maestro as your tutor.\n" : "") + "Author and use terms:\n" + info.Attribution;
             var lines = ModelText.Wrap(text, 64); int pages = Math.Max(1, (lines.Length + 7) / 8); page %= pages;
             Details = "Model information " + (page + 1) + "/" + pages + "\n" + string.Join("\n", lines, page * 8, Math.Min(8, lines.Length - page * 8)); Changed?.Invoke();
         }

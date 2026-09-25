@@ -9,6 +9,22 @@ namespace Maestro.Quest.Tests
 {
     public class IncludedAvatarTests
     {
+        [Test] public void WalkLoopsAndMovesBothLegsWithoutTranslatingTheRoot()
+        {
+            const string path = "Assets/Maestro/Resources/Avatars/DefaultMaestro.fbx";
+            var clip = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().Single(value => value.name=="Walk");
+            Assert.That(clip.isLooping,Is.True);
+            var model = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(path));
+            try
+            {
+                var bones = model.GetComponentsInChildren<Transform>(); var left = bones.Single(bone => bone.name=="LeftUpperLeg"); var right = bones.Single(bone => bone.name=="RightUpperLeg");
+                clip.SampleAnimation(model,clip.length*.25f); var a = left.localRotation; var b = right.localRotation; var position = model.transform.localPosition;
+                clip.SampleAnimation(model,clip.length*.75f);
+                Assert.That(Quaternion.Angle(a,left.localRotation),Is.GreaterThan(10)); Assert.That(Quaternion.Angle(b,right.localRotation),Is.GreaterThan(10));
+                Assert.That(model.transform.localPosition,Is.EqualTo(position));
+            }
+            finally { Object.DestroyImmediate(model); }
+        }
         [Test]
         public void IncludedGestureClipsActuallyMoveTheImportedSkeleton()
         {

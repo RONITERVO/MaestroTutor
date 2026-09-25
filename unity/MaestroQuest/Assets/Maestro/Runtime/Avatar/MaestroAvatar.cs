@@ -20,6 +20,7 @@ namespace Maestro.Quest.Avatar
         float greetingUntil;
         JointPose[] savedPose;
         bool editing;
+        bool spatialWalking;
         GameObject included;
         ImportedModel custom;
         string requestedModel = "";
@@ -73,7 +74,6 @@ namespace Maestro.Quest.Avatar
             {
                 var asset = await library.ReadAsync(hash);
                 if (!this || disposed || generation != modelGeneration) return false;
-                if (!asset.Inspection.IsAvatar) throw new ModelImportException("Choose a VRM humanoid to use as Maestro; ordinary GLBs remain room objects.");
                 candidateRoot = new GameObject("Custom Maestro"); candidateRoot.SetActive(false); candidateRoot.transform.SetParent(transform,false);
                 var candidate = candidateRoot.AddComponent<ImportedModel>(); await candidate.LoadAsync(asset);
                 if (!this || disposed || generation != modelGeneration) return false;
@@ -136,7 +136,15 @@ namespace Maestro.Quest.Avatar
             editing = value;
             if (!PoseRig) return;
             PoseRig.SetManual(value || savedPose != null);
-            if (!value) { PoseRig.SetPosing(false); PoseRig.Apply(savedPose); activity = null; }
+            if (!value) { PoseRig.SetPosing(false); PoseRig.Apply(savedPose); activity = null; spatialWalking = false; animator.speed = 1; }
+        }
+        public void SpatialWalk(float metresPerSecond)
+        {
+            bool walking = metresPerSecond > .025f && !ReducedMotion;
+            PoseRig.SetManual(false);
+            if (walking != spatialWalking || activity != "spatial") animator.CrossFadeInFixedTime(walking ? "Walk" : "Idle",.15f);
+            spatialWalking = walking; activity = "spatial";
+            animator.speed = ReducedMotion ? 0 : walking ? Mathf.Clamp(metresPerSecond/(.65f*transform.lossyScale.y),.25f,2) : 1;
         }
         public void Gesture(string name)
         {

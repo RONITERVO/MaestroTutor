@@ -34,6 +34,17 @@ namespace Maestro.Quest.Tests
             new RoomObjectData { id = "book", kind = RoomObjectKind.Book },
             new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro }
         } };
+        [Test] public void AvatarMovementSettingsValidateAndUndoWithoutChangingOldRoomDefaults()
+        {
+            var journal = new RoomJournal(EmptyRoom()); Assert.That(journal.Read("maestro").walkSpeed,Is.Zero);
+            var tutor = journal.Read("maestro"); tutor.walkSpeed = .65f; tutor.followDistance = 1.3f;
+            Assert.That(journal.Apply(new[] { tutor },Array.Empty<string>(),out var error),Is.True,error);
+            Assert.That(journal.Snapshot().Validate(out error),Is.True,error);
+            foreach (float invalid in new[] { float.NaN,-1f,.1f,20f }) { tutor.walkSpeed = invalid; Assert.That(journal.Apply(new[] { tutor },Array.Empty<string>(),out _),Is.False); }
+            tutor.walkSpeed = .65f; tutor.followDistance = .1f; Assert.That(journal.Apply(new[] { tutor },Array.Empty<string>(),out _),Is.False);
+            var book = journal.Read("book"); book.walkSpeed = .65f; Assert.That(journal.Apply(new[] { book },Array.Empty<string>(),out _),Is.False);
+            Assert.That(journal.Undo(),Is.True); Assert.That(journal.Read("maestro").walkSpeed,Is.Zero); Assert.That(journal.Read("maestro").followDistance,Is.Zero);
+        }
         [Test] public void AvatarModelReferencesAreBoundedAndOnlyAllowedOnTheTutorOrImports()
         {
             var journal = new RoomJournal(EmptyRoom()); var tutor = journal.Read("maestro"); tutor.modelHash = new string('b',64);

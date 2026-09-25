@@ -28,8 +28,10 @@ namespace Maestro.Quest.Creation
         public ItemPhysics physics;
         public ItemCollider collisionShape;
         public float mass = .5f;
+        // Zero preserves the defaults when loading rooms created before movement controls.
+        public float followDistance, walkSpeed;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape };
+        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed };
     }
 
     [Serializable]
@@ -56,6 +58,10 @@ namespace Maestro.Quest.Creation
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
                 bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
+                if (!float.IsFinite(item.followDistance) || !float.IsFinite(item.walkSpeed) ||
+                    item.followDistance != 0 && (item.kind != RoomObjectKind.Maestro || item.followDistance < .8f || item.followDistance > 2.5f) ||
+                    item.walkSpeed != 0 && (item.kind != RoomObjectKind.Maestro || item.walkSpeed < .2f || item.walkSpeed > 1.2f))
+                    return Fail("Maestro movement settings are invalid.",out error);
                 if (item.kind == RoomObjectKind.ImportedModel ? !ModelLibrary.ValidHash(item.modelHash) :
                     !string.IsNullOrEmpty(item.modelHash) && (!mayHaveModel || !ModelLibrary.ValidHash(item.modelHash)))
                     return Fail("This room contains an invalid model reference.", out error);

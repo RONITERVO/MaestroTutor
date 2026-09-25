@@ -62,6 +62,7 @@ namespace Maestro.Quest
 #endif
             originObject.SetActive(true);
             var physics = gameObject.AddComponent<RoomPhysicsWorld>();
+            var navigation = gameObject.AddComponent<RoomNavigation>(); navigation.Initialize(physics);
             var scan = gameObject.AddComponent<ScannedRoom>(); scan.Initialize(physics);
             gameObject.AddComponent<XRInteractionManager>();
             var content = new GameObject("Room content"); content.transform.SetParent(transform, false);
@@ -103,6 +104,7 @@ namespace Maestro.Quest
             tray.transform.localPosition = new Vector3(.87f,.98f,.9f); tray.transform.localRotation = Quaternion.Euler(24,35,0);
             tray.AddComponent<RoomToolTray>().Build(editor,room);
             var workshop = content.AddComponent<AnimationWorkshop>(); workshop.Initialize(editor);
+            var movement = avatar.AddComponent<AvatarSpatialMotion>(); movement.Initialize(editor,workshop,room,navigation,() => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3);
             var animationTools = new GameObject("Animation tools"); animationTools.transform.SetParent(content.transform,false);
             animationTools.transform.localPosition = new Vector3(.87f,.55f,.9f); animationTools.transform.localRotation = Quaternion.Euler(40,35,0);
             animationTools.AddComponent<AnimationTools>().Build(workshop,room);
@@ -118,6 +120,9 @@ namespace Maestro.Quest
             var physicsTools = new GameObject("Room physics tools"); physicsTools.transform.SetParent(content.transform,false);
             physicsTools.transform.localPosition = new Vector3(-1.2f,1.0f,1.55f); physicsTools.transform.localRotation = Quaternion.Euler(20,-45,0);
             router.Placement = physicsTools.AddComponent<PhysicsTools>(); router.Placement.Build(editor,physics,scan,room);
+            var movementTools = new GameObject("Maestro movement tools"); movementTools.transform.SetParent(content.transform,false);
+            movementTools.transform.localPosition = new Vector3(.85f,.38f,1.25f); movementTools.transform.localRotation = Quaternion.Euler(40,25,0);
+            movementTools.AddComponent<AvatarSpatialTools>().Build(movement,editor,workshop,content.GetComponent<RoomRules>(),room);
         }
 
         void Update()

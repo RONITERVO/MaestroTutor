@@ -2,6 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Latest implementation update (2026-09-26): validated Mixamo/Unity-named GLB
+humanoids can replace Maestro, including the user's actual Meshy export.
+Gaze and following use the shared pose rig and scanned-room navigation, with
+physical controls and visual-rule actions. 33 EditMode and 32 PlayMode checks
+pass with the two optional private-model tests enabled. See QUEST_CUSTOM_AVATARS.md
+and QUEST_AVATAR_MOVEMENT.md. Headset acceptance of these additions, independent
+editable locomotion bindings and all remaining release gates are still open.
+
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.

@@ -274,6 +274,17 @@ namespace Maestro.Quest.Creation
         }
 
         void MarkDirty() { dirty = true; saveAt = Time.unscaledTime + .5f; }
+        public void RememberPlacement(string id)
+        {
+            var item = Find(id);
+            if (item && journal.UpdatePlacement(id,item.transform.localPosition,item.transform.localRotation.normalized)) MarkDirty();
+        }
+        public void SetAvatarMovement(float distance, float speed)
+        {
+            Editing?.Invoke(); if (Busy()) return;
+            var data = journal.Read("maestro"); data.followDistance = distance; data.walkSpeed = speed;
+            Commit(new[] { data },Array.Empty<string>(),"Maestro movement preferences saved");
+        }
         public void SaveNow() { CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room"); }
         void CapturePhysicsPlacements()
         {

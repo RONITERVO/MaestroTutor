@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,7 +13,7 @@ namespace Maestro.Quest.Tests
     // Original synthetic geometry/animation, with no external asset licensing dependency.
     public static class ModelFixture
     {
-        public static byte[] Create(Action<JObject> edit = null, bool avatar = false)
+        public static byte[] Create(Action<JObject> edit = null, bool avatar = false, bool skinAllBones = false)
         {
             var views = new JArray(); var accessors = new JArray(); using var data = new MemoryStream(); using var writer = new BinaryWriter(data);
             int Floats(string type, int components, params float[] values)
@@ -47,16 +49,24 @@ namespace Maestro.Quest.Tests
                 // Bind the actual triangle to hips/head so avatar tests verify
                 // deformed geometry as well as Transform-only skeleton motion.
                 int jointOffset = (int)data.Length;
-                foreach (ushort joint in new ushort[] { 0,0,0,0, 0,0,0,0, 1,0,0,0 }) writer.Write(joint);
+                foreach (ushort joint in new ushort[] { 0,0,0,0, 0,0,0,0, (ushort)(skinAllBones ? 4 : 1),0,0,0 }) writer.Write(joint);
                 views.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = jointOffset, ["byteLength"] = 24 });
                 accessors.Add(new JObject { ["bufferView"] = views.Count-1, ["componentType"] = 5123, ["count"] = 3, ["type"] = "VEC4" });
                 int joints = accessors.Count-1;
                 int weights = Floats("VEC4",4, 1,0,0,0, 1,0,0,0, 1,0,0,0);
-                int bind = Floats("MAT4",16, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,-1,0,1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,-1.6f,0,1);
+                var jointIndices = skinAllBones ? Enumerable.Range(0,names.Length).ToArray() : new[] { 0,4 };
+                var matrices = new List<float>();
+                foreach (int joint in jointIndices)
+                {
+                    float x = 0,y = 0,z = 0;
+                    for (int ancestor = joint; ancestor >= 0; ancestor = parents[ancestor]) { x += translations[ancestor][0]; y += translations[ancestor][1]; z += translations[ancestor][2]; }
+                    matrices.AddRange(new float[] { 1,0,0,0, 0,1,0,0, 0,0,1,0, -x,-y,-z,1 });
+                }
+                int bind = Floats("MAT4",16,matrices.ToArray());
                 root["meshes"][0]["primitives"][0]["attributes"]["JOINTS_0"] = joints;
                 root["meshes"][0]["primitives"][0]["attributes"]["WEIGHTS_0"] = weights;
                 nodes[0]["skin"] = 0;
-                root["skins"] = new JArray(new JObject { ["joints"] = new JArray(1,5), ["inverseBindMatrices"] = bind });
+                root["skins"] = new JArray(new JObject { ["joints"] = new JArray(jointIndices.Select(joint => joint+1)), ["inverseBindMatrices"] = bind });
                 root["extensionsUsed"] = new JArray("VRMC_vrm");
                 root["extensions"] = new JObject {
                     ["VRMC_vrm"] = new JObject {
@@ -69,6 +79,12 @@ namespace Maestro.Quest.Tests
             root["buffers"] = new JArray(new JObject { ["byteLength"] = data.Length }); edit?.Invoke(root);
             return Pack(root, data.ToArray());
         }
+        public static byte[] Mixamo(Action<JObject> edit = null) => Create(root => {
+            root.Remove("extensions"); root.Remove("extensionsUsed");
+            string[] names = { "Hips","Spine","Spine1","Neck","Head","LeftArm","LeftForeArm","LeftHand","RightArm","RightForeArm","RightHand","LeftUpLeg","LeftLeg","LeftFoot","RightUpLeg","RightLeg","RightFoot" };
+            for (int i = 0; i < names.Length; i++) root["nodes"][i+1]["name"] = "mixamorig:"+names[i];
+            edit?.Invoke(root);
+        },avatar:true,skinAllBones:true);
         public static byte[] Pack(JObject root, byte[] binary)
         {
             byte[] json = Encoding.UTF8.GetBytes(root.ToString(Formatting.None)); int jsonLength = (json.Length+3)/4*4, binaryLength = (binary.Length+3)/4*4;

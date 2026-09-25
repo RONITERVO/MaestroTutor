@@ -73,7 +73,9 @@ namespace Maestro.Quest.Tests
             Debug.Log("MAESTRO_EXTERNAL_MODEL_PLAYED file="+Path.GetFileName(path)+" clips="+model.ClipCount+" displacement="+displacement+
                 " texturedMaterials="+model.Instance.Renderers.SelectMany(renderer => renderer.sharedMaterials).Count(material => material && material.mainTexture));
         }
-        [UnityTest] public IEnumerator CustomMaestroRetargetsGesturesAndPosesAndSurvivesUndoAndReload()
+        [UnityTest] public IEnumerator CustomMaestroRetargetsGesturesAndPosesAndSurvivesUndoAndReload() => CheckCustomMaestro(false);
+        [UnityTest] public IEnumerator MixamoGlbMaestroRetargetsGesturesPosesAndSurvivesUndoAndReload() => CheckCustomMaestro(true);
+        IEnumerator CheckCustomMaestro(bool mixamo)
         {
             root.AddComponent<XRInteractionManager>(); var room = root.AddComponent<RoomInteraction>();
             RoomItem Included(string name)
@@ -84,7 +86,7 @@ namespace Maestro.Quest.Tests
             var book = Included("book"); var tutor = Included("maestro"); var avatar = tutor.gameObject.AddComponent<MaestroAvatar>();
             var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,tutor,directory);
             var workshop = root.AddComponent<ImportWorkshop>(); workshop.Initialize(editor);
-            var prepare = workshop.PrepareAsync("custom.vrm",ModelFixture.Create(avatar:true)); yield return new WaitUntil(() => prepare.IsCompleted);
+            var prepare = workshop.PrepareAsync(mixamo ? "custom.glb" : "custom.vrm",mixamo ? ModelFixture.Mixamo() : ModelFixture.Create(avatar:true)); yield return new WaitUntil(() => prepare.IsCompleted);
             var use = workshop.UseMaestroAsync(); yield return new WaitUntil(() => use.IsCompleted);
             Assert.That(use.Result,Is.True,workshop.Status);
             var hash = editor.Read("maestro").modelHash; Assert.That(avatar.ModelHash,Is.EqualTo(hash));
@@ -126,6 +128,57 @@ namespace Maestro.Quest.Tests
             Assert.That(missing.Result,Is.False); Assert.That(avatar.CustomModel,Is.Null); Assert.That(avatar.ModelStatus,Does.Contain("Using included Maestro"));
         }
 
+        [UnityTest] public IEnumerator SelectedExternalHumanoidUsesTheRealTutorReplacementAndPosePath()
+        {
+            if (Environment.GetEnvironmentVariable("MAESTRO_REQUIRE_HUMANOID") != "1") Assert.Ignore("No external humanoid required for this run");
+            string path = Environment.GetEnvironmentVariable("MAESTRO_EXTERNAL_MODEL"); Assert.That(path,Is.Not.Empty);
+            var library = new ModelLibrary(directory); var asset = ModelLibrary.Inspect(Path.GetFileName(path),ModelLibrary.ReadBounded(path));
+            var save = library.SaveAsync(asset); yield return new WaitUntil(() => save.IsCompleted); Assert.That(save.Exception,Is.Null);
+            var avatar = root.AddComponent<MaestroAvatar>(); var load = avatar.SetModel(asset.Hash,library);
+            yield return new WaitUntil(() => load.IsCompleted); Assert.That(load.Result,Is.True,avatar.ModelStatus);
+            Assert.That(avatar.CustomModel.IsHumanoid,Is.True); Assert.That(avatar.CustomModel.IsPlaying,Is.False);
+            var hand = avatar.PoseRig.Bone(PoseJoint.RightHand); var elbow = avatar.PoseRig.Bone(PoseJoint.RightLowerArm);
+            float length = Vector3.Distance(hand.position,elbow.position);
+            avatar.SetEditing(true); avatar.Gesture("Idle"); yield return null; var before = hand.rotation;
+            avatar.Gesture("Greeting"); yield return new WaitForSeconds(.45f);
+            Assert.That(Quaternion.Angle(before,hand.rotation),Is.GreaterThan(3));
+            Assert.That(Vector3.Distance(hand.position,elbow.position),Is.EqualTo(length).Within(.002f));
+            var skins = avatar.CustomModel.Instance.SkinnedMeshRenderers; var baked = new Mesh();
+            Vector3[] Vertices()
+            {
+                var vertices = new System.Collections.Generic.List<Vector3>();
+                foreach (var skin in skins) { skin.BakeMesh(baked,true); vertices.AddRange(baked.vertices.Select(skin.transform.TransformPoint)); }
+                return vertices.ToArray();
+            }
+            avatar.PoseRig.SetManual(true); var beforePose = Vertices(); var head = avatar.PoseRig.Bone(PoseJoint.Head);
+            var visibleBounds = new Bounds(beforePose[0],Vector3.zero); foreach (var point in beforePose) visibleBounds.Encapsulate(point);
+            Assert.That(visibleBounds.size.y,Is.InRange(.8f,2.5f),"The fitted tutor mesh must have a usable height: "+visibleBounds);
+            Assert.That(visibleBounds.center.magnitude,Is.LessThan(2.5f),"The fitted tutor mesh must remain at its room placement: "+visibleBounds);
+            Assert.That(head.position.y,Is.InRange(.6f,2.5f),"Facing alignment must leave the avatar upright");
+            Assert.That(Vector3.Dot(avatar.CustomModel.Instance.transform.up,Vector3.up),Is.GreaterThan(.999f));
+            avatar.PoseRig.Rotate(PoseJoint.Head,Quaternion.AngleAxis(20,Vector3.right)*head.rotation);
+            float displacement = beforePose.Zip(Vertices(),(a,b) => Vector3.Distance(a,b)).Max(); UnityEngine.Object.Destroy(baked);
+            Assert.That(displacement,Is.GreaterThan(.01f),"Joint posing must deform the actual external model");
+            Assert.That(avatar.PoseRig.Capture().Length,Is.EqualTo(17));
+            yield return null; Capture("external-maestro-posed.png",Vector3.up*.9f,1.05f,true);
+            Debug.Log("MAESTRO_EXTERNAL_TUTOR_VERIFIED file="+Path.GetFileName(path)+" posedVertexDisplacement="+displacement+" channels="+avatar.PoseRig.Capture().Length);
+        }
+
+        [UnityTest] public IEnumerator IncompleteAndAmbiguousNamedRigsRemainObjectsButCannotReplaceMaestro()
+        {
+            foreach (var name in new[] { "UnknownHand","mixamorig:Hips" })
+            {
+                var go = new GameObject("Unsupported named rig"); go.transform.SetParent(root.transform,false);
+                var model = go.AddComponent<ImportedModel>();
+                var task = model.LoadAsync(ModelLibrary.Inspect("unsupported.glb",ModelFixture.Mixamo(json => json["nodes"][8]["name"] = name)));
+                yield return new WaitUntil(() => task.IsCompleted); Assert.That(task.Exception,Is.Null);
+                Assert.That(model.Ready,Is.True); Assert.That(model.IsHumanoid,Is.False);
+                Assert.Throws<ModelImportException>(() => model.FitAsMaestro());
+                Assert.That(model.HumanoidIssue,Is.Not.Empty);
+                UnityEngine.Object.Destroy(go); yield return null;
+            }
+        }
+
         [UnityTest] public IEnumerator AvatarReplacementCancellationCannotInstallAnOlderSelection()
         {
             var avatar = root.AddComponent<MaestroAvatar>(); var library = new ModelLibrary(directory);
@@ -165,14 +218,14 @@ namespace Maestro.Quest.Tests
             created = editor.Find(data.id).GetComponent<CreatedRoomObject>(); yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");
             Assert.That(created.Model.Ready, Is.True, created.ModelStatus); Assert.That(created.Model.IsPlaying, Is.False);
         }
-        static void Capture(string name, Vector3 center, float size)
+        static void Capture(string name, Vector3 center, float size, bool front = false)
         {
             string output = Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE"); if (string.IsNullOrEmpty(output)) return;
             Directory.CreateDirectory(output); var go = new GameObject("Import verification camera", typeof(Camera)); var camera = go.GetComponent<Camera>();
             var texture = new RenderTexture(1400, 1400, 24); var pixels = new Texture2D(1400, 1400, TextureFormat.RGB24, false); var previous = RenderTexture.active;
             try
             {
-                camera.transform.position = center + Vector3.back; camera.transform.LookAt(center); camera.orthographic = true; camera.orthographicSize = size; camera.nearClipPlane = .01f;
+                camera.transform.position = center + (front ? Vector3.forward*3 : Vector3.back); camera.transform.LookAt(center); camera.orthographic = true; camera.orthographicSize = size; camera.nearClipPlane = .01f;
                 camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1); camera.targetTexture = texture; camera.Render();
                 RenderTexture.active = texture; pixels.ReadPixels(new Rect(0,0,1400,1400),0,0); pixels.Apply(); File.WriteAllBytes(Path.Combine(output,name),pixels.EncodeToPNG());
             }

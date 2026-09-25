@@ -18,6 +18,7 @@ namespace Maestro.Quest.Rules
             public ScriptPlayable<RoomMotionPlayable> Player;
             public float Began;
             public RoomMotion ThrowMotion;
+            public AvatarSpatialMotion Spatial;
         }
         readonly RoomEditor editor;
         readonly AnimationWorkshop workshop;
@@ -34,6 +35,12 @@ namespace Maestro.Quest.Rules
             if (step.action == RuleActionKind.ThrowRecording && (!item.GetComponent<RigidRoomItem>() || !item.GetComponent<RigidRoomItem>().Dynamic || editor.Read(step.targetId).motion.frames.Length < 2 || !editor.PhysicsWorld || !editor.PhysicsWorld.Running))
             { error = "Throw recording needs a physical creation, two motion frames and running room physics"; return false; }
             if (step.action == RuleActionKind.Gesture && !item.GetComponent<MaestroAvatar>()) { error = "Gestures need a compatible Maestro avatar"; return false; }
+            if (RuleDocument.IsSpatial(step.action))
+            {
+                var spatial = item.GetComponent<AvatarSpatialMotion>();
+                if (!spatial) { error = "This target has no Maestro movement controls"; return false; }
+                return spatial.CanBegin(step.action == RuleActionKind.FollowUser ? AvatarSpatialMode.Follow : AvatarSpatialMode.Look,out error);
+            }
             return true;
         }
         public bool Start(string runId, RuleStep step, out float seconds, out string error)
@@ -42,9 +49,14 @@ namespace Maestro.Quest.Rules
             if (!CanRun(step,out error)) return false;
             if (step.action == RuleActionKind.Wait) return true;
             var target = editor.Find(step.targetId); var avatar = target.GetComponent<MaestroAvatar>();
-            if (avatar) avatar.SetEditing(true);
+            if (avatar && !RuleDocument.IsSpatial(step.action)) { avatar.GetComponent<AvatarSpatialMotion>()?.Stop(); avatar.SetEditing(true); }
             var effect = new Effect { TargetId = step.targetId, Began = Time.unscaledTime }; effects.Add(runId,effect);
             target.GetComponent<RigidRoomItem>()?.SetAnimationOwner(effect,true);
+            if (RuleDocument.IsSpatial(step.action))
+            {
+                effect.Spatial = target.GetComponent<AvatarSpatialMotion>();
+                return effect.Spatial.Begin(runId,step.action == RuleActionKind.FollowUser ? AvatarSpatialMode.Follow : AvatarSpatialMode.Look,out error);
+            }
             if (step.action == RuleActionKind.Gesture) { avatar.Gesture(step.gesture.ToString()); return true; }
             var motion = editor.Read(step.targetId).motion; motion.loop = step.loop;
             if (step.action == RuleActionKind.ThrowRecording) { motion.loop = false; effect.ThrowMotion = motion; }
@@ -87,6 +99,7 @@ namespace Maestro.Quest.Rules
             if (effect.Graph.IsValid()) effect.Graph.Destroy();
             if (!editor) return;
             var item = editor.Find(effect.TargetId);
+            if (effect.Spatial) { effect.Spatial.End(runId); return; }
             if (item) item.GetComponent<MaestroAvatar>()?.SetEditing(false);
             if (!preservePlacement) editor.RestorePose(effect.TargetId);
             if (item) item.GetComponent<RigidRoomItem>()?.SetAnimationOwner(effect,false);

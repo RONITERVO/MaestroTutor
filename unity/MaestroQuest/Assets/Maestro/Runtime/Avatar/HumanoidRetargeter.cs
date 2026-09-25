@@ -23,7 +23,7 @@ namespace Maestro.Quest.Avatar
         public void Initialize(AvatarPoseRig canonical, Animator humanoid)
         {
             if (!humanoid || !humanoid.avatar || !humanoid.avatar.isHuman || !humanoid.avatar.isValid)
-                throw new ModelImportException("Use a VRM with a valid humanoid skeleton for Maestro.");
+                throw new ModelImportException("Use a GLB or VRM with a valid humanoid skeleton for Maestro.");
             source = canonical; frame = canonical.transform;
             foreach (PoseJoint id in Enum.GetValues(typeof(PoseJoint)))
             {

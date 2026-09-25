@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Maestro.Quest.Art;
+using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
@@ -176,6 +177,15 @@ namespace Maestro.Quest.Editor
                 foreach (var pose in poses) { UnityEngine.Object.DestroyImmediate(pose.GetComponent<MeshFilter>().sharedMesh); UnityEngine.Object.DestroyImmediate(pose); }
                 foreach (var skin in avatar.GetComponentsInChildren<SkinnedMeshRenderer>()) skin.enabled = true;
             }
+            avatar.SetActive(false);
+            var spatialPreview = new GameObject("Maestro movement tools preview");
+            var spatialRoom = spatialPreview.AddComponent<RoomInteraction>();
+            var spatial = spatialPreview.AddComponent<AvatarSpatialMotion>();
+            var spatialBoard = new GameObject("Movement controls"); spatialBoard.transform.SetParent(spatialPreview.transform,false);
+            spatialBoard.AddComponent<AvatarSpatialTools>().Build(spatial,null,null,null,spatialRoom);
+            camera.orthographicSize = .28f; camera.transform.position = new Vector3(0,0,-1); camera.transform.LookAt(Vector3.zero);
+            Capture(camera,Path.Combine(output,"maestro-movement-tools.png"),1600,1100);
+            UnityEngine.Object.DestroyImmediate(spatialPreview);
             var shader = Shader.Find("Maestro/Watercolor");
             if (!shader || ShaderUtil.ShaderHasError(shader)) throw new InvalidOperationException("Watercolor shader has compilation errors.");
             File.WriteAllText(Path.Combine(output,"unity-art-evidence.txt"),

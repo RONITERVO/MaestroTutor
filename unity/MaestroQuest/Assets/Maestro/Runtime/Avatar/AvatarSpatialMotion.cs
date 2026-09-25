@@ -1,0 +1,169 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using Maestro.Quest.Creation;
+using Maestro.Quest.Interaction;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace Maestro.Quest.Avatar
+{
+    public enum AvatarSpatialMode { Look, Follow }
+
+    /// <summary>Explicitly owned movement; editing, grips, recovery and interruption take priority.</summary>
+    [DefaultExecutionOrder(125)]
+    public sealed class AvatarSpatialMotion : MonoBehaviour
+    {
+        MaestroAvatar avatar;
+        RoomItem item;
+        RoomEditor editor;
+        AnimationWorkshop animations;
+        RoomInteraction room;
+        RoomNavigation navigation;
+        Func<bool> tracked;
+        string owner;
+        AvatarSpatialMode mode;
+        bool paused, focused = true;
+        NavMeshPath path;
+        readonly Collider[] overlaps = new Collider[32];
+        readonly RaycastHit[] hits = new RaycastHit[32];
+        Vector3[] corners = Array.Empty<Vector3>();
+        int corner;
+        float nextPath, nextRemember, yaw, pitch;
+        public float Distance { get; private set; } = 1.3f;
+        public float Speed { get; private set; } = .65f;
+        public bool Active => owner != null;
+        public AvatarSpatialMode Mode => mode;
+        public string Status { get; private set; } = "Choose Look at me or Follow me";
+        public event Action Changed;
+        public void Initialize(RoomEditor source, AnimationWorkshop authoring, RoomInteraction interaction, RoomNavigation paths, Func<bool> headTracked = null)
+        {
+            path = new NavMeshPath();
+            avatar = GetComponent<MaestroAvatar>(); item = GetComponent<RoomItem>();
+            editor = source; animations = authoring; room = interaction; navigation = paths; tracked = headTracked ?? (() => room.Viewer && room.Viewer.gameObject.activeInHierarchy);
+            editor.Editing += Stop; editor.ItemGrabbed += Grabbed; animations.Starting += Authoring;
+            room.Restoring += Stop; avatar.ModelChanged += ModelChanged;
+            editor.Changed += ReadPreferences; ReadPreferences();
+        }
+        public bool CanBegin(AvatarSpatialMode value, out string error)
+        {
+            error = null;
+            if (paused || !focused || !room || !room.Viewer || !tracked()) error = "Head tracking is unavailable; try again when tracking returns";
+            else if (!avatar || !avatar.PoseRig || avatar.ModelBusy) error = "Wait for Maestro to finish loading";
+            else if (item.Grab.isSelected || avatar.PoseRig.IsHolding || animations.ControlsTarget("maestro")) error = "Release Maestro and stop posing or recording first";
+            else if (value == AvatarSpatialMode.Follow && (!editor.PhysicsWorld || !editor.PhysicsWorld.Running)) error = "Load the room, check its alignment, then Start physics before following";
+            return error == null;
+        }
+        public bool Begin(string identity, AvatarSpatialMode value, out string error)
+        {
+            if (string.IsNullOrEmpty(identity)) { error = "Movement needs an action owner"; return false; }
+            if (!CanBegin(value,out error)) { Say(error); return false; }
+            if (value == AvatarSpatialMode.Follow)
+            {
+                float scale = transform.lossyScale.y;
+                if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error)) { Say(error ?? "Room navigation is unavailable"); return false; }
+                if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near the scanned floor, then try Follow"; Say(error); return false; }
+            }
+            Stop(); owner = identity; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
+            avatar.SetEditing(true); avatar.SpatialWalk(0);
+            Say(value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
+        }
+        public void End(string identity) { if (owner == identity) Stop(); }
+        public void Stop()
+        {
+            if (!Active) return;
+            owner = null; corners = Array.Empty<Vector3>();
+            if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false); }
+            if (editor) editor.RememberPlacement("maestro");
+            Say("Maestro stopped — placement saved");
+        }
+        public void SetPreferences(float distance, float speed)
+        {
+            Distance = Mathf.Clamp(distance,.8f,2.5f); Speed = Mathf.Clamp(speed,.2f,1.2f);
+            nextPath = 0; Changed?.Invoke();
+        }
+        void ReadPreferences()
+        {
+            var data = editor.Read("maestro"); if (data == null) return;
+            SetPreferences(data.followDistance == 0 ? 1.3f : data.followDistance,data.walkSpeed == 0 ? .65f : data.walkSpeed);
+        }
+        void Grabbed(RoomItem value) { if (value == item) Stop(); }
+        void Authoring(string id) { if (id == "maestro") Stop(); }
+        void ModelChanged() { if (avatar.ModelBusy) Stop(); }
+        void Say(string message) { if (Status == message) return; Status = message; Changed?.Invoke(); }
+        void Update()
+        {
+            if (!Active) return;
+            if (paused || !focused || !tracked() || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Stop(); return; }
+            if (mode != AvatarSpatialMode.Follow) return;
+            if (!navigation || !navigation.Ready) { Stop(); Say("Following stopped — check room alignment and Start physics again"); return; }
+            float dt = Mathf.Min(Time.deltaTime,.05f);
+            var delta = Vector3.ProjectOnPlane(room.Viewer.position-transform.position,Vector3.up);
+            float moved = 0;
+            if (delta.magnitude > Distance + .05f && dt > 0)
+            {
+                var goal = new Vector3(room.Viewer.position.x,transform.position.y,room.Viewer.position.z);
+                if (Time.unscaledTime >= nextPath)
+                {
+                    nextPath = Time.unscaledTime + .35f;
+                    corners = navigation.Path(transform.position,goal,path) ? path.corners : Array.Empty<Vector3>(); corner = 1;
+                }
+                while (corner < corners.Length && Vector3.Distance(transform.position,corners[corner]) < .06f) corner++;
+                if (corner < corners.Length)
+                {
+                    var direction = corners[corner]-transform.position;
+                    var next = Vector3.MoveTowards(transform.position,corners[corner],Mathf.Min(Speed*dt,delta.magnitude-Distance));
+                    if (navigation.Sample(next,.10f,out var floor) && ClearStep(floor))
+                    {
+                        moved = Vector3.Distance(transform.position,floor); transform.position = floor;
+                        direction.y = 0; if (direction.sqrMagnitude > .0001f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(direction),120*dt);
+                        Say("Following you — Stop or grip Maestro to end");
+                    }
+                    else Say("Path blocked — move the obstacle or grip Maestro to reposition");
+                }
+                else Say("No connected path — place Maestro on the same clear floor");
+            }
+            else
+            {
+                if (delta.sqrMagnitude > .01f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(delta),90*dt);
+                Say("Maestro is keeping your chosen distance");
+            }
+            avatar.SpatialWalk(dt > 0 ? moved/dt : 0);
+            if (Time.unscaledTime >= nextRemember) { nextRemember = Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
+        }
+        bool ClearStep(Vector3 next)
+        {
+            float scale = transform.lossyScale.y, r = .25f*scale, h = 1.7f*scale;
+            var bottom = transform.position + Vector3.up*(r+.035f); var top = transform.position + Vector3.up*(h-r);
+            var step = next-transform.position;
+            int mask = (1<<RoomPhysicsLayers.Scanned) | (1<<RoomPhysicsLayers.Item) | (1<<RoomPhysicsLayers.Environment);
+            int count = Physics.CapsuleCastNonAlloc(bottom,top,r,step.normalized,hits,step.magnitude+.01f,mask,QueryTriggerInteraction.Ignore);
+            if (count == hits.Length) return false;
+            for (int i=0;i<count;i++) if (!hits[i].collider.transform.IsChildOf(transform)) return false;
+            count = Physics.OverlapCapsuleNonAlloc(bottom+step,top+step,r,overlaps,mask,QueryTriggerInteraction.Ignore);
+            if (count == overlaps.Length) return false;
+            for (int i=0;i<count;i++) if (!overlaps[i].transform.IsChildOf(transform)) return false;
+            return true;
+        }
+        void LateUpdate()
+        {
+            if (!Active || !avatar || !room.Viewer) return;
+            var head = avatar.PoseRig.CanonicalBone(PoseJoint.Head);
+            var target = transform.InverseTransformDirection(room.Viewer.position-head.position);
+            float targetYaw = Mathf.Clamp(Mathf.Atan2(target.x,target.z)*Mathf.Rad2Deg,-60,60);
+            float targetPitch = Mathf.Clamp(-Mathf.Atan2(target.y,new Vector2(target.x,target.z).magnitude)*Mathf.Rad2Deg,-30,30);
+            float blend = 1-Mathf.Exp(-6*Mathf.Min(Time.deltaTime,.05f));
+            yaw = Mathf.Lerp(yaw,targetYaw,blend); pitch = Mathf.Lerp(pitch,targetPitch,blend);
+            if (!avatar.ReducedMotion) head.rotation = Quaternion.AngleAxis(yaw,transform.up)*Quaternion.AngleAxis(pitch,transform.right)*head.rotation;
+        }
+        void OnApplicationPause(bool value) { paused = value; if (value) Stop(); }
+        void OnApplicationFocus(bool value) { focused = value; if (!value) Stop(); }
+        void OnDisable() => Stop();
+        void OnDestroy()
+        {
+            Stop(); if (editor) { editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; editor.Changed -= ReadPreferences; }
+            if (animations) animations.Starting -= Authoring;
+            if (room) room.Restoring -= Stop; if (avatar) avatar.ModelChanged -= ModelChanged;
+        }
+    }
+}

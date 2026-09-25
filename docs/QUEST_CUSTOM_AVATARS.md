@@ -1,19 +1,34 @@
 # Custom Maestro avatars
 
-The import tray's **Use Maestro** action selects a previewed or selected VRM
-humanoid as the tutor. **Add model** keeps its existing room-object meaning.
+The import tray's **Use Maestro** action selects a previewed or selected compatible
+GLB or VRM humanoid as the tutor. **Add model** keeps its existing room-object meaning.
 **Default** returns to the included Maestro. Switching is an undoable room edit;
 the room stores the private library's content hash, retaining position, scale,
 saved pose, recordings and rule target identity (`maestro`). It does not change
 the web tutor persona, backend account or voice configuration.
 
 The import confirmation and embedded attribution apply to both Add and Use
-Maestro. Ordinary GLBs can still be room objects but need VRM humanoid metadata
-to become the tutor. A valid Unity humanoid and 15 mapped bones are required:
+Maestro. VRM humanoid metadata or a validated GLB skeleton with Mixamo/Unity
+humanoid bone names can establish the tutor rig. A valid Unity humanoid and 15 mapped bones are required:
 hips, spine, head, upper/lower arms and hands, upper/lower legs and feet.
 Chest and neck are optional. The included source rig has all 17 pose channels.
 Fingers, toes, face expressions and spring simulation are not part of this
 rotation retargeter.
+
+Named GLB mapping uses the actual skin bones and their ancestors, with explicit
+aliases for Mixamo Arm/ForeArm, UpLeg/Leg and Spine1/Spine2 names. It requires
+unique names, the expected torso and limb chains, and nonzero limb lengths,
+then asks Unity to validate the generated humanoid. Incomplete, ambiguous or
+unrecognized skeletons remain ordinary room objects and receive an explanation
+when Use Maestro is attempted. Files are not recognized by provider name or
+filename. This is not automatic rigging of an unskinned mesh or a promise that
+every export from a particular service will work.
+
+Facing alignment uses the mapped hips and applies yaw only, keeping the model
+upright. The generated Avatar belongs to the imported instance and is released
+with it. Embedded animations remain available on imported room objects; selecting
+the character as Maestro uses the common tutor gestures, poses and recordings.
+Selecting its embedded clips as tutor actions remains further work.
 
 The included rig exposes 15 direct pose handles. Hips and neck are recorded and
 animated channels but do not have separate grab handles in the current editor.
@@ -74,3 +89,14 @@ and ARM64 checks pass. The original model was copied separately into the
 headset's Downloads/Maestro folder for user acceptance. Import, custom gestures,
 posing and Default/Undo have been requested but not yet confirmed on hardware.
 See QUEST_DEVICE_QA.md for exact artifact identity and startup evidence.
+
+The later Mixamo update passes 33 EditMode and 32 PlayMode tests, including two
+optional tests of the user's actual Meshy export (`220A3A4E`). Its original
+Running clip plays as an object; selecting it as Maestro fits it upright,
+retargets the included greeting and preserves arm length. Posing the head moves
+actual skinned vertices by about 0.10 metres in the test. Idle, Greeting and
+Pointing renders and a runtime posed screenshot have been inspected. Synthetic
+Mixamo tests also cover Default/Undo, save/reload and incomplete/ambiguous rig
+rejection. The private export is never included in tests or app packaging.
+`-ModelPreview <local-file> -ModelAsMaestro -RenderImports` reproduces the local
+asset verification. Look/follow behavior is described in QUEST_AVATAR_MOVEMENT.md.

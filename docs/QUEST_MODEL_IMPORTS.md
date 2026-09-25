@@ -14,7 +14,7 @@ UniVRM/UniGLTF 0.131.2 is pinned to commit
 loading. Import notices are packaged in Resources/ImportNotices.txt. The shared
 watercolor material preserves base textures and alpha cutouts; it approximates
 transparent materials as cutouts. Full MToon/translucent material fidelity is
-not claimed. VRM springs are disabled. Compatible VRMs can be room objects or
+not claimed. VRM springs are disabled. Compatible humanoid GLBs and VRMs can be room objects or
 the custom tutor via Use Maestro; see QUEST_CUSTOM_AVATARS.md for retargeting,
 posing, persistence and the remaining hardware checks.
 
@@ -77,9 +77,12 @@ vertex movement and restoration of the rest pose on Stop. The Meshy run passed
 31 EditMode and 25 PlayMode tests and all Editor processes exited successfully.
 Its playback render and reports are retained under ignored
 `.quest-evidence/meshy-220A3A4E`. This verifies an animated room-object import in
-Unity. Direct Mixamo GLB selection as Maestro still needs a humanoid mapping
-adapter and retargeting checks; the installed custom-tutor path requires VRM.
-This export has not yet been tested on the headset.
+Unity. A later update implements direct Mixamo GLB selection as Maestro, with
+named-bone validation, canonical gesture mapping and joint posing; see
+QUEST_CUSTOM_AVATARS.md. The optional `-ModelAsMaestro` verification checks the
+supplied file through actual tutor replacement, gesture and visible skin
+deformation, including upright facing and usable model bounds. This export has
+not yet been tested on the headset.
 
 On 2026-09-25, 10 of the 22 local files passed preflight under the above limits.
 The other 12 were rejected for texture, morph, material-image or conservative
