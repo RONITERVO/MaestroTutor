@@ -43,6 +43,19 @@ not supported yet. Failed or missing room models retain a selectable placeholder
 and a readable error, so the rest of the room and erase/undo remain usable.
 Native copies, content hashes and resource bounds are validated independently.
 
+## Quest file-picker location
+
+On 2026-09-26 the user reported an empty Downloads > Maestro folder. Both the
+GLB and VRM were present and indexed on the device. A normal OPEN_DOCUMENT
+picker opened at the external-storage document URI displayed the Meshy file,
+while the Downloads shortcut in the user's screenshot displayed no items.
+The model picker now supplies the actual primary storage Download directory as
+its initial-location hint, retaining all MIME types and single-file read grants.
+No broad storage permission, provider query or automatic import is added. Open
+Maestro inside that folder and select the model. This uses the documented
+DocumentsContract.EXTRA_INITIAL_URI; the system can ignore an unavailable hint.
+The updated in-app selection/copy still needs Quest acceptance.
+
 ## Evidence and remaining work
 
 Synthetic, original test fixtures exercise GLB geometry and animation, a VRM 1.0

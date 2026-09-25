@@ -3,6 +3,12 @@
 Development implementation; physical Quest acceptance and performance checks
 remain required. This does not complete the Quest v1 release gates.
 
+On 2026-09-26 the user confirmed that Follow me moves the included avatar on
+Quest 3, but reported stationary feet. Treat the gait as a hardware defect still
+under investigation, not a missing user-supplied animation. Stop/distance and
+custom-avatar gait acceptance remain open. The forthcoming Meshy default and
+large animation library are recorded in QUEST_V1_PLAN.md.
+
 The solid Maestro movement tray offers Look at me, Follow me, Stop, Distance and
 Walk speed. Its movable controls stay outside the book pages. Look at me turns
 the head toward the tracked viewer, with smoothed yaw/pitch limits of 60/30

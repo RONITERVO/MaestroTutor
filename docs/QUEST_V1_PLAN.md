@@ -12,6 +12,11 @@ editable locomotion bindings and all remaining release gates are still open.
 Development APK `1EAEF7DA` is now installed on Quest 3 with saved room data
 preserved; its build runs 63 required Unity and 15 native Android tests. The
 user's Meshy file is available separately in Downloads/Maestro for acceptance.
+Follow-up checkpoint `08F340EF` is installed with saved room/model data retained.
+It fixes the file-picker starting location and passes 64 required Unity plus
+15 native checks. The user confirmed Meshy import/replacement and following
+translation; reported stationary feet remain an unresolved headset gait issue.
+See QUEST_DEVICE_QA.md for the exact acceptance boundaries and evidence.
 
 ## Accepted product scope
 
@@ -35,6 +40,12 @@ user's Meshy file is available separately in Downloads/Maestro for acceptance.
 - Included full-body animated Maestro, based on the existing Maestro persona.
   Support idle, attentive listening, speaking, greeting and pointing; page turns
   and appearance animations respect reduced-motion settings.
+  On 2026-09-26 the user selected their forthcoming Meshy character as the future
+  included default and expects a library of several hundred animations. Keep the
+  current included draft until the final model/motions are supplied and verified.
+  Add separate animation packs, bounded on-demand loading and per-avatar clip
+  assignments for locomotion, tutor states and visual rules. The current 32-clip
+  per-model importer and common retargeted gestures do not fulfill that library.
 - User-created room items: in-app editor and GLB/VRM imports first, as selected
   by the user on 2026-09-25. Include playback of compatible imported animations.
   AI text-to-3D and public content sharing are outside this first release.

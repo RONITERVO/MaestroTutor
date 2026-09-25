@@ -7,6 +7,11 @@ the room stores the private library's content hash, retaining position, scale,
 saved pose, recordings and rule target identity (`maestro`). It does not change
 the web tutor persona, backend account or voice configuration.
 
+The user confirmed Meshy selection/replacement on Quest 3 on 2026-09-26 after
+opening the actual storage folder and selecting Use Maestro. Saved room data
+contains the verified Meshy asset hash for the tutor. This confirms the import
+and replacement flow, not yet gestures, posing, gait or long-session performance.
+
 The import confirmation and embedded attribution apply to both Add and Use
 Maestro. VRM humanoid metadata or a validated GLB skeleton with Mixamo/Unity
 humanoid bone names can establish the tutor rig. A valid Unity humanoid and 15 mapped bones are required:

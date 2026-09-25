@@ -2,6 +2,39 @@
 
 This is development evidence, not a release acceptance report.
 
+## Installed import-location fix and Meshy acceptance
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-08F340EF.apk`.
+SHA256: `08F340EF16F03DBB91FBFDDD58557F38FD0C9ADD55E735C2AB2A055EB7C3C323`.
+The full build passed 33 EditMode, 31 required PlayMode and 15 native Android
+tests, web build, native lint, ARM64/signature/manifest checks and Editor exit 0.
+Two optional private-file checks were not requested. Unity reports zero errors
+and two package warnings. The APK is 135,173,219 bytes, development signed.
+
+The user's screenshot showed Downloads > Maestro empty although both model files
+were present and indexed. Opening the normal document picker at the actual
+external-storage folder made the Meshy file visible. Import now supplies the
+primary Download directory as an initial-location hint. The user then loaded
+the textured preview and confirmed Use Maestro worked after its role was
+explained. The saved room contains the matching Meshy hash on `maestro` and on
+a separate imported room object. Gestures, joint posing and custom gait still
+need explicit acceptance; the preview alone is deliberately not grabbable.
+
+The user also confirmed Follow me translates the included avatar, but reported
+stationary feet. A new PlayMode regression check verifies actual visible foot
+mesh deformation over two gait cycles after a saved pose and through autosave;
+it passes locally. This does not resolve the reported headset gait defect.
+
+Before upgrading, the room and model library were backed up (9,217,211 bytes).
+The primary room hash stayed
+`FFC819EBC925FBA1DEC6135E7874190517617248D0F9D56DFDDA5E310831CAF3`
+through `adb install -r`. The model copy matches the original `220A3A4E` hash.
+Cold launch succeeded in 564 ms. The startup sample contains the previously
+observed Horizon settings-access exceptions, with no observed managed exception
+or fatal crash. Private screenshots, backup, logs and install receipt are in
+ignored `.quest-evidence/import-picker`. The updated in-app picker hint still
+needs user acceptance; the direct system-picker path was observed on device.
+
 ## Installed Mixamo and movement update
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-1EAEF7DA.apk`.

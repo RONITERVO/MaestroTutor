@@ -122,6 +122,55 @@ namespace Maestro.Quest.Tests
             Assert.That(motion.Active,Is.True); yield return new WaitForSeconds(.2f);
             scheduler.Tick(.6f); Assert.That(motion.Active,Is.False); Assert.That(scheduler.RunningCount,Is.Zero);
         }
+        [UnityTest] public IEnumerator FollowingAnimatesVisibleFeetAcrossCyclesAfterASavedPose()
+        {
+            Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12)); Tutor(); Ready();
+            viewer.transform.position = new Vector3(0,1.6f,5);
+            avatar.SetSavedPose(avatar.PoseRig.Capture());
+            Assert.That(motion.Begin("foot motion",AvatarSpatialMode.Follow,out var error),Is.True,error);
+            yield return new WaitForSeconds(.3f);
+            var baked = new Mesh();
+            try
+            {
+                var feet = new[] { avatar.PoseRig.CanonicalBone(PoseJoint.LeftFoot),avatar.PoseRig.CanonicalBone(PoseJoint.RightFoot) };
+                var skins = new SkinnedMeshRenderer[2]; var indices = new int[2];
+                var distances = new[] { float.PositiveInfinity,float.PositiveInfinity };
+                foreach (var skin in avatar.GetComponentsInChildren<SkinnedMeshRenderer>())
+                {
+                    skin.BakeMesh(baked,true); var vertices = baked.vertices;
+                    for (int vertex=0;vertex<vertices.Length;vertex++)
+                    {
+                        var point = skin.transform.TransformPoint(vertices[vertex]);
+                        for (int foot=0;foot<2;foot++)
+                        {
+                            float distance = Vector3.SqrMagnitude(point-feet[foot].position);
+                            if (distance >= distances[foot]) continue;
+                            distances[foot] = distance; skins[foot] = skin; indices[foot] = vertex;
+                        }
+                    }
+                }
+                Assert.That(distances[0],Is.LessThan(.04f)); Assert.That(distances[1],Is.LessThan(.04f));
+                for (int cycle=0;cycle<2;cycle++)
+                {
+                    var bounds = new Bounds[2];
+                    for (int sample=0;sample<12;sample++)
+                    {
+                        yield return new WaitForSeconds(.08f);
+                        for (int foot=0;foot<2;foot++)
+                        {
+                            skins[foot].BakeMesh(baked,true);
+                            // Exclude movement of the whole avatar: verify its visible skin deforms.
+                            var point = avatar.transform.InverseTransformPoint(skins[foot].transform.TransformPoint(baked.vertices[indices[foot]]));
+                            if (sample==0) bounds[foot] = new Bounds(point,Vector3.zero); else bounds[foot].Encapsulate(point);
+                        }
+                    }
+                    Assert.That(motion.Active,Is.True);
+                    for (int foot=0;foot<2;foot++) Assert.That(bounds[foot].size.magnitude,Is.GreaterThan(.06f),"Each visible foot must keep stepping, including after the room autosaves");
+                }
+                motion.Stop();
+            }
+            finally { UnityEngine.Object.Destroy(baked); }
+        }
         [UnityTearDown] public IEnumerator Cleanup()
         {
             UnityEngine.Object.Destroy(root); if (viewer) UnityEngine.Object.Destroy(viewer);

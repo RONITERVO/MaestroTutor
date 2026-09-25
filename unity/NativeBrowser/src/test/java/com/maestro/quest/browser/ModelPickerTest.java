@@ -5,6 +5,8 @@ package com.maestro.quest.browser;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Looper;
+import android.net.Uri;
+import android.provider.DocumentsContract;
 import java.io.File;
 import org.json.JSONObject;
 import org.junit.*;
@@ -29,6 +31,11 @@ public class ModelPickerTest {
     @Test public void opensSingleReadOnlyDocumentIntentAndReportsCancellation() throws Exception {
         Intent intent=ModelPicker.selectionIntent(); assertEquals(Intent.ACTION_OPEN_DOCUMENT,intent.getAction()); assertTrue(intent.hasCategory(Intent.CATEGORY_OPENABLE));
         assertEquals(Intent.FLAG_GRANT_READ_URI_PERMISSION,intent.getFlags()); assertFalse(intent.getBooleanExtra(Intent.EXTRA_ALLOW_MULTIPLE,false));
+        assertEquals("*/*",intent.getType()); assertFalse(intent.hasExtra(Intent.EXTRA_MIME_TYPES));
+        Uri initial=intent.getParcelableExtra(DocumentsContract.EXTRA_INITIAL_URI);
+        assertEquals("com.android.externalstorage.documents",initial.getAuthority());
+        assertEquals("primary:Download",DocumentsContract.getDocumentId(initial));
+        assertNull(intent.getComponent()); assertNull(intent.getPackage());
         ModelPicker picker=start(); picker.onActivityResult(ModelPicker.REQUEST,Activity.RESULT_CANCELED,null);
         JSONObject result=new JSONObject(ModelPicker.ReadResult()); assertEquals("",result.getString("path")); assertTrue(result.getString("error").contains("cancelled"));
     }
