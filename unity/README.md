@@ -112,7 +112,13 @@ Returning to the app keeps audio paused until that explicit action. Suspension
 stops microphone capture, Live/STT/TTS, music and runnable artifacts before the
 browser pauses; an unresponsive browser is recreated on return. Saved room and
 conversation storage remain, though unfinished page state can be lost during
-that fallback. Native microphone permission prompting is still pending.
+that fallback. Microphone use now requests Android permission when needed. If the
+system dialog interrupts the app, resume with the bell and try speaking again.
+Permission and file-picker notices appear on a solid token beside the book; tap
+it to dismiss. App file inputs open the Android document picker and receive
+bounded copies of the files explicitly selected. Camera capture, keyboard and
+authentication integration remain work. Native requests have automated tests;
+the permission and file-picker flows still need physical Quest acceptance.
 
 Quest 3 evidence and outstanding checks: `../docs/QUEST_DEVICE_QA.md`.
 

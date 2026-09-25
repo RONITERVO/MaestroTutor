@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import type { ChatMessage } from '../../core/types';
 import { collectBookArtifacts, parseBookCommand, resolveBookArtifact, resolveHistoryPage } from './bookModel';
@@ -44,7 +45,7 @@ describe('native book command boundary', () => {
   });
 
   it('cleans up only its own bridge and returns a minimal snapshot', () => {
-    const target = {} as Window;
+    const target = window;
     const snapshot: BookSnapshot = { version: 1, layout: 'conversation', activity: 'idle', bookmarkMessageId: 'm7', selectedArtifactId: null, historyStart: 0, historyEnd: 8, historyTotal: 20 };
     const commands: unknown[] = [];
     const uninstall = installBookBridge(target, () => snapshot, command => commands.push(command));

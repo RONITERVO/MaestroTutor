@@ -117,6 +117,27 @@ Outstanding rule acceptance:
 
 ## Remaining hardware and release work
 
+Native permission/file access is implemented locally, with twelve Android tests,
+fifteen web tests and a real Chrome file-gesture smoke check passing. The Unity
+notice token has a desktop render; its headset readability is unverified. No
+native-input build has been installed while the headset charges. Required device
+checks include first-use microphone grant/deny/retry; interruption during consent;
+opening/cancelling the document picker; reading an actual selected attachment in
+WebView; and rejecting an artifact-frame request without exposing private files.
+The existing explicit audio-resume policy also applies to native dialogs. Native
+file selection is not evidence that a GLB/VRM importer exists.
+
+Local native-input APK checkpoint:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-native-input-635CB415.apk`.
+SHA256: `635CB415BB42C14DA60E8C2D6BA223B87436EA4E24545E692A3C9FB3E4D4A885`.
+The full build passes the 33 Unity checks, twelve Android tests, native lint and
+web build. APK v2 signature verifies. The packaged manifest contains the private
+`com.maestro.quest.development.maestro.selected` provider (`exported=false`,
+`grantUriPermissions=false`) and the explicit Unity permission-dialog override.
+Unity reports zero errors and one package warning; native lint has zero errors
+and five warnings. This APK includes the preceding rules update and remains
+uninstalled pending the user's headset availability.
+
 Animation authoring update: 18 EditMode and seven PlayMode checks pass. This
 includes a real XRI grab moving the included avatar's head, pose/keyframe undo,
 Playables interpolation and looping, object recording interrupted by focus loss,

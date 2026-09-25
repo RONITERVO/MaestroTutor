@@ -28,8 +28,15 @@ Push-Location $repoRoot
 try {
     & npm.cmd run build *> (Join-Path $logRoot 'web-build.log')
     if ($LASTEXITCODE -ne 0) { throw "Shared web build failed; see $logRoot/web-build.log" }
-    & (Join-Path $repoRoot 'android/gradlew.bat') -p (Join-Path $repoRoot 'unity/NativeBrowser') assembleRelease lintRelease --console=plain *> (Join-Path $logRoot 'native-build.log')
+    & (Join-Path $repoRoot 'android/gradlew.bat') -p (Join-Path $repoRoot 'unity/NativeBrowser') testReleaseUnitTest assembleRelease lintRelease --console=plain *> (Join-Path $logRoot 'native-build.log')
     if ($LASTEXITCODE -ne 0) { throw "Native browser build failed; see $logRoot/native-build.log" }
+    $nativeTests = 0
+    foreach ($reportFile in Get-ChildItem -LiteralPath (Join-Path $repoRoot 'unity/NativeBrowser/build/test-results/testReleaseUnitTest') -Filter 'TEST-*.xml') {
+        [xml]$nativeReport = Get-Content -LiteralPath $reportFile.FullName
+        if ([int]$nativeReport.testsuite.failures -gt 0 -or [int]$nativeReport.testsuite.errors -gt 0) { throw 'Native browser tests failed.' }
+        $nativeTests += [int]$nativeReport.testsuite.tests
+    }
+    if ($nativeTests -lt 12) { throw 'Native browser tests did not cover the current request and file checks.' }
 } finally { Pop-Location }
 $webTarget = Join-Path $mirrorRoot 'Assets/StreamingAssets/maestro-web'
 $pluginTarget = Join-Path $mirrorRoot 'Assets/Plugins/Android'

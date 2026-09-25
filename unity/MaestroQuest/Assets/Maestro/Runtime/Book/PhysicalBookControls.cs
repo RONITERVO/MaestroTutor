@@ -13,6 +13,9 @@ namespace Maestro.Quest.Book
         NativeBookBrowser source;
         Material bellPaint;
         TextMesh bellLabel;
+        GameObject notice;
+        TextMesh noticeLabel;
+        string shownNotice;
 
         public void Build(NativeBookBrowser browser, IllustratedBook book)
         {
@@ -37,6 +40,15 @@ namespace Maestro.Quest.Book
             bellLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             label.GetComponent<MeshRenderer>().sharedMaterial = bellLabel.font.material;
             bellLabel.anchor = TextAnchor.MiddleCenter; bellLabel.color = IllustratedMaterials.Ink; bellLabel.text = "Resume audio";
+            notice = new GameObject("Browser notice token"); notice.transform.SetParent(transform,false);
+            notice.transform.localPosition = new Vector3(-.53f,-.07f,0);
+            Part(notice.transform,PrimitiveType.Cube,Vector3.zero,new Vector3(.245f,.19f,.016f),wood);
+            var noticeHit = notice.AddComponent<BoxCollider>(); noticeHit.size = new Vector3(.245f,.19f,.025f);
+            var dismiss = notice.AddComponent<BrowserNotice>(); dismiss.Browser = browser; dismiss.AccessibleName = "Dismiss browser notice";
+            var noticeMarking = new GameObject("Browser notice text",typeof(TextMesh)); noticeMarking.transform.SetParent(notice.transform,false); noticeMarking.transform.localPosition = new Vector3(0,0,-.012f);
+            noticeLabel = noticeMarking.GetComponent<TextMesh>(); noticeLabel.font = bellLabel.font; noticeLabel.fontSize = 48; noticeLabel.characterSize = .0027f;
+            noticeLabel.anchor = TextAnchor.MiddleCenter; noticeLabel.alignment = TextAlignment.Center; noticeLabel.color = IllustratedMaterials.Ink;
+            noticeMarking.GetComponent<MeshRenderer>().sharedMaterial = noticeLabel.font.material; notice.SetActive(false);
             // Both miniature books are fully modelled tokens on a wooden holder.
             for (int index = 0; index < 2; index++)
             {
@@ -98,6 +110,8 @@ namespace Maestro.Quest.Book
             bool paused = !source || source.Snapshot == null || source.Snapshot.audioPaused;
             bellLabel.text = paused ? "Resume audio" : "Audio on";
             bellPaint.color = paused ? IllustratedMaterials.Ribbon : IllustratedMaterials.Hex("2B8D88");
+            string message = source ? source.Error : null;
+            if (shownNotice != message) { shownNotice = message; noticeLabel.text = BrowserNotice.Wrap(message); notice.SetActive(!string.IsNullOrEmpty(message)); }
         }
 
         static void Part(Transform parent, PrimitiveType type, Vector3 position, Vector3 scale, Material material)

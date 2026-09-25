@@ -139,8 +139,28 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   have automated tests. These new controls still require headset acceptance.
   The builder currently uses numbered action names and preset durations; richer
   editing, native naming/keyboard support and additional actions remain work.
-- Model imports, native permission/authentication, production attestation,
+- Model imports, native permission acceptance/authentication, production attestation,
   billing, room anchoring and full device/store QA remain.
+
+## Native input development update
+
+Microphone requests now prompt for Android consent on use and reject stale
+callbacks, opaque/remote origins and unrequested resources. App file inputs can
+request Android's document picker through a one-use top-document gesture check.
+Only selected external-provider streams are copied, with file/session/count
+limits, worker cancellation and a private read-only provider for WebView. Native
+dialog interruption retains the existing explicit audio-resume policy. A solid
+notice token beside the book explains permission or picker outcomes.
+
+Twelve Android tests pass for consent/cancellation, callback ownership, actual
+stream copying, private-source rejection and budgets. Fifteen web tests pass,
+and a real Chrome smoke check confirms trusted hidden-input selection works while
+synthetic reuse and iframe selection are denied. Unity's 33 tests and a desktop
+notice render also pass. These are computer-side checks; no new build has been
+installed while the headset charges. Quest picker availability, actual WebView
+file reads, first-use microphone flow and ongoing paid/media sessions remain
+hardware checks. GLB/VRM loading, IME, native authentication and the remaining
+release scope are still incomplete.
 
 ## Primary references checked 2026-09-25
 

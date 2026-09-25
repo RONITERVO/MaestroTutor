@@ -86,7 +86,8 @@ namespace Maestro.Quest.Editor
             var bookObject = new GameObject("Book render", typeof(IllustratedBook));
             var book = bookObject.GetComponent<IllustratedBook>();
             book.Build(); book.SetBookmark(true, PageSide.Left);
-            bookObject.AddComponent<PhysicalBookControls>().Build(null, book);
+            var previewBrowser = bookObject.AddComponent<NativeBookBrowser>();
+            var bookControls = bookObject.AddComponent<PhysicalBookControls>(); bookControls.Build(previewBrowser, book);
             var pagePath = Environment.GetEnvironmentVariable("MAESTRO_BOOK_PREVIEW_TEXTURE");
             if (!string.IsNullOrEmpty(pagePath))
             {
@@ -99,6 +100,12 @@ namespace Maestro.Quest.Editor
             camera.transform.position = new Vector3(.11f,.20f,-1.4f);
             camera.transform.LookAt(new Vector3(.045f,-.015f,0));
             Capture(camera, Path.Combine(output,"book-unity.png"), 1440, 1080);
+            // Sample the real notice token with a native-owned message. No Android
+            // dialog or permission state is represented by this desktop render.
+            typeof(NativeBookBrowser).GetProperty(nameof(NativeBookBrowser.Error)).SetValue(previewBrowser,"Microphone allowed. Resume audio with the bell, then try speaking again.");
+            bookControls.SendMessage("Update"); camera.orthographicSize = .46f;
+            camera.transform.position = new Vector3(-.10f,.04f,-1.4f); camera.transform.LookAt(new Vector3(-.10f,0,0));
+            Capture(camera,Path.Combine(output,"book-permission-notice.png"),1800,1100);
             bookObject.SetActive(false);
 
             const string modelPath = "Assets/Maestro/Resources/Avatars/DefaultMaestro.fbx";

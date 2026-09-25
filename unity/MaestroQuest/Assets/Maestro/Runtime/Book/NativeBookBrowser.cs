@@ -31,6 +31,13 @@ namespace Maestro.Quest.Book
         public string Error { get; private set; }
         public event Action<BookSnapshot> SnapshotChanged;
         public event Action<string> ExternalLinkRequested;
+        public void ClearError()
+        {
+            Error = null;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (IsReady) m_NativePlugin.Call("ClearError");
+#endif
+        }
         long pointerDownTime;
         bool pointerHeld;
         bool suspended;

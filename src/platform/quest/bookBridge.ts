@@ -3,6 +3,7 @@
 import { parseBookCommand, type BookCommand, type BookLayout } from './bookModel';
 import { flushSync } from 'react-dom';
 import { sessionActivity } from '../browser/sessionActivity';
+import { createFileSelectionGate } from './fileSelectionGate';
 
 export interface BookSnapshot {
   version: 1;
@@ -18,16 +19,19 @@ export interface BookSnapshot {
 
 declare global {
   interface Window {
-    maestroBook?: Readonly<{ snapshot: () => BookSnapshot; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status> }>;
+    maestroBook?: Readonly<{ snapshot: () => BookSnapshot; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status>; takeFileSelection: () => boolean }>;
   }
 }
 
 /** Native polls this top-level document; no JS-to-native object is exposed to iframes. */
 export function installBookBridge(target: Window, readSnapshot: () => BookSnapshot, command: (value: BookCommand) => void) {
+  const fileSelection = createFileSelectionGate(target);
   const bridge = Object.freeze({
     snapshot: readSnapshot,
+    takeFileSelection: () => fileSelection.take(),
     lifecycle(suspended: boolean) {
       if (typeof suspended !== 'boolean') return;
+      if (suspended) fileSelection.clear();
       // Commit iframe removal before native pauses JavaScript timers.
       flushSync(() => sessionActivity.setSuspended(suspended));
     },
@@ -40,5 +44,5 @@ export function installBookBridge(target: Window, readSnapshot: () => BookSnapsh
     },
   });
   target.maestroBook = bridge;
-  return () => { if (target.maestroBook === bridge) delete target.maestroBook; };
+  return () => { fileSelection.dispose(); if (target.maestroBook === bridge) delete target.maestroBook; };
 }

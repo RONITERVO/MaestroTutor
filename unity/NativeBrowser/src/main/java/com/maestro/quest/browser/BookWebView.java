@@ -5,6 +5,7 @@ package com.maestro.quest.browser;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
 import android.net.Uri;
@@ -22,6 +23,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.ValueCallback;
 import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 import com.tlab.webkit.chromium.OffscreenBrowser;
@@ -42,10 +44,49 @@ public final class BookWebView extends OffscreenBrowser {
     private volatile boolean disposed;
     private boolean suspended;
     private int lifecycleEpoch;
+    private BookRequests requests, permissionOwner, pickerOwner;
+    private static final int MICROPHONE_REQUEST = 4701, FILE_REQUEST = 4702;
     private final Handler lifecycleHandler = new Handler(Looper.getMainLooper());
 
     private static boolean isAppOrigin(Uri uri) {
-        return uri != null && "https".equals(uri.getScheme()) && HOST.equals(uri.getHost()) && (uri.getPort() == -1 || uri.getPort() == 443);
+        return BookRequests.appOrigin(uri);
+    }
+
+    private void resetRequests() {
+        if (requests != null) requests.close();
+        final WebView owner = web;
+        requests = new BookRequests(new BookRequests.Host() {
+            public Activity activity() { return UnityPlayer.currentActivity; }
+            public boolean active() { return !disposed && !suspended && web == owner && web != null && isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl())); }
+            public Object document() { return web; }
+            public void askMicrophone() {
+                if (permissionOwner != null || pickerOwner != null) throw new IllegalStateException("A native dialog is already open");
+                permissionOwner = requests;
+                try { requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO },MICROPHONE_REQUEST); }
+                catch (RuntimeException failure) { permissionOwner = null; throw failure; }
+            }
+            public void pickFiles(Intent intent) {
+                if (pickerOwner != null || permissionOwner != null) throw new IllegalStateException("A native dialog is already open");
+                pickerOwner = requests;
+                try { startActivityForResult(intent,FILE_REQUEST); }
+                catch (RuntimeException failure) { pickerOwner = null; throw failure; }
+            }
+            public void checkFileGesture(ValueCallback<Boolean> result) {
+                if (!active()) { result.onReceiveValue(false); return; }
+                owner.evaluateJavascript("Boolean(window.maestroBook && window.maestroBook.takeFileSelection && window.maestroBook.takeFileSelection())", value -> result.onReceiveValue("true".equals(value)));
+            }
+            public void report(String message) { error = message; }
+        });
+    }
+
+    @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] results) {
+        super.onRequestPermissionsResult(code,permissions,results);
+        if (code == MICROPHONE_REQUEST) { BookRequests owner = permissionOwner; permissionOwner = null; if (owner != null) owner.microphoneResult(); }
+    }
+
+    @Override public void onActivityResult(int code,int result,Intent data) {
+        super.onActivityResult(code,result,data);
+        if (code == FILE_REQUEST) { BookRequests owner = pickerOwner; pickerOwner = null; if (owner != null) owner.fileResult(result,data); }
     }
 
     private static WebResourceResponse denied() {
@@ -93,6 +134,7 @@ public final class BookWebView extends OffscreenBrowser {
             settings.setMediaPlaybackRequiresUserGesture(true);
             CookieManager.getInstance().setAcceptThirdPartyCookies(web, false);
             web.setWebViewClient(new WebViewClient() {
+                @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap icon) { snapshot = ""; resetRequests(); }
                 @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                     Uri uri = request.getUrl();
                     if (isAppOrigin(uri)) {
@@ -115,6 +157,7 @@ public final class BookWebView extends OffscreenBrowser {
                 @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
                     error = "The book browser stopped. Reopen the book to recover your saved conversation.";
                     mInitialized = false;
+                    if (requests != null) { requests.close(); requests = null; }
                     if (view.getParent() instanceof ViewGroup) ((ViewGroup)view.getParent()).removeView(view);
                     view.destroy(); web = null; mView = null;
                     snapshot = "";
@@ -123,10 +166,12 @@ public final class BookWebView extends OffscreenBrowser {
             });
             web.setWebChromeClient(new WebChromeClient() {
                 @Override public void onPermissionRequest(PermissionRequest request) {
-                    boolean microphoneOnly = request.getResources().length == 1 && PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(request.getResources()[0]);
-                    if (!suspended && isAppOrigin(request.getOrigin()) && microphoneOnly && activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                        request.grant(new String[] { PermissionRequest.RESOURCE_AUDIO_CAPTURE });
-                    } else request.deny();
+                    if (requests != null) requests.requestMicrophone(request); else request.deny();
+                }
+                @Override public void onPermissionRequestCanceled(PermissionRequest request) { if (requests != null) requests.cancelMicrophone(request); }
+                @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams parameters) {
+                    if (requests == null) { callback.onReceiveValue(null); return true; }
+                    return requests.chooseFiles(callback,parameters);
                 }
             });
             web.setBackgroundColor(0xffFFF0D2);
@@ -136,6 +181,7 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     private void destroyWebView() {
+        if (requests != null) { requests.close(); requests = null; }
         if (web == null) return;
         web.stopLoading();
         if (web.getParent() instanceof ViewGroup) ((ViewGroup)web.getParent()).removeView(web);
@@ -156,6 +202,7 @@ public final class BookWebView extends OffscreenBrowser {
 
     public String ReadSnapshot() { return snapshot; }
     public String ReadError() { return error; }
+    public void ClearError() { error = ""; }
     public String TakeExternalLink() { String result = externalLink; externalLink = ""; return result; }
 
     public void ExecuteBookCommand(String json) {
@@ -182,10 +229,12 @@ public final class BookWebView extends OffscreenBrowser {
             if (web == null) createWebView(UnityPlayer.currentActivity);
             web.resumeTimers(); web.onResume();
             web.evaluateJavascript("window.maestroBook && window.maestroBook.lifecycle(false)", null);
+            if (requests != null) requests.resumed();
         });
     }
 
     private void suspendWebView() {
+        if (requests != null) requests.suspended();
         if (web == null || disposed) return;
         final WebView current = web;
         final int epoch = ++lifecycleEpoch;
