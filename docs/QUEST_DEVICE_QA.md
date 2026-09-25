@@ -99,11 +99,12 @@ The headset is charging at the user's request. No rule build has been installed
 or tested on the device yet. Keep the installed animation checkpoint distinct
 from the locally built rules APK:
 
-- Path: `D:/Projects/Builds/MaestroQuestVerify/Builds/MaestroQuest-development.apk`.
-- SHA256: `E983421F8F9A55749460CD87096DBB986B853913EB0CE71FA6324BCAC8687CD2`.
+- Checkpoint: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-rules-6733BD44.apk`.
+- SHA256: `6733BD440395D9B0F7974D37E894D23698AFA52E9B11B9055B5B14945203F6B9`.
 - Full build succeeded: shared web bundle, native AAR/lint and Unity ARM64 IL2CPP.
-  Unity reports zero errors and two warnings; native lint reports zero errors
-  and five warnings. Development identity and signing remain in effect.
+  Unity reports zero errors and one package warning, with no C# compiler warnings;
+  native lint reports zero errors and five warnings. APK v2 signature verification
+  passes. Development identity and signing remain in effect.
 
 Outstanding rule acceptance:
 

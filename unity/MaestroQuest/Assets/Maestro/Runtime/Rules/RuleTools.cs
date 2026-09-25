@@ -10,8 +10,8 @@ namespace Maestro.Quest.Rules
 {
     public sealed class RuleToolAction : PhysicalAction
     {
-        public Action Invoke;
-        protected override void OnActivate() => Invoke?.Invoke();
+        public Action Command;
+        protected override void OnActivate() => Command?.Invoke();
     }
     public sealed class RuleTools : MonoBehaviour
     {
@@ -39,7 +39,7 @@ namespace Maestro.Quest.Rules
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform,false); tool.transform.localPosition = new Vector3(-.375f + (i%6)*.15f,.19f-(i/6)*.12f,-.049f);
                 var collider = tool.AddComponent<BoxCollider>(); collider.size = new Vector3(.10f,.076f,.08f);
-                var action = tool.AddComponent<RuleToolAction>(); action.AccessibleName = labels[i]; action.Invoke = commands[i];
+                var action = tool.AddComponent<RuleToolAction>(); action.AccessibleName = labels[i]; action.Command = commands[i];
                 Part(tool.transform,PrimitiveType.Cylinder,Vector3.zero,new Vector3(.045f,.015f,.045f),i >= 24 ? plum : teal).transform.localRotation = Quaternion.Euler(90,0,0);
                 Label(tool.transform,new Vector3(0,-.052f,-.02f),labels[i].Replace(" ","\n"),.0053f);
             }
