@@ -1,3 +1,4 @@
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -313,10 +314,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     return codecWorkerRef.current;
   }, []);
 
-  const cleanup = useCallback(async (options?: { preserveRecordedAudio?: boolean; status?: string }) => {
+  const cleanupPromiseRef = useRef<Promise<void> | null>(null);
+  const cleanup = useCallback((options?: { preserveRecordedAudio?: boolean; status?: string }): Promise<void> => {
     // Prevent concurrent cleanup operations
-    if (isCleaningUpRef.current) return;
+    if (cleanupPromiseRef.current) return cleanupPromiseRef.current;
     isCleaningUpRef.current = true;
+    cleanupPromiseRef.current = Promise.resolve().then(async () => {
     speechTriggerAbortRef.current?.abort();
     speechTriggerAbortRef.current = null;
     setLocalSpeechTriggerPhase(null);
@@ -418,7 +421,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     previewPendingRef.current = false;
     setSpeechPreviewProgress(0);
     
-    isCleaningUpRef.current = false;
+    }).finally(() => { isCleaningUpRef.current = false; cleanupPromiseRef.current = null; });
+    return cleanupPromiseRef.current;
   }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   const stop = useCallback(async () => {
@@ -454,6 +458,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   }, [flushTranscriptState]);
 
   const start = useCallback(async (languageOrOptions?: string | SttStartOptions) => {
+    if (!sessionActivity.isActive()) return;
     const opts: SttStartOptions = (
       typeof languageOrOptions === 'string' || languageOrOptions === undefined
         ? { language: languageOrOptions }
@@ -466,6 +471,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     }
     
     await cleanup({ status: 'restarted' });
+    if (!sessionActivity.isActive()) return;
     
     setError(null);
     setTranscript('');
@@ -1149,6 +1155,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   // Store cleanup in a ref so the unmount effect doesn't depend on cleanup identity
   const cleanupRef = useRef(cleanup);
   cleanupRef.current = cleanup;
+  useEffect(() => sessionActivity.onSuspend(stop), [stop]);
 
   useEffect(() => {
     return () => {

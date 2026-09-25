@@ -1,3 +1,4 @@
+import { acquireUserMedia } from '../../../platform/browser/sessionActivity';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { getGeminiModels } from '../../../core/config/models';
@@ -33,7 +34,7 @@ export function createBrowserLiveRuntime(activity: LiveActivityPorts): LiveRunti
     acquireLocalWhisperClient, releaseLocalWhisperClient, waitForLocalSpeechTrigger, flushCaptureWorkletNode,
     isNativePlatform: () => Capacitor.isNativePlatform(),
     getAudioContextConstructor: () => window.AudioContext || (window as any).webkitAudioContext,
-    getUserMedia: constraints => navigator.mediaDevices.getUserMedia(constraints),
+    getUserMedia: constraints => acquireUserMedia(constraints),
     createAudioWorkletNode: (context, name, options) => new AudioWorkletNode(context, name, options),
     createCanvas: () => document.createElement('canvas'),
     createCodecWorker: () => new AudioCodecWorkerClient(),

@@ -1,3 +1,4 @@
+import { acquireUserMedia } from '../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -125,11 +126,11 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
   const fetchAvailableCameras = useCallback(async () => {
     try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      if (typeof navigator.mediaDevices?.getUserMedia === 'function') {
         try {
           // Requesting stream triggers permission prompt if not granted
           if (hasCameraConsent(useMaestroStore.getState().settings)) {
-            const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const tempStream = await acquireUserMedia({ video: true });
             tempStream.getTracks().forEach(track => track.stop());
           }
         } catch (permError) {
@@ -203,7 +204,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
 
         let stream: MediaStream;
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+          stream = await acquireUserMedia({ video: videoConstraints });
         } catch (deviceErr) {
           // If a specific device was requested and it failed with a hardware/constraint
           // error, remove it from the available list and attempt a facingMode-based
@@ -223,7 +224,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
             setAvailableCameras(prev => prev.filter(c => c.deviceId !== selectedCameraId));
 
             try {
-              stream = await navigator.mediaDevices.getUserMedia({
+              stream = await acquireUserMedia({
                 video: { facingMode: { ideal: fallbackFacingMode } }
               });
 
@@ -434,7 +435,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         logSttFlow('camera.capture.tempStream.start', {
           selectedCameraId: selectedCameraId || 'none',
         });
-        streamForCapture = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+        streamForCapture = await acquireUserMedia({ video: videoConstraints });
         streamWasTemporarilyStarted = true;
         videoElement.srcObject = streamForCapture;
         videoElement.muted = true;

@@ -11,6 +11,7 @@ import { BOOK_LAYOUT_STORAGE_KEY, collectBookArtifacts, readBookLayout, resolveB
 import { installBookBridge, type BookSnapshot } from './bookBridge';
 import { selectIsListening, selectIsSending, selectIsSpeaking } from '../../store/slices/uiSlice';
 import './questBook.css';
+import { sessionActivity } from '../browser/sessionActivity';
 
 /** One React root, store, IndexedDB, tutor and audio owner for both page textures. */
 export function QuestBookSurface({ children }: React.PropsWithChildren) {
@@ -48,6 +49,7 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const presentation = useMemo(() => ({ layout, spreadRoot, earlierPageTarget, earlierMessageIds, visibleMessageIds, historyPageKey, isLatestPage: page.isLatest, selectedId: selected?.id ?? null, selectArtifact: setSelectedId, posters }), [layout, earlierPageTarget, earlierMessageIds, selected?.id, posters, visibleMessageIds, historyPageKey, page.isLatest]);
   const command = (value: BookCommand) => {
     switch (value.type) {
+      case 'session.resume': sessionActivity.resume(); break;
       case 'layout.set': setLayout(value.layout); break;
       case 'history.step':
         if (value.direction < 0 && page.previousAnchor) setHistoryAnchor(page.previousAnchor);
@@ -66,6 +68,7 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
     const latest = stateRef.current;
     return {
       version: 1,
+      audioPaused: !sessionActivity.isActive(),
       layout: latest.layout,
       activity: selectIsSpeaking(state) ? 'speaking' : selectIsListening(state) ? 'listening' : selectIsSending(state) ? 'thinking' : 'idle',
       bookmarkMessageId: latest.bookmarkMessageId,

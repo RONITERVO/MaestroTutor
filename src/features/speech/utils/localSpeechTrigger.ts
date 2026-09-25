@@ -1,3 +1,4 @@
+import { acquireUserMedia } from '../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -129,7 +130,7 @@ export const waitForLocalSpeechTrigger = async (options: {
 
   try {
     setPhase('requesting-microphone');
-    const microphoneRequest = navigator.mediaDevices.getUserMedia({
+    const microphoneRequest = acquireUserMedia({
       audio: {
         sampleRate: INPUT_SAMPLE_RATE,
         channelCount: 1,

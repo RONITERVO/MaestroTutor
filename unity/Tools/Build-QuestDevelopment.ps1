@@ -42,8 +42,17 @@ $env:MAESTRO_ANDROID_NDK = $ndkRoot
 $env:MAESTRO_ANDROID_JDK = $jdkRoot
 $env:MAESTRO_QUEST_APK = Join-Path $mirrorRoot 'Builds/MaestroQuest-development.apk'
 $buildLog = Join-Path $logRoot 'development-build.log'
-$process = Start-Process -FilePath $editorPath -ArgumentList @('-batchmode','-quit','-buildTarget','Android','-projectPath',('"'+$mirrorRoot+'"'),'-executeMethod','Maestro.Quest.Editor.QuestDevelopmentBuild.Build','-logFile',('"'+$buildLog+'"')) -WindowStyle Hidden -PassThru
-$process.WaitForExit()
+if (Test-Path -LiteralPath $buildLog) { Remove-Item -LiteralPath $buildLog }
+$process = Start-Process -FilePath $editorPath -ArgumentList @('-batchmode','-quit','-buildTarget','Android','-projectPath',('"'+$mirrorRoot+'"'),'-executeMethod','Maestro.Quest.Editor.QuestDevelopmentBuild.Build','-logFile',('"'+$buildLog+'"')) -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041' }
+$deadline = [DateTime]::UtcNow.AddMinutes(45)
+$shutdownAt = $null
+while (!$process.WaitForExit(1000)) {
+    if (!$shutdownAt -and (Test-Path -LiteralPath $buildLog) -and (Select-String -LiteralPath $buildLog -Pattern 'Batchmode quit successfully invoked' -Quiet)) { $shutdownAt = [DateTime]::UtcNow }
+    if ([DateTime]::UtcNow -gt $deadline -or ($shutdownAt -and [DateTime]::UtcNow -gt $shutdownAt.AddSeconds(60))) {
+        $process.Kill(); $process.WaitForExit()
+        throw "Unity Android build timed out; see $buildLog. An APK alone is not a successful build."
+    }
+}
 if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $buildLog -Tail 60; throw "Unity Android build failed ($($process.ExitCode))." }
 if (!(Test-Path -LiteralPath $env:MAESTRO_QUEST_APK)) { throw 'Unity exited without producing the expected APK.' }
 $hash = (Get-FileHash -LiteralPath $env:MAESTRO_QUEST_APK -Algorithm SHA256).Hash

@@ -1,3 +1,4 @@
+import { acquireUserMedia, sessionActivity } from '../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -696,6 +697,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    * Start a new Gemini Live conversation session
    */
   const handleStartLiveSession = useCallback(async () => {
+    if (!sessionActivity.isActive()) return;
     if (liveSessionState === 'connecting' || liveSessionState === 'active' || liveSessionState === 'armed') return;
 
     setLiveSessionError(null);
@@ -718,7 +720,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         const videoConstraints = cameraVideoConstraints(settingsRef.current.selectedCameraId);
 
         // Request BOTH permissions upfront to avoid double prompts or late mic requests
-        stream = await navigator.mediaDevices.getUserMedia({
+        stream = await acquireUserMedia({
           video: videoConstraints,
           audio: true
         });
@@ -755,6 +757,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       cancelReengagement();
 
       const liveSystemInstruction = await generateLiveSystemInstruction();
+      if (!sessionActivity.isActive() || !continueLiveRef.current) { releaseLiveSessionCapture(); return; }
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
       restartLiveRef.current = async () => {

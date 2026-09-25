@@ -16,6 +16,7 @@ import {
   shouldCommitMeasuredBox,
 } from '../utils/embedIntrinsics';
 import type { EmbedBox as EmbedBoxValue } from '../../../core/types';
+import { useSessionActive } from '../../../platform/browser/useSessionActive';
 
 type MiniGameRuntimeState = 'booting' | 'ready' | 'error';
 type MiniGameInteractionMode = 'scroll' | 'gestures';
@@ -146,7 +147,8 @@ const MiniGameViewer: React.FC<MiniGameViewerProps> = React.memo(({
 
   const slot = useEmbedSlot({ id: embedId, kind: 'mini-game', enabled: !activeOnBook });
   const { setRef, poster, pin, publishPoster } = slot;
-  const isLive = activeOnBook || slot.isLive;
+  const sessionActive = useSessionActive();
+  const isLive = sessionActive && (activeOnBook || slot.isLive);
   const isFullyVisible = activeOnBook || slot.isFullyVisible;
   const postersEnabled = activeOnBook || slot.postersEnabled;
 

@@ -49,8 +49,11 @@ import { createReengagementSequence } from './coordinators/reengagement';
 import { createSpeechModeActions } from './coordinators/speechMode';
 import { readSpeechRoutingState } from './speechRoutingState';
 import { useLanguageSessionReset } from './hooks/useLanguageSessionReset';
+import { useNativeSessionLifecycle } from './hooks/useNativeSessionLifecycle';
+import { useSessionActive } from '../platform/browser/useSessionActive';
 
 const App: React.FC = () => {
+  const sessionActive = useSessionActive();
   // ============================================================
   // REFS - Declared before hooks
   // ============================================================
@@ -173,8 +176,8 @@ const App: React.FC = () => {
     captureSnapshot,
   } = useCameraManager({
     t,
-    sendWithSnapshotEnabled: settings.sendWithSnapshotEnabled,
-    useVisualContext: settings.smartReengagement.useVisualContext,
+    sendWithSnapshotEnabled: sessionActive && settings.sendWithSnapshotEnabled,
+    useVisualContext: sessionActive && settings.smartReengagement.useVisualContext,
     selectedCameraId: settings.selectedCameraId,
   });
 
@@ -298,7 +301,7 @@ const App: React.FC = () => {
 
   useIdleReengagement({
     selectedLanguagePair,
-    isBlockingActivity,
+    isBlockingActivity: isBlockingActivity || !sessionActive,
     isUserActive,
     reengagementPhase,
     scheduleReengagement,
@@ -447,7 +450,7 @@ const App: React.FC = () => {
   }, [handleLiveTurnComplete, scheduleReengagement]);
 
   const { stopSilentObserver, resetSilentObserver } = useSilentObserverController({
-    enabled: hasAiAccess && !showApiKeyGate,
+    enabled: sessionActive && hasAiAccess && !showApiKeyGate,
     isBlockingActivity: blocksSilentObserver,
     liveSessionState,
     liveVideoStream,
@@ -460,6 +463,9 @@ const App: React.FC = () => {
   });
   stopSilentObserverRef.current = stopSilentObserver;
   resetSilentObserverRef.current = resetSilentObserver;
+
+  useNativeSessionLifecycle({ cancelReengagement, stopSpeaking, stopListening,
+    stopSilentObserver, handleStopLiveSession, clearVideo: () => setLiveVideoStream(null) });
 
   const handleStartLiveSessionWithObserverStop = useCallback(async () => {
     await stopSilentObserver();

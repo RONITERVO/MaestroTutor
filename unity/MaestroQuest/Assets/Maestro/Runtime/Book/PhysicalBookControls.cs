@@ -10,6 +10,9 @@ namespace Maestro.Quest.Book
     public sealed class PhysicalBookControls : MonoBehaviour
     {
         readonly List<Material> owned = new();
+        NativeBookBrowser source;
+        Material bellPaint;
+        TextMesh bellLabel;
 
         public void Build(NativeBookBrowser browser, IllustratedBook book)
         {
@@ -18,6 +21,22 @@ namespace Maestro.Quest.Book
             var ink = Material(IllustratedMaterials.Ink);
             var teal = Material(IllustratedMaterials.Hex("2B8D88"));
             var gold = Material(IllustratedMaterials.Ribbon);
+            source = browser;
+            var bell = new GameObject("Resume audio bell"); bell.transform.SetParent(transform,false);
+            bell.transform.localPosition = new Vector3(-.41f,.12f,0);
+            bellPaint = Material(IllustratedMaterials.Ribbon);
+            Part(bell.transform, PrimitiveType.Sphere, Vector3.zero, new Vector3(.055f,.06f,.04f),bellPaint);
+            Part(bell.transform, PrimitiveType.Cube, new Vector3(0,-.026f,0),new Vector3(.07f,.012f,.045f),bellPaint);
+            Part(bell.transform, PrimitiveType.Sphere, new Vector3(0,-.04f,0),Vector3.one * .012f,ink);
+            var bellHit = bell.AddComponent<BoxCollider>(); bellHit.size = new Vector3(.09f,.1f,.065f);
+            var bellAction = bell.AddComponent<PhysicalBookAction>(); bellAction.Action = BookActionKind.ResumeAudio;
+            bellAction.AccessibleName = "Resume audio"; bellAction.Browser = browser;
+            var label = new GameObject("Audio state"); label.transform.SetParent(bell.transform,false);
+            label.transform.localPosition = new Vector3(0,-.063f,-.03f);
+            bellLabel = label.AddComponent<TextMesh>(); bellLabel.fontSize = 48; bellLabel.characterSize = .004f;
+            bellLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.GetComponent<MeshRenderer>().sharedMaterial = bellLabel.font.material;
+            bellLabel.anchor = TextAnchor.MiddleCenter; bellLabel.color = IllustratedMaterials.Ink; bellLabel.text = "Resume audio";
             // Both miniature books are fully modelled tokens on a wooden holder.
             for (int index = 0; index < 2; index++)
             {
@@ -71,6 +90,14 @@ namespace Maestro.Quest.Book
         Material Material(Color color)
         {
             var result = IllustratedMaterials.Create(color); owned.Add(result); return result;
+        }
+
+        void Update()
+        {
+            if (!bellLabel) return;
+            bool paused = !source || source.Snapshot == null || source.Snapshot.audioPaused;
+            bellLabel.text = paused ? "Resume audio" : "Audio on";
+            bellPaint.color = paused ? IllustratedMaterials.Ribbon : IllustratedMaterials.Hex("2B8D88");
         }
 
         static void Part(Transform parent, PrimitiveType type, Vector3 position, Vector3 scale, Material material)

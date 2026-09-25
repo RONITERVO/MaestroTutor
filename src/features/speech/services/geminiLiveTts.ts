@@ -142,6 +142,7 @@ const MAX_TRIGGER_DURATION_MS = 10000; // Stop sending trigger audio after 10 se
  */
 export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<GeminiLiveTtsResult> {
   const { lines, audioContext, abortSignal, voiceName = 'Kore', onLineStart, onLineComplete, onStatusUpdate, onError } = params;
+  if (abortSignal?.aborted) return { isComplete: false, error: 'ABORTED', audioSegments: [] };
   
   if (!lines.length) {
     return { isComplete: true, audioSegments: [] };
@@ -157,6 +158,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
     return { isComplete: false, error: errorMsg, audioSegments: [] };
   }
 
+  if (abortSignal?.aborted) return { isComplete: false, error: 'ABORTED', audioSegments: [] };
   // Build the text block for the system instruction
   // Each line on a new line for proper transcript splitting
   const systemInstructionText = buildTriggeredTtsSystemInstruction(lines);
@@ -407,6 +409,8 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
       resolveOnce(result);
     };
 
+    let connectPending = false;
+    let interruptedConnection: GeminiLiveTtsResult | null = null;
     const abortImmediately = () => {
       if (isResolved) return;
       terminalHandled = true;
@@ -418,23 +422,34 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
         segmentCount: finalizedResult?.audioSegments.length || 0,
         transcript: transcriptAccumulator,
       });
-      resolveOnce({
+      const result: GeminiLiveTtsResult = {
         isComplete: false,
         error: 'ABORTED',
         audioSegments: finalizedResult?.audioSegments || [],
-      });
+      };
+      // The caller's shutdown acknowledgment must include a connection that
+      // may still materialize after cancellation. Native has a bounded fallback
+      // that destroys this WebView if the transport never settles.
+      if (connectPending) interruptedConnection = result;
+      else resolveOnce(result);
     };
 
     try {
+      abortHandler = abortImmediately;
+      abortSignal?.addEventListener('abort', abortHandler, { once: true });
+      if (abortSignal?.aborted) { abortImmediately(); return; }
+      connectPending = true;
       session = await ai.live.connect({
         model,
         liveOpenReason: createLiveOpenReason(params.liveOpenTrigger),
         config: config as any,
         callbacks: {
           onopen: () => {
+            if (terminalHandled) return;
             onStatusUpdate?.('CONNECTED / STREAMING');
           },
           onmessage: (msg: LiveServerMessage) => {
+            if (terminalHandled) return;
             if (msg.usageMetadata) {
               usageTracker.trackSnapshot(msg.usageMetadata);
             }
@@ -566,10 +581,15 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
           }
         }
       });
+      connectPending = false;
 
       // A test transport or SDK adapter may synchronously emit a terminal
       // callback before connect() returns. Do not resurrect its trigger loop.
-      if (terminalHandled) return;
+      if (terminalHandled) {
+        try { session.close(); } catch {}
+        if (interruptedConnection) resolveOnce(interruptedConnection);
+        return;
+      }
 
       // --- Trigger Logic: Send pre-recorded audio to wake up model ---
       isStreaming = true;
@@ -645,16 +665,9 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
         if (sessionTimeoutId) clearTimeout(sessionTimeoutId);
       };
 
-      if (abortSignal) {
-        if (abortSignal.aborted) {
-          abortImmediately();
-          return;
-        }
-        abortHandler = abortImmediately;
-        abortSignal.addEventListener('abort', abortHandler, { once: true });
-      }
-
     } catch (e: any) {
+      connectPending = false;
+      if (interruptedConnection) { resolveOnce(interruptedConnection); return; }
       const errorMsg = e?.message || 'Connection failed';
       const finalizedResult = finalizeAudioSegments('error');
       void finishAfterPlayback({

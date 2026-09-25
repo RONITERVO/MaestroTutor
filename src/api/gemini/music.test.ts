@@ -34,6 +34,7 @@ vi.mock('../../services/backend/maestroBackendService', () => ({
 }));
 
 import { generateMusic } from './music';
+import { sessionActivity } from '../../platform/browser/sessionActivity';
 
 const result = {
   operationId: 'music-1',
@@ -76,5 +77,18 @@ describe('Gemini music provider accounting', () => {
     }));
     expect(mocks.runManaged).not.toHaveBeenCalled();
     expect(mocks.trackMusicGeneration).toHaveBeenCalledOnce();
+  });
+
+  it('aborts music generation on host interruption and waits for its completion', async () => {
+    mocks.resolveAccessMode.mockResolvedValue('managed');
+    let signal!: AbortSignal; let finish!: (value: typeof result) => void;
+    mocks.runManaged.mockImplementation(options => { signal = options.abortSignal; return new Promise(resolve => { finish = resolve; }); });
+    const pending = generateMusic({ prompt: 'Interrupted music', streamPlayback: false });
+    await vi.waitFor(() => expect(signal).toBeDefined());
+    sessionActivity.setSuspended(true);
+    expect(signal.aborted).toBe(true); expect(sessionActivity.status().settled).toBe(false);
+    finish(result); await pending; await Promise.resolve(); await Promise.resolve();
+    expect(sessionActivity.status().settled).toBe(true);
+    sessionActivity.setSuspended(false); sessionActivity.resume();
   });
 });

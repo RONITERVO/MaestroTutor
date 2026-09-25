@@ -6,6 +6,7 @@ import { streamGeminiLiveTts } from '../services/geminiLiveTts';
 import { pcmToWav } from '../../../core-sdk/media/audioProcessing';
 import type { SpeechPart, TtsProvider, SpeechCacheDetails } from '../../../core/types';
 import type { TtsLiveOpenTrigger } from '../../../../shared/liveOpenReason';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 
 export interface UseTtsEngineOptions {
   onQueueComplete?: () => void;
@@ -49,6 +50,8 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
   const geminiLiveActiveRef = useRef(false);
   const queueIdRef = useRef(0);
   const liveAbortRef = useRef<AbortController | null>(null);
+  const liveRequestRef = useRef<ReturnType<typeof streamGeminiLiveTts> | null>(null);
+  const playbackEpoch = useRef(0);
   
   // Track if context is being created to prevent concurrent creation
   const creatingContextRef = useRef<boolean>(false);
@@ -110,6 +113,8 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
    * Batches all queued items into a single session for better performance.
    */
   const processGeminiLiveQueue = useCallback(async () => {
+    if (!sessionActivity.isActive()) return;
+    const epoch = playbackEpoch.current;
     if (geminiLiveActiveRef.current) return; // Already processing
     
     const queue = queueRef.current;
@@ -138,6 +143,10 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
 
     try {
       const audioContext = await getAudioContext();
+      if (!sessionActivity.isActive() || playbackEpoch.current !== epoch) {
+        if (audioContext.state !== 'closed') await audioContext.close();
+        return;
+      }
       
       const lines = geminiLiveItems.map(item => ({
         text: item.text,
@@ -159,7 +168,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
 
       const abortController = new AbortController();
       liveAbortRef.current = abortController;
-      await streamGeminiLiveTts({
+      const request = streamGeminiLiveTts({
         lines,
         audioContext,
         voiceName: geminiLiveItems[0]?.voiceName,
@@ -189,6 +198,9 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
           console.error('[GeminiLiveTts] Error:', error);
         }
       });
+      liveRequestRef.current = request;
+      await request;
+      if (liveRequestRef.current === request) liveRequestRef.current = null;
 
       // Remove all processed gemini-live items from queue
       queueRef.current = queueRef.current.filter(item => !geminiLiveItems.includes(item));
@@ -196,19 +208,18 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
     } catch (e) {
       console.error('[GeminiLiveTts] Exception:', e);
     } finally {
-      geminiLiveActiveRef.current = false;
-      liveAbortRef.current = null;
-      
-      // Process any remaining items (non-gemini-live or fallback)
-      if (queueRef.current.length > 0) {
-        processSpeechQueue();
-      } else {
-        handleQueueComplete();
+      if (playbackEpoch.current === epoch) {
+        geminiLiveActiveRef.current = false;
+        liveAbortRef.current = null;
+        // Process any remaining items (non-gemini-live or fallback)
+        if (queueRef.current.length > 0) processSpeechQueue();
+        else handleQueueComplete();
       }
     }
   }, [getAudioContext, handleQueueComplete]);
 
   const processSpeechQueue = useCallback(async () => {
+    if (!sessionActivity.isActive()) return;
     const queue = queueRef.current;
     if (queue.length === 0) {
       if (!audioRef.current && !geminiLiveActiveRef.current) handleQueueComplete();
@@ -264,6 +275,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
     defaultLang: string,
     liveOpenTrigger: TtsLiveOpenTrigger,
   ) => {
+    if (!sessionActivity.isActive()) return;
     const parts: SpeechPart[] = typeof textOrParts === 'string' ? [{ text: textOrParts, langCode: defaultLang }] : textOrParts;
     const provider: TtsProvider = 'gemini-live';
     
@@ -287,6 +299,7 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
   }, [processSpeechQueue]);
 
   const stopSpeaking = useCallback(() => {
+    playbackEpoch.current++;
     // Stop HTML Audio element
     if (audioRef.current) {
         audioRef.current.pause();
@@ -301,19 +314,21 @@ export const useTtsEngine = (options?: UseTtsEngineOptions): UseTtsEngineReturn 
     if (audioContextRef.current && audioContextRef.current.state === 'running') {
       try { audioContextRef.current.suspend(); } catch {}
     }
-    if (audioContextRef.current) {
-      try { audioContextRef.current.close(); } catch {}
-      audioContextRef.current = null;
-    }
+    const closingContext = audioContextRef.current;
+    audioContextRef.current = null;
+    const closed = closingContext && closingContext.state !== 'closed' ? closingContext.close() : Promise.resolve();
     geminiLiveActiveRef.current = false;
     // Clear queue
     queueRef.current = [];
     handleQueueComplete();
+    return Promise.all([closed, liveRequestRef.current]).then(() => undefined).catch(() => undefined);
   }, [handleQueueComplete]);
+  useEffect(() => sessionActivity.onSuspend(stopSpeaking), [stopSpeaking]);
   
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      playbackEpoch.current++;
       // Abort any active live session
       if (liveAbortRef.current) {
         try { liveAbortRef.current.abort(); } catch {}

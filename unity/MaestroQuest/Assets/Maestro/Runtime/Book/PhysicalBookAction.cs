@@ -5,7 +5,7 @@ using Maestro.Quest.Interaction;
 
 namespace Maestro.Quest.Book
 {
-    public enum BookActionKind { Earlier, Later, Latest, Bookmark, ConversationLayout, PracticeLayout, LatestArtifact }
+    public enum BookActionKind { Earlier, Later, Latest, Bookmark, ConversationLayout, PracticeLayout, LatestArtifact, ResumeAudio }
 
     /// <summary>Attached to a solid mesh with a collider, never a flat screen button.</summary>
     public sealed class PhysicalBookAction : PhysicalAction
@@ -18,6 +18,7 @@ namespace Maestro.Quest.Book
             if (Browser == null) return;
             switch (Action)
             {
+                case BookActionKind.ResumeAudio: Browser.ExecuteBookCommand("{\"version\":1,\"type\":\"session.resume\"}"); break;
                 case BookActionKind.Earlier:
                     Browser.ExecuteBookCommand("{\"version\":1,\"type\":\"history.step\",\"direction\":-1}"); Book?.AnimateTurn(-1); break;
                 case BookActionKind.Later:

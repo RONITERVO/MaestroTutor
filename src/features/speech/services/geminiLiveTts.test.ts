@@ -104,6 +104,22 @@ describe('Gemini Live TTS audible completion', () => {
     vi.unstubAllGlobals();
   });
 
+  it('aborts during connection and closes a late transport without playing or sending', async () => {
+    let finish!: (session: unknown) => void;
+    const close = vi.fn(); const send = vi.fn();
+    mocks.connect.mockImplementation(options => { mocks.callbacks = options.callbacks; return new Promise(resolve => { finish = resolve; }); });
+    const context = new FakeAudioContext(); const abort = new AbortController();
+    const pending = streamGeminiLiveTts({ lines: [{ text: 'Interrupted', langCode: 'en' }], audioContext: context as unknown as AudioContext,
+      liveOpenTrigger: 'voice.tts-click', abortSignal: abort.signal });
+    await vi.waitFor(() => expect(mocks.callbacks).not.toBeNull());
+    let settled = false; void pending.then(() => { settled = true; });
+    abort.abort(); await Promise.resolve(); expect(settled).toBe(false);
+    mocks.callbacks!.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: pcmBase64(100) } }] } } });
+    finish({ close, sendRealtimeInput: send }); await Promise.resolve();
+    await expect(pending).resolves.toMatchObject({ error: 'ABORTED' });
+    expect(close).toHaveBeenCalledOnce(); expect(send).not.toHaveBeenCalled(); expect(context.sources).toHaveLength(0);
+  });
+
   it('keeps turn-complete audio alive until its scheduled source ends', async () => {
     const context = new FakeAudioContext();
     let settled = false;

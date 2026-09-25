@@ -41,20 +41,33 @@ foreach ($folder in @('Assets','Packages','ProjectSettings')) {
 }
 $logRoot = Join-Path $mirrorRoot 'Logs'
 New-Item -ItemType Directory -Path $logRoot -Force | Out-Null
-function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName) {
+function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$ResultPath = '') {
     $logPath = Join-Path $logRoot $LogName
     $argumentsWithPaths = @('-batchmode','-projectPath', ('"' + $mirrorRoot + '"'), '-logFile', ('"' + $logPath + '"')) + $Arguments
-    $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru
-    $process.WaitForExit()
+    if ($ResultPath -and (Test-Path -LiteralPath $ResultPath)) { Remove-Item -LiteralPath $ResultPath }
+    if (Test-Path -LiteralPath $logPath) { Remove-Item -LiteralPath $logPath }
+    # KAT Gateway owns the machine's default ADB server. Unity's shutdown can
+    # hang trying to stop it; give build children their own server endpoint.
+    $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041' }
+    $deadline = [DateTime]::UtcNow.AddMinutes(20)
+    $reportWrittenAt = $null
+    while (!$process.WaitForExit(1000)) {
+        if (!$reportWrittenAt -and (($ResultPath -and (Test-Path -LiteralPath $ResultPath)) -or
+            ((Test-Path -LiteralPath $logPath) -and (Select-String -LiteralPath $logPath -Pattern 'Batchmode quit successfully invoked' -Quiet)))) { $reportWrittenAt = [DateTime]::UtcNow }
+        if ([DateTime]::UtcNow -gt $deadline -or ($reportWrittenAt -and [DateTime]::UtcNow -gt $reportWrittenAt.AddSeconds(60))) {
+            $process.Kill(); $process.WaitForExit()
+            throw "Unity verification did not exit in time; see $logPath. A written test report alone is not a successful build."
+        }
+    }
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $logPath -Tail 50; throw "Unity exited $($process.ExitCode); see $logPath" }
 }
 Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProjectSetup.Configure') 'configure.log'
 $testResult = Join-Path $logRoot 'editmode-results.xml'
-Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log'
+Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
 [xml]$testReport = Get-Content -LiteralPath $testResult
 if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 15) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
-Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log'
+Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
 [xml]$playReport = Get-Content -LiteralPath $playResult
 if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 5) { throw 'Unity interaction tests did not pass.' }
 if ($RenderArt) {

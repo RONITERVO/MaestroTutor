@@ -30,6 +30,7 @@ vi.mock('../utils/localSpeechTrigger', () => ({ waitForLocalSpeechTrigger: ports
 
 import { useGeminiLiveConversation, type UseGeminiLiveConversationCallbacks } from './useGeminiLiveConversation';
 import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
+import { sessionActivity } from '../../../platform/browser/sessionActivity';
 
 const deferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -82,6 +83,16 @@ beforeEach(() => {
 afterEach(async () => { cleanup(); await flush(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('actual Live hook lifecycle before session-controller extraction', () => {
+  it('closes capture and the provider on host interruption and requires explicit resume', async () => {
+    const h = harness(); await h.start(true);
+    await act(async () => { sessionActivity.setSuspended(true); }); await flush();
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+    expect(contexts.every(context => context.state === 'closed')).toBe(true);
+    expect(sessionActivity.status().settled).toBe(true);
+    sessionActivity.setSuspended(false);
+    await h.start(); expect(ports.connect).toHaveBeenCalledTimes(1);
+    sessionActivity.resume(); await h.start(); expect(ports.connect).toHaveBeenCalledTimes(2);
+  });
   it('remains usable after React StrictMode rehearses effect cleanup', async () => {
     const hook = renderHook(() => useGeminiLiveConversation(), {
       wrapper: ({ children }) => createElement(StrictMode, null, children),

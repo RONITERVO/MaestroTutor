@@ -27,6 +27,17 @@ Status: active implementation. Nothing in this document claims store readiness.
 - User-created room items: in-app editor and GLB/VRM imports first, as selected
   by the user on 2026-09-25. Include playback of compatible imported animations.
   AI text-to-3D and public content sharing are outside this first release.
+- In-app animation authoring: record object movement, save/edit keyframes, choose
+  avatar gestures, and pose arms, legs and head with 3D handles. Joint posing is
+  explicitly included by the user (2026-09-25). Playables supplies playback;
+  authoring, validation, persistence and physical controls belong to this app.
+- Custom Maestro avatars and visual event/condition/action rules. Support tutor
+  activity gestures, gaze/head turn and following/walking for compatible rigs.
+  User locomotion and avatar movement have independent editable bindings; user
+  locomotion is opt-in. Solid user-created action buttons can attach to a
+  controller and be operated by the opposite controller. Preserve system input
+  reservations and an accessible recovery path. User chose both movement modes
+  and visual rules first (2026-09-25); arbitrary user code is outside v1.
 - Default book and avatar are included and usable without downloading assets.
 - Hand/controller interaction, comfortable seated/standing placement, save/load,
   recovery, bounded content/resource use, import validation, and accessible text.
@@ -104,7 +115,12 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   The user confirmed creation, drawing, editing and readable controls. Device
   capture confirms saved shapes/strokes return after a process restart. Included
   book/avatar cannot be erased. Saved poses are not physical-room anchors.
-- Model imports, native lifecycle/authentication, production attestation,
+- Native pause/resume now coordinates shared media and provider shutdown, waits
+  for acknowledgment and recreates the WebView if shutdown stalls. Quest settings
+  interruption and fault recovery pass on the device; audio waits for the solid
+  resume bell. An additional 98 targeted web tests cover interruption behavior
+  and nearby regressions. Active paid/media sessions still need device QA.
+- Model imports, native permission/authentication, production attestation,
   billing, room anchoring and full device/store QA remain.
 
 ## Primary references checked 2026-09-25

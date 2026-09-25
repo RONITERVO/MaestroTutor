@@ -1,3 +1,4 @@
+import { acquireUserMedia } from '../../../../platform/browser/sessionActivity';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -86,7 +87,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
       // EXPLICIT PERMISSION REQUEST:
       // We request the stream and await it. If the user sees a prompt,
       // this await will pause execution until they Allow or Deny.
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await acquireUserMedia({ audio: true });
       if (startVersion !== audioNoteStartVersionRef.current) {
         try { stream.getTracks().forEach(t => t.stop()); } catch {}
         return;

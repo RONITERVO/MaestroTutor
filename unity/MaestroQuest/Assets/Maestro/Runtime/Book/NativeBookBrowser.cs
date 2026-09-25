@@ -18,6 +18,7 @@ namespace Maestro.Quest.Book
         public int historyStart;
         public int historyEnd;
         public int historyTotal;
+        public bool audioPaused;
     }
 
     public sealed class NativeBookBrowser : FragmentCapture, IBookBrowser
@@ -33,6 +34,7 @@ namespace Maestro.Quest.Book
         long pointerDownTime;
         bool pointerHeld;
         bool suspended;
+        bool? nativeSuspended;
         bool applicationPaused, applicationFocused = true;
         float nextPoll;
         string previousSnapshot;
@@ -66,7 +68,11 @@ namespace Maestro.Quest.Book
         void Update()
         {
             GarbageCollect();
-            if (!IsReady || suspended) return;
+            if (!IsReady) return;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (nativeSuspended != suspended) { m_NativePlugin.Call("SetSuspended", suspended); nativeSuspended = suspended; }
+#endif
+            if (suspended) return;
             UpdateFrame();
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (Time.unscaledTime < nextPoll) return;
@@ -119,7 +125,7 @@ namespace Maestro.Quest.Book
             if (value && pointerHeld) Pointer(0, 0, BrowserPointerPhase.Cancel);
             suspended = value;
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if (IsReady) m_NativePlugin.Call("SetSuspended", value);
+            if (IsReady && nativeSuspended != value) { m_NativePlugin.Call("SetSuspended", value); nativeSuspended = value; }
 #endif
         }
 

@@ -28,5 +28,15 @@ Activity must have hardware acceleration enabled, and the offscreen WebView must
 use `setOffscreenPreRaster(true)`; without these it produced blank pages and tile
 memory warnings on the first device run. Android WebView debugging is enabled
 only when the containing application has Android's debuggable flag.
-Suspend must also stop Maestro Live/microphone streams before release. Native
-file selection, IME, authentication and render-process recovery need integration.
+Suspend calls the bounded book lifecycle bridge, stopping capture and media
+owners and unmounting runnable artifacts before WebView timers pause. Native
+polls the shutdown acknowledgment, with a 1.5-second deadline: if the page fails
+to settle, its WebView is destroyed and recreated on return. Saved IndexedDB is
+retained; unfinished in-memory work may be lost in this fallback. A physical bell
+explicitly resumes media after returning. Its command grants no Android permission
+and does not bypass application consent or managed-access checks.
+
+Quest 3 settings interruption and deliberately stalled acknowledgment recovery
+have been exercised. Real active Live/microphone sessions still need hardware QA.
+Native permission requests, file selection, IME and authentication need integration;
+renderer recovery currently occurs on returning from an application interruption.

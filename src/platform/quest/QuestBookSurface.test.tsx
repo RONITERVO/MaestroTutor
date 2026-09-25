@@ -7,6 +7,7 @@ import { QuestBookSurface } from './QuestBookSurface';
 import { useBookPresentation } from './BookPresentationContext';
 import { BOOK_LAYOUT_STORAGE_KEY } from './bookModel';
 import { useMaestroStore } from '../../store';
+import { sessionActivity } from '../browser/sessionActivity';
 
 vi.mock('../../shared/hooks/useAppTranslations', () => ({ useAppTranslations: () => ({ t: (key: string) => key }) }));
 function ChatProbe() {
@@ -23,6 +24,21 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe('full-page book layouts', () => {
+  it('removes an active artifact before acknowledging suspend and waits for the resume command', async () => {
+    const source = btoa('<html><body>Practice</body></html>');
+    useMaestroStore.setState({ messages: [{ id: 'game', role: 'assistant', timestamp: 1, imageUrl: `data:text/html;base64,${source}`, imageMimeType: 'text/html' }] });
+    const { container } = render(<QuestBookSurface><ChatProbe /></QuestBookSurface>);
+    act(() => { window.maestroBook!.command({ version: 1, type: 'layout.set', layout: 'practice' }); });
+    expect(container.querySelector('iframe')).not.toBeNull();
+    await act(async () => { window.maestroBook!.lifecycle(true); });
+    expect(container.querySelector('iframe')).toBeNull();
+    expect(window.maestroBook!.lifecycleState()).toMatchObject({ suspended: true, settled: true, active: false });
+    act(() => { window.maestroBook!.lifecycle(false); });
+    expect(container.querySelector('iframe')).toBeNull();
+    act(() => { window.maestroBook!.command({ version: 1, type: 'session.resume' }); });
+    expect(container.querySelector('iframe')).not.toBeNull();
+    expect(sessionActivity.isActive()).toBe(true);
+  });
   it('defaults to familiar conversation, with distinct earlier/current pages and no added page UI', () => {
     const { container, getByTestId } = render(<QuestBookSurface><ChatProbe /></QuestBookSurface>);
     expect(container.querySelector('.quest-layout-conversation')).not.toBeNull();

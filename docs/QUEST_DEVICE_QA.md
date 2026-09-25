@@ -7,7 +7,7 @@ This is development evidence, not a release acceptance report.
 - Unity 6000.3.24f1, Android ARM64 IL2CPP, GLES3, GameActivity.
 - Package `com.maestro.quest.development`, version 1.0.0 / code 1, debug signing.
 - APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/MaestroQuest-development.apk`.
-- SHA256: `BD63A52BAB39B707F23E21BD213BBB39050FCBEA0B7EC78A4944239309E63A22`.
+- SHA256: `37B85B858173CB282A1684A0361ADD09CA1B0FC6A27102C5FF5B40F5FB3425F3`.
 - Build succeeded with zero errors; Android APK v2 signature verification passed.
 - Actual APK manifest contains minimum API 32, target 34, required passthrough,
   optional hand tracking, hand permission and hardware-accelerated GameActivity.
@@ -51,6 +51,39 @@ Editor coverage includes painting, duplication, erase/undo, stroke geometry,
 bounded history/content, protected included objects, save/load reconstruction,
 damaged-save recovery and releasing a physical tool on the same target.
 
+## Session interruption update
+
+The final interruption build includes the late-connect TTS acknowledgment and
+music preflight fixes. All 20 Unity checks, web production build, native AAR and
+lint completed; the APK installed successfully. Build processes use a separate
+ADB endpoint (5041), since KAT Gateway's default server stalled Unity shutdown.
+
+The native host now waits for the shared web runtime to close capture, speech,
+Live/observer sessions and music playback before pausing WebView timers. Active
+artifact frames are unmounted synchronously. Capture requests resolving after
+suspension are stopped instead of reaching their callers. Audio stays paused on
+return and on native cold start until the physical bell's Resume audio action.
+The phone/browser default remains active.
+
+Ninety-eight targeted web tests passed across fifteen files, including Live
+transport closure, repeated STT stop ownership, pending TTS connections, cached
+playback, late microphone results, artifact unmount and explicit resume. The
+production web bundle, native AAR/lint and Unity development build also pass.
+
+On Quest 3, opening Android settings yielded `suspended=true, settled=true,
+active=false`. Returning yielded `suspended=false, settled=true, active=false`.
+The native resume command enables activity; the physical bell is visible in the
+headset capture. A deliberately stalled acknowledgment caused the 1.5-second
+fallback to destroy the WebView while retaining the Unity process. Returning
+recreated the complete two-page document with audio still paused. The room still
+contained 16 objects and ten strokes. No Android crash was recorded. A HOME-key
+test exited the Unity process cleanly; it is evidence of cold restart, not of a
+same-process pause. The settings test supplied the same-process pause evidence.
+
+These device checks used the onboarding page, without opening a paid session.
+Real microphone permission, active Live/audio interruption, thermal/long-session
+behavior and human use of the new bell still require hardware acceptance.
+
 ## Remaining hardware and release work
 
 - User confirmation of controller interaction, near interaction, hand-only use,
@@ -58,8 +91,8 @@ damaged-save recovery and releasing a physical tool on the same target.
 - Hand-only use of the recovery tool, sustained drawing/editor usability,
   model imports and room anchoring. Saved poses are relative to
   the content origin; they are not spatial anchors in a physical room.
-- Shared conversation, inline artifacts, keyboard/file selection, audio permissions,
-  focus/pause stopping all media and paid sessions, and explicit media resumption.
+- Shared conversation, inline artifacts, keyboard/file selection, native audio
+  permissions and active-session hardware acceptance of pause/resume behavior.
 - Native authentication, managed access/attestation, supported purchases and store
   identity/signing. No Meta dashboard app exists yet.
 - Long-session performance, thermal behavior, content limits and recovery.
