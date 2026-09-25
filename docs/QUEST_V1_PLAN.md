@@ -9,6 +9,9 @@ physical controls and visual-rule actions. 33 EditMode and 32 PlayMode checks
 pass with the two optional private-model tests enabled. See QUEST_CUSTOM_AVATARS.md
 and QUEST_AVATAR_MOVEMENT.md. Headset acceptance of these additions, independent
 editable locomotion bindings and all remaining release gates are still open.
+Development APK `1EAEF7DA` is now installed on Quest 3 with saved room data
+preserved; its build runs 63 required Unity and 15 native Android tests. The
+user's Meshy file is available separately in Downloads/Maestro for acceptance.
 
 ## Accepted product scope
 

@@ -100,3 +100,8 @@ Mixamo tests also cover Default/Undo, save/reload and incomplete/ambiguous rig
 rejection. The private export is never included in tests or app packaging.
 `-ModelPreview <local-file> -ModelAsMaestro -RenderImports` reproduces the local
 asset verification. Look/follow behavior is described in QUEST_AVATAR_MOVEMENT.md.
+
+Development APK `1EAEF7DA` now includes named GLB support and is installed on
+Quest 3. The verified Meshy export was copied separately into Downloads/Maestro.
+Its import/Use Maestro, gestures and joint posing have been requested for
+physical testing, but are not yet confirmed. See QUEST_DEVICE_QA.md.

@@ -2,6 +2,40 @@
 
 This is development evidence, not a release acceptance report.
 
+## Installed Mixamo and movement update
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-1EAEF7DA.apk`.
+SHA256: `1EAEF7DA36A38F83C27EAFF180829E7351B4969CB12CF11500272E01AC873735`.
+Size: 135,173,219 bytes. Source implementation commit `0e29c47`, with verifier
+follow-up `89a884d`. The shared web bundle, native AAR/lint and ARM64 IL2CPP
+build succeeded, including actual Editor exit 0. The package signature and
+manifest checks passed. Unity reports zero errors and two package warnings.
+
+The release-independent build runs 33 EditMode, 30 required PlayMode and 15
+native Android tests. Two optional private-file tests are explicitly ignored
+when no local model is requested; the verifier allows only those exact skips.
+The preceding local Meshy run passed all 32 PlayMode tests, including actual
+embedded playback, tutor replacement and posed skinned-vertex movement.
+
+The app was closed before its room files were backed up (181,872 bytes total).
+An upgrade with `adb install -r` succeeded without clearing data. The primary
+room SHA256 remained
+`3152A1D002E2FC9CA9E68B1B6E30ED0039670E8BAC1AC21570F271D4FC9F69E2`
+through installation. The verified Meshy file was copied separately into
+Downloads/Maestro and its device checksum matches the PC original (`220A3A4E`).
+No private avatar is packaged in the application.
+
+Cold launch succeeded. A device screenshot shows passthrough, book pages and
+the new movement controls in both eyes. The startup sample has no observed
+managed exception or fatal crash; the previously recorded Horizon settings
+access exceptions remain. Evidence is in ignored `.quest-evidence/device-mixamo`.
+
+User acceptance has been requested for Meshy import/Use Maestro, upright
+appearance, gestures and posing; Look at me; and following, stopping distance,
+Stop and grip interruption against an actual loaded room scan. Those results
+are pending. Existing custom VRM and broader rules, performance and release
+checks remain open; installation is not evidence that those checks passed.
+
 ## Installed custom-avatar update
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-CA09C56E.apk`.
