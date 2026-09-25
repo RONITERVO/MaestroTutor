@@ -85,7 +85,15 @@ $env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $M
 $env:MAESTRO_REQUIRE_HUMANOID = if ($ModelAsMaestro) { '1' } else { '' }
 Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
 [xml]$playReport = Get-Content -LiteralPath $playResult
-if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.passed -lt 30) { throw 'Unity interaction tests did not pass.' }
+# Unity marks the whole report Skipped:Ignored when only the deliberately
+# optional private-file checks are ignored. Never permit other skipped tests.
+$expectedSkipped = @()
+if (!$ModelPreview) { $expectedSkipped += 'SelectedExternalModelLoadsAndPlaysEmbeddedSkeletalAnimationWhenPresent' }
+if (!$ModelAsMaestro) { $expectedSkipped += 'SelectedExternalHumanoidUsesTheRealTutorReplacementAndPosePath' }
+$unexpectedCases = @($playReport.SelectNodes('//test-case[@result!="Passed"]') | Where-Object {
+    $_.result -ne 'Skipped' -or $_.label -ne 'Ignored' -or $expectedSkipped -notcontains $_.name
+})
+if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 30 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
 if ($ModelAuditDirectory) {
     $env:MAESTRO_MODEL_DIRECTORY = (Resolve-Path -LiteralPath $ModelAuditDirectory).Path
     $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'
