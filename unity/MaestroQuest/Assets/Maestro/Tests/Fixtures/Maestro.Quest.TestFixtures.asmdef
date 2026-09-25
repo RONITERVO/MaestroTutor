@@ -1,0 +1,11 @@
+{
+  "name": "Maestro.Quest.TestFixtures",
+  "references": [],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ]
+}

@@ -5,6 +5,7 @@ using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Imports;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -95,6 +96,10 @@ namespace Maestro.Quest
             var ruleTools = new GameObject("Behaviour rules"); ruleTools.transform.SetParent(content.transform,false);
             ruleTools.transform.localPosition = new Vector3(-.95f,.68f,.75f); ruleTools.transform.localRotation = Quaternion.Euler(28,-35,0);
             ruleTools.AddComponent<RuleTools>().Build(rules,room);
+            var imports = content.AddComponent<ImportWorkshop>(); imports.Initialize(editor, content.GetComponent<AnimationWorkshop>());
+            var importTools = new GameObject("Model import tools"); importTools.transform.SetParent(content.transform, false);
+            importTools.transform.localPosition = new Vector3(1.25f, .80f, 1.65f); importTools.transform.localRotation = Quaternion.Euler(20, 55, 0);
+            importTools.AddComponent<ImportTools>().Build(imports, room);
         }
 
         void Update()

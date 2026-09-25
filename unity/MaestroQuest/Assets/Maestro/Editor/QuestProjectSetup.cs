@@ -103,6 +103,13 @@ namespace Maestro.Quest.Editor
             // A Resources material keeps the dynamically used shader in player builds.
             const string pigmentPath = "Assets/Maestro/Resources/PencilPalette.mat";
             if (!AssetDatabase.LoadAssetAtPath<Material>(pigmentPath)) AssetDatabase.CreateAsset(IllustratedMaterials.Create(IllustratedMaterials.Paper), pigmentPath);
+            // Runtime glTF decoding uses these before applying the shared pencil material.
+            foreach (var shaderName in new[] { "Standard", "UniGLTF/UniUnlit" })
+            {
+                var shader = Shader.Find(shaderName); if (!shader) throw new InvalidOperationException("Missing model import shader: " + shaderName);
+                string path = "Assets/Maestro/Resources/Import-" + shaderName.Replace('/', '-') + ".mat";
+                if (!AssetDatabase.LoadAssetAtPath<Material>(path)) AssetDatabase.CreateAsset(new Material(shader), path);
+            }
             if (!File.Exists(ScenePath))
             {
                 var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

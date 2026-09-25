@@ -21,6 +21,11 @@ copies Library caches into the repository. Optional `-PageCapture` uses an
 unmodified browser screenshot as the book texture for a desktop art preview.
 This does not validate the live Android WebView or any headset interaction.
 
+`-RenderImports` captures the actual solid import tray and imported test geometry.
+Optional `-ModelAuditDirectory` inspects user-supplied VRM files without modifying
+them, and `-ModelPreview` imports/renders one local file in the Editor. See
+`docs/QUEST_MODEL_IMPORTS.md` for limits, evidence and unfinished avatar/physics work.
+
 Build the shared web app, native browser AAR, and ARM64 development APK together:
 
 ```powershell

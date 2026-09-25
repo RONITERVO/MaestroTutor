@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using Maestro.Quest.Art;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Imports;
 using UnityEngine;
 
 namespace Maestro.Quest.Creation
@@ -13,7 +14,10 @@ namespace Maestro.Quest.Creation
         Material pigment;
         PencilMarks drawing;
         GameObject selection;
-        public RoomItem Build(RoomObjectData data)
+        Color tint;
+        public ImportedModel Model { get; private set; }
+        public string ModelStatus { get; private set; }
+        public RoomItem Build(RoomObjectData data, ModelLibrary library = null)
         {
             Bounds bounds;
             Collider collider;
@@ -35,10 +39,28 @@ namespace Maestro.Quest.Creation
             ApplyColor(data.color);
             BuildSelection(bounds);
             var item = gameObject.AddComponent<RoomItem>(); var limits = RoomDocument.ScaleLimits(data.kind);
-            item.Configure(new[] { collider }, limits.minimum, limits.maximum); return item;
+            item.Configure(new[] { collider }, limits.minimum, limits.maximum);
+            if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
+            return item;
         }
 
-        public void ApplyColor(Color color) { if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); }
+        async void LoadModel(string hash, ModelLibrary library, Collider collider)
+        {
+            ModelStatus = "Loading local model…";
+            try
+            {
+                var asset = await library.ReadAsync(hash); if (!this) return;
+                var root = new GameObject("Imported geometry"); root.transform.SetParent(transform, false);
+                Model = root.AddComponent<ImportedModel>(); await Model.LoadAsync(asset); if (!this) return;
+                var box = (BoxCollider)collider; box.transform.localScale = Vector3.one; box.center = Model.LocalBounds.center; box.size = Model.LocalBounds.size + Vector3.one * .02f;
+                box.GetComponent<Renderer>().enabled = false;
+                bool selected = selection && selection.activeSelf; if (selection) { selection.SetActive(false); Destroy(selection); }
+                BuildSelection(Model.LocalBounds); SetSelected(selected); ApplyColor(tint);
+                ModelStatus = asset.Inspection.IsAvatar ? "VRM imported as room object" : "Model ready";
+            }
+            catch (System.Exception error) { if (this) ModelStatus = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again."; }
+        }
+        public void ApplyColor(Color color) { tint = color; if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
         public void SetSelected(bool value) { if (selection) selection.SetActive(value); }
 
         void BuildSelection(Bounds bounds)

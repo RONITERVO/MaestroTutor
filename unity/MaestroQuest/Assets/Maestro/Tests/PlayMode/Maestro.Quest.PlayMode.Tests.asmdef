@@ -1,6 +1,18 @@
 {
   "name": "Maestro.Quest.PlayMode.Tests",
   "rootNamespace": "Maestro.Quest.Tests",
-  "references": ["Maestro.Quest", "Unity.XR.Interaction.Toolkit"],
-  "optionalUnityReferences": ["TestAssemblies"]
+  "references": [
+    "Maestro.Quest",
+    "Unity.XR.Interaction.Toolkit",
+    "Maestro.Quest.TestFixtures",
+    "UniGLTF",
+    "UniGLTF.Utils"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ]
 }

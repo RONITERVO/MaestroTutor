@@ -6,6 +6,9 @@ param(
     [Parameter(Mandatory)][string]$BuildMirror,
     [switch]$RenderArt,
     [switch]$RenderRules,
+    [switch]$RenderImports,
+    [string]$ModelAuditDirectory,
+    [string]$ModelPreview,
     [string]$PageCapture
 )
 $ErrorActionPreference = 'Stop'
@@ -66,11 +69,22 @@ Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProject
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
 [xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 23) { throw 'Unity test results did not satisfy the current development checks.' }
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 27) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
+$env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
 Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
 [xml]$playReport = Get-Content -LiteralPath $playResult
-if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 10) { throw 'Unity interaction tests did not pass.' }
+if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 13) { throw 'Unity interaction tests did not pass.' }
+if ($ModelAuditDirectory) {
+    $env:MAESTRO_MODEL_DIRECTORY = (Resolve-Path -LiteralPath $ModelAuditDirectory).Path
+    $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestModelAudit.Inspect') 'model-audit.log'
+}
+if ($ModelPreview) {
+    $env:MAESTRO_MODEL_PREVIEW = (Resolve-Path -LiteralPath $ModelPreview).Path
+    $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestModelAudit.Preview') 'model-preview.log'
+}
 if ($RenderArt) {
     $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
     $env:MAESTRO_BOOK_PREVIEW_TEXTURE = if ($PageCapture) { (Resolve-Path -LiteralPath $PageCapture).Path } else { '' }

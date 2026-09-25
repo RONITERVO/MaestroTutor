@@ -1,7 +1,18 @@
 {
   "name": "Maestro.Quest.Tests",
   "rootNamespace": "Maestro.Quest.Tests",
-  "references": ["Maestro.Quest"],
-  "includePlatforms": ["Editor"],
-  "optionalUnityReferences": ["TestAssemblies"]
+  "references": [
+    "Maestro.Quest",
+    "Maestro.Quest.TestFixtures"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ]
 }

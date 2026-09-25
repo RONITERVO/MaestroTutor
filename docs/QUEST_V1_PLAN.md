@@ -43,6 +43,11 @@ Status: active implementation. Nothing in this document claims store readiness.
   are actions in the same system. Define once/loop and interruption behaviour;
   future event sources join the same catalog without duplicating user sequences.
 - Default book and avatar are included and usable without downloading assets.
+- MR physics: loose rigid items obey gravity, react to grabs/throws and collide
+  with scanned floors, walls and furniture. Include animation-to-physics release
+  actions and scan/permission/tracking lifecycle handling. The user explicitly
+  excluded hair and cloth interaction physics in their later steering on
+  2026-09-25. See QUEST_MODEL_IMPORTS.md for the implementation boundaries.
 - Hand/controller interaction, comfortable seated/standing placement, save/load,
   recovery, bounded content/resource use, import validation, and accessible text.
 
@@ -163,6 +168,11 @@ hardware checks. GLB/VRM loading, IME, native authentication and the remaining
 release scope are still incomplete.
 
 ## Primary references checked 2026-09-25
+
+The runtime-import development update is recorded in QUEST_MODEL_IMPORTS.md.
+GLB/VRM room-object importing and embedded-clip controls are now implemented for
+the supported subset; custom Maestro replacement, springs, physical simulation
+and Quest acceptance remain. Earlier milestone notes describe their checkpoints.
 
 - https://developers.meta.com/horizon/documentation/unity/unity-development-requirements/
 - https://developers.meta.com/horizon/documentation/unity/unity-project-setup/

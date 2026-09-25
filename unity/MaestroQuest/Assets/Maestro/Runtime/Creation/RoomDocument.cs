@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Maestro.Quest.Imports;
 
 namespace Maestro.Quest.Creation
 {
-    public enum RoomObjectKind { Book, Maestro, Block, Ball, Cylinder, Drawing }
+    public enum RoomObjectKind { Book, Maestro, Block, Ball, Cylinder, Drawing, ImportedModel }
 
     [Serializable]
     public sealed class RoomObjectData
@@ -22,8 +23,9 @@ namespace Maestro.Quest.Creation
         public float radius = .003f;
         public JointPose[] joints;
         public RoomMotion motion;
+        public string modelHash;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy() };
+        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash };
     }
 
     [Serializable]
@@ -49,6 +51,8 @@ namespace Maestro.Quest.Creation
             {
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
+                if (item.kind == RoomObjectKind.ImportedModel ? !ModelLibrary.ValidHash(item.modelHash) : !string.IsNullOrEmpty(item.modelHash))
+                    return Fail("This room contains an invalid model reference.", out error);
                 if (item.IsBuiltIn)
                 {
                     if (item.id != (item.kind == RoomObjectKind.Book ? "book" : "maestro")) return Fail("The included book and Maestro identities are invalid.", out error);
@@ -85,6 +89,7 @@ namespace Maestro.Quest.Creation
             if (builtIns != 2 || !ids.Contains("book") || !ids.Contains("maestro")) return Fail("The included book and Maestro must remain in the room.", out error);
             if (pointCount > MaximumTotalPoints) return Fail("This room has reached its drawing limit.", out error);
             if (frameCount > 1200 || jointCount > 6000) return Fail("This room has reached its animation limit.",out error);
+            if (objects.Count(item => item.kind == RoomObjectKind.ImportedModel) > 4) return Fail("Keep at most four imported models in this room.", out error);
             return true;
         }
 

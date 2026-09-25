@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Maestro.Quest.Art;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Imports;
 using UnityEngine;
 
 namespace Maestro.Quest.Creation
@@ -39,12 +40,14 @@ namespace Maestro.Quest.Creation
         public RoomObjectData Read(string id) => journal.Read(id);
         public bool AnyHeld => objects.Values.Any(item => item && item.Grab && item.Grab.isSelected);
         public RoomDocument Snapshot() => journal.Snapshot();
+        public ModelLibrary Models { get; private set; }
 
         public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null)
         {
             room = interaction;
             AddIdentity("book", book); AddIdentity("maestro", maestro);
-            storage = new RoomStorage(saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"));
+            var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room");
+            storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"));
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro));
             Reconcile();
@@ -97,6 +100,13 @@ namespace Maestro.Quest.Creation
             var forward = Vector3.ProjectOnPlane(room.Viewer.forward,Vector3.up).normalized;
             if (forward.sqrMagnitude < .01f) forward = transform.forward;
             return transform.InverseTransformPoint(room.Viewer.position + forward * .7f + room.Viewer.right * .3f - Vector3.up * .2f);
+        }
+
+        public bool AddModel(string hash)
+        {
+            var data = new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = RoomObjectKind.ImportedModel, modelHash = hash, position = SpawnPosition() };
+            if (!Commit(new[] { data }, Array.Empty<string>(), "Model added")) return false;
+            selected = data.id; UpdateSelection(); return true;
         }
 
         public void ChoosePaint(Color color)
@@ -178,7 +188,7 @@ namespace Maestro.Quest.Creation
                 {
                     var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
-                    item = root.AddComponent<CreatedRoomObject>().Build(data);
+                    item = root.AddComponent<CreatedRoomObject>().Build(data, Models);
                     AddIdentity(data.id,item); room.Register(item);
                 }
                 if (!item.Grab.isSelected) ApplyPose(item,data);

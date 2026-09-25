@@ -2,6 +2,27 @@
 
 This is development evidence, not a release acceptance report.
 
+## Uninstalled model-import checkpoint
+
+The latest development checkpoint is
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-imports-6DAE828D.apk`,
+SHA256 `6DAE828D4022A32B9F5A8CEE73BD364118FF983BA7E20D39C5A3ADD3DD48E531`.
+It includes the prior rules/native-input changes plus bounded GLB/VRM importing,
+private local model copies, solid import controls and embedded-clip playback.
+The development build succeeded with zero errors and one package warning; APK
+v2 signature verification passed. Twenty-seven EditMode, thirteen PlayMode and
+fifteen native Android tests pass. Desktop renders verify the actual controls,
+shared material, and the user's `vroidmodel3.vrm` as an imported room object.
+Ten of the user's 22 VRM files pass the current preflight limits; this is not a
+claim that all ten have been fully loaded or that any has passed Quest QA.
+
+No ADB/device polling, installation or headset tests were performed while the
+headset charges. The installed animation checkpoint below is unchanged. Import
+picker availability, resource use, cutout materials, large-file recovery and
+physical controls still require Quest acceptance. Custom Maestro switching,
+scan-based rigid physics and animation release actions remain unimplemented.
+The user has excluded hair and cloth interaction physics from this scope.
+
 ## Installed checkpoint
 
 - Unity 6000.3.24f1, Android ARM64 IL2CPP, GLES3, GameActivity.

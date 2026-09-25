@@ -9,6 +9,7 @@ namespace Maestro.Quest.Art
     public sealed class PencilModelStyle : MonoBehaviour
     {
         readonly List<Object> owned = new();
+        readonly Dictionary<Material, Color> colors = new();
         bool applied;
 
         public void Apply()
@@ -52,13 +53,19 @@ namespace Maestro.Quest.Art
                         if (original.name.StartsWith("Detail ")) pigment.SetShaderPassEnabled("PENCIL", false);
                         if (original.HasProperty("_BaseMap")) pigment.mainTexture = original.GetTexture("_BaseMap");
                         else if (original.HasProperty("_MainTex")) pigment.mainTexture = original.GetTexture("_MainTex");
+                        pigment.mainTextureScale = original.mainTextureScale; pigment.mainTextureOffset = original.mainTextureOffset;
+                        if (original.renderQueue >= 2450 || original.HasProperty("_Mode") && original.GetFloat("_Mode") > 0)
+                            pigment.SetFloat("_AlphaCutoff", original.HasProperty("_Cutoff") ? Mathf.Max(.01f, original.GetFloat("_Cutoff")) : .5f);
                         materials.Add(original, pigment); owned.Add(pigment);
+                        colors.Add(pigment, color);
                     }
                     replacements[i] = pigment;
                 }
                 renderer.sharedMaterials = replacements;
             }
         }
+
+        public void Tint(Color color) { foreach (var pair in colors) if (pair.Key) pair.Key.color = pair.Value * color; }
 
         void OnDestroy() { foreach (var item in owned) ArtResources.Release(item); }
     }
