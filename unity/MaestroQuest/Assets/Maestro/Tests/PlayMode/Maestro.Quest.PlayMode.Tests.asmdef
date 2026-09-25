@@ -1,0 +1,6 @@
+{
+  "name": "Maestro.Quest.PlayMode.Tests",
+  "rootNamespace": "Maestro.Quest.Tests",
+  "references": ["Maestro.Quest", "Unity.XR.Interaction.Toolkit"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

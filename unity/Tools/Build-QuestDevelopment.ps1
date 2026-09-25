@@ -1,0 +1,53 @@
+# Copyright 2026 Roni Tervo
+# SPDX-License-Identifier: Apache-2.0
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory)][string]$Editor,
+    [Parameter(Mandatory)][string]$BuildMirror,
+    [Parameter(Mandatory)][string]$AndroidSdk,
+    [Parameter(Mandatory)][string]$AndroidJdk
+)
+$ErrorActionPreference = 'Stop'
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+$mirrorRoot = [IO.Path]::GetFullPath($BuildMirror).TrimEnd('\','/')
+$sdkRoot = (Resolve-Path -LiteralPath $AndroidSdk).Path
+$jdkRoot = (Resolve-Path -LiteralPath $AndroidJdk).Path
+$editorPath = (Resolve-Path -LiteralPath $Editor).Path
+$ndkRoot = Join-Path $sdkRoot 'ndk/27.2.12479018'
+if (!(Test-Path -LiteralPath (Join-Path $ndkRoot 'source.properties'))) { throw 'Install the pinned Android NDK 27.2.12479018.' }
+$classesJar = Join-Path (Split-Path -Parent $editorPath) 'Data/PlaybackEngines/AndroidPlayer/Variations/il2cpp/Release/Classes/classes.jar'
+if (!(Test-Path -LiteralPath $classesJar)) { throw 'Install Android build support for the pinned Unity editor.' }
+
+# Validate the dedicated copy's ownership and run its current source tests.
+& (Join-Path $PSScriptRoot 'Verify-Quest.ps1') -Editor $editorPath -BuildMirror $mirrorRoot
+$logRoot = Join-Path $mirrorRoot 'Logs'
+$env:JAVA_HOME = $jdkRoot
+$env:ANDROID_HOME = $sdkRoot
+$env:MAESTRO_UNITY_CLASSES_JAR = $classesJar
+Push-Location $repoRoot
+try {
+    & npm.cmd run build *> (Join-Path $logRoot 'web-build.log')
+    if ($LASTEXITCODE -ne 0) { throw "Shared web build failed; see $logRoot/web-build.log" }
+    & (Join-Path $repoRoot 'android/gradlew.bat') -p (Join-Path $repoRoot 'unity/NativeBrowser') assembleRelease lintRelease --console=plain *> (Join-Path $logRoot 'native-build.log')
+    if ($LASTEXITCODE -ne 0) { throw "Native browser build failed; see $logRoot/native-build.log" }
+} finally { Pop-Location }
+$webTarget = Join-Path $mirrorRoot 'Assets/StreamingAssets/maestro-web'
+$pluginTarget = Join-Path $mirrorRoot 'Assets/Plugins/Android'
+New-Item -ItemType Directory -Path $webTarget,$pluginTarget -Force | Out-Null
+# Verify-Quest has already synchronized this owned mirror, removing stale files.
+Copy-Item -Path (Join-Path $repoRoot 'dist/*') -Destination $webTarget -Recurse -Force
+Copy-Item -LiteralPath (Join-Path $repoRoot 'unity/NativeBrowser/build/outputs/aar/MaestroBookBrowser-release.aar') -Destination (Join-Path $pluginTarget 'MaestroBookBrowser.aar')
+$env:MAESTRO_ANDROID_SDK = $sdkRoot
+$env:MAESTRO_ANDROID_NDK = $ndkRoot
+$env:MAESTRO_ANDROID_JDK = $jdkRoot
+$env:MAESTRO_QUEST_APK = Join-Path $mirrorRoot 'Builds/MaestroQuest-development.apk'
+$buildLog = Join-Path $logRoot 'development-build.log'
+$process = Start-Process -FilePath $editorPath -ArgumentList @('-batchmode','-quit','-buildTarget','Android','-projectPath',('"'+$mirrorRoot+'"'),'-executeMethod','Maestro.Quest.Editor.QuestDevelopmentBuild.Build','-logFile',('"'+$buildLog+'"')) -WindowStyle Hidden -PassThru
+$process.WaitForExit()
+if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $buildLog -Tail 60; throw "Unity Android build failed ($($process.ExitCode))." }
+if (!(Test-Path -LiteralPath $env:MAESTRO_QUEST_APK)) { throw 'Unity exited without producing the expected APK.' }
+$hash = (Get-FileHash -LiteralPath $env:MAESTRO_QUEST_APK -Algorithm SHA256).Hash
+Set-Content -LiteralPath ($env:MAESTRO_QUEST_APK + '.sha256') -Value $hash
+Write-Output "Development APK: $env:MAESTRO_QUEST_APK"
+Write-Output "SHA256: $hash"
+Write-Output 'Development signing only. Headset behavior and production/store release gates remain separate.'

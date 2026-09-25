@@ -53,9 +53,13 @@ $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log'
 [xml]$testReport = Get-Content -LiteralPath $testResult
 if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 6) { throw 'Unity test results did not satisfy the current development checks.' }
+$playResult = Join-Path $logRoot 'playmode-results.xml'
+Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log'
+[xml]$playReport = Get-Content -LiteralPath $playResult
+if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 2) { throw 'Unity interaction tests did not pass.' }
 if ($RenderArt) {
     $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
     $env:MAESTRO_BOOK_PREVIEW_TEXTURE = if ($PageCapture) { (Resolve-Path -LiteralPath $PageCapture).Path } else { '' }
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.Render') 'art-preview.log'
 }
-Write-Output "Unity checks passed: $($testReport.'test-run'.passed) tests. Evidence: $logRoot"
+Write-Output "Unity checks passed: $($testReport.'test-run'.passed) EditMode and $($playReport.'test-run'.passed) PlayMode tests. Evidence: $logRoot"

@@ -1,67 +1,177 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using Maestro.Quest.Art;
+using Maestro.Quest.Interaction;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.XR.Hands;
+using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 namespace Maestro.Quest.Book
 {
+    // Sample the tracked pose and select reader before XRI processes its frame.
+    [DefaultExecutionOrder(-200)]
     public sealed class BookControllerInput : MonoBehaviour
     {
         public BookPointerRouter Router;
         public Transform TrackingSpace;
         public Camera DesktopCamera;
-        Controller[] controllers;
+        public RoomInteraction Room;
+        HandInput[] hands;
+        bool paused, focused = true;
+        Material pointerMaterial;
 
-        sealed class Controller : IDisposable
+        sealed class HandInput : IDisposable
         {
-            public readonly InputAction Position, Rotation, Tracked, Press;
-            public bool Held;
-            public Controller(string hand)
+            public readonly InputAction Position, Rotation, Tracked, Press, Grip, Restore;
+            public readonly GestureOwnership Trigger = new(), Squeeze = new();
+            public readonly GameObject Root, Beam, Tip;
+            public readonly XRRayInteractor Interactor;
+            public readonly XRInputButtonReader Select;
+            public bool PageHeld, WasTracked, UsingHand;
+
+            public HandInput(string hand, Transform parent, Material material)
             {
                 string device = "<XRController>{" + hand + "}/";
                 Position = new InputAction(hand + " aim position", InputActionType.Value, device + "pointerPosition", expectedControlType: "Vector3");
                 Rotation = new InputAction(hand + " aim rotation", InputActionType.Value, device + "pointerRotation", expectedControlType: "Quaternion");
                 Tracked = new InputAction(hand + " tracked", InputActionType.Value, device + "isTracked", expectedControlType: "Button");
-                Press = new InputAction(hand + " press", InputActionType.Button, device + "triggerPressed");
-                Position.Enable(); Rotation.Enable(); Tracked.Enable(); Press.Enable();
+                Press = new InputAction(hand + " page", InputActionType.Button, device + "triggerPressed");
+                Grip = new InputAction(hand + " hold", InputActionType.Button, device + "gripPressed");
+                Restore = new InputAction(hand + " restore room", InputActionType.Button, device + "secondaryButton");
+                Root = new GameObject(hand + " interaction"); Root.SetActive(false); Root.transform.SetParent(parent, false);
+                Select = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue, manualFramePerformed = -1, manualFrameCompleted = -1 };
+                Interactor = Root.AddComponent<XRRayInteractor>();
+                Interactor.enableUIInteraction = false;
+                Interactor.selectInput = Select;
+                Interactor.selectActionTrigger = XRBaseInputInteractor.InputTriggerType.StateChange;
+                Interactor.maxRaycastDistance = 2;
+                // A grip can reach the cover behind the browser's separate page mesh colliders.
+                Interactor.hitClosestOnly = false;
+                Interactor.keepSelectedTargetValid = true;
+                Interactor.useForceGrab = false;
+                Interactor.manipulateAttachTransform = false;
+                Beam = Visual(PrimitiveType.Cylinder, "Physical pointer", parent, material);
+                Tip = Visual(PrimitiveType.Sphere, "Pointer tip", parent, material);
+                Tip.transform.localScale = Vector3.one * .005f;
+                Position.Enable(); Rotation.Enable(); Tracked.Enable(); Press.Enable(); Grip.Enable(); Restore.Enable();
             }
-            public void Dispose() { Position.Dispose(); Rotation.Dispose(); Tracked.Dispose(); Press.Dispose(); }
+
+            static GameObject Visual(PrimitiveType primitive, string label, Transform parent, Material material)
+            {
+                var item = GameObject.CreatePrimitive(primitive); item.name = label; item.transform.SetParent(parent, false);
+                item.GetComponent<Collider>().enabled = false; ArtResources.Release(item.GetComponent<Collider>());
+                item.GetComponent<Renderer>().sharedMaterial = material; item.SetActive(false); return item;
+            }
+
+            public void SetSelect(bool pressed)
+            {
+                if (pressed != Select.manualPerformed)
+                {
+                    if (pressed) Select.manualFramePerformed = Time.frameCount;
+                    else Select.manualFrameCompleted = Time.frameCount;
+                }
+                Select.manualPerformed = pressed; Select.manualValue = pressed ? 1 : 0;
+            }
+
+            public void Cancel()
+            {
+                SetSelect(false); Root.SetActive(false); Beam.SetActive(false); Tip.SetActive(false);
+                Trigger.Cancel(); Squeeze.Cancel(); PageHeld = false; WasTracked = false;
+            }
+
+            public void Dispose()
+            {
+                Cancel(); Position.Dispose(); Rotation.Dispose(); Tracked.Dispose(); Press.Dispose(); Grip.Dispose(); Restore.Dispose();
+                ArtResources.Release(Root); ArtResources.Release(Beam); ArtResources.Release(Tip);
+            }
         }
 
-        void OnEnable() => controllers = new[] { new Controller("LeftHand"), new Controller("RightHand") };
+        void OnEnable()
+        {
+            pointerMaterial = IllustratedMaterials.Create(IllustratedMaterials.Hex("2B8D88"), 0);
+            hands = new[] { new HandInput("LeftHand", transform, pointerMaterial), new HandInput("RightHand", transform, pointerMaterial) };
+        }
 
         void Update()
         {
-            if (!Router || !TrackingSpace) return;
-            for (int i = 0; i < controllers.Length; i++)
-            {
-                var controller = controllers[i];
-                if (controller.Tracked.ReadValue<float>() < .5f)
-                {
-                    Router.Cancel(i); controller.Held = false; continue;
-                }
-                var ray = new Ray(TrackingSpace.TransformPoint(controller.Position.ReadValue<Vector3>()), TrackingSpace.TransformDirection(controller.Rotation.ReadValue<Quaternion>() * Vector3.forward));
-                bool held = controller.Press.IsPressed();
-                if (held && !controller.Held) Router.Begin(i, ray);
-                else if (!held && controller.Held) Router.End(i, ray);
-                else if (held) Router.Move(i, ray);
-                controller.Held = held;
-            }
+            if (!Router || !TrackingSpace || paused || !focused) return;
+            for (int i = 0; i < hands.Length; i++) UpdateHand(i);
 #if UNITY_EDITOR
             if (!DesktopCamera || Mouse.current == null) return;
             var mouseRay = DesktopCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
             if (Mouse.current.leftButton.wasPressedThisFrame) Router.Begin(10, mouseRay);
             else if (Mouse.current.leftButton.wasReleasedThisFrame) Router.End(10, mouseRay);
             else if (Mouse.current.leftButton.isPressed) Router.Move(10, mouseRay);
+            if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame) RestoreRoom();
 #endif
         }
 
+        void UpdateHand(int index)
+        {
+            var input = hands[index];
+            var hand = index == 0 ? MetaAimHand.left : MetaAimHand.right;
+            bool controllerTracked = input.Tracked.ReadValue<float>() > .5f;
+            bool usingHand = !controllerTracked && hand != null && hand.isTracked.isPressed;
+            var flags = usingHand ? (MetaAimFlags)hand.aimFlags.ReadValue() : MetaAimFlags.None;
+            bool tracked = controllerTracked || (usingHand && (flags & MetaAimFlags.Valid) != 0 && (flags & MetaAimFlags.SystemGesture) == 0);
+            if (!tracked) { Router.Cancel(index); input.Cancel(); return; }
+            if (!input.WasTracked || input.UsingHand != usingHand) { Router.Cancel(index); input.Cancel(); }
+            input.WasTracked = true; input.UsingHand = usingHand;
+            var position = usingHand ? hand.devicePosition.ReadValue() : input.Position.ReadValue<Vector3>();
+            var rotation = usingHand ? hand.deviceRotation.ReadValue() : input.Rotation.ReadValue<Quaternion>();
+            input.Root.transform.SetPositionAndRotation(TrackingSpace.TransformPoint(position), TrackingSpace.rotation * rotation);
+            input.Root.SetActive(true);
+            var ray = new Ray(input.Root.transform.position, input.Root.transform.forward);
+            bool hitSomething = Physics.Raycast(ray, out var hit, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore);
+            bool page = hitSomething && (hit.collider.GetComponent<BookPageTarget>() || hit.collider.GetComponentInParent<PhysicalBookAction>());
+            bool item = hitSomething && hit.collider.GetComponentInParent<RoomItem>();
+            var pointed = page ? GestureTarget.Page : item ? GestureTarget.Object : GestureTarget.None;
+            bool pressed = usingHand ? hand.indexPressed.isPressed : input.Press.IsPressed();
+            var trigger = input.Trigger.Update(pressed, usingHand ? pointed : page ? GestureTarget.Page : GestureTarget.None);
+            var squeeze = input.Squeeze.Update(!usingHand && input.Grip.IsPressed(), GestureTarget.Object);
+            bool grabbing = squeeze == GestureTarget.Object || trigger == GestureTarget.Object;
+            input.SetSelect(grabbing);
+            if (grabbing && trigger == GestureTarget.Page) input.Trigger.Cancel();
+            bool pageHeld = trigger == GestureTarget.Page && !grabbing;
+            if (grabbing) Router.Cancel(index);
+            else if (pageHeld && !input.PageHeld) Router.Begin(index, ray);
+            else if (!pageHeld && input.PageHeld) Router.End(index, ray);
+            else if (pageHeld) Router.Move(index, ray);
+            input.PageHeld = pageHeld;
+            DrawPointer(input, ray, hitSomething && (page || item), hit.point);
+            // B/Y recovers the room, including a book placed beyond reach.
+            if (!usingHand && input.Restore.WasPressedThisFrame()) RestoreRoom();
+        }
+
+        void RestoreRoom() { CancelInputs(); Room?.RestoreInFrontOfViewer(); }
+
+        static void DrawPointer(HandInput input, Ray ray, bool visible, Vector3 point)
+        {
+            input.Beam.SetActive(visible); input.Tip.SetActive(visible);
+            if (!visible) return;
+            var delta = point - ray.origin;
+            input.Beam.transform.SetPositionAndRotation(ray.origin + delta * .5f, Quaternion.FromToRotation(Vector3.up, delta));
+            input.Beam.transform.localScale = new Vector3(.0012f, delta.magnitude * .5f, .0012f);
+            input.Tip.transform.position = point - ray.direction * .003f;
+        }
+
+        void CancelInputs()
+        {
+            if (hands == null) return;
+            for (int i = 0; i < hands.Length; i++) { Router?.Cancel(i); hands[i].Cancel(); }
+            Router?.Cancel(10);
+        }
+
+        void OnApplicationPause(bool value) { paused = value; if (paused) CancelInputs(); }
+        void OnApplicationFocus(bool value) { focused = value; if (!focused) CancelInputs(); }
         void OnDisable()
         {
-            if (controllers == null) return;
-            for (int i = 0; i < controllers.Length; i++) { Router?.Cancel(i); controllers[i].Dispose(); }
-            Router?.Cancel(10); controllers = null;
+            CancelInputs();
+            if (hands != null) foreach (var hand in hands) hand.Dispose();
+            hands = null; ArtResources.Release(pointerMaterial);
         }
     }
 }

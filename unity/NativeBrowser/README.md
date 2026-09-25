@@ -22,6 +22,11 @@ The packaged web bundle belongs in `Assets/StreamingAssets/maestro-web`.
 
 Current status: ARM64 release AAR compilation succeeds against Unity 6000.3.24f1.
 Android lint reports zero errors and four obsolete SDK-condition warnings in the
-upstream transport. No complete APK or physical-device validation exists yet.
+upstream transport. The development APK installs on Quest 3 and displays the
+bundled Maestro application on both book surfaces over passthrough. Android's
+Activity must have hardware acceleration enabled, and the offscreen WebView must
+use `setOffscreenPreRaster(true)`; without these it produced blank pages and tile
+memory warnings on the first device run. Android WebView debugging is enabled
+only when the containing application has Android's debuggable flag.
 Suspend must also stop Maestro Live/microphone streams before release. Native
 file selection, IME, authentication and render-process recovery need integration.

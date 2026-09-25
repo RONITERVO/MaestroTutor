@@ -33,6 +33,7 @@ namespace Maestro.Quest.Book
         long pointerDownTime;
         bool pointerHeld;
         bool suspended;
+        bool applicationPaused, applicationFocused = true;
         float nextPoll;
         string previousSnapshot;
 
@@ -122,7 +123,7 @@ namespace Maestro.Quest.Book
 #endif
         }
 
-        void OnApplicationPause(bool paused) => SetSuspended(paused);
-        void OnApplicationFocus(bool focused) => SetSuspended(!focused);
+        void OnApplicationPause(bool paused) { applicationPaused = paused; SetSuspended(applicationPaused || !applicationFocused); }
+        void OnApplicationFocus(bool focused) { applicationFocused = focused; SetSuspended(applicationPaused || !applicationFocused); }
     }
 }

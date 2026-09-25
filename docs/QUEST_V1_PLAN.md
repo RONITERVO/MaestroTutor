@@ -5,6 +5,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.
+- Current priority: actual Unity interaction and Quest mixed reality. Keep the
+  current draft artwork; further visual iterations can follow functional work.
 - The same Maestro tutor implementation and managed services, with a versioned
   native bridge. Preserve the familiar language, chat, suggestions, audio and
   artifact behavior; do not fork prompts or implement a second tutor in C#.
@@ -59,8 +61,8 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
 
 ## Release evidence still required
 
-- User has a Quest 3, which is the first test target. No device is connected as
-  of initial inventory (`adb devices` empty).
+- User connected and authorized Quest 3 for development. The development APK
+  installs and launches; see QUEST_DEVICE_QA.md for evidence and remaining checks.
 - User confirmed there is no Meta developer-dashboard app yet. App identity and
   store setup remain required external release gates.
 - Meta application identity, signing configuration, organization access and
@@ -69,7 +71,8 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   The original deeply nested installation omitted long-path package metadata;
   reinstalling at `D:/Tools/Unity/6000.3.24f1` repaired it. A physical short-path
   build mirror avoids a separate package-cache rename failure in the worktree.
-- Browser texture plugin choice is not yet validated against real Maestro content.
+- Browser texture transport now displays the real bundled Maestro onboarding on
+  Quest 3. Live sessions, interactive artifacts and long-session recovery remain.
 - The server's existing Stripe-only purchase route must not be exposed in a Quest
   purchase flow without reviewing the current Meta platform policy and selecting
   the supported store approach. Backend credit authority remains shared.
@@ -83,13 +86,21 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   succeeds. Conversation and practice fixtures have been inspected in-browser.
 - ARM64 browser transport: Gradle release AAR and Android lint pass (zero errors).
 - Unity project compiles and configures OpenXR, scene and included clips.
-  Six EditMode tests pass, including actual imported skeleton movement.
+  Nine EditMode and two PlayMode tests pass, including actual imported skeleton
+  movement, gesture ownership, tracked grabbing, two-hand scale limits and reset.
 - Actual Unity desktop renders cover the physical book using a browser-captured
   page texture, the shared pencil shader, avatar views and sampled gestures.
 - The user's later cartoon reference now defines the character direction.
   Current geometry is a development draft, not approved release artwork.
+- ARM64 development APK builds, its signature verifies, and it runs on Quest 3.
+  The headset capture shows passthrough, book pages, full-body avatar, physical
+  page controls, pointer and three movable starter items. A short startup sample
+  ran near 72 FPS; this is not a sustained performance or comfort qualification.
+- Grip movement, two-hand scaling, B/Y room recovery and Meta aim pinch routing
+  are implemented. The user confirmed controller movement, page tapping and
+  recovery on Quest 3. Hand-only usability and physical two-hand scaling need QA.
 - User drawing/editor and model import flows, native lifecycle/authentication,
-  production attestation, billing, hand interaction and device/store QA remain.
+  production attestation, billing, persistence and full device/store QA remain.
 
 ## Primary references checked 2026-09-25
 

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using UnityEngine;
+using Maestro.Quest.Interaction;
 
 namespace Maestro.Quest.Book
 {
@@ -18,6 +19,7 @@ namespace Maestro.Quest.Book
         public bool Begin(int pointerId, Ray ray)
         {
             if (owner != -1 || !Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore)) return false;
+            if (IsMoving(hit.collider)) return false;
             var action = hit.collider.GetComponentInParent<PhysicalBookAction>();
             var page = hit.collider.GetComponent<BookPageTarget>();
             if (action == null && (page == null || Browser == null || !Browser.IsReady)) return false;
@@ -30,7 +32,7 @@ namespace Maestro.Quest.Book
         public void Move(int pointerId, Ray ray)
         {
             if (pointerId != owner || capturedPage == null) return;
-            if (Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore) && hit.collider.GetComponent<BookPageTarget>() == capturedPage) Send(hit, BrowserPointerPhase.Move);
+            if (Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore) && !IsMoving(hit.collider) && hit.collider.GetComponent<BookPageTarget>() == capturedPage) Send(hit, BrowserPointerPhase.Move);
             else Cancel(pointerId);
         }
 
@@ -38,6 +40,7 @@ namespace Maestro.Quest.Book
         {
             if (pointerId != owner) return;
             bool hits = Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore);
+            if (hits && IsMoving(hit.collider)) { Cancel(pointerId); return; }
             if (capturedAction != null && hits && hit.collider.GetComponentInParent<PhysicalBookAction>() == capturedAction) capturedAction.Activate();
             if (capturedPage != null)
             {
@@ -63,6 +66,11 @@ namespace Maestro.Quest.Book
         }
 
         void Clear() { owner = -1; capturedPage = null; capturedAction = null; }
+        static bool IsMoving(Collider collider)
+        {
+            var item = collider.GetComponentInParent<RoomItem>();
+            return item && item.Grab && item.Grab.isSelected;
+        }
         void OnDisable() => Cancel(owner);
     }
 }

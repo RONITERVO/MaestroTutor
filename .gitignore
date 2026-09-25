@@ -157,6 +157,7 @@ live-gateway/lib/
 /unity/MaestroQuest/[Uu]serSettings/
 /unity/MaestroQuest/MemoryCaptures/
 /unity/MaestroQuest/Assets/StreamingAssets/maestro-web/
+/unity/MaestroQuest/Assets/Plugins/Android/MaestroBookBrowser.aar
 /.quest-tools/
 /.quest-evidence/
 /unity/NativeBrowser/.gradle/

@@ -6,6 +6,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.content.pm.ApplicationInfo;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.view.ViewGroup;
@@ -55,6 +56,8 @@ public final class BookWebView extends OffscreenBrowser {
             activity.getFragmentManager().beginTransaction().add(this, "MaestroBookBrowser").commitAllowingStateLoss();
             initParam(viewWidth, viewHeight, texWidth, texHeight, screenWidth, 0, vulkan, CaptureMode.values()[captureMode]);
             init();
+            // USB-only inspection is available for development APKs, never store builds.
+            WebView.setWebContentsDebuggingEnabled((activity.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0);
             web = new WebView(activity);
             mView = web;
             // Preserve the original app's root-relative fonts, workers and assets.
@@ -64,6 +67,9 @@ public final class BookWebView extends OffscreenBrowser {
             WebSettings settings = web.getSettings();
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
+            // This attached WebView lives outside the headset's Android window.
+            // Keep its tiles rasterized for the hardware-buffer capture surface.
+            settings.setOffscreenPreRaster(true);
             settings.setAllowFileAccess(false);
             settings.setAllowContentAccess(false);
             settings.setAllowFileAccessFromFileURLs(false);

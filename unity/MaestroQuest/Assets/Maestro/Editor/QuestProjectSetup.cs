@@ -35,9 +35,10 @@ namespace Maestro.Quest.Editor
             // Development identity only. Store identity is a separate release input.
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.maestro.quest.development");
             PlayerSettings.Android.bundleVersionCode = 1;
-            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel32;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            PlayerSettings.Android.applicationEntry = AndroidApplicationEntry.GameActivity;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Android, ApiCompatibilityLevel.NET_Standard);
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
@@ -70,11 +71,17 @@ namespace Maestro.Quest.Editor
             var settings = OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
             if (!settings) throw new InvalidOperationException("OpenXR settings were not created.");
             settings.renderMode = OpenXRSettings.RenderMode.SinglePassInstanced;
+            settings.latencyOptimization = OpenXRSettings.LatencyOptimization.PrioritizeInputPolling;
+            // The old "handtracking" ID now selects Microsoft's interaction profile.
+            var legacyHands = FeatureHelpers.GetFeatureWithIdForBuildTarget(BuildTargetGroup.Android, "com.unity.openxr.feature.input.handtracking");
+            if (legacyHands) { legacyHands.enabled = false; EditorUtility.SetDirty(legacyHands); }
             foreach (var id in new[] {
                 "com.unity.openxr.feature.metaquest",
+                "com.unity.openxr.feature.compositionlayers",
                 "com.unity.openxr.feature.input.metaquestplus",
                 "com.unity.openxr.feature.input.oculustouch",
-                "com.unity.openxr.feature.input.handtracking",
+                "com.unity.openxr.feature.input.handtrackingsubsystem",
+                "com.unity.openxr.feature.input.metahandtrackingaim",
                 "com.unity.openxr.feature.arfoundation-meta-session",
                 "com.unity.openxr.feature.arfoundation-meta-camera"
             })
@@ -82,6 +89,13 @@ namespace Maestro.Quest.Editor
                 var feature = FeatureHelpers.GetFeatureWithIdForBuildTarget(BuildTargetGroup.Android, id);
                 if (!feature) throw new InvalidOperationException("Missing required XR feature: " + id);
                 feature.enabled = true;
+                if (id == "com.unity.openxr.feature.metaquest")
+                {
+                    // Browser texture sharing uses GLES. This Meta optimization is Vulkan-only.
+                    var serialized = new SerializedObject(feature);
+                    var discard = serialized.FindProperty("m_optimizeBufferDiscards");
+                    if (discard != null) { discard.boolValue = false; serialized.ApplyModifiedPropertiesWithoutUndo(); }
+                }
                 EditorUtility.SetDirty(feature);
             }
             EditorUtility.SetDirty(settings); EditorUtility.SetDirty(xr);
