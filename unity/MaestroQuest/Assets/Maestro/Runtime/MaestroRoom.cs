@@ -4,6 +4,7 @@ using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Rules;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -89,6 +90,11 @@ namespace Maestro.Quest
             var animationTools = new GameObject("Animation tools"); animationTools.transform.SetParent(content.transform,false);
             animationTools.transform.localPosition = new Vector3(.87f,.55f,.9f); animationTools.transform.localRotation = Quaternion.Euler(40,35,0);
             animationTools.AddComponent<AnimationTools>().Build(workshop,room);
+            var rules = content.AddComponent<RuleWorkshop>(); rules.Initialize(editor);
+            content.AddComponent<RoomRules>().Initialize(rules,editor,workshop,browser,room,input);
+            var ruleTools = new GameObject("Behaviour rules"); ruleTools.transform.SetParent(content.transform,false);
+            ruleTools.transform.localPosition = new Vector3(-.95f,.68f,.75f); ruleTools.transform.localRotation = Quaternion.Euler(28,-35,0);
+            ruleTools.AddComponent<RuleTools>().Build(rules,room);
         }
 
         void Update()

@@ -9,9 +9,10 @@ namespace Maestro.Quest.Interaction
     {
         public string AccessibleName;
         float lastActivated = -1;
-        public void Activate()
+        public virtual bool CanActivatePointer(int pointerId) => true;
+        public void Activate(int pointerId = -1)
         {
-            if (!isActiveAndEnabled || Time.unscaledTime - lastActivated < .3f) return;
+            if (!isActiveAndEnabled || !CanActivatePointer(pointerId) || Time.unscaledTime - lastActivated < .3f) return;
             lastActivated = Time.unscaledTime; OnActivate();
         }
         protected abstract void OnActivate();

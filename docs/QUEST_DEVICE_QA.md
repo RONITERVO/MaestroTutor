@@ -6,7 +6,8 @@ This is development evidence, not a release acceptance report.
 
 - Unity 6000.3.24f1, Android ARM64 IL2CPP, GLES3, GameActivity.
 - Package `com.maestro.quest.development`, version 1.0.0 / code 1, debug signing.
-- APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/MaestroQuest-development.apk`.
+- Installed checkpoint copy:
+  `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-animation-916BABE2.apk`.
 - SHA256: `916BABE2F109F9AE225EF40C94BF86C6966E67908A4055F9C5BA8E524DFB915F`.
 - Build succeeded with zero errors; Android APK v2 signature verification passed.
 - Actual APK manifest contains minimum API 32, target 34, required passthrough,
@@ -84,6 +85,35 @@ These device checks used the onboarding page, without opening a paid session.
 Real microphone permission, active Live/audio interruption, thermal/long-session
 behavior and human use of the new bell still require hardware acceptance.
 
+## Rules update — computer-side verification only
+
+The local implementation passes 23 EditMode and ten PlayMode tests. New coverage
+includes the same recorded action triggered by a real button/router and by web
+activity; mounted-button following, opposite-controller filtering and saved
+offsets; interruption of a still-moving object by an actual XRI grip; authoring
+priority, bounded queues, while-state cancellation and save backup recovery.
+The actual Unity rule board was rendered and its desktop labels inspected.
+These checks do not establish headset reach, comfort, readability or tracking.
+
+The headset is charging at the user's request. No rule build has been installed
+or tested on the device yet. Keep the installed animation checkpoint distinct
+from the locally built rules APK:
+
+- Path: `D:/Projects/Builds/MaestroQuestVerify/Builds/MaestroQuest-development.apk`.
+- SHA256: `E983421F8F9A55749460CD87096DBB986B853913EB0CE71FA6324BCAC8687CD2`.
+- Full build succeeded: shared web bundle, native AAR/lint and Unity ARM64 IL2CPP.
+  Unity reports zero errors and two warnings; native lint reports zero errors
+  and five warnings. Development identity and signing remain in effect.
+
+Outstanding rule acceptance:
+
+- Create a gesture or recording sequence, add several steps and try it.
+- Attach a button to each controller; use the opposite trigger, then grip to
+  adjust it. Confirm tracking loss hides the button and return restores it.
+- Bind the same sequence to actual tutor-state and object-interaction events.
+- Verify while-state exit, Stop actions, grabbing and posing interrupt playback.
+- Confirm saved sequences, bindings and offsets survive an app restart.
+
 ## Remaining hardware and release work
 
 Animation authoring update: 18 EditMode and seven PlayMode checks pass. This
@@ -92,7 +122,9 @@ Playables interpolation and looping, object recording interrupted by focus loss,
 and room save/load. The development APK builds and is installed. Startup logs
 contain no new managed exceptions; the known Meta function lookup remains.
 Human acceptance of joint handles, physical animation controls and recording is
-pending. The installed room currently has three objects (book, Maestro and a
+in progress. The user confirmed moving a wrist and playing its animation on the
+headset; other joints, recording and broader comfort checks remain open.
+The installed room currently has three objects (book, Maestro and a
 user-created ball); no room data was restored or replaced during inspection.
 
 The rule builder, custom avatar switching, locomotion/following and controller

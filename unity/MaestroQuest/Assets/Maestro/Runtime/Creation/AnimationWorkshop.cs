@@ -26,6 +26,10 @@ namespace Maestro.Quest.Creation
         RoomMotion preview;
         int selectedFrame = -1;
         int gestureIndex;
+        bool controlling;
+        public event Action<string> Starting;
+        public bool ControlsTarget(string id) => controlling && targetId == id;
+        void TakeControl() { Starting?.Invoke(targetId); controlling = true; }
         public bool IsRecording => recording != null;
         public bool IsPlaying => graph.IsValid();
         public bool IsPosing => posing;
@@ -72,6 +76,7 @@ namespace Maestro.Quest.Creation
             Stop(); editor.Select(editor.Find("maestro")); SelectionChanged();
             if (editor.DrawingMode) editor.ToggleDrawing();
             if (!avatar || !avatar.PoseRig) { Say("Maestro is still loading"); return; }
+            TakeControl();
             avatar.SetEditing(true); avatar.PoseRig.SetManual(true); avatar.PoseRig.SetPosing(true);
             avatar.PoseRig.Apply(currentPose);
             avatar.PoseRig.PoseChanged += SavePose;
@@ -88,6 +93,7 @@ namespace Maestro.Quest.Creation
         public void AddFrame()
         {
             if (!Ready() || IsRecording) return;
+            TakeControl();
             StopPlayback();
             var motion = editor.Read(targetId).motion ?? new RoomMotion();
             if (motion.frames.Length >= RoomMotion.MaximumFrames || motion.Duration >= RoomMotion.MaximumSeconds) { Say("This animation is full"); return; }
@@ -101,6 +107,7 @@ namespace Maestro.Quest.Creation
             StopPlayback(); var motion = editor.Read(targetId).motion;
             if (motion == null) { Say("Save a frame first"); return; }
             selectedFrame = Mathf.Clamp(selectedFrame + direction,0,motion.frames.Length - 1);
+            TakeControl();
             if (avatar) avatar.SetEditing(true);
             Apply(motion.frames[selectedFrame]); Say("Frame " + (selectedFrame+1) + " of " + motion.frames.Length);
         }
@@ -125,7 +132,7 @@ namespace Maestro.Quest.Creation
         {
             if (IsRecording) { FinishRecording(); return; }
             if (!Ready()) return;
-            StopPlayback(); recording = new List<MotionFrame> { Capture(0) }; began = Time.unscaledTime; nextSample = .1f;
+            StopPlayback(); TakeControl(); recording = new List<MotionFrame> { Capture(0) }; began = Time.unscaledTime; nextSample = .1f;
             Say("Recording a new take — move or pose; tap Record again to save");
         }
         void FinishRecording()
@@ -141,6 +148,7 @@ namespace Maestro.Quest.Creation
             if (!Ready() || IsRecording) return;
             Stop(); preview = editor.Read(targetId).motion;
             if (preview == null || preview.frames.Length < 2) { Say("Save at least two frames to play"); return; }
+            TakeControl();
             if (avatar) avatar.SetEditing(true);
             target.Grab.enabled = false;
             graph = PlayableGraph.Create("User animation preview"); graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
@@ -173,7 +181,7 @@ namespace Maestro.Quest.Creation
             Stop(); if (!avatar) { Say("Choose Maestro for gestures"); return; }
             var names = new[] { "Greeting","Pointing","Listening","Speaking","Idle" };
             string name = names[gestureIndex++ % names.Length];
-            avatar.SetEditing(true); avatar.Gesture(name); Say(name + " preview — tap Gesture to choose another");
+            TakeControl(); avatar.SetEditing(true); avatar.Gesture(name); Say(name + " preview — tap Gesture to choose another");
         }
         public void ChangeSpeed(float factor)
         {
@@ -196,6 +204,7 @@ namespace Maestro.Quest.Creation
         public void Stop()
         {
             if (stopping) return;
+            if (!controlling && !posing && !IsPlaying && !IsRecording) return;
             stopping = true;
             try
             {
@@ -207,6 +216,7 @@ namespace Maestro.Quest.Creation
                 }
                 if (target) { foreach (var collider in target.Grab.colliders) collider.enabled = true; target.Grab.enabled = true; editor.RestorePose(targetId); }
                 posing = false;
+                controlling = false;
             }
             finally { stopping = false; }
             Say(saveError ?? "Stopped — saved animation is ready");

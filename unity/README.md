@@ -61,8 +61,43 @@ pose to the animation. Gesture cycles through included gestures; Auto gestures
 restores the tutor's automatic activity animation. Stop hides the handles and
 restores the saved placement. App interruption finishes a recording and stops
 preview before the room save is flushed. This first authoring implementation has
-one take per object and 1,200 frames across the room; avatar imports and rules are
-still separate work. Headset acceptance of these new tools is pending.
+one take per object and 1,200 frames across the room. The user has confirmed wrist
+posing and playback on Quest 3; the remaining joint and authoring checks are open.
+
+The third wooden board builds reusable action sequences. New action starts with
+a Maestro gesture. Step type switches between a recording, gesture and wait;
+Use target takes the current room selection. Add step appends another action.
+Duration, Clip loop and Repeat control timing, while On interrupt cycles Restart,
+Ignore and Queue latest. Try action previews the sequence; Stop actions ends all
+rule playback. Grabbing a target or starting animation authoring takes priority.
+
+Choose an Event and optional Condition, then Add trigger. Web events are changes
+to speaking/listening/thinking/idle; VR events are taps, grabs and releases on the
+selected Event source. Multiple triggers can use the same sequence. While state
+ends a web-triggered sequence when its state ends. Next trigger loads an existing
+binding; Remove trigger deletes it. To change a binding, remove it and add its
+replacement. The current trigger cooldown is one second. Web pause invalidates
+its activity baseline; browser recovery does not replay stale state transitions.
+
+Left button, Right button and Room button create solid action buttons for the
+selected sequence. Point with the opposite controller and trigger to activate a
+mounted button; grip it with that controller to adjust its offset. A button
+ignores the controller it is mounted on and hides if that controller loses
+tracking. Room buttons can be operated by either controller. B/Y recovery also
+brings room buttons back within reach. Remove button deletes the last button
+created for the selected sequence. Undo rules/Redo rules are separate from room
+object undo. Rule changes, bindings and button placements autosave to
+`rules.v1.json`, with validation and backup recovery.
+
+Current limits are 32 sequences, 16 steps per sequence, 128 triggers, 16 buttons
+(up to four on each controller), and eight concurrent sequences on separate
+targets. Sequences never autoplay when loading a save or returning to the app.
+The current builder supplies numbered action names, preset durations and built-in
+events/actions; it does not execute arbitrary code. Custom names, more authoring
+controls, avatar replacement, gaze/follow, locomotion and editable input bindings
+remain implementation work. Rules and mounted buttons have automated Unity
+coverage; their headset usability has not yet been checked. The `-RenderRules`
+option on `Verify-Quest.ps1` produces a desktop render of the actual solid controls.
 
 Edits autosave after a short debounce and on application interruption, retaining
 a previous valid backup. Room files contain at most 64 user objects and 32,768

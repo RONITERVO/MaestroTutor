@@ -101,7 +101,7 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   succeeds. Conversation and practice fixtures have been inspected in-browser.
 - ARM64 browser transport: Gradle release AAR and Android lint pass (zero errors).
 - Unity project compiles and configures OpenXR, scene and included clips.
-  Eighteen EditMode and seven PlayMode tests pass, including actual imported skeleton
+  Twenty-three EditMode and ten PlayMode tests pass, including actual imported skeleton
   movement, gesture ownership, tracked grabbing, two-hand scale limits and reset.
 - Actual Unity desktop renders cover the physical book using a browser-captured
   page texture, the shared pencil shader, avatar views and sampled gestures.
@@ -128,9 +128,17 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   loop/preview and Maestro joint handles. One bounded take and an optional static
   pose per object are included in save/load and undo. ScriptPlayable evaluation,
   actual XRI-driven head posing and interrupted recordings have automated tests.
-  Physical Quest usability remains to be confirmed. Custom avatar switching,
-  visual behaviour rules, following/walking, locomotion and attached buttons are
-  accepted work, not implemented features at this checkpoint.
+  The user confirms wrist posing and playback; the remaining physical checks are
+  open. Custom avatar switching, following/walking, locomotion and editable input
+  bindings are accepted work, not implemented features at this checkpoint.
+- Visual rules now support reusable multi-step recordings, gestures and waits;
+  tutor activity transitions and room tap/grab/release events; conditions,
+  repeat/loop and restart/ignore/queue policies. Solid buttons can be placed in
+  the room or mounted on either controller. Opposite-controller activation,
+  tracked placement, grip interruption, browser pause, persistence and recovery
+  have automated tests. These new controls still require headset acceptance.
+  The builder currently uses numbered action names and preset durations; richer
+  editing, native naming/keyboard support and additional actions remain work.
 - Model imports, native permission/authentication, production attestation,
   billing, room anchoring and full device/store QA remain.
 

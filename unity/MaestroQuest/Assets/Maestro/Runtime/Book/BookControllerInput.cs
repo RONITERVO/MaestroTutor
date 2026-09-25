@@ -25,6 +25,7 @@ namespace Maestro.Quest.Book
         HandInput[] hands;
         bool paused, focused = true;
         Material pointerMaterial;
+        public Transform ControllerAnchor(int index) => hands != null && index >= 0 && index < hands.Length && hands[index].WasTracked && !hands[index].UsingHand && hands[index].Root.activeSelf ? hands[index].Root.transform : null;
 
         sealed class HandInput : IDisposable
         {
@@ -45,6 +46,7 @@ namespace Maestro.Quest.Book
                 Grip = new InputAction(hand + " hold", InputActionType.Button, device + "gripPressed");
                 Restore = new InputAction(hand + " restore room", InputActionType.Button, device + "secondaryButton");
                 Root = new GameObject(hand + " interaction"); Root.SetActive(false); Root.transform.SetParent(parent, false);
+                Root.AddComponent<ControllerIdentity>().PointerId = hand == "LeftHand" ? 0 : 1;
                 Select = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue, manualFramePerformed = -1, manualFrameCompleted = -1 };
                 Interactor = Root.AddComponent<XRRayInteractor>();
                 Interactor.enableUIInteraction = false;

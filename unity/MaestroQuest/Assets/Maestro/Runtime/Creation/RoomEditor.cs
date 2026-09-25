@@ -31,6 +31,9 @@ namespace Maestro.Quest.Creation
         public event Action Changed;
         public event Action Editing;
         public event Action<RoomItem> ItemGrabbed;
+        public event Action<string> ItemReleased, ItemTapped;
+        public string Identity(RoomItem item) => item && identities.TryGetValue(item,out var id) ? id : null;
+        public void Tapped(RoomItem item) { var id = Identity(item); if (id != null) ItemTapped?.Invoke(id); }
         public string SelectedId => selected;
         public RoomItem Find(string id) => id != null && objects.TryGetValue(id,out var value) ? value : null;
         public RoomObjectData Read(string id) => journal.Read(id);
@@ -70,6 +73,7 @@ namespace Maestro.Quest.Creation
             var before = journal.Read(id); if (before == null) return;
             var after = Pose(before, item.transform);
             if (!Commit(new[] { after }, Array.Empty<string>(), "Placed — saving", true)) ApplyPose(item, journal.Read(id));
+            ItemReleased?.Invoke(id);
         }
 
         public void Select(RoomItem item)
