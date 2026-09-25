@@ -85,6 +85,10 @@ namespace Maestro.Quest
             var tray = new GameObject("Creation tools"); tray.transform.SetParent(content.transform,false);
             tray.transform.localPosition = new Vector3(.87f,.98f,.9f); tray.transform.localRotation = Quaternion.Euler(24,35,0);
             tray.AddComponent<RoomToolTray>().Build(editor,room);
+            var workshop = content.AddComponent<AnimationWorkshop>(); workshop.Initialize(editor);
+            var animationTools = new GameObject("Animation tools"); animationTools.transform.SetParent(content.transform,false);
+            animationTools.transform.localPosition = new Vector3(.87f,.55f,.9f); animationTools.transform.localRotation = Quaternion.Euler(40,35,0);
+            animationTools.AddComponent<AnimationTools>().Build(workshop,room);
         }
 
         void Update()

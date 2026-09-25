@@ -47,6 +47,23 @@ Select a creation by tapping it or picking it up; release before paint/erase/und
 Included book and Maestro cannot be erased or duplicated. New tools stay outside
 the book pages, and each tool is a solid 3D object with a text marking.
 
+The second wooden box contains animation tools. Select an object, then tap Record,
+move it and tap Record again to save a take (up to 30 seconds, sampled at 10 Hz).
+Alternatively use Save frame at successive placements. Earlier/Later selects a
+frame, Replace updates it and Remove deletes it. Faster/Slower changes the take's
+duration; Play, Stop and Loop control preview. A new recording replaces the
+selected object's take; Undo restores the old one. Clips never autoplay on load.
+
+Pose Maestro reveals teal joint handles. Grip or pinch a handle and move it to
+bend the joint; turn it to twist. Bone lengths remain fixed and rotations have
+bounded ranges. Releasing a handle saves the static pose. Save frame adds that
+pose to the animation. Gesture cycles through included gestures; Auto gestures
+restores the tutor's automatic activity animation. Stop hides the handles and
+restores the saved placement. App interruption finishes a recording and stops
+preview before the room save is flushed. This first authoring implementation has
+one take per object and 1,200 frames across the room; avatar imports and rules are
+still separate work. Headset acceptance of these new tools is pending.
+
 Edits autosave after a short debounce and on application interruption, retaining
 a previous valid backup. Room files contain at most 64 user objects and 32,768
 stroke points, with 32 undo steps per session. Poses persist relative to the room

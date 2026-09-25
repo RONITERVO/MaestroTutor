@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Maestro.Quest.Art;
+using Maestro.Quest.Avatar;
 using Maestro.Quest.Interaction;
 using UnityEngine;
 
@@ -28,6 +29,12 @@ namespace Maestro.Quest.Creation
         public bool CanUndo => journal != null && journal.CanUndo;
         public bool CanRedo => journal != null && journal.CanRedo;
         public event Action Changed;
+        public event Action Editing;
+        public event Action<RoomItem> ItemGrabbed;
+        public string SelectedId => selected;
+        public RoomItem Find(string id) => id != null && objects.TryGetValue(id,out var value) ? value : null;
+        public RoomObjectData Read(string id) => journal.Read(id);
+        public bool AnyHeld => objects.Values.Any(item => item && item.Grab && item.Grab.isSelected);
         public RoomDocument Snapshot() => journal.Snapshot();
 
         public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null)
@@ -56,7 +63,7 @@ namespace Maestro.Quest.Creation
             objects.Add(id,item); identities.Add(item,id);
             item.GrabStarted += GrabStarted; item.GrabFinished += GrabFinished;
         }
-        void GrabStarted(RoomItem item) { if (!applying) Select(item); }
+        void GrabStarted(RoomItem item) { if (!applying) { ItemGrabbed?.Invoke(item); Select(item); } }
         void GrabFinished(RoomItem item)
         {
             if (applying || !identities.TryGetValue(item,out var id)) return;
@@ -111,9 +118,9 @@ namespace Maestro.Quest.Creation
             if (Commit(Array.Empty<RoomObjectData>(), new[] { selected }, "Erased — Undo brings it back")) { selected = null; UpdateSelection(); }
         }
 
-        public void Undo() { if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
-        public void Redo() { if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
-        public void ToggleDrawing() { DrawingMode = !DrawingMode; SetStatus(DrawingMode ? "Pencil: hold trigger or pinch to draw" : "Pencil put away"); }
+        public void Undo() { Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
+        public void Redo() { Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
+        public void ToggleDrawing() { Editing?.Invoke(); DrawingMode = !DrawingMode; SetStatus(DrawingMode ? "Pencil: hold trigger or pinch to draw" : "Pencil put away"); }
 
         public bool AddDrawing(IReadOnlyList<Vector3> worldPoints, Color color)
         {
@@ -127,9 +134,23 @@ namespace Maestro.Quest.Creation
 
         bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false)
         {
+            if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
             if (!journal.Apply(replacements,removals,out var error)) { SetStatus(error); return false; }
             Reconcile(); MarkDirty(); SetStatus(success); return true;
+        }
+        public bool SaveAnimation(string id, RoomMotion motion, JointPose[] joints, bool savePose)
+        {
+            var data = journal.Read(id); if (data == null) return false;
+            data.motion = motion?.Copy();
+            if (savePose) data.joints = MotionFrame.CopyJoints(joints);
+            return Commit(new[] { data },Array.Empty<string>(),"Animation saved",true);
+        }
+        public void RestorePose(string id)
+        {
+            var item = Find(id); var data = journal.Read(id);
+            if (!item || data == null) return;
+            ApplyPose(item,data); item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
         }
         bool Busy()
         {
@@ -157,6 +178,7 @@ namespace Maestro.Quest.Creation
                     AddIdentity(data.id,item); room.Register(item);
                 }
                 if (!item.Grab.isSelected) ApplyPose(item,data);
+                item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
                 if (!data.IsBuiltIn)
                 {
                     item.SetHome(new Vector3(-.63f + (slot % 8) * .18f,.7f + ((slot / 8) % 4) * .18f,1.15f + (slot / 32) * .25f),Quaternion.identity,Vector3.one);
@@ -178,7 +200,7 @@ namespace Maestro.Quest.Creation
             foreach (var pair in objects) { var created = pair.Value.GetComponent<CreatedRoomObject>(); if (created) created.SetSelected(pair.Key == selected); }
             Changed?.Invoke();
         }
-        void BeforeRestore() { applying = true; }
+        void BeforeRestore() { Editing?.Invoke(); applying = true; }
         void AfterRestore()
         {
             applying = false;

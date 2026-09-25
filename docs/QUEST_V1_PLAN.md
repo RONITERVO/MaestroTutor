@@ -38,6 +38,10 @@ Status: active implementation. Nothing in this document claims store readiness.
   controller and be operated by the opposite controller. Preserve system input
   reservations and an accessible recovery path. User chose both movement modes
   and visual rules first (2026-09-25); arbitrary user code is outside v1.
+  Reusable action sequences may have multiple triggers: a controller-mounted
+  button, a web tutor state transition or a VR interaction. Recorded animations
+  are actions in the same system. Define once/loop and interruption behaviour;
+  future event sources join the same catalog without duplicating user sequences.
 - Default book and avatar are included and usable without downloading assets.
 - Hand/controller interaction, comfortable seated/standing placement, save/load,
   recovery, bounded content/resource use, import validation, and accessible text.
@@ -97,7 +101,7 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   succeeds. Conversation and practice fixtures have been inspected in-browser.
 - ARM64 browser transport: Gradle release AAR and Android lint pass (zero errors).
 - Unity project compiles and configures OpenXR, scene and included clips.
-  Fifteen EditMode and five PlayMode tests pass, including actual imported skeleton
+  Eighteen EditMode and seven PlayMode tests pass, including actual imported skeleton
   movement, gesture ownership, tracked grabbing, two-hand scale limits and reset.
 - Actual Unity desktop renders cover the physical book using a browser-captured
   page texture, the shared pencil shader, avatar views and sampled gestures.
@@ -120,6 +124,13 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   interruption and fault recovery pass on the device; audio waits for the solid
   resume bell. An additional 98 targeted web tests cover interruption behavior
   and nearby regressions. Active paid/media sessions still need device QA.
+- Animation authoring now supports object recording, keyframe editing, duration,
+  loop/preview and Maestro joint handles. One bounded take and an optional static
+  pose per object are included in save/load and undo. ScriptPlayable evaluation,
+  actual XRI-driven head posing and interrupted recordings have automated tests.
+  Physical Quest usability remains to be confirmed. Custom avatar switching,
+  visual behaviour rules, following/walking, locomotion and attached buttons are
+  accepted work, not implemented features at this checkpoint.
 - Model imports, native permission/authentication, production attestation,
   billing, room anchoring and full device/store QA remain.
 

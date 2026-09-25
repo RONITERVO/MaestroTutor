@@ -20,8 +20,10 @@ namespace Maestro.Quest.Creation
         public Color color = Color.white;
         public Vector3[] points;
         public float radius = .003f;
+        public JointPose[] joints;
+        public RoomMotion motion;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone() };
+        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy() };
     }
 
     [Serializable]
@@ -42,7 +44,7 @@ namespace Maestro.Quest.Creation
             error = null;
             if (version != 1 || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
-            var ids = new HashSet<string>(); int pointCount = 0, builtIns = 0;
+            var ids = new HashSet<string>(); int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
             {
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
@@ -75,9 +77,14 @@ namespace Maestro.Quest.Creation
                     if (!hasLength) return Fail("A drawing must have a visible stroke.", out error);
                 }
                 else if (item.points != null && item.points.Length != 0) return Fail("Only drawings can contain stroke points.", out error);
+                if (!MotionFrame.ValidJoints(item.joints) || (item.kind != RoomObjectKind.Maestro && item.joints?.Length > 0) || (item.motion != null && !item.motion.Validate(item.kind)))
+                    return Fail("An object has an invalid pose or animation.",out error);
+                frameCount += item.motion?.frames.Length ?? 0;
+                jointCount += item.motion?.frames.Sum(frame => frame.joints?.Length ?? 0) ?? 0;
             }
             if (builtIns != 2 || !ids.Contains("book") || !ids.Contains("maestro")) return Fail("The included book and Maestro must remain in the room.", out error);
             if (pointCount > MaximumTotalPoints) return Fail("This room has reached its drawing limit.", out error);
+            if (frameCount > 1200 || jointCount > 6000) return Fail("This room has reached its animation limit.",out error);
             return true;
         }
 

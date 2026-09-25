@@ -59,6 +59,14 @@ namespace Maestro.Quest.Creation
             {
                 if (!File.Exists(path) || new FileInfo(path).Length > MaximumBytes) return false;
                 var candidate = JsonUtility.FromJson<RoomDocument>(File.ReadAllText(path, Encoding.UTF8));
+                // Unity serializes null inline classes as empty objects and null
+                // arrays as empty arrays. Restore optional animation sentinels.
+                if (candidate?.objects != null) foreach (var item in candidate.objects)
+                {
+                    if (item == null) continue;
+                    if (item.joints?.Length == 0) item.joints = null;
+                    if (item.motion?.frames?.Length == 0) item.motion = null;
+                }
                 if (candidate == null || !candidate.Validate(out _)) return false;
                 room = candidate; return true;
             }

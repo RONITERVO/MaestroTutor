@@ -7,7 +7,7 @@ This is development evidence, not a release acceptance report.
 - Unity 6000.3.24f1, Android ARM64 IL2CPP, GLES3, GameActivity.
 - Package `com.maestro.quest.development`, version 1.0.0 / code 1, debug signing.
 - APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/MaestroQuest-development.apk`.
-- SHA256: `37B85B858173CB282A1684A0361ADD09CA1B0FC6A27102C5FF5B40F5FB3425F3`.
+- SHA256: `916BABE2F109F9AE225EF40C94BF86C6966E67908A4055F9C5BA8E524DFB915F`.
 - Build succeeded with zero errors; Android APK v2 signature verification passed.
 - Actual APK manifest contains minimum API 32, target 34, required passthrough,
   optional hand tracking, hand permission and hardware-accelerated GameActivity.
@@ -85,6 +85,18 @@ Real microphone permission, active Live/audio interruption, thermal/long-session
 behavior and human use of the new bell still require hardware acceptance.
 
 ## Remaining hardware and release work
+
+Animation authoring update: 18 EditMode and seven PlayMode checks pass. This
+includes a real XRI grab moving the included avatar's head, pose/keyframe undo,
+Playables interpolation and looping, object recording interrupted by focus loss,
+and room save/load. The development APK builds and is installed. Startup logs
+contain no new managed exceptions; the known Meta function lookup remains.
+Human acceptance of joint handles, physical animation controls and recording is
+pending. The installed room currently has three objects (book, Maestro and a
+user-created ball); no room data was restored or replaced during inspection.
+
+The rule builder, custom avatar switching, locomotion/following and controller
+mounts are accepted upcoming scope and are not available in this build.
 
 - User confirmation of controller interaction, near interaction, hand-only use,
   seated/standing reach, readable text and both eyes at different distances.
