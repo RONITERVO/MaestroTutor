@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Maestro.Quest.Imports;
+using Maestro.Quest.Avatar;
+using Maestro.Quest.Creation;
+using System.Linq;
 using UnityEngine;
 using UniGLTF;
 
@@ -51,6 +54,38 @@ namespace Maestro.Quest.Editor
                 texture = new RenderTexture(1400, 1600, 24); pixels = new Texture2D(1400,1600,TextureFormat.RGB24,false);
                 camera.targetTexture = texture; camera.Render(); RenderTexture.active = texture; pixels.ReadPixels(new Rect(0,0,1400,1600),0,0); pixels.Apply();
                 File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(output), "local-avatar-preview.png"), pixels.EncodeToPNG());
+                if (model.IsHumanoid)
+                {
+                    model.FitAsMaestro();
+                    var driver = UnityEngine.Object.Instantiate(Resources.Load<GameObject>("Avatars/DefaultMaestro"),root.transform);
+                    if (!driver.TryGetComponent<Animator>(out var animator)) animator = driver.AddComponent<Animator>();
+                    animator.enabled = false;
+                    var clips = UnityEditor.AssetDatabase.LoadAllAssetsAtPath("Assets/Maestro/Resources/Avatars/DefaultMaestro.fbx").OfType<AnimationClip>();
+                    foreach (var renderer in driver.GetComponentsInChildren<Renderer>()) renderer.enabled = false;
+                    var rig = root.AddComponent<AvatarPoseRig>(); rig.Initialize(animator);
+                    var retargeter = root.AddComponent<HumanoidRetargeter>(); retargeter.Initialize(rig,model.Humanoid); rig.SetDisplayRig(retargeter);
+                    camera.orthographicSize = 1.05f; camera.transform.position = new Vector3(0,.9f,3); camera.transform.LookAt(new Vector3(0,.9f,0));
+                    foreach (var gesture in new[] { "Idle","Greeting","Pointing" })
+                    {
+                        clips.First(clip => clip.name.Split('|').Last() == gesture).SampleAnimation(driver,.55f); retargeter.ApplyPose();
+                        // A synchronous editor still has no player skinning frame.
+                        // Bake the actual retargeted bones, as the included-avatar preview does.
+                        var poses = new List<GameObject>();
+                        foreach (var skin in model.Instance.SkinnedMeshRenderers)
+                        {
+                            var posed = new GameObject("Retargeted " + skin.name,typeof(MeshFilter),typeof(MeshRenderer)); posed.transform.SetParent(skin.transform,false);
+                            var mesh = new Mesh(); skin.BakeMesh(mesh,true); posed.GetComponent<MeshFilter>().sharedMesh = mesh;
+                            posed.GetComponent<MeshRenderer>().sharedMaterials = skin.sharedMaterials; skin.enabled = false; poses.Add(posed);
+                        }
+                        camera.Render(); RenderTexture.active = texture; pixels.ReadPixels(new Rect(0,0,1400,1600),0,0); pixels.Apply();
+                        File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(output),"custom-maestro-"+gesture.ToLowerInvariant()+".png"),pixels.EncodeToPNG());
+                        foreach (var posed in poses) { UnityEngine.Object.DestroyImmediate(posed.GetComponent<MeshFilter>().sharedMesh); UnityEngine.Object.DestroyImmediate(posed); }
+                        foreach (var skin in model.Instance.SkinnedMeshRenderers) skin.enabled = true;
+                    }
+                    var from = rig.CanonicalBone(PoseJoint.LeftHand).position - rig.CanonicalBone(PoseJoint.LeftLowerArm).position;
+                    var to = rig.Bone(PoseJoint.LeftHand).position - rig.Bone(PoseJoint.LeftLowerArm).position;
+                    Debug.Log("MAESTRO_RETARGET_VERIFIED bones="+rig.Capture().Length+" forearmAngle="+Vector3.Angle(from,to));
+                }
                 Debug.Log("MAESTRO_LOCAL_AVATAR_IMPORTED " + Path.GetFileName(path) + " renderers=" + model.Instance.Renderers.Count + " clips=" + model.ClipCount);
             }
             finally { RenderTexture.active = previous; UnityEngine.Object.DestroyImmediate(root); UnityEngine.Object.DestroyImmediate(go); if (texture) UnityEngine.Object.DestroyImmediate(texture); if (pixels) UnityEngine.Object.DestroyImmediate(pixels); }

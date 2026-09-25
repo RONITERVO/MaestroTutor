@@ -134,8 +134,8 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   pose per object are included in save/load and undo. ScriptPlayable evaluation,
   actual XRI-driven head posing and interrupted recordings have automated tests.
   The user confirms wrist posing and playback; the remaining physical checks are
-  open. Custom avatar switching, following/walking, locomotion and editable input
-  bindings are accepted work, not implemented features at this checkpoint.
+  open. Custom avatar switching is implemented in the later update below.
+  Following/walking, locomotion and editable input bindings remain accepted work.
 - Visual rules now support reusable multi-step recordings, gestures and waits;
   tutor activity transitions and room tap/grab/release events; conditions,
   repeat/loop and restart/ignore/queue policies. Solid buttons can be placed in
@@ -171,8 +171,9 @@ release scope are still incomplete.
 
 The runtime-import development update is recorded in QUEST_MODEL_IMPORTS.md.
 GLB/VRM room-object importing and embedded-clip controls are now implemented for
-the supported subset; custom Maestro replacement, springs, physical simulation
-and Quest acceptance remain. Earlier milestone notes describe their checkpoints.
+the supported subset. Later updates below cover custom Maestro replacement and
+physical simulation; springs remain disabled and import Quest acceptance remains.
+Earlier milestone notes describe their checkpoints.
 
 - https://developers.meta.com/horizon/documentation/unity/unity-development-requirements/
 - https://developers.meta.com/horizon/documentation/unity/unity-project-setup/
@@ -197,5 +198,22 @@ after scanning led to separate selection/scene-collision layers and a palm-carri
 trays beyond scanned walls on Quest 3. The source passes 30 EditMode, 21 PlayMode
 and 15 native Android tests and has a verified installed APK checkpoint.
 Maestro-hand
-attachment for throwing, persistent spatial anchors, custom Maestro/retargeting,
+attachment for throwing, persistent spatial anchors, custom Maestro headset QA,
 locomotion/bindings and the remaining release gates are still open.
+
+## Custom Maestro development update (2026-09-26)
+
+Use Maestro and Default on the solid import tray now switch the tutor between a
+compatible private VRM and the included character. The common 17-channel rig
+drives imported humanoid gestures and poses while retaining recordings, rules,
+room identity and undo/save/load. A valid humanoid with 15 required joints is
+needed; chest and neck are optional. See QUEST_CUSTOM_AVATARS.md for limitations.
+
+All 31 EditMode and 24 PlayMode tests passed, including actual skinned-vertex
+movement, pose/gesture mapping, model switching, persistence and cancellation.
+One private VRM also imported and rendered Idle, Greeting and Pointing through
+the real retargeter in Unity. The full build and 15 native Android tests also
+pass. Development checkpoint CA09C56E is installed on Quest 3 after a verified
+room backup; startup succeeds. This does not establish custom-avatar headset
+acceptance or sustained performance. The user is testing import/switch/pose and
+Default/Undo; see QUEST_DEVICE_QA.md for the exact artifact and remaining checks.

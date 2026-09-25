@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Avatar;
 using UnityEngine;
 
 namespace Maestro.Quest.Imports
@@ -18,6 +19,7 @@ namespace Maestro.Quest.Imports
         bool busy, picking, disposed, loop;
         int clip, page;
         string selected;
+        MaestroAvatar maestro;
         public string Status { get; private set; } = "Import your GLB or VRM model";
         public string Details { get; private set; } = "Models stay on this headset.\nChoose Import to select a local file.";
         public event Action Changed;
@@ -28,6 +30,8 @@ namespace Maestro.Quest.Imports
             editor = source; editor.Changed += SelectionChanged; editor.Editing += Stop;
             editor.ItemGrabbed += Grabbed; if (animations) animations.Starting += StopTarget;
             animationWorkshop = animations;
+            maestro = editor.Find("maestro")?.GetComponent<MaestroAvatar>();
+            if (maestro) maestro.ModelChanged += MaestroChanged;
         }
         AnimationWorkshop animationWorkshop;
         public void Pick()
@@ -86,7 +90,7 @@ namespace Maestro.Quest.Imports
             try { await preview.LoadAsync(asset); }
             catch { if (preview) Destroy(preview.gameObject); preview = null; throw; }
             if (!this || disposed) return;
-            pending = asset; clip = 0; page = 0; ShowDetails(); Say("Preview only — Add confirms you may use this model");
+            pending = asset; clip = 0; page = 0; ShowDetails(); Say("Preview ready — choose Add model" + (asset.Inspection.IsAvatar ? " or Use Maestro" : ""));
         }
         public async void Accept() => await AcceptAsync();
         public async Task<bool> AcceptAsync()
@@ -104,7 +108,29 @@ namespace Maestro.Quest.Imports
             finally { busy = false; }
         }
         public void Cancel() { if (Busy) { Say("Please wait for the model check to finish"); return; } ClearPreview(); Say("Import cancelled"); }
-        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; Details = "Select an imported object to play its clips.\nImported VRM objects do not yet replace Maestro."; Changed?.Invoke(); }
+        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; Details = "Select an imported object to play its clips.\nUse Maestro selects a compatible VRM as your tutor."; Changed?.Invoke(); }
+        public async void UseMaestro() => await UseMaestroAsync();
+        public async Task<bool> UseMaestroAsync()
+        {
+            if (Busy || !maestro || maestro.ModelBusy) return false;
+            if (editor.AnyHeld) { Say("Release the object before changing Maestro"); return false; }
+            var target = Target;
+            if (!target || !target.Ready || !target.IsHumanoid) { Say("Preview or select a VRM humanoid, then choose Use Maestro"); return false; }
+            string hash = HasPreview ? pending.Hash : editor.Read(editor.SelectedId)?.modelHash;
+            busy = true;
+            try
+            {
+                if (HasPreview) { await editor.Models.SaveAsync(pending); if (!this || disposed) return false; ClearPreview(); await Task.Yield(); }
+                if (!this || disposed || !editor.SetMaestroModel(hash)) return false;
+                bool ready = await maestro.ModelLoad;
+                if (this && !disposed) Say(maestro.ModelStatus);
+                return ready;
+            }
+            catch (Exception error) { Report(error); return false; }
+            finally { busy = false; }
+        }
+        public void DefaultMaestro() { if (Busy) return; if (editor.SetMaestroModel(null)) Say("Included Maestro restored — Undo brings back your custom avatar"); }
+        void MaestroChanged() { if (maestro) Say(maestro.ModelStatus); }
         ImportedModel Target => HasPreview ? preview : editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>()?.Model;
         public void NextClip() { var target = Target; if (!target || target.ClipCount == 0) { Say("This model has no embedded animation clips"); return; } target.Stop(); clip = (clip + 1) % target.ClipCount; Say("Clip " + (clip + 1) + ": " + target.ClipName(clip)); }
         public void Play() { var target = Target; if (!target || !target.Ready || target.ClipCount == 0) { Say("Choose an imported model with animation clips"); return; } if (editor.AnyHeld) { Say("Release the object before previewing its clip"); return; } target.Play(clip % target.ClipCount, loop); Say("Playing " + target.ClipName(clip % target.ClipCount)); }
@@ -122,7 +148,7 @@ namespace Maestro.Quest.Imports
         {
             if (pending == null) { var created = editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>(); Details = created?.ModelStatus ?? "Import a model to view its information."; Changed?.Invoke(); return; }
             var info = pending.Inspection;
-            string text = pending.Name + "\n" + info.Vertices + " vertices / " + info.Triangles + " triangles\n" + info.Clips + " embedded clips\n" + (info.IsAvatar ? "VRM room object; Maestro replacement is pending.\n" : "") + "Author and use terms:\n" + info.Attribution;
+            string text = pending.Name + "\n" + info.Vertices + " vertices / " + info.Triangles + " triangles\n" + info.Clips + " embedded clips\n" + (info.IsAvatar ? "VRM: Add as an object, or Use Maestro as your tutor.\n" : "") + "Author and use terms:\n" + info.Attribution;
             var lines = ModelText.Wrap(text, 64); int pages = Math.Max(1, (lines.Length + 7) / 8); page %= pages;
             Details = "Model information " + (page + 1) + "/" + pages + "\n" + string.Join("\n", lines, page * 8, Math.Min(8, lines.Length - page * 8)); Changed?.Invoke();
         }
@@ -140,6 +166,7 @@ namespace Maestro.Quest.Imports
             disposed = true; ClearPreview(); if (picking) ReleasePicker();
             if (editor) { editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; }
             if (animationWorkshop) animationWorkshop.Starting -= StopTarget;
+            if (maestro) maestro.ModelChanged -= MaestroChanged;
         }
     }
 

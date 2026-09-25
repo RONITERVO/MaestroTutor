@@ -20,6 +20,7 @@ namespace Maestro.Quest.Imports
         ModelInspection reservation;
         RuntimeGltfInstance instance;
         Animation animationPlayer;
+        Bounds rawBounds;
         bool destroyed;
         readonly Dictionary<SkinnedMeshRenderer, float[]> initialWeights = new();
         public bool Ready => instance;
@@ -27,6 +28,8 @@ namespace Maestro.Quest.Imports
         public bool IsPlaying => animationPlayer && animationPlayer.isPlaying;
         public Bounds LocalBounds { get; private set; }
         public RuntimeGltfInstance Instance => instance;
+        public Animator Humanoid => instance ? instance.GetComponent<Animator>() : null;
+        public bool IsHumanoid => Humanoid && Humanoid.avatar && Humanoid.avatar.isHuman && Humanoid.avatar.isValid;
         public string ClipName(int index) => index >= 0 && index < ClipCount ? ModelLibrary.SafeName(instance.AnimationClips[index].name) : "No embedded clips";
 
         public async Task LoadAsync(ModelAsset asset, IAwaitCaller awaitCaller = null)
@@ -38,7 +41,7 @@ namespace Maestro.Quest.Imports
             {
                 if (!this || destroyed) return;
                 var info = asset.Inspection;
-                if (liveModels >= 5 || liveVertices + info.Vertices > 500000 || livePixels + info.TexturePixels > 64 * 1024 * 1024 || liveMorphVertices + info.MorphVertices > 8000000)
+                if (liveModels >= 6 || liveVertices + info.Vertices > 500000 || livePixels + info.TexturePixels > 64 * 1024 * 1024 || liveMorphVertices + info.MorphVertices > 8000000)
                     throw new ModelImportException("This room has reached its model memory budget. Erase an imported object before adding another.");
                 reservation = info; liveModels++; liveVertices += info.Vertices; livePixels += info.TexturePixels; liveMorphVertices += info.MorphVertices;
                 awaitCaller ??= new RuntimeOnlyAwaitCaller();
@@ -57,6 +60,7 @@ namespace Maestro.Quest.Imports
                 foreach (var animator in instance.GetComponentsInChildren<Animator>()) animator.enabled = false;
                 if (instance.Renderers.Count == 0) throw new ModelImportException("This model has no supported visible mesh.");
                 var bounds = instance.Renderers[0].bounds; foreach (var renderer in instance.Renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
+                rawBounds = bounds;
                 float size = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
                 if (!float.IsFinite(size) || size < .00001f || size > 10000) throw new ModelImportException("The model has invalid dimensions. Apply transforms and export it again.");
                 float factor = .35f / size;
@@ -68,6 +72,16 @@ namespace Maestro.Quest.Imports
             }
             catch { if (loaded) loaded.Dispose(); instance = null; ReleaseBudget(); throw; }
             finally { loadQueue.Release(); }
+        }
+        public void FitAsMaestro(float height = 1.7f)
+        {
+            if (!IsHumanoid || rawBounds.size.y < .01f) throw new ModelImportException("Choose a VRM with a valid humanoid skeleton to replace Maestro.");
+            Stop();
+            float scale = height / rawBounds.size.y;
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = Vector3.one * scale;
+            instance.transform.localPosition = -new Vector3(rawBounds.center.x,rawBounds.min.y,rawBounds.center.z) * scale;
+            LocalBounds = new Bounds(Vector3.up * height * .5f,rawBounds.size * scale);
         }
         public void Play(int index, bool loop)
         {

@@ -44,6 +44,19 @@ namespace Maestro.Quest.Tests
                 for (int i = 0; i < names.Length; i++) { nodes.Add(new JObject { ["name"] = names[i], ["translation"] = new JArray(translations[i]) }); human[names[i]] = new JObject { ["node"] = i+1 }; }
                 for (int i = 0; i < names.Length; i++) if (parents[i] >= 0) { var parent = nodes[parents[i]+1]; if (parent["children"] == null) parent["children"] = new JArray(); ((JArray)parent["children"]).Add(i+1); }
                 sceneNodes.Add(1);
+                // Bind the actual triangle to hips/head so avatar tests verify
+                // deformed geometry as well as Transform-only skeleton motion.
+                int jointOffset = (int)data.Length;
+                foreach (ushort joint in new ushort[] { 0,0,0,0, 0,0,0,0, 1,0,0,0 }) writer.Write(joint);
+                views.Add(new JObject { ["buffer"] = 0, ["byteOffset"] = jointOffset, ["byteLength"] = 24 });
+                accessors.Add(new JObject { ["bufferView"] = views.Count-1, ["componentType"] = 5123, ["count"] = 3, ["type"] = "VEC4" });
+                int joints = accessors.Count-1;
+                int weights = Floats("VEC4",4, 1,0,0,0, 1,0,0,0, 1,0,0,0);
+                int bind = Floats("MAT4",16, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,-1,0,1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,-1.6f,0,1);
+                root["meshes"][0]["primitives"][0]["attributes"]["JOINTS_0"] = joints;
+                root["meshes"][0]["primitives"][0]["attributes"]["WEIGHTS_0"] = weights;
+                nodes[0]["skin"] = 0;
+                root["skins"] = new JArray(new JObject { ["joints"] = new JArray(1,5), ["inverseBindMatrices"] = bind });
                 root["extensionsUsed"] = new JArray("VRMC_vrm");
                 root["extensions"] = new JObject {
                     ["VRMC_vrm"] = new JObject {

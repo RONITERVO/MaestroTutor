@@ -34,6 +34,15 @@ namespace Maestro.Quest.Tests
             new RoomObjectData { id = "book", kind = RoomObjectKind.Book },
             new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro }
         } };
+        [Test] public void AvatarModelReferencesAreBoundedAndOnlyAllowedOnTheTutorOrImports()
+        {
+            var journal = new RoomJournal(EmptyRoom()); var tutor = journal.Read("maestro"); tutor.modelHash = new string('b',64);
+            Assert.That(journal.Apply(new[] { tutor },Array.Empty<string>(),out var error),Is.True,error);
+            tutor.modelHash = "../outside.vrm"; Assert.That(journal.Apply(new[] { tutor },Array.Empty<string>(),out _),Is.False);
+            var book = journal.Read("book"); book.modelHash = new string('b',64);
+            Assert.That(journal.Apply(new[] { book },Array.Empty<string>(),out _),Is.False);
+            Assert.That(journal.Undo(),Is.True); Assert.That(journal.Read("maestro").modelHash,Is.Null);
+        }
         static RoomObjectData Drawing() => new() { id = Guid.NewGuid().ToString("N"), kind = RoomObjectKind.Drawing,
             points = new[] { Vector3.zero, Vector3.right * .1f, Vector3.up * .2f }, color = new Color(.2f,.4f,.8f), scale = 1.5f };
 

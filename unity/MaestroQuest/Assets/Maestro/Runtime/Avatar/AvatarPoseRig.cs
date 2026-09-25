@@ -16,7 +16,10 @@ namespace Maestro.Quest.Avatar
     {
         readonly Dictionary<PoseJoint,Transform> bones = new();
         readonly Dictionary<PoseJoint,Quaternion> rest = new();
+        readonly Dictionary<PoseJoint,Quaternion> bindRotations = new();
+        readonly Dictionary<PoseJoint,Vector3> bindPositions = new();
         readonly List<JointHandle> handles = new();
+        HumanoidRetargeter displayRig;
         Animator animator;
         Material paint;
         public bool IsPosing { get; private set; }
@@ -28,11 +31,11 @@ namespace Maestro.Quest.Avatar
             animator = source;
             foreach (PoseJoint joint in Enum.GetValues(typeof(PoseJoint)))
             {
-                // The included generic rig uses these stable names. Humanoid import
-                // adapters can supply the equivalent GetBoneTransform mapping later.
                 var bone = source.GetComponentsInChildren<Transform>().SingleOrDefault(x => x.name == joint.ToString());
                 if (!bone) continue;
                 bones.Add(joint,bone); rest.Add(joint,bone.localRotation);
+                bindRotations.Add(joint,Quaternion.Inverse(transform.rotation)*bone.rotation);
+                bindPositions.Add(joint,transform.InverseTransformPoint(bone.position));
             }
         }
         public JointPose[] Capture() => bones.Select(x => new JointPose { joint = x.Key, rotation = x.Value.localRotation.normalized }).ToArray();
@@ -40,6 +43,7 @@ namespace Maestro.Quest.Avatar
         {
             if (pose == null) return;
             foreach (var value in pose) if (bones.TryGetValue(value.joint,out var bone)) bone.localRotation = value.rotation;
+            if (displayRig) displayRig.ApplyPose();
         }
         public void SetManual(bool manual) { if (animator) animator.enabled = !manual; }
         public void ResetPose() { foreach (var pair in bones) pair.Value.localRotation = rest[pair.Key]; PoseChanged?.Invoke(); }
@@ -52,14 +56,16 @@ namespace Maestro.Quest.Avatar
         void BuildHandles()
         {
             paint = IllustratedMaterials.Create(IllustratedMaterials.Hex("2B8D88"));
+            var visibleBones = bones.Keys.Select(Bone).Where(value => value).ToArray();
             // One handle at the end of each limb segment; head and torso use short levers.
             foreach (var pair in bones)
             {
                 if (pair.Key == PoseJoint.Hips || pair.Key == PoseJoint.Neck) continue;
-                var child = pair.Value.Cast<Transform>().FirstOrDefault(x => bones.Values.Contains(x));
-                var worldLever = child ? (child.position - pair.Value.position) * .8f : pair.Value.up * .12f;
-                if (worldLever.magnitude < .06f) worldLever = pair.Value.up * .12f;
-                var offset = pair.Value.InverseTransformVector(worldLever);
+                var visible = Bone(pair.Key); if (!visible) continue;
+                var child = visible.GetComponentsInChildren<Transform>().FirstOrDefault(x => x != visible && visibleBones.Contains(x));
+                var worldLever = child ? (child.position - visible.position) * .8f : visible.up * .12f;
+                if (worldLever.magnitude < .06f) worldLever = visible.up * .12f;
+                var offset = visible.InverseTransformVector(worldLever);
                 var root = GameObject.CreatePrimitive(PrimitiveType.Sphere); root.name = pair.Key + " pose handle";
                 root.transform.SetParent(transform,false); root.transform.localScale = Vector3.one * .042f;
                 root.GetComponent<Renderer>().sharedMaterial = paint;
@@ -69,18 +75,29 @@ namespace Maestro.Quest.Avatar
                 var item = root.AddComponent<RoomItem>(); item.Configure(new[] { root.GetComponent<Collider>() },1,1);
                 item.Grab.selectMode = UnityEngine.XR.Interaction.Toolkit.Interactables.InteractableSelectMode.Single;
                 var handle = root.AddComponent<JointHandle>();
-                handle.Initialize(this,item,pair.Key,pair.Value,offset); handles.Add(handle);
+                handle.Initialize(this,item,pair.Key,visible,offset); handles.Add(handle);
             }
         }
         public void Rotate(PoseJoint joint, Quaternion worldRotation)
         {
             if (!bones.TryGetValue(joint,out var bone)) return;
+            if (displayRig) worldRotation = displayRig.ToCanonicalRotation(joint,worldRotation);
             var local = Quaternion.Inverse(bone.parent.rotation) * worldRotation;
             float limit = joint == PoseJoint.Head ? 75 : joint == PoseJoint.Spine || joint == PoseJoint.Chest ? 45 : 150;
             bone.localRotation = Quaternion.RotateTowards(rest[joint],local,limit).normalized;
+            if (displayRig) displayRig.ApplyPose();
         }
         public void FinishedHandle() => PoseChanged?.Invoke();
-        public Transform Bone(PoseJoint joint) => bones.TryGetValue(joint,out var value) ? value : null;
+        public Transform Bone(PoseJoint joint) => displayRig ? displayRig.Bone(joint) : CanonicalBone(joint);
+        public Transform CanonicalBone(PoseJoint joint) => bones.TryGetValue(joint,out var value) ? value : null;
+        public Quaternion BindRotation(PoseJoint joint) => bindRotations[joint];
+        public Vector3 BindPosition(PoseJoint joint) => bindPositions[joint];
+        public void SetDisplayRig(HumanoidRetargeter value)
+        {
+            SetPosing(false);
+            foreach (var handle in handles) if (handle) { handle.gameObject.SetActive(false); ArtResources.Release(handle.gameObject); }
+            handles.Clear(); ArtResources.Release(paint); paint = null; displayRig = value;
+        }
         void OnDestroy() { foreach (var handle in handles) if (handle) ArtResources.Release(handle.gameObject); ArtResources.Release(paint); }
     }
 

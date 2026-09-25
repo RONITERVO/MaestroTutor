@@ -14,8 +14,9 @@ UniVRM/UniGLTF 0.131.2 is pinned to commit
 loading. Import notices are packaged in Resources/ImportNotices.txt. The shared
 watercolor material preserves base textures and alpha cutouts; it approximates
 transparent materials as cutouts. Full MToon/translucent material fidelity is
-not claimed. VRM springs are currently disabled. VRMs are room objects at this
-checkpoint; custom Maestro replacement and humanoid gesture retargeting remain.
+not claimed. VRM springs are disabled. Compatible VRMs can be room objects or
+the custom tutor via Use Maestro; see QUEST_CUSTOM_AVATARS.md for retargeting,
+posing, persistence and the remaining hardware checks.
 
 ## Bounds and unsupported formats
 
@@ -29,7 +30,8 @@ These are development limits, not measured Quest performance guarantees:
 - 128 morph targets per primitive; 4 million morph attribute vertices per model,
   8 million across live imports including the preview.
 - 4096 pixels per image side, 32 Mi pixels per model; 64 Mi pixels across live
-  imports, 500,000 aggregate counted vertices and five instances including preview.
+  imports, 500,000 aggregate counted vertices and six instances including preview
+  and the custom tutor.
 - 32 clips, increasing key times within one hour, 200,000 sampler output entries
   and 800,000 channel scalar entries. Imported clips contain data, never scripts.
 - Four imported room objects, private library at most 32 assets / 256 MiB.
@@ -66,7 +68,7 @@ render (three renderers, no clips). This is not headset or custom-Maestro QA.
 
 Still required: hardware picker/stream/label acceptance, representative stress
 and recovery tests, import optimization, library management, imported-clip rule
-actions, custom Maestro switching/retargeting/posing, expressions, detailed
+actions, custom Maestro headset acceptance, expressions, detailed
 licensing UI, and all overall release gates. Hair/cloth interaction physics is
 explicitly excluded by the user's subsequent scope decision.
 
@@ -80,8 +82,9 @@ single automatic result of model import or installing MRUK.
 **Latest scope decision:** skip hair and cloth interaction physics. Implement
 realistic rigid-item gravity, user grab/throw interactions and scanned-room
 collisions. Items must not begin falling before valid floor/room alignment is
-available. Steps 1–3 below describe the remaining rigid-physics work; steps 4–5
-are retained only as context for the excluded examples, not release requirements.
+available. Steps 1–2 are now implemented with basic Quest 3 user confirmation
+(see QUEST_ROOM_PHYSICS.md); step 3 still needs hand attachment and collision
+events. Steps 4–5 are retained only as context for the excluded examples.
 
 1. Rigid items: opt-in Decoration/Throwable presets, appropriate simple/convex
    collision geometry, mass, gravity, bounce/friction, tracked release velocity

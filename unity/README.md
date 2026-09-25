@@ -24,7 +24,10 @@ This does not validate the live Android WebView or any headset interaction.
 `-RenderImports` captures the actual solid import tray and imported test geometry.
 Optional `-ModelAuditDirectory` inspects user-supplied VRM files without modifying
 them, and `-ModelPreview` imports/renders one local file in the Editor. See
-`docs/QUEST_MODEL_IMPORTS.md` for limits, evidence and unfinished avatar/physics work.
+`../docs/QUEST_MODEL_IMPORTS.md` for limits and import evidence. The import tray's
+Use Maestro selects a compatible VRM as the tutor; Default restores the included
+character. Switching, poses and recordings persist through save/load and Undo.
+See `../docs/QUEST_CUSTOM_AVATARS.md` for the 17-channel retargeter and its limits.
 
 Build the shared web app, native browser AAR, and ARM64 development APK together:
 
@@ -100,7 +103,7 @@ Current limits are 32 sequences, 16 steps per sequence, 128 triggers, 16 buttons
 targets. Sequences never autoplay when loading a save or returning to the app.
 The current builder supplies numbered action names, preset durations and built-in
 events/actions; it does not execute arbitrary code. Custom names, more authoring
-controls, avatar replacement, gaze/follow, locomotion and editable input bindings
+controls, gaze/follow, locomotion and editable input bindings
 remain implementation work. Rules and mounted buttons have automated Unity
 coverage; their headset usability has not yet been checked. The `-RenderRules`
 option on `Verify-Quest.ps1` produces a desktop render of the actual solid controls.
@@ -142,7 +145,9 @@ Rigid item physics and MRUK room scanning are described in
 scan visibility, gravity startup, mass and collision shape. Its surface-placement
 tool uses live environment raycasting. The `-RenderPhysics` option on
 `Verify-Quest.ps1` renders the actual tray without a headset. Physical-room
-alignment, live raycasts, contact/throw feel and performance still need Quest QA.
+alignment and rigid-item physics have basic Quest 3 user confirmation, as do
+palm Recall and retrieval beyond scanned walls. Live-depth placement accuracy,
+long-session contact/throw behavior and performance still need Quest QA.
 The user confirmed a basic room-physics test. Scanned geometry stops loose items
 but does not block tool-selection rays. B/Y or the creation tray's Bring back
 control recovers content; hand users also have a solid Recall pebble above either

@@ -86,6 +86,21 @@ namespace Maestro.Quest.Tests
             var restored = new RoomStorage(directory).Load(out var error); Assert.That(restored,Is.Not.Null,error);
             Assert.That(restored.objects.Single(x => x.id == block.id).motion.frames.Length,Is.EqualTo(motion.frames.Length));
         }
+        [UnityTest] public IEnumerator ChangingAvatarFinishesAndRetainsTheCurrentTake()
+        {
+            var asset = Maestro.Quest.Imports.ModelLibrary.Inspect("recording-avatar.vrm",ModelFixture.Create(avatar:true));
+            var save = editor.Models.SaveAsync(asset); yield return new WaitUntil(() => save.IsCompleted); Assert.That(save.Exception,Is.Null);
+            editor.Select(avatarItem); workshop.ToggleRecord(); yield return new WaitForSeconds(.12f);
+            avatarItem.transform.localPosition += Vector3.right * .4f; yield return new WaitForSeconds(.12f);
+            Assert.That(editor.SetMaestroModel(asset.Hash),Is.True);
+            Assert.That(workshop.IsRecording,Is.False);
+            var motion = editor.Read("maestro").motion;
+            Assert.That(motion,Is.Not.Null,"Changing avatars must keep the take saved when authoring stops");
+            Assert.That(motion.frames.Length,Is.GreaterThanOrEqualTo(3));
+            Assert.That(motion.frames[^1].position.x - motion.frames[0].position.x,Is.EqualTo(.4f).Within(.001f));
+            yield return new WaitUntil(() => !avatar.ModelBusy); Assert.That(avatar.ModelHash,Is.EqualTo(asset.Hash),avatar.ModelStatus);
+            editor.Undo(); Assert.That(editor.Read("maestro").motion.frames.Length,Is.EqualTo(motion.frames.Length));
+        }
         [UnityTearDown] public IEnumerator TearDown()
         {
             UnityEngine.Object.Destroy(root); yield return null;

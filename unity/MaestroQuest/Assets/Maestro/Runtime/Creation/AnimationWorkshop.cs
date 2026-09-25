@@ -52,6 +52,7 @@ namespace Maestro.Quest.Creation
         bool Ready()
         {
             if (!target) { Say("Select an object first"); return false; }
+            if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return false; }
             if (editor.AnyHeld || (avatar && avatar.PoseRig && avatar.PoseRig.IsHolding)) { Say("Release the object or joint first"); return false; }
             return true;
         }
@@ -74,6 +75,7 @@ namespace Maestro.Quest.Creation
             if (editor.AnyHeld) { Say("Release the object first"); return; }
             var currentPose = avatar && avatar.PoseRig ? avatar.PoseRig.Capture() : null;
             Stop(); editor.Select(editor.Find("maestro")); SelectionChanged();
+            if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return; }
             if (editor.DrawingMode) editor.ToggleDrawing();
             if (!avatar || !avatar.PoseRig) { Say("Maestro is still loading"); return; }
             TakeControl();

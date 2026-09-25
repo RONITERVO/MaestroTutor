@@ -55,7 +55,9 @@ namespace Maestro.Quest.Creation
             {
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
-                if (item.kind == RoomObjectKind.ImportedModel ? !ModelLibrary.ValidHash(item.modelHash) : !string.IsNullOrEmpty(item.modelHash))
+                bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
+                if (item.kind == RoomObjectKind.ImportedModel ? !ModelLibrary.ValidHash(item.modelHash) :
+                    !string.IsNullOrEmpty(item.modelHash) && (!mayHaveModel || !ModelLibrary.ValidHash(item.modelHash)))
                     return Fail("This room contains an invalid model reference.", out error);
                 if (!Enum.IsDefined(typeof(ItemPhysics),item.physics) || !Enum.IsDefined(typeof(ItemCollider),item.collisionShape) || !float.IsFinite(item.mass) || item.mass < .05f || item.mass > 20 || (item.IsBuiltIn && (item.physics != ItemPhysics.Fixed || item.collisionShape != ItemCollider.Automatic)))
                     return Fail("An object has invalid physics settings.",out error);

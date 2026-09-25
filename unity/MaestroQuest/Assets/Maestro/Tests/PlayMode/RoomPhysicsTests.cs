@@ -19,8 +19,12 @@ namespace Maestro.Quest.Tests
         RigidRoomItem rigid;
         Rigidbody body;
         XRInteractionManager manager;
+        float previousCaptureDelta;
         [UnitySetUp] public IEnumerator SetUp()
         {
+            // XRI uses a short, timestamped throw buffer. Editor import/render
+            // stalls must not age all samples out of this synthetic 72 Hz input.
+            previousCaptureDelta = Time.captureDeltaTime; Time.captureDeltaTime = 1f/72;
             root = new GameObject("Synthetic physical room"); manager = root.AddComponent<XRInteractionManager>();
             world = root.AddComponent<RoomPhysicsWorld>(); RoomPhysicsLayers.Configure();
             var floor = GameObject.CreatePrimitive(PrimitiveType.Cube); floor.transform.SetParent(root.transform,false);
@@ -111,6 +115,6 @@ namespace Maestro.Quest.Tests
             hand.SetActive(false); yield return new WaitForFixedUpdate();
             Assert.That(sphere.enabled,Is.False);
         }
-        [UnityTearDown] public IEnumerator TearDown() { Object.Destroy(root); yield return null; }
+        [UnityTearDown] public IEnumerator TearDown() { Object.Destroy(root); Time.captureDeltaTime = previousCaptureDelta; yield return null; }
     }
 }

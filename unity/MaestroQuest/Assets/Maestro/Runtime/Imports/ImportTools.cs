@@ -19,11 +19,11 @@ namespace Maestro.Quest.Imports
         {
             workshop = owner;
             var wood = Paint("C89D65"); var teal = Paint("2B8D88"); var purple = Paint("73534E");
-            Part(transform, Vector3.zero, new Vector3(.72f, .70f, .04f), wood);
-            var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.72f, .70f, .04f);
+            Part(transform, Vector3.zero, new Vector3(.72f, .94f, .04f), wood);
+            var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.72f, .94f, .04f);
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle }, 1, 1); room.Register(item);
-            var labels = new[] { "Import", "Add model", "Cancel", "More info", "Next clip", "Play", "Stop", "Loop" };
-            Action[] commands = { owner.Pick, owner.Accept, owner.Cancel, owner.NextDetails, owner.NextClip, owner.Play, owner.Stop, owner.ToggleLoop };
+            var labels = new[] { "Import", "Add model", "Cancel", "More info", "Next clip", "Play", "Stop", "Loop", "Use Maestro", "Default" };
+            Action[] commands = { owner.Pick, owner.Accept, owner.Cancel, owner.NextDetails, owner.NextClip, owner.Play, owner.Stop, owner.ToggleLoop, owner.UseMaestro, owner.DefaultMaestro };
             for (int i = 0; i < labels.Length; i++)
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform, false); tool.transform.localPosition = new Vector3(-.255f + i % 4 * .17f, -.02f - i / 4 * .12f, -.05f);
@@ -32,9 +32,9 @@ namespace Maestro.Quest.Imports
                 Part(tool.transform, Vector3.zero, new Vector3(.06f, .036f, .04f), i == 1 ? purple : teal);
                 Label(tool.transform, new Vector3(0, -.048f, -.024f), labels[i], .0055f);
             }
-            details = Label(transform, new Vector3(0, .20f, -.023f), "", .0045f);
-            status = Label(transform, new Vector3(0, -.255f, -.023f), "", .0046f);
-            Label(transform, new Vector3(0, -.325f, -.023f), "Add confirms you have permission to use this model", .0043f);
+            details = Label(transform, new Vector3(0, .25f, -.023f), "", .0045f);
+            status = Label(transform, new Vector3(0, -.365f, -.023f), "", .0046f);
+            Label(transform, new Vector3(0, -.435f, -.023f), "Add / Use Maestro confirms you may use this model", .0043f);
             owner.Changed += Refresh; Refresh();
         }
         void Refresh() { details.text = workshop.Details; status.text = string.Join("\n", ModelText.Wrap(workshop.Status, 65).Take(3)); }

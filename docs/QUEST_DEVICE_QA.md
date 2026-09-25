@@ -1,6 +1,35 @@
-# Quest 3 development verification — 2026-09-25
+# Quest 3 development verification — 2026-09-26
 
 This is development evidence, not a release acceptance report.
+
+## Installed custom-avatar update
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-CA09C56E.apk`.
+SHA256: `CA09C56E0EBD52745C93A03C4CB55A0743B713A14CC7F433ED16595BB5F897A9`.
+Size: 135,149,540 bytes. The full web/native/ARM64 IL2CPP build and Editor exit
+succeeded. Thirty-one EditMode, twenty-four PlayMode and fifteen Android tests
+pass. Signature v2, architecture and manifest checks pass. Unity has zero errors
+and the same two package warnings; native lint has zero errors and five warnings.
+
+The source adds Use Maestro/Default selection, a 17-channel humanoid retargeter,
+visible-joint posing, validated private model references and cancellation/fallback.
+The regression suite verifies real skinned-vertex movement and preserves an active
+recording when switching avatars. See QUEST_CUSTOM_AVATARS.md for scope and limits.
+
+The user reconnected Quest 3. The app was paused before backing up both room
+files (181,864 bytes total), then upgraded with `adb install -r`. The primary room
+file's SHA256 was unchanged after installation; no app data was cleared. Startup
+capture shows the included avatar, physical controls and passthrough in both eyes.
+No managed exception or fatal crash was observed in that sample. The known
+Horizon settings-access exceptions remain; this is not a clean OS-log claim.
+
+A private copy of the user's `vroidmodel3.vrm` was placed in Downloads/Maestro,
+and its SHA256 matches the PC original. It is not packaged in the APK. The exact
+OPEN_DOCUMENT/OPENABLE intent resolves to the installed DocumentsUI picker.
+The user has been asked to import it, choose Use Maestro, exercise gestures and
+posing, and test Default/Undo. Picker callbacks, custom-avatar rendering and
+physical controls remain pending human acceptance. Broader rig coverage,
+long-session performance and overall store readiness remain open.
 
 ## Installed recovery update
 

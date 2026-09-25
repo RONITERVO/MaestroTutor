@@ -7,6 +7,7 @@ using System.Linq;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Avatar;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -18,8 +19,9 @@ namespace Maestro.Quest.Tests
     {
         GameObject root;
         string directory;
-        [UnitySetUp] public IEnumerator Setup() { root = new GameObject("Imported model test"); directory = Path.Combine(Path.GetTempPath(), "MaestroImportTests-" + Guid.NewGuid().ToString("N")); yield return null; }
-        [UnityTearDown] public IEnumerator Cleanup() { UnityEngine.Object.Destroy(root); yield return null; yield return null; if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+        float previousCaptureDelta;
+        [UnitySetUp] public IEnumerator Setup() { previousCaptureDelta = Time.captureDeltaTime; Time.captureDeltaTime = 1f/72; root = new GameObject("Imported model test"); directory = Path.Combine(Path.GetTempPath(), "MaestroImportTests-" + Guid.NewGuid().ToString("N")); yield return null; }
+        [UnityTearDown] public IEnumerator Cleanup() { UnityEngine.Object.Destroy(root); Time.captureDeltaTime = previousCaptureDelta; yield return null; yield return null; if (Directory.Exists(directory)) Directory.Delete(directory, true); }
         [UnityTest] public IEnumerator LoadsActualGeometryStylesItAndPlaysOnlyWhenRequested()
         {
             var model = root.AddComponent<ImportedModel>(); var task = model.LoadAsync(ModelLibrary.Inspect("triangle.glb", ModelFixture.Create()));
@@ -42,6 +44,70 @@ namespace Maestro.Quest.Tests
             Assert.That(animator, Is.Not.Null); Assert.That(animator.avatar.isHuman, Is.True);
             Assert.That(animator.GetBoneTransform(HumanBodyBones.Head), Is.Not.Null); Assert.That(model.IsPlaying, Is.False);
         }
+        [UnityTest] public IEnumerator CustomMaestroRetargetsGesturesAndPosesAndSurvivesUndoAndReload()
+        {
+            root.AddComponent<XRInteractionManager>(); var room = root.AddComponent<RoomInteraction>();
+            RoomItem Included(string name)
+            {
+                var go = new GameObject(name); go.transform.SetParent(root.transform,false);
+                var collider = go.AddComponent<BoxCollider>(); var item = go.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider }); room.Register(item); return item;
+            }
+            var book = Included("book"); var tutor = Included("maestro"); var avatar = tutor.gameObject.AddComponent<MaestroAvatar>();
+            var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,tutor,directory);
+            var workshop = root.AddComponent<ImportWorkshop>(); workshop.Initialize(editor);
+            var prepare = workshop.PrepareAsync("custom.vrm",ModelFixture.Create(avatar:true)); yield return new WaitUntil(() => prepare.IsCompleted);
+            var use = workshop.UseMaestroAsync(); yield return new WaitUntil(() => use.IsCompleted);
+            Assert.That(use.Result,Is.True,workshop.Status);
+            var hash = editor.Read("maestro").modelHash; Assert.That(avatar.ModelHash,Is.EqualTo(hash));
+            Assert.That(editor.Snapshot().objects.Count(value => value.kind == RoomObjectKind.ImportedModel),Is.Zero,"Choosing a tutor must not add a room-object copy");
+            Assert.That(avatar.PoseRig.Bone(PoseJoint.Head),Is.EqualTo(avatar.CustomModel.Humanoid.GetBoneTransform(HumanBodyBones.Head)));
+            var forearm = avatar.PoseRig.Bone(PoseJoint.RightLowerArm); var hand = avatar.PoseRig.Bone(PoseJoint.RightHand);
+            float length = Vector3.Distance(forearm.position,hand.position);
+            // Loading can finish halfway through the startup greeting. Establish
+            // an idle frame so the comparison cannot sample the same wave twice.
+            avatar.SetEditing(true); avatar.Gesture("Idle"); yield return null;
+            var before = hand.rotation; avatar.Gesture("Greeting");
+            yield return new WaitForSeconds(.45f);
+            Assert.That(Quaternion.Angle(before,hand.rotation),Is.GreaterThan(3),"Included gesture must reach the imported skeleton");
+            Assert.That(Vector3.Distance(forearm.position,hand.position),Is.EqualTo(length).Within(.001f),"Retargeting must preserve proportions");
+            avatar.PoseRig.SetManual(true); var head = avatar.PoseRig.Bone(PoseJoint.Head); var headBefore = head.rotation;
+            var skin = avatar.CustomModel.Instance.SkinnedMeshRenderers.Single(); var baked = new Mesh(); skin.BakeMesh(baked,true);
+            var vertexBefore = skin.transform.TransformPoint(baked.vertices[2]);
+            var channelsBefore = avatar.PoseRig.Capture(); avatar.PoseRig.Rotate(PoseJoint.Head,Quaternion.AngleAxis(25,Vector3.right)*headBefore);
+            skin.BakeMesh(baked,true);
+            Assert.That(Vector3.Distance(vertexBefore,skin.transform.TransformPoint(baked.vertices[2])),Is.GreaterThan(.05f),"The visible skinned mesh must follow the posed joint");
+            UnityEngine.Object.Destroy(baked);
+            Assert.That(Quaternion.Angle(headBefore,head.rotation),Is.GreaterThan(10));
+            var pose = avatar.PoseRig.Capture(); Assert.That(pose.Length,Is.EqualTo(17));
+            Assert.That(Quaternion.Angle(channelsBefore.Single(x => x.joint == PoseJoint.Head).rotation,pose.Single(x => x.joint == PoseJoint.Head).rotation),Is.GreaterThan(10));
+            editor.SaveAnimation("maestro",null,pose,true); avatar.SetEditing(false);
+            workshop.DefaultMaestro(); Assert.That(avatar.CustomModel,Is.Null); Assert.That(editor.Read("maestro").modelHash,Is.Null);
+            editor.Undo(); yield return new WaitUntil(() => !avatar.ModelBusy); Assert.That(avatar.ModelHash,Is.EqualTo(hash),avatar.ModelStatus);
+            Assert.That(Quaternion.Angle(avatar.PoseRig.Capture().Single(x => x.joint == PoseJoint.Head).rotation,pose.Single(x => x.joint == PoseJoint.Head).rotation),Is.LessThan(.1f));
+            editor.SaveNow(); yield return new WaitForSeconds(.2f);
+            var saved = new RoomStorage(directory).Load(out var error); Assert.That(saved,Is.Not.Null,error); Assert.That(saved.objects.Single(x => x.id == "maestro").modelHash,Is.EqualTo(hash));
+            UnityEngine.Object.Destroy(workshop); UnityEngine.Object.Destroy(editor); UnityEngine.Object.Destroy(avatar); yield return null;
+            // Recreate the whole tutor root, as a process restart does.
+            room.Unregister(tutor); UnityEngine.Object.Destroy(tutor.gameObject); yield return null;
+            tutor = Included("maestro"); avatar = tutor.gameObject.AddComponent<MaestroAvatar>();
+            editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,tutor,directory);
+            yield return new WaitUntil(() => !avatar.ModelBusy); Assert.That(avatar.ModelHash,Is.EqualTo(hash),avatar.ModelStatus);
+            Assert.That(avatar.PoseRig.Capture().Length,Is.EqualTo(17));
+            var missing = avatar.SetModel(new string('a',64),editor.Models); yield return new WaitUntil(() => missing.IsCompleted);
+            Assert.That(missing.Result,Is.False); Assert.That(avatar.CustomModel,Is.Null); Assert.That(avatar.ModelStatus,Does.Contain("Using included Maestro"));
+        }
+
+        [UnityTest] public IEnumerator AvatarReplacementCancellationCannotInstallAnOlderSelection()
+        {
+            var avatar = root.AddComponent<MaestroAvatar>(); var library = new ModelLibrary(directory);
+            var asset = ModelLibrary.Inspect("avatar.vrm",ModelFixture.Create(avatar:true)); var save = library.SaveAsync(asset); yield return new WaitUntil(() => save.IsCompleted);
+            var pending = avatar.SetModel(asset.Hash,library); avatar.SetModel(null,library);
+            yield return new WaitUntil(() => pending.IsCompleted); yield return null;
+            Assert.That(avatar.ModelHash,Is.Empty); Assert.That(avatar.CustomModel,Is.Null); Assert.That(avatar.ModelBusy,Is.False);
+            var plain = ModelLibrary.Inspect("object.glb",ModelFixture.Create()); save = library.SaveAsync(plain); yield return new WaitUntil(() => save.IsCompleted);
+            var rejected = avatar.SetModel(plain.Hash,library); yield return new WaitUntil(() => rejected.IsCompleted);
+            Assert.That(rejected.Result,Is.False); Assert.That(avatar.ModelHash,Is.Empty);
+        }
         [UnityTest] public IEnumerator PreviewAcceptEraseUndoAndReloadKeepLocalModelAndNeverAutoplay()
         {
             root.AddComponent<XRInteractionManager>(); var room = root.AddComponent<RoomInteraction>();
@@ -52,7 +118,7 @@ namespace Maestro.Quest.Tests
             var prepare = workshop.PrepareAsync("triangle.glb", ModelFixture.Create()); yield return new WaitUntil(() => prepare.IsCompleted);
             Assert.That(workshop.HasPreview, Is.True, workshop.Status); Assert.That(editor.Snapshot().objects.Any(x => x.kind == RoomObjectKind.ImportedModel), Is.False);
             var board = new GameObject("Solid import tools"); board.transform.SetParent(root.transform, false); board.transform.localPosition = new Vector3(4,0,0); board.AddComponent<ImportTools>().Build(workshop, room);
-            Capture("import-tools-unity.png", board.transform.position, .4f);
+            Capture("import-tools-unity.png", board.transform.position, .53f);
             var accept = workshop.AcceptAsync(); yield return new WaitUntil(() => accept.IsCompleted); Assert.That(accept.Result, Is.True, workshop.Status);
             var data = editor.Read(editor.SelectedId); Assert.That(data.kind, Is.EqualTo(RoomObjectKind.ImportedModel)); Assert.That(ModelLibrary.ValidHash(data.modelHash), Is.True);
             var created = editor.Find(data.id).GetComponent<CreatedRoomObject>();
