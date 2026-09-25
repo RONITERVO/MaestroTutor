@@ -86,7 +86,7 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
   succeeds. Conversation and practice fixtures have been inspected in-browser.
 - ARM64 browser transport: Gradle release AAR and Android lint pass (zero errors).
 - Unity project compiles and configures OpenXR, scene and included clips.
-  Nine EditMode and two PlayMode tests pass, including actual imported skeleton
+  Fifteen EditMode and five PlayMode tests pass, including actual imported skeleton
   movement, gesture ownership, tracked grabbing, two-hand scale limits and reset.
 - Actual Unity desktop renders cover the physical book using a browser-captured
   page texture, the shared pencil shader, avatar views and sampled gestures.
@@ -99,8 +99,13 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
 - Grip movement, two-hand scaling, B/Y room recovery and Meta aim pinch routing
   are implemented. The user confirmed controller movement, page tapping and
   recovery on Quest 3. Hand-only usability and physical two-hand scaling need QA.
-- User drawing/editor and model import flows, native lifecycle/authentication,
-  production attestation, billing, persistence and full device/store QA remain.
+- The physical room editor supports shapes, spatial pencil strokes, paint,
+  duplicate, erase, bounded undo/redo and validated save/load with a backup.
+  The user confirmed creation, drawing, editing and readable controls. Device
+  capture confirms saved shapes/strokes return after a process restart. Included
+  book/avatar cannot be erased. Saved poses are not physical-room anchors.
+- Model imports, native lifecycle/authentication, production attestation,
+  billing, room anchoring and full device/store QA remain.
 
 ## Primary references checked 2026-09-25
 

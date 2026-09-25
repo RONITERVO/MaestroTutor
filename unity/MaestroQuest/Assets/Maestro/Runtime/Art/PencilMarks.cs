@@ -28,6 +28,8 @@ namespace Maestro.Quest.Art
             mesh = next;
         }
 
+        public void SetColor(Color color) { if (material) material.color = color; }
+
         void OnDestroy() { ArtResources.Release(mesh); ArtResources.Release(material); }
     }
 }

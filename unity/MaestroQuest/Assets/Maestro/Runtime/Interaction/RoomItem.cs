@@ -1,6 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using UnityEngine;
+using System;
+using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
 
@@ -10,6 +12,7 @@ namespace Maestro.Quest.Interaction
     public sealed class RoomItem : MonoBehaviour
     {
         public XRGrabInteractable Grab { get; private set; }
+        public event Action<RoomItem> GrabStarted, GrabFinished;
         Vector3 homePosition, homeScale;
         Quaternion homeRotation;
 
@@ -36,8 +39,16 @@ namespace Maestro.Quest.Interaction
             transformer.allowTwoHandedRotation = XRGeneralGrabTransformer.TwoHandedRotationMode.TwoHandedAverage;
             Grab.AddSingleGrabTransformer(transformer);
             Grab.AddMultipleGrabTransformer(transformer);
+            Grab.firstSelectEntered.AddListener(OnGrabStarted);
+            Grab.lastSelectExited.AddListener(OnGrabFinished);
             Grab.enabled = true;
         }
+
+        void OnGrabStarted(SelectEnterEventArgs _) => GrabStarted?.Invoke(this);
+        void OnGrabFinished(SelectExitEventArgs _) => GrabFinished?.Invoke(this);
+
+        public void SetHome(Vector3 position, Quaternion rotation, Vector3 scale)
+        { homePosition = position; homeRotation = rotation; homeScale = scale; }
 
         public void RestoreHome()
         {

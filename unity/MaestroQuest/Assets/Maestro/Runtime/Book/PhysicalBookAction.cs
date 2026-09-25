@@ -1,24 +1,21 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using UnityEngine;
+using Maestro.Quest.Interaction;
 
 namespace Maestro.Quest.Book
 {
     public enum BookActionKind { Earlier, Later, Latest, Bookmark, ConversationLayout, PracticeLayout, LatestArtifact }
 
     /// <summary>Attached to a solid mesh with a collider, never a flat screen button.</summary>
-    public sealed class PhysicalBookAction : MonoBehaviour
+    public sealed class PhysicalBookAction : PhysicalAction
     {
         public BookActionKind Action;
         public NativeBookBrowser Browser;
         public IllustratedBook Book;
-        public string AccessibleName;
-        float lastActivated = -1;
-
-        public void Activate()
+        protected override void OnActivate()
         {
-            if (Time.unscaledTime - lastActivated < .3f || Browser == null) return;
-            lastActivated = Time.unscaledTime;
+            if (Browser == null) return;
             switch (Action)
             {
                 case BookActionKind.Earlier:

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using UnityEngine;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Creation;
 
 namespace Maestro.Quest.Book
 {
@@ -9,23 +10,27 @@ namespace Maestro.Quest.Book
     public sealed class BookPointerRouter : MonoBehaviour
     {
         public NativeBookBrowser Browser;
+        public RoomEditor Editor;
         public float MaximumDistance = 2;
         public LayerMask InteractionLayers = ~0;
         int owner = -1;
         BookPageTarget capturedPage;
-        PhysicalBookAction capturedAction;
+        PhysicalAction capturedAction;
+        RoomItem capturedItem;
         Vector2Int lastPixel;
 
         public bool Begin(int pointerId, Ray ray)
         {
             if (owner != -1 || !Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore)) return false;
             if (IsMoving(hit.collider)) return false;
-            var action = hit.collider.GetComponentInParent<PhysicalBookAction>();
+            var action = hit.collider.GetComponentInParent<PhysicalAction>();
             var page = hit.collider.GetComponent<BookPageTarget>();
-            if (action == null && (page == null || Browser == null || !Browser.IsReady)) return false;
+            var item = hit.collider.GetComponentInParent<RoomItem>();
+            if (action == null && (page == null || Browser == null || !Browser.IsReady) && (item == null || Editor == null)) return false;
             owner = pointerId;
-            capturedPage = page; capturedAction = action;
-            if (page != null) Send(hit, BrowserPointerPhase.Down);
+            capturedPage = action == null && page != null && Browser != null && Browser.IsReady ? page : null;
+            capturedAction = action; capturedItem = action == null && page == null ? item : null;
+            if (capturedPage != null) Send(hit, BrowserPointerPhase.Down);
             return true;
         }
 
@@ -41,7 +46,8 @@ namespace Maestro.Quest.Book
             if (pointerId != owner) return;
             bool hits = Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore);
             if (hits && IsMoving(hit.collider)) { Cancel(pointerId); return; }
-            if (capturedAction != null && hits && hit.collider.GetComponentInParent<PhysicalBookAction>() == capturedAction) capturedAction.Activate();
+            if (capturedAction != null && hits && hit.collider.GetComponentInParent<PhysicalAction>() == capturedAction) capturedAction.Activate();
+            if (capturedItem != null && hits && hit.collider.GetComponentInParent<RoomItem>() == capturedItem) Editor.Select(capturedItem);
             if (capturedPage != null)
             {
                 if (hits && hit.collider.GetComponent<BookPageTarget>() == capturedPage) Send(hit, BrowserPointerPhase.Up);
@@ -65,7 +71,7 @@ namespace Maestro.Quest.Book
             Browser.Pointer(pixel.x, pixel.y, phase);
         }
 
-        void Clear() { owner = -1; capturedPage = null; capturedAction = null; }
+        void Clear() { owner = -1; capturedPage = null; capturedAction = null; capturedItem = null; }
         static bool IsMoving(Collider collider)
         {
             var item = collider.GetComponentInParent<RoomItem>();

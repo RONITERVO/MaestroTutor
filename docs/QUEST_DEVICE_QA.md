@@ -7,7 +7,7 @@ This is development evidence, not a release acceptance report.
 - Unity 6000.3.24f1, Android ARM64 IL2CPP, GLES3, GameActivity.
 - Package `com.maestro.quest.development`, version 1.0.0 / code 1, debug signing.
 - APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/MaestroQuest-development.apk`.
-- SHA256: `D2402A757F6FE0B0F32CEF7A9BD29A5847A79C4C36CBBD0E6128C87E41A5D1B1`.
+- SHA256: `BD63A52BAB39B707F23E21BD213BBB39050FCBEA0B7EC78A4944239309E63A22`.
 - Build succeeded with zero errors; Android APK v2 signature verification passed.
 - Actual APK manifest contains minimum API 32, target 34, required passthrough,
   optional hand tracking, hand permission and hardware-accelerated GameActivity.
@@ -31,20 +31,33 @@ This is development evidence, not a release acceptance report.
 Screenshots and raw device logs are kept locally in ignored `.quest-evidence`.
 They include the user's physical surroundings and are not release/store assets.
 
+The room-editor update installed successfully. A headset capture shows the
+movable solid tool tray, shape tools, pencil, paint, erase, undo/redo, save and
+recovery controls. Actual Android storage contains a version-1 room with six
+objects and a backup, confirming first-save and replacement-save paths work.
+The user confirmed creation, paint, erase/undo, pencil drawing and label
+readability: “Everything works and labels are readable.” After that session the
+save contained 16 objects, including ten strokes (225 points). A process restart
+rendered the saved shapes and drawings again; the room file SHA256 was unchanged.
+
 ## Automated interaction evidence
 
-Nine EditMode tests and two PlayMode tests passed. The runtime tests exercise the
+Fifteen EditMode tests and five PlayMode tests passed. The runtime tests exercise the
 installed XRI grab implementation: translated hand moves the object, disabling
 the interactor releases it without gravity drift, two hands resize within limits,
 and restoring placement cancels selection. Gesture tests cover recovery while
 pinching, crossing from page to object, and pinching before reaching a target.
+Editor coverage includes painting, duplication, erase/undo, stroke geometry,
+bounded history/content, protected included objects, save/load reconstruction,
+damaged-save recovery and releasing a physical tool on the same target.
 
 ## Remaining hardware and release work
 
 - User confirmation of controller interaction, near interaction, hand-only use,
   seated/standing reach, readable text and both eyes at different distances.
-- Hand-only recovery and discoverable physical tools; creation/import/editor flow,
-  undo, persistent placement and room anchoring.
+- Hand-only use of the recovery tool, sustained drawing/editor usability,
+  model imports and room anchoring. Saved poses are relative to
+  the content origin; they are not spatial anchors in a physical room.
 - Shared conversation, inline artifacts, keyboard/file selection, audio permissions,
   focus/pause stopping all media and paid sessions, and explicit media resumption.
 - Native authentication, managed access/attestation, supported purchases and store

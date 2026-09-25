@@ -3,6 +3,7 @@
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Creation;
 using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -78,7 +79,12 @@ namespace Maestro.Quest
             avatar.AddComponent<MaestroAvatar>().Browser = browser;
             var avatarHandle = avatar.AddComponent<CapsuleCollider>(); avatarHandle.center = new Vector3(0,.85f,0); avatarHandle.height = 1.7f; avatarHandle.radius = .25f;
             var avatarItem = avatar.AddComponent<RoomItem>(); avatarItem.Configure(new Collider[] { avatarHandle }, .3f, 1.5f); room.Register(avatarItem);
-            room.BuildStarterItems();
+            var editor = content.AddComponent<RoomEditor>(); editor.Initialize(room,bookItem,avatarItem);
+            router.Editor = editor; input.Editor = editor;
+            var drawing = gameObject.AddComponent<SpatialDrawing>(); drawing.Editor = editor; input.Drawing = drawing;
+            var tray = new GameObject("Creation tools"); tray.transform.SetParent(content.transform,false);
+            tray.transform.localPosition = new Vector3(.87f,.98f,.9f); tray.transform.localRotation = Quaternion.Euler(24,35,0);
+            tray.AddComponent<RoomToolTray>().Build(editor,room);
         }
 
         void Update()

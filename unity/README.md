@@ -39,7 +39,21 @@ in front of the current view. Hand aim uses index pinch on a page for browser
 interaction, or on a cover/object for grabbing. Release before changing targets.
 Tracking loss and app interruption cancel selection. Objects stay where released.
 The Editor also supports mouse page interaction and Home to restore placement.
-Hand-only recovery, near-touch interactions and placement persistence remain open.
+The movable wooden tool tray adds block/ball/cylinder creation, paint, duplicate,
+erase, undo/redo, manual save and room recovery. Tap its pencil, then hold trigger
+or index pinch and move your hand to draw in space; tap the pencil again to leave
+drawing mode. Book pages and physical tools keep their normal interactions.
+Select a creation by tapping it or picking it up; release before paint/erase/undo.
+Included book and Maestro cannot be erased or duplicated. New tools stay outside
+the book pages, and each tool is a solid 3D object with a text marking.
+
+Edits autosave after a short debounce and on application interruption, retaining
+a previous valid backup. Room files contain at most 64 user objects and 32,768
+stroke points, with 32 undo steps per session. Poses persist relative to the room
+content origin; physical-room spatial anchors are not implemented. Drawing,
+editing and readable controls are confirmed by the user on Quest 3, and saved
+creations return after a process restart. Hand-only and near-touch usability,
+long-session stress checks and model imports remain open.
 
 Quest 3 evidence and outstanding checks: `../docs/QUEST_DEVICE_QA.md`.
 

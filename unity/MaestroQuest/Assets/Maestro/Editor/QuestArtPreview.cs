@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using Maestro.Quest.Art;
 using Maestro.Quest.Book;
+using Maestro.Quest.Creation;
+using Maestro.Quest.Interaction;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -14,6 +16,23 @@ namespace Maestro.Quest.Editor
     /// <summary>Renders the actual Unity materials and rig, without a headset or live account.</summary>
     public static class QuestArtPreview
     {
+        public static void RenderToolTray()
+        {
+            var output = Environment.GetEnvironmentVariable("MAESTRO_ART_EVIDENCE");
+            if (string.IsNullOrEmpty(output)) throw new InvalidOperationException("Set MAESTRO_ART_EVIDENCE.");
+            Directory.CreateDirectory(output);
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            var root = new GameObject("Tool tray verification");
+            var room = root.AddComponent<RoomInteraction>(); var editor = root.AddComponent<RoomEditor>();
+            var tray = new GameObject("Solid creation tools"); tray.AddComponent<RoomToolTray>().Build(editor,room);
+            var camera = new GameObject("Verification camera",typeof(Camera)).GetComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1);
+            camera.orthographic = true; camera.orthographicSize = .25f; camera.nearClipPlane = .01f;
+            camera.transform.position = new Vector3(.03f,.04f,-1); camera.transform.LookAt(Vector3.zero);
+            Capture(camera,Path.Combine(output,"creation-tools-unity.png"),1500,1050);
+            Debug.Log("MAESTRO_CREATION_TOOLS_RENDERED");
+        }
+
         public static void Render()
         {
             var output = Environment.GetEnvironmentVariable("MAESTRO_ART_EVIDENCE");

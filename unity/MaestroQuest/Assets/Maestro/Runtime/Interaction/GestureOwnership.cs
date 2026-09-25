@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace Maestro.Quest.Interaction
 {
-    public enum GestureTarget { None, Page, Object }
+    public enum GestureTarget { None, Page, Object, Drawing }
 
     /// <summary>A pinch owns its original target until release; tracking recovery requires a fresh gesture.</summary>
     public sealed class GestureOwnership

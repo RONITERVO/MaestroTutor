@@ -52,11 +52,11 @@ Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProject
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log'
 [xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 6) { throw 'Unity test results did not satisfy the current development checks.' }
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 15) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log'
 [xml]$playReport = Get-Content -LiteralPath $playResult
-if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 2) { throw 'Unity interaction tests did not pass.' }
+if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 5) { throw 'Unity interaction tests did not pass.' }
 if ($RenderArt) {
     $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
     $env:MAESTRO_BOOK_PREVIEW_TEXTURE = if ($PageCapture) { (Resolve-Path -LiteralPath $PageCapture).Path } else { '' }

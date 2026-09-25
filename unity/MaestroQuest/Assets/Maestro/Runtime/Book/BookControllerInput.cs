@@ -3,6 +3,7 @@
 using System;
 using Maestro.Quest.Art;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Creation;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Hands;
@@ -19,6 +20,8 @@ namespace Maestro.Quest.Book
         public Transform TrackingSpace;
         public Camera DesktopCamera;
         public RoomInteraction Room;
+        public RoomEditor Editor;
+        public SpatialDrawing Drawing;
         HandInput[] hands;
         bool paused, focused = true;
         Material pointerMaterial;
@@ -30,7 +33,7 @@ namespace Maestro.Quest.Book
             public readonly GameObject Root, Beam, Tip;
             public readonly XRRayInteractor Interactor;
             public readonly XRInputButtonReader Select;
-            public bool PageHeld, WasTracked, UsingHand;
+            public bool PageHeld, DrawingHeld, WasTracked, UsingHand;
 
             public HandInput(string hand, Transform parent, Material material)
             {
@@ -79,7 +82,7 @@ namespace Maestro.Quest.Book
             public void Cancel()
             {
                 SetSelect(false); Root.SetActive(false); Beam.SetActive(false); Tip.SetActive(false);
-                Trigger.Cancel(); Squeeze.Cancel(); PageHeld = false; WasTracked = false;
+                Trigger.Cancel(); Squeeze.Cancel(); PageHeld = false; DrawingHeld = false; WasTracked = false;
             }
 
             public void Dispose()
@@ -117,8 +120,8 @@ namespace Maestro.Quest.Book
             bool usingHand = !controllerTracked && hand != null && hand.isTracked.isPressed;
             var flags = usingHand ? (MetaAimFlags)hand.aimFlags.ReadValue() : MetaAimFlags.None;
             bool tracked = controllerTracked || (usingHand && (flags & MetaAimFlags.Valid) != 0 && (flags & MetaAimFlags.SystemGesture) == 0);
-            if (!tracked) { Router.Cancel(index); input.Cancel(); return; }
-            if (!input.WasTracked || input.UsingHand != usingHand) { Router.Cancel(index); input.Cancel(); }
+            if (!tracked) { Router.Cancel(index); Drawing?.Cancel(index); input.Cancel(); return; }
+            if (!input.WasTracked || input.UsingHand != usingHand) { Router.Cancel(index); Drawing?.Cancel(index); input.Cancel(); }
             input.WasTracked = true; input.UsingHand = usingHand;
             var position = usingHand ? hand.devicePosition.ReadValue() : input.Position.ReadValue<Vector3>();
             var rotation = usingHand ? hand.deviceRotation.ReadValue() : input.Rotation.ReadValue<Quaternion>();
@@ -126,22 +129,28 @@ namespace Maestro.Quest.Book
             input.Root.SetActive(true);
             var ray = new Ray(input.Root.transform.position, input.Root.transform.forward);
             bool hitSomething = Physics.Raycast(ray, out var hit, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore);
-            bool page = hitSomething && (hit.collider.GetComponent<BookPageTarget>() || hit.collider.GetComponentInParent<PhysicalBookAction>());
+            bool page = hitSomething && (hit.collider.GetComponent<BookPageTarget>() || hit.collider.GetComponentInParent<PhysicalAction>());
             bool item = hitSomething && hit.collider.GetComponentInParent<RoomItem>();
-            var pointed = page ? GestureTarget.Page : item ? GestureTarget.Object : GestureTarget.None;
+            var pointed = page ? GestureTarget.Page : Editor && Editor.DrawingMode ? GestureTarget.Drawing : item ? (usingHand ? GestureTarget.Object : GestureTarget.Page) : GestureTarget.None;
             bool pressed = usingHand ? hand.indexPressed.isPressed : input.Press.IsPressed();
-            var trigger = input.Trigger.Update(pressed, usingHand ? pointed : page ? GestureTarget.Page : GestureTarget.None);
+            var trigger = input.Trigger.Update(pressed, pointed);
             var squeeze = input.Squeeze.Update(!usingHand && input.Grip.IsPressed(), GestureTarget.Object);
             bool grabbing = squeeze == GestureTarget.Object || trigger == GestureTarget.Object;
             input.SetSelect(grabbing);
-            if (grabbing && trigger == GestureTarget.Page) input.Trigger.Cancel();
+            if (grabbing && (trigger == GestureTarget.Page || trigger == GestureTarget.Drawing)) input.Trigger.Cancel();
+            bool drawingHeld = trigger == GestureTarget.Drawing && !grabbing;
+            if (drawingHeld && !input.DrawingHeld) Drawing?.Begin(index,ray);
+            else if (!drawingHeld && input.DrawingHeld) Drawing?.End(index);
+            else if (drawingHeld) Drawing?.Move(index,ray);
+            input.DrawingHeld = drawingHeld;
             bool pageHeld = trigger == GestureTarget.Page && !grabbing;
             if (grabbing) Router.Cancel(index);
             else if (pageHeld && !input.PageHeld) Router.Begin(index, ray);
             else if (!pageHeld && input.PageHeld) Router.End(index, ray);
             else if (pageHeld) Router.Move(index, ray);
             input.PageHeld = pageHeld;
-            DrawPointer(input, ray, hitSomething && (page || item), hit.point);
+            bool pencil = Editor && Editor.DrawingMode && !page;
+            DrawPointer(input, ray, pencil || (hitSomething && (page || item)), pencil ? ray.GetPoint(.12f) : hit.point);
             // B/Y recovers the room, including a book placed beyond reach.
             if (!usingHand && input.Restore.WasPressedThisFrame()) RestoreRoom();
         }
@@ -161,7 +170,7 @@ namespace Maestro.Quest.Book
         void CancelInputs()
         {
             if (hands == null) return;
-            for (int i = 0; i < hands.Length; i++) { Router?.Cancel(i); hands[i].Cancel(); }
+            for (int i = 0; i < hands.Length; i++) { Router?.Cancel(i); Drawing?.Cancel(i); hands[i].Cancel(); }
             Router?.Cancel(10);
         }
 

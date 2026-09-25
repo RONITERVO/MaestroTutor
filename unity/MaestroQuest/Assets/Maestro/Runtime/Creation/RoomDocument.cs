@@ -1,0 +1,141 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+namespace Maestro.Quest.Creation
+{
+    public enum RoomObjectKind { Book, Maestro, Block, Ball, Cylinder, Drawing }
+
+    [Serializable]
+    public sealed class RoomObjectData
+    {
+        public string id;
+        public RoomObjectKind kind;
+        public Vector3 position;
+        public Quaternion rotation = Quaternion.identity;
+        public float scale = 1;
+        public Color color = Color.white;
+        public Vector3[] points;
+        public float radius = .003f;
+        public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
+        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone() };
+    }
+
+    [Serializable]
+    public sealed class RoomDocument
+    {
+        public const int MaximumObjects = 64;
+        public const int MaximumStrokePoints = 2048;
+        public const int MaximumTotalPoints = 32768;
+        public int version;
+        public RoomObjectData[] objects = Array.Empty<RoomObjectData>();
+
+        public static (float minimum, float maximum) ScaleLimits(RoomObjectKind kind) => kind switch {
+            RoomObjectKind.Book => (.65f, 1.8f), RoomObjectKind.Maestro => (.3f, 1.5f), _ => (.1f, 4f)
+        };
+
+        public bool Validate(out string error)
+        {
+            error = null;
+            if (version != 1 || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+                return Fail("This room file has an unsupported version or object count.", out error);
+            var ids = new HashSet<string>(); int pointCount = 0, builtIns = 0;
+            foreach (var item in objects)
+            {
+                if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
+                    return Fail("This room contains invalid or duplicate objects.", out error);
+                if (item.IsBuiltIn)
+                {
+                    if (item.id != (item.kind == RoomObjectKind.Book ? "book" : "maestro")) return Fail("The included book and Maestro identities are invalid.", out error);
+                    builtIns++;
+                }
+                else if (!Guid.TryParseExact(item.id, "N", out _)) return Fail("This room contains an invalid object identity.", out error);
+                var limits = ScaleLimits(item.kind);
+                float norm = item.rotation.x * item.rotation.x + item.rotation.y * item.rotation.y + item.rotation.z * item.rotation.z + item.rotation.w * item.rotation.w;
+                if (!Finite(item.position) || item.position.sqrMagnitude > 625 || !float.IsFinite(norm) || Mathf.Abs(norm - 1) > .01f ||
+                    !float.IsFinite(item.scale) || item.scale < limits.minimum - .0001f || item.scale > limits.maximum + .0001f)
+                    return Fail("An object has an invalid position, rotation or size.", out error);
+                var c = item.color;
+                if (!Unit(c.r) || !Unit(c.g) || !Unit(c.b) || !float.IsFinite(c.a) || Mathf.Abs(c.a - 1) > .001f)
+                    return Fail("An object has an invalid paint color.", out error);
+                if (item.kind == RoomObjectKind.Drawing)
+                {
+                    if (item.points == null || item.points.Length < 2 || item.points.Length > MaximumStrokePoints || !float.IsFinite(item.radius) || item.radius < .001f || item.radius > .02f)
+                        return Fail("A drawing exceeds the supported size.", out error);
+                    pointCount += item.points.Length;
+                    bool hasLength = false;
+                    foreach (var point in item.points)
+                    {
+                        if (!Finite(point) || point.sqrMagnitude > 100) return Fail("A drawing contains invalid coordinates.", out error);
+                        hasLength |= (point - item.points[0]).sqrMagnitude > .000001f;
+                    }
+                    if (!hasLength) return Fail("A drawing must have a visible stroke.", out error);
+                }
+                else if (item.points != null && item.points.Length != 0) return Fail("Only drawings can contain stroke points.", out error);
+            }
+            if (builtIns != 2 || !ids.Contains("book") || !ids.Contains("maestro")) return Fail("The included book and Maestro must remain in the room.", out error);
+            if (pointCount > MaximumTotalPoints) return Fail("This room has reached its drawing limit.", out error);
+            return true;
+        }
+
+        static bool Unit(float value) => float.IsFinite(value) && value >= 0 && value <= 1;
+        static bool Finite(Vector3 value) => float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
+        static bool Fail(string message, out string error) { error = message; return false; }
+        public RoomDocument Copy() => new() { version = version, objects = objects.Select(item => item.Copy()).ToArray() };
+    }
+
+    /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
+    public sealed class RoomJournal
+    {
+        sealed class Change { public RoomObjectData[] Before, After; }
+        readonly List<Change> undo = new(), redo = new();
+        readonly Dictionary<string, RoomObjectData> items = new();
+        public bool CanUndo => undo.Count > 0;
+        public bool CanRedo => redo.Count > 0;
+        public RoomJournal(RoomDocument document)
+        {
+            if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
+            foreach (var item in document.objects) items.Add(item.id, item.Copy());
+        }
+        public RoomObjectData Read(string id) => id != null && items.TryGetValue(id, out var value) ? value.Copy() : null;
+        public RoomDocument Snapshot() => new() { version = 1, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
+
+        public bool Apply(RoomObjectData[] replacements, string[] removals, out string error)
+        {
+            var changedIds = replacements.Select(item => item.id).Concat(removals).ToHashSet();
+            var candidate = new Dictionary<string, RoomObjectData>(items);
+            foreach (var id in removals) candidate.Remove(id);
+            foreach (var item in replacements) candidate[item.id] = item.Copy();
+            if (!(new RoomDocument { version = 1, objects = candidate.Values.ToArray() }).Validate(out error)) return false;
+            var change = new Change {
+                Before = changedIds.Where(items.ContainsKey).Select(id => items[id].Copy()).ToArray(),
+                After = changedIds.Where(candidate.ContainsKey).Select(id => candidate[id].Copy()).ToArray()
+            };
+            if (Equivalent(change.Before, change.After)) return true;
+            Set(change.Before, change.After);
+            undo.Add(change); if (undo.Count > 32) undo.RemoveAt(0); redo.Clear(); return true;
+        }
+
+        public bool Undo()
+        {
+            if (!CanUndo) return false;
+            var change = undo[undo.Count - 1]; undo.RemoveAt(undo.Count - 1);
+            Set(change.After, change.Before); redo.Add(change); return true;
+        }
+        public bool Redo()
+        {
+            if (!CanRedo) return false;
+            var change = redo[redo.Count - 1]; redo.RemoveAt(redo.Count - 1);
+            Set(change.Before, change.After); undo.Add(change); return true;
+        }
+        void Set(RoomObjectData[] before, RoomObjectData[] after)
+        {
+            foreach (var item in before) items.Remove(item.id);
+            foreach (var item in after) items[item.id] = item.Copy();
+        }
+        static bool Equivalent(RoomObjectData[] a, RoomObjectData[] b) => JsonUtility.ToJson(new RoomDocument { objects = a.OrderBy(x => x.id).ToArray() }) == JsonUtility.ToJson(new RoomDocument { objects = b.OrderBy(x => x.id).ToArray() });
+    }
+}
