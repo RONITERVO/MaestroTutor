@@ -79,6 +79,7 @@ Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"'
 if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 31) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 $env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
+$env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $ModelPreview).Path } else { '' }
 Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
 [xml]$playReport = Get-Content -LiteralPath $playResult
 if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 24) { throw 'Unity interaction tests did not pass.' }

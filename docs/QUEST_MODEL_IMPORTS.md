@@ -61,6 +61,26 @@ or duplicated submesh attributes. Compatibility is per file; no claim that all
 22 currently import, or that an Editor import establishes Quest performance.
 Private audit/render output stays in ignored `.quest-evidence`.
 
+On 2026-09-26, the user's Meshy GLB export with the Mixamo skeleton, Rigged
+Character and Current Animation enabled passed preflight, real Unity import,
+render and runtime playback. Its SHA256 starts `220A3A4E`; it contains 28 skin
+joints, 15,390 triangles, three embedded JPEG textures (base color, normal and
+metallic/roughness), and `Running` plus the very short `Running.001` clip.
+The file is 9,033,740 bytes. Removing the separate skin/texture controls from
+Meshy's GLB export UI did not remove the embedded textures. The shared watercolor
+shader visibly retains the base-color texture; it does not reproduce every PBR
+texture effect.
+
+The optional `-ModelPreview` check also supplies that local file to a PlayMode
+test. For a skinned model with clips, it checks manual playback, actual baked
+vertex movement and restoration of the rest pose on Stop. The Meshy run passed
+31 EditMode and 25 PlayMode tests and all Editor processes exited successfully.
+Its playback render and reports are retained under ignored
+`.quest-evidence/meshy-220A3A4E`. This verifies an animated room-object import in
+Unity. Direct Mixamo GLB selection as Maestro still needs a humanoid mapping
+adapter and retargeting checks; the installed custom-tutor path requires VRM.
+This export has not yet been tested on the headset.
+
 On 2026-09-25, 10 of the 22 local files passed preflight under the above limits.
 The other 12 were rejected for texture, morph, material-image or conservative
 vertex budgets. `vroidmodel3.vrm` also completed a real Unity Editor import and

@@ -44,6 +44,35 @@ namespace Maestro.Quest.Tests
             Assert.That(animator, Is.Not.Null); Assert.That(animator.avatar.isHuman, Is.True);
             Assert.That(animator.GetBoneTransform(HumanBodyBones.Head), Is.Not.Null); Assert.That(model.IsPlaying, Is.False);
         }
+        // An optional local export is deliberately never copied into the project.
+        // This checks the actual runtime player and visible deformation, beyond JSON inspection.
+        [UnityTest] public IEnumerator SelectedExternalModelLoadsAndPlaysEmbeddedSkeletalAnimationWhenPresent()
+        {
+            string path = Environment.GetEnvironmentVariable("MAESTRO_EXTERNAL_MODEL");
+            if (string.IsNullOrEmpty(path)) Assert.Ignore("No local animated model selected for verification");
+            var model = root.AddComponent<ImportedModel>();
+            var task = model.LoadAsync(ModelLibrary.Inspect(Path.GetFileName(path),ModelLibrary.ReadBounded(path)));
+            yield return new WaitUntil(() => task.IsCompleted); Assert.That(task.Exception,Is.Null);
+            Assert.That(model.Ready,Is.True); Assert.That(model.IsPlaying,Is.False);
+            var skins = model.Instance.SkinnedMeshRenderers.Where(skin => skin.sharedMesh && skin.sharedMesh.vertexCount > 0).ToArray();
+            if (model.ClipCount == 0 || skins.Length == 0) yield break;
+            Vector3[] Vertices()
+            {
+                var result = new System.Collections.Generic.List<Vector3>(); var baked = new Mesh();
+                foreach (var skin in skins) { skin.BakeMesh(baked,true); result.AddRange(baked.vertices.Select(skin.transform.TransformPoint)); }
+                UnityEngine.Object.Destroy(baked); return result.ToArray();
+            }
+            var initial = Vertices(); model.Play(0,true); yield return new WaitForSeconds(.18f);
+            Assert.That(model.IsPlaying,Is.True); var animated = Vertices();
+            float displacement = initial.Zip(animated,(a,b) => Vector3.Distance(a,b)).Max();
+            Assert.That(displacement,Is.GreaterThan(.001f),"Embedded playback must change the visible skinned mesh");
+            Capture("external-model-playing.png",Vector3.zero,.23f);
+            model.Stop(); yield return null;
+            Assert.That(model.IsPlaying,Is.False);
+            Assert.That(initial.Zip(Vertices(),(a,b) => Vector3.Distance(a,b)).Max(),Is.LessThan(.0001f),"Stop must restore the imported rest pose");
+            Debug.Log("MAESTRO_EXTERNAL_MODEL_PLAYED file="+Path.GetFileName(path)+" clips="+model.ClipCount+" displacement="+displacement+
+                " texturedMaterials="+model.Instance.Renderers.SelectMany(renderer => renderer.sharedMaterials).Count(material => material && material.mainTexture));
+        }
         [UnityTest] public IEnumerator CustomMaestroRetargetsGesturesAndPosesAndSurvivesUndoAndReload()
         {
             root.AddComponent<XRInteractionManager>(); var room = root.AddComponent<RoomInteraction>();
