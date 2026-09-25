@@ -41,10 +41,11 @@ namespace Maestro.Quest.Creation
         public bool AnyHeld => objects.Values.Any(item => item && item.Grab && item.Grab.isSelected);
         public RoomDocument Snapshot() => journal.Snapshot();
         public ModelLibrary Models { get; private set; }
+        public RoomPhysicsWorld PhysicsWorld { get; private set; }
 
-        public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null)
+        public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null)
         {
-            room = interaction;
+            room = interaction; PhysicsWorld = physics;
             AddIdentity("book", book); AddIdentity("maestro", maestro);
             var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room");
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"));
@@ -90,7 +91,7 @@ namespace Maestro.Quest.Creation
         public void Create(RoomObjectKind kind)
         {
             if (kind != RoomObjectKind.Block && kind != RoomObjectKind.Ball && kind != RoomObjectKind.Cylinder) return;
-            var item = new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = kind, color = Paint, position = SpawnPosition() };
+            var item = new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = kind, color = Paint, position = SpawnPosition(), physics = kind == RoomObjectKind.Ball ? ItemPhysics.Bouncy : ItemPhysics.Solid };
             if (Commit(new[] { item }, Array.Empty<string>(), kind + " added", true)) { selected = item.id; UpdateSelection(); }
         }
 
@@ -111,6 +112,7 @@ namespace Maestro.Quest.Creation
 
         public void ChoosePaint(Color color)
         {
+            CapturePhysicsPlacements();
             Paint = color; Paint = new Color(Paint.r,Paint.g,Paint.b,1);
             var item = journal.Read(selected);
             if (item != null && !item.IsBuiltIn) { item.color = Paint; Commit(new[] { item }, Array.Empty<string>(), "Paint changed"); }
@@ -119,6 +121,7 @@ namespace Maestro.Quest.Creation
 
         public void Duplicate()
         {
+            CapturePhysicsPlacements();
             var item = journal.Read(selected);
             if (item == null || item.IsBuiltIn) { SetStatus("Select one of your creations to duplicate"); return; }
             item.id = Guid.NewGuid().ToString("N"); item.position += Vector3.right * .18f;
@@ -151,7 +154,38 @@ namespace Maestro.Quest.Creation
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
             if (!journal.Apply(replacements,removals,out var error)) { SetStatus(error); return false; }
-            Reconcile(); MarkDirty(); SetStatus(success); return true;
+            Reconcile(replacements.Select(item => item.id).ToHashSet(), !placement); MarkDirty(); SetStatus(success); return true;
+        }
+        public void CyclePhysics()
+        {
+            Editing?.Invoke(); CapturePhysicsPlacements();
+            var data = journal.Read(selected);
+            if (data == null || data.IsBuiltIn) { SetStatus("Select a creation to change its physics"); return; }
+            data.physics = (ItemPhysics)(((int)data.physics + 1) % 3);
+            Commit(new[] { data },Array.Empty<string>(),"Physics: " + data.physics);
+        }
+        public void CycleMass()
+        {
+            Editing?.Invoke(); CapturePhysicsPlacements();
+            var data = journal.Read(selected);
+            if (data == null || data.IsBuiltIn) { SetStatus("Select a creation to change its mass"); return; }
+            float[] masses = { .1f,.5f,1,2,5,10,20 }; data.mass = masses.FirstOrDefault(value => value > data.mass); if (data.mass == 0) data.mass = .1f;
+            Commit(new[] { data },Array.Empty<string>(),"Mass: " + data.mass + " kg");
+        }
+        public void CycleCollider()
+        {
+            Editing?.Invoke(); CapturePhysicsPlacements();
+            var data = journal.Read(selected);
+            if (data == null || data.IsBuiltIn) { SetStatus("Select a creation to change its collision shape"); return; }
+            data.collisionShape = (ItemCollider)(((int)data.collisionShape + 1) % 3);
+            Commit(new[] { data },Array.Empty<string>(),"Collision shape: " + data.collisionShape);
+        }
+        public bool PlaceSelected(Vector3 worldPosition)
+        {
+            Editing?.Invoke(); if (Busy()) return false;
+            var data = journal.Read(selected); if (data == null) return false;
+            data.position = transform.InverseTransformPoint(worldPosition);
+            return Commit(new[] { data },Array.Empty<string>(),"Placed on the detected surface");
         }
         public bool SaveAnimation(string id, RoomMotion motion, JointPose[] joints, bool savePose)
         {
@@ -172,7 +206,7 @@ namespace Maestro.Quest.Creation
             SetStatus("Release the object before editing"); return true;
         }
 
-        void Reconcile()
+        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true)
         {
             applying = true;
             var document = journal.Snapshot(); var ids = document.objects.Select(item => item.id).ToHashSet();
@@ -184,14 +218,18 @@ namespace Maestro.Quest.Creation
             int slot = 0;
             foreach (var data in document.objects)
             {
+                bool created = false;
                 if (!objects.TryGetValue(data.id,out var item))
                 {
                     var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
                     item = root.AddComponent<CreatedRoomObject>().Build(data, Models);
                     AddIdentity(data.id,item); room.Register(item);
+                    created = true;
                 }
-                if (!item.Grab.isSelected) ApplyPose(item,data);
+                if (!item.Grab.isSelected && (created || changed == null || (applyChangedPose && changed.Contains(data.id)))) ApplyPose(item,data);
+                item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
+                item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
                 if (!data.IsBuiltIn)
                 {
@@ -205,6 +243,7 @@ namespace Maestro.Quest.Creation
         static void ApplyPose(RoomItem item, RoomObjectData data)
         {
             item.transform.SetLocalPositionAndRotation(data.position,data.rotation); item.transform.localScale = Vector3.one * data.scale;
+            item.GetComponent<RigidRoomItem>()?.Teleported();
         }
         static RoomObjectData Pose(RoomObjectData data, Transform pose)
         { data.position = pose.localPosition; data.rotation = pose.localRotation.normalized; data.scale = pose.localScale.x; return data; }
@@ -223,9 +262,22 @@ namespace Maestro.Quest.Creation
         }
 
         void MarkDirty() { dirty = true; saveAt = Time.unscaledTime + .5f; }
-        public void SaveNow() { MarkDirty(); saveAt = 0; SetStatus("Saving room"); }
+        public void SaveNow() { CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room"); }
+        void CapturePhysicsPlacements()
+        {
+            if (journal == null) return;
+            foreach (var pair in objects)
+            {
+                var item = pair.Value; if (!item || item.Grab.isSelected) continue;
+                var rigid = item.GetComponent<RigidRoomItem>();
+                if (!rigid || !rigid.Dynamic || rigid.AnimationOwned) continue;
+                if (journal.UpdatePlacement(pair.Key,item.transform.localPosition,item.transform.localRotation.normalized)) MarkDirty();
+            }
+        }
+        float captureAt;
         void Update()
         {
+            if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
             if (saveTask != null && saveTask.IsCompleted)
             {
                 var error = saveTask.GetAwaiter().GetResult(); saveTask = null;
@@ -239,6 +291,7 @@ namespace Maestro.Quest.Creation
         void Flush()
         {
             if (journal == null) return;
+            CapturePhysicsPlacements();
             var pendingError = saveTask?.GetAwaiter().GetResult(); saveTask = null;
             if (pendingError != null) SetStatus(pendingError);
             if (!dirty) return;

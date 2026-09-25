@@ -44,7 +44,7 @@ namespace Maestro.Quest.Rules
             // Compensate for the geometry's scale so the marking uses physical meters.
             marking.transform.localScale = new Vector3(1/.065f,1/.055f,1/.025f);
             label = marking.GetComponent<TextMesh>(); label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); label.fontSize = 48; label.characterSize = .0038f;
-            label.anchor = TextAnchor.MiddleCenter; label.alignment = TextAlignment.Center; label.color = IllustratedMaterials.Paper; marking.GetComponent<MeshRenderer>().sharedMaterial = label.font.material;
+            label.anchor = TextAnchor.MiddleCenter; label.alignment = TextAlignment.Center; label.color = IllustratedMaterials.TextColor(IllustratedMaterials.Paper); marking.GetComponent<MeshRenderer>().sharedMaterial = IllustratedMaterials.TextMaterial(label.font);
         }
         public void Configure(RuleButtonData value, string name)
         {

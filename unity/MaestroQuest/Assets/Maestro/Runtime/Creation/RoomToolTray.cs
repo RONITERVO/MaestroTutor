@@ -79,7 +79,7 @@ namespace Maestro.Quest.Creation
             var label = new GameObject("Tool marking",typeof(TextMesh)); label.transform.SetParent(parent,false); label.transform.localPosition = position;
             var mesh = label.GetComponent<TextMesh>(); mesh.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             mesh.text = text; mesh.fontSize = 48; mesh.characterSize = size; mesh.anchor = TextAnchor.MiddleCenter; mesh.alignment = TextAlignment.Center;
-            mesh.color = IllustratedMaterials.Ink; label.GetComponent<MeshRenderer>().sharedMaterial = mesh.font.material;
+            mesh.color = IllustratedMaterials.TextColor(IllustratedMaterials.Ink); label.GetComponent<MeshRenderer>().sharedMaterial = IllustratedMaterials.TextMaterial(mesh.font);
             return mesh;
         }
         static void Arrow(Transform parent, float sign, Material material)

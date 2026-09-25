@@ -7,6 +7,7 @@ using System.Linq;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Rules;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -20,6 +21,7 @@ namespace Maestro.Quest.Tests
         string directory;
         RoomEditor editor;
         RoomInteraction room;
+        RoomPhysicsWorld physics;
 
         [UnitySetUp]
         public IEnumerator SetUp()
@@ -28,7 +30,8 @@ namespace Maestro.Quest.Tests
             root = new GameObject("Room editor test"); root.AddComponent<XRInteractionManager>();
             room = root.AddComponent<RoomInteraction>();
             var book = Included("book"); var avatar = Included("maestro");
-            editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,avatar,directory);
+            physics = root.AddComponent<RoomPhysicsWorld>();
+            editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,avatar,directory,physics);
             yield return null;
         }
         RoomItem Included(string name)
@@ -104,6 +107,50 @@ namespace Maestro.Quest.Tests
         {
             UnityEngine.Object.Destroy(root); yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
+        }
+
+        [UnityTest]
+        public IEnumerator RecordedThrowReleasesIntoPhysicsAndUnrelatedEditsPreserveItsPosition()
+        {
+            var data = editor.Snapshot().objects.Single(x => x.kind == RoomObjectKind.Ball);
+            var item = editor.Find(data.id); editor.Select(item); editor.CyclePhysics();
+            var frames = new[] { new MotionFrame { time = 0,position = new Vector3(0,1.3f,0) },new MotionFrame { time = .5f,position = new Vector3(.5f,1.5f,0) } };
+            editor.SaveAnimation(data.id,new RoomMotion { frames = frames },null,false);
+            physics.SetSurfaces(true,"Test room"); physics.StartPhysics();
+            var actions = new RoomRuleActions(editor,null);
+            var step = new RuleStep { action = RuleActionKind.ThrowRecording,targetId = data.id };
+            Assert.That(actions.Start("throw",step,out _,out var error),Is.True,error);
+            Assert.That(item.GetComponent<Rigidbody>().isKinematic,Is.True);
+            actions.Complete("throw");
+            Assert.That(item.transform.localPosition.x,Is.EqualTo(.5f).Within(.001f));
+            Assert.That(item.GetComponent<Rigidbody>().linearVelocity.x,Is.EqualTo(1).Within(.01f));
+            yield return new WaitForFixedUpdate();
+            var beforeEdit = item.transform.position;
+            editor.Create(RoomObjectKind.Block);
+            Assert.That(Vector3.Distance(item.transform.position,beforeEdit),Is.LessThan(.001f),"Adding another object reset the flying ball");
+            editor.SaveNow(); physics.PausePhysics();
+            yield return new WaitForSeconds(.15f);
+            var saved = editor.Snapshot().objects.Single(x => x.id == data.id);
+            Assert.That(saved.position.x,Is.GreaterThanOrEqualTo(.5f));
+            Assert.That(saved.physics,Is.EqualTo(ItemPhysics.Solid));
+            Assert.That(actions.Start("canceled",step,out _,out _),Is.False,"Paused room must not start a throw");
+        }
+        [UnityTest]
+        public IEnumerator ColliderAndMassEditsSurviveUndoAndSaveWithoutChangingTheBook()
+        {
+            editor.Create(RoomObjectKind.Block); var id = editor.SelectedId; var item = editor.Find(id);
+            editor.CycleCollider(); editor.CycleCollider(); editor.CycleMass();
+            Assert.That(item.Grab.colliders.Single(),Is.TypeOf<SphereCollider>());
+            Assert.That(item.GetComponent<Rigidbody>().mass,Is.EqualTo(1));
+            editor.Undo(); Assert.That(item.GetComponent<Rigidbody>().mass,Is.EqualTo(.5f));
+            editor.Redo(); editor.SaveNow();
+            editor.SendMessage("OnApplicationPause",true);
+            var loaded = new RoomStorage(directory).Load(out var error); Assert.That(loaded,Is.Not.Null,error);
+            var data = loaded.objects.Single(value => value.id == id);
+            Assert.That(data.collisionShape,Is.EqualTo(ItemCollider.Sphere)); Assert.That(data.mass,Is.EqualTo(1));
+            editor.Select(editor.Find("book")); editor.CyclePhysics();
+            Assert.That(editor.Read("book").physics,Is.EqualTo(ItemPhysics.Fixed));
+            yield return null;
         }
     }
 }

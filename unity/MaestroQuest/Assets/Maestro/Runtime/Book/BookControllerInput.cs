@@ -22,6 +22,7 @@ namespace Maestro.Quest.Book
         public RoomInteraction Room;
         public RoomEditor Editor;
         public SpatialDrawing Drawing;
+        public RoomPhysicsWorld PhysicsWorld;
         HandInput[] hands;
         bool paused, focused = true;
         Material pointerMaterial;
@@ -31,12 +32,12 @@ namespace Maestro.Quest.Book
         {
             public readonly InputAction Position, Rotation, Tracked, Press, Grip, Restore;
             public readonly GestureOwnership Trigger = new(), Squeeze = new();
-            public readonly GameObject Root, Beam, Tip;
+            public readonly GameObject Root, Beam, Tip, Pusher;
             public readonly XRRayInteractor Interactor;
             public readonly XRInputButtonReader Select;
             public bool PageHeld, DrawingHeld, WasTracked, UsingHand;
 
-            public HandInput(string hand, Transform parent, Material material)
+            public HandInput(string hand, Transform parent, Material material, BookControllerInput owner)
             {
                 string device = "<XRController>{" + hand + "}/";
                 Position = new InputAction(hand + " aim position", InputActionType.Value, device + "pointerPosition", expectedControlType: "Vector3");
@@ -53,11 +54,15 @@ namespace Maestro.Quest.Book
                 Interactor.selectInput = Select;
                 Interactor.selectActionTrigger = XRBaseInputInteractor.InputTriggerType.StateChange;
                 Interactor.maxRaycastDistance = 2;
+                Interactor.raycastMask = RoomPhysicsLayers.InteractionMask;
+                Interactor.referenceFrame = parent;
                 // A grip can reach the cover behind the browser's separate page mesh colliders.
                 Interactor.hitClosestOnly = false;
                 Interactor.keepSelectedTargetValid = true;
                 Interactor.useForceGrab = false;
                 Interactor.manipulateAttachTransform = false;
+                Pusher = new GameObject(hand + " physical contact"); Pusher.transform.SetParent(parent,false);
+                var pusher = Pusher.AddComponent<TrackedPusher>(); pusher.Source = Root.transform; pusher.Interactor = Interactor; pusher.Input = owner;
                 Beam = Visual(PrimitiveType.Cylinder, "Physical pointer", parent, material);
                 Tip = Visual(PrimitiveType.Sphere, "Pointer tip", parent, material);
                 Tip.transform.localScale = Vector3.one * .005f;
@@ -90,14 +95,14 @@ namespace Maestro.Quest.Book
             public void Dispose()
             {
                 Cancel(); Position.Dispose(); Rotation.Dispose(); Tracked.Dispose(); Press.Dispose(); Grip.Dispose(); Restore.Dispose();
-                ArtResources.Release(Root); ArtResources.Release(Beam); ArtResources.Release(Tip);
+                ArtResources.Release(Root); ArtResources.Release(Beam); ArtResources.Release(Tip); ArtResources.Release(Pusher);
             }
         }
 
         void OnEnable()
         {
             pointerMaterial = IllustratedMaterials.Create(IllustratedMaterials.Hex("2B8D88"), 0);
-            hands = new[] { new HandInput("LeftHand", transform, pointerMaterial), new HandInput("RightHand", transform, pointerMaterial) };
+            hands = new[] { new HandInput("LeftHand", transform, pointerMaterial,this), new HandInput("RightHand", transform, pointerMaterial,this) };
         }
 
         void Update()

@@ -44,7 +44,10 @@ namespace Maestro.Quest.Tests
             leftAnchor = new GameObject("Left controller pose"); leftAnchor.transform.SetParent(root.transform,false); leftAnchor.transform.position = new Vector3(2,1,1);
             rightAnchor = new GameObject("Right controller pose"); rightAnchor.transform.SetParent(root.transform,false); rightAnchor.transform.position = new Vector3(3,1,1);
             runtime = root.AddComponent<RoomRules>(); runtime.Initialize(workshop,editor,animations,null,room,null,index => { var anchor = index == 0 ? leftAnchor : rightAnchor; return anchor && anchor.activeSelf ? anchor.transform : null; });
-            workshop.NewSequence(); workshop.CycleAction(); workshop.CycleAction(); workshop.UseTarget(); sequenceId = workshop.Selected.id;
+            workshop.NewSequence();
+            for (int i = 0; i < 4 && workshop.Selected.steps[0].action != RuleActionKind.RecordedAnimation; i++) workshop.CycleAction();
+            Assert.That(workshop.Selected.steps[0].action,Is.EqualTo(RuleActionKind.RecordedAnimation));
+            workshop.UseTarget(); sequenceId = workshop.Selected.id;
             yield return null;
         }
         XRRayInteractor Hand(int index, Vector3 position)

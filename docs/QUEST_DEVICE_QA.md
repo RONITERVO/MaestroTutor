@@ -2,9 +2,76 @@
 
 This is development evidence, not a release acceptance report.
 
+## Installed recovery update
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-physics-B0F3C7EC.apk`.
+SHA256: `B0F3C7ECF696528E7686D853C8A613F2B717D60317F3D84ABEC4A1114D75348D`.
+Size: 135,117,967 bytes. Full build succeeded with zero errors and the same two
+package warnings described below. Thirty EditMode, twenty-one PlayMode and
+fifteen Android tests pass. APK signature, ARM64 and manifest checks pass.
+
+- Saved room data was backed up again before `adb install -r`; installation and
+  launch succeeded. No app data was cleared.
+- Scanned colliders use a separate physics layer excluded from trigger/pinch and
+  XRI grip rays. Tests click and actually grab a tool behind a synthetic scanned
+  wall while retaining ball/floor/wall collision checks.
+- A solid teal Recall control follows each tracked palm independently of movable
+  content. Point and pinch with the opposite hand to pause physics and restore
+  the room. Tests cover carrying-hand rejection and tracking-loss cleanup.
+- All tool text uses a depth-tested font material. A render regression checks
+  visible foreground lettering and complete occlusion behind an opaque page.
+- Actual Quest capture shows the palm control in both eyes and the corrected
+  occlusion. The user answered "yes" to testing opposite-hand Recall activation,
+  bringing back the book/tools and retrieving a tray beyond a scanned wall.
+- Startup has no observed managed exception or fatal crash. Meta's native haptic
+  sample-rate/action-set startup messages and system settings-access warnings
+  remain; these were not hidden by granting extra permissions. The prior XRI
+  reference-frame warning is absent from the new startup sample.
+
+## First installed room-physics checkpoint
+
+Initial physics APK:
+`D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-physics-9B7AC37A.apk`.
+SHA256: `9B7AC37AEACD7BB738AB6D20465389EE83BB3C260E54E0774143692C010CCF13`.
+Size: 108,214,245 bytes. This includes the preceding import/rule/native-input work.
+
+The full web/native/Unity development build succeeds. All 29 EditMode, 19 PlayMode
+and 15 Android tests pass; native lint has zero errors and five warnings. Actual
+PhysX checks cover gravity, floor/wall bounce, controller contact, XRI throwing,
+tracking cancellation, pause/resume and animation ownership. The solid physics
+tray was rendered and inspected, including corrected text contrast in linear
+lighting. A rendered browser-pixel test confirms the explicit sRGB conversion.
+
+APK v2 signature and ARM64 packaging checks pass. The packaged manifest includes
+scene/anchor permissions, GameActivity, the private selected-file provider and
+contextual passthrough startup. The optional SDK DevAgent stays disabled; its
+editor credentials are cleared before packaging, and unused media-projection
+components/foreground-service permissions are absent from the manifest.
+
+Unity reports zero errors and two warnings: XRI's missing sample-cache directory
+and Meta's GameActivity template check. The latter inspects the pre-build template;
+the final APK was checked and contains the intended UnityPlayerGameActivity.
+The Unity splash is disabled and the OS startup background uses passthrough.
+
+After the user confirmed the headset was charged and reconnected, room data was
+backed up locally and this checkpoint was installed with `adb install -r`.
+Passthrough and the book render on Quest 3; saved user content is preserved.
+The user ran room scanning and later confirmed: "physics work tested". This is
+a basic device confirmation, not completion of every check below.
+
+The session also exposed two usability faults: scanned walls blocked the ray
+to misplaced tools, and hand-only recovery depended on reaching the creation
+tray. A device capture exposed labels drawing through the book. Fixes and a
+palm-carried 3D Recall control are included in the recovery update above.
+
+Remaining checks include permission/setup cancel/retry, detailed scan alignment,
+throws while looking away, live placement, pause/recenter/restart, both-eye
+browser colors and sustained performance. See `QUEST_ROOM_PHYSICS.md` for scope
+and limits. Custom Maestro replacement and store release gates remain open.
+
 ## Uninstalled model-import checkpoint
 
-The latest development checkpoint is
+The preceding import development checkpoint is
 `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-imports-6DAE828D.apk`,
 SHA256 `6DAE828D4022A32B9F5A8CEE73BD364118FF983BA7E20D39C5A3ADD3DD48E531`.
 It includes the prior rules/native-input changes plus bounded GLB/VRM importing,
@@ -16,14 +83,15 @@ shared material, and the user's `vroidmodel3.vrm` as an imported room object.
 Ten of the user's 22 VRM files pass the current preflight limits; this is not a
 claim that all ten have been fully loaded or that any has passed Quest QA.
 
-No ADB/device polling, installation or headset tests were performed while the
-headset charges. The installed animation checkpoint below is unchanged. Import
+No ADB/device polling, installation or headset tests were performed for this
+checkpoint while the headset charged. Import
 picker availability, resource use, cutout materials, large-file recovery and
-physical controls still require Quest acceptance. Custom Maestro switching,
-scan-based rigid physics and animation release actions remain unimplemented.
+physical controls still require Quest acceptance. Custom Maestro switching
+remains unfinished. Rigid physics and animation release were added in the later
+room-physics checkpoint above.
 The user has excluded hair and cloth interaction physics from this scope.
 
-## Installed checkpoint
+## Previous animation checkpoint
 
 - Unity 6000.3.24f1, Android ARM64 IL2CPP, GLES3, GameActivity.
 - Package `com.maestro.quest.development`, version 1.0.0 / code 1, debug signing.

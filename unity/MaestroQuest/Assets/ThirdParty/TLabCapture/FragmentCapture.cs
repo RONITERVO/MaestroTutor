@@ -361,7 +361,9 @@ namespace TLab.WebView
 				// pass zero (or one) for argments of texture size
 				// to reduce overhead of memory allocation?
 
-				var tmp = Texture2D.CreateExternalTexture(1, 1, TextureFormat.ARGB32, false, false, texID);
+				// The shared RGBA8 Android buffer contains sRGB-encoded browser pixels.
+				// Keep sampling raw; Maestro's page shader performs the explicit decode.
+				var tmp = Texture2D.CreateExternalTexture(1, 1, TextureFormat.ARGB32, false, true, texID);
 
 				//Debug.Log(THIS_NAME + $"[CreateExternalTexture] size: {tmp.width}, {tmp.height}, id: {texID}, {tmp.GetNativeTexturePtr()}");
 

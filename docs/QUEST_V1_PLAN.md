@@ -184,3 +184,18 @@ and Quest acceptance remain. Earlier milestone notes describe their checkpoints.
 
 Scetch-War references: `docs/PENCIL_ART.md`, `src/mr/book-paper.js`,
 `src/mr/pencil-geometry.js`, `src/mr/pencil-palette.js`, `src/mr/watercolor.js`.
+
+## Rigid physics development update
+
+The current scope and implementation are documented in QUEST_ROOM_PHYSICS.md.
+Hair/cloth interaction physics are excluded. MRUK scene colliders, explicit
+gravity startup, physical item modes, mass/collider controls, controller contact,
+live-depth surface placement and recorded-motion release are implemented. The
+user confirmed a basic physics test on Quest 3. Their report of unreachable tools
+after scanning led to separate selection/scene-collision layers and a palm-carried
+3D Recall control. The user subsequently confirmed palm recovery and retrieving
+trays beyond scanned walls on Quest 3. The source passes 30 EditMode, 21 PlayMode
+and 15 native Android tests and has a verified installed APK checkpoint.
+Maestro-hand
+attachment for throwing, persistent spatial anchors, custom Maestro/retargeting,
+locomotion/bindings and the remaining release gates are still open.

@@ -64,6 +64,8 @@ namespace Maestro.Quest.Creation
                 if (candidate?.objects != null) foreach (var item in candidate.objects)
                 {
                     if (item == null) continue;
+                    // Pre-physics v1 files omit mass and retain fixed placement.
+                    if (item.mass == 0 && item.physics == Interaction.ItemPhysics.Fixed) item.mass = .5f;
                     if (item.joints?.Length == 0) item.joints = null;
                     if (item.motion?.frames?.Length == 0) item.motion = null;
                 }

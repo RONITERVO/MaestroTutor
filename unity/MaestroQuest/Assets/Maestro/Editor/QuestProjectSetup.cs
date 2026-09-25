@@ -43,7 +43,9 @@ namespace Maestro.Quest.Editor
             PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.Android, ApiCompatibilityLevel.NET_Standard);
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
-            PlayerSettings.colorSpace = ColorSpace.Gamma;
+            // Meta's OpenXR build requires linear lighting. The browser shader
+            // decodes its raw sRGB pixels before Unity's final display conversion.
+            if (PlayerSettings.colorSpace != ColorSpace.Linear) PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = false;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
             QualitySettings.antiAliasing = 4;
@@ -77,6 +79,7 @@ namespace Maestro.Quest.Editor
             if (legacyHands) { legacyHands.enabled = false; EditorUtility.SetDirty(legacyHands); }
             foreach (var id in new[] {
                 "com.unity.openxr.feature.metaquest",
+                "com.meta.openxr.feature.metaxr",
                 "com.unity.openxr.feature.compositionlayers",
                 "com.unity.openxr.feature.input.metaquestplus",
                 "com.unity.openxr.feature.input.oculustouch",
@@ -99,6 +102,21 @@ namespace Maestro.Quest.Editor
                 EditorUtility.SetDirty(feature);
             }
             EditorUtility.SetDirty(settings); EditorUtility.SetDirty(xr);
+            var metaConfig = OVRProjectConfig.CachedProjectConfig;
+            metaConfig.sceneSupport = OVRProjectConfig.FeatureSupport.Supported;
+            metaConfig.anchorSupport = OVRProjectConfig.AnchorSupport.Enabled;
+            metaConfig.insightPassthroughSupport = OVRProjectConfig.FeatureSupport.Required;
+            metaConfig.systemLoadingScreenBackground = OVRProjectConfig.SystemLoadingScreenBackground.ContextualPassthrough;
+            PlayerSettings.SplashScreen.show = false;
+            metaConfig.handTrackingSupport = OVRProjectConfig.HandTrackingSupport.ControllersAndHands;
+            OVRProjectConfig.CommitProjectConfig(metaConfig);
+            var tags = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var layers = tags.FindProperty("layers");
+            layers.GetArrayElementAtIndex(8).stringValue = "RoomObstacles";
+            layers.GetArrayElementAtIndex(9).stringValue = "TrackedPushers";
+            layers.GetArrayElementAtIndex(10).stringValue = "LooseItems";
+            layers.GetArrayElementAtIndex(11).stringValue = "ScannedEnvironment";
+            tags.ApplyModifiedPropertiesWithoutUndo();
             ConfigureAnimations();
             // A Resources material keeps the dynamically used shader in player builds.
             const string pigmentPath = "Assets/Maestro/Resources/PencilPalette.mat";

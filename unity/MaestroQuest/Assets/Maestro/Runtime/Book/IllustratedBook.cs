@@ -96,9 +96,9 @@ namespace Maestro.Quest.Book
             drawing.GetComponent<PencilMarks>().SetPaths(paths, .00048f);
         }
 
-        public void SetSurface(Texture texture)
+        public void SetSurface(Texture texture, bool rawBrowserPixels = false)
         {
-            foreach (var material in pageMaterials) material.mainTexture = texture;
+            foreach (var material in pageMaterials) { material.mainTexture = texture; material.SetFloat("_DecodeBrowserSrgb",rawBrowserPixels ? 1 : 0); }
         }
 
         public void SetBookmark(bool visible, PageSide side)

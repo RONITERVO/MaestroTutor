@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Maestro.Quest.Imports;
+using Maestro.Quest.Interaction;
 
 namespace Maestro.Quest.Creation
 {
@@ -24,8 +25,11 @@ namespace Maestro.Quest.Creation
         public JointPose[] joints;
         public RoomMotion motion;
         public string modelHash;
+        public ItemPhysics physics;
+        public ItemCollider collisionShape;
+        public float mass = .5f;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash };
+        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape };
     }
 
     [Serializable]
@@ -53,6 +57,8 @@ namespace Maestro.Quest.Creation
                     return Fail("This room contains invalid or duplicate objects.", out error);
                 if (item.kind == RoomObjectKind.ImportedModel ? !ModelLibrary.ValidHash(item.modelHash) : !string.IsNullOrEmpty(item.modelHash))
                     return Fail("This room contains an invalid model reference.", out error);
+                if (!Enum.IsDefined(typeof(ItemPhysics),item.physics) || !Enum.IsDefined(typeof(ItemCollider),item.collisionShape) || !float.IsFinite(item.mass) || item.mass < .05f || item.mass > 20 || (item.IsBuiltIn && (item.physics != ItemPhysics.Fixed || item.collisionShape != ItemCollider.Automatic)))
+                    return Fail("An object has invalid physics settings.",out error);
                 if (item.IsBuiltIn)
                 {
                     if (item.id != (item.kind == RoomObjectKind.Book ? "book" : "maestro")) return Fail("The included book and Maestro identities are invalid.", out error);
@@ -113,6 +119,13 @@ namespace Maestro.Quest.Creation
             foreach (var item in document.objects) items.Add(item.id, item.Copy());
         }
         public RoomObjectData Read(string id) => id != null && items.TryGetValue(id, out var value) ? value.Copy() : null;
+        // Physics updates persisted placement without filling Undo with every simulation step.
+        public bool UpdatePlacement(string id, Vector3 position, Quaternion rotation)
+        {
+            if (!items.TryGetValue(id,out var data) || !float.IsFinite(position.sqrMagnitude) || position.sqrMagnitude > 625 || !MotionFrame.ValidRotation(rotation)) return false;
+            if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
+            data.position = position; data.rotation = rotation; return true;
+        }
         public RoomDocument Snapshot() => new() { version = 1, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
 
         public bool Apply(RoomObjectData[] replacements, string[] removals, out string error)

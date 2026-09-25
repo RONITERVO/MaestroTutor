@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Interaction;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -11,6 +12,24 @@ namespace Maestro.Quest.Tests
 {
     public sealed class RoomDocumentTests
     {
+        [Test] public void OldRoomDefaultsRemainFixedAndPhysicsSettingsAreValidated()
+        {
+            var directory = Path.Combine(Path.GetTempPath(),"MaestroOldRoom-"+Guid.NewGuid().ToString("N"));
+            try
+            {
+                Directory.CreateDirectory(directory);
+                string json = JsonUtility.ToJson(EmptyRoom()).Replace(",\"mass\":0.5","").Replace(",\"physics\":0","").Replace(",\"collisionShape\":0","");
+                File.WriteAllText(Path.Combine(directory,"room.v1.json"),json);
+                var loaded = new RoomStorage(directory).Load(out var error);
+                Assert.That(loaded,Is.Not.Null,error); Assert.That(loaded.objects[0].physics,Is.EqualTo(ItemPhysics.Fixed));
+                var data = Drawing(); data.physics = ItemPhysics.Bouncy; data.collisionShape = ItemCollider.Sphere;
+                var journal = new RoomJournal(loaded); Assert.That(journal.Apply(new[] { data },Array.Empty<string>(),out _),Is.True);
+                data.mass = float.NaN; Assert.That(journal.Apply(new[] { data },Array.Empty<string>(),out _),Is.False);
+                data.mass = .5f; data.collisionShape = (ItemCollider)99; Assert.That(journal.Apply(new[] { data },Array.Empty<string>(),out _),Is.False);
+                var book = journal.Read("book"); book.physics = ItemPhysics.Solid; Assert.That(journal.Apply(new[] { book },Array.Empty<string>(),out _),Is.False);
+            }
+            finally { Directory.Delete(directory,true); }
+        }
         static RoomDocument EmptyRoom() => new() { version = 1, objects = new[] {
             new RoomObjectData { id = "book", kind = RoomObjectKind.Book },
             new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro }

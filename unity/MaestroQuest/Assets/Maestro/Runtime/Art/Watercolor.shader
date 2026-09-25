@@ -12,6 +12,7 @@ Shader "Maestro/Watercolor"
         _HasRestCoordinates ("Rest-space coordinates", Float) = 0
         _PencilWidth ("Graphite silhouette in meters", Range(0,.005)) = .0012
         _AlphaCutoff ("Imported texture cutout", Range(0,1)) = 0
+        _DecodeBrowserSrgb ("Raw browser sRGB pixels", Float) = 0
     }
     SubShader
     {
@@ -70,6 +71,7 @@ Shader "Maestro/Watercolor"
             float _Shading;
             float _HasRestCoordinates;
             float _AlphaCutoff;
+            float _DecodeBrowserSrgb;
             Varying vert(Vertex input)
             {
                 Varying output;
@@ -87,6 +89,9 @@ Shader "Maestro/Watercolor"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 fixed4 surface = tex2D(_MainTex, input.uv);
+                #ifndef UNITY_COLORSPACE_GAMMA
+                if (_DecodeBrowserSrgb > .5) surface.rgb = GammaToLinearSpace(surface.rgb);
+                #endif
                 clip(surface.a - _AlphaCutoff);
                 // Object-space pigment remains fixed through head motion and between eyes.
                 float3 weights = abs(normalize(input.pigmentNormal));

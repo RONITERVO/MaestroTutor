@@ -8,7 +8,7 @@ using UnityEngine.XR.Interaction.Toolkit.Transformers;
 
 namespace Maestro.Quest.Interaction
 {
-    /// <summary>Movable room content stays where released; no gravity or throwing in passthrough.</summary>
+    /// <summary>Movable room content; loose creations can opt into RigidRoomItem physics.</summary>
     public sealed class RoomItem : MonoBehaviour
     {
         public XRGrabInteractable Grab { get; private set; }
@@ -56,6 +56,7 @@ namespace Maestro.Quest.Interaction
             if (Grab) Grab.enabled = false;
             transform.SetLocalPositionAndRotation(homePosition, homeRotation);
             transform.localScale = homeScale;
+            GetComponent<RigidRoomItem>()?.Teleported();
             if (Grab) Grab.enabled = true;
         }
     }

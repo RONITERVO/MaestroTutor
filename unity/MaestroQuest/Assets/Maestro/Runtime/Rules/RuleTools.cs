@@ -58,8 +58,8 @@ namespace Maestro.Quest.Rules
         {
             var root = new GameObject("Rule tool marking",typeof(TextMesh)); root.transform.SetParent(parent,false); root.transform.localPosition = position;
             var label = root.GetComponent<TextMesh>(); label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); label.fontSize = 48; label.characterSize = size;
-            label.text = text; label.anchor = TextAnchor.MiddleCenter; label.alignment = TextAlignment.Center; label.color = IllustratedMaterials.Ink;
-            root.GetComponent<MeshRenderer>().sharedMaterial = label.font.material; return label;
+            label.text = text; label.anchor = TextAnchor.MiddleCenter; label.alignment = TextAlignment.Center; label.color = IllustratedMaterials.TextColor(IllustratedMaterials.Ink);
+            root.GetComponent<MeshRenderer>().sharedMaterial = IllustratedMaterials.TextMaterial(label.font); return label;
         }
         void OnDestroy() { if (workshop) workshop.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
     }

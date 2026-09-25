@@ -28,9 +28,10 @@ namespace Maestro.Quest
             var originObject = new GameObject("User origin");
             originObject.SetActive(false);
             originObject.transform.SetParent(transform, false);
-            var offset = new GameObject("Camera height");
+            RoomPhysicsLayers.Configure();
+            var offset = new GameObject("TrackingSpace");
             offset.transform.SetParent(originObject.transform, false);
-            var cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
+            var cameraObject = new GameObject("CenterEyeAnchor", typeof(Camera), typeof(AudioListener));
             cameraObject.tag = "MainCamera";
             cameraObject.transform.SetParent(offset.transform, false);
             var camera = cameraObject.GetComponent<Camera>();
@@ -38,11 +39,15 @@ namespace Maestro.Quest
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = Color.clear;
             var origin = originObject.AddComponent<XROrigin>();
+            origin.Origin = originObject;
             origin.Camera = camera;
             origin.CameraFloorOffsetObject = offset;
-            origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Device;
+            origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
             origin.CameraYOffset = 1.55f;
 #if UNITY_ANDROID && !UNITY_EDITOR
+            var metaManager = originObject.AddComponent<OVRManager>();
+            metaManager.trackingOriginType = OVRManager.TrackingOrigin.FloorLevel;
+            originObject.AddComponent<MetaTrackingRig>();
             var pose = cameraObject.AddComponent<TrackedPoseDriver>();
             headPosition = new InputAction("Head position", InputActionType.Value, "<XRHMD>/centerEyePosition", expectedControlType: "Vector3");
             headRotation = new InputAction("Head rotation", InputActionType.Value, "<XRHMD>/centerEyeRotation", expectedControlType: "Quaternion");
@@ -56,9 +61,16 @@ namespace Maestro.Quest
             cameraObject.AddComponent<ARCameraManager>();
 #endif
             originObject.SetActive(true);
+            var physics = gameObject.AddComponent<RoomPhysicsWorld>();
+            var scan = gameObject.AddComponent<ScannedRoom>(); scan.Initialize(physics);
             gameObject.AddComponent<XRInteractionManager>();
             var content = new GameObject("Room content"); content.transform.SetParent(transform, false);
             var room = content.AddComponent<RoomInteraction>(); room.Viewer = camera.transform;
+            for (int hand = 0; hand < 2; hand++)
+            {
+                var recall = new GameObject(hand == 0 ? "Left palm recovery" : "Right palm recovery"); recall.transform.SetParent(transform,false);
+                recall.AddComponent<PalmRecoveryButton>().Build(hand,room,physics,offset.transform,camera.transform);
+            }
             var bookObject = new GameObject("Maestro book");
             bookObject.transform.SetParent(content.transform, false);
             bookObject.transform.localPosition = new Vector3(0, 1.16f, .65f);
@@ -68,20 +80,23 @@ namespace Maestro.Quest
             browser.SnapshotChanged += UpdateBook;
             bookObject.AddComponent<PhysicalBookControls>().Build(browser, book);
             var coverHandle = bookObject.AddComponent<BoxCollider>();
+            bookObject.layer = RoomPhysicsLayers.Environment;
             coverHandle.center = new Vector3(0, 0, .024f);
             coverHandle.size = new Vector3(.648f, .457f, .012f);
             var bookItem = bookObject.AddComponent<RoomItem>(); bookItem.Configure(new Collider[] { coverHandle }, .65f, 1.8f); room.Register(bookItem);
             var router = gameObject.AddComponent<BookPointerRouter>(); router.Browser = browser;
             var input = gameObject.AddComponent<BookControllerInput>();
             input.Router = router; input.TrackingSpace = offset.transform; input.DesktopCamera = camera; input.Room = room;
+            input.PhysicsWorld = physics;
             var avatar = new GameObject("Full body Maestro");
             avatar.transform.SetParent(content.transform, false);
             avatar.transform.localPosition = new Vector3(-.78f,0,1.4f);
             avatar.transform.localRotation = Quaternion.Euler(0,160,0);
             avatar.AddComponent<MaestroAvatar>().Browser = browser;
             var avatarHandle = avatar.AddComponent<CapsuleCollider>(); avatarHandle.center = new Vector3(0,.85f,0); avatarHandle.height = 1.7f; avatarHandle.radius = .25f;
+            avatar.layer = RoomPhysicsLayers.Environment;
             var avatarItem = avatar.AddComponent<RoomItem>(); avatarItem.Configure(new Collider[] { avatarHandle }, .3f, 1.5f); room.Register(avatarItem);
-            var editor = content.AddComponent<RoomEditor>(); editor.Initialize(room,bookItem,avatarItem);
+            var editor = content.AddComponent<RoomEditor>(); editor.Initialize(room,bookItem,avatarItem,physics:physics);
             router.Editor = editor; input.Editor = editor;
             var drawing = gameObject.AddComponent<SpatialDrawing>(); drawing.Editor = editor; input.Drawing = drawing;
             var tray = new GameObject("Creation tools"); tray.transform.SetParent(content.transform,false);
@@ -100,13 +115,16 @@ namespace Maestro.Quest
             var importTools = new GameObject("Model import tools"); importTools.transform.SetParent(content.transform, false);
             importTools.transform.localPosition = new Vector3(1.25f, .80f, 1.65f); importTools.transform.localRotation = Quaternion.Euler(20, 55, 0);
             importTools.AddComponent<ImportTools>().Build(imports, room);
+            var physicsTools = new GameObject("Room physics tools"); physicsTools.transform.SetParent(content.transform,false);
+            physicsTools.transform.localPosition = new Vector3(-1.2f,1.0f,1.55f); physicsTools.transform.localRotation = Quaternion.Euler(20,-45,0);
+            router.Placement = physicsTools.AddComponent<PhysicsTools>(); router.Placement.Build(editor,physics,scan,room);
         }
 
         void Update()
         {
             if (browser.Surface == currentSurface) return;
             currentSurface = browser.Surface;
-            if (currentSurface) book.SetSurface(currentSurface);
+            if (currentSurface) book.SetSurface(currentSurface,true);
         }
 
         void UpdateBook(BookSnapshot state) => book.SetBookmark(!string.IsNullOrEmpty(state.bookmarkMessageId), PageSide.Left);

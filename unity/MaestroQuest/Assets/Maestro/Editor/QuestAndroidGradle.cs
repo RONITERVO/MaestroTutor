@@ -22,6 +22,20 @@ namespace Maestro.Quest.Editor
             foreach (XmlElement activity in manifest.SelectNodes("/manifest/application/activity"))
                 if (activity.GetAttribute("name", android) == "com.unity3d.player.UnityPlayerGameActivity")
                     activity.SetAttribute("hardwareAccelerated", android, "true");
+            // Meta's optional editor agent bundles screen-capture components.
+            // This app uses object-motion recording and does not enable that agent.
+            const string tools = "http://schemas.android.com/tools";
+            manifest.DocumentElement.SetAttribute("xmlns:tools", tools);
+            void RemoveLibraryEntry(XmlNode parent, string element, string name)
+            {
+                var node = manifest.CreateElement(element);
+                node.SetAttribute("name",android,name); node.SetAttribute("node",tools,"remove"); parent.AppendChild(node);
+            }
+            RemoveLibraryEntry(manifest.DocumentElement,"uses-permission","android.permission.FOREGROUND_SERVICE");
+            RemoveLibraryEntry(manifest.DocumentElement,"uses-permission","android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION");
+            var app = manifest.SelectSingleNode("/manifest/application");
+            RemoveLibraryEntry(app,"activity","com.meta.agenticxr.AgenticMediaProjectionActivity");
+            RemoveLibraryEntry(app,"service","com.meta.agenticxr.AgenticMediaProjectionService");
             manifest.Save(manifestPath);
             var gradle = Path.Combine(path, "build.gradle");
             var source = File.ReadAllText(gradle);

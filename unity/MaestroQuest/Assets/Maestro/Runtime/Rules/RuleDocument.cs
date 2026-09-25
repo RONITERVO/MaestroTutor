@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle }
     public enum RuleInterruption { Restart, Ignore, QueueLatest }
     public enum RuleEventKind { Speaking, Listening, Thinking, Idle, ItemTapped, ItemGrabbed, ItemReleased }
@@ -75,7 +75,8 @@ namespace Maestro.Quest.Rules
                 foreach (var step in sequence.steps)
                 {
                     if (step == null || !Enum.IsDefined(typeof(RuleActionKind),step.action) || !Enum.IsDefined(typeof(RuleGesture),step.gesture) || !float.IsFinite(step.seconds) || step.seconds < 0 || step.seconds > 30) return false;
-                    if (step.action != RuleActionKind.RecordedAnimation && step.seconds < .1f) return false;
+                    if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.seconds < .1f) return false;
+                    if (step.action == RuleActionKind.ThrowRecording && (step.loop || step.seconds != 0)) return false;
                     if (step.action != RuleActionKind.Wait && !IsTarget(step.targetId)) return false;
                     if (step.action == RuleActionKind.Gesture && step.targetId != "maestro") return false;
                 }

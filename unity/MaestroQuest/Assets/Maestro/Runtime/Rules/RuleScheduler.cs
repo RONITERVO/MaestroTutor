@@ -12,6 +12,7 @@ namespace Maestro.Quest.Rules
         bool Start(string runId, RuleStep step, out float seconds, out string error);
         void Stop(string runId, bool preservePlacement);
     }
+    public interface IRuleCompletion { void Complete(string runId); }
 
     /// <summary>Bounded scheduler; disjoint targets can run concurrently. No user code executes.</summary>
     public sealed class RuleScheduler
@@ -107,7 +108,8 @@ namespace Maestro.Quest.Rules
             foreach (var run in running.ToArray())
             {
                 if (now < run.Ends) continue;
-                actions.Stop(run.Id,false); run.Step++;
+                if (actions is IRuleCompletion completion) completion.Complete(run.Id); else actions.Stop(run.Id,false);
+                run.Step++;
                 if (run.Step >= run.Sequence.steps.Length)
                 {
                     if (!run.Sequence.repeat) { running.Remove(run); continue; }

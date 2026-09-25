@@ -2,6 +2,8 @@
   "name": "Maestro.Quest",
   "rootNamespace": "Maestro.Quest",
   "references": [
+    "Oculus.VR",
+    "meta.xr.mrutilitykit",
     "Unity.InputSystem",
     "UnityEngine.UI",
     "Unity.XR.CoreUtils",

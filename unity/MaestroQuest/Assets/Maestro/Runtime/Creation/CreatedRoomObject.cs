@@ -15,6 +15,10 @@ namespace Maestro.Quest.Creation
         PencilMarks drawing;
         GameObject selection;
         Color tint;
+        Collider originalCollider, chosenCollider;
+        ItemCollider collisionShape;
+        Bounds geometryBounds;
+        bool pendingCollider;
         public ImportedModel Model { get; private set; }
         public string ModelStatus { get; private set; }
         public RoomItem Build(RoomObjectData data, ModelLibrary library = null)
@@ -40,8 +44,33 @@ namespace Maestro.Quest.Creation
             BuildSelection(bounds);
             var item = gameObject.AddComponent<RoomItem>(); var limits = RoomDocument.ScaleLimits(data.kind);
             item.Configure(new[] { collider }, limits.minimum, limits.maximum);
+            geometryBounds = bounds; originalCollider = chosenCollider = collider;
+            var rigid = gameObject.AddComponent<RigidRoomItem>(); rigid.Initialize(item);
+            collider.gameObject.layer = RoomPhysicsLayers.Item;
+            if (data.kind == RoomObjectKind.ImportedModel) rigid.SetGeometryReady(false);
             if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
             return item;
+        }
+        public void SetCollisionShape(ItemCollider shape, bool rebuild = false)
+        {
+            if (!rebuild && shape == collisionShape) return;
+            var item = GetComponent<RoomItem>(); if (!item) return;
+            if (item.Grab.isSelected) { pendingCollider |= rebuild; return; }
+            pendingCollider = false;
+            collisionShape = shape;
+            item.Grab.enabled = false;
+            chosenCollider.enabled = false;
+            if (chosenCollider != originalCollider) Destroy(chosenCollider);
+            if (shape == ItemCollider.Automatic) chosenCollider = originalCollider;
+            else if (shape == ItemCollider.Sphere)
+            {
+                var sphere = gameObject.AddComponent<SphereCollider>(); sphere.center = geometryBounds.center;
+                sphere.radius = Mathf.Max(geometryBounds.extents.x,Mathf.Max(geometryBounds.extents.y,geometryBounds.extents.z)); chosenCollider = sphere;
+            }
+            else { var box = gameObject.AddComponent<BoxCollider>(); box.center = geometryBounds.center; box.size = geometryBounds.size; chosenCollider = box; }
+            chosenCollider.gameObject.layer = RoomPhysicsLayers.Item; chosenCollider.enabled = true;
+            chosenCollider.sharedMaterial = originalCollider.sharedMaterial;
+            item.Grab.colliders.Clear(); item.Grab.colliders.Add(chosenCollider); item.Grab.enabled = true;
         }
 
         async void LoadModel(string hash, ModelLibrary library, Collider collider)
@@ -56,7 +85,9 @@ namespace Maestro.Quest.Creation
                 box.GetComponent<Renderer>().enabled = false;
                 bool selected = selection && selection.activeSelf; if (selection) { selection.SetActive(false); Destroy(selection); }
                 BuildSelection(Model.LocalBounds); SetSelected(selected); ApplyColor(tint);
+                geometryBounds = Model.LocalBounds; SetCollisionShape(collisionShape,true);
                 ModelStatus = asset.Inspection.IsAvatar ? "VRM imported as room object" : "Model ready";
+                GetComponent<RigidRoomItem>().SetGeometryReady(true);
             }
             catch (System.Exception error) { if (this) ModelStatus = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again."; }
         }
@@ -74,5 +105,6 @@ namespace Maestro.Quest.Creation
             selection.SetActive(false);
         }
         void OnDestroy() => ArtResources.Release(pigment);
+        void LateUpdate() { if (pendingCollider && !GetComponent<RoomItem>().Grab.isSelected) SetCollisionShape(collisionShape,true); }
     }
 }

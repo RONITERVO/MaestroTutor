@@ -7,11 +7,13 @@ param(
     [switch]$RenderArt,
     [switch]$RenderRules,
     [switch]$RenderImports,
+    [switch]$RenderPhysics,
     [string]$ModelAuditDirectory,
     [string]$ModelPreview,
     [string]$PageCapture
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $sourceProject = Join-Path $repoRoot 'unity/MaestroQuest'
 $mirrorRoot = [IO.Path]::GetFullPath($BuildMirror).TrimEnd('\','/')
@@ -47,34 +49,39 @@ $logRoot = Join-Path $mirrorRoot 'Logs'
 New-Item -ItemType Directory -Path $logRoot -Force | Out-Null
 function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$ResultPath = '') {
     $logPath = Join-Path $logRoot $LogName
-    $argumentsWithPaths = @('-batchmode','-projectPath', ('"' + $mirrorRoot + '"'), '-logFile', ('"' + $logPath + '"')) + $Arguments
+    # Desktop verification uses a desktop target and Meta's D3D11 OpenXR path.
+    $argumentsWithPaths = @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath', ('"' + $mirrorRoot + '"'), '-logFile', ('"' + $logPath + '"')) + $Arguments
     if ($ResultPath -and (Test-Path -LiteralPath $ResultPath)) { Remove-Item -LiteralPath $ResultPath }
     if (Test-Path -LiteralPath $logPath) { Remove-Item -LiteralPath $logPath }
     # KAT Gateway owns the machine's default ADB server. Unity's shutdown can
     # hang trying to stop it; give build children their own server endpoint.
+    Stop-QuestBuildHelper
     $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041' }
     $deadline = [DateTime]::UtcNow.AddMinutes(20)
     $reportWrittenAt = $null
-    while (!$process.WaitForExit(1000)) {
+    try { while (!$process.WaitForExit(1000)) {
         if (!$reportWrittenAt -and (($ResultPath -and (Test-Path -LiteralPath $ResultPath)) -or
-            ((Test-Path -LiteralPath $logPath) -and (Select-String -LiteralPath $logPath -Pattern 'Batchmode quit successfully invoked' -Quiet)))) { $reportWrittenAt = [DateTime]::UtcNow }
+            ((Test-Path -LiteralPath $logPath) -and (Select-String -LiteralPath $logPath -Pattern 'MAESTRO_PROJECT_CONFIGURED|Batchmode quit successfully invoked' -Quiet)))) {
+            $reportWrittenAt = [DateTime]::UtcNow
+            Stop-QuestBuildHelper
+        }
         if ([DateTime]::UtcNow -gt $deadline -or ($reportWrittenAt -and [DateTime]::UtcNow -gt $reportWrittenAt.AddSeconds(60))) {
             $process.Kill(); $process.WaitForExit()
             throw "Unity verification did not exit in time; see $logPath. A written test report alone is not a successful build."
         }
-    }
+    } } finally { Stop-QuestBuildHelper }
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $logPath -Tail 50; throw "Unity exited $($process.ExitCode); see $logPath" }
 }
 Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProjectSetup.Configure') 'configure.log'
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
 [xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 27) { throw 'Unity test results did not satisfy the current development checks.' }
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.total -lt 30) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 $env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
 Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
 [xml]$playReport = Get-Content -LiteralPath $playResult
-if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 13) { throw 'Unity interaction tests did not pass.' }
+if ($playReport.'test-run'.result -ne 'Passed' -or [int]$playReport.'test-run'.total -lt 21) { throw 'Unity interaction tests did not pass.' }
 if ($ModelAuditDirectory) {
     $env:MAESTRO_MODEL_DIRECTORY = (Resolve-Path -LiteralPath $ModelAuditDirectory).Path
     $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'
@@ -93,5 +100,9 @@ if ($RenderArt) {
 if ($RenderRules) {
     $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderRules') 'rule-preview.log'
+}
+if ($RenderPhysics) {
+    $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderPhysics') 'physics-preview.log'
 }
 Write-Output "Unity checks passed: $($testReport.'test-run'.passed) EditMode and $($playReport.'test-run'.passed) PlayMode tests. Evidence: $logRoot"

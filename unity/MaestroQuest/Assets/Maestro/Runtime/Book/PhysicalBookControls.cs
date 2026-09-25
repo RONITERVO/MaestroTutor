@@ -38,8 +38,8 @@ namespace Maestro.Quest.Book
             label.transform.localPosition = new Vector3(0,-.063f,-.03f);
             bellLabel = label.AddComponent<TextMesh>(); bellLabel.fontSize = 48; bellLabel.characterSize = .004f;
             bellLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            label.GetComponent<MeshRenderer>().sharedMaterial = bellLabel.font.material;
-            bellLabel.anchor = TextAnchor.MiddleCenter; bellLabel.color = IllustratedMaterials.Ink; bellLabel.text = "Resume audio";
+            label.GetComponent<MeshRenderer>().sharedMaterial = IllustratedMaterials.TextMaterial(bellLabel.font);
+            bellLabel.anchor = TextAnchor.MiddleCenter; bellLabel.color = IllustratedMaterials.TextColor(IllustratedMaterials.Ink); bellLabel.text = "Resume audio";
             notice = new GameObject("Browser notice token"); notice.transform.SetParent(transform,false);
             notice.transform.localPosition = new Vector3(-.53f,-.07f,0);
             Part(notice.transform,PrimitiveType.Cube,Vector3.zero,new Vector3(.245f,.19f,.016f),wood);
@@ -47,8 +47,8 @@ namespace Maestro.Quest.Book
             var dismiss = notice.AddComponent<BrowserNotice>(); dismiss.Browser = browser; dismiss.AccessibleName = "Dismiss browser notice";
             var noticeMarking = new GameObject("Browser notice text",typeof(TextMesh)); noticeMarking.transform.SetParent(notice.transform,false); noticeMarking.transform.localPosition = new Vector3(0,0,-.012f);
             noticeLabel = noticeMarking.GetComponent<TextMesh>(); noticeLabel.font = bellLabel.font; noticeLabel.fontSize = 48; noticeLabel.characterSize = .0027f;
-            noticeLabel.anchor = TextAnchor.MiddleCenter; noticeLabel.alignment = TextAlignment.Center; noticeLabel.color = IllustratedMaterials.Ink;
-            noticeMarking.GetComponent<MeshRenderer>().sharedMaterial = noticeLabel.font.material; notice.SetActive(false);
+            noticeLabel.anchor = TextAnchor.MiddleCenter; noticeLabel.alignment = TextAlignment.Center; noticeLabel.color = IllustratedMaterials.TextColor(IllustratedMaterials.Ink);
+            noticeMarking.GetComponent<MeshRenderer>().sharedMaterial = IllustratedMaterials.TextMaterial(noticeLabel.font); notice.SetActive(false);
             // Both miniature books are fully modelled tokens on a wooden holder.
             for (int index = 0; index < 2; index++)
             {

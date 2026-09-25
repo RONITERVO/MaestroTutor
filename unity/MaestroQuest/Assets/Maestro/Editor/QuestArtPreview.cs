@@ -17,6 +17,37 @@ namespace Maestro.Quest.Editor
     /// <summary>Renders the actual Unity materials and rig, without a headset or live account.</summary>
     public static class QuestArtPreview
     {
+        public static void RenderPhysics()
+        {
+            var output = Environment.GetEnvironmentVariable("MAESTRO_ART_EVIDENCE");
+            if (string.IsNullOrEmpty(output)) throw new InvalidOperationException("Set MAESTRO_ART_EVIDENCE.");
+            Directory.CreateDirectory(output);
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            string directory = Path.Combine(Path.GetTempPath(),"MaestroPhysicsPreview-"+Guid.NewGuid().ToString("N"));
+            var root = new GameObject("Physics tools verification");
+            try
+            {
+                var room = root.AddComponent<RoomInteraction>(); var physics = root.AddComponent<RoomPhysicsWorld>();
+                RoomItem Included(string name)
+                {
+                    var value = new GameObject(name); value.transform.SetParent(root.transform,false);
+                    var collider = value.AddComponent<BoxCollider>(); var item = value.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider }); return item;
+                }
+                var book = Included("book"); var maestro = Included("maestro");
+                var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,maestro,directory,physics);
+                editor.Create(RoomObjectKind.Ball);
+                foreach (var item in root.GetComponentsInChildren<RoomItem>()) item.gameObject.SetActive(false);
+                var scan = root.AddComponent<ScannedRoom>(); scan.Initialize(physics);
+                var board = new GameObject("Solid physics tools"); board.transform.SetParent(root.transform,false); board.AddComponent<PhysicsTools>().Build(editor,physics,scan,room);
+                var camera = new GameObject("Verification camera",typeof(Camera)).GetComponent<Camera>(); camera.transform.SetParent(root.transform,false);
+                camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1);
+                camera.orthographic = true; camera.orthographicSize = .38f; camera.nearClipPlane = .01f;
+                camera.transform.position = new Vector3(0,0,-1); camera.transform.LookAt(Vector3.zero);
+                Capture(camera,Path.Combine(output,"physics-tools-unity.png"),1600,1300);
+                Debug.Log("MAESTRO_PHYSICS_TOOLS_RENDERED");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); if (Directory.Exists(directory)) Directory.Delete(directory,true); }
+        }
         public static void RenderRules()
         {
             var output = Environment.GetEnvironmentVariable("MAESTRO_ART_EVIDENCE");

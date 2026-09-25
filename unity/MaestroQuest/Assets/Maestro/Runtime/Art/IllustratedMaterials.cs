@@ -1,12 +1,15 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace Maestro.Quest.Art
 {
     public static class IllustratedMaterials
     {
         static Texture2D pigment;
+        static readonly Dictionary<Font,Material> textMaterials = new();
+        static bool watchingFonts;
         public static readonly Color Paper = Hex("FFF0D2");
         public static readonly Color Ink = Hex("342D2B");
         public static readonly Color Cover = Hex("73534E");
@@ -14,6 +17,33 @@ namespace Maestro.Quest.Art
         public static readonly Color Ribbon = Hex("C39950");
 
         public static Color Hex(string value) => ColorUtility.TryParseHtmlString("#" + value, out var result) ? result : Color.white;
+
+        // Legacy TextMesh passes vertex colors through without sRGB decoding.
+        public static Color TextColor(Color srgb) => QualitySettings.activeColorSpace == ColorSpace.Linear ? srgb.linear : srgb;
+
+        public static Material TextMaterial(Font font)
+        {
+            if (textMaterials.TryGetValue(font,out var existing) && existing) return existing;
+            var shader = Shader.Find("Maestro/WorldText");
+            if (!shader) throw new System.InvalidOperationException("The world text shader is missing.");
+            var material = new Material(shader) { name = "Depth-tested tool lettering", mainTexture = font.material.mainTexture };
+            textMaterials[font] = material;
+            if (!watchingFonts) { Font.textureRebuilt += UpdateTextAtlas; watchingFonts = true; }
+            return material;
+        }
+
+        static void UpdateTextAtlas(Font font)
+        {
+            if (textMaterials.TryGetValue(font,out var material) && material) material.mainTexture = font.material.mainTexture;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetTextMaterials()
+        {
+            Font.textureRebuilt -= UpdateTextAtlas; watchingFonts = false;
+            foreach (var material in textMaterials.Values) ArtResources.Release(material);
+            textMaterials.Clear();
+        }
 
         public static Material Create(Color color, float grain = .07f)
         {

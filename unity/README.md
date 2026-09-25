@@ -70,7 +70,8 @@ one take per object and 1,200 frames across the room. The user has confirmed wri
 posing and playback on Quest 3; the remaining joint and authoring checks are open.
 
 The third wooden board builds reusable action sequences. New action starts with
-a Maestro gesture. Step type switches between a recording, gesture and wait;
+a Maestro gesture. Step type switches between a recording, gesture, wait and
+Play then throw (recorded motion followed by physical release);
 Use target takes the current room selection. Add step appends another action.
 Duration, Clip loop and Repeat control timing, while On interrupt cycles Restart,
 Ignore and Queue latest. Try action previews the sequence; Stop actions ends all
@@ -135,3 +136,14 @@ the book's page image preserves the existing application's appearance.
 
 See `NativeBrowser/README.md`, `../docs/QUEST_V1_PLAN.md` and
 `../docs/QUEST_ART_DIRECTION.md` for transport, release gaps and accepted scope.
+
+Rigid item physics and MRUK room scanning are described in
+`../docs/QUEST_ROOM_PHYSICS.md`. The solid physics tray controls scene access,
+scan visibility, gravity startup, mass and collision shape. Its surface-placement
+tool uses live environment raycasting. The `-RenderPhysics` option on
+`Verify-Quest.ps1` renders the actual tray without a headset. Physical-room
+alignment, live raycasts, contact/throw feel and performance still need Quest QA.
+The user confirmed a basic room-physics test. Scanned geometry stops loose items
+but does not block tool-selection rays. B/Y or the creation tray's Bring back
+control recovers content; hand users also have a solid Recall pebble above either
+tracked palm, activated by pointing and pinching with the opposite hand.

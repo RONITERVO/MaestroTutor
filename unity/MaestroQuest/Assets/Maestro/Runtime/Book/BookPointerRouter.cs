@@ -11,8 +11,10 @@ namespace Maestro.Quest.Book
     {
         public NativeBookBrowser Browser;
         public RoomEditor Editor;
+        public PhysicsTools Placement;
+        bool capturedPlacement;
         public float MaximumDistance = 2;
-        public LayerMask InteractionLayers = ~0;
+        public LayerMask InteractionLayers = RoomPhysicsLayers.InteractionMask;
         int owner = -1;
         BookPageTarget capturedPage;
         PhysicalAction capturedAction;
@@ -21,6 +23,7 @@ namespace Maestro.Quest.Book
 
         public bool Begin(int pointerId, Ray ray)
         {
+            if (owner == -1 && Placement && Placement.Placing) { owner = pointerId; capturedPlacement = true; return true; }
             if (owner != -1 || !Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore)) return false;
             if (IsMoving(hit.collider)) return false;
             var action = hit.collider.GetComponentInParent<PhysicalAction>();
@@ -45,6 +48,7 @@ namespace Maestro.Quest.Book
         public void End(int pointerId, Ray ray)
         {
             if (pointerId != owner) return;
+            if (capturedPlacement) { Placement.Place(ray); Clear(); return; }
             bool hits = Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore);
             if (hits && IsMoving(hit.collider)) { Cancel(pointerId); return; }
             if (capturedAction != null && hits && hit.collider.GetComponentInParent<PhysicalAction>() == capturedAction) capturedAction.Activate(pointerId);
@@ -60,6 +64,7 @@ namespace Maestro.Quest.Book
         public void Cancel(int pointerId)
         {
             if (pointerId != owner) return;
+            if (capturedPlacement && Placement) Placement.CancelPlacement();
             if (capturedPage != null && Browser != null) Browser.Pointer(lastPixel.x, lastPixel.y, BrowserPointerPhase.Cancel);
             Clear();
         }
@@ -72,7 +77,7 @@ namespace Maestro.Quest.Book
             Browser.Pointer(pixel.x, pixel.y, phase);
         }
 
-        void Clear() { owner = -1; capturedPage = null; capturedAction = null; capturedItem = null; }
+        void Clear() { owner = -1; capturedPage = null; capturedAction = null; capturedItem = null; capturedPlacement = false; }
         static bool IsMoving(Collider collider)
         {
             var item = collider.GetComponentInParent<RoomItem>();

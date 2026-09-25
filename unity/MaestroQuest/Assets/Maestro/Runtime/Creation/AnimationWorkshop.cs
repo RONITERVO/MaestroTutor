@@ -29,7 +29,7 @@ namespace Maestro.Quest.Creation
         bool controlling;
         public event Action<string> Starting;
         public bool ControlsTarget(string id) => controlling && targetId == id;
-        void TakeControl() { Starting?.Invoke(targetId); controlling = true; }
+        void TakeControl() { Starting?.Invoke(targetId); controlling = true; target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true); }
         public bool IsRecording => recording != null;
         public bool IsPlaying => graph.IsValid();
         public bool IsPosing => posing;
@@ -217,6 +217,7 @@ namespace Maestro.Quest.Creation
                 if (target) { foreach (var collider in target.Grab.colliders) collider.enabled = true; target.Grab.enabled = true; editor.RestorePose(targetId); }
                 posing = false;
                 controlling = false;
+                target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);
             }
             finally { stopping = false; }
             Say(saveError ?? "Stopped — saved animation is ready");
