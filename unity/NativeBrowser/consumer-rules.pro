@@ -1,0 +1,3 @@
+-keep class com.maestro.quest.browser.BookWebView { public *; }
+-keep class com.tlab.webkit.BaseOffscreenFragment { public *; }
+-keep class com.robot9.shared.SharedTexture { *; }

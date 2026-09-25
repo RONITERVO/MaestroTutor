@@ -1,0 +1,68 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using UnityEngine;
+
+namespace Maestro.Quest.Book
+{
+    /// <summary>One pointer owner for both pages. Input adapters feed rays and gestures.</summary>
+    public sealed class BookPointerRouter : MonoBehaviour
+    {
+        public NativeBookBrowser Browser;
+        public float MaximumDistance = 2;
+        public LayerMask InteractionLayers = ~0;
+        int owner = -1;
+        BookPageTarget capturedPage;
+        PhysicalBookAction capturedAction;
+        Vector2Int lastPixel;
+
+        public bool Begin(int pointerId, Ray ray)
+        {
+            if (owner != -1 || !Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore)) return false;
+            var action = hit.collider.GetComponentInParent<PhysicalBookAction>();
+            var page = hit.collider.GetComponent<BookPageTarget>();
+            if (action == null && (page == null || Browser == null || !Browser.IsReady)) return false;
+            owner = pointerId;
+            capturedPage = page; capturedAction = action;
+            if (page != null) Send(hit, BrowserPointerPhase.Down);
+            return true;
+        }
+
+        public void Move(int pointerId, Ray ray)
+        {
+            if (pointerId != owner || capturedPage == null) return;
+            if (Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore) && hit.collider.GetComponent<BookPageTarget>() == capturedPage) Send(hit, BrowserPointerPhase.Move);
+            else Cancel(pointerId);
+        }
+
+        public void End(int pointerId, Ray ray)
+        {
+            if (pointerId != owner) return;
+            bool hits = Physics.Raycast(ray, out var hit, MaximumDistance, InteractionLayers, QueryTriggerInteraction.Ignore);
+            if (capturedAction != null && hits && hit.collider.GetComponentInParent<PhysicalBookAction>() == capturedAction) capturedAction.Activate();
+            if (capturedPage != null)
+            {
+                if (hits && hit.collider.GetComponent<BookPageTarget>() == capturedPage) Send(hit, BrowserPointerPhase.Up);
+                else Browser.Pointer(lastPixel.x, lastPixel.y, BrowserPointerPhase.Cancel);
+            }
+            Clear();
+        }
+
+        public void Cancel(int pointerId)
+        {
+            if (pointerId != owner) return;
+            if (capturedPage != null && Browser != null) Browser.Pointer(lastPixel.x, lastPixel.y, BrowserPointerPhase.Cancel);
+            Clear();
+        }
+
+        void Send(RaycastHit hit, BrowserPointerPhase phase)
+        {
+            var uv = capturedPage.PageUV(hit.textureCoord);
+            var pixel = BookCoordinates.ToBrowserPixel(capturedPage.Side, uv.x, uv.y, Browser.Resolution.x, Browser.Resolution.y);
+            lastPixel = new Vector2Int(pixel.x, pixel.y);
+            Browser.Pointer(pixel.x, pixel.y, phase);
+        }
+
+        void Clear() { owner = -1; capturedPage = null; capturedAction = null; }
+        void OnDisable() => Cancel(owner);
+    }
+}

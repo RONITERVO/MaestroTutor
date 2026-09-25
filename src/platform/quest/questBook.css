@@ -1,0 +1,20 @@
+/* Full-page content only. New book controls belong to physical Unity objects. */
+.quest-book-surface { --quest-page-width: 50vw; width: 100vw; height: 100vh; overflow: hidden; background: #fff0d2; color: #342d2b; }
+.quest-chat-page { position: absolute; inset: 0 auto 0 0; width: var(--quest-page-width); overflow: hidden; container-type: inline-size; transform: translateZ(0); }
+.quest-chat-document { position: absolute; inset: 0; overflow: hidden; }
+.quest-chat-document > div { height: 100%; min-height: 0; }
+.quest-chat-document main { min-height: 0; }
+.quest-layout-conversation .quest-chat-page { left: auto; right: 0; }
+.quest-earlier-page { position: absolute; inset: 0 auto 0 0; width: var(--quest-page-width); display: flex; flex-direction: column; overflow: hidden; background: var(--page-bg-color); container-type: inline-size; transform: translateZ(0); }
+.quest-earlier-messages { flex: 1; min-height: 0; overflow: auto; padding: 16px; }
+.quest-practice-page { position: absolute; inset: 0 0 0 auto; width: var(--quest-page-width); display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; background: #fff0d2; }
+.quest-artifact-content { flex: 1; overflow: auto; min-height: 0; }
+.quest-artifact-content .quest-active-artifact { height: 100%; }
+.quest-active-artifact > div:first-child { max-width: none; min-height: 0; height: 100%; display: flex; flex-direction: column; }
+.quest-active-artifact .embed-box { flex: 1; min-height: 0; max-height: none; aspect-ratio: auto; }
+.quest-artifact-content > img, .quest-artifact-content video { width: 100%; height: 100%; object-fit: contain; }
+.quest-artifact-content audio { width: 100%; margin-top: 30%; }
+.quest-artifact-preview { width: 100%; display: flex; flex-direction: column; align-items: stretch; padding: 10px; gap: 8px; color: #342d2b; background: #f8ecd4; border: 1px solid #756b5c; border-radius: 10px; text-align: left; }
+.quest-artifact-preview img, .quest-artifact-preview svg { width: 100%; height: auto; max-height: 240px; object-fit: contain; }
+.quest-artifact-preview small { color: #286d69; }
+.quest-book-surface button:focus-visible { outline: 3px solid #2b8d88; outline-offset: 3px; }

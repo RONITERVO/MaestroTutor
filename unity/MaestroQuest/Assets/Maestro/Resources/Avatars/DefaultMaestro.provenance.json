@@ -1,0 +1,16 @@
+{
+  "generator": "Blender 4.5.9 / create_maestro.py",
+  "heightMeters": 1.697,
+  "triangles": 62372,
+  "materials": 14,
+  "bones": 18,
+  "animations": {
+    "Idle": 120,
+    "Listening": 90,
+    "Speaking": 90,
+    "Greeting": 75,
+    "Pointing": 90
+  },
+  "provenance": "Original procedural geometry and animation; visual reference is the user-supplied cartoon Maestro reference (2026-09-25).",
+  "artDirection": "Simplified cartoon proportions, blue-tipped braids, purple cropped top and cargo trousers, sneakers, matte pencil and watercolor."
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Maestro.Quest.Tests",
+  "rootNamespace": "Maestro.Quest.Tests",
+  "references": ["Maestro.Quest"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Maestro.Quest.Editor",
+  "rootNamespace": "Maestro.Quest.Editor",
+  "references": ["Maestro.Quest", "Unity.XR.Management", "Unity.XR.Management.Editor", "Unity.XR.OpenXR", "Unity.XR.OpenXR.Editor"],
+  "includePlatforms": ["Editor"]
+}

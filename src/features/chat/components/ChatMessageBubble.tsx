@@ -25,6 +25,7 @@ import OfficeFileViewer from './OfficeFileViewer';
 import { decodeTextFromDataUrl, isOfficeAttachment, isTextLikeAttachment } from '../../../core-sdk/chat/fileAttachments';
 import { isRunnableMiniGameAttachment } from '../utils/miniGameAttachment';
 import { selectPrimaryUploadedAttachmentVariant } from '../../../core-sdk/chat/uploadedAttachmentVariants';
+import { useBookPresentation } from '../../../platform/quest/BookPresentationContext';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -58,6 +59,9 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   onImageGenViewCost,
   registerBubbleEl
 }) => {
+  const book = useBookPresentation();
+  // Each half of the wide book texture is a phone-sized surface.
+  const messageWidthClasses = book ? 'max-w-[90%]' : 'max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]';
   const isUser = message.role === 'user';
   const settings = useMaestroStore(selectSettings);
   const selectedLanguagePair = useMaestroStore(selectSelectedLanguagePair);
@@ -1000,7 +1004,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
   if (message.thinking && !isAttachmentLoading) {
     return (
       <div className="flex justify-start mb-4">
-        <div className="relative max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]" style={{ width: '100%' }}>
+        <div className={`relative ${messageWidthClasses}`} style={{ width: '100%' }}>
           <div
             className="relative p-3 overflow-visible msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text sketchy-border-thin"
             style={{
@@ -1068,7 +1072,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
            else bubbleWrapperClasses += " msg-depth bg-ai-msg-bg bg-opacity-90 text-ai-msg-text";
       }
   } else {
-      tapeWrapperMaxWidth = "max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[65%]";
+      tapeWrapperMaxWidth = messageWidthClasses;
       bubbleWrapperClasses += " p-3 overflow-visible";
       if (isUser) bubbleWrapperClasses += " msg-depth-user bg-user-msg-bg bg-opacity-90 text-user-msg-text";
       else if (isError) bubbleWrapperClasses += " msg-depth bg-error-msg-bg/10 bg-opacity-90 text-error-msg-text";

@@ -147,3 +147,22 @@ live-gateway/lib/
 # Headless browser/profile artifacts (may contain session cookies)
 /.maestro-debug*/
 /.maestro-headless/
+
+# Unity Quest client and local tooling
+/unity/MaestroQuest/[Ll]ibrary/
+/unity/MaestroQuest/[Tt]emp/
+/unity/MaestroQuest/[Oo]bj/
+/unity/MaestroQuest/[Bb]uilds/
+/unity/MaestroQuest/[Ll]ogs/
+/unity/MaestroQuest/[Uu]serSettings/
+/unity/MaestroQuest/MemoryCaptures/
+/unity/MaestroQuest/Assets/StreamingAssets/maestro-web/
+/.quest-tools/
+/.quest-evidence/
+/unity/NativeBrowser/.gradle/
+/unity/NativeBrowser/.cxx/
+/unity/NativeBrowser/build/
+/unity/NativeBrowser/local.properties
+*.csproj
+*.sln
+*.slnx
