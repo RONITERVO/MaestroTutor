@@ -32,8 +32,9 @@ namespace Maestro.Quest.Creation
         public float followDistance, walkSpeed;
         // Zero means the included gait; positive values are one-based clips of modelHash.
         public int walkClip;
+        public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip };
+        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
@@ -52,7 +53,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             var ids = new HashSet<string>(); int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
@@ -60,6 +61,8 @@ namespace Maestro.Quest.Creation
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
                 bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
+                if (!string.IsNullOrEmpty(item.walkMotionId) && (version < 2 || item.kind != RoomObjectKind.Maestro || !Guid.TryParseExact(item.walkMotionId,"N",out _) || item.walkClip != 0))
+                    return Fail("The library walking motion reference is invalid.",out error);
                 if (item.walkClip < 0 || item.walkClip > 32 || item.walkClip > 0 && (item.kind != RoomObjectKind.Maestro || !ModelLibrary.ValidHash(item.modelHash)))
                     return Fail("The walking clip reference is invalid.",out error);
                 if (!float.IsFinite(item.followDistance) || !float.IsFinite(item.walkSpeed) ||
@@ -138,7 +141,7 @@ namespace Maestro.Quest.Creation
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
             data.position = position; data.rotation = rotation; return true;
         }
-        public RoomDocument Snapshot() => new() { version = 1, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
+        public RoomDocument Snapshot() => new() { version = 2, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
 
         public bool Apply(RoomObjectData[] replacements, string[] removals, out string error)
         {
@@ -146,7 +149,7 @@ namespace Maestro.Quest.Creation
             var candidate = new Dictionary<string, RoomObjectData>(items);
             foreach (var id in removals) candidate.Remove(id);
             foreach (var item in replacements) candidate[item.id] = item.Copy();
-            if (!(new RoomDocument { version = 1, objects = candidate.Values.ToArray() }).Validate(out error)) return false;
+            if (!(new RoomDocument { version = 2, objects = candidate.Values.ToArray() }).Validate(out error)) return false;
             var change = new Change {
                 Before = changedIds.Where(items.ContainsKey).Select(id => items[id].Copy()).ToArray(),
                 After = changedIds.Where(candidate.ContainsKey).Select(id => candidate[id].Copy()).ToArray()

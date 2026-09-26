@@ -13,6 +13,8 @@ namespace Maestro.Quest.Rules
         void Stop(string runId, bool preservePlacement);
     }
     public interface IRuleCompletion { void Complete(string runId); }
+    public enum RuleActionState { Preparing, Ready, Failed }
+    public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
 
     /// <summary>Bounded scheduler; disjoint targets can run concurrently. No user code executes.</summary>
     public sealed class RuleScheduler
@@ -24,7 +26,8 @@ namespace Maestro.Quest.Rules
             public RuleBinding Binding;
             public HashSet<string> Targets;
             public int Step;
-            public float Ends;
+            public float Ends, Duration, PrepareDeadline;
+            public bool Preparing;
         }
         sealed class Pending { public string SequenceId; public RuleBinding Binding; }
         readonly IRuleActions actions;
@@ -35,6 +38,7 @@ namespace Maestro.Quest.Rules
         string activity;
         bool suspended;
         public int RunningCount => running.Count;
+        public int PreparingCount => running.Count(x => x.Preparing);
         public int QueuedCount => queued.Count;
         public string LastError { get; private set; }
         public RuleScheduler(IRuleActions actions) { this.actions = actions; }
@@ -100,6 +104,10 @@ namespace Maestro.Quest.Rules
         {
             if (!actions.Start(run.Id,run.Sequence.steps[run.Step],out float seconds,out var error) || !float.IsFinite(seconds) || seconds < .01f || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false); return false; }
+            run.Duration = seconds; run.PrepareDeadline = now+30;
+            var state = actions is IRuleReadiness readiness ? readiness.State(run.Id,out error) : RuleActionState.Ready;
+            if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false); return false; }
+            run.Preparing = state == RuleActionState.Preparing;
             run.Ends = now + seconds; return true;
         }
         public void Tick(float now)
@@ -107,6 +115,15 @@ namespace Maestro.Quest.Rules
             if (suspended || !float.IsFinite(now)) return;
             foreach (var run in running.ToArray())
             {
+                if (run.Preparing)
+                {
+                    if (now >= run.PrepareDeadline) { LastError = "The action took too long to load; try again"; Stop(run,false); continue; }
+                    var state = ((IRuleReadiness)actions).State(run.Id,out var error);
+                    if (state == RuleActionState.Failed)
+                    { LastError = error ?? "The action took too long to load; try again"; Stop(run,false); continue; }
+                    if (state == RuleActionState.Ready) { run.Preparing = false; run.Ends = now+run.Duration; }
+                    continue; // Loading time never consumes any of the requested playback.
+                }
                 if (now < run.Ends) continue;
                 if (actions is IRuleCompletion completion) completion.Complete(run.Id); else actions.Stop(run.Id,false);
                 run.Step++;

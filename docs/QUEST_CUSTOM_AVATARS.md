@@ -128,6 +128,8 @@ stable library identities, bounded cached playback and the import tray's Save
 motions / Library controls. This keeps additional export geometry and textures
 out of the saved motion library. Compatible GLB/VRM 1.0 motions can be previewed
 on the current custom tutor; VRM 0.x reusable extraction is explicitly rejected.
-Library role assignments and visual-rule references are still pending, and no
-library update has been installed while the Quest charges. The current status,
+Saved motions now support visual-rule actions and walking assignments with
+stable IDs, compatible replacement and protected room/rule v2 migration. Broader
+role profiles remain pending. No library update has been installed while the
+Quest charges. The current status,
 limits and reproducible collection audit are in QUEST_ANIMATION_LIBRARY.md.

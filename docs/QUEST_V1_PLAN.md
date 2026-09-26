@@ -263,3 +263,14 @@ hundreds-of-clips support or authored travel complete from individual-file tests
 The headset is charging and the user is sleeping. Keep device work on hold until
 they return and reconnect it. Their reported PC crash involved the phone USB
 network adapter; no Quest cause was established. Continue PC-side work.
+
+### Saved-motion actions and walking
+
+The reusable-motion foundation now supports stable-ID visual-rule actions for
+Maestro and matching imported objects, controller/state/VR event triggering,
+and persisted walking selections. Asynchronous loading reserves targets without
+consuming playback time; interruption prevents late playback. Room/rule v2
+migration retains v1 originals and old exact-model clip references. Searchable
+book browsing, metadata authoring UI, broader role profiles, blending, explicit
+travel/contact policies, deletion/relinking and Quest library profiling remain.
+See QUEST_ANIMATION_LIBRARY.md and QUEST_DEVICE_QA.md for verification evidence.

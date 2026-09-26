@@ -26,6 +26,7 @@ namespace Maestro.Quest.Avatar
         float importedTime, importedSpeed = 1;
         bool importedLoop;
         MotionLibrary.Lease libraryMotion;
+        AvatarWalkMotion walkMotion;
         GameObject included;
         ImportedModel custom;
         string requestedModel = "";
@@ -39,11 +40,16 @@ namespace Maestro.Quest.Avatar
         public ImportedModel CustomModel => custom;
         public bool IsImportedClipPlaying => importedClip >= 0 || libraryMotion != null;
         public int WalkClip => walkClip;
-        public string WalkClipName => custom && walkClip >= 0 && walkClip < custom.ClipCount ? custom.ClipName(walkClip) : "Included walk";
+        public string WalkMotionId => walkMotion?.Id;
+        public string LibraryMotionId => libraryMotion?.Id;
+        public string WalkMotionStatus => walkMotion?.Status;
+        public event Action WalkMotionChanged;
+        public string WalkClipName => !string.IsNullOrEmpty(WalkMotionId) ? walkMotion.Name : custom && walkClip >= 0 && walkClip < custom.ClipCount ? custom.ClipName(walkClip) : "Included walk";
         public event Action ModelChanged;
 
         void Awake()
         {
+            walkMotion = new AvatarWalkMotion(this); walkMotion.Changed += () => WalkMotionChanged?.Invoke();
             var prefab = Resources.Load<GameObject>("Avatars/DefaultMaestro");
             if (!prefab) { Debug.LogError("The included Maestro model is missing."); return; }
             var model = Instantiate(prefab, transform);
@@ -66,6 +72,7 @@ namespace Maestro.Quest.Avatar
         {
             hash ??= "";
             if (requestedModel == hash && (!retry || ModelBusy)) return ModelLoad;
+            walkMotion?.Stop(); StopImportedClip();
             requestedModel = hash; int generation = ++modelGeneration;
             if (hash.Length == 0)
             {
@@ -142,7 +149,7 @@ namespace Maestro.Quest.Avatar
         }
         public void SetEditing(bool value)
         {
-            StopImportedClip();
+            walkMotion?.Stop(); StopImportedClip();
             editing = value;
             if (!PoseRig) return;
             PoseRig.SetManual(value || savedPose != null);
@@ -152,6 +159,8 @@ namespace Maestro.Quest.Avatar
         {
             bool walking = metresPerSecond > .025f && !ReducedMotion;
             float rate = walking ? Mathf.Clamp(metresPerSecond/(.65f*transform.lossyScale.y),.25f,2) : 1;
+            if (!walking) walkMotion?.Stop();
+            if (walking && walkMotion != null && walkMotion.Apply(rate)) { spatialWalking = true; activity = "spatial"; return; }
             if (walking && custom && walkClip >= 0 && walkClip < custom.ClipCount && custom.ClipDuration(walkClip) >= .1f)
             {
                 if (!spatialWalking || activity != "spatial" || importedClip != walkClip) PlayImportedClip(walkClip,true);
@@ -163,7 +172,9 @@ namespace Maestro.Quest.Avatar
             spatialWalking = walking; activity = "spatial";
             animator.speed = ReducedMotion ? 0 : rate;
         }
-        public void SetWalkClip(int index) { walkClip = index; }
+        public void SetWalkClip(int index) { walkClip = index; walkMotion?.Configure(null,null); }
+        public void SetWalkReference(int index,string id,MotionLibrary library) { walkClip = index; walkMotion?.Configure(library,id); }
+        public void SetImportedPlaybackRate(float rate) { if (float.IsFinite(rate)) importedSpeed = Mathf.Clamp(rate,.25f,2); }
         public bool PlayImportedClip(int index, bool loop)
         {
             if (ModelBusy || !custom || index < 0 || index >= custom.ClipCount || custom.ClipDuration(index) <= 0) return false;
@@ -203,9 +214,9 @@ namespace Maestro.Quest.Avatar
             // A gesture can be sampled into a pose while authoring; live tutor activity
             // resumes when authoring ends and no saved static pose is active.
         }
-        void OnApplicationPause(bool value) { if (value) StopImportedClip(); }
-        void OnApplicationFocus(bool value) { if (!value) StopImportedClip(); }
-        void OnDisable() => StopImportedClip();
-        void OnDestroy() { StopImportedClip(); disposed = true; modelGeneration++; }
+        void OnApplicationPause(bool value) { if (value) { walkMotion?.Stop(); StopImportedClip(); } }
+        void OnApplicationFocus(bool value) { if (!value) { walkMotion?.Stop(); StopImportedClip(); } }
+        void OnDisable() { walkMotion?.Stop(); StopImportedClip(); }
+        void OnDestroy() { walkMotion?.Stop(); StopImportedClip(); disposed = true; modelGeneration++; }
     }
 }

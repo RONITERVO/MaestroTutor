@@ -64,7 +64,7 @@ namespace Maestro.Quest.Rules
         public bool Trigger(string sequenceId)
         {
             bool accepted = Scheduler.Trigger(sequenceId,Time.unscaledTime);
-            workshop.Say(accepted ? "Action triggered" : Scheduler.LastError ?? "Action could not start"); return accepted;
+            workshop.Say(accepted ? Scheduler.PreparingCount > 0 ? "Loading action motion…" : "Action triggered" : Scheduler.LastError ?? "Action could not start"); return accepted;
         }
         public void TrySelected()
         {

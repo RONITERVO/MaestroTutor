@@ -73,8 +73,9 @@ one take per object and 1,200 frames across the room. The user has confirmed wri
 posing and playback on Quest 3; the remaining joint and authoring checks are open.
 
 The third wooden board builds reusable action sequences. New action starts with
-a Maestro gesture. Step type switches between a recording, gesture, wait and
-Play then throw (recorded motion followed by physical release);
+a Maestro gesture. Step type selects a recording, gesture, wait, Play then throw
+(recorded motion followed by physical release), gaze/follow, an embedded clip
+or a saved library motion. Motion cycles compatible clips for the latter two;
 Use target takes the current room selection. Add step appends another action.
 Duration, Clip loop and Repeat control timing, while On interrupt cycles Restart,
 Ignore and Queue latest. Try action previews the sequence; Stop actions ends all
@@ -96,15 +97,19 @@ tracking. Room buttons can be operated by either controller. B/Y recovery also
 brings room buttons back within reach. Remove button deletes the last button
 created for the selected sequence. Undo rules/Redo rules are separate from room
 object undo. Rule changes, bindings and button placements autosave to
-`rules.v1.json`, with validation and backup recovery.
+`rules.v2.json`, with validation and backup recovery. Room saves use
+`room.v2.json`. Valid v1 saves migrate in memory and remain unchanged on disk;
+a damaged or newer v2 save cannot silently revert to a stale v1 copy.
 
 Current limits are 32 sequences, 16 steps per sequence, 128 triggers, 16 buttons
 (up to four on each controller), and eight concurrent sequences on separate
 targets. Sequences never autoplay when loading a save or returning to the app.
 The current builder supplies numbered action names, preset durations and built-in
 events/actions; it does not execute arbitrary code. Custom names, more authoring
-controls, gaze/follow, locomotion and editable input bindings
-remain implementation work. Rules and mounted buttons have automated Unity
+controls, broader role profiles, locomotion and editable input bindings
+remain implementation work. Saved motion IDs survive renames and compatible
+model replacement; loading time does not consume their action duration. See
+`docs/QUEST_ANIMATION_LIBRARY.md` for library limits and migration details. Rules and mounted buttons have automated Unity
 coverage; their headset usability has not yet been checked. The `-RenderRules`
 option on `Verify-Quest.ps1` produces a desktop render of the actual solid controls.
 

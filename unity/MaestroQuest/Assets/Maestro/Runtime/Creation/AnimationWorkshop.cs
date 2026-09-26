@@ -28,14 +28,14 @@ namespace Maestro.Quest.Creation
         int selectedFrame = -1;
         int gestureIndex;
         bool controlling;
-        bool importedPreview;
+        bool importedPreview, walkPreview;
         public event Action<string> Starting;
         public bool ControlsTarget(string id) => controlling && targetId == id;
         void TakeControl() { Starting?.Invoke(targetId); controlling = true; target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true); }
         public bool IsRecording => recording != null;
         public bool IsPlaying => graph.IsValid();
         public bool IsPosing => posing;
-        public bool IsImportedPreview => importedPreview;
+        public bool IsImportedPreview => importedPreview || walkPreview;
         public string Status { get; private set; } = "Select an object, or choose Pose Maestro";
         public event Action Changed;
 
@@ -50,7 +50,7 @@ namespace Maestro.Quest.Creation
             Stop(); targetId = editor.SelectedId; target = editor.Find(targetId); avatar = target ? target.GetComponent<MaestroAvatar>() : null;
             selectedFrame = -1; Say(target ? "Selected " + editor.Read(targetId).kind : "Select an object, or choose Pose Maestro");
         }
-        void Grabbed(RoomItem item) { if (IsPlaying || importedPreview) Stop(); }
+        void Grabbed(RoomItem item) { if (IsPlaying || importedPreview || walkPreview) Stop(); }
         void Say(string value) { Status = value; Changed?.Invoke(); }
         bool Ready()
         {
@@ -205,6 +205,11 @@ namespace Maestro.Quest.Creation
         public void PreviewWalk()
         {
             Stop(); editor.Select(editor.Find("maestro")); SelectionChanged(); if (!Ready() || !avatar) return;
+            if (!string.IsNullOrEmpty(avatar.WalkMotionId))
+            {
+                TakeControl(); avatar.SetEditing(true); walkPreview = true; avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y);
+                Say("Saved walk preview — Stop ends preview"); return;
+            }
             if (avatar.CustomModel && avatar.WalkClip >= 0) { PreviewImportedClip(avatar.WalkClip,true); return; }
             TakeControl(); avatar.SetEditing(true); avatar.Gesture("Walk"); Say("Included walk preview — Stop ends preview");
         }
@@ -241,7 +246,7 @@ namespace Maestro.Quest.Creation
                 }
                 if (target) { foreach (var collider in target.Grab.colliders) collider.enabled = true; target.Grab.enabled = true; editor.RestorePose(targetId); }
                 posing = false;
-                importedPreview = false;
+                importedPreview = false; walkPreview = false;
                 controlling = false;
                 target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);
             }
@@ -250,6 +255,7 @@ namespace Maestro.Quest.Creation
         }
         void Update()
         {
+            if (walkPreview) { if (!avatar) { Stop(); return; } avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y); }
             if (importedPreview && (!avatar || !avatar.IsImportedClipPlaying)) { Stop(); return; }
             if (IsRecording)
             {

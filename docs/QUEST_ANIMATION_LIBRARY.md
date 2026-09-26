@@ -1,8 +1,8 @@
 # Expandable Maestro animation library
 
-Design and implementation record, 2026-09-26. Motion extraction, storage and
-manual previews are implemented; the full searchable role/rule library remains
-in progress. Quest 3 is charging; no new headset installation or acceptance is
+Design and implementation record, 2026-09-26. Motion extraction, storage,
+manual previews, stable-ID rule actions and saved walking assignments are
+implemented. Searchable browsing and broader role profiles remain in progress. Quest 3 is charging; no new headset installation or acceptance is
 implied.
 
 ## Keep collecting originals
@@ -114,13 +114,48 @@ tray states is part of desktop QA.
 
 Names, tags, favourites and filtering exist in the data API. The hundreds-of-
 clips browsing experience, book search UI, metadata editing and helper review UI
-are still outstanding. Library clips are not yet assignable to Follow roles or
-visual rules: those still use the existing embedded-model hash/index bindings.
+are still outstanding. Saved motions can now drive visual rules and the walking
+gait used by Follow. Existing embedded-model hash/index bindings remain valid.
 The private batch audit is a developer verification path, not a headset bulk
 import UI. Use `Verify-Quest.ps1 -MotionAuditDirectory SOURCE_DIRECTORY` to
 exercise real extraction and restart, plus source-versus-library transform and
 baked-mesh equivalence on one representative per category. Its outputs stay in
 ignored `.quest-evidence/motion-library`; it refuses output under the originals.
+
+## Saved-motion rules, walking and room migration
+
+The visual rule builder's **Saved** action selects a compatible library motion
+with the existing Motion control. It uses the same controller-mounted buttons,
+tutor activity events and VR item events as other action sequences. The stored
+motion ID survives renaming, metadata edits and compatible model replacement.
+Both Maestro and matching imported room objects can play library motions.
+Missing payloads and incompatible rest rigs produce an actionable failure.
+
+A preparing action reserves its target while loading. Its playback duration
+starts only after the clip is ready; loading has a separate 30-second deadline.
+Stop, state exit, focus loss, authoring, grabbing or replacement cancel ownership
+and prevent a late load from starting playback. Sequence interruption policies
+and the existing 30-second action duration cap still apply. Longer motions need
+an explicit capped duration. No arbitrary user code is executed.
+
+**Walk clip** cycles the included gait, embedded clips and compatible saved
+motions. **Preview walk** exercises the same saved selection without room travel.
+Following uses that gait while navigation owns translation. The included gait
+remains available during loading or after a missing/incompatible motion; the
+tray reports the fallback. A loaded clip starts only on a still-active movement
+frame. Stopping, posing or losing focus cannot leave a late completion playing.
+The ID persists through undo, restart and compatible avatar replacement; an
+incompatible replacement retains the preference but uses the included gait.
+This is not calibrated foot planting, blended gait transitions or authored travel.
+
+Room and rule saves now use `room.v2.json` and `rules.v2.json`. Valid v1 files
+load and upgrade in memory, retaining objects, recordings, raw clip selections,
+sequences and controller buttons. First save writes v2; v1 originals remain
+unchanged. Once v2 exists, corruption cannot silently load the stale v1 room.
+Valid current backups recover damaged saves. Unknown newer versions remain
+read-only even if an older valid backup exists. Invalid unrecoverable saves are
+preserved and saving is disabled. Existing embedded-clip references keep their
+exact model hash and index; they are not silently converted to a guessed library ID.
 
 ## Desktop verification snapshot
 
@@ -149,6 +184,17 @@ Actual Stage Walk still passed tutor replacement, posing and anchored clip
 playback. Editor processes exited successfully; evidence is retained privately
 under `.quest-evidence/motion-library/desktop-verification`. The ordinary build
 runs the 38 EditMode and 37 required PlayMode checks without private files.
+
+A subsequent saved-motion binding run passed 41 EditMode and 43 PlayMode
+checks, with the actual Stage Walk selected and the optional collection audit
+omitted. The saved-library walk moved the real leg and deformed visible vertices
+by up to 0.1275 metres while keeping the fitted container and room placement
+fixed. New checks cover imported-object library playback, controller/state
+triggers, rename stability, loading reservations/timeouts/cancellation, fallback,
+compatible avatar replacement, Undo/restart and v1/v2 save protection. This is
+desktop evidence; device gait and long-session performance remain open. Evidence
+is in ignored `.quest-evidence/motion-bindings/desktop-verification`. The current
+ordinary build requires 41 EditMode and 41 PlayMode checks without private files.
 
 ## Categorization and movement
 
@@ -219,7 +265,7 @@ generation or upload private models as part of this work.
 Embedded-model preview, persisted walk selection and ImportedClip visual rules
 remain available alongside the new reusable-motion foundation above. The large
 library is not complete: add searchable book browsing and metadata editing,
-role assignments and stable-ID rule actions with deterministic migration;
+broader role assignments and explicit embedded-clip relinking;
 blended transitions; explicit travel/contact policies; library deletion/relinking
 and retained references through room/rule undo. Profile import and long-session
 playback on Quest, including low storage, interruption and large collections.

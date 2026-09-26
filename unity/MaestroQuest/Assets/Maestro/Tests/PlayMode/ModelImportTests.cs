@@ -178,7 +178,31 @@ namespace Maestro.Quest.Tests
                 var hips = avatar.transform.InverseTransformPoint(avatar.PoseRig.Bone(PoseJoint.Hips).position);
                 Assert.That(new Vector2(hips.x,hips.z).magnitude,Is.LessThan(.25f),"Clip travel must not bypass room navigation");
                 yield return Capture("external-maestro-clip.png",Vector3.up*.9f,1.05f,true);
-                avatar.SpatialWalk(0); Assert.That(avatar.IsImportedClipPlaying,Is.False); avatar.SetEditing(false);
+                avatar.SpatialWalk(0); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+                // Exercise the reusable payload through the actual walking owner,
+                // including visible deformation rather than only synthetic bones.
+                using var motions = new MotionLibrary(directory);
+                var extract = motions.ImportAsync(Path.GetFileName(path),asset.Bytes);
+                yield return new WaitUntil(() => extract.IsCompleted); Assert.That(extract.Exception,Is.Null);
+                var motion = extract.Result.First(x => !x.Short);
+                avatar.SetWalkReference(-1,motion.id,motions);
+                float deadline = Time.realtimeSinceStartup+15;
+                while (avatar.LibraryMotionId != motion.id && Time.realtimeSinceStartup < deadline) { avatar.SpatialWalk(.65f); yield return null; }
+                Assert.That(avatar.LibraryMotionId,Is.EqualTo(motion.id),avatar.WalkMotionStatus);
+                baked = new Mesh(); var initialMotion = Vertices(); first = avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg).rotation;
+                for (int frame = 0; frame < 24; frame++) { avatar.SpatialWalk(.65f); yield return null; }
+                float motionDisplacement = initialMotion.Zip(Vertices(),(a,b) => Vector3.Distance(a,b)).Max();
+                Assert.That(motionDisplacement,Is.GreaterThan(.01f),"Saved walking motion must deform the real Meshy model");
+                Assert.That(Quaternion.Angle(first,avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg).rotation),Is.GreaterThan(.01f));
+                Assert.That(Vector3.Distance(position,avatar.transform.position),Is.LessThan(.0001f));
+                Assert.That(Vector3.Distance(localPosition,container.localPosition),Is.LessThan(.0001f));
+                Assert.That(Vector3.Distance(localScale,container.localScale),Is.LessThan(.0001f));
+                hips = avatar.transform.InverseTransformPoint(avatar.PoseRig.Bone(PoseJoint.Hips).position);
+                Assert.That(new Vector2(hips.x,hips.z).magnitude,Is.LessThan(.25f));
+                yield return Capture("external-maestro-library-walk.png",Vector3.up*.9f,1.05f,true);
+                UnityEngine.Object.Destroy(baked);
+                Debug.Log("MAESTRO_EXTERNAL_LIBRARY_WALK_VERIFIED file="+Path.GetFileName(path)+" vertexDisplacement="+motionDisplacement);
+                avatar.SpatialWalk(0); avatar.SetEditing(false); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             }
             Debug.Log("MAESTRO_EXTERNAL_TUTOR_VERIFIED file="+Path.GetFileName(path)+" posedVertexDisplacement="+displacement+" channels="+avatar.PoseRig.Capture().Length);
         }

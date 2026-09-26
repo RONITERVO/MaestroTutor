@@ -79,5 +79,16 @@ The installed baseline's mask excludes default-layer tool trays; their position
 was not established as the user's blocker. No connected route remains a
 separate condition. Neither Size nor these messages disable scanned collisions.
 
-These changes await device acceptance after charging. The larger motion-pack
-library is specified in QUEST_ANIMATION_LIBRARY.md and is not yet implemented.
+These changes await device acceptance after charging. The reusable motion
+library and its remaining gates are described in QUEST_ANIMATION_LIBRARY.md.
+
+## Reusable walking motions (desktop development)
+
+Walk clip now also selects compatible saved library motions. Their stable IDs
+survive renaming, Undo, restart and same-rig avatar replacement. While a clip
+loads, or if its payload is missing or its rig incompatible, the included gait
+runs and the tray explains the fallback. Preview walk and Follow use the same
+selection. Late loading cannot start playback after Stop, posing or focus loss.
+Imported horizontal travel remains anchored; room navigation owns translation.
+Room v2 migration retains old embedded walk selections and leaves v1 files
+untouched. Device gait acceptance is still required after charging.

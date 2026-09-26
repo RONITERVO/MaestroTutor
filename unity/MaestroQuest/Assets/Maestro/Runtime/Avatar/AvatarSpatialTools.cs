@@ -40,7 +40,7 @@ namespace Maestro.Quest.Avatar
             }
             preferences = Label(transform,new Vector3(0,.245f,-.023f),"",.0047f);
             status = Label(transform,new Vector3(0,-.225f,-.023f),"",.0044f);
-            motion.Changed += Refresh; if (editor) editor.Changed += Refresh; if (avatar) avatar.ModelChanged += Refresh; if (animations) animations.Changed += Refresh; Refresh();
+            motion.Changed += Refresh; if (editor) editor.Changed += Refresh; if (avatar) { avatar.ModelChanged += Refresh; avatar.WalkMotionChanged += Refresh; } if (animations) animations.Changed += Refresh; Refresh();
         }
         void Begin(AvatarSpatialMode mode) { animations.Stop(); rules?.Scheduler.StopTarget("maestro",true); motion.Begin("manual",mode,out _); }
         void Stop() { animations.Stop(); rules?.Scheduler.StopTarget("maestro",true); motion.Stop(); }
@@ -55,13 +55,16 @@ namespace Maestro.Quest.Avatar
         {
             var choices = new List<int> { -1 }; var model = avatar.CustomModel;
             if (model) for (int i=0;i<model.ClipCount;i++) if (model.ClipDuration(i) >= .1f) choices.Add(i);
-            editor.SetAvatarWalkClip(choices[(choices.IndexOf(avatar.WalkClip)+1)%choices.Count]);
+            var saved = editor.Motions.List(rigHash:model ? model.MotionRigHash ?? "" : "");
+            int at = string.IsNullOrEmpty(avatar.WalkMotionId) ? choices.IndexOf(avatar.WalkClip) : choices.Count+Array.FindIndex(saved,x => x.id == avatar.WalkMotionId);
+            int next = (at+1)%(choices.Count+saved.Length);
+            if (next < choices.Count) editor.SetAvatarWalkClip(choices[next]); else editor.SetAvatarWalkMotion(saved[next-choices.Count].id);
         }
         void PreviewWalk() { motion.Stop(); rules?.Scheduler.StopTarget("maestro",true); animations.PreviewWalk(); Refresh(); }
         void Refresh()
         {
             preferences.text = "Maestro · Distance " + motion.Distance.ToString("0.0") + " m · Walk " + motion.Speed.ToString("0.00") + " m/s · Size " + (editor ? editor.Read("maestro").scale : 1f).ToString("0.00") + "×";
-            status.text = string.Join("\n",ModelText.Wrap((animations && animations.ControlsTarget("maestro") ? animations.Status : motion.Status) + " · " + (avatar ? avatar.WalkClipName : "Included walk"),62).Take(3));
+            status.text = string.Join("\n",ModelText.Wrap((animations && animations.ControlsTarget("maestro") ? animations.Status : motion.Status) + " · " + (avatar ? avatar.WalkClipName : "Included walk") + (avatar && avatar.WalkMotionStatus != null ? " · "+avatar.WalkMotionStatus : ""),62).Take(3));
         }
         Material Paint(string color) { var value = IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); materials.Add(value); return value; }
         static void Part(Transform parent,Vector3 position,Vector3 scale,Material material)
@@ -76,6 +79,6 @@ namespace Maestro.Quest.Avatar
             value.text = text; value.richText = false; value.anchor = TextAnchor.MiddleCenter; value.alignment = TextAlignment.Center; value.color = IllustratedMaterials.TextColor(IllustratedMaterials.Ink);
             root.GetComponent<MeshRenderer>().sharedMaterial = IllustratedMaterials.TextMaterial(value.font); return value;
         }
-        void OnDestroy() { if (motion) motion.Changed -= Refresh; if (editor) editor.Changed -= Refresh; if (avatar) avatar.ModelChanged -= Refresh; if (animations) animations.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
+        void OnDestroy() { if (motion) motion.Changed -= Refresh; if (editor) editor.Changed -= Refresh; if (avatar) { avatar.ModelChanged -= Refresh; avatar.WalkMotionChanged -= Refresh; } if (animations) animations.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
     }
 }

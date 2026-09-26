@@ -245,7 +245,7 @@ namespace Maestro.Quest.Creation
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
-                var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.SetWalkClip(data.walkClip-1); _ = avatar.SetModel(data.modelHash,Models); }
+                var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.SetWalkReference(data.walkClip-1,data.walkMotionId,Motions); _ = avatar.SetModel(data.modelHash,Models); }
                 if (!data.IsBuiltIn)
                 {
                     item.SetHome(new Vector3(-.63f + (slot % 8) * .18f,.7f + ((slot / 8) % 4) * .18f,1.15f + (slot / 32) * .25f),Quaternion.identity,Vector3.one);
@@ -294,8 +294,17 @@ namespace Maestro.Quest.Creation
             var avatar = Find("maestro").GetComponent<MaestroAvatar>(); var model = avatar ? avatar.CustomModel : null;
             if (index < -1 || index >= 0 && (!model || avatar.ModelBusy || index >= model.ClipCount || model.ClipDuration(index) < .1f))
             { SetStatus("Choose a loaded Maestro clip at least 0.1 seconds long"); return false; }
-            var data = journal.Read("maestro"); data.walkClip = index+1;
+            var data = journal.Read("maestro"); data.walkClip = index+1; data.walkMotionId = null;
             return Commit(new[] { data },Array.Empty<string>(),"Walking clip saved");
+        }
+        public bool SetAvatarWalkMotion(string id)
+        {
+            Editing?.Invoke(); if (Busy()) return false;
+            var avatar = Find("maestro").GetComponent<MaestroAvatar>(); var entry = Motions.Find(id);
+            if (!avatar || avatar.ModelBusy || !avatar.CustomModel || entry == null || entry.Short || entry.rigHash != avatar.CustomModel.MotionRigHash)
+            { SetStatus("Choose a saved motion compatible with the loaded Maestro, at least 0.1 seconds long"); return false; }
+            var data = journal.Read("maestro"); data.walkClip = 0; data.walkMotionId = id;
+            return Commit(new[] { data },Array.Empty<string>(),"Saved walking motion assigned");
         }
         public bool SetAvatarSize(float scale)
         {

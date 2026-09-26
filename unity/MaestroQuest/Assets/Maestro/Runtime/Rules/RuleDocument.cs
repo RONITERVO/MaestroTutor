@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle, Walk }
     public enum RuleInterruption { Restart, Ignore, QueueLatest }
     public enum RuleEventKind { Speaking, Listening, Thinking, Idle, ItemTapped, ItemGrabbed, ItemReleased }
@@ -26,6 +26,7 @@ namespace Maestro.Quest.Rules
         public bool loop;
         public string clipModelHash;
         public int clipIndex;
+        public string motionId;
         public RuleStep Copy() => (RuleStep)MemberwiseClone();
     }
     [Serializable] public sealed class RuleSequence
@@ -56,7 +57,7 @@ namespace Maestro.Quest.Rules
     }
     [Serializable] public sealed class RuleDocument
     {
-        public int version = 1;
+        public int version = 2;
         public RuleSequence[] sequences = Array.Empty<RuleSequence>();
         public RuleBinding[] bindings = Array.Empty<RuleBinding>();
         public RuleButtonData[] buttons = Array.Empty<RuleButtonData>();
@@ -71,7 +72,7 @@ namespace Maestro.Quest.Rules
         public bool Validate(out string error)
         {
             error = "This rule file has an unsupported version or invalid data.";
-            if (version != 1 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
+            if (version != 1 && version != 2 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
             var sequenceIds = new HashSet<string>(); var bindingIds = new HashSet<string>(); var buttonIds = new HashSet<string>();
             foreach (var sequence in sequences)
             {
@@ -79,7 +80,8 @@ namespace Maestro.Quest.Rules
                 foreach (var step in sequence.steps)
                 {
                     if (step == null || !Enum.IsDefined(typeof(RuleActionKind),step.action) || !Enum.IsDefined(typeof(RuleGesture),step.gesture) || !float.IsFinite(step.seconds) || step.seconds < 0 || step.seconds > 30) return false;
-                    if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.seconds < .1f) return false;
+                    if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.seconds < .1f) return false;
+                    if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId) || version == 1 && (step.action == RuleActionKind.LibraryMotion || !string.IsNullOrEmpty(step.motionId))) return false;
                     if (step.clipIndex < 0 || step.clipIndex >= 32 || !string.IsNullOrEmpty(step.clipModelHash) && !ModelLibrary.ValidHash(step.clipModelHash)) return false;
                     if (step.action == RuleActionKind.ThrowRecording && (step.loop || step.seconds != 0)) return false;
                     if (step.action != RuleActionKind.Wait && !IsTarget(step.targetId)) return false;

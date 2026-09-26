@@ -2,6 +2,48 @@
 
 This is development evidence, not a release acceptance report.
 
+## Packaged saved-motion actions and walking — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-06DEB0D4.apk`.
+SHA256: `06DEB0D4ECE59F1524244549376E98FDE92523D5D5EB938DBA289149389D4095`.
+135,254,285 bytes, development signed. Unity completed with exit 0, zero build
+errors and two warnings. APK v2 signature, ARM64 and expected manifest checks
+pass. The full build passed 41 EditMode, 41 required PlayMode and 15 native
+Android tests (97 required checks), native lint and the shared web build.
+The three private-file checks remain explicitly optional and were omitted from
+that packaging run.
+
+A preceding desktop run passed 41 EditMode and 43 PlayMode checks using the
+real Meshy Stage Walk. The saved library motion moved its leg and visible mesh
+(maximum sampled displacement 0.1275 metres), with the fitted wrapper and room
+placement unchanged. Imported-object rules also animate and restore their rig.
+The first new object test used scaled test time against unscaled rule playback;
+its wait was corrected, and subsequent desktop and full-build runs passed.
+The real-model library-walk image and settled rule/library trays were inspected.
+
+The update adds stable-ID saved-motion actions, existing controller-button and
+tutor/VR event triggers, preparing-action reservations and cancellation, and
+saved walking assignments with included-gait fallback. Rename, compatible avatar
+replacement, Undo, restart, missing/incompatible motion handling, state exit,
+focus loss and load timeout are covered. Room/rule v2 migration leaves v1 files
+untouched, retains existing exact-model clip bindings, recovers valid current
+backups and refuses unknown newer versions without downgrading to an older save.
+
+Evidence is in ignored `.quest-evidence/motion-bindings/verified-06DEB0D4` and
+`desktop-verification`. No private model or motion collection is bundled. No
+headset query, install or launch occurred; the installed build remains 08F340EF.
+After the user returns, back up the complete room directory (including models,
+motions and both save versions) before installing. Check saved-motion rules
+from a mounted button and a tutor-state change; try a saved Walk clip with
+Preview walk and Follow; interrupt a loading/playing action; restart and verify
+old drawings, recordings, rules and buttons as well as new assignments. Confirm
+visible feet, small-room clearance and both-hand readability on Quest 3.
+
+The reported stationary-feet issue remains unaccepted on hardware. Searchable
+book browsing, broader role profiles, blends, deletion/relinking, authored
+travel/contact, independent locomotion bindings and long-session Quest profiling
+remain release work. This checkpoint is not a completed v1 or store release.
+
 ## Packaged reusable-motion library — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-EBACCF1C.apk`.
