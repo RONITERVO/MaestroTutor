@@ -11,8 +11,8 @@ vi.mock('../../../api/gemini/browserClientSource', () => ({ browserClientSource:
 vi.mock('../../../shared/utils/costTracker', () => ({ trackGeminiUsage: ports.usage }));
 vi.mock('./chatHistory', () => ({ safeSaveChatHistoryDB: ports.history }));
 vi.mock('./roomTaskStore', () => ({ roomTaskStore: { claim: ports.claim, save: ports.save, get: ports.get } }));
-import { useMaestroStore, initialSettings } from '../../../store';
-import { prepareRoomAgentHandoff, roomAgentRequestForVerification, startRoomAgentTask, roomAgentTasks } from './roomAgentTasks';
+import { useMaestroStore, initialSettings, allGeneratedLanguagePairs } from '../../../store';
+import { prepareRoomAgentHandoff, prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff, roomAgentRequestForVerification, startRoomAgentTask, roomAgentTasks } from './roomAgentTasks';
 import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
 import type { RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
 import { selectIsAgentWorking, selectIsSending } from '../../../store/slices/uiSlice';
@@ -121,5 +121,86 @@ describe('browser chat room handoff composition', () => {
     const { id, source } = setup(); await prepareRoomAgentHandoff(input, source);
     expect(roomAgentRequestForVerification(id, '```maestro-tool {"tool":"agent","compactHistory":true}```')).toBeUndefined();
     expect(roomAgentTasks.available(id)).toBe(true);
+  });
+});
+
+function liveSetup() {
+  const result = setup();
+  result.source.conversationId = allGeneratedLanguagePairs[0].id;
+  const state = useMaestroStore.getState();
+  useMaestroStore.setState({ settings: { ...state.settings, selectedLanguagePairId: result.source.conversationId } });
+  state.updateMessage(result.id, { llmRawResponse: 'I will ask the room agent to do that.' });
+  return result;
+}
+const spokenReply = 'I will ask the room agent to do that.';
+
+describe('Live connection provenance for the shared room dispatcher', () => {
+  it.each(['byok', 'managed'])('retains the actual connection instruction and original transcript for %s', async mode => {
+    const { id, source } = liveSetup();
+    if (mode === 'managed') { ports.key.mockResolvedValue(null); ports.managed.mockResolvedValue({ user: { id: 'user-1' }, firebaseIdToken: 'synthetic-session' }); }
+    const connection = await prepareLiveRoomAgentContext('Original profile, bookmark summary and history.');
+    expect(connection.handoffId).toBeTruthy();
+    expect(connection.systemInstruction).toContain('Do not speak JSON');
+    useMaestroStore.getState().addMessage({ role: 'user', text: 'A later unrelated message' });
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(true);
+    expect(roomAgentRequestForVerification(id, spokenReply)).toBe(input.prompt);
+    expect(execute).not.toHaveBeenCalled(); // Only capture: suggestions must still accept the handoff.
+    await startRoomAgentTask(id);
+    const record = records.get(`room-task:${id}`)!;
+    expect(record.handoff.input.prompt).toBe(input.prompt);
+    expect(record.handoff.input.systemInstruction).toBe(connection.systemInstruction);
+    expect(record.handoff.input.history).toEqual([]); // Already serialized in the connection instruction.
+    expect(JSON.stringify(requests[0])).toContain('Original profile, bookmark summary and history.');
+    expect(JSON.stringify(requests[0])).not.toContain('A later unrelated message');
+    expect(record.phase).toBe('completed'); expect(execute).toHaveBeenCalledOnce();
+    expect(JSON.stringify(record)).not.toContain('synthetic-session');
+    expect(JSON.stringify(record)).not.toContain('synthetic-key');
+  });
+
+  it('does not advertise or record room handoff for an ordinary phone connection', async () => {
+    liveSetup(); ports.lease.mockReturnValue(null);
+    expect(await prepareLiveRoomAgentContext('Unchanged instruction')).toEqual({ systemInstruction: 'Unchanged instruction' });
+    expect(ports.key).not.toHaveBeenCalled();
+  });
+
+  it('rejects invented connection identities, absent speech and duplicate completion', async () => {
+    const { source } = liveSetup();
+    expect(await captureLiveRoomAgentHandoff('invented', source, input.prompt, spokenReply)).toBe(false);
+    const silent = await prepareLiveRoomAgentContext('Context');
+    expect(await captureLiveRoomAgentHandoff(silent.handoffId!, source, '', spokenReply)).toBe(false);
+    const connection = await prepareLiveRoomAgentContext('Context');
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(true);
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(false);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it.each(['account', 'conversation', 'native', 'source'])('refuses a completed turn after its %s identity changes', async change => {
+    const { id, source } = liveSetup();
+    const connection = await prepareLiveRoomAgentContext('Context');
+    if (change === 'account') ports.key.mockResolvedValue('changed-key');
+    if (change === 'conversation') useMaestroStore.setState({ settings: { ...useMaestroStore.getState().settings, selectedLanguagePairId: 'another-pair' } });
+    if (change === 'native') ports.lease.mock.results[ports.lease.mock.results.length - 1].value.valid = () => false;
+    if (change === 'source') useMaestroStore.getState().updateMessage(source.sourceUserId, { text: 'Edited transcript' });
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(false);
+    expect(roomAgentRequestForVerification(id, spokenReply)).toBeUndefined();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('does not authorize a changed tutor reply or copied text from a different turn', async () => {
+    const { id, source } = liveSetup();
+    const connection = await prepareLiveRoomAgentContext('Context');
+    await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply);
+    expect(roomAgentRequestForVerification(id, 'Changed reply')).toBeUndefined();
+    useMaestroStore.getState().updateMessage(id, { llmRawResponse: 'Changed reply' });
+    await startRoomAgentTask(id); expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('rechecks conversation identity after a pending credential read', async () => {
+    liveSetup(); let resolve!: (value: string) => void;
+    ports.key.mockReturnValue(new Promise<string>(done => { resolve = done; }));
+    const preparing = prepareLiveRoomAgentContext('Context');
+    useMaestroStore.setState({ settings: { ...useMaestroStore.getState().settings, selectedLanguagePairId: 'another-pair' } });
+    resolve('synthetic-key');
+    expect(await preparing).toEqual({ systemInstruction: 'Context' });
   });
 });

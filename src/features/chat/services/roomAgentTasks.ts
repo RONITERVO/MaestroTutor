@@ -5,10 +5,12 @@ import { runTutorTextTurn } from '../../../core-sdk/chat/tutorTextTurn';
 import { RoomTaskHandoff, type RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
 import { runRoomActionTask } from '../../../core-sdk/room/roomAgent';
 import { hasAgentHandoffProposal } from '../../../core-sdk/chat/suggestionAftersteps';
-import { buildRoomResultInstruction, buildRoomTaskReplyInstruction, ROOM_HANDOFF_TUTOR_INSTRUCTION } from '../../../../shared/prompts';
+import { buildRoomResultInstruction, buildRoomTaskReplyInstruction, ROOM_HANDOFF_TUTOR_INSTRUCTION, ROOM_HANDOFF_LIVE_INSTRUCTION } from '../../../../shared/prompts';
 import { browserClientSource } from '../../../api/gemini/browserClientSource';
 import { currentRoomAgentLease } from '../../../platform/quest/roomAgentBridge';
 import { useMaestroStore } from '../../../store';
+import { getGeminiModels } from '../../../core-sdk/modelRegistry';
+import { selectSelectedLanguagePair } from '../../../store/slices/settingsSlice';
 import { loadApiKey } from '../../../core/security/apiKeyStorage';
 import { loadManagedAccessSession, hasManagedSession } from '../../../core/security/managedAccessSessionStorage';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityTokens';
@@ -16,7 +18,7 @@ import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 import { safeSaveChatHistoryDB } from './chatHistory';
 import { roomTaskStore } from './roomTaskStore';
 
-const contexts = new Map<string, { input: TutorTextTurnInput; conversationId: string; valid: () => Promise<boolean> }>();
+const contexts = new Map<string, { input: TutorTextTurnInput; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean }>();
 let activityCount = 0;
 let activityToken: string | undefined;
 const usage = (response: { modelUsed?: string; modelVersion?: string; usageMetadata?: Parameters<typeof trackGeminiUsage>[0]['usageMetadata'] }, model: string) =>
@@ -62,42 +64,96 @@ export const roomAgentTasks = new RoomTaskHandoff({
   now: Date.now,
 });
 
-/** Browser composition captures identities and access without persisting secrets. */
-export async function prepareRoomAgentHandoff(input: TutorTextTurnInput, source: { sourceUserId?: string; sourceAssistantId: string; conversationId: string | null }): Promise<TutorTextTurnInput> {
+type HandoffSource = { sourceUserId?: string; sourceAssistantId: string; conversationId: string | null };
+
+/** Account and conversation identity are captured before either tutor transport.
+ * Recheck after asynchronous access reads too; no credentials enter the journal. */
+async function captureAccess(conversationId: string | null) {
   const lease = currentRoomAgentLease();
-  if (!lease || !source.sourceUserId || !source.conversationId) return input;
-  const state = useMaestroStore.getState();
-  const user = state.messages.find(message => message.id === source.sourceUserId && message.role === 'user');
-  if (!user || user.text !== input.prompt) return input;
-  // This check reads the app's established access route. Secrets remain only in
-  // the closure and are never part of the handoff record or model context.
+  if (!lease || !conversationId) return null;
+  const nativeSession = lease.state().session;
+  const localCurrent = () => {
+    const state = useMaestroStore.getState();
+    return state.settings.selectedLanguagePairId === conversationId && !state.isLoadingHistory
+      && lease.valid() && lease.state().session === nativeSession;
+  };
+  if (!localCurrent()) return null;
   const key = await loadApiKey();
   const managed = key ? null : await loadManagedAccessSession();
-  if (!key && !hasManagedSession(managed)) return input;
+  if ((!key && !hasManagedSession(managed)) || !localCurrent()) return null;
   const accessScope = key ? 'byok' : `managed:${managed!.user.id}`;
-  if (!lease.valid()) return input;
-  const nativeSession = lease.state().session;
-  const prepared = structuredClone({ ...input, systemInstruction: input.systemInstruction + ROOM_HANDOFF_TUTOR_INSTRUCTION });
   const valid = async () => {
-    const current = useMaestroStore.getState();
-    if (current.settings.selectedLanguagePairId !== source.conversationId || current.isLoadingHistory
-        || !current.messages.some(message => message.id === source.sourceUserId && message.text === input.prompt)
-        || !current.messages.some(message => message.id === source.sourceAssistantId && message.role === 'assistant')) return false;
+    if (!localCurrent()) return false;
     const currentKey = await loadApiKey();
-    if (key) return currentKey === key;
-    const currentManaged = await loadManagedAccessSession();
-    return !currentKey && hasManagedSession(currentManaged) && currentManaged?.user.id === managed?.user.id;
+    const currentManaged = key ? null : await loadManagedAccessSession();
+    return localCurrent() && (key ? currentKey === key
+      : !currentKey && hasManagedSession(currentManaged) && currentManaged?.user.id === managed?.user.id);
   };
-  if (!await valid() || !lease.valid()) return input;
+  return { nativeSession, accessScope, valid };
+}
+
+async function captureHandoff(input: TutorTextTurnInput, source: HandoffSource,
+  access: NonNullable<Awaited<ReturnType<typeof captureAccess>>>, acceptsReply: (raw: string) => boolean, sourceReply?: string) {
+  if (!source.sourceUserId || !source.conversationId) return false;
+  const localCurrent = () => {
+    const state = useMaestroStore.getState();
+    return state.messages.some(message => message.id === source.sourceUserId && message.role === 'user' && message.text === input.prompt)
+      && state.messages.some(message => message.id === source.sourceAssistantId && message.role === 'assistant'
+        && (sourceReply === undefined || message.llmRawResponse === sourceReply));
+  };
+  const valid = async () => localCurrent() && await access.valid() && localCurrent();
+  if (!await valid()) return false;
   const id = `room-task:${source.sourceAssistantId}`;
   roomAgentTasks.capture({ version: 1, id, conversationId: source.conversationId, sourceUserId: source.sourceUserId,
-    sourceAssistantId: source.sourceAssistantId, nativeSession, accessScope, input: prepared }, valid);
-  contexts.set(source.sourceAssistantId, { input: structuredClone(prepared), conversationId: source.conversationId, valid });
+    sourceAssistantId: source.sourceAssistantId, nativeSession: access.nativeSession, accessScope: access.accessScope, input }, valid);
+  contexts.set(source.sourceAssistantId, { input: structuredClone(input), conversationId: source.conversationId, valid, acceptsReply });
   while (contexts.size > 8) contexts.delete(contexts.keys().next().value!);
-  return prepared;
+  return true;
+}
+
+/** Capture the exact input before the ordinary text tutor request. */
+export async function prepareRoomAgentHandoff(input: TutorTextTurnInput, source: HandoffSource): Promise<TutorTextTurnInput> {
+  if (!source.sourceUserId || !source.conversationId) return input;
+  const user = useMaestroStore.getState().messages.find(message => message.id === source.sourceUserId && message.role === 'user');
+  if (!user || user.text !== input.prompt) return input;
+  const access = await captureAccess(source.conversationId);
+  if (!access) return input;
+  const prepared = structuredClone({ ...input, systemInstruction: input.systemInstruction + ROOM_HANDOFF_TUTOR_INSTRUCTION });
+  return await captureHandoff(prepared, source, access, hasAgentHandoffProposal) ? prepared : input;
+}
+
+type LiveCapture = { input: Omit<TutorTextTurnInput, 'prompt'>; conversationId: string;
+  access: NonNullable<Awaited<ReturnType<typeof captureAccess>>> };
+const liveContexts = new Map<string, LiveCapture>();
+/** Called once, immediately before the actual Live connection, after its fresh
+ * history/profile/bookmark instruction has been built. No latest-chat lookup at completion. */
+export async function prepareLiveRoomAgentContext(systemInstruction?: string): Promise<{ systemInstruction?: string; handoffId?: string }> {
+  const state = useMaestroStore.getState(), conversationId = state.settings.selectedLanguagePairId;
+  const languagePair = selectSelectedLanguagePair(state);
+  if (!systemInstruction || !conversationId || !languagePair) return { systemInstruction };
+  const access = await captureAccess(conversationId);
+  if (!access) return { systemInstruction };
+  const prepared = systemInstruction + ROOM_HANDOFF_LIVE_INSTRUCTION;
+  const handoffId = crypto.randomUUID();
+  liveContexts.set(handoffId, { conversationId, access, input: {
+    model: getGeminiModels().text.default, systemInstruction: prepared,
+    nativeLanguageCode: languagePair.nativeLanguageCode, history: [],
+  } });
+  while (liveContexts.size > 8) liveContexts.delete(liveContexts.keys().next().value!);
+  return { systemInstruction: prepared, handoffId };
+}
+/** Only a locally issued connection identity can associate a completed spoken
+ * turn with agent context. Capturing is not execution: the shared verifier still decides. */
+export async function captureLiveRoomAgentHandoff(handoffId: string, source: HandoffSource, userText: string, modelText: string): Promise<boolean> {
+  const captured = liveContexts.get(handoffId);
+  liveContexts.delete(handoffId);
+  if (!captured || captured.conversationId !== source.conversationId || !userText.trim() || !modelText.trim()) return false;
+  const input = { ...structuredClone(captured.input), prompt: userText };
+  return captureHandoff(input, source, captured.access, raw => raw === modelText, modelText);
 }
 export function roomAgentRequestForVerification(assistantId: string, rawReply: string): string | undefined {
-  return roomAgentTasks.available(assistantId) && hasAgentHandoffProposal(rawReply) ? contexts.get(assistantId)?.input.prompt : undefined;
+  const context = contexts.get(assistantId);
+  return roomAgentTasks.available(assistantId) && context?.acceptsReply(rawReply) ? context.input.prompt : undefined;
 }
 export async function startRoomAgentTask(sourceAssistantId: string): Promise<void> {
   const context = contexts.get(sourceAssistantId);
@@ -105,7 +161,7 @@ export async function startRoomAgentTask(sourceAssistantId: string): Promise<voi
   let timer: ReturnType<typeof setInterval> | undefined;
   try {
     const source = useMaestroStore.getState().messages.find(message => message.id === sourceAssistantId);
-    if (!context || !source || !hasAgentHandoffProposal(source.llmRawResponse || '') || !await context.valid()) throw new Error('The agent handoff is no longer available. Please ask again.');
+    if (!context || !source || !context.acceptsReply(source.llmRawResponse || '') || !await context.valid()) throw new Error('The agent handoff is no longer available. Please ask again.');
     // Stop promptly on scope/native-session loss while provider work is in flight.
     const lease = currentRoomAgentLease();
     timer = setInterval(() => {

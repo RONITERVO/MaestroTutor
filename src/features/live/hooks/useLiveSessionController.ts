@@ -27,11 +27,12 @@ import {
   useGeminiLiveConversation,
   LiveSessionState,
   type LiveTurnTranscriptUpdate,
+  type LiveTurnContext,
   pcmToWav,
   mapAudioSegmentsToTextLines,
 } from '../../speech';
 import { uploadMediaToFiles } from '../../../api/gemini/files';
-import { computeTtsCacheKey } from '../../chat';
+import { computeTtsCacheKey, prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff } from '../../chat';
 import { processMediaForUpload } from '../../vision';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, type TokenCategory } from '../../../core/config/activityTokens';
 import { getPrimaryCode, getShortLangCodeForPrompt } from '../../../shared/utils/languageUtils';
@@ -117,7 +118,8 @@ export interface UseLiveSessionControllerReturn {
     userText: string,
     modelText: string,
     userAudioPcm?: Int16Array,
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: LiveTurnContext
   ) => Promise<void>;
   handleLiveTurnTranscriptUpdate: (update: LiveTurnTranscriptUpdate) => void;
 }
@@ -325,8 +327,10 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     userText: string, 
     modelText: string, 
     userAudioPcm?: Int16Array, 
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: LiveTurnContext
   ) => {
+    const turnPairId = useMaestroStore.getState().settings.selectedLanguagePairId;
     isFinalizingLiveTurnRef.current = true;
     const hasModelAudio = Boolean(modelAudioLines?.some(segment => segment.length > 0));
     try {
@@ -344,6 +348,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           // Capture snapshot of the user when they finished speaking
           snapshotData = await captureSnapshot(false);
         } catch { /* ignore */ }
+
+        if (useMaestroStore.getState().settings.selectedLanguagePairId !== turnPairId || useMaestroStore.getState().isLoadingHistory) return;
 
         // Save User Audio if available
         let recordedUtterance: RecordedUtterance | undefined = undefined;
@@ -448,6 +454,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         if (findExistingMessageId(assistantId)) {
           updateMessage(assistantId, {
             rawAssistantResponse: modelText,
+            llmRawResponse: modelText,
             translations: undefined,
           });
         } else {
@@ -460,7 +467,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             id: assistantId,
             timestamp: assistantTimestamp,
             role: 'assistant',
-            rawAssistantResponse: modelText
+            rawAssistantResponse: modelText,
+            llmRawResponse: modelText
           });
         }
 
@@ -547,6 +555,12 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
             rawAssistantResponse: structuredText,
             translations: translations
           });
+
+          if (context?.handoffId && userMessageId) {
+            await captureLiveRoomAgentHandoff(context.handoffId, {
+              sourceUserId: userMessageId, sourceAssistantId: assistantId, conversationId: turnPairId,
+            }, userText, structuredText);
+          }
 
           // 4. Generate Suggestions Immediately. Live turns rely on this shared
           // path to decide whether to attach an artifact or run a tool request.
@@ -767,6 +781,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           stream: liveSessionCaptureRef.current?.stream,
           videoElement: visualContextVideoRef.current,
           buildSystemInstruction: () => liveInstructionBuilderRef.current(),
+          prepareTurnContext: prepareLiveRoomAgentContext,
           voiceName,
           gateInputOnSpeech: true,
         });
@@ -778,6 +793,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
         buildSystemInstruction: () => liveInstructionBuilderRef.current(),
+        prepareTurnContext: prepareLiveRoomAgentContext,
         voiceName,
         // The user click opens Live immediately, while each microphone turn is
         // still held until VAD sees enough speech to avoid empty short turns.

@@ -134,6 +134,7 @@ export class RoomTaskHandoff {
       await publish();
       const reply = await this.ports.reply(clone(handoff.input), result, controller.signal);
       await check();
+      if (!reply.parsed.visibleText.trim()) throw new Error('The agent result did not contain a readable reply.');
       record.reply = clone(reply);
       record.phase = result.budgetExhausted ? 'limited' : 'completed';
       record.note = result.budgetExhausted ? 'Action limit reached. Review the result before continuing.' : 'Finished checking this request.';

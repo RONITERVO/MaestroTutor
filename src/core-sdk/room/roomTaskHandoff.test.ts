@@ -115,3 +115,11 @@ describe('shared app-owned room handoff', () => {
     await expect(h.manager.start('a1')).rejects.toMatchObject({ name: 'AbortError' }); expect(h.ports.run).not.toHaveBeenCalled();
   });
 });
+
+it('retains receipts and reports failure rather than a successful empty narration', async () => {
+  const h = harness();
+  vi.mocked(h.ports.reply).mockResolvedValue({ rawResponse: 'Malformed language reply', parsed: { visibleText: '', translations: [], hasSkippedNonLanguageContent: true } });
+  const result = await h.manager.start('a1');
+  expect(result.phase).toBe('failed'); expect(result.operations[0].receipt?.ok).toBe(true);
+  expect(result.reply).toBeUndefined(); expect(h.activity).toHaveBeenLastCalledWith(false);
+});

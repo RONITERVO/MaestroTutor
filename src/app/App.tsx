@@ -443,9 +443,10 @@ const App: React.FC = () => {
     userText: string,
     modelText: string,
     userAudioPcm?: Int16Array,
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: import('../features/speech').LiveTurnContext
   ) => {
-    await handleLiveTurnComplete(userText, modelText, userAudioPcm, modelAudioLines);
+    await handleLiveTurnComplete(userText, modelText, userAudioPcm, modelAudioLines, context);
     scheduleReengagement('silent-observer-response');
   }, [handleLiveTurnComplete, scheduleReengagement]);
 

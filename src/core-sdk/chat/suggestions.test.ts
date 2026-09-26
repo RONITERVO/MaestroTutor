@@ -109,3 +109,13 @@ it('offers the agent schema only with a host-captured request and passes that re
   expect((args[3].configOverrides.responseJsonSchema.properties.toolRequest.anyOf as any[]).some(item => item.properties?.tool?.enum?.includes('agent'))).toBe(true);
   expect(JSON.stringify(REPLY_SUGGESTIONS_RESPONSE_SCHEMA)).not.toContain('agent');
 });
+
+it.each([{ request: 'Make a blue robot', accepted: true }, { request: 'Translate "make a robot" into Spanish', accepted: false }])('verifies a captured spoken request without requiring spoken JSON: $request', async ({ request, accepted }) => {
+  vi.mocked(generateGeminiResponse).mockReset().mockResolvedValue({ text: JSON.stringify({ suggestions: [{ target: 'Vale', native: 'Okay' }], toolRequest: accepted ? { tool: 'agent' } : null }) } as any);
+  const result = await runReplySuggestions({ assistantMessageId: 'live-a', lastTutorMessage: 'I will ask the agent.', history: [], languagePair, responseSource: 'live', agentRequest: request }, { resolveAiClient: vi.fn() });
+  expect(result.toolRequest).toEqual(accepted ? { tool: 'agent' } : null);
+  const prompt = vi.mocked(generateGeminiResponse).mock.calls[0][1];
+  expect(prompt).toContain(JSON.stringify({ originalUserTranscript: request }));
+  expect(prompt).toContain('A spoken handoff has no JSON fence');
+  expect(prompt).toContain('exercise to repeat or translate');
+});

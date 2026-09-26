@@ -335,3 +335,28 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     expect(stopTrack).not.toHaveBeenCalled();
   });
 });
+
+it('captures prepared context from the exact connection and forwards it with the completed turn', async () => {
+  const h = harness();
+  const prepareTurnContext = vi.fn(async (instruction?: string) => ({ systemInstruction: instruction + ' Room capability.', handoffId: 'owned-connection' }));
+  await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+    systemInstruction: 'Stale preflight instruction', buildSystemInstruction: async () => 'Fresh context', prepareTurnContext, playModelAudio: false }); });
+  expect(prepareTurnContext).toHaveBeenCalledExactlyOnceWith('Fresh context');
+  expect(connections[0].config.systemInstruction).toBe('Fresh context Room capability.');
+  expect(connections[0].config).not.toHaveProperty('handoffId');
+  connections[0].callbacks.onmessage({ serverContent: { inputTranscription: { text: 'Make a robot' }, outputTranscription: { text: 'I will ask the agent.' }, turnComplete: true } });
+  await flush(); await advance(1500);
+  expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Make a robot', 'I will ask the agent.', new Int16Array(), [], {
+    systemInstruction: 'Fresh context Room capability.', handoffId: 'owned-connection',
+  });
+});
+
+it('does not connect after Stop while context preparation is pending', async () => {
+  const pending = deferred<{ systemInstruction: string; handoffId: string }>();
+  const h = harness(); let starting!: Promise<void>;
+  act(() => { starting = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false,
+    prepareTurnContext: () => pending.promise }); });
+  await flush(); await act(async () => { await h.result.current.stop(); });
+  await act(async () => { pending.resolve({ systemInstruction: 'Late context', handoffId: 'stale' }); await starting; });
+  expect(ports.connect).not.toHaveBeenCalled(); expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+});

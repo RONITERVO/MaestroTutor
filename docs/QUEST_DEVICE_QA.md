@@ -844,3 +844,28 @@ Check keyboard/input reachability, text size and both-hand pointer operation.
 
 These checks do not establish the separate Live voice path. The initial behaviour
 blocks now need their own Quest acceptance described in QUEST_BEHAVIOUR_WORKSPACE.md.
+
+
+## Spoken agent handoff (not headset accepted)
+
+Use a build containing the Live/observer handoff checkpoint documented in
+QUEST_UNIFIED_AGENT.md; the previously installed APK does not establish coverage.
+
+1. With a connected room, ask aloud for a small blue box robot. Check that Maestro
+   first proposes the handoff normally, then the agent status and actual result
+   appear in the same chat. Inspect the robot and its task receipt; a spoken
+   promise alone does not pass this check. Repeat through the passive observer.
+2. Ask to translate or practise the sentence "make a blue robot", and ask a
+   hypothetical about creating one. No room mutation should occur. Include
+   background speech and ambiguous pointing requests in provider acceptance.
+3. Continue a different language conversation while the task runs. Its original
+   request and native effects must remain tied to the source turn. Stop during
+   planning and final narration; existing room effects must remain recorded and
+   the task activity must clear without blocking normal speech/chat.
+4. Verify a turn that produces both a normal chat artifact and an agent handoff.
+   The artifact stays in chat and the handoff executes once with its original
+   transcript. Reloading must not automatically replay the task.
+5. Change account, language conversation or native session during preparation.
+   The old turn must not dispatch into the new scope. Speech context currently
+   transfers text only; original audio/camera replay and audible agent result
+   scheduling require their own acceptance once implemented.

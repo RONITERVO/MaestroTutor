@@ -33,6 +33,12 @@ export interface LiveTurnTranscriptUpdate {
   thinkingStatusLine?: string;
 }
 
+export interface LiveTurnContext {
+  systemInstruction?: string;
+  /** Opaque app-issued provenance, never model-authored data. */
+  handoffId?: string;
+}
+
 export interface UseGeminiLiveConversationCallbacks {
   onStateChange?: (state: LiveSessionState) => void;
   onError?: (message: string) => void;
@@ -54,7 +60,8 @@ export interface UseGeminiLiveConversationCallbacks {
     userText: string,
     modelText: string,
     userAudioPcm?: Int16Array,
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: LiveTurnContext
   ) => void | Promise<void>;
 }
 
@@ -74,6 +81,7 @@ export interface StartLiveConversationOptions {
   gateAudioAfterConnect?: boolean;
   systemInstruction?: string;
   buildSystemInstruction?: () => Promise<string>;
+  prepareTurnContext?: (systemInstruction?: string) => Promise<LiveTurnContext>;
   stream?: MediaStream | null;
   videoElement?: HTMLVideoElement | null;
   voiceName?: string;

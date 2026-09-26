@@ -13,7 +13,7 @@ import type { LiveRuntimePorts } from './ports';
 import type { LiveSessionData } from './state';
 import { type createLiveTelemetry } from './telemetry';
 import { type createLiveTranscripts } from './transcripts';
-import { type LiveTurnTranscriptUpdateReason } from './types';
+import { type LiveTurnContext, type LiveTurnTranscriptUpdateReason } from './types';
 import { notifyLiveConsumer } from './notifications';
 
 export interface LiveProviderPorts {
@@ -42,6 +42,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
 >, ports: LiveProviderPorts, session: {
   sessionId: number; playModelAudio: boolean; emitTurns: boolean; observerActivity: boolean;
   usageTracker: ReturnType<LiveRuntimePorts['createLiveUsageTracker']>;
+  turnContext?: LiveTurnContext;
 }) {
   const {
     sessionRef, logRef, logFinalizedRef,
@@ -207,7 +208,8 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
             finalUserText,
             modelText,
             finalUserAudio,
-            modelAudioLines
+            modelAudioLines,
+            ...(session.turnContext?.handoffId ? [session.turnContext] : [])
           );
           if (callbackResult instanceof Promise) {
             await callbackResult.catch((error) => {

@@ -150,11 +150,52 @@ to obtain final usage and settle the reservation accurately. An explicit managed
 server cancellation/accounting policy remains release work. BYOK passes the abort
 signal to the SDK, but already processed usage is not refunded.
 
+## Live/observer text-context handoff checkpoint (2026-09-26)
+
+User-opened Live and the locally gated observer now prepare the same room handoff
+at the actual connection boundary, after their fresh profile/bookmark/history
+instruction is built. The preparation returns that exact instruction plus one
+short spoken-handoff capability and a locally issued opaque identity. Only the
+instruction reaches Gemini; the identity travels through the owned provider
+callback to turn completion. Ordinary unconnected phone sessions retain their
+existing instruction and callback shape.
+
+The completed original transcript and exact connection instruction are captured
+against the persisted user and assistant message IDs before the existing
+suggestion creator runs. History is already serialized inside the Live instruction;
+it is not rebuilt from newer messages or duplicated as a second history. The
+capture binds the account, language conversation and native session at connection
+time, rechecks after credential reads and is consumed once. Empty speech, forged
+identities, stale scope and edited source transcripts/replies cannot initiate it.
+Only eight unconsumed connection captures are retained in memory.
+
+Live audio does not speak JSON. Its scoped instruction asks for an ordinary spoken
+handoff; the shared suggestion model must verify BOTH the original explicit room
+request and the tutor's proposed handoff before returning the existing `agent`
+tool. Language exercises, quotations, hypotheticals and background speech are
+explicitly excluded in that verification prompt. This is model intent verification,
+not a deterministic guarantee of speech attribution. Real-provider acceptance is
+still required. No direct Live room function protocol is enabled.
+
+The shared afterstep retains the exact source reply when a verified Live handoff
+also includes an artifact; history compaction uses the recorded tool kind and
+attachment. Without this exception, the existing Live compact-history rewrite
+would invalidate the source before execution. The task uses the same dispatcher,
+client routing, activity, cancellation and journal as typed chat. Malformed final
+narration with no readable language reply reports failure while retaining receipts,
+instead of displaying a successful blank result.
+
+**Scope still missing:** this checkpoint transfers the original transcript and
+text instruction, not the captured microphone PCM or original streamed camera
+frames. The planner is told not to infer unavailable media. Full multimodal context
+parity, spoken clarification/task steering and properly scheduled audible task
+results remain required work. This does not establish full hands-free acceptance.
+
 ## Evidence and remaining release work
 
-At this checkpoint, 173 targeted tests plus 65 existing prompt tests pass.
-TypeScript, full source lint, Core/prompt ownership guards and the production web
-build pass. The browser probe also preserves an existing v7 history through the
+At this checkpoint, 229 targeted tests and 65 prompt tests pass. TypeScript, full
+source lint, Core/prompt ownership guards and the production web build pass.
+Commit/file hashes are recorded under `.quest-evidence/live-agent-handoff`. The browser probe also preserves an existing v7 history through the
 v8 upgrade, checks atomic competing claims and rejects writes after source deletion.
 The public chat entry point now exports the shared attachment renderers used by
 book surfaces; existing book rendering tests still pass.
@@ -180,9 +221,10 @@ book surfaces; existing book rendering tests still pass.
 
 Remaining work:
 
-1. Capture Live/observer input and context with equally reliable source identity,
-   then feed its suggestion afterstep through this same dispatcher. Live does not
-   have this new handoff yet. Do not enable the optional direct Live tool protocol.
+1. Extend the completed Live transcript/text-context capture to original input
+   audio and camera evidence, with bounded retention, provenance and billing.
+   Verify explicit requests versus language exercises/background speech with the
+   actual provider. Do not enable the optional direct Live tool protocol.
 2. Add conversation-driven task Stop, clarification, follow-up revision and
    bounded continuation; current explicit task Stop is a chat control. Support
    durable task-result reconciliation when changing/reloading conversations and

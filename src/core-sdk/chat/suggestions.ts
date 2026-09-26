@@ -1,4 +1,4 @@
-import { buildRoomHandoffVerification } from '../../../shared/prompts';
+import { buildRoomHandoffVerification, buildLiveRoomHandoffVerification } from '../../../shared/prompts';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -132,7 +132,8 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput, option
   if (input.responseSource === 'live') {
     prompt += LIVE_REPLY_SUGGESTIONS_SUFFIX;
   }
-  if (input.agentRequest !== undefined) prompt += buildRoomHandoffVerification(input.agentRequest);
+  if (input.agentRequest !== undefined) prompt += input.responseSource === 'live'
+    ? buildLiveRoomHandoffVerification(input.agentRequest) : buildRoomHandoffVerification(input.agentRequest);
   return prompt;
 };
 

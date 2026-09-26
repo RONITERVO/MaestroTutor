@@ -313,10 +313,12 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         ? await opts.buildSystemInstruction()
         : systemInstruction;
       if (abortIfInvalidated()) return;
+      const turnContext = opts.prepareTurnContext ? structuredClone(await opts.prepareTurnContext(freshSystemInstruction)) : undefined;
+      if (abortIfInvalidated()) return;
       turnTimingRef.current?.mark('context.ready', { instructionCharacters: freshSystemInstruction?.length ?? 0 });
       const providerCallbacks = createLiveProviderCallbacks(state, {
         activity, audio: modelAudio, transcripts, cleanup, getAudioTelemetrySnapshot, debugLogService,
-      }, { sessionId, playModelAudio, emitTurns, observerActivity, usageTracker });
+      }, { sessionId, playModelAudio, emitTurns, observerActivity, usageTracker, turnContext });
       turnTimingRef.current?.mark('provider.connect-start');
       const session = await ai.live.connect({
         turnTiming: turnTimingRef.current ?? undefined,
@@ -325,7 +327,7 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         config: {
           ...getLiveCostControlConfig(),
           responseModalities,
-          systemInstruction: freshSystemInstruction,
+          systemInstruction: turnContext ? turnContext.systemInstruction : freshSystemInstruction,
           // Empty config objects to enable transcription without specifying parameters causing invalid argument errors
           inputAudioTranscription: {},
           outputAudioTranscription: {},

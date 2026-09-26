@@ -51,3 +51,5 @@ export {
 export { useTutorConversation } from './hooks/useTutorConversation';
 export { useSuggestions } from './hooks/useSuggestions';
 export { useChatPersistence } from './hooks/useChatPersistence';
+
+export { prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff } from './services/roomAgentTasks';

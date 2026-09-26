@@ -85,8 +85,9 @@ and request-owned native/client model cancellation is implemented. Text-chat too
 original context capture, durable task receipts and nonblocking header activity now
 work in local tests. Stop releases task activity even during a stalled model request;
 accepted managed requests still finish on the server for exact usage settlement.
-Live capture, conversational task steering, explicit server cancellation and
-acceptance remain open. See QUEST_UNIFIED_AGENT.md.
+Live/observer transcript and connection text-context capture now feeds that same
+verified tool dispatcher. Original audio/camera context replay, conversational task
+steering, explicit server cancellation and provider/headset acceptance remain open. See QUEST_UNIFIED_AGENT.md.
 
 ## Accepted product scope
 

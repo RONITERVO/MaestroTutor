@@ -8,8 +8,10 @@ import {
   useGeminiLiveConversation,
   LiveSessionState,
   type LiveTurnTranscriptUpdate,
+  type LiveTurnContext,
 } from '../../speech';
 import { useMaestroStore } from '../../../store';
+import { prepareLiveRoomAgentContext } from '../../chat';
 import { createSmartRef } from '../../../shared/utils/smartRef';
 import { buildLiveSystemInstruction } from '../utils/liveSystemInstruction';
 import { LIVE_OPEN_TRIGGER } from '../../../../shared/liveOpenReason';
@@ -31,7 +33,8 @@ export interface UseSilentObserverControllerConfig {
     userText: string,
     modelText: string,
     userAudioPcm?: Int16Array,
-    modelAudioLines?: Int16Array[]
+    modelAudioLines?: Int16Array[],
+    context?: LiveTurnContext
   ) => void | Promise<void>;
   onTurnTranscriptUpdate?: (update: LiveTurnTranscriptUpdate) => void;
 }
@@ -127,9 +130,9 @@ export const useSilentObserverController = ({
     onTurnTranscriptUpdate: (update) => {
       onTurnTranscriptUpdate?.(update);
     },
-    onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines) => {
+    onTurnComplete: (userText, modelText, userAudioPcm, modelAudioLines, context) => {
       if (!onTurnComplete) return;
-      return Promise.resolve(onTurnComplete(userText, modelText, userAudioPcm, modelAudioLines)).catch((error) => {
+      return Promise.resolve(onTurnComplete(userText, modelText, userAudioPcm, modelAudioLines, context)).catch((error) => {
         console.error('Silent observer turn handler failed:', error);
       });
     },
@@ -172,6 +175,7 @@ export const useSilentObserverController = ({
         videoElement: visualContextVideoRef.current,
         systemInstruction: liveSystemInstruction,
         buildSystemInstruction: () => instructionBuilderRef.current(),
+        prepareTurnContext: prepareLiveRoomAgentContext,
         voiceName,
         responseModalities: [Modality.AUDIO],
         playModelAudio: true,
