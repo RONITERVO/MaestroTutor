@@ -3,6 +3,7 @@
 export interface LibraryEntry {
   id: string; name: string; tags: string[]; duration: number;
   favourite: boolean; compatible: boolean; shortClip: boolean;
+  archived?: boolean; removed?: boolean; downloaded?: boolean; bytes?: number;
 }
 export interface ActivityChoice {
   motionId: string; name: string; weight: number; speed: number; cooldown: number; loop: boolean; available: boolean;
@@ -11,7 +12,12 @@ export interface ActivityProfile {
   modelHash: string; status: string; canAssign: boolean; readOnly: boolean; canUndo: boolean; canRedo: boolean;
   roles: { role: number; choices: ActivityChoice[] }[];
 }
+export interface MotionUsage {
+  total: number; page: number; pages: number; uses: string[];
+  history: boolean; saved: boolean; uncertain: boolean; playing: boolean; protection: string | null;
+}
 export interface LibraryState {
+  usage?: MotionUsage | null; archivedOnly?: boolean; canRemoveDownload?: boolean; canForgetMotion?: boolean;
   activityProfile?: ActivityProfile | null;
   version: 1; revision: number; ack: number; session: string; visible: boolean; busy: boolean; readOnly: boolean;
   query: string; offset: number; total: number; pageSize: number;
@@ -22,9 +28,10 @@ export interface LibraryState {
   sourceIndex: number; sourceCount: number; sourceName: string | null;
   attribution: string; termsPage: number; termsPages: number; status: string;
 }
-export type LibraryAction = 'query' | 'select' | 'save' | 'preview' | 'stop' | 'walk' | 'rule' | 'close' | 'roleAssign' | 'roleRemove' | 'roleClear' | 'roleUndo' | 'roleRedo';
+export type LibraryAction = 'query' | 'select' | 'save' | 'preview' | 'stop' | 'walk' | 'rule' | 'close' | 'roleAssign' | 'roleRemove' | 'roleClear' | 'roleUndo' | 'roleRedo' | 'archive' | 'restore' | 'removeDownload' | 'forgetMotion';
 export interface LibraryRequest {
   version: 1; session: string; sequence: number; action: LibraryAction;
+  archivedOnly?: boolean; usagePage?: number;
   query?: string; offset?: number; compatibleOnly?: boolean; favouritesOnly?: boolean; includeShort?: boolean;
   motionId?: string; name?: string; tags?: string[]; favourite?: boolean; loop?: boolean;
   modelHash?: string; role?: number; weight?: number; speed?: number; cooldown?: number;
@@ -37,7 +44,9 @@ const record = (value: unknown): value is Record<string, unknown> => value !== n
 function entry(value: unknown): value is LibraryEntry {
   return record(value) && id(value.id) && text(value.name, 100) && Array.isArray(value.tags) && value.tags.length <= 16 && value.tags.every(tag => text(tag, 32)) &&
     typeof value.duration === 'number' && Number.isFinite(value.duration) && value.duration > 0 && value.duration <= 3600 &&
-    ['favourite', 'compatible', 'shortClip'].every(key => typeof value[key] === 'boolean');
+    ['favourite', 'compatible', 'shortClip'].every(key => typeof value[key] === 'boolean') &&
+    ['archived', 'removed', 'downloaded'].every(key => value[key] === undefined || typeof value[key] === 'boolean') &&
+    (value.bytes === undefined || integer(value.bytes, 28, 8 * 1024 * 1024));
 }
 function activityProfile(value: unknown): boolean {
   const bounded = (number: unknown, min: number, max: number) => typeof number === 'number' && Number.isFinite(number) && number >= min && number <= max;
@@ -46,6 +55,11 @@ function activityProfile(value: unknown): boolean {
     value.roles.every((group, index) => record(group) && group.role === index && Array.isArray(group.choices) && group.choices.length <= 4 &&
       group.choices.every(choice => record(choice) && id(choice.motionId) && text(choice.name, 100) && integer(choice.weight, 1, 10) && bounded(choice.speed, .25, 2) && bounded(choice.cooldown, 0, 60) && typeof choice.loop === 'boolean' && typeof choice.available === 'boolean') &&
       new Set(group.choices.map(choice => choice.motionId)).size === group.choices.length);
+}
+function usage(value: unknown): boolean {
+  return record(value) && integer(value.total, 0, 2048) && integer(value.page, 0, 512) && integer(value.pages, 1, 513) &&
+    (value.page as number) < (value.pages as number) && Array.isArray(value.uses) && value.uses.length <= 8 && value.uses.every(line => text(line, 160)) &&
+    ['history', 'saved', 'uncertain', 'playing'].every(key => typeof value[key] === 'boolean') && (value.protection === null || text(value.protection, 512));
 }
 export function parseLibraryState(value: unknown): LibraryState | null {
   if (!record(value) || value.version !== 1 || !id(value.session) || !integer(value.revision, 1, 2147483647) || !integer(value.ack, 0, 2147483647) ||
@@ -56,6 +70,8 @@ export function parseLibraryState(value: unknown): LibraryState | null {
       value.ruleId !== null && !id(value.ruleId) || value.ruleName !== null && !text(value.ruleName, 32) || !integer(value.stepIndex, 0, 15) ||
       !integer(value.sourceIndex, 0, 1023) || !integer(value.sourceCount, 0, 1024) || value.sourceName !== null && !text(value.sourceName, 100) ||
       !text(value.attribution, 1500) || !integer(value.termsPage, 0, 64) || !integer(value.termsPages, 1, 65)) return null;
+  if (value.usage !== undefined && value.usage !== null && !usage(value.usage) ||
+      value.archivedOnly !== undefined && typeof value.archivedOnly !== 'boolean' || value.canRemoveDownload !== undefined && typeof value.canRemoveDownload !== 'boolean' || value.canForgetMotion !== undefined && typeof value.canForgetMotion !== 'boolean') return null;
   if (value.activityProfile !== undefined && value.activityProfile !== null && !activityProfile(value.activityProfile)) return null;
   return value as unknown as LibraryState;
 }

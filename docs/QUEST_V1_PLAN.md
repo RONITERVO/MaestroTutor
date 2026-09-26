@@ -35,6 +35,13 @@ tray or covering book pages. Rules migrate to v3 while retaining older files.
 See QUEST_AVATAR_PROPS.md for collision/ownership limits. Hardware acceptance,
 contact IK and the remaining release gates are still open.
 
+PC-only library maintenance update (2026-09-26): the book supports archive and
+restore, paged usage explanations, protected local-download removal and optional
+confirmed forgetting of unused removed entries. Exact reimport retains IDs unless
+the user deliberately forgot them. Retained references include room/rule/profile
+history and recovery files. See QUEST_MOTION_MAINTENANCE.md. No headset access or
+new hardware acceptance is implied; the full Store release remains incomplete.
+
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.

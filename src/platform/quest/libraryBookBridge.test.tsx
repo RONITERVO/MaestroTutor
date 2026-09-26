@@ -86,5 +86,45 @@ describe('book library transport and UI', () => {
     const invalid = { ...profile, roles: [{ role: 0, choices: [{ ...profile.roles[3].choices[0], speed: Infinity }] }, ...profile.roles.slice(1)] };
     expect(parseLibraryState({ ...initial, activityProfile: invalid })).toBeNull();
   });
+  it('reviews protected references and requires explicit confirmation before removing a download', () => {
+    const initial = state();
+    const selected = { ...initial.entries[0], archived: true, removed: false, downloaded: true, bytes: 1024 };
+    const usage = { total: 0, page: 0, pages: 1, uses: [], history: false, saved: false, uncertain: false, playing: false, protection: null };
+    const view = { ...initial, selected, entries: [selected], usage, archivedOnly: true, canRemoveDownload: true };
+    expect(parseLibraryState(view)).not.toBeNull();
+    expect(parseLibraryState({ ...view, usage: { ...usage, uses: Array(9).fill('A') } })).toBeNull();
+    expect(parseLibraryState({ ...view, selected: { ...selected, bytes: Infinity } })).toBeNull();
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.click(ui.getByText('Usage and local storage')); fireEvent.click(ui.getByText('Remove local download'));
+    expect(client.snapshot().libraryRequest).toBeNull(); expect(ui.getByLabelText('Confirm download removal')).toBeTruthy();
+    fireEvent.click(ui.getByText('Keep download')); expect(ui.queryByLabelText('Confirm download removal')).toBeNull();
+    fireEvent.click(ui.getByText('Remove local download')); fireEvent.click(ui.getByText('Confirm remove download'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'removeDownload', motionId });
+    act(() => { client.receive({ ...view, revision: 2, ack: 1, canRemoveDownload: false, usage: { ...usage, history: true, protection: 'Undo needs this motion' } }); });
+    expect((ui.getByText('Remove local download') as HTMLButtonElement).disabled).toBe(true);
+    expect(ui.getByText('Undo needs this motion')).toBeTruthy();
+  });
+  it('drops removal confirmation when the selection or native session changes and queries archived motions', () => {
+    const initial = state(); const selected = { ...initial.entries[0], archived: true, removed: false, downloaded: true, bytes: 1024 };
+    const view = { ...initial, selected, entries: [selected], usage: { total: 0, page: 0, pages: 1, uses: [], history: false, saved: false, uncertain: false, playing: false, protection: null }, canRemoveDownload: true };
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.click(ui.getByText('Usage and local storage')); fireEvent.click(ui.getByText('Remove local download'));
+    act(() => { client.receive({ ...view, revision: 2, selected: { ...selected, id: 'e'.repeat(32), name: 'Another motion' } }); });
+    expect(ui.queryByLabelText('Confirm download removal')).toBeNull(); expect(client.snapshot().libraryRequest).toBeNull();
+    fireEvent.click(ui.getByText('Remove local download')); act(() => { client.receive({ ...view, session: 'f'.repeat(32) }); });
+    expect(ui.queryByLabelText('Confirm download removal')).toBeNull();
+    fireEvent.click(ui.getByLabelText('Archived')); expect(client.snapshot().libraryRequest).toMatchObject({ action: 'query', archivedOnly: true, offset: 0 });
+  });
+  it('requires a separate confirmation to forget a removed motion identity', () => {
+    const initial = state(); const selected = { ...initial.entries[0], archived: true, removed: true, downloaded: false, bytes: 1024 };
+    const view = { ...initial, selected, entries: [selected], usage: { total: 0, page: 0, pages: 1, uses: [], history: false, saved: false, uncertain: false, playing: false, protection: null }, canRemoveDownload: false, canForgetMotion: true };
+    expect(parseLibraryState({ ...view, canForgetMotion: 'yes' })).toBeNull();
+    const client = new LibraryBookClient(); client.receive(view); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.click(ui.getByText('Usage and local storage')); fireEvent.click(ui.getByText('Forget motion details'));
+    expect(client.snapshot().libraryRequest).toBeNull(); expect(ui.getByLabelText('Confirm forgetting motion')).toBeTruthy();
+    fireEvent.click(ui.getByText('Keep details')); expect(ui.queryByLabelText('Confirm forgetting motion')).toBeNull();
+    fireEvent.click(ui.getByText('Forget motion details')); fireEvent.click(ui.getByText('Confirm forget details'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'forgetMotion', motionId });
+  });
 
 });

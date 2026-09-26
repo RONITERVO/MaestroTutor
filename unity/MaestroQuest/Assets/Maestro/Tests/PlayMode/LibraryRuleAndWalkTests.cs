@@ -60,8 +60,59 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {
+            var library=root.GetComponent<LibraryBookController>(); if (library) { library.SetVisible(false); yield return Until(() => !library.UsagePending); }
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
+        }
+        [UnityTest] public IEnumerator BookArchiveKeepsPlaybackAndShowsCurrentHistoryAndSavedProtection()
+        {
+            var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
+            var book=root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
+            int sequence=0;
+            LibraryBookRequest Request(string action) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,motionId=greeting.id };
+            var work=book.HandleAsync(Request("select")); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.usage.total,Is.EqualTo(1)); Assert.That(book.State.usage.uses.Single(),Does.Contain("Action"));
+            Assert.That(runtime.Trigger(rules.Selected.id),Is.True); yield return Until(() => avatar.LibraryMotionId == greeting.id);
+            work=book.HandleAsync(Request("archive")); yield return Until(() => work.IsCompleted);
+            Assert.That(editor.Motions.Inspect(greeting.id).archived,Is.True); Assert.That(avatar.LibraryMotionId,Is.EqualTo(greeting.id),"Archive must not interrupt an existing rule");
+            work=book.HandleAsync(Request("removeDownload")); yield return Until(() => work.IsCompleted);
+            Assert.That(editor.Motions.Downloaded(greeting.id),Is.True); Assert.That(book.State.canRemoveDownload,Is.False);
+            runtime.StopAll(); rules.AssignLibraryMotion(gait.id); book.Refresh();
+            Assert.That(book.State.usage.total,Is.Zero); Assert.That(book.State.usage.history,Is.True); Assert.That(book.State.canRemoveDownload,Is.False);
+            rules.Undo(); Assert.That(rules.Selected.steps[0].motionId,Is.EqualTo(greeting.id));
+            rules.SendMessage("OnApplicationPause",true); rules.SendMessage("OnApplicationPause",false);
+            yield return Until(() => book.State.usage.saved);
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE");
+            if (!string.IsNullOrEmpty(evidence)) { Directory.CreateDirectory(evidence); File.WriteAllText(Path.Combine(evidence,"protected-book-state.json"),Newtonsoft.Json.JsonConvert.SerializeObject(book.State)); }
+            work=book.HandleAsync(Request("restore")); yield return Until(() => work.IsCompleted); Assert.That(editor.Motions.Find(greeting.id).archived,Is.False);
+        }
+        [UnityTest] public IEnumerator BookRemovesUnusedDownloadAndExactReimportRestoresTheSameSelection()
+        {
+            var add=editor.Motions.ImportAsync("unused.glb",Clip(8,"Unassigned gesture")); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); var entry=add.Result.Single();
+            var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
+            var book=root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
+            int sequence=0;
+            LibraryBookRequest Request(string action) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,motionId=entry.id };
+            var work=book.HandleAsync(Request("select")); yield return Until(() => work.IsCompleted);
+            work=book.HandleAsync(Request("archive")); yield return Until(() => work.IsCompleted); yield return Until(() => book.State.canRemoveDownload);
+            var query=Request("query"); query.query=""; query.archivedOnly=true; query.compatibleOnly=true; work=book.HandleAsync(query); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.entries.Single().id,Is.EqualTo(entry.id));
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE");
+            if (!string.IsNullOrEmpty(evidence)) { Directory.CreateDirectory(evidence); File.WriteAllText(Path.Combine(evidence,"maintenance-book-state.json"),Newtonsoft.Json.JsonConvert.SerializeObject(book.State)); }
+            work=book.HandleAsync(Request("removeDownload")); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.selected.id,Is.EqualTo(entry.id)); Assert.That(book.State.selected.removed,Is.True,book.State.status); Assert.That(book.State.canPreview || book.State.canWalk || book.State.canAssign,Is.False);
+            Assert.That(editor.Motions.Find(entry.id),Is.Null); Assert.That(editor.Motions.PayloadPresent(entry.id),Is.False); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            if (!string.IsNullOrEmpty(evidence)) File.WriteAllText(Path.Combine(evidence,"removed-book-state.json"),Newtonsoft.Json.JsonConvert.SerializeObject(book.State));
+            work=book.HandleAsync(Request("walk")); yield return Until(() => work.IsCompleted); Assert.That(editor.Read("maestro").walkMotionId,Is.Not.EqualTo(entry.id));
+            add=editor.Motions.ImportAsync("original-again.glb",Clip(8,"Unassigned gesture")); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); Assert.That(add.Result.Single().id,Is.EqualTo(entry.id));
+            book.Refresh(); Assert.That(book.State.selected.removed,Is.False); Assert.That(book.State.canPreview,Is.True); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            // A lost payload must still be removable from the catalogue without
+            // forcing the user to download the original solely to forget it.
+            File.Delete(Path.Combine(directory,"motions",entry.hash+".motion.glb"));
+            work=book.HandleAsync(Request("archive")); yield return Until(() => work.IsCompleted); Assert.That(book.State.canRemoveDownload,Is.True);
+            work=book.HandleAsync(Request("removeDownload")); yield return Until(() => work.IsCompleted); Assert.That(book.State.canForgetMotion,Is.True);
+            work=book.HandleAsync(Request("forgetMotion")); yield return Until(() => work.IsCompleted); Assert.That(editor.Motions.Inspect(entry.id),Is.Null); Assert.That(book.State.selected,Is.Null);
+
         }
         [UnityTest] public IEnumerator TutorStateProfilesSwitchMotionsBlendAndYieldToManualOwners()
         {

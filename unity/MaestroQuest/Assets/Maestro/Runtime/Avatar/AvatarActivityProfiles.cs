@@ -57,7 +57,10 @@ namespace Maestro.Quest.Avatar
             document=file.Load(out var message) ?? new AvatarActivityDocument(); Notice=message;
         }
         public AvatarActivityProfile Find(string model) => document.avatars.FirstOrDefault(x => x.modelHash == model)?.Copy();
-        // Future library deletion must retain current and undo/redo references.
+        public AvatarActivityDocument Snapshot() => document.Copy();
+        public bool HistoricalMotion(string id) => undo.Concat(redo).SelectMany(x => new[] { x.Before,x.After }).Where(x => x != null).Any(x => x.roles.Any(role => role.choices.Any(choice => choice.motionId == id)));
+        public bool SavedMotion(string id,out bool uncertain,bool force=false) => file.Retains(x => x.avatars.SelectMany(avatar => avatar.roles).SelectMany(role => role.choices).Select(choice => choice.motionId),id,out uncertain,force);
+        // Keep current and undo/redo references available to library maintenance.
         public string[] ReferencedMotionIds => undo.Concat(redo).SelectMany(x => new[] { x.Before,x.After }).Where(x => x != null).Concat(document.avatars).SelectMany(x => x.roles).SelectMany(x => x.choices).Select(x => x.motionId).Distinct().ToArray();
         public bool Assign(string model,string rig,TutorMotionRole role,TutorMotionChoice choice,MotionLibrary library,out string error)
         {

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from 'react';
+import { MotionLibraryManagement } from './MotionLibraryManagement';
 import { ActivityMotionEditor } from './ActivityMotionEditor';
 import { LibraryBookClient, type LibraryState } from './libraryBookBridge';
 
@@ -17,8 +18,8 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
   useEffect(() => { setName(selected?.name ?? ''); setTags(selected?.tags.join(', ') ?? ''); setFavourite(selected?.favourite ?? false); setError(''); }, [selected?.id, selected?.name, selected?.tags.join(','), selected?.favourite]);
   if (!state?.visible) return null;
   const waiting = pending || state.busy;
-  const filter = (changes: Partial<Pick<LibraryState, 'compatibleOnly' | 'favouritesOnly' | 'includeShort' | 'offset'>> = {}) => client.request('query', {
-    query, compatibleOnly: state.compatibleOnly, favouritesOnly: state.favouritesOnly, includeShort: state.includeShort, offset: 0, ...changes,
+  const filter = (changes: Partial<Pick<LibraryState, 'compatibleOnly' | 'favouritesOnly' | 'includeShort' | 'archivedOnly' | 'offset'>> = {}) => client.request('query', {
+    query, compatibleOnly: state.compatibleOnly, favouritesOnly: state.favouritesOnly, includeShort: state.includeShort, archivedOnly: state.archivedOnly ?? false, offset: 0, ...changes,
   });
   const source = (sourceIndex: number, termsPage: number) => client.request('select', { motionId: selected!.id, sourceIndex, termsPage });
   const save = (event: FormEvent) => {
@@ -40,11 +41,12 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
         <label><input type="checkbox" checked={state.compatibleOnly} onChange={event => filter({ compatibleOnly: event.target.checked })} />For this Maestro</label>
         <label><input type="checkbox" checked={state.favouritesOnly} onChange={event => filter({ favouritesOnly: event.target.checked })} />Favourites</label>
         <label><input type="checkbox" checked={state.includeShort} onChange={event => filter({ includeShort: event.target.checked })} />Short clips</label>
+        <label><input type="checkbox" checked={state.archivedOnly ?? false} onChange={event => filter({ archivedOnly: event.target.checked })} />Archived</label>
       </fieldset>
       <div className="quest-library-results" aria-label="Saved animations">
         {state.entries.map(motion => <button key={motion.id} disabled={waiting} aria-pressed={selected?.id === motion.id} onClick={() => client.request('select', { motionId: motion.id })}>
           <span>{motion.favourite ? '★ ' : ''}{motion.name}</span>
-          <small>{motion.duration.toFixed(2)} s{motion.shortClip ? ' · Short export clip' : ''}{motion.compatible ? '' : ' · Different rig'}{motion.tags.length ? ` · ${motion.tags.join(', ')}` : ''}</small>
+          <small>{motion.duration.toFixed(2)} s{motion.removed ? ' · Download removed' : motion.downloaded === false ? ' · Missing download' : motion.archived ? ' · Archived' : ''}{motion.shortClip ? ' · Short export clip' : ''}{motion.compatible ? '' : ' · Different rig'}{motion.tags.length ? ` · ${motion.tags.join(', ')}` : ''}</small>
         </button>)}
         {!state.entries.length && <p className="quest-library-empty">No matching animations. Try another search or turn off a filter. Use Import, then Save motions on the physical tray to add a GLB or VRM export.</p>}
       </div>
@@ -56,6 +58,7 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
       <div className="quest-library-detail-scroll">
         {selected ? <>
           <h2>{selected.name}</h2><p>{selected.duration.toFixed(2)} seconds · {selected.compatible ? 'Matches this Maestro' : 'Requires a matching rig'}</p>
+          {selected.downloaded === false && <p>Download unavailable. Import the original export and use Save motions to restore it.</p>}
           {selected.shortClip && <p>Very short export clip. It may be a setup pose or helper; preview before assigning it.</p>}
           <div className="quest-library-actions"><button disabled={waiting || !state.canPreview} onClick={() => client.request('preview', { motionId: selected.id, loop })}>Preview on Maestro</button><button onClick={() => client.request('stop')}>Stop motion</button></div>
           <label className="quest-library-check"><input type="checkbox" checked={loop} onChange={event => setLoop(event.target.checked)} />Loop preview</label>
@@ -63,6 +66,7 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
             <button disabled={waiting || !state.canAssign || !state.ruleId} onClick={() => client.request('rule', { motionId: selected.id, ruleId: state.ruleId!, stepIndex: state.stepIndex })}>Use in selected action</button></div>
           <p className="quest-library-hint">{state.ruleName ? `${state.ruleName}, step ${state.stepIndex + 1}. Its target and triggers stay the same.` : 'Create or select an action on the physical rules tray to assign this motion.'} Walking stays within room navigation.</p>
           {state.activityProfile && <ActivityMotionEditor client={client} profile={state.activityProfile} selected={selected} waiting={waiting} />}
+          <MotionLibraryManagement client={client} state={state} waiting={waiting} />
           <form onSubmit={save} className="quest-library-edit"><fieldset disabled={waiting || state.readOnly}><legend>Library details</legend>
             <label>Name<input value={name} maxLength={100} onChange={event => setName(event.target.value)} /></label>
             <label>Tags, separated by commas<input value={tags} maxLength={542} onChange={event => setTags(event.target.value)} placeholder="Greeting, talking, calm" /></label>

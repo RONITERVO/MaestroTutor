@@ -32,13 +32,13 @@ namespace Maestro.Quest.Imports
         public MotionOrigin[] origins = Array.Empty<MotionOrigin>();
         public float duration;
         public int bytes,curveValues;
-        public bool favourite;
+        public bool favourite,archived,removed;
         public bool Short => duration < .1f;
         public MotionEntry Copy() { var copy = (MotionEntry)MemberwiseClone(); copy.tags = (string[])tags.Clone(); copy.origins = origins.Select(x => x.Copy()).ToArray(); return copy; }
     }
     [Serializable] sealed class MotionCatalogue
     {
-        public int version = 1;
+        public int version = 2;
         public MotionEntry[] entries = Array.Empty<MotionEntry>();
         public MotionSource[] sources = Array.Empty<MotionSource>();
         public MotionCatalogue Copy() => new() { version = version,entries = entries.Select(x => x.Copy()).ToArray(),sources = sources.Select(x => x.Copy()).ToArray() };
@@ -54,6 +54,7 @@ namespace Maestro.Quest.Imports
         readonly SemaphoreSlim writes = new(1,1);
         MotionCatalogue catalogue;
         bool disposed,readOnly;
+        readonly HashSet<string> removing = new();
         public string Notice { get; private set; }
         public bool ReadOnly => readOnly;
         internal sealed class Cached
@@ -79,21 +80,79 @@ namespace Maestro.Quest.Imports
         }
         public MotionLibrary(string directory)
         {
-            this.directory = Path.GetFullPath(directory); primary = Path.Combine(this.directory,"motions.v1.json"); backup = primary+".backup";
-            if (TryRead(primary,out catalogue,out bool unsupported)) return;
-            // An older app must never downgrade a newer catalogue using an old backup.
-            if (unsupported) { readOnly = true; Notice = "This motion catalogue needs a newer app. Its files are preserved."; catalogue = new MotionCatalogue(); return; }
-            if (TryRead(backup,out catalogue)) { Notice = "Recovered the motion library from its backup"; return; }
-            if (File.Exists(primary) || File.Exists(backup)) { readOnly = true; Notice = "The motion catalogue is unreadable. Its files are retained for recovery; imports are paused."; }
+            this.directory = Path.GetFullPath(directory); primary = Path.Combine(this.directory,"motions.v2.json"); backup = primary+".backup";
+            string source=File.Exists(primary) || File.Exists(backup) ? primary : Path.Combine(this.directory,"motions.v1.json");
+            int expected=source == primary ? 2 : 1;
+            if (TryRead(source,out catalogue,out bool unsupported,expected)) { catalogue.version=2; return; }
+            if (unsupported) { readOnly = true; Notice = "This motion catalogue needs a different app version. Its files are preserved."; catalogue = new MotionCatalogue(); return; }
+            if (TryRead(source+".backup",out catalogue,out _,expected)) { catalogue.version=2; Notice = "Recovered the motion library from its backup"; return; }
+            if (File.Exists(source) || File.Exists(source+".backup")) { readOnly = true; Notice = "The motion catalogue is unreadable. Its files are retained for recovery; imports are paused."; }
             catalogue = new MotionCatalogue();
         }
-        public MotionEntry Find(string id) { lock (gate) return catalogue.entries.FirstOrDefault(x => x.id == id)?.Copy(); }
-        public MotionSource[] Sources() { lock (gate) return catalogue.sources.Select(x => x.Copy()).ToArray(); }
-        public MotionEntry[] List(string query = "",string rigHash = null,bool includeShort = false,bool favouritesOnly = false)
+        public MotionEntry Inspect(string id)
         {
-            lock (gate) return catalogue.entries.Where(x => (includeShort || !x.Short) && (!favouritesOnly || x.favourite) &&
+            lock (gate) { var entry=catalogue.entries.FirstOrDefault(x => x.id == id)?.Copy(); if (entry != null && removing.Contains(id)) entry.removed=true; return entry; }
+        }
+        public MotionEntry Find(string id) { var entry=Inspect(id); return entry?.removed == false ? entry : null; }
+        public bool PayloadPresent(string id) { var entry=Inspect(id); return entry != null && File.Exists(PayloadPath(entry.hash)); }
+        public bool Downloaded(string id) { var entry=Inspect(id); return entry != null && !entry.removed && PayloadPresent(id); }
+        public bool Pinned(string id) => cache.TryGetValue(id,out var value) && (value.Users > 0 || !value.Load.IsCompleted);
+        public MotionSource[] Sources() { lock (gate) return catalogue.sources.Select(x => x.Copy()).ToArray(); }
+        public MotionEntry[] List(string query = "",string rigHash = null,bool includeShort = false,bool favouritesOnly = false,bool archivedOnly = false)
+        {
+            lock (gate) return catalogue.entries.Where(x => x.archived == archivedOnly && (archivedOnly || !x.removed) && (includeShort || !x.Short) && (!favouritesOnly || x.favourite) &&
                 (rigHash == null || x.rigHash == rigHash) && (string.IsNullOrWhiteSpace(query) || x.name.IndexOf(query,StringComparison.OrdinalIgnoreCase) >= 0 || x.tags.Any(t => t.IndexOf(query,StringComparison.OrdinalIgnoreCase) >= 0)))
                 .OrderByDescending(x => x.favourite).ThenBy(x => x.name,StringComparer.OrdinalIgnoreCase).ThenBy(x => x.id,StringComparer.Ordinal).Select(x => x.Copy()).ToArray();
+        }
+        public async Task ArchiveAsync(string id,bool archived)
+        {
+            await writes.WaitAsync().ConfigureAwait(false);
+            try { await Task.Run(() => {
+                if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
+                if (readOnly) throw new ModelImportException(Notice);
+                MotionCatalogue candidate; lock (gate) candidate=catalogue.Copy();
+                var entry=candidate.entries.FirstOrDefault(x => x.id == id) ?? throw new ModelImportException("This motion is missing from the catalogue.");
+                if (!archived && entry.removed) throw new ModelImportException("Import its original export again to restore this motion and its existing identity.");
+                entry.archived=archived; Save(candidate); lock (gate) catalogue=candidate;
+            }).ConfigureAwait(false); } finally { writes.Release(); }
+        }
+        // Call on the Unity thread. The final guard runs after waiting for other
+        // writes; hiding the entry prevents new assignments/leases during IO.
+        public Task RemoveDownloadAsync(string id,Func<Task<string>> protection) => MaintainAsync(id,protection,false);
+        public Task ForgetAsync(string id,Func<Task<string>> protection) => MaintainAsync(id,protection,true);
+        async Task MaintainAsync(string id,Func<Task<string>> protection,bool forget)
+        {
+            if (protection == null) throw new ArgumentNullException(nameof(protection));
+            await writes.WaitAsync();
+            try
+            {
+                if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
+                if (readOnly) throw new ModelImportException(Notice);
+                var entry=Inspect(id) ?? throw new ModelImportException("This motion is missing from the catalogue.");
+                if (forget && (!entry.removed || PayloadPresent(id))) throw new ModelImportException("Remove the local download before forgetting its details.");
+                if (!entry.archived) throw new ModelImportException("Archive this motion before removing its download.");
+                if (Pinned(id)) throw new ModelImportException("Stop this motion and wait for loading to finish before removing its download.");
+                lock (gate) removing.Add(id);
+                string reason=await protection(); if (reason != null) throw new ModelImportException(reason);
+                if (cache.TryGetValue(id,out var cached)) Remove(cached);
+                await Task.Run(() => {
+                    if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
+                    MotionCatalogue candidate; lock (gate) candidate=catalogue.Copy();
+                    if (forget)
+                    {
+                        candidate.entries=candidate.entries.Where(x => x.id != id).ToArray();
+                        var needed=candidate.entries.SelectMany(x => x.origins).Select(x => x.sourceHash).ToHashSet();
+                        candidate.sources=candidate.sources.Where(x => needed.Contains(x.hash)).ToArray();
+                    }
+                    else candidate.entries.First(x => x.id == id).removed=true;
+                    // Publish the tombstone before removing bytes. An interrupted
+                    // delete can be retried, and a reimport keeps the same GUID.
+                    Save(candidate); lock (gate) catalogue=candidate;
+                    string path=PayloadPath(entry.hash);
+                    if (!forget && File.Exists(path)) File.Delete(path);
+                });
+            }
+            finally { lock (gate) removing.Remove(id); writes.Release(); }
         }
         public async Task<MotionEntry[]> ImportAsync(string fileName,byte[] bytes,string category = null)
         {
@@ -121,6 +180,7 @@ namespace Maestro.Quest.Imports
                             entry = new MotionEntry { id = Guid.NewGuid().ToString("N"),hash = pack.Hash,rigHash = pack.RigHash,name = pack.Name,duration = pack.Duration,bytes = pack.Bytes.Length,curveValues = pack.CurveValues };
                             entries.Add(entry);
                         }
+                        entry.archived=false; entry.removed=false;
                         if (!entry.origins.Any(x => x.sourceHash == sourceHash && x.clipIndex == pack.SourceClip)) entry.origins = entry.origins.Append(new MotionOrigin { sourceHash = sourceHash,clipIndex = pack.SourceClip }).ToArray();
                         if (!string.IsNullOrWhiteSpace(category)) entry.tags = entry.tags.Append(CleanTag(category)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
                         added.Add(entry);
@@ -208,13 +268,14 @@ namespace Maestro.Quest.Imports
         static void Validate(MotionCatalogue value)
         {
             void Check(bool valid) { if (!valid) throw new ModelImportException("The motion catalogue contains invalid or excessive data."); }
-            Check(value != null && value.version == 1 && value.entries != null && value.sources != null && value.entries.Length <= MaximumEntries && value.sources.Length <= MaximumEntries);
+            Check(value != null && (value.version == 1 || value.version == 2) && value.entries != null && value.sources != null && value.entries.Length <= MaximumEntries && value.sources.Length <= MaximumEntries);
             var sources = new HashSet<string>();
             foreach (var source in value.sources) { Check(source != null && ModelLibrary.ValidHash(source.hash) && sources.Add(source.hash) && Text(source.name,100) && source.attribution != null && source.attribution.Length <= 65536); }
             var ids = new HashSet<string>(); var hashes = new HashSet<string>(); int origins = 0;
             foreach (var entry in value.entries)
             {
                 Check(entry != null && Guid.TryParseExact(entry.id,"N",out _) && ids.Add(entry.id) && ModelLibrary.ValidHash(entry.hash) && hashes.Add(entry.hash) && ModelLibrary.ValidHash(entry.rigHash));
+                Check((value.version >= 2 || !entry.archived && !entry.removed) && (!entry.removed || entry.archived));
                 Check(Text(entry.name,100) && !string.IsNullOrWhiteSpace(entry.name) && entry.tags != null && entry.tags.Length <= 16 && entry.tags.All(x => Text(x,32) && !string.IsNullOrWhiteSpace(x)) && entry.tags.Distinct(StringComparer.OrdinalIgnoreCase).Count() == entry.tags.Length);
                 Check(float.IsFinite(entry.duration) && entry.duration > 0 && entry.duration <= 3600 && entry.bytes >= 28 && entry.bytes <= MotionPack.MaximumBytes && entry.curveValues > 0 && entry.curveValues <= MaximumResidentCurveValues);
                 Check(entry.origins != null && entry.origins.Length > 0 && entry.origins.Length <= MaximumEntries);
@@ -222,10 +283,10 @@ namespace Maestro.Quest.Imports
                 foreach (var origin in entry.origins) { Check(origin != null && sources.Contains(origin.sourceHash) && origin.clipIndex >= 0 && origin.clipIndex < 32 && unique.Add(origin.sourceHash+":"+origin.clipIndex)); }
                 origins += entry.origins.Length; Check(origins <= 32768);
             }
-            Check(value.entries.Sum(x => (long)x.bytes) <= MaximumDiskBytes);
+            Check(value.entries.Where(x => !x.removed).Sum(x => (long)x.bytes) <= MaximumDiskBytes);
         }
         static bool TryRead(string path,out MotionCatalogue value) => TryRead(path,out value,out _);
-        static bool TryRead(string path,out MotionCatalogue value,out bool unsupported)
+        static bool TryRead(string path,out MotionCatalogue value,out bool unsupported,int expected = 2)
         {
             value = null; unsupported = false;
             try
@@ -234,13 +295,14 @@ namespace Maestro.Quest.Imports
                 using var reader = new JsonTextReader(new StringReader(new UTF8Encoding(false,true).GetString(ReadBounded(path,MaximumCatalogueBytes)))) { MaxDepth = 16,DateParseHandling = DateParseHandling.None };
                 var json = JObject.Load(reader,new JsonLoadSettings { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });
                 if (reader.Read() || json["version"]?.Type != JTokenType.Integer) return false;
-                if (json["version"].ToString() != "1") { unsupported = true; return false; }
+                if (json["version"].ToString() != expected.ToString()) { unsupported = true; return false; }
                 var candidate = json.ToObject<MotionCatalogue>(); Validate(candidate); value = candidate; return true;
             }
             catch (Exception error) when (error is IOException || error is UnauthorizedAccessException || error is JsonException || error is ArgumentException || error is ModelImportException || error is NullReferenceException || error is InvalidCastException || error is OverflowException) { return false; }
         }
         void Save(MotionCatalogue candidate)
         {
+            TryRead(primary,out _,out bool unsupported); if (unsupported) { readOnly=true; throw new ModelImportException("The motion catalogue version changed; its files are preserved."); }
             Validate(candidate); byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(candidate,Formatting.None));
             if (bytes.Length > MaximumCatalogueBytes) throw new ModelImportException("The motion catalogue has reached its metadata budget.");
             Directory.CreateDirectory(directory);

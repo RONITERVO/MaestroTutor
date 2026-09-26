@@ -2,7 +2,54 @@
 
 This is development evidence, not a release acceptance report.
 
-## Latest: avatar-held props — not installed
+## Latest: animation-library maintenance — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-BCEAF516.apk`.
+SHA256: `BCEAF5165C1A161D46DF0B567B032E8E3FAEE947C6D7E86B5559D3C95C08BD20`.
+135,420,391 bytes, development signed. Final Unity build exited 0, with zero
+errors and two warnings. APK v2 signature, ARM64 and manifest checks pass.
+54 EditMode, 61 required PlayMode and 17 native Android checks pass (132), plus
+18 Quest web checks (150 total). TypeScript compilation, native lint and the
+shared web build pass. Three optional private-file tests were deliberately
+skipped. No private animation/model pack was added to the build.
+
+The book library now offers archive/restore, paged current-use explanations,
+protected removal of a local motion download and separately confirmed forgetting
+of unused removed metadata. Current assignments, room/rule/profile Undo/Redo,
+retained saves/recovery copies and active/loading clips protect downloads.
+Archive preserves referenced playback. Exact reimport preserves an existing
+identity unless the user deliberately forgot its metadata. Missing downloads
+are shown as unavailable and can also be repaired or removed. The catalogue
+migrates to v2 without changing older original files. See
+QUEST_MOTION_MAINTENANCE.md for controls and precise limits.
+
+Unity tests verify real clip leases and runtime rule playback, asynchronous
+removal reservation/rollback, retained-reference protection, book requests,
+archive and exact reimport, absent payloads, future versions and metadata/source
+slot reclamation. Browser tests cover bounded state and separate confirmations
+that reset on selection/session changes. The local Edge fixture exercised search,
+metadata editing, return to chat and its inline artifact, state-profile controls,
+removal/forget confirmations and protected references using actual synthetic
+native state. The inspected screenshots fit the two page widths and use the
+existing detail scrolling. Fixture acknowledgements simulate transport; this
+is not Android WebView or headset acceptance.
+
+Ignored evidence: `.quest-evidence/motion-maintenance/verified-BCEAF516`. It
+contains 109 C# source hashes and 112 bundled web-file hashes matched to the
+build mirror, native AAR hash, build/test reports, browser results, native state
+JSON and reviewed screenshots. The earlier props and movement features are
+included.
+
+No headset query, installation or launch was initiated. Installed build remains
+08F340EF while the user sleeps and Quest charges. After the user returns, back
+up the room directory before installing. Verify archive while a rule plays,
+Archived search, reference explanations, restore, removing an unused download,
+restart and exact reimport, then optional forgetting. Confirm used and historical
+motions stay protected. Test keyboard and hand/controller scrolling with a large
+collection. Previous gait, movement bindings, tutor-state profiles, prop throwing,
+book/native parity and all Store release gates still need their stated acceptance.
+
+## Earlier: avatar-held props — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-DFE1FE66.apk`.
 SHA256: `DFE1FE66CD2860396D919D582C07A75EF21929A5233E09B3EA86B9A1C11B01E8`.

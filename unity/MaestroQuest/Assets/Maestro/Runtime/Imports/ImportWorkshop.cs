@@ -178,12 +178,12 @@ namespace Maestro.Quest.Imports
         MotionEntry[] CompatibleMotions() => editor.Motions.List(rigHash:maestro && maestro.CustomModel ? maestro.CustomModel.MotionRigHash ?? "" : "");
         MotionEntry CurrentMotion()
         {
-            var entry = editor.Motions.Find(libraryMotionId) ?? CompatibleMotions().FirstOrDefault();
+            var entry = editor.Motions.Inspect(libraryMotionId) ?? (libraryMotionId == null ? CompatibleMotions().FirstOrDefault() : null);
             libraryMotionId = entry?.id; return entry;
         }
         public bool SelectLibraryMotion(string id)
         {
-            var entry = editor.Motions.Find(id); if (entry == null) return false;
+            var entry = editor.Motions.Inspect(id); if (entry == null) return false;
             if (libraryMotionId != id) Stop();
             libraryMode = true; libraryMotionId = id; page = 0; ShowLibraryDetails(); Say("Selected "+entry.name); return true;
         }
@@ -212,7 +212,7 @@ namespace Maestro.Quest.Imports
             }
             var source = editor.Motions.Sources().FirstOrDefault(x => x.hash == entry.origins[0].sourceHash);
             bool compatible = maestro && !maestro.ModelBusy && maestro.CustomModel && maestro.CustomModel.MotionRigHash == entry.rigHash;
-            string text = (compatible ? "" : "Load a compatible Maestro to preview this saved motion.\n")+entry.name+"\n"+entry.duration.ToString("0.00")+" seconds · "+CompatibleMotions().Length+" compatible motions\n"+string.Join(", ",entry.tags)+"\nSource terms:\n"+source?.attribution;
+            string text = (entry.removed ? "Download removed. Import the original export, then Save motions to restore it.\n" : "")+(entry.archived ? "Archived: existing assignments are retained.\n" : "")+(compatible ? "" : "Load a compatible Maestro to preview this saved motion.\n")+entry.name+"\n"+entry.duration.ToString("0.00")+" seconds · "+CompatibleMotions().Length+" compatible motions\n"+string.Join(", ",entry.tags)+"\nSource terms:\n"+source?.attribution;
             var lines = ModelText.Wrap(text,64); int pages = Math.Max(1,(lines.Length+6)/7); page %= pages;
             Details = "Motion library " + (page+1) + "/" + pages + "\n" + string.Join("\n",lines,page*7,Math.Min(7,lines.Length-page*7)); Changed?.Invoke();
         }

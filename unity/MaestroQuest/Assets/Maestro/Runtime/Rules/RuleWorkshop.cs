@@ -29,6 +29,8 @@ namespace Maestro.Quest.Rules
         public RoomRules Runtime;
         public string Status { get; private set; } = "Create an action sequence, then add triggers or buttons";
         public event Action Changed, DocumentChanged;
+        public bool HistoricalMotion(string id) => undo.Concat(redo).Any(x => x.sequences.Any(sequence => sequence.steps.Any(step => step.motionId == id)));
+        public bool SavedMotion(string id,out bool uncertain,bool force=false) => storage.RetainsMotion(id,out uncertain,force);
         public RuleDocument Snapshot() => document.Copy();
         public RuleSequence Selected => sequenceIndex >= 0 && sequenceIndex < document.sequences.Length ? document.sequences[sequenceIndex].Copy() : null;
         public int SelectedStepIndex => stepIndex;

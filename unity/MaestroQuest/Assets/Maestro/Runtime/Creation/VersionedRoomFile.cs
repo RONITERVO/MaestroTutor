@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,6 +21,9 @@ namespace Maestro.Quest.Creation
         readonly Func<T,bool> validate;
         readonly Func<T,T> copy;
         readonly Action<T> normalize,upgrade;
+        sealed class Retained { public long Length,Stamp; public bool Uncertain; public HashSet<string> Ids; }
+        readonly object retainedGate=new();
+        readonly Dictionary<string,Retained> retained=new();
         public bool ReadOnly { get; private set; }
         public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2)
         {
@@ -63,6 +68,32 @@ namespace Maestro.Quest.Creation
                 value = candidate; return true;
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is ArgumentException || e is JsonException || e is OverflowException) { return false; }
+        }
+        public bool Retains(Func<T,IEnumerable<string>> identities,string id,out bool uncertain,bool force=false)
+        {
+            lock (retainedGate)
+            {
+                bool found=false; uncertain=false;
+                for (int v=1;v<=version;v++)
+                    foreach (string suffix in new[] { "", ".backup", ".pending", ".unreadable" })
+                    {
+                        string path=Path.Combine(directory,stem+".v"+v+".json"+suffix);
+                        try
+                        {
+                            var info=new FileInfo(path);
+                            if (!info.Exists) { retained.Remove(path); continue; }
+                            if (force || !retained.TryGetValue(path,out var cached) || cached.Length != info.Length || cached.Stamp != info.LastWriteTimeUtc.Ticks)
+                            {
+                                cached=new Retained { Length=info.Length,Stamp=info.LastWriteTimeUtc.Ticks };
+                                if (Read(path,v,out var document,out _)) cached.Ids=identities(document).Where(x => x != null).ToHashSet(); else cached.Uncertain=true;
+                                retained[path]=cached;
+                            }
+                            uncertain |= cached.Uncertain; found |= cached.Ids?.Contains(id) == true;
+                        }
+                        catch (Exception error) when (error is IOException || error is UnauthorizedAccessException) { uncertain=true; }
+                    }
+                return found;
+            }
         }
         public bool Save(T value,out string error)
         {

@@ -53,7 +53,7 @@ namespace Maestro.Quest.Tests
                 var entry = library.ImportAsync("first.glb",ModelFixture.Create()).GetAwaiter().GetResult().Single();
                 library.UpdateAsync(entry.id,"Renamed",new[] { "test" },true).GetAwaiter().GetResult();
             }
-            string primary = Path.Combine(directory,"motions.v1.json"); File.WriteAllText(primary,"damaged");
+            string primary = Path.Combine(directory,"motions.v2.json"); File.WriteAllText(primary,"damaged");
             using (var recovered = new MotionLibrary(directory))
             {
                 Assert.That(recovered.ReadOnly,Is.False); Assert.That(recovered.Notice,Does.Contain("backup")); Assert.That(recovered.List().Length,Is.EqualTo(1));

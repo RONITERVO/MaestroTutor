@@ -34,6 +34,10 @@ Maestro animation step can return, drop or throw that prop and use the existing
 event/button triggers. See `../docs/QUEST_AVATAR_PROPS.md` for authoring and limits.
 `-RenderRules` captures both physical rule-control pages in Verify or Build.
 
+The book library's Usage and local storage section supports archive/restore,
+protected download removal and optional forgetting of unused removed entries.
+See `../docs/QUEST_MOTION_MAINTENANCE.md` for exact reimport recovery and limits.
+
 Build the shared web app, native browser AAR, and ARM64 development APK together:
 
 ```powershell

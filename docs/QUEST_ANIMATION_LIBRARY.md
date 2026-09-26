@@ -73,7 +73,8 @@ excluding geometry, materials and images. These `.motion.glb` files use the GLB
 binary container with an internal Maestro schema; they are not visible model
 exports and the ordinary model importer rejects them. Originals are unchanged.
 
-`MotionLibrary` persists the private `room/motions/motions.v1.json` catalogue.
+`MotionLibrary` persists the private `room/motions/motions.v2.json` catalogue.
+V1 catalogues migrate without changing original files or motion identities.
 GUID identities survive renames, duplicate imports and restarts. Payload hashes
 deduplicate exact motions, source hashes/clip indices preserve provenance, and
 revised motions receive new IDs. Source terms are retained separately; identical
@@ -195,14 +196,16 @@ The ID persists through undo, restart and compatible avatar replacement; an
 incompatible replacement retains the preference but uses the included gait.
 This is not calibrated foot planting, blended gait transitions or authored travel.
 
-Room and rule saves now use `room.v2.json` and `rules.v2.json`. Valid v1 files
+Room saves use `room.v2.json`; rules now use `rules.v3.json` after the
+avatar-held prop update (QUEST_AVATAR_PROPS.md). Valid v1 rooms and v1/v2 rules
 load and upgrade in memory, retaining objects, recordings, raw clip selections,
-sequences and controller buttons. First save writes v2; v1 originals remain
-unchanged. Once v2 exists, corruption cannot silently load the stale v1 room.
-Valid current backups recover damaged saves. Unknown newer versions remain
-read-only even if an older valid backup exists. Invalid unrecoverable saves are
-preserved and saving is disabled. Existing embedded-clip references keep their
-exact model hash and index; they are not silently converted to a guessed library ID.
+sequences and controller buttons. First write uses the current format; older
+original files remain unchanged. Once a current file exists, corruption cannot
+silently load a stale older collection. Valid current backups recover damaged
+saves. Unknown newer versions remain read-only even with an older valid backup.
+Invalid unrecoverable saves are preserved and saving is disabled. Existing
+embedded-clip references keep their exact model hash and index; they are not
+silently converted to a guessed library ID.
 
 ## Desktop verification snapshot
 
@@ -313,8 +316,9 @@ generation or upload private models as part of this work.
 Embedded-model preview, persisted walk selection and ImportedClip visual rules
 remain available alongside the new reusable-motion foundation above. The large
 library is not complete: add broader roles and explicit embedded-clip
-relinking; blending beyond the canonical body state transitions; explicit travel/contact policies; library deletion/relinking
-and retained references through room/rule undo. Profile import and long-session
+relinking; blending beyond the canonical body state transitions; explicit travel/contact policies; bulk-pack management and deeper recovery tools. Archive, protected local-download
+removal, explicit assignment replacement and retained room/rule/profile references
+are implemented as described in QUEST_MOTION_MAINTENANCE.md. Profile import and long-session
 playback on Quest, including low storage, interruption and large collections.
 The user's final Meshy default is still in progress and private originals are
 not bundled into any build.
@@ -326,3 +330,12 @@ Speaking state for each custom avatar, with weights, speed, looping, reuse gaps
 and separate assignment Undo/Redo. See QUEST_AVATAR_ACTIVITIES.md for actual
 ownership, persistence and blending limits. Walking remains a separate gait;
 more roles, motion packs, contact/travel policy and Quest profiling remain open.
+
+## Archive, reference inspection and local storage
+
+The book now separates archiving from removing a local download. Archiving
+keeps referenced playback available. Removal checks current assignments, history,
+retained saves and active leases; exact reimport restores the same identity.
+Optional confirmed forgetting of an unused removed entry reclaims metadata
+capacity. See QUEST_MOTION_MAINTENANCE.md for user controls, migrations, recovery
+limits and the hardware acceptance still required.

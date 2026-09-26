@@ -128,6 +128,8 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string, RoomObjectData> items = new();
         public bool CanUndo => undo.Count > 0;
         public bool CanRedo => redo.Count > 0;
+        public bool UsesMotion(string id) => items.Values.Any(x => x.walkMotionId == id);
+        public string[] HistoricalMotionIds => undo.Concat(redo).SelectMany(x => x.Before.Concat(x.After)).Select(x => x.walkMotionId).Where(x => x != null).Distinct().ToArray();
         public RoomJournal(RoomDocument document)
         {
             if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
