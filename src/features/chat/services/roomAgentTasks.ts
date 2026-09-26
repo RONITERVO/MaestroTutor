@@ -45,11 +45,11 @@ export const roomAgentTasks = new RoomTaskHandoff({
   store: roomTaskStore,
   lease: currentRoomAgentLease,
   run: (input, lease, control) => runRoomActionTask(input, browserClientSource(), lease, response => usage(response, input.model), control),
-  reply: async (input, result) => {
+  reply: async (input, result, signal) => {
     const turn = await runTutorTextTurn({ ...input,
       systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene) + buildRoomTaskReplyInstruction(result.budgetExhausted),
       configOverrides: { maxOutputTokens: 2048 },
-    }, browserClientSource());
+    }, { ...browserClientSource(), signal });
     usage(turn.response, input.model);
     return { parsed: turn.parsed, rawResponse: turn.parsed.visibleText };
   },

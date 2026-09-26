@@ -82,7 +82,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode}),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_SCHEMA},
-      timeoutMs:input.timeoutMs,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
+      timeoutMs:input.timeoutMs,signal:control.signal,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });
     onUsage(response);active();
     const commands=parseRoomCommands(JSON.parse(response.text||'{}'));

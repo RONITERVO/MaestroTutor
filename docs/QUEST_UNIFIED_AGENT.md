@@ -138,13 +138,21 @@ Thinking avatar state, below actual listening/speaking priority. Task status,
 Stop and on-demand saved receipt details are inside chat on the book pages.
 One room task runs at a time. New ordinary chat does not cancel it; source
 removal, conversation/access/native-session change and explicit Stop prevent
-further actions. Stop aborts owned pending native work; an in-flight model request
-can still finish/consume usage while its result is discarded. This is not yet a
-provider-level cancellation guarantee.
+further actions. Stop aborts owned pending native work and signals the app's model
+transport during planning and final narration. It promptly releases task activity,
+cancels retry backoff, and discards late text/thoughts/results even if the transport
+ignores cancellation. Cancellation while resolving the client cannot later send
+that task. Recorded room actions and receipts remain available after Stop.
+
+This is client-side cancellation, not a guarantee that provider billing stops.
+The managed backend currently drains an accepted provider stream after disconnect
+to obtain final usage and settle the reservation accurately. An explicit managed
+server cancellation/accounting policy remains release work. BYOK passes the abort
+signal to the SDK, but already processed usage is not refunded.
 
 ## Evidence and remaining release work
 
-At this checkpoint, 160 targeted tests plus 65 existing prompt tests pass.
+At this checkpoint, 173 targeted tests plus 65 existing prompt tests pass.
 TypeScript, full source lint, Core/prompt ownership guards and the production web
 build pass. The browser probe also preserves an existing v7 history through the
 v8 upgrade, checks atomic competing claims and rejects writes after source deletion.
@@ -162,6 +170,11 @@ book surfaces; existing book rendering tests still pass.
   source-history pruning and Stop with uncertain outcome. Captures and receipt
   are in `.quest-evidence/agent-handoff`. Native/provider ports are simulated;
   this is not headset or real-provider acceptance.
+- Cancellation tests cover pending credential lookup, BYOK/managed transport
+  signals, no-output and mid-stream Stop, retry backoff, late provider failures,
+  same-chunk callbacks, completed-request cleanup and browser task activity.
+  Stopping during final narration retains acknowledged room effects. Provider
+  responses are simulated; no server-side cancellation or billing claim is made.
 - Ordinary prompt baselines remain unchanged. The additional capability and
   verification prompts are scoped to eligible connected-room turns.
 
@@ -174,8 +187,10 @@ Remaining work:
    bounded continuation; current explicit task Stop is a chat control. Support
    durable task-result reconciliation when changing/reloading conversations and
    include appropriate task data in export/import without automatic resumption.
-3. Add provider-level cancellation and strengthen access-change fencing across
-   asynchronous credential refresh; test managed billing on interrupted runs.
+3. Define explicit managed server cancellation with accurate partial-usage
+   settlement; client transport abort currently retains the existing server drain
+   policy. Strengthen access-change fencing across asynchronous credential refresh
+   and test actual managed billing on interrupted runs.
 4. Extend the shared capability catalogue to the remaining avatar/import/physics
    and animation-library actions; existing bounded room/rule coverage remains.
 5. Run real-provider request-versus-exercise acceptance, actual web/native bridge

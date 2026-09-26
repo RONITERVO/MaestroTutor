@@ -15,7 +15,7 @@ import { useMaestroStore, initialSettings } from '../../../store';
 import { prepareRoomAgentHandoff, roomAgentRequestForVerification, startRoomAgentTask, roomAgentTasks } from './roomAgentTasks';
 import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
 import type { RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
-import { selectIsSending } from '../../../store/slices/uiSlice';
+import { selectIsAgentWorking, selectIsSending } from '../../../store/slices/uiSlice';
 const proposal = 'I will ask the agent.\n```maestro-tool {"tool":"agent"}```';
 const input: TutorTextTurnInput = { model: 'test-model', prompt: '  Make a blue robot.\nPlease keep it small.  ', history: [{ role: 'user', text: 'Earlier context' }],
   nativeLanguageCode: 'en', systemInstruction: 'Tutor fixture', currentFileParts: [{ fileUri: 'test://current-drawing', mimeType: 'image/png' }] };
@@ -67,6 +67,38 @@ describe('browser chat room handoff composition', () => {
     expect(JSON.stringify(message)).not.toContain('sceneRevision'); expect(JSON.stringify(message)).not.toContain('commands');
     expect(selectIsSending(useMaestroStore.getState())).toBe(false);
     await startRoomAgentTask(id); expect(execute).toHaveBeenCalledOnce();
+  });
+  it.each(['planning', 'replying'])('Stop releases a stalled %s request and keeps completed room actions', async phase => {
+    const { id, source } = setup();
+    let started!: () => void, finishProvider!: (stream: AsyncIterable<any>) => void;
+    const waiting = new Promise<void>(resolve => { started = resolve; });
+    const pending = new Promise<AsyncIterable<any>>(resolve => { finishProvider = resolve; });
+    let signal!: AbortSignal;
+    const outputs = ['{"commands":[{"action":"create","reference":"r","name":"Robot","kind":"boxRobot"}]}', '{"commands":[]}'];
+    const send = vi.fn(async (request: any) => {
+      requests.push(request);
+      if (phase === 'planning' || requests.length === 3) {
+        signal = request.config.abortSignal; started(); return pending;
+      }
+      const text = outputs.shift();
+      return (async function* () { yield { text }; })();
+    });
+    ports.source.mockReturnValue({ aiClient: { models: { generateContentStream: send } } });
+    await prepareRoomAgentHandoff(input, source);
+    const done = startRoomAgentTask(id); await waiting;
+    expect(selectIsAgentWorking(useMaestroStore.getState())).toBe(true);
+    expect(selectIsSending(useMaestroStore.getState())).toBe(false);
+    roomAgentTasks.stop(`room-task:${id}`); await done;
+    expect(signal.aborted).toBe(true);
+    expect(selectIsAgentWorking(useMaestroStore.getState())).toBe(false);
+    const record = records.get(`room-task:${id}`)!;
+    expect(record.phase).toBe('stopped'); expect(record.reply).toBeUndefined();
+    expect(execute).toHaveBeenCalledTimes(phase === 'planning' ? 0 : 1);
+    if (phase === 'replying') expect(record.operations[0].receipt?.ok).toBe(true);
+    finishProvider((async function* () { yield { text: 'Late reply that must not replace Stop' }; })());
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(useMaestroStore.getState().messages.find(message => message.id === record.id)?.agentTask?.phase).toBe('stopped');
+    expect(send).toHaveBeenCalledTimes(phase === 'planning' ? 1 : 3);
   });
   it('does not expose room actions on an ordinary phone chat or a proactive message', async () => {
     const { source } = setup(); ports.lease.mockReturnValue(null);

@@ -25,6 +25,7 @@ export interface TutorTextTurnInput {
 export type TutorTextTurnOptions = GeminiClientSource & {
   runtime?: CoreRuntime;
   operationId?: string;
+  signal?: AbortSignal;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   onGoogleSearchUnavailable?: () => void;
 }
@@ -67,6 +68,7 @@ export const runTutorTextTurn = async (
         useGoogleSearch: input.useGoogleSearch,
         configOverrides: input.configOverrides,
         timeoutMs: input.timeoutMs,
+        ...(options.signal ? { signal: options.signal } : {}),
         ...pickGeminiClientSource(options),
         onGoogleSearchUnavailable: options.onGoogleSearchUnavailable,
         lifecycleHooks: {

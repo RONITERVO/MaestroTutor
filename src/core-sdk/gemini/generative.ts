@@ -50,6 +50,7 @@ export type GenerateGeminiResponseOptions = GeminiClientSource & {
   useGoogleSearch?: boolean;
   configOverrides?: any;
   timeoutMs?: number;
+  signal?: AbortSignal;
   lifecycleHooks?: GeminiRequestLifecycleHooks;
   onGoogleSearchUnavailable?: () => void;
 }
@@ -62,7 +63,27 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 };
 
-const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+const cancellationError = () => new DOMException('The model request was cancelled.', 'AbortError');
+const checkCancellation = (signal?: AbortSignal) => { if (signal?.aborted) throw cancellationError(); };
+
+/** Release the caller promptly even if a provider ignores cancellation. The
+ * transport also receives the signal; late results can never trigger a retry. */
+const withCancellation = <T>(run: () => Promise<T>, signal?: AbortSignal): Promise<T> => {
+  if (!signal) return run();
+  if (signal.aborted) return Promise.reject(cancellationError());
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => { signal.removeEventListener('abort', abort); reject(cancellationError()); };
+    signal.addEventListener('abort', abort, { once: true });
+    Promise.resolve().then(() => { checkCancellation(signal); return run(); }).then(resolve, reject)
+      .finally(() => signal.removeEventListener('abort', abort));
+  });
+};
+const sleep = (ms: number, signal?: AbortSignal): Promise<void> => new Promise((resolve, reject) => {
+  if (signal?.aborted) { reject(cancellationError()); return; }
+  const abort = () => { clearTimeout(timer); reject(cancellationError()); };
+  const timer = setTimeout(() => { signal?.removeEventListener('abort', abort); resolve(); }, ms);
+  signal?.addEventListener('abort', abort, { once: true });
+});
 
 const appendChunkWithPrefixDiff = (
   accumulated: string,
@@ -218,6 +239,7 @@ const withHighDemandRetry = async <T>(opts: {
   requestPayload: any | ((model: string) => any);
   run: (model: string) => Promise<T>;
   mapSuccess: (result: T) => any;
+  signal?: AbortSignal;
   onProgress?: (event: GeminiProgressEvent) => void;
 }): Promise<{ value: T; modelUsed: string }> => {
   let lastError: any;
@@ -229,6 +251,7 @@ const withHighDemandRetry = async <T>(opts: {
   let hasSwitchedToFallback = false;
 
   for (let attempt = 0; attempt <= HIGH_DEMAND_MAX_RETRIES; attempt++) {
+    checkCancellation(opts.signal);
     const attemptNumber = attempt + 1;
     const totalAttempts = HIGH_DEMAND_MAX_RETRIES + 1;
     opts.onProgress?.({
@@ -266,6 +289,7 @@ const withHighDemandRetry = async <T>(opts: {
     try {
       const result = await opts.run(activeModel);
       clearInterval(processingTimer);
+      checkCancellation(opts.signal);
       opts.onProgress?.({
         phase: 'success',
         operation: opts.operation,
@@ -279,6 +303,10 @@ const withHighDemandRetry = async <T>(opts: {
     } catch (error: any) {
       clearInterval(processingTimer);
       lastError = error;
+      if (opts.signal?.aborted) {
+        attemptLog.error({ message: 'Request cancelled.', retry: buildRetryMeta(attemptNumber) });
+        throw cancellationError();
+      }
 
       const canRetry = attempt < HIGH_DEMAND_MAX_RETRIES && isHighDemandError(error);
       const retryReason: GeminiRetryReason =
@@ -353,7 +381,7 @@ const withHighDemandRetry = async <T>(opts: {
       }
 
       if (retryInMs && retryInMs > 0) {
-        await sleep(retryInMs);
+        await sleep(retryInMs, opts.signal);
       }
     }
   }
@@ -376,7 +404,9 @@ export const generateGeminiResponse = async (
     lifecycleHooks,
     onGoogleSearchUnavailable,
   } = options;
-  const ai = options.aiClient || await options.resolveAiClient();
+  checkCancellation(options.signal);
+  const ai = options.aiClient || await withCancellation(() => options.resolveAiClient!(), options.signal);
+  checkCancellation(options.signal);
   const rawContents: any[] = [];
 
   const normalizeFileParts = (parts: unknown): Array<{ fileUri: string; mimeType: string }> => {
@@ -480,6 +510,7 @@ export const generateGeminiResponse = async (
   const runWithConfig = (requestConfig: any) => withHighDemandRetry(
     {
         operation: 'generateContent',
+        signal: options.signal,
         model: modelName,
         fallbackModel,
         requestPayload: (activeModel: string) => ({
@@ -487,7 +518,7 @@ export const generateGeminiResponse = async (
           config: configForModel(requestConfig, activeModel),
         }),
         run: activeModel => withTimeout(
-          (async () => {
+          withCancellation(async () => {
             const abortController = new AbortController();
             let latestChunk: any | undefined;
             let resolvedModelVersion: string | undefined;
@@ -511,6 +542,8 @@ export const generateGeminiResponse = async (
               };
             })();
 
+            const forwardCancellation = () => { clearNoOutputTimer(); abortController.abort(); };
+            options.signal?.addEventListener('abort', forwardCancellation, { once: true });
             const markVisibleModelOutput = () => {
               if (hasVisibleModelOutput) return;
               hasVisibleModelOutput = true;
@@ -518,6 +551,7 @@ export const generateGeminiResponse = async (
             };
 
             try {
+              checkCancellation(options.signal);
               const stream = await ai.models.generateContentStream({
                 model: activeModel,
                 contents,
@@ -527,7 +561,9 @@ export const generateGeminiResponse = async (
                 },
               });
 
+              checkCancellation(options.signal);
               for await (const chunk of stream) {
+                checkCancellation(options.signal);
                 latestChunk = chunk;
                 if (typeof chunk?.modelVersion === 'string' && chunk.modelVersion.trim()) {
                   resolvedModelVersion = chunk.modelVersion;
@@ -544,6 +580,7 @@ export const generateGeminiResponse = async (
                   }
                 }
 
+                checkCancellation(options.signal);
                 const chunkThought = extractThoughtText(chunk);
                 if (chunkThought) {
                   markVisibleModelOutput();
@@ -563,14 +600,16 @@ export const generateGeminiResponse = async (
                 modelVersion: resolvedModelVersion,
               };
             } catch (error: any) {
+              checkCancellation(options.signal);
               if (!hasVisibleModelOutput && abortController.signal.aborted) {
                 throw createNoOutputHighDemandError(activeModel, Date.now() - attemptStartedAt);
               }
               throw error;
             } finally {
               clearNoOutputTimer();
+              options.signal?.removeEventListener('abort', forwardCancellation);
             }
-          })(),
+          }, options.signal),
           timeoutMs
         ),
         mapSuccess: result => ({ text: result.text, usage: result.usageMetadata }),
@@ -601,6 +640,7 @@ export const generateGeminiResponse = async (
       modelUsed: retryResult.modelUsed,
     };
   } catch (e: any) {
+    checkCancellation(options.signal);
     console.error('Gemini API Error:', e);
     throw new ApiError(e.message || 'Gemini API failed', { status: getErrorStatus(e) || 500, code: getErrorCode(e) });
   }

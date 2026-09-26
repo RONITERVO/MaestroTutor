@@ -39,7 +39,7 @@ export interface RoomTaskPorts {
   store: RoomTaskStore;
   lease(): RoomAgentLease | null;
   run(input: TutorTextTurnInput, lease: RoomAgentLease, control: RoomTaskControl): Promise<RoomTaskResult>;
-  reply(input: TutorTextTurnInput, result: RoomTaskResult): Promise<Pick<TutorTextTurnResult, 'parsed' | 'rawResponse'>>;
+  reply(input: TutorTextTurnInput, result: RoomTaskResult, signal: AbortSignal): Promise<Pick<TutorTextTurnResult, 'parsed' | 'rawResponse'>>;
   changed(record: RoomTaskRecord): void;
   activity(active: boolean): void;
   now(): number;
@@ -132,7 +132,7 @@ export class RoomTaskHandoff {
       await check();
       record.phase = 'replying'; record.note = 'Preparing the result.';
       await publish();
-      const reply = await this.ports.reply(clone(handoff.input), result);
+      const reply = await this.ports.reply(clone(handoff.input), result, controller.signal);
       await check();
       record.reply = clone(reply);
       record.phase = result.budgetExhausted ? 'limited' : 'completed';
