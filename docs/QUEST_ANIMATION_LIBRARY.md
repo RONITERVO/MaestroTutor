@@ -121,8 +121,10 @@ optional short-clip filter exposes retained export helpers for explicit review.
 Saved motions drive visual rules and the walking gait used by Follow. Existing
 embedded-model hash/index bindings remain valid. Hundreds-of-clips headset
 usability and performance still require acceptance.
-The private batch audit is a developer verification path, not a headset bulk
-import UI. Use `Verify-Quest.ps1 -MotionAuditDirectory SOURCE_DIRECTORY` to
+The physical **Batch files** tab now provides a separate 1–128-file import path
+with stop/resume, per-file outcomes and retry; see QUEST_BATCH_IMPORTS.md.
+It avoids creating full-model previews for the collection. The private batch
+audit remains a separate developer verification path. Use `Verify-Quest.ps1 -MotionAuditDirectory SOURCE_DIRECTORY` to
 exercise real extraction and restart, plus source-versus-library transform and
 baked-mesh equivalence on one representative per category. Its outputs stay in
 ignored `.quest-evidence/motion-library`; it refuses output under the originals.

@@ -32,9 +32,11 @@ namespace Maestro.Quest.Imports
         public event Action Changed, BrowseRequested;
         public void BrowseLibrary() { if (BrowseRequested != null) BrowseRequested(); else ToggleLibrary(); }
         public bool HasPreview => pending != null && preview && preview.Ready;
-        public bool Busy => busy || picking;
+        public ImportBatchWorkshop Batches { get; private set; }
+        public bool Busy => busy || picking || (Batches && Batches.Busy);
         public void Initialize(RoomEditor source, AnimationWorkshop animations = null)
         {
+            Batches=gameObject.AddComponent<ImportBatchWorkshop>(); Batches.Initialize(source,this);
             editor = source; editor.Changed += SelectionChanged; editor.Editing += Stop;
             editor.ItemGrabbed += Grabbed; if (animations) animations.Starting += StopTarget;
             animationWorkshop = animations;
@@ -271,6 +273,7 @@ namespace Maestro.Quest.Imports
         void OnDestroy()
         {
             Stop(); disposed = true; ClearPreview(); if (picking) ReleasePicker();
+            if (Batches) Destroy(Batches);
             if (editor) { editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; }
             if (animationWorkshop) animationWorkshop.Starting -= StopTarget;
             if (maestro) maestro.ModelChanged -= MaestroChanged;

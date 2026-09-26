@@ -2,7 +2,49 @@
 
 This is development evidence, not a release acceptance report.
 
-## Latest: animation-library maintenance — not installed
+## Latest: batch animation imports — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-9A96BEB7.apk`.
+SHA256: `9A96BEB7C574DC3B22DF18C221DD98D1E789363854567986F5466008F93BDC6C`.
+135,429,553 bytes, development signed. The full Unity build exited 0 with zero
+errors and two warnings. APK v2 signature, ARM64 and manifest checks pass; the
+native batch-picker class is present in the packaged dex. 59 EditMode, 63 required
+PlayMode and 22 native Android checks pass (144 total). Native lint and the shared
+web build pass. Three optional private-file tests were deliberately skipped.
+No web feature changed; no new web test run is claimed. No private model or
+animation collection was included in the APK.
+
+The import tray's Batch files tab selects 1–128 GLB/VRM exports and requires
+Save batch before opening their streams. It imports one file at a time, shows
+per-file results and categories, supports stop/resume and retry, and retains
+completed motions without hidden avatar models or resident clip compilation.
+Exact reimport preserves existing identities/metadata. Original files and the
+separate web/single-model picker limits are unchanged. See QUEST_BATCH_IMPORTS.md
+for persistence, timeout and compatibility boundaries.
+
+Core tests check partial success, deduplication, retry of failed files, bounded
+sequential source ownership, oversize rejection, originals unchanged, stopping
+during read/save and saved-data reload. PlayMode exercises the tray commands,
+model-free imports, error repair, cancellation on pause and explicit resume.
+Native tests cover multiselect intent/counts, confirmation before reads, copy
+cleanup, rejected providers, retry and stale session/request isolation.
+Failure/success batch views and the ordinary import tray were rendered in Unity
+and inspected: text and controls fit without overlap. Direct tray-command tests
+and desktop renders do not establish headset pointer/picker acceptance.
+
+Ignored evidence: `.quest-evidence/batch-imports/verified-9A96BEB7`, with 114 C#
+source hashes and 112 web-file hashes matched to the build mirror, native Java
+source hashes and AAR hash, test XMLs, build reports/logs and three reviewed PNGs.
+
+No headset query, installation or launch occurred. Installed build remains
+08F340EF while the user sleeps and Quest charges. After the user returns, back
+up the saved room before installation. Test actual Quest document multiselect,
+a real collection, Stop during reading/saving, Resume, Retry failed, app restart
+and reselection, low space and permission loss. Measure sustained memory/frame
+rate and hand/controller readability. Earlier gait, rule/prop/state-profile,
+book parity and Store release gates remain open.
+
+## Earlier: animation-library maintenance — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-BCEAF516.apk`.
 SHA256: `BCEAF5165C1A161D46DF0B567B032E8E3FAEE947C6D7E86B5559D3C95C08BD20`.

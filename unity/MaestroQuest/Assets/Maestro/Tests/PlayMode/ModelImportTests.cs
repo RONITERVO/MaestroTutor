@@ -371,6 +371,65 @@ namespace Maestro.Quest.Tests
             created = editor.Find(data.id).GetComponent<CreatedRoomObject>(); yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");
             Assert.That(created.Model.Ready, Is.True, created.ModelStatus); Assert.That(created.Model.IsPlaying, Is.False);
         }
+        sealed class BatchReadGate : IMotionBatchSource
+        {
+            public int Count => 2;
+            public string Name(int index) => index+".glb";
+            public bool Waiting,Released,Disposed;
+            public async System.Threading.Tasks.Task<MotionBatchInput> ReadAsync(int index,System.Threading.CancellationToken cancellation)
+            {
+                if (index == 1 && !Released) { Waiting=true; await System.Threading.Tasks.Task.Delay(-1,cancellation); }
+                return new MotionBatchInput(index+".glb",ModelFixture.TranslationMotion("LINEAR",index+1));
+            }
+            public void Dispose() => Disposed=true;
+        }
+        (ImportWorkshop,RoomEditor,RoomInteraction) BatchRoom()
+        {
+            root.AddComponent<XRInteractionManager>(); var room=root.AddComponent<RoomInteraction>();
+            RoomItem Included(string name) { var go=new GameObject(name); go.transform.SetParent(root.transform,false); var collider=go.AddComponent<BoxCollider>(); var item=go.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider }); room.Register(item); return item; }
+            var book=Included("book"); var maestro=Included("maestro");
+            var editor=root.AddComponent<RoomEditor>(); editor.Initialize(room,book,maestro,directory);
+            var workshop=root.AddComponent<ImportWorkshop>(); workshop.Initialize(editor); return (workshop,editor,room);
+        }
+        [UnityTest] public IEnumerator BatchTraySavesMotionsWithoutCreatingModelsAndRetainsReviewableFailures()
+        {
+            var (workshop,editor,room)=BatchRoom(); Directory.CreateDirectory(directory);
+            string good=Path.Combine(directory,"Animation with a long user chosen name.glb"),bad=Path.Combine(directory,"Incomplete export.glb");
+            File.WriteAllBytes(good,ModelFixture.Mixamo()); File.WriteAllText(bad,"incomplete download");
+            var batch=workshop.Batches; Assert.That(batch.Prepare(new LocalMotionBatchSource(new[] {good,bad,good})),Is.True);
+            int count=editor.Snapshot().objects.Length;
+            var board=new GameObject("Batch tools"); board.transform.SetParent(root.transform,false); board.transform.position=new Vector3(4,0,0);
+            var tray=board.AddComponent<ImportTools>(); tray.Build(workshop,room);
+            var controls=board.GetComponentsInChildren<RuleToolAction>();
+            controls.Single(x => x.AccessibleName == "Animation batches").Command();
+            Assert.That(controls.Any(x => x.AccessibleName == "Save batch"),Is.True);
+            Assert.That(editor.Motions.List().Length,Is.Zero,"Selecting files does not save them");
+            batch.NextCategory(); Assert.That(batch.Batch.Category,Is.EqualTo("idle"));
+            controls.Single(x => x.AccessibleName == "Save batch").Command();
+            yield return new WaitUntil(() => !batch.Busy);
+            Assert.That(batch.Batch.Saved,Is.EqualTo(2)); Assert.That(batch.Batch.Failed,Is.EqualTo(1)); Assert.That(batch.Batch.Results[1].Name,Is.EqualTo("Incomplete export.glb"));
+            Assert.That(editor.Motions.List().Length,Is.EqualTo(1)); Assert.That(editor.Motions.ResidentClipCount,Is.Zero);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count)); Assert.That(root.GetComponentsInChildren<ImportedModel>().Length,Is.Zero);
+            batch.PreviousResult(); yield return Capture("batch-import-failure-unity.png",board.transform.position,.53f);
+            File.WriteAllBytes(bad,ModelFixture.TranslationMotion("STEP"));
+            controls.Single(x => x.AccessibleName == "Retry failed").Command(); yield return new WaitUntil(() => !batch.Busy);
+            Assert.That(batch.Batch.Saved,Is.EqualTo(3)); Assert.That(batch.Batch.Failed,Is.Zero); Assert.That(editor.Motions.List().Length,Is.EqualTo(2));
+            yield return Capture("batch-import-results-unity.png",board.transform.position,.53f);
+            batch.Clear(); Assert.That(batch.Batch,Is.Null); Assert.That(editor.Motions.List().Length,Is.EqualTo(2)); Assert.That(File.Exists(good),Is.True);
+            controls.Single(x => x.AccessibleName == "Models").Command(); Assert.That(controls.Any(x => x.AccessibleName == "Use Maestro"),Is.True);
+        }
+        [UnityTest] public IEnumerator PausingBatchCancelsProviderReadAndRequiresExplicitResume()
+        {
+            var (workshop,editor,_)=BatchRoom(); var source=new BatchReadGate(); var batch=workshop.Batches;
+            Assert.That(batch.Prepare(source),Is.True); var task=batch.SaveAsync(); yield return new WaitUntil(() => source.Waiting);
+            Assert.That(workshop.Busy,Is.True); batch.SendMessage("OnApplicationPause",true);
+            yield return new WaitUntil(() => task.IsCompleted); Assert.That(task.Exception,Is.Null); Assert.That(batch.Batch.Saved,Is.EqualTo(1)); Assert.That(batch.Batch.Pending,Is.EqualTo(1));
+            Assert.That(workshop.Busy,Is.False); batch.SendMessage("OnApplicationPause",false); yield return null;
+            Assert.That(editor.Motions.List().Length,Is.EqualTo(1),"Returning focus must not resume importing by itself");
+            source.Released=true; task=batch.SaveAsync(); yield return new WaitUntil(() => task.IsCompleted);
+            Assert.That(batch.Batch.Saved,Is.EqualTo(2)); Assert.That(editor.Motions.List().Length,Is.EqualTo(2));
+            batch.Clear(); Assert.That(source.Disposed,Is.True);
+        }
         static IEnumerator Capture(string name, Vector3 center, float size, bool front = false)
         {
             string output = Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE"); if (string.IsNullOrEmpty(output)) yield break;

@@ -56,7 +56,8 @@ namespace Maestro.Quest.Imports
         public static byte[] ReadBounded(string path)
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            if (stream.Length < 28 || stream.Length > ModelInspection.MaximumBytes) throw new ModelImportException("Choose a GLB or VRM file smaller than 64 MB.");
+            if (stream.Length < 28) throw new ModelImportException("This file is incomplete. Choose a complete GLB or VRM export.");
+            if (stream.Length > ModelInspection.MaximumBytes) throw new ModelImportException("Choose a GLB or VRM file of 64 MB or smaller.");
             var bytes = new byte[(int)stream.Length]; int offset = 0;
             while (offset < bytes.Length) { int read = stream.Read(bytes, offset, bytes.Length - offset); if (read == 0) throw new IOException("Incomplete model copy"); offset += read; }
             if (stream.ReadByte() != -1) throw new IOException("Model copy changed"); return bytes;

@@ -25,7 +25,7 @@ book spread now supports preview, metadata editing, filters, source terms and
 walking/rule assignment, with preserved chat state and bounded native messages.
 See QUEST_ANIMATION_LIBRARY.md for exact boundaries and QUEST_DEVICE_QA.md for
 the latest packaged checkpoint. Per-avatar tutor-state profiles and a bounded pose transition are implemented;
-pack deletion and large-library headset QA remain open. The user is sleeping while Quest charges;
+full-model storage management and large-library headset QA remain open. The user is sleeping while Quest charges;
 device queries/installations remain on hold.
 
 PC-only prop update (2026-09-26): Maestro animation steps can carry one fitted
@@ -41,6 +41,13 @@ confirmed forgetting of unused removed entries. Exact reimport retains IDs unles
 the user deliberately forgot them. Retained references include room/rule/profile
 history and recovery files. See QUEST_MOTION_MAINTENANCE.md. No headset access or
 new hardware acceptance is implied; the full Store release remains incomplete.
+
+PC-only batch import update (2026-09-26): the physical import tray selects up to
+128 motion exports, confirms before saving, shows per-file outcomes, supports
+stop/resume and retry, and preserves completed imports through stable identities.
+It reads one source at a time without creating hidden avatar models. See
+QUEST_BATCH_IMPORTS.md. Quest multiselect and large-collection performance remain
+hardware acceptance gates; device work stays on hold while the user sleeps.
 
 ## Accepted product scope
 

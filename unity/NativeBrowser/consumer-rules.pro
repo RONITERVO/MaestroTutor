@@ -2,3 +2,4 @@
 -keep class com.maestro.quest.browser.ModelPicker { public *; }
 -keep class com.tlab.webkit.BaseOffscreenFragment { public *; }
 -keep class com.robot9.shared.SharedTexture { *; }
+-keep class com.maestro.quest.browser.MotionBatchPicker { public *; }

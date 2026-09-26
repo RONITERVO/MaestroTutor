@@ -80,3 +80,11 @@ Chrome user activation, hidden file input clicks and iframe isolation. Set
 API references: [Android file chooser callbacks](https://developer.android.com/reference/android/webkit/WebChromeClient#onShowFileChooser(android.webkit.WebView,%20android.webkit.ValueCallback%3Candroid.net.Uri[]%3E,%20android.webkit.WebChromeClient.FileChooserParams)),
 [Storage Access Framework](https://developer.android.com/training/data-storage/shared/documents-files),
 [permission lifecycle](https://developer.android.com/reference/android/app/Fragment#requestPermissions(java.lang.String[],%20int)).
+
+The native-only `MotionBatchPicker` is separate from web file inputs and the
+single-model preview picker. It accepts at most 128 selected document URIs but
+opens none until the physical batch controls confirm saving. It streams one
+64 MiB-bounded private copy at a time, with per-request cancellation/timeout,
+explicit release and selection-session guards against late commands/results.
+No new storage permission or persistent grant is used. See
+`../../docs/QUEST_BATCH_IMPORTS.md` for workflow and remaining headset QA.
