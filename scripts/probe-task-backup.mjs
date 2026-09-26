@@ -66,7 +66,7 @@ window.__vite_plugin_react_preamble_installed__ = true;
     const db = await openDB(); const version = db.version; db.close();
     return { version, end: rows.at(-1), chunkCount: rows.filter(row => row.type === 'agentTaskChunk').length, announcements: window.announcements };
   });
-  assert.equal(exported.version, 10); assert.deepEqual(exported.end, { type: 'end', chats: 2, tasks: 3 });
+  assert.equal(exported.version, 11); assert.deepEqual(exported.end, { type: 'end', chats: 2, tasks: 3 });
   assert.ok(exported.chunkCount > 3); assert.equal(exported.announcements, 0);
   const restore = await page.evaluate(async () => {
     const chats = await import('/src/features/chat/services/chatHistory.ts');

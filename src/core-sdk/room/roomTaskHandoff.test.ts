@@ -21,6 +21,7 @@ function harness() {
   }) } } as any;
   const ports: RoomTaskPorts = {
     store: {
+      get: vi.fn(async id => structuredClone(saved.get(id))),
       claim: vi.fn(async record => {
         if (saved.has(record.id)) return { claimed: false, record: structuredClone(saved.get(record.id)!) };
         saved.set(record.id, structuredClone(record)); return { claimed: true, record };
@@ -136,4 +137,97 @@ it('reset revokes prepared handoffs, stops active work and waits for its final r
   expect(result.phase).toBe('stopped'); expect(result.operations[0].receipt?.status).toBe('Created before Stop');
   await expect(h.manager.start('prepared')).rejects.toThrow('original request');
   expect(h.ports.reply).not.toHaveBeenCalled();
+});
+
+function followup(h: ReturnType<typeof harness>, action: 'stop' | 'revise' | 'continue', running: boolean, parent = 'task-1') {
+  const next = { ...structuredClone(handoff), id: 'followup', sourceAssistantId: 'a2', sourceUserId: 'u2', input: { ...handoff.input, prompt: action === 'stop' ? 'Stop that task.' : 'Make it blue instead.' } };
+  h.manager.capture(next, h.valid, [{ id: parent, phase: running ? 'working' : 'completed', requestPreview: handoff.input.prompt, replyPreview: '', running }]);
+  return () => h.manager.start('a2', { action, taskId: parent });
+}
+describe('verified conversational task steering', () => {
+  it.each(['stop', 'revise'] as const)('%s awaits the old acknowledgement and does not overlap dispatch', async action => {
+    const h = harness(), started = deferred<void>(), acknowledgement = deferred<any>();
+    h.execute.mockImplementationOnce(async () => { started.resolve(); return acknowledgement.promise; });
+    const parent = h.manager.start('a1'); await started.promise;
+    const run = followup(h, action, true), next = run();
+    await vi.waitFor(() => expect(h.saved.get('followup')?.directive?.action).toBe(action));
+    expect(h.execute).toHaveBeenCalledOnce();
+    acknowledgement.resolve({ ...scene, ack: 1, status: 'Created before control' });
+    const result = await next;
+    expect((await parent).phase).toBe('stopped'); expect(result.phase).toBe('completed');
+    expect(result.relatedTask).toMatchObject({ id: 'task-1', wasRunning: true, unconfirmed: false, operations: [{ receipt: { status: 'Created before control' } }] });
+    expect(result.handoff.input.prompt).toBe(action === 'stop' ? 'Stop that task.' : 'Make it blue instead.');
+    expect(h.ports.run).toHaveBeenCalledTimes(action === 'stop' ? 1 : 2);
+    if (action === 'revise') expect(vi.mocked(h.ports.run).mock.calls[1][2].relatedTask).toMatchObject({ requests: [handoff.input.prompt] });
+    await run(); expect(h.execute).toHaveBeenCalledOnce();
+  });
+  it('continues with new input and earlier receipts, never replays a saved batch', async () => {
+    const h = harness(); await h.manager.start('a1');
+    const run = followup(h, 'continue', false); const result = await run();
+    expect(result.relatedTask?.operations).toHaveLength(1); expect(result.operations).toHaveLength(0);
+    expect(h.execute).toHaveBeenCalledOnce(); expect(h.ports.run).toHaveBeenCalledTimes(2);
+    expect(h.saved.get('task-1')?.phase).toBe('completed');
+  });
+  it('does not cancel a different task when a delayed stop target has finished', async () => {
+    const h = harness(); await h.manager.start('a1'); const stopOld = followup(h, 'stop', true);
+    const other = { ...handoff, id: 'other', sourceAssistantId: 'other-a' }; h.manager.capture(other, h.valid);
+    const waiting = deferred<any>(), began = deferred<void>(); vi.mocked(h.ports.run).mockImplementationOnce(async () => { began.resolve(); return waiting.promise; });
+    const otherDone = h.manager.start('other-a'); await began.promise;
+    await expect(stopOld()).rejects.toThrow('Another agent task'); expect(h.manager.running('other')).toBe(true);
+    waiting.resolve({ receipts: [], scene, budgetExhausted: false }); await otherDone;
+  });
+  it.each(['foreign', 'imported', 'deleted'] as const)('rejects a %s target without planner or native execution', async kind => {
+    const h = harness(); await h.manager.start('a1'); const count = vi.mocked(h.ports.run).mock.calls.length;
+    if (kind === 'deleted') h.saved.delete('task-1');
+    else { const parent = h.saved.get('task-1')!; if (kind === 'foreign') parent.handoff.nativeSession = 'other'; else parent.readOnly = true; }
+    const result = await followup(h, 'continue', false)();
+    expect(result.phase).toBe('failed'); expect(result.note).toContain('new request'); expect(h.ports.run).toHaveBeenCalledTimes(count);
+  });
+  it('cannot steer an invented target or continue a still-running captured task', async () => {
+    const h = harness();
+    await expect(h.manager.start('a1', { action: 'stop', taskId: 'invented' })).rejects.toThrow('not available');
+    await expect(followup(h, 'continue', true)()).rejects.toThrow('not available');
+    expect(h.execute).not.toHaveBeenCalled();
+  });
+  it('does not stop work if control intent cannot be durably claimed', async () => {
+    const h = harness(), started = deferred<void>(), acknowledgement = deferred<any>();
+    h.execute.mockImplementation(async () => { started.resolve(); return acknowledgement.promise; });
+    const parent = h.manager.start('a1'); await started.promise;
+    vi.mocked(h.ports.store.claim).mockRejectedValueOnce(new Error('Disk full'));
+    await expect(followup(h, 'stop', true)()).rejects.toThrow('Disk full');
+    expect(h.manager.running('task-1')).toBe(true);
+    acknowledgement.resolve({ ...scene, ack: 1 }); expect((await parent).phase).toBe('completed');
+  });
+});
+
+it('keeps uncertainty across a follow-up and refuses new mutations until the room is reviewed', async () => {
+  const h = harness(); await h.manager.start('a1');
+  const parent = h.saved.get('task-1')!; parent.phase = 'interrupted'; delete parent.operations[0].receipt;
+  h.ai.models.generateContentStream.mockImplementation(async () => (async function* () { yield { text: '{"commands":[{"action":"workspace","visible":true}]}' }; })());
+  const result = await followup(h, 'continue', false)();
+  expect(result.phase).toBe('limited'); expect(result.note).toContain('unconfirmed');
+  expect(result.operations).toHaveLength(0); expect(result.relatedTask?.unconfirmed).toBe(true); expect(h.execute).toHaveBeenCalledOnce();
+});
+
+it('honors scope loss while a revision waits for the previous acknowledgement', async () => {
+  const h = harness(), started = deferred<void>(), acknowledgement = deferred<any>();
+  h.execute.mockImplementation(async () => { started.resolve(); return acknowledgement.promise; });
+  const parent = h.manager.start('a1'); await started.promise;
+  const next = followup(h, 'revise', true)();
+  await vi.waitFor(() => expect(h.saved.get('followup')?.directive?.action).toBe('revise'));
+  h.valid.mockResolvedValue(false); acknowledgement.resolve({ ...scene, ack: 1 });
+  await parent; expect((await next).phase).toBe('stopped'); expect(h.ports.run).toHaveBeenCalledOnce();
+});
+
+it('can stop a long prior request without forwarding its entire request lineage', async () => {
+  const h = harness(); await h.manager.start('a1'); h.saved.get('task-1')!.handoff.input.prompt = 'x'.repeat(64001);
+  const result = await followup(h, 'stop', true)();
+  expect(result.phase).toBe('completed'); expect(result.relatedTask?.requests).toEqual([]); expect(h.execute).toHaveBeenCalledOnce();
+});
+
+it('reports an established stop even when its final narration fails', async () => {
+  const h = harness(); await h.manager.start('a1'); vi.mocked(h.ports.reply).mockRejectedValueOnce(new Error('Provider unavailable'));
+  const result = await followup(h, 'stop', true)();
+  expect(result.phase).toBe('failed'); expect(result.note).toContain('earlier task is no longer running');
+  expect(result.relatedTask?.phase).toBe('completed'); expect(h.execute).toHaveBeenCalledOnce();
 });

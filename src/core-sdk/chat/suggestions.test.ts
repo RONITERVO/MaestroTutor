@@ -119,3 +119,15 @@ it.each([{ request: 'Make a blue robot', accepted: true }, { request: 'Translate
   expect(prompt).toContain('A spoken handoff has no JSON fence');
   expect(prompt).toContain('exercise to repeat or translate');
 });
+
+it('binds steering classification to exact captured task IDs and original request without widening normal suggestions', async () => {
+  vi.mocked(generateGeminiResponse).mockReset().mockResolvedValue({ text: JSON.stringify({ suggestions: [{ target: 'Vale', native: 'Okay' }], toolRequest: null }) } as any);
+  const targets = [{ id: 'captured-task', phase: 'working' as const, running: true, requestPreview: 'Make a robot', replyPreview: '' }];
+  await runReplySuggestions({ assistantMessageId: 'a', lastTutorMessage: 'I will ask the agent.', history: [], languagePair, responseSource: 'live', agentRequest: '  Stop that task.  ', agentTargets: targets }, { resolveAiClient: vi.fn() });
+  const args: any = vi.mocked(generateGeminiResponse).mock.calls[0];
+  expect(args[1]).toContain(JSON.stringify({ originalUserTranscript: '  Stop that task.  ' }));
+  expect(args[1]).toContain('A short answer can authorize only the question it answers');
+  const choices = args[3].configOverrides.responseJsonSchema.properties.toolRequest.anyOf;
+  expect(choices.at(-1).properties.task.properties.taskId.enum).toEqual(['captured-task']);
+  expect(JSON.stringify(REPLY_SUGGESTIONS_RESPONSE_SCHEMA)).not.toContain('taskId');
+});

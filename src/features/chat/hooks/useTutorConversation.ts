@@ -1,4 +1,4 @@
-import { prepareRoomAgentHandoff, roomAgentRequestForVerification, startRoomAgentTask } from '../services/roomAgentTasks';
+import { prepareRoomAgentHandoff, roomAgentRequestForVerification, roomAgentTargetsForVerification, startRoomAgentTask } from '../services/roomAgentTasks';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -243,7 +243,7 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
   const normalizeSuggestionCreatorToolRequest = useCallback((toolRequest: unknown, assistantMessageId: string) => {
     const assistantMessage = messagesRef.current.find(message => message.id === assistantMessageId);
     const fallbackText = truncateForToolPrompt(getVisibleAssistantMessageText(assistantMessage), 500);
-    return normalizeCoreSuggestionCreatorToolRequest(toolRequest, fallbackText, { allowAgent: roomAgentRequestForVerification(assistantMessageId, assistantMessage?.llmRawResponse || '') !== undefined });
+    return normalizeCoreSuggestionCreatorToolRequest(toolRequest, fallbackText, { allowAgent: roomAgentRequestForVerification(assistantMessageId, assistantMessage?.llmRawResponse || '') !== undefined, agentTargets: roomAgentTargetsForVerification(assistantMessageId, assistantMessage?.llmRawResponse || '') });
   }, [messagesRef, settingsRef]);
 
   const formatGeminiStatusLine = useCallback((event: GeminiProgressEvent): string | undefined => {
@@ -413,6 +413,8 @@ export const useTutorConversation = (config: UseTutorConversationConfig): UseTut
     },
     runReplySuggestions: (input, options) => runReplySuggestions({ ...input,
       agentRequest: roomAgentRequestForVerification(input.assistantMessageId, input.lastTutorMessage),
+      ...(roomAgentRequestForVerification(input.assistantMessageId, input.lastTutorMessage) !== undefined
+        ? { agentTargets: roomAgentTargetsForVerification(input.assistantMessageId, input.lastTutorMessage) } : {}),
     }, options),
     normalizeSuggestionCreatorArtifact,
     normalizeSuggestionCreatorToolRequest,

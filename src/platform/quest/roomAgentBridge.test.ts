@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {afterEach,describe,expect,it,vi} from 'vitest';
-import {RoomAgentClient} from './roomAgentBridge';
+import {RoomAgentClient, registerRoomAgent, currentRoomAgentLease} from './roomAgentBridge';
 const state=(more={})=>({version:1,session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',created:[],objects:[],canUndo:false,canRedo:false,physicsRunning:false,...more});
 const commands=[{action:'create' as const,reference:'robot',name:'Robot',kind:'boxRobot' as const}];
 afterEach(()=>vi.useRealTimers());
@@ -60,4 +60,13 @@ describe('request-owned room cancellation',()=>{
   const next=client.request(commands);const pending=client.snapshot();controller.abort();expect(client.snapshot()).toEqual(pending);
   client.receive(state({session:'b'.repeat(32),revision:2,ack:1}));await next;
  });
+});
+
+it('allows task-control observation while an action awaits acknowledgement without allowing a second dispatch', async () => {
+  const client = new RoomAgentClient(), unregister = registerRoomAgent(client); client.receive(state());
+  const pending = client.request(commands); expect(client.lease()).toBeNull();
+  const observation = currentRoomAgentLease()!; expect(observation.state().sceneRevision).toBe(4);
+  await expect(observation.execute(commands, 4)).rejects.toThrow('busy');
+  expect(client.snapshot().request?.sequence).toBe(1);
+  client.receive(state({ revision: 2, ack: 1 })); await pending; unregister();
 });

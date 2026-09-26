@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { parseRoomTaskDirective, relatedRoomTask, RoomTaskSteeringError, type RoomTaskDirective, type RoomTaskTarget, type RelatedRoomTask } from './taskSteering';
 import { LiveInputContextError, validateLiveInputMedia } from '../media/liveInputContext';
 import type { TutorTextTurnInput, TutorTextTurnResult } from '../chat/tutorTextTurn';
 import type { RoomAgentLease, RoomAgentState, RoomCommand, RoomTaskControl, RoomTaskResult } from './roomAgent';
@@ -20,6 +21,8 @@ export interface RoomTaskRecord {
   version: 1;
   /** Restored evidence is never writable by a previously running task. */
   readOnly?: true;
+  directive?: RoomTaskDirective;
+  relatedTask?: RelatedRoomTask;
   id: string;
   handoff: RoomHandoff;
   phase: RoomTaskPhase;
@@ -37,6 +40,7 @@ export interface RoomTaskStore {
   /** Atomic, durable claim. Existing records MUST NOT be re-executed. */
   claim(record: RoomTaskRecord): Promise<{ claimed: boolean; record: RoomTaskRecord }>;
   save(record: RoomTaskRecord): Promise<void>;
+  get(id: string): Promise<RoomTaskRecord | undefined>;
 }
 export interface RoomTaskPorts {
   store: RoomTaskStore;
@@ -53,14 +57,14 @@ const interrupted = () => new DOMException('The agent task was stopped or its se
 /** Task lifetime is independent of a tutor response. Store full evidence here;
  * the chat adapter projects only status and the final language response. */
 export class RoomTaskHandoff {
-  private captures = new Map<string, { handoff: RoomHandoff; valid: () => Promise<boolean> }>();
+  private captures = new Map<string, { handoff: RoomHandoff; valid: () => Promise<boolean>; targets: RoomTaskTarget[] }>();
   private executing = new Set<string>();
   private active = new Map<string, { controller: AbortController; done: Promise<RoomTaskRecord> }>();
   constructor(private ports: RoomTaskPorts) {}
 
-  capture(handoff: RoomHandoff, valid: () => Promise<boolean>): void {
+  capture(handoff: RoomHandoff, valid: () => Promise<boolean>, targets: RoomTaskTarget[] = []): void {
     if (!handoff.sourceUserId || !handoff.sourceAssistantId || !handoff.conversationId) throw new Error('Missing source turn.');
-    this.captures.set(handoff.sourceAssistantId, { handoff: clone(handoff), valid });
+    this.captures.set(handoff.sourceAssistantId, { handoff: clone(handoff), valid, targets: clone(targets) });
     // Unused proposals are not an unbounded cache of conversation media.
     while (this.captures.size > 8) this.captures.delete(this.captures.keys().next().value!);
   }
@@ -73,22 +77,23 @@ export class RoomTaskHandoff {
     await Promise.allSettled([...this.active.values()].map(task => task.done));
   }
 
-  start(assistantId: string): Promise<RoomTaskRecord> {
+  start(assistantId: string, directive?: RoomTaskDirective): Promise<RoomTaskRecord> {
     const captured = this.captures.get(assistantId);
     if (!captured) return Promise.reject(new Error('This handoff has no original request context. Please ask again.'));
     const id = captured.handoff.id;
     const existing = this.active.get(id);
     if (existing) return existing.done;
-    if (this.active.size) return Promise.reject(new Error('Another agent task is running. Stop it or wait before starting a new one.'));
+    if (directive && (!parseRoomTaskDirective(directive, captured.targets) || directive.taskId === id)) return Promise.reject(new Error('This task was not available in the original request.'));
+    if ([...this.active.keys()].some(activeId => !directive || directive.action === 'continue' || activeId !== directive.taskId)) return Promise.reject(new Error('Another agent task is running. Stop it or wait before starting a new one.'));
     const controller = new AbortController();
     // Register before any async port can re-enter start().
-    const done = Promise.resolve().then(() => this.execute(captured, controller));
+    const done = Promise.resolve().then(() => this.execute(captured, controller, directive));
     this.active.set(id, { controller, done });
     void done.finally(() => this.active.delete(id)).catch(() => {});
     return done;
   }
 
-  private async execute(captured: { handoff: RoomHandoff; valid: () => Promise<boolean> }, controller: AbortController): Promise<RoomTaskRecord> {
+  private async execute(captured: { handoff: RoomHandoff; valid: () => Promise<boolean> }, controller: AbortController, directive?: RoomTaskDirective): Promise<RoomTaskRecord> {
     const { handoff, valid } = captured;
     const lease = this.ports.lease();
     const check = async () => {
@@ -98,7 +103,7 @@ export class RoomTaskHandoff {
     await check();
     const now = this.ports.now();
     const claim = await this.ports.store.claim({ version: 1, id: handoff.id, handoff: clone(handoff), phase: 'working',
-      note: 'Working on your request.', startedAt: now, updatedAt: now, operations: [] });
+      note: 'Working on your request.', startedAt: now, updatedAt: now, operations: [], ...(directive ? { directive: clone(directive) } : {}) });
     if (!claim.claimed) {
       // Could belong to another process or an interrupted prior run. Display it,
       // but never infer that pending dispatch is safe to replay.
@@ -117,7 +122,28 @@ export class RoomTaskHandoff {
       await publish();
       await check();
       if (handoff.input.liveInputMedia) validateLiveInputMedia(handoff.input.liveInputMedia);
-      const result = await this.ports.run(clone(handoff.input), lease!, {
+      if (directive) {
+        let parent = await this.ports.store.get(directive.taskId);
+        if (!parent || parent.readOnly || parent.handoff.conversationId !== handoff.conversationId
+          || parent.handoff.accessScope !== handoff.accessScope || parent.handoff.nativeSession !== handoff.nativeSession) {
+          throw new RoomTaskSteeringError('That task is no longer available in this room and conversation. Please make a new request.');
+        }
+        await check();
+        const running = this.active.get(directive.taskId);
+        if (directive.action === 'continue' && running) throw new RoomTaskSteeringError('This task is still running. Ask to revise or stop it first.');
+        // The durable claim records control intent before cancellation has any effect.
+        if (running) { running.controller.abort(); await running.done.catch(() => {}); }
+        await check();
+        parent = await this.ports.store.get(directive.taskId);
+        if (!parent || parent.readOnly) throw new RoomTaskSteeringError('The original task is no longer available. Please make a new request.');
+        record.relatedTask = relatedRoomTask(parent, directive, !!running);
+        record.note = directive.action === 'stop' ? 'Task stopped or already inactive. Recorded actions remain.' : 'Inspecting the room for your follow-up.';
+        await publish(); await check();
+      }
+      const result = directive?.action === 'stop'
+        ? { receipts: [], scene: clone(lease!.state()), budgetExhausted: false, relatedTask: record.relatedTask }
+        : await this.ports.run(clone(handoff.input), lease!, {
+        relatedTask: record.relatedTask,
         signal: controller.signal,
         isCurrent: () => !controller.signal.aborted,
         beforePlan: check,
@@ -144,8 +170,8 @@ export class RoomTaskHandoff {
       await check();
       if (!reply.parsed.visibleText.trim()) throw new Error('The agent result did not contain a readable reply.');
       record.reply = clone(reply);
-      record.phase = result.budgetExhausted ? 'limited' : 'completed';
-      record.note = result.budgetExhausted ? 'Action limit reached. Review the result before continuing.' : 'Finished checking this request.';
+      record.phase = result.budgetExhausted || result.needsReview ? 'limited' : 'completed';
+      record.note = result.needsReview ? 'An earlier action is unconfirmed. Inspect the room and make a new specific request before further edits.' : result.budgetExhausted ? 'Action limit reached. Review the result before continuing.' : 'Finished checking this request.';
       await publish();
     } catch (error) {
       const uncertain = record.operations.some(operation => !operation.receipt);
@@ -153,7 +179,8 @@ export class RoomTaskHandoff {
       record.phase = uncertain ? 'interrupted' : aborted ? 'stopped' : 'failed';
       record.note = uncertain ? 'Stopped with an unconfirmed action. Inspect the room before trying again.'
         : aborted ? 'Stopped. Recorded actions remain in the room.'
-        : error instanceof LiveInputContextError ? error.message
+        : error instanceof LiveInputContextError || error instanceof RoomTaskSteeringError ? error.message
+        : record.directive?.action === 'stop' && record.relatedTask ? 'The earlier task is no longer running here. Its recorded effects remain, but the result reply could not be completed.'
         : 'Could not finish this request. Recorded actions are available in task details.';
       try { await publish(); } catch {
         // Keep the in-memory receipt available even if storage stops working.

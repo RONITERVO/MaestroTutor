@@ -58,3 +58,12 @@ describe('passive task backup codec', () => {
     expect(() => validateArchivedRoomTask(value)).toThrow();
   });
 });
+
+it('retains follow-up provenance and cancellation evidence as passive backup history', async () => {
+  const value = archive(); value.record.directive = { action: 'revise', taskId: 'earlier' };
+  value.record.relatedTask = { id: 'earlier', action: 'revise', phase: 'stopped', note: 'Stopped.', requests: ['Make a blue robot.'],
+    operations: structuredClone(value.record.operations), reply: '', wasRunning: true, unconfirmed: false };
+  const entries = await decode([header, chat, ...await taskLines(value), end]);
+  expect(entries.find(entry => entry.kind === 'task')?.value).toEqual(value);
+  (value.record.relatedTask.requests as any) = [{}]; expect(() => validateArchivedRoomTask(value)).toThrow();
+});

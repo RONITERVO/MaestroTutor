@@ -96,8 +96,10 @@ adds validated staging and atomic full task backup/import, retaining original
 media and receipts as read-only history without resuming actions. PC browser
 checks cover corruption and storage-failure rollback; Quest backup acceptance
 remains pending.
-Conversational task steering, explicit server cancellation and provider/headset
-acceptance (including audible results) remain open. See QUEST_UNIFIED_AGENT.md.
+Conversational Stop/revision/continuation now uses the same verified handoff,
+with durable task links and no saved-command replay. Database v11 preserves
+compact task scope and hidden state. Real-provider intent/latency, explicit server
+cancellation and provider/headset acceptance (including audible results) remain open. See QUEST_UNIFIED_AGENT.md.
 
 ## Accepted product scope
 

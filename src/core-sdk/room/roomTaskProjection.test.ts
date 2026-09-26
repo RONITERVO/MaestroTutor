@@ -21,7 +21,9 @@ describe('durable task chat projection', () => {
     expect(messages.map(message => message.id)).toEqual(['user', 'assistant', 'task', 'later']);
     expect(messages[2]).toMatchObject({ role: 'assistant', translations: [{ target: 'Listo.', native: 'Ready.' }], agentTask: { phase: 'completed' } });
     const encoded = JSON.stringify(summary);
-    for (const privateValue of ['private-', 'Private system', 'sceneRevision', 'operations', 'input', 'history']) expect(encoded).not.toContain(privateValue);
+    for (const privateValue of ['private-raw', 'Private system', 'sceneRevision', 'operations', 'input', 'history']) expect(encoded).not.toContain(privateValue);
+    expect(JSON.stringify(summary.message)).not.toContain('private-');
+    expect(summary.taskScope).toEqual({ nativeSession: 'private-session', accessScope: 'private-account', readOnly: false, controlOnly: false });
     expect(history).toHaveLength(3); expect(summary.message.timestamp).toBe(3);
   });
   it('repairs stale task status in place and retains message identity, position and audio cache', () => {

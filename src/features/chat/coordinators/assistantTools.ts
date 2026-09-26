@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { RoomTaskDirective } from '../../../core-sdk/room/taskSteering';
 import { truncateForToolPrompt } from './toolPromptContext';
 import type { AppSettings, ChatMessage, LanguagePair } from '../../../core/types';
 import type { UseTutorConversationConfig, MutableValue } from './conversationContracts';
@@ -19,7 +20,7 @@ export interface AssistantToolPorts extends Pick<UseTutorConversationConfig, 'up
   attachGeneratedToolMedia: ReturnType<typeof createMediaPersistence>['attachGeneratedToolMedia'];
   synthesizeGeminiAudioNote: typeof synthesizeAudio;
   generateMusic: typeof generateMusicApi;
-  runAgentTask?(sourceAssistantId: string): Promise<void>;
+  runAgentTask?(sourceAssistantId: string, directive?: RoomTaskDirective): Promise<void>;
 }
 /** Tool execution and visible attachment phases. Existing attachments suppress
  * duplicate work; afterstep planning and persistence belong to separate owners. */
@@ -39,7 +40,8 @@ export function createAssistantTools(ports: AssistantToolPorts) {
 
     if (toolRequest?.tool === 'agent') {
       if (!ports.runAgentTask) throw new Error('Agent handoff is unavailable.');
-      await ports.runAgentTask(sourceAssistantId);
+      if (toolRequest.task) await ports.runAgentTask(sourceAssistantId, toolRequest.task);
+      else await ports.runAgentTask(sourceAssistantId);
       return;
     }
 

@@ -65,3 +65,14 @@ describe('app-owned room tool task',()=>{
   expect(execute).not.toHaveBeenCalled();expect(ai.models.generateContentStream).not.toHaveBeenCalled();
  });
 });
+
+it('shows current room plus prior evidence to a follow-up and refuses blind mutation after an unconfirmed action', async () => {
+  const relatedTask = { id: 'parent', action: 'continue' as const, phase: 'interrupted' as const, note: 'Unknown outcome',
+    requests: ['Make a blue robot.'], reply: '', operations: [{ commands: [{ action: 'workspace' as const, visible: true }], sceneRevision: 1 }], wasRunning: false, unconfirmed: true };
+  const ai = client(['{"commands":[{"action":"workspace","visible":true}]}']), execute = vi.fn();
+  const result = await runRoomActionTask(input, { aiClient: ai }, { state: () => scene, valid: () => true, execute }, () => {}, { relatedTask });
+  expect(result.needsReview).toBe(true); expect(execute).not.toHaveBeenCalled();
+  const request: any = (ai.models.generateContentStream.mock.calls as any)[0][0];
+  const data = JSON.parse(request.contents[0].parts[0].text);
+  expect(data.request).toBe(input.prompt); expect(data.tutorContext.relatedTask).toEqual(relatedTask); expect(data.scene).toEqual(scene);
+});

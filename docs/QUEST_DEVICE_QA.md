@@ -926,7 +926,7 @@ or device query is included; the charging hold remains in force.
    native microphone ownership or sustained Quest performance.
 
 
-## Task result recovery and database v10 acceptance (pending Quest)
+## Task result recovery and database v11 acceptance (pending Quest)
 
 PC evidence: `.quest-evidence/agent-task-recovery`. Real Chromium/IndexedDB probes
 verify migration, app history loading, rollback and deletion. This has not been
@@ -976,3 +976,36 @@ native action, headset query, APK packaging or installation is included.
    commit. Staging needs extra free space; interrupted staging is cleaned by a
    subsequent import after seven days. Native room/model/library backups remain
    separate from chat/task archives.
+
+
+## Conversational task control acceptance (pending provider/Quest)
+
+PC evidence: `.quest-evidence/task-steering`, using the real browser runner,
+dispatcher, database and task details with simulated model/native behavior.
+Database v10-to-v11 migration preserves hidden results and backfills compact scope.
+No hardware query, APK installation or provider usage is included.
+
+1. Start a multi-step task by text and by Live speech, then ask it to stop while
+   planning and during final narration. Observe status and actual room effects.
+   Completed effects remain; no replacement active task may be cancelled. Measure
+   latency through the actual tutor/verifier and confirm final speech occurs once.
+2. Revise a running creation and answer an agent clarification with a short reply.
+   Check the original constraints and actual new request are both respected, the
+   prior runner finishes before new edits, and the existing object is modified.
+   Continue a limited task without recreating successful earlier actions.
+3. Request stop while a native action awaits acknowledgement. If the outcome is
+   unknown or the room handshake changes, no speculative revision/retry may run.
+   Inspect the room and make a fresh specific request. Contrast stopping the agent
+   with asking to stop an object's animation; they must not be confused.
+4. Say/quote/translate "stop", "continue" and "make it blue" as lesson content in
+   several languages. No task control may start without actual current intent.
+   Try ambiguous references with several tasks, an unavailable older task and
+   background speech. The tutor should clarify, never silently select another.
+5. Switch conversation, account or native room while classification/control waits;
+   delete the source or import history. No stale control may act in the new scope.
+   Imported and other-room records remain history; ask a fresh self-contained
+   request to work in the current room. Restore backups with linked task records.
+6. Repeat a turn's delivery, interrupt storage and restart the app. Claims, links
+   and receipts must remain readable with no automatic resumption or speech.
+   Confirm managed/BYOK usage and the existing server settlement behavior; client
+   cancellation does not prove zero provider cost or remote cancellation.

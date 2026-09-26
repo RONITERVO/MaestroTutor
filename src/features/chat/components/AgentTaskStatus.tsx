@@ -34,6 +34,10 @@ export function AgentTaskStatus({ task, controls = roomAgentTasks }: {
       {record && <>
         {record.readOnly && <p>Imported task record. Its actions will not run again.</p>}
         {record.note !== task.note && <p>{record.note}</p>}
+        {record.directive && <p>Request: {{ stop: 'Stop earlier work', revise: 'Revise earlier work', continue: 'Continue earlier work' }[record.directive.action]}.</p>}
+        {record.relatedTask && <p>Earlier task: {record.relatedTask.phase}. {record.relatedTask.unconfirmed
+          ? 'An earlier action is unconfirmed; further edits need a new specific request.'
+          : 'Recorded effects remain; this request does not replay earlier commands.'}</p>}
         <p>Recorded action batches: {record.operations.length}.</p>
         <ol className="list-decimal pl-5">{record.operations.map((operation, index) => <li key={index} className="my-1">
           {operation.commands.map(command => command.action).join(', ')}: {operation.receipt

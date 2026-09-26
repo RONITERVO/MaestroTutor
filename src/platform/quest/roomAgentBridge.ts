@@ -52,8 +52,8 @@ export class RoomAgentClient {
     const scene=expected??lease.state();if(scene.session!==lease.state().session)return Promise.reject(new Error('The room session changed. Reload the latest object before editing.'));return lease.execute(commands,scene.sceneRevision,scene.objects);
   }
   snapshot=() => ({clientId:this.clientId,session:this.value?.session??'',request:this.pending?.request??null});
-  lease():RoomAgentLease|null {
-    if(!this.value || Date.now()-this.lastSeen>3000 || this.pending) return null;
+  lease(allowPendingObservation=false):RoomAgentLease|null {
+    if(!this.value || Date.now()-this.lastSeen>3000 || (this.pending && !allowPendingObservation)) return null;
     const generation=this.generation,session=this.value.session;
     const valid=() => generation===this.generation && this.value?.session===session && Date.now()-this.lastSeen<=3000;
     return {valid,state:()=>{if(!valid()) throw new Error('Room session unavailable');return this.value!;},execute:(commands,expectedRevision,expectedObjects,signal)=>{
@@ -76,5 +76,5 @@ export class RoomAgentClient {
   }
 }
 let installed:RoomAgentClient|undefined;
-export const currentRoomAgentLease=() => installed?.lease()??null;
+export const currentRoomAgentLease=() => installed?.lease(true)??null;
 export function registerRoomAgent(client:RoomAgentClient) {installed=client;return()=>{client.cancel();if(installed===client) installed=undefined;};}

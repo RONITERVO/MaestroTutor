@@ -39,6 +39,7 @@ vi.mock('../../../shared/utils/costTracker', () => ({ trackGeminiUsage: ports.us
 vi.mock('../../../platform/quest/roomAgentBridge', () => ({ currentRoomAgentLease: ports.roomLease }));
 vi.mock('../../../core/security/apiKeyStorage', () => ({ loadApiKey: ports.roomKey }));
 vi.mock('../../../api/gemini/browserClientSource', () => ({ browserClientSource: ports.roomSource }));
+vi.mock('../services/roomTaskSummaries', () => ({ isRoomTaskHidden: () => false, loadRoomTaskSummaries: async () => [] }));
 vi.mock('../services/roomTaskStore', () => ({ roomTaskStore: { claim: ports.roomClaim, save: ports.roomSave, get: vi.fn() } }));
 vi.mock('../services/chatHistory', () => ({ safeSaveChatHistoryDB: ports.saveHistory }));
 import { prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff } from '../services/roomAgentTasks';

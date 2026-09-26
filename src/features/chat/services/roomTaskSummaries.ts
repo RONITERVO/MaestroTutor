@@ -39,3 +39,13 @@ export async function hideRoomTaskMessage(id: string): Promise<void> {
     };
   });
 }
+
+export async function loadRoomTaskSummaries(pairId: string): Promise<RoomTaskSummary[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(AGENT_TASK_SUMMARY_STORE, 'readonly'); let result: RoomTaskSummary[] = [];
+    readRoomTaskSummaries(tx, pairId, summaries => { result = summaries; });
+    tx.oncomplete = () => { db.close(); resolve(result); };
+    tx.onabort = tx.onerror = () => { db.close(); reject(tx.error || new Error('Could not read task history.')); };
+  });
+}

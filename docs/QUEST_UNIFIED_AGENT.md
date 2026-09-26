@@ -123,7 +123,7 @@ history and tutor context, and publishes its result in the original conversation
 The original tutor context is task data; it cannot override the native command
 schema. Detailed observations and receipts stay outside ordinary chat history.
 
-The task journal lives in the existing app database (v10, `agentTasks`). It commits
+The task journal lives in the existing app database (v11, `agentTasks`). It commits
 an atomic initiation claim and each pending action before native dispatch, then
 commits acknowledgements before the next model call. Duplicate initiation IDs
 return existing records. An interrupted/unconfirmed operation is never replayed
@@ -340,6 +340,64 @@ identity collisions and in-flight credential/receipt races. Evidence is under
 tests, TypeScript, full source lint, ownership guards, production build and both
 backup/recovery browser probes. No headset, provider or native command is used.
 
+## Conversational task control (PC verification, 2026-09-26)
+
+Typed chat and captured Live turns can propose the existing agent tool for stop,
+revision, continuation or an answer to a task's clarification. The chat model
+still emits only the ordinary handoff. The existing suggestion verifier receives
+the exact original request plus up to four recent host-captured task labels; it
+may select a closed `task: { action, taskId }` directive on that same tool. It may
+not rewrite the request, invent targets, treat lesson exercises as controls, or
+convert an unavailable task into fresh work. Ambiguous references must elicit
+clarification. These are model instructions and bounded runtime validation, not
+proof that a real provider always classifies intent correctly.
+
+The catalogue is captured before the text request or Live connection. It uses
+compact database summaries and excludes hidden, imported, source-deleted,
+foreign-conversation/account/room and control-only records. Database v11
+backfills only small scope metadata, one journal at a time while preserving
+hidden status. Scope metadata stays outside chat/model history. This does not
+add a second provider account or autonomous tool path.
+
+A control request gets its own durable claim before it can cancel another task.
+Stop/revise can coexist only with their specifically captured target. They stop
+that runner and await its cleanup/acknowledgement before proceeding. A delayed
+stop never selects a replacement active task. Stop invokes no room planner or
+room command; ordinary shared narration reports whether the target was running,
+its final known state and retained effects. It does not undo edits or stop rule,
+physics or object-animation playback. If cancelling an unacknowledged native
+request rotates the room handshake, the follow-up stops too and asks for a fresh
+request after inspecting/reconnecting the room.
+
+Revision/continuation is a new bounded task using the exact new input, prior user
+requests, the immediate prior operations/receipts, and a fresh room observation.
+It never replays saved command batches. Prior Live audio/frames are not recopied
+into later requests; each new Live handoff uses only its own approved sent media.
+The normal tutor context and scene help interpret a clarification answer. The follow-up
+request lineage is bounded to 64,000 characters; exceeding that limit asks for a
+self-contained request without silently dropping constraints. Stop does not need
+to forward that lineage and is not blocked by its size. Native action
+limits remain three batches of up to eight commands per new user request.
+
+Earlier unconfirmed actions propagate uncertainty. Follow-ups may inspect, but
+further mutations are refused until the user reviews the room and makes a fresh
+specific request. The final reply and task details expose this limitation. A failed final narration retains the recorded stop outcome in chat and details. No
+automatic continuation, cross-room resumption or provider-generated target
+identity is accepted. Stop/revision latency still includes the normal tutor and
+verifier round trip; the existing explicit Stop control remains available.
+
+Unit tests cover text/Live routing, schema and target restrictions, original-input
+preservation, stop/revision races, waiting for receipts, scope loss, failed durable
+claims, duplicate requests, source/room/import filtering and uncertain actions.
+The real-browser steering probe exercises the actual task runner, tool dispatcher,
+IndexedDB v10-to-v11 migration, compact-scope/hidden-status preservation and task
+details UI. Its simulated room creates one robot, stops its task and paints the
+same robot blue on a new revision, with no second creation. Backup, recovery and existing handoff UI probes still pass. The checkpoint has
+281 targeted tests (including focused follow-up checks) and 65 prompt tests,
+plus TypeScript, lint, ownership guards and the production build. Evidence: `.quest-evidence/task-steering`. Real multilingual
+intent, ambiguity, cancellation latency, provider billing and Quest behavior
+remain acceptance gates; no APK or headset update is included.
+
 ## Evidence and remaining release work
 
 At the original text handoff checkpoint, 229 targeted tests and 65 prompt tests passed.
@@ -378,10 +436,10 @@ Remaining work:
    exercises/background speech, actual media billing and Quest memory/latency
    with the real provider and headset. Do not enable the optional direct Live
    tool protocol.
-2. Add conversation-driven task Stop, clarification, follow-up revision and
-   bounded continuation; current explicit task Stop is a chat control. Full
-   task-journal backup/import and durable result reconciliation now have PC
-   coverage; validate the database upgrade and backup flow on Quest.
+2. Validate conversational Stop, clarification answers, revision and continuation
+   with the real provider and headset; current PC coverage uses simulated intent
+   classifications and native effects. Validate database v11, full task backups
+   and durable result reconciliation on Quest.
 3. Define explicit managed server cancellation with accurate partial-usage
    settlement; client transport abort currently retains the existing server drain
    policy. Strengthen access-change fencing across asynchronous credential refresh

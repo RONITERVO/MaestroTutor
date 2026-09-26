@@ -39,6 +39,23 @@ export function validateArchivedRoomTask(value: unknown): ArchivedRoomTask {
     for (const command of operation.commands) text(object(command).action);
     if (operation.receipt !== undefined) { const receipt = object(operation.receipt); text(receipt.status); if (typeof receipt.ok !== 'boolean') invalid(); }
   }
+  if (record.directive !== undefined) {
+    const directive = object(record.directive); id(directive.taskId);
+    if (!['stop','revise','continue'].includes(directive.action)) invalid();
+  }
+  if (record.relatedTask !== undefined) {
+    const related = object(record.relatedTask); id(related.id); text(related.note); text(related.reply);
+    if (!['stop','revise','continue'].includes(related.action) || !['working','replying','completed','limited','stopped','interrupted','failed'].includes(related.phase)
+      || typeof related.wasRunning !== 'boolean' || typeof related.unconfirmed !== 'boolean' || !Array.isArray(related.requests)
+      || related.requests.some((request: unknown) => typeof request !== 'string') || related.requests.join('').length > 64000
+      || !Array.isArray(related.operations) || related.operations.length > 1024) invalid();
+    for (const value of related.operations) {
+      const operation = object(value); integer(operation.sceneRevision);
+      if (!Array.isArray(operation.commands) || operation.commands.length > 1024) invalid();
+      for (const command of operation.commands) text(object(command).action);
+      if (operation.receipt !== undefined) { const receipt = object(operation.receipt); text(receipt.status); if (typeof receipt.ok !== 'boolean') invalid(); }
+    }
+  }
   if (record.reply !== undefined) {
     const reply = object(record.reply), parsed = object(reply.parsed); text(reply.rawResponse); text(parsed.visibleText);
     if (!Array.isArray(parsed.translations)) invalid();

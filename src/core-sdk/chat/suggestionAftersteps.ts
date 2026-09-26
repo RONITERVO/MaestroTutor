@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { parseRoomTaskDirective, type RoomTaskDirective, type RoomTaskTarget } from '../room/taskSteering';
 import type { ChatMessage } from '../../core/types';
 import { decodeTextFromDataUrl, normalizeAttachmentMimeType } from './fileAttachments';
 import { sanitizeSvgArtifact, type AssistantArtifactOptions } from './artifactOptions';
@@ -22,6 +23,7 @@ export interface NormalizedSuggestionArtifact {
 
 export interface SuggestionCreatorToolRequest {
   tool?: string;
+  task?: unknown;
   prompt?: string;
   text?: string;
   durationSeconds?: number;
@@ -29,7 +31,7 @@ export interface SuggestionCreatorToolRequest {
 }
 
 export type NormalizedSuggestionToolRequest =
-  | { tool: 'agent' }
+  | { tool: 'agent'; task?: RoomTaskDirective }
   | { tool: 'image'; prompt: string }
   | { tool: 'audio-note'; text: string }
   | { tool: 'music'; prompt: string; durationSeconds?: number };
@@ -110,12 +112,17 @@ export const normalizeSuggestionCreatorArtifact = (artifact: unknown, options?: 
 export const normalizeSuggestionCreatorToolRequest = (
   toolRequest: unknown,
   fallbackText: string,
-  options: { allowAgent?: boolean } = {},
+  options: { allowAgent?: boolean; agentTargets?: RoomTaskTarget[] } = {},
 ): NormalizedSuggestionToolRequest | null => {
   if (!toolRequest || typeof toolRequest !== 'object' || Array.isArray(toolRequest)) return null;
   const candidate = toolRequest as SuggestionCreatorToolRequest;
   const tool = typeof candidate.tool === 'string' ? candidate.tool.trim().toLowerCase() : '';
-  if (tool === 'agent') return options.allowAgent && Object.keys(candidate).every(key => key === 'tool') ? { tool: 'agent' } : null;
+  if (tool === 'agent') {
+    if (!options.allowAgent || Object.keys(candidate).some(key => key !== 'tool' && key !== 'task')) return null;
+    if (candidate.task === undefined) return { tool: 'agent' };
+    const task = parseRoomTaskDirective(candidate.task, options.agentTargets || []);
+    return task ? { tool: 'agent', task } : null;
+  }
   if (tool !== 'image' && tool !== 'audio-note' && tool !== 'music') return null;
   const prompt = typeof candidate.prompt === 'string' ? candidate.prompt.trim() : '';
   const text = typeof candidate.text === 'string' ? candidate.text.trim() : '';

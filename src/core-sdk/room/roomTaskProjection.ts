@@ -12,12 +12,14 @@ export interface RoomTaskSummary {
   sourceAssistantId: string;
   message: ChatMessage;
   hidden?: boolean;
+  taskScope?: { nativeSession: string; accessScope: string; readOnly: boolean; controlOnly: boolean };
 }
 export function summarizeRoomTask(record: RoomTaskRecord): RoomTaskSummary {
   const parsed = record.reply?.parsed;
   return {
     version: 1, id: record.id, conversationId: record.handoff.conversationId,
     sourceUserId: record.handoff.sourceUserId, sourceAssistantId: record.handoff.sourceAssistantId,
+    taskScope: { nativeSession: record.handoff.nativeSession, accessScope: record.handoff.accessScope, readOnly: !!record.readOnly, controlOnly: record.directive?.action === 'stop' },
     message: {
       id: record.id, timestamp: record.startedAt,
       role: parsed ? 'assistant' : 'status',

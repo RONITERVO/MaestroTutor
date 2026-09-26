@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { RelatedRoomTask } from './taskSteering';
 import {validRuleRequest,type RuleRequest,type RuleView} from './rules';
 import { parseRecipe, type RoomRecipe } from './recipe';
 import { generateGeminiResponse } from '../gemini/generative';
@@ -57,6 +58,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
 }
 
 export interface RoomTaskControl {
+  relatedTask?: RelatedRoomTask;
   isCurrent?:()=>boolean;
   beforePlan?:()=>Promise<void>;
   beforeDispatch?:(commands:RoomCommand[],scene:RoomAgentState)=>Promise<void>;
@@ -64,7 +66,7 @@ export interface RoomTaskControl {
   /** Called with each actual native acknowledgement, before the next model call. */
   onReceipt?:(receipt:RoomAgentState)=>void|Promise<void>;
 }
-export interface RoomTaskResult {receipts:RoomAgentState[];scene:RoomAgentState;budgetExhausted:boolean}
+export interface RoomTaskResult {receipts:RoomAgentState[];scene:RoomAgentState;budgetExhausted:boolean;relatedTask?:RelatedRoomTask;needsReview?:boolean}
 const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 
 /** A bounded tool task owned by the original Maestro app. The caller supplies
@@ -79,7 +81,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
   for(let step=0;step<3;step++) {
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state());
-    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode}),input.history,{
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask}),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_SCHEMA},
@@ -87,7 +89,10 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     });
     onUsage(response);active();
     const commands=parseRoomCommands(JSON.parse(response.text||'{}'));
-    if(!commands.length)return {receipts,scene:copy(lease.state()),budgetExhausted:false};
+    if(!commands.length)return {receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
+    // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
+    if (control.relatedTask?.unconfirmed && commands.some(command => command.action !== 'inspect'))
+      return { receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
     await control.beforeDispatch?.(commands,scene);active();
     const receipt=await (control.signal
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
@@ -98,7 +103,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     await control.onReceipt?.(copy(receipt));
     active();
   }
-  active();return {receipts,scene:copy(lease.state()),budgetExhausted:true};
+  active();return {receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};
 }
 
 /** Compatibility wrapper until room tasks enter the common tool dispatcher. */

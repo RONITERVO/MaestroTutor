@@ -49,3 +49,12 @@ it('keeps the handoff capability-gated and never accepts a rewritten request', a
   await expect(executeSuggestionToolRequest({ tool: 'agent' }, handlers)).rejects.toThrow('unavailable');
   expect(handlers.music).not.toHaveBeenCalled();
 });
+
+it('accepts only host-listed task control and rejects rewritten prompts or stale targets', () => {
+  const target = { id: 'task', phase: 'working' as const, requestPreview: 'Make a robot', replyPreview: '', running: true };
+  const options = { allowAgent: true, agentTargets: [target] };
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', task: { action: 'stop', taskId: 'task' } }, '', options)).toEqual({ tool: 'agent', task: { action: 'stop', taskId: 'task' } });
+  for (const task of [{ action: 'stop', taskId: 'other' }, { action: 'continue', taskId: 'task' }, { action: 'revise', taskId: 'task', prompt: 'rewritten' }])
+    expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', task }, '', options)).toBeNull();
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', task: { action: 'stop', taskId: 'task' } }, '', { allowAgent: true })).toBeNull();
+});

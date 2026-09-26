@@ -1,12 +1,13 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { parseRoomTaskDirective, type RoomTaskDirective, type RoomTaskTarget } from '../../../core-sdk/room/taskSteering';
 import { missingLiveInput, validateLiveInputMedia, type LiveInputMedia } from '../../../core-sdk/media/liveInputContext';
 import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
 import { runTutorTextTurn } from '../../../core-sdk/chat/tutorTextTurn';
 import { RoomTaskHandoff, type RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
 import { runRoomActionTask } from '../../../core-sdk/room/roomAgent';
 import { hasAgentHandoffProposal } from '../../../core-sdk/chat/suggestionAftersteps';
-import { buildRoomResultInstruction, buildRoomTaskReplyInstruction, ROOM_HANDOFF_TUTOR_INSTRUCTION, ROOM_HANDOFF_LIVE_INSTRUCTION } from '../../../../shared/prompts';
+import { buildRoomResultInstruction, buildRoomTaskReplyInstruction, buildRoomTaskCatalogue, buildRoomTaskOutcomeInstruction, ROOM_HANDOFF_TUTOR_INSTRUCTION, ROOM_HANDOFF_LIVE_INSTRUCTION } from '../../../../shared/prompts';
 import { browserClientSource } from '../../../api/gemini/browserClientSource';
 import { currentRoomAgentLease } from '../../../platform/quest/roomAgentBridge';
 import { useMaestroStore } from '../../../store';
@@ -20,9 +21,9 @@ import { safeSaveChatHistoryDB } from './chatHistory';
 import { roomTaskStore } from './roomTaskStore';
 import { publishRoomTaskResult } from './roomTaskResults';
 import { summarizeRoomTask, hasRoomTaskSources } from '../../../core-sdk/room/roomTaskProjection';
-import { isRoomTaskHidden } from './roomTaskSummaries';
+import { isRoomTaskHidden, loadRoomTaskSummaries } from './roomTaskSummaries';
 
-const contexts = new Map<string, { prompt: string; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean }>();
+const contexts = new Map<string, { prompt: string; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean; targets: RoomTaskTarget[] }>();
 const deliveryContexts = new Map<string, { valid: () => Promise<boolean> }>();
 let contextGeneration = 0;
 let activityCount = 0;
@@ -50,7 +51,8 @@ export const roomAgentTasks = new RoomTaskHandoff({
   run: (input, lease, control) => runRoomActionTask(input, browserClientSource(), lease, response => usage(response, input.model), control),
   reply: async (input, result, signal) => {
     const turn = await runTutorTextTurn({ ...input,
-      systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene) + buildRoomTaskReplyInstruction(result.budgetExhausted),
+      systemInstruction: input.systemInstruction + '\n\n' + buildRoomResultInstruction(result.receipts, result.scene) + buildRoomTaskReplyInstruction(result.budgetExhausted)
+        + (result.relatedTask ? buildRoomTaskOutcomeInstruction(result.relatedTask, result.needsReview) : ''),
       configOverrides: { maxOutputTokens: 2048 },
     }, { ...browserClientSource(), signal });
     usage(turn.response, input.model);
@@ -95,7 +97,7 @@ async function captureAccess(conversationId: string | null) {
 }
 
 async function captureHandoff(input: TutorTextTurnInput, source: HandoffSource,
-  access: NonNullable<Awaited<ReturnType<typeof captureAccess>>>, acceptsReply: (raw: string) => boolean, sourceReply?: string) {
+  access: NonNullable<Awaited<ReturnType<typeof captureAccess>>>, acceptsReply: (raw: string) => boolean, targets: RoomTaskTarget[], sourceReply?: string) {
   if (!source.sourceUserId || !source.conversationId) return false;
   const localCurrent = () => {
     const state = useMaestroStore.getState();
@@ -107,10 +109,23 @@ async function captureHandoff(input: TutorTextTurnInput, source: HandoffSource,
   if (!await valid()) return false;
   const id = `room-task:${source.sourceAssistantId}`;
   roomAgentTasks.capture({ version: 1, id, conversationId: source.conversationId, sourceUserId: source.sourceUserId,
-    sourceAssistantId: source.sourceAssistantId, nativeSession: access.nativeSession, accessScope: access.accessScope, input }, valid);
-  contexts.set(source.sourceAssistantId, { prompt: input.prompt, conversationId: source.conversationId, valid, acceptsReply });
+    sourceAssistantId: source.sourceAssistantId, nativeSession: access.nativeSession, accessScope: access.accessScope, input }, valid, targets);
+  contexts.set(source.sourceAssistantId, { prompt: input.prompt, conversationId: source.conversationId, valid, acceptsReply, targets: structuredClone(targets) });
   while (contexts.size > 8) contexts.delete(contexts.keys().next().value!);
   return true;
+}
+
+async function captureTaskTargets(conversationId: string, access: NonNullable<Awaited<ReturnType<typeof captureAccess>>>): Promise<RoomTaskTarget[]> {
+  const summaries = await loadRoomTaskSummaries(conversationId);
+  const state = useMaestroStore.getState();
+  return summaries.filter(summary => !summary.hidden && !isRoomTaskHidden(summary.id) && hasRoomTaskSources(state.messages, summary)
+    && summary.taskScope?.nativeSession === access.nativeSession && summary.taskScope.accessScope === access.accessScope
+    && !summary.taskScope.readOnly && !summary.taskScope.controlOnly)
+    .sort((a, b) => b.message.timestamp - a.message.timestamp).slice(0, 4).map(summary => ({
+      id: summary.id, phase: summary.message.agentTask!.phase, running: roomAgentTasks.running(summary.id),
+      requestPreview: (state.messages.find(message => message.id === summary.sourceUserId)?.text || '').slice(0, 500),
+      replyPreview: (summary.message.rawAssistantResponse || summary.message.text || '').slice(0, 500),
+    }));
 }
 
 /** Capture the exact input before the ordinary text tutor request. */
@@ -120,12 +135,14 @@ export async function prepareRoomAgentHandoff(input: TutorTextTurnInput, source:
   if (!user || user.text !== input.prompt) return input;
   const access = await captureAccess(source.conversationId);
   if (!access) return input;
-  const prepared = structuredClone({ ...input, systemInstruction: input.systemInstruction + ROOM_HANDOFF_TUTOR_INSTRUCTION });
-  return await captureHandoff(prepared, source, access, hasAgentHandoffProposal) ? prepared : input;
+  const targets = await captureTaskTargets(source.conversationId, access);
+  const prepared = structuredClone({ ...input, systemInstruction: input.systemInstruction + ROOM_HANDOFF_TUTOR_INSTRUCTION
+    + buildRoomTaskCatalogue(targets) });
+  return await captureHandoff(prepared, source, access, hasAgentHandoffProposal, targets) ? prepared : input;
 }
 
 type LiveCapture = { input: Omit<TutorTextTurnInput, 'prompt'>; conversationId: string;
-  access: NonNullable<Awaited<ReturnType<typeof captureAccess>>> };
+  access: NonNullable<Awaited<ReturnType<typeof captureAccess>>>; targets: RoomTaskTarget[] };
 const liveContexts = new Map<string, LiveCapture>();
 /** Called once, immediately before the actual Live connection, after its fresh
  * history/profile/bookmark instruction has been built. No latest-chat lookup at completion. */
@@ -135,9 +152,11 @@ export async function prepareLiveRoomAgentContext(systemInstruction?: string): P
   if (!systemInstruction || !conversationId || !languagePair) return { systemInstruction };
   const access = await captureAccess(conversationId);
   if (!access) return { systemInstruction };
-  const prepared = systemInstruction + ROOM_HANDOFF_LIVE_INSTRUCTION;
+  const targets = await captureTaskTargets(conversationId, access);
+  if (!await access.valid()) return { systemInstruction };
+  const prepared = systemInstruction + ROOM_HANDOFF_LIVE_INSTRUCTION + buildRoomTaskCatalogue(targets);
   const handoffId = crypto.randomUUID();
-  liveContexts.set(handoffId, { conversationId, access, input: {
+  liveContexts.set(handoffId, { conversationId, access, targets, input: {
     model: getGeminiModels().text.default, systemInstruction: prepared,
     nativeLanguageCode: languagePair.nativeLanguageCode, history: [],
   } });
@@ -162,13 +181,16 @@ export async function captureLiveRoomAgentHandoff(handoffId: string, source: Han
     }
   }
   const input = { ...structuredClone(captured.input), prompt: userText, liveInputMedia: media };
-  return captureHandoff(input, source, captured.access, raw => raw === modelText, modelText);
+  return captureHandoff(input, source, captured.access, raw => raw === modelText, captured.targets, modelText);
 }
 export function roomAgentRequestForVerification(assistantId: string, rawReply: string): string | undefined {
   const context = contexts.get(assistantId);
   return roomAgentTasks.available(assistantId) && context?.acceptsReply(rawReply) ? context.prompt : undefined;
 }
-export async function startRoomAgentTask(sourceAssistantId: string): Promise<void> {
+export function roomAgentTargetsForVerification(assistantId: string, rawReply: string): RoomTaskTarget[] {
+  return roomAgentRequestForVerification(assistantId, rawReply) !== undefined ? structuredClone(contexts.get(assistantId)?.targets || []) : [];
+}
+export async function startRoomAgentTask(sourceAssistantId: string, directive?: RoomTaskDirective): Promise<void> {
   const context = contexts.get(sourceAssistantId);
   const id = `room-task:${sourceAssistantId}`;
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -176,13 +198,14 @@ export async function startRoomAgentTask(sourceAssistantId: string): Promise<voi
   try {
     const source = useMaestroStore.getState().messages.find(message => message.id === sourceAssistantId);
     if (!context || !source || !context.acceptsReply(source.llmRawResponse || '') || !await context.valid()) throw new Error('The agent handoff is no longer available. Please ask again.');
+    if (directive && !parseRoomTaskDirective(directive, context.targets)) throw new Error('The selected task was not available in this request.');
     if (!deliveryContexts.has(id)) { deliveryContexts.set(id, context); ownsDeliveryContext = true; }
     // Stop promptly on scope/native-session loss while provider work is in flight.
     const lease = currentRoomAgentLease();
     timer = setInterval(() => {
       void context.valid().then(valid => { if (!valid || !lease?.valid()) roomAgentTasks.stop(id); }, () => roomAgentTasks.stop(id));
     }, 500);
-    await roomAgentTasks.start(sourceAssistantId);
+    await roomAgentTasks.start(sourceAssistantId, directive);
   } catch (error) {
     const state = useMaestroStore.getState();
     if (!isRoomTaskHidden(id) && context?.conversationId === state.settings.selectedLanguagePairId && state.messages.some(message => message.id === sourceAssistantId)) {
