@@ -64,4 +64,27 @@ describe('book library transport and UI', () => {
     expect(original.closest('[hidden]')).toBeNull(); expect((original as HTMLInputElement).value).toBe('Keep my draft');
     expect(ui.queryByLabelText('Animation library')).toBeNull();
   });
+  it('validates bounded per-avatar profiles and sends explicit assignment settings without preview', () => {
+    const modelHash = 'f'.repeat(64);
+    const initial = { ...state(), selected: state().entries[0], activityProfile: { modelHash, status: 'Ready', canAssign: true, readOnly: false, canUndo: false, canRedo: false, roles: [0, 1, 2, 3].map(role => ({ role, choices: [] })) } };
+    expect(parseLibraryState(initial)).not.toBeNull();
+    expect(parseLibraryState({ ...initial, activityProfile: { ...initial.activityProfile, roles: [] } })).toBeNull();
+    const client = new LibraryBookClient(); client.receive(initial); const ui = render(<LibraryBookView client={client} />);
+    fireEvent.click(ui.getByText('Tutor-state motions'));
+    fireEvent.change(ui.getByLabelText('Tutor state'), { target: { value: '3' } });
+    fireEvent.change(ui.getByLabelText('Selection weight'), { target: { value: '5' } });
+    fireEvent.change(ui.getByLabelText('Seconds before reusing'), { target: { value: '10' } });
+    fireEvent.click(ui.getByText('Assign to tutor state'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'roleAssign', modelHash, role: 3, motionId, speed: 1, weight: 5, cooldown: 10, loop: false });
+    const profile = { ...initial.activityProfile, canUndo: true, roles: initial.activityProfile.roles.map(group => ({ ...group, choices: group.role === 3 ? [{ motionId, name: 'Stage walk', weight: 5, speed: 1, cooldown: 10, loop: false, available: true }] : [] })) };
+    act(() => { client.receive({ ...initial, revision: 2, ack: 1, activityProfile: profile }); });
+    fireEvent.click(ui.getByLabelText('Remove Stage walk from Speaking'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'roleRemove', modelHash, role: 3, motionId });
+    act(() => { client.receive({ ...initial, revision: 3, ack: 2, activityProfile: profile }); });
+    fireEvent.click(ui.getByText('Undo assignments'));
+    expect(client.snapshot().libraryRequest).toMatchObject({ action: 'roleUndo', modelHash });
+    const invalid = { ...profile, roles: [{ role: 0, choices: [{ ...profile.roles[3].choices[0], speed: Infinity }] }, ...profile.roles.slice(1)] };
+    expect(parseLibraryState({ ...initial, activityProfile: invalid })).toBeNull();
+  });
+
 });

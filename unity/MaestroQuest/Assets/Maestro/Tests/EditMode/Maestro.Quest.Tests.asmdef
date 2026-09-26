@@ -3,7 +3,8 @@
   "rootNamespace": "Maestro.Quest.Tests",
   "references": [
     "Maestro.Quest",
-    "Maestro.Quest.TestFixtures"
+    "Maestro.Quest.TestFixtures",
+    "TLab.Capture"
   ],
   "includePlatforms": [
     "Editor"

@@ -32,7 +32,19 @@ try {
   await page.frameLocator('iframe').getByRole('button', { name: 'Try the phrase', exact: true }).click();
   await page.frameLocator('iframe').getByText('Un café, por favor.', { exact: true }).waitFor();
   await page.screenshot({ path: path.join(output, 'returned-conversation.png') });
+  await page.goto('http://127.0.0.1:5178/test-fixtures/browser/library-book.html?activity=1');
+  await page.getByText('Tutor-state motions', { exact: true }).click();
+  await page.getByRole('combobox', { name: 'Tutor state', exact: true }).selectOption('3');
+  await page.getByRole('button', { name: 'Update state motion', exact: true }).waitFor();
+  const assigned = page.getByRole('list', { name: 'Assigned state motions' });
+  if (!await assigned.getByRole('button', { name: 'Greeting', exact: true }).isVisible()) throw new Error('Native state assignment is missing');
+  if (await page.getByRole('combobox', { name: 'Selection weight', exact: true }).inputValue() !== '2' || await page.getByRole('combobox', { name: 'Seconds before reusing', exact: true }).inputValue() !== '2') throw new Error('Native state preferences were not restored');
+  await page.screenshot({ path: path.join(output, 'activity-assignments.png') });
+  await page.getByRole('button', { name: 'Undo assignments', exact: true }).scrollIntoViewIfNeeded();
+  if (!await page.getByRole('button', { name: 'Undo assignments', exact: true }).isEnabled()) throw new Error('Assignment history is not available');
+  if (await page.locator('.quest-library-page').evaluateAll(pages => pages.some(page => page.scrollWidth > page.clientWidth + 1))) throw new Error('State controls overflow the book');
+  await page.screenshot({ path: path.join(output, 'activity-assignment-history.png') });
   if (errors.length) throw new Error(errors.join('\n'));
-  await writeFile(path.join(output, 'visual-check.json'), JSON.stringify({ viewport: '1024x768', scale: 2, overflow: false, search: 'passed', edit: 'passed', returnToChat: 'passed', artifactAfterReturn: 'passed', pageErrors: errors, scope: 'Native synthetic state; simulated fixture acknowledgements. Native operations tested separately in Unity.' }, null, 2));
-  console.log('Library visual checks passed: search, metadata edit, return to chat and page bounds. '+output);
+  await writeFile(path.join(output, 'visual-check.json'), JSON.stringify({ viewport: '1024x768', scale: 2, overflow: false, search: 'passed', edit: 'passed', returnToChat: 'passed', artifactAfterReturn: 'passed', stateAssignmentValues: 'passed', stateAssignmentHistory: 'passed', pageErrors: errors, scope: 'Native synthetic state; simulated fixture acknowledgements. Native operations tested separately in Unity.' }, null, 2));
+  console.log('Library visual checks passed: search, metadata edit, return to chat state-assignment presentation and page bounds. '+output);
 } finally { await browser.close(); }

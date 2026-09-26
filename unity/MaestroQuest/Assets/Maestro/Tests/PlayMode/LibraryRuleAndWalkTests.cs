@@ -63,6 +63,71 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
+        [UnityTest] public IEnumerator TutorStateProfilesSwitchMotionsBlendAndYieldToManualOwners()
+        {
+            var profiles=editor.ActivityProfiles; var model=avatar.ModelHash; var rig=avatar.CustomModel.MotionRigHash;
+            Assert.That(profiles.Assign(model,rig,TutorMotionRole.Speaking,new TutorMotionChoice { motionId=greeting.id,loop=true },editor.Motions,out var error),Is.True,error);
+            Assert.That(profiles.Assign(model,rig,TutorMotionRole.Listening,new TutorMotionChoice { motionId=gait.id,loop=true },editor.Motions,out error),Is.True,error);
+            var speaking=new BookSnapshot { version=1,activity="speaking" }; avatar.ObserveTutorState(speaking);
+            yield return Until(() => avatar.ActivityMotionId == greeting.id);
+            var head=avatar.PoseRig.CanonicalBone(PoseJoint.Head); var before=head.localRotation;
+            yield return new WaitForSeconds(.3f); Assert.That(Quaternion.Angle(before,head.localRotation),Is.GreaterThan(1),"The assigned motion must deform the actual rig");
+            var rootPosition=avatar.transform.position; var beforeSwitch=head.localRotation;
+            avatar.ObserveTutorState(new BookSnapshot { version=1,activity="listening" }); yield return Until(() => avatar.ActivityMotionId == gait.id);
+            Assert.That(Quaternion.Angle(beforeSwitch,head.localRotation),Is.LessThan(30),"Transitions must begin from the presented pose");
+            Assert.That(avatar.transform.position,Is.EqualTo(rootPosition),"Activity clips do not own room translation");
+            avatar.SetEditing(true); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
+            avatar.SetEditing(false); avatar.SetActivityLibraryOpen(true); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
+            avatar.SetActivityLibraryOpen(false); yield return Until(() => avatar.ActivityMotionId == gait.id);
+            var play=editor.Motions.AcquireAsync(greeting.id,rig); yield return Until(() => play.IsCompleted); Assert.That(avatar.PlayLibraryMotion(play.Result,true),Is.True);
+            yield return new WaitForSeconds(.15f); Assert.That(avatar.LibraryMotionId,Is.EqualTo(greeting.id)); Assert.That(avatar.ActivityMotionId,Is.Null,"An explicit preview retains priority");
+            avatar.StopImportedClip(); avatar.ReducedMotion=true; yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
+            avatar.ReducedMotion=false; avatar.ObserveTutorState(new BookSnapshot { version=1,activity="speaking",audioPaused=true }); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
+        }
+        [UnityTest] public IEnumerator StateLoadCannotStartAfterPauseAndAvatarProfilesReturnAfterSwitching()
+        {
+            string model=avatar.ModelHash,rig=avatar.CustomModel.MotionRigHash;
+            editor.ActivityProfiles.Assign(model,rig,TutorMotionRole.Speaking,new TutorMotionChoice { motionId=greeting.id,loop=true },editor.Motions,out _);
+            var observed=new BookSnapshot { version=1,activity="speaking" }; avatar.ObserveTutorState(observed);
+            yield return null; avatar.SendMessage("OnApplicationPause",true); yield return new WaitForSeconds(.3f); Assert.That(avatar.ActivityMotionId,Is.Null);
+            avatar.SendMessage("OnApplicationPause",false); avatar.ObserveTutorState(observed); yield return new WaitForSeconds(.15f); Assert.That(avatar.ActivityMotionId,Is.Null,"Resume rejects the old snapshot object");
+            avatar.ObserveTutorState(new BookSnapshot { version=1,activity="speaking" }); yield return Until(() => avatar.ActivityMotionId == greeting.id);
+            Assert.That(editor.SetMaestroModel(""),Is.True); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
+            Assert.That(editor.SetMaestroModel(model),Is.True); yield return Until(() => !avatar.ModelBusy); yield return Until(() => avatar.ActivityMotionId == greeting.id);
+            Assert.That(editor.ActivityProfiles.Find(model).roles[0].choices[0].motionId,Is.EqualTo(greeting.id));
+            avatar.SendMessage("OnApplicationFocus",false); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
+            avatar.SendMessage("OnApplicationFocus",true); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
+        }
+        [UnityTest] public IEnumerator NonloopingStateChoicesAvoidImmediateRepeatAndRespectReuseGap()
+        {
+            string model=avatar.ModelHash,rig=avatar.CustomModel.MotionRigHash;
+            editor.ActivityProfiles.Assign(model,rig,TutorMotionRole.Speaking,new TutorMotionChoice { motionId=greeting.id,speed=2,cooldown=3,weight=10 },editor.Motions,out _);
+            editor.ActivityProfiles.Assign(model,rig,TutorMotionRole.Speaking,new TutorMotionChoice { motionId=gait.id,speed=2,cooldown=3 },editor.Motions,out _);
+            avatar.ObserveTutorState(new BookSnapshot { version=1,activity="speaking" }); yield return Until(() => avatar.ActivityMotionId != null);
+            string first=avatar.ActivityMotionId; yield return Until(() => avatar.ActivityMotionId != null && avatar.ActivityMotionId != first);
+            yield return Until(() => avatar.ActivityMotionId == null); yield return new WaitForSeconds(.15f);
+            Assert.That(avatar.ActivityMotionId,Is.Null,"Completed choices wait for their cooldown instead of repeating immediately");
+            Assert.That(avatar.ActivityMotionStatus,Does.Contain("included"));
+        }
+        [UnityTest] public IEnumerator BookRoleAssignmentsRejectStaleAvatarAndPersistWithoutPreviewing()
+        {
+            var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
+            var book=root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
+            int sequence=0;
+            LibraryBookRequest Request(string action,string model=null) => new() { version=1,session=book.State.session,sequence=++sequence,action=action,modelHash=model ?? avatar.ModelHash,role=3,motionId=greeting.id,weight=2,speed=1,cooldown=2 };
+            avatar.ObserveTutorState(new BookSnapshot { version=1,activity="speaking" });
+            var work=book.HandleAsync(Request("roleAssign")); yield return Until(() => work.IsCompleted); yield return null;
+            Assert.That(book.State.activityProfile.roles[3].choices.Single().motionId,Is.EqualTo(greeting.id)); Assert.That(avatar.ActivityMotionId,Is.Null,"Library browsing suppresses automatic state playback");
+            work=book.HandleAsync(Request("roleClear",new string('a',64))); yield return Until(() => work.IsCompleted); Assert.That(book.State.status,Does.Contain("changed")); Assert.That(book.State.activityProfile.roles[3].choices.Length,Is.EqualTo(1));
+            work=book.HandleAsync(Request("roleRemove")); yield return Until(() => work.IsCompleted); Assert.That(book.State.activityProfile.roles[3].choices,Is.Empty);
+            work=book.HandleAsync(Request("roleUndo")); yield return Until(() => work.IsCompleted); Assert.That(book.State.activityProfile.roles[3].choices.Length,Is.EqualTo(1));
+            work=book.HandleAsync(Request("roleRedo")); yield return Until(() => work.IsCompleted); Assert.That(book.State.activityProfile.roles[3].choices,Is.Empty);
+            work=book.HandleAsync(Request("roleAssign")); yield return Until(() => work.IsCompleted);
+            work=book.HandleAsync(Request("select")); yield return Until(() => work.IsCompleted);
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE");
+            if (!string.IsNullOrEmpty(evidence)) { Directory.CreateDirectory(evidence); File.WriteAllText(Path.Combine(evidence,"activity-book-state.json"),Newtonsoft.Json.JsonConvert.SerializeObject(book.State)); }
+            work=book.HandleAsync(Request("close")); yield return Until(() => work.IsCompleted); yield return Until(() => avatar.ActivityMotionId == greeting.id);
+        }
         [UnityTest] public IEnumerator BookLibrarySearchesPagesEditsAndAssignsStableIdsWithoutAutoplay()
         {
             var imports = root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);

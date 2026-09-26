@@ -4,7 +4,15 @@ export interface LibraryEntry {
   id: string; name: string; tags: string[]; duration: number;
   favourite: boolean; compatible: boolean; shortClip: boolean;
 }
+export interface ActivityChoice {
+  motionId: string; name: string; weight: number; speed: number; cooldown: number; loop: boolean; available: boolean;
+}
+export interface ActivityProfile {
+  modelHash: string; status: string; canAssign: boolean; readOnly: boolean; canUndo: boolean; canRedo: boolean;
+  roles: { role: number; choices: ActivityChoice[] }[];
+}
 export interface LibraryState {
+  activityProfile?: ActivityProfile | null;
   version: 1; revision: number; ack: number; session: string; visible: boolean; busy: boolean; readOnly: boolean;
   query: string; offset: number; total: number; pageSize: number;
   compatibleOnly: boolean; favouritesOnly: boolean; includeShort: boolean;
@@ -14,11 +22,12 @@ export interface LibraryState {
   sourceIndex: number; sourceCount: number; sourceName: string | null;
   attribution: string; termsPage: number; termsPages: number; status: string;
 }
-export type LibraryAction = 'query' | 'select' | 'save' | 'preview' | 'stop' | 'walk' | 'rule' | 'close';
+export type LibraryAction = 'query' | 'select' | 'save' | 'preview' | 'stop' | 'walk' | 'rule' | 'close' | 'roleAssign' | 'roleRemove' | 'roleClear' | 'roleUndo' | 'roleRedo';
 export interface LibraryRequest {
   version: 1; session: string; sequence: number; action: LibraryAction;
   query?: string; offset?: number; compatibleOnly?: boolean; favouritesOnly?: boolean; includeShort?: boolean;
   motionId?: string; name?: string; tags?: string[]; favourite?: boolean; loop?: boolean;
+  modelHash?: string; role?: number; weight?: number; speed?: number; cooldown?: number;
   ruleId?: string; stepIndex?: number; sourceIndex?: number; termsPage?: number;
 }
 const id = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
@@ -30,6 +39,14 @@ function entry(value: unknown): value is LibraryEntry {
     typeof value.duration === 'number' && Number.isFinite(value.duration) && value.duration > 0 && value.duration <= 3600 &&
     ['favourite', 'compatible', 'shortClip'].every(key => typeof value[key] === 'boolean');
 }
+function activityProfile(value: unknown): boolean {
+  const bounded = (number: unknown, min: number, max: number) => typeof number === 'number' && Number.isFinite(number) && number >= min && number <= max;
+  return record(value) && (value.modelHash === '' || typeof value.modelHash === 'string' && /^[a-f0-9]{64}$/.test(value.modelHash)) && text(value.status, 2048) &&
+    ['canAssign', 'readOnly', 'canUndo', 'canRedo'].every(key => typeof value[key] === 'boolean') && Array.isArray(value.roles) && value.roles.length === 4 &&
+    value.roles.every((group, index) => record(group) && group.role === index && Array.isArray(group.choices) && group.choices.length <= 4 &&
+      group.choices.every(choice => record(choice) && id(choice.motionId) && text(choice.name, 100) && integer(choice.weight, 1, 10) && bounded(choice.speed, .25, 2) && bounded(choice.cooldown, 0, 60) && typeof choice.loop === 'boolean' && typeof choice.available === 'boolean') &&
+      new Set(group.choices.map(choice => choice.motionId)).size === group.choices.length);
+}
 export function parseLibraryState(value: unknown): LibraryState | null {
   if (!record(value) || value.version !== 1 || !id(value.session) || !integer(value.revision, 1, 2147483647) || !integer(value.ack, 0, 2147483647) ||
       !integer(value.offset, 0, 1024) || !integer(value.total, 0, 1024) || value.pageSize !== 12 || !text(value.query, 80) || !text(value.status, 2048) ||
@@ -39,6 +56,7 @@ export function parseLibraryState(value: unknown): LibraryState | null {
       value.ruleId !== null && !id(value.ruleId) || value.ruleName !== null && !text(value.ruleName, 32) || !integer(value.stepIndex, 0, 15) ||
       !integer(value.sourceIndex, 0, 1023) || !integer(value.sourceCount, 0, 1024) || value.sourceName !== null && !text(value.sourceName, 100) ||
       !text(value.attribution, 1500) || !integer(value.termsPage, 0, 64) || !integer(value.termsPages, 1, 65)) return null;
+  if (value.activityProfile !== undefined && value.activityProfile !== null && !activityProfile(value.activityProfile)) return null;
   return value as unknown as LibraryState;
 }
 /** Requests are acknowledged by native sequence, never retried as new actions.

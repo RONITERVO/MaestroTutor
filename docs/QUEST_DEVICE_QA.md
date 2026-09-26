@@ -580,3 +580,58 @@ Packaged checkpoint: **7CCC2880**, development-signed and **not installed**.
 Earlier development builds during this work were superseded before checkpointing.
 No ADB device query, install or headset launch occurred. Hardware acceptance,
 production signing, application identity and the complete release gates remain.
+
+
+## Per-avatar state motions — PC development, 2026-09-26
+
+The book library now assigns compatible saved motions to Idle, Listening,
+Thinking and Speaking for each exact custom avatar. See
+QUEST_AVATAR_ACTIVITIES.md for settings, interruption and transition limits.
+The installed headset build remains 08F340EF; device work stays on hold while
+the user sleeps and charges Quest. The packaged checkpoint and desktop evidence are recorded below.
+
+After the user returns and reconnects:
+
+1. Use a compatible custom Maestro, save a supported animated export's motions,
+   then Library. Select a motion, open Tutor-state motions and assign Speaking.
+   Confirm speed/weight/gap/loop and Undo/Redo are usable with trigger and pinch.
+   Library browsing and assignment must not start automatic animation.
+2. Return to chat and exercise actual speaking/listening/thinking/idle. Confirm
+   the chosen motions start and blend, gaps use the included animation and two
+   ready choices do not immediately repeat. Keep the book interaction functional.
+3. Preview, pose, record, walk and run an explicit visual-rule action while a
+   tutor state is active. Each explicit owner must retain control. After it ends,
+   the current tutor state may resume. Audio pause/reduced motion must suppress
+   automatic state motions.
+4. Change Maestro to Default or another imported avatar, then back. Confirm its
+   assignments return without appearing on the other avatar. Restart the app and
+   confirm preferences persist; in-memory assignment Undo history resets.
+5. Interrupt during loading with system UI/headset removal. Return with audio
+   still paused. Old state must not replay; a fresh active tutor state is needed.
+   Check page reload/browser recovery too. Native callback and Unity cache guards
+   have automated tests; actual headset/WebView scheduling remains unverified.
+6. Observe feet, extra bones and expressions across transitions. The new blend
+   covers canonical body joints/hips only. Verify small-room suitability and
+   performance; there is no new limb/contact collision or hair/cloth solver.
+
+Packaged checkpoint: **906ED6F1**, development-signed and **not installed**.
+
+- APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-906ED6F1.apk`
+- SHA256: `906ED6F13BF2074199E47A1E771699155E9D7C29ED570B3F10EB6660E852D4DE`
+- Size: 135,356,835 bytes. Full build exited 0; zero build errors, two warnings.
+- APK v2 signature, required manifest entries and ARM64 architecture verified.
+- 47 EditMode + 52 required PlayMode + 17 native Android + 15 web checks passed
+  (131). Three optional private-file tests were explicitly skipped. TypeScript,
+  shared web production build and native lint passed.
+- Native state emitted by Unity was inspected in a desktop Edge fixture. Search,
+  metadata editing, return to chat/inline artifact interaction, restored state
+  values, assignment history and horizontal page bounds passed. Fixture responses
+  are simulated; actual assignment/persistence/ownership are tested in Unity.
+- All 103 C# source files, 112 web build files and the native AAR matched the build
+  mirror. Reports, source hashes, build logs and inspected book PNGs are archived
+  in `.quest-evidence/avatar-activities/verified-906ED6F1`.
+
+Earlier failed test attempts and an editor-shutdown timeout were corrected or
+retried before this verified checkpoint. Only the successful full pipeline is
+represented above. No device query, install or headset launch occurred. The
+full release and physical-device acceptance gates remain open.

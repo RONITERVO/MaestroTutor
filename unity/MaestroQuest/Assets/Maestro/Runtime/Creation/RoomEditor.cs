@@ -42,6 +42,7 @@ namespace Maestro.Quest.Creation
         public RoomDocument Snapshot() => journal.Snapshot();
         public ModelLibrary Models { get; private set; }
         public MotionLibrary Motions { get; private set; }
+        public AvatarActivityProfiles ActivityProfiles { get; private set; }
         public RoomPhysicsWorld PhysicsWorld { get; private set; }
 
         public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null)
@@ -50,6 +51,7 @@ namespace Maestro.Quest.Creation
             AddIdentity("book", book); AddIdentity("maestro", maestro);
             var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room");
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models")); Motions = new MotionLibrary(Path.Combine(directory,"motions"));
+            ActivityProfiles=new AvatarActivityProfiles(directory);
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro));
             Reconcile();
@@ -245,7 +247,7 @@ namespace Maestro.Quest.Creation
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
-                var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.SetWalkReference(data.walkClip-1,data.walkMotionId,Motions); _ = avatar.SetModel(data.modelHash,Models); }
+                var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.ConfigureActivityProfiles(ActivityProfiles,Motions); avatar.SetWalkReference(data.walkClip-1,data.walkMotionId,Motions); _ = avatar.SetModel(data.modelHash,Models); }
                 if (!data.IsBuiltIn)
                 {
                     item.SetHome(new Vector3(-.63f + (slot % 8) * .18f,.7f + ((slot / 8) % 4) * .18f,1.15f + (slot / 32) * .25f),Quaternion.identity,Vector3.one);

@@ -27,6 +27,24 @@ namespace Maestro.Quest.Avatar
         bool importedLoop;
         MotionLibrary.Lease libraryMotion;
         AvatarWalkMotion walkMotion;
+        AvatarActivityMotion activityMotion;
+        bool activityPlayback,libraryOpen,paused,focused=true;
+        BookSnapshot observedSnapshot,blockedSnapshot;
+        string observedActivity;
+        JointPose[] activityBlend;
+        Vector3 blendHips;
+        float blendElapsed;
+        public string ActivityMotionId => activityPlayback ? libraryMotion?.Id : null;
+        public string ActivityMotionStatus => activityMotion?.Status;
+        public event Action ActivityMotionChanged;
+        public void ConfigureActivityProfiles(AvatarActivityProfiles profiles,MotionLibrary library) => activityMotion.Configure(profiles,library);
+        public void SetActivityLibraryOpen(bool value) { libraryOpen=value; if (value) activityMotion?.Cancel(); }
+        public void ObserveTutorState(BookSnapshot snapshot)
+        {
+            observedSnapshot=snapshot;
+            observedActivity=!paused && focused && snapshot != null && !ReferenceEquals(snapshot,blockedSnapshot) && snapshot.version == 1 && !snapshot.audioPaused &&
+                (snapshot.activity == "idle" || snapshot.activity == "listening" || snapshot.activity == "thinking" || snapshot.activity == "speaking") ? snapshot.activity : null;
+        }
         GameObject included;
         ImportedModel custom;
         string requestedModel = "";
@@ -49,6 +67,7 @@ namespace Maestro.Quest.Avatar
 
         void Awake()
         {
+            activityMotion=new AvatarActivityMotion(this); activityMotion.Changed+=() => ActivityMotionChanged?.Invoke();
             walkMotion = new AvatarWalkMotion(this); walkMotion.Changed += () => WalkMotionChanged?.Invoke();
             var prefab = Resources.Load<GameObject>("Avatars/DefaultMaestro");
             if (!prefab) { Debug.LogError("The included Maestro model is missing."); return; }
@@ -127,9 +146,12 @@ namespace Maestro.Quest.Avatar
 
         void Update()
         {
-            if (editing || savedPose != null || IsImportedClipPlaying) return;
+            if (Browser) ObserveTutorState(Browser.Snapshot);
+            bool ambient=!paused && focused && !ReducedMotion && !editing && !spatialWalking && savedPose == null && !libraryOpen && !ModelBusy && custom && (!IsImportedClipPlaying || activityPlayback);
+            if (activityMotion.Apply(observedActivity,ambient && (observedActivity != "idle" || Time.unscaledTime >= greetingUntil),Time.unscaledTime)) return;
+            if (paused || !focused || editing || savedPose != null || IsImportedClipPlaying) return;
             if (!animator || !animator.runtimeAnimatorController || Time.unscaledTime < greetingUntil) return;
-            string state = ReducedMotion ? "Idle" : Browser?.Snapshot?.activity switch
+            string state = ReducedMotion ? "Idle" : observedActivity switch
             {
                 "speaking" => "Speaking",
                 "listening" => "Listening",
@@ -142,9 +164,10 @@ namespace Maestro.Quest.Avatar
 
         public void SetSavedPose(JointPose[] pose)
         {
+            if (pose != null) activityMotion?.Cancel();
             savedPose = MotionFrame.CopyJoints(pose);
             if (!PoseRig || editing) return;
-            PoseRig.SetManual(savedPose != null); PoseRig.Apply(savedPose);
+            PoseRig.SetManual(savedPose != null || IsImportedClipPlaying); PoseRig.Apply(savedPose);
             if (savedPose == null) activity = null;
         }
         public void SetEditing(bool value)
@@ -186,14 +209,43 @@ namespace Maestro.Quest.Avatar
         // Ownership of the lease transfers only on success; Stop always releases it.
         public bool PlayLibraryMotion(MotionLibrary.Lease motion,bool loop)
         {
+            activityMotion?.Cancel(); return StartLibraryMotion(motion,loop,false);
+        }
+        internal bool PlayActivityMotion(MotionLibrary.Lease motion,bool loop)
+        {
+            BeginActivityBlend(); return StartLibraryMotion(motion,loop,true);
+        }
+        bool StartLibraryMotion(MotionLibrary.Lease motion,bool loop,bool ambient)
+        {
             if (ModelBusy || !custom || motion == null || !motion.Clip || motion.RigHash != custom.MotionRigHash) return false;
-            StopImportedClip(); custom.Stop(); libraryMotion = motion; importedLoop = loop; importedTime = 0; importedSpeed = 1;
+            StopClip(); custom.Stop(); libraryMotion = motion; activityPlayback=ambient; importedLoop = loop; importedTime = 0; importedSpeed = 1;
             PoseRig.SetManual(true); activity = "imported";
             custom.SampleMotion(motion,0,loop); PoseRig.CaptureImportedPose(); return true;
         }
         float ImportedDuration => libraryMotion != null ? (libraryMotion.Clip ? libraryMotion.Clip.length : 0) : custom.ClipDuration(importedClip);
-        public void StopImportedClip()
+        public void StopImportedClip() { activityMotion?.Cancel(); activityBlend=null; StopClip(); }
+        internal void StopActivityMotion(bool blend)
         {
+            if (!activityPlayback) { if (!blend) activityBlend=null; return; }
+            if (blend) BeginActivityBlend(); else activityBlend=null;
+            StopClip();
+        }
+        void BeginActivityBlend()
+        {
+            if (!PoseRig || ReducedMotion) { activityBlend=null; return; }
+            activityBlend=PoseRig.Capture(); blendHips=PoseRig.CanonicalBone(PoseJoint.Hips).localPosition; blendElapsed=0;
+        }
+        void BlendActivity()
+        {
+            if (activityBlend == null || !PoseRig) return;
+            blendElapsed+=Mathf.Min(Time.deltaTime,.05f); float t=Mathf.Clamp01(blendElapsed/.25f);
+            foreach (var from in activityBlend) { var bone=PoseRig.CanonicalBone(from.joint); if (bone) bone.localRotation=Quaternion.Slerp(from.rotation,bone.localRotation,t); }
+            var hips=PoseRig.CanonicalBone(PoseJoint.Hips); hips.localPosition=Vector3.Lerp(blendHips,hips.localPosition,t);
+            if (t >= 1) activityBlend=null;
+        }
+        void StopClip()
+        {
+            activityPlayback=false;
             if (!IsImportedClipPlaying) return;
             libraryMotion?.Dispose(); libraryMotion = null;
             importedClip = -1; if (custom) custom.Stop();
@@ -201,10 +253,11 @@ namespace Maestro.Quest.Avatar
         }
         void LateUpdate()
         {
-            if (!IsImportedClipPlaying || !custom) return;
+            if (!IsImportedClipPlaying || !custom) { BlendActivity(); return; }
             importedTime += Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
-            if (ImportedDuration <= 0 || !importedLoop && importedTime >= ImportedDuration) { StopImportedClip(); return; }
+            if (ImportedDuration <= 0 || !importedLoop && importedTime >= ImportedDuration) { if (activityPlayback) BeginActivityBlend(); StopClip(); return; }
             if (libraryMotion != null ? custom.SampleMotion(libraryMotion,importedTime,importedLoop) : custom.SampleClip(importedClip,importedTime,importedLoop)) PoseRig.CaptureImportedPose();
+            if (activityPlayback) BlendActivity();
         }
         public void Gesture(string name)
         {
@@ -214,9 +267,9 @@ namespace Maestro.Quest.Avatar
             // A gesture can be sampled into a pose while authoring; live tutor activity
             // resumes when authoring ends and no saved static pose is active.
         }
-        void OnApplicationPause(bool value) { if (value) { walkMotion?.Stop(); StopImportedClip(); } }
-        void OnApplicationFocus(bool value) { if (!value) { walkMotion?.Stop(); StopImportedClip(); } }
+        void OnApplicationPause(bool value) { paused=value; if (value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (value) { walkMotion?.Stop(); StopImportedClip(); } }
+        void OnApplicationFocus(bool value) { focused=value; if (!value) { blockedSnapshot=observedSnapshot; observedActivity=null; } if (!value) { walkMotion?.Stop(); StopImportedClip(); } }
         void OnDisable() { walkMotion?.Stop(); StopImportedClip(); }
-        void OnDestroy() { walkMotion?.Stop(); StopImportedClip(); disposed = true; modelGeneration++; }
+        void OnDestroy() { walkMotion?.Stop(); StopImportedClip(); activityMotion?.Dispose(); disposed = true; modelGeneration++; }
     }
 }

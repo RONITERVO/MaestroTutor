@@ -284,3 +284,14 @@ MR return restores tracking origin and pauses physics for alignment review.
 See QUEST_CONTROLLER_MOVEMENT.md for boundaries and remaining headset checks.
 General core-button remapping, alternate locomotion accessibility and sustained
 comfort/performance acceptance remain open. The device is still on charging hold.
+
+### Per-avatar tutor-state motions (PC development)
+
+Idle, Listening, Thinking and Speaking can each use up to four compatible saved
+motions, configured in the full-page book library. Weights, speed, reuse gaps,
+looping and per-avatar assignment Undo/Redo are persisted separately from room
+placements and rules. Automatic playback follows the shared tutor state and
+yields to explicit ownership. Canonical body transitions blend; broader layers,
+contact/travel policy and hardware acceptance remain. Android snapshot results
+are invalidated across suspension/navigation to prevent stale activity reuse.
+See QUEST_AVATAR_ACTIVITIES.md. Device work remains on charging hold.

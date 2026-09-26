@@ -2,7 +2,8 @@
 import './questBookFixture';
 import { parseLibraryState, type LibraryState } from '../../src/platform/quest/libraryBookBridge';
 if (!import.meta.env.DEV) throw new Error('Library fixture is development-only.');
-const response = await fetch('/.quest-evidence/art/library-book-state.json');
+const evidence = new URLSearchParams(window.location.search).get('activity') === '1' ? 'activity-book-state.json' : 'library-book-state.json';
+const response = await fetch('/.quest-evidence/art/' + evidence);
 const initial = parseLibraryState(await response.json());
 if (!initial) throw new Error('Run Verify-Quest.ps1 -RenderImports to generate native library test evidence.');
 let current: LibraryState = { ...initial, revision: 1, ack: 0, offset: 0, status: 'Choose an animation to preview or assign.' };

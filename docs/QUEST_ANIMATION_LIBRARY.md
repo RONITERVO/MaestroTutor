@@ -2,8 +2,9 @@
 
 Design and implementation record, 2026-09-26. Motion extraction, storage,
 manual previews, stable-ID rule actions, saved walking assignments and a
-searchable two-page library browser are implemented. Broader role profiles and
-physical-device library acceptance remain in progress. Quest 3 is charging; no new headset installation or acceptance is
+searchable two-page library browser are implemented. Per-avatar Idle, Listening,
+Thinking and Speaking assignments are documented in QUEST_AVATAR_ACTIVITIES.md.
+Broader roles and physical-device library acceptance remain in progress. Quest 3 is charging; no new headset installation or acceptance is
 implied.
 
 ## Keep collecting originals
@@ -228,8 +229,8 @@ damaged/missing payloads, active-cache pins/eviction, cubic values/tangents, nam
 morph deformation, library controls, cancellation during loading and no autoplay.
 Actual Stage Walk still passed tutor replacement, posing and anchored clip
 playback. Editor processes exited successfully; evidence is retained privately
-under `.quest-evidence/motion-library/desktop-verification`. The ordinary build
-runs the 38 EditMode and 37 required PlayMode checks without private files.
+under `.quest-evidence/motion-library/desktop-verification`. That checkpoint ran 38 EditMode and 37 required PlayMode checks without private
+files.
 
 A subsequent saved-motion binding run passed 41 EditMode and 43 PlayMode
 checks, with the actual Stage Walk selected and the optional collection audit
@@ -239,8 +240,9 @@ fixed. New checks cover imported-object library playback, controller/state
 triggers, rename stability, loading reservations/timeouts/cancellation, fallback,
 compatible avatar replacement, Undo/restart and v1/v2 save protection. This is
 desktop evidence; device gait and long-session performance remain open. Evidence
-is in ignored `.quest-evidence/motion-bindings/desktop-verification`. The current
-ordinary build requires 41 EditMode and 41 PlayMode checks without private files.
+is in ignored `.quest-evidence/motion-bindings/desktop-verification`. That checkpoint required 41 EditMode and 41 PlayMode checks without private files.
+The expanded state-profile checkpoint requires 47 EditMode and 52 PlayMode checks;
+see QUEST_DEVICE_QA.md for its package and acceptance status.
 
 ## Categorization and movement
 
@@ -310,9 +312,17 @@ generation or upload private models as part of this work.
 
 Embedded-model preview, persisted walk selection and ImportedClip visual rules
 remain available alongside the new reusable-motion foundation above. The large
-library is not complete: add broader role assignments and explicit embedded-clip
-relinking; blended transitions; explicit travel/contact policies; library deletion/relinking
+library is not complete: add broader roles and explicit embedded-clip
+relinking; blending beyond the canonical body state transitions; explicit travel/contact policies; library deletion/relinking
 and retained references through room/rule undo. Profile import and long-session
 playback on Quest, including low storage, interruption and large collections.
 The user's final Meshy default is still in progress and private originals are
 not bundled into any build.
+
+## Automatic tutor-state assignments
+
+The book now assigns up to four saved motions per Idle, Listening, Thinking and
+Speaking state for each custom avatar, with weights, speed, looping, reuse gaps
+and separate assignment Undo/Redo. See QUEST_AVATAR_ACTIVITIES.md for actual
+ownership, persistence and blending limits. Walking remains a separate gait;
+more roles, motion packs, contact/travel policy and Quest profiling remain open.

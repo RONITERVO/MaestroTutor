@@ -90,23 +90,25 @@ namespace Maestro.Quest.Book
             m_NativePlugin.Call("RequestSnapshot");
             string json = m_NativePlugin.Call<string>("ReadSnapshot");
             Error = m_NativePlugin.Call<string>("ReadError");
-            if (!string.IsNullOrEmpty(json) && json.Length <= 4096 && json != previousSnapshot)
-            {
-                try
-                {
-                    var snapshot = JsonUtility.FromJson<BookSnapshot>(json);
-                    if (snapshot != null && snapshot.version == 1)
-                    {
-                        previousSnapshot = json;
-                        Snapshot = snapshot;
-                        SnapshotChanged?.Invoke(snapshot);
-                    }
-                }
-                catch (ArgumentException) { Error = "The book sent an invalid state update."; }
-            }
+            ReadSnapshot(json);
             var link = m_NativePlugin.Call<string>("TakeExternalLink");
             if (Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme == "https") ExternalLinkRequested?.Invoke(link);
 #endif
+        }
+
+        // Empty native state marks navigation/replacement. Invalidate the cached
+        // activity even when the next page eventually sends identical JSON.
+        void ReadSnapshot(string json)
+        {
+            if (suspended || string.IsNullOrEmpty(json) || json.Length > 4096) { Snapshot=null; previousSnapshot=null; return; }
+            if (json == previousSnapshot) return;
+            try
+            {
+                var snapshot=JsonUtility.FromJson<BookSnapshot>(json);
+                if (snapshot == null || snapshot.version != 1) { Snapshot=null; previousSnapshot=null; return; }
+                previousSnapshot=json; Snapshot=snapshot; SnapshotChanged?.Invoke(snapshot);
+            }
+            catch (ArgumentException) { Snapshot=null; previousSnapshot=null; Error="The book sent an invalid state update."; }
         }
 
         public void Pointer(int x, int y, BrowserPointerPhase phase)
@@ -141,6 +143,7 @@ namespace Maestro.Quest.Book
         public void SetSuspended(bool value)
         {
             if (value && pointerHeld) Pointer(0, 0, BrowserPointerPhase.Cancel);
+            if (suspended != value) { Snapshot=null; previousSnapshot=null; }
             suspended = value;
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (IsReady && nativeSuspended != value) { m_NativePlugin.Call("SetSuspended", value); nativeSuspended = value; }

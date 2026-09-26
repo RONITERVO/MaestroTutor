@@ -163,7 +163,7 @@ tracked palm, activated by pointing and pinching with the opposite hand.
 The physical Library control opens a two-page catalogue: search/filter on the
 left; preview, walking/rule assignment, names/tags/favourites and source terms
 on the right. Book and tray selections stay synchronized. Back to chat preserves
-the mounted conversation and draft. Playback requires an explicit action and a
+the mounted conversation and draft. Preview requires an explicit action and a
 compatible loaded rig. The native controller validates each request and prevents
 stale polling or resume from replaying it. See `docs/QUEST_ANIMATION_LIBRARY.md`
 for transport limits, visual verification and outstanding headset acceptance.
@@ -173,3 +173,10 @@ Controller walking and user locomotion are described in
 physical control tray owns separate bindings and user-rule button assignments.
 Both movement modes default off; user movement needs explicit virtual view.
 Device alignment, comfort and actual controller acceptance remain required.
+
+Custom Maestro state-motion profiles are described in
+[`QUEST_AVATAR_ACTIVITIES.md`](../docs/QUEST_AVATAR_ACTIVITIES.md). Select motions
+and expand Tutor-state motions in the library to assign Idle, Listening,
+Thinking or Speaking choices. Assignments stay with each exact avatar and
+resume automatically with the conversation after leaving the library. Walking,
+posing and explicit actions retain priority. Device acceptance is still needed.

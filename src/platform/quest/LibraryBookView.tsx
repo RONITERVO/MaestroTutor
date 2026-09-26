@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from 'react';
+import { ActivityMotionEditor } from './ActivityMotionEditor';
 import { LibraryBookClient, type LibraryState } from './libraryBookBridge';
 
 export function LibraryBookView({ client }: { client: LibraryBookClient }) {
@@ -61,6 +62,7 @@ export function LibraryBookView({ client }: { client: LibraryBookClient }) {
           <div className="quest-library-actions"><button disabled={waiting || !state.canWalk} onClick={() => client.request('walk', { motionId: selected.id })}>Use for walking</button>
             <button disabled={waiting || !state.canAssign || !state.ruleId} onClick={() => client.request('rule', { motionId: selected.id, ruleId: state.ruleId!, stepIndex: state.stepIndex })}>Use in selected action</button></div>
           <p className="quest-library-hint">{state.ruleName ? `${state.ruleName}, step ${state.stepIndex + 1}. Its target and triggers stay the same.` : 'Create or select an action on the physical rules tray to assign this motion.'} Walking stays within room navigation.</p>
+          {state.activityProfile && <ActivityMotionEditor client={client} profile={state.activityProfile} selected={selected} waiting={waiting} />}
           <form onSubmit={save} className="quest-library-edit"><fieldset disabled={waiting || state.readOnly}><legend>Library details</legend>
             <label>Name<input value={name} maxLength={100} onChange={event => setName(event.target.value)} /></label>
             <label>Tags, separated by commas<input value={tags} maxLength={542} onChange={event => setTags(event.target.value)} placeholder="Greeting, talking, calm" /></label>

@@ -55,3 +55,12 @@
 .quest-library-source summary { cursor: pointer; min-height: 36px; }
 .quest-library-source pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
 .quest-library-empty { color: #625a4f; padding: 16px 0; }
+
+.quest-activity-editor label { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: .4rem 0; }
+.quest-activity-editor select { min-height: 44px; max-width: 60%; padding: .25rem; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: .35rem; }
+.quest-activity-editor ul { list-style: none; margin: .5rem 0; padding: 0; }
+.quest-activity-editor li { display: grid; grid-template-columns: 1fr auto; gap: .25rem; margin: .5rem 0; }
+.quest-activity-editor li span { grid-column: 1; font-size: .85em; }
+.quest-activity-editor li button:last-child { grid-column: 2; grid-row: 1 / span 2; }
+.quest-activity-editor fieldset { border: 1px solid currentColor; padding: .65rem; border-radius: .5rem; }
+.quest-activity-editor label.quest-library-check { justify-content: flex-start; }
