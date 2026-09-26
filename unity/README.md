@@ -157,3 +157,13 @@ The user confirmed a basic room-physics test. Scanned geometry stops loose items
 but does not block tool-selection rays. B/Y or the creation tray's Bring back
 control recovers content; hand users also have a solid Recall pebble above either
 tracked palm, activated by pointing and pinching with the opposite hand.
+
+### Searchable animation book
+
+The physical Library control opens a two-page catalogue: search/filter on the
+left; preview, walking/rule assignment, names/tags/favourites and source terms
+on the right. Book and tray selections stay synchronized. Back to chat preserves
+the mounted conversation and draft. Playback requires an explicit action and a
+compatible loaded rig. The native controller validates each request and prevents
+stale polling or resume from replaying it. See `docs/QUEST_ANIMATION_LIBRARY.md`
+for transport limits, visual verification and outstanding headset acceptance.

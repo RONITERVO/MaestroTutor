@@ -19,6 +19,9 @@ namespace Maestro.Quest.Book
         public int historyEnd;
         public int historyTotal;
         public bool audioPaused;
+        public string librarySession;
+        public int libraryRevision;
+        public LibraryBookRequest libraryRequest;
     }
 
     public sealed class NativeBookBrowser : FragmentCapture, IBookBrowser
@@ -124,6 +127,14 @@ namespace Maestro.Quest.Book
             if (!IsReady || suspended || string.IsNullOrEmpty(commandJson) || commandJson.Length > 4096) return;
 #if UNITY_ANDROID && !UNITY_EDITOR
             m_NativePlugin.Call("ExecuteBookCommand", commandJson);
+#endif
+        }
+
+        public void PublishLibraryState(string json)
+        {
+            if (!IsReady || suspended || string.IsNullOrEmpty(json) || json.Length > 32768) return;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            m_NativePlugin.Call("PublishLibraryState",json);
 #endif
         }
 

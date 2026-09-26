@@ -1,8 +1,9 @@
 # Expandable Maestro animation library
 
 Design and implementation record, 2026-09-26. Motion extraction, storage,
-manual previews, stable-ID rule actions and saved walking assignments are
-implemented. Searchable browsing and broader role profiles remain in progress. Quest 3 is charging; no new headset installation or acceptance is
+manual previews, stable-ID rule actions, saved walking assignments and a
+searchable two-page library browser are implemented. Broader role profiles and
+physical-device library acceptance remain in progress. Quest 3 is charging; no new headset installation or acceptance is
 implied.
 
 ## Keep collecting originals
@@ -105,22 +106,67 @@ thread. The existing 64 MiB source-file, 32 embedded-clip, 32 full-model and
 The physical import tray has **Save motions** and **Library**. Import/preview an
 animated export, then Save motions to retain its clips without saving another
 full model; the preview is released. A selected saved custom Maestro can also
-supply motions. Library, Next clip and Play select and preview compatible saved
-motions on the current Maestro, using the existing animation ownership and
-fitted placement. Save/import never starts playback. Stop, pause, model changes
+supply motions. Library opens the searchable book spread in the native app;
+Next clip and Play remain available on the physical tray. Selections stay in
+sync between the book and tray. Compatible saved motions preview on the current
+Maestro through the existing animation ownership and fitted placement. Save/import never starts playback. Stop, pause, model changes
 and editing cancel playback/loading. The normal list hides sub-0.1-second helper
 clips but retains them in storage. Rendering of both the import and library
 tray states is part of desktop QA.
 
-Names, tags, favourites and filtering exist in the data API. The hundreds-of-
-clips browsing experience, book search UI, metadata editing and helper review UI
-are still outstanding. Saved motions can now drive visual rules and the walking
-gait used by Follow. Existing embedded-model hash/index bindings remain valid.
+Names, tags, favourites and filtering are editable in the book browser. The
+optional short-clip filter exposes retained export helpers for explicit review.
+Saved motions drive visual rules and the walking gait used by Follow. Existing
+embedded-model hash/index bindings remain valid. Hundreds-of-clips headset
+usability and performance still require acceptance.
 The private batch audit is a developer verification path, not a headset bulk
 import UI. Use `Verify-Quest.ps1 -MotionAuditDirectory SOURCE_DIRECTORY` to
 exercise real extraction and restart, plus source-versus-library transform and
 baked-mesh equivalence on one representative per category. Its outputs stay in
 ignored `.quest-evidence/motion-library`; it refuses output under the originals.
+
+## Two-page library browser
+
+The physical **Library** control opens an explicit library spread. The normal
+chat pages remain mounted but hidden and inert, preserving the composer,
+history and shared session. Back to chat or the physical layout/history controls
+return to that presentation. No persistent headers or toolbars are added over
+the chat pages, and the external controls remain physical 3D items.
+
+The left page searches names/tags and filters compatible motions, favourites
+and short clips, with twelve results per page. The right page previews/stops a
+motion, selects loop preview, assigns walking or the currently selected action
+step, edits the name/tags/favourite, and pages through all recorded source terms.
+A rename retains the ID and existing references. Assignment preserves the
+selected rule's target and triggers; it rejects a stale selected step or an
+incompatible/loading target. It does not create a new sequence implicitly.
+Use the rules tray to create/select that sequence. Selecting/importing/editing
+never starts playback. A short clip is labelled and cannot be used as a gait.
+
+Native Unity remains authoritative. The trusted top-level page snapshot carries
+one bounded request, with session and monotonically increasing sequence IDs.
+Acknowledgement prevents repeated polling from replaying an action. Stop/close
+preempt a pending preview; focus/pause rotates the session and discards stale
+requests. Atomic metadata writes already in progress may finish, but cannot
+restart playback. Native responses are capped at 32 KiB, with twelve rows and
+1,500-character source-term pages; no geometry, file paths or executable content
+crosses this channel. JSON is encoded as data and rendered as text. No new
+JavaScript interface is exposed to artifact iframes.
+
+Desktop checks cover native filtering/pagination, metadata updates, stable-ID
+assignments, tray/book selection consistency, invalid requests, repeat/stale
+request rejection and cancellation during a cold load. Web tests cover bounded
+state validation, acknowledgement/preemption, UI commands, escaped source text,
+and preserving the chat draft across library navigation. Native Android tests
+verify data quoting and reject malformed/oversize responses.
+
+`Verify-Quest.ps1 -RenderImports` emits synthetic native state for the local
+`test-fixtures/browser/library-book.html` fixture. With Vite on localhost:5178,
+`node unity/Tools/verify-library-book.mjs` renders both pages at 1024×768 CSS
+pixels / 2048×1536 output, checks page bounds, search, metadata edit, return to chat and its inline
+HTML artifact interaction. Fixture acknowledgements simulate transport; they are not Android
+WebView/headset acceptance. Quest keyboard, hand/controller scrolling, long
+names, large collections and sustained operation remain required device checks.
 
 ## Saved-motion rules, walking and room migration
 
@@ -264,9 +310,8 @@ generation or upload private models as part of this work.
 
 Embedded-model preview, persisted walk selection and ImportedClip visual rules
 remain available alongside the new reusable-motion foundation above. The large
-library is not complete: add searchable book browsing and metadata editing,
-broader role assignments and explicit embedded-clip relinking;
-blended transitions; explicit travel/contact policies; library deletion/relinking
+library is not complete: add broader role assignments and explicit embedded-clip
+relinking; blended transitions; explicit travel/contact policies; library deletion/relinking
 and retained references through room/rule undo. Profile import and long-session
 playback on Quest, including low storage, interruption and large collections.
 The user's final Meshy default is still in progress and private originals are

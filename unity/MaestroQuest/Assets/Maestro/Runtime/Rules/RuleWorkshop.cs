@@ -30,6 +30,7 @@ namespace Maestro.Quest.Rules
         public event Action Changed, DocumentChanged;
         public RuleDocument Snapshot() => document.Copy();
         public RuleSequence Selected => sequenceIndex >= 0 && sequenceIndex < document.sequences.Length ? document.sequences[sequenceIndex].Copy() : null;
+        public int SelectedStepIndex => stepIndex;
         public string Summary
         {
             get

@@ -23,7 +23,7 @@ namespace Maestro.Quest.Imports
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.72f, .94f, .04f);
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle }, 1, 1); room.Register(item);
             var labels = new[] { "Import", "Add model", "Cancel", "More info", "Next clip", "Play", "Stop", "Loop", "Use Maestro", "Default", "Save motions", "Library" };
-            Action[] commands = { owner.Pick, owner.Accept, owner.Cancel, owner.NextDetails, owner.NextClip, owner.Play, owner.StopPreview, owner.ToggleLoop, owner.UseMaestro, owner.DefaultMaestro, owner.SaveMotions, owner.ToggleLibrary };
+            Action[] commands = { owner.Pick, owner.Accept, owner.Cancel, owner.NextDetails, owner.NextClip, owner.Play, owner.StopPreview, owner.ToggleLoop, owner.UseMaestro, owner.DefaultMaestro, owner.SaveMotions, owner.BrowseLibrary };
             for (int i = 0; i < labels.Length; i++)
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform, false); tool.transform.localPosition = new Vector3(-.255f + i % 4 * .17f, -.02f - i / 4 * .12f, -.05f);

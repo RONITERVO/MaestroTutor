@@ -63,6 +63,58 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
+        [UnityTest] public IEnumerator BookLibrarySearchesPagesEditsAndAssignsStableIdsWithoutAutoplay()
+        {
+            var imports = root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
+            var book = root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); imports.BrowseLibrary();
+            Assert.That(book.State.visible,Is.True); Assert.That(imports.LibraryMode,Is.True);
+            foreach (int i in Enumerable.Range(1,15).Where(x => x != 5 && x != 12)) { var add = editor.Motions.ImportAsync("motion.glb",Clip(i,"Motion "+i)); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); }
+            int sequence = 0;
+            LibraryBookRequest Request(string action) => new() { version = 1,sequence = ++sequence,session = book.State.session,action = action };
+            var query = Request("query"); query.query = ""; query.compatibleOnly = true;
+            var work = book.HandleAsync(query); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.total,Is.EqualTo(15)); Assert.That(book.State.entries.Length,Is.EqualTo(12));
+            query = Request("query"); query.query = ""; query.offset = 12; query.compatibleOnly = true;
+            work = book.HandleAsync(query); yield return Until(() => work.IsCompleted); Assert.That(book.State.offset,Is.EqualTo(12)); Assert.That(book.State.entries.Length,Is.EqualTo(3));
+            var select = Request("select"); select.motionId = gait.id; work = book.HandleAsync(select); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.canPreview && book.State.canWalk && book.State.canAssign,Is.True);
+            Assert.That(imports.SelectedLibraryMotionId,Is.EqualTo(gait.id));
+            imports.NextClip(); Assert.That(book.State.selected.id,Is.EqualTo(imports.SelectedLibraryMotionId));
+            select.sequence = ++sequence; work = book.HandleAsync(select); yield return Until(() => work.IsCompleted);
+            var save = Request("save"); save.motionId = gait.id; save.name = "Everyday walk"; save.tags = new[] { "Walk","Calm" }; save.favourite = true;
+            work = book.HandleAsync(save); yield return Until(() => work.IsCompleted);
+            Assert.That(editor.Motions.Find(gait.id).name,Is.EqualTo("Everyday walk")); Assert.That(imports.Details,Does.Contain("Everyday walk")); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            query = Request("query"); query.query = "calm"; query.favouritesOnly = true;
+            work = book.HandleAsync(query); yield return Until(() => work.IsCompleted); Assert.That(book.State.total,Is.EqualTo(1)); Assert.That(book.State.entries[0].id,Is.EqualTo(gait.id));
+            var walk = Request("walk"); walk.motionId = gait.id; work = book.HandleAsync(walk); yield return Until(() => work.IsCompleted);
+            Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id)); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            var assign = Request("rule"); assign.motionId = gait.id; assign.ruleId = rules.Selected.id; assign.stepIndex = rules.SelectedStepIndex;
+            work = book.HandleAsync(assign); yield return Until(() => work.IsCompleted); Assert.That(rules.Selected.steps[0].motionId,Is.EqualTo(gait.id));
+            rules.NewSequence(); assign.sequence = ++sequence; work = book.HandleAsync(assign); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.status,Does.Contain("changed")); Assert.That(rules.Selected.steps[0].action,Is.EqualTo(RuleActionKind.Gesture));
+            query = Request("query"); query.query = ""; work = book.HandleAsync(query); yield return Until(() => work.IsCompleted);
+            string evidence = Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE");
+            if (!string.IsNullOrEmpty(evidence)) { Directory.CreateDirectory(evidence); File.WriteAllText(Path.Combine(evidence,"library-book-state.json"),Newtonsoft.Json.JsonConvert.SerializeObject(book.State)); }
+        }
+        [UnityTest] public IEnumerator BookLibraryAcknowledgesBadInputAndCannotReplayCancelledOrOldSessionRequests()
+        {
+            var imports = root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
+            var book = root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
+            string session = book.State.session;
+            var preview = new LibraryBookRequest { version = 1,sequence = 1,session = session,action = "preview",motionId = greeting.id };
+            var work = book.HandleAsync(preview); Assert.That(work.IsCompleted,Is.False,"Exercise the cold asynchronous load");
+            var stop = book.HandleAsync(new LibraryBookRequest { version = 1,sequence = 2,session = session,action = "stop" });
+            yield return Until(() => work.IsCompleted && stop.IsCompleted); yield return null;
+            Assert.That(avatar.IsImportedClipPlaying,Is.False); Assert.That(book.State.ack,Is.EqualTo(2));
+            work = book.HandleAsync(preview); yield return Until(() => work.IsCompleted); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            var malformed = new LibraryBookRequest { version = 1,sequence = 3,session = session,action = "save",motionId = gait.id,name = "Bad",tags = new string[17] };
+            work = book.HandleAsync(malformed); yield return Until(() => work.IsCompleted); Assert.That(book.State.ack,Is.EqualTo(3)); Assert.That(book.State.status,Does.Contain("invalid"));
+            book.SendMessage("OnApplicationFocus",false); book.SendMessage("OnApplicationFocus",true);
+            Assert.That(book.State.session,Is.Not.EqualTo(session)); preview.sequence = 4;
+            work = book.HandleAsync(preview); yield return Until(() => work.IsCompleted); Assert.That(avatar.IsImportedClipPlaying,Is.False); Assert.That(book.State.ack,Is.Zero);
+            work = book.HandleAsync(new LibraryBookRequest { version = 1,sequence = 1,session = book.State.session,action = "close" }); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.visible,Is.False); Assert.That(book.State.ack,Is.EqualTo(1));
+        }
         [UnityTest] public IEnumerator SavedMotionUsesTheSameControllerButtonAndTutorStateRulesAndKeepsItsIdentityAfterRename()
         {
             rules.ToggleWhileState(); rules.AddBinding(); rules.AddButton(ButtonMount.LeftController); yield return null;

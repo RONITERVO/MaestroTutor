@@ -38,7 +38,7 @@ try {
         if ([int]$nativeReport.testsuite.failures -gt 0 -or [int]$nativeReport.testsuite.errors -gt 0) { throw 'Native browser tests failed.' }
         $nativeTests += [int]$nativeReport.testsuite.tests
     }
-    if ($nativeTests -lt 15) { throw 'Native browser tests did not cover the current request and file checks.' }
+    if ($nativeTests -lt 16) { throw 'Native browser tests did not cover the current request and file checks.' }
 } finally { Pop-Location }
 $webTarget = Join-Path $mirrorRoot 'Assets/StreamingAssets/maestro-web'
 $pluginTarget = Join-Path $mirrorRoot 'Assets/Plugins/Android'

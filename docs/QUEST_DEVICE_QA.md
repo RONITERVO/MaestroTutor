@@ -2,6 +2,51 @@
 
 This is development evidence, not a release acceptance report.
 
+## Packaged searchable animation book — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-800D603B.apk`.
+SHA256: `800D603B71438C5F63FC68ED52FA8F6DE15E1F633818EFEC6374535013AACB6A`.
+135,259,932 bytes, development signed. Final Unity build exited 0 with zero
+errors and two warnings. APK v2 signature, ARM64 and expected manifest checks
+pass. The full build passed 41 EditMode, 43 required PlayMode and 16 native
+Android tests (100 required checks), native lint and the shared web build.
+Three private-file checks were deliberately omitted. Twenty-five related web
+tests also pass: 14 Quest presentation/library checks and 11 shared session/
+artifact checks. TypeScript compilation passes.
+
+The physical Library control opens a two-page browser with name/tag search,
+compatibility/favourite/short-clip filters, paginated results, preview/stop,
+walking/current-rule assignment, metadata editing and complete paged source
+terms. The book and physical import tray share selection. Incompatible saved
+selections remain explicit and cannot silently play another clip. Chat stays
+mounted, hidden and inert while browsing; its composer/history return intact.
+The shared tutor session remains the existing owner.
+
+Native request validation, session/sequence acknowledgement, Stop/close
+preemption, pause/focus cancellation, stale action-target rejection and bounded
+responses are tested. Browser tests also cover escaped source text and retained
+chat drafts. An isolated Edge render exercised actual synthetic Unity response
+data at the native viewport size, checked page bounds, search and metadata
+editing, returned to chat, and activated its inline HTML artifact. Screenshots
+were visually inspected. The fixture simulates acknowledgements; this does not
+verify Android WebView input or Quest usability. The in-app automation helper
+could not initialize, so the reproducible local browser script was used instead.
+
+Evidence is in ignored `.quest-evidence/book-library/verified-800D603B`.
+No private model or motion pack is bundled. No headset query, installation or
+launch occurred; installed build remains 08F340EF. After the user returns,
+back up the complete room directory before installation. Check the physical
+Library toggle, Quest keyboard/search, both-page scrolling, filters and long
+names, rename/favourite persistence, preview/Stop, walking/rule assignment,
+tray/book consistency, focus interruption, Back to chat and inline artifacts
+with both controllers and hands. Confirm original saved room/rules and visible
+feet. The previous stationary-feet report remains unaccepted on hardware.
+
+Broader role profiles, blending, deletion/relinking, bulk collection delivery,
+authored travel/contact, independent locomotion bindings, localization review,
+sustained performance and store/authentication gates remain release work.
+This is a development checkpoint, not completed v1/store readiness.
+
 ## Packaged saved-motion actions and walking — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-06DEB0D4.apk`.

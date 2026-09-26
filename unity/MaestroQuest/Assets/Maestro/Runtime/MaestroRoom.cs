@@ -114,6 +114,7 @@ namespace Maestro.Quest
             ruleTools.transform.localPosition = new Vector3(-.95f,.68f,.75f); ruleTools.transform.localRotation = Quaternion.Euler(28,-35,0);
             ruleTools.AddComponent<RuleTools>().Build(rules,room);
             var imports = content.AddComponent<ImportWorkshop>(); imports.Initialize(editor, content.GetComponent<AnimationWorkshop>());
+            content.AddComponent<LibraryBookController>().Initialize(editor,imports,rules,browser);
             var importTools = new GameObject("Model import tools"); importTools.transform.SetParent(content.transform, false);
             importTools.transform.localPosition = new Vector3(1.25f, .80f, 1.65f); importTools.transform.localRotation = Quaternion.Euler(20, 55, 0);
             importTools.AddComponent<ImportTools>().Build(imports, room);

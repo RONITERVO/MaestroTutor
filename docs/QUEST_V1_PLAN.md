@@ -2,7 +2,7 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-Latest implementation update (2026-09-26): validated Mixamo/Unity-named GLB
+Earlier implementation update (2026-09-26): validated Mixamo/Unity-named GLB
 humanoids can replace Maestro, including the user's actual Meshy export.
 Gaze and following use the shared pose rig and scanned-room navigation, with
 physical controls and visual-rule actions. 33 EditMode and 32 PlayMode checks
@@ -18,15 +18,15 @@ It fixes the file-picker starting location and passes 64 required Unity plus
 translation; reported stationary feet remain an unresolved headset gait issue.
 See QUEST_DEVICE_QA.md for the exact acceptance boundaries and evidence.
 
-PC-only motion-library update (2026-09-26): reusable same-rig motion extraction,
-private versioned storage, stable identities/provenance, a bounded clip cache and
-manual Maestro preview controls are implemented. Searchable book browsing,
-role assignments, stable-ID visual-rule actions and large-library headset QA
-remain open. See QUEST_ANIMATION_LIBRARY.md for exact boundaries. The user is
-sleeping while Quest charges; device queries/installations remain on hold.
-The verified development checkpoint is EBACCF1C (not installed), with 75 required
-Unity and 15 native tests, web/native builds and package checks passing. The
-96-export corpus audit and three real category equivalence samples also pass.
+PC-only motion-library update (2026-09-26): reusable same-rig extraction,
+versioned storage, stable identities/provenance, bounded cached playback,
+walking assignments and visual-rule actions are implemented. A searchable
+book spread now supports preview, metadata editing, filters, source terms and
+walking/rule assignment, with preserved chat state and bounded native messages.
+See QUEST_ANIMATION_LIBRARY.md for exact boundaries and QUEST_DEVICE_QA.md for
+the latest packaged checkpoint. Broader role profiles, blending, deletion and
+large-library headset QA remain open. The user is sleeping while Quest charges;
+device queries/installations remain on hold.
 
 ## Accepted product scope
 
@@ -270,7 +270,6 @@ The reusable-motion foundation now supports stable-ID visual-rule actions for
 Maestro and matching imported objects, controller/state/VR event triggering,
 and persisted walking selections. Asynchronous loading reserves targets without
 consuming playback time; interruption prevents late playback. Room/rule v2
-migration retains v1 originals and old exact-model clip references. Searchable
-book browsing, metadata authoring UI, broader role profiles, blending, explicit
+migration retains v1 originals and old exact-model clip references. Broader role profiles, blending, explicit
 travel/contact policies, deletion/relinking and Quest library profiling remain.
 See QUEST_ANIMATION_LIBRARY.md and QUEST_DEVICE_QA.md for verification evidence.

@@ -24,11 +24,13 @@ namespace Maestro.Quest.Imports
         string libraryMotionId;
         int motionRequest;
         public bool LibraryMode => libraryMode;
+        public string SelectedLibraryMotionId => libraryMotionId;
         string selected;
         MaestroAvatar maestro;
         public string Status { get; private set; } = "Import your GLB or VRM model";
         public string Details { get; private set; } = "Models stay on this headset.\nChoose Import to select a local file.";
-        public event Action Changed;
+        public event Action Changed, BrowseRequested;
+        public void BrowseLibrary() { if (BrowseRequested != null) BrowseRequested(); else ToggleLibrary(); }
         public bool HasPreview => pending != null && preview && preview.Ready;
         public bool Busy => busy || picking;
         public void Initialize(RoomEditor source, AnimationWorkshop animations = null)
@@ -176,9 +178,16 @@ namespace Maestro.Quest.Imports
         MotionEntry[] CompatibleMotions() => editor.Motions.List(rigHash:maestro && maestro.CustomModel ? maestro.CustomModel.MotionRigHash ?? "" : "");
         MotionEntry CurrentMotion()
         {
-            var entries = CompatibleMotions(); var entry = entries.FirstOrDefault(x => x.id == libraryMotionId) ?? entries.FirstOrDefault();
+            var entry = editor.Motions.Find(libraryMotionId) ?? CompatibleMotions().FirstOrDefault();
             libraryMotionId = entry?.id; return entry;
         }
+        public bool SelectLibraryMotion(string id)
+        {
+            var entry = editor.Motions.Find(id); if (entry == null) return false;
+            if (libraryMotionId != id) Stop();
+            libraryMode = true; libraryMotionId = id; page = 0; ShowLibraryDetails(); Say("Selected "+entry.name); return true;
+        }
+        public void RefreshLibraryDetails() { if (libraryMode) ShowLibraryDetails(); }
         public void ToggleLibrary()
         {
             if (Busy) return; Stop(); libraryMode = !libraryMode;
@@ -202,7 +211,8 @@ namespace Maestro.Quest.Imports
                 Changed?.Invoke(); return;
             }
             var source = editor.Motions.Sources().FirstOrDefault(x => x.hash == entry.origins[0].sourceHash);
-            string text = entry.name+"\n"+entry.duration.ToString("0.00")+" seconds · "+CompatibleMotions().Length+" compatible motions\n"+string.Join(", ",entry.tags)+"\nSource terms:\n"+source?.attribution;
+            bool compatible = maestro && !maestro.ModelBusy && maestro.CustomModel && maestro.CustomModel.MotionRigHash == entry.rigHash;
+            string text = (compatible ? "" : "Load a compatible Maestro to preview this saved motion.\n")+entry.name+"\n"+entry.duration.ToString("0.00")+" seconds · "+CompatibleMotions().Length+" compatible motions\n"+string.Join(", ",entry.tags)+"\nSource terms:\n"+source?.attribution;
             var lines = ModelText.Wrap(text,64); int pages = Math.Max(1,(lines.Length+6)/7); page %= pages;
             Details = "Motion library " + (page+1) + "/" + pages + "\n" + string.Join("\n",lines,page*7,Math.Min(7,lines.Length-page*7)); Changed?.Invoke();
         }
@@ -228,12 +238,13 @@ namespace Maestro.Quest.Imports
             catch (Exception error) { Report(error); return false; }
             finally { busy = false; }
         }
-        public async Task<bool> PlayLibraryAsync()
+        public async Task<bool> PlayLibraryAsync(string motionId = null,bool? repeat = null)
         {
             if (Busy || !isActiveAndEnabled) return false;
-            var entry = CurrentMotion();
-            if (entry == null || !maestro || maestro.ModelBusy || !maestro.CustomModel || !animationWorkshop) { Say("Choose a saved motion compatible with the loaded Maestro"); return false; }
+            var entry = motionId == null ? CurrentMotion() : editor.Motions.Find(motionId);
+            if (entry == null || !maestro || maestro.ModelBusy || !maestro.CustomModel || !animationWorkshop || entry.rigHash != maestro.CustomModel.MotionRigHash) { Say("Choose a saved motion compatible with the loaded Maestro"); return false; }
             if (editor.AnyHeld) { Say("Release the object before previewing its motion"); return false; }
+            libraryMotionId = entry.id; if (repeat.HasValue) loop = repeat.Value;
             Stop(); int request = ++motionRequest; busy = true; MotionLibrary.Lease lease = null; Say("Loading " + entry.name + "…");
             try
             {

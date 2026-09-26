@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useMaestroStore } from '../../store';
 import MiniGameViewer from '../../features/chat/components/MiniGameViewer';
 import PdfViewer from '../../features/chat/components/PdfViewer';
@@ -11,6 +11,8 @@ import { BOOK_LAYOUT_STORAGE_KEY, collectBookArtifacts, readBookLayout, resolveB
 import { installBookBridge, type BookSnapshot } from './bookBridge';
 import { selectIsListening, selectIsSending, selectIsSpeaking } from '../../store/slices/uiSlice';
 import './questBook.css';
+import { LibraryBookClient } from './libraryBookBridge';
+import { LibraryBookView } from './LibraryBookView';
 import { sessionActivity } from '../browser/sessionActivity';
 
 /** One React root, store, IndexedDB, tutor and audio owner for both page textures. */
@@ -18,6 +20,8 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const [layout, setLayout] = useState<BookLayout>(() => {
     try { return readBookLayout(window.localStorage); } catch { return 'conversation'; }
   });
+  const [library] = useState(() => new LibraryBookClient());
+  const libraryOpen = useSyncExternalStore(library.subscribe, library.getSnapshot).state?.visible ?? false;
   const spreadRoot = useRef<HTMLDivElement>(null);
   const [earlierPageTarget, setEarlierPageTarget] = useState<HTMLDivElement | null>(null);
   useEffect(() => { try { window.localStorage.setItem(BOOK_LAYOUT_STORAGE_KEY, layout); } catch { /* Session choice still works if storage is unavailable. */ } }, [layout]);
@@ -48,6 +52,7 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const historyPageKey = JSON.stringify(page.ids);
   const presentation = useMemo(() => ({ layout, spreadRoot, earlierPageTarget, earlierMessageIds, visibleMessageIds, historyPageKey, isLatestPage: page.isLatest, selectedId: selected?.id ?? null, selectArtifact: setSelectedId, posters }), [layout, earlierPageTarget, earlierMessageIds, selected?.id, posters, visibleMessageIds, historyPageKey, page.isLatest]);
   const command = (value: BookCommand) => {
+    if (value.type !== 'session.resume') library.close();
     switch (value.type) {
       case 'session.resume': sessionActivity.resume(); break;
       case 'layout.set': setLayout(value.layout); break;
@@ -75,11 +80,12 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
       selectedArtifactId: latest.selected?.id ?? null,
       historyStart: latest.page.start, historyEnd: latest.page.end, historyTotal: latest.page.total,
     };
-  }, value => stateRef.current.command(value)), []);
+  }, value => stateRef.current.command(value), library), [library]);
 
   return (
     <BookPresentationContext.Provider value={presentation}>
       <div className={`quest-book-surface quest-layout-${layout}`} ref={spreadRoot}>
+        <div hidden={libraryOpen} inert={libraryOpen} className="quest-tutor-pages">
         <section className="quest-chat-page" aria-label="Conversation page">
           <div className="quest-chat-document">{children}</div>
         </section>
@@ -99,6 +105,8 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
             </div>
           </>}
         </section>}
+        </div>
+        <LibraryBookView client={library} />
       </div>
     </BookPresentationContext.Provider>
   );
