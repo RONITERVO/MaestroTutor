@@ -10,6 +10,8 @@ import { pickGeminiClientSource, type GeminiClientSource } from '../gemini/clien
 import { createCoreRuntime, type CoreRuntime } from '../runtime';
 import { formatStreamingTutorDraftText, parseStrictTutorResponseText } from './tutorResponse';
 
+import type { LiveInputMedia } from '../media/liveInputContext';
+
 export interface TutorTextTurnInput {
   model: string;
   prompt: string;
@@ -17,6 +19,7 @@ export interface TutorTextTurnInput {
   nativeLanguageCode: string;
   systemInstruction: string;
   currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
+  liveInputMedia?: LiveInputMedia;
   useGoogleSearch?: boolean;
   configOverrides?: unknown;
   timeoutMs?: number;
@@ -65,6 +68,7 @@ export const runTutorTextTurn = async (
       {
         systemInstruction: input.systemInstruction,
         currentFileParts: input.currentFileParts,
+        ...(input.liveInputMedia ? { liveInputMedia: input.liveInputMedia } : {}),
         useGoogleSearch: input.useGoogleSearch,
         configOverrides: input.configOverrides,
         timeoutMs: input.timeoutMs,

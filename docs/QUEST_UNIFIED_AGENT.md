@@ -185,17 +185,48 @@ client routing, activity, cancellation and journal as typed chat. Malformed fina
 narration with no readable language reply reports failure while retaining receipts,
 instead of displaying a successful blank result.
 
-**Scope still missing:** this checkpoint transfers the original transcript and
-text instruction, not the captured microphone PCM or original streamed camera
-frames. The planner is told not to infer unavailable media. Full multimodal context
-parity, spoken clarification/task steering and properly scheduled audible task
-results remain required work. This does not establish full hands-free acceptance.
+Original Live input now accompanies an eligible handoff (PC verification,
+2026-09-26). After explicit user approval for this use, the browser retains only
+PCM and JPEG bytes whose `sendRealtimeInput` call succeeded, under the same
+camera consent and speech gate. It wraps the PCM in a mono 16 kHz WAV without
+resampling, trimming or inserting silence. Packet delivery times/sample offsets
+and frame delivery times/audio offsets preserve the submitted order and timing.
+These are client submission records, not proof of provider receipt/processing,
+full video, or new observations of the room.
+
+Capture exists only for an app-issued connected-room handoff identity. It is
+sealed at turn completion and released on teardown. Barge-in marks context
+incomplete. The limits per handoff are 4 MiB of decoded media (including the WAV
+header), 90 seconds of sent audio, 90 JPEG frames and 2,048 audio packets. An
+exceeded limit discards the entire retained payload instead of silently truncating
+it. Missing, interrupted or invalid media produces a saved, readable task failure
+before planning or native dispatch; the original Live conversation still completes.
+
+A complete context is validated and copied before asynchronous access checks,
+validated again before planning, and sent as inline media through the existing
+shared Generate Content client for both managed access and BYOK. Each planning
+and final-narration call includes it and uses the existing usage accounting; this
+adds media input cost to those requests. There is no new provider client in Unity.
+The suggestion creator continues to verify the original transcript and tutor
+handoff proposal; it does not consume the media payload. The private task journal
+retains media with the source context and is pruned with source history. Ordinary
+chat and diagnostic request logs do not contain these payloads. The verifier's
+in-memory lookup retains only the request text, avoiding a second media cache;
+the existing handoff cache remains bounded to eight captures.
+
+**Scope still missing:** real-provider audio/image comprehension, speech intent
+acceptance, Quest memory/latency and camera availability, spoken clarification,
+task steering and properly scheduled audible task results. No claim is made to
+reproduce the Live model's private compressed state or internal reasoning. This
+does not establish full hands-free acceptance.
 
 ## Evidence and remaining release work
 
-At this checkpoint, 229 targeted tests and 65 prompt tests pass. TypeScript, full
+At the original text handoff checkpoint, 229 targeted tests and 65 prompt tests passed.
+The original-media checkpoint passes 270 targeted tests and 65 prompt tests. TypeScript, full
 source lint, Core/prompt ownership guards and the production web build pass.
-Commit/file hashes are recorded under `.quest-evidence/live-agent-handoff`. The browser probe also preserves an existing v7 history through the
+Commit/file hashes are recorded under `.quest-evidence/live-agent-handoff` and
+`.quest-evidence/live-input-handoff`. The browser probe also preserves an existing v7 history through the
 v8 upgrade, checks atomic competing claims and rejects writes after source deletion.
 The public chat entry point now exports the shared attachment renderers used by
 book surfaces; existing book rendering tests still pass.
@@ -221,10 +252,10 @@ book surfaces; existing book rendering tests still pass.
 
 Remaining work:
 
-1. Extend the completed Live transcript/text-context capture to original input
-   audio and camera evidence, with bounded retention, provenance and billing.
-   Verify explicit requests versus language exercises/background speech with the
-   actual provider. Do not enable the optional direct Live tool protocol.
+1. Verify original-input comprehension, explicit requests versus language
+   exercises/background speech, actual media billing and Quest memory/latency
+   with the real provider and headset. Do not enable the optional direct Live
+   tool protocol.
 2. Add conversation-driven task Stop, clarification, follow-up revision and
    bounded continuation; current explicit task Stop is a chat control. Support
    durable task-result reconciliation when changing/reloading conversations and

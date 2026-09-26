@@ -348,6 +348,7 @@ it('captures prepared context from the exact connection and forwards it with the
   await flush(); await advance(1500);
   expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Make a robot', 'I will ask the agent.', new Int16Array(), [], {
     systemInstruction: 'Fresh context Room capability.', handoffId: 'owned-connection',
+    liveInputMedia: { version: 1, complete: false, issue: 'missing', frames: [], packets: [] },
   });
 });
 
@@ -359,4 +360,26 @@ it('does not connect after Stop while context preparation is pending', async () 
   await flush(); await act(async () => { await h.result.current.stop(); });
   await act(async () => { pending.resolve({ systemInstruction: 'Late context', handoffId: 'stale' }); await starting; });
   expect(ports.connect).not.toHaveBeenCalled(); expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+});
+
+it.each([false, true])('preserves actual sent audio through completion; interrupted=%s', async interrupted => {
+  const h = harness(); ports.encode.mockResolvedValue('AAD/fwCA//8=');
+  await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
+    prepareTurnContext: async () => ({ systemInstruction: 'Original context', handoffId: 'owned-media' }), playModelAudio: false }); });
+  const capture = nodes.find(node => node.name === 'capture')!;
+  capture.port.onmessage!({ data: new Int16Array(1600).fill(200) }); await flush(); await advance(120);
+  expect(sessions[0].sendRealtimeInput).toHaveBeenCalledWith({ audio: { data: 'AAD/fwCA//8=', mimeType: 'audio/pcm;rate=16000' } });
+  if (interrupted) { connections[0].callbacks.onmessage({ serverContent: { interrupted: true } }); await flush(); }
+  connections[0].callbacks.onmessage({ serverContent: { inputTranscription: { text: 'Make this' }, outputTranscription: { text: 'I will ask the agent.' }, turnComplete: true } });
+  await flush();
+  const count = sessions[0].sendRealtimeInput.mock.calls.length;
+  capture.port.onmessage!({ data: new Int16Array(1600).fill(900) }); await flush(); await advance(1500);
+  expect(sessions[0].sendRealtimeInput).toHaveBeenCalledTimes(count);
+  const media = h.callbacks.onTurnComplete.mock.calls[0][4].liveInputMedia;
+  if (interrupted) expect(media).toMatchObject({ complete: false, issue: 'interrupted', packets: [] });
+  else {
+    expect(media.complete).toBe(true); expect(atob(media.audio.data).slice(44)).toBe(atob('AAD/fwCA//8='));
+    expect(media.packets).toEqual([{ atMs: 0, sampleOffset: 0, samples: 4 }]);
+  }
+  expect(capture.port.onmessage).toBeNull();
 });

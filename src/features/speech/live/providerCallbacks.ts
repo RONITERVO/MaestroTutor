@@ -3,6 +3,7 @@
 import {
   type LiveServerMessage
 } from '@google/genai';
+import { missingLiveInput } from '../../../core-sdk/media/liveInputContext';
 import { mergeInt16Arrays } from '../../../core-sdk/media/audioProcessing';
 import { LiveTurnFinalizer } from '../utils/liveTurnFinalizer';
 import { countTranscriptNewlines } from '../utils/transcriptParsing';
@@ -29,7 +30,7 @@ export interface LiveProviderPorts {
  * A close/error waits for decode and playback; stale sessions retain only their
  * original accounting flush behavior. */
 export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
-  'sessionRef' | 'logRef' | 'logFinalizedRef'
+  'liveInputContextRef' | 'sessionRef' | 'logRef' | 'logFinalizedRef'
   | 'modelRef' | 'pendingUserTurnRef' | 'serverMessageQueueRef'
   | 'inputPacketizerRef' | 'currentSessionIdRef' | 'currentInputTranscriptionRef'
   | 'localSpeechPendingRef' | 'turnTimingRef' | 'currentOutputTranscriptionRef'
@@ -45,7 +46,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
   turnContext?: LiveTurnContext;
 }) {
   const {
-    sessionRef, logRef, logFinalizedRef,
+    liveInputContextRef, sessionRef, logRef, logFinalizedRef,
     modelRef, pendingUserTurnRef, serverMessageQueueRef,
     inputPacketizerRef, currentSessionIdRef, currentInputTranscriptionRef,
     localSpeechPendingRef, turnTimingRef, currentOutputTranscriptionRef,
@@ -201,6 +202,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
         pendingUserTurnRef.current = null;
       }
 
+      inputClosedByServerRef.current = true;
       if (emitTurns) {
         flushPendingTranscriptUpdate();
         try {
@@ -209,7 +211,9 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
             modelText,
             finalUserAudio,
             modelAudioLines,
-            ...(session.turnContext?.handoffId ? [session.turnContext] : [])
+            ...(session.turnContext?.handoffId ? [{ ...session.turnContext,
+              liveInputMedia: liveInputContextRef.current?.finish() ?? missingLiveInput(),
+            }] : [])
           );
           if (callbackResult instanceof Promise) {
             await callbackResult.catch((error) => {
@@ -410,10 +414,15 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
 
           // 3. Finalize only after already-dispatched provider callbacks settle.
           if (msg.serverContent?.turnComplete) {
+            // One response owns this connection; stop further input before sealing its evidence.
+            if (!msg.serverContent?.interrupted) inputClosedByServerRef.current = true;
             turnFinalizer.schedule(enqueueTurnFinalization);
           }
           // 4. Handle Interruption
           if (msg.serverContent?.interrupted) {
+            // A barged-in response has ambiguous turn ownership; keep conversation working
+            // but never delegate a partial or mixed media history as a complete request.
+            liveInputContextRef.current?.invalidate('interrupted');
             turnFinalizer.cancel();
             const interruptedTurnId = currentModelAudioTurnIdRef.current;
             cancelModelAudioDecodeJobs(sessionId, interruptedTurnId);

@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { LiveInputContextError, validateLiveInputMedia } from '../media/liveInputContext';
 import type { TutorTextTurnInput, TutorTextTurnResult } from '../chat/tutorTextTurn';
 import type { RoomAgentLease, RoomAgentState, RoomCommand, RoomTaskControl, RoomTaskResult } from './roomAgent';
 
@@ -109,6 +110,7 @@ export class RoomTaskHandoff {
     try {
       await publish();
       await check();
+      if (handoff.input.liveInputMedia) validateLiveInputMedia(handoff.input.liveInputMedia);
       const result = await this.ports.run(clone(handoff.input), lease!, {
         signal: controller.signal,
         isCurrent: () => !controller.signal.aborted,
@@ -145,6 +147,7 @@ export class RoomTaskHandoff {
       record.phase = uncertain ? 'interrupted' : aborted ? 'stopped' : 'failed';
       record.note = uncertain ? 'Stopped with an unconfirmed action. Inspect the room before trying again.'
         : aborted ? 'Stopped. Recorded actions remain in the room.'
+        : error instanceof LiveInputContextError ? error.message
         : 'Could not finish this request. Recorded actions are available in task details.';
       try { await publish(); } catch {
         // Keep the in-memory receipt available even if storage stops working.

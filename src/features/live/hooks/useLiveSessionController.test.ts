@@ -76,8 +76,9 @@ it('captures the completed spoken source messages before starting shared suggest
     return true;
   });
   await act(async () => { await h.result.current.handleLiveTurnComplete('Make a blue robot.', 'I will ask the agent.', undefined, undefined,
-    { systemInstruction: 'Original captured context', handoffId: 'owned-live-context' }); });
+    { systemInstruction: 'Original captured context', handoffId: 'owned-live-context', liveInputMedia: { version: 1, complete: false, issue: 'limit', frames: [], packets: [] } }); });
   expect(ports.capture).toHaveBeenCalledOnce(); expect(ports.suggestions).toHaveBeenCalledOnce();
+  expect(ports.capture.mock.calls[0][4]).toEqual({ version: 1, complete: false, issue: 'limit', frames: [], packets: [] });
   expect(ports.suggestions.mock.calls[0][3]).toEqual({ responseSource: 'live' });
 });
 

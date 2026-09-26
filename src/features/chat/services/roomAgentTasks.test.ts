@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
+const sentMedia = () => { const input = new LiveInputContext(() => 0); input.recordAudio('AAA='); input.recordFrame('/9j/2Q=='); return input.finish(); };
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const ports = vi.hoisted(() => ({ lease: vi.fn(), key: vi.fn(), managed: vi.fn(), source: vi.fn(), history: vi.fn(), usage: vi.fn(),
@@ -142,7 +144,7 @@ describe('Live connection provenance for the shared room dispatcher', () => {
     expect(connection.handoffId).toBeTruthy();
     expect(connection.systemInstruction).toContain('Do not speak JSON');
     useMaestroStore.getState().addMessage({ role: 'user', text: 'A later unrelated message' });
-    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(true);
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply, sentMedia())).toBe(true);
     expect(roomAgentRequestForVerification(id, spokenReply)).toBe(input.prompt);
     expect(execute).not.toHaveBeenCalled(); // Only capture: suggestions must still accept the handoff.
     await startRoomAgentTask(id);
@@ -152,6 +154,13 @@ describe('Live connection provenance for the shared room dispatcher', () => {
     expect(record.handoff.input.history).toEqual([]); // Already serialized in the connection instruction.
     expect(JSON.stringify(requests[0])).toContain('Original profile, bookmark summary and history.');
     expect(JSON.stringify(requests[0])).not.toContain('A later unrelated message');
+    const media = sentMedia();
+    expect(record.handoff.input.liveInputMedia).toEqual(media);
+    for (const request of requests) {
+      const parts = request.contents.flatMap((content: any) => content.parts);
+      expect(parts).toContainEqual({ inlineData: { mimeType: 'audio/wav', data: media.audio!.data } });
+      expect(parts).toContainEqual({ inlineData: { mimeType: 'image/jpeg', data: media.frames[0].data } });
+    }
     expect(record.phase).toBe('completed'); expect(execute).toHaveBeenCalledOnce();
     expect(JSON.stringify(record)).not.toContain('synthetic-session');
     expect(JSON.stringify(record)).not.toContain('synthetic-key');
@@ -165,12 +174,12 @@ describe('Live connection provenance for the shared room dispatcher', () => {
 
   it('rejects invented connection identities, absent speech and duplicate completion', async () => {
     const { source } = liveSetup();
-    expect(await captureLiveRoomAgentHandoff('invented', source, input.prompt, spokenReply)).toBe(false);
+    expect(await captureLiveRoomAgentHandoff('invented', source, input.prompt, spokenReply, sentMedia())).toBe(false);
     const silent = await prepareLiveRoomAgentContext('Context');
     expect(await captureLiveRoomAgentHandoff(silent.handoffId!, source, '', spokenReply)).toBe(false);
     const connection = await prepareLiveRoomAgentContext('Context');
-    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(true);
-    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(false);
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply, sentMedia())).toBe(true);
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply, sentMedia())).toBe(false);
     expect(execute).not.toHaveBeenCalled();
   });
 
@@ -181,7 +190,7 @@ describe('Live connection provenance for the shared room dispatcher', () => {
     if (change === 'conversation') useMaestroStore.setState({ settings: { ...useMaestroStore.getState().settings, selectedLanguagePairId: 'another-pair' } });
     if (change === 'native') ports.lease.mock.results[ports.lease.mock.results.length - 1].value.valid = () => false;
     if (change === 'source') useMaestroStore.getState().updateMessage(source.sourceUserId, { text: 'Edited transcript' });
-    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply)).toBe(false);
+    expect(await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply, sentMedia())).toBe(false);
     expect(roomAgentRequestForVerification(id, spokenReply)).toBeUndefined();
     expect(execute).not.toHaveBeenCalled();
   });
@@ -189,7 +198,7 @@ describe('Live connection provenance for the shared room dispatcher', () => {
   it('does not authorize a changed tutor reply or copied text from a different turn', async () => {
     const { id, source } = liveSetup();
     const connection = await prepareLiveRoomAgentContext('Context');
-    await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply);
+    await captureLiveRoomAgentHandoff(connection.handoffId!, source, input.prompt, spokenReply, sentMedia());
     expect(roomAgentRequestForVerification(id, 'Changed reply')).toBeUndefined();
     useMaestroStore.getState().updateMessage(id, { llmRawResponse: 'Changed reply' });
     await startRoomAgentTask(id); expect(execute).not.toHaveBeenCalled();
@@ -202,5 +211,21 @@ describe('Live connection provenance for the shared room dispatcher', () => {
     useMaestroStore.setState({ settings: { ...useMaestroStore.getState().settings, selectedLanguagePairId: 'another-pair' } });
     resolve('synthetic-key');
     expect(await preparing).toEqual({ systemInstruction: 'Context' });
+  });
+});
+
+describe('incomplete Live media handoffs', () => {
+  it.each(['missing', 'limit', 'interrupted'] as const)('persists a readable %s failure before planning, without native effects', async issue => {
+    const { id, source } = liveSetup();
+    const context = await prepareLiveRoomAgentContext('Original instruction');
+    const media = issue === 'missing' ? undefined : { version: 1 as const, complete: false, issue, frames: [], packets: [] };
+    expect(await captureLiveRoomAgentHandoff(context.handoffId!, source, input.prompt, spokenReply, media)).toBe(true);
+    await startRoomAgentTask(id);
+    const record = records.get(`room-task:${id}`)!;
+    expect(record.phase).toBe('failed'); expect(record.operations).toEqual([]);
+    expect(record.note).toContain('Please repeat a shorter request');
+    expect(ports.source).not.toHaveBeenCalled(); expect(execute).not.toHaveBeenCalled();
+    expect(useMaestroStore.getState().messages.find(message => message.id === record.id)?.text).toBe(record.note);
+    expect(selectIsAgentWorking(useMaestroStore.getState())).toBe(false);
   });
 });

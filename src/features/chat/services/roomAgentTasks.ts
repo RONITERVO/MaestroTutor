@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { missingLiveInput, validateLiveInputMedia, type LiveInputMedia } from '../../../core-sdk/media/liveInputContext';
 import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
 import { runTutorTextTurn } from '../../../core-sdk/chat/tutorTextTurn';
 import { RoomTaskHandoff, type RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
@@ -18,7 +19,7 @@ import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 import { safeSaveChatHistoryDB } from './chatHistory';
 import { roomTaskStore } from './roomTaskStore';
 
-const contexts = new Map<string, { input: TutorTextTurnInput; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean }>();
+const contexts = new Map<string, { prompt: string; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean }>();
 let activityCount = 0;
 let activityToken: string | undefined;
 const usage = (response: { modelUsed?: string; modelVersion?: string; usageMetadata?: Parameters<typeof trackGeminiUsage>[0]['usageMetadata'] }, model: string) =>
@@ -106,7 +107,7 @@ async function captureHandoff(input: TutorTextTurnInput, source: HandoffSource,
   const id = `room-task:${source.sourceAssistantId}`;
   roomAgentTasks.capture({ version: 1, id, conversationId: source.conversationId, sourceUserId: source.sourceUserId,
     sourceAssistantId: source.sourceAssistantId, nativeSession: access.nativeSession, accessScope: access.accessScope, input }, valid);
-  contexts.set(source.sourceAssistantId, { input: structuredClone(input), conversationId: source.conversationId, valid, acceptsReply });
+  contexts.set(source.sourceAssistantId, { prompt: input.prompt, conversationId: source.conversationId, valid, acceptsReply });
   while (contexts.size > 8) contexts.delete(contexts.keys().next().value!);
   return true;
 }
@@ -144,16 +145,27 @@ export async function prepareLiveRoomAgentContext(systemInstruction?: string): P
 }
 /** Only a locally issued connection identity can associate a completed spoken
  * turn with agent context. Capturing is not execution: the shared verifier still decides. */
-export async function captureLiveRoomAgentHandoff(handoffId: string, source: HandoffSource, userText: string, modelText: string): Promise<boolean> {
+export async function captureLiveRoomAgentHandoff(handoffId: string, source: HandoffSource, userText: string, modelText: string, liveInputMedia?: LiveInputMedia): Promise<boolean> {
   const captured = liveContexts.get(handoffId);
   liveContexts.delete(handoffId);
   if (!captured || captured.conversationId !== source.conversationId || !userText.trim() || !modelText.trim()) return false;
-  const input = { ...structuredClone(captured.input), prompt: userText };
+  // Bound and freeze media before the asynchronous account check or durable claim.
+  // Invalid/incomplete input keeps a failure marker, never a partial media payload.
+  let media = missingLiveInput();
+  if (liveInputMedia) {
+    if (!liveInputMedia.complete && ['limit', 'invalid', 'interrupted', 'missing'].includes(liveInputMedia.issue || '')) {
+      media.issue = liveInputMedia.issue;
+    } else {
+      try { validateLiveInputMedia(liveInputMedia); media = structuredClone(liveInputMedia); }
+      catch { media.issue = 'invalid'; }
+    }
+  }
+  const input = { ...structuredClone(captured.input), prompt: userText, liveInputMedia: media };
   return captureHandoff(input, source, captured.access, raw => raw === modelText, modelText);
 }
 export function roomAgentRequestForVerification(assistantId: string, rawReply: string): string | undefined {
   const context = contexts.get(assistantId);
-  return roomAgentTasks.available(assistantId) && context?.acceptsReply(rawReply) ? context.input.prompt : undefined;
+  return roomAgentTasks.available(assistantId) && context?.acceptsReply(rawReply) ? context.prompt : undefined;
 }
 export async function startRoomAgentTask(sourceAssistantId: string): Promise<void> {
   const context = contexts.get(sourceAssistantId);

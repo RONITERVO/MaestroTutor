@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
+const sentMedia = () => { const input = new LiveInputContext(() => 0); input.recordAudio('AAA='); input.recordFrame('/9j/2Q=='); return input.finish(); };
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -468,7 +470,7 @@ it.each([false, true])('dispatches a verified spoken handoff through the actual 
     artifact: withArtifact ? { mimeType: 'text/html', fileName: 'lesson.html', encoding: 'text', content: '<b>Lesson</b>' } : null });
   const h = harness([message('live-agent-u', { role: 'user', text: user }), message('live-agent-a', { text: reply, llmRawResponse: reply })]);
   const context = await prepareLiveRoomAgentContext('The original Live history and profile.');
-  await captureLiveRoomAgentHandoff(context.handoffId!, { sourceUserId: 'live-agent-u', sourceAssistantId: 'live-agent-a', conversationId: pair.id }, user, reply);
+  await captureLiveRoomAgentHandoff(context.handoffId!, { sourceUserId: 'live-agent-u', sourceAssistantId: 'live-agent-a', conversationId: pair.id }, user, reply, sentMedia());
   await h.fetch('live-agent-a', reply, 'live');
   expect(ports.runSuggestions.mock.calls[0][0]).toMatchObject({ agentRequest: user, responseSource: 'live' });
   expect(useMaestroStore.getState().messages.find(item => item.id === 'live-agent-a')?.llmRawResponse).toBe(reply);

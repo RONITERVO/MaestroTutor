@@ -559,7 +559,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
           if (context?.handoffId && userMessageId) {
             await captureLiveRoomAgentHandoff(context.handoffId, {
               sourceUserId: userMessageId, sourceAssistantId: assistantId, conversationId: turnPairId,
-            }, userText, structuredText);
+            }, userText, structuredText, context.liveInputMedia);
           }
 
           // 4. Generate Suggestions Immediately. Live turns rely on this shared

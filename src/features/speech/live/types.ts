@@ -33,7 +33,10 @@ export interface LiveTurnTranscriptUpdate {
   thinkingStatusLine?: string;
 }
 
+import type { LiveInputMedia } from '../../../core-sdk/media/liveInputContext';
+
 export interface LiveTurnContext {
+  liveInputMedia?: LiveInputMedia;
   systemInstruction?: string;
   /** Opaque app-issued provenance, never model-authored data. */
   handoffId?: string;

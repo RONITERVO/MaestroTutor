@@ -9,6 +9,8 @@ import { getGeminiModels } from '../modelRegistry';
 import { collapseGeminiContents } from '../../shared/utils/conversationTurns';
 import { ApiError } from '../errors';
 import type { GeminiClientSource } from './clientSource';
+import { validateLiveInputMedia, type LiveInputMedia } from '../media/liveInputContext';
+import { LIVE_INPUT_CONTEXT_INSTRUCTION, buildLiveInputTiming, buildLiveInputFrameLabel } from '../../../shared/prompts';
 
 const DEFAULT_TIMEOUT_MS = 600_000; // 10 minutes
 const HIGH_DEMAND_MAX_RETRIES = 10;
@@ -47,6 +49,7 @@ export interface GeminiRequestLifecycleHooks {
 export type GenerateGeminiResponseOptions = GeminiClientSource & {
   systemInstruction?: string;
   currentFileParts?: Array<{ fileUri: string; mimeType: string }>;
+  liveInputMedia?: LiveInputMedia;
   useGoogleSearch?: boolean;
   configOverrides?: any;
   timeoutMs?: number;
@@ -405,6 +408,8 @@ export const generateGeminiResponse = async (
     onGoogleSearchUnavailable,
   } = options;
   checkCancellation(options.signal);
+  if (options.liveInputMedia) validateLiveInputMedia(options.liveInputMedia);
+  const liveInputMedia = options.liveInputMedia ? structuredClone(options.liveInputMedia) : undefined;
   const ai = options.aiClient || await withCancellation(() => options.resolveAiClient!(), options.signal);
   checkCancellation(options.signal);
   const rawContents: any[] = [];
@@ -451,6 +456,15 @@ export const generateGeminiResponse = async (
     currentParts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
   });
 
+  if (liveInputMedia) {
+    const media = liveInputMedia;
+    currentParts.push({ text: LIVE_INPUT_CONTEXT_INSTRUCTION }, { text: buildLiveInputTiming(media.packets) },
+      { inlineData: { mimeType: media.audio!.mimeType, data: media.audio!.data } });
+    media.frames.forEach((frame, index) => currentParts.push(
+      { text: buildLiveInputFrameLabel(index, frame.atMs, frame.audioOffsetSamples) },
+      { inlineData: { mimeType: frame.mimeType, data: frame.data } },
+    ));
+  }
   rawContents.push({ role: 'user', parts: currentParts });
   // Collapse only for this request. We do not mutate the source history because
   // the UI/persistence layer still needs the original message granularity.

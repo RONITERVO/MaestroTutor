@@ -4,14 +4,14 @@ import type { LiveSessionData } from './state';
 import { MAX_LIVE_FRAME_DIMENSION } from './types';
 
 export function createBrowserLiveVideo(state: Pick<LiveSessionData,
-  'sessionRef' | 'frameIntervalRef' | 'captureVideoRef'
+  'liveInputContextRef' | 'sessionRef' | 'frameIntervalRef' | 'captureVideoRef'
   | 'canvasRef' | 'videoUpdateVersionRef' | 'videoFrameInFlightRef'
-  | 'currentSessionIdRef' | 'speechTurnBoundaryRef'
+  | 'currentSessionIdRef' | 'speechTurnBoundaryRef' | 'inputClosedByServerRef'
 >, ports: { hasCameraConsent(): boolean }) {
   const {
-    sessionRef, frameIntervalRef, captureVideoRef,
+    liveInputContextRef, sessionRef, frameIntervalRef, captureVideoRef,
     canvasRef, videoUpdateVersionRef, videoFrameInFlightRef,
-    currentSessionIdRef, speechTurnBoundaryRef,
+    currentSessionIdRef, speechTurnBoundaryRef, inputClosedByServerRef,
   } = state;
   const { hasCameraConsent } = ports;
   const ownedVideos = new Set<HTMLVideoElement>();
@@ -113,7 +113,7 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
     stopVideoFrameLoop();
     frameIntervalRef.current = window.setInterval(() => {
       // Check session is still valid
-      if (currentSessionIdRef.current !== sessionId) return;
+      if (currentSessionIdRef.current !== sessionId || inputClosedByServerRef.current) return;
 
       // A gated session sends no paid video while nobody is speaking. A frame
       if (!hasCameraConsent()) return;
@@ -129,7 +129,7 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
       if (activeVideo.videoWidth === 0) return;
       if (videoFrameInFlightRef.current) return;
       const updateVersion = videoUpdateVersionRef.current;
-      const isCurrentFrame = () => currentSessionIdRef.current === sessionId
+      const isCurrentFrame = () => currentSessionIdRef.current === sessionId && !inputClosedByServerRef.current
         && videoUpdateVersionRef.current === updateVersion
         && sessionRef.current === activeSession && captureVideoRef.current === activeVideo;
 
@@ -154,6 +154,7 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
               if (!hasCameraConsent()) return;
               if (speechTurnBoundaryRef.current && !speechTurnBoundaryRef.current.isOpen) return;
               activeSession.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
+              liveInputContextRef.current?.recordFrame(b64);
             }
           } catch (error) {
             if (isCurrentFrame()) console.warn('Live video frame encoding failed:', error);

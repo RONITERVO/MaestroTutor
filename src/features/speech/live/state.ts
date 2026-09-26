@@ -22,6 +22,8 @@ import {
 } from '../utils/playbackDrain';
 import { createEmptyInputAudioTelemetry, createEmptyPlaybackTelemetry, type LiveInputAudioTelemetry, type LivePlaybackTelemetry, type LiveTurnTranscriptUpdate, type ModelAudioDecodeJob, type UseGeminiLiveConversationCallbacks } from './types';
 
+import type { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
+
 const cell = <T>(current: T): { current: T } => ({ current });
 
 /** Per-hook session ownership, independent of React renders. Cells preserve the
@@ -30,6 +32,7 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
   const speechTriggerActivityTokenRef = cell<string | null>(null);
   const vadActivityTokenRef = cell<{ token: string; observer: boolean } | null>(null);
   const sessionRef = cell<any>(null);
+  const liveInputContextRef = cell<LiveInputContext | null>(null);
   const frameIntervalRef = cell<number | null>(null);
   const inputAudioContextRef = cell<AudioContext | null>(null);
   const outputAudioContextRef = cell<AudioContext | null>(null);
@@ -96,7 +99,7 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
   const boundaryClosePromiseRef = cell<Promise<void> | null>(null);
   const callbacksRef = cell(callbacks);
   return {
-    speechTriggerActivityTokenRef, vadActivityTokenRef, sessionRef,
+    speechTriggerActivityTokenRef, vadActivityTokenRef, sessionRef, liveInputContextRef,
     frameIntervalRef, inputAudioContextRef, outputAudioContextRef,
     microphoneStreamRef, captureVideoRef, canvasRef,
     workletNodeRef, playbackNodeRef, logRef,

@@ -866,6 +866,30 @@ QUEST_UNIFIED_AGENT.md; the previously installed APK does not establish coverage
    The artifact stays in chat and the handoff executes once with its original
    transcript. Reloading must not automatically replay the task.
 5. Change account, language conversation or native session during preparation.
-   The old turn must not dispatch into the new scope. Speech context currently
-   transfers text only; original audio/camera replay and audible agent result
-   scheduling require their own acceptance once implemented.
+   The old turn must not dispatch into the new scope. Original sent audio/camera
+   context now has PC-side verification; it requires the separate acceptance below.
+   Audible agent result scheduling remains unfinished.
+
+
+## Original Live media handoff acceptance (pending headset/provider)
+
+PC evidence: `.quest-evidence/live-input-handoff`; 270 targeted and 65 prompt
+checks pass, with TypeScript, lint, ownership guards and the production build.
+Audio hardware, provider responses and native effects in these tests are simulated.
+No APK was packaged, deployed or installed for this checkpoint; device hold remains.
+
+1. Use a private test scene and request a small creation matching a visible item
+   while speaking its details. Check the actual room result and receipt against
+   the original item. Verify subscription and BYOK access independently.
+2. Show one item during the request, then change the view before the tutor finishes.
+   The agent must use the submitted request frames, not the later chat snapshot.
+   Ambiguous or absent details should elicit clarification without guessed edits.
+3. Disable camera sharing before a frame finishes encoding. Confirm no further
+   frames are sent or retained; spoken requests must still work with audio only.
+4. Exceed the 90-second audio or 4 MiB decoded-context limit. The task must explain
+   that original context is unavailable and request a shorter turn, with no model
+   planning or room action. Repeat with interruption and a lost native session.
+5. Inspect usage, storage, frame pacing and memory during repeated long requests,
+   including eight pending proposals. Confirm source-history deletion removes the
+   task journal. Confirm media bytes are absent from diagnostic request logs and
+   ordinary tutor history. Do not infer server cancellation or zero cost from Stop.

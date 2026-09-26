@@ -48,7 +48,7 @@ const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
 /** Packet pacing, semantic gate and continuous turn boundaries. Capture handoff
  * remains explicit so the session controller can fence it after asynchronous work. */
 export function createLiveInputCapture(state: Pick<LiveSessionData,
-  'sessionRef' | 'inputPacketizerRef' | 'pcmCaptureRouterRef'
+  'liveInputContextRef' | 'sessionRef' | 'inputPacketizerRef' | 'pcmCaptureRouterRef'
   | 'currentSessionIdRef' | 'currentInputTranscriptionRef' | 'localSpeechPendingRef'
   | 'concealedSpeechProgressRef' | 'concealedSpeechSamplesRef' | 'turnTimingRef'
   | 'currentUserAudioChunksRef' | 'currentUserAudioTotalLengthRef' | 'inputAudioTelemetryRef'
@@ -63,7 +63,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
   inputSource: MediaStreamAudioSourceNode | null;
 }) {
   const {
-    sessionRef, inputPacketizerRef, pcmCaptureRouterRef,
+    liveInputContextRef, sessionRef, inputPacketizerRef, pcmCaptureRouterRef,
     currentSessionIdRef, currentInputTranscriptionRef, localSpeechPendingRef,
     concealedSpeechProgressRef, concealedSpeechSamplesRef, turnTimingRef,
     currentUserAudioChunksRef, currentUserAudioTotalLengthRef, inputAudioTelemetryRef,
@@ -99,6 +99,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     activeSession.sendRealtimeInput({
       audio: { data: base64, mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
     });
+    liveInputContextRef.current?.recordAudio(base64);
     turnTimingRef.current?.markOnce('input.first-audio-sent');
     turnTimingRef.current?.markLatest('input.last-audio-sent');
     if (retained) {

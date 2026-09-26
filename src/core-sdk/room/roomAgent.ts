@@ -70,7 +70,7 @@ const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 /** A bounded tool task owned by the original Maestro app. The caller supplies
  * its existing Gemini access route and conversation lifetime; Unity never owns
  * a provider client. The result can be presented even if narration later fails. */
-export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'prompt'|'history'|'timeoutMs'> & Partial<Pick<TutorTextTurnInput,'systemInstruction'|'currentFileParts'|'nativeLanguageCode'>>,
+export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'prompt'|'history'|'timeoutMs'> & Partial<Pick<TutorTextTurnInput,'systemInstruction'|'currentFileParts'|'nativeLanguageCode'|'liveInputMedia'>>,
   options:TutorTextTurnOptions,lease:RoomAgentLease,
   onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,control:RoomTaskControl={}
 ):Promise<RoomTaskResult> {
@@ -81,6 +81,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     const scene=copy(lease.state());
     const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode}),input.history,{
       ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
+      ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_SCHEMA},
       timeoutMs:input.timeoutMs,signal:control.signal,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });

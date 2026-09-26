@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
 import { createLiveInputCapture } from './inputCapture';
 import { createLiveProviderCallbacks } from './providerCallbacks';
 import {
@@ -319,6 +320,7 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
       const providerCallbacks = createLiveProviderCallbacks(state, {
         activity, audio: modelAudio, transcripts, cleanup, getAudioTelemetrySnapshot, debugLogService,
       }, { sessionId, playModelAudio, emitTurns, observerActivity, usageTracker, turnContext });
+      state.liveInputContextRef.current = turnContext?.handoffId ? new LiveInputContext() : null;
       turnTimingRef.current?.mark('provider.connect-start');
       const session = await ai.live.connect({
         turnTiming: turnTimingRef.current ?? undefined,
