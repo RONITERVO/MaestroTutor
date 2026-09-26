@@ -120,6 +120,8 @@ export const appConfig = {
   geminiLiveTokenUses: 1,
   managedLiveTokenLifetimeSeconds: Math.min(120, Math.max(30, parseInteger(process.env.MANAGED_LIVE_TOKEN_LIFETIME_SECONDS, 120))),
   managedLiveGatewayUrl: process.env.MANAGED_LIVE_GATEWAY_URL?.trim() || '',
+  // Activate only after provider continuation accounting and client QA.
+  managedLiveRoomToolsEnabled: process.env.MANAGED_LIVE_ROOM_TOOLS_ENABLED === 'true',
   managedLiveGatewayTicketSeconds: Math.min(
     60,
     Math.max(15, parseInteger(process.env.MANAGED_LIVE_GATEWAY_TICKET_SECONDS, 45)),

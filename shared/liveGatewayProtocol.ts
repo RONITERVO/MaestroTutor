@@ -58,3 +58,9 @@ export const LIVE_GATEWAY_MAX_QUEUED_MESSAGES = 1024;
 export const LIVE_GATEWAY_MAX_TURNS = 1;
 /** Camera input is admitted at the same one-frame-per-second cadence as the app. */
 export const LIVE_GATEWAY_VIDEO_FRAME_INTERVAL_MS = 1_000;
+
+/** Closed room tool protocol. These limits also bound the managed reservation. */
+export const LIVE_ROOM_MAX_CALLS = 6;
+export const LIVE_ROOM_MAX_CALL_BYTES = 32 * 1024;
+export const LIVE_ROOM_MAX_RESPONSE_BYTES = 72 * 1024;
+export const LIVE_ROOM_MAX_TOTAL_RESPONSE_BYTES = 144 * 1024;

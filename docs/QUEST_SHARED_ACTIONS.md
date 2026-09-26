@@ -149,6 +149,12 @@ receipts are session-bound, imported-motion/prop book editing is incomplete and
 there is no general developer MCP/action catalogue. Browser tests use simulated
 native replies; Unity tests separately execute actual rule/event/button behaviour.
 
+The next transport foundation is described in QUEST_LIVE_ROOM_ACTIONS.md: shared
+room function declarations, pending-call ownership, cancellation and bounded
+managed usage evidence are implemented. The gateway issuer switch is off by
+default; Live controller/native execution and provider accounting acceptance remain
+open. This does not add user-visible Live action parity yet.
+
 Incremental migration preserves existing tested controls:
 
 1. Define/version the capability and action catalogue around the working room

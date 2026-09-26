@@ -72,6 +72,12 @@ state/object triggers and physical buttons. Recipe animations can run from those
 same events/buttons. QUEST_BEHAVIOUR_WORKSPACE.md records exact coverage; full
 agent parity, Live voice and hardware/store gates remain open.
 
+PC-only Live transport foundation (2026-09-26): a closed, bounded room function
+protocol now supports pending-ID matching, cancellation and tool usage evidence
+through the managed gateway. The issuer switch defaults off; client/native voice
+execution and real-provider continuation accounting are still unverified. See
+QUEST_LIVE_ROOM_ACTIONS.md. No new APK, deployment or headset test is implied.
+
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.

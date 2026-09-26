@@ -14,7 +14,7 @@
 
 import type { GeminiPricingRegistry } from './registry';
 import { resolvePricingRule } from './registry';
-import { LIVE_GATEWAY_MAX_TURNS } from '../liveGatewayProtocol';
+import { LIVE_GATEWAY_MAX_TURNS, LIVE_ROOM_MAX_CALLS, LIVE_ROOM_MAX_CALL_BYTES, LIVE_ROOM_MAX_TOTAL_RESPONSE_BYTES } from '../liveGatewayProtocol';
 
 /** A managed operation, as named by both the client and the backend. */
 export type ManagedOperation =
@@ -114,20 +114,28 @@ export const DEFAULT_LIVE_GATEWAY_WINDOW_RATES: LiveGatewayWindowRates = {
 export const getLiveGatewayWindowTokenBudget = (
   durationSeconds: number,
   rates: LiveGatewayWindowRates = DEFAULT_LIVE_GATEWAY_WINDOW_RATES,
+  roomTools = false,
 ) => {
   const seconds = Math.max(1, Math.floor(durationSeconds));
+  // A tool continuation can re-bill retained context without a second user turn.
   const turns = Math.max(1, Math.floor(rates.maxBillableTurns));
+  const contexts = turns * (roomTools ? LIVE_ROOM_MAX_CALLS + 1 : 1);
   const oneDirectionAudioTokens = seconds * LIVE_AUDIO_TOKENS_PER_SECOND;
   return {
     // Earlier input and model audio can both re-enter the prompt on each turn.
     audioInputTokens: Math.min(
-      rates.reservationInputTokenCeiling * turns,
-      oneDirectionAudioTokens * 2 * turns,
+      rates.reservationInputTokenCeiling * contexts,
+      oneDirectionAudioTokens * 2 * contexts,
     ),
-    videoInputTokens: seconds * rates.videoTokensPerFrame * turns,
-    textInputTokens: rates.inputTextTokensPerTurn * turns,
+    videoInputTokens: seconds * rates.videoTokensPerFrame * contexts,
+    // For the extra tool payload, reserve at one token per UTF-8 byte. This
+    // deliberately covers dense JSON/non-Latin text; settlement uses provider
+    // metadata and releases unused credit. Ordinary conversation is unchanged.
+    textInputTokens: rates.inputTextTokensPerTurn * contexts
+      + (roomTools ? LIVE_ROOM_MAX_TOTAL_RESPONSE_BYTES * LIVE_ROOM_MAX_CALLS : 0),
     audioOutputTokens: Math.min(rates.reservationOutputTokenCeiling, oneDirectionAudioTokens),
-    textOutputTokens: rates.outputTextTokenHeadroom + (seconds * 8),
+    textOutputTokens: rates.outputTextTokenHeadroom + (seconds * 8)
+      + (roomTools ? LIVE_ROOM_MAX_CALL_BYTES * LIVE_ROOM_MAX_CALLS : 0),
     maxBillableTurns: turns,
   };
 };
@@ -140,8 +148,9 @@ export const getLiveGatewayWindowTokenBudget = (
 export const calculateLiveGatewayWindowUsd = (
   durationSeconds: number,
   rates: LiveGatewayWindowRates = DEFAULT_LIVE_GATEWAY_WINDOW_RATES,
+  roomTools = false,
 ): number => {
-  const budget = getLiveGatewayWindowTokenBudget(durationSeconds, rates);
+  const budget = getLiveGatewayWindowTokenBudget(durationSeconds, rates, roomTools);
   const subtotal =
     (budget.audioInputTokens / 1_000_000) * rates.inputAudioPerMillion
     + (budget.videoInputTokens / 1_000_000) * rates.inputVideoPerMillion
