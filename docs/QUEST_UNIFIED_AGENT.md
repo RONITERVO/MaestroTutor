@@ -216,15 +216,51 @@ the existing handoff cache remains bounded to eight captures.
 
 **Scope still missing:** real-provider audio/image comprehension, speech intent
 acceptance, Quest memory/latency and camera availability, spoken clarification,
-task steering and properly scheduled audible task results. No claim is made to
+task steering and headset acceptance of audible task results. No claim is made to
 reproduce the Live model's private compressed state or internal reasoning. This
 does not establish full hands-free acceptance.
+
+## Audible task results (PC verification, 2026-09-26)
+
+A fresh completed, limited, failed or interrupted task result now queues the
+actual projected chat message for the existing `speakMessage` path. It keeps the
+same voice, target/native-language preference, cache and managed/BYOK TTS routing.
+There is no new narration model call or Unity audio/provider implementation.
+Existing TTS may still incur its normal synthesis cost. Stopped tasks are not
+announced automatically. Failure notes currently remain English, as in chat.
+
+The Core queue holds at most eight fresh results. It deduplicates notifications,
+checks the original source/access/native-session validity before and after audio
+acquisition, and rechecks active delivery. It waits for active Live/observer
+turns, STT, other TTS, response generation and explicit UI holds. Idle local
+monitoring yields: user-selected Live remains selected while its transport stops,
+and the passive observer stays stopped under a shared TTS activity reservation.
+A failed observer shutdown leaves the result waiting. Pending observer instruction
+builds cannot reopen input while result speech owns audio. Listening resumes only
+after output drains and the same conversation/session still owns the selection.
+
+Stop clears pending announcements and awaits an active output shutdown before
+restoring listening. Manual Live start shares that shutdown rather than stopping
+the same transport twice. Pair/source/access/native-session loss, suspension and
+unmount prevent late speech; separate reservation IDs keep late cleanup from
+removing a newer audio owner. Results are not scanned from stored history, so
+reload or repeated durable task claims never replay announcements. The message
+and task receipts remain available even if automatic speech fails. This queue
+only controls result delivery; it does not cancel completed native actions.
+
+Tests compose the real queue/store with the observer lifecycle, test user-owned
+Live restoration and manual Live start ordering, and verify the ordinary speech
+orchestrator's language/cache selection. Provider audio and microphone devices are
+simulated. Real-provider timing, acoustics, barge-in and Quest suspension/restore
+remain acceptance gates; this is not full hands-free acceptance.
 
 ## Evidence and remaining release work
 
 At the original text handoff checkpoint, 229 targeted tests and 65 prompt tests passed.
 The original-media checkpoint passes 270 targeted tests and 65 prompt tests. TypeScript, full
-source lint, Core/prompt ownership guards and the production web build pass.
+source lint, Core/prompt ownership guards and the production web build pass. The
+audible-result checkpoint passes 354 targeted tests plus 65 prompt tests, with
+evidence under `.quest-evidence/agent-task-speech`.
 Commit/file hashes are recorded under `.quest-evidence/live-agent-handoff` and
 `.quest-evidence/live-input-handoff`. The browser probe also preserves an existing v7 history through the
 v8 upgrade, checks atomic competing claims and rejects writes after source deletion.

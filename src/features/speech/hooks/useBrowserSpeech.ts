@@ -23,7 +23,7 @@ interface UseBrowserSpeechProps {
 interface UseBrowserSpeechReturn {
   isSpeaking: boolean;
   speak: (textOrParts: string | SpeechPart[], defaultLang: string, liveOpenTrigger: TtsLiveOpenTrigger) => void;
-  stopSpeaking: () => void;
+  stopSpeaking: () => void | Promise<void>;
   isSpeechSynthesisSupported: boolean;
   isListening: boolean;
   transcript: string;

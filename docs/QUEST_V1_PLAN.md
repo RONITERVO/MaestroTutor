@@ -88,8 +88,10 @@ accepted managed requests still finish on the server for exact usage settlement.
 Live/observer transcript and connection text-context capture now feeds that same
 verified tool dispatcher. Bounded original sent PCM/JPEG context now follows eligible
 handoffs through the shared managed/BYOK client, with incomplete-input failures
-before room actions. Conversational task steering, audible results, explicit server
-cancellation and provider/headset acceptance remain open. See QUEST_UNIFIED_AGENT.md.
+before room actions. Fresh task results now use ordinary chat TTS after active
+speech yields, with shared listening ownership, Stop and no replay on reload.
+Conversational task steering, explicit server cancellation and provider/headset
+acceptance (including audible results) remain open. See QUEST_UNIFIED_AGENT.md.
 
 ## Accepted product scope
 

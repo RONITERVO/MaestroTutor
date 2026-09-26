@@ -868,7 +868,7 @@ QUEST_UNIFIED_AGENT.md; the previously installed APK does not establish coverage
 5. Change account, language conversation or native session during preparation.
    The old turn must not dispatch into the new scope. Original sent audio/camera
    context now has PC-side verification; it requires the separate acceptance below.
-   Audible agent result scheduling remains unfinished.
+   Audible result scheduling has PC coverage; verify it using the checks below.
 
 
 ## Original Live media handoff acceptance (pending headset/provider)
@@ -893,3 +893,34 @@ No APK was packaged, deployed or installed for this checkpoint; device hold rema
    including eight pending proposals. Confirm source-history deletion removes the
    task journal. Confirm media bytes are absent from diagnostic request logs and
    ordinary tutor history. Do not infer server cancellation or zero cost from Stop.
+
+
+## Audible agent result acceptance (pending headset/provider)
+
+PC evidence: `.quest-evidence/agent-task-speech`; 354 targeted and 65 prompt tests,
+TypeScript, lint, ownership guards and the production build pass. Provider audio,
+microphone hardware and native effects are simulated. No APK/install/deployment
+or device query is included; the charging hold remains in force.
+
+1. Finish a typed task and a spoken Live/observer task. Verify each actual result
+   appears in original chat and speaks once in the chosen voice and languages,
+   respecting the native-language playback setting. Check the usual speech flag
+   and avatar state. Inspect room effects and receipts independently of narration.
+2. Keep talking when the task completes. The result must wait for the current turn
+   and queued speech to drain. Repeat while recording a message, playing an
+   artifact, and holding interaction controls. No competing microphone capture
+   or duplicate result should start.
+3. Let the result speak while Live was selected but locally armed. Verify it
+   returns to armed listening only after playback; then make another request.
+   Repeat with the passive observer. Confirm result audio is not transcribed as
+   new user speech and does not produce an accidental room request.
+4. Stop speech during synthesis and during playback, and start Live while a result
+   is playing. Verify output ends before new input starts. Change conversation,
+   account/native session, hide/suspend the app and remove source history during
+   queued and active results. No stale result should play in the new context.
+5. Reload saved history and reopen task details. Saved results must not auto-play
+   or repeat native actions. Manual message playback should still use normal TTS.
+   Disconnect audio/provider access and verify text/receipts survive failures.
+6. Repeat tasks over a long session. Inspect managed/BYOK usage and actual acoustic
+   timing; simulated tests do not establish provider costs, barge-in quality,
+   native microphone ownership or sustained Quest performance.

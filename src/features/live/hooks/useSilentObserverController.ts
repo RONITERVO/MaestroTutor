@@ -43,6 +43,7 @@ export interface UseSilentObserverControllerReturn {
   silentObserverState: LiveSessionState;
   silentObserverError: string | null;
   stopSilentObserver: () => Promise<void>;
+  pauseObserverForSpeech: () => Promise<boolean>;
   resetSilentObserver: () => Promise<void>;
 }
 
@@ -223,13 +224,24 @@ export const useSilentObserverController = ({
     clearRetryTimer();
     try {
       await stopObserverConversation();
+      return true;
     } catch {
-      // Ignore stop errors; observer lifecycle will reconcile on next effect tick.
+      // The lifecycle can retry; audio ownership must not assume this succeeded.
+      return false;
     }
   }, [clearRetryTimer, clearSuspendWakeTimer, stopObserverConversation]);
 
   const stopSilentObserver = useCallback(async () => {
     await stopObserverInternal('manual-stop', OBSERVER_MANUAL_STOP_HOLD_MS);
+  }, [stopObserverInternal]);
+
+  const pauseObserverForSpeech = useCallback(async () => {
+    const mode = useMaestroStore.getState().silentObserverState;
+    if (mode === 'active' || mode === 'connecting') return false;
+    // Fence a pending instruction build before waiting for transport cleanup.
+    // The caller's TTS activity reservation prevents automatic re-arming.
+    shouldRunRef.current = false;
+    return await stopObserverInternal('task-speech');
   }, [stopObserverInternal]);
 
   const resetSilentObserver = useCallback(async () => {
@@ -325,6 +337,7 @@ export const useSilentObserverController = ({
     silentObserverState,
     silentObserverError,
     stopSilentObserver,
+    pauseObserverForSpeech,
     resetSilentObserver,
   };
 };

@@ -229,3 +229,15 @@ describe('incomplete Live media handoffs', () => {
     expect(selectIsAgentWorking(useMaestroStore.getState())).toBe(false);
   });
 });
+
+it('announces a fresh task result once and does not announce a saved claim again', async () => {
+  const { subscribeRoomTaskResults } = await import('./roomTaskResults');
+  const announced = vi.fn(), unsubscribe = subscribeRoomTaskResults(announced);
+  try {
+    const { id, source } = setup(); await prepareRoomAgentHandoff(input, source); await startRoomAgentTask(id);
+    expect(announced).toHaveBeenCalledOnce();
+    const result = announced.mock.calls[0][0]; expect(result.id).toBe(`room-task:${id}`); expect(await result.valid()).toBe(true);
+    await startRoomAgentTask(id); expect(announced).toHaveBeenCalledOnce();
+    ports.key.mockResolvedValue('different-synthetic-key'); expect(await result.valid()).toBe(false);
+  } finally { unsubscribe(); }
+});

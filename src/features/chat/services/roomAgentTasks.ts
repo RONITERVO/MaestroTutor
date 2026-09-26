@@ -18,8 +18,10 @@ import { TOKEN_CATEGORY, TOKEN_SUBTYPE } from '../../../core/config/activityToke
 import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 import { safeSaveChatHistoryDB } from './chatHistory';
 import { roomTaskStore } from './roomTaskStore';
+import { publishRoomTaskResult } from './roomTaskResults';
 
 const contexts = new Map<string, { prompt: string; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean }>();
+const deliveryContexts = new Map<string, { valid: () => Promise<boolean> }>();
 let activityCount = 0;
 let activityToken: string | undefined;
 const usage = (response: { modelUsed?: string; modelVersion?: string; usageMetadata?: Parameters<typeof trackGeminiUsage>[0]['usageMetadata'] }, model: string) =>
@@ -43,6 +45,10 @@ function project(record: RoomTaskRecord) {
   if (state.messages.some(message => message.id === record.id)) state.updateMessage(record.id, patch);
   else state.addMessage({ ...patch, id: record.id });
   void safeSaveChatHistoryDB(record.handoff.conversationId, useMaestroStore.getState().messages);
+  const context = deliveryContexts.get(record.id);
+  if (context && roomAgentTasks.running(record.id) && ['completed', 'limited', 'failed', 'interrupted'].includes(record.phase)) {
+    publishRoomTaskResult({ id: record.id, conversationId: record.handoff.conversationId, valid: context.valid });
+  }
 }
 export const roomAgentTasks = new RoomTaskHandoff({
   store: roomTaskStore,
@@ -171,9 +177,11 @@ export async function startRoomAgentTask(sourceAssistantId: string): Promise<voi
   const context = contexts.get(sourceAssistantId);
   const id = `room-task:${sourceAssistantId}`;
   let timer: ReturnType<typeof setInterval> | undefined;
+  let ownsDeliveryContext = false;
   try {
     const source = useMaestroStore.getState().messages.find(message => message.id === sourceAssistantId);
     if (!context || !source || !context.acceptsReply(source.llmRawResponse || '') || !await context.valid()) throw new Error('The agent handoff is no longer available. Please ask again.');
+    if (!deliveryContexts.has(id)) { deliveryContexts.set(id, context); ownsDeliveryContext = true; }
     // Stop promptly on scope/native-session loss while provider work is in flight.
     const lease = currentRoomAgentLease();
     timer = setInterval(() => {
@@ -187,8 +195,9 @@ export async function startRoomAgentTask(sourceAssistantId: string): Promise<voi
       if (!state.messages.some(message => message.id === id)) {
         state.addMessage({ id, role: 'status', text: note, maestroToolKind: 'agent', agentTask: { id, phase: 'failed', note } });
         void safeSaveChatHistoryDB(context.conversationId, useMaestroStore.getState().messages);
+        publishRoomTaskResult({ id, conversationId: context.conversationId, valid: context.valid });
       }
     }
-  } finally { if (timer) clearInterval(timer); }
+  } finally { if (timer) clearInterval(timer); if (ownsDeliveryContext) deliveryContexts.delete(id); }
 }
 export const loadRoomAgentTask = roomTaskStore.get;

@@ -48,6 +48,7 @@ export {
 } from './utils/persistence';
 
 // Hooks
+export { useAgentTaskSpeech } from './hooks/useAgentTaskSpeech';
 export { useTutorConversation } from './hooks/useTutorConversation';
 export { useSuggestions } from './hooks/useSuggestions';
 export { useChatPersistence } from './hooks/useChatPersistence';

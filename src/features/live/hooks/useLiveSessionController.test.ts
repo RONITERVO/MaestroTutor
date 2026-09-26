@@ -4,12 +4,13 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
-const ports = vi.hoisted(() => ({ pcmToWav: vi.fn(), cache: vi.fn(), suggestions: vi.fn(), clearDrafts: vi.fn(), capture: vi.fn(), prepare: vi.fn() }));
+const ports = vi.hoisted(() => ({ pcmToWav: vi.fn(), cache: vi.fn(), suggestions: vi.fn(), clearDrafts: vi.fn(), capture: vi.fn(), prepare: vi.fn(), live: vi.fn(), start: vi.fn(), stop: vi.fn() }));
 vi.mock('../../speech', () => ({
-  useGeminiLiveConversation: () => ({ start: vi.fn(), stop: vi.fn() }),
+  useGeminiLiveConversation: (callbacks: any) => { ports.live(callbacks); return { start: ports.start, stop: ports.stop }; },
   pcmToWav: ports.pcmToWav, mapAudioSegmentsToTextLines: () => [0],
 }));
 vi.mock('../../chat', () => ({ computeTtsCacheKey: () => 'cache-key', captureLiveRoomAgentHandoff: ports.capture, prepareLiveRoomAgentContext: ports.prepare }));
+vi.mock('../utils/liveSystemInstruction', () => ({ buildLiveSystemInstruction: async () => 'Original fixture instruction' }));
 vi.mock('../../vision', () => ({ processMediaForUpload: vi.fn() }));
 vi.mock('../../../api/gemini/files', () => ({ uploadMediaToFiles: vi.fn() }));
 
@@ -92,4 +93,25 @@ it('does not persist a spoken turn into another conversation after a slow snapsh
   await act(async () => { resolve(null); await completing; });
   expect(useMaestroStore.getState().messages).toHaveLength(0);
   expect(ports.capture).not.toHaveBeenCalled(); expect(ports.suggestions).not.toHaveBeenCalled();
+});
+
+it.each(['finish', 'stop', 'conversation'])('yields idle user-owned Live without losing its choice; %s', async outcome => {
+  const callbacks = () => ports.live.mock.calls[ports.live.mock.calls.length - 1][0];
+  ports.start.mockImplementation(async options => callbacks().onStateChange(options.gateInputOnSpeech ? 'armed' : 'active'));
+  ports.stop.mockImplementation(async () => callbacks().onStateChange('idle'));
+  const config = { ...createConfig(), liveVideoStream: { active: true } as MediaStream };
+  const h = renderHook(() => useLiveSessionController(config));
+  await act(async () => { await h.result.current.handleStartLiveSession(); });
+  expect(await h.result.current.pauseLiveForSpeech()).toBeNull(); // Active speech cannot be displaced.
+  await act(async () => { callbacks().onStateChange('idle'); });
+  expect(useMaestroStore.getState().liveSessionState).toBe('armed'); expect(ports.start).toHaveBeenCalledTimes(2);
+  let resume!: (() => void) | null;
+  await act(async () => { resume = await h.result.current.pauseLiveForSpeech(); });
+  expect(resume).toBeTypeOf('function'); expect(ports.start).toHaveBeenCalledTimes(2);
+  expect(useMaestroStore.getState().liveSessionState).toBe('armed');
+  if (outcome === 'stop') await act(async () => { await h.result.current.handleStopLiveSession(); });
+  if (outcome === 'conversation') act(() => useMaestroStore.setState({ settings: { ...initialSettings, selectedLanguagePairId: 'other' } }));
+  await act(async () => { resume!(); resume!(); });
+  expect(ports.start).toHaveBeenCalledTimes(outcome === 'finish' ? 3 : 2);
+  if (outcome === 'finish') expect(ports.start.mock.calls[2][0]).toMatchObject({ gateInputOnSpeech: true });
 });

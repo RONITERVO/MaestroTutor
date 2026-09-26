@@ -34,7 +34,7 @@ export interface UseTtsEngineReturn {
   isSpeaking: boolean;
   speakingUtteranceText: string | null;
   speak: (textOrParts: string | SpeechPart[], defaultLang: string, liveOpenTrigger: TtsLiveOpenTrigger) => void;
-  stopSpeaking: () => void;
+  stopSpeaking: () => void | Promise<void>;
   hasPendingQueueItems: () => boolean;
 }
 

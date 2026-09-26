@@ -113,6 +113,7 @@ export interface UseLiveSessionControllerReturn {
   
   // Handlers
   handleStartLiveSession: () => Promise<void>;
+  pauseLiveForSpeech: () => Promise<(() => void) | null>;
   handleStopLiveSession: (options?: { scheduleReengagement?: boolean }) => Promise<void>;
   handleLiveTurnComplete: (
     userText: string,
@@ -189,6 +190,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
   const liveUiTokenRef = useRef<string | null>(null);
   const isFinalizingLiveTurnRef = useRef(false);
   const continueLiveRef = useRef(false);
+  const speechPauseRef = useRef<symbol | null>(null);
   const restartLiveRef = useRef<(() => Promise<void>) | null>(null);
   const liveDraftMessageMetaRef = useRef<{
     user: { id: string | null; timestamp: number | null };
@@ -674,7 +676,8 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       // Keep the user-owned Live mode selected while re-arming; publishing idle
       // here would let the passive observer acquire the microphone in between.
       if (state === 'idle' && continueLiveRef.current) {
-        void restartLiveRef.current?.();
+        if (speechPauseRef.current) setLiveSessionState('armed');
+        else void restartLiveRef.current?.();
         return;
       }
       setLiveSessionState(state);
@@ -693,6 +696,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       }
       if (state === 'idle' || state === 'error') {
         continueLiveRef.current = false;
+        speechPauseRef.current = null;
         restoreSttAfterLiveSession();
         releaseLiveSessionCapture();
       }
@@ -704,6 +708,23 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     onTurnTranscriptUpdate: handleLiveTurnTranscriptUpdate,
     onTurnComplete: handleLiveTurnComplete
   });
+
+  const pauseLiveForSpeech = useCallback(async (): Promise<(() => void) | null> => {
+    const state = useMaestroStore.getState();
+    if (state.liveSessionState === 'idle' || state.liveSessionState === 'error') return () => {};
+    if (state.liveSessionState !== 'armed' || !continueLiveRef.current || speechPauseRef.current) return null;
+    const pairId = state.settings.selectedLanguagePairId;
+    const owner = Symbol('task-speech'); speechPauseRef.current = owner;
+    try { await stopLiveConversation(); }
+    catch { if (speechPauseRef.current === owner) speechPauseRef.current = null; throw new Error('Could not pause idle Live input.'); }
+    return () => {
+      if (speechPauseRef.current !== owner) return;
+      speechPauseRef.current = null;
+      if (continueLiveRef.current && sessionActivity.isActive() && useMaestroStore.getState().settings.selectedLanguagePairId === pairId) {
+        void restartLiveRef.current?.();
+      }
+    };
+  }, [stopLiveConversation]);
 
   // --- Public Handlers ---
 
@@ -775,7 +796,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       const voiceName = settingsRef.current.tts.voiceName || 'Kore';
 
       restartLiveRef.current = async () => {
-        if (!continueLiveRef.current) return;
+        if (!continueLiveRef.current || speechPauseRef.current || !sessionActivity.isActive()) return;
         await startLiveConversation({
           liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE,
           stream: liveSessionCaptureRef.current?.stream,
@@ -801,6 +822,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
       });
     } catch (error) {
       continueLiveRef.current = false;
+      speechPauseRef.current = null;
       releaseLiveSessionCapture();
       restoreSttAfterLiveSession();
       const message = error instanceof Error ? error.message : t('general.error');
@@ -831,6 +853,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
    */
   const handleStopLiveSession = useCallback(async (options?: { scheduleReengagement?: boolean }) => {
     continueLiveRef.current = false;
+    speechPauseRef.current = null;
     const scheduleStopReengagement = options?.scheduleReengagement ?? true;
     try {
       await stopLiveConversation();
@@ -850,6 +873,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
     liveSessionState,
     liveSessionError,
     handleStartLiveSession,
+    pauseLiveForSpeech,
     handleStopLiveSession,
     handleLiveTurnComplete,
     handleLiveTurnTranscriptUpdate,
