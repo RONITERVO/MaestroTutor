@@ -189,3 +189,18 @@ Incremental migration preserves existing tested controls:
 The benefit is one behaviour change to maintain, visible and reversible co-editing,
 accessible language control, reusable user-created rules and repeatable regression
 scenarios. It does not mean zero UI work per feature or zero hardware testing.
+
+## Shared movement and physics increment
+
+See QUEST_ROOM_CONTROLS.md for the implemented four-operation extension. Physical
+avatar controls and agent intentions now use the same movement owner and Stop;
+physics settings and avatar preferences use shared validators and the existing
+room journal. Capability gates prevent dispatch to older runtimes. Native state
+serialization is checked against the browser parser using actual Unity captures,
+including absent values and live movement. This is partial domain coverage, not
+completion of import/library/controller/scan parity or durable native receipts.
+
+The subsequent user question about code and visual blocks is recorded in
+QUEST_BEHAVIOUR_PROGRAMS.md. It proposes a common typed program with functions,
+branches and event entry points, extending the current bounded sequences. It is
+not implemented by the movement/physics action extension.

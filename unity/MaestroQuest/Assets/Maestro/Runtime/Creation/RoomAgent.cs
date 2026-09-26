@@ -18,6 +18,9 @@ namespace Maestro.Quest.Creation
         public Color color=Color.white;
         public RoomRecipe recipe;
         public RuleRequest rule;
+        public string operation;
+        public ObjectPhysicsSettings physics;
+        public AvatarMovementSettings movement;
     }
     [Serializable] public sealed class RoomObjectCondition { public string id; public int revision; }
     [Serializable] public sealed class RoomInspection { public string id,partId; public int objectRevision; public RoomRecipe recipe; }
@@ -36,7 +39,9 @@ namespace Maestro.Quest.Creation
         public Vector3 position;
         public float scale;
         public Color color;
-        public bool animated;
+        public bool animated,held,simulating;
+        public ObjectPhysicsSettings physics;
+        public AvatarMovementSettings movement;
     }
     [Serializable] public sealed class RoomAgentState
     {
@@ -46,6 +51,9 @@ namespace Maestro.Quest.Creation
         public RoomInspection inspection;
         public string workspaceView;
         public RuleView rules;
+        public string[] capabilities;
+        public RoomPhysicsObservation physics;
+        public AvatarMovementObservation avatar;
         public RoomAgentObject[] objects;
         public string[] created=Array.Empty<string>();
     }
@@ -68,7 +76,7 @@ namespace Maestro.Quest.Creation
             {
                 if(command==null) return false;
                 if(command.action=="create") { if(command.reference!=null) aliases.Add(command.reference); continue; }
-                if(command.action=="undo" || command.action=="redo") { if(request.sceneRevision!=editor.Revision) return false; continue; }
+                if(command.action=="undo" || command.action=="redo" || command.action=="physicsRun") { if(request.sceneRevision!=editor.Revision) return false; continue; }
                 if(command.target==null || aliases.Contains(command.target)) continue;
                 var condition=request.conditions.FirstOrDefault(x=>x.id==command.target);
                 if(condition==null || condition.revision<=0 || condition.revision!=editor.ObjectRevision(command.target)) return false;
@@ -80,6 +88,15 @@ namespace Maestro.Quest.Creation
             created=Array.Empty<string>(); status="Invalid room request";
             if(request == null || (request.version != 1 && request.version != 2) || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
             var commands=request.commands;
+            if(commands.Any(command => command==null || RoomControls.IsControl(command.action) && !RoomControls.ValidCommand(command))) return false;
+            if(commands.Any(command => RoomControls.Runtime(command.action)) && commands.Length!=1) {status="Runtime controls must be sent on their own";return false;}
+            if(commands.Length==1 && RoomControls.Runtime(commands[0].action)) {
+                if(!Preconditions(request,out status))return false;
+                var command=commands[0];
+                if(command.action=="avatarMotion")return RoomControls.AvatarMotion(editor,command.operation,out status);
+                var physics=editor.PhysicsWorld;if(!physics) {status="Room physics is unavailable";return false;}
+                return physics.SetRunning(command.operation=="start",out status);
+            }
             if(commands.Length==1 && commands[0]?.action=="rules") {
                 var workshop=editor.GetComponent<RuleWorkshop>();if(!workshop) {status="Behaviours are unavailable in this room";return false;}
                 bool accepted=workshop.Execute(commands[0].rule,out status,out created);
@@ -130,7 +147,7 @@ namespace Maestro.Quest.Creation
                     }
                     string id=Guid.NewGuid().ToString("N"); refs.Add(command.reference,id); added.Add(id);
                     changes[id]=new RoomObjectData { id=id,name=command.name,kind=kind,position=command.atPosition ? command.position : editor.CreationPosition,
-                        scale=command.scale,color=command.color,physics=kind==RoomObjectKind.Ball ? Interaction.ItemPhysics.Bouncy : Interaction.ItemPhysics.Fixed,
+                        scale=command.scale,color=command.color,physics=kind==RoomObjectKind.Ball ? Interaction.ItemPhysics.Bouncy : kind==RoomObjectKind.Assembly ? Interaction.ItemPhysics.Fixed : Interaction.ItemPhysics.Solid,
                         recipe=command.kind=="boxRobot" ? RecipeTemplates.BoxRobot(true) : command.kind=="recipe" ? command.recipe?.Copy() : null };
                     continue;
                 }
@@ -140,6 +157,8 @@ namespace Maestro.Quest.Creation
                 if(data==null) {status="The target no longer exists";return false;}
                 switch(command.action)
                 {
+                    case "physicsSettings": if(!RoomControls.SetPhysics(data,command.physics,out status))return false;break;
+                    case "avatarSettings": if(!RoomControls.SetMovement(data,command.movement,out status))return false;break;
                     case "move": data.position=command.position; break;
                     case "resize": data.scale=command.scale; break;
                     case "paint": if(data.IsBuiltIn) {status="Painting the book or tutor is unavailable";return false;} data.color=command.color;break;
@@ -201,18 +220,28 @@ namespace Maestro.Quest.Creation
             if(!string.IsNullOrEmpty(json) && json.Length<=32768)
             {
                 try {
+                    var requestJson=Newtonsoft.Json.Linq.JObject.Parse(json)["request"];
                     var snapshot=JsonUtility.FromJson<RoomAgentSnapshot>(json);
-                    if(inbox.TryAccept(snapshot,out var request)) ok=executor.Execute(request,out status,out created);
-                } catch(ArgumentException) { /* Invalid or partial messages never execute. */ }
+                    if(inbox.TryAccept(snapshot,out var request)) {
+                        if(RoomControls.ValidWire(requestJson?.ToString() ?? "")) ok=executor.Execute(request,out status,out created);
+                        else {ok=false;status="Invalid room control arguments";created=Array.Empty<string>();}
+                    }
+                } catch(Exception ex) when(ex is ArgumentException || ex is Newtonsoft.Json.JsonException) { /* Invalid or partial messages never execute. */ }
             }
+            browser.PublishRoomAgentState(RoomAgentWire.Serialize(Observe()));
+        }
+        public RoomAgentState Observe()
+        {
             if(executor.WorkspaceVisible && editor.SelectedId!=null) lastInspected=editor.SelectedId;
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);
-            var state=new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
+            return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
+                capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),
                 visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
                 selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
-                objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,objectRevision=editor.ObjectRevision(x.id),name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=x.position,scale=x.scale,color=x.color,animated=editor.Find(x.id)?.GetComponent<RecipeObject>()?.IsPlaying??false}).ToArray() };
-            browser.PublishRoomAgentState(JsonUtility.ToJson(state));
+                objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,objectRevision=editor.ObjectRevision(x.id),name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=editor.Find(x.id) ? editor.Find(x.id).transform.localPosition : x.position,scale=x.scale,color=x.color,physics=RoomControls.Physics(x),
+                    movement=x.kind==RoomObjectKind.Maestro ? new AvatarMovementSettings {distance=x.followDistance==0 ? 1.3f : x.followDistance,speed=x.walkSpeed==0 ? .65f : x.walkSpeed} : null,
+                    held=editor.Find(x.id)?.Grab.isSelected??false,simulating=editor.Find(x.id)?.GetComponent<Interaction.RigidRoomItem>()?.Simulating??false,animated=editor.Find(x.id)?.GetComponent<RecipeObject>()?.IsPlaying??false}).ToArray() };
         }
     }
 }

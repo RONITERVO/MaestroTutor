@@ -16,7 +16,8 @@
     "UniGLTF",
     "UniGLTF.Utils",
     "VRM10",
-    "UniHumanoid"
+    "UniHumanoid",
+    "Unity.Newtonsoft.Json"
   ],
   "autoReferenced": true
 }

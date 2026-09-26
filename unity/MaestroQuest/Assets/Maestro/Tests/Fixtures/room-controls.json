@@ -1,0 +1,164 @@
+{
+  "cases": [
+    {
+      "name": "mode fixed",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"fixed\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mode solid",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"solid\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mode bouncy",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 0.05",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.05,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 20",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":20,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 0",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 20.01",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":20.01,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "physics target book",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"book\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "physics target maestro",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"maestro\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "physics target bad-target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"bad-target\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "missing mass",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"solid\",\"shape\":\"box\"}}]}"
+    },
+    {
+      "name": "extra nested argument",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\",\"code\":\"ignored?\"}}]}"
+    },
+    {
+      "name": "extra command argument",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"},\"position\":{\"x\":0,\"y\":0,\"z\":0}}]}"
+    },
+    {
+      "name": "numeric string",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":\"1\",\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "unknown shape",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"mesh\"}}]}"
+    },
+    {
+      "name": "movement defaults",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "movement low bounds",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":0.8,\"speed\":0.2}}]}"
+    },
+    {
+      "name": "movement high bounds",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":2.5,\"speed\":1.2}}]}"
+    },
+    {
+      "name": "movement wrong target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"book\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "movement too fast",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":2}}]}"
+    },
+    {
+      "name": "missing movement",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\"}]}"
+    },
+    {
+      "name": "missing distance",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"speed\":0.65}}]}"
+    },
+    {
+      "name": "avatar look",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"look\"}]}"
+    },
+    {
+      "name": "avatar follow",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"follow\"}]}"
+    },
+    {
+      "name": "avatar stop",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"stop\"}]}"
+    },
+    {
+      "name": "avatar walk",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"walk\"}]}"
+    },
+    {
+      "name": "physics start",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"start\"}]}"
+    },
+    {
+      "name": "physics pause",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"pause\"}]}"
+    },
+    {
+      "name": "physics scan",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"scan\"}]}"
+    },
+    {
+      "name": "runtime mixed edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"start\"},{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "saved settings batch",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}},{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "runtime wrong target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"book\",\"operation\":\"follow\"}]}"
+    }
+  ]
+}

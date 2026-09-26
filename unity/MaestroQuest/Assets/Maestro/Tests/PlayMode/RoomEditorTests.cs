@@ -40,6 +40,38 @@ namespace Maestro.Quest.Tests
             var roomItem = item.AddComponent<RoomItem>(); roomItem.Configure(new[] { item.GetComponent<Collider>() }); room.Register(roomItem); return roomItem;
         }
 
+        [UnityTest] public IEnumerator AgentPhysicsUsesSharedSettingsAndOneUndoWithNoPartialInvalidBatch()
+        {
+            var agent=new RoomAgentExecutor(editor);
+            bool Run(params RoomAgentCommand[] commands) => agent.Execute(new RoomAgentRequest {version=1,sceneRevision=editor.Revision,commands=commands},out _,out _);
+            Assert.That(Run(new RoomAgentCommand {action="create",reference="ball",name="Agent test ball",kind="ball"},
+                new RoomAgentCommand {action="physicsSettings",target="ball",physics=new ObjectPhysicsSettings {mode="solid",shape="box",mass=2}}),Is.True);
+            var data=editor.Snapshot().objects.Single(x=>x.name=="Agent test ball");var id=data.id;
+            Assert.That(data.physics,Is.EqualTo(ItemPhysics.Solid));Assert.That(data.mass,Is.EqualTo(2));Assert.That(data.collisionShape,Is.EqualTo(ItemCollider.Box));
+            editor.Select(editor.Find(id));editor.CycleMass();Assert.That(editor.Read(id).mass,Is.EqualTo(5));
+            editor.Undo();Assert.That(editor.Read(id).mass,Is.EqualTo(2));
+            var before=JsonUtility.ToJson(editor.Snapshot());
+            Assert.That(Run(new RoomAgentCommand {action="paint",target=id,color=Color.red},new RoomAgentCommand {action="physicsSettings",target=id,physics=new ObjectPhysicsSettings {mode="solid",shape="box",mass=100}}),Is.False);
+            Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+            Assert.That(Run(new RoomAgentCommand {action="physicsSettings",target="maestro",physics=new ObjectPhysicsSettings {mode="solid",shape="box",mass=1}}),Is.False);
+            editor.Undo();Assert.That(editor.Find(id),Is.Null,"One undo removes the create/settings transaction");
+            editor.Redo();Assert.That(editor.Read(id).mass,Is.EqualTo(2));
+            Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.False);Assert.That(physics.Running,Is.False);
+            physics.SetSurfaces(true,"Synthetic aligned scan");
+            Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.True);Assert.That(physics.Running,Is.True);
+            Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="pause"}),Is.True);Assert.That(physics.Running,Is.False);
+            physics.SendMessage("OnApplicationFocus",false);Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.False);
+            physics.SendMessage("OnApplicationFocus",true);Assert.That(physics.Running,Is.False,"Focus recovery never restarts gravity");
+            physics.SetSurfaces(false,"Lost alignment");Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.False);
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            var state=observer.Observe();Assert.That(state.capabilities,Does.Contain("physicsSettings.v1"));Assert.That(state.capabilities,Does.Not.Contain("avatarMotion.v1"));
+            Assert.That(state.physics.status,Is.EqualTo(physics.Status));
+            var json=RoomAgentWire.Serialize(state);var evidence=Environment.GetEnvironmentVariable("MAESTRO_CONTROL_EVIDENCE");
+            if(!string.IsNullOrEmpty(evidence)) {Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"native-physics-state.json"),json);}
+            editor.SaveNow();yield return new WaitForSeconds(.3f);
+            Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==id).mass,Is.EqualTo(2));
+        }
+
         [UnityTest]
         public IEnumerator DrawingPaintDuplicateEraseUndoAndReloadPreserveGeometry()
         {

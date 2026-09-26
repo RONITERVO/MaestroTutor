@@ -42,8 +42,8 @@ namespace Maestro.Quest.Avatar
             status = Label(transform,new Vector3(0,-.225f,-.023f),"",.0044f);
             motion.Changed += Refresh; if (editor) editor.Changed += Refresh; if (avatar) { avatar.ModelChanged += Refresh; avatar.WalkMotionChanged += Refresh; } if (animations) animations.Changed += Refresh; Refresh();
         }
-        void Begin(AvatarSpatialMode mode) { animations.Stop(); rules?.Scheduler.StopTarget("maestro",true); motion.Begin("manual",mode,out _); }
-        void Stop() { animations.Stop(); rules?.Scheduler.StopTarget("maestro",true); motion.Stop(); }
+        void Begin(AvatarSpatialMode mode) { RoomControls.AvatarMotion(editor,mode == AvatarSpatialMode.Look ? "look" : "follow",out _); }
+        void Stop() { RoomControls.AvatarMotion(editor,"stop",out _); }
         void Distance() { float[] values = { .8f,1.3f,1.8f,2.5f }; float next = values.FirstOrDefault(x => x > motion.Distance+.01f); editor.SetAvatarMovement(next == 0 ? values[0] : next,motion.Speed); }
         void Speed() { float[] values = { .35f,.65f,1f }; float next = values.FirstOrDefault(x => x > motion.Speed+.01f); editor.SetAvatarMovement(motion.Distance,next == 0 ? values[0] : next); }
         void Size()

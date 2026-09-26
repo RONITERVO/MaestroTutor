@@ -70,3 +70,22 @@ it('allows task-control observation while an action awaits acknowledgement witho
   expect(client.snapshot().request?.sequence).toBe(1);
   client.receive(state({ revision: 2, ack: 1 })); await pending; unregister();
 });
+
+const controls={capabilities:['physicsSettings.v1','avatarSettings.v1','physicsRun.v1','avatarMotion.v1'],
+ physics:{ready:true,running:false,status:'Aligned'},avatar:{active:false,mode:'stopped',status:'Ready',canLook:true,canFollow:false,lookReason:'',followReason:'Start physics',distance:1.3,speed:.65}};
+it('requires native capability and preserves object conditions for shared controls',async()=>{
+ const client=new RoomAgentClient();client.receive(state());
+ expect(()=>client.lease()!.execute([{action:'physicsRun',operation:'start'}],4)).toThrow('does not support');
+ expect(client.snapshot().request).toBeNull();
+ const maestro={id:'maestro',name:'Maestro',kind:'Maestro',objectRevision:5,position:{x:0,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false,
+  physics:{mode:'fixed',mass:.5,shape:'automatic'},movement:{distance:1.3,speed:.65},held:false,simulating:false};
+ expect(client.receive(state({...controls,revision:2,objects:[maestro]}))).toBe(true);
+ const promise=client.request([{action:'avatarMotion',target:'maestro',operation:'follow'}]);
+ expect(client.snapshot().request).toMatchObject({version:2,sequence:1,conditions:[{id:'maestro',revision:5}]});
+ client.receive(state({...controls,revision:3,ack:1,objects:[maestro],ok:false,status:'Start room physics first'}));
+ expect((await promise).ok).toBe(false);
+ expect(client.receive(state({...controls,revision:4,physics:{...controls.physics,running:true}}))).toBe(false);
+ expect(client.receive(state({...controls,revision:4,avatar:{...controls.avatar,active:true}}))).toBe(false);
+ expect(client.receive(state({...controls,revision:4,objects:[{...maestro,physics:{...maestro.physics,mass:100}}]}))).toBe(false);
+ expect(client.receive(state({...controls,revision:4,capabilities:['physicsRun.v1','physicsRun.v1']}))).toBe(false);
+});

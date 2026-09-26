@@ -76,3 +76,18 @@ it('shows current room plus prior evidence to a follow-up and refuses blind muta
   const data = JSON.parse(request.contents[0].parts[0].text);
   expect(data.request).toBe(input.prompt); expect(data.tutorContext.relatedTask).toEqual(relatedTask); expect(data.scene).toEqual(scene);
 });
+
+it('uses live runtime observations after a start without claiming future movement completed',async()=>{
+ let current:RoomAgentState={...scene,capabilities:['avatarMotion.v1'],avatar:{active:false,mode:'stopped',status:'Ready',canLook:true,canFollow:true,lookReason:'',followReason:'',distance:1.3,speed:.65}};
+ const ai=client(['{"commands":[{"action":"avatarMotion","target":"maestro","operation":"follow"}]}','{"commands":[]}']);
+ const execute=vi.fn(async()=>({...current,ack:1,status:'Maestro follow started',avatar:{...current.avatar!,active:true,mode:'follow' as const,status:'Following'}}));
+ const task=await runRoomActionTask({...input,prompt:'Follow me'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{onReceipt:()=>{current={...current,avatar:{...current.avatar!,active:true,mode:'follow',status:'Path blocked by book'}};}});
+ expect(task.receipts[0].status).toContain('started');expect(task.scene.avatar?.status).toContain('blocked');
+ const request:any=(ai.models.generateContentStream.mock.calls as any)[1][0];
+ expect(JSON.parse(request.contents[0].parts[0].text).scene.avatar.status).toContain('blocked');
+});
+it('does not persist an action intent or dispatch a new capability to an older native runtime',async()=>{
+ const ai=client(['{"commands":[{"action":"physicsRun","operation":"start"}]}']),execute=vi.fn(),beforeDispatch=vi.fn();
+ await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{},{beforeDispatch})).rejects.toThrow('does not support');
+ expect(execute).not.toHaveBeenCalled();expect(beforeDispatch).not.toHaveBeenCalled();
+});

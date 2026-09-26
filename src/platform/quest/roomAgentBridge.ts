@@ -1,3 +1,4 @@
+import { requireRoomCapabilities, validObjectPhysics, validAvatarMovement, validPhysicsObservation, validAvatarObservation } from '../../../shared/roomControls';
 import {validRuleView} from '../../core-sdk/room/rules';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -25,6 +26,10 @@ export class RoomAgentClient {
       typeof input.status!=='string' || input.status.length>2048 || !['ok','canUndo','canRedo','physicsRunning'].every(k=>typeof input[k]==='boolean') ||
       !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>65536) return false;
     if(input.objects.some(o=>!record(o) || typeof o.id!=='string' || !/^(book|maestro|[a-f0-9]{32})$/.test(o.id) || typeof o.name!=='string' || o.name.length>80 || typeof o.kind!=='string' || !vector(o.position) || typeof o.scale!=='number' || !Number.isFinite(o.scale) || !validPigment(o.color) || typeof o.animated!=='boolean' || o.objectRevision!==undefined&&!integer(o.objectRevision,1))) return false;
+    if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>64||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
+    if(input.physics!==undefined&&input.physics!==null&&(!validPhysicsObservation(input.physics)||input.physics.running!==input.physicsRunning))return false;
+    if(input.avatar!==undefined&&input.avatar!==null&&!validAvatarObservation(input.avatar))return false;
+    if(input.objects.some(o=>o.physics!==undefined&&!validObjectPhysics(o.physics)||o.movement!==undefined&&o.movement!==null&&!validAvatarMovement(o.movement)||['held','simulating'].some(key=>o[key]!==undefined&&typeof o[key]!=='boolean')))return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
     if(input.rules!==undefined&&input.rules!==null&&!validRuleView(input.rules))return false;
     if(input.workspaceView!==undefined&&!['objects','rules'].includes(input.workspaceView as string))return false;
@@ -59,7 +64,7 @@ export class RoomAgentClient {
     return {valid,state:()=>{if(!valid()) throw new Error('Room session unavailable');return this.value!;},execute:(commands,expectedRevision,expectedObjects,signal)=>{
       if(signal?.aborted)return Promise.reject(new DOMException('Room request cancelled before dispatch.','AbortError'));
       if(!valid() || this.pending || this.sequence>=2147483647) return Promise.reject(new Error('Room session unavailable or busy'));
-      parseRoomCommands({commands});
+      parseRoomCommands({commands});requireRoomCapabilities(commands,this.value!);
       const objects=expectedObjects??this.value!.objects;
       const modern=objects.every(object=>integer(object.objectRevision,1));
       const targets=new Set(commands.flatMap(command=>command.target?[command.target]:[]));

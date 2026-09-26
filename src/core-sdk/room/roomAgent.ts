@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation } from '../../../shared/roomControls';
 import type { RelatedRoomTask } from './taskSteering';
 import {validRuleRequest,type RuleRequest,type RuleView} from './rules';
 import { parseRecipe, type RoomRecipe } from './recipe';
@@ -9,8 +10,9 @@ import { runTutorTextTurn, type TutorTextTurnInput, type TutorTextTurnOptions } 
 import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTION, ROOM_AGENT_SCHEMA } from '../../../shared/prompts';
 
 export interface RoomCommand {
-  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules';
+  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | keyof typeof roomControlFields;
   rule?:RuleRequest;
+  operation?:'start'|'pause'|'look'|'follow'|'stop'; physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings;
   target?: string; partId?:string; reference?: string; name?: string;
   kind?: 'block' | 'ball' | 'cylinder' | 'recipe' | 'boxRobot';
   visible?: boolean; atPosition?: boolean; position?: { x: number; y: number; z: number };
@@ -19,10 +21,11 @@ export interface RoomCommand {
 export interface RoomAgentState {
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
+  capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null;
   workspaceView?:'objects'|'rules'; rules?:RuleView|null;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
   selectedId?: string | null;
-  objects: { objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean }[];
+  objects: { physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings|null; held?:boolean; simulating?:boolean; objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean }[];
 }
 export interface RoomAgentLease {
   state(): RoomAgentState;
@@ -32,7 +35,8 @@ export interface RoomAgentLease {
 const record = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Number(v[k]) >= 0 && Number(v[k]) <= 1) && v.a === 1;
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
-const fields: Record<RoomCommand['action'], string[]> = {
+const fields: Record<RoomCommand['action'], readonly string[]> = {
+  ...roomControlFields,
   create:['reference','name','kind','atPosition','position','scale','color','recipe'], move:['target','position'], resize:['target','scale'],
   paint:['target','color'], recipe:['target','recipe'], delete:['target'], undo:[], redo:[], inspect:['target','partId'], workspace:['visible'], play:['target'], stop:['target'], rules:['rule'],
 };
@@ -46,6 +50,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if (action === 'create' && (typeof c.reference !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.reference) || typeof c.name !== 'string' || c.name.length > 80 || /[\u0000-\u001f]/.test(c.name) || !['block','ball','cylinder','recipe','boxRobot'].includes(c.kind as string))) throw new Error('Invalid creation.');
     if ((action === 'move' || c.atPosition === true || c.position !== undefined) && !vector(c.position)) throw new Error('Invalid position.');
     if (c.partId !== undefined && (typeof c.partId !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.partId))) throw new Error('Invalid recipe part.');
+    if (Object.prototype.hasOwnProperty.call(roomControlFields,action) && !validRoomControl(c)) throw new Error('Invalid room control.');
     if (action === 'rules' && !validRuleRequest(c.rule)) throw new Error('Invalid behaviour request.');
     if (action === 'workspace' && typeof c.visible !== 'boolean') throw new Error('Invalid workspace state.');
     if (c.atPosition !== undefined && typeof c.atPosition !== 'boolean') throw new Error('Invalid placement.');
@@ -53,7 +58,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if ((action === 'paint' || c.color !== undefined) && !validColor(c.color)) throw new Error('Invalid colour.');
     if ((action === 'recipe' || c.kind === 'recipe') && !parseRecipe(c.recipe)) throw new Error('Missing recipe.');
   }
-  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
+  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules','physicsRun','avatarMotion'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
   return input.commands as unknown as RoomCommand[];
 }
 
@@ -93,6 +98,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
     if (control.relatedTask?.unconfirmed && commands.some(command => command.action !== 'inspect'))
       return { receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
+    requireRoomCapabilities(commands,scene);
     await control.beforeDispatch?.(commands,scene);active();
     const receipt=await (control.signal
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)

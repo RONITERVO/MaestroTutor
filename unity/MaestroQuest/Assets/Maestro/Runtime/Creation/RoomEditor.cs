@@ -195,29 +195,27 @@ namespace Maestro.Quest.Creation
             if (!journal.Apply(replacements,removals,out var error)) { SetStatus(error); return false; }
             Reconcile(replacements.Select(item => item.id).ToHashSet(), !placement); MarkDirty(); SetStatus(success); return true;
         }
+        public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
+        {
+            Editing?.Invoke(); CapturePhysicsPlacements(); if(Busy())return false;
+            var data=journal.Read(id);
+            if(!RoomControls.SetPhysics(data,settings,out var status)) {SetStatus(status);return false;}
+            return Commit(new[] {data},Array.Empty<string>(),status);
+        }
         public void CyclePhysics()
         {
-            Editing?.Invoke(); CapturePhysicsPlacements();
-            var data = journal.Read(selected);
-            if (data == null || data.IsBuiltIn) { SetStatus("Select a creation to change its physics"); return; }
-            data.physics = (ItemPhysics)(((int)data.physics + 1) % 3);
-            Commit(new[] { data },Array.Empty<string>(),"Physics: " + data.physics);
+            var data=journal.Read(selected);if(data==null || data.IsBuiltIn) {SetStatus("Select a creation to change its physics");return;}
+            var settings=RoomControls.Physics(data);settings.mode=((ItemPhysics)(((int)data.physics+1)%3)).ToString().ToLowerInvariant();SetItemPhysics(selected,settings);
         }
         public void CycleMass()
         {
-            Editing?.Invoke(); CapturePhysicsPlacements();
-            var data = journal.Read(selected);
-            if (data == null || data.IsBuiltIn) { SetStatus("Select a creation to change its mass"); return; }
-            float[] masses = { .1f,.5f,1,2,5,10,20 }; data.mass = masses.FirstOrDefault(value => value > data.mass); if (data.mass == 0) data.mass = .1f;
-            Commit(new[] { data },Array.Empty<string>(),"Mass: " + data.mass + " kg");
+            var data=journal.Read(selected);if(data==null || data.IsBuiltIn) {SetStatus("Select a creation to change its mass");return;}
+            var settings=RoomControls.Physics(data);float[] masses={.1f,.5f,1,2,5,10,20};settings.mass=masses.FirstOrDefault(value=>value>data.mass);if(settings.mass==0)settings.mass=.1f;SetItemPhysics(selected,settings);
         }
         public void CycleCollider()
         {
-            Editing?.Invoke(); CapturePhysicsPlacements();
-            var data = journal.Read(selected);
-            if (data == null || data.IsBuiltIn) { SetStatus("Select a creation to change its collision shape"); return; }
-            data.collisionShape = (ItemCollider)(((int)data.collisionShape + 1) % 3);
-            Commit(new[] { data },Array.Empty<string>(),"Collision shape: " + data.collisionShape);
+            var data=journal.Read(selected);if(data==null || data.IsBuiltIn) {SetStatus("Select a creation to change its collision shape");return;}
+            var settings=RoomControls.Physics(data);settings.shape=((ItemCollider)(((int)data.collisionShape+1)%3)).ToString().ToLowerInvariant();SetItemPhysics(selected,settings);
         }
         public bool PlaceSelected(Vector3 worldPosition)
         {
@@ -311,8 +309,9 @@ namespace Maestro.Quest.Creation
         public void SetAvatarMovement(float distance, float speed)
         {
             Editing?.Invoke(); if (Busy()) return;
-            var data = journal.Read("maestro"); data.followDistance = distance; data.walkSpeed = speed;
-            Commit(new[] { data },Array.Empty<string>(),"Maestro movement preferences saved");
+            var data = journal.Read("maestro");
+            if (!RoomControls.SetMovement(data,new AvatarMovementSettings {distance=distance,speed=speed},out var status)) {SetStatus(status);return;}
+            Commit(new[] { data },Array.Empty<string>(),status);
         }
         public bool SetAvatarWalkClip(int index)
         {

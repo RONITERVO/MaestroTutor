@@ -65,6 +65,40 @@ namespace Maestro.Quest.Tests
             authoring = root.AddComponent<AnimationWorkshop>(); authoring.Initialize(editor);
             motion = tutor.gameObject.AddComponent<AvatarSpatialMotion>(); motion.Initialize(editor,authoring,room,navigation,() => tracked);
         }
+        [UnityTest] public IEnumerator AgentAndPhysicalAvatarControlsShareMovementPreferencesStopAndLiveStatus()
+        {
+            Surface(new Vector3(0,-.1f,0),new Vector3(8,.2f,8));Tutor();
+            var agent=new RoomAgentExecutor(editor);
+            bool Run(RoomAgentCommand command) => agent.Execute(new RoomAgentRequest {version=2,sceneRevision=editor.Revision,
+                conditions=new[] {new RoomObjectCondition {id="maestro",revision=editor.ObjectRevision("maestro")}},commands=new[] {command}},out _,out _);
+            Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="follow"}),Is.False);
+            Assert.That(motion.Active,Is.False);Assert.That(RoomControls.ObserveAvatar(editor).canFollow,Is.False);Ready();
+            Assert.That(Run(new RoomAgentCommand {action="avatarSettings",target="maestro",movement=new AvatarMovementSettings {distance=1.8f,speed=1}}),Is.True);
+            Assert.That(motion.Distance,Is.EqualTo(1.8f));editor.Undo();Assert.That(motion.Distance,Is.EqualTo(1.3f));
+            var stale=editor.ObjectRevision("maestro");editor.SetAvatarMovement(1.8f,1);
+            Assert.That(agent.Execute(new RoomAgentRequest {version=2,conditions=new[] {new RoomObjectCondition {id="maestro",revision=stale}},commands=new[] {
+                new RoomAgentCommand {action="avatarSettings",target="maestro",movement=new AvatarMovementSettings {distance=1,speed=.5f}}}},out _,out _),Is.False);
+            Assert.That(motion.Distance,Is.EqualTo(1.8f));
+            var board=new GameObject("Shared movement tray");board.transform.SetParent(root.transform,false);board.transform.position=new Vector3(20,0,0);
+            board.AddComponent<AvatarSpatialTools>().Build(motion,editor,authoring,null,room);
+            var stop=Array.Find(board.GetComponentsInChildren<RuleToolAction>(),tool=>tool.AccessibleName=="Stop");
+            Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="follow"}),Is.True);
+            yield return new WaitForSeconds(.4f);Assert.That(avatar.transform.position.z,Is.GreaterThan(.1f));
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);var state=observer.Observe();
+            Assert.That(state.avatar.active,Is.True);Assert.That(state.avatar.mode,Is.EqualTo("follow"));
+            Assert.That(state.objects[Array.FindIndex(state.objects,x=>x.id=="maestro")].position,Is.EqualTo(avatar.transform.localPosition));
+            var evidence=Environment.GetEnvironmentVariable("MAESTRO_CONTROL_EVIDENCE");if(!string.IsNullOrEmpty(evidence)) {Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"native-avatar-state.json"),RoomAgentWire.Serialize(state));}
+            // Exercise the same ray/click/release path used for a physical tool.
+            var router=root.AddComponent<BookPointerRouter>();Physics.SyncTransforms();var ray=new Ray(stop.transform.position-stop.transform.forward*.3f,stop.transform.forward);
+            Assert.That(router.Begin(901,ray),Is.True);router.End(901,ray);Assert.That(motion.Active,Is.False);
+            Array.Find(board.GetComponentsInChildren<RuleToolAction>(),tool=>tool.AccessibleName=="Look at me").Command();Assert.That(motion.Active,Is.True);
+            Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="stop"}),Is.True);Assert.That(motion.Active,Is.False);
+            Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="follow"}),Is.True);
+            tracked=false;yield return null;Assert.That(RoomControls.ObserveAvatar(editor).active,Is.False);Assert.That(RoomControls.ObserveAvatar(editor).canLook,Is.False);
+            editor.Create(RoomObjectKind.Ball);authoring.ToggleRecord();Assert.That(authoring.IsRecording,Is.True);
+            Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="stop"}),Is.True);
+            Assert.That(authoring.IsRecording,Is.True,"Stopping Maestro must preserve recording of another object");authoring.Stop();
+        }
         [UnityTest] public IEnumerator NavigationRoutesAroundWallsAndRejectsDisconnectedFloorAndLostScan()
         {
             var floor = Surface(new Vector3(0,-.1f,0),new Vector3(8,.2f,8));
