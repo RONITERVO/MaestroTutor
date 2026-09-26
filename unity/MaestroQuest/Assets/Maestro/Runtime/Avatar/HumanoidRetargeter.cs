@@ -14,6 +14,7 @@ namespace Maestro.Quest.Avatar
     {
         sealed class Joint { public Transform Target; public Quaternion Correction; }
         readonly Dictionary<PoseJoint,Joint> joints = new();
+        readonly Dictionary<PoseJoint,Quaternion> importedRotations = new();
         AvatarPoseRig source;
         Transform frame;
         Vector3 hipsPosition;
@@ -74,6 +75,16 @@ namespace Maestro.Quest.Avatar
         }
         public Quaternion ToCanonicalRotation(PoseJoint joint, Quaternion worldRotation) =>
             joints.TryGetValue(joint,out var entry) ? worldRotation * Quaternion.Inverse(entry.Correction) : worldRotation;
+        public void CaptureImportedPose()
+        {
+            // Read every displayed rotation before changing the source hierarchy.
+            // Sampling native clips through the canonical rig retains gaze, posing and recordings.
+            foreach (var pair in joints) importedRotations[pair.Key] = ToCanonicalRotation(pair.Key,pair.Value.Target.rotation);
+            float rise = (frame.InverseTransformPoint(Bone(PoseJoint.Hips).position).y-hipsPosition.y)/heightRatio;
+            foreach (var pair in importedRotations) source.CanonicalBone(pair.Key).rotation = pair.Value;
+            // Navigation owns horizontal placement. Preserve authored vertical body motion only.
+            source.CanonicalBone(PoseJoint.Hips).position = frame.TransformPoint(source.BindPosition(PoseJoint.Hips)+Vector3.up*rise);
+        }
         void LateUpdate() => ApplyPose();
     }
 }

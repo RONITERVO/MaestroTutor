@@ -6,7 +6,10 @@ private content-addressed copy to the room after Add. A room record stores the
 SHA256 identity, never the external provider URI or original filesystem path.
 The original is not changed. Imported objects support existing grip/scale,
 paint tint, duplicate/erase/undo and root movement recording. Compatible embedded
-glTF clips have manual next/play/stop/loop controls. Files and saved rooms never
+glTF clips have manual next/play/stop/loop controls. These controls also support
+the selected custom Maestro; visual ImportedClip actions bind to its exact model
+hash. The large, separately stored motion library is described in
+QUEST_ANIMATION_LIBRARY.md and is not yet implemented. Files and saved rooms never
 start animation playback automatically; pause and grabbing stop playback.
 
 UniVRM/UniGLTF 0.131.2 is pinned to commit

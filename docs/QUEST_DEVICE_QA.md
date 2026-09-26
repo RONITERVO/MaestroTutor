@@ -2,6 +2,41 @@
 
 This is development evidence, not a release acceptance report.
 
+## Packaged imported-motion and small-room update — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-3A2ABC32.apk`.
+SHA256: `3A2ABC325317DB88B138038B775D6909283ACE2F7A90D154231807A6FCA3DB53`.
+135,177,732 bytes, development signed. Editor build exited 0; zero errors and
+two package warnings. APK v2 signature, ARM64 and expected manifest checks pass.
+The full build passed 34 EditMode, 33 required PlayMode and 15 native Android
+tests, native lint and the shared web build. The two optional local-file checks
+were omitted from this redistributable build. A preceding real Meshy Stage Walk
+run passed all 35 PlayMode checks and rendered actual tutor clip playback.
+Three Python catalogue checks also pass. Evidence is in ignored
+`.quest-evidence/avatar-clips/verified-3A2ABC32` and `.quest-evidence/art`.
+
+Added selected-Maestro embedded-clip preview, persisted walk-clip assignment,
+ImportedClip visual-rule actions, Size and Preview walk controls, and clearer
+blocked-step explanations. Tests cover clip deformation, interruption, pause,
+rule duration, exact-model references, replacement while loading, Undo/save,
+and a miniature avatar clearing an overhead book. Save/reload tests now flush
+pending asynchronous saves using the pause path instead of assuming a short
+scaled-time wait completes background I/O.
+
+The Quest is charging and the user is sleeping. No installation, launch, room
+restore or device acceptance occurred for this APK. The installed build remains
+08F340EF. After the user returns: back up the current room before installation;
+check import Play/Stop on selected Maestro; choose Walk clip and Preview walk;
+compare included/custom visible gait; check Size and blocker text in the real
+small room; trigger a clip from a physical rule button and tutor-state event;
+confirm grip/pause/recall interruption, restart persistence and both-hand use.
+Do not report the prior stationary-feet defect fixed on hardware yet.
+
+The 96-export animation inventory is read-only. Original models are neither
+modified nor bundled into the app. Full searchable motion packs, automatic role
+mapping, blended transitions and collision-checked authored travel remain work
+specified in QUEST_ANIMATION_LIBRARY.md.
+
 ## Installed import-location fix and Meshy acceptance
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-08F340EF.apk`.

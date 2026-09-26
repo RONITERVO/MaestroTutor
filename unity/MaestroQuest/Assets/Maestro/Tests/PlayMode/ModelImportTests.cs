@@ -8,6 +8,7 @@ using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Avatar;
+using Maestro.Quest.Rules;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -115,7 +116,7 @@ namespace Maestro.Quest.Tests
             workshop.DefaultMaestro(); Assert.That(avatar.CustomModel,Is.Null); Assert.That(editor.Read("maestro").modelHash,Is.Null);
             editor.Undo(); yield return new WaitUntil(() => !avatar.ModelBusy); Assert.That(avatar.ModelHash,Is.EqualTo(hash),avatar.ModelStatus);
             Assert.That(Quaternion.Angle(avatar.PoseRig.Capture().Single(x => x.joint == PoseJoint.Head).rotation,pose.Single(x => x.joint == PoseJoint.Head).rotation),Is.LessThan(.1f));
-            editor.SaveNow(); yield return new WaitForSeconds(.2f);
+            editor.SaveNow(); editor.SendMessage("OnApplicationPause",true); editor.SendMessage("OnApplicationPause",false); yield return null;
             var saved = new RoomStorage(directory).Load(out var error); Assert.That(saved,Is.Not.Null,error); Assert.That(saved.objects.Single(x => x.id == "maestro").modelHash,Is.EqualTo(hash));
             UnityEngine.Object.Destroy(workshop); UnityEngine.Object.Destroy(editor); UnityEngine.Object.Destroy(avatar); yield return null;
             // Recreate the whole tutor root, as a process restart does.
@@ -161,7 +162,82 @@ namespace Maestro.Quest.Tests
             Assert.That(displacement,Is.GreaterThan(.01f),"Joint posing must deform the actual external model");
             Assert.That(avatar.PoseRig.Capture().Length,Is.EqualTo(17));
             yield return null; Capture("external-maestro-posed.png",Vector3.up*.9f,1.05f,true);
+            if (avatar.CustomModel.ClipCount > 0 && avatar.CustomModel.ClipDuration(0) >= .1f)
+            {
+                var position = avatar.transform.position; var container = avatar.CustomModel.Instance.transform;
+                var localPosition = container.localPosition; var localScale = container.localScale;
+                avatar.SetEditing(true); avatar.SetWalkClip(0); avatar.SpatialWalk(.65f);
+                var first = avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg).rotation;
+                yield return new WaitForSeconds(.3f);
+                Assert.That(avatar.IsImportedClipPlaying,Is.True);
+                Assert.That(Quaternion.Angle(first,avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg).rotation),Is.GreaterThan(.01f),"Selected walking export must move its leg");
+                yield return new WaitForSeconds(1.8f);
+                Assert.That(Vector3.Distance(position,avatar.transform.position),Is.LessThan(.0001f));
+                Assert.That(Vector3.Distance(localPosition,container.localPosition),Is.LessThan(.0001f));
+                Assert.That(Vector3.Distance(localScale,container.localScale),Is.LessThan(.0001f));
+                var hips = avatar.transform.InverseTransformPoint(avatar.PoseRig.Bone(PoseJoint.Hips).position);
+                Assert.That(new Vector2(hips.x,hips.z).magnitude,Is.LessThan(.25f),"Clip travel must not bypass room navigation");
+                Capture("external-maestro-clip.png",Vector3.up*.9f,1.05f,true);
+                avatar.SpatialWalk(0); Assert.That(avatar.IsImportedClipPlaying,Is.False); avatar.SetEditing(false);
+            }
             Debug.Log("MAESTRO_EXTERNAL_TUTOR_VERIFIED file="+Path.GetFileName(path)+" posedVertexDisplacement="+displacement+" channels="+avatar.PoseRig.Capture().Length);
+        }
+
+        [UnityTest] public IEnumerator EmbeddedMaestroClipsPreviewPersistAndRunFromVisualRules()
+        {
+            root.AddComponent<XRInteractionManager>(); var room = root.AddComponent<RoomInteraction>();
+            RoomItem Included(string name)
+            {
+                var go = new GameObject(name); go.transform.SetParent(root.transform,false);
+                var collider = go.AddComponent<BoxCollider>(); var item = go.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider }); room.Register(item); return item;
+            }
+            var book = Included("book"); var tutor = Included("maestro"); var avatar = tutor.gameObject.AddComponent<MaestroAvatar>();
+            var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,tutor,directory);
+            var animations = root.AddComponent<AnimationWorkshop>(); animations.Initialize(editor);
+            var imports = root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,animations);
+            var rules = root.AddComponent<RuleWorkshop>(); rules.Initialize(editor,directory);
+            var runtime = root.AddComponent<RoomRules>(); runtime.Initialize(rules,editor,animations,null,room,null);
+            var prepare = imports.PrepareAsync("head-turn.glb",ModelFixture.Mixamo(json => json["animations"][0]["channels"][0]["target"]["node"] = 5));
+            yield return new WaitUntil(() => prepare.IsCompleted);
+            var use = imports.UseMaestroAsync(); yield return new WaitUntil(() => use.IsCompleted);
+            Assert.That(use.Result,Is.True,imports.Status); Assert.That(editor.SelectedId,Is.EqualTo("maestro"));
+            Assert.That(editor.SetAvatarWalkClip(0),Is.True); Assert.That(avatar.WalkClip,Is.Zero);
+            Assert.That(editor.SetAvatarSize(.35f),Is.True); Assert.That(avatar.transform.localScale.x,Is.EqualTo(.35f));
+            editor.Undo(); Assert.That(avatar.transform.localScale.x,Is.EqualTo(1));
+            var position = tutor.transform.position; var head = avatar.PoseRig.Bone(PoseJoint.Head);
+            imports.Play(); var before = head.rotation;
+            yield return new WaitForSeconds(.35f);
+            Assert.That(avatar.IsImportedClipPlaying,Is.True); Assert.That(animations.IsImportedPreview,Is.True);
+            Assert.That(Quaternion.Angle(before,head.rotation),Is.GreaterThan(10));
+            Assert.That(Vector3.Distance(position,tutor.transform.position),Is.LessThan(.001f));
+            imports.Stop(); Assert.That(avatar.IsImportedClipPlaying,Is.False); Assert.That(animations.ControlsTarget("maestro"),Is.False);
+            animations.PreviewWalk(); Assert.That(avatar.IsImportedClipPlaying,Is.True);
+            animations.SendMessage("OnApplicationPause",true); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            animations.SendMessage("OnApplicationPause",false);
+            rules.NewSequence();
+            for (int i=0;i<7 && rules.Selected.steps[0].action != RuleActionKind.ImportedClip;i++) rules.CycleAction();
+            var step = rules.Selected.steps[0]; Assert.That(step.action,Is.EqualTo(RuleActionKind.ImportedClip));
+            Assert.That(step.clipModelHash,Is.EqualTo(avatar.ModelHash)); Assert.That(step.seconds,Is.Zero);
+            Assert.That(runtime.Trigger(rules.Selected.id),Is.True,runtime.Scheduler.LastError);
+            before = head.rotation; yield return new WaitForSeconds(.35f);
+            Assert.That(Quaternion.Angle(before,head.rotation),Is.GreaterThan(10));
+            imports.Stop(); Assert.That(runtime.Scheduler.RunningCount,Is.Zero); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            Assert.That(runtime.Trigger(rules.Selected.id),Is.True); yield return new WaitForSecondsRealtime(1.15f);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero); Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            editor.SaveNow(); rules.SendMessage("OnApplicationPause",true); rules.SendMessage("OnApplicationPause",false); yield return new WaitForSeconds(.2f);
+            Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x => x.id == "maestro").walkClip,Is.EqualTo(1));
+            Assert.That(new RuleStorage(directory).Load(out _).sequences.Single().steps[0].clipModelHash,Is.EqualTo(step.clipModelHash));
+            imports.DefaultMaestro(); Assert.That(editor.Read("maestro").walkClip,Is.Zero);
+            Assert.That(runtime.Trigger(rules.Selected.id),Is.False,"A clip must not silently resolve against another avatar");
+            editor.Undo(); yield return new WaitUntil(() => !avatar.ModelBusy);
+            Assert.That(avatar.WalkClip,Is.Zero); Assert.That(runtime.Trigger(rules.Selected.id),Is.True,runtime.Scheduler.LastError); runtime.StopAll();
+            var replacement = ModelLibrary.Inspect("different.glb",ModelFixture.Mixamo(json => json["animations"][0]["name"] = "Different motion"));
+            var saveReplacement = editor.Models.SaveAsync(replacement); yield return new WaitUntil(() => saveReplacement.IsCompleted);
+            Assert.That(saveReplacement.Exception,Is.Null);
+            Assert.That(editor.SetMaestroModel(replacement.Hash),Is.True); Assert.That(avatar.ModelBusy,Is.True);
+            rules.CycleGesture(); Assert.That(rules.Selected.steps[0].clipModelHash,Is.Null,"Loading must not bind the previous rig's clip index to the next model");
+            yield return new WaitUntil(() => !avatar.ModelBusy);
+            rules.CycleGesture(); Assert.That(rules.Selected.steps[0].clipModelHash,Is.EqualTo(replacement.Hash));
         }
 
         [UnityTest] public IEnumerator IncompleteAndAmbiguousNamedRigsRemainObjectsButCannotReplaceMaestro()
@@ -210,7 +286,7 @@ namespace Maestro.Quest.Tests
             editor.Undo(); yield return null;
             created = editor.Find(data.id).GetComponent<CreatedRoomObject>(); yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");
             Assert.That(created.Model.Ready, Is.True, created.ModelStatus); Assert.That(created.Model.IsPlaying, Is.False);
-            editor.SaveNow(); yield return new WaitForSeconds(.2f); UnityEngine.Object.Destroy(workshop); UnityEngine.Object.Destroy(editor); yield return null;
+            editor.SaveNow(); editor.SendMessage("OnApplicationPause",true); editor.SendMessage("OnApplicationPause",false); yield return null; UnityEngine.Object.Destroy(workshop); UnityEngine.Object.Destroy(editor); yield return null;
             var document = new RoomStorage(directory).Load(out var error); Assert.That(document, Is.Not.Null, error);
             Assert.That(document.objects.Single(x => x.id == data.id).modelHash, Is.EqualTo(data.modelHash));
             foreach (var value in root.GetComponentsInChildren<CreatedRoomObject>()) UnityEngine.Object.Destroy(value.gameObject); yield return null;

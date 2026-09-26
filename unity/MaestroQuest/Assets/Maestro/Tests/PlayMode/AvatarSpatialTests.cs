@@ -75,6 +75,27 @@ namespace Maestro.Quest.Tests
             world.SetSurfaces(false,"Tracking alignment unavailable");
             Assert.That(navigation.Prepare(.25f,1.7f,out _),Is.False);
         }
+        [UnityTest] public IEnumerator SmallAvatarCanClearTheBookAndMovementToolsControlPreviewAndStop()
+        {
+            Surface(new Vector3(0,-.1f,0),new Vector3(8,.2f,8)); Tutor(); Ready();
+            var book = editor.Find("book"); book.gameObject.layer = RoomPhysicsLayers.Environment;
+            book.transform.position = new Vector3(0,1,.6f); book.GetComponent<BoxCollider>().size = new Vector3(.8f,.4f,.15f);
+            Physics.SyncTransforms();
+            Assert.That(motion.Begin("large",AvatarSpatialMode.Follow,out var error),Is.True,error);
+            yield return new WaitForSeconds(1);
+            Assert.That(motion.Status,Does.Contain("blocked by book")); var stoppedAt = avatar.transform.position.z;
+            Assert.That(editor.SetAvatarSize(.35f),Is.True); Assert.That(motion.Active,Is.False);
+            Assert.That(motion.Begin("small",AvatarSpatialMode.Follow,out error),Is.True,error);
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(avatar.transform.position.z,Is.GreaterThan(stoppedAt+.4f),"A smaller avatar must use its own body clearance"); motion.Stop();
+            var board = new GameObject("Movement tray"); board.transform.SetParent(root.transform,false);
+            board.AddComponent<AvatarSpatialTools>().Build(motion,editor,authoring,null,room);
+            var tools = board.GetComponentsInChildren<RuleToolAction>();
+            RuleToolAction Find(string label) => Array.Find(tools,tool => tool.AccessibleName == label);
+            Find("Preview walk").Command(); Assert.That(authoring.ControlsTarget("maestro"),Is.True); Assert.That(motion.Active,Is.False);
+            Find("Stop").Command(); Assert.That(authoring.ControlsTarget("maestro"),Is.False);
+            Find("Size").Command(); Assert.That(editor.Read("maestro").scale,Is.EqualTo(.5f));
+        }
         [UnityTest] public IEnumerator GazeTurnsHeadAndTrackingAuthoringAndRecoveryInterruptOwnership()
         {
             Tutor(); viewer.transform.position = new Vector3(2,1.6f,3);

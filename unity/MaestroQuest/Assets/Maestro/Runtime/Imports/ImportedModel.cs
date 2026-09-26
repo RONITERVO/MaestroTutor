@@ -33,6 +33,18 @@ namespace Maestro.Quest.Imports
         public bool IsHumanoid => Humanoid && Humanoid.avatar && Humanoid.avatar.isHuman && Humanoid.avatar.isValid;
         public string HumanoidIssue { get; private set; }
         public string ClipName(int index) => index >= 0 && index < ClipCount ? ModelLibrary.SafeName(instance.AnimationClips[index].name) : "No embedded clips";
+        public float ClipDuration(int index) => index >= 0 && index < ClipCount ? instance.AnimationClips[index].length : 0;
+        public bool SampleClip(int index, float time, bool loop)
+        {
+            if (index < 0 || index >= ClipCount || !float.IsFinite(time) || time < 0 || ClipDuration(index) <= 0) return false;
+            Stop(); // Unkeyed joints must not accumulate last frame's gaze or pose offsets.
+            // A tutor clip supplies pose data; its fitted container stays at the room placement.
+            var position = instance.transform.localPosition; var rotation = instance.transform.localRotation; var scale = instance.transform.localScale;
+            var clip = instance.AnimationClips[index];
+            clip.SampleAnimation(instance.gameObject,loop ? time % clip.length : Mathf.Min(time,clip.length));
+            instance.transform.SetLocalPositionAndRotation(position,rotation); instance.transform.localScale = scale;
+            return true;
+        }
 
         public async Task LoadAsync(ModelAsset asset, IAwaitCaller awaitCaller = null)
         {

@@ -239,3 +239,17 @@ pass. Development checkpoint CA09C56E is installed on Quest 3 after a verified
 room backup; startup succeeds. This does not establish custom-avatar headset
 acceptance or sustained performance. The user is testing import/switch/pose and
 Default/Undo; see QUEST_DEVICE_QA.md for the exact artifact and remaining checks.
+
+### Animation library direction, 2026-09-26
+
+The user is collecting Meshy exports in three movement categories and wants an
+expandable library plus user imports. The current read-only 96-file inventory
+finds repeated geometry/rig and about 8.9 MiB of unique animation accessors in
+844.4 MiB of full exports. See QUEST_ANIMATION_LIBRARY.md for the motion-pack,
+role mapping, stable identity, loading-budget and contact/travel design. Current
+embedded-clip controls are a first step, not that complete library. Do not mark
+hundreds-of-clips support or authored travel complete from individual-file tests.
+
+The headset is charging and the user is sleeping. Keep device work on hold until
+they return and reconnect it. Their reported PC crash involved the phone USB
+network adapter; no Quest cause was established. Continue PC-side work.

@@ -4,12 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Imports;
 using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser }
-    public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip }
+    public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle, Walk }
     public enum RuleInterruption { Restart, Ignore, QueueLatest }
     public enum RuleEventKind { Speaking, Listening, Thinking, Idle, ItemTapped, ItemGrabbed, ItemReleased }
     public enum RuleCondition { Any, Speaking, Listening, Thinking, Idle }
@@ -20,9 +21,11 @@ namespace Maestro.Quest.Rules
         public RuleActionKind action;
         public string targetId = "maestro";
         public RuleGesture gesture;
-        // Zero uses a recording's duration; other actions have an explicit duration.
+        // Zero uses a recording/imported clip duration; other actions use an explicit duration.
         public float seconds;
         public bool loop;
+        public string clipModelHash;
+        public int clipIndex;
         public RuleStep Copy() => (RuleStep)MemberwiseClone();
     }
     [Serializable] public sealed class RuleSequence
@@ -76,7 +79,8 @@ namespace Maestro.Quest.Rules
                 foreach (var step in sequence.steps)
                 {
                     if (step == null || !Enum.IsDefined(typeof(RuleActionKind),step.action) || !Enum.IsDefined(typeof(RuleGesture),step.gesture) || !float.IsFinite(step.seconds) || step.seconds < 0 || step.seconds > 30) return false;
-                    if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.seconds < .1f) return false;
+                    if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.seconds < .1f) return false;
+                    if (step.clipIndex < 0 || step.clipIndex >= 32 || !string.IsNullOrEmpty(step.clipModelHash) && !ModelLibrary.ValidHash(step.clipModelHash)) return false;
                     if (step.action == RuleActionKind.ThrowRecording && (step.loop || step.seconds != 0)) return false;
                     if (step.action != RuleActionKind.Wait && !IsTarget(step.targetId)) return false;
                     if ((step.action == RuleActionKind.Gesture || IsSpatial(step.action)) && step.targetId != "maestro") return false;

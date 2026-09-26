@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Avatar;
+using Maestro.Quest.Rules;
 using UnityEngine;
 
 namespace Maestro.Quest.Imports
@@ -108,7 +109,7 @@ namespace Maestro.Quest.Imports
             finally { busy = false; }
         }
         public void Cancel() { if (Busy) { Say("Please wait for the model check to finish"); return; } ClearPreview(); Say("Import cancelled"); }
-        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; Details = "Select an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
+        void ClearPreview() { if (preview) { preview.gameObject.SetActive(false); Destroy(preview.gameObject); } preview = null; pending = null; Details = "Select Maestro or an imported object to play its clips.\nUse Maestro selects a compatible GLB or VRM humanoid."; Changed?.Invoke(); }
         public async void UseMaestro() => await UseMaestroAsync();
         public async Task<bool> UseMaestroAsync()
         {
@@ -123,6 +124,7 @@ namespace Maestro.Quest.Imports
                 if (HasPreview) { await editor.Models.SaveAsync(pending); if (!this || disposed) return false; ClearPreview(); await Task.Yield(); }
                 if (!this || disposed || !editor.SetMaestroModel(hash)) return false;
                 bool ready = await maestro.ModelLoad;
+                if (ready && this && !disposed) editor.Select(editor.Find("maestro"));
                 if (this && !disposed) Say(maestro.ModelStatus);
                 return ready;
             }
@@ -131,22 +133,32 @@ namespace Maestro.Quest.Imports
         }
         public void DefaultMaestro() { if (Busy) return; if (editor.SetMaestroModel(null)) Say("Included Maestro restored — Undo brings back your custom avatar"); }
         void MaestroChanged() { if (maestro) Say(maestro.ModelStatus); }
-        ImportedModel Target => HasPreview ? preview : editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>()?.Model;
-        public void NextClip() { var target = Target; if (!target || target.ClipCount == 0) { Say("This model has no embedded animation clips"); return; } target.Stop(); clip = (clip + 1) % target.ClipCount; Say("Clip " + (clip + 1) + ": " + target.ClipName(clip)); }
-        public void Play() { var target = Target; if (!target || !target.Ready || target.ClipCount == 0) { Say("Choose an imported model with animation clips"); return; } if (editor.AnyHeld) { Say("Release the object before previewing its clip"); return; } target.Play(clip % target.ClipCount, loop); Say("Playing " + target.ClipName(clip % target.ClipCount)); }
+        ImportedModel Target => HasPreview ? preview : editor.SelectedId == "maestro" ? maestro?.CustomModel : editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>()?.Model;
+        public void NextClip() { var target = Target; if (!target || target.ClipCount == 0) { Say("This model has no embedded animation clips"); return; } Stop(); clip = (clip + 1) % target.ClipCount; Say("Clip " + (clip + 1) + ": " + target.ClipName(clip)); }
+        public void Play()
+        {
+            var target = Target; if (!target || !target.Ready || target.ClipCount == 0) { Say("Choose an imported model or Maestro with animation clips"); return; }
+            if (editor.AnyHeld) { Say("Release the object before previewing its clip"); return; }
+            if (!HasPreview && editor.SelectedId == "maestro")
+            {
+                if (!animationWorkshop || !animationWorkshop.PreviewImportedClip(clip % target.ClipCount,loop)) { Say(animationWorkshop ? animationWorkshop.Status : "Animation controls are unavailable"); return; }
+            }
+            else target.Play(clip % target.ClipCount, loop);
+            Say("Playing " + target.ClipName(clip % target.ClipCount));
+        }
         public void ToggleLoop() { loop = !loop; Stop(); Say(loop ? "Clip loop enabled — press Play" : "Clip plays once — press Play"); }
-        public void Stop() { if (preview) preview.Stop(); if (editor) foreach (var model in editor.GetComponentsInChildren<ImportedModel>()) model.Stop(); }
+        public void Stop() { if (editor) editor.GetComponent<RoomRules>()?.StopAll(); if (maestro) { maestro.GetComponent<AvatarSpatialMotion>()?.Stop(); maestro.StopImportedClip(); } if (animationWorkshop && animationWorkshop.IsImportedPreview) animationWorkshop.Stop(); if (preview) preview.Stop(); if (editor) foreach (var model in editor.GetComponentsInChildren<ImportedModel>()) model.Stop(); }
         void Grabbed(RoomItem item) => item.GetComponent<CreatedRoomObject>()?.Model?.Stop();
         void StopTarget(string id) => editor.Find(id)?.GetComponent<CreatedRoomObject>()?.Model?.Stop();
         void SelectionChanged()
         {
             if (selected == editor.SelectedId) return; selected = editor.SelectedId; clip = 0;
-            if (!HasPreview) { var created = editor.Find(selected)?.GetComponent<CreatedRoomObject>(); Details = created && created.Model ? created.ModelStatus : "Select an imported object to play its clips."; Changed?.Invoke(); }
+            if (!HasPreview) { var created = editor.Find(selected)?.GetComponent<CreatedRoomObject>(); Details = selected == "maestro" && maestro ? maestro.ModelStatus : created && created.Model ? created.ModelStatus : "Select Maestro or an imported object to play its clips."; Changed?.Invoke(); }
         }
         public void NextDetails() { page++; ShowDetails(); }
         void ShowDetails()
         {
-            if (pending == null) { var created = editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>(); Details = created?.ModelStatus ?? "Import a model to view its information."; Changed?.Invoke(); return; }
+            if (pending == null) { var created = editor.Find(editor.SelectedId)?.GetComponent<CreatedRoomObject>(); Details = editor.SelectedId == "maestro" && maestro ? maestro.ModelStatus : created?.ModelStatus ?? "Import a model to view its information."; Changed?.Invoke(); return; }
             var info = pending.Inspection;
             string text = pending.Name + "\n" + info.Vertices + " vertices / " + info.Triangles + " triangles\n" + info.Clips + " embedded clips\n" + (preview && preview.IsHumanoid ? "Humanoid: Add as an object, or Use Maestro as your tutor.\n" : "") + "Author and use terms:\n" + info.Attribution;
             var lines = ModelText.Wrap(text, 64); int pages = Math.Max(1, (lines.Length + 7) / 8); page %= pages;

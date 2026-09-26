@@ -114,7 +114,9 @@ namespace Maestro.Quest.Creation
             // Finish authoring before copying the record so its last pose/take
             // is included in the replacement and in the switch's undo state.
             Editing?.Invoke(); if (Busy()) return false;
-            var data = journal.Read("maestro"); data.modelHash = string.IsNullOrEmpty(hash) ? null : hash;
+            var data = journal.Read("maestro");
+            if (data.modelHash != hash) data.walkClip = 0;
+            data.modelHash = string.IsNullOrEmpty(hash) ? null : hash;
             if (!Commit(new[] { data },Array.Empty<string>(),string.IsNullOrEmpty(hash) ? "Included Maestro selected" : "Custom Maestro selected")) return false;
             var avatar = Find("maestro").GetComponent<MaestroAvatar>();
             if (avatar) _ = avatar.SetModel(data.modelHash,Models,retry:true);
@@ -242,7 +244,7 @@ namespace Maestro.Quest.Creation
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
-                var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) _ = avatar.SetModel(data.modelHash,Models);
+                var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.SetWalkClip(data.walkClip-1); _ = avatar.SetModel(data.modelHash,Models); }
                 if (!data.IsBuiltIn)
                 {
                     item.SetHome(new Vector3(-.63f + (slot % 8) * .18f,.7f + ((slot / 8) % 4) * .18f,1.15f + (slot / 32) * .25f),Quaternion.identity,Vector3.one);
@@ -284,6 +286,21 @@ namespace Maestro.Quest.Creation
             Editing?.Invoke(); if (Busy()) return;
             var data = journal.Read("maestro"); data.followDistance = distance; data.walkSpeed = speed;
             Commit(new[] { data },Array.Empty<string>(),"Maestro movement preferences saved");
+        }
+        public bool SetAvatarWalkClip(int index)
+        {
+            Editing?.Invoke(); if (Busy()) return false;
+            var avatar = Find("maestro").GetComponent<MaestroAvatar>(); var model = avatar ? avatar.CustomModel : null;
+            if (index < -1 || index >= 0 && (!model || avatar.ModelBusy || index >= model.ClipCount || model.ClipDuration(index) < .1f))
+            { SetStatus("Choose a loaded Maestro clip at least 0.1 seconds long"); return false; }
+            var data = journal.Read("maestro"); data.walkClip = index+1;
+            return Commit(new[] { data },Array.Empty<string>(),"Walking clip saved");
+        }
+        public bool SetAvatarSize(float scale)
+        {
+            Editing?.Invoke(); if (Busy()) return false;
+            var data = journal.Read("maestro"); data.scale = scale;
+            return Commit(new[] { data },Array.Empty<string>(),"Maestro size saved");
         }
         public void SaveNow() { CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room"); }
         void CapturePhysicsPlacements()

@@ -37,14 +37,28 @@ namespace Maestro.Quest.Rules
                 var sequence = Selected;
                 if (sequence == null) return "No action sequence selected";
                 var step = sequence.steps[Mathf.Clamp(stepIndex,0,sequence.steps.Length-1)];
-                string action = step.action switch { RuleActionKind.RecordedAnimation => "Play recording",RuleActionKind.ThrowRecording => "Play then throw",RuleActionKind.Gesture => step.gesture.ToString(),RuleActionKind.LookAtUser => "Look at user",RuleActionKind.FollowUser => "Follow user",_ => "Wait" };
+                string action = step.action switch { RuleActionKind.RecordedAnimation => "Play recording",RuleActionKind.ThrowRecording => "Play then throw",RuleActionKind.Gesture => step.gesture.ToString(),RuleActionKind.ImportedClip => ClipName(step),RuleActionKind.LookAtUser => "Look at user",RuleActionKind.FollowUser => "Follow user",_ => "Wait" };
                 string target = step.action == RuleActionKind.Wait ? "" : " · " + TargetName(step.targetId);
                 string source = RuleDocument.IsObjectEvent(trigger) ? " on " + TargetName(sourceId) : "";
                 string policy = sequence.interruption == RuleInterruption.QueueLatest ? "Queue latest" : sequence.interruption.ToString();
                 return sequence.name + " · Step " + (stepIndex+1) + "/" + sequence.steps.Length + ": " + action + target +
-                    "\n" + (step.seconds == 0 ? "Recording duration" : step.seconds+" seconds") + (step.action == RuleActionKind.RecordedAnimation ? " · Clip loop " + OnOff(step.loop) : "") + " · Repeat " + OnOff(sequence.repeat) + " · " + policy +
+                    "\n" + (step.seconds == 0 ? "Full clip duration" : step.seconds+" seconds") + ((step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip) ? " · Clip loop " + OnOff(step.loop) : "") + " · Repeat " + OnOff(sequence.repeat) + " · " + policy +
                     "\n" + EventName(trigger) + source + " · If " + condition + " · While state " + OnOff(stopOnExit);
             }
+        }
+        string ClipName(RuleStep step)
+        {
+            var model = RoomRuleActions.ClipModel(editor.Find(step.targetId));
+            return model && editor.Read(step.targetId)?.modelHash == step.clipModelHash && step.clipIndex < model.ClipCount ? model.ClipName(step.clipIndex) : "Choose imported motion";
+        }
+        void ChooseClip(RuleStep step, bool advance)
+        {
+            var model = RoomRuleActions.ClipModel(editor.Find(step.targetId));
+            string hash = editor.Read(step.targetId)?.modelHash;
+            var avatar = editor.Find(step.targetId)?.GetComponent<Maestro.Quest.Avatar.MaestroAvatar>();
+            if (!model || !model.Ready || model.ClipCount == 0 || avatar && (avatar.ModelBusy || avatar.ModelHash != hash)) { step.clipModelHash = null; step.clipIndex = 0; return; }
+            step.clipIndex = advance && step.clipModelHash == hash ? (step.clipIndex+1)%model.ClipCount : 0;
+            step.clipModelHash = hash;
         }
         static string OnOff(bool value) => value ? "on" : "off";
         static string EventName(RuleEventKind value) => value switch { RuleEventKind.ItemTapped => "On tap", RuleEventKind.ItemGrabbed => "On grab", RuleEventKind.ItemReleased => "On release", _ => "When " + value.ToString().ToLowerInvariant() };
@@ -97,11 +111,11 @@ namespace Maestro.Quest.Rules
             if (Selected == null) { Say("Create an action first"); return; }
             Edit(value => action(value.sequences[sequenceIndex].steps[stepIndex]),message);
         }
-        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; },"Action type changed");
+        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording || step.action == RuleActionKind.ImportedClip ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); },"Action type changed");
         public void UseTarget()
         {
             var id = editor.SelectedId; if (id == null) { Say("Select a room object first"); return; }
-            EditStep(step => { if ((step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) && id != "maestro") { Say("This action targets Maestro"); return; } step.targetId = id; },"Target assigned from your room selection");
+            EditStep(step => { if ((step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) && id != "maestro") { Say("This action targets Maestro"); return; } step.targetId = id; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); },"Target assigned from your room selection");
         }
         public void Step(int direction) { if (Selected == null) return; stepIndex = (stepIndex + direction + Selected.steps.Length) % Selected.steps.Length; Changed?.Invoke(); }
         public void AddStep()
@@ -114,8 +128,8 @@ namespace Maestro.Quest.Rules
             if (Selected == null || Selected.steps.Length <= 1) { Say("Keep at least one step in the action"); return; }
             Edit(value => value.sequences[sequenceIndex].steps = value.sequences[sequenceIndex].steps.Where((_,i) => i != stepIndex).ToArray(),"Step removed");
         }
-        public void CycleTime() => EditStep(step => { if (step.action == RuleActionKind.ThrowRecording) return; float[] times = step.action == RuleActionKind.RecordedAnimation ? new[] { 0f,1,2,3,5,10,20,30 } : new[] { 1f,2,3,5,10,20,30 }; int i = Array.FindIndex(times,x => x > step.seconds); step.seconds = times[i < 0 ? 0 : i]; },"Step duration changed");
-        public void CycleGesture() => EditStep(step => step.gesture = (RuleGesture)(((int)step.gesture+1)%5),"Gesture changed");
+        public void CycleTime() => EditStep(step => { if (step.action == RuleActionKind.ThrowRecording) return; float[] times = (step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip) ? new[] { 0f,1,2,3,5,10,20,30 } : new[] { 1f,2,3,5,10,20,30 }; int i = Array.FindIndex(times,x => x > step.seconds); step.seconds = times[i < 0 ? 0 : i]; },"Step duration changed");
+        public void CycleGesture() => EditStep(step => { if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,true); else step.gesture = (RuleGesture)(((int)step.gesture+1)%Enum.GetValues(typeof(RuleGesture)).Length); },"Motion changed");
         public void ToggleClipLoop() => EditStep(step => { if (step.action != RuleActionKind.ThrowRecording) step.loop = !step.loop; },"Clip looping changed");
         public void ToggleRepeat() { if (Selected != null) Edit(value => value.sequences[sequenceIndex].repeat = !value.sequences[sequenceIndex].repeat,"Sequence repeat changed"); }
         public void CyclePolicy() { if (Selected != null) Edit(value => value.sequences[sequenceIndex].interruption = (RuleInterruption)(((int)value.sequences[sequenceIndex].interruption+1)%3),"Interruption behaviour changed"); }

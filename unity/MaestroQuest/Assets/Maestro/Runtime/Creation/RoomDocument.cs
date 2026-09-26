@@ -30,8 +30,10 @@ namespace Maestro.Quest.Creation
         public float mass = .5f;
         // Zero preserves the defaults when loading rooms created before movement controls.
         public float followDistance, walkSpeed;
+        // Zero means the included gait; positive values are one-based clips of modelHash.
+        public int walkClip;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed };
+        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip };
     }
 
     [Serializable]
@@ -58,6 +60,8 @@ namespace Maestro.Quest.Creation
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
                 bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
+                if (item.walkClip < 0 || item.walkClip > 32 || item.walkClip > 0 && (item.kind != RoomObjectKind.Maestro || !ModelLibrary.ValidHash(item.modelHash)))
+                    return Fail("The walking clip reference is invalid.",out error);
                 if (!float.IsFinite(item.followDistance) || !float.IsFinite(item.walkSpeed) ||
                     item.followDistance != 0 && (item.kind != RoomObjectKind.Maestro || item.followDistance < .8f || item.followDistance > 2.5f) ||
                     item.walkSpeed != 0 && (item.kind != RoomObjectKind.Maestro || item.walkSpeed < .2f || item.walkSpeed > 1.2f))

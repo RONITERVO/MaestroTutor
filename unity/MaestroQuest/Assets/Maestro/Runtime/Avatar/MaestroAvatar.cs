@@ -11,6 +11,7 @@ using UnityEngine;
 namespace Maestro.Quest.Avatar
 {
     /// <summary>Presentation follows the existing tutor; never starts a second audio session.</summary>
+    [DefaultExecutionOrder(110)]
     public sealed class MaestroAvatar : MonoBehaviour
     {
         public NativeBookBrowser Browser;
@@ -21,6 +22,9 @@ namespace Maestro.Quest.Avatar
         JointPose[] savedPose;
         bool editing;
         bool spatialWalking;
+        int importedClip = -1, walkClip = -1;
+        float importedTime, importedSpeed = 1;
+        bool importedLoop;
         GameObject included;
         ImportedModel custom;
         string requestedModel = "";
@@ -32,6 +36,9 @@ namespace Maestro.Quest.Avatar
         public bool ModelBusy { get; private set; }
         public Task<bool> ModelLoad { get; private set; } = Task.FromResult(true);
         public ImportedModel CustomModel => custom;
+        public bool IsImportedClipPlaying => importedClip >= 0;
+        public int WalkClip => walkClip;
+        public string WalkClipName => custom && walkClip >= 0 && walkClip < custom.ClipCount ? custom.ClipName(walkClip) : "Included walk";
         public event Action ModelChanged;
 
         void Awake()
@@ -103,6 +110,7 @@ namespace Maestro.Quest.Avatar
         }
         void UseIncluded()
         {
+            StopImportedClip();
             if (PoseRig) PoseRig.SetDisplayRig(null);
             if (custom) { custom.gameObject.SetActive(false); Destroy(custom.gameObject); custom = null; }
             if (included) foreach (var renderer in included.GetComponentsInChildren<Renderer>()) renderer.enabled = true;
@@ -111,7 +119,7 @@ namespace Maestro.Quest.Avatar
 
         void Update()
         {
-            if (editing || savedPose != null) return;
+            if (editing || savedPose != null || IsImportedClipPlaying) return;
             if (!animator || !animator.runtimeAnimatorController || Time.unscaledTime < greetingUntil) return;
             string state = ReducedMotion ? "Idle" : Browser?.Snapshot?.activity switch
             {
@@ -133,6 +141,7 @@ namespace Maestro.Quest.Avatar
         }
         public void SetEditing(bool value)
         {
+            StopImportedClip();
             editing = value;
             if (!PoseRig) return;
             PoseRig.SetManual(value || savedPose != null);
@@ -141,18 +150,51 @@ namespace Maestro.Quest.Avatar
         public void SpatialWalk(float metresPerSecond)
         {
             bool walking = metresPerSecond > .025f && !ReducedMotion;
+            float rate = walking ? Mathf.Clamp(metresPerSecond/(.65f*transform.lossyScale.y),.25f,2) : 1;
+            if (walking && custom && walkClip >= 0 && walkClip < custom.ClipCount && custom.ClipDuration(walkClip) >= .1f)
+            {
+                if (!spatialWalking || activity != "spatial" || importedClip != walkClip) PlayImportedClip(walkClip,true);
+                importedSpeed = rate; spatialWalking = true; activity = "spatial"; return;
+            }
+            StopImportedClip();
             PoseRig.SetManual(false);
             if (walking != spatialWalking || activity != "spatial") animator.CrossFadeInFixedTime(walking ? "Walk" : "Idle",.15f);
             spatialWalking = walking; activity = "spatial";
-            animator.speed = ReducedMotion ? 0 : walking ? Mathf.Clamp(metresPerSecond/(.65f*transform.lossyScale.y),.25f,2) : 1;
+            animator.speed = ReducedMotion ? 0 : rate;
+        }
+        public void SetWalkClip(int index) { walkClip = index; }
+        public bool PlayImportedClip(int index, bool loop)
+        {
+            if (ModelBusy || !custom || index < 0 || index >= custom.ClipCount || custom.ClipDuration(index) <= 0) return false;
+            StopImportedClip(); custom.Stop();
+            importedClip = index; importedLoop = loop; importedTime = 0; importedSpeed = 1;
+            PoseRig.SetManual(true); activity = "imported";
+            custom.SampleClip(index,0,loop); PoseRig.CaptureImportedPose(); return true;
+        }
+        public void StopImportedClip()
+        {
+            if (importedClip < 0) return;
+            importedClip = -1; if (custom) custom.Stop();
+            if (PoseRig) PoseRig.SetManual(editing || savedPose != null);
+        }
+        void LateUpdate()
+        {
+            if (importedClip < 0 || !custom) return;
+            importedTime += Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
+            if (!importedLoop && importedTime >= custom.ClipDuration(importedClip)) { StopImportedClip(); return; }
+            if (custom.SampleClip(importedClip,importedTime,importedLoop)) PoseRig.CaptureImportedPose();
         }
         public void Gesture(string name)
         {
-            if (!animator || !animator.runtimeAnimatorController || (name != "Greeting" && name != "Pointing" && name != "Listening" && name != "Speaking" && name != "Idle")) return;
+            if (!animator || !animator.runtimeAnimatorController || (name != "Greeting" && name != "Pointing" && name != "Listening" && name != "Speaking" && name != "Idle" && name != "Walk")) return;
+            StopImportedClip();
             PoseRig.SetManual(false); animator.Play(name,0,0); animator.Update(0);
             // A gesture can be sampled into a pose while authoring; live tutor activity
             // resumes when authoring ends and no saved static pose is active.
         }
+        void OnApplicationPause(bool value) { if (value) StopImportedClip(); }
+        void OnApplicationFocus(bool value) { if (!value) StopImportedClip(); }
+        void OnDisable() => StopImportedClip();
         void OnDestroy() { disposed = true; modelGeneration++; }
     }
 }

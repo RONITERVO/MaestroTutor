@@ -183,7 +183,7 @@ namespace Maestro.Quest.Editor
             var spatial = spatialPreview.AddComponent<AvatarSpatialMotion>();
             var spatialBoard = new GameObject("Movement controls"); spatialBoard.transform.SetParent(spatialPreview.transform,false);
             spatialBoard.AddComponent<AvatarSpatialTools>().Build(spatial,null,null,null,spatialRoom);
-            camera.orthographicSize = .28f; camera.transform.position = new Vector3(0,0,-1); camera.transform.LookAt(Vector3.zero);
+            camera.orthographicSize = .35f; camera.transform.position = new Vector3(0,0,-1); camera.transform.LookAt(Vector3.zero);
             Capture(camera,Path.Combine(output,"maestro-movement-tools.png"),1600,1100);
             UnityEngine.Object.DestroyImmediate(spatialPreview);
             var shader = Shader.Find("Maestro/Watercolor");

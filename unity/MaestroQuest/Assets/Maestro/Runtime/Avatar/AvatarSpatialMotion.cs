@@ -113,15 +113,16 @@ namespace Maestro.Quest.Avatar
                 {
                     var direction = corners[corner]-transform.position;
                     var next = Vector3.MoveTowards(transform.position,corners[corner],Mathf.Min(Speed*dt,delta.magnitude-Distance));
-                    if (navigation.Sample(next,.10f,out var floor) && ClearStep(floor))
+                    string blocked = "Scanned floor has no space for this step — try Size or reposition Maestro";
+                    if (navigation.Sample(next,.10f,out var floor) && ClearStep(floor,out blocked))
                     {
                         moved = Vector3.Distance(transform.position,floor); transform.position = floor;
                         direction.y = 0; if (direction.sqrMagnitude > .0001f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(direction),120*dt);
                         Say("Following you — Stop or grip Maestro to end");
                     }
-                    else Say("Path blocked — move the obstacle or grip Maestro to reposition");
+                    else Say(blocked);
                 }
-                else Say("No connected path — place Maestro on the same clear floor");
+                else Say("No connected path — try Size, or place Maestro on the same clear floor");
             }
             else
             {
@@ -131,19 +132,27 @@ namespace Maestro.Quest.Avatar
             avatar.SpatialWalk(dt > 0 ? moved/dt : 0);
             if (Time.unscaledTime >= nextRemember) { nextRemember = Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
         }
-        bool ClearStep(Vector3 next)
+        bool ClearStep(Vector3 next, out string blocked)
         {
+            blocked = "Path crowded — try Size or reposition Maestro";
             float scale = transform.lossyScale.y, r = .25f*scale, h = 1.7f*scale;
             var bottom = transform.position + Vector3.up*(r+.035f); var top = transform.position + Vector3.up*(h-r);
             var step = next-transform.position;
             int mask = (1<<RoomPhysicsLayers.Scanned) | (1<<RoomPhysicsLayers.Item) | (1<<RoomPhysicsLayers.Environment);
             int count = Physics.CapsuleCastNonAlloc(bottom,top,r,step.normalized,hits,step.magnitude+.01f,mask,QueryTriggerInteraction.Ignore);
             if (count == hits.Length) return false;
-            for (int i=0;i<count;i++) if (!hits[i].collider.transform.IsChildOf(transform)) return false;
+            for (int i=0;i<count;i++) if (!hits[i].collider.transform.IsChildOf(transform)) { blocked = Blocker(hits[i].collider); return false; }
             count = Physics.OverlapCapsuleNonAlloc(bottom+step,top+step,r,overlaps,mask,QueryTriggerInteraction.Ignore);
             if (count == overlaps.Length) return false;
-            for (int i=0;i<count;i++) if (!overlaps[i].transform.IsChildOf(transform)) return false;
+            for (int i=0;i<count;i++) if (!overlaps[i].transform.IsChildOf(transform)) { blocked = Blocker(overlaps[i]); return false; }
             return true;
+        }
+        string Blocker(Collider collider)
+        {
+            string obstacle = collider.gameObject.layer == RoomPhysicsLayers.Scanned ? "scanned room surface" :
+                collider.GetComponentInParent<CreatedRoomObject>() ? "room object" :
+                collider.transform.IsChildOf(editor.Find("book").transform) ? "book" : "obstacle";
+            return "Path blocked by " + obstacle + " — try Size or reposition Maestro";
         }
         void LateUpdate()
         {

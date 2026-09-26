@@ -167,3 +167,6 @@ live-gateway/lib/
 *.csproj
 *.sln
 *.slnx
+
+# Python Quest audit cache
+/unity/Tools/__pycache__/

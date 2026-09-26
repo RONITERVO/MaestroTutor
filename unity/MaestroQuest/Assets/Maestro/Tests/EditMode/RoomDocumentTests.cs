@@ -54,6 +54,16 @@ namespace Maestro.Quest.Tests
             Assert.That(journal.Apply(new[] { book },Array.Empty<string>(),out _),Is.False);
             Assert.That(journal.Undo(),Is.True); Assert.That(journal.Read("maestro").modelHash,Is.Null);
         }
+        [Test] public void WalkClipReferencesRequireAnAvatarModelAndSurviveCopyAndUndo()
+        {
+            var journal = new RoomJournal(EmptyRoom()); var data = journal.Read("maestro"); data.walkClip = 1;
+            Assert.That(journal.Apply(new[] { data },Array.Empty<string>(),out _),Is.False);
+            data.modelHash = new string('c',64); Assert.That(journal.Apply(new[] { data },Array.Empty<string>(),out _),Is.True);
+            Assert.That(journal.Snapshot().Copy().objects.Single(x => x.id == "maestro").walkClip,Is.EqualTo(1));
+            data.walkClip = 33; Assert.That(journal.Apply(new[] { data },Array.Empty<string>(),out _),Is.False);
+            data.walkClip = -1; Assert.That(journal.Apply(new[] { data },Array.Empty<string>(),out _),Is.False);
+            Assert.That(journal.Undo(),Is.True); Assert.That(journal.Read("maestro").walkClip,Is.Zero);
+        }
         static RoomObjectData Drawing() => new() { id = Guid.NewGuid().ToString("N"), kind = RoomObjectKind.Drawing,
             points = new[] { Vector3.zero, Vector3.right * .1f, Vector3.up * .2f }, color = new Color(.2f,.4f,.8f), scale = 1.5f };
 

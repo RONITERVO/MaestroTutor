@@ -27,7 +27,7 @@ namespace Maestro.Quest.Rules
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item);
             var labels = new[] { "New action","Prev action","Next action","Delete action","Try action","Stop actions",
                 "Step type","Use target","Prev step","Next step","Add step","Delete step",
-                "Duration","Gesture","Clip loop","Repeat","On interrupt","While state",
+                "Duration","Motion","Clip loop","Repeat","On interrupt","While state",
                 "Event","Event source","Condition","Add trigger","Next trigger","Remove trigger",
                 "Left button","Right button","Room button","Remove button","Undo rules","Redo rules" };
             Action[] commands = { owner.NewSequence,() => owner.SelectSequence(-1),() => owner.SelectSequence(1),owner.DeleteSequence,() => owner.Runtime.TrySelected(),() => { owner.Runtime.StopAll(); owner.Say("All rule actions stopped"); },

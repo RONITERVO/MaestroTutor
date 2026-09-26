@@ -31,16 +31,17 @@ every export from a particular service will work.
 
 Facing alignment uses the mapped hips and applies yaw only, keeping the model
 upright. The generated Avatar belongs to the imported instance and is released
-with it. Embedded animations remain available on imported room objects; selecting
-the character as Maestro uses the common tutor gestures, poses and recordings.
-Selecting its embedded clips as tutor actions remains further work.
+with it. Embedded animations are available on imported room objects and selected
+Maestro through manual preview and ImportedClip rule actions. The common tutor
+gestures, poses and recordings remain available. Shared motion packs and
+automatic role assignment are still further work.
 
 The included rig exposes 15 direct pose handles. Hips and neck are recorded and
 animated channels but do not have separate grab handles in the current editor.
 
 ## Animation and posing
 
-The included skeleton remains the common animation source, with its meshes
+The included skeleton remains the common pose representation, with its meshes
 hidden when a custom model is active. This preserves existing recordings, tutor
 activity gestures and rule actions. The retargeter maps world rotations using
 the source's stored bind pose, the target's bone axes and limb directions;
@@ -110,3 +111,14 @@ Development APK `1EAEF7DA` now includes named GLB support and is installed on
 Quest 3. The verified Meshy export was copied separately into Downloads/Maestro.
 Its import/Use Maestro, gestures and joint posing have been requested for
 physical testing, but are not yet confirmed. See QUEST_DEVICE_QA.md.
+
+## Embedded animations and future library
+
+Development changes on 2026-09-26 connect the selected custom tutor's embedded
+clips to import Play/Stop, the movement tray's walk selection, and visual-rule
+ImportedClip actions. Preview and following hold horizontal clip travel at the
+chosen placement; authored travel is not yet supported. Stop/pause/editing yield
+ownership, and rule references are bound to the current exact model hash.
+The original GLB is still stored whole. See QUEST_ANIMATION_LIBRARY.md for the
+separate motion-pack architecture needed for hundreds of animations and users'
+expandable libraries. These changes still require Quest acceptance.

@@ -92,6 +92,7 @@ namespace Maestro.Quest.Avatar
         public Transform CanonicalBone(PoseJoint joint) => bones.TryGetValue(joint,out var value) ? value : null;
         public Quaternion BindRotation(PoseJoint joint) => bindRotations[joint];
         public Vector3 BindPosition(PoseJoint joint) => bindPositions[joint];
+        public void CaptureImportedPose() { if (displayRig) displayRig.CaptureImportedPose(); }
         public void SetDisplayRig(HumanoidRetargeter value)
         {
             SetPosing(false);

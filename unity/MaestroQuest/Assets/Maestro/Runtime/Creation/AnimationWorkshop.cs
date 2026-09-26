@@ -27,12 +27,14 @@ namespace Maestro.Quest.Creation
         int selectedFrame = -1;
         int gestureIndex;
         bool controlling;
+        bool importedPreview;
         public event Action<string> Starting;
         public bool ControlsTarget(string id) => controlling && targetId == id;
         void TakeControl() { Starting?.Invoke(targetId); controlling = true; target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,true); }
         public bool IsRecording => recording != null;
         public bool IsPlaying => graph.IsValid();
         public bool IsPosing => posing;
+        public bool IsImportedPreview => importedPreview;
         public string Status { get; private set; } = "Select an object, or choose Pose Maestro";
         public event Action Changed;
 
@@ -47,7 +49,7 @@ namespace Maestro.Quest.Creation
             Stop(); targetId = editor.SelectedId; target = editor.Find(targetId); avatar = target ? target.GetComponent<MaestroAvatar>() : null;
             selectedFrame = -1; Say(target ? "Selected " + editor.Read(targetId).kind : "Select an object, or choose Pose Maestro");
         }
-        void Grabbed(RoomItem item) { if (IsPlaying) Stop(); }
+        void Grabbed(RoomItem item) { if (IsPlaying || importedPreview) Stop(); }
         void Say(string value) { Status = value; Changed?.Invoke(); }
         bool Ready()
         {
@@ -181,9 +183,22 @@ namespace Maestro.Quest.Creation
         {
             if (!Ready() || IsRecording) return;
             Stop(); if (!avatar) { Say("Choose Maestro for gestures"); return; }
-            var names = new[] { "Greeting","Pointing","Listening","Speaking","Idle" };
+            var names = new[] { "Greeting","Pointing","Listening","Speaking","Idle","Walk" };
             string name = names[gestureIndex++ % names.Length];
             TakeControl(); avatar.SetEditing(true); avatar.Gesture(name); Say(name + " preview — tap Gesture to choose another");
+        }
+        public bool PreviewImportedClip(int index, bool loop)
+        {
+            if (!Ready() || IsRecording || !avatar) return false;
+            Stop(); TakeControl(); avatar.SetEditing(true);
+            if (!avatar.PlayImportedClip(index,loop)) { Stop(); Say("This Maestro has no playable clip at that index"); return false; }
+            importedPreview = true; Say("Playing " + avatar.CustomModel.ClipName(index) + " — Stop ends preview"); return true;
+        }
+        public void PreviewWalk()
+        {
+            Stop(); editor.Select(editor.Find("maestro")); SelectionChanged(); if (!Ready() || !avatar) return;
+            if (avatar.CustomModel && avatar.WalkClip >= 0) { PreviewImportedClip(avatar.WalkClip,true); return; }
+            TakeControl(); avatar.SetEditing(true); avatar.Gesture("Walk"); Say("Included walk preview — Stop ends preview");
         }
         public void ChangeSpeed(float factor)
         {
@@ -218,6 +233,7 @@ namespace Maestro.Quest.Creation
                 }
                 if (target) { foreach (var collider in target.Grab.colliders) collider.enabled = true; target.Grab.enabled = true; editor.RestorePose(targetId); }
                 posing = false;
+                importedPreview = false;
                 controlling = false;
                 target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);
             }
@@ -226,6 +242,7 @@ namespace Maestro.Quest.Creation
         }
         void Update()
         {
+            if (importedPreview && (!avatar || !avatar.IsImportedClipPlaying)) { Stop(); return; }
             if (IsRecording)
             {
                 float time = Mathf.Min(Time.unscaledTime - began,RoomMotion.MaximumSeconds);

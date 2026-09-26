@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Imports;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -19,10 +20,12 @@ namespace Maestro.Quest.Rules
             public float Began;
             public RoomMotion ThrowMotion;
             public AvatarSpatialMotion Spatial;
+            public ImportedModel ClipModel;
         }
         readonly RoomEditor editor;
         readonly AnimationWorkshop workshop;
         readonly Dictionary<string,Effect> effects = new();
+        public static ImportedModel ClipModel(RoomItem item) => !item ? null : item.GetComponent<MaestroAvatar>()?.CustomModel ?? item.GetComponent<CreatedRoomObject>()?.Model;
         public RoomRuleActions(RoomEditor editor, AnimationWorkshop workshop) { this.editor = editor; this.workshop = workshop; }
         public bool CanRun(RuleStep step, out string error)
         {
@@ -35,6 +38,14 @@ namespace Maestro.Quest.Rules
             if (step.action == RuleActionKind.ThrowRecording && (!item.GetComponent<RigidRoomItem>() || !item.GetComponent<RigidRoomItem>().Dynamic || editor.Read(step.targetId).motion.frames.Length < 2 || !editor.PhysicsWorld || !editor.PhysicsWorld.Running))
             { error = "Throw recording needs a physical creation, two motion frames and running room physics"; return false; }
             if (step.action == RuleActionKind.Gesture && !item.GetComponent<MaestroAvatar>()) { error = "Gestures need a compatible Maestro avatar"; return false; }
+            if (step.action == RuleActionKind.ImportedClip)
+            {
+                var model = ClipModel(item); var avatar = item.GetComponent<MaestroAvatar>();
+                if (string.IsNullOrEmpty(step.clipModelHash) || editor.Read(step.targetId).modelHash != step.clipModelHash ||
+                    !model || !model.Ready || avatar && (avatar.ModelBusy || avatar.ModelHash != step.clipModelHash) || step.clipIndex < 0 || step.clipIndex >= model.ClipCount || model.ClipDuration(step.clipIndex) <= 0)
+                { error = "Choose a clip from the target's current loaded model using Motion"; return false; }
+                if (step.seconds == 0 && model.ClipDuration(step.clipIndex) > 30) { error = "Choose an explicit duration for clips longer than 30 seconds"; return false; }
+            }
             if (RuleDocument.IsSpatial(step.action))
             {
                 var spatial = item.GetComponent<AvatarSpatialMotion>();
@@ -58,6 +69,13 @@ namespace Maestro.Quest.Rules
                 return effect.Spatial.Begin(runId,step.action == RuleActionKind.FollowUser ? AvatarSpatialMode.Follow : AvatarSpatialMode.Look,out error);
             }
             if (step.action == RuleActionKind.Gesture) { avatar.Gesture(step.gesture.ToString()); return true; }
+            if (step.action == RuleActionKind.ImportedClip)
+            {
+                effect.ClipModel = ClipModel(target);
+                if (seconds == 0) seconds = Mathf.Max(.1f,effect.ClipModel.ClipDuration(step.clipIndex));
+                if (avatar) { if (avatar.PlayImportedClip(step.clipIndex,step.loop)) return true; error = "This motion is unavailable; choose a loaded clip"; return false; }
+                effect.ClipModel.Play(step.clipIndex,step.loop); return true;
+            }
             var motion = editor.Read(step.targetId).motion; motion.loop = step.loop;
             if (step.action == RuleActionKind.ThrowRecording) { motion.loop = false; effect.ThrowMotion = motion; }
             if (seconds == 0) seconds = Mathf.Max(.1f,motion.Duration);
@@ -97,6 +115,7 @@ namespace Maestro.Quest.Rules
         {
             if (!effects.Remove(runId,out var effect)) return;
             if (effect.Graph.IsValid()) effect.Graph.Destroy();
+            if (effect.ClipModel) effect.ClipModel.Stop();
             if (!editor) return;
             var item = editor.Find(effect.TargetId);
             if (effect.Spatial) { effect.Spatial.End(runId); return; }
