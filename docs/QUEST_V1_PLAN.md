@@ -18,6 +18,16 @@ It fixes the file-picker starting location and passes 64 required Unity plus
 translation; reported stationary feet remain an unresolved headset gait issue.
 See QUEST_DEVICE_QA.md for the exact acceptance boundaries and evidence.
 
+PC-only motion-library update (2026-09-26): reusable same-rig motion extraction,
+private versioned storage, stable identities/provenance, a bounded clip cache and
+manual Maestro preview controls are implemented. Searchable book browsing,
+role assignments, stable-ID visual-rule actions and large-library headset QA
+remain open. See QUEST_ANIMATION_LIBRARY.md for exact boundaries. The user is
+sleeping while Quest charges; device queries/installations remain on hold.
+The verified development checkpoint is EBACCF1C (not installed), with 75 required
+Unity and 15 native tests, web/native builds and package checks passing. The
+96-export corpus audit and three real category equivalence samples also pass.
+
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.

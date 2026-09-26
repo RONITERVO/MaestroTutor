@@ -30,7 +30,7 @@ namespace Maestro.Quest.Tests
             Assert.That(model.Ready, Is.True); Assert.That(model.IsPlaying, Is.False); Assert.That(model.ClipCount, Is.EqualTo(1));
             Assert.That(model.LocalBounds.size.y, Is.EqualTo(.35f).Within(.001f));
             Assert.That(model.Instance.Renderers[0].sharedMaterial.shader.name, Is.EqualTo("Maestro/Watercolor"));
-            Capture("imported-model-unity.png", Vector3.zero, .26f);
+            yield return Capture("imported-model-unity.png", Vector3.zero, .26f);
             var node = model.Instance.Nodes[0]; var rotation = node.localRotation;
             model.Play(0, true); yield return new WaitForSeconds(.2f);
             Assert.That(Quaternion.Angle(rotation, node.localRotation), Is.GreaterThan(5));
@@ -67,7 +67,7 @@ namespace Maestro.Quest.Tests
             Assert.That(model.IsPlaying,Is.True); var animated = Vertices();
             float displacement = initial.Zip(animated,(a,b) => Vector3.Distance(a,b)).Max();
             Assert.That(displacement,Is.GreaterThan(.001f),"Embedded playback must change the visible skinned mesh");
-            Capture("external-model-playing.png",Vector3.zero,.23f);
+            yield return Capture("external-model-playing.png",Vector3.zero,.23f);
             model.Stop(); yield return null;
             Assert.That(model.IsPlaying,Is.False);
             Assert.That(initial.Zip(Vertices(),(a,b) => Vector3.Distance(a,b)).Max(),Is.LessThan(.0001f),"Stop must restore the imported rest pose");
@@ -161,7 +161,7 @@ namespace Maestro.Quest.Tests
             float displacement = beforePose.Zip(Vertices(),(a,b) => Vector3.Distance(a,b)).Max(); UnityEngine.Object.Destroy(baked);
             Assert.That(displacement,Is.GreaterThan(.01f),"Joint posing must deform the actual external model");
             Assert.That(avatar.PoseRig.Capture().Length,Is.EqualTo(17));
-            yield return null; Capture("external-maestro-posed.png",Vector3.up*.9f,1.05f,true);
+            yield return null; yield return Capture("external-maestro-posed.png",Vector3.up*.9f,1.05f,true);
             if (avatar.CustomModel.ClipCount > 0 && avatar.CustomModel.ClipDuration(0) >= .1f)
             {
                 var position = avatar.transform.position; var container = avatar.CustomModel.Instance.transform;
@@ -177,7 +177,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(Vector3.Distance(localScale,container.localScale),Is.LessThan(.0001f));
                 var hips = avatar.transform.InverseTransformPoint(avatar.PoseRig.Bone(PoseJoint.Hips).position);
                 Assert.That(new Vector2(hips.x,hips.z).magnitude,Is.LessThan(.25f),"Clip travel must not bypass room navigation");
-                Capture("external-maestro-clip.png",Vector3.up*.9f,1.05f,true);
+                yield return Capture("external-maestro-clip.png",Vector3.up*.9f,1.05f,true);
                 avatar.SpatialWalk(0); Assert.That(avatar.IsImportedClipPlaying,Is.False); avatar.SetEditing(false);
             }
             Debug.Log("MAESTRO_EXTERNAL_TUTOR_VERIFIED file="+Path.GetFileName(path)+" posedVertexDisplacement="+displacement+" channels="+avatar.PoseRig.Capture().Length);
@@ -240,6 +240,59 @@ namespace Maestro.Quest.Tests
             rules.CycleGesture(); Assert.That(rules.Selected.steps[0].clipModelHash,Is.EqualTo(replacement.Hash));
         }
 
+        [UnityTest] public IEnumerator LibraryControlsSaveAndPreviewWithoutAnotherModelOrAutoplay()
+        {
+            root.AddComponent<XRInteractionManager>(); var room = root.AddComponent<RoomInteraction>();
+            RoomItem Included(string name)
+            {
+                var go = new GameObject(name); go.transform.SetParent(root.transform,false);
+                var collider = go.AddComponent<BoxCollider>(); var item = go.AddComponent<RoomItem>(); item.Configure(new Collider[] { collider }); room.Register(item); return item;
+            }
+            var book = Included("book"); var tutor = Included("maestro"); var avatar = tutor.gameObject.AddComponent<MaestroAvatar>();
+            var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,tutor,directory);
+            var animations = root.AddComponent<AnimationWorkshop>(); animations.Initialize(editor);
+            var imports = root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,animations);
+            var original = ModelFixture.Mixamo(json => json["animations"][0]["channels"][0]["target"]["node"] = 5);
+            var prepare = imports.PrepareAsync("avatar.glb",original); yield return new WaitUntil(() => prepare.IsCompleted);
+            var use = imports.UseMaestroAsync(); yield return new WaitUntil(() => use.IsCompleted); Assert.That(use.Result,Is.True,imports.Status);
+            var add = imports.SaveMotionsAsync(); yield return new WaitUntil(() => add.IsCompleted); Assert.That(add.Result,Is.True,imports.Status);
+            Assert.That(imports.LibraryMode,Is.True); Assert.That(avatar.IsImportedClipPlaying,Is.False,"Saving must not start playback");
+            var entry = editor.Motions.List().Single();
+            var second = ModelFixture.Mixamo(json => json["animations"][0]["channels"][0]["target"]["node"] = 8);
+            prepare = imports.PrepareAsync("another-export.glb",second); yield return new WaitUntil(() => prepare.IsCompleted);
+            add = imports.SaveMotionsAsync(); yield return new WaitUntil(() => add.IsCompleted); Assert.That(add.Result,Is.True,imports.Status);
+            Assert.That(Directory.GetFiles(Path.Combine(directory,"models"),"*.glb").Length,Is.EqualTo(1),"Motions must not persist another textured model");
+            Assert.That(editor.Motions.List().Length,Is.EqualTo(2)); Assert.That(imports.HasPreview,Is.False);
+            Assert.That(editor.Snapshot().objects.Count(x => x.kind == RoomObjectKind.ImportedModel),Is.Zero);
+            imports.NextClip(); // Return to the first same-named motion's stable identity.
+            var play = imports.PlayLibraryAsync(); bool wasPending = !play.IsCompleted; imports.SendMessage("OnApplicationPause",true);
+            yield return new WaitUntil(() => play.IsCompleted); if (wasPending) Assert.That(play.Result,Is.False,"Pause during loading must cancel playback");
+            Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            // Force another cold load so focus loss cannot hide behind an already
+            // completed cache hit. No action resumes until the user presses Play.
+            editor.Motions.Dispose(); // Recreate the actual editor/library as on restart.
+            UnityEngine.Object.Destroy(imports); UnityEngine.Object.Destroy(animations); UnityEngine.Object.Destroy(editor); yield return null;
+            foreach (var item in root.GetComponentsInChildren<CreatedRoomObject>()) UnityEngine.Object.Destroy(item.gameObject); yield return null;
+            editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,tutor,directory); editor.Select(tutor);
+            animations = root.AddComponent<AnimationWorkshop>(); animations.Initialize(editor);
+            imports = root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,animations); imports.ToggleLibrary();
+            yield return new WaitUntil(() => !avatar.ModelBusy);
+            play = imports.PlayLibraryAsync(); wasPending = !play.IsCompleted; imports.SendMessage("OnApplicationFocus",false);
+            yield return new WaitUntil(() => play.IsCompleted); if (wasPending) Assert.That(play.Result,Is.False,"Focus loss during loading must cancel playback");
+            Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            play = imports.PlayLibraryAsync(); yield return new WaitUntil(() => play.IsCompleted); Assert.That(play.Result,Is.True,imports.Status);
+            Assert.That(avatar.IsImportedClipPlaying,Is.True); Assert.That(animations.IsImportedPreview,Is.True);
+            var head = avatar.PoseRig.Bone(PoseJoint.Head); var hand = avatar.PoseRig.Bone(PoseJoint.LeftHand);
+            var beforeHead = head.rotation; var beforeHand = hand.rotation; yield return new WaitForSeconds(.35f);
+            Assert.That(Mathf.Max(Quaternion.Angle(beforeHead,head.rotation),Quaternion.Angle(beforeHand,hand.rotation)),Is.GreaterThan(10));
+            imports.StopPreview(); Assert.That(avatar.IsImportedClipPlaying,Is.False); Assert.That(animations.ControlsTarget("maestro"),Is.False); Assert.That(imports.Status,Does.Contain("stopped"));
+            string storage = Path.Combine(directory,"motions");
+            using var reopened = new MotionLibrary(storage); Assert.That(reopened.Find(entry.id).hash,Is.EqualTo(entry.hash)); Assert.That(reopened.ResidentClipCount,Is.Zero);
+            var board = new GameObject("Library controls"); board.transform.SetParent(root.transform,false); board.transform.localPosition = new Vector3(-3,1,0); board.AddComponent<ImportTools>().Build(imports,room);
+            yield return null; yield return Capture("motion-library-tools-unity.png",board.transform.position,.53f);
+            imports.DefaultMaestro(); Assert.That(imports.Details,Does.Contain("Load a compatible"));
+        }
+
         [UnityTest] public IEnumerator IncompleteAndAmbiguousNamedRigsRemainObjectsButCannotReplaceMaestro()
         {
             foreach (var name in new[] { "UnknownHand","mixamorig:Hips" })
@@ -276,7 +329,7 @@ namespace Maestro.Quest.Tests
             var prepare = workshop.PrepareAsync("triangle.glb", ModelFixture.Create()); yield return new WaitUntil(() => prepare.IsCompleted);
             Assert.That(workshop.HasPreview, Is.True, workshop.Status); Assert.That(editor.Snapshot().objects.Any(x => x.kind == RoomObjectKind.ImportedModel), Is.False);
             var board = new GameObject("Solid import tools"); board.transform.SetParent(root.transform, false); board.transform.localPosition = new Vector3(4,0,0); board.AddComponent<ImportTools>().Build(workshop, room);
-            Capture("import-tools-unity.png", board.transform.position, .53f);
+            yield return Capture("import-tools-unity.png", board.transform.position, .53f);
             var accept = workshop.AcceptAsync(); yield return new WaitUntil(() => accept.IsCompleted); Assert.That(accept.Result, Is.True, workshop.Status);
             var data = editor.Read(editor.SelectedId); Assert.That(data.kind, Is.EqualTo(RoomObjectKind.ImportedModel)); Assert.That(ModelLibrary.ValidHash(data.modelHash), Is.True);
             var created = editor.Find(data.id).GetComponent<CreatedRoomObject>();
@@ -294,15 +347,18 @@ namespace Maestro.Quest.Tests
             created = editor.Find(data.id).GetComponent<CreatedRoomObject>(); yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");
             Assert.That(created.Model.Ready, Is.True, created.ModelStatus); Assert.That(created.Model.IsPlaying, Is.False);
         }
-        static void Capture(string name, Vector3 center, float size, bool front = false)
+        static IEnumerator Capture(string name, Vector3 center, float size, bool front = false)
         {
-            string output = Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE"); if (string.IsNullOrEmpty(output)) return;
+            string output = Environment.GetEnvironmentVariable("MAESTRO_IMPORT_EVIDENCE"); if (string.IsNullOrEmpty(output)) yield break;
             Directory.CreateDirectory(output); var go = new GameObject("Import verification camera", typeof(Camera)); var camera = go.GetComponent<Camera>();
             var texture = new RenderTexture(1400, 1400, 24); var pixels = new Texture2D(1400, 1400, TextureFormat.RGB24, false); var previous = RenderTexture.active;
             try
             {
                 camera.transform.position = center + (front ? Vector3.forward*3 : Vector3.back); camera.transform.LookAt(center); camera.orthographic = true; camera.orthographicSize = size; camera.nearClipPlane = .01f;
-                camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1); camera.targetTexture = texture; camera.Render();
+                camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1); camera.targetTexture = texture; camera.enabled = false;
+                // Offscreen text first becomes visible here. Let dynamic-font atlas
+                // and TextMesh UV updates settle before retaining visual evidence.
+                camera.Render(); yield return null; camera.Render();
                 RenderTexture.active = texture; pixels.ReadPixels(new Rect(0,0,1400,1400),0,0); pixels.Apply(); File.WriteAllBytes(Path.Combine(output,name),pixels.EncodeToPNG());
             }
             finally { RenderTexture.active = previous; camera.targetTexture = null; UnityEngine.Object.Destroy(go); UnityEngine.Object.Destroy(texture); UnityEngine.Object.Destroy(pixels); }

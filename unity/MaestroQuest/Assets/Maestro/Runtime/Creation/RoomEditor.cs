@@ -41,6 +41,7 @@ namespace Maestro.Quest.Creation
         public bool AnyHeld => objects.Values.Any(item => item && item.Grab && item.Grab.isSelected);
         public RoomDocument Snapshot() => journal.Snapshot();
         public ModelLibrary Models { get; private set; }
+        public MotionLibrary Motions { get; private set; }
         public RoomPhysicsWorld PhysicsWorld { get; private set; }
 
         public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null)
@@ -48,7 +49,7 @@ namespace Maestro.Quest.Creation
             room = interaction; PhysicsWorld = physics;
             AddIdentity("book", book); AddIdentity("maestro", maestro);
             var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room");
-            storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"));
+            storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models")); Motions = new MotionLibrary(Path.Combine(directory,"motions"));
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro));
             Reconcile();
@@ -343,7 +344,7 @@ namespace Maestro.Quest.Creation
         void OnApplicationQuit() => Flush();
         void OnDestroy()
         {
-            Flush();
+            Flush(); Motions?.Dispose();
             if (room) { room.Restoring -= BeforeRestore; room.Restored -= AfterRestore; }
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished; }
         }

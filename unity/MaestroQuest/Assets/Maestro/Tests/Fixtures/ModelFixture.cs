@@ -85,6 +85,55 @@ namespace Maestro.Quest.Tests
             for (int i = 0; i < names.Length; i++) root["nodes"][i+1]["name"] = "mixamorig:"+names[i];
             edit?.Invoke(root);
         },avatar:true,skinAllBones:true);
+        public static byte[] TranslationMotion(string interpolation, float end = 1)
+        {
+            var original = Create(); int jsonLength = BitConverter.ToInt32(original,12);
+            var root = JObject.Parse(Encoding.UTF8.GetString(original,20,jsonLength));
+            using var binary = new MemoryStream(); using var writer = new BinaryWriter(binary);
+            int binaryLength = (int)root["buffers"][0]["byteLength"]; writer.Write(original,28+jsonLength,binaryLength);
+            int offset = (int)binary.Position;
+            float[] values = interpolation == "CUBICSPLINE" ? new float[] { 0,0,0, 0,0,0, 0,0,2, 0,0,0, 0,0,end, 0,0,0 } : new float[] { 0,0,0, 0,0,end };
+            foreach (float value in values) writer.Write(value);
+            var views = (JArray)root["bufferViews"]; views.Add(new JObject { ["buffer"] = 0,["byteOffset"] = offset,["byteLength"] = values.Length*4 });
+            var accessors = (JArray)root["accessors"]; accessors.Add(new JObject { ["bufferView"] = views.Count-1,["componentType"] = 5126,["count"] = values.Length/3,["type"] = "VEC3" });
+            root["animations"][0]["samplers"][0]["output"] = accessors.Count-1; root["animations"][0]["samplers"][0]["interpolation"] = interpolation;
+            root["animations"][0]["channels"][0]["target"]["path"] = "translation";
+            root["buffers"][0]["byteLength"] = binary.Length; return Pack(root,binary.ToArray());
+        }
+        public static byte[] CubicRotationMotion()
+        {
+            var original = Create(); int jsonLength = BitConverter.ToInt32(original,12);
+            var root = JObject.Parse(Encoding.UTF8.GetString(original,20,jsonLength));
+            using var binary = new MemoryStream(); using var writer = new BinaryWriter(binary);
+            writer.Write(original,28+jsonLength,(int)root["buffers"][0]["byteLength"]); int offset = (int)binary.Position;
+            float[] values = { 0,0,0,0, 0,0,0,1, 0,2,0,0, 0,0,0,0, 0,.70710678f,0,.70710678f, 0,0,0,0 };
+            foreach (float value in values) writer.Write(value);
+            var views = (JArray)root["bufferViews"]; views.Add(new JObject { ["buffer"] = 0,["byteOffset"] = offset,["byteLength"] = values.Length*4 });
+            var accessors = (JArray)root["accessors"]; accessors.Add(new JObject { ["bufferView"] = views.Count-1,["componentType"] = 5126,["count"] = values.Length/4,["type"] = "VEC4" });
+            root["animations"][0]["samplers"][0]["output"] = accessors.Count-1; root["animations"][0]["samplers"][0]["interpolation"] = "CUBICSPLINE";
+            root["buffers"][0]["byteLength"] = binary.Length; return Pack(root,binary.ToArray());
+        }
+        public static byte[] MorphMotion()
+        {
+            var original = Create(); int jsonLength = BitConverter.ToInt32(original,12);
+            var root = JObject.Parse(Encoding.UTF8.GetString(original,20,jsonLength));
+            using var binary = new MemoryStream(); using var writer = new BinaryWriter(binary);
+            writer.Write(original,28+jsonLength,(int)root["buffers"][0]["byteLength"]);
+            int Add(string type,int components,float[] values)
+            {
+                int offset = (int)binary.Position; foreach (float value in values) writer.Write(value);
+                var views = (JArray)root["bufferViews"]; views.Add(new JObject { ["buffer"] = 0,["byteOffset"] = offset,["byteLength"] = values.Length*4 });
+                var accessors = (JArray)root["accessors"]; accessors.Add(new JObject { ["bufferView"] = views.Count-1,["componentType"] = 5126,["count"] = values.Length/components,["type"] = type }); return accessors.Count-1;
+            }
+            int positions = Add("VEC3",3,new float[] { 0,0,0, 0,0,0, 0,0,1 });
+            int values = Add("SCALAR",1,new float[] { 0,1 });
+            root["meshes"][0]["primitives"][0]["targets"] = new JArray(new JObject { ["POSITION"] = positions });
+            root["meshes"][0]["extras"] = new JObject { ["targetNames"] = new JArray("Smile") };
+            root["meshes"][0]["weights"] = new JArray(0);
+            root["animations"][0]["samplers"][0]["output"] = values;
+            root["animations"][0]["channels"][0]["target"]["path"] = "weights";
+            root["buffers"][0]["byteLength"] = binary.Length; return Pack(root,binary.ToArray());
+        }
         public static byte[] Pack(JObject root, byte[] binary)
         {
             byte[] json = Encoding.UTF8.GetBytes(root.ToString(Formatting.None)); int jsonLength = (json.Length+3)/4*4, binaryLength = (binary.Length+3)/4*4;

@@ -111,6 +111,17 @@ actions, custom Maestro headset acceptance, expressions, detailed
 licensing UI, and all overall release gates. Hair/cloth interaction physics is
 explicitly excluded by the user's subsequent scope decision.
 
+## Reusable motions (2026-09-26 PC update)
+
+The import tray can now Save motions from a selected animated export into a
+separate private motion catalogue, without persisting another full model. Library,
+Next clip, Play and Stop preview compatible same-rig motions on custom Maestro.
+Original files and use terms are preserved; changing the avatar does not silently
+retarget incompatible curves. The first implementation is manual preview, with
+book search, role assignments, motion rule IDs and headset stress QA still pending.
+See QUEST_ANIMATION_LIBRARY.md for exact limits, collection results and boundaries.
+No motion-library build has been installed while the user's Quest charges.
+
 ## User's MR collision examples (2026-09-25)
 
 The user asked about throwable balls, animated avatars releasing balls, curtains

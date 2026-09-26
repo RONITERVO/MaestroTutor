@@ -2,6 +2,49 @@
 
 This is development evidence, not a release acceptance report.
 
+## Packaged reusable-motion library — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-EBACCF1C.apk`.
+SHA256: `EBACCF1C36FFDF4BEB94C6C8CD2AD84DE1EB562098F2BF49C0F73256507F5D47`.
+135,241,569 bytes, development signed. The final Editor build exited 0 with
+zero errors and two warnings. APK v2 signature, ARM64 and expected manifest
+checks pass. The final build passed 38 EditMode, 37 required PlayMode and 15
+native Android tests, native lint and the shared web build (90 required tests).
+Three explicitly optional private-file checks are excluded from that build.
+
+The preceding private collection run passed all 78 selected Unity checks,
+including real Meshy Stage Walk, source-versus-library deformation equivalence
+for three category samples and the read-only 96-export extraction audit. All
+source hashes stayed unchanged. Motion payloads total 11,899,044 bytes, with
+one compatible rig and 96 unique clips including one deduplicated short helper.
+No private avatar or motion pack is included in the APK. Source collection,
+storage and runtime memory sizes are separate measurements; see
+QUEST_ANIMATION_LIBRARY.md for the measured boundaries.
+
+Added Save motions / Library controls, same-rig motion extraction, persistent
+stable IDs and source terms, atomic storage/backup recovery, bounded cached
+playback and Maestro previews without another persisted textured model. Tests
+cover no autoplay, pause/focus loss during loading, restart, damaged/missing
+copies, duplicate/revised sources, cache pins and cubic/morph curves. One-shot
+sampling now holds the final frame instead of inheriting an embedded clip's
+loop setting. Offscreen UI capture waits a player frame for font atlas updates;
+the settled import and library tray renders have been visually inspected.
+
+One configuration attempt was correctly rejected because Unity did not exit
+within its shutdown deadline. The final complete retry passed with actual
+successful Editor exits; the timeout was not treated as a successful build.
+Final evidence is in ignored `.quest-evidence/motion-library/verified-EBACCF1C`;
+private collection evidence remains in its `desktop-verification` sibling.
+
+The headset is still charging and no device query, installation or launch was
+performed. Installed build remains 08F340EF. After the user returns, preserve
+room/model/motion data before installing and check Save motions from a second
+same-rig export, Library selection/Play/Stop, duplicate import, incompatible rig
+messages, grip/pose/focus interruption, restart and both-hand readability.
+The previous stationary-feet report and small-room movement checks remain open.
+Searchable book browsing, role assignments, stable-ID rule actions, deletion and
+large-library performance acceptance are not supplied by this checkpoint.
+
 ## Packaged imported-motion and small-room update — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-3A2ABC32.apk`.

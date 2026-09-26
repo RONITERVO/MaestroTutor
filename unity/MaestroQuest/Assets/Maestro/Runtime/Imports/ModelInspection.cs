@@ -23,9 +23,11 @@ namespace Maestro.Quest.Imports
 
         // Inspect before asking Unity to allocate meshes, textures or animation curves.
         // This deliberately accepts a documented, self-contained subset of glTF 2.0.
-        public static ModelInspection Inspect(byte[] bytes)
+        public static ModelInspection Inspect(byte[] bytes) => Inspect(bytes,false);
+        internal static ModelInspection InspectMotion(byte[] bytes) => Inspect(bytes,true);
+        static ModelInspection Inspect(byte[] bytes, bool motionOnly)
         {
-            try { return new Inspector(bytes).Read(); }
+            try { return new Inspector(bytes,motionOnly).Read(); }
             catch (ModelImportException) { throw; }
             catch (Exception error) when (error is JsonException || error is ArgumentException || error is OverflowException || error is InvalidCastException || error is InvalidOperationException || error is IndexOutOfRangeException || error is NullReferenceException)
             { throw new ModelImportException("This model contains invalid GLB data. Export it again as a self-contained GLB or VRM."); }
@@ -34,12 +36,13 @@ namespace Maestro.Quest.Imports
         sealed class Inspector
         {
             readonly byte[] bytes;
+            readonly bool motionOnly;
             JObject root;
             JArray views, accessors, nodes, meshes;
             int binary, binaryLength;
             long decoded;
             readonly ModelInspection info = new();
-            public Inspector(byte[] value) { bytes = value; }
+            public Inspector(byte[] value, bool motionOnly) { bytes = value; this.motionOnly = motionOnly; }
             void Require(bool value, string message = "This model contains invalid GLB data.") { if (!value) throw new ModelImportException(message); }
             uint U32(int at) => BitConverter.ToUInt32(bytes, at);
             public ModelInspection Read()
@@ -65,7 +68,7 @@ namespace Maestro.Quest.Imports
                 int usedBytes = Integer(buffers[0], "byteLength", 1, binaryLength); Require(binaryLength - usedBytes <= 3);
                 views = Array(root, "bufferViews", 4096); accessors = Array(root, "accessors", 4096);
                 nodes = Array(root, "nodes", 512); meshes = Array(root, "meshes", 128);
-                Require(nodes.Count > 0 && meshes.Count > 0, "This file does not contain a visible 3D model.");
+                Require(nodes.Count > 0 && (motionOnly || meshes.Count > 0), "This file does not contain a visible 3D model.");
                 foreach (var view in views)
                 {
                     Require(Integer(view, "buffer", 0, 0) == 0 && view["extensions"] == null, "Compressed buffers are not supported yet.");
@@ -130,7 +133,7 @@ namespace Maestro.Quest.Imports
                     int m = Index(node["mesh"], meshes.Count); info.Vertices += meshVertices[m]; info.Triangles += meshTriangles[m];
                     renderParts += ((JArray)meshes[m]["primitives"]).Count;
                 }
-                Require(info.Vertices > 0 && info.Vertices <= 250000 && info.Triangles <= 120000 && renderParts <= 128, "Reduce this model to 250,000 vertices, 120,000 triangles and 128 material parts or fewer.");
+                Require((motionOnly || info.Vertices > 0) && info.Vertices <= 250000 && info.Triangles <= 120000 && renderParts <= 128, "Reduce this model to 250,000 vertices, 120,000 triangles and 128 material parts or fewer.");
                 var skins = Array(root, "skins", 16);
                 foreach (var skin in skins)
                 {
@@ -154,6 +157,7 @@ namespace Maestro.Quest.Imports
                     }
                 }
                 CheckTextures(); CheckAnimations();
+                if (motionOnly) Require(info.Vertices == 0 && info.TexturePixels == 0 && info.Clips == 1, "A motion pack must contain exactly one clip and no rendered geometry or textures.");
                 info.IsAvatar = root["extensions"]?["VRMC_vrm"] != null || root["extensions"]?["VRM"] != null;
                 var meta = root["extensions"]?["VRMC_vrm"]?["meta"] ?? root["extensions"]?["VRM"]?["meta"];
                 info.Attribution = meta?.ToString(Formatting.Indented) ?? (string)root["asset"]?["copyright"] ?? "No author or license information is included in this model.";

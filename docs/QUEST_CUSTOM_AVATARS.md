@@ -122,3 +122,12 @@ ownership, and rule references are bound to the current exact model hash.
 The original GLB is still stored whole. See QUEST_ANIMATION_LIBRARY.md for the
 separate motion-pack architecture needed for hundreds of animations and users'
 expandable libraries. These changes still require Quest acceptance.
+
+A later PC development update implements same-rig motion-only extraction,
+stable library identities, bounded cached playback and the import tray's Save
+motions / Library controls. This keeps additional export geometry and textures
+out of the saved motion library. Compatible GLB/VRM 1.0 motions can be previewed
+on the current custom tutor; VRM 0.x reusable extraction is explicitly rejected.
+Library role assignments and visual-rule references are still pending, and no
+library update has been installed while the Quest charges. The current status,
+limits and reproducible collection audit are in QUEST_ANIMATION_LIBRARY.md.

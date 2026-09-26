@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Imports;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -193,6 +194,13 @@ namespace Maestro.Quest.Creation
             Stop(); TakeControl(); avatar.SetEditing(true);
             if (!avatar.PlayImportedClip(index,loop)) { Stop(); Say("This Maestro has no playable clip at that index"); return false; }
             importedPreview = true; Say("Playing " + avatar.CustomModel.ClipName(index) + " — Stop ends preview"); return true;
+        }
+        public bool PreviewLibraryMotion(MotionLibrary.Lease motion,bool loop)
+        {
+            if (!Ready() || IsRecording || !avatar) return false;
+            Stop(); TakeControl(); avatar.SetEditing(true);
+            if (!avatar.PlayLibraryMotion(motion,loop)) { Stop(); Say("This motion is incompatible with the loaded Maestro"); return false; }
+            importedPreview = true; Say("Playing library motion — Stop ends preview"); return true;
         }
         public void PreviewWalk()
         {

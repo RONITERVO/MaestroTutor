@@ -9,6 +9,7 @@ param(
     [switch]$RenderImports,
     [switch]$RenderPhysics,
     [string]$ModelAuditDirectory,
+    [string]$MotionAuditDirectory,
     [string]$ModelPreview,
     [switch]$ModelAsMaestro,
     [string]$PageCapture
@@ -78,10 +79,11 @@ Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProject
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
 [xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 34) { throw 'Unity test results did not satisfy the current development checks.' }
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 38) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 $env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
 $env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $ModelPreview).Path } else { '' }
+$env:MAESTRO_MOTION_DIRECTORY = if ($MotionAuditDirectory) { (Resolve-Path -LiteralPath $MotionAuditDirectory).Path } else { '' }
 $env:MAESTRO_REQUIRE_HUMANOID = if ($ModelAsMaestro) { '1' } else { '' }
 Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
 [xml]$playReport = Get-Content -LiteralPath $playResult
@@ -90,10 +92,15 @@ Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"'
 $expectedSkipped = @()
 if (!$ModelPreview) { $expectedSkipped += 'SelectedExternalModelLoadsAndPlaysEmbeddedSkeletalAnimationWhenPresent' }
 if (!$ModelAsMaestro) { $expectedSkipped += 'SelectedExternalHumanoidUsesTheRealTutorReplacementAndPosePath' }
+if (!$MotionAuditDirectory) { $expectedSkipped += 'SelectedCollectionMotionsMatchSourceTransformsAndDeformedMeshes' }
 $unexpectedCases = @($playReport.SelectNodes('//test-case[@result!="Passed"]') | Where-Object {
     $_.result -ne 'Skipped' -or $_.label -ne 'Ignored' -or $expectedSkipped -notcontains $_.name
 })
-if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 33 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
+if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 37 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
+if ($MotionAuditDirectory) {
+    $env:MAESTRO_MOTION_AUDIT = Join-Path $repoRoot '.quest-evidence/motion-library'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestMotionAudit.Inspect') 'motion-audit.log'
+}
 if ($ModelAuditDirectory) {
     $env:MAESTRO_MODEL_DIRECTORY = (Resolve-Path -LiteralPath $ModelAuditDirectory).Path
     $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'

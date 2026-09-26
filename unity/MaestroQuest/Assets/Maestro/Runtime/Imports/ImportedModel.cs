@@ -32,17 +32,30 @@ namespace Maestro.Quest.Imports
         public Animator Humanoid => instance ? instance.GetComponent<Animator>() : null;
         public bool IsHumanoid => Humanoid && Humanoid.avatar && Humanoid.avatar.isHuman && Humanoid.avatar.isValid;
         public string HumanoidIssue { get; private set; }
+        public string MotionRigHash { get; private set; }
+        public string MotionRigIssue { get; private set; }
         public string ClipName(int index) => index >= 0 && index < ClipCount ? ModelLibrary.SafeName(instance.AnimationClips[index].name) : "No embedded clips";
         public float ClipDuration(int index) => index >= 0 && index < ClipCount ? instance.AnimationClips[index].length : 0;
         public bool SampleClip(int index, float time, bool loop)
         {
             if (index < 0 || index >= ClipCount || !float.IsFinite(time) || time < 0 || ClipDuration(index) <= 0) return false;
+            return Sample(instance.AnimationClips[index],time,loop);
+        }
+        public bool SampleMotion(MotionLibrary.Lease motion,float time,bool loop)
+        {
+            if (motion == null || !motion.Clip || motion.RigHash != MotionRigHash || !float.IsFinite(time) || time < 0 || motion.Clip.length <= 0) return false;
+            return Sample(motion.Clip,time,loop);
+        }
+        bool Sample(AnimationClip clip,float time,bool loop)
+        {
             Stop(); // Unkeyed joints must not accumulate last frame's gaze or pose offsets.
             // A tutor clip supplies pose data; its fitted container stays at the room placement.
             var position = instance.transform.localPosition; var rotation = instance.transform.localRotation; var scale = instance.transform.localScale;
-            var clip = instance.AnimationClips[index];
-            clip.SampleAnimation(instance.gameObject,loop ? time % clip.length : Mathf.Min(time,clip.length));
-            instance.transform.SetLocalPositionAndRotation(position,rotation); instance.transform.localScale = scale;
+            // Imported clips default to Loop: sampling exactly at their duration
+            // would otherwise wrap to the first frame even for a one-shot preview.
+            var wrap = clip.wrapMode;
+            try { clip.wrapMode = WrapMode.ClampForever; clip.SampleAnimation(instance.gameObject,loop ? time % clip.length : Mathf.Min(time,clip.length)); }
+            finally { clip.wrapMode = wrap; instance.transform.SetLocalPositionAndRotation(position,rotation); instance.transform.localScale = scale; }
             return true;
         }
 
@@ -55,6 +68,11 @@ namespace Maestro.Quest.Imports
             {
                 if (!this || destroyed) return;
                 var info = asset.Inspection;
+                // Editor batch previews deliberately use a synchronous caller. Do not
+                // capture its main-thread context and then block awaiting a worker.
+                try { MotionRigHash = awaitCaller is ImmediateCaller ? MotionPack.RigIdentity(asset.Bytes) : await Task.Run(() => MotionPack.RigIdentity(asset.Bytes)); }
+                catch (ModelImportException error) { MotionRigHash = null; MotionRigIssue = error.Message; }
+                if (!this || destroyed) return;
                 if (liveModels >= 6 || liveVertices + info.Vertices > 500000 || livePixels + info.TexturePixels > 64 * 1024 * 1024 || liveMorphVertices + info.MorphVertices > 8000000)
                     throw new ModelImportException("This room has reached its model memory budget. Erase an imported object before adding another.");
                 reservation = info; liveModels++; liveVertices += info.Vertices; livePixels += info.TexturePixels; liveMorphVertices += info.MorphVertices;

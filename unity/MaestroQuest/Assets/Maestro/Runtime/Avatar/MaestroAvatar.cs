@@ -25,6 +25,7 @@ namespace Maestro.Quest.Avatar
         int importedClip = -1, walkClip = -1;
         float importedTime, importedSpeed = 1;
         bool importedLoop;
+        MotionLibrary.Lease libraryMotion;
         GameObject included;
         ImportedModel custom;
         string requestedModel = "";
@@ -36,7 +37,7 @@ namespace Maestro.Quest.Avatar
         public bool ModelBusy { get; private set; }
         public Task<bool> ModelLoad { get; private set; } = Task.FromResult(true);
         public ImportedModel CustomModel => custom;
-        public bool IsImportedClipPlaying => importedClip >= 0;
+        public bool IsImportedClipPlaying => importedClip >= 0 || libraryMotion != null;
         public int WalkClip => walkClip;
         public string WalkClipName => custom && walkClip >= 0 && walkClip < custom.ClipCount ? custom.ClipName(walkClip) : "Included walk";
         public event Action ModelChanged;
@@ -171,18 +172,28 @@ namespace Maestro.Quest.Avatar
             PoseRig.SetManual(true); activity = "imported";
             custom.SampleClip(index,0,loop); PoseRig.CaptureImportedPose(); return true;
         }
+        // Ownership of the lease transfers only on success; Stop always releases it.
+        public bool PlayLibraryMotion(MotionLibrary.Lease motion,bool loop)
+        {
+            if (ModelBusy || !custom || motion == null || !motion.Clip || motion.RigHash != custom.MotionRigHash) return false;
+            StopImportedClip(); custom.Stop(); libraryMotion = motion; importedLoop = loop; importedTime = 0; importedSpeed = 1;
+            PoseRig.SetManual(true); activity = "imported";
+            custom.SampleMotion(motion,0,loop); PoseRig.CaptureImportedPose(); return true;
+        }
+        float ImportedDuration => libraryMotion != null ? (libraryMotion.Clip ? libraryMotion.Clip.length : 0) : custom.ClipDuration(importedClip);
         public void StopImportedClip()
         {
-            if (importedClip < 0) return;
+            if (!IsImportedClipPlaying) return;
+            libraryMotion?.Dispose(); libraryMotion = null;
             importedClip = -1; if (custom) custom.Stop();
             if (PoseRig) PoseRig.SetManual(editing || savedPose != null);
         }
         void LateUpdate()
         {
-            if (importedClip < 0 || !custom) return;
+            if (!IsImportedClipPlaying || !custom) return;
             importedTime += Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
-            if (!importedLoop && importedTime >= custom.ClipDuration(importedClip)) { StopImportedClip(); return; }
-            if (custom.SampleClip(importedClip,importedTime,importedLoop)) PoseRig.CaptureImportedPose();
+            if (ImportedDuration <= 0 || !importedLoop && importedTime >= ImportedDuration) { StopImportedClip(); return; }
+            if (libraryMotion != null ? custom.SampleMotion(libraryMotion,importedTime,importedLoop) : custom.SampleClip(importedClip,importedTime,importedLoop)) PoseRig.CaptureImportedPose();
         }
         public void Gesture(string name)
         {
@@ -195,6 +206,6 @@ namespace Maestro.Quest.Avatar
         void OnApplicationPause(bool value) { if (value) StopImportedClip(); }
         void OnApplicationFocus(bool value) { if (!value) StopImportedClip(); }
         void OnDisable() => StopImportedClip();
-        void OnDestroy() { disposed = true; modelGeneration++; }
+        void OnDestroy() { StopImportedClip(); disposed = true; modelGeneration++; }
     }
 }

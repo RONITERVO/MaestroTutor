@@ -1,8 +1,9 @@
 # Expandable Maestro animation library
 
-Design decision, 2026-09-26. This document separates the proposed large-library
-architecture from the development implementation. Quest 3 is charging; no new
-headset installation or acceptance is implied.
+Design and implementation record, 2026-09-26. Motion extraction, storage and
+manual previews are implemented; the full searchable role/rule library remains
+in progress. Quest 3 is charging; no new headset installation or acceptance is
+implied.
 
 ## Keep collecting originals
 
@@ -61,6 +62,93 @@ Nonhumanoid object clips remain attached to their matching object hierarchy.
 Do not promise universal interchange merely because a file is GLB or because
 joint names match. Require explicit supported deformation channels; unsupported
 material/events/cloth behaviour must not silently become a successful import.
+
+## Implemented foundation
+
+`MotionPack` extracts one versioned motion-only container per source clip. It
+keeps named joint channels, hierarchy/rest transforms and inverse binds, while
+excluding geometry, materials and images. These `.motion.glb` files use the GLB
+binary container with an internal Maestro schema; they are not visible model
+exports and the ordinary model importer rejects them. Originals are unchanged.
+
+`MotionLibrary` persists the private `room/motions/motions.v1.json` catalogue.
+GUID identities survive renames, duplicate imports and restarts. Payload hashes
+deduplicate exact motions, source hashes/clip indices preserve provenance, and
+revised motions receive new IDs. Source terms are retained separately; identical
+motion payloads can have several recorded sources. Atomic payload/index writes,
+a last-good backup, damaged-copy repair by reimport and refusal to downgrade an
+unknown catalogue version are implemented. Missing or corrupt motions do not
+play. Index damage preserves files for recovery.
+
+Compatibility currently requires the same ordered named node hierarchy, float32
+rest transforms, joint/inverse-bind data, coordinate convention and named morph
+channels. Matching bone names alone is insufficient. Normal GLB and compatible
+VRM 1.0 motion conventions are supported by the extractor; VRM 0.x reusable
+extraction requests a newer export while ordinary avatar import remains separate.
+Cross-rig motion retargeting is not implemented. Tests cover named morph curves;
+this is not universal facial-expression support.
+
+`MotionClipCompiler` builds a legacy Unity clip without creating another model,
+texture, renderer or hidden rig. Linear/step quaternion conversion matches the
+pinned model importer; cubic values and tangents both receive axis conversion.
+Library leases keep active clips alive and evict only released cached clips.
+The extracted-motion cache is limited to eight clips and 800,000 keyed component
+values in total; embedded clips already in a loaded model have their separate
+existing budgets. These are provisional limits, not Quest memory measurements.
+
+Other explicit limits: 8 MiB per motion payload, 32 MiB extracted per source,
+128 MiB total payload storage, 1,024 catalogue entries and source records, and
+16 MiB catalogue metadata. Extraction is serialized and runs off the Unity main
+thread. The existing 64 MiB source-file, 32 embedded-clip, 32 full-model and
+256 MiB full-model-library limits remain; they were not raised for this feature.
+
+The physical import tray has **Save motions** and **Library**. Import/preview an
+animated export, then Save motions to retain its clips without saving another
+full model; the preview is released. A selected saved custom Maestro can also
+supply motions. Library, Next clip and Play select and preview compatible saved
+motions on the current Maestro, using the existing animation ownership and
+fitted placement. Save/import never starts playback. Stop, pause, model changes
+and editing cancel playback/loading. The normal list hides sub-0.1-second helper
+clips but retains them in storage. Rendering of both the import and library
+tray states is part of desktop QA.
+
+Names, tags, favourites and filtering exist in the data API. The hundreds-of-
+clips browsing experience, book search UI, metadata editing and helper review UI
+are still outstanding. Library clips are not yet assignable to Follow roles or
+visual rules: those still use the existing embedded-model hash/index bindings.
+The private batch audit is a developer verification path, not a headset bulk
+import UI. Use `Verify-Quest.ps1 -MotionAuditDirectory SOURCE_DIRECTORY` to
+exercise real extraction and restart, plus source-versus-library transform and
+baked-mesh equivalence on one representative per category. Its outputs stay in
+ignored `.quest-evidence/motion-library`; it refuses output under the originals.
+
+## Desktop verification snapshot
+
+The 2026-09-26 runtime extraction audit read all 96 original exports (885,417,980
+bytes), with zero failures and every original hash unchanged. Their 192 source
+clips deduplicated to 96 motion payloads: 95 ordinary motions plus one shared
+short helper. All reported one compatible rig. Saved payloads total 11,899,044
+bytes (11.35 MiB), excluding the separately stored avatar and the JSON catalogue.
+This is measured disk storage, not resident RAM or an APK-size estimate. Reopening
+the catalogue preserved every motion ID and payload identity. Folder-derived tags
+are bounded metadata; full original relative paths remain in the private audit.
+
+The category representatives Discuss While Moving, Alert Quick Turn Right and
+Agree Gesture matched the original clip's sampled local transforms and baked
+visible vertices at five times per clip, including both endpoints and the short
+helper. Maximum measured vertex difference was zero in all three samples. This
+checks this pinned importer and these exports; it does not establish universal
+retargeting, foot contact, authored travel or headset performance.
+
+The run passed 38 EditMode and 40 PlayMode checks, including three explicitly
+selected private-model/collection checks. Required checks cover persistence,
+duplicate/revised sources, backup recovery, refusal to downgrade unknown versions,
+damaged/missing payloads, active-cache pins/eviction, cubic values/tangents, named
+morph deformation, library controls, cancellation during loading and no autoplay.
+Actual Stage Walk still passed tutor replacement, posing and anchored clip
+playback. Editor processes exited successfully; evidence is retained privately
+under `.quest-evidence/motion-library/desktop-verification`. The ordinary build
+runs the 38 EditMode and 37 required PlayMode checks without private files.
 
 ## Categorization and movement
 
@@ -128,17 +216,12 @@ generation or upload private models as part of this work.
 
 ## Current development boundary and next release gates
 
-The current implementation imports a whole self-contained GLB/VRM, retains its
-embedded clips, and bounds each file/library/live models. Development changes
-add Maestro clip preview, a persisted walk selection, and an ImportedClip visual
-rule action bound to the exact model hash. This is useful for individual exports,
-not the completed multi-pack library. The current per-file 32-clip and library
-32-file/256-MiB limits must not simply be raised to hold this collection.
-
-Next steps: implement versioned motion-only extraction and rig compatibility;
-verify equivalence against original exports; add stable IDs, role assignments
-and import/search UI; migrate existing references; add blended transitions and
-travel/contact policies; profile large libraries on Quest and test restart,
-missing/corrupt packs, duplicate imports, updates, deletion/undo and user rigs.
-Validate representative stationary, turning and travelling motions before
-bulk-curating hundreds. The user's final Meshy default is still in progress.
+Embedded-model preview, persisted walk selection and ImportedClip visual rules
+remain available alongside the new reusable-motion foundation above. The large
+library is not complete: add searchable book browsing and metadata editing,
+role assignments and stable-ID rule actions with deterministic migration;
+blended transitions; explicit travel/contact policies; library deletion/relinking
+and retained references through room/rule undo. Profile import and long-session
+playback on Quest, including low storage, interruption and large collections.
+The user's final Meshy default is still in progress and private originals are
+not bundled into any build.
