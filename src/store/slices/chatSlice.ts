@@ -17,7 +17,8 @@
 import type { StateCreator } from 'zustand';
 import type { ChatMessage, ReplySuggestion, TtsAudioCacheEntry, GroundingChunk } from '../../core/types';
 import {
-  getChatHistoryDB, 
+  getChatHistoryDB,
+  hideRoomTaskMessage,
   safeSaveChatHistoryDB, 
   getChatMetaDB,
   INLINE_CAP_AUDIO,
@@ -234,8 +235,12 @@ export const createChatSlice: StateCreator<
   },
   
   deleteMessage: (messageId: string) => {
+    if (get().messages.some(message => message.id === messageId && message.agentTask)) {
+      void hideRoomTaskMessage(messageId).catch(error => console.warn('Could not persist task message deletion.', error));
+    }
     set(state => ({
-      messages: state.messages.filter(m => m.id !== messageId)
+      messages: state.messages.filter(m => m.id !== messageId
+        && m.agentTask?.sourceUserId !== messageId && m.agentTask?.sourceAssistantId !== messageId)
     }));
   },
 

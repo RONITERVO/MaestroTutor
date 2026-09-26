@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { RoomTaskHandoff, type RoomTaskRecord, type RoomHandoff } from '../../src/core-sdk/room/roomTaskHandoff';
 import { runRoomActionTask, type RoomAgentState } from '../../src/core-sdk/room/roomAgent';
 import { roomTaskStore } from '../../src/features/chat/services/roomTaskStore';
-import { saveChatHistoryDB } from '../../src/features/chat/services/chatHistory';
+import { saveChatHistoryDB, getChatHistoryDB } from '../../src/features/chat/services/chatHistory';
 import { AgentTaskStatus } from '../../src/features/chat/components/AgentTaskStatus';
 import CollapsedMaestroStatus from '../../src/features/session/components/CollapsedMaestroStatus';
 import { useMaestroStore } from '../../src/store';
@@ -69,7 +69,14 @@ function Fixture() {
     {record?.reply && <p className="my-4">{record.reply.parsed.visibleText}</p>}
     <label className="block mt-6">Continue the conversation<input aria-label="Chat message" className="block w-full rounded border border-current/30 bg-white/60 p-3 mt-2" placeholder="You can keep chatting…" /></label>
     <div className="flex gap-3 mt-6 text-sm">
-      <button className="rounded border border-current/30 p-2" onClick={() => { void manager.start('fixture-assistant'); }}>Start simulated handoff</button>
+      <button className="rounded border border-current/30 p-2" onClick={() => { void (async () => {
+        const history = await getChatHistoryDB(source.conversationId);
+        if (!history.length) await saveChatHistoryDB(source.conversationId, [
+          { id: source.sourceUserId, role: 'user', text: source.input.prompt, timestamp: 1 },
+          { id: source.sourceAssistantId, role: 'assistant', text: 'I will ask the agent.', timestamp: 2 },
+        ]);
+        await manager.start('fixture-assistant');
+      })(); }}>Start simulated handoff</button>
       <button className="rounded border border-current/30 p-2" onClick={() => finish?.()}>Acknowledge simulated action</button>
     </div>
     <p className="mt-5 text-xs opacity-70">Development fixture · simulated provider and room · real IndexedDB task storage</p>

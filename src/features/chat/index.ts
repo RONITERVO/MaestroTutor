@@ -54,3 +54,5 @@ export { useSuggestions } from './hooks/useSuggestions';
 export { useChatPersistence } from './hooks/useChatPersistence';
 
 export { prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff } from './services/roomAgentTasks';
+
+export { hideRoomTaskMessage } from './services/roomTaskSummaries';

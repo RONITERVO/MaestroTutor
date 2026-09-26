@@ -19,6 +19,8 @@ import { trackGeminiUsage } from '../../../shared/utils/costTracker';
 import { safeSaveChatHistoryDB } from './chatHistory';
 import { roomTaskStore } from './roomTaskStore';
 import { publishRoomTaskResult } from './roomTaskResults';
+import { summarizeRoomTask, hasRoomTaskSources } from '../../../core-sdk/room/roomTaskProjection';
+import { isRoomTaskHidden } from './roomTaskSummaries';
 
 const contexts = new Map<string, { prompt: string; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean }>();
 const deliveryContexts = new Map<string, { valid: () => Promise<boolean> }>();
@@ -29,19 +31,10 @@ const usage = (response: { modelUsed?: string; modelVersion?: string; usageMetad
 
 function project(record: RoomTaskRecord) {
   const state = useMaestroStore.getState();
-  if (state.settings.selectedLanguagePairId !== record.handoff.conversationId
-      || !state.messages.some(message => message.id === record.handoff.sourceAssistantId)) return;
-  const parsed = record.reply?.parsed;
-  const patch = {
-    role: parsed ? 'assistant' as const : 'status' as const,
-    text: parsed ? (parsed.translations.length ? undefined : parsed.visibleText) : record.note,
-    translations: parsed?.translations.length ? parsed.translations : undefined,
-    rawAssistantResponse: parsed?.visibleText,
-    // Persist only the language reply in normal chat, never plans/full scene receipts.
-    llmRawResponse: parsed ? parsed.visibleText : undefined,
-    maestroToolKind: 'agent' as const,
-    agentTask: { id: record.id, phase: record.phase, note: record.note },
-  };
+  const summary = summarizeRoomTask(record);
+  if (state.isLoadingHistory || state.settings.selectedLanguagePairId !== record.handoff.conversationId
+      || !hasRoomTaskSources(state.messages, summary) || isRoomTaskHidden(record.id)) return;
+  const patch = summary.message;
   if (state.messages.some(message => message.id === record.id)) state.updateMessage(record.id, patch);
   else state.addMessage({ ...patch, id: record.id });
   void safeSaveChatHistoryDB(record.handoff.conversationId, useMaestroStore.getState().messages);
@@ -190,7 +183,7 @@ export async function startRoomAgentTask(sourceAssistantId: string): Promise<voi
     await roomAgentTasks.start(sourceAssistantId);
   } catch (error) {
     const state = useMaestroStore.getState();
-    if (context?.conversationId === state.settings.selectedLanguagePairId && state.messages.some(message => message.id === sourceAssistantId)) {
+    if (!isRoomTaskHidden(id) && context?.conversationId === state.settings.selectedLanguagePairId && state.messages.some(message => message.id === sourceAssistantId)) {
       const note = error instanceof Error ? error.message : 'The agent task could not start.';
       if (!state.messages.some(message => message.id === id)) {
         state.addMessage({ id, role: 'status', text: note, maestroToolKind: 'agent', agentTask: { id, phase: 'failed', note } });

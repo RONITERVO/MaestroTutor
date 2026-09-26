@@ -924,3 +924,27 @@ or device query is included; the charging hold remains in force.
 6. Repeat tasks over a long session. Inspect managed/BYOK usage and actual acoustic
    timing; simulated tests do not establish provider costs, barge-in quality,
    native microphone ownership or sustained Quest performance.
+
+
+## Task result recovery and database v9 acceptance (pending Quest)
+
+PC evidence: `.quest-evidence/agent-task-recovery`. Real Chromium/IndexedDB probes
+verify migration, app history loading, rollback and deletion. This has not been
+packaged or installed on Quest, and device work remains on charging hold.
+
+1. Back up the installed app before the eventual upgrade. Retain existing chat,
+   bookmarks and task records; upgrade and verify they remain readable. Open an
+   old task's details and inspect acknowledged and unconfirmed actions.
+2. Run a task, switch conversation, then return. Check the recorded final status
+   and result against the actual room. Restart the app and repeat; there must be
+   no repeat action, automatic speech or claim of success for an unconfirmed action.
+3. Delete just a result, restart, and verify it remains hidden. Delete a source
+   message and verify associated visible results and private task details are
+   removed. Existing room objects remain governed by normal room actions.
+4. Verify chat exports include current visible task results. Full private-journal
+   export/import is not implemented yet; do not treat a chat-only backup as a
+   complete task-evidence backup. Restored references must never execute commands.
+5. Interrupt storage with low-space conditions and lifecycle suspension during
+   completion. Verify journal/chat consistency and recovery without dispatching
+   an action whose required durable write failed. Inspect long-history load time
+   and memory with retained original Live media; routine loads use compact summaries.

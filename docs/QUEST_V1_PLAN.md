@@ -90,6 +90,8 @@ verified tool dispatcher. Bounded original sent PCM/JPEG context now follows eli
 handoffs through the shared managed/BYOK client, with incomplete-input failures
 before room actions. Fresh task results now use ordinary chat TTS after active
 speech yields, with shared listening ownership, Stop and no replay on reload.
+Database v9 atomically saves compact task results with their journals and repairs
+chat on history load while preserving deletion and preventing replay.
 Conversational task steering, explicit server cancellation and provider/headset
 acceptance (including audible results) remain open. See QUEST_UNIFIED_AGENT.md.
 

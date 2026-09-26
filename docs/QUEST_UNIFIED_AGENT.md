@@ -123,7 +123,7 @@ history and tutor context, and publishes its result in the original conversation
 The original tutor context is task data; it cannot override the native command
 schema. Detailed observations and receipts stay outside ordinary chat history.
 
-The task journal lives in the existing app database (v8, `agentTasks`). It commits
+The task journal lives in the existing app database (v9, `agentTasks`). It commits
 an atomic initiation claim and each pending action before native dispatch, then
 commits acknowledgements before the next model call. Duplicate initiation IDs
 return existing records. An interrupted/unconfirmed operation is never replayed
@@ -254,6 +254,43 @@ orchestrator's language/cache selection. Provider audio and microphone devices a
 simulated. Real-provider timing, acoustics, barge-in and Quest suspension/restore
 remain acceptance gates; this is not full hands-free acceptance.
 
+## Durable result recovery (PC verification, 2026-09-26)
+
+Database v9 adds a compact `agentTaskSummaries` store indexed by conversation.
+The v8 upgrade derives summaries one journal at a time; it retains original task
+records and existing chat/bookmarks. New task claims and updates commit journal,
+summary and persisted chat projection in one transaction. A new claim also checks
+that both source messages still exist in durable history, preventing a deletion
+that completed during authorization from being followed by a new task claim.
+
+History loading and saving reconcile from the small summary records. A completed
+result missing from chat is restored next to its original reply; a stale result
+is updated in place while preserving its message identity, position and audio
+cache. A late autosave cannot replace a newer task result. Source IDs link results
+for immediate cleanup in the current view. Removing source history deletes its
+journal, summary and projection; late journal writes are rejected. Deleting only
+a result hides that projection across reload and later updates, retaining the
+existing no-replay claim and receipts until the source history is removed.
+
+Recovery never executes room commands, emits completion notifications or starts
+speech. An unfinished journal retains its last recorded phase and unconfirmed
+operations. The existing task UI explains that a task without this view's runner
+is no longer running here and directs the user to inspect the room; it does not
+invent success, restart it, or overwrite a potentially live runner in another
+window. This is recovery on history load, not cross-window live synchronization.
+Routine chat loads read no private task audio, frames, plans or room snapshots.
+
+The real-browser recovery probe exercises v8-to-v9 migration, actual app history
+loading across conversations, bookmark preservation, stale saves, duplicate
+claims, zero automatic announcements, explicit result/source deletion and reload.
+An injected IndexedDB abort verifies rollback of both journal and chat. The
+existing handoff probe also passes its v7 migration, native-acknowledgement and
+Stop/no-replay tests. Recovery uses real IndexedDB; provider/native actions remain
+simulated or uncalled. Full task-journal backup/import and Quest upgrade testing
+are still required; current chat exports include the reconciled visible result,
+not the private journal or its original media. Bulk history replacement clears
+both journal stores and does not resume imported task references.
+
 ## Evidence and remaining release work
 
 At the original text handoff checkpoint, 229 targeted tests and 65 prompt tests passed.
@@ -294,8 +331,8 @@ Remaining work:
    tool protocol.
 2. Add conversation-driven task Stop, clarification, follow-up revision and
    bounded continuation; current explicit task Stop is a chat control. Support
-   durable task-result reconciliation when changing/reloading conversations and
-   include appropriate task data in export/import without automatic resumption.
+   complete task-journal export/import without automatic resumption. Durable
+   result reconciliation now has PC coverage; validate the database upgrade on Quest.
 3. Define explicit managed server cancellation with accurate partial-usage
    settlement; client transport abort currently retains the existing server drain
    policy. Strengthen access-change fencing across asynchronous credential refresh
