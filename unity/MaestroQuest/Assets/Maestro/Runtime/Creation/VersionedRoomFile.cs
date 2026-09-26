@@ -9,26 +9,32 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
-    // v1 originals remain available to an older build. Once v2 exists, corruption
-    // never silently rolls the user back to that older room or rule collection.
+    // Older originals remain available. Once a newer file exists, corruption
+    // never silently rolls the user back to an earlier room or rule collection.
     internal sealed class VersionedRoomFile<T> where T : class
     {
-        readonly string directory,primary,legacy,label;
+        readonly string directory,primary,stem,label;
+        readonly int version;
         readonly int maximum;
         readonly Func<T,bool> validate;
         readonly Func<T,T> copy;
         readonly Action<T> normalize,upgrade;
         public bool ReadOnly { get; private set; }
-        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade)
+        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2)
         {
-            this.directory = Path.GetFullPath(directory); primary = Path.Combine(this.directory,stem+".v2.json"); legacy = Path.Combine(this.directory,stem+".v1.json");
+            this.directory = Path.GetFullPath(directory); this.stem=stem; this.version=version; primary = Path.Combine(this.directory,stem+".v"+version+".json");
             label = stem; this.maximum = maximum; this.validate = validate; this.copy = copy; this.normalize = normalize; this.upgrade = upgrade;
         }
         public T Load(out string message)
         {
             message = null;
-            string source = File.Exists(primary) || File.Exists(primary+".backup") ? primary : legacy;
-            int expected = source == primary ? 2 : 1;
+            string source=primary; int expected=version;
+            for (; expected > 1; expected--)
+            {
+                source=Path.Combine(directory,stem+".v"+expected+".json");
+                if (File.Exists(source) || File.Exists(source+".backup")) break;
+            }
+            source=Path.Combine(directory,stem+".v"+expected+".json");
             if (!File.Exists(source) && !File.Exists(source+".backup")) return null;
             if (Read(source,expected,out var value,out bool newer)) { upgrade(value); return value; }
             if (!newer && Read(source+".backup",expected,out value,out _)) { upgrade(value); message = "Recovered "+label+" from its backup"; return value; }
@@ -62,7 +68,7 @@ namespace Maestro.Quest.Creation
         {
             error = "Saved "+label+" is unavailable for editing; its original files are preserved";
             if (ReadOnly) return false;
-            Read(primary,2,out _,out bool newer); if (newer) { ReadOnly = true; return false; }
+            Read(primary,version,out _,out bool newer); if (newer) { ReadOnly = true; return false; }
             if (value == null || !validate(value)) { error = "Invalid "+label+" data"; return false; }
             var candidate = copy(value); upgrade(candidate);
             if (!validate(candidate)) { error = "Invalid "+label+" data"; return false; }
@@ -75,7 +81,7 @@ namespace Maestro.Quest.Creation
                 using (var stream = new FileStream(pending,FileMode.Create,FileAccess.Write,FileShare.None)) { stream.Write(bytes,0,bytes.Length); stream.Flush(true); }
                 if (File.Exists(primary))
                 {
-                    File.Copy(primary,Read(primary,2,out _,out _) ? primary+".backup" : primary+".unreadable",true);
+                    File.Copy(primary,Read(primary,version,out _,out _) ? primary+".backup" : primary+".unreadable",true);
                     File.Replace(pending,primary,null);
                 }
                 else File.Move(pending,primary);

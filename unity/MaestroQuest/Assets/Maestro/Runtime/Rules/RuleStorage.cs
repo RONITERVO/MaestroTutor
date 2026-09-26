@@ -7,7 +7,7 @@ namespace Maestro.Quest.Rules
     {
         readonly VersionedRoomFile<RuleDocument> file;
         public bool ReadOnly => file.ReadOnly;
-        public RuleStorage(string directory) => file = new VersionedRoomFile<RuleDocument>(directory,"rules",256*1024,x => x.Validate(out _),x => x.Copy(),null,x => x.version = 2);
+        public RuleStorage(string directory) => file = new VersionedRoomFile<RuleDocument>(directory,"rules",256*1024,x => x.Validate(out _),x => x.Copy(),null,x => x.version = 3,3);
         public RuleDocument Load(out string message) => file.Load(out message) ?? new RuleDocument();
         public bool Save(RuleDocument document,out string error) => file.Save(document,out error);
     }

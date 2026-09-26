@@ -10,6 +10,8 @@ using UnityEngine;
 namespace Maestro.Quest.Rules
 {
     public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion }
+    public enum PropHand { Left, Right }
+    public enum PropRelease { Return, Drop, Throw }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle, Walk }
     public enum RuleInterruption { Restart, Ignore, QueueLatest }
     public enum RuleEventKind { Speaking, Listening, Thinking, Idle, ItemTapped, ItemGrabbed, ItemReleased }
@@ -27,6 +29,12 @@ namespace Maestro.Quest.Rules
         public string clipModelHash;
         public int clipIndex;
         public string motionId;
+        public string propId,propAvatarHash;
+        public PropHand propHand=PropHand.Right;
+        public PropRelease propRelease;
+        public Vector3 propOffset;
+        public Quaternion propRotation=Quaternion.identity;
+        public float propReleaseAt=1;
         public RuleStep Copy() => (RuleStep)MemberwiseClone();
     }
     [Serializable] public sealed class RuleSequence
@@ -57,7 +65,7 @@ namespace Maestro.Quest.Rules
     }
     [Serializable] public sealed class RuleDocument
     {
-        public int version = 2;
+        public int version = 3;
         public RuleSequence[] sequences = Array.Empty<RuleSequence>();
         public RuleBinding[] bindings = Array.Empty<RuleBinding>();
         public RuleButtonData[] buttons = Array.Empty<RuleButtonData>();
@@ -65,6 +73,12 @@ namespace Maestro.Quest.Rules
         public static bool IsId(string value) => Guid.TryParseExact(value,"N",out _);
         public static bool IsTarget(string value) => value == "maestro" || value == "book" || IsId(value);
         public static bool IsObjectEvent(RuleEventKind kind) => kind >= RuleEventKind.ItemTapped;
+        public static bool CanCarry(RuleStep step) => step.targetId == "maestro" && (step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.Gesture || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion);
+        public static IEnumerable<string> Targets(RuleStep step)
+        {
+            if (step.action != RuleActionKind.Wait) yield return step.targetId;
+            if (!string.IsNullOrEmpty(step.propId)) yield return step.propId;
+        }
         public static bool IsSpatial(RuleActionKind kind) => kind == RuleActionKind.LookAtUser || kind == RuleActionKind.FollowUser;
         public static string Activity(RuleEventKind kind) => kind switch { RuleEventKind.Speaking => "speaking",RuleEventKind.Listening => "listening",RuleEventKind.Thinking => "thinking",RuleEventKind.Idle => "idle",_ => null };
         public static bool ConditionMatches(RuleCondition condition, string activity) => condition == RuleCondition.Any || condition.ToString().ToLowerInvariant() == activity;
@@ -72,7 +86,7 @@ namespace Maestro.Quest.Rules
         public bool Validate(out string error)
         {
             error = "This rule file has an unsupported version or invalid data.";
-            if (version != 1 && version != 2 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
+            if (version != 1 && version != 2 && version != 3 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
             var sequenceIds = new HashSet<string>(); var bindingIds = new HashSet<string>(); var buttonIds = new HashSet<string>();
             foreach (var sequence in sequences)
             {
@@ -80,6 +94,10 @@ namespace Maestro.Quest.Rules
                 foreach (var step in sequence.steps)
                 {
                     if (step == null || !Enum.IsDefined(typeof(RuleActionKind),step.action) || !Enum.IsDefined(typeof(RuleGesture),step.gesture) || !float.IsFinite(step.seconds) || step.seconds < 0 || step.seconds > 30) return false;
+                    if (!string.IsNullOrEmpty(step.propId) && (version < 3 || !IsId(step.propId) || !CanCarry(step) || !Enum.IsDefined(typeof(PropHand),step.propHand) ||
+                        !Enum.IsDefined(typeof(PropRelease),step.propRelease) || !float.IsFinite(step.propReleaseAt) || step.propReleaseAt < .05f || step.propReleaseAt > 1 ||
+                        !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
+                        !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
                     if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.seconds < .1f) return false;
                     if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId) || version == 1 && (step.action == RuleActionKind.LibraryMotion || !string.IsNullOrEmpty(step.motionId))) return false;
                     if (step.clipIndex < 0 || step.clipIndex >= 32 || !string.IsNullOrEmpty(step.clipModelHash) && !ModelLibrary.ValidHash(step.clipModelHash)) return false;

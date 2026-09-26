@@ -24,9 +24,16 @@ walking assignments and visual-rule actions are implemented. A searchable
 book spread now supports preview, metadata editing, filters, source terms and
 walking/rule assignment, with preserved chat state and bounded native messages.
 See QUEST_ANIMATION_LIBRARY.md for exact boundaries and QUEST_DEVICE_QA.md for
-the latest packaged checkpoint. Broader role profiles, blending, deletion and
-large-library headset QA remain open. The user is sleeping while Quest charges;
+the latest packaged checkpoint. Per-avatar tutor-state profiles and a bounded pose transition are implemented;
+pack deletion and large-library headset QA remain open. The user is sleeping while Quest charges;
 device queries/installations remain on hold.
+
+PC-only prop update (2026-09-26): Maestro animation steps can carry one fitted
+creation and return, drop or throw it through the existing rule triggers. The
+physical Props tab adds hand, fit and release controls without enlarging the
+tray or covering book pages. Rules migrate to v3 while retaining older files.
+See QUEST_AVATAR_PROPS.md for collision/ownership limits. Hardware acceptance,
+contact IK and the remaining release gates are still open.
 
 ## Accepted product scope
 

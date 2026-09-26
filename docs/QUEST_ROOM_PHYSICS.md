@@ -66,8 +66,9 @@ anchors or guarantee whole-object clearance around irregular surfaces.
   cannot simultaneously drive it. The rule builder's **Play then throw** action
   evaluates a recording's final pose, derives velocity/spin from its last 0.1 s,
   and releases it into physics. Ordinary cancellation never launches an object.
-  Attachment to Maestro's hands and synchronized avatar/object throw authoring
-  are still separate remaining work.
+  Maestro animation steps can also carry one fitted prop and return, drop or
+  throw it at a chosen step fraction. See QUEST_AVATAR_PROPS.md for controls,
+  ownership/collision limits and pending headset acceptance.
 - Save/load and undo retain physics settings. Live placements are checkpointed
   without adding every simulation step to Undo. Unrelated edits do not reset a
   flying object's transform. Room placements are not cross-session spatial

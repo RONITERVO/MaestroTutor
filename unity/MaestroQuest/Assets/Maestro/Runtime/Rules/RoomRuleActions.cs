@@ -17,6 +17,10 @@ namespace Maestro.Quest.Rules
         sealed class Effect
         {
             public string TargetId;
+            public RuleStep Step;
+            public float Duration;
+            public AvatarHeldProp Prop;
+            public RigidRoomItem PropReservation;
             public PlayableGraph Graph;
             public ScriptPlayable<RoomMotionPlayable> Player;
             public float Began;
@@ -37,6 +41,8 @@ namespace Maestro.Quest.Rules
         {
             error = null;
             if (step.action == RuleActionKind.Wait) return true;
+            if (!AvatarHeldProp.CanAttach(editor,step,out error)) return false;
+            if (!string.IsNullOrEmpty(step.propId) && workshop && workshop.ControlsTarget(step.propId)) { error="Stop authoring the prop before running this action"; return false; }
             var item = editor.Find(step.targetId);
             if (!item) { error = "An action target was removed; choose another target"; return false; }
             if (item.Grab.isSelected || (workshop && workshop.ControlsTarget(step.targetId))) { error = "Release the target and stop authoring before running its rule"; return false; }
@@ -75,19 +81,26 @@ namespace Maestro.Quest.Rules
             if (step.action == RuleActionKind.Wait) return true;
             var target = editor.Find(step.targetId); var avatar = target.GetComponent<MaestroAvatar>();
             if (avatar && !RuleDocument.IsSpatial(step.action)) { avatar.GetComponent<AvatarSpatialMotion>()?.Stop(); avatar.SetEditing(true); }
-            var effect = new Effect { TargetId = step.targetId, Began = Time.unscaledTime }; effects.Add(runId,effect);
+            var effect = new Effect { TargetId = step.targetId, Began = Time.unscaledTime,Step=step.Copy(),Duration=seconds }; effects.Add(runId,effect);
             target.GetComponent<RigidRoomItem>()?.SetAnimationOwner(effect,true);
+            if (!string.IsNullOrEmpty(step.propId))
+            {
+                effect.PropReservation=editor.Find(step.propId).GetComponent<RigidRoomItem>();
+                if (effect.PropReservation.AnimationOwned) { error="Another animation owns this prop"; return false; }
+                effect.PropReservation.SetAnimationOwner(effect,true);
+            }
             if (RuleDocument.IsSpatial(step.action))
             {
                 effect.Spatial = target.GetComponent<AvatarSpatialMotion>();
                 return effect.Spatial.Begin(runId,step.action == RuleActionKind.FollowUser ? AvatarSpatialMode.Follow : AvatarSpatialMode.Look,out error);
             }
-            if (step.action == RuleActionKind.Gesture) { avatar.Gesture(step.gesture.ToString()); return true; }
+            if (step.action == RuleActionKind.Gesture) { avatar.Gesture(step.gesture.ToString()); return BeginProp(effect,out error); }
             if (step.action == RuleActionKind.ImportedClip)
             {
                 effect.ClipModel = ClipModel(target);
                 if (seconds == 0) seconds = Mathf.Max(.1f,effect.ClipModel.ClipDuration(step.clipIndex));
-                if (avatar) { if (avatar.PlayImportedClip(step.clipIndex,step.loop)) return true; error = "This motion is unavailable; choose a loaded clip"; return false; }
+                effect.Duration=seconds;
+                if (avatar) { if (avatar.PlayImportedClip(step.clipIndex,step.loop)) return BeginProp(effect,out error); error = "This motion is unavailable; choose a loaded clip"; return false; }
                 effect.ClipModel.Play(step.clipIndex,step.loop); return true;
             }
             if (step.action == RuleActionKind.LibraryMotion)
@@ -95,7 +108,7 @@ namespace Maestro.Quest.Rules
                 var entry = editor.Motions.Find(step.motionId); effect.ClipModel = ClipModel(target); effect.RigHash = effect.ClipModel.MotionRigHash;
                 effect.ModelHash = editor.Read(step.targetId).modelHash; effect.Loop = step.loop;
                 if (seconds == 0) seconds = Mathf.Max(.1f,entry.duration);
-                effect.Preparation = Prepare(effect,entry.id); return true;
+                effect.Duration=seconds; effect.Preparation = Prepare(effect,entry.id); return true;
             }
             var motion = editor.Read(step.targetId).motion; motion.loop = step.loop;
             if (step.action == RuleActionKind.ThrowRecording) { motion.loop = false; effect.ThrowMotion = motion; }
@@ -108,7 +121,14 @@ namespace Maestro.Quest.Rules
                 target.transform.SetLocalPositionAndRotation(frame.position,frame.rotation); target.transform.localScale = Vector3.one*frame.scale;
                 if (avatar && avatar.PoseRig) { avatar.PoseRig.SetManual(true); avatar.PoseRig.Apply(frame.joints); }
             };
-            ScriptPlayableOutput.Create(effect.Graph,"Motion").SetSourcePlayable(effect.Player); effect.Graph.Play(); return true;
+            ScriptPlayableOutput.Create(effect.Graph,"Motion").SetSourcePlayable(effect.Player); effect.Graph.Play(); effect.Duration=seconds;
+            effect.Player.SetTime(0); effect.Graph.Evaluate(0); return BeginProp(effect,out error);
+        }
+        bool BeginProp(Effect effect,out string error)
+        {
+            error=null; if (string.IsNullOrEmpty(effect.Step.propId)) return true;
+            if (effect.PropReservation) { effect.PropReservation.SetAnimationOwner(effect,false); effect.PropReservation=null; }
+            effect.Prop=AvatarHeldProp.Begin(editor,effect.Step,effect.Duration,out error); return effect.Prop;
         }
         async Task Prepare(Effect effect,string motionId)
         {
@@ -124,7 +144,9 @@ namespace Maestro.Quest.Rules
         public RuleActionState State(string runId,out string error)
         {
             error = null;
-            if (!effects.TryGetValue(runId,out var effect) || effect.Preparation == null || effect.Started) return RuleActionState.Ready;
+            if (!effects.TryGetValue(runId,out var effect)) return RuleActionState.Ready;
+            if (effect.Prop && !effect.Prop.Valid(out error)) return RuleActionState.Failed;
+            if (effect.Preparation == null || effect.Started) return RuleActionState.Ready;
             if (!effect.Preparation.IsCompleted) return RuleActionState.Preparing;
             if (effect.LoadError != null) { error = effect.LoadError; return RuleActionState.Failed; }
             var target = editor ? editor.Find(effect.TargetId) : null; var avatar = target ? target.GetComponent<MaestroAvatar>() : null;
@@ -138,7 +160,8 @@ namespace Maestro.Quest.Rules
                 effect.Motion = null; // Avatar now owns the lease.
             }
             else if (!effect.ClipModel.SampleMotion(effect.Motion,0,effect.Loop)) { error = "This saved motion cannot play on this object"; return RuleActionState.Failed; }
-            effect.Began = Time.unscaledTime; effect.Started = true; return RuleActionState.Ready;
+            effect.Began = Time.unscaledTime; effect.Started = true;
+            return BeginProp(effect,out error) ? RuleActionState.Ready : RuleActionState.Failed;
         }
         public void Tick()
         {
@@ -148,11 +171,14 @@ namespace Maestro.Quest.Rules
                 if (effect.Started && effect.Motion != null && effect.ClipModel) effect.ClipModel.SampleMotion(effect.Motion,Time.unscaledTime-effect.Began,effect.Loop);
             }
         }
-        public void Complete(string runId)
+        public bool Complete(string runId,out string error)
         {
-            if (!effects.TryGetValue(runId,out var effect) || effect.ThrowMotion == null) { Stop(runId,false); return; }
+            error=null;
+            if (!effects.TryGetValue(runId,out var effect)) return true;
+            if (effect.Prop) { effect.Prop.Finish(); error=effect.Prop.Error; }
+            if (effect.ThrowMotion == null || error != null) { Stop(runId,false); return error == null; }
             var item = editor.Find(effect.TargetId);
-            if (!item || !editor.PhysicsWorld || !editor.PhysicsWorld.Running) { Stop(runId,false); return; }
+            if (!item || !editor.PhysicsWorld || !editor.PhysicsWorld.Running) { Stop(runId,false); error="Room physics stopped before release"; return false; }
             // Evaluate the precise release pose even when the final animation frame was skipped.
             var motion = effect.ThrowMotion;
             effect.Player.SetTime(motion.Duration); effect.Graph.Evaluate(0);
@@ -164,11 +190,14 @@ namespace Maestro.Quest.Rules
             var spin = Mathf.Abs(angle) < .001f ? Vector3.zero : axis * (angle*Mathf.Deg2Rad/dt);
             if (item.transform.parent) { velocity = item.transform.parent.TransformVector(velocity); spin = item.transform.parent.TransformDirection(spin); }
             Stop(runId,true);
-            if (!item.GetComponent<RigidRoomItem>().Launch(velocity,spin)) editor.RestorePose(effect.TargetId);
+            if (item.GetComponent<RigidRoomItem>().Launch(velocity,spin)) return true;
+            editor.RestorePose(effect.TargetId); error="Room physics could not take ownership after the recording"; return false;
         }
         public void Stop(string runId, bool preservePlacement)
         {
             if (!effects.Remove(runId,out var effect)) return;
+            if (effect.PropReservation) effect.PropReservation.SetAnimationOwner(effect,false);
+            if (effect.Prop) effect.Prop.End(preservePlacement);
             effect.Cancelled = true; effect.Motion?.Dispose(); effect.Motion = null;
             if (effect.Graph.IsValid()) effect.Graph.Destroy();
             if (effect.ClipModel) effect.ClipModel.Stop();

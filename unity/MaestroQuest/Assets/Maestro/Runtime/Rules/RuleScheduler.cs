@@ -12,7 +12,7 @@ namespace Maestro.Quest.Rules
         bool Start(string runId, RuleStep step, out float seconds, out string error);
         void Stop(string runId, bool preservePlacement);
     }
-    public interface IRuleCompletion { void Complete(string runId); }
+    public interface IRuleCompletion { bool Complete(string runId,out string error); }
     public enum RuleActionState { Preparing, Ready, Failed }
     public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
 
@@ -84,7 +84,7 @@ namespace Maestro.Quest.Rules
             if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
             if (!BindingStillValid(binding)) return false;
             foreach (var step in sequence.steps) if (!actions.CanRun(step,out var error)) { LastError = error; return false; }
-            var targets = sequence.steps.Where(x => x.action != RuleActionKind.Wait).Select(x => x.targetId).ToHashSet();
+            var targets = sequence.steps.SelectMany(RuleDocument.Targets).ToHashSet();
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || x.Targets.Overlaps(targets)).ToArray();
             if (conflicts.Length > 0 || running.Count >= 8)
             {
@@ -124,8 +124,12 @@ namespace Maestro.Quest.Rules
                     if (state == RuleActionState.Ready) { run.Preparing = false; run.Ends = now+run.Duration; }
                     continue; // Loading time never consumes any of the requested playback.
                 }
+                if (actions is IRuleReadiness active && active.State(run.Id,out var activeError) == RuleActionState.Failed)
+                { LastError=activeError ?? "This action stopped because its target changed"; Stop(run,false); continue; }
                 if (now < run.Ends) continue;
-                if (actions is IRuleCompletion completion) completion.Complete(run.Id); else actions.Stop(run.Id,false);
+                if (actions is IRuleCompletion completion)
+                { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false); continue; } }
+                else actions.Stop(run.Id,false);
                 run.Step++;
                 if (run.Step >= run.Sequence.steps.Length)
                 {
@@ -139,15 +143,15 @@ namespace Maestro.Quest.Rules
             {
                 var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
                 if (sequence == null || !BindingStillValid(pending.Binding)) { queued.Remove(pending); continue; }
-                var targets = sequence.steps.Where(x => x.action != RuleActionKind.Wait).Select(x => x.targetId).ToHashSet();
+                var targets = sequence.steps.SelectMany(RuleDocument.Targets).ToHashSet();
                 if (running.Count >= 8 || running.Any(x => x.Sequence.id == sequence.id || x.Targets.Overlaps(targets))) continue;
                 queued.Remove(pending); Trigger(sequence.id,now,pending.Binding);
             }
         }
         public void StopTarget(string targetId, bool preservePlacement)
         {
-            foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && run.Sequence.steps[run.Step].targetId == targetId);
-            queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.steps.Any(y => y.targetId == targetId) == true);
+            foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && RuleDocument.Targets(run.Sequence.steps[run.Step]).Contains(targetId));
+            queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.steps.Any(y => RuleDocument.Targets(y).Contains(targetId)) == true);
         }
         void Stop(Run run, bool preservePlacement) { actions.Stop(run.Id,preservePlacement); running.Remove(run); }
         public void StopAll() { foreach (var run in running.ToArray()) Stop(run,false); queued.Clear(); }

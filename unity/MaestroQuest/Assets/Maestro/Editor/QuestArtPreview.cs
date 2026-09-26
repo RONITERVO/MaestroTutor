@@ -69,13 +69,18 @@ namespace Maestro.Quest.Editor
                 var book = Included("book"); var maestro = Included("maestro");
                 var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,maestro,directory);
                 foreach (var item in root.GetComponentsInChildren<RoomItem>()) item.gameObject.SetActive(false);
-                var workshop = root.AddComponent<RuleWorkshop>(); workshop.Initialize(editor,directory); workshop.NewSequence(); workshop.AddBinding(); workshop.AddButton(ButtonMount.LeftController);
+                var sampleProp=editor.Snapshot().objects.First(x => x.kind == RoomObjectKind.Ball);
+                var example=new RuleDocument { sequences=new[] { new RuleSequence { id=Guid.NewGuid().ToString("N"),name="Ball gesture",steps=new[] { new RuleStep { action=RuleActionKind.Gesture,seconds=2.5f,propId=sampleProp.id,propHand=PropHand.Right,propRelease=PropRelease.Throw,propReleaseAt=.6f } } } } };
+                if (!new RuleStorage(directory).Save(example,out var saveError)) throw new InvalidOperationException(saveError);
+                var workshop = root.AddComponent<RuleWorkshop>(); workshop.Initialize(editor,directory); workshop.AddBinding(); workshop.AddButton(ButtonMount.LeftController);
                 var board = new GameObject("Solid rule tools"); board.transform.SetParent(root.transform,false); board.AddComponent<RuleTools>().Build(workshop,room);
                 var camera = new GameObject("Verification camera",typeof(Camera)).GetComponent<Camera>(); camera.transform.SetParent(root.transform,false);
                 camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = new Color(.93f,.91f,.87f,1);
-                camera.orthographic = true; camera.orthographicSize = .52f; camera.nearClipPlane = .01f;
+                camera.orthographic = true; camera.orthographicSize = .57f; camera.nearClipPlane = .01f;
                 camera.transform.position = new Vector3(0,0,-1); camera.transform.LookAt(Vector3.zero);
                 Capture(camera,Path.Combine(output,"rule-tools-unity.png"),1600,1450);
+                board.GetComponent<RuleTools>().ShowProps(true);
+                Capture(camera,Path.Combine(output,"prop-tools-unity.png"),1600,1450);
                 Debug.Log("MAESTRO_RULE_TOOLS_RENDERED");
             }
             finally

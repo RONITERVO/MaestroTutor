@@ -2,6 +2,44 @@
 
 This is development evidence, not a release acceptance report.
 
+## Latest: avatar-held props — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-DFE1FE66.apk`.
+SHA256: `DFE1FE66CD2860396D919D582C07A75EF21929A5233E09B3EA86B9A1C11B01E8`.
+135,396,031 bytes, development signed. Final build exited 0 with zero errors and
+two warnings. APK v2 signature, ARM64 and expected manifest checks pass.
+50 EditMode, 57 required PlayMode and 17 native Android checks pass (124 total),
+along with native lint and the shared web build. Three deliberately optional
+private-file tests were skipped. No new web feature/test result is claimed;
+the shared web source is unchanged from the prior checkpoint.
+
+A Maestro gesture, recording, embedded clip or saved-library motion can carry
+one fitted creation in either hand, then return, drop or throw it. Rules reserve
+both avatar and prop, including asynchronous loading. Real Unity physics checks
+cover the released ball's velocity, gravity and floor bounce, blocked movement,
+room pause, user grip takeover, imported Mixamo hand following, persistence and
+Undo. Pointer tests activate the actual physical Props/Rules tab and controls.
+Both Unity tray renders were visually inspected after fixing status-label
+spacing and a text-encoding regression. The original tray size is retained.
+
+Evidence is in ignored `.quest-evidence/avatar-props/verified-DFE1FE66`, including
+106 C# source hashes matched to the build mirror, 112 bundled web-file hashes,
+the native AAR hash, build reports/logs, test XMLs and reviewed tray PNGs.
+See QUEST_AVATAR_PROPS.md for authoring, release timing and collision limits.
+This build also includes the prior movement bindings and tutor-state profiles.
+No private model or animation pack is bundled.
+
+No headset query, installation or launch occurred. Installed build remains
+08F340EF while the user sleeps and Quest charges. After the user returns, back
+up the complete room directory before installing. Check a Return action first,
+then fit a ball to the Meshy avatar's hand, run a compatible throw motion and
+adjust release timing. Verify grab takeover, Stop before release, return after
+loading, wall blocking in the small room, pause/recenter/tracking interruption,
+and rule/controller/event triggers. Also test the earlier book-library,
+locomotion, gait and tutor-state-profile changes which remain unaccepted on
+hardware. Throw feel, device frame rate, per-limb contacts/IK and full Store
+release acceptance remain open.
+
 ## Packaged searchable animation book — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-800D603B.apk`.

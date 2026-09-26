@@ -121,7 +121,7 @@ namespace Maestro.Quest.Tests
             var step = new RuleStep { action = RuleActionKind.ThrowRecording,targetId = data.id };
             Assert.That(actions.Start("throw",step,out _,out var error),Is.True,error);
             Assert.That(item.GetComponent<Rigidbody>().isKinematic,Is.True);
-            actions.Complete("throw");
+            Assert.That(actions.Complete("throw",out var completionError),Is.True,completionError);
             Assert.That(item.transform.localPosition.x,Is.EqualTo(.5f).Within(.001f));
             Assert.That(item.GetComponent<Rigidbody>().linearVelocity.x,Is.EqualTo(1).Within(.01f));
             yield return new WaitForFixedUpdate();

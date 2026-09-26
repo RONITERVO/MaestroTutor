@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Avatar;
 using UnityEngine;
 
 namespace Maestro.Quest.Rules
@@ -44,6 +45,7 @@ namespace Maestro.Quest.Rules
                 string policy = sequence.interruption == RuleInterruption.QueueLatest ? "Queue latest" : sequence.interruption.ToString();
                 return sequence.name + " · Step " + (stepIndex+1) + "/" + sequence.steps.Length + ": " + action + target +
                     "\n" + (step.seconds == 0 ? "Full clip duration" : step.seconds+" seconds") + ((step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion) ? " · Clip loop " + OnOff(step.loop) : "") + " · Repeat " + OnOff(sequence.repeat) + " · " + policy +
+                    (!string.IsNullOrEmpty(step.propId) ? "\nProp: "+TargetName(step.propId)+" · "+step.propHand+" hand · "+step.propRelease+(step.propRelease == PropRelease.Return ? " after motion" : " at "+Mathf.RoundToInt(step.propReleaseAt*100)+"%") : "") +
                     "\n" + EventName(trigger) + source + " · If " + condition + " · While state " + OnOff(stopOnExit);
             }
         }
@@ -126,11 +128,11 @@ namespace Maestro.Quest.Rules
             if (Selected == null) { Say("Create an action first"); return; }
             Edit(value => action(value.sequences[sequenceIndex].steps[stepIndex]),message);
         }
-        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); },"Action type changed");
+        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); if (!RuleDocument.CanCarry(step)) step.propId=null; },"Action type changed");
         public void UseTarget()
         {
             var id = editor.SelectedId; if (id == null) { Say("Select a room object first"); return; }
-            EditStep(step => { if ((step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) && id != "maestro") { Say("This action targets Maestro"); return; } step.targetId = id; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); },"Target assigned from your room selection");
+            EditStep(step => { if ((step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) && id != "maestro") { Say("This action targets Maestro"); return; } step.targetId = id; if (!RuleDocument.CanCarry(step)) step.propId=null; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); },"Target assigned from your room selection");
         }
         public void Step(int direction) { if (Selected == null) return; stepIndex = (stepIndex + direction + Selected.steps.Length) % Selected.steps.Length; Changed?.Invoke(); }
         public void AddStep()
@@ -143,6 +145,30 @@ namespace Maestro.Quest.Rules
             if (Selected == null || Selected.steps.Length <= 1) { Say("Keep at least one step in the action"); return; }
             Edit(value => value.sequences[sequenceIndex].steps = value.sequences[sequenceIndex].steps.Where((_,i) => i != stepIndex).ToArray(),"Step removed");
         }
+        public void UseProp()
+        {
+            var selected=Selected?.steps[stepIndex]; var item=editor.Read(editor.SelectedId);
+            var avatar=editor.Find("maestro").GetComponent<MaestroAvatar>();
+            if (selected == null || !RuleDocument.CanCarry(selected)) { Say("Choose a Maestro gesture, recording or imported motion step first"); return; }
+            if (item == null || item.IsBuiltIn || !avatar || avatar.ModelBusy) { Say("Select a loaded creation to carry, then Use prop"); return; }
+            EditStep(step => { step.propId=item.id; step.propAvatarHash=avatar.ModelHash; step.propOffset=Vector3.forward*.12f; step.propRotation=Quaternion.identity; step.propReleaseAt=1; step.propRelease=PropRelease.Return; },"Prop assigned — move it beside the hand and use Fit prop, or Try action");
+        }
+        public void FitProp()
+        {
+            var step=Selected?.steps[stepIndex]; var item=editor.Find(step?.propId); var avatar=editor.Find("maestro").GetComponent<MaestroAvatar>();
+            if (step == null || !item || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Say("Assign a prop, position it at the chosen hand, then release your grip"); return; }
+            Runtime?.StopAll();
+            var hand=avatar.PoseRig ? avatar.PoseRig.Bone(step.propHand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand) : null;
+            if (!hand) { Say("This avatar has no mapped hand for the prop"); return; }
+            var offset=Quaternion.Inverse(hand.rotation)*(item.transform.position-hand.position)/avatar.transform.lossyScale.y;
+            if (!float.IsFinite(offset.sqrMagnitude) || offset.sqrMagnitude > 1) { Say("Move the prop closer to the chosen hand before fitting"); return; }
+            var rotation=Quaternion.Inverse(hand.rotation)*item.transform.rotation;
+            EditStep(value => { value.propOffset=offset; value.propRotation=rotation.normalized; value.propAvatarHash=avatar.ModelHash; },"Current prop position and rotation fitted to this avatar's hand");
+        }
+        public void CyclePropHand() => EditStep(step => { step.propHand=step.propHand == PropHand.Left ? PropHand.Right : PropHand.Left; },"Prop hand changed — use Fit prop to adjust its hold");
+        public void CyclePropRelease() => EditStep(step => { if (!string.IsNullOrEmpty(step.propId)) step.propRelease=(PropRelease)(((int)step.propRelease+1)%3); },"Prop release mode changed");
+        public void CyclePropTime() => EditStep(step => { step.propReleaseAt=step.propReleaseAt >= .999f ? .05f : Mathf.Min(1,Mathf.Round((step.propReleaseAt+.05f)*20)/20); },"Prop release time changed in 5% motion increments");
+        public void ClearProp() => EditStep(step => step.propId=null,"Prop removed from this step");
         public void CycleTime() => EditStep(step => { if (step.action == RuleActionKind.ThrowRecording) return; float[] times = (step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion) ? new[] { 0f,1,2,3,5,10,20,30 } : new[] { 1f,2,3,5,10,20,30 }; int i = Array.FindIndex(times,x => x > step.seconds); step.seconds = times[i < 0 ? 0 : i]; },"Step duration changed");
         public void CycleGesture() => EditStep(step => { if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,true); else if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,true); else step.gesture = (RuleGesture)(((int)step.gesture+1)%Enum.GetValues(typeof(RuleGesture)).Length); },"Motion changed");
         public void ToggleClipLoop() => EditStep(step => { if (step.action != RuleActionKind.ThrowRecording) step.loop = !step.loop; },"Clip looping changed");

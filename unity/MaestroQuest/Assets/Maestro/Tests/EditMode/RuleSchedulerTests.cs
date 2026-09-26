@@ -97,6 +97,17 @@ namespace Maestro.Quest.Tests
             scheduler.Trigger(sequence.id,0); scheduler.Tick(1000); Assert.That(fake.Started.Count,Is.EqualTo(2),"No catch-up loop after a stalled frame");
             Assert.That(fake.Started[1],Is.EqualTo("maestro")); scheduler.StopTarget("book",true); Assert.That(fake.Active,Is.Empty);
         }
+        [Test] public void PropReferencesReserveBothTargetsAndActiveFailuresCancelTheRun()
+        {
+            var carry=Sequence(); string prop=Guid.NewGuid().ToString("N"); carry.steps[0].propId=prop;
+            var other=Sequence(prop); other.interruption=RuleInterruption.Ignore;
+            var actions=new PreparingActions { Phase=RuleActionState.Ready }; var scheduler=new RuleScheduler(actions);
+            scheduler.Configure(new RuleDocument { sequences=new[] { carry,other } });
+            Assert.That(scheduler.Trigger(carry.id,0),Is.True); Assert.That(scheduler.Trigger(other.id,.1f),Is.False);
+            scheduler.StopTarget(prop,true); Assert.That(scheduler.RunningCount,Is.Zero);
+            Assert.That(scheduler.Trigger(carry.id,.2f),Is.True); actions.Phase=RuleActionState.Failed; scheduler.Tick(.3f);
+            Assert.That(scheduler.RunningCount,Is.Zero); Assert.That(scheduler.LastError,Does.Contain("Missing"));
+        }
         [Test] public void ValidatesReferencesAndBoundsAndRecoversRulesButtonsAndIndependentCopies()
         {
             string directory = Path.Combine(Path.GetTempPath(),"MaestroRules-"+Guid.NewGuid().ToString("N"));
@@ -105,7 +116,7 @@ namespace Maestro.Quest.Tests
                 var sequence = Sequence(); var document = new RuleDocument { sequences = new[] { sequence },bindings = new[] { Binding(sequence,RuleEventKind.Speaking) },buttons = new[] { new RuleButtonData { id = Guid.NewGuid().ToString("N"),sequenceId = sequence.id,mount = ButtonMount.LeftController,position = new Vector3(-.12f,.08f,.06f) } } };
                 Assert.That(document.Validate(out _),Is.True); var copy = document.Copy(); copy.sequences[0].steps[0].seconds = 9; Assert.That(document.sequences[0].steps[0].seconds,Is.EqualTo(2));
                 var storage = new RuleStorage(directory); Assert.That(storage.Save(document,out _),Is.True); Assert.That(storage.Save(copy,out _),Is.True);
-                File.WriteAllText(Path.Combine(directory,"rules.v2.json"),"broken");
+                File.WriteAllText(Path.Combine(directory,"rules.v3.json"),"broken");
                 var recovered = storage.Load(out var message); StringAssert.Contains("backup",message); Assert.That(recovered.buttons[0].position,Is.EqualTo(document.buttons[0].position));
                 Assert.That(recovered.sequences[0].steps[0].seconds,Is.EqualTo(2));
                 copy.buttons[0].position = Vector3.one; Assert.That(copy.Validate(out _),Is.False);

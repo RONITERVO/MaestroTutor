@@ -27,6 +27,7 @@ namespace Maestro.Quest.Interaction
         Vector3 lastGoodPosition;
         Quaternion lastGoodRotation;
         public event Action<RoomItem> Settled;
+        public bool GeometryReady => geometryReady;
         public bool Dynamic => profile != ItemPhysics.Fixed;
         public bool Simulating => body && !body.isKinematic;
         public bool AnimationOwned => owners.Count > 0;
