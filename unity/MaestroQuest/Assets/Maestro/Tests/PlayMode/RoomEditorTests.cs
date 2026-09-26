@@ -102,6 +102,45 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Snapshot().objects.First(x => x.kind == RoomObjectKind.Block).position,Is.EqualTo(before));
         }
 
+        [UnityTest]
+        public IEnumerator AgentRecipeCreatesAnimatedRobotAndUndoRedoPreserveItsEditableData()
+        {
+            var executor=new RoomAgentExecutor(editor);int before=editor.Snapshot().objects.Length;
+            var request=new RoomAgentRequest {version=1,sceneRevision=editor.Revision,commands=new[] {
+                new RoomAgentCommand {action="create",reference="robot",name="Practice robot",kind="boxRobot",scale=.4f},
+                new RoomAgentCommand {action="move",target="robot",position=new Vector3(0,0,1)}
+            }};
+            Assert.That(executor.Execute(request,out var status,out var created),Is.True,status);
+            Assert.That(created.Length,Is.EqualTo(1));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before+1));
+            var data=editor.Read(created[0]);Assert.That(data.name,Is.EqualTo("Practice robot"));
+            var geometry=editor.Find(created[0]).GetComponent<RecipeObject>();Assert.That(geometry,Is.Not.Null);
+            var start=geometry.Part("RightUpperArm").localRotation;
+            yield return new WaitForSeconds(.5f);
+            Assert.That(Quaternion.Angle(start,geometry.Part("RightUpperArm").localRotation),Is.GreaterThan(40));
+            var file=new RoomStorage(Path.Combine(directory,"recipe-reload"));Assert.That(file.Save(editor.Snapshot(),out status),Is.True,status);
+            var loaded=file.Load(out status);Assert.That(loaded.objects.Single(x=>x.id==created[0]).recipe.Validate(out status),Is.True,status);
+            editor.Undo();yield return null;Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before));
+            editor.Redo();yield return null;Assert.That(editor.Read(created[0]).recipe.parts.Length,Is.EqualTo(data.recipe.parts.Length));
+            Assert.That(editor.Find(created[0]).GetComponent<RecipeObject>().Part("Head"),Is.Not.Null);
+        }
+        [UnityTest]
+        public IEnumerator InvalidAndStaleAgentBatchesNeverPartiallyChangeTheRoom()
+        {
+            var executor=new RoomAgentExecutor(editor);int count=editor.Snapshot().objects.Length,revision=editor.Revision;
+            var request=new RoomAgentRequest {version=1,sceneRevision=revision,commands=new[] {
+                new RoomAgentCommand {action="create",reference="box",name="Box",kind="block"},
+                new RoomAgentCommand {action="delete",target="book"}
+            }};
+            Assert.That(executor.Execute(request,out _,out _),Is.False);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.Revision,Is.EqualTo(revision));
+            editor.Create(RoomObjectKind.Ball);
+            request.commands=new[]{new RoomAgentCommand {action="create",reference="robot",name="Robot",kind="boxRobot"}};
+            Assert.That(executor.Execute(request,out var status,out _),Is.False);StringAssert.Contains("changed",status);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
+            request.sceneRevision=editor.Revision;request.commands[0].scale=float.NaN;
+            Assert.That(executor.Execute(request,out _,out _),Is.False);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
+            yield return null;
+        }
+
         [UnityTearDown]
         public IEnumerator TearDown()
         {

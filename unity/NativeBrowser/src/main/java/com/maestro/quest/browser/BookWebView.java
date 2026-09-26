@@ -38,6 +38,7 @@ public final class BookWebView extends OffscreenBrowser {
     private static final String HOST = "appassets.androidplatform.net";
     private static final String START = "https://" + HOST + "/index.html?surface=quest-book";
     private WebView web;
+    private final BrowserSnapshotStore roomSnapshots = new BrowserSnapshotStore(32768);
     private final BrowserSnapshotStore snapshots = new BrowserSnapshotStore();
     private volatile String error = "";
     private volatile String externalLink = "";
@@ -134,7 +135,7 @@ public final class BookWebView extends OffscreenBrowser {
             settings.setMediaPlaybackRequiresUserGesture(true);
             CookieManager.getInstance().setAcceptThirdPartyCookies(web, false);
             web.setWebViewClient(new WebViewClient() {
-                @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap icon) { snapshots.invalidate(); resetRequests(); }
+                @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap icon) { snapshots.invalidate(); roomSnapshots.invalidate(); resetRequests(); }
                 @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                     Uri uri = request.getUrl();
                     if (isAppOrigin(uri)) {
@@ -160,7 +161,7 @@ public final class BookWebView extends OffscreenBrowser {
                     if (requests != null) { requests.close(); requests = null; }
                     if (view.getParent() instanceof ViewGroup) ((ViewGroup)view.getParent()).removeView(view);
                     view.destroy(); web = null; mView = null;
-                    snapshots.invalidate();
+                    snapshots.invalidate(); roomSnapshots.invalidate();
                     return true;
                 }
             });
@@ -185,8 +186,26 @@ public final class BookWebView extends OffscreenBrowser {
         if (web == null) return;
         web.stopLoading();
         if (web.getParent() instanceof ViewGroup) ((ViewGroup)web.getParent()).removeView(web);
-        web.destroy(); web = null; mView = null; snapshots.invalidate();
+        web.destroy(); web = null; mView = null; snapshots.invalidate(); roomSnapshots.invalidate();
     }
+
+    public void RequestRoomAgentSnapshot() {
+        UnityPlayer.currentActivity.runOnUiThread(() -> {
+            if (disposed || suspended || web == null || !isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) return;
+            final WebView current = web;
+            final long request = roomSnapshots.begin();
+            if (request < 0) return;
+            web.evaluateJavascript("window.maestroBook && window.maestroBook.roomSnapshot ? JSON.stringify(window.maestroBook.roomSnapshot()) : ''", result -> {
+                if (disposed || suspended || current != web) return;
+                try {
+                    Object decoded = new JSONTokener(result).nextValue();
+                    if (decoded instanceof String) roomSnapshots.publish(request, (String)decoded);
+                } catch (Exception ignored) { roomSnapshots.publish(request, ""); }
+            });
+        });
+    }
+
+    public String ReadRoomAgentSnapshot() { return roomSnapshots.read(); }
 
     public void RequestSnapshot() {
         UnityPlayer.currentActivity.runOnUiThread(() -> {
@@ -223,6 +242,14 @@ public final class BookWebView extends OffscreenBrowser {
         } catch (Exception ignored) { /* Invalid commands have no effect. */ }
     }
 
+    public void PublishRoomAgentState(String json) {
+        String script = LibraryBookMessages.publishScript(json, "roomState");
+        if (script == null) return;
+        UnityPlayer.currentActivity.runOnUiThread(() -> {
+            if (!disposed && !suspended && web != null && isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) web.evaluateJavascript(script, null);
+        });
+    }
+
     public void PublishLibraryState(String json) {
         String script = LibraryBookMessages.publishScript(json);
         if (script == null) return;
@@ -232,7 +259,7 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     public void SetSuspended(boolean value) {
-        snapshots.suspend(value);
+        snapshots.suspend(value); roomSnapshots.suspend(value);
         UnityPlayer.currentActivity.runOnUiThread(() -> {
             if (disposed) return;
             suspended = value;

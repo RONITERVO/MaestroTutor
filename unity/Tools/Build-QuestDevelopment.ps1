@@ -7,6 +7,7 @@ param(
     [Parameter(Mandatory)][string]$AndroidSdk,
     [Parameter(Mandatory)][string]$AndroidJdk,
     [switch]$RenderImports,
+    [switch]$RenderRecipes,
     [switch]$RenderRules
 )
 $ErrorActionPreference = 'Stop'
@@ -22,7 +23,7 @@ $classesJar = Join-Path (Split-Path -Parent $editorPath) 'Data/PlaybackEngines/A
 if (!(Test-Path -LiteralPath $classesJar)) { throw 'Install Android build support for the pinned Unity editor.' }
 
 # Validate the dedicated copy's ownership and run its current source tests.
-& (Join-Path $PSScriptRoot 'Verify-Quest.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -RenderImports:$RenderImports -RenderRules:$RenderRules
+& (Join-Path $PSScriptRoot 'Verify-Quest.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -RenderImports:$RenderImports -RenderRules:$RenderRules -RenderRecipes:$RenderRecipes
 $logRoot = Join-Path $mirrorRoot 'Logs'
 $env:JAVA_HOME = $jdkRoot
 $env:ANDROID_HOME = $sdkRoot
@@ -39,7 +40,7 @@ try {
         if ([int]$nativeReport.testsuite.failures -gt 0 -or [int]$nativeReport.testsuite.errors -gt 0) { throw 'Native browser tests failed.' }
         $nativeTests += [int]$nativeReport.testsuite.tests
     }
-    if ($nativeTests -lt 22) { throw 'Native browser tests did not cover the current request and file checks.' }
+    if ($nativeTests -lt 24) { throw 'Native browser tests did not cover the current request and file checks.' }
 } finally { Pop-Location }
 $webTarget = Join-Path $mirrorRoot 'Assets/StreamingAssets/maestro-web'
 $pluginTarget = Join-Path $mirrorRoot 'Assets/Plugins/Android'

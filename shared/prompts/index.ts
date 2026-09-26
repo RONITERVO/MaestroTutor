@@ -10,3 +10,4 @@ export * from './music';
 export * from './translation';
 export * from './art';
 export * from './context';
+export * from './room';

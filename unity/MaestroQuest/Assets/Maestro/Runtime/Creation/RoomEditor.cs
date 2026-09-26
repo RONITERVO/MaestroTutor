@@ -35,6 +35,8 @@ namespace Maestro.Quest.Creation
         public event Action<string> ItemReleased, ItemTapped;
         public string Identity(RoomItem item) => item && identities.TryGetValue(item,out var id) ? id : null;
         public void Tapped(RoomItem item) { var id = Identity(item); if (id != null) ItemTapped?.Invoke(id); }
+        public int Revision { get; private set; } = 1;
+        public Vector3 CreationPosition => SpawnPosition();
         public string SelectedId => selected;
         public RoomItem Find(string id) => id != null && objects.TryGetValue(id,out var value) ? value : null;
         public RoomObjectData Read(string id) => journal.Read(id);
@@ -168,6 +170,22 @@ namespace Maestro.Quest.Creation
             selected = data.id; UpdateSelection(); return true;
         }
 
+        public bool ApplyAgentEdit(int expectedRevision,RoomObjectData[] replacements,string[] removals,out string error)
+        {
+            error=null;
+            if (expectedRevision != Revision) { error="The room changed. Read its current state before trying again."; return false; }
+            if (AnyHeld) { error="Release the held object before editing."; return false; }
+            foreach(var data in replacements)
+            {
+                var old=Read(data.id);
+                if (old != null && (old.kind != data.kind || old.modelHash != data.modelHash)) { error="An edit cannot replace object identity or model."; return false; }
+            }
+            Editing?.Invoke();
+            if (expectedRevision != Revision) { error="Authoring changed the room. Read its current state before trying again."; return false; }
+            if (!Commit(replacements,removals,"Room request completed — Undo is available")) { error=Status; return false; }
+            return true;
+        }
+
         bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false)
         {
             if (!placement) Editing?.Invoke();
@@ -247,6 +265,7 @@ namespace Maestro.Quest.Creation
                     created = true;
                 }
                 if (!item.Grab.isSelected && (created || changed == null || (applyChangedPose && changed.Contains(data.id)))) ApplyPose(item,data);
+                item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
@@ -281,7 +300,7 @@ namespace Maestro.Quest.Creation
             Commit(placements,Array.Empty<string>(),"Room brought back within reach");
         }
 
-        void MarkDirty() { dirty = true; saveAt = Time.unscaledTime + .5f; }
+        void MarkDirty() { Revision++; dirty = true; saveAt = Time.unscaledTime + .5f; }
         public void RememberPlacement(string id)
         {
             var item = Find(id);

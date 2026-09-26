@@ -107,6 +107,7 @@ export function createTextResponseCoordinator(ports: TextResponsePorts) {
         filePartCount: params.imageForGeminiContextFileUri?.length || 0,
         useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
       });
+      const requestPair = selectedLanguagePairRef.current;
       const turn = await runTutorTextTurn(
         {
           model: getGeminiModels().text.default,
@@ -118,6 +119,7 @@ export function createTextResponseCoordinator(ports: TextResponsePorts) {
           useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
         },
         {
+          isCurrent: () => selectedLanguagePairRef.current === requestPair && Boolean(messagesRef.current.find(message => message.id === params.thinkingMessageId)?.thinking),
           onGoogleSearchUnavailable: () => {
             setSettings(prev => prev.enableGoogleSearch
               ? { ...prev, enableGoogleSearch: false }

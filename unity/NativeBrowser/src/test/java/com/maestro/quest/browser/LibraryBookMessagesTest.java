@@ -9,6 +9,14 @@ import org.json.JSONObject;
 import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class) @Config(sdk=35)
 public class LibraryBookMessagesTest {
+    @Test public void roomStateIsDataAndOnlyKnownReceiversAreAllowed() throws Exception {
+        String json=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("status","');window.injected=true;//").toString();
+        String script=LibraryBookMessages.publishScript(json,"roomState");
+        String prefix="window.maestroBook && window.maestroBook.roomState && window.maestroBook.roomState(JSON.parse(";
+        assertTrue(script.startsWith(prefix));
+        assertEquals(json,new org.json.JSONTokener(script.substring(prefix.length(),script.length()-2)).nextValue());
+        assertNull(LibraryBookMessages.publishScript(json,"eval"));
+    }
     @Test public void quotesAttributionAsDataAndRejectsInvalidOrExcessiveState() throws Exception {
         JSONObject state = new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("attribution","'); alert('source'); //\n\\");
         String script = LibraryBookMessages.publishScript(state.toString());

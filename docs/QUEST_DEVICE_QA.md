@@ -762,3 +762,18 @@ Earlier failed test attempts and an editor-shutdown timeout were corrected or
 retried before this verified checkpoint. Only the successful full pipeline is
 represented above. No device query, install or headset launch occurred. The
 full release and physical-device acceptance gates remain open.
+
+## Pending: conversational recipe creation (2026-09-26)
+
+Device work remains on hold until the user explicitly reconnects/returns. After
+installing agent-recipe checkpoint `0FE4C286`, verify authenticated
+managed and BYOK text turns and recorded-speech turns independently. Try making a
+small waving robot, a coloured ball, moving/resizing/painting a named object, and
+Undo/Redo. Verify native receipts match the actual room and that unrelated language
+practice does not mutate it. Pause or change conversations while a model request
+is pending: no late scene action may execute. Move an object during planning and
+verify a stale edit is rejected without partial creation. Save/reopen and inspect
+the recipe robot. Check labels, collider/grab behaviour and sustained performance.
+
+These tests do not cover the separate Live voice path or the planned Scratch-like
+visual workspace; both remain implementation work, not accepted features.

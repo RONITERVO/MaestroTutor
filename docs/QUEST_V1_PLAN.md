@@ -49,6 +49,14 @@ It reads one source at a time without creating hidden avatar models. See
 QUEST_BATCH_IMPORTS.md. Quest multiselect and large-collection performance remain
 hardware acceptance gates; device work stays on hold while the user sleeps.
 
+Agent-first steering (2026-09-26): spoken and typed requests become the primary
+interface, using existing Maestro account access and BYOK. Native versioned JSON
+recipes create editable objects and simple animated characters. Users can
+optionally inspect and co-edit the same data through a hierarchy, Scratch-like
+behaviour blocks and an animation timeline. See QUEST_AGENT_WORKSPACE.md for
+implemented foundations, architectural decisions and remaining work. This does
+not imply hands-free/Live voice, the visual workspace or Store release are done.
+
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.
@@ -79,7 +87,9 @@ hardware acceptance gates; device work stays on hold while the user sleeps.
   per-model importer and common retargeted gestures do not fulfill that library.
 - User-created room items: in-app editor and GLB/VRM imports first, as selected
   by the user on 2026-09-25. Include playback of compatible imported animations.
-  AI text-to-3D and public content sharing are outside this first release.
+  External AI mesh-generation services and public content sharing remain outside
+  this first release. The newer agent-first scope includes native procedural
+  creation from validated recipes, including simple animated characters.
 - In-app animation authoring: record object movement, save/edit keyframes, choose
   avatar gestures, and pose arms, legs and head with 3D handles. Joint posing is
   explicitly included by the user (2026-09-25). Playables supplies playback;

@@ -99,6 +99,7 @@ namespace Maestro.Quest
             var avatarItem = avatar.AddComponent<RoomItem>(); avatarItem.Configure(new Collider[] { avatarHandle }, .3f, 1.5f); room.Register(avatarItem);
             var editor = content.AddComponent<RoomEditor>(); editor.Initialize(room,bookItem,avatarItem,physics:physics);
             router.Editor = editor; input.Editor = editor;
+            content.AddComponent<RoomAgent>().Initialize(editor,browser);
             var drawing = gameObject.AddComponent<SpatialDrawing>(); drawing.Editor = editor; input.Drawing = drawing;
             var tray = new GameObject("Creation tools"); tray.transform.SetParent(content.transform,false);
             tray.transform.localPosition = new Vector3(.87f,.98f,.9f); tray.transform.localRotation = Quaternion.Euler(24,35,0);

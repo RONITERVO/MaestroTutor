@@ -18,6 +18,24 @@ namespace Maestro.Quest.Editor
     /// <summary>Renders the actual Unity materials and rig, without a headset or live account.</summary>
     public static class QuestArtPreview
     {
+        public static void RenderRecipes()
+        {
+            var output=Environment.GetEnvironmentVariable("MAESTRO_ART_EVIDENCE");
+            if(string.IsNullOrEmpty(output)) throw new InvalidOperationException("Set MAESTRO_ART_EVIDENCE.");
+            Directory.CreateDirectory(output);EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+            var root=new GameObject("Native recipe robot");
+            var geometry=root.AddComponent<RecipeObject>();var recipe=RecipeTemplates.BoxRobot(true);geometry.Apply(recipe);
+            var camera=new GameObject("Recipe camera",typeof(Camera)).GetComponent<Camera>();
+            camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.944f,.929f,.887f,1);
+            camera.orthographic=true;camera.orthographicSize=.66f;camera.nearClipPlane=.01f;
+            camera.transform.position=new Vector3(1.1f,.9f,2.3f);camera.transform.LookAt(new Vector3(0,.52f,0));
+            Capture(camera,Path.Combine(output,"recipe-robot-rest.png"),1000,1100);
+            foreach(var track in recipe.tracks) geometry.Part(track.part).localRotation=recipe.parts.Single(x=>x.id==track.part).rotation*recipe.Sample(track,.7f);
+            Capture(camera,Path.Combine(output,"recipe-robot-wave.png"),1000,1100);
+            UnityEngine.Object.DestroyImmediate(root);UnityEngine.Object.DestroyImmediate(camera.gameObject);
+            Debug.Log("MAESTRO_RECIPES_RENDERED");
+        }
+
         public static void RenderPhysics()
         {
             var output = Environment.GetEnvironmentVariable("MAESTRO_ART_EVIDENCE");

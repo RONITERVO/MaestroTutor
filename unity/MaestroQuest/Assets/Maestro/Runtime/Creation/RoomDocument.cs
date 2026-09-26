@@ -9,12 +9,14 @@ using Maestro.Quest.Interaction;
 
 namespace Maestro.Quest.Creation
 {
-    public enum RoomObjectKind { Book, Maestro, Block, Ball, Cylinder, Drawing, ImportedModel }
+    public enum RoomObjectKind { Book, Maestro, Block, Ball, Cylinder, Drawing, ImportedModel, Assembly }
 
     [Serializable]
     public sealed class RoomObjectData
     {
         public string id;
+        public string name;
+        public RoomRecipe recipe;
         public RoomObjectKind kind;
         public Vector3 position;
         public Quaternion rotation = Quaternion.identity;
@@ -34,7 +36,7 @@ namespace Maestro.Quest.Creation
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
-        public RoomObjectData Copy() => new() { id = id, kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
+        public RoomObjectData Copy() => new() { id = id, name = name, recipe = recipe?.Copy(), kind = kind, position = position, rotation = rotation, scale = scale, color = color, radius = radius, points = points == null ? null : (Vector3[])points.Clone(), joints = MotionFrame.CopyJoints(joints), motion = motion?.Copy(), modelHash = modelHash, physics = physics, mass = mass, collisionShape = collisionShape, followDistance = followDistance, walkSpeed = walkSpeed, walkClip = walkClip, walkMotionId = walkMotionId };
     }
 
     [Serializable]
@@ -55,11 +57,14 @@ namespace Maestro.Quest.Creation
             error = null;
             if (version != 1 && version != 2 || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
-            var ids = new HashSet<string>(); int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
+            var ids = new HashSet<string>(); int partCount = 0; int pointCount = 0, builtIns = 0, frameCount = 0, jointCount = 0;
             foreach (var item in objects)
             {
                 if (item == null || !Enum.IsDefined(typeof(RoomObjectKind), item.kind) || string.IsNullOrEmpty(item.id) || !ids.Add(item.id))
                     return Fail("This room contains invalid or duplicate objects.", out error);
+                if (item.name != null && (item.name.Length > 80 || item.name.Any(char.IsControl))) return Fail("Object names must be at most 80 readable characters.",out error);
+                if (item.kind == RoomObjectKind.Assembly ? item.recipe == null || !item.recipe.Validate(out _) : item.recipe != null) return Fail("An object has an invalid construction recipe.",out error);
+                partCount += item.recipe?.parts.Length ?? 0;
                 bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
                 if (!string.IsNullOrEmpty(item.walkMotionId) && (version < 2 || item.kind != RoomObjectKind.Maestro || !Guid.TryParseExact(item.walkMotionId,"N",out _) || item.walkClip != 0))
                     return Fail("The library walking motion reference is invalid.",out error);
@@ -108,6 +113,7 @@ namespace Maestro.Quest.Creation
                 jointCount += item.motion?.frames.Sum(frame => frame.joints?.Length ?? 0) ?? 0;
             }
             if (builtIns != 2 || !ids.Contains("book") || !ids.Contains("maestro")) return Fail("The included book and Maestro must remain in the room.", out error);
+            if (partCount > 256) return Fail("Keep at most 256 recipe parts in this room.",out error);
             if (pointCount > MaximumTotalPoints) return Fail("This room has reached its drawing limit.", out error);
             if (frameCount > 1200 || jointCount > 6000) return Fail("This room has reached its animation limit.",out error);
             if (objects.Count(item => item.kind == RoomObjectKind.ImportedModel) > 4) return Fail("Keep at most four imported models in this room.", out error);

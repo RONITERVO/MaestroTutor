@@ -132,6 +132,21 @@ namespace Maestro.Quest.Book
 #endif
         }
 
+        public string ReadRoomAgentSnapshot()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if(IsReady && !suspended) { m_NativePlugin.Call("RequestRoomAgentSnapshot"); return m_NativePlugin.Call<string>("ReadRoomAgentSnapshot"); }
+#endif
+            return null;
+        }
+        public void PublishRoomAgentState(string json)
+        {
+            if(!IsReady || suspended || string.IsNullOrEmpty(json) || json.Length>32768) return;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            m_NativePlugin.Call("PublishRoomAgentState",json);
+#endif
+        }
+
         public void PublishLibraryState(string json)
         {
             if (!IsReady || suspended || string.IsNullOrEmpty(json) || json.Length > 32768) return;

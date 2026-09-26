@@ -12,6 +12,7 @@ namespace Maestro.Quest.Creation
     public sealed class CreatedRoomObject : MonoBehaviour
     {
         Material pigment;
+        RecipeObject recipe;
         PencilMarks drawing;
         GameObject selection;
         Color tint;
@@ -25,7 +26,12 @@ namespace Maestro.Quest.Creation
         {
             Bounds bounds;
             Collider collider;
-            if (data.kind == RoomObjectKind.Drawing)
+            if (data.kind == RoomObjectKind.Assembly)
+            {
+                recipe=gameObject.AddComponent<RecipeObject>(); recipe.Apply(data.recipe); bounds=recipe.LocalBounds;
+                var box=gameObject.AddComponent<BoxCollider>(); box.center=bounds.center; box.size=bounds.size; collider=box;
+            }
+            else if (data.kind == RoomObjectKind.Drawing)
             {
                 drawing = gameObject.AddComponent<PencilMarks>(); drawing.SetPaths(new[] { data.points }, data.radius);
                 bounds = GetComponent<MeshFilter>().sharedMesh.bounds;
@@ -50,6 +56,14 @@ namespace Maestro.Quest.Creation
             if (data.kind == RoomObjectKind.ImportedModel) rigid.SetGeometryReady(false);
             if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
             return item;
+        }
+        public void ApplyRecipe(RoomRecipe value)
+        {
+            if (!recipe || !recipe.Apply(value)) return;
+            geometryBounds=recipe.LocalBounds;
+            var box=(BoxCollider)originalCollider; box.center=geometryBounds.center; box.size=geometryBounds.size;
+            bool selected=selection && selection.activeSelf; if(selection) { selection.SetActive(false); Destroy(selection); }
+            BuildSelection(geometryBounds); SetSelected(selected); SetCollisionShape(collisionShape,true);
         }
         public void SetCollisionShape(ItemCollider shape, bool rebuild = false)
         {
@@ -91,7 +105,7 @@ namespace Maestro.Quest.Creation
             }
             catch (System.Exception error) { if (this) ModelStatus = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again."; }
         }
-        public void ApplyColor(Color color) { tint = color; if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
+        public void ApplyColor(Color color) { tint = color; if(recipe) recipe.Tint(color); if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
         public void SetSelected(bool value) { if (selection) selection.SetActive(value); }
 
         void BuildSelection(Bounds bounds)
