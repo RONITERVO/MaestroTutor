@@ -53,6 +53,6 @@ export { useTutorConversation } from './hooks/useTutorConversation';
 export { useSuggestions } from './hooks/useSuggestions';
 export { useChatPersistence } from './hooks/useChatPersistence';
 
-export { prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff } from './services/roomAgentTasks';
+export { prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff, resetRoomAgentTasks } from './services/roomAgentTasks';
 
 export { hideRoomTaskMessage } from './services/roomTaskSummaries';

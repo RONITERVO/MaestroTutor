@@ -91,7 +91,11 @@ handoffs through the shared managed/BYOK client, with incomplete-input failures
 before room actions. Fresh task results now use ordinary chat TTS after active
 speech yields, with shared listening ownership, Stop and no replay on reload.
 Database v9 atomically saves compact task results with their journals and repairs
-chat on history load while preserving deletion and preventing replay.
+chat on history load while preserving deletion and preventing replay. Database v10
+adds validated staging and atomic full task backup/import, retaining original
+media and receipts as read-only history without resuming actions. PC browser
+checks cover corruption and storage-failure rollback; Quest backup acceptance
+remains pending.
 Conversational task steering, explicit server cancellation and provider/headset
 acceptance (including audible results) remain open. See QUEST_UNIFIED_AGENT.md.
 

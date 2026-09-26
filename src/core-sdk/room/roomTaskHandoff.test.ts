@@ -123,3 +123,17 @@ it('retains receipts and reports failure rather than a successful empty narratio
   expect(result.phase).toBe('failed'); expect(result.operations[0].receipt?.ok).toBe(true);
   expect(result.reply).toBeUndefined(); expect(h.activity).toHaveBeenLastCalledWith(false);
 });
+
+it('reset revokes prepared handoffs, stops active work and waits for its final receipt', async () => {
+  const h = harness(), started = deferred<void>(), acknowledged = deferred<any>();
+  h.manager.capture({ ...handoff, id: 'prepared-task', sourceAssistantId: 'prepared' }, h.valid);
+  h.execute.mockImplementation(async () => { started.resolve(); return acknowledged.promise; });
+  const running = h.manager.start('a1'); await started.promise;
+  let settled = false; const reset = h.manager.reset().then(() => { settled = true; });
+  await Promise.resolve(); expect(settled).toBe(false);
+  acknowledged.resolve({ ...scene, ack: 1, status: 'Created before Stop' });
+  await reset; const result = await running;
+  expect(result.phase).toBe('stopped'); expect(result.operations[0].receipt?.status).toBe('Created before Stop');
+  await expect(h.manager.start('prepared')).rejects.toThrow('original request');
+  expect(h.ports.reply).not.toHaveBeenCalled();
+});

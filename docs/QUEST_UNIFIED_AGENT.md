@@ -123,14 +123,14 @@ history and tutor context, and publishes its result in the original conversation
 The original tutor context is task data; it cannot override the native command
 schema. Detailed observations and receipts stay outside ordinary chat history.
 
-The task journal lives in the existing app database (v9, `agentTasks`). It commits
+The task journal lives in the existing app database (v10, `agentTasks`). It commits
 an atomic initiation claim and each pending action before native dispatch, then
 commits acknowledgements before the next model call. Duplicate initiation IDs
 return existing records. An interrupted/unconfirmed operation is never replayed
 automatically. Receipts survive narration failure. Deleting source conversation
 messages prunes their task records; late saves cannot recreate a deleted task.
-Bulk history replacement clears the task journal. Backups currently contain task
-status references in chat, not the full journal; restored references cannot run.
+Validated backup replacement now restores full task journals as read-only history.
+Explicit history deletion still clears journals; imported task references cannot run.
 
 The existing header flag displays `agent:task`; it does not set `gen:response` or
 block chat input/passive speech. The book projects agent activity to the existing
@@ -280,16 +280,65 @@ invent success, restart it, or overwrite a potentially live runner in another
 window. This is recovery on history load, not cross-window live synchronization.
 Routine chat loads read no private task audio, frames, plans or room snapshots.
 
-The real-browser recovery probe exercises v8-to-v9 migration, actual app history
+The real-browser recovery probe exercises v8-to-current migration, actual app history
 loading across conversations, bookmark preservation, stale saves, duplicate
 claims, zero automatic announcements, explicit result/source deletion and reload.
 An injected IndexedDB abort verifies rollback of both journal and chat. The
 existing handoff probe also passes its v7 migration, native-acknowledgement and
 Stop/no-replay tests. Recovery uses real IndexedDB; provider/native actions remain
-simulated or uncalled. Full task-journal backup/import and Quest upgrade testing
-are still required; current chat exports include the reconciled visible result,
-not the private journal or its original media. Bulk history replacement clears
-both journal stores and does not resume imported task references.
+simulated or uncalled. Full task-journal backup/import now has the separate PC
+coverage below. Quest upgrade and storage/lifecycle testing remain required.
+
+## Full task backup and atomic import (PC verification, 2026-09-26)
+
+Save All and Save Chat now stream complete task records whose original source
+messages are included in the export. This preserves exact original context,
+retained PCM/JPEG input, receipts, final replies and hidden-result status. The
+existing `ndjson-v1` format adds `taskArchiveVersion: 1`, indexed task chunks with
+SHA-256 checksums and an end record counting conversations and tasks. Checksums
+detect damage; they do not authenticate claims in an externally edited file.
+The usual backup controls describe the private media included in these files.
+
+The shared Core decoder accepts legacy chat-only archives and validates new
+archives strictly, including chunk order, identities, version, completeness and
+display fields. It never executes imported commands. The browser adapter stages
+validated entries in database v10's `backupStaging` store, then replaces chat,
+bookmarks, profile, avatar image, journals and summaries in one IndexedDB
+transaction. Invalid input, missing task sources or storage failure cannot leave
+half-replaced history. Selected-conversation merging retains existing task IDs,
+reconciles hidden/authoritative results and leaves other conversations untouched.
+Both import paths reload through normal history loading, retaining its language
+switch fencing and bookmark behavior.
+
+Before committing, the app revokes prepared handoffs, stops its current task and
+awaits task cleanup. Imported records are read-only: prior callbacks cannot
+rewrite them, and duplicate claims cannot rerun actions. Unfinished records keep
+last-known phase and uncertainty; no automatic completion announcement, speech,
+provider call, native dispatch or resumption occurs. This does not undo earlier
+room effects or cancel a different browser window's already dispatched action.
+A chat/task archive does not replace native room saves, imported model files,
+motion libraries or externally referenced attachment content.
+
+Memory retains one conversation and one task during decoding; a task is limited
+to 64 Mi characters and split into 128 Ki-character chunks. Oversized records fail
+explicitly rather than being truncated. Staging requires space alongside existing
+data. Failed imports discard their batch; staging abandoned by a crashed process
+is removed on a later import after seven days. Export snapshots each journal
+individually, not the entire live app at one instant. Restoring reconciles task
+results from those retained records. Older app builds ignore the added task lines
+and cannot preserve full task evidence when re-exporting; use an updated build.
+
+`scripts/probe-task-backup.mjs` runs the actual React backup hook and real
+Chromium IndexedDB in an isolated profile. It covers both export modes, full
+restore, exact media/context preservation across chunks, three tasks sharing a
+conversation, hidden and unfinished records, bookmarks/profile, repeated merges,
+late writes, duplicate claims, malformed/truncated input, missing sources,
+forced staging/commit failure, cleanup and zero completion announcements.
+Codec and reset tests separately cover wrong hashes, versions, chunk order,
+identity collisions and in-flight credential/receipt races. Evidence is under
+`.quest-evidence/task-backup`. The checkpoint passes 164 targeted and 65 prompt
+tests, TypeScript, full source lint, ownership guards, production build and both
+backup/recovery browser probes. No headset, provider or native command is used.
 
 ## Evidence and remaining release work
 
@@ -330,9 +379,9 @@ Remaining work:
    with the real provider and headset. Do not enable the optional direct Live
    tool protocol.
 2. Add conversation-driven task Stop, clarification, follow-up revision and
-   bounded continuation; current explicit task Stop is a chat control. Support
-   complete task-journal export/import without automatic resumption. Durable
-   result reconciliation now has PC coverage; validate the database upgrade on Quest.
+   bounded continuation; current explicit task Stop is a chat control. Full
+   task-journal backup/import and durable result reconciliation now have PC
+   coverage; validate the database upgrade and backup flow on Quest.
 3. Define explicit managed server cancellation with accurate partial-usage
    settlement; client transport abort currently retains the existing server drain
    policy. Strengthen access-change fencing across asynchronous credential refresh

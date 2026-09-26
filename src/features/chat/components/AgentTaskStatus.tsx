@@ -32,6 +32,7 @@ export function AgentTaskStatus({ task, controls = roomAgentTasks }: {
       <summary className="cursor-pointer py-1">Task details</summary>
       {loadError && <p>{loadError}</p>}
       {record && <>
+        {record.readOnly && <p>Imported task record. Its actions will not run again.</p>}
         {record.note !== task.note && <p>{record.note}</p>}
         <p>Recorded action batches: {record.operations.length}.</p>
         <ol className="list-decimal pl-5">{record.operations.map((operation, index) => <li key={index} className="my-1">

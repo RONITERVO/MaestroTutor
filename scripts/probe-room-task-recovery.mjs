@@ -57,7 +57,7 @@ window.__vite_plugin_react_preamble_installed__ = true;
     return { version, ids: messages.map(message => message.id), completed: messages.find(message => message.id === 'task'),
       unfinished: messages.find(message => message.id === 'unfinished'), privateDataInSummary: JSON.stringify(summary).includes('private-') };
   });
-  assert.equal(migrated.version, 9); assert.equal(migrated.completed.text, 'Robot ready.');
+  assert.equal(migrated.version, 10); assert.equal(migrated.completed.text, 'Robot ready.');
   assert.equal(migrated.unfinished.agentTask.phase, 'working'); assert.equal(migrated.privateDataInSummary, false);
   assert.deepEqual([...migrated.ids].sort(), ['a', 'later', 'task', 'u', 'unfinished'].sort());
 

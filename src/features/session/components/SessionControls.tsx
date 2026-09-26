@@ -591,6 +591,9 @@ const SessionControls: React.FC = () => {
             />
             <span className="text-xs text-ctrl-muted-text break-words">
               {ACTION_CONFIG[pendingAction].description}
+              {['saveAll', 'saveThis', 'loadAll', 'combine', 'reset'].includes(pendingAction) && (
+                <span className="block mt-1">{t('sessionControls.taskBackupDetails')}</span>
+              )}
             </span>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">

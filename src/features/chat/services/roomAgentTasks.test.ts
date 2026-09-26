@@ -14,7 +14,7 @@ vi.mock('../../../shared/utils/costTracker', () => ({ trackGeminiUsage: ports.us
 vi.mock('./chatHistory', () => ({ safeSaveChatHistoryDB: ports.history }));
 vi.mock('./roomTaskStore', () => ({ roomTaskStore: { claim: ports.claim, save: ports.save, get: ports.get } }));
 import { useMaestroStore, initialSettings, allGeneratedLanguagePairs } from '../../../store';
-import { prepareRoomAgentHandoff, prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff, roomAgentRequestForVerification, startRoomAgentTask, roomAgentTasks } from './roomAgentTasks';
+import { prepareRoomAgentHandoff, prepareLiveRoomAgentContext, captureLiveRoomAgentHandoff, roomAgentRequestForVerification, startRoomAgentTask, roomAgentTasks, resetRoomAgentTasks } from './roomAgentTasks';
 import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
 import type { RoomTaskRecord } from '../../../core-sdk/room/roomTaskHandoff';
 import { selectIsAgentWorking, selectIsSending } from '../../../store/slices/uiSlice';
@@ -240,4 +240,17 @@ it('announces a fresh task result once and does not announce a saved claim again
     await startRoomAgentTask(id); expect(announced).toHaveBeenCalledOnce();
     ports.key.mockResolvedValue('different-synthetic-key'); expect(await result.valid()).toBe(false);
   } finally { unsubscribe(); }
+});
+
+it('reset invalidates context still waiting for credentials and previously prepared handoffs', async () => {
+  const { id, source } = setup();
+  await prepareRoomAgentHandoff(input, source);
+  let resolveKey!: (key: string) => void;
+  ports.key.mockImplementationOnce(() => new Promise<string>(resolve => { resolveKey = resolve; }));
+  const pending = prepareRoomAgentHandoff(input, source);
+  await resetRoomAgentTasks(); resolveKey('synthetic-key-not-a-credential');
+  expect(await pending).toBe(input);
+  expect(roomAgentRequestForVerification(id, proposal)).toBeUndefined();
+  await startRoomAgentTask(id);
+  expect(execute).not.toHaveBeenCalled();
 });

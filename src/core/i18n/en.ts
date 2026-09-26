@@ -49,6 +49,7 @@ export const enTranslations: Record<string, string> = {
   "startPage.browserNotSupported": "Your browser does not support file saving. Please use Chrome or Edge.",
   
   // Session Controls - Action labels and descriptions
+  "sessionControls.taskBackupDetails": "Backups include agent task records and any speech or camera frames saved with them. Imported tasks are history only; their actions will not run again.",
   "sessionControls.saveAll.label": "Save All",
   "sessionControls.saveAll.description": "Export all chats to backup file",
   "sessionControls.loadAll.label": "Load All",

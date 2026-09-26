@@ -51,7 +51,7 @@ export const roomTaskStore: RoomTaskStore & { get(id: string): Promise<RoomTaskR
     const request = store.get(record.id);
     request.onsuccess = () => {
       // History deletion must win over a late task callback.
-      if (!request.result) { store.transaction.abort(); return; }
+      if (!request.result || request.result.readOnly) { store.transaction.abort(); return; }
       store.put(record); writeProjection(store, record); result();
     };
   }),

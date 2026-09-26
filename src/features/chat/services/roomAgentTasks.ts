@@ -24,6 +24,7 @@ import { isRoomTaskHidden } from './roomTaskSummaries';
 
 const contexts = new Map<string, { prompt: string; conversationId: string; valid: () => Promise<boolean>; acceptsReply: (raw: string) => boolean }>();
 const deliveryContexts = new Map<string, { valid: () => Promise<boolean> }>();
+let contextGeneration = 0;
 let activityCount = 0;
 let activityToken: string | undefined;
 const usage = (response: { modelUsed?: string; modelVersion?: string; usageMetadata?: Parameters<typeof trackGeminiUsage>[0]['usageMetadata'] }, model: string) =>
@@ -69,12 +70,13 @@ type HandoffSource = { sourceUserId?: string; sourceAssistantId: string; convers
 /** Account and conversation identity are captured before either tutor transport.
  * Recheck after asynchronous access reads too; no credentials enter the journal. */
 async function captureAccess(conversationId: string | null) {
+  const generation = contextGeneration;
   const lease = currentRoomAgentLease();
   if (!lease || !conversationId) return null;
   const nativeSession = lease.state().session;
   const localCurrent = () => {
     const state = useMaestroStore.getState();
-    return state.settings.selectedLanguagePairId === conversationId && !state.isLoadingHistory
+    return contextGeneration === generation && state.settings.selectedLanguagePairId === conversationId && !state.isLoadingHistory
       && lease.valid() && lease.state().session === nativeSession;
   };
   if (!localCurrent()) return null;
@@ -194,3 +196,9 @@ export async function startRoomAgentTask(sourceAssistantId: string): Promise<voi
   } finally { if (timer) clearInterval(timer); if (ownsDeliveryContext) deliveryContexts.delete(id); }
 }
 export const loadRoomAgentTask = roomTaskStore.get;
+
+/** History replacement revokes both prepared handoffs and currently executing work. */
+export async function resetRoomAgentTasks(): Promise<void> {
+  contextGeneration++; contexts.clear(); liveContexts.clear(); deliveryContexts.clear();
+  await roomAgentTasks.reset();
+}

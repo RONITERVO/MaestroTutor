@@ -18,6 +18,8 @@ export interface RoomHandoff {
 }
 export interface RoomTaskRecord {
   version: 1;
+  /** Restored evidence is never writable by a previously running task. */
+  readOnly?: true;
   id: string;
   handoff: RoomHandoff;
   phase: RoomTaskPhase;
@@ -66,6 +68,10 @@ export class RoomTaskHandoff {
   stop(id: string): void { this.active.get(id)?.controller.abort(); }
   stopAll(): void { for (const item of this.active.values()) item.controller.abort(); }
   running(id: string): boolean { return this.executing.has(id); }
+  async reset(): Promise<void> {
+    this.captures.clear(); this.stopAll();
+    await Promise.allSettled([...this.active.values()].map(task => task.done));
+  }
 
   start(assistantId: string): Promise<RoomTaskRecord> {
     const captured = this.captures.get(assistantId);
