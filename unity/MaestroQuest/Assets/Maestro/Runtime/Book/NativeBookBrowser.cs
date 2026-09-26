@@ -141,7 +141,7 @@ namespace Maestro.Quest.Book
         }
         public void PublishRoomAgentState(string json)
         {
-            if(!IsReady || suspended || string.IsNullOrEmpty(json) || json.Length>32768) return;
+            if(!IsReady || suspended || string.IsNullOrEmpty(json) || json.Length>65536) return;
 #if UNITY_ANDROID && !UNITY_EDITOR
             m_NativePlugin.Call("PublishRoomAgentState",json);
 #endif

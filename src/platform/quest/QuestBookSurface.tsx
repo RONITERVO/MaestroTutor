@@ -12,6 +12,8 @@ import { installBookBridge, type BookSnapshot } from './bookBridge';
 import { selectIsListening, selectIsSending, selectIsSpeaking } from '../../store/slices/uiSlice';
 import './questBook.css';
 import { LibraryBookClient } from './libraryBookBridge';
+import { RoomAgentClient } from './roomAgentBridge';
+import { RoomWorkspace } from './RoomWorkspace';
 import { LibraryBookView } from './LibraryBookView';
 import { sessionActivity } from '../browser/sessionActivity';
 
@@ -20,8 +22,24 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const [layout, setLayout] = useState<BookLayout>(() => {
     try { return readBookLayout(window.localStorage); } catch { return 'conversation'; }
   });
+  const [room] = useState(() => new RoomAgentClient());
+  const roomView = useSyncExternalStore(room.subscribe,room.getSnapshot);
+  const workspaceOpen = roomView.state?.visible ?? false;
   const [library] = useState(() => new LibraryBookClient());
   const libraryOpen = useSyncExternalStore(library.subscribe, library.getSnapshot).state?.visible ?? false;
+  const [overlay,setOverlay] = useState<'library'|'workspace'|null>(null);
+  const previousOpen=useRef({library:false,workspace:false});
+  useEffect(()=>{
+    const previous=previousOpen.current;
+    if(workspaceOpen&&!previous.workspace)setOverlay('workspace');
+    else if(libraryOpen&&!previous.library)setOverlay('library');
+    else if(overlay==='workspace'&&!workspaceOpen||overlay==='library'&&!libraryOpen)setOverlay(null);
+    previousOpen.current={library:libraryOpen,workspace:workspaceOpen};
+  },[libraryOpen,workspaceOpen,overlay]);
+  useEffect(()=>{
+    if(overlay==='workspace'&&libraryOpen)library.close();
+    if(overlay==='library'&&workspaceOpen&&!roomView.pending)void room.request([{action:'workspace',visible:false}]).catch(()=>{});
+  },[overlay,libraryOpen,workspaceOpen,roomView.pending,library,room]);
   const spreadRoot = useRef<HTMLDivElement>(null);
   const [earlierPageTarget, setEarlierPageTarget] = useState<HTMLDivElement | null>(null);
   useEffect(() => { try { window.localStorage.setItem(BOOK_LAYOUT_STORAGE_KEY, layout); } catch { /* Session choice still works if storage is unavailable. */ } }, [layout]);
@@ -53,7 +71,9 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const presentation = useMemo(() => ({ layout, spreadRoot, earlierPageTarget, earlierMessageIds, visibleMessageIds, historyPageKey, isLatestPage: page.isLatest, selectedId: selected?.id ?? null, selectArtifact: setSelectedId, posters }), [layout, earlierPageTarget, earlierMessageIds, selected?.id, posters, visibleMessageIds, historyPageKey, page.isLatest]);
   const command = (value: BookCommand) => {
     if (value.type !== 'session.resume') library.close();
+    if (value.type !== 'session.resume' && value.type !== 'workspace.open' && workspaceOpen) void room.request([{action:'workspace',visible:false}]).catch(()=>{});
     switch (value.type) {
+      case 'workspace.open': setOverlay('workspace'); void room.request([{action:'workspace',visible:true}]).catch(()=>{}); break;
       case 'session.resume': sessionActivity.resume(); break;
       case 'layout.set': setLayout(value.layout); break;
       case 'history.step':
@@ -80,12 +100,12 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
       selectedArtifactId: latest.selected?.id ?? null,
       historyStart: latest.page.start, historyEnd: latest.page.end, historyTotal: latest.page.total,
     };
-  }, value => stateRef.current.command(value), library), [library]);
+  }, value => stateRef.current.command(value), library, room), [library,room]);
 
   return (
     <BookPresentationContext.Provider value={presentation}>
       <div className={`quest-book-surface quest-layout-${layout}`} ref={spreadRoot}>
-        <div hidden={libraryOpen} inert={libraryOpen} className="quest-tutor-pages">
+        <div hidden={overlay!==null} inert={overlay!==null} className="quest-tutor-pages">
         <section className="quest-chat-page" aria-label="Conversation page">
           <div className="quest-chat-document">{children}</div>
         </section>
@@ -106,7 +126,8 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
           </>}
         </section>}
         </div>
-        <LibraryBookView client={library} />
+        {overlay==='library' && <LibraryBookView client={library} />}
+        {overlay==='workspace' && <RoomWorkspace client={room} />}
       </div>
     </BookPresentationContext.Provider>
   );

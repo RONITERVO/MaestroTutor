@@ -2,7 +2,34 @@
 
 This is development evidence, not a release acceptance report.
 
-## Latest: batch animation imports — not installed
+## Latest: shared recipe workspace — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-71987229.apk`.
+SHA256: `71987229044DCDEAB6108DDAE42E8315C512859DD2C1A0C354109E07EFB7B83F`.
+135,462,494 bytes, development signed; zero build errors and two warnings.
+APK v2 signature, ARM64 and required manifest checks pass. 63 EditMode, 67 required
+PlayMode and 25 native Android checks pass (155), plus 27 room/Quest web checks
+and 65 shared prompt checks. Three optional private-file checks are skipped.
+TypeScript, native lint, boundary checks and production web build pass.
+
+The optional book workspace exposes the object/part tree and recipe animation
+keys through the same native executor used by conversational room requests.
+It adds inspected recipe read-back, part outlines, target-specific revision checks,
+actual playback status/restart and cancellation-safe session handshakes. No
+behaviour-block editor, full Live voice integration or complete action parity is
+claimed. See QUEST_AGENT_WORKSPACE.md and QUEST_SHARED_ACTIONS.md.
+
+The 1024 x 768 browser fixture checks Apply, Undo, key editing, Stop/Play and return
+to mounted chat, with no page errors. It uses real React surfaces and a native
+recipe, but simulated bridge receipts. Unity tests exercise real native execution;
+neither evidence proves the complete WebView/headset path. Reviewed captures and
+source/build hashes are archived under `.quest-evidence/workspace/verified-71987229`.
+
+No device query, installation or launch occurred. Installed checkpoint remains
+08F340EF. Once the user explicitly returns, preserve saved room data before any
+upgrade and perform the conversational/workspace checks at the end of this file.
+
+## Earlier: batch animation imports — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-9A96BEB7.apk`.
 SHA256: `9A96BEB7C574DC3B22DF18C221DD98D1E789363854567986F5466008F93BDC6C`.
@@ -766,7 +793,7 @@ full release and physical-device acceptance gates remain open.
 ## Pending: conversational recipe creation (2026-09-26)
 
 Device work remains on hold until the user explicitly reconnects/returns. After
-installing agent-recipe checkpoint `0FE4C286`, verify authenticated
+installing shared-workspace checkpoint `71987229`, verify authenticated
 managed and BYOK text turns and recorded-speech turns independently. Try making a
 small waving robot, a coloured ball, moving/resizing/painting a named object, and
 Undo/Redo. Verify native receipts match the actual room and that unrelated language
@@ -775,5 +802,13 @@ is pending: no late scene action may execute. Move an object during planning and
 verify a stale edit is rejected without partial creation. Save/reopen and inspect
 the recipe robot. Check labels, collider/grab behaviour and sustained performance.
 
-These tests do not cover the separate Live voice path or the planned Scratch-like
-visual workspace; both remain implementation work, not accepted features.
+Open Workshop using the physical token and by a language request. Inspect a part,
+confirm its outline on the actual model, edit/apply/Undo a key and rest pose, and
+return to unchanged chat. Move an unrelated physics object during a draft; the
+edit should still apply. Move the edited object; the stale draft must remain visible
+and require reload. Switch physical selection and verify outline cleanup. Reopen
+the book after cancellation and ensure no old acknowledgement triggers an edit.
+Check keyboard/input reachability, text size and both-hand pointer operation.
+
+These checks do not establish the separate Live voice path or the planned
+behaviour-block view, which remain implementation work.

@@ -13,12 +13,16 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,Quaternion> rest = new();
         readonly List<Material> materials = new();
         readonly List<Color> colors = new();
-        GameObject geometry;
+        GameObject geometry,highlight;
+        string highlightedPart;
         RoomRecipe recipe;
         string encoded;
         float time;
         bool interrupted;
         public Bounds LocalBounds { get; private set; }
+        public bool IsPlaying => recipe != null && recipe.playing && !interrupted && (recipe.loop || time < recipe.duration);
+        public void Restart() { if(recipe == null || recipe.tracks.Length == 0) return; time=0; interrupted=false; }
+        public void Stop() { interrupted=true; }
         public Transform Part(string id) => nodes.TryGetValue(id,out var node) ? node : null;
         public bool Apply(RoomRecipe value)
         {
@@ -47,7 +51,19 @@ namespace Maestro.Quest.Creation
                     if (first) { bounds = new Bounds(point,Vector3.zero); first=false; } else bounds.Encapsulate(point);
                 }
             }
-            LocalBounds=bounds; return true;
+            LocalBounds=bounds; Highlight(highlightedPart); return true;
+        }
+        public void Highlight(string partId)
+        {
+            highlightedPart=partId;
+            if(highlight) {highlight.SetActive(false);ArtResources.Release(highlight);}
+            if(string.IsNullOrEmpty(partId) || !nodes.TryGetValue(partId,out var node))return;
+            var part=System.Array.Find(recipe.parts,value=>value.id==partId);var half=part.size*.5f+Vector3.one*.008f;
+            highlight=new GameObject("Selected recipe part",typeof(PencilMarks));highlight.transform.SetParent(node,false);
+            var paths=new List<Vector3[]>();
+            foreach(float z in new[]{-half.z,half.z})paths.Add(new[]{new Vector3(-half.x,-half.y,z),new Vector3(half.x,-half.y,z),new Vector3(half.x,half.y,z),new Vector3(-half.x,half.y,z),new Vector3(-half.x,-half.y,z)});
+            foreach(float x in new[]{-half.x,half.x})foreach(float y in new[]{-half.y,half.y})paths.Add(new[]{new Vector3(x,y,-half.z),new Vector3(x,y,half.z)});
+            var marks=highlight.GetComponent<PencilMarks>();marks.SetPaths(paths,.0015f);marks.SetColor(IllustratedMaterials.Ribbon);
         }
         public void Tint(Color tint) { for(int i=0;i<materials.Count;i++) materials[i].color=colors[i]*tint; }
         void Update()

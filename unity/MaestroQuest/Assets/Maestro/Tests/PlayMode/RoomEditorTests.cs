@@ -141,6 +141,39 @@ namespace Maestro.Quest.Tests
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator ObjectPreconditionsAllowUnrelatedEditsButProtectTheTargetAndExposeRecipes()
+        {
+            var executor=new RoomAgentExecutor(editor);
+            var target=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block);
+            int revision=editor.ObjectRevision(target.id),scene=editor.Revision;
+            editor.Create(RoomObjectKind.Ball);
+            var request=new RoomAgentRequest {version=2,sceneRevision=scene,conditions=new[]{new RoomObjectCondition {id=target.id,revision=revision}},commands=new[]{new RoomAgentCommand {action="paint",target=target.id,color=Color.red}}};
+            Assert.That(executor.Execute(request,out var status,out _),Is.True,status);Assert.That(editor.Read(target.id).color,Is.EqualTo(Color.red));
+            request.commands[0].color=Color.blue;
+            Assert.That(executor.Execute(request,out status,out _),Is.False);StringAssert.Contains("changed",status);Assert.That(editor.Read(target.id).color,Is.EqualTo(Color.red));
+            request.conditions=Array.Empty<RoomObjectCondition>();request.commands=new[]{new RoomAgentCommand {action="create",reference="robot",name="Robot",kind="boxRobot"}};
+            Assert.That(executor.Execute(request,out status,out var created),Is.True,status);
+            request.commands=new[]{new RoomAgentCommand {action="inspect",target=created[0],partId="Head"}};
+            Assert.That(executor.Execute(request,out status,out _),Is.True,status);Assert.That(executor.InspectionId,Is.EqualTo(created[0]));Assert.That(editor.SelectedId,Is.EqualTo(created[0]));
+            Assert.That(editor.Read(executor.InspectionId).recipe.parts.Length,Is.GreaterThanOrEqualTo(17));
+            Assert.That(editor.Find(created[0]).GetComponent<RecipeObject>().Part("Head").Find("Selected recipe part"),Is.Not.Null);
+            yield return null;
+        }
+        [UnityTest]
+        public IEnumerator RecipePlaybackCanBeStoppedAndExplicitlyRestartedAfterFocusLoss()
+        {
+            var executor=new RoomAgentExecutor(editor);var create=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="create",reference="robot",name="Robot",kind="boxRobot"}}};
+            Assert.That(executor.Execute(create,out var status,out var created),Is.True,status);
+            var geometry=editor.Find(created[0]).GetComponent<RecipeObject>();yield return null;Assert.That(geometry.IsPlaying,Is.True);
+            geometry.SendMessage("OnApplicationFocus",false);Assert.That(geometry.IsPlaying,Is.False);
+            var play=new RoomAgentRequest {version=2,conditions=new[]{new RoomObjectCondition{id=created[0],revision=editor.ObjectRevision(created[0])}},commands=new[]{new RoomAgentCommand {action="play",target=created[0]}}};
+            Assert.That(executor.Execute(play,out status,out _),Is.True,status);Assert.That(geometry.IsPlaying,Is.True);
+            play.commands[0].action="stop";Assert.That(executor.Execute(play,out status,out _),Is.True,status);Assert.That(geometry.IsPlaying,Is.False);
+            play.conditions[0].revision=editor.ObjectRevision(created[0]);play.commands[0].action="play";
+            Assert.That(executor.Execute(play,out status,out _),Is.True,status);Assert.That(geometry.IsPlaying,Is.True);
+        }
+
         [UnityTearDown]
         public IEnumerator TearDown()
         {

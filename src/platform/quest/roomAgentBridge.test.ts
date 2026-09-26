@@ -18,6 +18,7 @@ describe('native room agent client',()=>{
   const client=new RoomAgentClient();client.receive(state());const lease=client.lease()!;
   const pending=lease.execute(commands,4);const rejected=expect(pending).rejects.toThrow('interrupted');client.cancel();await rejected;
   expect(lease.valid()).toBe(false);expect(client.snapshot().request).toBeNull();
+  expect(client.receive(state({revision:20,ack:1}))).toBe(false);
   client.receive(state({session:'b'.repeat(32)}));expect(lease.valid()).toBe(false);
   const next=client.lease()!.execute(commands,4);expect(client.snapshot().request?.sequence).toBe(1);
   client.receive(state({session:'b'.repeat(32),revision:2,ack:1}));await next;

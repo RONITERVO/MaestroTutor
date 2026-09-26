@@ -25,6 +25,7 @@ namespace Maestro.Quest.Editor
             Directory.CreateDirectory(output);EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             var root=new GameObject("Native recipe robot");
             var geometry=root.AddComponent<RecipeObject>();var recipe=RecipeTemplates.BoxRobot(true);geometry.Apply(recipe);
+            File.WriteAllText(Path.Combine(output,"recipe-robot.json"),JsonUtility.ToJson(recipe,true));
             var camera=new GameObject("Recipe camera",typeof(Camera)).GetComponent<Camera>();
             camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.944f,.929f,.887f,1);
             camera.orthographic=true;camera.orthographicSize=.66f;camera.nearClipPlane=.01f;

@@ -62,7 +62,7 @@ export function resolveHistoryPage(ids: readonly string[], anchorId: string | nu
 export const QUEST_BRIDGE_VERSION = 1;
 export type BookCommand =
   | { version: 1; type: 'history.step'; direction: -1 | 1 }
-  | { version: 1; type: 'history.latest' | 'bookmark.jump' | 'artifact.latest' | 'session.resume' }
+  | { version: 1; type: 'history.latest' | 'bookmark.jump' | 'artifact.latest' | 'session.resume' | 'workspace.open' }
   | { version: 1; type: 'artifact.select'; messageId: string }
   | { version: 1; type: 'layout.set'; layout: BookLayout };
 
@@ -75,7 +75,7 @@ export function parseBookCommand(input: unknown): BookCommand | null {
   if (record.type === 'history.step' && (record.direction === -1 || record.direction === 1)) {
     return { version: 1, type: record.type, direction: record.direction };
   }
-  if (record.type === 'history.latest' || record.type === 'bookmark.jump' || record.type === 'artifact.latest' || record.type === 'session.resume') {
+  if (record.type === 'history.latest' || record.type === 'bookmark.jump' || record.type === 'artifact.latest' || record.type === 'session.resume' || record.type === 'workspace.open') {
     return { version: 1, type: record.type };
   }
   if (record.type === 'artifact.select' && typeof record.messageId === 'string' && record.messageId.length > 0 && record.messageId.length <= 256) {

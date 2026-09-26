@@ -234,7 +234,7 @@ public final class BookWebView extends OffscreenBrowser {
             JSONObject command = new JSONObject(json);
             if (command.optInt("version") != 1) return;
             String type = command.optString("type");
-            if (!(type.equals("history.step") || type.equals("history.latest") || type.equals("bookmark.jump") || type.equals("artifact.select") || type.equals("artifact.latest") || type.equals("layout.set") || type.equals("session.resume"))) return;
+            if (!(type.equals("history.step") || type.equals("history.latest") || type.equals("bookmark.jump") || type.equals("artifact.select") || type.equals("artifact.latest") || type.equals("layout.set") || type.equals("session.resume") || type.equals("workspace.open"))) return;
             String encoded = command.toString();
             UnityPlayer.currentActivity.runOnUiThread(() -> {
                 if (web != null && isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) web.evaluateJavascript("window.maestroBook && window.maestroBook.command(" + encoded + ")", null);

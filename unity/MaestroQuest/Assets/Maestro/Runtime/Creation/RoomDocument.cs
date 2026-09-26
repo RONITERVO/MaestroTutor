@@ -132,6 +132,9 @@ namespace Maestro.Quest.Creation
         sealed class Change { public RoomObjectData[] Before, After; }
         readonly List<Change> undo = new(), redo = new();
         readonly Dictionary<string, RoomObjectData> items = new();
+        readonly Dictionary<string,int> revisions = new();
+        int nextRevision = 1;
+        public int ObjectRevision(string id) => id != null && revisions.TryGetValue(id,out var value) ? value : 0;
         public bool CanUndo => undo.Count > 0;
         public bool CanRedo => redo.Count > 0;
         public bool UsesMotion(string id) => items.Values.Any(x => x.walkMotionId == id);
@@ -139,7 +142,7 @@ namespace Maestro.Quest.Creation
         public RoomJournal(RoomDocument document)
         {
             if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
-            foreach (var item in document.objects) items.Add(item.id, item.Copy());
+            foreach (var item in document.objects) { items.Add(item.id, item.Copy()); revisions[item.id]=nextRevision++; }
         }
         public RoomObjectData Read(string id) => id != null && items.TryGetValue(id, out var value) ? value.Copy() : null;
         // Physics updates persisted placement without filling Undo with every simulation step.
@@ -147,7 +150,7 @@ namespace Maestro.Quest.Creation
         {
             if (!items.TryGetValue(id,out var data) || !float.IsFinite(position.sqrMagnitude) || position.sqrMagnitude > 625 || !MotionFrame.ValidRotation(rotation)) return false;
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
-            data.position = position; data.rotation = rotation; return true;
+            data.position = position; data.rotation = rotation; revisions[id]=nextRevision++; return true;
         }
         public RoomDocument Snapshot() => new() { version = 2, objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray() };
 
@@ -181,8 +184,8 @@ namespace Maestro.Quest.Creation
         }
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {
-            foreach (var item in before) items.Remove(item.id);
-            foreach (var item in after) items[item.id] = item.Copy();
+            foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
+            foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=nextRevision++; }
         }
         static bool Equivalent(RoomObjectData[] a, RoomObjectData[] b) => JsonUtility.ToJson(new RoomDocument { objects = a.OrderBy(x => x.id).ToArray() }) == JsonUtility.ToJson(new RoomDocument { objects = b.OrderBy(x => x.id).ToArray() });
     }

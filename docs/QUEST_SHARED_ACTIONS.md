@@ -1,0 +1,171 @@
+# Shared actions, observations and human/agent parity
+
+Recommended implementation direction, 2026-09-26, following the user's comparison
+with StateBeats, Scetch-War and StateWork. This is a design and coverage record;
+it is not a claim that every proposed service or testing adapter exists.
+
+## What the local examples actually demonstrate
+
+Inspected local source, not only project descriptions:
+
+| Project | Existing pattern | Relevant files |
+|---|---|---|
+| `D:/Projects/Games/StateBeats` | Pure tick transition, caller-bound SDK sessions, common service dispatcher, observations, explicit time and replay; CLI/MCP are adapters | `packages/core/src/engine.ts`, `packages/sdk/src/session.ts`, `packages/sdk/src/service.ts`, `packages/mcp/src/index.ts` |
+| `D:/Projects/Games/Scetch-War` | Classic UI and MR grab/drop adapter submit to the same Session; interaction tests and browser drags verify the input path as well as final state | `src/client/app.js`, `src/mr/host.js`, `src/mr/interaction.js`, `tests/tabletop.test.js`, `tests/browser/tabletop.spec.js` |
+| `D:/Projects/Work` | Shared validated service, actor-bound permissions, durable request receipts, revision conflicts, semantic perception adapters and exported schemas | `packages/sdk/src/service.ts`, `packages/sdk/src/perception.ts`, `packages/tools/src/mcp.ts`, `scripts/contracts.mjs` |
+
+These are reusable architectural patterns, not evidence that all three already
+have complete LLM control. For example, Scetch-War's optional Gemma commentary
+path is documented as having no command channel. Nor are their local tests proof
+of Maestro device compatibility. Reuse proven patterns without coupling unrelated
+applications to a new shared framework prematurely.
+
+## Intended contract
+
+Book controls, 3D tools, conversational tools, behaviour rules and development
+clients should consume the same capability-aware operations and observations.
+A complete feature includes:
+
+1. A stable action ID and typed, versioned arguments with one authoritative native
+   or web handler; no button-only business logic or model-only implementation.
+2. A readable observation: stable entity/part/step IDs, relevant saved data and
+   live status, selection, supported actions and concrete unavailable reasons.
+3. A receipt with request/operation identity, actual result, changed IDs, revisions,
+   progress/errors and cancellation state. Accepted, running, completed, failed,
+   cancelled and outcome-unknown are distinct. Durable edits and their receipts
+   need atomic persistence before claiming restart-safe deduplication.
+4. A manual control and discoverable conversational entry when appropriate, plus
+   event/rule invocation for reusable runtime actions. Editor-only authoring and
+   continuous tracking are not automatically callable every frame from a rule.
+5. Validation, permission, conflict, persistence and end-to-end adapter tests.
+
+Use an action catalogue as the shared specification for argument schemas, labels,
+agent descriptions, required capabilities, reversibility and example cases. Derive
+wire types/tool descriptions and coverage checks from it where practical. Native
+validation remains authoritative. UI usability still needs designed controls; a
+schema does not automatically create a good VR interface. Existing TS/C# validation
+currently overlaps and needs shared conformance fixtures before claiming no drift.
+
+Expose a small semantic client surface for discovery, observation, execution,
+operation status/events and cancellation. These names describe proposed operations,
+not currently callable APIs. MCP/CLI can wrap this client for development; the
+in-app agent can call it directly. A transport is not an extra source of behaviour.
+
+## One authority per domain
+
+Keep language tutoring, chat and provider/access logic in the existing shared web
+core and backend. Keep room objects, rules, physics and native avatar runtime in
+Unity. The book is another view of the same web app. Do not reimplement room rules
+in TypeScript or tutor policy in C# just to make every surface use one language.
+Contracts cross that boundary; each domain has one implementation and owner.
+
+Desktop Unity should run the same native services and content as Quest with a
+replaceable device/input adapter. Phone/browser can edit supported saved data and
+use the shared tutor; physical room tracking requires a connected native runtime.
+Capabilities must report that difference instead of promising identical device
+features. Cross-device synchronization is separate work, not implied by a shared
+schema or common backend login.
+
+High-rate head/hand/controller poses remain in the native input/runtime loop. The
+agent selects bounded intentions such as starting a follow behaviour or playing
+an animation; it does not generate every movement frame. A simulated test input
+source feeds the same input router and interaction components as real devices.
+
+## Collaboration and perception
+
+Treat user and agent as collaborators on the same document. Selection and
+references such as "this arm" resolve to explicit IDs and revisions. Agent edits
+must use the observed revision; refresh and explain conflicts rather than silently
+overwrite a newer human draft. Add edit ownership/locks where needed, and have
+manual grab/Stop interrupt incompatible ongoing behaviour.
+
+The object tree, behaviour blocks and timeline are views of canonical domain data.
+They must retain stable identities across human and agent edits. The agent can
+explain the selected step, change it through the shared operations and highlight
+its target. Receipts show what really changed even if generating the final spoken
+answer fails. Completed changes must not be inferred from fluent model text.
+
+Return semantic scene information for reliable actions, and add images/rendered
+views for appearance questions. Distinguish known room geometry from what a camera
+currently sees. Simulated input and domain observations cannot establish visual
+quality, tracking quality or comfort.
+
+Use per-object/sequence conditions and bounded transactions for edits. Long actions
+such as importing, walking or playback need operation handles, events and Stop;
+"started" does not mean "finished". One Undo should restore a logical saved edit.
+Stopping or restoring settings cannot undo every physical consequence of a thrown
+ball. Cross-domain edits must state their actual atomicity/compensation boundary.
+
+The host grants capabilities according to the current user's access. Permission
+is not supplied by model JSON. Runtime tools cannot grant themselves developer
+powers. Development-only reset, test clock and input injection belong to a separate
+adapter/build surface; production agent actions use normal validators.
+
+## Development-agent testing through the user's paths
+
+Use three complementary levels of evidence:
+
+- **Contract/domain scenarios:** repeatable fixtures run through the public action
+  services. Compare resulting saved data, receipts and supported observations for
+  manual-adapter and agent-adapter requests. Test restart/retry, stale plans,
+  cancelled work, assets missing and unsupported schema versions. Do not count a
+  mocked receipt as evidence of native execution.
+- **Actual interaction and rendering:** launch the real Unity scene, provide
+  simulated controller/head/hand input, perform ray selection, pinch/grip/release,
+  page interaction and 3D button presses. Capture views and action/event traces.
+  Verify that interaction reaches the same operations and outcomes; commanding an
+  object directly cannot prove that its button or collider is reachable. Test the
+  real Android book bridge separately from the isolated browser fixture.
+- **Quest acceptance:** verify tracking, room scan alignment, passthrough, Android
+  permissions/browser texture, text comfort, frame timing, memory and heat on the
+  device. Simulators reduce repeated manual work but do not eliminate this gate.
+
+Deterministic document edits/rules can have exact expected results. Unity rigid-body
+simulation should use fixed-step recorded inputs and tolerance/invariant checks;
+do not promise bit-identical trajectories across PC and Quest. Unity documents
+fixed steps as important for reproducibility while noting PhysX determinism limits:
+https://docs.unity.com/en-us/engine/6000.6/manual/physics-section/physics-overview/physics-optimization/cpu/manual-simulation
+The installed project currently uses Unity 6000.3.24f1 and XRI 3.6.1; the linked
+newer manual is rationale, not a claim of a package upgrade.
+
+Keep a coverage matrix with action -> manual entry -> agent tool -> observation ->
+contract case -> real interaction case -> hardware status. CI should reject missing
+required mappings for new actions, and intentional unsupported cases need reasons.
+Agent policy evaluations are separate from deterministic execution tests: a correct
+executor does not establish that the model selects the right action or asks the
+right clarification.
+
+## Current Maestro coverage and next implementation slices
+
+Checkpoint 71987229 has a shared room executor for bounded creation/edit/delete,
+inspection, recipe playback and room Undo/Redo. The first book part/key editor and
+text-turn planner use it. The room journal is shared with physical tools, but many
+physical controls still call domain methods directly; full operation-level parity
+is not established. Observations are partial, receipts are session-bound and no
+public developer MCP/action catalogue exists. Browser checks use simulated native
+receipts; Unity PlayMode checks exercise native execution separately.
+
+Incremental migration preserves existing tested controls:
+
+1. Define/version the capability and action catalogue around the working room
+   executor. Separate transport/session handling from domain execution. Add durable
+   operation receipts and independent observation/event access, keeping migrations
+   and existing user data recoverable. Extract pure validation where useful instead
+   of rewriting the whole app at once.
+2. Wrap the existing RuleWorkshop/rule runtime with ID-based operations and stable
+   step identities. Route physical rule controls and the planned book blocks through
+   those operations, then expose the same tools to the agent. Keep runtime triggers
+   and cancellation semantics common.
+3. Extend coverage to animation library/import, avatar assignment/state profiles,
+   controller bindings and room physics/scan. Connect recorded speech and Live voice
+   to the same orchestration. Load only relevant tool groups/context per turn to
+   limit planning cost as the catalogue grows.
+4. Add the developer client and Unity input/render harness, then a vertical scenario:
+   "make a small robot; wave when Maestro speaks; let this controller button play
+   it; stop; edit the wave manually; restart and reload." Assert shared definitions,
+   revisions, real playback and user interruption across the participating paths.
+5. Expand the coverage matrix and device evidence before declaring v1 parity.
+
+The benefit is one behaviour change to maintain, visible and reversible co-editing,
+accessible language control, reusable user-created rules and repeatable regression
+scenarios. It does not mean zero UI work per feature or zero hardware testing.

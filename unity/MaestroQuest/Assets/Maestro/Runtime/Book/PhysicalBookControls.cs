@@ -74,6 +74,20 @@ namespace Maestro.Quest.Book
                 action.AccessibleName = index == 0 ? "Conversation book" : "Practice spread";
                 action.Browser = browser; action.Book = book;
             }
+            var workshop=new GameObject("Workshop building blocks");workshop.transform.SetParent(transform,false);
+            workshop.transform.localPosition=new Vector3(.53f,.12f,0);
+            Part(workshop.transform,PrimitiveType.Cube,new Vector3(0,0,.016f),new Vector3(.095f,.09f,.025f),wood);
+            Part(workshop.transform,PrimitiveType.Cube,new Vector3(-.023f,-.015f,-.013f),Vector3.one*.036f,teal);
+            Part(workshop.transform,PrimitiveType.Cube,new Vector3(.02f,-.015f,-.013f),Vector3.one*.036f,gold);
+            Part(workshop.transform,PrimitiveType.Cube,new Vector3(0,.021f,-.013f),Vector3.one*.036f,paper);
+            var workshopHit=workshop.AddComponent<BoxCollider>();workshopHit.size=new Vector3(.1f,.1f,.075f);
+            var workshopAction=workshop.AddComponent<PhysicalBookAction>();workshopAction.Action=BookActionKind.Workspace;
+            workshopAction.AccessibleName="Open room workshop";workshopAction.Browser=browser;
+            var workshopMarking=new GameObject("Workshop label",typeof(TextMesh));workshopMarking.transform.SetParent(workshop.transform,false);
+            workshopMarking.transform.localPosition=new Vector3(0,-.061f,-.024f);
+            var workshopLabel=workshopMarking.GetComponent<TextMesh>();workshopLabel.font=bellLabel.font;workshopLabel.fontSize=48;workshopLabel.characterSize=.0036f;
+            workshopLabel.anchor=TextAnchor.MiddleCenter;workshopLabel.color=IllustratedMaterials.TextColor(IllustratedMaterials.Ink);workshopLabel.text="Workshop";
+            workshopMarking.GetComponent<MeshRenderer>().sharedMaterial=IllustratedMaterials.TextMaterial(workshopLabel.font);
             // Solid paper bundles sit beyond the page edges for earlier/later history.
             for (int side = -1; side <= 1; side += 2)
             {

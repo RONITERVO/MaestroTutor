@@ -1,0 +1,24 @@
+/* Copyright 2026 Roni Tervo; SPDX-License-Identifier: Apache-2.0 */
+.room-workspace { position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;background:#f8f1df;color:#332e2b;font:16px/1.4 system-ui,sans-serif; }
+.room-workspace-page { min-width:0;overflow-y:auto;padding:24px;scrollbar-width:thin; }
+.room-hierarchy {border-right:1px solid #c8bda5;background:linear-gradient(90deg,#f8f1df 94%,#e5d9c4);}
+.room-inspector {background:linear-gradient(90deg,#e5d9c4,#fff9ed 6%);}
+.room-workspace h1,.room-workspace h2,.room-workspace p {margin:0 0 12px;}
+.room-workspace h1 {font:700 30px/1.2 Georgia,serif;}.room-workspace h2 {font:700 24px/1.2 Georgia,serif;}
+.room-eyebrow {font-size:11px;font-weight:800;letter-spacing:2px;color:#6f6656;}
+.room-workspace-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+.room-workspace button {min-height:44px;border:1px solid #bdaf95;border-radius:8px;padding:8px 12px;background:#fffaf0;color:inherit;font:inherit;cursor:pointer;}
+.room-workspace button:disabled {opacity:.45;cursor:default;}.room-workspace button:focus-visible {outline:3px solid #368a85;outline-offset:2px;}
+.room-workspace button[aria-pressed=true],.room-workspace button[aria-selected=true] {background:#225e5a;color:#fff;border-color:#225e5a;}
+.room-workspace-intro {color:#6f6656;font-size:14px;}.room-workspace-actions {display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px;}
+.room-object-list,.room-parts-list {display:flex;flex-direction:column;gap:6px;margin-top:16px;}.room-object-list button,.room-parts-list button {text-align:left;display:flex;flex-direction:column;gap:3px;}
+.room-object-list small,.room-parts-list small {font-size:12px;opacity:.8;}.room-parts-list h2 {margin-top:16px;}.room-parts-list h2 small {font:14px system-ui;}
+.room-parts-list button {border-left:4px solid #7b65a1;margin-left:12px;}.room-object-list button {border-left:4px solid #368a85;}
+.room-workspace fieldset {border:1px solid #d8cbb5;border-radius:10px;margin:12px 0;padding:12px;min-width:0;}.room-workspace legend {font-size:14px;font-weight:700;padding:0 5px;}
+.room-edit-body {border:0!important;padding:0!important;}.room-axis-controls>div {display:grid;grid-template-columns:1fr 75px 75px;gap:8px;align-items:center;margin:6px 0;}
+.room-shapes,.room-workspace-tabs,.room-clip-settings {display:flex;gap:8px;align-items:center;flex-wrap:wrap;}.room-workspace-tabs {margin:18px 0;border-bottom:1px solid #d8cbb5;padding-bottom:10px;}
+.room-message {font-size:13px;padding:10px 12px;border-radius:8px;background:#e9eee1;min-height:40px;}.room-message-warning {background:#f3dfbc;color:#674009;}
+.room-status-pill {font-size:12px;border-radius:16px;padding:6px 12px;background:#e2ecdf;}.room-timeline {display:flex;overflow-x:auto;gap:6px;padding:16px 0;border-top:2px solid #9c88b5;border-bottom:1px solid #d8cbb5;}
+.room-timeline button {flex-shrink:0;min-width:62px;}.room-workspace-empty {margin-top:32px!important;color:#756b5b;}.room-simple-inspector fieldset button,.room-edit-body fieldset>button {margin:3px;}
+
+.room-workspace-heading {position:sticky;top:-24px;z-index:2;background:#f8f1df;padding:12px 0;margin-top:-12px;border-bottom:1px solid #dfd4bf;}

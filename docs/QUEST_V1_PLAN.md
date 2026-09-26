@@ -55,7 +55,16 @@ recipes create editable objects and simple animated characters. Users can
 optionally inspect and co-edit the same data through a hierarchy, Scratch-like
 behaviour blocks and an animation timeline. See QUEST_AGENT_WORKSPACE.md for
 implemented foundations, architectural decisions and remaining work. This does
-not imply hands-free/Live voice, the visual workspace or Store release are done.
+not imply hands-free/Live voice, complete behaviour-block authoring or Store release
+are done. The initial object/part and recipe-key workspace is now packaged in
+PC-verified checkpoint 71987229; hardware acceptance remains open.
+
+Shared-action steering (2026-09-26): the user asked for human/agent parity and
+development-agent testing comparable to StateBeats, Scetch-War and StateWork.
+QUEST_SHARED_ACTIONS.md records inspected examples, current gaps and the proposed
+contract. Build coverage through existing domain services, one authoritative
+implementation per domain, shared observations and honest operation receipts.
+Test semantic outcomes and actual input/rendering independently.
 
 ## Accepted product scope
 

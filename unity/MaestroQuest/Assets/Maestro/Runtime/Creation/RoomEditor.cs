@@ -42,6 +42,8 @@ namespace Maestro.Quest.Creation
         public RoomObjectData Read(string id) => journal.Read(id);
         public bool AnyHeld => objects.Values.Any(item => item && item.Grab && item.Grab.isSelected);
         public RoomDocument Snapshot() => journal.Snapshot();
+        public int ObjectRevision(string id) => journal.ObjectRevision(id);
+        public void PrepareAgentEdit() => Editing?.Invoke();
         public bool UsesMotion(string id) => journal.UsesMotion(id);
         public bool HistoricalMotion(string id) => journal.HistoricalMotionIds.Contains(id);
         public bool SavedMotion(string id,out bool uncertain,bool force=false) => storage.RetainsMotion(id,out uncertain,force);

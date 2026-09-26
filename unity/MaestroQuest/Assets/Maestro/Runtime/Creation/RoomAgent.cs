@@ -10,23 +10,27 @@ namespace Maestro.Quest.Creation
 {
     [Serializable] public sealed class RoomAgentCommand
     {
-        public string action, target, reference, name, kind;
+        public string action, target, reference, name, kind, partId;
         public Vector3 position;
-        public bool atPosition;
+        public bool atPosition, visible;
         public float scale=1;
         public Color color=Color.white;
         public RoomRecipe recipe;
     }
+    [Serializable] public sealed class RoomObjectCondition { public string id; public int revision; }
+    [Serializable] public sealed class RoomInspection { public string id,partId; public int objectRevision; public RoomRecipe recipe; }
     [Serializable] public sealed class RoomAgentRequest
     {
         public int version, sequence, sceneRevision;
         public string session;
         public RoomAgentCommand[] commands;
+        public RoomObjectCondition[] conditions;
     }
-    [Serializable] public sealed class RoomAgentSnapshot { public string session; public RoomAgentRequest request; }
+    [Serializable] public sealed class RoomAgentSnapshot { public string clientId,session; public RoomAgentRequest request; }
     [Serializable] public sealed class RoomAgentObject
     {
         public string id,name,kind;
+        public int objectRevision;
         public Vector3 position;
         public float scale;
         public Color color;
@@ -36,7 +40,8 @@ namespace Maestro.Quest.Creation
     {
         public int version=1,revision,sceneRevision,ack;
         public string session,status,selectedId;
-        public bool ok,canUndo,canRedo,physicsRunning;
+        public bool ok,canUndo,canRedo,physicsRunning,visible;
+        public RoomInspection inspection;
         public RoomAgentObject[] objects;
         public string[] created=Array.Empty<string>();
     }
@@ -44,14 +49,53 @@ namespace Maestro.Quest.Creation
     public sealed class RoomAgentExecutor
     {
         readonly RoomEditor editor;
+        public bool WorkspaceVisible { get; private set; }
+        public string InspectionId { get; private set; }
+        public string InspectedPart { get; private set; }
         public RoomAgentExecutor(RoomEditor source) => editor=source;
+        bool Preconditions(RoomAgentRequest request,out string error)
+        {
+            error="The target changed; inspect its latest state before retrying.";
+            if(request.version==1) return request.sceneRevision==editor.Revision;
+            if(request.conditions==null || request.conditions.Length>8 || request.conditions.Any(x=>x==null || x.id==null) || request.conditions.Select(x=>x.id).Distinct().Count()!=request.conditions.Length) return false;
+            var aliases=new HashSet<string>();
+            foreach(var command in request.commands)
+            {
+                if(command==null) return false;
+                if(command.action=="create") { if(command.reference!=null) aliases.Add(command.reference); continue; }
+                if(command.action=="undo" || command.action=="redo") { if(request.sceneRevision!=editor.Revision) return false; continue; }
+                if(command.target==null || aliases.Contains(command.target)) continue;
+                var condition=request.conditions.FirstOrDefault(x=>x.id==command.target);
+                if(condition==null || condition.revision<=0 || condition.revision!=editor.ObjectRevision(command.target)) return false;
+            }
+            return true;
+        }
         public bool Execute(RoomAgentRequest request,out string status,out string[] created)
         {
             created=Array.Empty<string>(); status="Invalid room request";
-            if(request == null || request.version != 1 || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
-            if(request.sceneRevision != editor.Revision) {status="The scene changed; inspect the new state before retrying."; return false;}
-            if(editor.AnyHeld) {status="Release the held object before editing."; return false;}
+            if(request == null || (request.version != 1 && request.version != 2) || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
             var commands=request.commands;
+            if(commands.Length==1 && commands[0]?.action=="workspace") { WorkspaceVisible=commands[0].visible; if(WorkspaceVisible) InspectionId=editor.SelectedId; status=WorkspaceVisible ? "Workspace opened on the book" : "Returned to chat"; return true; }
+            if(commands.Length==1 && commands[0]?.action=="inspect")
+            {
+                var target=editor.Find(commands[0].target); if(!target) {status="The target no longer exists";return false;}
+                string partId=commands[0].partId;var geometry=target.GetComponent<RecipeObject>();
+                if(!string.IsNullOrEmpty(partId) && (!geometry || !geometry.Part(partId))) {status="That recipe part no longer exists";return false;}
+                foreach(var recipeObject in editor.GetComponentsInChildren<RecipeObject>())recipeObject.Highlight(null);
+                InspectionId=commands[0].target;InspectedPart=partId;editor.Select(target);geometry?.Highlight(partId);status="Object inspected";return true;
+            }
+            if(!Preconditions(request,out status)) return false;
+            if(editor.AnyHeld) {status="Release the held object before editing."; return false;}
+            if(commands.Length==1 && (commands[0]?.action=="play" || commands[0]?.action=="stop"))
+            {
+                var data=editor.Read(commands[0].target); var geometry=editor.Find(commands[0].target)?.GetComponent<RecipeObject>();
+                if(data?.recipe==null || data.recipe.tracks.Length==0 || !geometry) {status="This object has no recipe animation";return false;}
+                bool play=commands[0].action=="play";
+                if(data.recipe.playing!=play) { data.recipe.playing=play; if(!editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out status)) return false; }
+                if(play) geometry.Restart(); else geometry.Stop(); status=play ? "Recipe animation started" : "Recipe animation stopped"; return true;
+            }
+            // Stop active authoring, then recheck the exact targets before copying mutable data.
+            editor.PrepareAgentEdit(); if(!Preconditions(request,out status)) return false;
             if(commands.Length==1 && (commands[0]?.action=="undo" || commands[0]?.action=="redo"))
             {
                 bool undo=commands[0].action=="undo";
@@ -96,8 +140,26 @@ namespace Maestro.Quest.Creation
             // Validate the entire candidate before touching any scene object or interrupting authoring.
             var candidate=editor.Snapshot(); candidate.objects=candidate.objects.Where(x=>!removed.Contains(x.id) && !changes.ContainsKey(x.id)).Concat(changes.Values).ToArray();
             if(!candidate.Validate(out status)) return false;
-            if(!editor.ApplyAgentEdit(request.sceneRevision,changes.Values.ToArray(),removed.ToArray(),out status)) return false;
+            if(!editor.ApplyAgentEdit(editor.Revision,changes.Values.ToArray(),removed.ToArray(),out status)) return false;
             created=added.Where(id=>!removed.Contains(id)).ToArray(); status="Completed "+commands.Length+" room actions. One Undo restores the preceding scene edit."; return true;
+        }
+    }
+    public sealed class RoomAgentInbox
+    {
+        string clientId;
+        public string Session { get; private set; }=Guid.NewGuid().ToString("N");
+        public int Ack { get; private set; }
+        public void Reset() {Session=Guid.NewGuid().ToString("N");Ack=0;}
+        public bool TryAccept(RoomAgentSnapshot snapshot,out RoomAgentRequest request)
+        {
+            request=null;
+            if(snapshot==null || !Guid.TryParseExact(snapshot.clientId,"N",out _))return false;
+            // Reopening or cancelling starts a new handshake. A cancelled sequence
+            // can never be reused against a late receipt from the preceding client.
+            if(clientId!=snapshot.clientId) {clientId=snapshot.clientId;Reset();return false;}
+            var candidate=snapshot.request;
+            if(snapshot.session!=Session || candidate==null || candidate.session!=Session || candidate.sequence!=Ack+1 || candidate.sequence<=Ack)return false;
+            Ack=candidate.sequence;request=candidate;return true;
         }
     }
     public sealed class RoomAgent : MonoBehaviour
@@ -105,18 +167,20 @@ namespace Maestro.Quest.Creation
         RoomEditor editor;
         NativeBookBrowser browser;
         RoomAgentExecutor executor;
-        string session=Guid.NewGuid().ToString("N"),status="Room actions ready";
-        int ack,revision;
+        readonly RoomAgentInbox inbox=new();
+        string status="Room actions ready";
+        int revision;
         float next;
         bool connected,ok=true;
         string[] created=Array.Empty<string>();
+        string lastInspected;
         public void Initialize(RoomEditor source,NativeBookBrowser book) {editor=source;browser=book;executor=new RoomAgentExecutor(source);}
         void Update()
         {
             if(!editor || !browser) return;
             if(browser.Snapshot==null)
             {
-                if(connected) {session=Guid.NewGuid().ToString("N");ack=0;revision=0;connected=false;created=Array.Empty<string>();status="Room session reopened";}
+                if(connected) {inbox.Reset();revision=0;connected=false;created=Array.Empty<string>();status="Room session reopened";}
                 return;
             }
             connected=true;
@@ -125,14 +189,17 @@ namespace Maestro.Quest.Creation
             if(!string.IsNullOrEmpty(json) && json.Length<=32768)
             {
                 try {
-                    var snapshot=JsonUtility.FromJson<RoomAgentSnapshot>(json); var request=snapshot?.request;
-                    if(snapshot?.session==session && request!=null && request.session==session && request.sequence>ack && request.sequence==ack+1)
-                    { ack=request.sequence; ok=executor.Execute(request,out status,out created); }
+                    var snapshot=JsonUtility.FromJson<RoomAgentSnapshot>(json);
+                    if(inbox.TryAccept(snapshot,out var request)) ok=executor.Execute(request,out status,out created);
                 } catch(ArgumentException) { /* Invalid or partial messages never execute. */ }
             }
-            var state=new RoomAgentState { session=session,revision=++revision,sceneRevision=editor.Revision,ack=ack,ok=ok,status=status,created=created,
+            if(executor.WorkspaceVisible && editor.SelectedId!=null) lastInspected=editor.SelectedId;
+            else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
+            var inspected=editor.Read(lastInspected);
+            var state=new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
+                visible=executor.WorkspaceVisible,inspection=inspected==null ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
                 selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
-                objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=x.position,scale=x.scale,color=x.color,animated=x.recipe?.playing??false}).ToArray() };
+                objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,objectRevision=editor.ObjectRevision(x.id),name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=x.position,scale=x.scale,color=x.color,animated=editor.Find(x.id)?.GetComponent<RecipeObject>()?.IsPlaying??false}).ToArray() };
             browser.PublishRoomAgentState(JsonUtility.ToJson(state));
         }
     }

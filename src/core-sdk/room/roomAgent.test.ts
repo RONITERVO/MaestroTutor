@@ -15,7 +15,7 @@ describe('shared room tutor journey',()=>{
   const ai=client([JSON.stringify({commands:[{action:'create',reference:'robot',name:'Robot',kind:'boxRobot'}]}),'{"commands":[]}','Hola.\n[EN]Hello.']);
   const execute=vi.fn(async()=>({...scene,ack:1,sceneRevision:5,ok:true,status:'Created robot',created:['b'.repeat(32)]}));const usage=vi.fn();
   const result=await runRoomTutorTurn(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},usage);
-  expect(execute).toHaveBeenCalledTimes(1);expect(execute.mock.calls[0]).toMatchObject([[{kind:'boxRobot'}],4]);
+  expect(execute).toHaveBeenCalledTimes(1);expect(execute.mock.calls[0]).toMatchObject([[{kind:'boxRobot'}],4,scene.objects]);
   expect(usage).toHaveBeenCalledTimes(2);expect(result.rawResponse).toContain('Hola');
   const requests=ai.models.generateContentStream.mock.calls as unknown as [any][];
   expect(requests[0][0].config.responseJsonSchema).toEqual(ROOM_AGENT_SCHEMA);

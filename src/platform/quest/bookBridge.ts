@@ -29,9 +29,9 @@ declare global {
 }
 
 /** Native polls this top-level document; no JS-to-native object is exposed to iframes. */
-export function installBookBridge(target: Window, readSnapshot: () => BookSnapshot, command: (value: BookCommand) => void, library?: LibraryBookClient) {
+export function installBookBridge(target: Window, readSnapshot: () => BookSnapshot, command: (value: BookCommand) => void, library?: LibraryBookClient, room = new RoomAgentClient()) {
   const fileSelection = createFileSelectionGate(target);
-  const room = new RoomAgentClient(); const unregisterRoom = registerRoomAgent(room);
+  const unregisterRoom = registerRoomAgent(room);
   const bridge = Object.freeze({
     roomSnapshot: room.snapshot, roomState: room.receive,
     snapshot: () => ({ ...readSnapshot(), ...library?.snapshot() }),

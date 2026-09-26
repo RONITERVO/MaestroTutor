@@ -8,6 +8,17 @@ namespace Maestro.Quest.Tests
 {
     public class RoomRecipeTests
     {
+        [Test] public void CancelledClientCannotReplayOrReuseAnOldSequenceReceipt()
+        {
+            var inbox=new RoomAgentInbox();var snapshot=new RoomAgentSnapshot {clientId=new string('a',32)};
+            Assert.That(inbox.TryAccept(snapshot,out _),Is.False);string first=inbox.Session;
+            snapshot.session=first;snapshot.request=new RoomAgentRequest {session=first,sequence=1};
+            Assert.That(inbox.TryAccept(snapshot,out _),Is.True);Assert.That(inbox.TryAccept(snapshot,out _),Is.False);
+            snapshot.clientId=new string('b',32);Assert.That(inbox.TryAccept(snapshot,out _),Is.False);Assert.That(inbox.Session,Is.Not.EqualTo(first));
+            Assert.That(inbox.TryAccept(snapshot,out _),Is.False);Assert.That(inbox.Ack,Is.Zero);
+            snapshot.session=inbox.Session;snapshot.request.session=inbox.Session;
+            Assert.That(inbox.TryAccept(snapshot,out _),Is.True);Assert.That(inbox.Ack,Is.EqualTo(1));
+        }
         [Test] public void BoxRobotHasSeventeenSemanticJointsAndEditableWave()
         {
             var recipe=RecipeTemplates.BoxRobot(true);
