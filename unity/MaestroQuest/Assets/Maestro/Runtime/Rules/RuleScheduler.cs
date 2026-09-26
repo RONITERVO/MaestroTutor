@@ -41,6 +41,7 @@ namespace Maestro.Quest.Rules
         public int PreparingCount => running.Count(x => x.Preparing);
         public int QueuedCount => queued.Count;
         public string LastError { get; private set; }
+        public RuleRunView[] ObserveRuns() => running.Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,stepId=x.Sequence.steps[x.Step].id,preparing=x.Preparing}).ToArray();
         public RuleScheduler(IRuleActions actions) { this.actions = actions; }
         public void Configure(RuleDocument value)
         {

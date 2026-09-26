@@ -66,6 +66,12 @@ contract. Build coverage through existing domain services, one authoritative
 implementation per domain, shared observations and honest operation receipts.
 Test semantic outcomes and actual input/rendering independently.
 
+PC-only behaviour workspace update (2026-09-26): 7EC419D6 adds shared native rule
+operations, stable step IDs, book blocks and agent access to bounded sequences,
+state/object triggers and physical buttons. Recipe animations can run from those
+same events/buttons. QUEST_BEHAVIOUR_WORKSPACE.md records exact coverage; full
+agent parity, Live voice and hardware/store gates remain open.
+
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.

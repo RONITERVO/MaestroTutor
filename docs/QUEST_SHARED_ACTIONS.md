@@ -137,13 +137,17 @@ right clarification.
 
 ## Current Maestro coverage and next implementation slices
 
-Checkpoint 71987229 has a shared room executor for bounded creation/edit/delete,
-inspection, recipe playback and room Undo/Redo. The first book part/key editor and
-text-turn planner use it. The room journal is shared with physical tools, but many
-physical controls still call domain methods directly; full operation-level parity
-is not established. Observations are partial, receipts are session-bound and no
-public developer MCP/action catalogue exists. Browser checks use simulated native
-receipts; Unity PlayMode checks exercise native execution separately.
+Checkpoint 7EC419D6 extends the room executor with shared rule operations and
+book behaviour blocks. The native v4 rule document has stable step IDs; sequence,
+trigger and button edits have revision checks and one Undo per batch. The existing
+scheduler executes both agent/book requests and physical/event triggers, including
+recipe animations. Runtime step IDs are visible. See QUEST_BEHAVIOUR_WORKSPACE.md.
+
+Many physical parameter controls still call validated domain methods directly;
+full operation-level parity is not established. Observations remain partial,
+receipts are session-bound, imported-motion/prop book editing is incomplete and
+there is no general developer MCP/action catalogue. Browser tests use simulated
+native replies; Unity tests separately execute actual rule/event/button behaviour.
 
 Incremental migration preserves existing tested controls:
 
@@ -152,10 +156,11 @@ Incremental migration preserves existing tested controls:
    operation receipts and independent observation/event access, keeping migrations
    and existing user data recoverable. Extract pure validation where useful instead
    of rewriting the whole app at once.
-2. Wrap the existing RuleWorkshop/rule runtime with ID-based operations and stable
-   step identities. Route physical rule controls and the planned book blocks through
-   those operations, then expose the same tools to the agent. Keep runtime triggers
-   and cancellation semantics common.
+2. Complete the initial RuleWorkshop wrapper and book blocks: route remaining
+   physical parameter commands through the public operations, finish imported-motion
+   and prop selection, add finer trigger editing and durable receipts. Keep runtime
+   triggers and cancellation semantics common. Stable step IDs, bounded agent edits
+   and initial manual blocks are implemented in 7EC419D6.
 3. Extend coverage to animation library/import, avatar assignment/state profiles,
    controller bindings and room physics/scan. Connect recorded speech and Live voice
    to the same orchestration. Load only relevant tool groups/context per turn to

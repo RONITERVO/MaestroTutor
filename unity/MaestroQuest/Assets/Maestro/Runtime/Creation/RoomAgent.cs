@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Book;
+using Maestro.Quest.Rules;
 using UnityEngine;
 
 namespace Maestro.Quest.Creation
@@ -16,6 +17,7 @@ namespace Maestro.Quest.Creation
         public float scale=1;
         public Color color=Color.white;
         public RoomRecipe recipe;
+        public RuleRequest rule;
     }
     [Serializable] public sealed class RoomObjectCondition { public string id; public int revision; }
     [Serializable] public sealed class RoomInspection { public string id,partId; public int objectRevision; public RoomRecipe recipe; }
@@ -42,6 +44,8 @@ namespace Maestro.Quest.Creation
         public string session,status,selectedId;
         public bool ok,canUndo,canRedo,physicsRunning,visible;
         public RoomInspection inspection;
+        public string workspaceView;
+        public RuleView rules;
         public RoomAgentObject[] objects;
         public string[] created=Array.Empty<string>();
     }
@@ -50,6 +54,7 @@ namespace Maestro.Quest.Creation
     {
         readonly RoomEditor editor;
         public bool WorkspaceVisible { get; private set; }
+        public bool RulesFocused { get; private set; }
         public string InspectionId { get; private set; }
         public string InspectedPart { get; private set; }
         public RoomAgentExecutor(RoomEditor source) => editor=source;
@@ -75,9 +80,15 @@ namespace Maestro.Quest.Creation
             created=Array.Empty<string>(); status="Invalid room request";
             if(request == null || (request.version != 1 && request.version != 2) || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
             var commands=request.commands;
+            if(commands.Length==1 && commands[0]?.action=="rules") {
+                var workshop=editor.GetComponent<RuleWorkshop>();if(!workshop) {status="Behaviours are unavailable in this room";return false;}
+                bool accepted=workshop.Execute(commands[0].rule,out status,out created);
+                if(accepted) RulesFocused=true;return accepted;
+            }
             if(commands.Length==1 && commands[0]?.action=="workspace") { WorkspaceVisible=commands[0].visible; if(WorkspaceVisible) InspectionId=editor.SelectedId; status=WorkspaceVisible ? "Workspace opened on the book" : "Returned to chat"; return true; }
             if(commands.Length==1 && commands[0]?.action=="inspect")
             {
+                RulesFocused=false;
                 var target=editor.Find(commands[0].target); if(!target) {status="The target no longer exists";return false;}
                 string partId=commands[0].partId;var geometry=target.GetComponent<RecipeObject>();
                 if(!string.IsNullOrEmpty(partId) && (!geometry || !geometry.Part(partId))) {status="That recipe part no longer exists";return false;}
@@ -88,6 +99,7 @@ namespace Maestro.Quest.Creation
             if(editor.AnyHeld) {status="Release the held object before editing."; return false;}
             if(commands.Length==1 && (commands[0]?.action=="play" || commands[0]?.action=="stop"))
             {
+                editor.PrepareAgentEdit();if(!Preconditions(request,out status))return false;
                 var data=editor.Read(commands[0].target); var geometry=editor.Find(commands[0].target)?.GetComponent<RecipeObject>();
                 if(data?.recipe==null || data.recipe.tracks.Length==0 || !geometry) {status="This object has no recipe animation";return false;}
                 bool play=commands[0].action=="play";
@@ -197,7 +209,7 @@ namespace Maestro.Quest.Creation
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);
             var state=new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
-                visible=executor.WorkspaceVisible,inspection=inspected==null ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
+                visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
                 selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
                 objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,objectRevision=editor.ObjectRevision(x.id),name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=x.position,scale=x.scale,color=x.color,animated=editor.Find(x.id)?.GetComponent<RecipeObject>()?.IsPlaying??false}).ToArray() };
             browser.PublishRoomAgentState(JsonUtility.ToJson(state));

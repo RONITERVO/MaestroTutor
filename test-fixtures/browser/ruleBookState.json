@@ -1,0 +1,84 @@
+{
+    "revision": 3,
+    "bindingPage": 0,
+    "bindingCount": 1,
+    "queued": 0,
+    "canUndo": true,
+    "canRedo": false,
+    "readOnly": false,
+    "status": "Behaviour edit applied. Undo restores this batch.",
+    "sequences": [
+        {
+            "id": "101915e45582430c8dc126fbac4a3f04",
+            "name": "Ball gesture",
+            "steps": 1,
+            "repeat": false
+        }
+    ],
+    "selected": {
+        "id": "101915e45582430c8dc126fbac4a3f04",
+        "name": "Ball gesture",
+        "interruption": 0,
+        "repeat": false,
+        "steps": [
+            {
+                "id": "33a7cc1c403243e895bc031a205e82f5",
+                "action": 1,
+                "targetId": "maestro",
+                "gesture": 0,
+                "seconds": 2.5,
+                "loop": false,
+                "clipModelHash": "",
+                "clipIndex": 0,
+                "motionId": "",
+                "propId": "5f3dd72aff924a05a44dfd9299dabbad",
+                "propAvatarHash": "",
+                "propHand": 1,
+                "propRelease": 2,
+                "propOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "propRotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                },
+                "propReleaseAt": 0.6000000238418579
+            }
+        ]
+    },
+    "bindings": [
+        {
+            "id": "0d33629d30184f4284004d15572454f2",
+            "sequenceId": "101915e45582430c8dc126fbac4a3f04",
+            "sourceId": "maestro",
+            "trigger": 0,
+            "condition": 0,
+            "cooldown": 1.0,
+            "enabled": true,
+            "stopOnExit": false
+        }
+    ],
+    "buttons": [
+        {
+            "id": "df46ba643da146779f353d4b76de27e0",
+            "sequenceId": "101915e45582430c8dc126fbac4a3f04",
+            "mount": 1,
+            "position": {
+                "x": -0.11999999731779099,
+                "y": 0.05999999865889549,
+                "z": 0.05000000074505806
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            }
+        }
+    ],
+    "running": []
+}

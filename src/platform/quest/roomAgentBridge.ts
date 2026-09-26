@@ -1,3 +1,4 @@
+import {validRuleView} from '../../core-sdk/room/rules';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {parseRecipe,validPigment} from '../../core-sdk/room/recipe';
@@ -22,9 +23,11 @@ export class RoomAgentClient {
   receive=(input:unknown) => {
     if (!record(input) || input.version!==1 || !id(input.session) || !integer(input.revision,1) || !integer(input.sceneRevision,1) || !integer(input.ack) ||
       typeof input.status!=='string' || input.status.length>2048 || !['ok','canUndo','canRedo','physicsRunning'].every(k=>typeof input[k]==='boolean') ||
-      !Array.isArray(input.created) || input.created.length>8 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>65536) return false;
+      !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>65536) return false;
     if(input.objects.some(o=>!record(o) || typeof o.id!=='string' || !/^(book|maestro|[a-f0-9]{32})$/.test(o.id) || typeof o.name!=='string' || o.name.length>80 || typeof o.kind!=='string' || !vector(o.position) || typeof o.scale!=='number' || !Number.isFinite(o.scale) || !validPigment(o.color) || typeof o.animated!=='boolean' || o.objectRevision!==undefined&&!integer(o.objectRevision,1))) return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
+    if(input.rules!==undefined&&input.rules!==null&&!validRuleView(input.rules))return false;
+    if(input.workspaceView!==undefined&&!['objects','rules'].includes(input.workspaceView as string))return false;
     const inspection=input.inspection;
     if(inspection!==undefined && inspection!==null && (!record(inspection)||typeof inspection.id!=='string'||!input.objects.some(o=>o.id===inspection.id)||!integer(inspection.objectRevision,1)||inspection.recipe!==null&&!parseRecipe(inspection.recipe)))return false;
     if(record(inspection)&&inspection.partId!==undefined&&inspection.partId!==null&&inspection.partId!==''&&(typeof inspection.partId!=='string'||!/^[a-zA-Z0-9_]{1,32}$/.test(inspection.partId)))return false;

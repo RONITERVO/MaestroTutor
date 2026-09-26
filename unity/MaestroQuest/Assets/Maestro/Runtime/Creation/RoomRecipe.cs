@@ -60,9 +60,9 @@ namespace Maestro.Quest.Creation
         public static bool ValidId(string id) => !string.IsNullOrEmpty(id) && id.Length <= 32 && id.All(c => c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_');
         public static bool Finite(Vector3 v) => float.IsFinite(v.x) && float.IsFinite(v.y) && float.IsFinite(v.z);
         public static bool ValidColor(Color c) => float.IsFinite(c.r) && c.r >= 0 && c.r <= 1 && float.IsFinite(c.g) && c.g >= 0 && c.g <= 1 && float.IsFinite(c.b) && c.b >= 0 && c.b <= 1 && c.a == 1;
-        public Quaternion Sample(RecipeTrack track,float time)
+        public Quaternion Sample(RecipeTrack track,float time,bool? repeat=null)
         {
-            time = loop ? Mathf.Repeat(time,duration) : Mathf.Clamp(time,0,duration);
+            time = (repeat ?? loop) ? Mathf.Repeat(time,duration) : Mathf.Clamp(time,0,duration);
             int high = 1; while (high < track.keys.Length-1 && track.keys[high].time < time) high++;
             var a = track.keys[high-1]; var b = track.keys[high];
             return Quaternion.Slerp(a.rotation,b.rotation,Mathf.InverseLerp(a.time,b.time,time));

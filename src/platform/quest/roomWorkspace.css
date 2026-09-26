@@ -22,3 +22,11 @@
 .room-timeline button {flex-shrink:0;min-width:62px;}.room-workspace-empty {margin-top:32px!important;color:#756b5b;}.room-simple-inspector fieldset button,.room-edit-body fieldset>button {margin:3px;}
 
 .room-workspace-heading {position:sticky;top:-24px;z-index:2;background:#f8f1df;padding:12px 0;margin-top:-12px;border-bottom:1px solid #dfd4bf;}
+
+.rule-workspace label {display:flex;flex-direction:column;gap:6px;margin:10px 0;font-size:14px;font-weight:600;}
+.rule-workspace input,.rule-workspace select {min-height:44px;width:100%;max-width:100%;border:1px solid #bbaf98;border-radius:6px;padding:8px;background:#fffaf0;color:#332e2b;font:16px system-ui;}
+.rule-workspace .rule-checkbox {flex-direction:row;align-items:center;gap:10px;}.rule-checkbox input {width:22px;height:22px;min-height:22px;}
+.rule-section-title {margin-top:24px!important;}.rule-start-block,.rule-event-block {padding:14px;border-radius:12px;background:#efd9a4;border:1px solid #c9a851;margin:16px 0;}
+.rule-event-block p {font-size:13px;margin:6px 0;}.rule-block-list {list-style:none;padding:0 0 0 12px;margin:0;border-left:5px solid #9a84b5;}
+.rule-action-block {position:relative;margin:10px 0;padding:14px;background:#e9dff2;border:1px solid #b5a0ca;border-radius:8px;}.rule-action-block:before {content:'';position:absolute;top:-6px;left:22px;width:40px;height:10px;border-radius:5px;background:#b5a0ca;}
+.rule-action-active {outline:3px solid #2d8b7e;outline-offset:2px;}.rule-step-heading {display:flex;justify-content:space-between;gap:8px;}.rule-step-heading span {font-size:12px;color:#206559;}

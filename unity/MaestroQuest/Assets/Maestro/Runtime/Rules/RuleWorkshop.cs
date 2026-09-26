@@ -12,7 +12,7 @@ using UnityEngine;
 namespace Maestro.Quest.Rules
 {
     [DefaultExecutionOrder(-50)]
-    public sealed class RuleWorkshop : MonoBehaviour
+    public sealed partial class RuleWorkshop : MonoBehaviour
     {
         RoomEditor editor;
         RuleStorage storage;
@@ -27,6 +27,10 @@ namespace Maestro.Quest.Rules
         RuleCondition condition;
         bool stopOnExit;
         public RoomRules Runtime;
+        public int Revision { get; private set; }=1;
+        public bool ReadOnly => storage?.ReadOnly ?? false;
+        public bool CanUndo => !ReadOnly && undo.Count>0;
+        public bool CanRedo => !ReadOnly && redo.Count>0;
         public string Status { get; private set; } = "Create an action sequence, then add triggers or buttons";
         public event Action Changed, DocumentChanged;
         public bool HistoricalMotion(string id) => undo.Concat(redo).Any(x => x.sequences.Any(sequence => sequence.steps.Any(step => step.motionId == id)));
@@ -41,12 +45,12 @@ namespace Maestro.Quest.Rules
                 var sequence = Selected;
                 if (sequence == null) return "No action sequence selected";
                 var step = sequence.steps[Mathf.Clamp(stepIndex,0,sequence.steps.Length-1)];
-                string action = step.action switch { RuleActionKind.RecordedAnimation => "Play recording",RuleActionKind.ThrowRecording => "Play then throw",RuleActionKind.Gesture => step.gesture.ToString(),RuleActionKind.ImportedClip => ClipName(step),RuleActionKind.LibraryMotion => "Saved: " + (editor.Motions.Find(step.motionId)?.name ?? "Choose motion"),RuleActionKind.LookAtUser => "Look at user",RuleActionKind.FollowUser => "Follow user",_ => "Wait" };
+                string action = step.action switch { RuleActionKind.RecordedAnimation => "Play recording",RuleActionKind.ThrowRecording => "Play then throw",RuleActionKind.Gesture => step.gesture.ToString(),RuleActionKind.ImportedClip => ClipName(step),RuleActionKind.LibraryMotion => "Saved: " + (editor.Motions.Find(step.motionId)?.name ?? "Choose motion"),RuleActionKind.RecipeAnimation => "Recipe animation",RuleActionKind.LookAtUser => "Look at user",RuleActionKind.FollowUser => "Follow user",_ => "Wait" };
                 string target = step.action == RuleActionKind.Wait ? "" : " · " + TargetName(step.targetId);
                 string source = RuleDocument.IsObjectEvent(trigger) ? " on " + TargetName(sourceId) : "";
                 string policy = sequence.interruption == RuleInterruption.QueueLatest ? "Queue latest" : sequence.interruption.ToString();
                 return sequence.name + " · Step " + (stepIndex+1) + "/" + sequence.steps.Length + ": " + action + target +
-                    "\n" + (step.seconds == 0 ? "Full clip duration" : step.seconds+" seconds") + ((step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion) ? " · Clip loop " + OnOff(step.loop) : "") + " · Repeat " + OnOff(sequence.repeat) + " · " + policy +
+                    "\n" + (step.seconds == 0 ? "Full clip duration" : step.seconds+" seconds") + ((step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion || step.action == RuleActionKind.RecipeAnimation) ? " · Clip loop " + OnOff(step.loop) : "") + " · Repeat " + OnOff(sequence.repeat) + " · " + policy +
                     (!string.IsNullOrEmpty(step.propId) ? "\nProp: "+TargetName(step.propId)+" · "+step.propHand+" hand · "+step.propRelease+(step.propRelease == PropRelease.Return ? " after motion" : " at "+Mathf.RoundToInt(step.propReleaseAt*100)+"%") : "") +
                     "\n" + EventName(trigger) + source + " · If " + condition + " · While state " + OnOff(stopOnExit);
             }
@@ -95,6 +99,7 @@ namespace Maestro.Quest.Rules
         public void Say(string value) { Status = value; Changed?.Invoke(); }
         bool Edit(Action<RuleDocument> action, string message, bool placement = false)
         {
+            if (ReadOnly) { Say("Saved rules are unavailable for editing; original files are preserved"); return false; }
             if (!placement && Runtime && Runtime.AnyButtonHeld) { Say("Release your action buttons before editing rules"); return false; }
             var candidate = document.Copy(); action(candidate);
             if (!candidate.Validate(out var error)) { Say(error); return false; }
@@ -106,14 +111,14 @@ namespace Maestro.Quest.Rules
         {
             sequenceIndex = document.sequences.Length == 0 ? -1 : Mathf.Clamp(sequenceIndex,0,document.sequences.Length-1);
             stepIndex = Selected == null ? 0 : Mathf.Clamp(stepIndex,0,Selected.steps.Length-1);
-            dirty = true; saveAt = Time.unscaledTime + .5f; DocumentChanged?.Invoke(); Changed?.Invoke();
+            Revision++; dirty = true; saveAt = Time.unscaledTime + .5f; DocumentChanged?.Invoke(); Changed?.Invoke();
         }
         public void NewSequence()
         {
             if (document.sequences.Length >= 32) { Say("This room has reached its action limit"); return; }
             int number = 1; while (document.sequences.Any(x => x.name == "Action " + number)) number++;
-            var sequence = new RuleSequence { id = Guid.NewGuid().ToString("N"), name = "Action " + number, steps = new[] { new RuleStep { action = RuleActionKind.Gesture, seconds = 2.5f } } };
-            if (Edit(value => value.sequences = value.sequences.Append(sequence).ToArray(),"Action created — choose its steps and triggers")) { sequenceIndex = document.sequences.Length-1; stepIndex = 0; bindingIndex = -1; Changed?.Invoke(); }
+            var sequence = new RuleSequence { id = null, name = "Action " + number, steps = new[] { new RuleStep { action = RuleActionKind.Gesture, seconds = 2.5f } } };
+            Execute(new RuleRequest {action="edit",revision=Revision,edits=new[] {new RuleEdit {kind="save",reference="newAction",sequence=sequence}}},out _,out _);
         }
         public void SelectSequence(int direction)
         {
@@ -123,14 +128,14 @@ namespace Maestro.Quest.Rules
         public void DeleteSequence()
         {
             var sequence = Selected; if (sequence == null) return;
-            Edit(value => { value.sequences = value.sequences.Where(x => x.id != sequence.id).ToArray(); value.bindings = value.bindings.Where(x => x.sequenceId != sequence.id).ToArray(); value.buttons = value.buttons.Where(x => x.sequenceId != sequence.id).ToArray(); },"Action and its triggers removed — Undo restores them");
+            Execute(new RuleRequest {action="edit",revision=Revision,edits=new[] {new RuleEdit {kind="delete",target=sequence.id}}},out _,out _);
         }
         void EditStep(Action<RuleStep> action, string message)
         {
             if (Selected == null) { Say("Create an action first"); return; }
             Edit(value => action(value.sequences[sequenceIndex].steps[stepIndex]),message);
         }
-        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); if (!RuleDocument.CanCarry(step)) step.propId=null; },"Action type changed");
+        public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion || step.action == RuleActionKind.RecipeAnimation ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); if (!RuleDocument.CanCarry(step)) step.propId=null; },"Action type changed");
         public void UseTarget()
         {
             var id = editor.SelectedId; if (id == null) { Say("Select a room object first"); return; }
@@ -171,7 +176,7 @@ namespace Maestro.Quest.Rules
         public void CyclePropRelease() => EditStep(step => { if (!string.IsNullOrEmpty(step.propId)) step.propRelease=(PropRelease)(((int)step.propRelease+1)%3); },"Prop release mode changed");
         public void CyclePropTime() => EditStep(step => { step.propReleaseAt=step.propReleaseAt >= .999f ? .05f : Mathf.Min(1,Mathf.Round((step.propReleaseAt+.05f)*20)/20); },"Prop release time changed in 5% motion increments");
         public void ClearProp() => EditStep(step => step.propId=null,"Prop removed from this step");
-        public void CycleTime() => EditStep(step => { if (step.action == RuleActionKind.ThrowRecording) return; float[] times = (step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion) ? new[] { 0f,1,2,3,5,10,20,30 } : new[] { 1f,2,3,5,10,20,30 }; int i = Array.FindIndex(times,x => x > step.seconds); step.seconds = times[i < 0 ? 0 : i]; },"Step duration changed");
+        public void CycleTime() => EditStep(step => { if (step.action == RuleActionKind.ThrowRecording) return; float[] times = (step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion || step.action == RuleActionKind.RecipeAnimation) ? new[] { 0f,1,2,3,5,10,20,30 } : new[] { 1f,2,3,5,10,20,30 }; int i = Array.FindIndex(times,x => x > step.seconds); step.seconds = times[i < 0 ? 0 : i]; },"Step duration changed");
         public void CycleGesture() => EditStep(step => { if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,true); else if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,true); else step.gesture = (RuleGesture)(((int)step.gesture+1)%Enum.GetValues(typeof(RuleGesture)).Length); },"Motion changed");
         public void ToggleClipLoop() => EditStep(step => { if (step.action != RuleActionKind.ThrowRecording) step.loop = !step.loop; },"Clip looping changed");
         public void ToggleRepeat() { if (Selected != null) Edit(value => value.sequences[sequenceIndex].repeat = !value.sequences[sequenceIndex].repeat,"Sequence repeat changed"); }
@@ -184,8 +189,8 @@ namespace Maestro.Quest.Rules
         {
             var sequence = Selected; if (sequence == null) return;
             if (document.bindings.Length >= 128) { Say("This room has reached its trigger limit"); return; }
-            var binding = new RuleBinding { id = Guid.NewGuid().ToString("N"), sequenceId = sequence.id, trigger = trigger, condition = condition, sourceId = sourceId, stopOnExit = stopOnExit };
-            Edit(value => value.bindings = value.bindings.Append(binding).ToArray(),"Trigger added to " + sequence.name);
+            var binding = new RuleBinding { id = null, sequenceId = sequence.id, trigger = trigger, condition = condition, sourceId = sourceId, stopOnExit = stopOnExit };
+            Execute(new RuleRequest {action="edit",revision=Revision,edits=new[] {new RuleEdit {kind="bind",binding=binding}}},out _,out _);
         }
         public void NextBinding()
         {
@@ -210,9 +215,7 @@ namespace Maestro.Quest.Rules
             if (document.buttons.Length >= 16) { Say("This room has reached its button limit"); return; }
             int slot = document.buttons.Count(x => x.mount == mount);
             if (mount != ButtonMount.Room && slot >= 4) { Say("Keep at most four buttons on each controller"); return; }
-            var button = new RuleButtonData { id = Guid.NewGuid().ToString("N"), sequenceId = Selected.id, mount = mount,
-                position = mount == ButtonMount.Room ? new Vector3(.3f+slot*.08f,1.25f,.7f) : new Vector3(mount == ButtonMount.LeftController ? -.12f : .12f,.06f + (slot%2)*.08f,.05f+(slot/2)*.08f) };
-            Edit(value => value.buttons = value.buttons.Append(button).ToArray(),"Button created — grip it to adjust placement");
+            Execute(new RuleRequest {action="edit",revision=Revision,edits=new[] {new RuleEdit {kind="button",target=Selected.id,mount=mount}}},out _,out _);
         }
         public void RemoveButton()
         {
@@ -225,8 +228,8 @@ namespace Maestro.Quest.Rules
         {
             Edit(value => { int i = 0; foreach (var button in value.buttons) if (button.mount == ButtonMount.Room) { button.position = new Vector3(.28f+(i%6)*.09f,1.2f-(i/6)*.09f,.68f); button.rotation = Quaternion.identity; i++; } },"Room buttons brought back within reach");
         }
-        public void Undo() { if (undo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; redo.Add(document); document = undo[^1]; undo.RemoveAt(undo.Count-1); Updated(); Say("Rule edit undone"); }
-        public void Redo() { if (redo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; undo.Add(document); document = redo[^1]; redo.RemoveAt(redo.Count-1); Updated(); Say("Rule edit redone"); }
+        public void Undo() { if (ReadOnly || undo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; redo.Add(document); document = undo[^1]; undo.RemoveAt(undo.Count-1); Updated(); Say("Rule edit undone"); }
+        public void Redo() { if (ReadOnly || redo.Count == 0 || (Runtime && Runtime.AnyButtonHeld)) return; undo.Add(document); document = redo[^1]; redo.RemoveAt(redo.Count-1); Updated(); Say("Rule edit redone"); }
         void Update()
         {
             if (saveTask != null && saveTask.IsCompleted) { var error = saveTask.GetAwaiter().GetResult(); saveTask = null; if (error != null) Say(error); }

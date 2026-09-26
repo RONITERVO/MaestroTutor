@@ -19,8 +19,12 @@ namespace Maestro.Quest.Creation
         string encoded;
         float time;
         bool interrupted;
+        bool? runtimeLoop;
+        bool RuntimePlaying => runtimeLoop.HasValue || recipe.playing;
         public Bounds LocalBounds { get; private set; }
-        public bool IsPlaying => recipe != null && recipe.playing && !interrupted && (recipe.loop || time < recipe.duration);
+        public bool IsPlaying => recipe != null && RuntimePlaying && !interrupted && ((runtimeLoop ?? recipe.loop) || time < recipe.duration);
+        public void StartRule(bool loop) {runtimeLoop=loop;Restart();}
+        public void StopRule() {runtimeLoop=null;Stop();}
         public void Restart() { if(recipe == null || recipe.tracks.Length == 0) return; time=0; interrupted=false; }
         public void Stop() { interrupted=true; }
         public Transform Part(string id) => nodes.TryGetValue(id,out var node) ? node : null;
@@ -28,7 +32,7 @@ namespace Maestro.Quest.Creation
         {
             if (value == null || !value.Validate(out _)) return false;
             string json = JsonUtility.ToJson(value); if (encoded == json) return false;
-            encoded = json; recipe = value.Copy(); time = 0; interrupted = false;
+            encoded = json; recipe = value.Copy(); time = 0; interrupted = false; runtimeLoop=null;
             if (geometry) { geometry.SetActive(false); ArtResources.Release(geometry); }
             foreach (var material in materials) ArtResources.Release(material);
             nodes.Clear(); rest.Clear(); materials.Clear(); colors.Clear();
@@ -68,9 +72,9 @@ namespace Maestro.Quest.Creation
         public void Tint(Color tint) { for(int i=0;i<materials.Count;i++) materials[i].color=colors[i]*tint; }
         void Update()
         {
-            if (recipe == null || !recipe.playing || interrupted) return;
+            if (recipe == null || !RuntimePlaying || interrupted) return;
             time += Mathf.Min(Time.deltaTime,.05f);
-            foreach (var track in recipe.tracks) nodes[track.part].localRotation=rest[track.part]*recipe.Sample(track,time);
+            foreach (var track in recipe.tracks) nodes[track.part].localRotation=rest[track.part]*recipe.Sample(track,time,runtimeLoop);
         }
         void OnApplicationPause(bool paused) { if (paused) interrupted=true; }
         void OnApplicationFocus(bool focused) { if (!focused) interrupted=true; }

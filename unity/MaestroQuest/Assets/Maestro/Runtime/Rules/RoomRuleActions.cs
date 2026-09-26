@@ -17,6 +17,7 @@ namespace Maestro.Quest.Rules
         sealed class Effect
         {
             public string TargetId;
+            public RecipeObject Recipe;
             public RuleStep Step;
             public float Duration;
             public AvatarHeldProp Prop;
@@ -50,6 +51,11 @@ namespace Maestro.Quest.Rules
             if (step.action == RuleActionKind.ThrowRecording && (!item.GetComponent<RigidRoomItem>() || !item.GetComponent<RigidRoomItem>().Dynamic || editor.Read(step.targetId).motion.frames.Length < 2 || !editor.PhysicsWorld || !editor.PhysicsWorld.Running))
             { error = "Throw recording needs a physical creation, two motion frames and running room physics"; return false; }
             if (step.action == RuleActionKind.Gesture && !item.GetComponent<MaestroAvatar>()) { error = "Gestures need a compatible Maestro avatar"; return false; }
+            if (step.action == RuleActionKind.RecipeAnimation)
+            {
+                var recipe=editor.Read(step.targetId)?.recipe;
+                if(recipe==null || recipe.tracks.Length==0 || !item.GetComponent<RecipeObject>()) {error="This object has no recipe animation";return false;}
+            }
             if (step.action == RuleActionKind.ImportedClip)
             {
                 var model = ClipModel(item); var avatar = item.GetComponent<MaestroAvatar>();
@@ -93,6 +99,10 @@ namespace Maestro.Quest.Rules
             {
                 effect.Spatial = target.GetComponent<AvatarSpatialMotion>();
                 return effect.Spatial.Begin(runId,step.action == RuleActionKind.FollowUser ? AvatarSpatialMode.Follow : AvatarSpatialMode.Look,out error);
+            }
+            if (step.action == RuleActionKind.RecipeAnimation) {
+                effect.Recipe=target.GetComponent<RecipeObject>();if(seconds==0)seconds=editor.Read(step.targetId).recipe.duration;
+                effect.Duration=seconds;effect.Recipe.StartRule(step.loop);return true;
             }
             if (step.action == RuleActionKind.Gesture) { avatar.Gesture(step.gesture.ToString()); return BeginProp(effect,out error); }
             if (step.action == RuleActionKind.ImportedClip)
@@ -201,6 +211,7 @@ namespace Maestro.Quest.Rules
             effect.Cancelled = true; effect.Motion?.Dispose(); effect.Motion = null;
             if (effect.Graph.IsValid()) effect.Graph.Destroy();
             if (effect.ClipModel) effect.ClipModel.Stop();
+            if (effect.Recipe) effect.Recipe.StopRule();
             if (!editor) return;
             var item = editor.Find(effect.TargetId);
             if (effect.Spatial) { effect.Spatial.End(runId); return; }

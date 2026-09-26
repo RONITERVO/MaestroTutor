@@ -110,7 +110,15 @@ https://docs.blockly.com/guides/configure/serialization/
   inspected before editing. Full receipts are still repeated in planner context,
   so context size and planning cost need further work.
 
-## PC verification
+## Behaviour workspace follow-up
+
+Checkpoint 7EC419D6 adds native v4 rule-step identities, the optional book behaviour
+blocks, shared agent/book rule operations, physical event/controller-button bindings
+and recipe animation in the existing scheduler. See QUEST_BEHAVIOUR_WORKSPACE.md
+for current verification and limits. The recipe-workspace checkpoint below is
+retained as earlier evidence.
+
+## Earlier PC verification
 
 Checkpoint `71987229` passes 63 Unity EditMode and 67 PlayMode checks; three
 optional private-model/motion checks are skipped. Android passes 25 unit checks
@@ -132,15 +140,16 @@ real-provider behaviour or headset usability.
 - Authenticated managed and BYOK trials, device installation and Quest acceptance.
   The headset remains on hold until the user returns/reconnects.
 - Voice-first start/stop/resume and actions in the separate Live voice path.
-- Behaviour blocks backed by existing rule data, stable step/channel identities,
-  add/delete/reparent parts, timeline duration/time editing, accessible input and
-  explicit edit ownership/locks. Selection highlighting also needs complete cleanup
+- Complete motion/prop and fine trigger editing in the new behaviour blocks,
+  stable animation-channel identities, add/delete/reparent recipe parts, timeline
+  duration/time editing, accessible input and explicit edit ownership/locks. Selection highlighting also needs complete cleanup
   when physical selection changes independently of workspace inspection.
 - Bounded patch operations, cross-domain transaction/recovery semantics and receipts
   visible in chat even if the final provider reply fails. Future schema versions
   need explicit migrations and preservation instead of silent field loss.
-- Agent adapters for import, animation-library, tutor-state/VR rules, gaze/follow,
-  controller bindings and scan/physics workflows. These are not yet language actions.
+- Further agent adapters for import, animation-library discovery/assignment,
+  locomotion-controller bindings and scan/physics workflows. Bounded rules and
+  their gaze/follow actions now use the shared planner but await provider/device QA.
 - Planner cost/latency: up to three structured requests precede the tutor reply;
   even a language-only Quest turn currently adds a planning call. Consolidate
   conversational output and planning or add reviewed native function tools.

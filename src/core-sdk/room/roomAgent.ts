@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validRuleRequest,type RuleRequest,type RuleView} from './rules';
 import { parseRecipe, type RoomRecipe } from './recipe';
 import { generateGeminiResponse } from '../gemini/generative';
 import { pickGeminiClientSource } from '../gemini/clientSource';
@@ -7,7 +8,8 @@ import { runTutorTextTurn, type TutorTextTurnInput, type TutorTextTurnOptions } 
 import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTION, ROOM_AGENT_SCHEMA } from '../../../shared/prompts';
 
 export interface RoomCommand {
-  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop';
+  action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules';
+  rule?:RuleRequest;
   target?: string; partId?:string; reference?: string; name?: string;
   kind?: 'block' | 'ball' | 'cylinder' | 'recipe' | 'boxRobot';
   visible?: boolean; atPosition?: boolean; position?: { x: number; y: number; z: number };
@@ -16,6 +18,7 @@ export interface RoomCommand {
 export interface RoomAgentState {
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
+  workspaceView?:'objects'|'rules'; rules?:RuleView|null;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
   selectedId?: string | null;
   objects: { objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean }[];
@@ -30,7 +33,7 @@ const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof 
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
 const fields: Record<RoomCommand['action'], string[]> = {
   create:['reference','name','kind','atPosition','position','scale','color','recipe'], move:['target','position'], resize:['target','scale'],
-  paint:['target','color'], recipe:['target','recipe'], delete:['target'], undo:[], redo:[], inspect:['target','partId'], workspace:['visible'], play:['target'], stop:['target'],
+  paint:['target','color'], recipe:['target','recipe'], delete:['target'], undo:[], redo:[], inspect:['target','partId'], workspace:['visible'], play:['target'], stop:['target'], rules:['rule'],
 };
 export function parseRoomCommands(input: unknown): RoomCommand[] {
   if (!record(input) || Object.keys(input).some(k => k !== 'commands') || !Array.isArray(input.commands) || input.commands.length > 8 || JSON.stringify(input).length > 28000) throw new Error('The room plan is invalid or too large.');
@@ -42,13 +45,14 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if (action === 'create' && (typeof c.reference !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.reference) || typeof c.name !== 'string' || c.name.length > 80 || /[\u0000-\u001f]/.test(c.name) || !['block','ball','cylinder','recipe','boxRobot'].includes(c.kind as string))) throw new Error('Invalid creation.');
     if ((action === 'move' || c.atPosition === true || c.position !== undefined) && !vector(c.position)) throw new Error('Invalid position.');
     if (c.partId !== undefined && (typeof c.partId !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.partId))) throw new Error('Invalid recipe part.');
+    if (action === 'rules' && !validRuleRequest(c.rule)) throw new Error('Invalid behaviour request.');
     if (action === 'workspace' && typeof c.visible !== 'boolean') throw new Error('Invalid workspace state.');
     if (c.atPosition !== undefined && typeof c.atPosition !== 'boolean') throw new Error('Invalid placement.');
     if ((action === 'resize' || c.scale !== undefined) && (typeof c.scale !== 'number' || !Number.isFinite(c.scale) || c.scale < .1 || c.scale > 4)) throw new Error('Invalid scale.');
     if ((action === 'paint' || c.color !== undefined) && !validColor(c.color)) throw new Error('Invalid colour.');
     if ((action === 'recipe' || c.kind === 'recipe') && !parseRecipe(c.recipe)) throw new Error('Missing recipe.');
   }
-  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
+  if (input.commands.some(c => ['undo','redo','inspect','workspace','play','stop','rules'].includes(c.action)) && input.commands.length !== 1) throw new Error('This action must be submitted on its own.');
   return input.commands as unknown as RoomCommand[];
 }
 

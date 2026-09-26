@@ -1,0 +1,64 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+import {useEffect,useState,useSyncExternalStore} from 'react';
+import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
+import {copySequence,newRuleStep,validSequence,ruleActions,ruleGestures,ruleEvents,ruleConditions,rulePolicies,ruleMounts,type RuleSequence,type RuleEdit,type RuleRequest,type RuleStep} from '../../core-sdk/room/rules';
+import type {RoomAgentClient} from './roomAgentBridge';
+
+type Draft={sequence:RuleSequence;source:RoomAgentState;revision:number};
+const draftOf=(state:RoomAgentState):Draft|null=>state.rules?.selected?{sequence:copySequence(state.rules.selected),source:state,revision:state.rules.revision}:null;
+export function RuleWorkspace({client}:{client:RoomAgentClient}) {
+ const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
+ const [draft,setDraft]=useState<Draft|null>(null),[dirty,setDirty]=useState(false),[error,setError]=useState('');
+ const [trigger,setTrigger]=useState(0),[condition,setCondition]=useState(0),[source,setSource]=useState('maestro'),[whileState,setWhileState]=useState(false);
+ useEffect(()=>{if(!dirty&&state)setDraft(draftOf(state));},[state?.rules?.revision,state?.rules?.selected?.id,dirty]);
+ if(!state?.visible||!state.rules)return null;
+ const rules=state.rules,sequence=draft?.sequence;
+ const stale=Boolean(draft&&(draft.source.session!==state.session||draft.revision!==rules.revision)),blocked=pending||rules.readOnly||stale;
+ const send=async(rule:RuleRequest,expected?:RoomAgentState)=>{setError('');try {const result=await client.request([{action:'rules',rule}],expected);if(!result.ok)setError(result.status);return result;}catch(e){setError(e instanceof Error?e.message:'This action could not be completed.');return null;}};
+ const edit=async(edits:RuleEdit[],expected=state)=>send({action:'edit',revision:expected.rules!.revision,edits},expected);
+ const change=(fn:(value:RuleSequence)=>void)=>{if(!draft)return;const value=copySequence(draft.sequence);fn(value);setDraft({...draft,sequence:value});setDirty(true);};
+ const save=async()=>{if(!draft||!validSequence(draft.sequence,true)){setError('Check the name, targets and durations before applying.');return;}const result=await edit([{kind:'save',sequence:draft.sequence}],draft.source);if(result?.ok){setDirty(false);setDraft(draftOf(result));}};
+ const updateStep=(index:number,fn:(step:RuleStep)=>void)=>change(value=>fn(value.steps[index]));
+ const create=async()=>{const target=state.objects.find(o=>o.kind==='Assembly');const step=newRuleStep(target?8:1);step.targetId=target?.id??'maestro';await edit([{kind:'save',reference:'newBehaviour',sequence:{id:'',name:'New behaviour',interruption:0,repeat:false,steps:[step]}}]);};
+ const exit=async(objects:boolean)=>{try {const result=await client.request(objects?[{action:'inspect',target:state.selectedId??state.objects[0]?.id??'maestro'}]:[{action:'workspace',visible:false}]);if(!result.ok)setError(result.status);else setDirty(false);}catch(e){setError(e instanceof Error?e.message:'The book is unavailable.');}};
+ return <div className="room-workspace rule-workspace" aria-label="Behaviour workspace">
+  <section className="room-workspace-page room-hierarchy" aria-label="Behaviours and triggers">
+   <div className="room-workspace-heading"><div><span className="room-eyebrow">WHEN THIS HAPPENS</span><h1>Behaviours</h1></div><button disabled={pending} onClick={()=>void exit(false)}>{dirty?'Discard & return':'Back to chat'}</button></div>
+   <p className="room-workspace-intro">Build actions together. The agent, these blocks and your physical buttons use the same behaviours.</p>
+   <div className="room-workspace-actions"><button disabled={pending||dirty} onClick={()=>void exit(true)}>Objects</button><button disabled={pending||dirty||rules.readOnly} onClick={()=>void create()}>+ Behaviour</button><button disabled={pending||dirty||!rules.canUndo} onClick={()=>void send({action:'undo',revision:rules.revision})}>Undo</button><button disabled={pending||dirty||!rules.canRedo} onClick={()=>void send({action:'redo',revision:rules.revision})}>Redo</button></div>
+   <div className="room-object-list" aria-label="Behaviours">{rules.sequences.map(value=><button key={value.id} disabled={pending||dirty} aria-pressed={sequence?.id===value.id} onClick={()=>void send({action:'inspect',target:value.id})}><span>{value.name}</span><small>{value.steps} steps{value.repeat?' · Repeats':''}{rules.running.some(run=>run.sequenceId===value.id)?' · Running':''}</small></button>)}</div>
+   {sequence&&<>
+    <h2 className="rule-section-title">Triggers</h2>
+    {rules.bindings.map(binding=><div className="rule-event-block" key={binding.id}><strong>When {ruleEvents[binding.trigger].toLowerCase()}</strong><p>{binding.trigger>=4?state.objects.find(o=>o.id===binding.sourceId)?.name??'Missing object':'Maestro state'} · If {ruleConditions[binding.condition].toLowerCase()}{binding.stopOnExit?' · Stop on exit':''}</p><div className="room-workspace-actions"><button disabled={blocked||dirty} onClick={()=>void edit([{kind:'bind',binding:{...binding,enabled:!binding.enabled}}])}>{binding.enabled?'Disable':'Enable'}</button><button disabled={blocked||dirty} onClick={()=>void edit([{kind:'unbind',target:binding.id}])}>Remove trigger</button></div></div>)}
+    {rules.bindingCount>8&&<div className="room-workspace-actions"><button disabled={pending||dirty||rules.bindingPage===0} onClick={()=>void send({action:'inspect',target:sequence.id,page:rules.bindingPage-1})}>Previous triggers</button><span>{rules.bindingPage+1} / {Math.ceil(rules.bindingCount/8)}</span><button disabled={pending||dirty||(rules.bindingPage+1)*8>=rules.bindingCount} onClick={()=>void send({action:'inspect',target:sequence.id,page:rules.bindingPage+1})}>Next triggers</button></div>}
+    <fieldset disabled={blocked||dirty}><legend>Add a trigger</legend><label>When<select value={trigger} onChange={e=>setTrigger(Number(e.target.value))}>{ruleEvents.map((name,index)=><option value={index} key={name}>{name}</option>)}</select></label>{trigger>=4&&<label>Object<select value={source} onChange={e=>setSource(e.target.value)}>{state.objects.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}<label>Only if<select value={condition} onChange={e=>setCondition(Number(e.target.value))}>{ruleConditions.map((name,index)=><option key={name} value={index}>{name}</option>)}</select></label><label className="rule-checkbox"><input type="checkbox" checked={whileState} onChange={e=>setWhileState(e.target.checked)}/>Stop when the state ends</label><button onClick={()=>void edit([{kind:'bind',binding:{id:'',sequenceId:sequence.id,sourceId:trigger>=4?source:null,trigger,condition,cooldown:1,enabled:true,stopOnExit:whileState}}])}>Add trigger</button></fieldset>
+    <h2>Physical buttons</h2><p className="room-workspace-intro">Controller buttons can be pressed with the other hand.</p>
+    {rules.buttons.map(button=><div className="room-workspace-actions" key={button.id}><span>{ruleMounts[button.mount]}</span><button disabled={blocked||dirty} onClick={()=>void edit([{kind:'unbutton',target:button.id}])}>Remove button</button></div>)}
+    <div className="room-workspace-actions">{ruleMounts.map((name,mount)=><button disabled={blocked||dirty} key={name} onClick={()=>void edit([{kind:'button',target:sequence.id,mount}])}>+ {name}</button>)}</div>
+   </>}
+  </section>
+  <section className="room-workspace-page room-inspector" aria-label="Behaviour blocks">
+   <div className="room-workspace-heading"><div><span className="room-eyebrow">DO THESE ACTIONS</span><h2>{sequence?.name??'Choose a behaviour'}</h2></div><button disabled={pending} onClick={()=>void send({action:'stop'})}>Stop all</button></div>
+   <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(stale?'Behaviours changed. Your draft is retained; reload before applying.':rules.status)}</div>
+   {rules.queued>0&&<p>{rules.queued} queued actions</p>}
+   {sequence&&<>
+    <div className="room-workspace-actions"><button disabled={blocked||!dirty} onClick={()=>void save()}>Apply changes</button><button disabled={pending||!dirty&&!stale} onClick={()=>{setDraft(draftOf(state));setDirty(false);setError('');}}>{stale?'Reload latest':'Discard draft'}</button><button disabled={blocked||dirty} onClick={()=>void send({action:'play',target:sequence.id,revision:rules.revision})}>Try behaviour</button></div>
+    <fieldset disabled={blocked} className="room-edit-body"><label>Name<input maxLength={32} value={sequence.name} onChange={e=>change(value=>{value.name=e.target.value;})}/></label>
+    <div className="rule-start-block"><label className="rule-checkbox"><input type="checkbox" checked={sequence.repeat} onChange={e=>change(value=>{value.repeat=e.target.checked;})}/>Repeat until stopped</label><label>If triggered again<select value={sequence.interruption} onChange={e=>change(value=>{value.interruption=Number(e.target.value);})}>{rulePolicies.map((name,index)=><option key={name} value={index}>{name}</option>)}</select></label></div>
+    <ol className="rule-block-list">{sequence.steps.map((step,index)=>{const active=rules.running.find(run=>run.sequenceId===sequence.id&&run.stepId===step.id);return <li key={step.id||`draft-${index}`} className={`rule-action-block${active?' rule-action-active':''}`}>
+     <div className="rule-step-heading"><strong>{index+1}. {ruleActions[step.action]}</strong>{active&&<span>{active.preparing?'Loading':'Running'}</span>}</div>
+     <label>Action<select aria-label={`Step ${index+1} action`} value={step.action} onChange={e=>updateStep(index,value=>{value.action=Number(e.target.value);value.seconds=[0,3,6,7,8].includes(value.action)?0:2.5;if([1,4,5].includes(value.action))value.targetId='maestro';if(value.action===3)value.loop=false;if(![0,1,6,7].includes(value.action))value.propId=null;})}>{ruleActions.map((name,action)=><option key={name} value={action} disabled={(action===6||action===7)&&step.action!==action}>{name}</option>)}</select></label>
+     {step.action!==2&&<label>Target<select aria-label={`Step ${index+1} target`} value={step.targetId} onChange={e=>updateStep(index,value=>{value.targetId=e.target.value;if(value.targetId!=='maestro')value.propId=null;})}>{state.objects.filter(o=>![1,4,5].includes(step.action)||o.id==='maestro').map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
+     {step.action===1&&<label>Gesture<select aria-label={`Step ${index+1} gesture`} value={step.gesture} onChange={e=>updateStep(index,value=>{value.gesture=Number(e.target.value);})}>{ruleGestures.map((name,gesture)=><option key={name} value={gesture}>{name}</option>)}</select></label>}
+     <label>Seconds<input aria-label={`Step ${index+1} seconds`} type="number" min={[0,3,6,7,8].includes(step.action)?0:.1} max={30} step={.1} disabled={step.action===3} value={step.seconds} onChange={e=>updateStep(index,value=>{value.seconds=Number(e.target.value);})}/></label>
+     {[0,6,7,8].includes(step.action)&&<><small>0 uses the full animation duration.</small><label className="rule-checkbox"><input type="checkbox" checked={step.loop} onChange={e=>updateStep(index,value=>{value.loop=e.target.checked;})}/>Loop during this step</label></>}
+     {(step.action===6||step.action===7)&&<p className="room-workspace-intro">The saved imported motion is retained. New motion assignments use the existing motion tools.</p>}
+     {step.propId&&<p>Carrying {state.objects.find(o=>o.id===step.propId)?.name??'a missing prop'}; saved hand and release settings are retained.</p>}
+     <div className="room-workspace-actions"><button aria-label={`Move step ${index+1} up`} disabled={index===0} onClick={()=>change(value=>{[value.steps[index-1],value.steps[index]]=[value.steps[index],value.steps[index-1]];})}>↑</button><button aria-label={`Move step ${index+1} down`} disabled={index===sequence.steps.length-1} onClick={()=>change(value=>{[value.steps[index+1],value.steps[index]]=[value.steps[index],value.steps[index+1]];})}>↓</button><button aria-label={`Remove step ${index+1}`} disabled={sequence.steps.length<=1} onClick={()=>change(value=>{value.steps.splice(index,1);})}>Remove</button></div>
+    </li>;})}</ol><button disabled={sequence.steps.length>=16} onClick={()=>change(value=>{value.steps.push(newRuleStep());})}>+ Wait / action block</button></fieldset>
+    <div className="room-workspace-actions"><button disabled={blocked||dirty} onClick={()=>void edit([{kind:'delete',target:sequence.id}])}>Delete behaviour · Undo available</button></div>
+   </>}
+  </section>
+ </div>;
+}

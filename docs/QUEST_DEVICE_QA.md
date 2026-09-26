@@ -2,7 +2,29 @@
 
 This is development evidence, not a release acceptance report.
 
-## Latest: shared recipe workspace — not installed
+## Latest: shared behaviour workspace — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-7EC419D6.apk`.
+SHA256: `7EC419D60CBDDDB06A4BBBA522CBCC8780F4B7FF964BC7317463A2377CBF0297`.
+135,465,547 bytes, development signed, zero build errors and two warnings.
+Signature v2, ARM64 and required manifest checks pass. 64 EditMode, 69 required
+PlayMode and 25 native checks pass (158), with three optional private-file tests
+skipped. Room/Quest web checks total 34 and shared prompt checks 65; TypeScript,
+web build, lint and boundaries pass. See QUEST_BEHAVIOUR_WORKSPACE.md for scope.
+
+Native tests execute the same recipe rule through an agent request, tutor event
+and real ray/button input, observing arm motion and stops. The browser page checks
+use real React surfaces and native-exported data with simulated replies, not a
+Quest/WebView acceptance run. Reviewed captures and build/source hashes are in
+`.quest-evidence/behaviours/verified-7EC419D6`.
+
+No device access occurred; installed build remains 08F340EF. Once the user returns,
+back up saved room/rules before upgrading and test v4 migration, book edits/reorder,
+Undo, stale-draft retention, state triggers, physical buttons, recipe motion and
+interruption. Preserve the earlier conversational/provider and device checks below.
+
+
+## Earlier: shared recipe workspace — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-71987229.apk`.
 SHA256: `71987229044DCDEAB6108DDAE42E8315C512859DD2C1A0C354109E07EFB7B83F`.
@@ -793,7 +815,7 @@ full release and physical-device acceptance gates remain open.
 ## Pending: conversational recipe creation (2026-09-26)
 
 Device work remains on hold until the user explicitly reconnects/returns. After
-installing shared-workspace checkpoint `71987229`, verify authenticated
+installing shared-workspace checkpoint `7EC419D6`, verify authenticated
 managed and BYOK text turns and recorded-speech turns independently. Try making a
 small waving robot, a coloured ball, moving/resizing/painting a named object, and
 Undo/Redo. Verify native receipts match the actual room and that unrelated language
@@ -810,5 +832,5 @@ and require reload. Switch physical selection and verify outline cleanup. Reopen
 the book after cancellation and ensure no old acknowledgement triggers an edit.
 Check keyboard/input reachability, text size and both-hand pointer operation.
 
-These checks do not establish the separate Live voice path or the planned
-behaviour-block view, which remain implementation work.
+These checks do not establish the separate Live voice path. The initial behaviour
+blocks now need their own Quest acceptance described in QUEST_BEHAVIOUR_WORKSPACE.md.
