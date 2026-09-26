@@ -1,3 +1,4 @@
+import { AgentTaskStatus } from './AgentTaskStatus';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
@@ -1177,6 +1178,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = React.memo(({
         style={bubbleWrapperStyle}
         ref={registerBubbleEl}
       >
+          {message.agentTask && <AgentTaskStatus task={message.agentTask} />}
           {hasVisibleAttachment && (
                <div 
                   ref={annotationViewportRef} 

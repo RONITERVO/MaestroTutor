@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { ChatMessage } from '../../core/types';
 import { decodeTextFromDataUrl, isTextLikeAttachment } from '../../core-sdk/chat/fileAttachments';
-import { isRunnableMiniGameAttachment } from '../../features/chat/utils/miniGameAttachment';
+import { isRunnableMiniGameAttachment } from '../../features/chat';
 
 export interface BookArtifact {
   id: string;

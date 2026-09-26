@@ -55,7 +55,7 @@ export function planSuggestionAftersteps(input: {
     assistantPatches.push(patch);
   }
 
-  const splitToolMessage: SplitToolMessage | null = artifact && toolRequest
+  const splitToolMessage: SplitToolMessage | null = artifact && toolRequest && toolRequest.tool !== 'agent'
     ? mode === 'headless'
       ? { role: 'assistant', rawAssistantResponse: contextText || undefined }
       : { role: 'assistant', llmRawResponse: isLive ? buildLiveToolRawText(contextText, toolRequest) : undefined }

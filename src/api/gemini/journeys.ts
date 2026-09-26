@@ -7,8 +7,6 @@ import { runMaestroImageGeneration as runImage, type MaestroImageGenerationInput
 import type { CoreGeminiClient } from '../../core-sdk/managedGeminiClient';
 import { trackGeminiUsage } from '../../shared/utils/costTracker';
 import { sanitizeSvgAnimationStructure } from '../../platform/browser/sanitizeSvgAnimationStructure';
-import { currentRoomAgentLease } from '../../platform/quest/roomAgentBridge';
-import { runRoomTutorTurn } from '../../core-sdk/room/roomAgent';
 import { browserClientSource } from './browserClientSource';
 
 type BrowserOptions<T> = Omit<T, 'aiClient' | 'resolveAiClient' | 'onUsage' | 'sanitizeSvg'> & { aiClient?: CoreGeminiClient };
@@ -16,8 +14,7 @@ type BrowserOptions<T> = Omit<T, 'aiClient' | 'resolveAiClient' | 'onUsage' | 's
 /** Composition boundary: the UI supplies browser access and persistence, Core owns the journey. */
 export const runTutorTextTurn = (input: TutorTextTurnInput, options: BrowserOptions<TutorTextTurnOptions> & { isCurrent?: () => boolean } = {}) => {
   const configured = { ...options, ...browserClientSource(options.aiClient) };
-  const lease = currentRoomAgentLease();
-  return lease ? runRoomTutorTurn(input,configured,lease,response => trackGeminiUsage({feature:'tutor',configuredModel:response.modelUsed || input.model,modelVersion:response.modelVersion,usageMetadata:response.usageMetadata}),options.isCurrent) : runText(input,configured);
+  return runText(input,configured);
 };
 
 export const runReplySuggestions = (input: ReplySuggestionsInput, options: BrowserOptions<ReplySuggestionsOptions> = {}) =>

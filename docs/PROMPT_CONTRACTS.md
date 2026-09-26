@@ -14,7 +14,8 @@ environment, database or filesystem dependencies in the catalogue.
 | `speech.ts` | STT with context, triggered TTS, audio notes, diagnostic Live fallback |
 | `music.ts` | One music suffix builder shared by BYOK and managed Functions |
 | `translation.ts` | Translation template |
-| `room.ts` | Native room planner schema/instructions and receipt-aware tutor addition; active only with a native room lease |
+| `room.ts` | Native task planner schema/instructions and receipt-aware task reply; active only after an eligible tool handoff |
+| `handoff.ts` | Connected-room tutor capability, suggestion verification against the original request, and bounded task-completion narration |
 | `context.ts` | History/profile labels, compact-history markers, omissions, re-engagement trigger |
 
 The SDK and feature layers still select history, trim data, attach files and send

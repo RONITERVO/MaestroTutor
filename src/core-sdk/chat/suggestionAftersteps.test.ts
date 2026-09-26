@@ -3,6 +3,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import {
+  hasAgentHandoffProposal,
   executeSuggestionToolRequest,
   normalizeSuggestionCreatorArtifact,
   normalizeSuggestionCreatorToolRequest,
@@ -36,4 +37,15 @@ describe('suggestion creator aftersteps', () => {
     await expect(executeSuggestionToolRequest({ tool: 'music', prompt: 'scale' }, handlers)).resolves.toBe('music');
     expect(handlers.music).toHaveBeenCalledOnce();
   });
+});
+
+it('keeps the handoff capability-gated and never accepts a rewritten request', async () => {
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent' }, 'short fallback')).toBeNull();
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent' }, 'short fallback', { allowAgent: true })).toEqual({ tool: 'agent' });
+  expect(normalizeSuggestionCreatorToolRequest({ tool: 'agent', prompt: 'different request' }, '', { allowAgent: true })).toBeNull();
+  expect(hasAgentHandoffProposal('Reply.\n```maestro-tool {"tool":"agent"}```')).toBe(true);
+  expect(hasAgentHandoffProposal('```maestro-tool {"tool":"agent","alreadyUsed":true}```')).toBe(false);
+  const handlers = { image: vi.fn(), audioNote: vi.fn(), music: vi.fn() };
+  await expect(executeSuggestionToolRequest({ tool: 'agent' }, handlers)).rejects.toThrow('unavailable');
+  expect(handlers.music).not.toHaveBeenCalled();
 });

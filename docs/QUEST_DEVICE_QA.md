@@ -2,6 +2,16 @@
 
 This is development evidence, not a release acceptance report.
 
+## New PC checkpoint: chat-to-agent handoff — not packaged
+
+The normal tutor can propose an `agent` tool; the existing suggestion stage
+verifies it, and the task retains the original request/context. Durable native
+receipts, a same-chat result, task Stop/details and a nonblocking header activity
+state are implemented. Browser verification uses real IndexedDB and UI with
+simulated provider/native ports. See QUEST_UNIFIED_AGENT.md and
+`.quest-evidence/agent-handoff/receipt.json` for scope and remaining work.
+The following APK still predates this web-only checkpoint. Device hold continues.
+
 ## Latest: shared behaviour workspace — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-7EC419D6.apk`.

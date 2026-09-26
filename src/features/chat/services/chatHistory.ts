@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE } from '../../../core/db/index';
+import { openDB, STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE, AGENT_TASK_STORE } from '../../../core/db/index';
 import { ChatMessage, ChatMeta } from '../../../core/types';
 import { sanitizeForPersistence } from '../utils/persistence';
 export { deriveHistoryForApi } from '../../../core-sdk/chat/history';
@@ -26,12 +26,22 @@ export const saveChatHistoryDB = async (pairId: string, messages: ChatMessage[])
     .map(sanitizeForPersistence);
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
+    const transaction = db.transaction([STORE_NAME, AGENT_TASK_STORE], "readwrite");
     const store = transaction.objectStore(STORE_NAME);
     const request = store.put({ pairId, messages: messagesToSave });
+    const sourceIds = new Set(messagesToSave.map(message => message.id));
+    const tasks = transaction.objectStore(AGENT_TASK_STORE).openCursor();
+    tasks.onsuccess = () => {
+      const cursor = tasks.result;
+      if (!cursor) return;
+      const handoff = cursor.value?.handoff;
+      if (handoff?.conversationId === pairId && (!sourceIds.has(handoff.sourceUserId) || !sourceIds.has(handoff.sourceAssistantId))) cursor.delete();
+      cursor.continue();
+    };
 
     request.onerror = () => reject(new Error("Error saving history to DB"));
-    request.onsuccess = () => resolve();
+    transaction.oncomplete = () => { db.close(); resolve(); };
+    transaction.onabort = () => { db.close(); reject(transaction.error || new Error("History transaction was aborted")); };
   });
 };
 
@@ -148,7 +158,7 @@ export const clearAndSaveAllHistoriesDB = async (
 ): Promise<void> => {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-  const transaction = db.transaction([STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE], "readwrite");
+  const transaction = db.transaction([STORE_NAME, META_STORE, GLOBAL_PROFILE_STORE, AGENT_TASK_STORE], "readwrite");
   const store = transaction.objectStore(STORE_NAME);
   const metaStore = transaction.objectStore(META_STORE);
   const profileStore = transaction.objectStore(GLOBAL_PROFILE_STORE);
@@ -159,6 +169,7 @@ export const clearAndSaveAllHistoriesDB = async (
         const clearRequest = store.clear();
         const clearMetaReq = metaStore.clear();
   const clearProfileReq = profileStore.clear();
+        transaction.objectStore(AGENT_TASK_STORE).clear();
         clearRequest.onerror = () => reject(new Error("Error clearing store before bulk save"));
         clearMetaReq.onerror = () => reject(new Error("Error clearing meta store before bulk save"));
         clearProfileReq.onerror = () => reject(new Error("Error clearing profile store before bulk save"));

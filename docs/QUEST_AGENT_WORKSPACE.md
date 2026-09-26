@@ -83,7 +83,9 @@ https://docs.blockly.com/guides/configure/serialization/
   for an inspected recipe; requests remain 32 KiB. It does not widen the existing
   4 KiB book snapshot or expose a native object to artifact iframes.
 - In native book sessions, the shared text-turn path adds a structured room planner
-  before the familiar tutor answer. It uses the existing client resolver and usage
+  before the familiar tutor answer in the earlier prototype. The current text-chat
+  path starts it through the agent tool after the normal reply; see
+  QUEST_UNIFIED_AGENT.md. It uses the existing client resolver and usage
   accounting. Typed requests and recorded speech transcribed into that text-turn
   path share this implementation. Ordinary phone/browser turns are unchanged.
 

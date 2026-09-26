@@ -19,6 +19,7 @@ export interface AssistantToolPorts extends Pick<UseTutorConversationConfig, 'up
   attachGeneratedToolMedia: ReturnType<typeof createMediaPersistence>['attachGeneratedToolMedia'];
   synthesizeGeminiAudioNote: typeof synthesizeAudio;
   generateMusic: typeof generateMusicApi;
+  runAgentTask?(sourceAssistantId: string): Promise<void>;
 }
 /** Tool execution and visible attachment phases. Existing attachments suppress
  * duplicate work; afterstep planning and persistence belong to separate owners. */
@@ -27,13 +28,20 @@ export function createAssistantTools(ports: AssistantToolPorts) {
     attachGeneratedToolMedia, synthesizeGeminiAudioNote, generateMusic } = ports;
   async function executeAssistantToolRequest(
     assistantMessageId: string,
-    toolRequest: NormalizedSuggestionToolRequest | null
+    toolRequest: NormalizedSuggestionToolRequest | null,
+    sourceAssistantId = assistantMessageId
   ) {
     const existing = messagesRef.current.find(message => message.id === assistantMessageId);
     updateMessage(assistantMessageId, {
       isLoadingArtifact: false,
       artifactLoadStartTime: undefined,
     });
+
+    if (toolRequest?.tool === 'agent') {
+      if (!ports.runAgentTask) throw new Error('Agent handoff is unavailable.');
+      await ports.runAgentTask(sourceAssistantId);
+      return;
+    }
 
     if (existing && ((existing.imageUrl && existing.imageMimeType) || (existing.uploadedFileVariants && existing.uploadedFileVariants.length > 0))) {
       return;

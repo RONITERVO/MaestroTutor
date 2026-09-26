@@ -160,7 +160,9 @@ Gemini calls. Chat/suggestion aftersteps initiate the room task through the exis
 tool coordinator; Live is an input/conversation interface. The room runner is now
 separate from final tutor narration, with per-request bridge cancellation. See
 QUEST_UNIFIED_AGENT.md. The direct Live function protocol is optional and stays off.
-The existing automatic pre-planner must be removed when the common dispatcher is wired.
+The text-chat dispatcher now starts the agent tool and the automatic pre-planner
+has been removed. Original input snapshots, a durable task journal and nonblocking
+header activity are implemented; Live capture and release acceptance remain open.
 
 Incremental migration preserves existing tested controls:
 

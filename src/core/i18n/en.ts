@@ -335,6 +335,8 @@ export const enTranslations: Record<string, string> = {
   "chat.suggestion.practiceUnavailableLive": "Suggestion practice is unavailable during a live session.",
   
   // Chat - maestro status (used via CollapsedMaestroStatus)
+  "chat.maestro.agentWorking": "Maestro is working on your request",
+  "chat.maestro.title.agentWorking": "Agent task running. You can keep chatting.",
   "chat.maestro.idle": "Maestro is idle",
   "chat.maestro.title.idle": "Maestro is currently idle.",
   "chat.maestro.resting": "Maestro is resting...",

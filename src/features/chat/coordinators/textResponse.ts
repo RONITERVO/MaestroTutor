@@ -1,3 +1,4 @@
+import type { TutorTextTurnInput } from '../../../core-sdk/chat/tutorTextTurn';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import type { ConversationDiagnostics } from './conversationContracts';
@@ -16,6 +17,7 @@ export interface TextResponsePorts extends Pick<UseTutorConversationConfig, 't' 
   messagesRef: MutableValue<ChatMessage[]>;
   selectedLanguagePairRef: MutableValue<LanguagePair | undefined>;
   runTutorTextTurn: typeof runText;
+  prepareAgentHandoff?(input: TutorTextTurnInput, source: { sourceUserId?: string; sourceAssistantId: string; conversationId: string | null }): Promise<TutorTextTurnInput>;
   trackGeminiUsage: typeof trackUsage;
   setLatestGroundingChunks(chunks: GroundingChunk[] | undefined): void;
   formatGeminiPhaseLabel(event: GeminiProgressEvent): string | undefined;
@@ -56,6 +58,7 @@ export function createTextResponseCoordinator(ports: TextResponsePorts) {
 
   const handleGeminiResponse = async (params: {
     thinkingMessageId: string;
+    sourceUserId?: string;
     geminiPromptText: string;
     sanitizedDerivedHistory: any[];
     systemInstructionForGemini: string;
@@ -108,18 +111,25 @@ export function createTextResponseCoordinator(ports: TextResponsePorts) {
         useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
       });
       const requestPair = selectedLanguagePairRef.current;
+      const originalInput: TutorTextTurnInput = {
+        model: getGeminiModels().text.default,
+        prompt: params.geminiPromptText,
+        history: params.sanitizedDerivedHistory,
+        nativeLanguageCode: requestPair?.nativeLanguageCode || '',
+        systemInstruction: params.systemInstructionForGemini,
+        currentFileParts: params.imageForGeminiContextFileUri,
+        useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
+      };
+      const preparedInput = ports.prepareAgentHandoff ? await ports.prepareAgentHandoff(originalInput, {
+        sourceUserId: params.sourceUserId, sourceAssistantId: params.thinkingMessageId,
+        conversationId: params.currentSettingsVal.selectedLanguagePairId,
+      }) : originalInput;
+      const isCurrent = () => selectedLanguagePairRef.current === requestPair && Boolean(messagesRef.current.find(message => message.id === params.thinkingMessageId)?.thinking);
+      if (!isCurrent()) throw new DOMException('This tutor turn was interrupted.', 'AbortError');
       const turn = await runTutorTextTurn(
+        preparedInput,
         {
-          model: getGeminiModels().text.default,
-          prompt: params.geminiPromptText,
-          history: params.sanitizedDerivedHistory,
-          nativeLanguageCode: selectedLanguagePairRef.current?.nativeLanguageCode || '',
-          systemInstruction: params.systemInstructionForGemini,
-          currentFileParts: params.imageForGeminiContextFileUri,
-          useGoogleSearch: params.currentSettingsVal.enableGoogleSearch,
-        },
-        {
-          isCurrent: () => selectedLanguagePairRef.current === requestPair && Boolean(messagesRef.current.find(message => message.id === params.thinkingMessageId)?.thinking),
+          isCurrent,
           onGoogleSearchUnavailable: () => {
             setSettings(prev => prev.enableGoogleSearch
               ? { ...prev, enableGoogleSearch: false }
@@ -188,6 +198,7 @@ export function createTextResponseCoordinator(ports: TextResponsePorts) {
         searchQueries,
       });
 
+      if (!isCurrent()) throw new DOMException('This tutor turn was interrupted.', 'AbortError');
       const accumulatedFullText = turn.rawResponse;
       const strictParsedResponse = turn.parsed;
       const responseTextForConversation = strictParsedResponse.visibleText;

@@ -12,3 +12,5 @@ export * from './art';
 export * from './context';
 export * from './room';
 export * from './rules';
+
+export * from './handoff';

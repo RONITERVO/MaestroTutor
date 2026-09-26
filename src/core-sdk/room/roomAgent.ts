@@ -58,6 +58,8 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
 
 export interface RoomTaskControl {
   isCurrent?:()=>boolean;
+  beforePlan?:()=>Promise<void>;
+  beforeDispatch?:(commands:RoomCommand[],scene:RoomAgentState)=>Promise<void>;
   signal?:AbortSignal;
   /** Called with each actual native acknowledgement, before the next model call. */
   onReceipt?:(receipt:RoomAgentState)=>void|Promise<void>;
@@ -68,23 +70,24 @@ const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 /** A bounded tool task owned by the original Maestro app. The caller supplies
  * its existing Gemini access route and conversation lifetime; Unity never owns
  * a provider client. The result can be presented even if narration later fails. */
-export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'prompt'|'history'|'timeoutMs'>,
+export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'prompt'|'history'|'timeoutMs'> & Partial<Pick<TutorTextTurnInput,'systemInstruction'|'currentFileParts'|'nativeLanguageCode'>>,
   options:TutorTextTurnOptions,lease:RoomAgentLease,
   onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,control:RoomTaskControl={}
 ):Promise<RoomTaskResult> {
   const receipts:RoomAgentState[]=[];
   const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
   for(let step=0;step<3;step++) {
-    active();
+    active();await control.beforePlan?.();active();
     const scene=copy(lease.state());
-    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts),input.history,{
-      ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode}),input.history,{
+      ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,currentFileParts:input.currentFileParts,
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_SCHEMA},
       timeoutMs:input.timeoutMs,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });
     onUsage(response);active();
     const commands=parseRoomCommands(JSON.parse(response.text||'{}'));
     if(!commands.length)return {receipts,scene:copy(lease.state()),budgetExhausted:false};
+    await control.beforeDispatch?.(commands,scene);active();
     const receipt=await (control.signal
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
       : lease.execute(commands,scene.sceneRevision,scene.objects));

@@ -3,8 +3,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import TextFileViewer from '../../features/chat/components/TextFileViewer';
-import MiniGameViewer from '../../features/chat/components/MiniGameViewer';
+import { TextFileViewer, MiniGameViewer } from '../../features/chat';
 import { BookPresentationContext } from './BookPresentationContext';
 
 vi.mock('../../shared/hooks/useAppTranslations', () => ({ useAppTranslations: () => ({ t: (key: string) => key }) }));

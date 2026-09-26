@@ -2,11 +2,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const DB_NAME = 'GeminiLanguageTutorDB';
-export const DB_VERSION = 7;
+export const DB_VERSION = 8;
 export const STORE_NAME = 'chatHistories';
 export const META_STORE = 'chatMetas';
 export const GLOBAL_PROFILE_STORE = 'globalProfile';
 export const SETTINGS_STORE = 'appSettings';
+export const AGENT_TASK_STORE = 'agentTasks';
 export const ASSETS_STORE = 'appAssets';
 
 export const openDB = (): Promise<IDBDatabase> => {
@@ -29,6 +30,9 @@ export const openDB = (): Promise<IDBDatabase> => {
       }
       if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
         db.createObjectStore(SETTINGS_STORE, { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains(AGENT_TASK_STORE)) {
+        db.createObjectStore(AGENT_TASK_STORE, { keyPath: 'id' });
       }
       if (!db.objectStoreNames.contains(ASSETS_STORE)) {
         db.createObjectStore(ASSETS_STORE, { keyPath: 'key' });

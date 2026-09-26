@@ -98,3 +98,14 @@ describe('reply suggestions', () => {
     expect(generateGeminiResponse).toHaveBeenCalledTimes(2);
   });
 });
+
+it('offers the agent schema only with a host-captured request and passes that request unchanged', async () => {
+  vi.mocked(generateGeminiResponse).mockReset().mockResolvedValue({ text: JSON.stringify({ suggestions: [{ target: 'Vale', native: 'Okay' }], toolRequest: { tool: 'agent' } }) } as any);
+  const original = '  Make a blue robot.\nKeep its feet small.  ';
+  const result = await runReplySuggestions({ assistantMessageId: 'a', lastTutorMessage: '```maestro-tool {"tool":"agent"}```', history: [], languagePair, agentRequest: original }, { resolveAiClient: vi.fn() });
+  expect(result.toolRequest).toEqual({ tool: 'agent' });
+  const args = vi.mocked(generateGeminiResponse).mock.calls[0];
+  expect(args[1]).toContain(JSON.stringify({ originalUserRequest: original }));
+  expect((args[3].configOverrides.responseJsonSchema.properties.toolRequest.anyOf as any[]).some(item => item.properties?.tool?.enum?.includes('agent'))).toBe(true);
+  expect(JSON.stringify(REPLY_SUGGESTIONS_RESPONSE_SCHEMA)).not.toContain('agent');
+});

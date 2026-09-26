@@ -1,3 +1,4 @@
+import { buildRoomHandoffVerification } from '../../../shared/prompts';
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
@@ -19,6 +20,8 @@ export interface ReplySuggestionsInput {
   languagePair: LanguagePair;
   existingGlobalProfile?: string;
   responseSource?: 'chat' | 'live';
+  /** Host-captured request, available only for a proposed room handoff. */
+  agentRequest?: string;
 }
 
 export type ReplySuggestionsOptions = GeminiClientSource & AssistantArtifactOptions & {
@@ -129,6 +132,7 @@ export const buildReplySuggestionsPrompt = (input: ReplySuggestionsInput, option
   if (input.responseSource === 'live') {
     prompt += LIVE_REPLY_SUGGESTIONS_SUFFIX;
   }
+  if (input.agentRequest !== undefined) prompt += buildRoomHandoffVerification(input.agentRequest);
   return prompt;
 };
 
@@ -154,7 +158,13 @@ export const runReplySuggestions = async (
         ...pickGeminiClientSource(options),
         configOverrides: {
           responseMimeType: 'application/json',
-          responseJsonSchema: REPLY_SUGGESTIONS_RESPONSE_SCHEMA,
+          responseJsonSchema: input.agentRequest === undefined ? REPLY_SUGGESTIONS_RESPONSE_SCHEMA : {
+            ...REPLY_SUGGESTIONS_RESPONSE_SCHEMA,
+            properties: { ...REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties, toolRequest: {
+              anyOf: [...REPLY_SUGGESTIONS_RESPONSE_SCHEMA.properties.toolRequest.anyOf,
+                { type: 'object', additionalProperties: false, required: ['tool'], properties: { tool: { type: 'string', enum: ['agent'] } } }],
+            } },
+          },
         },
         lifecycleHooks: {
           onProgress: event => options.lifecycleHooks?.onProgress?.(event),

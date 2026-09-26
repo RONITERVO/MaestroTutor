@@ -104,37 +104,80 @@ SDK, provider key, subscription ledger or prompt fork is required.
   revisions. Developer tests should use those operations plus independent input/
   rendering tests and headset QA; direct command success does not prove usable VR.
 
-## Current state and remaining migration
+## Text-chat handoff checkpoint (2026-09-26)
 
-The existing code already centralizes Gemini access in the original app. However,
-`src/api/gemini/journeys.ts` still runs the legacy room planner before each Quest
-text reply. This is transitional and is not the desired tool-triggered flow.
+The non-Live chat path now uses the proposed flow. A connected room adds one short
+`agent` tool instruction to the ordinary tutor turn. The host captures that exact
+prepared input against real user/assistant IDs; a proactive reply, restored tool
+block or unconnected phone chat has no handoff capability. The existing suggestion
+creator verifies the tool proposal against the captured original request. Its
+schema only includes `agent` for that eligible proposal. The tool carries no
+rewritten prompt. `assistantTools` starts the task using the original source ID,
+including when the tutor also produced an artifact.
 
-This checkpoint extracts `runRoomActionTask` from that wrapper. It accepts the
-original app's provider source and conversation controls, returns native receipts
-independently of a tutor reply and publishes each acknowledgement before another
-model call. The compatibility wrapper calls this same implementation. It adds no
-Live provider connection or second task engine. The bridge now accepts a request-
-owned AbortSignal: aborting an old/completed task cannot cancel a later manual edit.
+`src/api/gemini/journeys.ts` no longer runs the legacy room planner before every
+Quest reply. The app-owned task independently observes/plans/executes (three
+batches maximum) and prepares its own normal-format reply. It uses the same
+browser client resolver for BYOK or managed access, retains original attachments,
+history and tutor context, and publishes its result in the original conversation.
+The original tutor context is task data; it cannot override the native command
+schema. Detailed observations and receipts stay outside ordinary chat history.
 
-Remaining work before calling this flow implemented:
+The task journal lives in the existing app database (v8, `agentTasks`). It commits
+an atomic initiation claim and each pending action before native dispatch, then
+commits acknowledgements before the next model call. Duplicate initiation IDs
+return existing records. An interrupted/unconfirmed operation is never replayed
+automatically. Receipts survive narration failure. Deleting source conversation
+messages prunes their task records; late saves cannot recreate a deleted task.
+Bulk history replacement clears the task journal. Backups currently contain task
+status references in chat, not the full journal; restored references cannot run.
 
-1. Add the capability-gated room tool to the existing tutor/suggestion schema and
-   normalizer, including provenance tied to the current real user request.
-2. Register the room task in `assistantTools`; remove the pre-planner from ordinary
-   Quest tutoring once the replacement is complete. Keep chat/Live aftersteps on
-   the same dispatcher, with one task per initiation ID.
-3. Add durable task/operation storage, visible chat progress/results, Stop and
-   recovery; bind account, conversation and native-session lifetime correctly.
-   Keep task receipts out of ordinary tutor history and use a distinct activity
-   token in the existing flag system that does not block chat input.
-4. Validate explicit requests versus quoted exercises, duplicate/replayed tool
-   blocks, stale suggestions, partial results, manual conflicts and interruption.
-   Exercise both BYOK and managed clients through the same task port.
-5. Test the actual web/native bridge and Quest speech flow before release. This
-   direction removes the need to activate the direct Live room-function transport;
-   ordinary Live billing and speech tests still apply.
+The existing header flag displays `agent:task`; it does not set `gen:response` or
+block chat input/passive speech. The book projects agent activity to the existing
+Thinking avatar state, below actual listening/speaking priority. Task status,
+Stop and on-demand saved receipt details are inside chat on the book pages.
+One room task runs at a time. New ordinary chat does not cancel it; source
+removal, conversation/access/native-session change and explicit Stop prevent
+further actions. Stop aborts owned pending native work; an in-flight model request
+can still finish/consume usage while its result is discarded. This is not yet a
+provider-level cancellation guarantee.
 
-The client-side draft of a separate Live room dispatcher was removed after this
-direction was clarified. No direct Live tool activation, backend deployment or
-Quest access occurred during the migration preparation.
+## Evidence and remaining release work
+
+At this checkpoint, 160 targeted tests plus 65 existing prompt tests pass.
+TypeScript, full source lint, Core/prompt ownership guards and the production web
+build pass. The browser probe also preserves an existing v7 history through the
+v8 upgrade, checks atomic competing claims and rejects writes after source deletion.
+The public chat entry point now exports the shared attachment renderers used by
+book surfaces; existing book rendering tests still pass.
+
+- Core tests exercise the original context/media at the provider boundary,
+  journal-before-dispatch ordering, duplicate claims, Stop/acknowledgement races,
+  stale sessions/access, failed durable writes and failed narration.
+- Browser composition tests exercise BYOK/managed routing with simulated provider
+  responses, preserve source provenance after later user messages, and ensure
+  full room snapshots never enter normal chat history.
+- `node scripts/probe-room-handoff.mjs` checks the actual task UI and IndexedDB in
+  an isolated browser: input while working, receipt display, reload without replay,
+  source-history pruning and Stop with uncertain outcome. Captures and receipt
+  are in `.quest-evidence/agent-handoff`. Native/provider ports are simulated;
+  this is not headset or real-provider acceptance.
+- Ordinary prompt baselines remain unchanged. The additional capability and
+  verification prompts are scoped to eligible connected-room turns.
+
+Remaining work:
+
+1. Capture Live/observer input and context with equally reliable source identity,
+   then feed its suggestion afterstep through this same dispatcher. Live does not
+   have this new handoff yet. Do not enable the optional direct Live tool protocol.
+2. Add conversation-driven task Stop, clarification, follow-up revision and
+   bounded continuation; current explicit task Stop is a chat control. Support
+   durable task-result reconciliation when changing/reloading conversations and
+   include appropriate task data in export/import without automatic resumption.
+3. Add provider-level cancellation and strengthen access-change fencing across
+   asynchronous credential refresh; test managed billing on interrupted runs.
+4. Extend the shared capability catalogue to the remaining avatar/import/physics
+   and animation-library actions; existing bounded room/rule coverage remains.
+5. Run real-provider request-versus-exercise acceptance, actual web/native bridge
+   and Quest speech/UI checks, alongside the broader v1 release requirements.
+   No new APK, deployment, provider spend or headset access is implied here.

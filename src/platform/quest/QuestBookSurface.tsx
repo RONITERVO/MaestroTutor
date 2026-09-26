@@ -2,14 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useMaestroStore } from '../../store';
-import MiniGameViewer from '../../features/chat/components/MiniGameViewer';
-import PdfViewer from '../../features/chat/components/PdfViewer';
-import TextFileViewer from '../../features/chat/components/TextFileViewer';
-import MiniGameErrorBoundary from '../../features/chat/components/MiniGameErrorBoundary';
+import { MiniGameViewer, PdfViewer, TextFileViewer, MiniGameErrorBoundary } from '../../features/chat';
 import { BookPresentationContext } from './BookPresentationContext';
 import { BOOK_LAYOUT_STORAGE_KEY, collectBookArtifacts, readBookLayout, resolveBookArtifact, resolveHistoryPage, type BookCommand, type BookLayout } from './bookModel';
 import { installBookBridge, type BookSnapshot } from './bookBridge';
-import { selectIsListening, selectIsSending, selectIsSpeaking } from '../../store/slices/uiSlice';
+import { selectIsAgentWorking, selectIsListening, selectIsSending, selectIsSpeaking } from '../../store/slices/uiSlice';
 import './questBook.css';
 import { LibraryBookClient } from './libraryBookBridge';
 import { RoomAgentClient } from './roomAgentBridge';
@@ -95,7 +92,7 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
       version: 1,
       audioPaused: !sessionActivity.isActive(),
       layout: latest.layout,
-      activity: selectIsSpeaking(state) ? 'speaking' : selectIsListening(state) ? 'listening' : selectIsSending(state) ? 'thinking' : 'idle',
+      activity: selectIsSpeaking(state) ? 'speaking' : selectIsListening(state) ? 'listening' : (selectIsSending(state) || selectIsAgentWorking(state)) ? 'thinking' : 'idle',
       bookmarkMessageId: latest.bookmarkMessageId,
       selectedArtifactId: latest.selected?.id ?? null,
       historyStart: latest.page.start, historyEnd: latest.page.end, historyTotal: latest.page.total,

@@ -29,6 +29,7 @@ export interface SuggestionCreatorToolRequest {
 }
 
 export type NormalizedSuggestionToolRequest =
+  | { tool: 'agent' }
   | { tool: 'image'; prompt: string }
   | { tool: 'audio-note'; text: string }
   | { tool: 'music'; prompt: string; durationSeconds?: number };
@@ -109,10 +110,12 @@ export const normalizeSuggestionCreatorArtifact = (artifact: unknown, options?: 
 export const normalizeSuggestionCreatorToolRequest = (
   toolRequest: unknown,
   fallbackText: string,
+  options: { allowAgent?: boolean } = {},
 ): NormalizedSuggestionToolRequest | null => {
   if (!toolRequest || typeof toolRequest !== 'object' || Array.isArray(toolRequest)) return null;
   const candidate = toolRequest as SuggestionCreatorToolRequest;
   const tool = typeof candidate.tool === 'string' ? candidate.tool.trim().toLowerCase() : '';
+  if (tool === 'agent') return options.allowAgent && Object.keys(candidate).every(key => key === 'tool') ? { tool: 'agent' } : null;
   if (tool !== 'image' && tool !== 'audio-note' && tool !== 'music') return null;
   const prompt = typeof candidate.prompt === 'string' ? candidate.prompt.trim() : '';
   const text = typeof candidate.text === 'string' ? candidate.text.trim() : '';
@@ -132,12 +135,29 @@ export const normalizeSuggestionCreatorToolRequest = (
 export const executeSuggestionToolRequest = async <T>(
   request: NormalizedSuggestionToolRequest,
   handlers: {
+    agent?: (request: Extract<NormalizedSuggestionToolRequest, { tool: 'agent' }>) => Promise<T>;
     image: (request: Extract<NormalizedSuggestionToolRequest, { tool: 'image' }>) => Promise<T>;
     audioNote: (request: Extract<NormalizedSuggestionToolRequest, { tool: 'audio-note' }>) => Promise<T>;
     music: (request: Extract<NormalizedSuggestionToolRequest, { tool: 'music' }>) => Promise<T>;
   },
 ): Promise<T> => {
+  if (request.tool === 'agent') {
+    if (!handlers.agent) throw new Error('Agent handoff is unavailable.');
+    return handlers.agent(request);
+  }
   if (request.tool === 'image') return handlers.image(request);
   if (request.tool === 'audio-note') return handlers.audioNote(request);
   return handlers.music(request);
 };
+
+/** Handoffs are proposals in the current tutor reply, never replayed compact history. */
+export function hasAgentHandoffProposal(raw: string): boolean {
+  const blocks = raw.matchAll(/(`{3,})maestro-tool\b([\s\S]*?)\1/gi);
+  for (const block of blocks) {
+    try {
+      const value = JSON.parse(block[2].trim());
+      if (value && !Array.isArray(value) && value.tool === 'agent' && Object.keys(value).length === 1) return true;
+    } catch { /* Not a valid tool proposal. */ }
+  }
+  return false;
+}
