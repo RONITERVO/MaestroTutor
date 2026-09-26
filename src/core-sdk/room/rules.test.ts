@@ -26,3 +26,8 @@ describe('shared behaviour contract',()=>{
   }
  });
 });
+
+
+it('rejects inherited property names as behaviour edit kinds without throwing',()=>{
+ for(const kind of ['__proto__','constructor','toString'])expect(validRuleRequest({action:'edit',revision:1,edits:[{kind,target:id}]})).toBe(false);
+});

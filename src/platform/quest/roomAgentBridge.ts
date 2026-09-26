@@ -18,7 +18,7 @@ export class RoomAgentClient {
   private publish(){this.view={state:this.value,pending:Boolean(this.pending)};for(const listener of this.listeners)listener();}
   private generation=0;
   private sequence=0;
-  private pending?:{request:{version:1|2;session:string;sequence:number;sceneRevision:number;commands:RoomCommand[];conditions:{id:string;revision:number}[]};resolve:(value:RoomAgentState)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>};
+  private pending?:{request:{version:1|2;session:string;sequence:number;sceneRevision:number;commands:RoomCommand[];conditions:{id:string;revision:number}[]};resolve:(value:RoomAgentState)=>void;reject:(error:Error)=>void;timer:ReturnType<typeof setTimeout>;detachAbort:()=>void};
   private lastSeen=0;
   receive=(input:unknown) => {
     if (!record(input) || input.version!==1 || !id(input.session) || !integer(input.revision,1) || !integer(input.sceneRevision,1) || !integer(input.ack) ||
@@ -36,7 +36,7 @@ export class RoomAgentClient {
     if(this.value?.session===next.session && next.revision<=this.value.revision) return false;
     if(this.value?.session!==next.session) {this.reset(false);this.sequence=next.ack;}
     this.value=next;this.lastSeen=Date.now();this.sequence=Math.max(this.sequence,next.ack);
-    if(this.pending && next.ack===this.pending.request.sequence) {const p=this.pending;this.pending=undefined;clearTimeout(p.timer);p.resolve(next);}
+    if(this.pending && next.ack===this.pending.request.sequence) {const p=this.pending;this.pending=undefined;clearTimeout(p.timer);p.detachAbort();p.resolve(next);}
     this.publish();return true;
   };
   cancel() {this.reset(true);}
@@ -44,7 +44,7 @@ export class RoomAgentClient {
     if(this.value){this.rejectedSessions.add(this.value.session);while(this.rejectedSessions.size>16)this.rejectedSessions.delete(this.rejectedSessions.values().next().value!);}
     if(rotate)this.clientId=crypto.randomUUID().replace(/-/g,'');
     this.generation++;
-    if(this.pending) {clearTimeout(this.pending.timer);this.pending.reject(new DOMException('Room request interrupted; inspect the room before retrying.','AbortError'));this.pending=undefined;}
+    if(this.pending) {clearTimeout(this.pending.timer);this.pending.detachAbort();this.pending.reject(new DOMException('Room request interrupted; inspect the room before retrying.','AbortError'));this.pending=undefined;}
     this.value=null;this.publish();
   }
   request(commands:RoomCommand[],expected?:RoomAgentState) {
@@ -56,7 +56,8 @@ export class RoomAgentClient {
     if(!this.value || Date.now()-this.lastSeen>3000 || this.pending) return null;
     const generation=this.generation,session=this.value.session;
     const valid=() => generation===this.generation && this.value?.session===session && Date.now()-this.lastSeen<=3000;
-    return {valid,state:()=>{if(!valid()) throw new Error('Room session unavailable');return this.value!;},execute:(commands,expectedRevision,expectedObjects)=>{
+    return {valid,state:()=>{if(!valid()) throw new Error('Room session unavailable');return this.value!;},execute:(commands,expectedRevision,expectedObjects,signal)=>{
+      if(signal?.aborted)return Promise.reject(new DOMException('Room request cancelled before dispatch.','AbortError'));
       if(!valid() || this.pending || this.sequence>=2147483647) return Promise.reject(new Error('Room session unavailable or busy'));
       parseRoomCommands({commands});
       const objects=expectedObjects??this.value!.objects;
@@ -65,7 +66,11 @@ export class RoomAgentClient {
       const conditions=objects.filter(object=>targets.has(object.id)).map(object=>({id:object.id,revision:object.objectRevision!}));
       const request={version:(modern?2:1) as 1|2,session,sequence:++this.sequence,sceneRevision:expectedRevision,conditions,commands:commands.map(command => command.action === 'create' ? {scale:1,color:{r:1,g:1,b:1,a:1},...command} : command)};
       return new Promise<RoomAgentState>((resolve,reject)=>{
-        const timer=setTimeout(()=>{this.cancel();},15000);this.pending={request,resolve,reject,timer};this.publish();
+        const abort=()=>{if(this.pending?.request===request)this.cancel();};
+        const timer=setTimeout(abort,15000);
+        this.pending={request,resolve,reject,timer,detachAbort:()=>signal?.removeEventListener('abort',abort)};
+        signal?.addEventListener('abort',abort,{once:true});
+        this.publish();
       });
     }};
   }

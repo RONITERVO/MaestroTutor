@@ -29,3 +29,35 @@ describe('native room agent client',()=>{
   await vi.advanceTimersByTimeAsync(15001);await rejected;expect(client.snapshot().request).toBeNull();expect(lease.valid()).toBe(false);
  });
 });
+
+
+describe('request-owned room cancellation',()=>{
+ it('does not enqueue or reset the room for an already aborted request',async()=>{
+  const client=new RoomAgentClient();client.receive(state());const before=client.snapshot();
+  const controller=new AbortController();controller.abort();
+  await expect(client.lease()!.execute(commands,4,[],controller.signal)).rejects.toMatchObject({name:'AbortError'});
+  expect(client.snapshot()).toEqual(before);expect(client.lease()).not.toBeNull();
+ });
+ it('cancels only its own pending request and rotates the native handshake',async()=>{
+  const client=new RoomAgentClient();client.receive(state());const before=client.snapshot().clientId;
+  const controller=new AbortController();const pending=client.lease()!.execute(commands,4,[],controller.signal);
+  const rejected=expect(pending).rejects.toMatchObject({name:'AbortError'});controller.abort();await rejected;
+  expect(client.snapshot().clientId).not.toBe(before);expect(client.snapshot().request).toBeNull();
+  expect(client.receive(state({revision:2,ack:1}))).toBe(false);
+ });
+ it('detaches a completed request so its late abort cannot cancel a manual edit',async()=>{
+  const client=new RoomAgentClient();client.receive(state());const controller=new AbortController();
+  const first=client.lease()!.execute(commands,4,[],controller.signal);
+  client.receive(state({revision:2,ack:1}));await first;
+  const manual=client.request(commands);const pending=client.snapshot();controller.abort();
+  expect(client.snapshot()).toEqual(pending);
+  client.receive(state({revision:3,ack:2}));expect((await manual).ack).toBe(2);
+ });
+ it('does not let an old signal cancel work in a replacement native session',async()=>{
+  const client=new RoomAgentClient();client.receive(state());const controller=new AbortController();
+  const old=client.lease()!.execute(commands,4,[],controller.signal);const rejected=expect(old).rejects.toThrow();
+  client.receive(state({session:'b'.repeat(32)}));await rejected;
+  const next=client.request(commands);const pending=client.snapshot();controller.abort();expect(client.snapshot()).toEqual(pending);
+  client.receive(state({session:'b'.repeat(32),revision:2,ack:1}));await next;
+ });
+});

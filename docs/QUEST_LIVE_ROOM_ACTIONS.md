@@ -1,5 +1,11 @@
 # Live room action integration
 
+**Superseded v1 direction (2026-09-26):** room tasks are launched by the original
+Maestro chat/suggestion tool coordinator. See [QUEST_UNIFIED_AGENT.md](QUEST_UNIFIED_AGENT.md).
+Direct Live function calling remains disabled experimental infrastructure, not a
+required Quest v1 path. The remaining steps below apply only if that optional
+transport is revisited; do not enable it as part of the current unified-task work.
+
 Status (2026-09-26): transport foundation implemented and locally tested. **Live
 voice cannot perform room actions in the shipped app yet.** The new managed path
 is disabled by default (`MANAGED_LIVE_ROOM_TOOLS_ENABLED=false`). No backend

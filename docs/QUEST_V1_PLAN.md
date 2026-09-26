@@ -78,6 +78,12 @@ through the managed gateway. The issuer switch defaults off; client/native voice
 execution and real-provider continuation accounting are still unverified. See
 QUEST_LIVE_ROOM_ACTIONS.md. No new APK, deployment or headset test is implied.
 
+Unified-agent direction (2026-09-26): the original app owns Gemini and starts room
+tasks through its chat/suggestion tool mechanism. Direct Live room function calling
+is optional and remains disabled. The room task runner is separated from narration,
+and request-owned native cancellation is implemented; common dispatcher wiring,
+durable chat receipts and acceptance remain open. See QUEST_UNIFIED_AGENT.md.
+
 ## Accepted product scope
 
 - Native Unity mixed-reality app for a long-term Meta Quest Store release.

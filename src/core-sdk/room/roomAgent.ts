@@ -26,7 +26,7 @@ export interface RoomAgentState {
 export interface RoomAgentLease {
   state(): RoomAgentState;
   valid(): boolean;
-  execute(commands: RoomCommand[], expectedRevision: number, expectedObjects?: RoomAgentState['objects']): Promise<RoomAgentState>;
+  execute(commands: RoomCommand[], expectedRevision: number, expectedObjects?: RoomAgentState['objects'], signal?: AbortSignal): Promise<RoomAgentState>;
 }
 const record = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Number(v[k]) >= 0 && Number(v[k]) <= 1) && v.a === 1;
@@ -56,24 +56,51 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
   return input.commands as unknown as RoomCommand[];
 }
 
-/** Same provider/access route as tutoring. Native execution, never model text, supplies receipts. */
-export async function runRoomTutorTurn(input: TutorTextTurnInput, options: TutorTextTurnOptions, lease: RoomAgentLease,
-  onUsage: (response: Awaited<ReturnType<typeof generateGeminiResponse>>) => void, isCurrent: () => boolean = () => true) {
-  const receipts: RoomAgentState[] = [];
-  const active = () => { if (!isCurrent() || !lease.valid()) throw new DOMException('The room request was interrupted. No further actions will run.', 'AbortError'); };
-  for (let step = 0; step < 3; step++) {
+export interface RoomTaskControl {
+  isCurrent?:()=>boolean;
+  signal?:AbortSignal;
+  /** Called with each actual native acknowledgement, before the next model call. */
+  onReceipt?:(receipt:RoomAgentState)=>void|Promise<void>;
+}
+export interface RoomTaskResult {receipts:RoomAgentState[];scene:RoomAgentState;budgetExhausted:boolean}
+const copy=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
+
+/** A bounded tool task owned by the original Maestro app. The caller supplies
+ * its existing Gemini access route and conversation lifetime; Unity never owns
+ * a provider client. The result can be presented even if narration later fails. */
+export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'prompt'|'history'|'timeoutMs'>,
+  options:TutorTextTurnOptions,lease:RoomAgentLease,
+  onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,control:RoomTaskControl={}
+):Promise<RoomTaskResult> {
+  const receipts:RoomAgentState[]=[];
+  const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
+  for(let step=0;step<3;step++) {
     active();
-    const scene = lease.state();
-    const response = await generateGeminiResponse(input.model, buildRoomAgentPrompt(input.prompt,scene,receipts), input.history, {
-      ...pickGeminiClientSource(options), systemInstruction: ROOM_AGENT_INSTRUCTION,
-      configOverrides: { responseMimeType:'application/json', responseJsonSchema:ROOM_AGENT_SCHEMA },
-      timeoutMs:input.timeoutMs, lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
+    const scene=copy(lease.state());
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts),input.history,{
+      ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION,
+      configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_SCHEMA},
+      timeoutMs:input.timeoutMs,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });
-    onUsage(response); active();
-    const commands = parseRoomCommands(JSON.parse(response.text || '{}'));
-    if (!commands.length) break;
-    const receipt = await lease.execute(commands,scene.sceneRevision,scene.objects); receipts.push(receipt); active();
+    onUsage(response);active();
+    const commands=parseRoomCommands(JSON.parse(response.text||'{}'));
+    if(!commands.length)return {receipts,scene:copy(lease.state()),budgetExhausted:false};
+    const receipt=await (control.signal
+      ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
+      : lease.execute(commands,scene.sceneRevision,scene.objects));
+    receipts.push(copy(receipt));
+    // Cancellation may race an acknowledgement. Preserve that evidence before
+    // checking the turn fence; never relabel a completed edit as rolled back.
+    await control.onReceipt?.(copy(receipt));
+    active();
   }
-  active();
-  return runTutorTextTurn({...input,systemInstruction:input.systemInstruction + '\n\n' + buildRoomResultInstruction(receipts,lease.state())},options);
+  active();return {receipts,scene:copy(lease.state()),budgetExhausted:true};
+}
+
+/** Compatibility wrapper until room tasks enter the common tool dispatcher. */
+export async function runRoomTutorTurn(input:TutorTextTurnInput,options:TutorTextTurnOptions,lease:RoomAgentLease,
+  onUsage:(response:Awaited<ReturnType<typeof generateGeminiResponse>>)=>void,isCurrent:()=>boolean=()=>true) {
+  const task=await runRoomActionTask(input,options,lease,onUsage,{isCurrent});
+  if(!isCurrent()||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');
+  return runTutorTextTurn({...input,systemInstruction:input.systemInstruction+'\n\n'+buildRoomResultInstruction(task.receipts,task.scene)},options);
 }

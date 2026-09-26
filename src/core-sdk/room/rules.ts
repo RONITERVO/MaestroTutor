@@ -44,7 +44,7 @@ export function validRuleRequest(v:unknown):v is RuleRequest {
  return v.edits.every(e=>{
   if(!record(e))return false;
   const fields:Record<string,string[]>={save:['sequence','reference'],delete:['target'],bind:['binding'],unbind:['target'],button:['target','mount'],unbutton:['target']};
-  if(typeof e.kind!=='string'||!fields[e.kind])return false;const kind=e.kind;
+  if(typeof e.kind!=='string'||!Object.prototype.hasOwnProperty.call(fields,e.kind))return false;const kind=e.kind;
   if(Object.keys(e).some(k=>k!=='kind'&&!fields[kind].includes(k)))return false;
   if(e.kind==='save')return validSequence(e.sequence,true)&&(e.sequence.id!==''||ref(e.reference));
   if(e.kind==='bind')return validBinding(e.binding,true);

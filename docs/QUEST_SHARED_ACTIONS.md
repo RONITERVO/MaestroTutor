@@ -155,6 +155,13 @@ managed usage evidence are implemented. The gateway issuer switch is off by
 default; Live controller/native execution and provider accounting acceptance remain
 open. This does not add user-visible Live action parity yet.
 
+The user's later direction is authoritative: the original Maestro app owns all
+Gemini calls. Chat/suggestion aftersteps initiate the room task through the existing
+tool coordinator; Live is an input/conversation interface. The room runner is now
+separate from final tutor narration, with per-request bridge cancellation. See
+QUEST_UNIFIED_AGENT.md. The direct Live function protocol is optional and stays off.
+The existing automatic pre-planner must be removed when the common dispatcher is wired.
+
 Incremental migration preserves existing tested controls:
 
 1. Define/version the capability and action catalogue around the working room
@@ -168,8 +175,8 @@ Incremental migration preserves existing tested controls:
    triggers and cancellation semantics common. Stable step IDs, bounded agent edits
    and initial manual blocks are implemented in 7EC419D6.
 3. Extend coverage to animation library/import, avatar assignment/state profiles,
-   controller bindings and room physics/scan. Connect recorded speech and Live voice
-   to the same orchestration. Load only relevant tool groups/context per turn to
+   controller bindings and room physics/scan. Connect chat and Live suggestion
+   aftersteps to the same app-owned room task orchestration. Load only relevant tool groups/context per turn to
    limit planning cost as the catalogue grows.
 4. Add the developer client and Unity input/render harness, then a vertical scenario:
    "make a small robot; wave when Maestro speaks; let this controller button play
