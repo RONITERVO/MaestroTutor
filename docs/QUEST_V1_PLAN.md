@@ -273,3 +273,14 @@ consuming playback time; interruption prevents late playback. Room/rule v2
 migration retains v1 originals and old exact-model clip references. Broader role profiles, blending, explicit
 travel/contact policies, deletion/relinking and Quest library profiling remain.
 See QUEST_ANIMATION_LIBRARY.md and QUEST_DEVICE_QA.md for verification evidence.
+
+### Independent movement controls (PC development)
+
+The physical controller tray now provides separate user/avatar stick bindings,
+explicit enablement, dead-zone and user-speed settings, and persistent X/A/stick
+click assignment to visual-rule sequences or snap turns. Maestro uses its shared
+navigation and gait path. User movement is confined to an explicit virtual view;
+MR return restores tracking origin and pauses physics for alignment review.
+See QUEST_CONTROLLER_MOVEMENT.md for boundaries and remaining headset checks.
+General core-button remapping, alternate locomotion accessibility and sustained
+comfort/performance acceptance remain open. The device is still on charging hold.

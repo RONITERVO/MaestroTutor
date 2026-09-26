@@ -30,7 +30,7 @@ namespace Maestro.Quest.Book
 
         sealed class HandInput : IDisposable
         {
-            public readonly InputAction Position, Rotation, Tracked, Press, Grip, Restore;
+            public readonly InputAction Position, Rotation, Tracked, Press, Grip, Restore, Stick, Primary, StickClick;
             public readonly GestureOwnership Trigger = new(), Squeeze = new();
             public readonly GameObject Root, Beam, Tip, Pusher;
             public readonly XRRayInteractor Interactor;
@@ -46,6 +46,9 @@ namespace Maestro.Quest.Book
                 Press = new InputAction(hand + " page", InputActionType.Button, device + "triggerPressed");
                 Grip = new InputAction(hand + " hold", InputActionType.Button, device + "gripPressed");
                 Restore = new InputAction(hand + " restore room", InputActionType.Button, device + "secondaryButton");
+                Stick = new InputAction(hand + " movement", InputActionType.Value, device + "primary2DAxis", expectedControlType: "Vector2");
+                Primary = new InputAction(hand + " action", InputActionType.Button, device + "primaryButton");
+                StickClick = new InputAction(hand + " stick action", InputActionType.Button, device + "{Primary2DAxisClick}");
                 Root = new GameObject(hand + " interaction"); Root.SetActive(false); Root.transform.SetParent(parent, false);
                 Root.AddComponent<ControllerIdentity>().PointerId = hand == "LeftHand" ? 0 : 1;
                 Select = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue, manualFramePerformed = -1, manualFrameCompleted = -1 };
@@ -66,7 +69,7 @@ namespace Maestro.Quest.Book
                 Beam = Visual(PrimitiveType.Cylinder, "Physical pointer", parent, material);
                 Tip = Visual(PrimitiveType.Sphere, "Pointer tip", parent, material);
                 Tip.transform.localScale = Vector3.one * .005f;
-                Position.Enable(); Rotation.Enable(); Tracked.Enable(); Press.Enable(); Grip.Enable(); Restore.Enable();
+                Position.Enable(); Rotation.Enable(); Tracked.Enable(); Press.Enable(); Grip.Enable(); Restore.Enable(); Stick.Enable(); Primary.Enable(); StickClick.Enable();
             }
 
             static GameObject Visual(PrimitiveType primitive, string label, Transform parent, Material material)
@@ -94,7 +97,7 @@ namespace Maestro.Quest.Book
 
             public void Dispose()
             {
-                Cancel(); Position.Dispose(); Rotation.Dispose(); Tracked.Dispose(); Press.Dispose(); Grip.Dispose(); Restore.Dispose();
+                Cancel(); Position.Dispose(); Rotation.Dispose(); Tracked.Dispose(); Press.Dispose(); Grip.Dispose(); Restore.Dispose(); Stick.Dispose(); Primary.Dispose(); StickClick.Dispose();
                 ArtResources.Release(Root); ArtResources.Release(Beam); ArtResources.Release(Tip); ArtResources.Release(Pusher);
             }
         }
@@ -162,6 +165,14 @@ namespace Maestro.Quest.Book
             if (!usingHand && input.Restore.WasPressedThisFrame()) RestoreRoom();
         }
 
+        public ControllerFrame ReadMovement() => hands == null || paused || !focused ? default : new ControllerFrame {
+            leftTracked=ControllerAnchor(0), rightTracked=ControllerAnchor(1),
+            leftStick=hands[0].Stick.ReadValue<Vector2>(), rightStick=hands[1].Stick.ReadValue<Vector2>(),
+            x=hands[0].Primary.IsPressed(), a=hands[1].Primary.IsPressed(), leftClick=hands[0].StickClick.IsPressed(), rightClick=hands[1].StickClick.IsPressed(),
+            manipulating=hands[0].Select.manualPerformed || hands[1].Select.manualPerformed || hands[0].DrawingHeld || hands[1].DrawingHeld,
+            busy=hands[0].Select.manualPerformed || hands[1].Select.manualPerformed || hands[0].PageHeld || hands[1].PageHeld || hands[0].DrawingHeld || hands[1].DrawingHeld
+        };
+        public void CancelAll() => CancelInputs();
         void RestoreRoom() { CancelInputs(); Room?.RestoreInFrontOfViewer(); }
 
         static void DrawPointer(HandInput input, Ray ray, bool visible, Vector3 point)

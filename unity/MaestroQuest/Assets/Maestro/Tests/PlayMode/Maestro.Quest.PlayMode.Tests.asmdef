@@ -6,7 +6,9 @@
     "Unity.XR.Interaction.Toolkit",
     "Maestro.Quest.TestFixtures",
     "UniGLTF",
-    "UniGLTF.Utils"
+    "UniGLTF.Utils",
+    "Unity.InputSystem",
+    "Unity.XR.OpenXR"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"

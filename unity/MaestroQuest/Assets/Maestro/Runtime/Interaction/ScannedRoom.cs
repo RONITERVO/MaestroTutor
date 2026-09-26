@@ -24,7 +24,17 @@ namespace Maestro.Quest.Interaction
         RoomPhysicsWorld world;
         Material outline;
         InputAction tracked;
-        bool busy, showing;
+        bool busy, showing, virtualView, mrukWasEnabled;
+        public bool Busy => busy;
+        public void SetVirtualView(bool value)
+        {
+            if (virtualView == value) return; virtualView=value;
+            // MRUK writes TrackingSpace every Update. Changing EnableWorldLock would
+            // reset that pose; freeze the updater to retain entry-time alignment.
+            if (mruk) { if (value) mrukWasEnabled=mruk.enabled; mruk.enabled=value ? false : mrukWasEnabled; }
+            if (surfaces) surfaces.HideMesh=!(value || showing);
+            if (!value) { world.SetSurfaces(false,"Check room alignment after leaving virtual view"); nextCheck=0; }
+        }
         float nextCheck;
         public void Initialize(RoomPhysicsWorld physics)
         {
@@ -53,6 +63,7 @@ namespace Maestro.Quest.Interaction
         public void Scan() => BeginLoad(true);
         public async Task<bool> PreparePlacement()
         {
+            if (virtualView) return false;
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (!await ScenePermission() || !this || !EnvironmentRaycastManager.IsSupported) return false;
             if (!liveSurfaces) liveSurfaces = gameObject.AddComponent<EnvironmentRaycastManager>();
@@ -63,6 +74,7 @@ namespace Maestro.Quest.Interaction
         }
         async void BeginLoad(bool rescan)
         {
+            if (virtualView) { world.SetSurfaces(world.SurfacesReady,"Return to mixed reality before loading or scanning the room"); return; }
             if (busy) return;
             world.PausePhysics(); world.SetSurfaces(false,"Loading room surfaces…"); busy = true;
             try
@@ -107,7 +119,7 @@ namespace Maestro.Quest.Interaction
         }
         void ValidateRoom()
         {
-            if (!mruk || !surfaces) return;
+            if (virtualView || !mruk || !surfaces) return;
             var room = mruk.GetCurrentRoom();
             bool ready = room && room.FloorAnchors.Count > 0 && room.WallAnchors.Count > 0 && mruk.IsWorldLockActive &&
                 room.FloorAnchors.All(anchor => surfaces.EffectMeshObjects.TryGetValue(anchor,out var floor) && floor.collider && floor.collider.enabled) &&
@@ -120,12 +132,12 @@ namespace Maestro.Quest.Interaction
         }
         public void ToggleSurfaces()
         {
-            showing = !showing; if (surfaces) surfaces.HideMesh = !showing;
+            showing = !showing; if (surfaces) surfaces.HideMesh = !(showing || virtualView);
         }
         public bool TrySurface(Ray ray, out Vector3 point, out Vector3 normal)
         {
             point = normal = default;
-            if (!liveSurfaces || !EnvironmentRaycastManager.IsSupported || !liveSurfaces.Raycast(ray,out var hit,4)) return false;
+            if (virtualView || !liveSurfaces || !EnvironmentRaycastManager.IsSupported || !liveSurfaces.Raycast(ray,out var hit,4)) return false;
             if (!float.IsFinite(hit.point.sqrMagnitude) || hit.normal.sqrMagnitude < .9f || hit.normalConfidence < .5f) return false;
             point = hit.point; normal = hit.normal.normalized; return true;
         }

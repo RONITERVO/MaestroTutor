@@ -8,7 +8,7 @@ using UnityEngine.AI;
 
 namespace Maestro.Quest.Avatar
 {
-    public enum AvatarSpatialMode { Look, Follow }
+    public enum AvatarSpatialMode { Look, Follow, Manual }
 
     /// <summary>Explicitly owned movement; editing, grips, recovery and interruption take priority.</summary>
     [DefaultExecutionOrder(125)]
@@ -22,6 +22,10 @@ namespace Maestro.Quest.Avatar
         RoomNavigation navigation;
         Func<bool> tracked;
         string owner;
+        Vector3 manualDirection;
+        float manualAt;
+        public bool OwnedBy(string identity) => owner == identity;
+        public void ManualDirection(string identity,Vector3 direction) { if (owner == identity && mode == AvatarSpatialMode.Manual && float.IsFinite(direction.sqrMagnitude)) { manualDirection=Vector3.ClampMagnitude(Vector3.ProjectOnPlane(direction,Vector3.up),1); manualAt=Time.unscaledTime; } }
         AvatarSpatialMode mode;
         bool paused, focused = true;
         NavMeshPath path;
@@ -51,22 +55,22 @@ namespace Maestro.Quest.Avatar
             if (paused || !focused || !room || !room.Viewer || !tracked()) error = "Head tracking is unavailable; try again when tracking returns";
             else if (!avatar || !avatar.PoseRig || avatar.ModelBusy) error = "Wait for Maestro to finish loading";
             else if (item.Grab.isSelected || avatar.PoseRig.IsHolding || animations.ControlsTarget("maestro")) error = "Release Maestro and stop posing or recording first";
-            else if (value == AvatarSpatialMode.Follow && (!editor.PhysicsWorld || !editor.PhysicsWorld.Running)) error = "Load the room, check its alignment, then Start physics before following";
+            else if (value != AvatarSpatialMode.Look && (!editor.PhysicsWorld || !editor.PhysicsWorld.Running)) error = "Load the room, check its alignment, then Start physics before walking";
             return error == null;
         }
         public bool Begin(string identity, AvatarSpatialMode value, out string error)
         {
             if (string.IsNullOrEmpty(identity)) { error = "Movement needs an action owner"; return false; }
             if (!CanBegin(value,out error)) { Say(error); return false; }
-            if (value == AvatarSpatialMode.Follow)
+            if (value != AvatarSpatialMode.Look)
             {
                 float scale = transform.lossyScale.y;
                 if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error)) { Say(error ?? "Room navigation is unavailable"); return false; }
-                if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near the scanned floor, then try Follow"; Say(error); return false; }
+                if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near the scanned floor, then try walking"; Say(error); return false; }
             }
-            Stop(); owner = identity; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
+            Stop(); manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
             avatar.SetEditing(true); avatar.SpatialWalk(0);
-            Say(value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
+            Say(value == AvatarSpatialMode.Manual ? "Maestro stick active — center it to stop" : value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
         }
         public void End(string identity) { if (owner == identity) Stop(); }
         public void Stop()
@@ -95,9 +99,10 @@ namespace Maestro.Quest.Avatar
         {
             if (!Active) return;
             if (paused || !focused || !tracked() || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Stop(); return; }
-            if (mode != AvatarSpatialMode.Follow) return;
-            if (!navigation || !navigation.Ready) { Stop(); Say("Following stopped — check room alignment and Start physics again"); return; }
+            if (mode == AvatarSpatialMode.Look) return;
+            if (!navigation || !navigation.Ready) { Stop(); Say("Walking stopped — check room alignment and Start physics again"); return; }
             float dt = Mathf.Min(Time.deltaTime,.05f);
+            if (mode == AvatarSpatialMode.Manual) { ManualStep(dt); return; }
             var delta = Vector3.ProjectOnPlane(room.Viewer.position-transform.position,Vector3.up);
             float moved = 0;
             if (delta.magnitude > Distance + .05f && dt > 0)
@@ -132,6 +137,21 @@ namespace Maestro.Quest.Avatar
             avatar.SpatialWalk(dt > 0 ? moved/dt : 0);
             if (Time.unscaledTime >= nextRemember) { nextRemember = Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
         }
+        void ManualStep(float dt)
+        {
+            if (Time.unscaledTime-manualAt > .15f) { Stop(); return; }
+            var next=transform.position+manualDirection*Speed*dt;
+            string error="Scanned floor has no space for this step"; float moved=0;
+            if (manualDirection.sqrMagnitude > 0 && navigation.DirectStep(transform.position,next,out var floor) && ClearStep(floor,out error))
+            {
+                moved=Vector3.Distance(transform.position,floor); transform.position=floor;
+                transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(manualDirection),180*dt);
+                Say("Maestro stick active — center it to stop");
+            }
+            else if (manualDirection.sqrMagnitude > 0) Say(error);
+            avatar.SpatialWalk(dt > 0 ? moved/dt : 0);
+            if (Time.unscaledTime >= nextRemember) { nextRemember=Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
+        }
         bool ClearStep(Vector3 next, out string blocked)
         {
             blocked = "Path crowded — try Size or reposition Maestro";
@@ -156,7 +176,7 @@ namespace Maestro.Quest.Avatar
         }
         void LateUpdate()
         {
-            if (!Active || !avatar || !room.Viewer) return;
+            if (!Active || mode == AvatarSpatialMode.Manual || !avatar || !room.Viewer) return;
             var head = avatar.PoseRig.CanonicalBone(PoseJoint.Head);
             var target = transform.InverseTransformDirection(room.Viewer.position-head.position);
             float targetYaw = Mathf.Clamp(Mathf.Atan2(target.x,target.z)*Mathf.Rad2Deg,-60,60);

@@ -167,3 +167,9 @@ the mounted conversation and draft. Playback requires an explicit action and a
 compatible loaded rig. The native controller validates each request and prevents
 stale polling or resume from replaying it. See `docs/QUEST_ANIMATION_LIBRARY.md`
 for transport limits, visual verification and outstanding headset acceptance.
+
+Controller walking and user locomotion are described in
+[`QUEST_CONTROLLER_MOVEMENT.md`](../docs/QUEST_CONTROLLER_MOVEMENT.md). The
+physical control tray owns separate bindings and user-rule button assignments.
+Both movement modes default off; user movement needs explicit virtual view.
+Device alignment, comfort and actual controller acceptance remain required.

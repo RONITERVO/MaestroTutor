@@ -42,8 +42,9 @@ is not persisted or started by loading a room.
 Still required: Quest checks with the included and custom avatar, irregular
 floor/wall scans, scale extremes, moving obstacles, controller/hand grip
 interruption, actual visual rules, prolonged use and comfortable tray placement.
-Independent editable thumbstick bindings for avatar movement and opt-in user
-locomotion remain accepted v1 work; this tray does not implement them.
+Independent editable thumbstick bindings and opt-in virtual user locomotion are
+now implemented on a separate physical control tray. See
+QUEST_CONTROLLER_MOVEMENT.md for behaviour, verification and remaining Quest QA.
 
 The 2026-09-26 verification passed 33 EditMode and 32 PlayMode tests (the latter
 include two optional local-model checks). Movement-specific checks exercise an
@@ -92,3 +93,7 @@ selection. Late loading cannot start playback after Stop, posing or focus loss.
 Imported horizontal travel remains anchored; room navigation owns translation.
 Room v2 migration retains old embedded walk selections and leaves v1 files
 untouched. Device gait acceptance is still required after charging.
+
+Direct controller walking now shares this navigation and gait path. It requires
+its own explicit enablement and neutral stick; releasing the stick stops and
+saves placement. Follow and direct control do not run simultaneously.

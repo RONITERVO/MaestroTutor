@@ -23,7 +23,7 @@ namespace Maestro.Quest.Interaction
         public bool Prepare(float bodyRadius, float bodyHeight, out string error)
         {
             error = null;
-            if (!world || !world.Running || !world.SurfacesReady) { error = "Load the room, check its alignment, then Start physics before following"; return false; }
+            if (!world || !world.Running || !world.SurfacesReady) { error = "Load the room, check its alignment, then Start physics before walking"; return false; }
             if (Ready && Mathf.Abs(radius-bodyRadius) < .005f && Mathf.Abs(height-bodyHeight) < .01f) return true;
             Clear();
             var geometry = FindObjectsByType<Collider>(FindObjectsSortMode.None).Where(c => c.enabled && !c.isTrigger && c.gameObject.layer == RoomPhysicsLayers.Scanned).ToArray();
@@ -48,6 +48,12 @@ namespace Maestro.Quest.Interaction
             floor = default;
             if (!Ready || !NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || world.Contains != null && !world.Contains(hit.position + Vector3.up*.1f)) return false;
             floor = hit.position; return true;
+        }
+        public bool DirectStep(Vector3 from,Vector3 to,out Vector3 floor)
+        {
+            floor=default;
+            return Sample(from,.1f,out var start) && Sample(to,.08f,out floor) &&
+                Vector3.Distance(new Vector3(to.x,floor.y,to.z),floor) < .025f && !NavMesh.Raycast(start,floor,out _,Filter);
         }
         public bool Path(Vector3 from, Vector3 to, NavMeshPath path) => Ready &&
             Sample(from,.25f,out var start) && Sample(to,.5f,out var end) &&

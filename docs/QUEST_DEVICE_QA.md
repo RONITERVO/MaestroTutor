@@ -520,3 +520,63 @@ mounts are accepted upcoming scope and are not available in this build.
 Initial device failures were corrected: use the XR Hands subsystem feature ID
 instead of Microsoft's similarly named profile; enable OpenXR composition layers;
 enable Android hardware View rendering and offscreen WebView tile rasterization.
+
+
+## Independent controller movement — PC checkpoint, 2026-09-26
+
+No device access while the user sleeps and Quest charges. The installed headset
+build remains 08F340EF. Independent avatar/user stick controls, persistent
+bindings and controller rule actions now have desktop verification. A separate
+physical tray preserves the full book pages. See QUEST_CONTROLLER_MOVEMENT.md.
+
+The current verification passed 44 EditMode and 48 required PlayMode checks,
+including an actual OpenXR Touch-layout input test, both movement targets,
+collision stops, reverse direction, neutral/press gates, snap turns, restoring
+the original XR origin, pause/tracking interruption, saved control settings
+and stable rule references. Three private-file tests were explicitly skipped.
+This is not hardware evidence of passthrough transitions or MRUK alignment.
+
+After the user returns and reconnects, verify this sequence on Quest 3:
+
+1. Confirm existing trigger/grip, B/Y and palm Recall still work. Movement starts
+   off. Enable Maestro stick, centre the right stick, then walk with it; check
+   both visible feet and the selected saved gait. Check scanned walls and reverse
+   away from a blocked direction. Keep avatar size suitable for the user's room.
+2. Swap bindings and test the other stick. Disable/re-enable while a stick is
+   held: no movement until it is centred. Verify hand tracking cannot act as
+   stick input and returning controllers cannot replay a held input.
+3. Choose Virtual / MR while stationary. Real passthrough must disappear, the
+   virtual floor and any loaded scan surfaces must appear, and enabling Your
+   movement must move only the viewpoint. Check body collision, 30-degree X/A
+   turns, current controller alignment and sustained comfort. Movement must stop
+   before manipulating objects and remain neutral-gated afterward.
+4. Use B/Y, palm Recall and Stop / MR independently. Each must restore the real
+   room alignment and turn movement off. Check scan alignment before restarting
+   physics. Repeat after system UI interruption, removing the headset and
+   temporary tracking loss. No virtual camera offset may persist after restart.
+5. Select an existing visual action, assign a stick click or A/X through Use
+   action, and verify recorded/imported animations, hold-vs-press behaviour,
+   deleted action feedback and persistence. Mounted 3D action buttons and tutor
+   state triggers must keep their existing scheduler semantics.
+
+Teleportation, general trigger/grip remapping, broader movement accessibility,
+per-limb contact and comfortable long-session acceptance remain open. Do not
+infer these from the desktop capsule/navigation checks.
+
+Packaged checkpoint: **7CCC2880**, development-signed and **not installed**.
+
+- APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-7CCC2880.apk`
+- SHA256: `7CCC288014445B83A90CA61A9D2E0D81C2CA5065F95B34E72E2E126B34939367`
+- Size: 135,281,085 bytes. Full build exited 0; zero build errors, two warnings.
+- APK v2 signature, required manifest entries and ARM64 architecture verified.
+- 44 EditMode + 48 required PlayMode + 16 native Android checks passed (108).
+  Shared web build and native lint passed. No new web source changed in this checkpoint.
+- The real Touch-layout test includes trigger press/release of the view switch;
+  settings tests also verify repeated edits refresh physical markings.
+- All 99 C# source files matched the build mirror. Hashes, test XML, native test
+  reports, build logs/report and inspected tray PNG are archived under
+  `.quest-evidence/controller-movement/verified-7CCC2880`.
+
+Earlier development builds during this work were superseded before checkpointing.
+No ADB device query, install or headset launch occurred. Hardware acceptance,
+production signing, application identity and the complete release gates remain.
