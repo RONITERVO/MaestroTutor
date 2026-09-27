@@ -151,6 +151,7 @@ namespace Maestro.Quest.Creation
             return true;
         }
         public bool MoveObject(string id,Vector3 position,out string error)=>EditObject(id,false,data=>data.position=position,"Object moved",true,out error);
+        public bool RotateObject(string id,Quaternion rotation,out string error)=>EditObject(id,false,data=>data.rotation=rotation,"Object rotated",true,out error);
         public bool ResizeObject(string id,float scale,out string error)=>EditObject(id,false,data=>data.scale=scale,"Object resized",true,out error);
         public bool PaintObject(string id,Color color,out string error)=>EditObject(id,true,data=>data.color=color,"Object painted",false,out error);
         public bool DeleteObject(string id,out string error) {

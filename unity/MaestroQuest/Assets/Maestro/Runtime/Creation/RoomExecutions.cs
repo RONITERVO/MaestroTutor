@@ -57,7 +57,7 @@ namespace Maestro.Quest.Creation
             if(operation=="recover"){bool recovered=runtime.Scheduler.RecoverInvocations((string)request["recoveryId"],out error);if(recovered)selectedId=null;return recovered;}
             if(operation=="start") {
                 var call=(JObject)request["call"];
-                if(!BehaviourCatalog.TryInvocation((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out error)||!runtime.CanRun(step,out error))return false;
+                if(!BehaviourCatalog.TryCall((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out error)||!runtime.CanRun(step,out error))return false;
                 bool accepted=runtime.Scheduler.Invoke(call,Time.unscaledTime,out var id,out error,(string)request["runId"]);
                 if(id!=null) {selectedId=id;error=(string)runtime.Scheduler.Invocation(id)["status"];}
                 return accepted;

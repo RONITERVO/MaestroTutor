@@ -16,8 +16,8 @@ namespace Maestro.Quest.Tests
         sealed class Actions:IRuleActions,IRuleReadiness
         {
             public int Starts,Stops;public RuleActionState Phase=RuleActionState.Ready;
-            public bool CanRun(RuleStep step,out string error){error=null;return true;}
-            public bool Start(string id,RuleStep step,out float seconds,out string error){Starts++;seconds=1;error=null;return true;}
+            public bool CanRun(CapabilityCall step,out string error){error=null;return true;}
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error){ invocation.TryStep(out var step,out _);Starts++;seconds=1;error=null;return true;}
             public void Stop(string id,bool placement){Stops++;}
             public RuleActionState State(string id,out string error){error=null;return Phase;}
         }

@@ -22,20 +22,38 @@ namespace Maestro.Quest.Tests
             // Compare the serialized contract: a nullable C# string becomes JSON null.
             var actual=JObject.Parse(BehaviourCatalog.Manifest().ToString());
             Assert.That(JToken.DeepEquals(actual,expected),Is.True,"Regenerate the reviewed manifest from native registrations.");
-            Assert.That(BehaviourCatalog.Actions.All(x=>x.Duration==(RuleDocument.IsInstant(x.Kind)?"instant":"timed")),Is.True);
+            Assert.That(BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue).All(x=>x.Duration==(RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(x.Id).Value)?"instant":"timed")),Is.True);
             Assert.That(BehaviourCatalog.Action("avatar.gesture.upperBody").Channels,Is.EqualTo(new[] {"upperBody"}));
             Assert.That(BehaviourCatalog.Action("avatar.follow.user").Channels,Is.EqualTo(new[] {"locomotion","gaze"}));
             Assert.That(BehaviourCatalog.Action("animation.library.play").Channels,Is.EqualTo(new[] {"wholeTarget"}));
         }
         [Test] public void EveryExistingAdapterHasExactlyOneStableRegistration()
         {
-            Assert.That(BehaviourCatalog.Actions.Select(x=>x.Kind),Is.EquivalentTo(Enum.GetValues(typeof(RuleActionKind))));
+            Assert.That(BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue).Select(x=>LegacyCapabilityAdapters.Kind(x.Id).Value),Is.EquivalentTo(Enum.GetValues(typeof(RuleActionKind))));
             Assert.That(BehaviourCatalog.Events.Select(x=>x.Kind),Is.EquivalentTo(Enum.GetValues(typeof(RuleEventKind))));
             var ids=BehaviourCatalog.Actions.Select(x=>x.Id).Concat(BehaviourCatalog.Events.Select(x=>x.Id)).Concat(BehaviourCatalog.Facts.Select(x=>x.Id)).ToArray();
             Assert.That(ids.Distinct().Count(),Is.EqualTo(ids.Length));
             Assert.That(ids.All(id=>System.Text.RegularExpressions.Regex.IsMatch(id,@"^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$")),Is.True);
             Assert.That(BehaviourCatalog.HasAction((RuleActionKind)999),Is.False);
             Assert.That(BehaviourCatalog.Event((RuleEventKind)999),Is.Null);
+        }
+        [Test] public void NamedOnlyCapabilityCompilesWithoutLegacyStepAndKeepsValidatedArgumentsDetached()
+        {
+            var arguments=new JObject {["target"]="book",["pitch"]=0,["yaw"]=90,["roll"]=0};
+            Assert.That(BehaviourCatalog.TryCall("object.rotation.set",1,arguments,out var call,out var error),Is.True,error);
+            Assert.That(LegacyCapabilityAdapters.Kind(call.Definition.Id),Is.Null);
+            Assert.That(call.TryStep(out _,out _),Is.False);
+            arguments["yaw"]=999;var exposed=call.Arguments;exposed["target"]="maestro";
+            Assert.That((int)call.Arguments["yaw"],Is.EqualTo(90));Assert.That(call.Resources,Is.EqualTo(new[]{"book"}));
+            Assert.That(call.Claims.Single().Target,Is.EqualTo("book"));Assert.That(call.Claims.Single().Channel,Is.EqualTo("wholeTarget"));
+            var json=new JObject {["id"]=call.Definition.Id,["version"]=1,["arguments"]=call.Arguments};
+            Assert.That(BehaviourProgram.TryParse(BehaviourProgram.FromInvocation(json),out var program,out error),Is.True,error);
+            Assert.That(program.SimpleSteps(),Is.Null,"Old tray adapters must not invent or discard unknown fields");
+            var machine=new ProgramMachine(program,null);Assert.That(machine.Advance(out var yielded),Is.EqualTo(ProgramYield.Action));
+            Assert.That(yielded.Definition.Id,Is.EqualTo("object.rotation.set"));Assert.That(yielded.Instant,Is.True);
+            Assert.That(JToken.DeepEquals(yielded.Arguments,call.Arguments),Is.True);
+            Assert.That(BehaviourCatalog.TryCall("object.rotation.set",1,arguments,out _,out _),Is.False);
+            arguments["yaw"]=90;arguments["seconds"]=1;Assert.That(BehaviourCatalog.TryCall("object.rotation.set",1,arguments,out _,out _),Is.False);
         }
         [Test] public void MissingFactsStayUnavailableAndPresentFalseIsNotMistakenForMissing()
         {
@@ -63,13 +81,13 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void NamedArgumentsRoundTripThroughEveryExistingNativeHandlerAdapter()
         {
-            foreach(var capability in BehaviourCatalog.Actions) {
-                var original=new RuleStep {action=capability.Kind,targetId=RuleDocument.IsInstant(capability.Kind)?Guid.NewGuid().ToString("N"):"maestro",seconds=capability.Kind==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(capability.Kind)?0:1,
+            foreach(var capability in BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue)) {
+                var original=new RuleStep {action=LegacyCapabilityAdapters.Kind(capability.Id).Value,targetId=RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(capability.Id).Value)?Guid.NewGuid().ToString("N"):"maestro",seconds=LegacyCapabilityAdapters.Kind(capability.Id).Value==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(capability.Id).Value)?0:1,
                     gesture=RuleGesture.Greeting,clipModelHash=new string('a',64),clipIndex=2,motionId=Guid.NewGuid().ToString("N")};
-                if(capability.Kind==RuleActionKind.CreateRecipe) original.creationRecipe=RecipeTemplates.BoxRobot(true);
+                if(LegacyCapabilityAdapters.Kind(capability.Id).Value==RuleActionKind.CreateRecipe) original.creationRecipe=RecipeTemplates.BoxRobot(true);
                 var args=CapabilityArguments.FromStep(original);
                 Assert.That(BehaviourCatalog.TryInvocation(capability.Id,1,args,out var step,out var error),Is.True,capability.Id+": "+error);
-                Assert.That(step.action,Is.EqualTo(capability.Kind));Assert.That(step.seconds,Is.EqualTo(original.seconds));
+                Assert.That(step.action,Is.EqualTo(LegacyCapabilityAdapters.Kind(capability.Id).Value));Assert.That(step.seconds,Is.EqualTo(original.seconds));
                 Assert.That(JToken.DeepEquals(CapabilityArguments.FromStep(step),args),Is.True,capability.Id);
                 Assert.That(BehaviourCatalog.TryInvocation(capability.Id,2,args,out _,out _),Is.False);
                 args["engineCode"]="anything";Assert.That(BehaviourCatalog.TryInvocation(capability.Id,1,args,out _,out _),Is.False);

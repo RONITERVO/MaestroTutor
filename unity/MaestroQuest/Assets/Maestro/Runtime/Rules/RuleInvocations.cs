@@ -14,7 +14,7 @@ namespace Maestro.Quest.Rules
         public bool Invoke(JObject call,float now,out string runId,out string error,string issuedId=null)
         {
             runId=null;error=null;LastError=null;
-            if(!RoomCapabilityCatalog.ValidCall(call)||!BehaviourCatalog.TryInvocation((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out error))
+            if(!RoomCapabilityCatalog.ValidCall(call)||!BehaviourCatalog.TryCall((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out error))
             {error??="Invalid capability invocation";return false;}
             if(suspended||!float.IsFinite(now)) {error="Actions are paused";return false;}
             string source=BehaviourProgram.FromInvocation(call);
@@ -24,7 +24,7 @@ namespace Maestro.Quest.Rules
             var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="One-off action",interruption=RuleInterruption.Ignore,program=source};
             var identity=issuedId??Receipts?.NextId??Guid.NewGuid().ToString("N");
             if(Receipts!=null&&!Receipts.Reserve(identity,call,program.Resources.ToArray(),out error))return false;
-            var run=new Run {Id=identity,Sequence=sequence,Targets=program.Resources.ToHashSet(),Claims=BehaviourCatalog.Claims(step),Invocation=(JObject)call.DeepClone(),Machine=new ProgramMachine(program,this)};
+            var run=new Run {Id=identity,Sequence=sequence,Targets=program.Resources.ToHashSet(),Claims=step.Claims,Invocation=(JObject)call.DeepClone(),Machine=new ProgramMachine(program,this)};
             runId=run.Id;running.Add(run);bool accepted=StartStep(run,now);
             if(!accepted)error=LastError??"Action failed";return accepted;
         }

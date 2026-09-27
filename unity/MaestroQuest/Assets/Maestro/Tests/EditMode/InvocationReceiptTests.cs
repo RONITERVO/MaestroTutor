@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Programs;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
@@ -15,8 +16,8 @@ namespace Maestro.Quest.Tests
         sealed class Actions : IRuleActions
         {
             public int Starts,Stops;
-            public bool CanRun(RuleStep step,out string error) {error=null;return true;}
-            public bool Start(string id,RuleStep step,out float seconds,out string error) {Starts++;seconds=1;error=null;return true;}
+            public bool CanRun(CapabilityCall step,out string error) {error=null;return true;}
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _);Starts++;seconds=1;error=null;return true;}
             public void Stop(string id,bool preserve) {Stops++;}
         }
         static void Evidence(string name,JObject view)

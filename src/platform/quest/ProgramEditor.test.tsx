@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {cleanup,fireEvent,render} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {ProgramEditor} from './ProgramEditor';
-import {parseProgram,type BehaviourProgram} from '../../core-sdk/room/programs';
+import {parseProgram,simpleProgramSteps,type BehaviourProgram} from '../../core-sdk/room/programs';
 afterEach(cleanup);
 it('lets a human wire a native creation result into the next action without writing source',()=>{
  const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json','utf8')) as BehaviourProgram;
@@ -119,4 +119,16 @@ it('preserves unavailable source until a complete valid repair is accepted',()=>
  fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:JSON.stringify(empty)}});
  fireEvent.click(screen.getByRole('button',{name:'Update draft'}));
  expect(onChange).toHaveBeenCalledWith(JSON.stringify(empty));expect(editing).toHaveBeenLastCalledWith(false);
+});
+
+it('authors a named-only rotation module with schema controls and preserves it outside legacy tray adapters',()=>{
+ const h=harness();fireEvent.click(h.screen.getByLabelText('+ Action in main'));
+ h.click('Edit values block_1');h.change('Block action','object.rotation.set');
+ h.change('target','book');h.change('pitch','20');h.change('yaw','90');h.change('roll','-10');h.click('Update draft');
+ const expected={id:'block_1',op:'invoke',capability:'object.rotation.set',version:1,arguments:{target:'book',pitch:20,yaw:90,roll:-10},bindings:{}};
+ const result=parseProgram(h.source());expect(result.error).toBeNull();expect(result.program?.functions[0].body).toEqual([expected]);
+ expect(result.program).toEqual(JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-rotation.json','utf8')));expect(simpleProgramSteps(h.source())).toBeNull();
+ expect(h.screen.queryByLabelText('Program JSON')).toBeNull();h.click('Edit values block_1');
+ h.change('yaw','181');h.click('Update draft');expect(h.screen.getByRole('alert').textContent).toContain('contract');
+ expect(JSON.parse(h.source()).functions[0].body[0]).toEqual(expected);
 });

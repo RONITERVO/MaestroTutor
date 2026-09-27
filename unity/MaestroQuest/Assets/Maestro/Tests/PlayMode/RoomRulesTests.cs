@@ -253,6 +253,53 @@ namespace Maestro.Quest.Tests
             editor.Redo();Assert.That(editor.Find(created),Is.Null);
             Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("object.position.set",created,("x",0),("y",1),("z",0)),Time.unscaledTime,out _,out _),Is.False);
         }
+        [UnityTest] public IEnumerator NamedOnlyRotationSharesSavedProgramsReceiptsPhysicsAndUndo()
+        {
+            Assert.That(Maestro.Quest.Programs.LegacyCapabilityAdapters.Kind("object.rotation.set"),Is.Null);
+            physics.SetSurfaces(true,"Ready");physics.StartPhysics();
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Rotate me",new Vector3(0,1.6f,1),1,Color.white,out var id,out var error),Is.True,error);
+            var item=editor.Find(id);var body=item.GetComponent<Rigidbody>();yield return new WaitForFixedUpdate();
+            Assert.That(item.GetComponent<RigidRoomItem>().Launch(Vector3.right,Vector3.up),Is.True);yield return new WaitForFixedUpdate();
+            // Undo restores the preceding journal pose, not an unsaved physics frame.
+            var position=item.transform.localPosition;var scale=item.transform.localScale;var original=editor.Read(id).rotation;
+            var executor=new RoomAgentExecutor(editor);var call=ObjectEditCall("object.rotation.set",id,("pitch",20),("yaw",90),("roll",-10));
+            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.recording.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
+            var request=ObjectEditRequest(call);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);var expected=Quaternion.Euler(20,90,-10);
+            Assert.That(Quaternion.Angle(item.transform.localRotation,expected),Is.LessThan(.01));
+            Assert.That(item.transform.localPosition,Is.EqualTo(position));Assert.That(item.transform.localScale,Is.EqualTo(scale));
+            Assert.That(body.linearVelocity,Is.EqualTo(Vector3.zero));Assert.That(body.angularVelocity,Is.EqualTo(Vector3.zero));Assert.That(body.useGravity,Is.True);
+            Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"));
+            Assert.That((string)runtime.Scheduler.Invocation(recording)["phase"],Is.EqualTo("running"));
+            Assert.That(Quaternion.Angle(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==id).rotation,expected),Is.LessThan(.01));
+            editor.Undo();Assert.That(Quaternion.Angle(item.transform.localRotation,original),Is.LessThan(.01));
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(Quaternion.Angle(item.transform.localRotation,original),Is.LessThan(.01),"Receipt replay cannot rotate an undone object");
+            editor.Redo();Assert.That(Quaternion.Angle(item.transform.localRotation,expected),Is.LessThan(.01));
+            var source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-rotation.json"));var sequence=new RuleSequence {id="",name="Rotate module",program=source};
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="rotation",sequence=sequence}}},out error,out var ids),Is.True,error);
+            Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);runtime.Scheduler.Tick(Time.unscaledTime);
+            Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"));
+            Assert.That(Quaternion.Angle(editor.Find("book").transform.localRotation,expected),Is.LessThan(.01));
+            yield return new WaitForFixedUpdate();Assert.That(body.linearVelocity.y,Is.LessThan(0));
+        }
+        [UnityTest] public IEnumerator RotationModuleRejectsInvalidHeldConflictingAndUnsavedEdits()
+        {
+            var executor=new RoomAgentExecutor(editor);string id=editor.Identity(block);
+            var call=ObjectEditCall("object.rotation.set",id,("pitch",0),("yaw",90),("roll",0));
+            var stale=ObjectEditRequest(call);stale.conditions[0].revision--;
+            Assert.That(executor.Execute(stale,out _,out _),Is.False);
+            var invalid=(JObject)call.DeepClone();invalid["arguments"]["yaw"]=181;
+            Assert.That(runtime.Scheduler.Invoke(invalid,Time.unscaledTime,out _,out _),Is.False);
+            var hand=Hand(1,block.transform.position);manager.SelectEnter((IXRSelectInteractor)hand,block.Grab);
+            Assert.That(executor.Execute(ObjectEditRequest(call),out _,out _),Is.False);manager.SelectExit((IXRSelectInteractor)hand,block.Grab);yield return null;
+            Assert.That(runtime.Trigger(sequenceId),Is.True);Assert.That(executor.Execute(ObjectEditRequest(call),out _,out _),Is.False);runtime.Scheduler.StopAll();
+            string before=JsonUtility.ToJson(editor.Read(id));var orientation=block.transform.localRotation;
+            Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"room.v999.json"),"preserve newer room");
+            Assert.That(executor.Execute(ObjectEditRequest(call),out _,out _),Is.False);
+            Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));Assert.That(block.transform.localRotation,Is.EqualTo(orientation));
+            Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("failed"));
+        }
+
         [UnityTest] public IEnumerator PaintPreservesLivePhysicsAndPlacementResetsMotionWithExactUndo()
         {
             physics.SetSurfaces(true,"Ready");physics.StartPhysics();

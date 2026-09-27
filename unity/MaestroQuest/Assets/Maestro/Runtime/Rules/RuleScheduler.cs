@@ -9,8 +9,8 @@ namespace Maestro.Quest.Rules
 {
     public interface IRuleActions
     {
-        bool CanRun(RuleStep step, out string error);
-        bool Start(string runId, RuleStep step, out float seconds, out string error);
+        bool CanRun(CapabilityCall step, out string error);
+        bool Start(string runId, CapabilityCall step, out float seconds, out string error);
         void Stop(string runId, bool preservePlacement);
     }
     public interface IRuleResults { Newtonsoft.Json.Linq.JObject TakeResult(string runId); }
@@ -33,7 +33,7 @@ namespace Maestro.Quest.Rules
             public int EventDepth,WaitSerial;
             public bool Reactive=>Sequence.Compile(out _).Version==3;
             public ProgramMachine Machine;
-            public RuleStep Active;
+            public CapabilityCall Active;
             public Newtonsoft.Json.Linq.JObject Invocation,Output;
         }
         sealed class Pending { public string SequenceId; public RuleBinding Binding; }
@@ -56,7 +56,7 @@ namespace Maestro.Quest.Rules
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
         static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
-        public bool ActionBusy(RuleStep step)=>running.Any(run=>Conflicts(run,BehaviourCatalog.Claims(step)));
+        public bool ActionBusy(CapabilityCall call)=>running.Any(run=>Conflicts(run,call.Claims));
         public string LastError { get; private set; }
         public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.Wait!=null?x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
             waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
@@ -149,13 +149,13 @@ namespace Maestro.Quest.Rules
                 }
             }
             if(run.Reactive) {
-                var targets=RuleDocument.Targets(run.Active).ToHashSet();
-                var claims=BehaviourCatalog.Claims(run.Active);
+                var targets=run.Active.Resources.ToHashSet();
+                var claims=run.Active.Claims;
                 if(running.Any(x=>x!=run&&Conflicts(x,claims))) {LastError="An action already owns this target";Stop(run,false,"failed",LastError);return false;}
                 run.Targets=targets;run.Claims=claims;
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
-            bool instant=RuleDocument.IsInstant(run.Active.action);
+            bool instant=run.Active.Instant;
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant?seconds!=0:seconds<.01f) || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
             run.Duration = seconds; run.PrepareDeadline = now+30;
@@ -213,7 +213,7 @@ namespace Maestro.Quest.Rules
                 { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out var resultError)) {LastError=resultError;Stop(run,false,"failed",resultError);continue;}
-                bool timed=run.Active!=null&&!RuleDocument.IsInstant(run.Active.action);
+                bool timed=run.Active!=null&&!run.Active.Instant;
                 run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
@@ -238,7 +238,7 @@ namespace Maestro.Quest.Rules
         }
         public void StopTarget(string targetId, bool preservePlacement)
         {
-            foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && run.Active!=null && RuleDocument.Targets(run.Active).Contains(targetId));
+            foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && run.Active!=null && run.Active.Resources.Contains(targetId));
             queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.Targets().Contains(targetId) == true);
         }
         void Finish(Run run,string phase,string status) {

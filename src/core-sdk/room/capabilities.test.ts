@@ -7,7 +7,7 @@ import {stepInvocation,invocationStep} from './capabilitySteps';
 import {newRuleStep} from './rules';
 import {parseProgram,sequenceProgram} from './programs';
 
-it.each(behaviourCatalog.actions)('uses the same named $id contract for simple authoring and saved execution',definition=>{
+it.each(behaviourCatalog.actions.filter(definition=>behaviourCatalog.adapters.ruleStep.actionIds.includes(definition.id)))('uses the same named $id contract for simple authoring and saved execution',definition=>{
  const kind=behaviourCatalog.adapters.ruleStep.actionIds.indexOf(definition.id);
  const step={...newRuleStep(kind),targetId:definition.duration==='instant'?'f'.repeat(32):'maestro',seconds:kind===3||definition.duration==='instant'?0:1},call=stepInvocation(step);
  expect(validCapabilityInvocation(call)).toBe(true);
@@ -67,4 +67,15 @@ it('declares instant physical effects with bounded scalar arguments that can be 
  expect(parseProgram(JSON.stringify(program)).error).toBeNull();
  program.functions[0].locals[0].initial='bad';expect(parseProgram(JSON.stringify(program)).program).toBeNull();
  expect(validateCapabilityArguments('object.physics.stop',1,{target})).toBeNull();
+});
+
+it('discovers and validates rotation without adding a numeric action adapter',()=>{
+ const id='object.rotation.set',definition=capabilityDefinition(id)!;
+ expect(behaviourCatalog.adapters.ruleStep.actionIds).not.toContain(id);
+ expect(definition.duration).toBe('instant');expect(definition.channels).toEqual(['wholeTarget']);
+ const args={target:'book',pitch:20,yaw:90,roll:-10};expect(validateCapabilityArguments(id,1,args)).toBeNull();
+ expect(validateCapabilityArguments(id,1,{...args,yaw:181})).not.toBeNull();
+ expect(validateCapabilityArguments(id,1,{...args,yaw:'90'})).not.toBeNull();
+ expect(validateCapabilityArguments(id,1,{...args,seconds:1})).not.toBeNull();
+ expect(validCapabilityInvocation({id,version:1,arguments:args})).toBe(true);
 });

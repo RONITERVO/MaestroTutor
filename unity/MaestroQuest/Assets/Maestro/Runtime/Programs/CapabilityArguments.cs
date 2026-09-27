@@ -8,6 +8,7 @@ using Maestro.Quest.Rules;
 using Maestro.Quest.Creation;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using static Maestro.Quest.Programs.CapabilitySchema;
 
 namespace Maestro.Quest.Programs
 {
@@ -16,57 +17,10 @@ namespace Maestro.Quest.Programs
     public static class CapabilityArguments
     {
         static readonly string[] Gestures={"greeting","pointing","listening","speaking","idle","walk"};
-        static JObject Number(double min,double max,bool integer=false)=>new() {["type"]=integer?"integer":"number",["minimum"]=min,["maximum"]=max};
-        static JObject Text(string pattern,int max=128)=>new() {["type"]="string",["pattern"]=pattern,["maxLength"]=max};
-        static JObject Choice(params string[] values)=>new() {["type"]="string",["enum"]=new JArray(values)};
-        static JObject Object(JObject properties,params string[] optional)=>new() {
-            ["type"]="object",["properties"]=properties,["required"]=new JArray(properties.Properties().Select(p=>p.Name).Except(optional)),["additionalProperties"]=false
-        };
-        static JObject List(JObject items,int minimum,int maximum)=>new() {["type"]="array",["items"]=items,["minItems"]=minimum,["maxItems"]=maximum};
-        static JObject RecipeSchema() {
-            JObject Triple(double min,double max)=>Object(new JObject {["x"]=Number(min,max),["y"]=Number(min,max),["z"]=Number(min,max)});
-            var parent=Text("^[a-zA-Z0-9_]{0,32}$",32);parent["nullable"]=true;
-            var part=Object(new JObject {["id"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["parent"]=parent,["shape"]=Choice("box","sphere","cylinder"),
-                ["position"]=Triple(-2,2),["size"]=Triple(.005,2),["rotation"]=Vector(true),
-                ["color"]=Object(new JObject {["r"]=Number(0,1),["g"]=Number(0,1),["b"]=Number(0,1),["a"]=Number(1,1)})});
-            var key=Object(new JObject {["time"]=Number(0,30),["rotation"]=Vector(true)});
-            var track=Object(new JObject {["part"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["keys"]=List(key,2,16)});
-            var recipe=Object(new JObject {["version"]=Number(1,1,true),["parts"]=List(part,1,32),["tracks"]=List(track,0,17),
-                ["duration"]=Number(.1,30),["playing"]=new JObject {["type"]="boolean"},["loop"]=new JObject {["type"]="boolean"}});
-            recipe["format"]="roomRecipe";return recipe;
-        }
-        static JObject Vector(bool rotation=false)
-        {
-            var fields=new JObject {["x"]=Number(-1,1),["y"]=Number(-1,1),["z"]=Number(-1,1)};
-            if(rotation)fields["w"]=Number(-1,1);var schema=Object(fields);schema["format"]=rotation?"unitQuaternion":"boundedOffset";return schema;
-        }
-        static JObject Resource(JObject schema) {schema["x-resource"]="object";return schema;}
-        static JObject Prop()=>Object(new JObject {
-            ["objectId"]=Resource(Text("^[a-fA-F0-9]{32}$",32)),["avatarHash"]=Text("^(|[a-f0-9]{64})$",64),
-            ["hand"]=Choice("left","right"),["release"]=Choice("return","drop","throw"),
-            ["offset"]=Vector(),["rotation"]=Vector(true),["releaseAt"]=Number(.05,1)
-        });
-        public static JObject Schema(RuleActionKind kind)
+        public static JObject Schema(RuleActionKind kind)=>BehaviourCatalog.Action(kind)?.InputSchema;
+        internal static JObject AnimationSchema(RuleActionKind kind)
         {
             var p=new JObject();
-            if(kind==RuleActionKind.CreateRecipe)return Object(new JObject { ["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema() });
-            if(kind==RuleActionKind.CreatePrimitive)return Object(new JObject {
-                ["shape"]=Choice("ball","block","cylinder"),["name"]=Text("^.{0,80}$",80),
-                ["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),
-                ["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1)
-            });
-            if(RuleDocument.IsObjectEdit(kind)) {
-                p["target"]=Resource(Text(kind is RuleActionKind.PaintObject or RuleActionKind.DeleteObject?"^[a-fA-F0-9]{32}$":"^(maestro|book|[a-fA-F0-9]{32})$",32));
-                if(kind==RuleActionKind.MoveObject){p["x"]=Number(-25,25);p["y"]=Number(-25,25);p["z"]=Number(-25,25);}
-                if(kind==RuleActionKind.ResizeObject)p["scale"]=Number(.1,4);
-                if(kind==RuleActionKind.PaintObject){p["red"]=Number(0,1);p["green"]=Number(0,1);p["blue"]=Number(0,1);}
-                return Object(p);
-            }
-            if(RuleDocument.IsInstant(kind)) {
-                p["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32));
-                if(kind==RuleActionKind.PhysicsImpulse) {p["x"]=Number(-20,20);p["y"]=Number(-20,20);p["z"]=Number(-20,20);}
-                return Object(p);
-            }
             if(kind!=RuleActionKind.Wait)p["target"]=kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)
                 ? Choice("maestro") : Text("^(maestro|book|[a-fA-F0-9]{32})$",32);
             if(kind!=RuleActionKind.ThrowRecording)p["seconds"]=Number(kind==RuleActionKind.Wait||kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind) ? .1 : 0,30);
@@ -80,8 +34,6 @@ namespace Maestro.Quest.Programs
             if(p["prop"] is JObject prop)prop["x-requires"]=new JObject {["target"]="maestro"};
             return Object(p,"prop");
         }
-        public static JObject OutputSchema(RuleActionKind kind)=>Object(RuleDocument.IsCreation(kind)
-            ?new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))}:new JObject());
         // A bound resource placeholder is not an authorization. Computed IDs are
         // checked against declarations or native-created results at execution time.
         public static string[] LiteralResources(JObject arguments,JObject schema,JObject bindings,int version) {

@@ -73,7 +73,7 @@ namespace Maestro.Quest.Rules
             if(issue!=null){workshop.Say(issue);return;}
             animations.Stop(); Trigger(workshop.Selected.id);
         }
-        public bool CanRun(RuleStep step,out string error)
+        public bool CanRun(Maestro.Quest.Programs.CapabilityCall step,out string error)
         {
             error="Action runtime is not ready";if(actions==null||Scheduler==null)return false;
             if(paused||!focused||!isActiveAndEnabled) {error="Actions are paused";return false;}

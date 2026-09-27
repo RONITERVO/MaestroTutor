@@ -1,16 +1,17 @@
 # Shared object-edit actions
 
-The catalog now exposes 18 native actions. Four new version-1 actions let the
+The catalog now exposes 19 native actions. Five version-1 actions let the
 original-app agent, book controls and saved programs edit existing objects:
 
 | Action | Arguments | Effect |
 | --- | --- | --- |
 | `object.position.set` | target, x, y, z | Immediate placement in room metres; keeps rotation/scale and resets velocity. |
+| `object.rotation.set` | target, pitch, yaw, roll | Orientation in degrees; keeps current position/scale and resets velocity. |
 | `object.scale.set` | target, scale | Uniform scale; keeps current position/rotation and resets velocity. |
 | `object.color.set` | target, red, green, blue | RGB tint; preserves live position and velocity. |
 | `object.delete` | target | Removes a user-created object; room Undo can restore it. |
 
-The included book and Maestro support placement and scaling. Their scale ranges
+The included book and Maestro support placement, rotation and scaling. Their scale ranges
 are respectively 0.65–1.8 and 0.3–1.5. User-created objects allow 0.1–4.
 Positions stay within 25 m of the room origin; RGB channels are 0–1.
 Painting/deletion reject the included book and Maestro. These calls do not
@@ -84,3 +85,11 @@ Durable writes currently serialize on Unity's main thread. Quest measurements
 and, if necessary, an asynchronous completion lifecycle remain release work,
 especially for large rooms and repeated edits. This checkpoint does not claim
 headset acceptance, real-provider completion or Quest Store readiness.
+
+
+Rotation was added on 2026-09-28 through the named module path, with no numeric
+tray adapter. The book's capability/function editor generates its fields. Pitch,
+yaw and roll use Unity Euler angles, each -180 to 180. Undo restores the previous
+journal pose rather than an unsaved physics frame. Completed receipts never
+reapply rotation after Undo. The shared program-rotation.json fixture is authored
+in the browser and executed in Unity. See [module verification](QUEST_CAPABILITY_MODULES.md).

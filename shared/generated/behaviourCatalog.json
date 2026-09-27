@@ -460,12 +460,12 @@
       ],
       "description": "Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit. Stop leaves created objects in the room.",
       "example": {
-        "shape": "ball",
         "name": "Ball",
         "x": 0.3,
         "y": 1.3,
         "z": 0.65,
-        "scale": 1.0,
+        "scale": 1,
+        "shape": "ball",
         "red": 0.2,
         "green": 0.6,
         "blue": 0.9
@@ -803,7 +803,7 @@
         "x": 0.3,
         "y": 1.3,
         "z": 0.65,
-        "scale": 1.0,
+        "scale": 1,
         "recipe": {
           "version": 1,
           "parts": [
@@ -1502,6 +1502,56 @@
         "storage.writable"
       ],
       "description": "Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Saves before completion and adds one Undo edit. This is immediate placement: velocity resets, then normal gravity resumes. Other objects keep running."
+    },
+    {
+      "id": "object.rotation.set",
+      "version": 1,
+      "label": "Rotate object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "pitch": {
+            "type": "number",
+            "minimum": -180.0,
+            "maximum": 180.0
+          },
+          "yaw": {
+            "type": "number",
+            "minimum": -180.0,
+            "maximum": 180.0
+          },
+          "roll": {
+            "type": "number",
+            "minimum": -180.0,
+            "maximum": 180.0
+          }
+        },
+        "required": [
+          "target",
+          "pitch",
+          "yaw",
+          "roll"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Saves before completion and adds one Undo edit. Rotation resets velocity, then normal gravity resumes. Other objects keep running."
     },
     {
       "id": "object.scale.set",
@@ -2281,15 +2331,15 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "f66bbfe4ee0baffa73392e23ddd96b06e0e4ea712e0762cece899adc1a98c013"
+      "sha256": "54b3fd7d97c98514e011d59a167b2260bacc9be5fa3160fdea444c6d166d092f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "a9a486eba7c7d0f08ed5133266e2a9317ac14d1b659d2d345c670c573bf37ad2"
+      "sha256": "89ee11d58a955036d2fa3b1036c8bd97de6295d582dccabf331de633ea418f8b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "933d996c4a738e3aab62bf3e0ac96bef8877c5418e7bd03f275450bad218627e"
+      "sha256": "d4065eed79d88cd012a4a11154e65a32e72447a0068659ace3da6fa78cf50f2e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
@@ -2302,6 +2352,34 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
       "sha256": "2f4156e6d20fa4a4b8ec15fafc9ff1604c1bf3f2df11824a7c9d420ba298255a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
+      "sha256": "84b82e55839d87ba102200ce5cb94bdd931de0317466b15b120552f2751e7949"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapability.cs",
+      "sha256": "124bcd94dbbaa52575232f490c93662a95602ec916e4043af08f2868fb6e8163"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
+      "sha256": "75b3a597a3858f61a036dc256d45d2b703b0b92f231c5d30cf30b79c9246b2eb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
+      "sha256": "69d72372012bf364ab35c1e82f388c73d676c8c0e204ff4df82ada4518ad2951"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
+      "sha256": "1162eef52b8c0c1fbd5a5df8c6a44177dd1cf8c7bf33b220669387610477e38f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
+      "sha256": "2a3c8f60c641d0d4be1425ddab1f5b560e9a70a7867e1028eea16a08d29f0baf"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",
+      "sha256": "7c45f9c5fdd1817bfcab0ead75700e37df2f0ce4f06eb0d9b02133251ed929b5"
     }
   ]
 }

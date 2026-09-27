@@ -29,8 +29,8 @@ describe('shared behaviour contract',()=>{
   for(const [name,values] of Object.entries({RuleActionKind:ruleActions,RuleGesture:ruleGestures,RuleEventKind:ruleEvents,RuleCondition:ruleConditions,RuleInterruption:rulePolicies,ButtonMount:ruleMounts})) {
    const match=source.match(new RegExp(`enum ${name} \{([^}]+)\}`));expect(match).not.toBeNull();const names=match![1].split(',').map(s=>s.trim());
    if(name==='RuleActionKind'){
-    const catalog=readFileSync('unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs','utf8');
-    const registered=new Map([...catalog.matchAll(/new ActionDefinition\("([^"]+)",RuleActionKind\.(\w+),/g)].map(m=>[m[2],m[1]]));
+    const catalog=readFileSync('unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs','utf8');
+    const registered=new Map([...catalog.matchAll(/\[RuleActionKind\.(\w+)\]="([^"]+)"/g)].map(m=>[m[1],m[2]]));
     expect(names.map(name=>registered.get(name))).toEqual(behaviourCatalog.adapters.ruleStep.actionIds);
     expect(values).toEqual(behaviourCatalog.adapters.ruleStep.actionIds.map(id=>behaviourCatalog.actions.find(action=>action.id===id)!.label));
    }else expect(names.map(s=>s.toLowerCase())).toEqual(values.map(s=>s.replace(/[ -]/g,'').toLowerCase()));

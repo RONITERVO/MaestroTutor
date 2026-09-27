@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Programs;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -129,8 +130,8 @@ namespace Maestro.Quest.Tests
             public readonly List<string> Started = new();
             public readonly HashSet<string> Active = new();
             public int Stopped;
-            public bool CanRun(RuleStep step,out string error) { error = null; return true; }
-            public bool Start(string id,RuleStep step,out float seconds,out string error) { Active.Add(id); Started.Add(step.targetId); seconds = RuleDocument.IsInstant(step.action)?0:step.seconds == 0 ? 2 : step.seconds; error = null; return true; }
+            public bool CanRun(CapabilityCall step,out string error) { error = null; return true; }
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _); Active.Add(id); Started.Add(step.targetId); seconds = RuleDocument.IsInstant(step.action)?0:step.seconds == 0 ? 2 : step.seconds; error = null; return true; }
             public void Stop(string id,bool preserve) { if (Active.Remove(id)) Stopped++; }
         }
         sealed class PreparingActions : IRuleActions,IRuleReadiness
@@ -138,8 +139,8 @@ namespace Maestro.Quest.Tests
             public RuleActionState Phase = RuleActionState.Preparing;
             public int Polls,Stops,Starts;
             public string Failure="Missing saved motion";
-            public bool CanRun(RuleStep step,out string error) { error = null; return true; }
-            public bool Start(string id,RuleStep step,out float seconds,out string error) { Starts++; seconds = 2; error = null; return true; }
+            public bool CanRun(CapabilityCall step,out string error) { error = null; return true; }
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _); Starts++; seconds = 2; error = null; return true; }
             public void Stop(string id,bool preserve) { Stops++; }
             public RuleActionState State(string id,out string error) { Polls++; error = Phase == RuleActionState.Failed ? Failure : null; return Phase; }
         }

@@ -66,10 +66,10 @@ namespace Maestro.Quest.Creation
                     ["definition"]=known?definition.ToJson():JValue.CreateNull(),["status"]=known?"Action definition. Check concrete arguments before running it.":"Unknown capability or unsupported version"};
             }
             var call=(JObject)request["call"];
-            bool valid=BehaviourCatalog.TryInvocation((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out var error);
+            bool valid=BehaviourCatalog.TryCall((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out var error);
             bool available=false,occupied=false;string[] resources=Array.Empty<string>();
             if(valid) {
-                resources=RuleDocument.Targets(step).Distinct().ToArray();
+                resources=step.Resources.Distinct().ToArray();
                 var runtime=editor.GetComponent<RoomRules>();
                 if(!runtime)error="Action runtime is not ready";
                 else {

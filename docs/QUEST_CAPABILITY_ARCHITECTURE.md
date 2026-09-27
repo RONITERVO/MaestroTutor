@@ -162,3 +162,13 @@ result without repeating its action; restart reports unfinished effects as
 uncertain and does not resume them. Storage failures block new one-off effects.
 See [recovery contract and boundaries](QUEST_ACTION_RECOVERY.md). Receipts for
 other room commands and durable saved-program state remain future work.
+
+
+## Named native modules (2026-09-28)
+
+The scheduler and interpreter now carry named calls directly. Ten independent
+modules own their contracts and execution, with a temporary adapter for the nine
+existing animation/spatial capabilities. A real rotation capability demonstrates
+addition without extending the enum, step fields, scheduler, web validator or
+book form. Manifest provenance automatically covers the module directory.
+See [module boundaries, verification and remaining work](QUEST_CAPABILITY_MODULES.md).

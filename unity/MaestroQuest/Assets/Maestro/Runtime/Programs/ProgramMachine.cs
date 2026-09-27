@@ -57,7 +57,7 @@ namespace Maestro.Quest.Programs
                 if(frames.Count==0)Result=value;return;
             }
         }
-        public ProgramYield Advance(out RuleStep action,int budget=32)
+        public ProgramYield Advance(out CapabilityCall action,int budget=32)
         {
             action=null;Signal=null;if(resultContract!=null)throw new InvalidOperationException("Complete the pending action result before advancing");if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
             if(budget<1||budget>256)throw new ArgumentOutOfRangeException(nameof(budget));
@@ -97,14 +97,14 @@ namespace Maestro.Quest.Programs
                         case "invoke":
                             var arguments=(JObject)node["arguments"].DeepClone();
                             foreach(var binding in ((JObject)node["bindings"]).Properties())arguments[binding.Name]=JToken.FromObject(Evaluate(binding.Value,frame.Scope).Value);
-                            if(!BehaviourCatalog.TryInvocation((string)node["capability"],(int)node["version"],arguments,out action,out var error))throw new ProgramFault(error??"Invalid computed capability arguments");
-                            if(!RuleDocument.Targets(action).All(id=>program.Allows(id)||createdResources.Contains(id)))throw new ProgramFault("Computed target is not a declared or created resource");
+                            if(!BehaviourCatalog.TryCall((string)node["capability"],(int)node["version"],arguments,out action,out var error))throw new ProgramFault(error??"Invalid computed capability arguments");
+                            if(!action.Resources.All(id=>program.Allows(id)||createdResources.Contains(id)))throw new ProgramFault("Computed target is not a declared or created resource");
                             var contract=BehaviourCatalog.Action((string)node["capability"]);
                             if(((JObject)contract.OutputSchema["properties"]).Count>0) {
                                 if(createdResources.Count>=16)throw new ProgramFault("This run has reached its limit of 16 created objects");
                                 resultScope=frame.Scope;resultBindings=node["results"] as JObject;resultContract=contract;
                             }
-                            action.id=NodeId;return ProgramYield.Action;
+                            action.NodeId=NodeId;return ProgramYield.Action;
                     }
                 }return ProgramYield.Yield;
             } catch(ProgramFault error) {Error=error.Message;frames.Clear();terminal=true;action=null;return ProgramYield.Failed;}

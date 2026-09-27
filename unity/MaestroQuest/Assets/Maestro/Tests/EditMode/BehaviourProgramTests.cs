@@ -50,9 +50,9 @@ namespace Maestro.Quest.Tests
             play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true};
             Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);
             var machine=new ProgramMachine(program,null);
-            Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(create.creationRecipe.tracks.Length,Is.EqualTo(2));
+            Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(create).creationRecipe.tracks.Length,Is.EqualTo(2));
             string id=Guid.NewGuid().ToString("N");Assert.That(machine.CompleteAction(new JObject {["objectId"]=id},out error),Is.True,error);
-            Assert.That(machine.Advance(out var animation),Is.EqualTo(ProgramYield.Action));Assert.That(animation.targetId,Is.EqualTo(id));Assert.That(animation.action,Is.EqualTo(RuleActionKind.RecipeAnimation));
+            Assert.That(machine.Advance(out var animation),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(animation).targetId,Is.EqualTo(id));Assert.That(EditorStep(animation).action,Is.EqualTo(RuleActionKind.RecipeAnimation));
             string output=Environment.GetEnvironmentVariable("MAESTRO_RECIPE_CREATION_EVIDENCE");
             if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"program.json"),source.ToString());}
         }
@@ -66,7 +66,7 @@ namespace Maestro.Quest.Tests
                 new RuleStep {action=RuleActionKind.PaintObject,targetId=target,editColor=Color.red},
                 new RuleStep {action=RuleActionKind.DeleteObject,targetId=target}
             }) {
-                var definition=BehaviourCatalog.Actions.Single(x=>x.Kind==step.action);
+                var definition=BehaviourCatalog.Actions.Single(x=>LegacyCapabilityAdapters.Kind(x.Id)==step.action);
                 Assert.That(definition.Duration,Is.EqualTo("instant"));
                 Assert.That(definition.Channels,Is.EqualTo(new[]{"wholeTarget"}));
                 var args=CapabilityArguments.FromStep(step);
@@ -86,11 +86,11 @@ namespace Maestro.Quest.Tests
             var json=CreationProgram();Assert.That(BehaviourProgram.TryParse(json.ToString(),out var program,out var error),Is.True,error);
             Assert.That(program.SimpleSteps(),Is.Null);
             var machine=new ProgramMachine(program,null);
-            Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(create.action,Is.EqualTo(RuleActionKind.CreatePrimitive));
+            Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(create).action,Is.EqualTo(RuleActionKind.CreatePrimitive));
             Assert.That(machine.CompleteAction(new JObject {["objectId"]="maestro"},out error),Is.False,"A builtin cannot be invented by a creation result");
             string id=Guid.NewGuid().ToString("N");Assert.That(machine.CompleteAction(new JObject {["objectId"]=id},out error),Is.True,error);
             Assert.That(machine.Locals["ball"].Text,Is.EqualTo(id));
-            Assert.That(machine.Advance(out var push),Is.EqualTo(ProgramYield.Action));Assert.That(push.targetId,Is.EqualTo(id));
+            Assert.That(machine.Advance(out var push),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(push).targetId,Is.EqualTo(id));
             Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed));
             json=CreationProgram();json["functions"][0]["body"][1]["bindings"]["target"]=new JObject {["value"]=Guid.NewGuid().ToString("N")};
             machine=new ProgramMachine(Compile(json.ToString()),null);machine.Advance(out _);Assert.That(machine.CompleteAction(new JObject {["objectId"]=id},out error),Is.True,error);
@@ -105,7 +105,7 @@ namespace Maestro.Quest.Tests
             json["functions"][0]["body"]=new JArray(new JObject {["id"]="loop",["op"]="forever",["body"]=new JArray(create)});
             var machine=new ProgramMachine(Compile(json.ToString()),null);int previous=0;
             for(int i=0;i<16;i++) {
-                Assert.That(machine.Advance(out var action),Is.EqualTo(ProgramYield.Action));Assert.That(action.action,Is.EqualTo(RuleActionKind.CreatePrimitive));
+                Assert.That(machine.Advance(out var action),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(action).action,Is.EqualTo(RuleActionKind.CreatePrimitive));
                 Assert.That(machine.Instructions,Is.GreaterThan(previous));previous=machine.Instructions;
                 Assert.That(machine.CompleteAction(new JObject {["objectId"]=Guid.NewGuid().ToString("N")},out var error),Is.True,error);
             }
@@ -167,6 +167,7 @@ namespace Maestro.Quest.Tests
             command["execution"]=new JObject {["operation"]="inspect",["runId"]=Guid.NewGuid().ToString("N")};
             ((JArray)raw["commands"]).Add(new JObject {["action"]="stop",["target"]="book"});Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.False);
         }
+        static RuleStep EditorStep(CapabilityCall call) {Assert.That(call.TryStep(out var step,out var error),Is.True,error);return step;}
         static string Example()=>File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json"));
         static BehaviourProgram Compile(string source) {Assert.That(BehaviourProgram.TryParse(source,out var program,out var error),Is.True,error);return program;}
         sealed class Facts:IProgramFacts {public bool TryRead(string name,out ProgramValue value) {value=new ProgramValue("speaking");return name=="maestro.state";}}
@@ -175,17 +176,17 @@ namespace Maestro.Quest.Tests
         {
             var json=JObject.Parse(Example());json["functions"][0]["body"][0]["args"][0]["value"]=candidate;
             var program=Compile(json.ToString());var machine=new ProgramMachine(program,new Facts());
-            ProgramYield result;RuleStep action;int ticks=0;
+            ProgramYield result;CapabilityCall action;int ticks=0;
             do {result=machine.Advance(out action,4);Assert.That(++ticks,Is.LessThan(100));}while(result==ProgramYield.Yield);
-            Assert.That(result,Is.EqualTo(ProgramYield.Action),machine.Error);Assert.That(action.gesture,Is.EqualTo(expected));Assert.That(action.id,Is.EqualTo(machine.NodeId));
+            Assert.That(result,Is.EqualTo(ProgramYield.Action),machine.Error);Assert.That(EditorStep(action).gesture,Is.EqualTo(expected));Assert.That(action.NodeId,Is.EqualTo(machine.NodeId));
             Assert.That(machine.NodeId,Is.EqualTo(expected==RuleGesture.Greeting?"prime_wave":"composite_idle"));Assert.That(machine.Function,Is.EqualTo("main"));
             Assert.That(machine.Locals["answer"].Boolean,Is.EqualTo(expected==RuleGesture.Greeting));Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed));
             Assert.That(machine.Advance(out _),Is.EqualTo(ProgramYield.Completed),"A completed program is never replayed");
         }
         sealed class Actions:IRuleActions {
             public int Starts,Stops;public RuleGesture Gesture;
-            public bool CanRun(RuleStep step,out string error) {error=null;return true;}
-            public bool Start(string run,RuleStep step,out float seconds,out string error) {Starts++;Gesture=step.gesture;seconds=step.seconds;error=null;return true;}
+            public bool CanRun(CapabilityCall step,out string error) {error=null;return true;}
+            public bool Start(string run,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _);Starts++;Gesture=step.gesture;seconds=step.seconds;error=null;return true;}
             public void Stop(string run,bool preserve) {Stops++;}
         }
         [Test] public void ProgramUsesExistingTriggerOwnershipStopAndCompletionInsteadOfAnotherRuntime()
@@ -224,10 +225,10 @@ namespace Maestro.Quest.Tests
             do {
                 result=machine.Advance(out var action,4);Assert.That(++ticks,Is.LessThan(50),machine.Error);
                 if(result==ProgramYield.Action){
-                    actions++;Assert.That(action.id,Is.EqualTo(activity=="speaking"?"block_3":"block_4"));
-                    Assert.That(action.action,Is.EqualTo(activity=="speaking"?RuleActionKind.Gesture:RuleActionKind.Wait));
-                    if(activity=="speaking"){Assert.That(action.gesture,Is.EqualTo(RuleGesture.Greeting));Assert.That(action.seconds,Is.EqualTo(.2f));}
-                    else Assert.That(action.seconds,Is.EqualTo(1));
+                    actions++;Assert.That(action.NodeId,Is.EqualTo(activity=="speaking"?"block_3":"block_4"));
+                    Assert.That(EditorStep(action).action,Is.EqualTo(activity=="speaking"?RuleActionKind.Gesture:RuleActionKind.Wait));
+                    if(activity=="speaking"){Assert.That(EditorStep(action).gesture,Is.EqualTo(RuleGesture.Greeting));Assert.That(EditorStep(action).seconds,Is.EqualTo(.2f));}
+                    else Assert.That(EditorStep(action).seconds,Is.EqualTo(1));
                 }
             }while(result==ProgramYield.Action||result==ProgramYield.Yield);
             Assert.That(result,Is.EqualTo(ProgramYield.Completed),machine.Error);Assert.That(actions,Is.EqualTo(expected));
@@ -249,7 +250,7 @@ namespace Maestro.Quest.Tests
             Assert.That(sequence.SimpleSteps()[0].seconds,Is.EqualTo(1));
             Assert.That(JObject.Parse(JsonUtility.ToJson(copy)).ContainsKey("steps"),Is.False);
             var machine=new ProgramMachine(copy.Compile(out _),null);Assert.That(machine.Advance(out var action),Is.EqualTo(ProgramYield.Action));
-            Assert.That(action.seconds,Is.EqualTo(2));Assert.That(machine.NodeId,Is.EqualTo("wave"));
+            Assert.That(EditorStep(action).seconds,Is.EqualTo(2));Assert.That(machine.NodeId,Is.EqualTo("wave"));
             Assert.That(Compile(Example()).SimpleSteps(),Is.Null);Assert.Throws<ArgumentException>(()=>Compile(Example()).WithSimpleSteps(view));
         }
         [Test] public void SimpleEditsUpdateResourceOwnershipWithoutFlatteningComplexPrograms()
@@ -368,7 +369,7 @@ namespace Maestro.Quest.Tests
             program["functions"][0]["body"][0]["bindings"]["gesture"]=new JObject {["value"]=gesture};
             var machine=new ProgramMachine(Compile(program.ToString()),null);
             Assert.That(machine.Advance(out var step),Is.EqualTo(valid?ProgramYield.Action:ProgramYield.Failed));
-            if(valid)Assert.That(step.gesture,Is.EqualTo(RuleGesture.Greeting));else Assert.That(step,Is.Null);
+            if(valid)Assert.That(EditorStep(step).gesture,Is.EqualTo(RuleGesture.Greeting));else Assert.That(step,Is.Null);
         }
         [Test] public void ComputedTargetAndIndexMustMeetTheirContractAndResourceReservation()
         {
@@ -378,7 +379,7 @@ namespace Maestro.Quest.Tests
             var machine=new ProgramMachine(Compile(program.ToString()),null);
             Assert.That(machine.Advance(out var step),Is.EqualTo(ProgramYield.Failed));Assert.That(step,Is.Null);
             ((JArray)program["resources"]).Add("book");
-            machine=new ProgramMachine(Compile(program.ToString()),null);Assert.That(machine.Advance(out step),Is.EqualTo(ProgramYield.Action));Assert.That(step.targetId,Is.EqualTo("book"));
+            machine=new ProgramMachine(Compile(program.ToString()),null);Assert.That(machine.Advance(out step),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(step).targetId,Is.EqualTo("book"));
             bindings["clipIndex"]=new JObject {["value"]=.5};
             machine=new ProgramMachine(Compile(program.ToString()),null);Assert.That(machine.Advance(out step),Is.EqualTo(ProgramYield.Failed));Assert.That(step,Is.Null);
         }
@@ -422,7 +423,7 @@ namespace Maestro.Quest.Tests
         [Test] public void ShortCircuitSkipsUnavailableFactsAndInvalidComputedActionsNeverEscape()
         {
             var json=JObject.Parse(Example());json["functions"][0]["body"][1]["test"]=JObject.Parse("{\"op\":\"or\",\"args\":[{\"value\":true},{\"op\":\"eq\",\"args\":[{\"fact\":\"maestro.state\"},{\"value\":\"speaking\"}]}]}");
-            var machine=new ProgramMachine(Compile(json.ToString()),null);Assert.That(machine.Advance(out var step,256),Is.EqualTo(ProgramYield.Action));Assert.That(step.gesture,Is.EqualTo(RuleGesture.Greeting));
+            var machine=new ProgramMachine(Compile(json.ToString()),null);Assert.That(machine.Advance(out var step,256),Is.EqualTo(ProgramYield.Action));Assert.That(EditorStep(step).gesture,Is.EqualTo(RuleGesture.Greeting));
             json["functions"][0]["body"][1]["then"][0]["bindings"]["seconds"]=JObject.Parse("{\"value\":100}");
             machine=new ProgramMachine(Compile(json.ToString()),null);Assert.That(machine.Advance(out step,256),Is.EqualTo(ProgramYield.Failed));Assert.That(step,Is.Null);
         }

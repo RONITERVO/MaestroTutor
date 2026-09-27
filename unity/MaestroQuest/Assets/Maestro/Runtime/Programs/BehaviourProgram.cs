@@ -49,7 +49,7 @@ namespace Maestro.Quest.Programs
         public string[] ReferencedIds=>referencedIds.ToArray();
         readonly HashSet<string> resources=new();
         readonly Dictionary<string,ProgramFunction> functions=new();
-        readonly Dictionary<string,RuleStep> actions=new();
+        readonly Dictionary<string,CapabilityCall> actions=new();
         readonly HashSet<string> ids=new();
         readonly Dictionary<string,HashSet<string>> calls=new();
         int expressions;
@@ -61,13 +61,14 @@ namespace Maestro.Quest.Programs
             catch(Exception ex) when(ex is ProgramFault || ex is JsonException || ex is ArgumentException || ex is OverflowException) {error=ex.Message;return false;}
         }
         public int NodeCount=>ids.Count;
-        public RuleStep[] NativeActions=>actions.Values.Select(x=>x.Copy()).ToArray();
+        public CapabilityCall[] NativeActions=>actions.Values.Select(x=>x.Copy()).ToArray();
         public RuleStep[] SimpleSteps()
         {
             var f=functions[Entry];
             if(Version!=2 || functions.Count!=1 || f.Returns!=ProgramType.Void || f.Parameters.Length!=0 || f.Initial.Count!=0 ||
                 f.Body.Any(n=>(string)n["op"]!="invoke" || ((JObject)n["bindings"]).Count!=0 || n["results"]!=null))return null;
-            return f.Body.Select(n=> {var step=Action((string)n["id"]);step.id=(string)n["id"];return step;}).ToArray();
+            var steps=new List<RuleStep>();foreach(var node in f.Body) {if(!Action((string)node["id"]).TryStep(out var step,out _))return null;steps.Add(step);}
+            return steps.ToArray();
         }
         public string WithSimpleSteps(RuleStep[] steps)
         {
@@ -93,7 +94,7 @@ namespace Maestro.Quest.Programs
         }.ToString(Formatting.None);
         public bool ReferencesMotion(string id)=>Source.Contains("\""+id+"\"");
         internal ProgramFunction Function(string name)=>functions[name];
-        internal RuleStep Action(string id)=>actions[id].Copy();
+        internal CapabilityCall Action(string id)=>actions[id].Copy();
         internal bool Allows(string target)=>resources.Contains(target);
         static void Need(bool condition,string message) {if(!condition)throw new ProgramFault(message);}
         internal static bool Name(string value)=>!string.IsNullOrEmpty(value)&&value.Length<=32&&value.All(c=>c>='a'&&c<='z'||c>='A'&&c<='Z'||c>='0'&&c<='9'||c=='_');
@@ -212,9 +213,9 @@ namespace Maestro.Quest.Programs
                     case "invoke":
                         Keys(node,"id op capability version arguments bindings","results");
                         string capability=Text(node["capability"]);Need((node["version"]?.Type==JTokenType.Integer||node["version"]?.Type==JTokenType.Float)&&(double)node["version"]==Math.Truncate((double)node["version"]),"Capability version must be an integer");
-                        Need(BehaviourCatalog.TryInvocation(capability,(int)node["version"],Object(node["arguments"]),out var step,out var invocationError),invocationError??"Invalid capability arguments");
+                        Need(BehaviourCatalog.TryCall(capability,(int)node["version"],Object(node["arguments"]),out var step,out var invocationError),invocationError??"Invalid capability arguments");
                         var contract=BehaviourCatalog.Action(capability);
-                        Need(CapabilityArguments.LiteralResources(Object(node["arguments"]),contract.InputSchema,Object(node["bindings"]),Version).All(resources.Contains),"Declare every action resource");step.id=id;actions.Add(id,step);
+                        Need(CapabilityArguments.LiteralResources(Object(node["arguments"]),contract.InputSchema,Object(node["bindings"]),Version).All(resources.Contains),"Declare every action resource");step.NodeId=id;actions.Add(id,step);
                         if(node.ContainsKey("results")) {
                             Need(Version==3,"Action results need program version 3");
                             var outputs=(JObject)contract.OutputSchema["properties"];var assigned=new HashSet<string>();
