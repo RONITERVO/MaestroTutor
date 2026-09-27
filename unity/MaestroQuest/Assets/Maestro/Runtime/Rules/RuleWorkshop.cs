@@ -33,7 +33,7 @@ namespace Maestro.Quest.Rules
         public bool CanRedo => !ReadOnly && redo.Count>0;
         public string Status { get; private set; } = "Create an action sequence, then add triggers or buttons";
         public event Action Changed, DocumentChanged;
-        public bool HistoricalMotion(string id) => undo.Concat(redo).Any(x => x.sequences.Any(sequence => sequence.steps.Any(step => step.motionId == id)));
+        public bool HistoricalMotion(string id) => undo.Concat(redo).Any(x => x.sequences.Any(sequence => sequence.UsesMotion(id)));
         public bool SavedMotion(string id,out bool uncertain,bool force=false) => storage.RetainsMotion(id,out uncertain,force);
         public RuleDocument Snapshot() => document.Copy();
         public RuleSequence Selected => sequenceIndex >= 0 && sequenceIndex < document.sequences.Length ? document.sequences[sequenceIndex].Copy() : null;
@@ -44,6 +44,7 @@ namespace Maestro.Quest.Rules
             {
                 var sequence = Selected;
                 if (sequence == null) return "No action sequence selected";
+                if(sequence.UsesProgram)return sequence.name+" · Program · Edit its functions in the book";
                 var step = sequence.steps[Mathf.Clamp(stepIndex,0,sequence.steps.Length-1)];
                 string action = step.action switch { RuleActionKind.RecordedAnimation => "Play recording",RuleActionKind.ThrowRecording => "Play then throw",RuleActionKind.Gesture => step.gesture.ToString(),RuleActionKind.ImportedClip => ClipName(step),RuleActionKind.LibraryMotion => "Saved: " + (editor.Motions.Find(step.motionId)?.name ?? "Choose motion"),RuleActionKind.RecipeAnimation => "Recipe animation",RuleActionKind.LookAtUser => "Look at user",RuleActionKind.FollowUser => "Follow user",_ => "Wait" };
                 string target = step.action == RuleActionKind.Wait ? "" : " · " + TargetName(step.targetId);
@@ -110,7 +111,7 @@ namespace Maestro.Quest.Rules
         void Updated()
         {
             sequenceIndex = document.sequences.Length == 0 ? -1 : Mathf.Clamp(sequenceIndex,0,document.sequences.Length-1);
-            stepIndex = Selected == null ? 0 : Mathf.Clamp(stepIndex,0,Selected.steps.Length-1);
+            stepIndex = Selected == null || Selected.UsesProgram ? 0 : Mathf.Clamp(stepIndex,0,Selected.steps.Length-1);
             Revision++; dirty = true; saveAt = Time.unscaledTime + .5f; DocumentChanged?.Invoke(); Changed?.Invoke();
         }
         public void NewSequence()
@@ -133,6 +134,7 @@ namespace Maestro.Quest.Rules
         void EditStep(Action<RuleStep> action, string message)
         {
             if (Selected == null) { Say("Create an action first"); return; }
+            if(Selected.UsesProgram) {Say("Edit program blocks in the book");return;}
             Edit(value => action(value.sequences[sequenceIndex].steps[stepIndex]),message);
         }
         public void CycleAction() => EditStep(step => { step.action = (RuleActionKind)(((int)step.action+1)%Enum.GetValues(typeof(RuleActionKind)).Length); step.seconds = step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording || step.action == RuleActionKind.ImportedClip || step.action == RuleActionKind.LibraryMotion || step.action == RuleActionKind.RecipeAnimation ? 0 : 2.5f; if (step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) step.targetId = "maestro"; if (step.action == RuleActionKind.ThrowRecording) step.loop = false; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); if (!RuleDocument.CanCarry(step)) step.propId=null; },"Action type changed");
@@ -141,10 +143,10 @@ namespace Maestro.Quest.Rules
             var id = editor.SelectedId; if (id == null) { Say("Select a room object first"); return; }
             EditStep(step => { if ((step.action == RuleActionKind.Gesture || RuleDocument.IsSpatial(step.action)) && id != "maestro") { Say("This action targets Maestro"); return; } step.targetId = id; if (!RuleDocument.CanCarry(step)) step.propId=null; if (step.action == RuleActionKind.ImportedClip) ChooseClip(step,false); if (step.action == RuleActionKind.LibraryMotion) ChooseLibraryMotion(step,false); },"Target assigned from your room selection");
         }
-        public void Step(int direction) { if (Selected == null) return; stepIndex = (stepIndex + direction + Selected.steps.Length) % Selected.steps.Length; Changed?.Invoke(); }
+        public void Step(int direction) { if (Selected == null || Selected.UsesProgram) return; stepIndex = (stepIndex + direction + Selected.steps.Length) % Selected.steps.Length; Changed?.Invoke(); }
         public void AddStep()
         {
-            if (Selected == null || Selected.steps.Length >= 16) { Say("Choose an action with fewer than 16 steps"); return; }
+            if (Selected == null || Selected.UsesProgram || Selected.steps.Length >= 16) { Say("Choose an action with fewer than 16 steps"); return; }
             if (Edit(value => value.sequences[sequenceIndex].steps = value.sequences[sequenceIndex].steps.Append(new RuleStep { action = RuleActionKind.Wait, seconds = 1 }).ToArray(),"Step added")) { stepIndex = Selected.steps.Length-1; Changed?.Invoke(); }
         }
         public void DeleteStep()
@@ -154,7 +156,7 @@ namespace Maestro.Quest.Rules
         }
         public void UseProp()
         {
-            var selected=Selected?.steps[stepIndex]; var item=editor.Read(editor.SelectedId);
+            var selected=Selected==null||Selected.UsesProgram ? null : Selected.steps[stepIndex]; var item=editor.Read(editor.SelectedId);
             var avatar=editor.Find("maestro").GetComponent<MaestroAvatar>();
             if (selected == null || !RuleDocument.CanCarry(selected)) { Say("Choose a Maestro gesture, recording or imported motion step first"); return; }
             if (item == null || item.IsBuiltIn || !avatar || avatar.ModelBusy) { Say("Select a loaded creation to carry, then Use prop"); return; }
@@ -162,7 +164,7 @@ namespace Maestro.Quest.Rules
         }
         public void FitProp()
         {
-            var step=Selected?.steps[stepIndex]; var item=editor.Find(step?.propId); var avatar=editor.Find("maestro").GetComponent<MaestroAvatar>();
+            var step=Selected==null||Selected.UsesProgram ? null : Selected.steps[stepIndex]; var item=editor.Find(step?.propId); var avatar=editor.Find("maestro").GetComponent<MaestroAvatar>();
             if (step == null || !item || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Say("Assign a prop, position it at the chosen hand, then release your grip"); return; }
             Runtime?.StopAll();
             var hand=avatar.PoseRig ? avatar.PoseRig.Bone(step.propHand == PropHand.Left ? PoseJoint.LeftHand : PoseJoint.RightHand) : null;

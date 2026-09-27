@@ -1,9 +1,105 @@
-# Proposed long-term programmable behaviours
+# Programmable behaviours: foundation and roadmap
 
-Design recommendation, 2026-09-26, responding to the user's code/visual-block
-example. This document does not claim that the language, text editor, branching
-runtime or timers below are implemented. Preserve the working v4 rule system
-while introducing this incrementally.
+Updated 2026-09-26. The first executable program subset is implemented alongside
+existing linear rules. This is a development milestone, not Quest release approval.
+
+## Implemented foundation
+
+`BehaviourProgram` and `ProgramMachine` validate and interpret version-1 JSON
+programs inside Unity. Functions have typed parameters, local variables and return
+values. Supported statements are native action, assignment, if/else, switch/case,
+repeat, call and return. Expressions support arithmetic, comparisons, short-circuit
+logic and three explicit facts: Maestro state, physics readiness and physics running.
+No provider call occurs while a saved program runs.
+
+The existing revision-checked `rules` command saves either linear `steps` or one
+`program` string with empty steps. The same native scheduler handles ownership,
+loading, completion, state/object triggers, physical buttons, Stop, grabbing,
+app pause and interruption policy. Run-now uses `rules.play`; saving does not run
+a program and a physical button is optional. Programs reserve their declared
+resources conservatively across branches. Edits and Undo cancel active old runs.
+Native actions cover the existing nine rule kinds, not every room-agent control.
+Functions currently live within one program; cross-program libraries are future work.
+
+The optional book workspace renders nested blocks and functions, highlights the
+current native node, and shows native locals and recent outcomes. Users can add,
+reorder and remove blocks/functions, edit a block/function's JSON, edit full source,
+and convert a linear sequence without losing step IDs or prop/motion fields.
+Complete-program validation runs before accepting an editor draft and again before
+native execution. Unfinished edits are retained when a physical edit makes their
+revision stale. JSON is the current advanced text representation; this is not a
+JavaScript/C# editor, Blockly integration or a finished drag-and-drop editor.
+
+The planner uses the same save/play/inspect/bind/button contract, gated by native
+`behaviourPrograms.v1`. Original Maestro still owns Gemini, subscriptions/BYOK,
+conversation and handoff verification. The chat stays the default book interface.
+Program authoring is an optional workspace, and no new floating flat controls are
+introduced outside the pages.
+
+Rules storage is now v5. Loading v1–v4 preserves the old files and stable IDs;
+existing rules remain linear until explicitly converted. Backups and Undo retain
+program source and referenced library motions. A newer outer document version or
+embedded program version makes the collection read-only, preserving the original
+instead of falling back to an older backup. New opcodes must bump program version.
+
+Limits are 16 functions, 8 parameters/16 locals per function, 128 statement nodes,
+512 expression nodes, nesting/call depth 8, 16 reserved targets, 24,000 source
+characters per program and 128,000 across a saved collection. Text values are
+bounded to 128 characters; numeric values to magnitude 1,000,000. Calls cannot
+recurse. Repeat counts are 0–10,000. The interpreter yields between statements
+around a 32-instruction tick budget, charging expression evaluation too; an atomic
+expression may finish past that boundary. A run fails after 65,536 instructions.
+Eight disjoint runs and eight queued requests are the existing scheduler maximum.
+Explicit whole-sequence repeat resets the per-run budget each cycle until stopped.
+
+Native actions yield while loading/playing. Computed native arguments and resource
+ownership are revalidated before dispatch. Errors stop the run and release its
+owned operations. Running node/function/locals and up to 16 session-local terminal
+outcomes are exposed to both human and agent. These outcomes are not durable run
+receipts, and a successful start receipt does not establish eventual completion.
+
+Room observations allow up to 192 KiB across Unity, Java and web so selected
+program source plus concurrent traces fit. Library messages retain their 32 KiB
+limit; command batches retain 28,000 characters (32 KiB native envelope). JSON
+escaping counts toward the command limit. Transport refuses oversized input;
+it does not silently truncate source or traces.
+
+Shared JSON conformance cases exercise the TypeScript authoring validator and
+native parser. The prime-number example exercises functions, returns, arithmetic,
+branching and loops. Unity PlayMode verifies an agent-saved program moving a real
+recipe robot, tutor-state triggering, a left-controller button pressed by the other
+controller, cancellation, completion, pause, Undo and reload. Browser tests replay
+actual Unity observations; browser edit acknowledgements are explicitly simulated.
+Hardware frame timing and this editor's Quest readability remain unverified.
+
+## Verified development checkpoint (2026-09-27)
+
+APK SHA256: `AAB1F7AECA92CB67347FDC25C8F587F3B289946FC1BAA23B3EF6958A78C766DB`.
+This is development signing, built by `Build-QuestDevelopment.ps1`, and has not
+been installed or tested on the headset. The packaged web bundle was compared
+byte-for-byte with the successful production web build.
+
+- Full app suite: 1,118 passing tests; full app lint and TypeScript pass.
+- Unity: 79 EditMode and 72 PlayMode passing tests; three explicitly optional
+  private-model/collection tests skipped because no external files were supplied.
+- Native Android browser: 25 passing tests, release AAR build and lint pass.
+- Functions: 25 passing unit tests/build. Live gateway: 31 passing tests/build.
+- Shared prompt ownership, core boundaries and release-config checks pass.
+- Browser replay: actual native current-node/locals displayed; a block edit
+  validates and preserves other functions before one simulated save receipt.
+
+Local evidence is under ignored `.quest-evidence/programs/`. The full emulator,
+real-provider, headset and Meta Store release checks are separate gates; no pass
+is implied for those by this checkpoint.
+
+## Still to implement
+
+Readable text syntax with parser/printer round trips, friendlier structured field
+editors and drag/drop, typed asset pickers, cross-program function libraries,
+timer/custom-event entry points, event-await with timeouts, controlled parallel
+branches, durable native run receipts, and a unified extensible capability catalogue.
+No claim of support for these follows from the current JSON editor. The remaining
+sections describe that long-term direction, not additional shipped behavior.
 
 ## One program, multiple editors
 
@@ -114,10 +210,11 @@ still open native-foundation work.
 
 ## Migration from the current application
 
-Current v4 rules have sequential steps, repeats, waits, seven fixed event kinds,
+Legacy v4 rules have sequential steps, repeats, waits, seven fixed event kinds,
 limited tutor-state conditions, physical buttons, recorded/imported/library and
-recipe animation, spatial actions and interruption handling. They do not have
-general branching, variables, user functions, a text language or timer bindings.
+recipe animation, spatial actions and interruption handling. Those legacy sequences do not have
+general branching, variables or user functions; the v5 program alternative adds
+them. Readable text syntax and timer bindings remain unimplemented.
 The room planner's three batches/eight commands limit bounds model-driven edits;
 it is not a suitable language limit for future saved programs.
 

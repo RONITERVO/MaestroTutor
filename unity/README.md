@@ -189,3 +189,13 @@ and expand Tutor-state motions in the library to assign Idle, Listening,
 Thinking or Speaking choices. Assignments stay with each exact avatar and
 resume automatically with the conversation after leaving the library. Walking,
 posing and explicit actions retain priority. Device acceptance is still needed.
+
+
+Behavior programs use the same native rules scheduler and agent operations as the
+physical tools. The optional book workspace shows nested functions/blocks, a JSON
+editor and live variables/outcomes. Existing sequences can be converted without
+losing IDs or animation references; rules v5 retains earlier files and histories.
+See [the program contract](../docs/QUEST_BEHAVIOUR_PROGRAMS.md) for the supported
+subset and release limitations. Set `MAESTRO_PROGRAM_EVIDENCE` to a local output
+directory during `Verify-Quest.ps1` to capture real native observations for the
+web validator tests. No provider or headset is used by these PC checks.

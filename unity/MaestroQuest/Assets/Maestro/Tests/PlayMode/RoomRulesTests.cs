@@ -9,6 +9,7 @@ using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Rules;
 using NUnit.Framework;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -153,6 +154,45 @@ namespace Maestro.Quest.Tests
             var ray=new Ray(button.transform.position-Vector3.forward*.3f,Vector3.forward);Assert.That(router.Begin(1,ray),Is.True);router.End(1,ray);Assert.That(geometry.IsPlaying,Is.True);
             yield return new WaitForSeconds(.4f);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(geometry.IsPlaying,Is.False);
             Assert.That(editor.Read(target).recipe.playing,Is.False,"Rule playback does not rewrite the saved recipe flags");
+        }
+        [UnityTest] public IEnumerator ProgramsFromAgentDriveRealRecipeThroughEventsButtonsStopAndUndo()
+        {
+            var executor=new RoomAgentExecutor(editor);var recipe=RecipeTemplates.BoxRobot(true);recipe.playing=false;
+            Assert.That(executor.Execute(new RoomAgentRequest {version=1,sceneRevision=editor.Revision,commands=new[] {new RoomAgentCommand {action="create",kind="recipe",reference="robot",name="Program robot",recipe=recipe}}},out var error,out var created),Is.True,error);
+            string target=created.Single();var geometry=editor.Find(target).GetComponent<RecipeObject>();
+            var json=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json")));
+            json["resources"]=new JArray(target);
+            foreach(var token in new[] {json["functions"][0]["body"][1]["then"][0],json["functions"][0]["body"][1]["else"][0]}) {
+                token["step"]["action"]=8;token["step"]["targetId"]=target;token["step"]["seconds"]=.8f;token["step"]["loop"]=true;
+            }
+            var sequence=new RuleSequence {id="",name="Programmed wave",program=json.ToString(Newtonsoft.Json.Formatting.None),steps=Array.Empty<RuleStep>()};
+            var request=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {
+                new RuleEdit {kind="save",reference="wave",sequence=sequence},
+                new RuleEdit {kind="bind",binding=new RuleBinding {sequenceId="wave",trigger=RuleEventKind.Speaking,stopOnExit=true}},
+                new RuleEdit {kind="button",target="wave",mount=ButtonMount.LeftController}}};
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=request}}},out error,out created),Is.True,error);
+            string id=created.Single();var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            void Evidence(string phase) {
+                string output=Environment.GetEnvironmentVariable("MAESTRO_PROGRAM_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);
+                var state=observer.Observe();state.visible=true;state.workspaceView="rules";state.rules=workshop.Observe(true);
+                File.WriteAllText(Path.Combine(output,"program-"+phase+".json"),RoomAgentWire.Serialize(state));
+            }
+            runtime.ObserveSnapshot(new BookSnapshot {activity="idle"});runtime.ObserveSnapshot(new BookSnapshot {activity="speaking"});
+            for(int i=0;i<20&&!geometry.IsPlaying;i++)yield return null;
+            Assert.That(geometry.IsPlaying,Is.True,runtime.Scheduler.LastError);Assert.That(workshop.Observe().running.Single().nodeId,Is.EqualTo("prime_wave"));Evidence("running");
+            var arm=geometry.Part("RightUpperArm");var rotation=arm.localRotation;yield return new WaitForSeconds(.12f);Assert.That(Quaternion.Angle(rotation,arm.localRotation),Is.GreaterThan(.1f));
+            runtime.ObserveSnapshot(new BookSnapshot {activity="idle"});Assert.That(geometry.IsPlaying,Is.False);Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("cancelled"));Evidence("cancelled");
+            var button=root.GetComponentInChildren<RuleButton>();var router=root.AddComponent<BookPointerRouter>();router.Editor=editor;yield return null;Physics.SyncTransforms();
+            var ray=new Ray(button.transform.position-Vector3.forward*.3f,Vector3.forward);Assert.That(router.Begin(0,ray),Is.False);Assert.That(router.Begin(1,ray),Is.True);router.End(1,ray);
+            for(int i=0;i<20&&!geometry.IsPlaying;i++)yield return null;Assert.That(geometry.IsPlaying,Is.True);
+            yield return new WaitForSeconds(.95f);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"));Evidence("completed");
+            Assert.That(editor.Read(target).recipe.playing,Is.False);
+            var saved=workshop.Selected;string original=saved.program;Assert.That(runtime.Trigger(id),Is.True);saved.name="Changed program";
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=saved}}},out error,out _),Is.True,error);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Editing stops the previous program revision");workshop.Undo();Assert.That(workshop.Selected.name,Is.EqualTo("Programmed wave"));Assert.That(workshop.Selected.program,Is.EqualTo(original));
+            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==id).program,Is.EqualTo(original),error);workshop.SendMessage("OnApplicationPause",false);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            Assert.That(workshop.Execute(new RuleRequest {action="play",revision=workshop.Revision,target=id},out error,out _),Is.True,error);
+            for(int i=0;i<20&&!geometry.IsPlaying;i++)yield return null;Assert.That(geometry.IsPlaying,Is.True);runtime.SendMessage("OnApplicationPause",true);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(geometry.IsPlaying,Is.False);
         }
         [UnityTearDown] public IEnumerator TearDown()
         {

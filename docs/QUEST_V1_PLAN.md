@@ -2,6 +2,17 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Current PC checkpoint (2026-09-27): the development client includes typed behavior
+programs with functions, variables, branches, loops, shared native actions and an
+optional book editor showing blocks, JSON and live execution state. Existing
+state/object triggers and controller buttons run those programs through the same
+scheduler. Rules v5 preserves legacy sequences and future-version files. See
+QUEST_BEHAVIOUR_PROGRAMS.md for the implemented subset and remaining editor,
+timer/event, library and durable-receipt work. The first draft PR is a review
+checkpoint for the accumulated Quest companion and app-owned agent work; it does
+not mark the v1 release complete. Device access remains on hold.
+
+
 Earlier implementation update (2026-09-26): validated Mixamo/Unity-named GLB
 humanoids can replace Maestro, including the user's actual Meshy export.
 Gaze and following use the shared pose rig and scanned-room navigation, with

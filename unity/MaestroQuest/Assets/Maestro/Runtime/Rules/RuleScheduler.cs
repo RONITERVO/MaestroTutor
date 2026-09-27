@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Maestro.Quest.Programs;
 
 namespace Maestro.Quest.Rules
 {
@@ -17,7 +18,7 @@ namespace Maestro.Quest.Rules
     public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
 
     /// <summary>Bounded scheduler; disjoint targets can run concurrently. No user code executes.</summary>
-    public sealed class RuleScheduler
+    public sealed class RuleScheduler : IProgramFacts
     {
         sealed class Run
         {
@@ -27,13 +28,17 @@ namespace Maestro.Quest.Rules
             public HashSet<string> Targets;
             public int Step;
             public float Ends, Duration, PrepareDeadline;
-            public bool Preparing;
+            public bool Preparing,Computing;
+            public ProgramMachine Machine;
+            public RuleStep Active;
         }
         sealed class Pending { public string SequenceId; public RuleBinding Binding; }
         readonly IRuleActions actions;
         readonly List<Run> running = new();
         readonly List<Pending> queued = new();
         readonly Dictionary<string,float> firedAt = new();
+        readonly Queue<RuleOutcome> outcomes=new();
+        public RuleOutcome[] Outcomes=>outcomes.ToArray();
         RuleDocument document = new();
         string activity;
         bool suspended;
@@ -41,8 +46,13 @@ namespace Maestro.Quest.Rules
         public int PreparingCount => running.Count(x => x.Preparing);
         public int QueuedCount => queued.Count;
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,stepId=x.Sequence.steps[x.Step].id,preparing=x.Preparing}).ToArray();
+        public RuleRunView[] ObserveRuns() => running.Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,stepId=x.Active?.id ?? "00000000000000000000000000000000",preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
+            locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public RuleScheduler(IRuleActions actions) { this.actions = actions; }
+        public bool TryRead(string name,out ProgramValue value) {
+            if(name=="maestro.state"&&activity!=null) {value=new ProgramValue(activity);return true;}
+            if(actions is IProgramFacts source)return source.TryRead(name,out value);value=default;return false;
+        }
         public void Configure(RuleDocument value)
         {
             if (!value.Validate(out var error)) throw new ArgumentException(error);
@@ -85,7 +95,7 @@ namespace Maestro.Quest.Rules
             if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
             if (!BindingStillValid(binding)) return false;
             foreach (var step in sequence.steps) if (!actions.CanRun(step,out var error)) { LastError = error; return false; }
-            var targets = sequence.steps.SelectMany(RuleDocument.Targets).ToHashSet();
+            var targets = sequence.Targets().ToHashSet();
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || x.Targets.Overlaps(targets)).ToArray();
             if (conflicts.Length > 0 || running.Count >= 8)
             {
@@ -99,15 +109,27 @@ namespace Maestro.Quest.Rules
                 foreach (var run in conflicts) Stop(run,false);
             }
             var next = new Run { Id = Guid.NewGuid().ToString("N"), Sequence = sequence.Copy(), Binding = binding?.Copy(), Targets = targets };
+            if(sequence.UsesProgram)next.Machine=new ProgramMachine(sequence.Compile(out _),this);
             running.Add(next); return StartStep(next,now);
         }
         bool StartStep(Run run, float now)
         {
-            if (!actions.Start(run.Id,run.Sequence.steps[run.Step],out float seconds,out var error) || !float.IsFinite(seconds) || seconds < .01f || seconds > 30)
-            { LastError = error ?? "This action has an invalid duration"; Stop(run,false); return false; }
+            run.Computing=false;
+            if(run.Machine!=null) {
+                var yielded=run.Machine.Advance(out run.Active);
+                if(yielded==ProgramYield.Yield) {run.Computing=true;return true;}
+                if(yielded==ProgramYield.Failed) {LastError=run.Machine.Error;Stop(run,false,"failed",LastError);return false;}
+                if(yielded==ProgramYield.Completed) {
+                    if(run.Sequence.repeat) {run.Machine=new ProgramMachine(run.Sequence.Compile(out _),this);run.Computing=true;}
+                    else Finish(run,"completed","Program completed");
+                    return true;
+                }
+            }else run.Active=run.Sequence.steps[run.Step];
+            if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || seconds < .01f || seconds > 30)
+            { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
             run.Duration = seconds; run.PrepareDeadline = now+30;
             var state = actions is IRuleReadiness readiness ? readiness.State(run.Id,out error) : RuleActionState.Ready;
-            if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false); return false; }
+            if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false,"failed",LastError); return false; }
             run.Preparing = state == RuleActionState.Preparing;
             run.Ends = now + seconds; return true;
         }
@@ -116,25 +138,28 @@ namespace Maestro.Quest.Rules
             if (suspended || !float.IsFinite(now)) return;
             foreach (var run in running.ToArray())
             {
+                if(run.Computing) {StartStep(run,now);continue;}
                 if (run.Preparing)
                 {
-                    if (now >= run.PrepareDeadline) { LastError = "The action took too long to load; try again"; Stop(run,false); continue; }
+                    if (now >= run.PrepareDeadline) { LastError = "The action took too long to load; try again"; Stop(run,false,"failed",LastError); continue; }
                     var state = ((IRuleReadiness)actions).State(run.Id,out var error);
                     if (state == RuleActionState.Failed)
-                    { LastError = error ?? "The action took too long to load; try again"; Stop(run,false); continue; }
+                    { LastError = error ?? "The action took too long to load; try again"; Stop(run,false,"failed",LastError); continue; }
                     if (state == RuleActionState.Ready) { run.Preparing = false; run.Ends = now+run.Duration; }
                     continue; // Loading time never consumes any of the requested playback.
                 }
                 if (actions is IRuleReadiness active && active.State(run.Id,out var activeError) == RuleActionState.Failed)
-                { LastError=activeError ?? "This action stopped because its target changed"; Stop(run,false); continue; }
+                { LastError=activeError ?? "This action stopped because its target changed"; Stop(run,false,"failed",LastError); continue; }
                 if (now < run.Ends) continue;
                 if (actions is IRuleCompletion completion)
-                { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false); continue; } }
+                { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
+                run.Active=null;
+                if(run.Machine!=null) {StartStep(run,now);continue;}
                 run.Step++;
                 if (run.Step >= run.Sequence.steps.Length)
                 {
-                    if (!run.Sequence.repeat) { running.Remove(run); continue; }
+                    if (!run.Sequence.repeat) { Finish(run,"completed","Behaviour completed"); continue; }
                     run.Step = 0;
                 }
                 // At most one step per run per tick, even after a long frame.
@@ -144,17 +169,21 @@ namespace Maestro.Quest.Rules
             {
                 var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
                 if (sequence == null || !BindingStillValid(pending.Binding)) { queued.Remove(pending); continue; }
-                var targets = sequence.steps.SelectMany(RuleDocument.Targets).ToHashSet();
+                var targets = sequence.Targets().ToHashSet();
                 if (running.Count >= 8 || running.Any(x => x.Sequence.id == sequence.id || x.Targets.Overlaps(targets))) continue;
                 queued.Remove(pending); Trigger(sequence.id,now,pending.Binding);
             }
         }
         public void StopTarget(string targetId, bool preservePlacement)
         {
-            foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && RuleDocument.Targets(run.Sequence.steps[run.Step]).Contains(targetId));
-            queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.steps.Any(y => RuleDocument.Targets(y).Contains(targetId)) == true);
+            foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && run.Active!=null && RuleDocument.Targets(run.Active).Contains(targetId));
+            queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.Targets().Contains(targetId) == true);
         }
-        void Stop(Run run, bool preservePlacement) { actions.Stop(run.Id,preservePlacement); running.Remove(run); }
+        void Finish(Run run,string phase,string status) {
+            running.Remove(run);outcomes.Enqueue(new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase});
+            while(outcomes.Count>16)outcomes.Dequeue();
+        }
+        void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {actions.Stop(run.Id,preservePlacement);Finish(run,phase,status);}
         public void StopAll() { foreach (var run in running.ToArray()) Stop(run,false); queued.Clear(); }
     }
 }

@@ -9,10 +9,11 @@ using Maestro.Quest.Interaction;
 using Maestro.Quest.Imports;
 using UnityEngine;
 using UnityEngine.Playables;
+using Maestro.Quest.Programs;
 
 namespace Maestro.Quest.Rules
 {
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness
+    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IProgramFacts
     {
         sealed class Effect
         {
@@ -38,6 +39,11 @@ namespace Maestro.Quest.Rules
         readonly Dictionary<string,Effect> effects = new();
         public static ImportedModel ClipModel(RoomItem item) => !item ? null : item.GetComponent<MaestroAvatar>()?.CustomModel ?? item.GetComponent<CreatedRoomObject>()?.Model;
         public RoomRuleActions(RoomEditor editor, AnimationWorkshop workshop) { this.editor = editor; this.workshop = workshop; }
+        public bool TryRead(string name,out ProgramValue value) {
+            value=default;if(!editor.PhysicsWorld)return false;
+            if(name=="physics.running") {value=new ProgramValue(editor.PhysicsWorld.Running);return true;}
+            if(name=="physics.ready") {value=new ProgramValue(editor.PhysicsWorld.SurfacesReady);return true;}return false;
+        }
         public bool CanRun(RuleStep step, out string error)
         {
             error = null;
@@ -155,6 +161,7 @@ namespace Maestro.Quest.Rules
         {
             error = null;
             if (!effects.TryGetValue(runId,out var effect)) return RuleActionState.Ready;
+            if(effect.Spatial&&!effect.Spatial.OwnedBy(runId)) {error=effect.Spatial.Status;return RuleActionState.Failed;}
             if (effect.Prop && !effect.Prop.Valid(out error)) return RuleActionState.Failed;
             if (effect.Preparation == null || effect.Started) return RuleActionState.Ready;
             if (!effect.Preparation.IsCompleted) return RuleActionState.Preparing;

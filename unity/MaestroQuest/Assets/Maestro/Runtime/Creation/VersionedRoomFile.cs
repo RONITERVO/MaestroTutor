@@ -18,16 +18,17 @@ namespace Maestro.Quest.Creation
         readonly string directory,primary,stem,label;
         readonly int version;
         readonly int maximum;
-        readonly Func<T,bool> validate;
+        readonly Func<T,bool> validate,newerDocument;
         readonly Func<T,T> copy;
         readonly Action<T> normalize,upgrade;
         sealed class Retained { public long Length,Stamp; public bool Uncertain; public HashSet<string> Ids; }
         readonly object retainedGate=new();
         readonly Dictionary<string,Retained> retained=new();
         public bool ReadOnly { get; private set; }
-        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2)
+        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null)
         {
             this.directory = Path.GetFullPath(directory); this.stem=stem; this.version=version; primary = Path.Combine(this.directory,stem+".v"+version+".json");
+            this.newerDocument=newerDocument;
             label = stem; this.maximum = maximum; this.validate = validate; this.copy = copy; this.normalize = normalize; this.upgrade = upgrade;
         }
         public T Load(out string message)
@@ -64,6 +65,7 @@ namespace Maestro.Quest.Creation
                 if (reader.Read() || json["version"]?.Type != JTokenType.Integer) return false;
                 if (json["version"].ToString() != expected.ToString()) { newer = true; return false; }
                 var candidate = JsonUtility.FromJson<T>(text); if (candidate == null) return false;
+                if(newerDocument?.Invoke(candidate)==true) {newer=true;return false;}
                 normalize?.Invoke(candidate); if (!validate(candidate)) return false;
                 value = candidate; return true;
             }

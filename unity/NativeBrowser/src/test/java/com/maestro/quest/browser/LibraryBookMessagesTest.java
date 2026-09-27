@@ -9,11 +9,11 @@ import org.json.JSONObject;
 import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class) @Config(sdk=35)
 public class LibraryBookMessagesTest {
-    @Test public void recipeInspectionHasALargerBoundWithoutWideningTheLibrary() throws Exception {
-        JSONObject state=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("inspection","x".repeat(40000));
+    @Test public void programInspectionAndTraceFitWithoutWideningTheLibrary() throws Exception {
+        JSONObject state=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("inspection","x".repeat(140000));
         assertNotNull(LibraryBookMessages.publishScript(state.toString(),"roomState"));
         assertNull(LibraryBookMessages.publishScript(state.toString(),"libraryState"));
-        assertNull(LibraryBookMessages.publishScript(state.put("inspection","x".repeat(65536)).toString(),"roomState"));
+        assertNull(LibraryBookMessages.publishScript(state.put("inspection","x".repeat(196608)).toString(),"roomState"));
     }
     @Test public void roomStateIsDataAndOnlyKnownReceiversAreAllowed() throws Exception {
         String json=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("status","');window.injected=true;//").toString();

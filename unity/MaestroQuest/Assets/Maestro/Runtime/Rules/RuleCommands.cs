@@ -20,8 +20,10 @@ namespace Maestro.Quest.Rules
         public int revision,page;
         public RuleEdit[] edits;
     }
-    [Serializable] public sealed class RuleSummary { public string id,name; public int steps; public bool repeat; }
-    [Serializable] public sealed class RuleRunView { public string id,sequenceId,stepId; public bool preparing; }
+    [Serializable] public sealed class RuleSummary { public string id,name; public int steps; public bool repeat,program; }
+    [Serializable] public sealed class RuleRunView { public string id,sequenceId,stepId; public bool preparing; public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
+    [Serializable] public sealed class RuleOutcome {public string id,sequenceId,phase,nodeId,status;}
+    [Serializable] public sealed class ProgramVariableView {public string name,type,value;}
     [Serializable] public sealed class RuleView
     {
         public int revision,bindingPage,bindingCount,queued;
@@ -32,6 +34,7 @@ namespace Maestro.Quest.Rules
         public RuleBinding[] bindings;
         public RuleButtonData[] buttons;
         public RuleRunView[] running;
+        public RuleOutcome[] outcomes=Array.Empty<RuleOutcome>();
     }
     public sealed partial class RuleWorkshop
     {
@@ -43,10 +46,10 @@ namespace Maestro.Quest.Rules
             int page=Mathf.Clamp(viewPage,0,Mathf.Max(0,(bindings.Length-1)/8));
             return new RuleView {
                 revision=Revision,canUndo=CanUndo,canRedo=CanRedo,readOnly=ReadOnly,status=Status,
-                sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.steps.Length,repeat=x.repeat}).ToArray(),
+                sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.UsesProgram?x.Compile(out _).NodeCount:x.steps.Length,repeat=x.repeat,program=x.UsesProgram}).ToArray(),
                 selected=selected,bindings=bindings.Skip(page*8).Take(8).Select(x=>x.Copy()).ToArray(),bindingPage=page,bindingCount=bindings.Length,
                 buttons=selected==null ? Array.Empty<RuleButtonData>() : document.buttons.Where(x=>x.sequenceId==selected.id).Select(x=>x.Copy()).ToArray(),
-                running=Runtime?.Scheduler?.ObserveRuns() ?? Array.Empty<RuleRunView>(),queued=Runtime?.Scheduler?.QueuedCount ?? 0
+                running=Runtime?.Scheduler?.ObserveRuns() ?? Array.Empty<RuleRunView>(),outcomes=Runtime?.Scheduler?.Outcomes??Array.Empty<RuleOutcome>(),queued=Runtime?.Scheduler?.QueuedCount ?? 0
             };
         }
         public bool Execute(RuleRequest request,out string error,out string[] created)

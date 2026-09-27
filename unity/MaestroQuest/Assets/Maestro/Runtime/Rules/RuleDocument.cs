@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Programs;
 using Maestro.Quest.Imports;
 using UnityEngine;
 
@@ -43,8 +44,21 @@ namespace Maestro.Quest.Rules
         public string id, name;
         public RuleInterruption interruption;
         public bool repeat;
+        public string program;
+        public bool UsesProgram=>!string.IsNullOrEmpty(program);
+        BehaviourProgram compiled;
+        string compiledSource;
+        public BehaviourProgram Compile(out string error) {
+            error=null;if(!UsesProgram)return null;
+            if(compiledSource==program&&compiled!=null)return compiled;
+            if(!BehaviourProgram.TryParse(program,out var value,out error))return null;
+            compiledSource=program;compiled=value;return compiled;
+        }
+        public IEnumerable<string> Targets()=>UsesProgram?Compile(out _)?.Resources??Array.Empty<string>():steps.SelectMany(RuleDocument.Targets);
+        public bool UsesMotion(string id)=>steps.Any(x=>x.motionId==id)||(UsesProgram&&Compile(out _)?.ReferencesMotion(id)==true);
+        public IEnumerable<string> MotionIds()=>steps.Select(x=>x.motionId).Concat(UsesProgram?Compile(out _)?.ReferencedIds??Array.Empty<string>():Array.Empty<string>());
         public RuleStep[] steps = Array.Empty<RuleStep>();
-        public RuleSequence Copy() => new() { id = id, name = name, interruption = interruption, repeat = repeat, steps = steps.Select(x => x.Copy()).ToArray() };
+        public RuleSequence Copy() => new() { id = id, name = name, interruption = interruption, repeat = repeat, program=program,compiled=compiled,compiledSource=compiledSource, steps = steps.Select(x => x.Copy()).ToArray() };
     }
     [Serializable] public sealed class RuleBinding
     {
@@ -66,7 +80,7 @@ namespace Maestro.Quest.Rules
     }
     [Serializable] public sealed class RuleDocument
     {
-        public int version = 4;
+        public int version = 5;
         public RuleSequence[] sequences = Array.Empty<RuleSequence>();
         public RuleBinding[] bindings = Array.Empty<RuleBinding>();
         public RuleButtonData[] buttons = Array.Empty<RuleButtonData>();
@@ -87,11 +101,12 @@ namespace Maestro.Quest.Rules
         public bool Validate(out string error)
         {
             error = "This rule file has an unsupported version or invalid data.";
-            if (version != 1 && version != 2 && version != 3 && version != 4 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
+            if(sequences.Where(x=>x!=null).Sum(x=>x.program?.Length??0)>128000)return false;
             var stepIds = new HashSet<string>(); var sequenceIds = new HashSet<string>(); var bindingIds = new HashSet<string>(); var buttonIds = new HashSet<string>();
             foreach (var sequence in sequences)
             {
-                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.steps == null || sequence.steps.Length < 1 || sequence.steps.Length > 16) return false;
+                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.steps == null || (sequence.UsesProgram ? version<5 || sequence.steps.Length!=0 || sequence.Compile(out _)==null : sequence.steps.Length<1 || sequence.steps.Length>16)) return false;
                 foreach (var step in sequence.steps)
                 {
                     if (step == null || version >= 4 && (!IsId(step.id) || !stepIds.Add(step.id)) || version < 4 && step.action == RuleActionKind.RecipeAnimation || !Enum.IsDefined(typeof(RuleActionKind),step.action) || !Enum.IsDefined(typeof(RuleGesture),step.gesture) || !float.IsFinite(step.seconds) || step.seconds < 0 || step.seconds > 30) return false;

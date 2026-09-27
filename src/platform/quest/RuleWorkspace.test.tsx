@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
+import nativeProgram from '../../../test-fixtures/browser/programBookState.json';
 import {act,cleanup,fireEvent,render,waitFor} from '@testing-library/react';
 import {afterEach,describe,expect,it} from 'vitest';
+import {readFileSync} from 'node:fs';
+import {parseProgram,type BehaviourProgram} from '../../core-sdk/room/programs';
 import {RuleWorkspace} from './RuleWorkspace';
 import {RoomAgentClient} from './roomAgentBridge';
 import {newRuleStep,type RuleView} from '../../core-sdk/room/rules';
@@ -33,3 +36,40 @@ describe('shared behaviour blocks',()=>{
   await act(async()=>{client.receive(state({revision:3,ack:2,rules:{...rules(),revision:6}}));});
  });
 });
+
+const programSource=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-prime.json','utf8');
+const programState=():RoomAgentState=>state({capabilities:['behaviourPrograms.v1'],rules:{...rules(),sequences:[{id,name:'Prime wave',steps:11,program:true,repeat:false}],selected:{id,name:'Prime wave',interruption:0,repeat:false,steps:[],program:programSource}}});
+describe('program block and source editing',()=>{
+ it('round trips a user block edit without losing functions, then sends the same program through the native contract',async()=>{
+  const client=new RoomAgentClient();client.receive(programState());const screen=render(<RuleWorkspace client={client}/>);
+  expect(screen.getAllByText('Maestro · 0.1 seconds')).toHaveLength(2);expect(screen.getByRole('region',{name:'Function prime'})).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'Edit block call_prime'}));
+  const node=JSON.parse((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value);node.args[0].value=12;
+  fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:JSON.stringify(node)}});expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(true);expect(client.snapshot().request).toBeNull();
+  fireEvent.click(screen.getByRole('button',{name:'Update draft'}));expect(screen.getByText('answer = prime(12)')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
+  const program=parseProgram(updated.program).program!;expect(program.functions[1]).toEqual(JSON.parse(programSource).functions[1]);expect(program.functions[0].body[0].id).toBe('call_prime');expect(updated.steps).toEqual([]);
+  await act(async()=>{client.receive({...programState(),revision:2,ack:1,rules:{...programState().rules!,revision:5,selected:updated}});});
+  expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(true);
+ });
+ it('retains unfinished source on a concurrent physical edit, rejects invalid edits and displays native progress/outcomes',()=>{
+  const client=new RoomAgentClient(),original=programState();client.receive({...original,rules:{...original.rules!,running:[{id:'e'.repeat(32),sequenceId:id,stepId:'f'.repeat(32),preparing:false,nodeId:'prime_wave',functionName:'main',status:'Running',locals:[{name:'answer',type:'boolean',value:'True'}]}],outcomes:[{id:'0'.repeat(32),sequenceId:id,phase:'completed',nodeId:'prime_wave',status:'Program completed'}]}});const screen=render(<RuleWorkspace client={client}/>);
+  expect(screen.getByLabelText('Live program values').textContent).toContain('answer');expect(screen.getByText(/Last run: completed/)).toBeTruthy();expect(screen.container.querySelector('[data-node-id="prime_wave"]')!.classList.contains('rule-action-active')).toBe(true);
+  fireEvent.click(screen.getByRole('button',{name:'Edit full source'}));fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:'{bad'}});fireEvent.click(screen.getByRole('button',{name:'Update draft'}));expect(screen.getByRole('alert')).toBeTruthy();expect(client.snapshot().request).toBeNull();
+  act(()=>{client.receive({...original,revision:2,rules:{...original.rules!,revision:5}});});expect((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value).toBe('{bad');expect(screen.getByRole('status').textContent).toContain('draft is retained');
+  fireEvent.click(screen.getByRole('button',{name:'Reload latest'}));expect(screen.queryByLabelText('Program JSON')).toBeNull();expect(screen.getByRole('region',{name:'Function prime'})).toBeTruthy();
+ });
+ it('converts existing steps losslessly and never advertises programs to an older native app',()=>{
+  const client=new RoomAgentClient();client.receive(state());const screen=render(<RuleWorkspace client={client}/>);expect(screen.queryByRole('button',{name:'Convert to program'})).toBeNull();
+  act(()=>{client.receive(state({revision:2,capabilities:['behaviourPrograms.v1']}));});fireEvent.click(screen.getByRole('button',{name:'Convert to program'}));fireEvent.click(screen.getByRole('button',{name:'Edit full source'}));
+  const program=JSON.parse((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value) as BehaviourProgram;expect(program.functions[0].body.map(n=>n.id)).toEqual(rules().selected!.steps.map(s=>s.id));expect(program.resources).toEqual(['maestro']);client.cancel();
+ });
+});
+
+ it('keeps a large valid program and concurrent local traces within the expanded room observation boundary',()=>{
+  const state=JSON.parse(JSON.stringify(nativeProgram)) as RoomAgentState;
+  state.rules!.selected!.program=state.rules!.selected!.program!.padEnd(24000,' ');
+  const run=state.rules!.running[0];state.rules!.running=Array.from({length:8},(_,i)=>({...run,id:i.toString(16).padStart(32,'0'),locals:Array.from({length:24},(_,j)=>({name:'value_'+j,type:'text',value:'x'.repeat(128)}))}));
+  state.rules!.outcomes=Array.from({length:16},(_,i)=>({id:(i+20).toString(16).padStart(32,'0'),sequenceId:run.sequenceId,phase:'completed',status:'x'.repeat(500)}));
+  expect(JSON.stringify(state).length).toBeGreaterThan(65536);expect(new RoomAgentClient().receive(state)).toBe(true);
+  expect(new RoomAgentClient().receive({...state,padding:'x'.repeat(196608)})).toBe(false);
+ });

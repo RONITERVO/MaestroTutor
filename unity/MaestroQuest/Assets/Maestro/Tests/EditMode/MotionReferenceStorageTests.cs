@@ -24,14 +24,14 @@ namespace Maestro.Quest.Tests
             string roomText = JsonUtility.ToJson(room),ruleText = JsonUtility.ToJson(rules);
             File.WriteAllText(Path.Combine(directory,"room.v1.json"),roomText); File.WriteAllText(Path.Combine(directory,"rules.v1.json"),ruleText);
             var roomStore = new RoomStorage(directory); var loaded = roomStore.Load(out _); Assert.That(loaded.version,Is.EqualTo(2)); Assert.That(loaded.objects[1].walkClip,Is.EqualTo(2));
-            var ruleStore = new RuleStorage(directory); var loadedRules = ruleStore.Load(out _); Assert.That(loadedRules.version,Is.EqualTo(4)); Assert.That(loadedRules.sequences[0].steps[0].clipIndex,Is.EqualTo(1)); Assert.That(loadedRules.buttons[0].mount,Is.EqualTo(ButtonMount.RightController));
+            var ruleStore = new RuleStorage(directory); var loadedRules = ruleStore.Load(out _); Assert.That(loadedRules.version,Is.EqualTo(5)); Assert.That(loadedRules.sequences[0].steps[0].clipIndex,Is.EqualTo(1)); Assert.That(loadedRules.buttons[0].mount,Is.EqualTo(ButtonMount.RightController));
             Assert.That(roomStore.Save(loaded,out _),Is.True); Assert.That(ruleStore.Save(loadedRules,out _),Is.True);
             Assert.That(File.ReadAllText(Path.Combine(directory,"room.v1.json")),Is.EqualTo(roomText)); Assert.That(File.ReadAllText(Path.Combine(directory,"rules.v1.json")),Is.EqualTo(ruleText));
-            Assert.That(File.Exists(Path.Combine(directory,"room.v2.json")),Is.True); Assert.That(File.Exists(Path.Combine(directory,"rules.v4.json")),Is.True);
+            Assert.That(File.Exists(Path.Combine(directory,"room.v2.json")),Is.True); Assert.That(File.Exists(Path.Combine(directory,"rules.v5.json")),Is.True);
             // Corrupt current storage never resurrects a stale, still-valid v1 file.
             File.WriteAllText(Path.Combine(directory,"room.v2.json"),"broken"); var blocked = new RoomStorage(directory); Assert.That(blocked.Load(out _),Is.Null); Assert.That(blocked.ReadOnly,Is.True); Assert.That(blocked.Save(room,out _),Is.False);
-            Assert.That(ruleStore.Save(loadedRules,out _),Is.True); Assert.That(File.Exists(Path.Combine(directory,"rules.v4.json.backup")),Is.True);
-            File.WriteAllText(Path.Combine(directory,"rules.v4.json"),"{\"version\":5}"); var blockedRules = new RuleStorage(directory); Assert.That(blockedRules.Load(out _).sequences,Is.Empty); Assert.That(blockedRules.ReadOnly,Is.True); Assert.That(blockedRules.Save(rules,out _),Is.False);
+            Assert.That(ruleStore.Save(loadedRules,out _),Is.True); Assert.That(File.Exists(Path.Combine(directory,"rules.v5.json.backup")),Is.True);
+            File.WriteAllText(Path.Combine(directory,"rules.v5.json"),"{\"version\":6}"); var blockedRules = new RuleStorage(directory); Assert.That(blockedRules.Load(out _).sequences,Is.Empty); Assert.That(blockedRules.ReadOnly,Is.True); Assert.That(blockedRules.Save(rules,out _),Is.False);
         }
         [Test] public void StableMotionIdsPersistThroughCopyUndoAndReloadAndRejectPathsAndWrongTargets()
         {

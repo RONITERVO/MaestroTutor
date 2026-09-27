@@ -204,3 +204,20 @@ The subsequent user question about code and visual blocks is recorded in
 QUEST_BEHAVIOUR_PROGRAMS.md. It proposes a common typed program with functions,
 branches and event entry points, extending the current bounded sequences. It is
 not implemented by the movement/physics action extension.
+
+
+## Programmable behavior milestone (2026-09-26)
+
+Version-1 behavior programs now compose the existing native rule actions with typed
+variables, function calls/returns, conditions, switch and bounded loops. They use
+one revision-checked rule command from chat-agent authoring and the optional book
+editor. The book displays nested editable blocks/JSON, the native current node,
+locals and recent completion/cancellation/failure outcomes. State/object events,
+run-now and physical buttons share that execution path. Programs are capability
+gated; v5 rule storage preserves older linear rules and future-version files.
+
+See [the program contract and remaining roadmap](QUEST_BEHAVIOUR_PROGRAMS.md).
+This milestone does not provide timers, arbitrary JavaScript/C#, Blockly round-trip
+editing, cross-program libraries or durable native execution receipts. Browser
+checks replay real Unity observations but simulated edits; headset acceptance and
+performance testing are still required for release.

@@ -20,9 +20,13 @@ export function validRoomControl(c:Record<string,unknown>):boolean {
     default:return false;
   }
 }
-export function requireRoomCapabilities(commands:{action:string}[],scene:{capabilities?:string[]}) {
-  for(const command of commands) if(Object.prototype.hasOwnProperty.call(roomControlFields,command.action)&&!scene.capabilities?.includes(command.action+'.v1'))
-    throw new Error('This room does not support '+command.action+'. Update or connect a compatible native app.');
+export function requireRoomCapabilities(commands:{action:string;rule?:unknown}[],scene:{capabilities?:string[]}) {
+  for(const command of commands) {
+    if(Object.prototype.hasOwnProperty.call(roomControlFields,command.action)&&!scene.capabilities?.includes(command.action+'.v1'))
+      throw new Error('This room does not support '+command.action+'. Update or connect a compatible native app.');
+    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&e.sequence.program)&&!scene.capabilities?.includes('behaviourPrograms.v1'))
+      throw new Error('This room does not support behaviour programs. Update or connect a compatible native app.');
+  }
 }
 const text=(v:unknown)=>typeof v==='string'&&v.length<=2048;
 export const validPhysicsObservation=(v:unknown):v is PhysicsObservation=>record(v)&&typeof v.ready==='boolean'&&typeof v.running==='boolean'&&(!v.running||v.ready)&&text(v.status);
