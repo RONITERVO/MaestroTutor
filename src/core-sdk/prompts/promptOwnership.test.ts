@@ -63,6 +63,14 @@ describe('prompt ownership', () => {
     expect(catalogueRuntimeViolations('const example = "window.document"; const data = { window: "example" };')).toEqual([]);
   });
 
+  it('keeps the native vocabulary adapter dependent only on generated data', () => {
+    const source = readFileSync(new URL('../../../shared/behaviourCatalog.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('behaviourCatalog.ts', source, ts.ScriptTarget.Latest, true);
+    const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
+    expect(imports).toEqual(['./generated/behaviourCatalog.json']);
+    expect(catalogueRuntimeViolations(source, 'behaviourCatalog.ts')).toEqual([]);
+  });
+
   it('keeps the catalogue runtime-independent and usable by Functions', () => {
     const rootDirectory = new URL('../../../shared/prompts/', import.meta.url);
     for (const file of readdirSync(rootDirectory).filter(name => name.endsWith('.ts'))) {
@@ -70,7 +78,7 @@ describe('prompt ownership', () => {
       const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
       for (const statement of ast.statements) {
         if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
-          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^\.\/[a-z]+$/);
+          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/behaviourCatalog)$/);
         }
       }
       expect(catalogueRuntimeViolations(source, file)).toEqual([]);

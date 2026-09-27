@@ -49,9 +49,7 @@ namespace Maestro.Quest.Programs
         readonly HashSet<string> ids=new();
         readonly Dictionary<string,HashSet<string>> calls=new();
         int expressions;
-        public static readonly IReadOnlyDictionary<string,ProgramType> Facts=new Dictionary<string,ProgramType> {
-            {"maestro.state",ProgramType.Text},{"physics.running",ProgramType.Boolean},{"physics.ready",ProgramType.Boolean}
-        };
+        public static IReadOnlyDictionary<string,ProgramType> Facts=>BehaviourCatalog.FactTypes;
         public static bool TryParse(string source,out BehaviourProgram program,out string error)
         {
             program=null;error=null;
@@ -174,10 +172,8 @@ namespace Maestro.Quest.Programs
                 if(op=="switch"&&Returns((JArray)item["default"])&&((JArray)item["cases"]).All(x=>Returns((JArray)x["body"])))return true;
             }return false;
         }
-        internal static ProgramType BindingType(string name)=>name switch {
-            "targetId" or "motionId"=>ProgramType.Text,"seconds" or "gesture" or "clipIndex"=>ProgramType.Number,"loop"=>ProgramType.Boolean,
-            _=>throw new ProgramFault("Unsupported native argument binding")
-        };
+        internal static ProgramType BindingType(string name)=>BehaviourCatalog.Bindings.TryGetValue(name,out var type)
+            ? type : throw new ProgramFault("Unsupported native argument binding");
         internal static bool ValidStep(RuleStep step,out string error)=>new RuleDocument {sequences=new[] {new RuleSequence {id="11111111111111111111111111111111",name="Program action",steps=new[] {step}}}}.Validate(out error);
         static RuleStep ReadStep(JObject value)
         {

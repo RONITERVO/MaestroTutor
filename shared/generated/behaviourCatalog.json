@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "actions": [
+    {
+      "id": "animation.recording.play",
+      "label": "Recorded animation",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "recording.available"
+      ]
+    },
+    {
+      "id": "avatar.gesture.play",
+      "label": "Gesture",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "avatar.available"
+      ]
+    },
+    {
+      "id": "time.wait",
+      "label": "Wait",
+      "duration": "timed",
+      "ownership": "none",
+      "channels": [],
+      "requirements": []
+    },
+    {
+      "id": "object.recording.throw",
+      "label": "Throw recording",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "recording.twoFrames",
+        "rigidBody.dynamic",
+        "physics.running"
+      ]
+    },
+    {
+      "id": "avatar.look.user",
+      "label": "Look at user",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "avatar.spatialReady"
+      ]
+    },
+    {
+      "id": "avatar.follow.user",
+      "label": "Follow user",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "avatar.spatialReady",
+        "physics.running",
+        "navigation.floorReady"
+      ]
+    },
+    {
+      "id": "animation.embedded.play",
+      "label": "Imported clip",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "model.loaded",
+        "embeddedClip.available"
+      ]
+    },
+    {
+      "id": "animation.library.play",
+      "label": "Library motion",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "model.loaded",
+        "motion.available",
+        "rig.compatible"
+      ]
+    },
+    {
+      "id": "animation.recipe.play",
+      "label": "Recipe animation",
+      "duration": "timed",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "recipe.tracksAvailable"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "maestro.speaking.enter",
+      "label": "Speaking",
+      "activity": "speaking",
+      "objectEvent": false
+    },
+    {
+      "id": "maestro.listening.enter",
+      "label": "Listening",
+      "activity": "listening",
+      "objectEvent": false
+    },
+    {
+      "id": "maestro.thinking.enter",
+      "label": "Thinking",
+      "activity": "thinking",
+      "objectEvent": false
+    },
+    {
+      "id": "maestro.idle.enter",
+      "label": "Idle",
+      "activity": "idle",
+      "objectEvent": false
+    },
+    {
+      "id": "object.tapped",
+      "label": "Item tapped",
+      "activity": null,
+      "objectEvent": true
+    },
+    {
+      "id": "object.grabbed",
+      "label": "Item grabbed",
+      "activity": null,
+      "objectEvent": true
+    },
+    {
+      "id": "object.released",
+      "label": "Item released",
+      "activity": null,
+      "objectEvent": true
+    }
+  ],
+  "facts": [
+    {
+      "id": "maestro.state",
+      "type": "text",
+      "label": "Maestro state"
+    },
+    {
+      "id": "physics.running",
+      "type": "boolean",
+      "label": "Physics running"
+    },
+    {
+      "id": "physics.ready",
+      "type": "boolean",
+      "label": "Room surfaces ready"
+    }
+  ],
+  "adapters": {
+    "ruleStep": {
+      "actionIds": [
+        "animation.recording.play",
+        "avatar.gesture.play",
+        "time.wait",
+        "object.recording.throw",
+        "avatar.look.user",
+        "avatar.follow.user",
+        "animation.embedded.play",
+        "animation.library.play",
+        "animation.recipe.play"
+      ],
+      "eventIds": [
+        "maestro.speaking.enter",
+        "maestro.listening.enter",
+        "maestro.thinking.enter",
+        "maestro.idle.enter",
+        "object.tapped",
+        "object.grabbed",
+        "object.released"
+      ],
+      "bindings": {
+        "targetId": "text",
+        "motionId": "text",
+        "seconds": "number",
+        "gesture": "number",
+        "clipIndex": "number",
+        "loop": "boolean"
+      }
+    }
+  },
+  "sources": [
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
+      "sha256": "1269c1b464441434d8edceb8290f2e4cd26344521d739b3313a2a0f31b89107a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
+      "sha256": "a778739badb67039ac1aa4adf617755d197d5a3c8b4b0374d7f43f64920ec317"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
+      "sha256": "65f982e935a1772014d886dbde9ad5245c145a55f198ac70de09e6aaaf938b7b"
+    }
+  ]
+}

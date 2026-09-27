@@ -6,6 +6,7 @@ param(
     [Parameter(Mandatory)][string]$BuildMirror,
     [Parameter(Mandatory)][string]$AndroidSdk,
     [Parameter(Mandatory)][string]$AndroidJdk,
+    [switch]$UpdateBehaviourCatalog,
     [switch]$RenderImports,
     [switch]$RenderRecipes,
     [switch]$RenderRules
@@ -23,7 +24,7 @@ $classesJar = Join-Path (Split-Path -Parent $editorPath) 'Data/PlaybackEngines/A
 if (!(Test-Path -LiteralPath $classesJar)) { throw 'Install Android build support for the pinned Unity editor.' }
 
 # Validate the dedicated copy's ownership and run its current source tests.
-& (Join-Path $PSScriptRoot 'Verify-Quest.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -RenderImports:$RenderImports -RenderRules:$RenderRules -RenderRecipes:$RenderRecipes
+& (Join-Path $PSScriptRoot 'Verify-Quest.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -RenderImports:$RenderImports -RenderRules:$RenderRules -RenderRecipes:$RenderRecipes -UpdateBehaviourCatalog:$UpdateBehaviourCatalog
 $logRoot = Join-Path $mirrorRoot 'Logs'
 $env:JAVA_HOME = $jdkRoot
 $env:ANDROID_HOME = $sdkRoot

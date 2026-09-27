@@ -1,9 +1,10 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-/** Versioned wire enum order. Native conformance tests protect these numeric identities. */
-export const ruleActions=['Recorded animation','Gesture','Wait','Throw recording','Look at user','Follow user','Imported clip','Library motion','Recipe animation'] as const;
+import {behaviourCatalog} from '../behaviourCatalog';
+/** Generated labels retain the current native wire identities. */
+export const ruleActions=behaviourCatalog.adapters.ruleStep.actionIds.map(id=>behaviourCatalog.actions.find(action=>action.id===id)!.label);
 export const ruleGestures=['Greeting','Pointing','Listening','Speaking','Idle','Walk'] as const;
-export const ruleEvents=['Speaking','Listening','Thinking','Idle','Item tapped','Item grabbed','Item released'] as const;
+export const ruleEvents=behaviourCatalog.adapters.ruleStep.eventIds.map(id=>behaviourCatalog.events.find(event=>event.id===id)!.label);
 export const ruleConditions=['Any','Speaking','Listening','Thinking','Idle'] as const;
 export const rulePolicies=['Restart','Ignore','Queue latest'] as const;
 export const ruleMounts=['Room','Left controller','Right controller'] as const;

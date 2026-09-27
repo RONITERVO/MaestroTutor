@@ -50,7 +50,7 @@ namespace Maestro.Quest.Rules
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public RuleScheduler(IRuleActions actions) { this.actions = actions; }
         public bool TryRead(string name,out ProgramValue value) {
-            if(name=="maestro.state"&&activity!=null) {value=new ProgramValue(activity);return true;}
+            if(BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(activity),out value))return true;
             if(actions is IProgramFacts source)return source.TryRead(name,out value);value=default;return false;
         }
         public void Configure(RuleDocument value)

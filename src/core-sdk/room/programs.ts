@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {validRuleStep,type RuleStep} from './ruleSteps';
+import {behaviourFactTypes,behaviourBindingTypes} from '../../../shared/behaviourCatalog';
 export type Value=number|boolean|string;
 export type ValueType='number'|'boolean'|'text';
 export type Expression={value:Value}|{var:string}|{fact:string}|{op:string;args:Expression[]};
@@ -11,7 +12,7 @@ export type ProgramNode={id:string}&(
  {op:'action';step:Omit<RuleStep,'id'>;bindings:Record<string,Expression>});
 export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value}[];body:ProgramNode[]}
 export interface BehaviourProgram {version:1;entry:string;resources:string[];functions:ProgramFunction[]}
-export const programFacts:Readonly<Record<string,ValueType>>={'maestro.state':'text','physics.running':'boolean','physics.ready':'boolean'};
+export const programFacts=behaviourFactTypes;
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 function need(condition:unknown,message:string):asserts condition {if(!condition)throw new Error(message);}
 const obj=(v:unknown)=>{need(record(v),'Expected an object');return v;};
@@ -81,7 +82,7 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
       }
       const step={id:'22222222222222222222222222222222',propHand:1,propRelease:0,propReleaseAt:1,propOffset:{x:0,y:0,z:0},propRotation:{x:0,y:0,z:0,w:1},...s};need(validRuleStep(step),'Invalid native action');
       need((step.action===2||resources.has(step.targetId))&&(!step.propId||resources.has(step.propId)),'Declare every action resource');
-      const types:Record<string,ValueType>={targetId:'text',motionId:'text',seconds:'number',gesture:'number',clipIndex:'number',loop:'boolean'};
+      const types=behaviourBindingTypes;
       for(const [key,value] of Object.entries(obj(n.bindings))){need(Object.prototype.hasOwnProperty.call(types,key),'Unsupported native argument binding');need(expr(value,f.types)===types[key],'Native argument type differs');}break;
      }
      default:throw new Error('Unknown program block');

@@ -50,6 +50,8 @@ jobs:
       - name: Audit shipped Functions dependencies
         run: npm --prefix functions audit --omit=dev --audit-level=high
 
+      - name: Verify generated behaviour catalog sources
+        run: npm run verify:behaviour-catalog
       - name: Test app and shared core
         run: npm test
       - name: Lint app

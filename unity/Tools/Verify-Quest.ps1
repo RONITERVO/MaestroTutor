@@ -4,6 +4,7 @@
 param(
     [Parameter(Mandatory)][string]$Editor,
     [Parameter(Mandatory)][string]$BuildMirror,
+    [switch]$UpdateBehaviourCatalog,
     [switch]$RenderArt,
     [switch]$RenderRecipes,
     [switch]$RenderRules,
@@ -77,10 +78,18 @@ function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$Res
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $logPath -Tail 50; throw "Unity exited $($process.ExitCode); see $logPath" }
 }
 Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProjectSetup.Configure') 'configure.log'
+$nativeCatalog = Join-Path $logRoot 'behaviour-catalog.json'
+$sharedCatalog = Join-Path $repoRoot 'shared/generated/behaviourCatalog.json'
+if (!(Test-Path -LiteralPath $nativeCatalog)) { throw 'Native behaviour catalog was not exported.' }
+if ($UpdateBehaviourCatalog) { Copy-Item -LiteralPath $nativeCatalog -Destination $sharedCatalog -Force }
+$nativeJson = Get-Content -LiteralPath $nativeCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 30 -Compress
+$sharedJson = Get-Content -LiteralPath $sharedCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 30 -Compress
+if ($nativeJson -cne $sharedJson) { throw 'Behaviour catalog drift. Review registrations, then run Verify-Quest.ps1 with -UpdateBehaviourCatalog.' }
+$env:MAESTRO_BEHAVIOUR_CATALOG = $sharedCatalog
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
 [xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 81) { throw 'Unity test results did not satisfy the current development checks.' }
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 85) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 $env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
 $env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $ModelPreview).Path } else { '' }

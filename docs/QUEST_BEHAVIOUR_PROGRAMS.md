@@ -260,3 +260,14 @@ it is not a suitable language limit for future saved programs.
 
 The architecture above is our recommendation; those sources describe the
 underlying editor/runtime facilities, not an already-integrated Maestro language.
+
+
+## Approved catalog and event-runtime direction (2026-09-27)
+
+The owner authorizes simplifying development-only formats and resetting their
+prototype saves if needed. The accepted design, review qualifications, tradeoffs
+and staged acceptance are in [QUEST_CAPABILITY_ARCHITECTURE.md](QUEST_CAPABILITY_ARCHITECTURE.md).
+The first native vocabulary registry now generates web action/event labels, fact
+types, scalar binding types and the prompt fact guide, with drift checks. Typed
+capability invocation, full room-command coverage, timers/state machines and
+per-channel ownership remain follow-up work. No development data was reset here.

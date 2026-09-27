@@ -41,8 +41,8 @@ namespace Maestro.Quest.Rules
         public RoomRuleActions(RoomEditor editor, AnimationWorkshop workshop) { this.editor = editor; this.workshop = workshop; }
         public bool TryRead(string name,out ProgramValue value) {
             value=default;if(!editor.PhysicsWorld)return false;
-            if(name=="physics.running") {value=new ProgramValue(editor.PhysicsWorld.Running);return true;}
-            if(name=="physics.ready") {value=new ProgramValue(editor.PhysicsWorld.SurfacesReady);return true;}return false;
+            return BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(physicsReady:editor.PhysicsWorld.SurfacesReady,
+                physicsRunning:editor.PhysicsWorld.Running),out value);
         }
         public bool CanRun(RuleStep step, out string error)
         {
