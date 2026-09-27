@@ -46,9 +46,9 @@ namespace Maestro.Quest.Rules
             using(var output=new FileStream(staging,FileMode.CreateNew,FileAccess.Write,FileShare.None)){input.CopyTo(output);output.Flush(true);}
             File.Move(staging,destination);
         }
-        static long ArchiveBytes(string root)
+        static long ArchiveBytes(string root,out int count)
         {
-            if(!Directory.Exists(root))return 0;Ordinary(root);long total=0;int count=0;
+            count=0;if(!Directory.Exists(root))return 0;Ordinary(root);long total=0;
             foreach(var folder in Directory.GetDirectories(root)){
                 Ordinary(folder);if(Directory.GetDirectories(folder).Length!=0)throw new IOException("Unexpected archive layout");
                 foreach(var file in Directory.GetFiles(folder)){Ordinary(file);total+=new FileInfo(file).Length;if(++count>512||total>ArchiveLimit)throw new IOException("Recovery archive is full");}
@@ -65,7 +65,7 @@ namespace Maestro.Quest.Rules
             if(Error==null)return true;
             try {
                 string directory=Path.GetDirectoryName(path),archives=Path.Combine(directory,"action-receipt-archives");
-                Directory.CreateDirectory(directory);Ordinary(directory);long used=ArchiveBytes(archives);
+                Directory.CreateDirectory(directory);Ordinary(directory);long used=ArchiveBytes(archives,out int archiveCount);
                 JObject plan=null;string archive=null;
                 if(File.Exists(RecoveryMarker)){
                     Ordinary(RecoveryMarker);
@@ -81,8 +81,9 @@ namespace Maestro.Quest.Rules
                 }
                 var present=Directory.GetFileSystemEntries(directory).Where(x=>JournalName.IsMatch(Path.GetFileName(x))).ToArray();
                 foreach(var file in present){Ordinary(file);if(Directory.Exists(file))throw new IOException("A journal path is a directory");}
-                long size=present.Sum(x=>new FileInfo(x).Length);
-                if(present.Length>16||size>TransactionLimit||plan==null&&used+size+2*1024*1024>ArchiveLimit)throw new IOException("Recovery archive capacity exceeded");
+                long size=present.Sum(x=>new FileInfo(x).Length),markerBytes=plan==null&&File.Exists(RecoveryMarker)?new FileInfo(RecoveryMarker).Length:0;
+                if(present.Length>16||size+markerBytes>TransactionLimit||plan==null&&(used+size+markerBytes+2*1024*1024>ArchiveLimit||archiveCount+present.Length+3>512||
+                    Directory.Exists(archives)&&Directory.GetDirectories(archives).Length>=128))throw new IOException("Recovery archive capacity exceeded");
                 if(plan==null){
                     archive=Path.Combine(archives,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(archive);Ordinary(archives);Ordinary(archive);
                     if(File.Exists(RecoveryMarker))Preserve(RecoveryMarker,Path.Combine(archive,"previous-marker.json"));
@@ -99,7 +100,9 @@ namespace Maestro.Quest.Rules
                     if(File.Exists(staging))Ordinary(staging);
                     return Math.Max(0,new FileInfo(file).Length-(File.Exists(staging)?new FileInfo(staging).Length:0));
                 });
-                if(used+additional+(File.Exists(Path.Combine(archive,"session.json"))?0:1024*1024)>ArchiveLimit)throw new IOException("Recovery archive capacity exceeded");
+                int extraFiles=present.Count(file=>!File.Exists(Path.Combine(archive,Path.GetFileName(file)))&&!File.Exists(Path.Combine(archive,Path.GetFileName(file))+".copying"))+
+                    (File.Exists(Path.Combine(archive,"session.json"))||File.Exists(Path.Combine(archive,"session.json.writing"))?0:1)+(File.Exists(Path.Combine(archive,"fresh.json"))?0:1)+(markerBytes>0?1:0);
+                if(archiveCount+extraFiles>512||used+markerBytes+additional+(File.Exists(Path.Combine(archive,"session.json"))?0:1024*1024)+8192>ArchiveLimit)throw new IOException("Recovery archive capacity exceeded");
                 if(present.Any(x=>Path.GetFileName(x)!=Path.GetFileName(path)&&!names.Contains(Path.GetFileName(x))))throw new IOException("Journal files changed during recovery");
                 string session=Path.Combine(archive,"session.json");
                 if(!File.Exists(session)){

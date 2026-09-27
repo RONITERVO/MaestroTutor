@@ -106,7 +106,7 @@ filesystem links.
 Only app-owned action-receipts.v*.json and their known sidecars are archived;
 chat, room saves, models, programs and backups of those remain untouched.
 Per-transaction source data is limited to 16 files/16 MiB; retained archives are
-bounded to 128 MiB and 512 files. Archives are not automatically deleted. Reaching
+bounded to 128 MiB, 512 files and 128 recovery folders. Archives are not automatically deleted. Reaching
 that maintenance bound keeps recovery blocked; archive export/maintenance UI
 remains release work. Synchronous recovery is an infrequent maintenance action;
 Quest latency and power-loss durability need device acceptance.

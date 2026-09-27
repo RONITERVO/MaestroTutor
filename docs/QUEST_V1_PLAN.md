@@ -515,7 +515,7 @@ explicit new agent request. Exact old evidence is archived before a fresh journa
 is committed; interrupted recovery resumes safely, and old starts never replay.
 Saved behaviours and room objects remain unchanged. Native motion tests and
 Chrome bridge checks cover the same operation. Verification covers 1,301 app,
-143 EditMode and 96 PlayMode tests, with three optional private-model skips.
+146 EditMode and 96 PlayMode tests, with three optional private-model skips.
 See [recovery semantics and remaining scope](QUEST_ACTION_RECOVERY.md).
 Archive export/maintenance controls, device power-loss/latency acceptance, native
 capability modularization and all remaining v1/provider/headset/store gates remain

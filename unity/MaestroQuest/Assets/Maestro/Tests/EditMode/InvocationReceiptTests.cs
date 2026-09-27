@@ -187,6 +187,25 @@ namespace Maestro.Quest.Tests
             Assert.That(File.ReadAllText(Path.Combine(archive,"previous-marker.json")),Is.EqualTo(raw));Assert.That(File.ReadAllText(room),Is.EqualTo("keep this room"));
         }
 
+        [TestCase("markerBytes")] [TestCase("archiveFiles")] [TestCase("archiveCount")]
+        public void RecoveryCapacityIncludesMalformedMetadataAndEveryNewArchiveFile(string limit)
+        {
+            Directory.CreateDirectory(directory);string primary=Path.Combine(directory,"action-receipts.v1.json");File.WriteAllText(primary,"preserve primary");
+            string archives=Path.Combine(directory,"action-receipt-archives");
+            if(limit=="markerBytes"){
+                using var large=new FileStream(Path.Combine(directory,"action-recovery.pending.json"),FileMode.CreateNew,FileAccess.Write);large.SetLength(16L*1024*1024+1);
+            }else{
+                Directory.CreateDirectory(archives);
+                if(limit=="archiveFiles"){string archive=Path.Combine(archives,Guid.NewGuid().ToString("N"));Directory.CreateDirectory(archive);for(int i=0;i<511;i++)File.WriteAllText(Path.Combine(archive,"evidence-"+i),"x");}
+                else for(int i=0;i<128;i++)Directory.CreateDirectory(Path.Combine(archives,Guid.NewGuid().ToString("N")));
+            }
+            var receipts=new InvocationReceipts(directory);Assert.That(receipts.Error,Is.Not.Null);
+            int before=Directory.Exists(archives)?Directory.GetDirectories(archives).Length:0;
+            Assert.That(receipts.Recover((string)receipts.RecoveryView["id"],out _),Is.False);
+            Assert.That(receipts.NextId,Is.Null);Assert.That(File.ReadAllText(primary),Is.EqualTo("preserve primary"));
+            Assert.That(Directory.Exists(archives)?Directory.GetDirectories(archives).Length:0,Is.EqualTo(before),"Capacity rejection must not allocate another archive");
+        }
+
         [Test] public void FutureReceiptFilesArePreservedAndDisableNewStarts()
         {
             Directory.CreateDirectory(directory);string future=Path.Combine(directory,"action-receipts.v2.json");File.WriteAllText(future,"future");
