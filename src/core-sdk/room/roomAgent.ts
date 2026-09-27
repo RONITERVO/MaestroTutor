@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation } from '../../../shared/roomControls';
+import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation, type AvatarWalkObservation } from '../../../shared/roomControls';
 import {validMotionQuery,type MotionQuery,type MotionSearchView} from '../../../shared/roomMotions';
 import type { RelatedRoomTask } from './taskSteering';
 import {validRuleRequest,type RuleRequest,type RuleView} from './rules';
@@ -12,7 +12,7 @@ import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTIO
 
 export interface RoomCommand {
   action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | 'motions' | keyof typeof roomControlFields;
-  rule?:RuleRequest; motionQuery?:MotionQuery;
+  rule?:RuleRequest; motionId?:string; motionQuery?:MotionQuery;
   operation?:'start'|'pause'|'look'|'follow'|'stop'; physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings;
   target?: string; partId?:string; reference?: string; name?: string;
   kind?: 'block' | 'ball' | 'cylinder' | 'recipe' | 'boxRobot';
@@ -22,7 +22,7 @@ export interface RoomCommand {
 export interface RoomAgentState {
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
-  capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null;
+  capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
   workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
   selectedId?: string | null;

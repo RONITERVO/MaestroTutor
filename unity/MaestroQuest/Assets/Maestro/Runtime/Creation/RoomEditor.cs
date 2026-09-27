@@ -315,6 +315,7 @@ namespace Maestro.Quest.Creation
         }
         public bool SetAvatarWalkClip(int index)
         {
+            if(index == -1) return SetAvatarWalkMotion("");
             Editing?.Invoke(); if (Busy()) return false;
             var avatar = Find("maestro").GetComponent<MaestroAvatar>(); var model = avatar ? avatar.CustomModel : null;
             if (index < -1 || index >= 0 && (!model || avatar.ModelBusy || index >= model.ClipCount || model.ClipDuration(index) < .1f))
@@ -325,11 +326,9 @@ namespace Maestro.Quest.Creation
         public bool SetAvatarWalkMotion(string id)
         {
             Editing?.Invoke(); if (Busy()) return false;
-            var avatar = Find("maestro").GetComponent<MaestroAvatar>(); var entry = Motions.Find(id);
-            if (!avatar || avatar.ModelBusy || !avatar.CustomModel || entry == null || entry.Short || entry.rigHash != avatar.CustomModel.MotionRigHash)
-            { SetStatus("Choose a saved motion compatible with the loaded Maestro, at least 0.1 seconds long"); return false; }
-            var data = journal.Read("maestro"); data.walkClip = 0; data.walkMotionId = id;
-            return Commit(new[] { data },Array.Empty<string>(),"Saved walking motion assigned");
+            var data = journal.Read("maestro");
+            if(!AvatarWalkSelection.Apply(this,data,id,out var status)) {SetStatus(status);return false;}
+            return Commit(new[] { data },Array.Empty<string>(),status);
         }
         public bool SetAvatarSize(float scale)
         {

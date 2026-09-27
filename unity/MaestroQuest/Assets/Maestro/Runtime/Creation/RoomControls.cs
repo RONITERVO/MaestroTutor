@@ -23,7 +23,7 @@ namespace Maestro.Quest.Creation
     /// Saved settings use the room journal; transient motion has its own ownership and Stop.</summary>
     public static class RoomControls
     {
-        public static readonly string[] Actions = { "physicsSettings", "avatarSettings", "physicsRun", "avatarMotion" };
+        public static readonly string[] Actions = { "physicsSettings", "avatarSettings", "physicsRun", "avatarMotion", "avatarWalk" };
         public static bool IsControl(string action) => Actions.Contains(action);
         public static bool Runtime(string action) => action == "physicsRun" || action == "avatarMotion";
         public static bool ValidPhysics(ObjectPhysicsSettings value) => value != null &&
@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation
             float.IsFinite(value.speed) && value.speed >= .2f && value.speed <= 1.2f;
         public static bool ValidCommand(RoomAgentCommand command) => command != null && (command.action switch {
             "physicsSettings" => RoomRecipe.ValidId(command.target) && command.target != "book" && command.target != "maestro" && ValidPhysics(command.physics),
+            "avatarWalk" => command.target == "maestro" && AvatarWalkSelection.ValidId(command.motionId),
             "avatarSettings" => command.target == "maestro" && ValidMovement(command.movement),
             "physicsRun" => command.operation == "start" || command.operation == "pause",
             "avatarMotion" => command.target == "maestro" && new[] { "look","follow","stop" }.Contains(command.operation),
@@ -55,12 +56,14 @@ namespace Maestro.Quest.Creation
                     if (!IsControl(action)) continue;
                     string[] keys = action switch {
                         "physicsSettings" => new[] { "action","target","physics" },
+                        "avatarWalk" => new[] { "action","target","motionId" },
                         "avatarSettings" => new[] { "action","target","movement" },
                         "avatarMotion" => new[] { "action","target","operation" },
                         _ => new[] { "action","operation" }
                     };
                     if (!Exact(value,keys) || value["target"] != null && value["target"].Type != JTokenType.String ||
                         value["operation"] != null && value["operation"].Type != JTokenType.String) return false;
+                    if (action == "avatarWalk" && value["motionId"].Type != JTokenType.String) return false;
                     if (action == "physicsSettings" && (value["physics"] is not JObject physics || !Exact(physics,new[] { "mode","mass","shape" }) ||
                         physics["mode"].Type != JTokenType.String || physics["shape"].Type != JTokenType.String || !Number(physics["mass"],.05,20))) return false;
                     if (action == "avatarSettings" && (value["movement"] is not JObject movement || !Exact(movement,new[] { "distance","speed" }) ||
@@ -100,7 +103,7 @@ namespace Maestro.Quest.Creation
         }
         public static string[] Capabilities(RoomEditor editor) => Actions.Where(action =>
             action != "physicsRun" || editor.PhysicsWorld).Where(action =>
-            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Select(action => action+".v1").Concat(new[] {"motions.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v1"} : Array.Empty<string>()).ToArray();
+            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v1"} : Array.Empty<string>()).ToArray();
         public static RoomPhysicsObservation ObservePhysics(RoomEditor editor) => !editor.PhysicsWorld ? null : new() {
             ready=editor.PhysicsWorld.SurfacesReady,running=editor.PhysicsWorld.Running,status=editor.PhysicsWorld.Status
         };

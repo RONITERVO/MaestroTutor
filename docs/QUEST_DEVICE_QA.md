@@ -2,7 +2,32 @@
 
 This is development evidence, not a release acceptance report.
 
-## Latest: shared motion discovery — not installed
+## Latest: shared walking preference — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-walk-CF9E1370.apk`.
+SHA256: `CF9E1370A329212E2895DC6E15B6FE6F87B8E11CAE67CC56BD5A8FBF1A1646AF`.
+Development APK v2 signature verifies; native libraries are ARM64 only. All 88
+runtime sources match the tested Unity mirror. Embedded web bytes match the built
+bundle, including the new agent instructions. 81 EditMode, 75 required PlayMode,
+25 Android and 1,149 app tests pass, with three optional private-file tests skipped.
+TypeScript, lint, prompt/core guards and release-config checks pass. Functions (25)
+and Live gateway (31) tests/builds pass. Evidence: `.quest-evidence/avatar-walk/`.
+
+Chat/Live room tasks can choose a compatible downloaded walk or restore the included
+walk, using the same native validation as manual selection and the same room Undo.
+The observation exposes the saved choice, availability and loading/fallback status.
+A native test observes leg rotation from the assigned animation; it also checks
+manual/agent edits, failed combined edits, missing downloads and Undo. Web bridge
+tests consume an actual native observation. See QUEST_AVATAR_MOVEMENT.md.
+
+No device access occurred. The user's reported stationary feet on the included
+avatar remain a hardware acceptance issue. When the user returns, preserve saved
+room data and verify assignment through chat, walking/following with included and
+custom avatars, missing-motion feedback, restoration and Undo alongside earlier
+book, animation, physics and hand/controller checks. Real-provider acceptance also
+remains open.
+
+## Earlier: shared motion discovery — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-motion-search-3B2EB463.apk`.
 SHA256: `3B2EB463F3074110FE272C57C5DA3781FA78402B51EB8AA52FA0E75D52B36268`.

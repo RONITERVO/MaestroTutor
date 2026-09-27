@@ -107,3 +107,13 @@ it('discovers native motion identities before saving an animation through the ex
  expect(execute.mock.calls.map(call=>call[0])).toEqual([[search],[save]]);expect(result.receipts).toHaveLength(2);expect(result.budgetExhausted).toBe(false);
  const second:any=(ai.models.generateContentStream.mock.calls as any)[1][0];expect(JSON.parse(second.contents[0].parts[0].text).scene.motions.entries[0].id).toBe(motionId);expect(ai.live.connect).not.toHaveBeenCalled();
 });
+
+it('assigns a discovered walking motion without starting follow and reports native availability',async()=>{
+ const motionId='b'.repeat(32),command={action:'avatarWalk',target:'maestro',motionId};
+ let current:RoomAgentState={...scene,capabilities:['avatarWalk.v1'],walk:{source:'included',motionId:'',clipIndex:-1,modelHash:'',name:'Included walk',available:true,status:'Selected',playbackStatus:''}};
+ const ai=client([JSON.stringify({commands:[command]}),'{"commands":[]}']);
+ const execute=vi.fn(async()=>current={...current,ack:1,walk:{...current.walk!,source:'library',motionId,name:'Walking',available:false,status:'Download no longer available'}});
+ const result=await runRoomActionTask({...input,prompt:'Use the walking animation we found'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute.mock.calls).toHaveLength(1);expect(execute).toHaveBeenCalledWith([command],4,scene.objects);expect(result.scene.walk?.available).toBe(false);
+ const next:any=(ai.models.generateContentStream.mock.calls as any)[1][0];expect(JSON.parse(next.contents[0].parts[0].text).scene.walk.status).toBe('Download no longer available');
+});

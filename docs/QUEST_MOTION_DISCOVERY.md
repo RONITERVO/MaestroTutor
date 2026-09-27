@@ -27,14 +27,15 @@ reported as unavailable, rather than an empty successful search. Search never
 changes room selection, saved revisions, Undo, visibility or playback.
 
 The agent can use a returned downloaded ID in a library-motion step or program,
-through the existing revision-checked `rules` commands. Playback checks the actual
-target rig again. Search alone does not assign a motion or establish playback;
+through the existing revision-checked `rules` commands. With `avatarWalk.v1`, the
+separate `avatarWalk` command saves a walking preference; see QUEST_AVATAR_MOVEMENT.md.
+Playback checks the actual target rig again. Search alone does not assign a motion or establish playback;
 receipts and live rule observations distinguish these stages. Current tasks still
 allow three command batches, so long searches or edits may require a continuation.
 Animation names/tags are data, not instructions or authority to change the room.
 
-This does not add file import, cross-rig retargeting, an agent action for walking or
-activity-profile assignments, semantic ranking, or a new asset-picker UI. Those
+This does not add file import, cross-rig retargeting, activity-profile assignments,
+semantic ranking, or a new asset-picker UI. Those
 remaining action-coverage and authoring features stay on the v1 work list.
 
 ## Verification

@@ -64,6 +64,34 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
+        [UnityTest] public IEnumerator AgentAndManualWalkSelectionShareValidationPlaybackUndoAndAvailability()
+        {
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            RoomAgentRequest Request(params RoomAgentCommand[] commands) => new() {version=2,conditions=new[] {new RoomObjectCondition {id="maestro",revision=editor.ObjectRevision("maestro")}},commands=commands};
+            RoomAgentCommand Choose(string id) => new() {action="avatarWalk",target="maestro",motionId=id};
+            Assert.That(observer.Observe().walk.source,Is.EqualTo("included"));
+            var original=editor.Read("maestro");int before=editor.Revision;
+            Assert.That(executor.Execute(Request(Choose(gait.id),new RoomAgentCommand {action="avatarSettings",target="maestro",movement=new AvatarMovementSettings {distance=1.1f,speed=.8f}}),out var error,out _),Is.True,error);
+            Assert.That(editor.Revision,Is.EqualTo(before+1));Assert.That(avatar.IsImportedClipPlaying,Is.False,"Saving a gait does not begin movement or preview");
+            var view=observer.Observe().walk;Assert.That(view.motionId,Is.EqualTo(gait.id));Assert.That(view.name,Is.EqualTo("Walking"));Assert.That(view.available,Is.True);Assert.That(view.source,Is.EqualTo("library"));
+            string output=Environment.GetEnvironmentVariable("MAESTRO_WALK_EVIDENCE");
+            if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"walk-state.json"),RoomAgentWire.Serialize(observer.Observe()));}
+            authoring.PreviewWalk();yield return Until(()=>avatar.LibraryMotionId==gait.id);
+            var leg=avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg);var rotation=leg.rotation;yield return new WaitForSeconds(.3f);Assert.That(Quaternion.Angle(rotation,leg.rotation),Is.GreaterThan(1));authoring.Stop();
+            editor.Undo();Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(original.walkMotionId));Assert.That(editor.Read("maestro").walkSpeed,Is.EqualTo(original.walkSpeed));
+            editor.Redo();Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id));Assert.That(editor.Read("maestro").walkSpeed,Is.EqualTo(.8f));
+            var stale=Request(Choose(gait.id));Assert.That(editor.SetAvatarWalkMotion(greeting.id),Is.True);
+            Assert.That(observer.Observe().walk.motionId,Is.EqualTo(greeting.id));Assert.That(executor.Execute(stale,out error,out _),Is.False);Assert.That(error,Does.Contain("changed"));Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(greeting.id));
+            var add=editor.Motions.ImportAsync("different-rig.glb",ModelFixture.Create());yield return Until(()=>add.IsCompleted);Assert.That(add.Exception,Is.Null);
+            before=editor.Revision;float size=editor.Read("maestro").scale;
+            Assert.That(executor.Execute(Request(new RoomAgentCommand {action="resize",target="maestro",scale=1.2f},Choose(add.Result.Single().id)),out error,out _),Is.False);
+            Assert.That(editor.Revision,Is.EqualTo(before));Assert.That(editor.Read("maestro").scale,Is.EqualTo(size),"A failed assignment cannot partially apply the saved batch");
+            File.Delete(Path.Combine(directory,"motions",gait.hash+".motion.glb"));
+            Assert.That(editor.SetAvatarWalkMotion(gait.id),Is.False);Assert.That(executor.Execute(Request(Choose(gait.id)),out error,out _),Is.False);Assert.That(error,Does.Contain("download"));
+            File.Delete(Path.Combine(directory,"motions",greeting.hash+".motion.glb"));view=observer.Observe().walk;Assert.That(view.available,Is.False);Assert.That(view.motionId,Is.EqualTo(greeting.id),"Availability never silently rewrites a saved choice");
+            Assert.That(executor.Execute(Request(Choose("")),out error,out _),Is.True,error);view=observer.Observe().walk;Assert.That(view.source,Is.EqualTo("included"));Assert.That(view.available,Is.True);Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            editor.Undo();Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(greeting.id));Assert.That(editor.SetAvatarWalkClip(-1),Is.True);Assert.That(observer.Observe().walk.source,Is.EqualTo("included"));
+        }
         [UnityTest] public IEnumerator AgentSearchSharesBookPagesAndFeedsRealRulePlaybackWithoutSideEffects()
         {
             foreach(int i in Enumerable.Range(1,15).Where(x=>x!=5 && x!=12)) {

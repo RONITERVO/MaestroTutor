@@ -102,3 +102,14 @@ it('accepts the actual Unity motion page and keeps search receipts tied to nativ
  expect(client.receive({...native,revision:3,ack:1,motions:{...native.motions,ready:false}})).toBe(false);
  expect(client.getSnapshot().state?.sceneRevision).toBe(native.sceneRevision);
 });
+
+it('accepts the actual native walk observation and protects the selected avatar revision',async()=>{
+ const native=JSON.parse(readFileSync('test-fixtures/browser/avatarWalkState.json','utf8'));
+ const client=new RoomAgentClient();expect(client.receive(native)).toBe(true);
+ expect(client.getSnapshot().state?.walk).toMatchObject({source:'library',available:true,name:'Walking'});
+ const command={action:'avatarWalk' as const,target:'maestro',motionId:''};const pending=client.request([command]);
+ expect(client.snapshot().request?.conditions).toEqual([{id:'maestro',revision:native.objects.find((o:any)=>o.id==='maestro').objectRevision}]);
+ const cleared={...native.walk,source:'included',motionId:'',name:'Included walk'};
+ expect(client.receive({...native,revision:native.revision+1,ack:1,walk:cleared})).toBe(true);expect((await pending).walk?.source).toBe('included');
+ expect(client.receive({...native,revision:native.revision+2,ack:1,walk:{...native.walk,clipIndex:0}})).toBe(false);
+});

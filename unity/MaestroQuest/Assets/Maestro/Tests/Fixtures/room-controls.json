@@ -159,6 +159,51 @@
       "name": "runtime wrong target",
       "valid": false,
       "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"book\",\"operation\":\"follow\"}]}"
+    },
+    {
+      "name": "choose saved walking motion",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}"
+    },
+    {
+      "name": "restore included walking animation",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"\"}]}"
+    },
+    {
+      "name": "walk assignment and speed share one saved edit",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.8}}]}"
+    },
+    {
+      "name": "missing walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\"}]}"
+    },
+    {
+      "name": "null walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":null}]}"
+    },
+    {
+      "name": "arbitrary walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"walk\"}]}"
+    },
+    {
+      "name": "noncanonical walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]}"
+    },
+    {
+      "name": "wrong walking target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"book\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}"
+    },
+    {
+      "name": "walk assignment with unknown operation",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"operation\":\"follow\"}]}"
     }
   ]
 }

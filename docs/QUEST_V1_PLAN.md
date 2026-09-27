@@ -26,6 +26,12 @@ rules/programs. Search does not select, play or modify the room. See
 QUEST_MOTION_DISCOVERY.md for scope and evidence; provider and headset acceptance
 remain open.
 
+PC-only walking preference update (2026-09-27): `avatarWalk.v1` connects compatible
+library motions to the same manual/agent saved walk selection, including one-batch
+Undo, stale-edit rejection, included-walk restoration and availability read-back.
+Native tests observe actual leg motion after an agent assignment. This does not
+resolve the reported on-headset default gait issue. See QUEST_AVATAR_MOVEMENT.md.
+
 Earlier implementation update (2026-09-26): validated Mixamo/Unity-named GLB
 humanoids can replace Maestro, including the user's actual Meshy export.
 Gaze and following use the shared pose rig and scanned-room navigation, with

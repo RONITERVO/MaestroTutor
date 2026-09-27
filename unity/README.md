@@ -206,3 +206,9 @@ rules/programs; no provider client is added to Unity. See
 [QUEST_MOTION_DISCOVERY.md](../docs/QUEST_MOTION_DISCOVERY.md) for the query,
 compatibility/receipt boundaries and validation. Set `MAESTRO_MOTION_SEARCH_EVIDENCE`
 to an output directory during verification to capture the native search observation.
+
+`avatarWalk.v1` connects a saved library motion to Maestro's walking preference,
+sharing validation and room Undo with the manual walk chooser. Native observations
+include assignment availability and loading/fallback messages. See
+[QUEST_AVATAR_MOVEMENT.md](../docs/QUEST_AVATAR_MOVEMENT.md). Set
+`MAESTRO_WALK_EVIDENCE` during verification to capture its actual native observation.

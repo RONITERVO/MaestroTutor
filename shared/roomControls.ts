@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 export interface ObjectPhysicsSettings { mode:'fixed'|'solid'|'bouncy'; mass:number; shape:'automatic'|'box'|'sphere' }
 export interface AvatarMovementSettings { distance:number; speed:number }
+export interface AvatarWalkObservation {source:'included'|'embedded'|'library';motionId:string;modelHash:string;clipIndex:number;name:string;available:boolean;status:string;playbackStatus:string}
 export interface PhysicsObservation { ready:boolean; running:boolean; status:string }
 export interface AvatarMovementObservation { active:boolean; mode:'look'|'follow'|'manual'|'stopped'; status:string; canLook:boolean; canFollow:boolean; lookReason:string; followReason:string; distance:number; speed:number }
 import {roomControlFields} from './prompts/roomcontrols';
@@ -14,6 +15,7 @@ export const validAvatarMovement=(v:unknown):v is AvatarMovementSettings=>record
 export function validRoomControl(c:Record<string,unknown>):boolean {
   switch(c.action) {
     case 'physicsSettings':return typeof c.target==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(c.target)&&!['book','maestro'].includes(c.target)&&validObjectPhysics(c.physics);
+    case 'avatarWalk':return c.target==='maestro'&&typeof c.motionId==='string'&&(c.motionId===''||/^[a-f0-9]{32}$/.test(c.motionId));
     case 'avatarSettings':return c.target==='maestro'&&validAvatarMovement(c.movement);
     case 'physicsRun':return c.operation==='start'||c.operation==='pause';
     case 'avatarMotion':return c.target==='maestro'&&['look','follow','stop'].includes(c.operation as string);
@@ -31,3 +33,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown}[]
 const text=(v:unknown)=>typeof v==='string'&&v.length<=2048;
 export const validPhysicsObservation=(v:unknown):v is PhysicsObservation=>record(v)&&typeof v.ready==='boolean'&&typeof v.running==='boolean'&&(!v.running||v.ready)&&text(v.status);
 export const validAvatarObservation=(v:unknown):v is AvatarMovementObservation=>record(v)&&['active','canLook','canFollow'].every(key=>typeof v[key]==='boolean')&&['look','follow','manual','stopped'].includes(v.mode as string)&&v.active===(v.mode!=='stopped')&&['status','lookReason','followReason'].every(key=>text(v[key]))&&between(v.distance,.8,2.5)&&between(v.speed,.2,1.2);
+
+export const validAvatarWalkObservation=(v:unknown):v is AvatarWalkObservation=>record(v)&&['included','embedded','library'].includes(v.source as string)&&typeof v.available==='boolean'&&['name','status','playbackStatus'].every(k=>text(v[k]))&&typeof v.modelHash==='string'&&(v.modelHash===''||/^[a-f0-9]{64}$/.test(v.modelHash))&&(
+ v.source==='library'?typeof v.motionId==='string'&&/^[a-f0-9]{32}$/.test(v.motionId)&&v.clipIndex===-1:
+ v.motionId===''&&(v.source==='included'?v.clipIndex===-1:Number.isInteger(v.clipIndex)&&between(v.clipIndex,0,31)));

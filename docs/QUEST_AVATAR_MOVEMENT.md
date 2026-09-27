@@ -9,6 +9,36 @@ under investigation, not a missing user-supplied animation. Stop/distance and
 custom-avatar gait acceptance remain open. The forthcoming Meshy default and
 large animation library are recorded in QUEST_V1_PLAN.md.
 
+## Shared walking-animation selection (2026-09-27)
+
+When native capability `avatarWalk.v1` is present, a chat/Live room task can save a
+compatible downloaded library motion as Maestro's walk using
+`{action:"avatarWalk",target:"maestro",motionId:"<native ID>"}`. An empty `motionId`
+restores the included walk. Use the `motions` query to discover real compatible
+IDs first. The physical chooser, book library and agent share `AvatarWalkSelection`
+validation. Missing downloads, short clips and incompatible or unloaded models are
+rejected. Assignment is a saved preference; it does not start follow or playback.
+
+Assignments can share a room-edit batch with other saved settings, using one Undo.
+Per-object revision checks reject a stale agent edit after a manual change; a bad
+assignment prevents the whole saved batch from committing. The existing direct
+`SetAvatarWalkClip` path still handles embedded clips; agent selection of embedded
+clips remains future work.
+
+The native `walk` observation exposes source (included/embedded/library), motion ID,
+clip index, model identity, name, availability, explanatory status and the actual
+runtime loading/fallback message. Missing files or a model change do not silently
+rewrite the saved choice. Runtime playback can fall back to the included gait;
+availability is not proof of active walking or completion.
+
+PC verification uses the same saved motion through agent assignment and the manual
+preview to observe leg rotation, then tests Undo/Redo, manual changes and stale
+requests, failed combined edits, missing downloads and restoring the included walk.
+The native observation is also consumed by the web bridge test. These checks do
+not resolve the reported headset gait defect above; that requires device testing.
+
+## Physical movement controls
+
 The solid Maestro movement tray offers Look at me, Follow me, Stop, Distance and
 Walk speed, Size, Walk clip and Preview walk. Its movable controls stay outside the book pages. Look at me turns
 the head toward the tracked viewer, with smoothed yaw/pitch limits of 60/30

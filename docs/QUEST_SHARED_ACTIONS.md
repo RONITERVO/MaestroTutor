@@ -228,5 +228,12 @@ performance testing are still required for release.
 book and agent use `MotionLibrary.Search`; downloaded results provide stable IDs
 for the existing behavior executor. Native observations invalidate compatibility
 when the target model changes. See QUEST_MOTION_DISCOVERY.md. This closes discovery
-for saved motions; walking/profile assignment, import and full action-catalogue
-parity remain unfinished.
+for saved motions; profile assignment, import and full action-catalogue parity remain unfinished.
+
+## Shared walking preference (2026-09-27)
+
+`avatarWalk.v1` saves a library gait or restores the included gait through the same
+validation as manual selection. It joins the existing atomic room-edit journal and
+per-object revision checks. The `walk` observation adds assignment and availability
+read-back, plus native loading/fallback status. See QUEST_AVATAR_MOVEMENT.md; this
+is a preference edit, not a movement-start command or headset gait acceptance.
