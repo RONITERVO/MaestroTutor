@@ -133,6 +133,101 @@ namespace Maestro.Quest.Tests
             yield return null;
         }
 
+        JObject ObjectEditCall(string capability,string target,params (string key,JToken value)[] values) {
+            var args=new JObject {["target"]=target};foreach(var value in values)args[value.key]=value.value;
+            return new JObject {["id"]=capability,["version"]=1,["arguments"]=args};
+        }
+        RoomAgentRequest ObjectEditRequest(JObject call) {
+            string target=(string)call["arguments"]["target"];
+            return new RoomAgentRequest {version=2,conditions=new[]{new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)}},
+                commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call}}}};
+        }
+        void EditEvidence(string phase,RoomAgentExecutor executor,JObject program=null) {
+            string directory=Environment.GetEnvironmentVariable("MAESTRO_OBJECT_EDIT_EVIDENCE");if(string.IsNullOrEmpty(directory))return;
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory,phase+".json"),new JObject {["program"]=program,["execution"]=executor.Executions.Observe(),
+                ["room"]=JObject.Parse(JsonUtility.ToJson(editor.Snapshot()))}.ToString());
+        }
+        [UnityTest] public IEnumerator CreatedResultsComposeWithSavedObjectEditsWithoutStoppingUnrelatedMotion()
+        {
+            var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
+            var body=(JArray)source["functions"][0]["body"];body.RemoveAt(1);
+            void Add(string node,string capability,JObject args) {
+                args["target"]=new string('0',32);body.Add(new JObject {["id"]=node,["op"]="invoke",["capability"]=capability,["version"]=1,
+                    ["arguments"]=args,["bindings"]=new JObject {["target"]=new JObject {["var"]="ball"}}});
+            }
+            Add("paint","object.color.set",new JObject {["red"]=1,["green"]=.2,["blue"]=.1});
+            Add("resize","object.scale.set",new JObject {["scale"]=1.5});
+            Add("move","object.position.set",new JObject {["x"]=.2,["y"]=1.7,["z"]=1});
+            var sequence=new RuleSequence {id="",name="Make a red ball",program=source.ToString(Newtonsoft.Json.Formatting.None)};
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="ball",sequence=sequence}}},out var error,out var ids),Is.True,error);
+            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.recording.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
+            Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
+            string created=runtime.Scheduler.ObserveRuns().Single().locals.Single(x=>x.name=="ball").value;
+            for(int i=0;i<5;i++)runtime.Scheduler.Tick(Time.unscaledTime);
+            Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),runtime.Scheduler.LastError);
+            var item=editor.Find(created);Assert.That(item.transform.localPosition,Is.EqualTo(new Vector3(.2f,1.7f,1)));
+            Assert.That(item.transform.localScale.x,Is.EqualTo(1.5f));Assert.That(editor.Read(created).color,Is.EqualTo(new Color(1,.2f,.1f,1)));
+            var saved=new RoomStorage(directory).Load(out error).objects.Single(x=>x.id==created);
+            Assert.That(saved.position,Is.EqualTo(item.transform.localPosition));Assert.That(saved.color,Is.EqualTo(editor.Read(created).color));Assert.That(saved.scale,Is.EqualTo(1.5f));
+            Assert.That((string)runtime.Scheduler.Invocation(recording)["phase"],Is.EqualTo("running"));
+            var before=block.transform.position;yield return new WaitForSeconds(.12f);Assert.That(block.transform.position.x,Is.GreaterThan(before.x));
+
+            var executor=new RoomAgentExecutor(editor);var request=ObjectEditRequest(ObjectEditCall("object.delete",created));
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Find(created),Is.Null);EditEvidence("deleted",executor,source);
+            string run=(string)request.commands[0].execution["runId"];
+            Assert.That((string)new InvocationReceipts(directory).Find(run)["phase"],Is.EqualTo("completed"));
+            Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==created),Is.False);
+            editor.Undo();Assert.That(editor.Find(created),Is.Not.Null);Assert.That(editor.Read(created).color,Is.EqualTo(saved.color));
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);
+            Assert.That(editor.Find(created),Is.Not.Null,"Replay of the completed deletion must not delete the restored object");
+            editor.Redo();Assert.That(editor.Find(created),Is.Null);
+            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("object.position.set",created,("x",0),("y",1),("z",0)),Time.unscaledTime,out _,out _),Is.False);
+        }
+        [UnityTest] public IEnumerator PaintPreservesLivePhysicsAndPlacementResetsMotionWithExactUndo()
+        {
+            physics.SetSurfaces(true,"Ready");physics.StartPhysics();
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Moving ball",new Vector3(0,1.5f,1),1,Color.white,out var id,out var error),Is.True,error);
+            var item=editor.Find(id);var rigid=item.GetComponent<RigidRoomItem>();var body=item.GetComponent<Rigidbody>();
+            yield return new WaitForFixedUpdate();Assert.That(rigid.Launch(Vector3.right,Vector3.up),Is.True);
+            yield return new WaitForFixedUpdate();
+            var position=item.transform.localPosition;var velocity=body.linearVelocity;var spin=body.angularVelocity;
+            var executor=new RoomAgentExecutor(editor);var paint=ObjectEditRequest(ObjectEditCall("object.color.set",id,("red",.2),("green",.4),("blue",1)));
+            Assert.That(executor.Execute(paint,out error,out _),Is.True,error);
+            Assert.That(item.transform.localPosition,Is.EqualTo(position));Assert.That(body.linearVelocity,Is.EqualTo(velocity));Assert.That(body.angularVelocity,Is.EqualTo(spin));
+            Assert.That(editor.Read(id).position,Is.EqualTo(position));EditEvidence("painted",executor);
+            int revision=editor.ObjectRevision(id);Assert.That(executor.Execute(paint,out error,out _),Is.True,error);Assert.That(editor.ObjectRevision(id),Is.EqualTo(revision));
+            var move=ObjectEditRequest(ObjectEditCall("object.position.set",id,("x",.5),("y",2),("z",1)));
+            Assert.That(executor.Execute(move,out error,out _),Is.True,error);
+            Assert.That(item.transform.localPosition,Is.EqualTo(new Vector3(.5f,2,1)));Assert.That(body.linearVelocity,Is.EqualTo(Vector3.zero));
+            Assert.That(body.angularVelocity,Is.EqualTo(Vector3.zero));Assert.That(body.useGravity,Is.True);
+            editor.Undo();Assert.That(item.transform.localPosition,Is.EqualTo(position));Assert.That(editor.Read(id).color,Is.EqualTo(new Color(.2f,.4f,1,1)));
+            yield return new WaitForFixedUpdate();Assert.That(body.linearVelocity.y,Is.LessThan(0));
+        }
+        [UnityTest] public IEnumerator ObjectEditsRejectStaleHeldBusyProtectedAndUnsavableTargets()
+        {
+            var executor=new RoomAgentExecutor(editor);string id=editor.Identity(block);string before=JsonUtility.ToJson(editor.Read(id));
+            var request=ObjectEditRequest(ObjectEditCall("object.color.set",id,("red",1),("green",0),("blue",0)));
+            request.conditions[0].revision--;
+            Assert.That(executor.Execute(request,out var error,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));
+            request.conditions[0].revision=editor.ObjectRevision(id);
+            Assert.That(runtime.Trigger(sequenceId),Is.True);Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
+            runtime.Scheduler.StopAll();
+            var hand=Hand(1,block.transform.position);manager.SelectEnter((IXRSelectInteractor)hand,block.Grab);
+            Assert.That(executor.Execute(request,out error,out _),Is.False);manager.SelectExit((IXRSelectInteractor)hand,block.Grab);
+            yield return null;
+            Assert.That(executor.Execute(ObjectEditRequest(ObjectEditCall("object.delete","book")),out error,out _),Is.False);
+            Assert.That(executor.Execute(ObjectEditRequest(ObjectEditCall("object.scale.set","book",("scale",4))),out error,out _),Is.False);
+            Assert.That(executor.Execute(ObjectEditRequest(ObjectEditCall("object.scale.set","book",("scale",1.2))),out error,out _),Is.True,error);
+            Assert.That(editor.Find("book").transform.localScale.x,Is.EqualTo(1.2f));
+            before=JsonUtility.ToJson(editor.Read(id));
+            Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"room.v999.json"),"preserve newer save");
+            var failing=ObjectEditRequest(ObjectEditCall("object.color.set",id,("red",1),("green",0),("blue",0)));
+            Assert.That(executor.Execute(failing,out error,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));
+            Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("failed"));
+            Assert.That(File.ReadAllText(Path.Combine(directory,"room.v999.json")),Is.EqualTo("preserve newer save"));
+        }
+
         JObject CreationCall() {
             var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
             return new JObject {["id"]="object.create.primitive",["version"]=1,["arguments"]=program["functions"][0]["body"][0]["arguments"].DeepClone()};

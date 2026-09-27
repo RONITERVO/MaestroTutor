@@ -486,3 +486,10 @@ now use the named creation/result path. Native examples and bounded array schema
 let human and agent author the same recipe, then animate its returned ID.
 See [recipe contract, evidence and limits](QUEST_RECIPE_ACTIONS.md).
 Hardware performance and complete v1/store acceptance remain open.
+
+PC object-edit checkpoint (2026-09-27): named placement, scale, tint and deletion
+actions now share durable native editing and can consume newly created IDs.
+Painting preserves physical motion; explicit placement/resizing resets velocity.
+Unrelated runs continue, and completed deletion replay cannot delete an Undo
+restoration. See [object-edit semantics and evidence](QUEST_OBJECT_EDIT_ACTIONS.md).
+Quest acceptance, broader operation coverage and store release remain open.

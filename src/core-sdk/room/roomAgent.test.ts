@@ -1,3 +1,4 @@
+import nativeEditProgram from '../../../test-fixtures/browser/objectEditProgram.json';
 import {sequenceProgram} from './programs';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -188,4 +189,17 @@ it('journals the exact issued native identity before an action can lose its ackn
  });
  await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{beforeDispatch})).rejects.toThrow('Connection lost');
  expect(execute).toHaveBeenCalledTimes(1);expect(beforeDispatch).toHaveBeenCalledTimes(1);
+});
+
+it('lets the original-app agent save and trigger the native-tested creation/edit chain through existing tools',async()=>{
+ const programId='f'.repeat(32);
+ const save:RoomCommand={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'redBall',sequence:{id:'',name:'Make a red ball',interruption:0,repeat:false,program:JSON.stringify(nativeEditProgram)}}]}};
+ const play:RoomCommand={action:'rules',rule:{action:'play',revision:2,target:programId}};
+ const ai=client([JSON.stringify({commands:[save]}),JSON.stringify({commands:[play]}),'{"commands":[]}']);
+ let current:RoomAgentState={...scene,capabilities:['behaviourPrograms.v3','eventPrograms.v1','actionResults.v1','objectEdits.v1']};
+ const execute=vi.fn(async(commands:RoomCommand[])=>{current={...current,revision:current.revision+1,ack:current.ack+1,created:commands[0].rule?.action==='edit'?[programId]:[],status:'Native-test fixture accepted'};return current;});
+ const result=await runRoomActionTask({...input,prompt:'Make a red ball, enlarge it, and place it in front of me.'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute.mock.calls.map(call=>call[0])).toEqual([[save],[play]]);
+ expect(result.receipts).toHaveLength(2);expect(result.budgetExhausted).toBe(false);
+ expect(ai.live.connect).not.toHaveBeenCalled();
 });

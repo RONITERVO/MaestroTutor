@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation, UpperBodyGesture, PhysicsImpulse, PhysicsStop, CreatePrimitive, CreateRecipe }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation, UpperBodyGesture, PhysicsImpulse, PhysicsStop, CreatePrimitive, CreateRecipe, MoveObject, ResizeObject, PaintObject, DeleteObject }
     public enum PropHand { Left, Right }
     public enum PropRelease { Return, Drop, Throw }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle, Walk }
@@ -34,6 +34,9 @@ namespace Maestro.Quest.Rules
         public Color creationColor=Color.white;
         public float creationScale=1;
         public RoomRecipe creationRecipe;
+        public Vector3 editPosition;
+        public float editScale=1;
+        public Color editColor=Color.white;
         public string clipModelHash;
         public int clipIndex;
         public string motionId;
@@ -110,7 +113,8 @@ namespace Maestro.Quest.Rules
             if (step.action != RuleActionKind.Wait && !IsCreation(step.action)) yield return step.targetId;
             if (!string.IsNullOrEmpty(step.propId)) yield return step.propId;
         }
-        public static bool IsInstant(RuleActionKind kind) => kind == RuleActionKind.PhysicsImpulse || kind == RuleActionKind.PhysicsStop || IsCreation(kind);
+        public static bool IsInstant(RuleActionKind kind) => kind == RuleActionKind.PhysicsImpulse || kind == RuleActionKind.PhysicsStop || IsCreation(kind) || IsObjectEdit(kind);
+        public static bool IsObjectEdit(RuleActionKind kind)=>kind is RuleActionKind.MoveObject or RuleActionKind.ResizeObject or RuleActionKind.PaintObject or RuleActionKind.DeleteObject;
         public static bool IsCreation(RuleActionKind kind)=>kind==RuleActionKind.CreatePrimitive||kind==RuleActionKind.CreateRecipe;
         public static bool IsSpatial(RuleActionKind kind) => kind == RuleActionKind.LookAtUser || kind == RuleActionKind.FollowUser;
         public static string Activity(RuleEventKind kind) => BehaviourCatalog.Event(kind)?.Activity;
@@ -125,10 +129,13 @@ namespace Maestro.Quest.Rules
                 !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
                 !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
             if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && !IsInstant(step.action) && step.seconds < .1f) return false;
-            if (IsInstant(step.action) && (step.seconds != 0 || step.loop || !IsCreation(step.action) && !IsId(step.targetId))) return false;
+            if (IsInstant(step.action) && (step.seconds != 0 || step.loop || !IsCreation(step.action) && !(step.action is RuleActionKind.MoveObject or RuleActionKind.ResizeObject) && !IsId(step.targetId))) return false;
             if (step.action == RuleActionKind.CreatePrimitive && !new[]{"block","ball","cylinder"}.Contains(step.shape)) return false;
             if (step.action == RuleActionKind.CreateRecipe && (step.creationRecipe==null || !step.creationRecipe.Validate(out _))) return false;
             if (IsCreation(step.action) && (step.objectName==null || step.objectName.Length>80 || step.objectName.Any(char.IsControl) || !RoomRecipe.Finite(step.creationPosition) || step.creationPosition.sqrMagnitude>625 || !float.IsFinite(step.creationScale) || step.creationScale<.1f || step.creationScale>4 || !RoomRecipe.ValidColor(step.creationColor))) return false;
+            if(step.action==RuleActionKind.MoveObject&&(!RoomRecipe.Finite(step.editPosition)||step.editPosition.sqrMagnitude>625))return false;
+            if(step.action==RuleActionKind.ResizeObject&&(!float.IsFinite(step.editScale)||step.editScale<.1f||step.editScale>4))return false;
+            if(step.action==RuleActionKind.PaintObject&&!RoomRecipe.ValidColor(step.editColor))return false;
             if (step.action == RuleActionKind.PhysicsImpulse && (!float.IsFinite(step.impulse.sqrMagnitude) || Mathf.Abs(step.impulse.x)>20 || Mathf.Abs(step.impulse.y)>20 || Mathf.Abs(step.impulse.z)>20)) return false;
             if (step.action == RuleActionKind.UpperBodyGesture && step.gesture == RuleGesture.Walk) return false;
             if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId)) return false;

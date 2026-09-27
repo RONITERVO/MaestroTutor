@@ -1454,6 +1454,176 @@
       }
     },
     {
+      "id": "object.position.set",
+      "version": 1,
+      "label": "Move object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "x": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          }
+        },
+        "required": [
+          "target",
+          "x",
+          "y",
+          "z"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Saves before completion and adds one Undo edit. This is immediate placement: velocity resets, then normal gravity resumes. Other objects keep running."
+    },
+    {
+      "id": "object.scale.set",
+      "version": 1,
+      "label": "Resize object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 4.0
+          }
+        },
+        "required": [
+          "target",
+          "scale"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Set uniform scale while retaining current position, rotation, model and recipe. User objects allow 0.1–4, the book 0.65–1.8, and Maestro 0.3–1.5. Saves before completion, one Undo edit. Resizing resets velocity; normal gravity resumes."
+    },
+    {
+      "id": "object.color.set",
+      "version": 1,
+      "label": "Paint object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "red": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "green": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "blue": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        },
+        "required": [
+          "target",
+          "red",
+          "green",
+          "blue"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Set RGB tint, each 0–1, on a user-created object. Preserves its live position and velocity. Recipes, drawings and imported models keep their geometry. The included book and Maestro cannot be painted. Saves before completion, one Undo edit."
+    },
+    {
+      "id": "object.delete",
+      "version": 1,
+      "label": "Delete object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "storage.writable"
+      ],
+      "description": "Remove a user-created object after saving the room. One Undo edit restores its saved geometry and animation data. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail."
+    },
+    {
       "id": "object.physics.impulse",
       "version": 1,
       "label": "Push object",
@@ -2091,7 +2261,11 @@
         "object.physics.impulse",
         "object.physics.stop",
         "object.create.primitive",
-        "object.create.recipe"
+        "object.create.recipe",
+        "object.position.set",
+        "object.scale.set",
+        "object.color.set",
+        "object.delete"
       ],
       "eventIds": [
         "maestro.speaking.enter",
@@ -2107,11 +2281,11 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "b23188084555d2f87cadc4a1e8e0dd80a4bbeff1da72f6558a4d786da771f854"
+      "sha256": "f66bbfe4ee0baffa73392e23ddd96b06e0e4ea712e0762cece899adc1a98c013"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "a5b018197352c99575fd5ae850980958d1d0a7abf9e56e748a4617598ec5be94"
+      "sha256": "a9a486eba7c7d0f08ed5133266e2a9317ac14d1b659d2d345c670c573bf37ad2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -2119,7 +2293,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
-      "sha256": "6f7ade838687dc310082a97efa2de1e162a066b87d48391e733ad39358893ac2"
+      "sha256": "737bc8b9b3b8602856a19f29dba3b9f258554c902523d0b8744ab95b0cc771b5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",

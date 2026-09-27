@@ -57,7 +57,7 @@ namespace Maestro.Quest.Rules
             var item = editor.Find(step.targetId);
             if (!item) { error = "An action target was removed; choose another target"; return false; }
             if (item.Grab.isSelected || (workshop && workshop.ControlsTarget(step.targetId))) { error = "Release the target and stop authoring before running its rule"; return false; }
-            if(RuleDocument.IsInstant(step.action)) {
+            if(step.action is RuleActionKind.PhysicsImpulse or RuleActionKind.PhysicsStop) {
                 var rigid=item.GetComponent<RigidRoomItem>();
                 if(!rigid) {error="This object has no rigid-body physics";return false;}
                 return rigid.CanReceivePhysicsAction(out error);
@@ -74,6 +74,12 @@ namespace Maestro.Quest.Rules
             {error="Stop Maestro's current movement before starting a conflicting action";return false;}
             if(tutor && tutor.UpperBodyActive && !RuleDocument.IsSpatial(step.action))
             {error="An upper-body gesture is already running";return false;}
+            if(step.action==RuleActionKind.ResizeObject) {
+                var limits=RoomDocument.ScaleLimits(editor.Read(step.targetId).kind);
+                if(step.editScale<limits.minimum||step.editScale>limits.maximum){error="Scale must be between "+limits.minimum+" and "+limits.maximum+" for this object";return false;}
+            }
+            if(RuleDocument.IsObjectEdit(step.action))
+                return editor.CanEditObject(step.targetId,step.action is RuleActionKind.PaintObject or RuleActionKind.DeleteObject,out error);
             if (step.action == RuleActionKind.RecipeAnimation)
             {
                 var recipe=editor.Read(step.targetId)?.recipe;
@@ -107,6 +113,14 @@ namespace Maestro.Quest.Rules
         {
             seconds = step.seconds;
             if (!CanRun(step,out error)) return false;
+            if(RuleDocument.IsObjectEdit(step.action)) {
+                seconds=0;return step.action switch {
+                    RuleActionKind.MoveObject=>editor.MoveObject(step.targetId,step.editPosition,out error),
+                    RuleActionKind.ResizeObject=>editor.ResizeObject(step.targetId,step.editScale,out error),
+                    RuleActionKind.PaintObject=>editor.PaintObject(step.targetId,step.editColor,out error),
+                    _=>editor.DeleteObject(step.targetId,out error)
+                };
+            }
             if(step.action==RuleActionKind.CreateRecipe) {
                 if(!editor.CreateRecipe(step.objectName,step.creationPosition,step.creationScale,step.creationRecipe,out var id,out error))return false;
                 results[runId]=new Newtonsoft.Json.Linq.JObject {["objectId"]=id};return true;

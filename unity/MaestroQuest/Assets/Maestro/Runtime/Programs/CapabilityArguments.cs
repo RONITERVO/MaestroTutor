@@ -55,6 +55,13 @@ namespace Maestro.Quest.Programs
                 ["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),
                 ["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1)
             });
+            if(RuleDocument.IsObjectEdit(kind)) {
+                p["target"]=Resource(Text(kind is RuleActionKind.PaintObject or RuleActionKind.DeleteObject?"^[a-fA-F0-9]{32}$":"^(maestro|book|[a-fA-F0-9]{32})$",32));
+                if(kind==RuleActionKind.MoveObject){p["x"]=Number(-25,25);p["y"]=Number(-25,25);p["z"]=Number(-25,25);}
+                if(kind==RuleActionKind.ResizeObject)p["scale"]=Number(.1,4);
+                if(kind==RuleActionKind.PaintObject){p["red"]=Number(0,1);p["green"]=Number(0,1);p["blue"]=Number(0,1);}
+                return Object(p);
+            }
             if(RuleDocument.IsInstant(kind)) {
                 p["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32));
                 if(kind==RuleActionKind.PhysicsImpulse) {p["x"]=Number(-20,20);p["y"]=Number(-20,20);p["z"]=Number(-20,20);}
@@ -139,6 +146,9 @@ namespace Maestro.Quest.Programs
         public static JObject FromStep(RuleStep step)
         {
             var result=new JObject();var fields=(JObject)Schema(step.action)["properties"];
+            if(step.action==RuleActionKind.MoveObject){result["x"]=step.editPosition.x;result["y"]=step.editPosition.y;result["z"]=step.editPosition.z;}
+            if(step.action==RuleActionKind.ResizeObject)result["scale"]=step.editScale;
+            if(step.action==RuleActionKind.PaintObject){result["red"]=step.editColor.r;result["green"]=step.editColor.g;result["blue"]=step.editColor.b;}
             if(step.action==RuleActionKind.CreateRecipe) {
                 result["name"]=step.objectName;result["x"]=step.creationPosition.x;result["y"]=step.creationPosition.y;result["z"]=step.creationPosition.z;result["scale"]=step.creationScale;
                 result["recipe"]=step.creationRecipe==null?JValue.CreateNull():JObject.Parse(JsonUtility.ToJson(step.creationRecipe));
@@ -166,6 +176,9 @@ namespace Maestro.Quest.Programs
             step=null;error=null;if(!BehaviourCatalog.HasAction(kind) || !Validate(arguments,Schema(kind),out error)) {error??="Unknown capability";return false;}
             var result=new RuleStep {action=kind,targetId=(string)arguments["target"]??"maestro",seconds=(float?)arguments["seconds"]??0,
                 loop=(bool?)arguments["loop"]??false,clipModelHash=(string)arguments["modelHash"],clipIndex=(int?)arguments["clipIndex"]??0,motionId=(string)arguments["motionId"]};
+            if(kind==RuleActionKind.MoveObject)result.editPosition=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);
+            if(kind==RuleActionKind.ResizeObject)result.editScale=(float)arguments["scale"];
+            if(kind==RuleActionKind.PaintObject)result.editColor=new Color((float)arguments["red"],(float)arguments["green"],(float)arguments["blue"],1);
             if(kind==RuleActionKind.CreateRecipe) {result.objectName=(string)arguments["name"];result.creationPosition=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);result.creationScale=(float)arguments["scale"];result.creationRecipe=JsonUtility.FromJson<RoomRecipe>(arguments["recipe"].ToString());}
             if(kind==RuleActionKind.CreatePrimitive) {
                 result.shape=(string)arguments["shape"];result.objectName=(string)arguments["name"];result.creationPosition=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);

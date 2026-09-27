@@ -136,14 +136,44 @@ namespace Maestro.Quest.Creation
         }
         bool CommitCreatedObject(RoomObjectData item,out string id,out string error) {
             id=null;
-            var candidate=journal.Snapshot();candidate.objects=candidate.objects.Append(item).ToArray();
+            if(!CommitPersisted(new[]{item},Array.Empty<string>(),item.kind+" added",false,out error))return false;
+            id=item.id;return true;
+        }
+        public bool CanEditObject(string id,bool creationOnly,out string error) {
+            error=null;
+            if(journal==null){error="Room editor is not ready";return false;}
+            if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
+            var data=Read(id);var item=Find(id);
+            if(data==null||!item){error="This object was removed; inspect the room first";return false;}
+            if(creationOnly&&data.IsBuiltIn){error="Choose a user-created object";return false;}
+            if(item.Grab.isSelected){error="Release this object before editing it";return false;}
+            if(item.GetComponent<RigidRoomItem>()?.AnimationOwned==true){error="An animation or carried prop owns this object";return false;}
+            return true;
+        }
+        public bool MoveObject(string id,Vector3 position,out string error)=>EditObject(id,false,data=>data.position=position,"Object moved",true,out error);
+        public bool ResizeObject(string id,float scale,out string error)=>EditObject(id,false,data=>data.scale=scale,"Object resized",true,out error);
+        public bool PaintObject(string id,Color color,out string error)=>EditObject(id,true,data=>data.color=color,"Object painted",false,out error);
+        public bool DeleteObject(string id,out string error) {
+            if(!CanEditObject(id,true,out error))return false;
+            return CommitPersisted(Array.Empty<RoomObjectData>(),new[]{id},"Object deleted — Undo restores it",false,out error);
+        }
+        bool EditObject(string id,bool creationOnly,Action<RoomObjectData> change,string message,bool applyPose,out string error) {
+            if(!CanEditObject(id,creationOnly,out error))return false;
+            // Runtime physics can be newer than the last periodic saved placement.
+            var data=Pose(Read(id),Find(id).transform);change(data);
+            return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
+        }
+        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error) {
+            var candidate=journal.Snapshot();
+            var changed=replacements.Select(x=>x.id).Concat(removals).ToHashSet();
+            candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
             if(!candidate.Validate(out error))return false;
-            // Serialize with the existing background writer. Save the validated candidate
-            // before applying it; an interrupted write cannot cause a second creation on retry.
+            // Same serialized writer and journal as manual edits; no global Editing
+            // signal here because the caller already owns only the affected targets.
             saveTask?.GetAwaiter().GetResult();saveTask=null;
             if(!storage.Save(candidate,out error))return false;
-            if(!Commit(new[]{item},Array.Empty<string>(),item.kind+" added",true)) {error=Status;return false;}
-            dirty=false;id=item.id;return true;
+            if(!Commit(replacements,removals,message,true,applyPose)){error=Status;return false;}
+            dirty=false;return true;
         }
 
         Vector3 SpawnPosition()
@@ -179,7 +209,7 @@ namespace Maestro.Quest.Creation
             CapturePhysicsPlacements();
             Paint = color; Paint = new Color(Paint.r,Paint.g,Paint.b,1);
             var item = journal.Read(selected);
-            if (item != null && !item.IsBuiltIn) { item.color = Paint; Commit(new[] { item }, Array.Empty<string>(), "Paint changed"); }
+            if (item != null && !item.IsBuiltIn) { Editing?.Invoke(); if(!PaintObject(selected,Paint,out var error))SetStatus(error); }
             else SetStatus("Paint chosen for your next creation");
         }
 
@@ -196,7 +226,7 @@ namespace Maestro.Quest.Creation
         {
             var item = journal.Read(selected);
             if (item == null || item.IsBuiltIn) { SetStatus("Select one of your creations to erase"); return; }
-            if (Commit(Array.Empty<RoomObjectData>(), new[] { selected }, "Erased — Undo brings it back")) { selected = null; UpdateSelection(); }
+            Editing?.Invoke(); if(DeleteObject(selected,out var error)) { selected = null; UpdateSelection(); } else SetStatus(error);
         }
 
         public void Undo() { Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
@@ -229,12 +259,12 @@ namespace Maestro.Quest.Creation
             return true;
         }
 
-        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false)
+        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null)
         {
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
             if (!journal.Apply(replacements,removals,out var error)) { SetStatus(error); return false; }
-            Reconcile(replacements.Select(item => item.id).ToHashSet(), !placement); MarkDirty(); SetStatus(success); return true;
+            Reconcile(replacements.Select(item => item.id).ToHashSet(), applyPose ?? !placement); MarkDirty(); SetStatus(success); return true;
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
         {
@@ -262,8 +292,7 @@ namespace Maestro.Quest.Creation
         {
             Editing?.Invoke(); if (Busy()) return false;
             var data = journal.Read(selected); if (data == null) return false;
-            data.position = transform.InverseTransformPoint(worldPosition);
-            return Commit(new[] { data },Array.Empty<string>(),"Placed on the detected surface");
+            if(MoveObject(selected,transform.InverseTransformPoint(worldPosition),out var error))return true;SetStatus(error);return false;
         }
         public bool SaveAnimation(string id, RoomMotion motion, JointPose[] joints, bool savePose)
         {
@@ -376,8 +405,7 @@ namespace Maestro.Quest.Creation
         public bool SetAvatarSize(float scale)
         {
             Editing?.Invoke(); if (Busy()) return false;
-            var data = journal.Read("maestro"); data.scale = scale;
-            return Commit(new[] { data },Array.Empty<string>(),"Maestro size saved");
+            if(ResizeObject("maestro",scale,out var error))return true;SetStatus(error);return false;
         }
         public void SaveNow() { CapturePhysicsPlacements(); MarkDirty(); saveAt = 0; SetStatus("Saving room"); }
         void CapturePhysicsPlacements()

@@ -25,7 +25,10 @@ export function validRoomControl(c:Record<string,unknown>):boolean {
 export function requireRoomCapabilities(commands:{action:string;rule?:unknown}[],scene:{capabilities?:string[]}) {
   const hasResults=(value:unknown):boolean=>Array.isArray(value)?value.some(hasResults):record(value)?value.op==='invoke'&&(value.results!==undefined||value.capability==='object.create.primitive'||value.capability==='object.create.recipe')||Object.values(value).some(hasResults):false;
   const hasRecipe=(value:unknown):boolean=>Array.isArray(value)?value.some(hasRecipe):record(value)?value.op==='invoke'&&value.capability==='object.create.recipe'||Object.values(value).some(hasRecipe):false;
+  const hasEdit=(value:unknown):boolean=>Array.isArray(value)?value.some(hasEdit):record(value)?value.op==='invoke'&&['object.position.set','object.scale.set','object.color.set','object.delete'].includes(String(value.capability))||Object.values(value).some(hasEdit):false;
   for(const command of commands) {
+    if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasEdit(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('objectEdits.v1'))
+      throw new Error('Update the native app to edit objects in programs.');
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasRecipe(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('recipeCreation.v1'))
       throw new Error('Update the native app to create recipe objects in programs.');
     if(command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)&&command.rule.edits.some(e=>record(e)&&record(e.sequence)&&typeof e.sequence.program==='string'&&hasResults(JSON.parse(e.sequence.program)))&&!scene.capabilities?.includes('actionResults.v1'))

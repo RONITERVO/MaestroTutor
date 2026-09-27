@@ -11,6 +11,8 @@ import nativeExecutions from './executionStates.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
+import objectEditProgram from './objectEditProgram.json';
+import objectEditResults from './objectEditResults.json';
 import recipeCreationProgram from './recipeCreationProgram.json';
 import recipeCreationResult from './recipeCreationResult.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
@@ -30,14 +32,16 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+const objectEdits=new URLSearchParams(location.search).has('objectEdits');
 const recipeCreation=new URLSearchParams(location.search).has('recipeCreation');
-if(new URLSearchParams(location.search).has('creation')||recipeCreation){
+if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectEdits){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
- const name=recipeCreation?'Create waving robot':'Create and push';
- state.rules!.selected!.program=JSON.stringify(recipeCreation?recipeCreationProgram:creationProgram);state.rules!.selected!.name=name;
- state.rules!.sequences=state.rules!.sequences.map(x=>x.id===state.rules!.selected!.id?{...x,name,steps:2,program:true}:x);
+ const program=objectEdits?objectEditProgram:recipeCreation?recipeCreationProgram:creationProgram;
+ const name=objectEdits?'Make a red ball':recipeCreation?'Create waving robot':'Create and push';
+ state.rules!.selected!.program=JSON.stringify(program);state.rules!.selected!.name=name;
+ state.rules!.sequences=state.rules!.sequences.map(x=>x.id===state.rules!.selected!.id?{...x,name,steps:program.functions[0].body.length,program:true}:x);
  state.rules!.running=[];state.rules!.outcomes=[];state.rules!.bindings=[];state.rules!.bindingCount=0;state.rules!.buttons=[];
- state.execution=JSON.parse(JSON.stringify(recipeCreation?recipeCreationResult:creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','recipeCreation.v1','execution.v1','executionReceipts.v1'];
+ state.execution=JSON.parse(JSON.stringify(objectEdits?objectEditResults.painted:recipeCreation?recipeCreationResult:creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','recipeCreation.v1','objectEdits.v1','execution.v1','executionReceipts.v1'];
 }
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;

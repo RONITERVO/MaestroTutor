@@ -1,0 +1,84 @@
+{
+  "deleted": {
+    "selected": {
+      "id": "defb9e1842fd4e248dd2b5fcbf0390d6",
+      "capability": "object.delete",
+      "version": 1,
+      "resources": [
+        "fefda9326c814b73a8324d5575cbb781"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "call": {
+        "id": "object.delete",
+        "version": 1,
+        "arguments": {
+          "target": "fefda9326c814b73a8324d5575cbb781"
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "902266a9cd3143f285429e18266118cc",
+        "capability": "animation.recording.play",
+        "version": 1,
+        "resources": [
+          "38ce7ce240ec45098d9568099d6b6f0d"
+        ],
+        "phase": "running",
+        "status": "Action running"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "defb9e1842fd4e248dd2b5fcbf0390d6",
+        "capability": "object.delete",
+        "version": 1,
+        "resources": [
+          "fefda9326c814b73a8324d5575cbb781"
+        ],
+        "phase": "completed",
+        "status": "Action completed"
+      }
+    ],
+    "nextRunId": "39945709d8fa49fdb18411a4e4f63f83",
+    "storageError": null
+  },
+  "painted": {
+    "selected": {
+      "id": "c9e8c219b4aa46e0a7113b90b9dad820",
+      "capability": "object.color.set",
+      "version": 1,
+      "resources": [
+        "891d5a7503d94265899c65c530af1df6"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "call": {
+        "id": "object.color.set",
+        "version": 1,
+        "arguments": {
+          "target": "891d5a7503d94265899c65c530af1df6",
+          "red": 0.2,
+          "green": 0.4,
+          "blue": 1
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "c9e8c219b4aa46e0a7113b90b9dad820",
+        "capability": "object.color.set",
+        "version": 1,
+        "resources": [
+          "891d5a7503d94265899c65c530af1df6"
+        ],
+        "phase": "completed",
+        "status": "Action completed"
+      }
+    ],
+    "nextRunId": "8b0ac7dbbbe04fd6a309cbad98f02e54",
+    "storageError": null
+  }
+}

@@ -57,6 +57,29 @@ namespace Maestro.Quest.Tests
             if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"program.json"),source.ToString());}
         }
 
+        [Test] public void ObjectEditsUseTypedScopedInstantContractsAndProtectBuiltins()
+        {
+            string target=Guid.NewGuid().ToString("N");
+            foreach(var step in new[] {
+                new RuleStep {action=RuleActionKind.MoveObject,targetId="book",editPosition=Vector3.up},
+                new RuleStep {action=RuleActionKind.ResizeObject,targetId="maestro",editScale=.5f},
+                new RuleStep {action=RuleActionKind.PaintObject,targetId=target,editColor=Color.red},
+                new RuleStep {action=RuleActionKind.DeleteObject,targetId=target}
+            }) {
+                var definition=BehaviourCatalog.Actions.Single(x=>x.Kind==step.action);
+                Assert.That(definition.Duration,Is.EqualTo("instant"));
+                Assert.That(definition.Channels,Is.EqualTo(new[]{"wholeTarget"}));
+                var args=CapabilityArguments.FromStep(step);
+                Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,args,out var restored,out var error),Is.True,error);
+                Assert.That(CapabilityArguments.Resources(args,definition.InputSchema),Is.EqualTo(new[]{step.targetId}));
+                Assert.That(JToken.DeepEquals(args,CapabilityArguments.FromStep(restored)),Is.True);
+                args["seconds"]=1;Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,args,out _,out _),Is.False);
+            }
+            Assert.That(BehaviourCatalog.TryInvocation("object.position.set",1,new JObject {["target"]=target,["x"]=25,["y"]=25,["z"]=25},out _,out _),Is.False);
+            Assert.That(BehaviourCatalog.TryInvocation("object.delete",1,new JObject {["target"]="maestro"},out _,out _),Is.False);
+            Assert.That(BehaviourCatalog.TryInvocation("object.color.set",1,new JObject {["target"]="book",["red"]=1,["green"]=0,["blue"]=0},out _,out _),Is.False);
+        }
+
         static JObject CreationProgram()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
         [Test] public void TypedNativeResultsAuthorizeOnlyCreatedObjectsAndNeverFlattenToSimpleSteps()
         {

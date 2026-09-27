@@ -153,3 +153,26 @@ it('preserves the editable native recipe when authoring creation and switching t
  expect(node.arguments.recipe).toEqual(newRuleStep(13).creationRecipe);
  await act(async()=>{client.receive({...initial,revision:2,ack:1,rules:{...rules(),revision:5,selected:updated}});});
 });
+
+it('authors scoped object edits with scalar controls and preserves their exact targets',async()=>{
+ const client=new RoomAgentClient(),initial=state({capabilities:['behaviourPrograms.v3','objectEdits.v1']});
+ const target='e'.repeat(32);initial.objects.push({...initial.objects[0],id:target,name:'Ball',kind:'Ball'});
+ client.receive(initial);const screen=render(<RuleWorkspace client={client}/>);
+ const cases=[
+  {kind:'14',label:'Step 1 position y',value:'1.7',id:'object.position.set',args:{x:0,y:1.7,z:0}},
+  {kind:'15',label:'Step 1 object scale',value:'1.5',id:'object.scale.set',args:{scale:1.5}},
+  {kind:'16',label:'Step 1 tint green',value:'.2',id:'object.color.set',args:{red:1,green:.2,blue:1}},
+  {kind:'17',label:null,value:'',id:'object.delete',args:{}}
+ ];
+ let revision=2;
+ for(const entry of cases){
+  fireEvent.change(screen.getByLabelText('Step 1 action'),{target:{value:entry.kind}});
+  fireEvent.change(screen.getByLabelText('Step 1 target'),{target:{value:target}});
+  expect(screen.queryByLabelText('Step 1 seconds')).toBeNull();
+  if(entry.label)fireEvent.change(screen.getByLabelText(entry.label),{target:{value:entry.value}});
+  fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+  const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
+  expect(JSON.parse(updated.program).functions[0].body[0]).toMatchObject({id:step,capability:entry.id,arguments:{target,...entry.args}});
+  await act(async()=>{client.receive({...initial,revision:revision++,ack:revision-2,rules:{...rules(),revision:revision+3,selected:updated}});});
+ }
+});
