@@ -10,9 +10,10 @@ const gestures=['greeting','pointing','listening','speaking','idle','walk'];
 export function stepInvocation(step:RuleStep):CapabilityInvocation {
  const id=ids[step.action];if(!id)throw new Error('Unknown capability');
  const args:Record<string,unknown>={};
- if(step.action!==2&&step.action!==12)args.target=step.targetId;
- if(![3,10,11,12].includes(step.action))args.seconds=step.seconds;
+ if(![2,12,13].includes(step.action))args.target=step.targetId;
+ if(![3,10,11,12,13].includes(step.action))args.seconds=step.seconds;
  if(step.action===12)Object.assign(args,step.creation??{shape:'ball',name:'',x:.3,y:1.3,z:.65,scale:1,red:1,green:1,blue:1});
+ if(step.action===13){const c=step.creation;Object.assign(args,{name:c?.name??'',x:c?.x??.3,y:c?.y??1.3,z:c?.z??.65,scale:c?.scale??1,recipe:step.creationRecipe?JSON.parse(JSON.stringify(step.creationRecipe)):null});}
  if(step.action===10){args.x=step.impulse?.x??0;args.y=step.impulse?.y??0;args.z=step.impulse?.z??0;}
  if(step.action===1||step.action===9)args.gesture=gestures[step.gesture]??'invalid';
  if([0,6,7,8].includes(step.action))args.loop=step.loop;
@@ -27,11 +28,12 @@ export function stepInvocation(step:RuleStep):CapabilityInvocation {
  * Draft numeric values remain editable even when outside their permitted bounds.
  */
 export function invocationStep(call:CapabilityInvocation,id:string):RuleStep {
- const action=ids.indexOf(call.id);if(action<0||action>12||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
+ const action=ids.indexOf(call.id);if(action<0||action>13||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
  const a=call.arguments,p=a.prop as Record<string,unknown>|undefined;
  return {id,action,targetId:(a.target??'maestro') as string,seconds:(a.seconds??0) as number,
   gesture:a.gesture===undefined?0:gestures.indexOf(a.gesture as string),loop:(a.loop??false) as boolean,
   clipModelHash:(a.modelHash??'') as string,clipIndex:(a.clipIndex??0) as number,motionId:(a.motionId??'') as string,
+  ...(action===13?{creation:{shape:'ball',name:a.name as string,x:a.x as number,y:a.y as number,z:a.z as number,scale:a.scale as number,red:1,green:1,blue:1},creationRecipe:JSON.parse(JSON.stringify(a.recipe)) as RuleStep['creationRecipe']}:{}),
   ...(action===12?{creation:a as RuleStep['creation']}:{}),
   ...(action===10?{impulse:{x:a.x as number,y:a.y as number,z:a.z as number}}:{}),
   ...(p?{propId:p.objectId as string,propAvatarHash:p.avatarHash as string,propHand:['left','right'].indexOf(p.hand as string),

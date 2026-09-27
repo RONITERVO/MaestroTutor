@@ -64,8 +64,9 @@ contradictory outputs, runtime feature gating and human result wiring.
 
 ## Remaining boundaries
 
-Recipes, drawings and imported avatars/objects retain their existing creation
-paths; this checkpoint does not yet make every edit/import a program capability.
+Recipe creation is now also a named action; see [editable recipe actions](QUEST_RECIPE_ACTIONS.md).
+Drawings and imported avatars/objects retain their existing creation paths;
+this work does not yet make every edit/import a program capability.
 The new generic scalar-result contract is the foundation for that work. Programs
 still do not execute arbitrary engine code.
 

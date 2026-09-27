@@ -69,6 +69,70 @@ namespace Maestro.Quest.Tests
             yield return null;
         }
 
+
+        [UnityTest] public IEnumerator RecipeCreationResultDrivesNativeRobotAnimationAndRetainsTheEditableObject()
+        {
+            var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
+            var definition=Maestro.Quest.Programs.BehaviourCatalog.Action("object.create.recipe");
+            source["functions"][0]["locals"][0]["name"]="robot";
+            var create=source["functions"][0]["body"][0];create["capability"]=definition.Id;create["arguments"]=definition.Example;create["results"]["objectId"]="robot";
+            var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.recipe.play";play["bindings"]["target"]["var"]="robot";
+            play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true};
+            var sequence=new RuleSequence {id="",name="Create waving robot",program=source.ToString(Newtonsoft.Json.Formatting.None)};
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="robot",sequence=sequence}}},out var error,out var ids),Is.True,error);
+            int count=editor.Snapshot().objects.Length;
+            Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
+            string created=runtime.Scheduler.ObserveRuns().Single().locals.Single(x=>x.name=="robot").value;
+            var geometry=editor.Find(created).GetComponent<RecipeObject>();
+            Assert.That(geometry,Is.Not.Null);Assert.That(geometry.IsPlaying,Is.False,"Creation does not invent an automatic playback request");
+            Assert.That(editor.Read(created).recipe.parts.Length,Is.EqualTo(19));
+            runtime.Scheduler.Tick(Time.unscaledTime);Assert.That(geometry.IsPlaying,Is.True,runtime.Scheduler.LastError);
+            var arm=geometry.Part("RightUpperArm");var pose=arm.localRotation;
+            yield return new WaitForSeconds(.18f);Assert.That(Quaternion.Angle(pose,arm.localRotation),Is.GreaterThan(5),"Native recipe keyframes must move the actual joint");
+            void Evidence(string phase) {
+                string output=Environment.GetEnvironmentVariable("MAESTRO_RECIPE_CREATION_EVIDENCE");if(string.IsNullOrEmpty(output))return;
+                Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,phase+".json"),new JObject {["program"]=source,
+                    ["createdId"]=created,["recipe"]=JObject.Parse(JsonUtility.ToJson(editor.Read(created).recipe)),["playing"]=geometry.IsPlaying,
+                    ["armRotation"]=JObject.Parse(JsonUtility.ToJson(arm.localRotation)),["rules"]=JObject.Parse(JsonUtility.ToJson(workshop.Observe(true)))}.ToString());
+            }
+            Evidence("animating");
+            Assert.That(runtime.Scheduler.StopSequence(ids.Single()),Is.True);Assert.That(geometry.IsPlaying,Is.False);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1),"Stop never erases a creation");
+            pose=arm.localRotation;yield return new WaitForSeconds(.1f);Assert.That(Quaternion.Angle(pose,arm.localRotation),Is.LessThan(.01f));Evidence("stopped");
+            var saved=new RoomStorage(directory).Load(out error).objects.Single(x=>x.id==created);
+            Assert.That(saved.recipe.tracks.Length,Is.EqualTo(2));Assert.That(saved.recipe.playing,Is.False);
+            editor.Undo();Assert.That(editor.Find(created),Is.Null);
+            editor.Redo();Assert.That(editor.Find(created).GetComponent<RecipeObject>().Part("RightUpperArm"),Is.Not.Null);
+        }
+        [UnityTest] public IEnumerator RecipeCreationOneOffPersistsExactDefinitionAndRejectsCombinedPartOverflow()
+        {
+            var definition=Maestro.Quest.Programs.BehaviourCatalog.Action("object.create.recipe");
+            // Model the actual JSON wire request, including float-to-JSON conversion.
+            var call=JObject.Parse(new JObject {["id"]=definition.Id,["version"]=1,["arguments"]=definition.Example}.ToString());
+            var executor=new RoomAgentExecutor(editor);string run=runtime.Scheduler.Receipts.NextId;int count=editor.Snapshot().objects.Length;
+            var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=run,["call"]=call}}}};
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+            string id=(string)executor.Executions.Observe()["selected"]["output"]["objectId"];
+            var before=editor.Read(id).recipe.Copy();Assert.That(executor.Execute(request,out error,out _),Is.True,error);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
+            var receipt=new InvocationReceipts(directory).Find(run);
+            Assert.That(JToken.DeepEquals(receipt["call"],call),Is.True);Assert.That((string)receipt["output"]["objectId"],Is.EqualTo(id));
+            Assert.That(JsonUtility.ToJson(new RoomStorage(directory).Load(out error).objects.Single(x=>x.id==id).recipe),Is.EqualTo(JsonUtility.ToJson(before)));
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_RECIPE_CREATION_EVIDENCE");
+            if(!string.IsNullOrEmpty(evidence)) {Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"receipt.json"),executor.Executions.Observe().ToString());}
+            editor.Undo();Assert.That(editor.Find(id),Is.Null);
+            var bulk=new RoomRecipe {parts=Enumerable.Range(0,32).Select(i=>new RecipePart {id="part"+i,size=Vector3.one*.05f}).ToArray()};
+            for(int i=0;i<8;i++)Assert.That(editor.CreateRecipe("Parts",Vector3.one,1,bulk,out _,out error),Is.True,error);
+            count=editor.Snapshot().objects.Length;
+            Assert.That(editor.CanCreateRecipe(before,out error),Is.False);Assert.That(error,Does.Contain("256"));
+            string unused=runtime.Scheduler.Receipts.NextId;request.commands[0].execution["runId"]=unused;
+            Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("256"));
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));
+            Assert.That(runtime.Scheduler.Receipts.NextId,Is.EqualTo(unused),"Readiness rejects before authorizing an effect");
+            Assert.That(runtime.Scheduler.Receipts.Find(unused),Is.Null);
+            yield return null;
+        }
+
         JObject CreationCall() {
             var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
             return new JObject {["id"]="object.create.primitive",["version"]=1,["arguments"]=program["functions"][0]["body"][0]["arguments"].DeepClone()};

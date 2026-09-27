@@ -11,6 +11,8 @@ import nativeExecutions from './executionStates.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
 import creationResult from './creationResult.json';
+import recipeCreationProgram from './recipeCreationProgram.json';
+import recipeCreationResult from './recipeCreationResult.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
 import {behaviourCatalog} from '../../shared/behaviourCatalog';
 import nativeRules from './ruleBookState.json';
@@ -28,12 +30,14 @@ const eventPrograms=new URLSearchParams(location.search).has('events');let signa
 if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
-if(new URLSearchParams(location.search).has('creation')){
+const recipeCreation=new URLSearchParams(location.search).has('recipeCreation');
+if(new URLSearchParams(location.search).has('creation')||recipeCreation){
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
- state.rules!.selected!.program=JSON.stringify(creationProgram);state.rules!.selected!.name='Create and push';
- state.rules!.sequences=state.rules!.sequences.map(x=>x.id===state.rules!.selected!.id?{...x,name:'Create and push',steps:2,program:true}:x);
+ const name=recipeCreation?'Create waving robot':'Create and push';
+ state.rules!.selected!.program=JSON.stringify(recipeCreation?recipeCreationProgram:creationProgram);state.rules!.selected!.name=name;
+ state.rules!.sequences=state.rules!.sequences.map(x=>x.id===state.rules!.selected!.id?{...x,name,steps:2,program:true}:x);
  state.rules!.running=[];state.rules!.outcomes=[];state.rules!.bindings=[];state.rules!.bindingCount=0;state.rules!.buttons=[];
- state.execution=JSON.parse(JSON.stringify(creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','execution.v1','executionReceipts.v1'];
+ state.execution=JSON.parse(JSON.stringify(recipeCreation?recipeCreationResult:creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','recipeCreation.v1','execution.v1','executionReceipts.v1'];
 }
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
@@ -43,10 +47,13 @@ const ruleUndo:RuleView[]=[],ruleRedo:RuleView[]=[];
 const copy=<T,>(value:T):T=>JSON.parse(JSON.stringify(value));
 const uuid=()=>crypto.randomUUID().replace(/-/g,'');
 createRoot(document.getElementById('root')!).render(<QuestBookSurface><div style={{padding:32}}>Your conversation stays here while the workshop is open.</div></QuestBookSurface>);
+// Retain fixture requests so browser probes cannot miss a fast simulated acknowledgement.
+const requestHistory:unknown[]=[];Object.assign(window,{maestroWorkspaceRequests:requestHistory});
 setInterval(()=>{
  const bridge=window.maestroBook;if(!bridge)return;
  const request=bridge.roomSnapshot().request;
  if(request&&request.session===state.session&&request.sequence===state.ack+1){
+  requestHistory.push(copy(request));if(requestHistory.length>32)requestHistory.shift();
   state={...state,ack:request.sequence,ok:true,status:'Fixture action completed'};
   for(const command of request.commands){
    if(command.action==='execution'&&command.execution){

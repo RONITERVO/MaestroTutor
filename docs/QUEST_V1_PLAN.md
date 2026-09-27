@@ -480,3 +480,9 @@ object ID to one-off receipts and version-3 program locals. Human blocks and the
 agent use the same result binding, with native authority checks, room Undo and
 no duplicate creation on receipt replay. See [contract and boundaries](QUEST_CREATION_RESULTS.md).
 This does not complete all creation/import capabilities or Quest/store acceptance.
+
+PC recipe-action checkpoint (2026-09-27): editable assemblies and animation tracks
+now use the named creation/result path. Native examples and bounded array schemas
+let human and agent author the same recipe, then animate its returned ID.
+See [recipe contract, evidence and limits](QUEST_RECIPE_ACTIONS.md).
+Hardware performance and complete v1/store acceptance remain open.

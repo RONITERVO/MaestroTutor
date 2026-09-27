@@ -1,14 +1,16 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {parseRecipe} from './roomRecipe';
 import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
 export interface CapabilitySchema {
- type:'object'|'string'|'number'|'integer'|'boolean';
+ type:'object'|'array'|'string'|'number'|'integer'|'boolean';
+ items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
 }
 export interface CapabilityDefinition {
- id:string;version:number;label:string;description?:string;input:CapabilitySchema;output?:CapabilitySchema;
+ id:string;version:number;label:string;description?:string;input:CapabilitySchema;output?:CapabilitySchema;example?:Record<string,unknown>;
  duration:string;ownership:string;channels:string[];requirements:string[];
 }
 export interface CapabilityInvocation {id:string;version:number;arguments:Record<string,unknown>}
@@ -20,6 +22,7 @@ const own=(value:object,key:string)=>Object.prototype.hasOwnProperty.call(value,
 export function capabilityDefinition(id:string):CapabilityDefinition|null {const value=definitions.get(id);return value?clone(value):null;}
 function validate(value:unknown,schema:CapabilitySchema,path:string):string|null {
  const error=path+' does not match the capability contract';
+ if(value===null&&schema.nullable)return null;
  switch(schema.type) {
   case 'object': {
    if(!record(value))return error;const properties=schema.properties??{};
@@ -28,9 +31,14 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
     const error=validate(entry,properties[key],path+'.'+key);if(error)return error;
     if(Object.entries(properties[key]['x-requires']??{}).some(([field,expected])=>value[field]!==expected))return path+'.'+key+' has incompatible arguments';
    }
+   if(schema.format==='roomRecipe')return parseRecipe(value)?null:path+' is an invalid construction recipe';
    if(schema.format){const norm=Object.values(value).reduce<number>((sum,x)=>sum+Number(x)**2,0);
     if(schema.format==='boundedOffset'&&norm>1||schema.format==='unitQuaternion'&&Math.abs(norm-1)>=.01)return path+' has an invalid length';}
    return null;
+  }
+  case 'array': {
+   if(!Array.isArray(value)||value.length<(schema.minItems??0)||value.length>(schema.maxItems??0)||!schema.items)return error;
+   for(let i=0;i<value.length;i++){const failure=validate(value[i],schema.items,path+'['+i+']');if(failure)return failure;}return null;
   }
   case 'string':return typeof value==='string'&&!/[\u0000-\u001f\u007f-\u009f]/.test(value)&&
    (schema.maxLength===undefined||value.length<=schema.maxLength)&&(!schema.pattern||new RegExp(schema.pattern).test(value))&&(!schema.enum||schema.enum.includes(value))?null:error;
@@ -77,6 +85,7 @@ export function capabilityResources(id:string,args:Record<string,unknown>):strin
  const result=new Set<string>();
  const visit=(value:unknown,schema:CapabilitySchema|undefined)=>{
   if(!schema)return;if(schema['x-resource']==='object'&&typeof value==='string')result.add(value);
+  if(Array.isArray(value))for(const entry of value)visit(entry,schema.items);
   if(record(value))for(const [key,entry] of Object.entries(value))visit(entry,schema.properties?.[key]);
  };visit(args,definitions.get(id)?.input);return [...result];
 }

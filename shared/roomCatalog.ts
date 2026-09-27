@@ -13,10 +13,10 @@ const text=(v:unknown,max:number):v is string=>typeof v==='string'&&v.length<=ma
 const integer=(v:unknown,min=0):v is number=>typeof v==='number'&&Number.isInteger(v)&&v>=min&&v<=1000000;
 const id=(v:unknown)=>text(v,96)&&/^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/.test(v);
 export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
- if(!record(v)||!exact(v,['id','version','arguments'])||!id(v.id)||!integer(v.version,1)||!record(v.arguments)||JSON.stringify(v.arguments).length>8000)return false;
+ if(!record(v)||!exact(v,['id','version','arguments'])||!id(v.id)||!integer(v.version,1)||!record(v.arguments)||JSON.stringify(v.arguments).length>24000)return false;
  let count=0;
  const bounded=(v:unknown,depth:number):boolean=>{
-  if(++count>128||depth>8)return false;
+  if(++count>4096||depth>12)return false;
   if(record(v))return Object.entries(v).every(([key,x])=>text(key,80)&&bounded(x,depth+1));
   if(Array.isArray(v))return v.length<=64&&v.every(x=>bounded(x,depth+1));
   return v===null||typeof v==='boolean'||typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=1000000||text(v,128);

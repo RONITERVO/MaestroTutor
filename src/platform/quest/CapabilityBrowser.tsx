@@ -10,6 +10,7 @@ export type OpenCatalog=(insert?:CatalogInsert)=>void;
 function initial(schema:CapabilitySchema,objects:{id:string}[]):unknown {
  if(schema.enum)return schema.enum[0];
  if(schema.type==='object')return Object.fromEntries((schema.required??[]).map(key=>[key,initial(schema.properties![key],objects)]));
+ if(schema.type==='array')return Array.from({length:schema.minItems??0},()=>initial(schema.items!,objects));
  if(schema.type==='boolean')return false;
  if(schema.type==='number'||schema.type==='integer')return schema.minimum??0;
  if(schema['x-resource']==='object')return objects.find(x=>!schema.pattern||new RegExp(schema.pattern).test(x.id))?.id??'';
@@ -31,7 +32,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  };
  const search=async(offset=0)=>{const result=await send({operation:'search',query:offset?page?.query??query:query,offset});if(result?.operation==='search')setPage(result);};
  const inspect=async(id:string,version:number)=>{const result=await send({operation:'inspect',capability:id,version});if(result?.operation==='inspect'){
-  setDefinition(result.definition);setChecked('');if(result.definition)setArgs(JSON.stringify(result.definition.id==='object.create.primitive'?{shape:'ball',name:'Ball',x:.3,y:1.3,z:.65,scale:1,red:.2,green:.6,blue:.9}:initial(result.definition.input,state?.objects??[]),null,2));else setError(result.status);
+  setDefinition(result.definition);setChecked('');if(result.definition)setArgs(JSON.stringify(result.definition.example??initial(result.definition.input,state?.objects??[]),null,2));else setError(result.status);
  }};
  let call:CapabilityInvocation|null=null,invalid='';
  if(definition)try {const argumentsValue:unknown=JSON.parse(args);invalid=validateCapabilityArguments(definition.id,definition.version,argumentsValue)??'';

@@ -17,7 +17,7 @@ namespace Maestro.Quest.Editor
         public static void Export()
         {
             var manifest=BehaviourCatalog.Manifest();
-            var sources=new[] { "Runtime/Programs/BehaviourCatalog.cs", "Runtime/Programs/CapabilityArguments.cs", "Runtime/Programs/BehaviourProgram.cs", "Runtime/Rules/RuleDocument.cs" };
+            var sources=new[] { "Runtime/Programs/BehaviourCatalog.cs", "Runtime/Programs/CapabilityArguments.cs", "Runtime/Programs/BehaviourProgram.cs", "Runtime/Rules/RuleDocument.cs", "Runtime/Creation/RoomRecipe.cs", "Runtime/Creation/RecipeTemplates.cs" };
             using var sha=SHA256.Create();
             manifest["sources"]=new JArray(sources.Select(path=>new JObject {
                 ["path"]="unity/MaestroQuest/Assets/Maestro/"+path,

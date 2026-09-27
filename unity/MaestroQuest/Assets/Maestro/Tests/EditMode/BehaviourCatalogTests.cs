@@ -6,6 +6,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using Maestro.Quest.Programs;
+using Maestro.Quest.Creation;
 using Maestro.Quest.Rules;
 using NUnit.Framework;
 namespace Maestro.Quest.Tests
@@ -65,6 +66,7 @@ namespace Maestro.Quest.Tests
             foreach(var capability in BehaviourCatalog.Actions) {
                 var original=new RuleStep {action=capability.Kind,targetId=RuleDocument.IsInstant(capability.Kind)?Guid.NewGuid().ToString("N"):"maestro",seconds=capability.Kind==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(capability.Kind)?0:1,
                     gesture=RuleGesture.Greeting,clipModelHash=new string('a',64),clipIndex=2,motionId=Guid.NewGuid().ToString("N")};
+                if(capability.Kind==RuleActionKind.CreateRecipe) original.creationRecipe=RecipeTemplates.BoxRobot(true);
                 var args=CapabilityArguments.FromStep(original);
                 Assert.That(BehaviourCatalog.TryInvocation(capability.Id,1,args,out var step,out var error),Is.True,capability.Id+": "+error);
                 Assert.That(step.action,Is.EqualTo(capability.Kind));Assert.That(step.seconds,Is.EqualTo(original.seconds));

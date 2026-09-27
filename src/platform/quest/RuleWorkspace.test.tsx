@@ -135,3 +135,21 @@ it('authors physical impulse blocks through the same named contract without fake
  expect(JSON.parse(client.snapshot().request!.commands[0].rule!.edits![0].sequence!.program).functions[0].body[0].arguments).toEqual({target:ballId});
  act(()=>client.cancel());
 });
+
+it('preserves the editable native recipe when authoring creation and switching to function blocks',async()=>{
+ const client=new RoomAgentClient(),initial=state({capabilities:['behaviourPrograms.v3','actionResults.v1','recipeCreation.v1']});
+ client.receive(initial);const screen=render(<RuleWorkspace client={client}/>);
+ fireEvent.change(screen.getByLabelText('Step 1 action'),{target:{value:'13'}});
+ expect(screen.queryByLabelText('Step 1 seconds')).toBeNull();expect(screen.queryByLabelText('Step 1 target')).toBeNull();
+ expect(screen.getByText('19 parts · 2 animation tracks')).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Step 1 recipe name'),{target:{value:'Study robot'}});
+ fireEvent.change(screen.getByLabelText('Step 1 recipe scale'),{target:{value:'.4'}});
+ fireEvent.click(screen.getByRole('button',{name:'Edit recipe in function blocks'}));
+ fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
+ const program=parseProgram(updated.program).program!,node=program.functions[0].body[0];
+ expect(node).toMatchObject({id:step,op:'invoke',capability:'object.create.recipe',arguments:{name:'Study robot',scale:.4,recipe:{playing:false}}});
+ if(node.op!=='invoke')throw new Error('Expected invocation');
+ expect(node.arguments.recipe).toEqual(newRuleStep(13).creationRecipe);
+ await act(async()=>{client.receive({...initial,revision:2,ack:1,rules:{...rules(),revision:5,selected:updated}});});
+});

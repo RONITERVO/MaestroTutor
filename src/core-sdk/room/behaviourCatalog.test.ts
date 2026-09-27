@@ -6,7 +6,7 @@ import { ruleActions, ruleEvents } from '../../../shared/prompts/rules';
 import { parseProgram } from './programs';
 
 it('keeps existing book wire positions stable while adding named identities', () => {
-  expect(behaviourCatalog.adapters.ruleStep.actionIds).toHaveLength(13);
+  expect(behaviourCatalog.adapters.ruleStep.actionIds).toHaveLength(14);
   expect(behaviourCatalog.adapters.ruleStep.eventIds).toHaveLength(7);
   expect(ruleActions[2]).toBe('Wait'); expect(ruleEvents[4]).toBe('Item tapped');
   expect(behaviourCatalog.adapters.ruleStep.actionIds.indexOf('animation.library.play')).toBe(7);

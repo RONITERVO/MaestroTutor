@@ -31,10 +31,10 @@ namespace Maestro.Quest.Creation
         }
         public static bool ValidCall(JObject call)
         {
-            if(!Exact(call,"id","version","arguments")||!Id(call["id"])||!Version(call["version"])||call["arguments"] is not JObject arguments||arguments.ToString(Newtonsoft.Json.Formatting.None).Length>8000)return false;
+            if(!Exact(call,"id","version","arguments")||!Id(call["id"])||!Version(call["version"])||call["arguments"] is not JObject arguments||arguments.ToString(Newtonsoft.Json.Formatting.None).Length>24000)return false;
             int count=0;
             bool Bounded(JToken token,int depth) {
-                if(++count>128||depth>8)return false;
+                if(++count>4096||depth>12)return false;
                 if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1));
                 if(token is JArray array)return array.Count<=64&&array.All(x=>Bounded(x,depth+1));
                 return token.Type switch {JTokenType.String=>Text(token,128),JTokenType.Integer or JTokenType.Float=>double.IsFinite((double)token)&&Math.Abs((double)token)<=1000000,JTokenType.Boolean or JTokenType.Null=>true,_=>false};

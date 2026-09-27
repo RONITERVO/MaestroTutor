@@ -459,6 +459,984 @@
         "storage.writable"
       ],
       "description": "Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit. Stop leaves created objects in the room.",
+      "example": {
+        "shape": "ball",
+        "name": "Ball",
+        "x": 0.3,
+        "y": 1.3,
+        "z": 0.65,
+        "scale": 1.0,
+        "red": 0.2,
+        "green": 0.6,
+        "blue": 0.9
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "objectId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "objectId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.create.recipe",
+      "version": 1,
+      "label": "Create recipe object",
+      "input": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^.{0,80}$",
+            "maxLength": 80
+          },
+          "x": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "y": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "z": {
+            "type": "number",
+            "minimum": -25.0,
+            "maximum": 25.0
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 4.0
+          },
+          "recipe": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "parts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                      "maxLength": 32
+                    },
+                    "parent": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                      "maxLength": 32,
+                      "nullable": true
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "box",
+                        "sphere",
+                        "cylinder"
+                      ]
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -2.0,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "size": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": 0.005,
+                          "maximum": 2.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "rotation": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "z": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        },
+                        "w": {
+                          "type": "number",
+                          "minimum": -1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "z",
+                        "w"
+                      ],
+                      "additionalProperties": false,
+                      "format": "unitQuaternion"
+                    },
+                    "color": {
+                      "type": "object",
+                      "properties": {
+                        "r": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "g": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "b": {
+                          "type": "number",
+                          "minimum": 0.0,
+                          "maximum": 1.0
+                        },
+                        "a": {
+                          "type": "number",
+                          "minimum": 1.0,
+                          "maximum": 1.0
+                        }
+                      },
+                      "required": [
+                        "r",
+                        "g",
+                        "b",
+                        "a"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "parent",
+                    "shape",
+                    "position",
+                    "size",
+                    "rotation",
+                    "color"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 32
+              },
+              "tracks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "part": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                      "maxLength": 32
+                    },
+                    "keys": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "maximum": 30.0
+                          },
+                          "rotation": {
+                            "type": "object",
+                            "properties": {
+                              "x": {
+                                "type": "number",
+                                "minimum": -1.0,
+                                "maximum": 1.0
+                              },
+                              "y": {
+                                "type": "number",
+                                "minimum": -1.0,
+                                "maximum": 1.0
+                              },
+                              "z": {
+                                "type": "number",
+                                "minimum": -1.0,
+                                "maximum": 1.0
+                              },
+                              "w": {
+                                "type": "number",
+                                "minimum": -1.0,
+                                "maximum": 1.0
+                              }
+                            },
+                            "required": [
+                              "x",
+                              "y",
+                              "z",
+                              "w"
+                            ],
+                            "additionalProperties": false,
+                            "format": "unitQuaternion"
+                          }
+                        },
+                        "required": [
+                          "time",
+                          "rotation"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 2,
+                      "maxItems": 16
+                    }
+                  },
+                  "required": [
+                    "part",
+                    "keys"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 17
+              },
+              "duration": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 30.0
+              },
+              "playing": {
+                "type": "boolean"
+              },
+              "loop": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "version",
+              "parts",
+              "tracks",
+              "duration",
+              "playing",
+              "loop"
+            ],
+            "additionalProperties": false,
+            "format": "roomRecipe"
+          }
+        },
+        "required": [
+          "name",
+          "x",
+          "y",
+          "z",
+          "scale",
+          "recipe"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "room.capacity",
+        "storage.writable",
+        "recipe.valid"
+      ],
+      "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.recipe.play on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics.",
+      "example": {
+        "name": "Box robot",
+        "x": 0.3,
+        "y": 1.3,
+        "z": 0.65,
+        "scale": 1.0,
+        "recipe": {
+          "version": 1,
+          "parts": [
+            {
+              "id": "Hips",
+              "parent": "",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": 0.47999998927116394,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.25,
+                "y": 0.11999999731779099,
+                "z": 0.15000000596046448
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "Spine",
+              "parent": "Hips",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": 0.10999999940395355,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.23000000417232513,
+                "y": 0.11999999731779099,
+                "z": 0.14000000059604645
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "Chest",
+              "parent": "Spine",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": 0.12999999523162842,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.30000001192092896,
+                "y": 0.17000000178813934,
+                "z": 0.17000000178813934
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "Neck",
+              "parent": "Chest",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": 0.11999999731779099,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.070000000298023224,
+                "y": 0.070000000298023224,
+                "z": 0.070000000298023224
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "Head",
+              "parent": "Neck",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": 0.14000000059604645,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.25,
+                "y": 0.23000000417232513,
+                "z": 0.20000000298023224
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "LeftUpperArm",
+              "parent": "Chest",
+              "shape": "box",
+              "position": {
+                "x": -0.2199999988079071,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.11999999731779099,
+                "y": 0.15000000596046448,
+                "z": 0.11999999731779099
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "LeftLowerArm",
+              "parent": "LeftUpperArm",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.15999999642372131,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10000000149011612,
+                "y": 0.15000000596046448,
+                "z": 0.10000000149011612
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "LeftHand",
+              "parent": "LeftLowerArm",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.11999999731779099,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10000000149011612,
+                "y": 0.10000000149011612,
+                "z": 0.10000000149011612
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "LeftUpperLeg",
+              "parent": "Hips",
+              "shape": "box",
+              "position": {
+                "x": -0.090000003576278687,
+                "y": -0.14000000059604645,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10999999940395355,
+                "y": 0.18000000715255737,
+                "z": 0.11999999731779099
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "LeftLowerLeg",
+              "parent": "LeftUpperLeg",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.18000000715255737,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10000000149011612,
+                "y": 0.17000000178813934,
+                "z": 0.10000000149011612
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "LeftFoot",
+              "parent": "LeftLowerLeg",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.10999999940395355,
+                "z": 0.039999999105930328
+              },
+              "size": {
+                "x": 0.12999999523162842,
+                "y": 0.10000000149011612,
+                "z": 0.20000000298023224
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "LeftEye",
+              "parent": "Head",
+              "shape": "box",
+              "position": {
+                "x": -0.054999999701976776,
+                "y": 0.02500000037252903,
+                "z": 0.10499999672174454
+              },
+              "size": {
+                "x": 0.035000000149011612,
+                "y": 0.039999999105930328,
+                "z": 0.014000000432133675
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.079999998211860657,
+                "g": 0.079999998211860657,
+                "b": 0.11999999731779099,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "RightUpperArm",
+              "parent": "Chest",
+              "shape": "box",
+              "position": {
+                "x": 0.2199999988079071,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.11999999731779099,
+                "y": 0.15000000596046448,
+                "z": 0.11999999731779099
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "RightLowerArm",
+              "parent": "RightUpperArm",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.15999999642372131,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10000000149011612,
+                "y": 0.15000000596046448,
+                "z": 0.10000000149011612
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "RightHand",
+              "parent": "RightLowerArm",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.11999999731779099,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10000000149011612,
+                "y": 0.10000000149011612,
+                "z": 0.10000000149011612
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "RightUpperLeg",
+              "parent": "Hips",
+              "shape": "box",
+              "position": {
+                "x": 0.090000003576278687,
+                "y": -0.14000000059604645,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10999999940395355,
+                "y": 0.18000000715255737,
+                "z": 0.11999999731779099
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "RightLowerLeg",
+              "parent": "RightUpperLeg",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.18000000715255737,
+                "z": 0.0
+              },
+              "size": {
+                "x": 0.10000000149011612,
+                "y": 0.17000000178813934,
+                "z": 0.10000000149011612
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "RightFoot",
+              "parent": "RightLowerLeg",
+              "shape": "box",
+              "position": {
+                "x": 0.0,
+                "y": -0.10999999940395355,
+                "z": 0.039999999105930328
+              },
+              "size": {
+                "x": 0.12999999523162842,
+                "y": 0.10000000149011612,
+                "z": 0.20000000298023224
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.18000000715255737,
+                "g": 0.64999997615814209,
+                "b": 0.62999999523162842,
+                "a": 1.0
+              }
+            },
+            {
+              "id": "RightEye",
+              "parent": "Head",
+              "shape": "box",
+              "position": {
+                "x": 0.054999999701976776,
+                "y": 0.02500000037252903,
+                "z": 0.10499999672174454
+              },
+              "size": {
+                "x": 0.035000000149011612,
+                "y": 0.039999999105930328,
+                "z": 0.014000000432133675
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "color": {
+                "r": 0.079999998211860657,
+                "g": 0.079999998211860657,
+                "b": 0.11999999731779099,
+                "a": 1.0
+              }
+            }
+          ],
+          "tracks": [
+            {
+              "part": "RightUpperArm",
+              "keys": [
+                {
+                  "time": 0.0,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "time": 0.40000000596046448,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.92387950420379639,
+                    "w": 0.38268342614173889
+                  }
+                },
+                {
+                  "time": 1.6000000238418579,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.92387950420379639,
+                    "w": 0.38268342614173889
+                  }
+                },
+                {
+                  "time": 2.0,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                }
+              ]
+            },
+            {
+              "part": "RightLowerArm",
+              "keys": [
+                {
+                  "time": 0.0,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "time": 0.40000000596046448,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "time": 0.699999988079071,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.30070579051971436,
+                    "w": 0.9537169337272644
+                  }
+                },
+                {
+                  "time": 1.0,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": -0.2164396196603775,
+                    "w": 0.97629600763320923
+                  }
+                },
+                {
+                  "time": 1.2999999523162842,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.30070579051971436,
+                    "w": 0.9537169337272644
+                  }
+                },
+                {
+                  "time": 1.6000000238418579,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "time": 2.0,
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                }
+              ]
+            }
+          ],
+          "playing": false,
+          "loop": true,
+          "duration": 2.0
+        }
+      },
       "output": {
         "type": "object",
         "properties": {
@@ -1112,7 +2090,8 @@
         "avatar.gesture.upperBody",
         "object.physics.impulse",
         "object.physics.stop",
-        "object.create.primitive"
+        "object.create.primitive",
+        "object.create.recipe"
       ],
       "eventIds": [
         "maestro.speaking.enter",
@@ -1128,11 +2107,11 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "35cc2a8299431b58b44e31e9631cd5027f218a00c5b49502b3a6dc9999fbd3a5"
+      "sha256": "b23188084555d2f87cadc4a1e8e0dd80a4bbeff1da72f6558a4d786da771f854"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "40cc85afac5e537c9a91fe49512c3cdf91a45b3f1b7dc420b9a66d9444f41c0e"
+      "sha256": "a5b018197352c99575fd5ae850980958d1d0a7abf9e56e748a4617598ec5be94"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -1140,7 +2119,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
-      "sha256": "2f510995d74d73ed7ca65fd5db71160405fd8944587bc86ced0619496e7d206b"
+      "sha256": "6f7ade838687dc310082a97efa2de1e162a066b87d48391e733ad39358893ac2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
+      "sha256": "401ad282a0054fac7142e1e3e593d6ce93e9db723efd6945f5eed3f2d594dff8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
+      "sha256": "2f4156e6d20fa4a4b8ec15fafc9ff1604c1bf3f2df11824a7c9d420ba298255a"
     }
   ]
 }

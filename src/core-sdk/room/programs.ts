@@ -112,7 +112,7 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
 }
 export function sequenceProgram(steps:RuleStep[]):BehaviourProgram {
  const resources=new Set<string>();const body:ProgramNode[]=steps.map((step,i)=>{
-  const call=stepInvocation(step);if(step.action!==2&&step.action!==12)resources.add(step.targetId);if(step.propId)resources.add(step.propId);
+  const call=stepInvocation(step);if(![2,12,13].includes(step.action))resources.add(step.targetId);if(step.propId)resources.add(step.propId);
   return {id:step.id||'action_'+(i+1),op:'invoke',capability:call.id,version:call.version,arguments:call.arguments,bindings:{}};
  });
  return {version:2,entry:'main',resources:[...resources],functions:[{name:'main',returns:'void',parameters:[],locals:[],body}]};

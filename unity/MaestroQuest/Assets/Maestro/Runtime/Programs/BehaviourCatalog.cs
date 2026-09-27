@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Creation;
+using UnityEngine;
 using Newtonsoft.Json.Linq;
 
 namespace Maestro.Quest.Programs
@@ -19,6 +21,14 @@ namespace Maestro.Quest.Programs
             public int Version=>1;
             public JObject InputSchema=>CapabilityArguments.Schema(Kind);
             public JObject OutputSchema=>CapabilityArguments.OutputSchema(Kind);
+            public JObject Example {
+                get {
+                    if(!RuleDocument.IsCreation(Kind))return null;
+                    var step=new RuleStep {action=Kind,objectName=Kind==RuleActionKind.CreateRecipe?"Box robot":"Ball",creationColor=new Color(.2f,.6f,.9f,1)};
+                    if(Kind==RuleActionKind.CreateRecipe) {step.creationRecipe=RecipeTemplates.BoxRobot(true);step.creationRecipe.playing=false;}
+                    return CapabilityArguments.FromStep(step);
+                }
+            }
             public bool TryArguments(JObject arguments,out RuleStep step,out string error)=>CapabilityArguments.TryStep(Kind,arguments,out step,out error);
             public readonly RuleActionKind Kind;
             public readonly string Duration, Ownership;
@@ -27,12 +37,13 @@ namespace Maestro.Quest.Programs
                 var value=new JObject {["id"]=Id,["version"]=Version,["label"]=Label,["input"]=InputSchema,
                     ["duration"]=Duration,["ownership"]=Ownership,["channels"]=new JArray(Channels),["requirements"]=new JArray(Requirements)};
                 if(Description!=null)value["description"]=Description;
+                if(Example!=null)value["example"]=Example;
                 if(((JObject)OutputSchema["properties"]).Count>0)value["output"]=OutputSchema;return value;
             }
             public ActionDefinition(string id, RuleActionKind kind, string label, string requirements="",string description=null)
             {
                 Id=id;Kind=kind;Label=label;Description=description;Duration=RuleDocument.IsInstant(kind)?"instant":"timed";
-                Ownership=kind==RuleActionKind.Wait||kind==RuleActionKind.CreatePrimitive?"none":kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)?"exclusiveChannels":"exclusiveTargetAndProp";
+                Ownership=kind==RuleActionKind.Wait||RuleDocument.IsCreation(kind)?"none":kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)?"exclusiveChannels":"exclusiveTargetAndProp";
                 Channels=Array.AsReadOnly(ActionChannels(kind));
                 Requirements=Array.AsReadOnly(requirements.Split(' ',StringSplitOptions.RemoveEmptyEntries));
             }
@@ -71,6 +82,7 @@ namespace Maestro.Quest.Programs
             new ActionDefinition("avatar.gesture.upperBody",RuleActionKind.UpperBodyGesture,"Upper-body gesture","target.exists target.unheld authoring.inactive avatar.available"),
             new ActionDefinition("time.wait",RuleActionKind.Wait,"Wait"),
             new ActionDefinition("object.create.primitive",RuleActionKind.CreatePrimitive,"Create shape","room.capacity storage.writable","Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit. Stop leaves created objects in the room."),
+            new ActionDefinition("object.create.recipe",RuleActionKind.CreateRecipe,"Create recipe object","room.capacity storage.writable recipe.valid","Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.recipe.play on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. The new assembly uses fixed physics."),
             new ActionDefinition("object.physics.impulse",RuleActionKind.PhysicsImpulse,"Push object","target.exists target.unheld authoring.inactive rigidBody.dynamic physics.running geometry.ready","Apply x/y/z impulse in Newton-seconds along room axes (right/up/forward). Mass affects the velocity change; existing speed limits apply. Completion means the push was applied; gravity and collisions keep moving the object."),
             new ActionDefinition("object.physics.stop",RuleActionKind.PhysicsStop,"Stop object motion","target.exists target.unheld authoring.inactive rigidBody.dynamic physics.running geometry.ready","Clear linear and angular velocity once. This does not freeze or pin the object; gravity and collisions continue afterward."),
             new ActionDefinition("object.recording.throw",RuleActionKind.ThrowRecording,"Throw recording","target.exists target.unheld authoring.inactive recording.twoFrames rigidBody.dynamic physics.running"),
@@ -107,7 +119,7 @@ namespace Maestro.Quest.Programs
             return action!=null && action.Version==version && action.TryArguments(arguments,out step,out error);
         }
         public static string[] ActionChannels(RuleActionKind kind)=>kind switch {
-            RuleActionKind.Wait or RuleActionKind.CreatePrimitive=>Array.Empty<string>(),
+            RuleActionKind.Wait or RuleActionKind.CreatePrimitive or RuleActionKind.CreateRecipe=>Array.Empty<string>(),
             RuleActionKind.UpperBodyGesture=>new[] {"upperBody"},
             RuleActionKind.LookAtUser=>new[] {"gaze"},
             RuleActionKind.FollowUser=>new[] {"locomotion","gaze"},

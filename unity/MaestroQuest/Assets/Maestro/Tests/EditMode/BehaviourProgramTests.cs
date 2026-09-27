@@ -13,6 +13,50 @@ namespace Maestro.Quest.Tests
     public sealed class BehaviourProgramTests
     {
 
+
+        [Test] public void RecipeCreationContractChecksHierarchyTracksCollectionsAndDetachedExamples()
+        {
+            var definition=BehaviourCatalog.Action("object.create.recipe");var args=definition.Example;
+            var call=new JObject {["id"]=definition.Id,["version"]=1,["arguments"]=args};
+            Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidCall(call),Is.True);
+            Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,args,out var step,out var error),Is.True,error);
+            Assert.That(step.creationRecipe.parts.Length,Is.GreaterThanOrEqualTo(17));Assert.That(step.creationRecipe.playing,Is.False);
+            var copy=step.Copy();copy.creationRecipe.parts[0].size.x=1;
+            Assert.That(step.creationRecipe.parts[0].size.x,Is.Not.EqualTo(1));
+            Assert.That(CapabilityArguments.Resources(args,definition.InputSchema),Is.Empty);
+            void Invalid(Action<JObject> change) {
+                var value=definition.Example;change(value);
+                Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,value,out _,out _),Is.False);
+            }
+            Invalid(x=>x["recipe"]["parts"][0]["parent"]="Head");
+            Invalid(x=>x["recipe"]["parts"][1]["id"]=x["recipe"]["parts"][0]["id"].DeepClone());
+            Invalid(x=>x["recipe"]["parts"][0]["color"]["a"]=.5);
+            Invalid(x=>x["recipe"]["tracks"][0]["keys"][1]["time"]=0);
+            Invalid(x=>x["recipe"]["tracks"][0]["part"]="missing");
+            Invalid(x=>((JArray)x["recipe"]["tracks"][0]["keys"]).RemoveAt(0));
+            Invalid(x=>x["recipe"]["parts"][0]["script"]="run code");
+            Invalid(x=>x["recipe"]["parts"]=new JArray());
+            Invalid(x=>x["recipe"]["duration"]=31);
+            Invalid(x=>x["recipe"]["parts"][0]["position"]=new JObject {["x"]=2,["y"]=2,["z"]=2});
+            Assert.That((string)definition.Example["recipe"]["parts"][0]["id"],Is.EqualTo("Hips"));
+        }
+        [Test] public void RecipeCreationProgramsRetainArraysAndUseReturnedIdForAnimation()
+        {
+            var definition=BehaviourCatalog.Action("object.create.recipe");
+            var source=CreationProgram();source["functions"][0]["body"][0]["capability"]=definition.Id;
+            source["functions"][0]["body"][0]["arguments"]=definition.Example;
+            source["functions"][0]["locals"][0]["name"]="robot";source["functions"][0]["body"][0]["results"]["objectId"]="robot";
+            var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.recipe.play";play["bindings"]["target"]["var"]="robot";
+            play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true};
+            Assert.That(BehaviourProgram.TryParse(source.ToString(),out var program,out var error),Is.True,error);
+            var machine=new ProgramMachine(program,null);
+            Assert.That(machine.Advance(out var create),Is.EqualTo(ProgramYield.Action));Assert.That(create.creationRecipe.tracks.Length,Is.EqualTo(2));
+            string id=Guid.NewGuid().ToString("N");Assert.That(machine.CompleteAction(new JObject {["objectId"]=id},out error),Is.True,error);
+            Assert.That(machine.Advance(out var animation),Is.EqualTo(ProgramYield.Action));Assert.That(animation.targetId,Is.EqualTo(id));Assert.That(animation.action,Is.EqualTo(RuleActionKind.RecipeAnimation));
+            string output=Environment.GetEnvironmentVariable("MAESTRO_RECIPE_CREATION_EVIDENCE");
+            if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"program.json"),source.ToString());}
+        }
+
         static JObject CreationProgram()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
         [Test] public void TypedNativeResultsAuthorizeOnlyCreatedObjectsAndNeverFlattenToSimpleSteps()
         {
@@ -49,6 +93,7 @@ namespace Maestro.Quest.Tests
         {
             foreach(RuleActionKind kind in Enum.GetValues(typeof(RuleActionKind))) {
                 var step=new RuleStep {action=kind,targetId=RuleDocument.IsInstant(kind)?Guid.NewGuid().ToString("N"):"maestro",seconds=kind==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(kind)?0:1};
+                if(kind==RuleActionKind.CreateRecipe)step.creationRecipe=Maestro.Quest.Creation.RecipeTemplates.BoxRobot(true);
                 void Check() {
                     var schema=CapabilityArguments.Schema(kind);var args=CapabilityArguments.FromStep(step);
                     Assert.That(CapabilityArguments.Validate(args,schema,out var error),Is.True,error);
@@ -80,7 +125,7 @@ namespace Maestro.Quest.Tests
             command["action"]="play";Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidWire(command),Is.False);command["action"]="catalog";
             command["catalog"]["extra"]=true;Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(wire.ToString()),Is.False);((JObject)command["catalog"]).Remove("extra");
             ((JArray)wire["commands"]).Add(new JObject {["action"]="stop",["target"]="maestro"});Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(wire.ToString()),Is.False);
-            var tooDeep=new JObject();var cursor=tooDeep;for(int i=0;i<10;i++){var next=new JObject();cursor["nested"]=next;cursor=next;}
+            var tooDeep=new JObject();var cursor=tooDeep;for(int i=0;i<14;i++){var next=new JObject();cursor["nested"]=next;cursor=next;}
             query["call"]["arguments"]=tooDeep;Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidRequest(query),Is.False);
         }
         [Test] public void OneOffWireRequiresExactOperationsAndStructuredCalls()

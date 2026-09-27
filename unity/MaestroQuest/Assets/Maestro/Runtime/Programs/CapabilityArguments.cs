@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Maestro.Quest.Rules;
+using Maestro.Quest.Creation;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -21,6 +22,19 @@ namespace Maestro.Quest.Programs
         static JObject Object(JObject properties,params string[] optional)=>new() {
             ["type"]="object",["properties"]=properties,["required"]=new JArray(properties.Properties().Select(p=>p.Name).Except(optional)),["additionalProperties"]=false
         };
+        static JObject List(JObject items,int minimum,int maximum)=>new() {["type"]="array",["items"]=items,["minItems"]=minimum,["maxItems"]=maximum};
+        static JObject RecipeSchema() {
+            JObject Triple(double min,double max)=>Object(new JObject {["x"]=Number(min,max),["y"]=Number(min,max),["z"]=Number(min,max)});
+            var parent=Text("^[a-zA-Z0-9_]{0,32}$",32);parent["nullable"]=true;
+            var part=Object(new JObject {["id"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["parent"]=parent,["shape"]=Choice("box","sphere","cylinder"),
+                ["position"]=Triple(-2,2),["size"]=Triple(.005,2),["rotation"]=Vector(true),
+                ["color"]=Object(new JObject {["r"]=Number(0,1),["g"]=Number(0,1),["b"]=Number(0,1),["a"]=Number(1,1)})});
+            var key=Object(new JObject {["time"]=Number(0,30),["rotation"]=Vector(true)});
+            var track=Object(new JObject {["part"]=Text("^[a-zA-Z0-9_]{1,32}$",32),["keys"]=List(key,2,16)});
+            var recipe=Object(new JObject {["version"]=Number(1,1,true),["parts"]=List(part,1,32),["tracks"]=List(track,0,17),
+                ["duration"]=Number(.1,30),["playing"]=new JObject {["type"]="boolean"},["loop"]=new JObject {["type"]="boolean"}});
+            recipe["format"]="roomRecipe";return recipe;
+        }
         static JObject Vector(bool rotation=false)
         {
             var fields=new JObject {["x"]=Number(-1,1),["y"]=Number(-1,1),["z"]=Number(-1,1)};
@@ -35,6 +49,7 @@ namespace Maestro.Quest.Programs
         public static JObject Schema(RuleActionKind kind)
         {
             var p=new JObject();
+            if(kind==RuleActionKind.CreateRecipe)return Object(new JObject { ["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema() });
             if(kind==RuleActionKind.CreatePrimitive)return Object(new JObject {
                 ["shape"]=Choice("ball","block","cylinder"),["name"]=Text("^.{0,80}$",80),
                 ["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),
@@ -58,7 +73,7 @@ namespace Maestro.Quest.Programs
             if(p["prop"] is JObject prop)prop["x-requires"]=new JObject {["target"]="maestro"};
             return Object(p,"prop");
         }
-        public static JObject OutputSchema(RuleActionKind kind)=>Object(kind==RuleActionKind.CreatePrimitive
+        public static JObject OutputSchema(RuleActionKind kind)=>Object(RuleDocument.IsCreation(kind)
             ?new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))}:new JObject());
         // A bound resource placeholder is not an authorization. Computed IDs are
         // checked against declarations or native-created results at execution time.
@@ -72,6 +87,7 @@ namespace Maestro.Quest.Programs
         {
             error=path+" does not match the capability contract";
             if(value==null)return false;
+            if(value.Type==JTokenType.Null)return (bool?)schema["nullable"]==true;
             switch((string)schema["type"]) {
                 case "object":
                     if(value is not JObject obj)return false;var properties=(JObject)schema["properties"];
@@ -81,10 +97,17 @@ namespace Maestro.Quest.Programs
                         if(!Validate(field.Value,fieldSchema,out error,path+"."+field.Name))return false;
                         if(fieldSchema["x-requires"] is JObject requirements && requirements.Properties().Any(p=>!JToken.DeepEquals(obj[p.Name],p.Value))) {error=path+"."+field.Name+" has incompatible arguments";return false;}
                     }
-                    if(schema["format"]!=null) {
+                    if((string)schema["format"]=="roomRecipe") {
+                        var recipe=JsonUtility.FromJson<RoomRecipe>(obj.ToString(Newtonsoft.Json.Formatting.None));
+                        if(recipe==null||!recipe.Validate(out error)) {error??=path+" is an invalid construction recipe";return false;}
+                    } else if(schema["format"]!=null) {
                         double norm=obj.Properties().Sum(p=>(double)p.Value*(double)p.Value);
                         if((string)schema["format"]=="boundedOffset" && norm>1 || (string)schema["format"]=="unitQuaternion" && Math.Abs(norm-1)>=.01) {error=path+" has an invalid length";return false;}
                     }
+                    break;
+                case "array":
+                    if(value is not JArray array||array.Count<(int)schema["minItems"]||array.Count>(int)schema["maxItems"])return false;
+                    for(int i=0;i<array.Count;i++)if(!Validate(array[i],(JObject)schema["items"],out error,path+"["+i+"]"))return false;
                     break;
                 case "string":
                     if(value.Type!=JTokenType.String)return false;string text=(string)value;
@@ -107,6 +130,7 @@ namespace Maestro.Quest.Programs
             void Walk(JToken value,JToken shape) {
                 if(value==null||shape==null)return;
                 if((string)shape["x-resource"]=="object" && value.Type==JTokenType.String)values.Add((string)value);
+                if(value is JArray array && shape["items"] is JObject itemSchema)foreach(var item in array)Walk(item,itemSchema);
                 if(value is JObject obj && shape["properties"] is JObject fields)
                     foreach(var field in obj.Properties())Walk(field.Value,fields[field.Name]);
             }
@@ -115,6 +139,10 @@ namespace Maestro.Quest.Programs
         public static JObject FromStep(RuleStep step)
         {
             var result=new JObject();var fields=(JObject)Schema(step.action)["properties"];
+            if(step.action==RuleActionKind.CreateRecipe) {
+                result["name"]=step.objectName;result["x"]=step.creationPosition.x;result["y"]=step.creationPosition.y;result["z"]=step.creationPosition.z;result["scale"]=step.creationScale;
+                result["recipe"]=step.creationRecipe==null?JValue.CreateNull():JObject.Parse(JsonUtility.ToJson(step.creationRecipe));
+            }
             if(step.action==RuleActionKind.CreatePrimitive) {
                 result["shape"]=step.shape;result["name"]=step.objectName;result["x"]=step.creationPosition.x;result["y"]=step.creationPosition.y;result["z"]=step.creationPosition.z;
                 result["scale"]=step.creationScale;result["red"]=step.creationColor.r;result["green"]=step.creationColor.g;result["blue"]=step.creationColor.b;
@@ -138,6 +166,7 @@ namespace Maestro.Quest.Programs
             step=null;error=null;if(!BehaviourCatalog.HasAction(kind) || !Validate(arguments,Schema(kind),out error)) {error??="Unknown capability";return false;}
             var result=new RuleStep {action=kind,targetId=(string)arguments["target"]??"maestro",seconds=(float?)arguments["seconds"]??0,
                 loop=(bool?)arguments["loop"]??false,clipModelHash=(string)arguments["modelHash"],clipIndex=(int?)arguments["clipIndex"]??0,motionId=(string)arguments["motionId"]};
+            if(kind==RuleActionKind.CreateRecipe) {result.objectName=(string)arguments["name"];result.creationPosition=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);result.creationScale=(float)arguments["scale"];result.creationRecipe=JsonUtility.FromJson<RoomRecipe>(arguments["recipe"].ToString());}
             if(kind==RuleActionKind.CreatePrimitive) {
                 result.shape=(string)arguments["shape"];result.objectName=(string)arguments["name"];result.creationPosition=new Vector3((float)arguments["x"],(float)arguments["y"],(float)arguments["z"]);
                 result.creationScale=(float)arguments["scale"];result.creationColor=new Color((float)arguments["red"],(float)arguments["green"],(float)arguments["blue"],1);

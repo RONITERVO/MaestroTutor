@@ -49,6 +49,7 @@ namespace Maestro.Quest.Rules
         public bool CanRun(RuleStep step, out string error)
         {
             error = null;
+            if (step.action == RuleActionKind.CreateRecipe) return editor.CanCreateRecipe(step.creationRecipe,out error);
             if (step.action == RuleActionKind.CreatePrimitive) return editor.CanCreatePrimitive(out error);
             if (step.action == RuleActionKind.Wait) return true;
             if (!AvatarHeldProp.CanAttach(editor,step,out error)) return false;
@@ -106,6 +107,10 @@ namespace Maestro.Quest.Rules
         {
             seconds = step.seconds;
             if (!CanRun(step,out error)) return false;
+            if(step.action==RuleActionKind.CreateRecipe) {
+                if(!editor.CreateRecipe(step.objectName,step.creationPosition,step.creationScale,step.creationRecipe,out var id,out error))return false;
+                results[runId]=new Newtonsoft.Json.Linq.JObject {["objectId"]=id};return true;
+            }
             if(step.action==RuleActionKind.CreatePrimitive) {
                 if(!editor.CreatePrimitive(Enum.Parse<RoomObjectKind>(step.shape,true),step.objectName,step.creationPosition,step.creationScale,step.creationColor,out var id,out error))return false;
                 results[runId]=new Newtonsoft.Json.Linq.JObject {["objectId"]=id};return true;
