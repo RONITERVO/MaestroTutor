@@ -39,6 +39,10 @@ namespace Maestro.Quest.Programs
     {
         public const int MaximumCharacters=24000,MaximumNodes=128,MaximumFunctions=16;
         public string Source {get;private set;}
+        public int Version {get;private set;}
+        internal readonly Dictionary<string,ProgramValue> InitialState=new();
+        internal readonly Dictionary<string,ProgramType> CustomEvents=new();
+        internal ProgramType EventType(string name) => CustomEvents.TryGetValue(name,out var type)?type:BehaviourCatalog.Events.Any(x=>x.Id==name)?ProgramType.Text:throw new ProgramFault("Unknown event");
         public string Entry {get;private set;}
         public string[] Resources => resources.ToArray();
         string[] referencedIds=System.Array.Empty<string>();
@@ -61,7 +65,7 @@ namespace Maestro.Quest.Programs
         public RuleStep[] SimpleSteps()
         {
             var f=functions[Entry];
-            if(functions.Count!=1 || f.Returns!=ProgramType.Void || f.Parameters.Length!=0 || f.Initial.Count!=0 ||
+            if(Version!=2 || functions.Count!=1 || f.Returns!=ProgramType.Void || f.Parameters.Length!=0 || f.Initial.Count!=0 ||
                 f.Body.Any(n=>(string)n["op"]!="invoke" || ((JObject)n["bindings"]).Count!=0))return null;
             return f.Body.Select(n=> {var step=Action((string)n["id"]);step.id=(string)n["id"];return step;}).ToArray();
         }
@@ -107,8 +111,14 @@ namespace Maestro.Quest.Programs
             Need(source!=null&&source.Length<=MaximumCharacters,"Program exceeds its size limit");
             using var reader=new JsonTextReader(new System.IO.StringReader(source)) {MaxDepth=48,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
-            Need(!reader.Read(),"Extra data follows the program");Keys(root,"version entry resources functions");
-            Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&(double)root["version"]==2,"Unsupported program version");
+            Need(!reader.Read(),"Extra data follows the program");
+            Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&((double)root["version"]==2||(double)root["version"]==3),"Unsupported program version");
+            Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions");
+            if(Version==3) {
+                foreach(var token in Array(root["state"],16)) {var item=Object(token);Keys(item,"name initial");string name=Text(item["name"]);Need(Name(name)&&InitialState.TryAdd(name,Literal(item["initial"])),"Invalid or duplicate state name");}
+                foreach(var token in Array(root["events"],16)) {var item=Object(token);Keys(item,"name type");string name=Text(item["name"]);var type=Type(Text(item["type"]));
+                    Need(System.Text.RegularExpressions.Regex.IsMatch(name,@"^user\.[a-zA-Z0-9_]{1,32}$")&&type!=ProgramType.Void&&CustomEvents.TryAdd(name,type),"Invalid or duplicate custom event");}
+            }
             Entry=Text(root["entry"]);
             foreach(var item in Array(root["resources"],16)) {string id=Text(item);Need(RuleDocument.IsTarget(id)&&resources.Add(id),"Invalid or duplicate resource");}
             var definitions=Array(root["functions"],MaximumFunctions);Need(definitions.Count>0,"A program needs a function");
@@ -153,6 +163,7 @@ namespace Maestro.Quest.Programs
             Need(depth<=8&&++expressions<=512,"Expression limit exceeded");var expression=Object(token);
             if(expression.ContainsKey("value")) {Keys(expression,"value");return Literal(expression["value"]).Type;}
             if(expression.ContainsKey("var")) {Keys(expression,"var");Need(function.Types.TryGetValue(Text(expression["var"]),out var type),"Unknown variable");return type;}
+            if(expression.ContainsKey("state")) {Keys(expression,"state");Need(Version==3&&InitialState.TryGetValue(Text(expression["state"]),out var state),"Unknown program state");return InitialState[Text(expression["state"])].Type;}
             if(expression.ContainsKey("fact")) {Keys(expression,"fact");Need(Facts.TryGetValue(Text(expression["fact"]),out var type),"Unknown room fact");return type;}
             Keys(expression,"op args");string op=Text(expression["op"]);var args=Array(expression["args"],2);Need(args.Count==(op=="not"?1:2),"Invalid expression argument count");
             var types=args.Select(x=>Expression(x,function,depth+1)).ToArray();
@@ -170,6 +181,21 @@ namespace Maestro.Quest.Programs
                 void Child(string key)=>Body(Array(node[key],MaximumNodes),function,depth+1);
                 void Expr(string key,ProgramType type)=>Need(Expression(node[key],function)==type,"Expression type differs from its use");
                 switch(op) {
+                    case "setState":
+                        Need(Version==3,"State needs program version 3");Keys(node,"id op variable value");Need(InitialState.TryGetValue(Text(node["variable"]),out var state),"Unknown program state");Expr("value",state.Type);break;
+                    case "forever":Need(Version==3,"Events need program version 3");Keys(node,"id op body");Child("body");break;
+                    case "sleep":Need(Version==3,"Timers need program version 3");Keys(node,"id op seconds");Expr("seconds",ProgramType.Number);break;
+                    case "awaitEvent":
+                        Need(Version==3,"Events need program version 3");Keys(node,"id op event source timeout received value");
+                        string eventName=Text(node["event"]);var eventType=EventType(eventName);string sourceId=Text(node["source"]);
+                        var definition=BehaviourCatalog.Events.FirstOrDefault(x=>x.Id==eventName);
+                        Need(sourceId==""||definition?.ObjectEvent==true&&RuleDocument.IsTarget(sourceId),"Only object events accept a source");
+                        Need(function.Types.TryGetValue(Text(node["received"]),out var received)&&received==ProgramType.Boolean,"Event received needs a boolean local");
+                        Need(function.Types.TryGetValue(Text(node["value"]),out var payload)&&payload==eventType,"Event value needs a matching local");
+                        Need(Text(node["received"])!=Text(node["value"]),"Event destinations must differ");
+                        Expr("timeout",ProgramType.Number);break;
+                    case "emitEvent":
+                        Need(Version==3,"Events need program version 3");Keys(node,"id op event value");Need(CustomEvents.TryGetValue(Text(node["event"]),out var customType),"Only declared custom events may be emitted");Expr("value",customType);break;
                     case "set": Keys(node,"id op variable value");Need(function.Types.TryGetValue(Text(node["variable"]),out var type),"Unknown assigned variable");Expr("value",type);break;
                     case "if": Keys(node,"id op test then else");Expr("test",ProgramType.Boolean);Child("then");Child("else");break;
                     case "repeat": Keys(node,"id op count body");Expr("count",ProgramType.Number);Child("body");break;

@@ -8,19 +8,26 @@ using Newtonsoft.Json.Linq;
 
 namespace Maestro.Quest.Programs
 {
-    public enum ProgramYield { Action, Yield, Completed, Failed }
+    public enum ProgramYield { Action, Yield, Waiting, Signal, Completed, Failed }
+    public sealed class ProgramWait {public string Event,Source;public float Seconds;}
+    public sealed class ProgramSignal {public string Event;public ProgramValue Value;}
     public interface IProgramFacts {bool TryRead(string name,out ProgramValue value);}
     /// <summary>Cooperatively evaluated statements; native action completion remains the host's responsibility.</summary>
     public sealed class ProgramMachine
     {
         sealed class Scope {public ProgramFunction Function;public Dictionary<string,ProgramValue> Values;}
-        sealed class Frame {public JArray Body;public int Index,Remaining=1;public Scope Scope;public bool Function;public Scope Caller;public string Result;}
+        sealed class Frame {public JArray Body;public int Index,Remaining=1;public bool Forever;public Scope Scope;public bool Function;public Scope Caller;public string Result;}
         public const int MaximumInstructions=65536;
         readonly BehaviourProgram program;
         readonly IProgramFacts facts;
         readonly Stack<Frame> frames=new();
         Scope observed;
         bool terminal;
+        readonly Dictionary<string,ProgramValue> state;
+        Scope waitingScope;string receivedVariable,valueVariable;
+        public ProgramWait Wait {get;private set;}
+        public ProgramSignal Signal {get;private set;}
+        public IReadOnlyDictionary<string,ProgramValue> State=>new Dictionary<string,ProgramValue>(state);
         public string NodeId {get;private set;}
         public string Error {get;private set;}
         public int Instructions {get;private set;}
@@ -29,7 +36,7 @@ namespace Maestro.Quest.Programs
         public string Function=>observed?.Function.Name;
         public ProgramMachine(BehaviourProgram program,IProgramFacts facts)
         {
-            this.program=program??throw new ArgumentNullException(nameof(program));this.facts=facts;
+            this.program=program??throw new ArgumentNullException(nameof(program));this.facts=facts;state=new(program.InitialState);
             Call(program.Entry,Array.Empty<ProgramValue>(),null,null);
         }
         void Call(string name,ProgramValue[] args,Scope caller,string result)
@@ -49,7 +56,7 @@ namespace Maestro.Quest.Programs
         }
         public ProgramYield Advance(out RuleStep action,int budget=32)
         {
-            action=null;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
+            action=null;Signal=null;if(Wait!=null)return ProgramYield.Waiting;if(terminal)return Error==null?ProgramYield.Completed:ProgramYield.Failed;
             if(budget<1||budget>256)throw new ArgumentOutOfRangeException(nameof(budget));
             try {
                 int began=Instructions;
@@ -58,13 +65,24 @@ namespace Maestro.Quest.Programs
                     Charge();
                     var frame=frames.Peek();
                     if(frame.Index>=frame.Body.Count) {
-                        if(--frame.Remaining>0)frame.Index=0;
+                        if(frame.Forever||--frame.Remaining>0)frame.Index=0;
                         else if(frame.Function) {if(frame.Scope.Function.Returns!=ProgramType.Void)throw new ProgramFault("Function ended without returning a value");Return(default);}
                         else frames.Pop();continue;
                     }
                     observed=frame.Scope;var node=(JObject)frame.Body[frame.Index++];NodeId=(string)node["id"];string op=(string)node["op"];
                     ProgramValue Eval(string key)=>Evaluate(node[key],frame.Scope);
                     switch(op) {
+                        case "setState":state[(string)node["variable"]]=Eval("value");break;
+                        case "forever":frames.Push(new Frame {Body=(JArray)node["body"],Scope=frame.Scope,Forever=true});break;
+                        case "sleep":
+                            double seconds=Eval("seconds").Number;if(!double.IsFinite(seconds)||seconds<.1||seconds>3600)throw new ProgramFault("Delay must be 0.1 to 3600 seconds");
+                            Wait=new ProgramWait {Seconds=(float)seconds};return ProgramYield.Waiting;
+                        case "awaitEvent":
+                            double timeout=Eval("timeout").Number;if(!double.IsFinite(timeout)||timeout!=0&&(timeout<.1||timeout>3600))throw new ProgramFault("Event timeout must be zero or 0.1 to 3600 seconds");
+                            waitingScope=frame.Scope;receivedVariable=(string)node["received"];valueVariable=(string)node["value"];
+                            waitingScope.Values[receivedVariable]=new ProgramValue(false);
+                            Wait=new ProgramWait {Event=(string)node["event"],Source=(string)node["source"],Seconds=(float)timeout};return ProgramYield.Waiting;
+                        case "emitEvent":Signal=new ProgramSignal {Event=(string)node["event"],Value=Eval("value")};return ProgramYield.Signal;
                         case "set":frame.Scope.Values[(string)node["variable"]]=Eval("value");break;
                         case "if":Block((JArray)node[Eval("test").Boolean?"then":"else"],frame.Scope);break;
                         case "switch":var value=Eval("value");var arm=((JArray)node["cases"]).FirstOrDefault(x=>ProgramValue.Literal(x["value"]).Same(value));Block((JArray)(arm==null?node["default"]:arm["body"]),frame.Scope);break;
@@ -83,6 +101,17 @@ namespace Maestro.Quest.Programs
                 }return ProgramYield.Yield;
             } catch(ProgramFault error) {Error=error.Message;frames.Clear();terminal=true;action=null;return ProgramYield.Failed;}
         }
+        public void Resume(bool received,ProgramValue value=default)
+        {
+            if(Wait==null)throw new InvalidOperationException("This program is not waiting");
+            if(received&&Wait.Event!=null) {
+                if(value.Type!=program.EventType(Wait.Event))throw new ArgumentException("Event payload type differs");
+                waitingScope.Values[receivedVariable]=new ProgramValue(true);waitingScope.Values[valueVariable]=value;
+            }
+            Wait=null;waitingScope=null;receivedVariable=valueVariable=null;
+            BeginActivation(); // Scope/state/stack remain intact.
+        }
+        internal void BeginActivation()=>Instructions=0;
         void Charge() {if(++Instructions>MaximumInstructions)throw new ProgramFault("Program instruction budget exhausted");}
         ProgramValue Evaluate(JToken token,Scope scope)
         {
@@ -90,6 +119,7 @@ namespace Maestro.Quest.Programs
             var e=(JObject)token;
             if(e.ContainsKey("value"))return ProgramValue.Literal(e["value"]);
             if(e.ContainsKey("var"))return scope.Values[(string)e["var"]];
+            if(e.ContainsKey("state"))return state[(string)e["state"]];
             if(e.ContainsKey("fact")) {
                 string name=(string)e["fact"];
                 if(facts==null||!facts.TryRead(name,out var value)||value.Type!=BehaviourProgram.Facts[name])throw new ProgramFault("Room fact unavailable: "+name);

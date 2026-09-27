@@ -154,7 +154,7 @@ namespace Maestro.Quest.Tests
             try {
                 var document=new RuleDocument {sequences=new[] {new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Future",program=Example()}}};
                 var storage=new RuleStorage(directory);Assert.That(storage.Save(document,out _),Is.True);Assert.That(storage.Save(document,out _),Is.True);
-                var program=JObject.Parse(document.sequences[0].program);program["version"]=3;document.sequences[0].program=program.ToString();
+                var program=JObject.Parse(document.sequences[0].program);program["version"]=4;document.sequences[0].program=program.ToString();
                 string path=Path.Combine(directory,"behaviours.v2.json"),future=JsonUtility.ToJson(document);File.WriteAllText(path,future);
                 storage=new RuleStorage(directory);storage.Load(out var message);Assert.That(storage.ReadOnly,Is.True,message);Assert.That(message,Does.Contain("different app version"));
                 Assert.That(storage.Save(new RuleDocument(),out _),Is.False);Assert.That(File.ReadAllText(path),Is.EqualTo(future));

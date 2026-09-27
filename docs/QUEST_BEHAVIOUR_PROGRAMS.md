@@ -329,3 +329,16 @@ and prop revisions, reject busy resources, and expose exact run phases rather
 than claiming completion on acknowledgement. See [contract and evidence](QUEST_ONE_OFF_ACTIONS.md).
 Earlier pending-transient-invocation notes describe prior checkpoints. Persistent
 event programs, timers, channel blending and full release acceptance remain open.
+
+
+## Event-program development checkpoint (2026-09-27)
+
+Version-3 programs now retain typed state across event/timer waits in the existing
+interpreter. Named signals, bounded indexed event dispatch, timer delays, causal
+budgets and idle resource release share the user/agent/native execution path.
+The optional book exposes event blocks, state, signals and per-behaviour Stop.
+Saving does not enable a run; pause, edits and reload cancel without catch-up.
+See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier notes
+marking all event waits/timers pending describe prior checkpoints. Durable state,
+wall-clock scheduling, parallel branches, channel blending and full release
+acceptance remain open; no headset install or backend deployment is included.

@@ -60,6 +60,42 @@ namespace Maestro.Quest.Tests
             ray.selectInput = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed = true,manualValue = 1 };
             hand.SetActive(true); return ray;
         }
+        [UnityTest] public IEnumerator EventProgramsSaveSignalAnimateAndStopThroughTheSharedNativeExecutor()
+        {
+            string target=editor.SelectedId;var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-events.json")));
+            program["resources"]=new JArray(target);
+            var loop=(JArray)program["functions"][0]["body"][0]["body"];loop[0]["event"]="user.wave";loop[0]["source"]="";
+            program["functions"][0]["locals"][1]["initial"]=0;
+            loop[1]["then"][1]=new JObject {["id"]="wave",["op"]="invoke",["capability"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=.5,["loop"]=false},["bindings"]=new JObject()};
+            var sequence=workshop.Selected;sequence.program=program.ToString(Newtonsoft.Json.Formatting.None);sequence.repeat=false;
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            bool Execute(RuleRequest rule,out string error)=>executor.Execute(new RoomAgentRequest {version=2,commands=new[]{new RoomAgentCommand {action="rules",rule=rule}}},out error,out _);
+            Assert.That(Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=sequence}}},out var error),Is.True,error);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Saving does not start a subscriber");
+            var saved=JsonUtility.ToJson(workshop.Snapshot());int revision=workshop.Revision;
+            void Evidence(string phase) {
+                string output=Environment.GetEnvironmentVariable("MAESTRO_EVENT_EVIDENCE");if(string.IsNullOrEmpty(output))return;
+                Directory.CreateDirectory(output);var state=observer.Observe();state.rules=workshop.Observe();state.visible=true;state.workspaceView="rules";File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));
+            }
+            Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sequence.id},out error),Is.True,error);Evidence("waiting");
+            Assert.That(runtime.Scheduler.TargetsBusy(new[]{target}),Is.False);
+            var raw=new JObject {["version"]=2,["commands"]=new JArray(new JObject {["action"]="rules",["rule"]=new JObject {["action"]="signal",["revision"]=revision,["eventName"]="user.wave",["value"]=1}})};
+            Assert.That(RoomControls.ValidWire(raw.ToString()),Is.True);var request=JsonUtility.FromJson<RoomAgentRequest>(raw.ToString());Assert.That(RoomAgentWire.PopulateStructured(request,raw),Is.True);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);
+            var before=block.transform.localPosition;yield return new WaitForSeconds(.2f);
+            Assert.That(block.transform.localPosition.x,Is.GreaterThan(before.x+.02f));Evidence("moving");
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="count").value,Is.EqualTo("1"));
+            yield return new WaitForSeconds(.7f);Assert.That(runtime.Scheduler.ObserveRuns().Single().waiting,Is.True);Assert.That(runtime.Scheduler.TargetsBusy(new[]{target}),Is.False);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return new WaitForSeconds(.15f);
+            Assert.That(runtime.Scheduler.ObserveRuns().Single().state.Single(x=>x.name=="count").value,Is.EqualTo("2"));Evidence("second");
+            request.commands[0].rule.revision--;Assert.That(executor.Execute(request,out error,out _),Is.False,"A stale signal cannot target revised definitions");
+            Assert.That(Execute(new RuleRequest {action="stop",target=sequence.id},out error),Is.True,error);Evidence("stopped");
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(runtime.Scheduler.EventQueueCount,Is.Zero);
+            Assert.That(workshop.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(saved),"Signals are runtime effects, not edits");
+            Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sequence.id},out error),Is.True,error);
+            runtime.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",false);yield return null;
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("paused");
+        }
         [UnityTest] public IEnumerator OneOffNativeWireMovesTheRealItemOnceAndLeavesDocumentsUntouched()
         {
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);

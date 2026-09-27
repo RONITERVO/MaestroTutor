@@ -86,3 +86,18 @@ it('retains an invalid simple numeric draft for correction without flattening or
  const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;expect(updated).not.toHaveProperty('steps');expect(simpleProgramSteps(updated.program)![0]).toMatchObject({id:step,seconds:1});
  await act(async()=>{client.receive(state({revision:2,ack:1,rules:{...rules(),revision:5,selected:updated}}));});
 });
+
+it('adds event blocks without flattening the current program and exposes shared state/signals',async()=>{
+ const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-events.json','utf8');
+ const current=state({capabilities:['behaviourPrograms.v3','eventPrograms.v1'],rules:{...rules(),selected:{id,name:'Reactive',interruption:0,repeat:false,program:source},running:[{id:'1'.repeat(32),sequenceId:id,preparing:false,waiting:true,waitEvent:'object.tapped',waitSeconds:0,nodeId:'wait',functionName:'main',status:'Waiting for object.tapped',state:[{name:'count',type:'number',value:'2'}],locals:[]}]}});
+ const client=new RoomAgentClient();expect(client.receive(current)).toBe(true);const screen=render(<RuleWorkspace client={client}/>);
+ expect(screen.getByLabelText('Live program values').textContent).toContain('state.count');
+ fireEvent.change(screen.getByLabelText('Value for user.wave'),{target:{value:'7'}});fireEvent.click(screen.getByRole('button',{name:'Send event'}));
+ expect(client.snapshot().request!.commands).toEqual([{action:'rules',rule:{action:'signal',revision:4,eventName:'user.wave',value:7}}]);
+ await act(async()=>{client.receive({...current,revision:2,ack:1});});
+ fireEvent.click(screen.getByRole('button',{name:'+ Timer in main'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const saved=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
+ const original=parseProgram(source).program!,updated=parseProgram(saved.program).program!;
+ expect(updated.state).toEqual(original.state);expect(updated.events).toEqual(original.events);const previousLoop=original.functions[0].body[0],loop=updated.functions[0].body[0];if(previousLoop.op!=='forever'||loop.op!=='forever')throw new Error('Expected Forever');expect(loop.body.slice(0,-1)).toEqual(previousLoop.body);expect(loop.body[loop.body.length-1].op).toBe('sleep');
+ await act(async()=>{client.receive({...current,revision:3,ack:2,rules:{...current.rules!,revision:5,selected:saved}});});
+});

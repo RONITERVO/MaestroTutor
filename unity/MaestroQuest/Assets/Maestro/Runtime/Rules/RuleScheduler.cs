@@ -28,6 +28,8 @@ namespace Maestro.Quest.Rules
             public HashSet<string> Targets;
             public float Ends, Duration, PrepareDeadline;
             public bool Preparing,Computing;
+            public int EventDepth,WaitSerial;
+            public bool Reactive=>Sequence.Compile(out _).Version==3;
             public ProgramMachine Machine;
             public RuleStep Active;
             public Newtonsoft.Json.Linq.JObject Invocation;
@@ -50,7 +52,9 @@ namespace Maestro.Quest.Rules
         public int QueuedCount => queued.Count;
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.Wait!=null?x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
+            waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
+            state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public RuleScheduler(IRuleActions actions) { this.actions = actions; }
         public bool TryRead(string name,out ProgramValue value) {
@@ -84,6 +88,7 @@ namespace Maestro.Quest.Rules
         public void Emit(RuleEventKind kind, string sourceId, float now)
         {
             if (suspended || !float.IsFinite(now)) return;
+            var definition=BehaviourCatalog.Event(kind);if(definition!=null)EnqueueEvent(definition.Id,sourceId??"",new ProgramValue(definition.ObjectEvent?sourceId:definition.Activity),now,0,out _);
             foreach (var binding in document.bindings)
             {
                 if (!binding.enabled || binding.trigger != kind || (RuleDocument.IsObjectEvent(kind) && binding.sourceId != sourceId) || !RuleDocument.ConditionMatches(binding.condition,activity)) continue;
@@ -98,7 +103,7 @@ namespace Maestro.Quest.Rules
             var sequence = document.sequences.FirstOrDefault(x => x.id == sequenceId);
             if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
             if (!BindingStillValid(binding)) return false;
-            var targets = sequence.Targets().ToHashSet();
+            var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || x.Targets.Overlaps(targets)).ToArray();
             if (conflicts.Length > 0 || !HasCapacity)
             {
@@ -120,6 +125,12 @@ namespace Maestro.Quest.Rules
             run.Computing=false;
             {
                 var yielded=run.Machine.Advance(out run.Active);
+                if(yielded==ProgramYield.Waiting) {WaitForEvent(run,now);return true;}
+                if(yielded==ProgramYield.Signal) {
+                    var signal=run.Machine.Signal;
+                    if(!EnqueueEvent(signal.Event,"",signal.Value,now,run.EventDepth+1,out var eventError)) {LastError=eventError;Stop(run,false,"failed",eventError);return false;}
+                    run.Computing=true;return true;
+                }
                 if(yielded==ProgramYield.Yield) {run.Computing=true;return true;}
                 if(yielded==ProgramYield.Failed) {LastError=run.Machine.Error;Stop(run,false,"failed",LastError);return false;}
                 if(yielded==ProgramYield.Completed) {
@@ -127,6 +138,11 @@ namespace Maestro.Quest.Rules
                     else Finish(run,"completed","Program completed");
                     return true;
                 }
+            }
+            if(run.Reactive) {
+                var targets=RuleDocument.Targets(run.Active).ToHashSet();
+                if(running.Any(x=>x!=run&&x.Targets.Overlaps(targets))) {LastError="An action already owns this target";Stop(run,false,"failed",LastError);return false;}
+                run.Targets=targets;
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || seconds < .01f || seconds > 30)
@@ -140,8 +156,13 @@ namespace Maestro.Quest.Rules
         public void Tick(float now)
         {
             if (suspended || !float.IsFinite(now)) return;
+            lastNow=now;DispatchEvents(now);
             foreach (var run in running.ToArray())
             {
+                if(run.Machine.Wait!=null) {
+                    if(run.Machine.Wait.Seconds==0||now<run.Ends)continue;
+                    Unsubscribe(run);run.Machine.Resume(false);run.EventDepth=0;StartStep(run,now);continue;
+                }
                 if(run.Computing) {StartStep(run,now);continue;}
                 if (run.Preparing)
                 {
@@ -158,7 +179,7 @@ namespace Maestro.Quest.Rules
                 if (actions is IRuleCompletion completion)
                 { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
-                run.Active=null;
+                run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Machine.BeginActivation();run.EventDepth=0;}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }
@@ -166,7 +187,7 @@ namespace Maestro.Quest.Rules
             {
                 var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
                 if (sequence == null || !BindingStillValid(pending.Binding)) { queued.Remove(pending); continue; }
-                var targets = sequence.Targets().ToHashSet();
+                var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
                 if (!HasCapacity || running.Any(x => x.Sequence.id == sequence.id || x.Targets.Overlaps(targets))) continue;
                 queued.Remove(pending); Trigger(sequence.id,now,pending.Binding);
             }
@@ -178,10 +199,16 @@ namespace Maestro.Quest.Rules
         }
         void Finish(Run run,string phase,string status) {
             if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
-            running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Resources=run.Targets.ToArray()});
+            Unsubscribe(run);running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Resources=run.Targets.ToArray()});
             while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
         }
         void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {actions.Stop(run.Id,preservePlacement);Finish(run,phase,status);}
-        public void StopAll() { foreach (var run in running.ToArray()) Stop(run,false); queued.Clear(); }
+        public bool StopSequence(string id)
+        {
+            if(!document.sequences.Any(x=>x.id==id))return false;
+            foreach(var run in running.Where(x=>x.Sequence.id==id).ToArray())Stop(run,false);
+            queued.RemoveAll(x=>x.SequenceId==id);return true;
+        }
+        public void StopAll() { foreach (var run in running.ToArray()) Stop(run,false); queued.Clear();eventQueue.Clear(); }
     }
 }

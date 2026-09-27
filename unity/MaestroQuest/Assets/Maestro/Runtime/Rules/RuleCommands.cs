@@ -16,17 +16,18 @@ namespace Maestro.Quest.Rules
     }
     [Serializable] public sealed class RuleRequest
     {
-        public string action,target;
+        public string action,target,eventName;
+        [NonSerialized] public Newtonsoft.Json.Linq.JToken value;
         public int revision,page;
         public RuleEdit[] edits;
     }
     [Serializable] public sealed class RuleSummary { public string id,name; public int steps; public bool repeat,program; }
-    [Serializable] public sealed class RuleRunView { public string id,sequenceId; public bool preparing; public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
+    [Serializable] public sealed class RuleRunView { public string id,sequenceId; public bool preparing,waiting;public string waitEvent;public float waitSeconds;public ProgramVariableView[] state=Array.Empty<ProgramVariableView>(); public string nodeId,functionName,status; public ProgramVariableView[] locals=Array.Empty<ProgramVariableView>(); }
     [Serializable] public sealed class RuleOutcome {public string id,sequenceId,phase,nodeId,status;}
     [Serializable] public sealed class ProgramVariableView {public string name,type,value;}
     [Serializable] public sealed class RuleView
     {
-        public int revision,bindingPage,bindingCount,queued;
+        public int revision,bindingPage,bindingCount,queued,eventQueue,eventsDropped;
         public bool canUndo,canRedo,readOnly;
         public string status;
         public RuleSummary[] sequences;
@@ -49,7 +50,7 @@ namespace Maestro.Quest.Rules
                 sequences=document.sequences.Select(x=>new RuleSummary {id=x.id,name=x.name,steps=x.Compile(out _).NodeCount,repeat=x.repeat,program=true}).ToArray(),
                 selected=selected,bindings=bindings.Skip(page*8).Take(8).Select(x=>x.Copy()).ToArray(),bindingPage=page,bindingCount=bindings.Length,
                 buttons=selected==null ? Array.Empty<RuleButtonData>() : document.buttons.Where(x=>x.sequenceId==selected.id).Select(x=>x.Copy()).ToArray(),
-                running=Runtime?.Scheduler?.ObserveRuns() ?? Array.Empty<RuleRunView>(),outcomes=Runtime?.Scheduler?.Outcomes??Array.Empty<RuleOutcome>(),queued=Runtime?.Scheduler?.QueuedCount ?? 0
+                running=Runtime?.Scheduler?.ObserveRuns() ?? Array.Empty<RuleRunView>(),outcomes=Runtime?.Scheduler?.Outcomes??Array.Empty<RuleOutcome>(),queued=Runtime?.Scheduler?.QueuedCount ?? 0,eventQueue=Runtime?.Scheduler?.EventQueueCount??0,eventsDropped=Runtime?.Scheduler?.EventsDropped??0
             };
         }
         public bool Execute(RuleRequest request,out string error,out string[] created)
@@ -65,8 +66,16 @@ namespace Maestro.Quest.Rules
                 }
                 viewPage=Mathf.Max(0,request.page);error="Behaviour inspected";Changed?.Invoke();return true;
             }
-            if(request.action=="stop") {Runtime?.StopAll();Say("Behaviour playback stopped");error=Status;return true;}
+            if(request.action=="stop") {
+                if(!string.IsNullOrEmpty(request.target)) {if(Runtime?.Scheduler?.StopSequence(request.target)!=true){error="That behaviour no longer exists";return false;}}
+                else Runtime?.StopAll();
+                Say(string.IsNullOrEmpty(request.target)?"Behaviour playback stopped":"This behaviour stopped");error=Status;return true;
+            }
             if(request.revision!=Revision) {error="Behaviours changed. Inspect the latest version before editing or playing.";return false;}
+            if(request.action=="signal") {
+                if(!Runtime||!RuleScheduler.ValidEventValue(request.value)) {error="Choose a declared custom event and a bounded value";return false;}
+                bool accepted=Runtime.Scheduler.Signal(request.eventName,Programs.ProgramValue.Literal(request.value),Time.unscaledTime,out error);Say(error);return accepted;
+            }
             if(request.action=="play") {
                 if(!Runtime) {error="Behaviour playback is unavailable";return false;}
                 bool started=Runtime.Trigger(request.target);error=Status;return started;

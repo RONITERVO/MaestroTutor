@@ -8,6 +8,7 @@ import {copyRecipe,parseRecipe} from '../../src/core-sdk/room/recipe';
 import robot from './recipeRobot.json';
 import nativeProgram from './programBookState.json';
 import nativeExecutions from './executionStates.json';
+import nativeEvents from './eventProgramStates.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
 import {behaviourCatalog} from '../../shared/behaviourCatalog';
 import nativeRules from './ruleBookState.json';
@@ -21,6 +22,8 @@ let state:RoomAgentState={version:1,session:'a'.repeat(32),revision:1,sceneRevis
  objects:[{id:'book',objectRevision:1,name:'My conversation book',kind:'Book',position:{x:0,y:1.1,z:.6},scale:1,color:white,animated:false},{id:'maestro',objectRevision:2,name:'Maestro',kind:'Maestro',position:{x:-.8,y:0,z:1.4},scale:1,color:white,animated:false},{id,objectRevision:3,name:'Practice robot',kind:'Assembly',position:{x:.4,y:.8,z:.8},scale:.4,color:white,animated:true}],inspection:{id,objectRevision:3,recipe}};
 if(!validRuleView(nativeRules))throw new Error('Native rule observation fixture is invalid');
 state.capabilities=['behaviourPrograms.v3'];state.rules=JSON.parse(JSON.stringify(nativeRules));state.workspaceView='objects';
+const eventPrograms=new URLSearchParams(location.search).has('events');let signalCount=0;
+if(eventPrograms)state=JSON.parse(JSON.stringify(nativeEvents.waiting));
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
 if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
@@ -70,6 +73,11 @@ setInterval(()=>{
     const rule=command.rule;let view=state.rules!;state.workspaceView='rules';state.inspection=null;
     if(!['inspect','stop'].includes(rule.action)&&rule.revision!==view.revision){state.ok=false;state.status='Behaviours changed';continue;}
     if(rule.action==='inspect')view.status='Behaviour inspected';
+    if(rule.action==='signal'){
+     if(eventPrograms&&rule.eventName==='user.wave'&&rule.value===1&&view.selected?.program===nativeEvents.waiting.rules.selected.program){
+      view=copy(signalCount++===0?nativeEvents.moving.rules:nativeEvents.second.rules) as RuleView;state.status='Replayed native event result';
+     }else{state.ok=false;state.status='This browser fixture only replays the recorded user.wave signal. It does not execute programs.';}
+    }
     if(rule.action==='edit'){
      ruleUndo.push(copy(view));ruleRedo.length=0;view=copy(view);
      for(const edit of rule.edits??[]) {
@@ -84,7 +92,7 @@ setInterval(()=>{
     } else if(rule.action==='undo'&&ruleUndo.length){const revision=view.revision+1;ruleRedo.push(copy(view));view=ruleUndo.pop()!;view.revision=revision;}
     else if(rule.action==='redo'&&ruleRedo.length){const revision=view.revision+1;ruleUndo.push(copy(view));view=ruleRedo.pop()!;view.revision=revision;}
     else if(rule.action==='play'&&view.selected?.program){state.ok=false;state.status='Programs execute in Unity. This browser fixture only replays recorded native observations.';}
-    else if(rule.action==='stop'){view.running=[];view.status='Fixture playback stopped';}
+    else if(rule.action==='stop'){if(eventPrograms)view=copy(nativeEvents.stopped.rules) as RuleView;else view.running=[];view.status='Fixture playback stopped';}
     view.canUndo=ruleUndo.length>0;view.canRedo=ruleRedo.length>0;state.rules=view;
    }
    else{state.ok=false;state.status='This development fixture only simulates recipe editing and playback.';}

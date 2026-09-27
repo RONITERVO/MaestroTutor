@@ -38,6 +38,10 @@ namespace Maestro.Quest.Creation
         {
             if(raw?["commands"] is not JArray commands || request?.commands==null || commands.Count!=request.commands.Length)return false;
             for(int i=0;i<commands.Count;i++) {
+                if(request.commands[i]?.action=="rules"&&request.commands[i].rule?.action=="signal") {
+                    if(commands[i] is not JObject signal || !Maestro.Quest.Rules.RuleScheduler.ValidSignalWire(signal))return false;
+                    request.commands[i].rule.value=signal["rule"]["value"].DeepClone();continue;
+                }
                 if(request.commands[i]?.action=="execution") {
                     if(commands[i] is not JObject execution || !RoomExecutions.ValidWire(execution))return false;
                     request.commands[i].execution=(JObject)execution["execution"].DeepClone();continue;

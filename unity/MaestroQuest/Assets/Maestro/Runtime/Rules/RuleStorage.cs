@@ -17,7 +17,7 @@ namespace Maestro.Quest.Rules
                 try {
                     using var reader=new Newtonsoft.Json.JsonTextReader(new System.IO.StringReader(sequence.program)) {MaxDepth=48,DateParseHandling=Newtonsoft.Json.DateParseHandling.None};
                     var root=Newtonsoft.Json.Linq.JObject.Load(reader);var value=root["version"];
-                    if((value?.Type==Newtonsoft.Json.Linq.JTokenType.Integer || value?.Type==Newtonsoft.Json.Linq.JTokenType.Float)&&(double)value!=2)return true;
+                    if((value?.Type==Newtonsoft.Json.Linq.JTokenType.Integer || value?.Type==Newtonsoft.Json.Linq.JTokenType.Float)&&(double)value!=2&&(double)value!=3)return true;
                     foreach(var node in root.Descendants().OfType<Newtonsoft.Json.Linq.JObject>()) {
                         if(node["op"]?.Type!=Newtonsoft.Json.Linq.JTokenType.String || (string)node["op"]!="invoke" || node["capability"]?.Type!=Newtonsoft.Json.Linq.JTokenType.String ||
                             (node["version"]?.Type!=Newtonsoft.Json.Linq.JTokenType.Integer && node["version"]?.Type!=Newtonsoft.Json.Linq.JTokenType.Float))continue;

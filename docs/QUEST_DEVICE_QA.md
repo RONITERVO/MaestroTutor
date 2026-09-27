@@ -1133,3 +1133,16 @@ during loading and verify it cannot resume. Test pause/focus loss and reconnecti
 without duplicate execution, including a lost acknowledgement. Verify the book
 can read and operate Run/Stop controls using hands/controllers. Device work remains
 on hold; PC execution, bridge tests and browser replay do not prove these checks.
+
+
+## Event-program development checkpoint (2026-09-27)
+
+Version-3 programs now retain typed state across event/timer waits in the existing
+interpreter. Named signals, bounded indexed event dispatch, timer delays, causal
+budgets and idle resource release share the user/agent/native execution path.
+The optional book exposes event blocks, state, signals and per-behaviour Stop.
+Saving does not enable a run; pause, edits and reload cancel without catch-up.
+See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier notes
+marking all event waits/timers pending describe prior checkpoints. Durable state,
+wall-clock scheduling, parallel branches, channel blending and full release
+acceptance remain open; no headset install or backend deployment is included.

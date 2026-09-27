@@ -116,9 +116,12 @@ eliminate UI, provider evaluation or headset testing.
    One-off execution now uses the same scheduler without saving a behaviour, with
    target/prop revision checks, conservative busy rejection and exact run cancellation.
    See [discovery](QUEST_CAPABILITY_DISCOVERY.md) and [one-off actions](QUEST_ONE_OFF_ACTIONS.md).
-4. Implement native event subscriptions, monotonic timers, named events and state
-   machines with explicit lifecycle policy. Test storms, recursion, pause, reload,
-   deleted targets, lost tracking and Stop before claiming continuous behaviours.
+4. **Event-program foundation implemented:** version-3 state, indexed event waits,
+   monotonic delays, named signals and Forever blocks use the same interpreter.
+   Tests cover bounded storms/causal cycles, pause/reload, Stop and busy targets.
+   State machines compose state with if/switch; first-class state-machine editing,
+   durable state, wall-clock scheduling and hardware acceptance remain.
+   See [event semantics and boundaries](QUEST_EVENT_PROGRAMS.md).
 5. Introduce per-channel actor intent ownership and compatible motion blending.
    Test simultaneous walk/look/gesture/prop behaviour, manual takeover and missing
    rigs. Verify actual Quest frame timing and comfort.
@@ -133,3 +136,16 @@ normalized source hashes in CI. Native export comparison is a local Unity check;
 the web CI runner does not claim to compile Unity. TypeScript consumes the JSON
 directly, avoiding an extra manually maintained TypeScript copy. Prerequisite
 metadata is descriptive; native CanRun checks remain the execution authority.
+
+
+## Event-program development checkpoint (2026-09-27)
+
+Version-3 programs now retain typed state across event/timer waits in the existing
+interpreter. Named signals, bounded indexed event dispatch, timer delays, causal
+budgets and idle resource release share the user/agent/native execution path.
+The optional book exposes event blocks, state, signals and per-behaviour Stop.
+Saving does not enable a run; pause, edits and reload cancel without catch-up.
+See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier notes
+marking all event waits/timers pending describe prior checkpoints. Durable state,
+wall-clock scheduling, parallel branches, channel blending and full release
+acceptance remain open; no headset install or backend deployment is included.

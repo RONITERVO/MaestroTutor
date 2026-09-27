@@ -5,7 +5,8 @@ import {readFileSync} from 'node:fs';
 import {parseProgram,sequenceProgram,simpleProgramSteps,withSimpleProgramSteps,type BehaviourProgram} from './programs';
 import {validSequence,newRuleStep,validRuleView} from './rules';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
-import {parseRoomCommands} from './roomAgent';
+import {RoomAgentClient} from '../../platform/quest/roomAgentBridge';
+import {parseRoomCommands,isRoomQuery} from './roomAgent';
 const fixture=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contract.json','utf8')) as {cases:{name:string;source:string;valid:boolean}[]};
 describe('shared behaviour programs',()=>{
  it.each(fixture.cases)('$name',({source,valid})=>expect(parseProgram(source).program!==null).toBe(valid));
@@ -34,4 +35,46 @@ it('edits literal action views without losing identities, function names or extr
  const edited=parseProgram(withSimpleProgramSteps(source,steps)).program!;expect(edited.entry).toBe('start');expect(edited.resources).toEqual(['maestro','e'.repeat(32)]);expect(edited.functions[0].body[0].id).toBe('move');expect(simpleProgramSteps(source)![0].targetId).toBe('book');
  const block=program.functions[0].body[0];if(block.op!=='invoke')throw new Error('Expected action');block.bindings.seconds={value:2};
  expect(simpleProgramSteps(JSON.stringify(program))).toBeNull();expect(()=>withSimpleProgramSteps(JSON.stringify(program),steps)).toThrow('function editor');
+});
+
+describe('event programs share the native contract',()=>{
+ const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-events.json','utf8');
+ it('accepts the actual native event fixture, preserves state and requires native support',()=>{
+  const p=parseProgram(source);expect(p.error).toBeNull();expect(p.program?.state).toEqual([{name:'count',initial:0}]);expect(simpleProgramSteps(source)).toBeNull();
+  const sequence={id:'a'.repeat(32),name:'Reactive',interruption:0,repeat:false,program:source};
+  expect(validSequence(sequence)).toBe(true);expect(validSequence({...sequence,repeat:true})).toBe(false);
+  const commands=parseRoomCommands({commands:[{action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',sequence}]}}]});
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['behaviourPrograms.v3']})).toThrow('event programs');
+  expect(()=>requireRoomCapabilities(commands,{capabilities:['behaviourPrograms.v3','eventPrograms.v1']})).not.toThrow();
+ });
+ it('rejects unknown events, wrong payload locals, undeclared state and forged built-in emission',()=>{
+  const variants=[
+   (p:ReturnType<typeof JSON.parse>)=>{p.version=2;},
+   (p:ReturnType<typeof JSON.parse>)=>{p.functions[0].body[0].body[0].event='unknown';},
+   (p:ReturnType<typeof JSON.parse>)=>{p.functions[0].body[0].body[0].received='payload';},
+   (p:ReturnType<typeof JSON.parse>)=>{p.functions[0].body[0].body[0].value='received';},
+   (p:ReturnType<typeof JSON.parse>)=>{p.functions[0].body[0].body[1].then[0].value={state:'missing'};},
+   (p:ReturnType<typeof JSON.parse>)=>{p.functions[0].body=[{id:'fake',op:'emitEvent',event:'maestro.speaking.enter',value:{value:'speaking'}}];},
+   (p:ReturnType<typeof JSON.parse>)=>{p.events[0].type='void';},
+  ];
+  for(const mutate of variants){const p=JSON.parse(source);mutate(p);expect(parseProgram(JSON.stringify(p)).program).toBeNull();}
+ });
+ it('validates custom signals as actions and refuses unknown fields and oversized values',()=>{
+  const command={action:'rules',rule:{action:'signal',revision:1,eventName:'user.wave',value:3}};
+  expect(parseRoomCommands({commands:[command]})).toEqual([command]);
+  expect(isRoomQuery(parseRoomCommands({commands:[command]})[0])).toBe(false);
+  expect(isRoomQuery({action:'rules',rule:{action:'inspect',target:'a'.repeat(32)}})).toBe(true);
+  expect(()=>requireRoomCapabilities([{action:'rules',rule:{action:'stop',target:'a'.repeat(32)}}],{capabilities:['behaviourPrograms.v3']})).toThrow('event programs');
+  expect(()=>requireRoomCapabilities(parseRoomCommands({commands:[command]}),{capabilities:['behaviourPrograms.v3']})).toThrow('event programs');
+  for(const rule of [{...command.rule,value:Infinity},{...command.rule,eventName:'maestro.speaking.enter'},{...command.rule,value:'x'.repeat(129)},{...command.rule,extra:true}])
+   expect(()=>parseRoomCommands({commands:[{...command,rule}]})).toThrow();
+ });
+});
+
+it('validates actual native event runs and their retained state through the room bridge',()=>{
+ const states=JSON.parse(readFileSync('test-fixtures/browser/eventProgramStates.json','utf8'));
+ for(const state of Object.values(states))expect(new RoomAgentClient().receive(state)).toBe(true);
+ expect(states.waiting.rules.running[0]).toMatchObject({waiting:true,waitEvent:'user.wave',state:[{name:'count',type:'number',value:'0'}]});
+ expect(states.second.rules.running[0].state[0].value).toBe('2');
+ expect(states.stopped.rules.running).toEqual([]);expect(states.paused.rules.running).toEqual([]);
 });

@@ -130,11 +130,15 @@ namespace Maestro.Quest.Rules
             error = "This rule file has an unsupported version or invalid data.";
             if (version != 2 || sequences == null || bindings == null || buttons == null || sequences.Length > 32 || bindings.Length > 128 || buttons.Length > 16) return false;
             if(sequences.Where(x=>x!=null).Sum(x=>x.program?.Length??0)>128000)return false;
+            var eventTypes=new Dictionary<string,ProgramType>();
             var sequenceIds = new HashSet<string>(); var bindingIds = new HashSet<string>(); var buttonIds = new HashSet<string>();
             foreach (var sequence in sequences)
             {
-                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.Compile(out _)==null) return false;
-
+                if (sequence == null || !IsId(sequence.id) || !sequenceIds.Add(sequence.id) || string.IsNullOrWhiteSpace(sequence.name) || sequence.name.Length > 32 || sequence.name.Any(char.IsControl) || !Enum.IsDefined(typeof(RuleInterruption),sequence.interruption) || sequence.Compile(out _)==null||sequence.repeat&&sequence.Compile(out _).Version==3) return false;
+                foreach(var declaration in sequence.Compile(out _).CustomEvents) {
+                    if(eventTypes.TryGetValue(declaration.Key,out var previous)&&previous!=declaration.Value) {error="Custom event payload types must agree across programs";return false;}
+                    eventTypes[declaration.Key]=declaration.Value;
+                }
             }
             foreach (var binding in bindings)
             {

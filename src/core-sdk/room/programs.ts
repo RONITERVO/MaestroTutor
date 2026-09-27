@@ -1,19 +1,19 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {type RuleStep} from './ruleSteps';
-import {behaviourFactTypes} from '../../../shared/behaviourCatalog';
+import {behaviourFactTypes,behaviourCatalog} from '../../../shared/behaviourCatalog';
 import {validateCapabilityArguments,capabilityParameterType,capabilityResources} from '../../../shared/capabilities';
 import {stepInvocation,invocationStep} from './capabilitySteps';
 export type Value=number|boolean|string;
 export type ValueType='number'|'boolean'|'text';
-export type Expression={value:Value}|{var:string}|{fact:string}|{op:string;args:Expression[]};
+export type Expression={value:Value}|{var:string}|{state:string}|{fact:string}|{op:string;args:Expression[]};
 export type ProgramNode={id:string}&(
- {op:'set';variable:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
+ {op:'set'|'setState';variable:string;value:Expression}|{op:'forever';body:ProgramNode[]}|{op:'sleep';seconds:Expression}|{op:'awaitEvent';event:string;source:string;timeout:Expression;received:string;value:string}|{op:'emitEvent';event:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
  {op:'call';function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
  {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>});
 export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value}[];body:ProgramNode[]}
-export interface BehaviourProgram {version:2;entry:string;resources:string[];functions:ProgramFunction[]}
+export interface BehaviourProgram {version:2|3;entry:string;resources:string[];functions:ProgramFunction[];state?:{name:string;initial:Value}[];events?:{name:string;type:ValueType}[]}
 export const programFacts=behaviourFactTypes;
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 function need(condition:unknown,message:string):asserts condition {if(!condition)throw new Error(message);}
@@ -39,7 +39,12 @@ function strictJson(source:string):unknown {
 /** Authoring validator only. Unity is the sole program executor. Shared fixtures cover both validators. */
 export function parseProgram(source:unknown):{program:BehaviourProgram|null;error:string|null} {
  try {
-  need(typeof source==='string'&&source.length<=24000,'Program exceeds its size limit');const root=obj(strictJson(source));keys(root,'version entry resources functions');need(root.version===2,'Unsupported program version');
+  need(typeof source==='string'&&source.length<=24000,'Program exceeds its size limit');const root=obj(strictJson(source));need(root.version===2||root.version===3,'Unsupported program version');keys(root,root.version===3?'version entry resources functions state events':'version entry resources functions');
+  const state=new Map<string,ValueType>(),events=new Map<string,ValueType>();
+  if(root.version===3){
+   for(const value of array(root.state,16)){const v=obj(value);keys(v,'name initial');need(name(v.name)&&!state.has(v.name as string),'Invalid or duplicate state name');state.set(v.name as string,literal(v.initial));}
+   for(const value of array(root.events,16)){const v=obj(value);keys(v,'name type');const t=type(v.type);need(typeof v.name==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(v.name)&&!events.has(v.name)&&t!=='void','Invalid or duplicate custom event');events.set(v.name,t);}
+  }
   const resources=new Set<string>();for(const value of array(root.resources,16)){need(target(value)&&!resources.has(value as string),'Invalid or duplicate resource');resources.add(value as string);}
   const functions=new Map<string,{source:Record<string,unknown>;types:Map<string,ValueType>}>(),calls=new Map<string,Set<string>>();
   for(const value of array(root.functions,16)) {
@@ -55,6 +60,7 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
    need(depth<=8&&++expressions<=512,'Expression limit exceeded');const e=obj(value);
    if(Object.prototype.hasOwnProperty.call(e,'value')){keys(e,'value');return literal(e.value);}
    if(Object.prototype.hasOwnProperty.call(e,'var')){keys(e,'var');const t=types.get(text(e.var));need(t,'Unknown variable');return t;}
+   if(Object.prototype.hasOwnProperty.call(e,'state')){keys(e,'state');const t=state.get(text(e.state));need(root.version===3&&t,'Unknown program state');return t;}
    if(Object.prototype.hasOwnProperty.call(e,'fact')){keys(e,'fact');const fact=text(e.fact);need(Object.prototype.hasOwnProperty.call(programFacts,fact),'Unknown room fact');return programFacts[fact];}
    keys(e,'op args');const op=text(e.op),args=array(e.args,2);need(args.length===(op==='not'?1:2),'Invalid expression argument count');const ts=args.map(a=>expr(a,types,depth+1));
    if(['not','and','or'].includes(op)){need(ts.every(t=>t==='boolean'),'Logic needs booleans');return 'boolean';}
@@ -67,6 +73,15 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
     const n=obj(value);need(name(n.id)&&!ids.has(n.id as string)&&ids.size<128,'Invalid, duplicate or excessive block identities');ids.add(n.id as string);
     const child=(key:string)=>body(array(n[key],128),f,depth+1),expect=(key:string,t:ValueType)=>need(expr(n[key],f.types)===t,'Expression type differs from its use');
     switch(n.op) {
+     case 'setState': {need(root.version===3,'State needs program version 3');keys(n,'id op variable value');const t=state.get(text(n.variable));need(t,'Unknown program state');expect('value',t);break;}
+     case 'forever':need(root.version===3,'Events need program version 3');keys(n,'id op body');child('body');break;
+     case 'sleep':need(root.version===3,'Timers need program version 3');keys(n,'id op seconds');expect('seconds','number');break;
+     case 'awaitEvent': {
+      need(root.version===3,'Events need program version 3');keys(n,'id op event source timeout received value');const eventName=text(n.event),definition=behaviourCatalog.events.find(e=>e.id===eventName),t=events.get(eventName)??(definition?'text':null);need(t,'Unknown event');
+      const source=text(n.source);need(source===''||definition?.objectEvent&&target(source),'Only object events accept a source');
+      need(f.types.get(text(n.received))==='boolean','Event received needs a boolean local');need(f.types.get(text(n.value))===t,'Event value needs a matching local');need(n.received!==n.value,'Event destinations must differ');expect('timeout','number');break;
+     }
+     case 'emitEvent': {need(root.version===3,'Events need program version 3');keys(n,'id op event value');const t=events.get(text(n.event));need(t,'Only declared custom events may be emitted');expect('value',t);break;}
      case 'set': {keys(n,'id op variable value');const t=f.types.get(text(n.variable));need(t,'Unknown assigned variable');expect('value',t);break;}
      case 'if':keys(n,'id op test then else');expect('test','boolean');child('then');child('else');break;
      case 'repeat':keys(n,'id op count body');expect('count','number');child('body');break;
@@ -116,7 +131,7 @@ export function withSimpleProgramSteps(source:string,steps:RuleStep[]):string {
  p.functions[0].body=next.functions[0].body;return JSON.stringify(p);
 }
 export function expressionLabel(e:Expression):string {
- if('value' in e)return JSON.stringify(e.value);if('var' in e)return e.var;if('fact' in e)return e.fact;
+ if('value' in e)return JSON.stringify(e.value);if('var' in e)return e.var;if('state' in e)return 'state.'+e.state;if('fact' in e)return e.fact;
  const symbols:Record<string,string>={add:'+',sub:'−',mul:'×',div:'÷',mod:'mod',lt:'<',le:'≤',gt:'>',ge:'≥',eq:'=',ne:'≠',and:'and',or:'or'};
  return e.op==='not'?`not (${expressionLabel(e.args[0])})`:`(${expressionLabel(e.args[0])} ${symbols[e.op]??e.op} ${expressionLabel(e.args[1])})`;
 }

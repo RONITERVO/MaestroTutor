@@ -70,7 +70,7 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
   return input.commands as unknown as RoomCommand[];
 }
 
-export const isRoomQuery=(command:RoomCommand)=>['inspect','motions','catalog'].includes(command.action)||command.action==='execution'&&command.execution?.operation==='inspect';
+export const isRoomQuery=(command:RoomCommand)=>['inspect','motions','catalog'].includes(command.action)||command.action==='execution'&&command.execution?.operation==='inspect'||command.action==='rules'&&command.rule?.action==='inspect';
 export interface RoomTaskControl {
   relatedTask?: RelatedRoomTask;
   isCurrent?:()=>boolean;
