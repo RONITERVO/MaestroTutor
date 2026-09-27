@@ -60,7 +60,8 @@ namespace Maestro.Quest.Rules
             waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
             state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
-        public RuleScheduler(IRuleActions actions) { this.actions = actions; }
+        public InvocationReceipts Receipts { get; }
+        public RuleScheduler(IRuleActions actions,InvocationReceipts receipts=null) { this.actions = actions; Receipts=receipts; }
         public bool TryRead(string name,out ProgramValue value) {
             if(BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(activity),out value))return true;
             if(actions is IProgramFacts source)return source.TryRead(name,out value);value=default;return false;
@@ -215,6 +216,7 @@ namespace Maestro.Quest.Rules
             if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
             Unsubscribe(run);running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Resources=run.Targets.ToArray()});
             while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
+            if(run.Invocation!=null)Receipts?.Update(LiveInvocation(run.Id));
         }
         void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {actions.Stop(run.Id,preservePlacement);Finish(run,phase,status);}
         public bool StopSequence(string id)

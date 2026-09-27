@@ -76,3 +76,17 @@ it('starts and stops one exact action through the catalog and displays native ph
  expect(screen.getByLabelText('Selected action').textContent).toContain('cancelled');
  expect(state.rules!.revision).toBe(nativeExecutions.running.rules.revision);act(()=>client.cancel());
 });
+
+import nativeRecovery from '../../../test-fixtures/browser/actionReceiptStates.json';
+it('shows recovered uncertainty and storage failure in the same action catalog without starting anything',()=>{
+ const client=new RoomAgentClient(),state={...nativeExecutions.running,revision:1,ack:0,execution:nativeRecovery.interrupted};
+ expect(client.receive(state)).toBe(true);
+ const screen=render(<CapabilityBrowser client={client} onClose={()=>{}}/>);
+ expect(screen.getByLabelText('Selected action').textContent).toContain('interrupted');
+ expect(screen.getByLabelText('Selected action').textContent).toContain('Some effects');
+ expect(screen.queryByRole('button',{name:/Stop action/})).toBeNull();expect(client.snapshot().request).toBeNull();
+ act(()=>{expect(client.receive({...state,revision:2,execution:nativeRecovery['unsaved-completion']})).toBe(true);});
+ expect(screen.getByRole('status').textContent).toContain('storage failed');
+ expect(screen.getByLabelText('Selected action').textContent).toContain('completed');
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

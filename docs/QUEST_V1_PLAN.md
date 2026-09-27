@@ -2,6 +2,12 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Latest PC increment (2026-09-27): one-off action receipts survive Unity restart.
+The app journals a native-issued ID before dispatch; duplicate/expired IDs cannot
+start another effect, and unfinished recovery is explicitly uncertain. Corrupt or
+failed receipt storage disables new one-off starts. See QUEST_ACTION_RECOVERY.md.
+This does not resume saved programs or cover all room-command receipts.
+
 Current PC checkpoint (2026-09-27): the development client includes typed behavior
 programs with functions, variables, branches, loops, shared native actions and an
 optional book editor showing blocks, JSON and live execution state. Existing

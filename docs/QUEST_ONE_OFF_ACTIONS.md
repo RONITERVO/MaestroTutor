@@ -32,9 +32,11 @@ operation; their existing Stop controls remain available.
 contains retained terminal summaries. Details include preparing/running/completed/
 cancelled/failed, resources and status. Inspect returns the exact original
 arguments. Active executions and saved programs share a total capacity of eight.
-They share a bounded history of 16 terminal runs; each view projects its own
-kind. Unknown or evicted outcomes remain unknown, never presumed complete.
-These are session records; durable native receipts remain future work.
+The session scheduler retains 16 terminal runs; each view projects its own
+kind. The durable one-off journal separately retains its latest 16 terminal calls. Unknown or evicted outcomes remain unknown, never presumed complete.
+When `executionReceipts.v1` is advertised, one-off receipts also persist across
+restart with native-issued IDs; see [recovery semantics](QUEST_ACTION_RECOVERY.md).
+Saved-program terminal history remains session-only.
 
 The existing transport consumes each request sequence once within its handshake.
 Duplicate delivery cannot start another action. A lost acknowledgement, cancelled
@@ -82,6 +84,6 @@ at the existing 28,000-character batch and 32 KiB native input limits.
 
 The catalog now includes ten invocation capabilities, including an explicit
 [upper-body layer](QUEST_AVATAR_CHANNELS.md). [Event programs](QUEST_EVENT_PROGRAMS.md)
-provide session state and timers. Full room-command catalog coverage, durable
-state/receipts, broader clip layering, actual provider planning quality, headset performance and store release
+provide session state and timers. [One-off receipt recovery](QUEST_ACTION_RECOVERY.md)
+is implemented. Full room-command catalog coverage, durable program state and receipts for other commands, broader clip layering, actual provider planning quality, headset performance and store release
 acceptance remain. No headset install or service deployment is included.

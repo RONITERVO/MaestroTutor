@@ -51,12 +51,12 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Action details">
    <h2>{definition?.label??'Choose an action'}</h2>
-   <div role="status" className={error?'room-message room-message-warning':'room-message'}>{error||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':check?.status??state?.execution?.selected?.status??'Select an action or check its availability.')}</div>
+   <div role="status" className={error||state?.execution?.storageError?'room-message room-message-warning':'room-message'}>{error||state?.execution?.storageError||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':check?.status??state?.execution?.selected?.status??'Select an action or check its availability.')}</div>
    {definition&&<><p>{definition.id} · version {definition.version}</p>
     <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');}}/></label>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
     <div className="room-workspace-actions"><button disabled={pending||!call} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>
-     {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call} onClick={()=>{if(call)void execute({operation:'start',call});}}>Run action now</button>}
+     {state?.capabilities?.includes('execution.v1')&&<button disabled={pending||!call||Boolean(state?.execution?.storageError)} onClick={()=>{if(call)void execute({operation:'start',call});}}>Run action now</button>}
      {onInsert&&<button disabled={pending||!call} onClick={()=>{if(call){const error=onInsert(call);if(error)setError(error);else onClose();}}}>Add first block to draft</button>}</div>
     <p className="room-workspace-intro">{onInsert?'Adding a block changes your draft. Apply it in the workshop when ready.':'Choose a behaviour in the workshop to add an action block.'} Availability can change before a behaviour runs.</p>
     <details><summary>Argument reference</summary><p>Duration: {definition.duration}. Uses: {definition.channels.join(', ')||'no animation channel'}.</p><p>Needs: {definition.requirements.join(', ')||'no additional requirements'}.</p><pre>{JSON.stringify(definition.input,null,2)}</pre></details>

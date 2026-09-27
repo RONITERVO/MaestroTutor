@@ -175,3 +175,17 @@ it('permits an exact execution inspection after an unconfirmed turn but never re
  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>({...scene,capabilities:['execution.v1']}),valid:()=>true,execute},()=>{},{relatedTask});
  expect(execute).toHaveBeenCalledOnce();expect(result.needsReview).toBe(true);
 });
+
+it('journals the exact issued native identity before an action can lose its acknowledgement',async()=>{
+ const id='d'.repeat(32),call={id:'time.wait',version:1,arguments:{seconds:1}};
+ const ai=client([JSON.stringify({commands:[{action:'execution',execution:{operation:'start',call}}]})]);
+ const current:RoomAgentState={...scene,capabilities:['execution.v1','executionReceipts.v1'],execution:{selected:null,running:[],outcomes:[],nextRunId:id,storageError:null}};
+ let journal:RoomCommand[]=[];
+ const beforeDispatch=vi.fn(async(commands:RoomCommand[])=>{journal=structuredClone(commands);});
+ const execute=vi.fn(async(commands:RoomCommand[])=>{
+  expect(journal).toEqual(commands);expect(journal[0].execution).toMatchObject({runId:id});
+  throw new DOMException('Connection lost','AbortError');
+ });
+ await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},{beforeDispatch})).rejects.toThrow('Connection lost');
+ expect(execute).toHaveBeenCalledTimes(1);expect(beforeDispatch).toHaveBeenCalledTimes(1);
+});

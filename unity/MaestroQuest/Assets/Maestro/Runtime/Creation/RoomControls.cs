@@ -115,7 +115,7 @@ namespace Maestro.Quest.Creation
         }
         public static string[] Capabilities(RoomEditor editor) => Actions.Where(action =>
             action != "physicsRun" || editor.PhysicsWorld).Where(action =>
-            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1","avatarActivities.v1","catalog.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v3","eventPrograms.v1","execution.v1"} : Array.Empty<string>()).ToArray();
+            action != "avatarMotion" || editor.Find("maestro")?.GetComponent<AvatarSpatialMotion>()).Where(action => action != "avatarWalk" || editor.Find("maestro")?.GetComponent<MaestroAvatar>()).Select(action => action+".v1").Concat(new[] {"motions.v1","avatarActivities.v1","catalog.v1"}).Concat(editor.GetComponent<RuleWorkshop>() ? new[] {"behaviourPrograms.v3","eventPrograms.v1","execution.v1","executionReceipts.v1"} : Array.Empty<string>()).ToArray();
         public static RoomPhysicsObservation ObservePhysics(RoomEditor editor) => !editor.PhysicsWorld ? null : new() {
             ready=editor.PhysicsWorld.SurfacesReady,running=editor.PhysicsWorld.Running,status=editor.PhysicsWorld.Status
         };

@@ -96,6 +96,31 @@ namespace Maestro.Quest.Tests
             runtime.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",false);yield return null;
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("paused");
         }
+        [UnityTest] public IEnumerator LostReceiptAcrossBrowserReconnectReturnsTheOriginalActionBeforeStaleTargetChecks()
+        {
+            var executor=new RoomAgentExecutor(editor);string target=editor.SelectedId;
+            string id=runtime.Scheduler.Receipts.NextId;
+            var call=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false}};
+            var request=new RoomAgentRequest {version=2,conditions=new[]{new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)}},
+                commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=call}}}};
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+            yield return new WaitForSeconds(.2f);var moved=block.transform.localPosition;
+            var reopened=new RoomAgentExecutor(editor);
+            request.conditions[0].revision=0; // The old observation cannot authorize a new action.
+            Assert.That(reopened.Execute(request,out error,out _),Is.True,error);
+            Assert.That((string)reopened.Executions.Observe()["selected"]["id"],Is.EqualTo(id));
+            Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));Assert.That(block.transform.localPosition,Is.EqualTo(moved));
+            call["arguments"]["seconds"]=2;
+            Assert.That(reopened.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("different call"));
+            call["arguments"]["seconds"]=1;
+            yield return new WaitForSeconds(1);
+            Assert.That(reopened.Execute(request,out error,out _),Is.True,error);
+            Assert.That((string)reopened.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"));
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            var recovered=new InvocationReceipts(directory);Assert.That((string)recovered.Find(id)["phase"],Is.EqualTo("completed"));
+            request.commands[0].execution["runId"]=Guid.NewGuid().ToString("N");
+            Assert.That(reopened.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("unknown"));
+        }
         [UnityTest] public IEnumerator OneOffNativeWireMovesTheRealItemOnceAndLeavesDocumentsUntouched()
         {
             var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);

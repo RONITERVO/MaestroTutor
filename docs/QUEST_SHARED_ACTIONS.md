@@ -295,3 +295,13 @@ See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier note
 marking all event waits/timers pending describe prior checkpoints. Durable state,
 wall-clock scheduling, parallel branches, channel blending and full release
 acceptance remain open; no headset install or backend deployment is included.
+
+
+## One-off receipt recovery (2026-09-27)
+
+Native-issued start identities and write-ahead receipts now connect the existing
+app task journal to persistent native outcomes. Reconnect returns an existing
+result without repeating its action; restart reports unfinished effects as
+uncertain and does not resume them. Storage failures block new one-off effects.
+See [recovery contract and boundaries](QUEST_ACTION_RECOVERY.md). Receipts for
+other room commands and durable saved-program state remain future work.

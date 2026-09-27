@@ -30,7 +30,7 @@ namespace Maestro.Quest.Rules
         {
             workshop = source; editor = roomEditor; animations = animationWorkshop; browser = book; room = interaction; input = controllerInput;
             anchors = controllerAnchors ?? (index => input ? input.ControllerAnchor(index) : null);
-            actions = new RoomRuleActions(editor,animations); Scheduler = new RuleScheduler(actions); workshop.Runtime = this;
+            actions = new RoomRuleActions(editor,animations); Scheduler = new RuleScheduler(actions,new InvocationReceipts(editor.SaveDirectory)); workshop.Runtime = this;
             workshop.DocumentChanged += Reload;
             editor.Editing += StopAll; editor.ItemGrabbed += Grabbed; editor.ItemReleased += Released; editor.ItemTapped += Tapped;
             animations.Starting += Authoring; room.Restoring += StopAll; room.Restored += RecoverButtons;

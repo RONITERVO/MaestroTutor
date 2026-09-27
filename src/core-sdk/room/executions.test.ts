@@ -12,7 +12,7 @@ const call={id:'animation.recording.play',version:1,arguments:{target:'maestro',
 const start={operation:'start' as const,call};
 it('validates exact one-off commands and distinguishes inspection from starts or cancellation',()=>{
  expect(validExecutionRequest(start)).toBe(true);
- for(const bad of [{...start,runId:id},{operation:'cancel',call},{operation:'inspect',runId:'unknown'},
+ for(const bad of [{...start,runId:"invalid"},{operation:'cancel',call},{operation:'inspect',runId:'unknown'},
   {...start,call:{...call,version:2}},{...start,call:{...call,arguments:{...call.arguments,seconds:50}}}])
   expect(validExecutionRequest(bad)).toBe(false);
  const command={action:'execution' as const,execution:start};
@@ -65,4 +65,37 @@ it('accepts actual Unity execution observations through the shared bridge',()=>{
  expect(nativeExecutions.running.execution.selected.phase).toBe('running');
  expect(nativeExecutions.cancelled.execution.selected.phase).toBe('cancelled');
  expect(nativeExecutions.completed.execution.selected.phase).toBe('completed');client.cancel();
+});
+
+it('binds a consumed start identity before dispatch and preserves recovered uncertainty',async()=>{
+ const client=new RoomAgentClient(),state=JSON.parse(JSON.stringify(nativeProgram)) as RoomAgentState;
+ const execution:ExecutionView={selected:null,running:[],outcomes:[],nextRunId:id,storageError:null};
+ state.capabilities=['execution.v1','executionReceipts.v1'];state.execution=execution;state.revision=1;state.ack=0;
+ expect(client.receive(state)).toBe(true);
+ const promise=client.request([{action:'execution',execution:{operation:'start',call:{id:'time.wait',version:1,arguments:{seconds:1}}}}]);
+ expect(client.snapshot().request?.commands[0].execution).toMatchObject({operation:'start',runId:id});
+ const interrupted={id,capability:'time.wait',version:1,resources:[],phase:'interrupted' as const,status:'Some effects may have happened; not replayed'};
+ client.receive({...state,revision:2,ack:1,execution:{...execution,nextRunId:prop,selected:{...interrupted,call:{id:'time.wait',version:1,arguments:{seconds:1}}},outcomes:[interrupted]}});
+ expect((await promise).execution!.selected!.phase).toBe('interrupted');
+ client.cancel();expect(client.snapshot().request).toBeNull();
+ expect(validExecutionView({...execution,nextRunId:null,storageError:'Receipt storage unavailable'})).toBe(true);
+ expect(validExecutionView({...execution,nextRunId:id,storageError:'Contradictory'})).toBe(false);
+ client.receive({...state,session:'c'.repeat(32),execution:{...execution,nextRunId:null,storageError:'Receipt storage unavailable'}});
+ expect(()=>client.lease()!.execute([{action:'execution',execution:start}],state.sceneRevision)).toThrow('Receipt storage unavailable');
+ expect(client.snapshot().request).toBeNull();client.cancel();
+});
+
+import nativeRecovery from '../../../test-fixtures/browser/actionReceiptStates.json';
+it('accepts actual native disk recovery and unsaved-completion observations without replay',()=>{
+ const client=new RoomAgentClient();let revision=0;
+ for(const execution of Object.values(nativeRecovery)) {
+  expect(validExecutionView(execution)).toBe(true);
+  expect(client.receive({...nativeProgram,revision:++revision,execution,capabilities:['execution.v1','executionReceipts.v1']})).toBe(true);
+  expect(client.snapshot().request).toBeNull();
+ }
+ expect(nativeRecovery.interrupted.selected.phase).toBe('interrupted');
+ expect(nativeRecovery.completed.selected.phase).toBe('completed');
+ expect(nativeRecovery['unsaved-completion'].selected.phase).toBe('completed');
+ expect(nativeRecovery['unsaved-completion'].nextRunId).toBeNull();
+ expect(nativeRecovery['unsaved-completion'].storageError).toContain('storage failed');client.cancel();
 });

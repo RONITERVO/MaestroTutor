@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {capabilityResources} from '../../../shared/capabilities';
-import {validExecutionView} from '../../../shared/roomExecutions';
+import {validExecutionView,identifyExecution} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
 import { requireRoomCapabilities, validObjectPhysics, validAvatarMovement, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
 import {validActivityProfile} from '../../../shared/avatarActivities';
@@ -75,6 +75,7 @@ export class RoomAgentClient {
       if(signal?.aborted)return Promise.reject(new DOMException('Room request cancelled before dispatch.','AbortError'));
       if(!valid() || this.pending || this.sequence>=2147483647) return Promise.reject(new Error('Room session unavailable or busy'));
       parseRoomCommands({commands});requireRoomCapabilities(commands,this.value!);
+      if(this.value!.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,this.value!.execution)}:c);
       const objects=expectedObjects??this.value!.objects;
       const modern=objects.every(object=>integer(object.objectRevision,1));
       const targets=new Set(commands.flatMap(command=>command.action==='execution'&&command.execution?.operation==='start'?capabilityResources(command.execution.call.id,command.execution.call.arguments):command.target?[command.target]:[]));

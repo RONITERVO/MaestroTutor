@@ -51,12 +51,13 @@ namespace Maestro.Quest.Creation
         public MotionLibrary Motions { get; private set; }
         public AvatarActivityProfiles ActivityProfiles { get; private set; }
         public RoomPhysicsWorld PhysicsWorld { get; private set; }
+        public string SaveDirectory { get; private set; }
 
         public void Initialize(RoomInteraction interaction, RoomItem book, RoomItem maestro, string saveDirectory = null, RoomPhysicsWorld physics = null)
         {
             room = interaction; PhysicsWorld = physics;
             AddIdentity("book", book); AddIdentity("maestro", maestro);
-            var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room");
+            var directory = saveDirectory ?? Path.Combine(Application.persistentDataPath, "room"); SaveDirectory=directory;
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models")); Motions = new MotionLibrary(Path.Combine(directory,"motions"));
             ActivityProfiles=new AvatarActivityProfiles(directory);
             var loaded = storage.Load(out var message);

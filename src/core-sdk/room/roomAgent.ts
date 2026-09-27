@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {validExecutionRequest,type ExecutionRequest,type ExecutionView} from '../../../shared/roomExecutions';
+import {identifyExecution,validExecutionRequest,type ExecutionRequest,type ExecutionView} from '../../../shared/roomExecutions';
 import {validCatalogRequest,type CatalogRequest,type CatalogView} from '../../../shared/roomCatalog';
 import { roomControlFields, validRoomControl, requireRoomCapabilities, type ObjectPhysicsSettings, type AvatarMovementSettings, type PhysicsObservation, type AvatarMovementObservation, type AvatarWalkObservation } from '../../../shared/roomControls';
 import {validAvatarActivityRequest,type AvatarActivityRequest,type ActivityProfile} from '../../../shared/avatarActivities';
@@ -103,12 +103,13 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       timeoutMs:input.timeoutMs,signal:control.signal,lifecycleHooks:{onProgress:options.lifecycleHooks?.onProgress},
     });
     onUsage(response);active();
-    const commands=parseRoomCommands(JSON.parse(response.text||'{}'));
+    let commands=parseRoomCommands(JSON.parse(response.text||'{}'));
     if(!commands.length)return {receipts,scene:copy(lease.state()),budgetExhausted:false,relatedTask:control.relatedTask,needsReview:!!control.relatedTask?.unconfirmed};
     // An unconfirmed earlier action is evidence of uncertainty, never permission to retry it.
     if (control.relatedTask?.unconfirmed && commands.some(command => !isRoomQuery(command)))
       return { receipts, scene: copy(lease.state()), budgetExhausted: false, relatedTask: control.relatedTask, needsReview: true };
     requireRoomCapabilities(commands,scene);
+    if(scene.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,scene.execution)}:c);
     await control.beforeDispatch?.(commands,scene);active();
     const receipt=await (control.signal
       ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)

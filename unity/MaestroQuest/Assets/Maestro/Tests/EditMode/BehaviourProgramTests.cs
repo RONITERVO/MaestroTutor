@@ -58,7 +58,8 @@ namespace Maestro.Quest.Tests
             var typed=JsonUtility.FromJson<Maestro.Quest.Creation.RoomAgentRequest>(raw.ToString());
             Assert.That(Maestro.Quest.Creation.RoomAgentWire.PopulateStructured(typed,raw),Is.True);
             Assert.That(JToken.DeepEquals(typed.commands[0].execution,command["execution"]),Is.True);
-            command["execution"]["runId"]=Guid.NewGuid().ToString("N");Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.False);
+            command["execution"]["runId"]=Guid.NewGuid().ToString("N");Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.True);
+            command["execution"]["runId"]="invalid";Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.False);
             command["execution"]=new JObject {["operation"]="cancel",["runId"]="bad"};Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.False);
             command["execution"]["runId"]=Guid.NewGuid().ToString("N");Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.True);
             command["execution"]["operation"]=new JObject();Assert.That(Maestro.Quest.Creation.RoomExecutions.ValidRequest((JObject)command["execution"]),Is.False);

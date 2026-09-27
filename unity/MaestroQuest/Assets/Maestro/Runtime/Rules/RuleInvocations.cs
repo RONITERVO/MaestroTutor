@@ -11,7 +11,7 @@ namespace Maestro.Quest.Rules
     {
         // One-off invocations share Run, ProgramMachine, native handlers and the
         // same terminal history. They never enter RuleDocument or its Undo stack.
-        public bool Invoke(JObject call,float now,out string runId,out string error)
+        public bool Invoke(JObject call,float now,out string runId,out string error,string issuedId=null)
         {
             runId=null;error=null;LastError=null;
             if(!RoomCapabilityCatalog.ValidCall(call)||!BehaviourCatalog.TryInvocation((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out error))
@@ -22,7 +22,9 @@ namespace Maestro.Quest.Rules
             if(ActionBusy(step)) {error="A running action owns a required animation channel or object";return false;}
             if(!HasCapacity) {error="All action slots are currently in use";return false;}
             var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="One-off action",interruption=RuleInterruption.Ignore,program=source};
-            var run=new Run {Id=Guid.NewGuid().ToString("N"),Sequence=sequence,Targets=program.Resources.ToHashSet(),Claims=BehaviourCatalog.Claims(step),Invocation=(JObject)call.DeepClone(),Machine=new ProgramMachine(program,this)};
+            var identity=issuedId??Receipts?.NextId??Guid.NewGuid().ToString("N");
+            if(Receipts!=null&&!Receipts.Reserve(identity,call,program.Resources.ToArray(),out error))return false;
+            var run=new Run {Id=identity,Sequence=sequence,Targets=program.Resources.ToHashSet(),Claims=BehaviourCatalog.Claims(step),Invocation=(JObject)call.DeepClone(),Machine=new ProgramMachine(program,this)};
             runId=run.Id;running.Add(run);bool accepted=StartStep(run,now);
             if(!accepted)error=LastError??"Action failed";return accepted;
         }
@@ -33,12 +35,17 @@ namespace Maestro.Quest.Rules
         static JObject Summary(FinishedRun run)=>Summary(run.Outcome.id,run.Invocation,run.Resources,run.Outcome.phase,run.Outcome.status);
         public JObject Invocation(string runId)
         {
+            if(Receipts==null)return LiveInvocation(runId);
+            var retained=Receipts.Find(runId);return retained==null?null:LiveInvocation(runId)??retained;
+        }
+        JObject LiveInvocation(string runId)
+        {
             var active=running.FirstOrDefault(x=>x.Id==runId&&x.Invocation!=null);
             if(active!=null) {var value=Summary(active);value["call"]=active.Invocation.DeepClone();return value;}
             var done=outcomes.FirstOrDefault(x=>x.Outcome.id==runId&&x.Invocation!=null);
             if(done==null)return null;var result=Summary(done);result["call"]=done.Invocation.DeepClone();return result;
         }
-        public JObject ObserveInvocations(string selectedId)=>new() {
+        public JObject ObserveInvocations(string selectedId)=>Receipts?.Observe(selectedId,LiveInvocation)??new JObject {
             ["selected"]=Invocation(selectedId)??(JToken)JValue.CreateNull(),
             ["running"]=new JArray(running.Where(x=>x.Invocation!=null).Select(Summary)),
             ["outcomes"]=new JArray(outcomes.Where(x=>x.Invocation!=null).Select(Summary))
@@ -47,7 +54,7 @@ namespace Maestro.Quest.Rules
         {
             error=null;var active=running.FirstOrDefault(x=>x.Id==runId&&x.Invocation!=null);
             if(active!=null) {Stop(active,false);return true;}
-            if(outcomes.Any(x=>x.Outcome.id==runId&&x.Invocation!=null))return true;
+            if(outcomes.Any(x=>x.Outcome.id==runId&&x.Invocation!=null)||Receipts?.Find(runId)!=null)return true;
             error="This action outcome is unknown or no longer retained";return false;
         }
     }

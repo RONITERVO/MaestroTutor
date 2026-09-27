@@ -106,6 +106,7 @@ namespace Maestro.Quest.Creation
                 if(commands.Length!=1||!RoomExecutions.ValidRequest(commands[0].execution)) {status="Action requests must be valid and sent on their own";return false;}
                 if((string)commands[0].execution["operation"]=="start") {
                     if(request.version!=2) {status="Inspect the latest targets before running an action";return false;}
+                    if(Executions.Replay(commands[0].execution,out var replayed,out status))return replayed;
                     if(!Preconditions(request,out status))return false;
                 }
                 return Executions.Execute(commands[0].execution,out status);
