@@ -28,8 +28,15 @@ namespace Maestro.Quest.Book
             var uses=new List<string>();
             if (editor.UsesMotion(id)) uses.Add("Maestro walking");
             foreach (var sequence in rules.Snapshot().sequences)
+            {
+                if (sequence.UsesProgram)
+                {
+                    if (sequence.UsesMotion(id)) uses.Add("Program: "+sequence.name);
+                    continue;
+                }
                 for (int step=0;step<sequence.steps.Length;step++)
                     if (sequence.steps[step].motionId == id) uses.Add("Action: "+sequence.name+", step "+(step+1));
+            }
             foreach (var profile in editor.ActivityProfiles.Snapshot().avatars)
                 foreach (var role in profile.roles)
                     if (role.choices.Any(x => x.motionId == id)) uses.Add("Avatar "+profile.modelHash.Substring(0,8)+": "+role.role);

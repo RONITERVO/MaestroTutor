@@ -64,6 +64,47 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
+        [UnityTest] public IEnumerator ProgramEditsKeepLibraryUsableAndProtectReferencedMotions()
+        {
+            var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);
+            var book=root.AddComponent<LibraryBookController>(); book.Initialize(editor,imports,rules); book.SetVisible(true);
+            int requestNumber=0;
+            LibraryBookRequest Request(string action) => new() { version=1,session=book.State.session,sequence=++requestNumber,action=action,motionId=gait.id,ruleId=rules.Selected.id,stepIndex=rules.SelectedStepIndex };
+            var work=book.HandleAsync(Request("select")); yield return Until(() => work.IsCompleted);
+            Assert.That(book.State.canAssign,Is.True);
+            var staleAssignment=Request("rule");
+            var program=rules.Selected; program.name="Programmed walk"; program.steps=Array.Empty<RuleStep>();
+            program.program=Newtonsoft.Json.JsonConvert.SerializeObject(new {
+                version=1,entry="main",resources=new[] {"maestro"},functions=new[] {new {
+                    name="main",returns="void",parameters=Array.Empty<object>(),locals=Array.Empty<object>(),
+                    body=new[] {new {id="walk",op="action",step=new {action=7,targetId="maestro",gesture=0,motionId=gait.id,seconds=.5f,loop=true},bindings=new {}}}
+                }}
+            });
+            Assert.That(program.Compile(out var programError),Is.Not.Null,programError);
+            var executor=new RoomAgentExecutor(editor);
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=new RuleRequest {
+                action="edit",revision=rules.Revision,edits=new[] {new RuleEdit {kind="save",sequence=program}}
+            }}}},out var error,out _),Is.True,error);
+            Assert.That(rules.SelectedStep,Is.Null); Assert.That(book.State.canAssign,Is.False);
+            Assert.That(book.State.usage.uses,Is.EqualTo(new[] {"Program: Programmed walk"}));
+            var usage=MotionUsage.Read(editor,rules,gait.id,retained:new MotionRetention());
+            Assert.That(usage.total,Is.EqualTo(1)); Assert.That(usage.history || usage.saved || usage.uncertain || usage.playing,Is.False);
+            Assert.That(usage.protection,Does.Contain("assignments"),"The current program protects its motion before save/history retention can do so");
+            work=book.HandleAsync(staleAssignment); yield return Until(() => work.IsCompleted);
+            Assert.That(work.Exception,Is.Null); Assert.That(book.State.ack,Is.EqualTo(staleAssignment.sequence));
+            Assert.That(book.State.status,Does.Contain("program")); Assert.That(rules.Selected.program,Is.EqualTo(program.program));
+            Assert.That(runtime.Trigger(program.id),Is.True); yield return Until(() => avatar.LibraryMotionId == gait.id);
+            book.Refresh(); Assert.That(book.State.canPreview,Is.True); Assert.That(book.State.canAssign,Is.False);
+            runtime.StopAll();
+            work=book.HandleAsync(Request("archive")); yield return Until(() => work.IsCompleted);
+            work=book.HandleAsync(Request("removeDownload")); yield return Until(() => work.IsCompleted);
+            Assert.That(editor.Motions.Downloaded(gait.id),Is.True);
+            rules.Undo(); Assert.That(rules.Selected.UsesProgram,Is.False); Assert.That(book.State.canAssign,Is.True);
+            work=book.HandleAsync(Request("rule")); yield return Until(() => work.IsCompleted);
+            Assert.That(rules.SelectedStep.motionId,Is.EqualTo(gait.id),book.State.status);
+            book.SetVisible(false); rules.Undo(); rules.Redo();
+            Assert.That(book.State.visible,Is.False); Assert.That(rules.SelectedStep.motionId,Is.EqualTo(gait.id));
+        }
         [UnityTest] public IEnumerator BookArchiveKeepsPlaybackAndShowsCurrentHistoryAndSavedProtection()
         {
             var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);

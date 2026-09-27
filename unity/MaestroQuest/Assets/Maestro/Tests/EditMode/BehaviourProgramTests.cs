@@ -84,6 +84,29 @@ namespace Maestro.Quest.Tests
                 Assert.That(storage.Save(new RuleDocument(),out _),Is.False);Assert.That(File.ReadAllText(path),Is.EqualTo(future));
             }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }
+        [Test] public void NewerCollectionFilenamesPreventRollbackSavingAndMotionRemoval()
+        {
+            string directory=Path.Combine(Path.GetTempPath(),"MaestroFutureFiles-"+Guid.NewGuid().ToString("N"));
+            try {
+                var document=new RuleDocument {sequences=new[] {new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Current",program=Example()}}};
+                var storage=new RuleStorage(directory);Assert.That(storage.Save(document,out var error),Is.True,error);
+                string current=Path.Combine(directory,"rules.v5.json"),original=File.ReadAllText(current);
+                File.WriteAllText(Path.Combine(directory,"rules.v6.json.notes"),"unrelated notes");
+                File.WriteAllText(Path.Combine(directory,"room.v999.json"),"another collection");
+                storage=new RuleStorage(directory);Assert.That(storage.Load(out _).sequences.Length,Is.EqualTo(1));Assert.That(storage.ReadOnly,Is.False);
+                foreach(string name in new[] {"rules.v6.json","rules.v6.json.backup","rules.v6.json.pending","rules.v6.json.unreadable","rules.v999999999999.json"}) {
+                    // The newer writer may appear after this process has loaded.
+                    var running=new RuleStorage(directory);running.Load(out _);
+                    string path=Path.Combine(directory,name),future="Unknown newer format, preserve every byte";File.WriteAllText(path,future);
+                    var reopened=new RuleStorage(directory);var loaded=reopened.Load(out var message);
+                    Assert.That(reopened.ReadOnly,Is.True,name);Assert.That(loaded.sequences,Is.Empty,"Never roll back to the older primary or backup");
+                    Assert.That(message,Does.Contain("different app version"));
+                    Assert.That(running.Save(new RuleDocument(),out _),Is.False,name);Assert.That(running.ReadOnly,Is.True);
+                    running.RetainsMotion(Guid.NewGuid().ToString("N"),out bool uncertain);Assert.That(uncertain,Is.True,"Unknown retained references protect downloads");
+                    Assert.That(File.ReadAllText(current),Is.EqualTo(original));Assert.That(File.ReadAllText(path),Is.EqualTo(future));File.Delete(path);
+                }
+            }finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        }
         [Test] public void ParserRejectsRecursiveMistypedUnknownAndUndeclaredPrograms()
         {
             void Invalid(Action<JObject> change) {var json=JObject.Parse(Example());change(json);Assert.That(BehaviourProgram.TryParse(json.ToString(),out _,out _),Is.False);}

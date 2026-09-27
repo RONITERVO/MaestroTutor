@@ -1,8 +1,33 @@
-# Quest 3 development verification — 2026-09-26
+# Quest 3 development verification — 2026-09-27
 
 This is development evidence, not a release acceptance report.
 
-## New PC checkpoint: chat-to-agent handoff — not packaged
+## Latest: behavior programs and library compatibility — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-program-library-3EC36425.apk`.
+SHA256: `3EC364252AD3075A00A6250388E44519F946DFD6F4FA9716748C7FBEBDBA8184`.
+Development signing, verified APK v2 signature and ARM64-only native libraries.
+80 EditMode, 73 required PlayMode and 25 native Android tests pass; three optional
+private-model/collection tests are skipped. The production web build and native
+browser lint/build pass; embedded web bytes match the build. Existing full-app and
+backend validation, and the initial successful PR release gate, are recorded in
+QUEST_BEHAVIOUR_PROGRAMS.md. Evidence: `.quest-evidence/program-library/`.
+
+This checkpoint includes the app-owned chat/Live agent, programmable behaviors,
+blocks/JSON workspace, execution observations and the program/library compatibility
+fix. Library references include program motions; a stale linear assignment cannot
+replace a program. Newer collection filenames and recovery files block rollback
+and protect unknown motion references from removal.
+
+No device access occurred. Installed build remains `08F340EF`. When the user returns,
+back up room/rules before upgrading; check migration, familiar book chat and existing
+controls, then save/edit/run a program with state and button triggers. Open the motion
+library while a program is selected, preview a compatible motion, return to its block
+editor, and verify Undo and Stop. Complete real-provider, WebView, readable-book,
+room physics and frame-timing acceptance separately. The older sections below are
+historical checkpoints and do not describe the latest packaged APK.
+
+## Earlier PC checkpoint: chat-to-agent handoff — initially not packaged
 
 The normal tutor can propose an `agent` tool; the existing suggestion stage
 verifies it, and the task retains the original request/context. Durable native
@@ -12,7 +37,7 @@ simulated provider/native ports. See QUEST_UNIFIED_AGENT.md and
 `.quest-evidence/agent-handoff/receipt.json` for scope and remaining work.
 The following APK still predates this web-only checkpoint. Device hold continues.
 
-## Latest: shared behaviour workspace — not installed
+## Earlier: shared behaviour workspace — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-avatar-7EC419D6.apk`.
 SHA256: `7EC419D60CBDDDB06A4BBBA522CBCC8780F4B7FF964BC7317463A2377CBF0297`.

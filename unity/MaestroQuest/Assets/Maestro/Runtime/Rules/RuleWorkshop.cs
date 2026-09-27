@@ -38,6 +38,17 @@ namespace Maestro.Quest.Rules
         public RuleDocument Snapshot() => document.Copy();
         public RuleSequence Selected => sequenceIndex >= 0 && sequenceIndex < document.sequences.Length ? document.sequences[sequenceIndex].Copy() : null;
         public int SelectedStepIndex => stepIndex;
+        // Programs have blocks, not a selected legacy step. Consumers must not
+        // infer a step from SelectedStepIndex (which remains zero for programs).
+        public RuleStep SelectedStep
+        {
+            get
+            {
+                var sequence = Selected;
+                return sequence == null || sequence.UsesProgram || stepIndex < 0 || stepIndex >= sequence.steps.Length
+                    ? null : sequence.steps[stepIndex];
+            }
+        }
         public string Summary
         {
             get

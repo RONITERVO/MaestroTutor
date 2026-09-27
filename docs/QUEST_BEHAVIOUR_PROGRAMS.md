@@ -1,6 +1,6 @@
 # Programmable behaviours: foundation and roadmap
 
-Updated 2026-09-26. The first executable program subset is implemented alongside
+Updated 2026-09-27. The first executable program subset is implemented alongside
 existing linear rules. This is a development milestone, not Quest release approval.
 
 ## Implemented foundation
@@ -40,7 +40,17 @@ Rules storage is now v5. Loading v1–v4 preserves the old files and stable IDs;
 existing rules remain linear until explicitly converted. Backups and Undo retain
 program source and referenced library motions. A newer outer document version or
 embedded program version makes the collection read-only, preserving the original
-instead of falling back to an older backup. New opcodes must bump program version.
+instead of falling back to an older backup. A newer collection filename (including
+its backup, pending or unreadable recovery copy) also blocks loading/saving older
+collections and protects unknown motion references from download removal. This
+check runs on load, save and retained-reference inspection, including when a newer
+file appears after loading. New opcodes must bump program version.
+
+The motion-library book view tolerates a selected program without indexing legacy
+steps. Its old step-assignment button is unavailable for programs, and a queued
+assignment receives an explanation instead of changing the program. Program blocks
+remain editable in their own book workspace. Library usage lists include program
+references, using the same conservative reference analysis as storage and Undo.
 
 Limits are 16 functions, 8 parameters/16 locals per function, 128 statement nodes,
 512 expression nodes, nesting/call depth 8, 16 reserved targets, 24,000 source
@@ -74,13 +84,13 @@ Hardware frame timing and this editor's Quest readability remain unverified.
 
 ## Verified development checkpoint (2026-09-27)
 
-APK SHA256: `AAB1F7AECA92CB67347FDC25C8F587F3B289946FC1BAA23B3EF6958A78C766DB`.
+APK SHA256: `3EC364252AD3075A00A6250388E44519F946DFD6F4FA9716748C7FBEBDBA8184`.
 This is development signing, built by `Build-QuestDevelopment.ps1`, and has not
 been installed or tested on the headset. The packaged web bundle was compared
 byte-for-byte with the successful production web build.
 
 - Full app suite: 1,118 passing tests; full app lint and TypeScript pass.
-- Unity: 79 EditMode and 72 PlayMode passing tests; three explicitly optional
+- Unity: 80 EditMode and 73 PlayMode passing tests; three explicitly optional
   private-model/collection tests skipped because no external files were supplied.
 - Native Android browser: 25 passing tests, release AAR build and lint pass.
 - Functions: 25 passing unit tests/build. Live gateway: 31 passing tests/build.
@@ -88,9 +98,17 @@ byte-for-byte with the successful production web build.
 - Browser replay: actual native current-node/locals displayed; a block edit
   validates and preserves other functions before one simulated save receipt.
 
-Local evidence is under ignored `.quest-evidence/programs/`. The full emulator,
-real-provider, headset and Meta Store release checks are separate gates; no pass
-is implied for those by this checkpoint.
+The integration check also saves a library-motion program through the shared agent
+executor while the library is open, plays it on the imported rig, rejects a stale
+step assignment, protects its referenced download and restores linear assignment
+with Undo. Save tests cover newer collection filenames appearing before and after
+load, recovery copies, reference protection and unchanged original bytes.
+
+Local program/browser evidence is under ignored `.quest-evidence/programs/`; the
+updated native test reports, APK/source hashes and build logs are under
+`.quest-evidence/program-library/`. The initial PR's GitHub release gate passed at
+`1e14f53`, including the billing emulator suite. Real-provider, headset and Meta
+Store release checks remain separate; this checkpoint does not establish those.
 
 ## Still to implement
 

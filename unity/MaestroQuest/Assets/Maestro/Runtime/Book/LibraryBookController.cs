@@ -193,11 +193,13 @@ namespace Maestro.Quest.Book
                         if (entry.removed) throw new ModelImportException("Import the original export again before assigning this motion.");
                         var sequence = rules.Selected;
                         if (sequence == null || sequence.id != request.ruleId || rules.SelectedStepIndex != request.stepIndex) throw new ModelImportException("The selected action changed. Review it and assign again.");
-                        var target = editor.Find(sequence.steps[request.stepIndex].targetId);
+                        var selectedStep = rules.SelectedStep;
+                        if (selectedStep == null) throw new ModelImportException("Edit this program's animation blocks in the book before assigning a motion.");
+                        var target = editor.Find(selectedStep.targetId);
                         var model = RoomRuleActions.ClipModel(target); var targetAvatar = target ? target.GetComponent<MaestroAvatar>() : null;
                         if (!model || !model.Ready || targetAvatar && targetAvatar.ModelBusy || model.MotionRigHash != entry.rigHash) throw new ModelImportException("This motion is incompatible with the selected action's target.");
                         rules.AssignLibraryMotion(entry.id);
-                        if (rules.Selected.steps[request.stepIndex].motionId != entry.id) throw new ModelImportException(rules.Status);
+                        if (rules.SelectedStep?.motionId != entry.id) throw new ModelImportException(rules.Status);
                         message = "Assigned to "+sequence.name+", step "+(request.stepIndex+1)+". Its triggers are retained.";
                     }
                 }
@@ -217,7 +219,8 @@ namespace Maestro.Quest.Book
             var matches = editor.Motions.List(query,compatibleOnly ? rig ?? "" : null,includeShort,favouritesOnly,archivedOnly);
             offset = matches.Length == 0 ? 0 : Math.Min(offset/PageSize,(matches.Length-1)/PageSize)*PageSize;
             var selected = editor.Motions.Inspect(selectedId); var sequence = rules.Selected; int step = rules.SelectedStepIndex;
-            var target = sequence == null ? null : editor.Find(sequence.steps[step].targetId);
+            var selectedStep = rules.SelectedStep;
+            var target = selectedStep == null ? null : editor.Find(selectedStep.targetId);
             var model = RoomRuleActions.ClipModel(target); var targetAvatar = target ? target.GetComponent<MaestroAvatar>() : null;
             var sources = selected == null ? Array.Empty<MotionSource>() : editor.Motions.Sources().Where(x => selected.origins.Any(y => y.sourceHash == x.hash)).ToArray();
             sourceIndex = sources.Length == 0 ? 0 : Mathf.Clamp(sourceIndex,0,sources.Length-1);

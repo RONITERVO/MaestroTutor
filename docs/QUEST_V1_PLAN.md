@@ -12,6 +12,12 @@ timer/event, library and durable-receipt work. The first draft PR is a review
 checkpoint for the accumulated Quest companion and app-owned agent work; it does
 not mark the v1 release complete. Device access remains on hold.
 
+PR [#248](https://github.com/RONITERVO/MaestroTutor/pull/248) is open as a draft.
+Its initial GitHub release gate passed at commit `1e14f53`, including app, Functions,
+billing-emulator and Live gateway checks. A follow-up hardens the native program /
+motion-library integration and protects newer collection filenames on downgrade;
+its validation checkpoint is recorded in QUEST_BEHAVIOUR_PROGRAMS.md.
+
 
 Earlier implementation update (2026-09-26): validated Mixamo/Unity-named GLB
 humanoids can replace Maestro, including the user's actual Meshy export.

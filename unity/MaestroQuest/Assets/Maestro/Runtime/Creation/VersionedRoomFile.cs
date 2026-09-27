@@ -31,9 +31,37 @@ namespace Maestro.Quest.Creation
             this.newerDocument=newerDocument;
             label = stem; this.maximum = maximum; this.validate = validate; this.copy = copy; this.normalize = normalize; this.upgrade = upgrade;
         }
+        // A newer app writes a different filename. Do not load an older save
+        // merely because its contents are still valid after a downgrade.
+        bool HasNewerFiles()
+        {
+            try
+            {
+                if (!Directory.Exists(directory)) return false;
+                string prefix=stem+".v";
+                foreach (string path in Directory.EnumerateFiles(directory,stem+".v*.json*"))
+                {
+                    string name=Path.GetFileName(path);
+                    if (!name.StartsWith(prefix,StringComparison.Ordinal)) continue;
+                    int end=name.IndexOf(".json",prefix.Length,StringComparison.Ordinal);
+                    if (end < 0) continue;
+                    string suffix=name.Substring(end+5);
+                    if (suffix != "" && suffix != ".backup" && suffix != ".pending" && suffix != ".unreadable") continue;
+                    string digits=name.Substring(prefix.Length,end-prefix.Length);
+                    if (digits.Length == 0 || digits.Any(c => c < '0' || c > '9')) continue;
+                    if (!int.TryParse(digits,out int savedVersion) || savedVersion > version) return true;
+                }
+                return false;
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { return true; }
+        }
         public T Load(out string message)
         {
             message = null;
+            if (HasNewerFiles())
+            {
+                ReadOnly=true; message="Saved "+label+" needs a different app version; its files are preserved"; return null;
+            }
             string source=primary; int expected=version;
             for (; expected > 1; expected--)
             {
@@ -75,7 +103,7 @@ namespace Maestro.Quest.Creation
         {
             lock (retainedGate)
             {
-                bool found=false; uncertain=false;
+                bool found=false; uncertain=HasNewerFiles();
                 for (int v=1;v<=version;v++)
                     foreach (string suffix in new[] { "", ".backup", ".pending", ".unreadable" })
                     {
@@ -100,7 +128,7 @@ namespace Maestro.Quest.Creation
         public bool Save(T value,out string error)
         {
             error = "Saved "+label+" is unavailable for editing; its original files are preserved";
-            if (ReadOnly) return false;
+            if (ReadOnly || HasNewerFiles()) { ReadOnly=true; return false; }
             Read(primary,version,out _,out bool newer); if (newer) { ReadOnly = true; return false; }
             if (value == null || !validate(value)) { error = "Invalid "+label+" data"; return false; }
             var candidate = copy(value); upgrade(candidate);
