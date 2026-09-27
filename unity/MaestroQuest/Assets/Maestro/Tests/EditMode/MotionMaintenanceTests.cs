@@ -70,7 +70,7 @@ namespace Maestro.Quest.Tests
             Assert.That(storage.RetainsMotion(id,out bool uncertain),Is.True); Assert.That(uncertain,Is.False);
             Assert.That(storage.Save(new RuleDocument(),out error),Is.True,error);
             Assert.That(storage.RetainsMotion(id,out uncertain),Is.True,"Recovery backup keeps the earlier reference"); Assert.That(uncertain,Is.False);
-            File.WriteAllText(Path.Combine(directory,"behaviours.v1.json.unreadable"),"damaged retained save");
+            File.WriteAllText(Path.Combine(directory,"behaviours.v2.json.unreadable"),"damaged retained save");
             storage.RetainsMotion(Guid.NewGuid().ToString("N"),out uncertain); Assert.That(uncertain,Is.True,"Unknown retained contents must not permit deleting a possible dependency");
         }
     }

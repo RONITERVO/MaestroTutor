@@ -1,7 +1,9 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {validRuleStep,type RuleStep} from './ruleSteps';
-import {behaviourFactTypes,behaviourBindingTypes} from '../../../shared/behaviourCatalog';
+import {behaviourFactTypes} from '../../../shared/behaviourCatalog';
+import {validateCapabilityArguments,capabilityParameterType} from '../../../shared/capabilities';
+import {stepInvocation,invocationStep} from './capabilitySteps';
 export type Value=number|boolean|string;
 export type ValueType='number'|'boolean'|'text';
 export type Expression={value:Value}|{var:string}|{fact:string}|{op:string;args:Expression[]};
@@ -9,9 +11,9 @@ export type ProgramNode={id:string}&(
  {op:'set';variable:string;value:Expression}|{op:'if';test:Expression;then:ProgramNode[];else:ProgramNode[]}|
  {op:'repeat';count:Expression;body:ProgramNode[]}|{op:'switch';value:Expression;cases:{value:Value;body:ProgramNode[]}[];default:ProgramNode[]}|
  {op:'call';function:string;args:Expression[];result?:string}|{op:'return';value?:Expression}|
- {op:'action';step:Omit<RuleStep,'id'>;bindings:Record<string,Expression>});
+ {op:'invoke';capability:string;version:number;arguments:Record<string,unknown>;bindings:Record<string,Expression>});
 export interface ProgramFunction {name:string;returns:ValueType|'void';parameters:{name:string;type:ValueType}[];locals:{name:string;initial:Value}[];body:ProgramNode[]}
-export interface BehaviourProgram {version:1;entry:string;resources:string[];functions:ProgramFunction[]}
+export interface BehaviourProgram {version:2;entry:string;resources:string[];functions:ProgramFunction[]}
 export const programFacts=behaviourFactTypes;
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 function need(condition:unknown,message:string):asserts condition {if(!condition)throw new Error(message);}
@@ -37,7 +39,7 @@ function strictJson(source:string):unknown {
 /** Authoring validator only. Unity is the sole program executor. Shared fixtures cover both validators. */
 export function parseProgram(source:unknown):{program:BehaviourProgram|null;error:string|null} {
  try {
-  need(typeof source==='string'&&source.length<=24000,'Program exceeds its size limit');const root=obj(strictJson(source));keys(root,'version entry resources functions');need(root.version===1,'Unsupported program version');
+  need(typeof source==='string'&&source.length<=24000,'Program exceeds its size limit');const root=obj(strictJson(source));keys(root,'version entry resources functions');need(root.version===2,'Unsupported program version');
   const resources=new Set<string>();for(const value of array(root.resources,16)){need(target(value)&&!resources.has(value as string),'Invalid or duplicate resource');resources.add(value as string);}
   const functions=new Map<string,{source:Record<string,unknown>;types:Map<string,ValueType>}>(),calls=new Map<string,Set<string>>();
   for(const value of array(root.functions,16)) {
@@ -71,19 +73,14 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
      case 'switch': {keys(n,'id op value cases default');const t=expr(n.value,f.types),values=new Set<unknown>();for(const value of array(n.cases,16)){const arm=obj(value);keys(arm,'value body');need(literal(arm.value)===t&&!values.has(arm.value),'Duplicate or differently typed case');values.add(arm.value);body(array(arm.body,128),f,depth+1);}child('default');break;}
      case 'call': {keys(n,'id op function args','result');const callee=functions.get(text(n.function));need(callee,'Unknown function');calls.get(f.source.name as string)!.add(n.function as string);const args=array(n.args,8),params=array(callee.source.parameters,8);need(args.length===params.length,'Wrong function argument count');args.forEach((a,i)=>need(expr(a,f.types)===obj(params[i]).type,'Function argument type differs'));if(Object.prototype.hasOwnProperty.call(n,'result')){const t=f.types.get(text(n.result));need(t&&t===callee.source.returns,'Invalid return destination');}break;}
      case 'return':keys(n,f.source.returns==='void'?'id op':'id op value');if(f.source.returns!=='void')expect('value',f.source.returns as ValueType);break;
-     case 'action': {
-      keys(n,'id op step bindings');const s=obj(n.step);keys(s,'action targetId gesture seconds loop','clipModelHash clipIndex motionId propId propAvatarHash propHand propRelease propOffset propRotation propReleaseAt');
-      for(const [key,value] of Object.entries(s)) {
-       if(['targetId','clipModelHash','motionId','propId','propAvatarHash'].includes(key))need(value===null||typeof value==='string','Native reference must be text');
-       else if(['action','gesture','clipIndex','propHand','propRelease'].includes(key))need(Number.isInteger(value),'Native enum/index must be an integer');
-       else if(key==='loop')need(typeof value==='boolean','Loop must be boolean');
-       else if(key==='propOffset'||key==='propRotation'){const v=obj(value);keys(v,key==='propOffset'?'x y z':'x y z w');need(Object.values(v).every(x=>typeof x==='number'),'Vector must be numeric');}
-       else need(typeof value==='number','Native value must be numeric');
-      }
-      const step={id:'22222222222222222222222222222222',propHand:1,propRelease:0,propReleaseAt:1,propOffset:{x:0,y:0,z:0},propRotation:{x:0,y:0,z:0,w:1},...s};need(validRuleStep(step),'Invalid native action');
+     case 'invoke': {
+      keys(n,'id op capability version arguments bindings');const capability=text(n.capability),args=obj(n.arguments);
+      need(typeof n.version==='number','Capability version must be numeric');
+      const error=validateCapabilityArguments(capability,n.version,args);need(!error,error??'Invalid capability arguments');
+      const step=invocationStep({id:capability,version:n.version,arguments:args},'22222222222222222222222222222222');
+      need(validRuleStep(step),'Invalid native action');
       need((step.action===2||resources.has(step.targetId))&&(!step.propId||resources.has(step.propId)),'Declare every action resource');
-      const types=behaviourBindingTypes;
-      for(const [key,value] of Object.entries(obj(n.bindings))){need(Object.prototype.hasOwnProperty.call(types,key),'Unsupported native argument binding');need(expr(value,f.types)===types[key],'Native argument type differs');}break;
+      for(const [key,value] of Object.entries(obj(n.bindings))){const t=capabilityParameterType(capability,key);need(t,'Unsupported capability argument binding');need(expr(value,f.types)===t,'Capability argument type differs');}break;
      }
      default:throw new Error('Unknown program block');
     }
@@ -97,8 +94,11 @@ export function parseProgram(source:unknown):{program:BehaviourProgram|null;erro
  }catch(error){return {program:null,error:error instanceof Error?error.message:'Invalid program'};}
 }
 export function sequenceProgram(steps:RuleStep[]):BehaviourProgram {
- const resources=new Set<string>();const body:ProgramNode[]=steps.map((step,i)=>{const {id,...value}=step;if(step.action!==2)resources.add(step.targetId);if(step.propId)resources.add(step.propId);return {id:id||'action_'+(i+1),op:'action',step:value,bindings:{}};});
- return {version:1,entry:'main',resources:[...resources],functions:[{name:'main',returns:'void',parameters:[],locals:[],body}]};
+ const resources=new Set<string>();const body:ProgramNode[]=steps.map((step,i)=>{
+  const call=stepInvocation(step);if(step.action!==2)resources.add(step.targetId);if(step.propId)resources.add(step.propId);
+  return {id:step.id||'action_'+(i+1),op:'invoke',capability:call.id,version:call.version,arguments:call.arguments,bindings:{}};
+ });
+ return {version:2,entry:'main',resources:[...resources],functions:[{name:'main',returns:'void',parameters:[],locals:[],body}]};
 }
 /** A detached action-only view for the simple editor, not another saved format.
  * Draft numeric values may be temporarily invalid; validSequence guards Apply.
@@ -106,9 +106,9 @@ export function sequenceProgram(steps:RuleStep[]):BehaviourProgram {
 export function simpleProgramSteps(source:string):RuleStep[]|null {
  try {
   const p=JSON.parse(source) as BehaviourProgram;
-  if(p.functions.length!==1)return null;const f=p.functions[0];
-  if(f.name!==p.entry||f.returns!=='void'||f.parameters.length||f.locals.length||f.body.some(n=>n.op!=='action'||Object.keys(n.bindings).length))return null;
-  return f.body.map(n=>{if(n.op!=='action')throw new Error('Expected action');return {...n.step,id:n.id};});
+  if(p.version!==2||p.functions.length!==1)return null;const f=p.functions[0];
+  if(f.name!==p.entry||f.returns!=='void'||f.parameters.length||f.locals.length||f.body.some(n=>n.op!=='invoke'||Object.keys(n.bindings).length))return null;
+  return f.body.map(n=>{if(n.op!=='invoke')throw new Error('Expected action');return invocationStep({id:n.capability,version:n.version,arguments:n.arguments},n.id);});
  }catch{return null;}
 }
 export function withSimpleProgramSteps(source:string,steps:RuleStep[]):string {

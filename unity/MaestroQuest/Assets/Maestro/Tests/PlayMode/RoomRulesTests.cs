@@ -163,7 +163,7 @@ namespace Maestro.Quest.Tests
             var json=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json")));
             json["resources"]=new JArray(target);
             foreach(var token in new[] {json["functions"][0]["body"][1]["then"][0],json["functions"][0]["body"][1]["else"][0]}) {
-                token["step"]["action"]=8;token["step"]["targetId"]=target;token["step"]["seconds"]=.8f;token["step"]["loop"]=true;
+                token["capability"]="animation.recipe.play";token["arguments"]=new JObject {["target"]=target,["seconds"]=.8f,["loop"]=true};
             }
             var sequence=new RuleSequence {id="",name="Programmed wave",program=json.ToString(Newtonsoft.Json.Formatting.None)};
             var request=new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {

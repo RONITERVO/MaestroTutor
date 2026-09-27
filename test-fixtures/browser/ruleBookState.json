@@ -9,7 +9,7 @@
     "status": "Behaviour edit applied. Undo restores this batch.",
     "sequences": [
         {
-            "id": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
+            "id": "5ad367be24d64038bf63663398643429",
             "name": "Ball gesture",
             "steps": 1,
             "repeat": false,
@@ -17,16 +17,16 @@
         }
     ],
     "selected": {
-        "id": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
+        "id": "5ad367be24d64038bf63663398643429",
         "name": "Ball gesture",
         "interruption": 0,
         "repeat": false,
-        "program": "{\"version\":1,\"entry\":\"main\",\"resources\":[\"maestro\",\"0e674d1f3d1947bcb80141a4b8709b9c\"],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"0becaf826b9e479d83df8b617f7670a6\",\"op\":\"action\",\"step\":{\"action\":1,\"targetId\":\"maestro\",\"gesture\":0,\"seconds\":2.5,\"loop\":false,\"clipModelHash\":\"\",\"clipIndex\":0,\"motionId\":\"\",\"propId\":\"0e674d1f3d1947bcb80141a4b8709b9c\",\"propAvatarHash\":\"\",\"propHand\":1,\"propRelease\":2,\"propOffset\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"propRotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0},\"propReleaseAt\":0.60000002384185791},\"bindings\":{}}]}]}"
+        "program": "{\"version\":2,\"entry\":\"main\",\"resources\":[\"maestro\",\"548c66926b654391a5b33a9601771d2d\"],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"c304916e4f154c7bb726fa771c23f11b\",\"op\":\"invoke\",\"capability\":\"avatar.gesture.play\",\"version\":1,\"arguments\":{\"target\":\"maestro\",\"seconds\":2.5,\"gesture\":\"greeting\",\"prop\":{\"objectId\":\"548c66926b654391a5b33a9601771d2d\",\"avatarHash\":\"\",\"hand\":\"right\",\"release\":\"throw\",\"releaseAt\":0.6,\"offset\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}}},\"bindings\":{}}]}]}"
     },
     "bindings": [
         {
-            "id": "1e28d4640bd14507af80744f89783c0b",
-            "sequenceId": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
+            "id": "6b76723980b24c8d90ee304b2a45e7a2",
+            "sequenceId": "5ad367be24d64038bf63663398643429",
             "sourceId": "maestro",
             "trigger": 0,
             "condition": 0,
@@ -37,8 +37,8 @@
     ],
     "buttons": [
         {
-            "id": "a8499283a0b7459886f913b8666ccfaa",
-            "sequenceId": "fa1bb97f3ec9411da3ecb9c37bd5bcb5",
+            "id": "20de8955114c4792953d88ceadc7ac07",
+            "sequenceId": "5ad367be24d64038bf63663398643429",
             "mount": 1,
             "position": {
                 "x": -0.11999999731779099,

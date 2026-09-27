@@ -4,9 +4,9 @@ Updated 2026-09-27. Every behaviour now uses one canonical program representatio
 
 ## Implemented foundation
 
-`BehaviourProgram` and `ProgramMachine` validate and interpret version-1 JSON
+`BehaviourProgram` and `ProgramMachine` validate and interpret version-2 JSON
 programs inside Unity. Functions have typed parameters, local variables and return
-values. Supported statements are native action, assignment, if/else, switch/case,
+values. Supported statements are named capability invocation, assignment, if/else, switch/case,
 repeat, call and return. Expressions support arithmetic, comparisons, short-circuit
 logic and three explicit facts: Maestro state, physics readiness and physics running.
 No provider call occurs while a saved program runs.
@@ -34,24 +34,35 @@ revision stale. JSON is the current advanced text representation; this is not a
 JavaScript/C# editor, Blockly integration or a finished drag-and-drop editor.
 
 The planner uses the same save/play/inspect/bind/button contract, gated by native
-`behaviourPrograms.v2`. Original Maestro still owns Gemini, subscriptions/BYOK,
+`behaviourPrograms.v3`. Original Maestro still owns Gemini, subscriptions/BYOK,
 conversation and handoff verification. The chat stays the default book interface.
 Program authoring is an optional workspace, and no new floating flat controls are
 introduced outside the pages.
 
-Behaviour storage now uses `behaviours.v1.json`. This deliberately resets the
-owner's pre-release behaviour collection instead of migrating `rules.v1`–`rules.v5`.
+Behaviour storage now uses `behaviours.v2.json`. This deliberately resets the
+owner's pre-release behaviour collection instead of migrating `rules.v1`–`rules.v5` or numeric-program `behaviours.v1`.
 Old files remain untouched but are no longer loaded; saved triggers and mounted
 buttons belonging to them are reset with the behaviours. Loading an old development
 installation shows a reset message. Room creations, downloaded models/motions,
 source collections and the original web chat/backup formats are unaffected.
 
 Atomic pending writes, last-good backup recovery, Undo and motion-reference
-protection remain. A newer outer document, embedded program or collection filename
+protection remain. A newer outer document, embedded program/capability or collection filename
 (including recovery copies) makes the collection read-only instead of rolling back
 to an older backup. Current save files and incoming native save commands reject
 legacy/mixed sequence fields before deserialization can silently discard them.
 New opcodes still require a program-version change.
+
+Invocations store `{id, op:"invoke", capability:"avatar.gesture.play", version:1,
+arguments:{target:"maestro", gesture:"greeting", seconds:1}, bindings:{}}`.
+The program root version is 2; each capability has its own version. Names and
+typed fields replace serialized RuleStep enums. Bindings accept only scalar
+arguments actually declared by that capability; gesture values are names.
+Native schemas generate web structural checks and agent signatures. Existing native
+domain/readiness checks remain authoritative. Unknown arguments, mismatched types,
+unsupported versions and undeclared computed targets fail before dispatch.
+The internal RuleStep adapter is used only by current controls and native handlers.
+Catalog search, live availability queries and transient direct calls remain pending.
 
 Motion-library assignment and physical action/prop controls remain available for
 literal action-only programs. Complex programs keep their source and receive an
@@ -89,7 +100,33 @@ controller, cancellation, completion, pause, Undo and reload. Browser tests repl
 actual Unity observations; browser edit acknowledgements are explicitly simulated.
 Hardware frame timing and this editor's Quest readability remain unverified.
 
-## Verified canonical-storage checkpoint (2026-09-27)
+## Typed-invocation checkpoint (2026-09-27)
+
+The current development APK is `MaestroQuest-capabilities-257F8326.apk`.
+SHA256: `257F8326DC027D078FF920088C350E68931603486BAC3950449B8E4F5102300E`.
+Its v2 signature verifies, all 91 runtime source files match the build mirror,
+and the bundled web file matches the production build byte-for-byte.
+It has not been installed; no headset reset or acceptance has occurred.
+
+- 1,226 app tests passed, plus lint, TypeScript and production build.
+- 95 Unity EditMode and 76 PlayMode tests passed; the same three optional
+  private-file cases were skipped. Native tests exercise named calls through
+  real object animation, state triggers, controller buttons, Stop, Undo and reload.
+- 25 Android browser, 25 Functions and 31 gateway tests/builds passed.
+- Shared native/web parser cases cover named arguments, capability versions,
+  computed bindings, domain validation, resource declarations and malformed input.
+  Unknown newer capability IDs/versions preserve saves instead of using old backups.
+- Chrome replays native observations and checks simple/source editing preserves
+  IDs, props and other functions. Browser edit receipts are simulated.
+- Catalog/source drift, prompt ownership, core boundaries and release config passed.
+
+Evidence is in ignored `.quest-evidence/capability-invocation/`. Paged capability
+search, live availability queries and direct transient invocation remain pending.
+Current program calls still adapt to the nine existing domain handlers; adding
+new operation families requires native handlers and extending the simple-control
+adapter or using a future generic editor. This is not complete catalog coverage.
+
+## Earlier canonical-storage checkpoint (2026-09-27, numeric program format)
 
 Development APK SHA256: `F9F5222307E7CAD36A3724604DDB8EF32FAB2C56A8FBA1F3213878A4BCBAA18C`.
 It has not been installed on Quest. Its v2 signature verifies, the bundled web
@@ -230,7 +267,7 @@ text/block/program fixtures establish semantic parity. Keep durable run receipts
 and uncertain-outcome handling separate from ordinary scene save/Undo; these are
 still open native-foundation work.
 
-## Migration from the current application
+## Development transition and release compatibility
 
 Legacy v4 rules have sequential steps, repeats, waits, seven fixed event kinds,
 limited tutor-state conditions, physical buttons, recorded/imported/library and
@@ -240,19 +277,15 @@ them. Readable text syntax and timer bindings remain unimplemented.
 The room planner's three batches/eight commands limit bounds model-driven edits;
 it is not a suitable language limit for future saved programs.
 
-1. Finish the shared capability/observation/receipt foundation around current
-   actions. Preserve current rule/room documents and validated manual paths.
-2. Add a new program document and interpreter with variables, expressions,
-   branches, function calls and waits. Migrate v4 sequences to equivalent sequence
-   nodes and bindings, preserving IDs, interruption and stop-on-exit semantics.
-3. Add entry-point bindings, run-now and typed parameter/reference selection.
-   Integrate original chat handoff and user-authored animation/recipe references.
-4. Add visual blocks with execution highlighting and a tested text representation;
-   the agent uses the same revision-checked edit API from the start. Free-form text
-   editing is enabled only once its parser and round-trip support are complete.
-5. Expand primitives and reusable behaviour libraries through the catalogue, with
-   compatibility migrations, resource limits, deterministic traces and Quest
-   performance/acceptance evidence. Do not require users to become programmers.
+The owner approved resetting prototype behaviour saves instead of maintaining
+v4/v5 and numeric-program migrations. The new canonical collection preserves
+last-good recovery and refuses unknown newer formats. Original web chat/backups,
+room creations and source model/motion collections are outside that reset.
+
+Continue with capability discovery and availability, then event/state scheduling,
+layered ownership and broader action coverage. After release, versioned capability
+contracts and persistent programs become supported compatibility commitments;
+future upgrades need explicit migration or preserved read-only handling.
 
 ## Primary references checked
 
@@ -272,6 +305,7 @@ The owner authorizes simplifying development-only formats and resetting their
 prototype saves if needed. The accepted design, review qualifications, tradeoffs
 and staged acceptance are in [QUEST_CAPABILITY_ARCHITECTURE.md](QUEST_CAPABILITY_ARCHITECTURE.md).
 The first native vocabulary registry now generates web action/event labels, fact
-types, scalar binding types and the prompt fact guide, with drift checks. Typed
-capability invocation, full room-command coverage, timers/state machines and
+types, per-capability argument schemas and prompt signatures, with drift checks.
+Typed invocation now serves every saved program. Paged capability discovery,
+live availability queries, full room-command coverage, timers/state machines and
 per-channel ownership remain follow-up work. No development data was reset here.

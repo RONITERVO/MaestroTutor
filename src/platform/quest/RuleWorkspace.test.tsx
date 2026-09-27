@@ -11,7 +11,7 @@ import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 afterEach(cleanup);
 const id='b'.repeat(32),step='c'.repeat(32);
 const rules=():RuleView=>({revision:4,canUndo:true,canRedo:false,readOnly:false,status:'Ready',sequences:[{id,name:'Wave',steps:2,repeat:false}],selected:{id,name:'Wave',interruption:0,repeat:false,program:JSON.stringify(sequenceProgram([{...newRuleStep(1),id:step},{...newRuleStep(),id:'d'.repeat(32)}]))},bindings:[],buttons:[],bindingPage:0,bindingCount:0,running:[],queued:0});
-const state=(more:Partial<RoomAgentState>={}):RoomAgentState=>({version:1,capabilities:['behaviourPrograms.v2'],session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',canUndo:false,canRedo:false,physicsRunning:false,visible:true,workspaceView:'rules',created:[],objects:[{id:'maestro',objectRevision:3,name:'Maestro',kind:'Maestro',position:{x:0,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false}],rules:rules(),...more});
+const state=(more:Partial<RoomAgentState>={}):RoomAgentState=>({version:1,capabilities:['behaviourPrograms.v3'],session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',canUndo:false,canRedo:false,physicsRunning:false,visible:true,workspaceView:'rules',created:[],objects:[{id:'maestro',objectRevision:3,name:'Maestro',kind:'Maestro',position:{x:0,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false}],rules:rules(),...more});
 describe('shared behaviour blocks',()=>{
  it('reorders stable steps through one revision-checked native operation',async()=>{
   const client=new RoomAgentClient();expect(client.receive(state())).toBe(true);const screen=render(<RuleWorkspace client={client}/>);
@@ -38,7 +38,7 @@ describe('shared behaviour blocks',()=>{
 });
 
 const programSource=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-prime.json','utf8');
-const programState=():RoomAgentState=>state({capabilities:['behaviourPrograms.v2'],rules:{...rules(),sequences:[{id,name:'Prime wave',steps:11,program:true,repeat:false}],selected:{id,name:'Prime wave',interruption:0,repeat:false,program:programSource}}});
+const programState=():RoomAgentState=>state({capabilities:['behaviourPrograms.v3'],rules:{...rules(),sequences:[{id,name:'Prime wave',steps:11,program:true,repeat:false}],selected:{id,name:'Prime wave',interruption:0,repeat:false,program:programSource}}});
 describe('program block and source editing',()=>{
  it('round trips a user block edit without losing functions, then sends the same program through the native contract',async()=>{
   const client=new RoomAgentClient();client.receive(programState());const screen=render(<RuleWorkspace client={client}/>);

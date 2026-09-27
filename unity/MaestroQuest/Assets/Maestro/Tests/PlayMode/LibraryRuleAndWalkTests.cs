@@ -174,9 +174,9 @@ namespace Maestro.Quest.Tests
             var staleAssignment=Request("rule");
             var program=rules.Selected; program.name="Programmed walk";
             program.program=Newtonsoft.Json.JsonConvert.SerializeObject(new {
-                version=1,entry="main",resources=new[] {"maestro"},functions=new[] {new {
+                version=2,entry="main",resources=new[] {"maestro"},functions=new[] {new {
                     name="main",returns="void",parameters=Array.Empty<object>(),locals=new[] {new {name="reserved",initial=false}},
-                    body=new[] {new {id="walk",op="action",step=new {action=7,targetId="maestro",gesture=0,motionId=gait.id,seconds=.5f,loop=true},bindings=new {}}}
+                    body=new[] {new {id="walk",op="invoke",capability="animation.library.play",version=1,arguments=new {target="maestro",motionId=gait.id,seconds=.5f,loop=true},bindings=new {}}}
                 }}
             });
             Assert.That(program.Compile(out var programError),Is.Not.Null,programError);

@@ -62,7 +62,7 @@ namespace Maestro.Quest.Programs
         {
             var f=functions[Entry];
             if(functions.Count!=1 || f.Returns!=ProgramType.Void || f.Parameters.Length!=0 || f.Initial.Count!=0 ||
-                f.Body.Any(n=>(string)n["op"]!="action" || ((JObject)n["bindings"]).Count!=0))return null;
+                f.Body.Any(n=>(string)n["op"]!="invoke" || ((JObject)n["bindings"]).Count!=0))return null;
             return f.Body.Select(n=> {var step=Action((string)n["id"]);step.id=(string)n["id"];return step;}).ToArray();
         }
         public string WithSimpleSteps(RuleStep[] steps)
@@ -75,11 +75,11 @@ namespace Maestro.Quest.Programs
             return root.ToString(Formatting.None);
         }
         static JArray ActionNodes(RuleStep[] steps) => new(steps.Select(step=> {
-            var value=JObject.Parse(JsonUtility.ToJson(step));value.Remove("id");
-            return new JObject { ["id"]=step.id,["op"]="action",["step"]=value,["bindings"]=new JObject() };
+            var capability=BehaviourCatalog.Action(step.action)??throw new ArgumentException("Unknown native capability");
+            return new JObject { ["id"]=step.id,["op"]="invoke",["capability"]=capability.Id,["version"]=capability.Version,["arguments"]=CapabilityArguments.FromStep(step),["bindings"]=new JObject() };
         }));
         public static string FromSteps(params RuleStep[] steps) => new JObject {
-            ["version"]=1,["entry"]="main",["resources"]=new JArray(steps.SelectMany(RuleDocument.Targets).Distinct()),
+            ["version"]=2,["entry"]="main",["resources"]=new JArray(steps.SelectMany(RuleDocument.Targets).Distinct()),
             ["functions"]=new JArray(new JObject { ["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),["body"]=ActionNodes(steps) })
         }.ToString(Formatting.None);
         public bool ReferencesMotion(string id)=>Source.Contains("\""+id+"\"");
@@ -103,7 +103,7 @@ namespace Maestro.Quest.Programs
             using var reader=new JsonTextReader(new System.IO.StringReader(source)) {MaxDepth=48,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
             Need(!reader.Read(),"Extra data follows the program");Keys(root,"version entry resources functions");
-            Need(root["version"]?.Type==JTokenType.Integer&&(int)root["version"]==1,"Unsupported program version");
+            Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&(double)root["version"]==2,"Unsupported program version");
             Entry=Text(root["entry"]);
             foreach(var item in Array(root["resources"],16)) {string id=Text(item);Need(RuleDocument.IsTarget(id)&&resources.Add(id),"Invalid or duplicate resource");}
             var definitions=Array(root["functions"],MaximumFunctions);Need(definitions.Count>0,"A program needs a function");
@@ -178,11 +178,13 @@ namespace Maestro.Quest.Programs
                         if(node.ContainsKey("result"))Need(function.Types.TryGetValue(Text(node["result"]),out var result)&&result==callee.Returns&&result!=ProgramType.Void,"Invalid return destination");break;
                     case "return":
                         Keys(node,function.Returns==ProgramType.Void?"id op":"id op value");if(function.Returns!=ProgramType.Void)Expr("value",function.Returns);break;
-                    case "action":
-                        Keys(node,"id op step bindings");var step=ReadStep(Object(node["step"]));
-                        Need(RuleDocument.Targets(step).All(resources.Contains),"Declare every action resource");actions.Add(id,step);
+                    case "invoke":
+                        Keys(node,"id op capability version arguments bindings");
+                        string capability=Text(node["capability"]);Need((node["version"]?.Type==JTokenType.Integer||node["version"]?.Type==JTokenType.Float)&&(double)node["version"]==Math.Truncate((double)node["version"]),"Capability version must be an integer");
+                        Need(BehaviourCatalog.TryInvocation(capability,(int)node["version"],Object(node["arguments"]),out var step,out var invocationError),invocationError??"Invalid capability arguments");
+                        Need(RuleDocument.Targets(step).All(resources.Contains),"Declare every action resource");step.id=id;actions.Add(id,step);
                         foreach(var binding in Object(node["bindings"]).Properties()) {
-                            var expected=BindingType(binding.Name);Need(Expression(binding.Value,function)==expected,"Native argument type differs");
+                            var expected=BindingType(capability,binding.Name);Need(Expression(binding.Value,function)==expected,"Native argument type differs");
                         }break;
                     default:throw new ProgramFault("Unknown program block");
                 }
@@ -196,23 +198,10 @@ namespace Maestro.Quest.Programs
                 if(op=="switch"&&Returns((JArray)item["default"])&&((JArray)item["cases"]).All(x=>Returns((JArray)x["body"])))return true;
             }return false;
         }
-        internal static ProgramType BindingType(string name)=>BehaviourCatalog.Bindings.TryGetValue(name,out var type)
-            ? type : throw new ProgramFault("Unsupported native argument binding");
-        internal static bool ValidStep(RuleStep step,out string error)=>RuleDocument.ValidStep(step,out error);
-        static RuleStep ReadStep(JObject value)
+        internal static ProgramType BindingType(string capability,string name)
         {
-            Keys(value,"action targetId gesture seconds loop","clipModelHash clipIndex motionId propId propAvatarHash propHand propRelease propOffset propRotation propReleaseAt");
-            var strings=new[] {"targetId","clipModelHash","motionId","propId","propAvatarHash"};var integers=new[] {"action","gesture","clipIndex","propHand","propRelease"};
-            foreach(var p in value.Properties()) {
-                if(strings.Contains(p.Name))Need(p.Value.Type==JTokenType.String||p.Value.Type==JTokenType.Null,"Native reference must be text");
-                else if(integers.Contains(p.Name))Need(p.Value.Type==JTokenType.Integer,"Native enum/index must be an integer");
-                else if(p.Name=="loop")Need(p.Value.Type==JTokenType.Boolean,"Loop must be boolean");
-                else if(p.Name=="propOffset"||p.Name=="propRotation") {
-                    var v=Object(p.Value);Keys(v,p.Name=="propOffset"?"x y z":"x y z w");foreach(var component in v.Properties())Need(component.Value.Type==JTokenType.Integer||component.Value.Type==JTokenType.Float,"Vector must be numeric");
-                }else Need(p.Value.Type==JTokenType.Integer||p.Value.Type==JTokenType.Float,"Native value must be numeric");
-            }
-            var step=JsonUtility.FromJson<RuleStep>(value.ToString(Formatting.None));step.id="22222222222222222222222222222222";
-            Need(ValidStep(step,out var error),error??"Invalid native action");return step;
+            var schema=BehaviourCatalog.Action(capability)?.InputSchema["properties"]?[name];
+            return (string)(schema?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>throw new ProgramFault("Unsupported capability argument binding")};
         }
     }
 }

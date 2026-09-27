@@ -415,8 +415,9 @@ The owner authorizes simplifying development-only formats and resetting their
 prototype saves if needed. The accepted design, review qualifications, tradeoffs
 and staged acceptance are in [QUEST_CAPABILITY_ARCHITECTURE.md](QUEST_CAPABILITY_ARCHITECTURE.md).
 The first native vocabulary registry now generates web action/event labels, fact
-types, scalar binding types and the prompt fact guide, with drift checks. Typed
-capability invocation, full room-command coverage, timers/state machines and
+types, typed argument schemas and prompt signatures, with drift checks. Saved
+programs now invoke named, versioned capabilities. Paged discovery, live availability,
+full room-command coverage, timers/state machines and
 per-channel ownership remain follow-up work. No development data was reset here.
 
 
@@ -429,7 +430,7 @@ function editor. Stable node identities, props, exact motion IDs, revision check
 Undo, triggers, buttons, Stop and last-good recovery are retained. Complex programs
 stay in the function editor and cannot be flattened by a simple assignment.
 
-The new `behaviours.v1.json` format starts an empty development behaviour collection,
+The new `behaviours.v2.json` format starts an empty development behaviour collection,
 including its triggers/buttons; retired rule files are preserved without migration.
 This applies when the new build is installed. No headset installation or reset was
 performed during this PC checkpoint. Room creations, models/motions, source

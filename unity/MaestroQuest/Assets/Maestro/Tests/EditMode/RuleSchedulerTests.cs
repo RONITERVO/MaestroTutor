@@ -116,7 +116,7 @@ namespace Maestro.Quest.Tests
                 var sequence = Sequence(); var document = new RuleDocument { sequences = new[] { sequence },bindings = new[] { Binding(sequence,RuleEventKind.Speaking) },buttons = new[] { new RuleButtonData { id = Guid.NewGuid().ToString("N"),sequenceId = sequence.id,mount = ButtonMount.LeftController,position = new Vector3(-.12f,.08f,.06f) } } };
                 Assert.That(document.Validate(out _),Is.True); var copy = document.Copy(); var edited=copy.sequences[0].SimpleSteps();edited[0].seconds=9;copy.sequences[0].SetSimpleSteps(edited); Assert.That(document.sequences[0].SimpleSteps()[0].seconds,Is.EqualTo(2));
                 var storage = new RuleStorage(directory); Assert.That(storage.Save(document,out _),Is.True); Assert.That(storage.Save(copy,out _),Is.True);
-                File.WriteAllText(Path.Combine(directory,"behaviours.v1.json"),"broken");
+                File.WriteAllText(Path.Combine(directory,"behaviours.v2.json"),"broken");
                 var recovered = storage.Load(out var message); StringAssert.Contains("backup",message); Assert.That(recovered.buttons[0].position,Is.EqualTo(document.buttons[0].position));
                 Assert.That(recovered.sequences[0].SimpleSteps()[0].seconds,Is.EqualTo(2));
                 copy.buttons[0].position = Vector3.one; Assert.That(copy.Validate(out _),Is.False);

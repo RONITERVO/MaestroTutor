@@ -18,7 +18,7 @@ it('keeps existing book wire positions stable while adding named identities', ()
 
 it.each(behaviourCatalog.facts)('validates $id using the exported native type', fact => {
   const value=fact.type==='boolean'?false:fact.type==='number'?0:'';
-  const program={version:1,entry:'main',resources:[],functions:[{name:'main',returns:'void',parameters:[],
+  const program={version:2,entry:'main',resources:[],functions:[{name:'main',returns:'void',parameters:[],
     locals:[{name:'result',initial:value}],body:[{id:'read',op:'set',variable:'result',value:{fact:fact.id}}]}]};
   expect(parseProgram(JSON.stringify(program)).error).toBeNull();
   program.functions[0].locals[0].initial=fact.type==='boolean'?'incorrect':true;

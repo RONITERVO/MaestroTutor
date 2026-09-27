@@ -1,0 +1,51 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
+export interface CapabilitySchema {
+ type:'object'|'string'|'number'|'integer'|'boolean';
+ properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
+ minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];
+}
+export interface CapabilityDefinition {
+ id:string;version:number;label:string;input:CapabilitySchema;
+ duration:string;ownership:string;channels:string[];requirements:string[];
+}
+export interface CapabilityInvocation {id:string;version:number;arguments:Record<string,unknown>}
+const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
+// Authoring receives copies, so editing a schema cannot change validation.
+const definitions=new Map((clone(behaviourCatalog.actions) as unknown as CapabilityDefinition[]).map(value=>[value.id,value]));
+const record=(value:unknown):value is Record<string,unknown>=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+const own=(value:object,key:string)=>Object.prototype.hasOwnProperty.call(value,key);
+export function capabilityDefinition(id:string):CapabilityDefinition|null {const value=definitions.get(id);return value?clone(value):null;}
+function validate(value:unknown,schema:CapabilitySchema,path:string):string|null {
+ const error=path+' does not match the capability contract';
+ switch(schema.type) {
+  case 'object': {
+   if(!record(value))return error;const properties=schema.properties??{};
+   if((schema.required??[]).some(key=>!own(value,key))||Object.keys(value).some(key=>!own(properties,key)))return error;
+   for(const [key,entry] of Object.entries(value)){const error=validate(entry,properties[key],path+'.'+key);if(error)return error;}return null;
+  }
+  case 'string':return typeof value==='string'&&!/[\u0000-\u001f\u007f-\u009f]/.test(value)&&
+   (schema.maxLength===undefined||value.length<=schema.maxLength)&&(!schema.pattern||new RegExp(schema.pattern).test(value))&&(!schema.enum||schema.enum.includes(value))?null:error;
+  case 'boolean':return typeof value==='boolean'?null:error;
+  case 'number':case 'integer':return typeof value==='number'&&Number.isFinite(value)&&
+   (schema.minimum===undefined||value>=schema.minimum)&&(schema.maximum===undefined||value<=schema.maximum)&&(schema.type!=='integer'||Number.isInteger(value))?null:error;
+ }
+}
+/** Structural authoring check. The connected native handler remains authoritative
+ * for domain constraints, target availability, model/rig compatibility and ownership.
+ */
+export function validateCapabilityArguments(id:string,version:number,args:unknown):string|null {
+ const definition=definitions.get(id);
+ if(!definition||definition.version!==version)return 'Unknown capability or unsupported capability version';
+ return validate(args,definition.input,'arguments');
+}
+export function validCapabilityInvocation(value:unknown):value is CapabilityInvocation {
+ return record(value)&&Object.keys(value).length===3&&['id','version','arguments'].every(key=>own(value,key))&&typeof value.id==='string'&&
+ typeof value.version==='number'&&validateCapabilityArguments(value.id,value.version,value.arguments)===null;
+}
+export function capabilityParameterType(id:string,parameter:string):BehaviourValueType|null {
+ const schema=definitions.get(id)?.input.properties;
+ if(!schema||!own(schema,parameter))return null;
+ const type=schema[parameter].type;return type==='string'?'text':type==='integer'?'number':type==='number'||type==='boolean'?type:null;
+}

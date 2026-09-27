@@ -16,7 +16,7 @@ namespace Maestro.Quest.Creation
     internal sealed class VersionedRoomFile<T> where T : class
     {
         readonly string directory,primary,stem,label;
-        readonly int version;
+        readonly int version,minimumVersion;
         readonly int maximum;
         readonly Func<T,bool> validate,newerDocument;
         readonly Func<JObject,bool> validWire;
@@ -26,9 +26,10 @@ namespace Maestro.Quest.Creation
         readonly object retainedGate=new();
         readonly Dictionary<string,Retained> retained=new();
         public bool ReadOnly { get; private set; }
-        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null,Func<JObject,bool> validWire = null)
+        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null,Func<JObject,bool> validWire = null,int minimumVersion = 1)
         {
-            this.directory = Path.GetFullPath(directory); this.stem=stem; this.version=version; primary = Path.Combine(this.directory,stem+".v"+version+".json");
+            if(minimumVersion<1 || minimumVersion>version)throw new ArgumentOutOfRangeException(nameof(minimumVersion));
+            this.minimumVersion=minimumVersion;this.directory = Path.GetFullPath(directory); this.stem=stem; this.version=version; primary = Path.Combine(this.directory,stem+".v"+version+".json");
             this.newerDocument=newerDocument;this.validWire=validWire;
             label = stem; this.maximum = maximum; this.validate = validate; this.copy = copy; this.normalize = normalize; this.upgrade = upgrade;
         }
@@ -64,7 +65,7 @@ namespace Maestro.Quest.Creation
                 ReadOnly=true; message="Saved "+label+" needs a different app version; its files are preserved"; return null;
             }
             string source=primary; int expected=version;
-            for (; expected > 1; expected--)
+            for (; expected > minimumVersion; expected--)
             {
                 source=Path.Combine(directory,stem+".v"+expected+".json");
                 if (File.Exists(source) || File.Exists(source+".backup")) break;
@@ -106,7 +107,7 @@ namespace Maestro.Quest.Creation
             lock (retainedGate)
             {
                 bool found=false; uncertain=HasNewerFiles();
-                for (int v=1;v<=version;v++)
+                for (int v=minimumVersion;v<=version;v++)
                     foreach (string suffix in new[] { "", ".backup", ".pending", ".unreadable" })
                     {
                         string path=Path.Combine(directory,stem+".v"+v+".json"+suffix);

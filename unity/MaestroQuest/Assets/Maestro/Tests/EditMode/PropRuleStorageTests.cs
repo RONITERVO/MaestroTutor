@@ -20,18 +20,20 @@ namespace Maestro.Quest.Tests
             step.action=RuleActionKind.Wait;Assert.That(Valid(),Is.False);step.action=RuleActionKind.ImportedClip;
             step.targetId="book";Assert.That(Valid(),Is.False);step.targetId="maestro";
             step.propId="book";Assert.That(Valid(),Is.False);step.propId=Guid.NewGuid().ToString("N");
-            Assert.That(Valid(),Is.True);doc.version=2;Assert.That(doc.Validate(out _),Is.False);
+            Assert.That(Valid(),Is.True);doc.version=3;Assert.That(doc.Validate(out _),Is.False);
         }
         [Test] public void RetiredDevelopmentRulesStayUntouchedAndCannotOverrideCanonicalPrograms()
         {
             string directory=Path.Combine(Path.GetTempPath(),"MaestroReset-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(directory);
             try {
                 foreach(int version in new[] {1,2,3,4,5})File.WriteAllText(Path.Combine(directory,"rules.v"+version+".json"),"Retired development save "+version);
+                File.WriteAllText(Path.Combine(directory,"behaviours.v1.json"),"Retired numeric program save");
                 var storage=new RuleStorage(directory);var loaded=storage.Load(out _);Assert.That(loaded.sequences,Is.Empty);Assert.That(storage.ReadOnly,Is.False);
+                Assert.That(File.ReadAllText(Path.Combine(directory,"behaviours.v1.json")),Is.EqualTo("Retired numeric program save"));
                 var doc=Document();Assert.That(storage.Save(doc,out var error),Is.True,error);
                 Assert.That(new RuleStorage(directory).Load(out _).sequences[0].program,Is.EqualTo(doc.sequences[0].program));
                 foreach(int version in new[] {1,2,3,4,5})Assert.That(File.ReadAllText(Path.Combine(directory,"rules.v"+version+".json")),Is.EqualTo("Retired development save "+version));
-                File.WriteAllText(Path.Combine(directory,"behaviours.v1.json"),"{\"version\":2}");
+                File.WriteAllText(Path.Combine(directory,"behaviours.v2.json"),"{\"version\":3}");
                 storage=new RuleStorage(directory);storage.Load(out _);Assert.That(storage.ReadOnly,Is.True);Assert.That(storage.Save(doc,out _),Is.False);
             }finally {Directory.Delete(directory,true);}
         }
@@ -42,7 +44,7 @@ namespace Maestro.Quest.Tests
                 var document=Document();var sequence=document.sequences[0];var steps=sequence.SimpleSteps();
                 steps[0].propRelease=PropRelease.Throw;sequence.SetSimpleSteps(steps);var storage=new RuleStorage(directory);
                 Assert.That(storage.Save(document,out _),Is.True);Assert.That(storage.Save(document,out _),Is.True);
-                File.WriteAllText(Path.Combine(directory,"behaviours.v1.json"),"broken");
+                File.WriteAllText(Path.Combine(directory,"behaviours.v2.json"),"broken");
                 var loaded=new RuleStorage(directory).Load(out var message);Assert.That(message,Does.Contain("backup"));
                 var recovered=loaded.sequences[0].SimpleSteps()[0];Assert.That(recovered.propRelease,Is.EqualTo(PropRelease.Throw));Assert.That(recovered.id,Is.EqualTo(steps[0].id));
                 Assert.That(Newtonsoft.Json.Linq.JObject.Parse(JsonUtility.ToJson(loaded))["sequences"][0]["steps"],Is.Null);

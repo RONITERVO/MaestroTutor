@@ -19,7 +19,7 @@ export function RuleWorkspace({client}:{client:RoomAgentClient}) {
  useEffect(()=>{if(!dirty&&state)setDraft(draftOf(state));},[state?.rules?.revision,state?.rules?.selected?.id,dirty]);
  if(!state?.visible||!state.rules)return null;
  const rules=state.rules,sequence=draft?.sequence,steps=sequence?simpleProgramSteps(sequence.program):null;
- const supported=state.capabilities?.includes('behaviourPrograms.v2')===true;
+ const supported=state.capabilities?.includes('behaviourPrograms.v3')===true;
  const stale=Boolean(draft&&(draft.source.session!==state.session||draft.revision!==rules.revision)),blocked=pending||rules.readOnly||stale||!supported;
  const send=async(rule:RuleRequest,expected?:RoomAgentState)=>{setError('');try {const result=await client.request([{action:'rules',rule}],expected);if(!result.ok)setError(result.status);return result;}catch(e){setError(e instanceof Error?e.message:'This action could not be completed.');return null;}};
  const edit=async(edits:RuleEdit[],expected=state)=>send({action:'edit',revision:expected.rules!.revision,edits},expected);

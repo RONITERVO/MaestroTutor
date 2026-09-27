@@ -91,23 +91,27 @@ eliminate UI, provider evaluation or headset testing.
 
 1. **Vocabulary foundation (complete):** native registrations for the nine
    existing program actions, seven events and three facts; duration, current whole-target
-   ownership and prerequisite metadata; typed scalar bindings;
+   ownership and prerequisite metadata; typed capability arguments and scalar bindings;
    generated web labels/fact types/prompt fact guide; native export equality and
    CI source-drift checks and an EditMode comparison with the committed manifest. Native fact reads and event classification use the
-   registrations. Old numeric positions and RuleStep binding names are isolated under
-   adapters.ruleStep, separate from the string capability identities. This is not
-   the finished catalog of all room commands or generated argument validation.
+   registrations. Numeric positions for existing controls/handlers are isolated under
+   adapters.ruleStep. Saved invocations use stable capability IDs and named arguments;
+   scalar binding types come from each capability schema.
 2. **Canonical program storage (complete):** every behaviour stores one program;
    simple controls derive and edit literal blocks, with one interpreter for all runs.
-   `behaviours.v1.json` starts a fresh development behaviour collection, preserving
-   old `rules.v1`–`rules.v5` files without migration. Their triggers/buttons reset too.
+   `behaviours.v2.json` starts a fresh development behaviour collection, preserving
+   old `rules.v1`–`rules.v5` and numeric-program `behaviours.v1` files without migration. Their triggers/buttons reset too.
    Models, motion downloads, room creations and released web saves are unchanged.
    Atomic writes, last-good recovery, newer-version protection, stable node IDs,
    Undo and motion-library assignment remain. New saves require the native
-   `behaviourPrograms.v2` capability. No headset installation/reset has occurred yet.
-3. Add typed capability invocation, availability and paged search, with one
-   vertical path exercised by book, agent and native program. Preserve domain
-   validators; generate structural schemas rather than duplicating business rules.
+   `behaviourPrograms.v3` capability. No headset installation/reset has occurred yet.
+3. **Typed invocation implemented; discovery pending:** version-2 programs call
+   stable action IDs plus capability version and named arguments. Native definitions
+   generate structural schemas used by web validation, editor labels and agent
+   signatures. Runtime computed arguments go through that same schema and existing
+   domain validators before the existing scheduler/handler. Book/agent/native paths
+   exercise these calls. Per-capability availability queries, paged search and direct
+   transient invocation are still to implement; current run-now requires a saved program.
 4. Implement native event subscriptions, monotonic timers, named events and state
    machines with explicit lifecycle policy. Test storms, recursion, pause, reload,
    deleted targets, lost tracking and Stop before claiming continuous behaviours.

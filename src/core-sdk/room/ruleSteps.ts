@@ -5,7 +5,7 @@ export interface RuleStep {id:string;action:number;targetId:string;gesture:numbe
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const int=(v:unknown,min:number,max:number):v is number=>typeof v==='number'&&Number.isInteger(v)&&v>=min&&v<=max;
 const num=(v:unknown,min:number,max:number):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
-const guid=(v:unknown)=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
+const guid=(v:unknown)=>typeof v==='string'&&/^[a-fA-F0-9]{32}$/.test(v);
 const target=(v:unknown)=>v==='maestro'||v==='book'||guid(v);
 const hash=(v:unknown)=>v==null||v===''||typeof v==='string'&&/^[a-f0-9]{64}$/.test(v);
 const optionalId=(v:unknown)=>v==null||v===''||guid(v);

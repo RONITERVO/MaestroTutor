@@ -73,25 +73,15 @@ namespace Maestro.Quest.Programs
                             Block((JArray)node["body"],frame.Scope,(int)repeats);break;
                         case "call":Call((string)node["function"],((JArray)node["args"]).Select(x=>Evaluate(x,frame.Scope)).ToArray(),frame.Scope,(string)node["result"]);break;
                         case "return":Return(node.ContainsKey("value")?Eval("value"):default);break;
-                        case "action":
-                            action=program.Action(NodeId);
-                            foreach(var binding in ((JObject)node["bindings"]).Properties())Bind(action,binding.Name,Evaluate(binding.Value,frame.Scope));
-                            if(!BehaviourProgram.ValidStep(action,out var error))throw new ProgramFault(error??"Invalid computed native arguments");
+                        case "invoke":
+                            var arguments=(JObject)node["arguments"].DeepClone();
+                            foreach(var binding in ((JObject)node["bindings"]).Properties())arguments[binding.Name]=JToken.FromObject(Evaluate(binding.Value,frame.Scope).Value);
+                            if(!BehaviourCatalog.TryInvocation((string)node["capability"],(int)node["version"],arguments,out action,out var error))throw new ProgramFault(error??"Invalid computed capability arguments");
                             if(!RuleDocument.Targets(action).All(program.Allows))throw new ProgramFault("Computed target is not a declared resource");
-                            return ProgramYield.Action;
+                            action.id=NodeId;return ProgramYield.Action;
                     }
                 }return ProgramYield.Yield;
             } catch(ProgramFault error) {Error=error.Message;frames.Clear();terminal=true;action=null;return ProgramYield.Failed;}
-        }
-        static void Bind(RuleStep step,string name,ProgramValue value)
-        {
-            switch(name) {
-                case "targetId":step.targetId=value.Text;break;case "motionId":step.motionId=value.Text;break;
-                case "seconds":step.seconds=(float)value.Number;break;case "loop":step.loop=value.Boolean;break;
-                case "gesture":case "clipIndex":
-                    if(Math.Truncate(value.Number)!=value.Number||value.Number<0||value.Number>31)throw new ProgramFault("Native enum/index must be a bounded integer");
-                    if(name=="gesture")step.gesture=(RuleGesture)(int)value.Number;else step.clipIndex=(int)value.Number;break;
-            }
         }
         void Charge() {if(++Instructions>MaximumInstructions)throw new ProgramFault("Program instruction budget exhausted");}
         ProgramValue Evaluate(JToken token,Scope scope)

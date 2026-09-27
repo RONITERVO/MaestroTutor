@@ -10,12 +10,15 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Programs
 {
     /// <summary>Native vocabulary authority. The checked-in web manifest is generated from these registrations.
-    /// Numeric rule identities remain an adapter until programs use typed capability calls.</summary>
+    /// Numeric rule identities are private adapters for existing physical controls and handlers.</summary>
     public static class BehaviourCatalog
     {
         public sealed class ActionDefinition
         {
             public readonly string Id, Label;
+            public int Version=>1;
+            public JObject InputSchema=>CapabilityArguments.Schema(Kind);
+            public bool TryArguments(JObject arguments,out RuleStep step,out string error)=>CapabilityArguments.TryStep(Kind,arguments,out step,out error);
             public readonly RuleActionKind Kind;
             public readonly string Duration, Ownership;
             public readonly IReadOnlyList<string> Channels, Requirements;
@@ -83,13 +86,17 @@ namespace Maestro.Quest.Programs
             new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),
         });
         public static readonly IReadOnlyDictionary<string,ProgramType> FactTypes=new ReadOnlyDictionary<string,ProgramType>(Facts.ToDictionary(x=>x.Id,x=>x.Type));
-        public static readonly IReadOnlyDictionary<string,ProgramType> Bindings=new ReadOnlyDictionary<string,ProgramType>(new Dictionary<string,ProgramType> {
-            {"targetId",ProgramType.Text},{"motionId",ProgramType.Text},{"seconds",ProgramType.Number},
-            {"gesture",ProgramType.Number},{"clipIndex",ProgramType.Number},{"loop",ProgramType.Boolean},
-        });
         static readonly Dictionary<RuleActionKind,ActionDefinition> actions=Actions.ToDictionary(x=>x.Kind);
         static readonly Dictionary<RuleEventKind,EventDefinition> events=Events.ToDictionary(x=>x.Kind);
         static readonly Dictionary<string,FactDefinition> facts=Facts.ToDictionary(x=>x.Id,StringComparer.Ordinal);
+        static readonly Dictionary<string,ActionDefinition> actionIds=Actions.ToDictionary(x=>x.Id,StringComparer.Ordinal);
+        public static ActionDefinition Action(string id)=>id!=null&&actionIds.TryGetValue(id,out var value)?value:null;
+        public static ActionDefinition Action(RuleActionKind kind)=>actions.TryGetValue(kind,out var value)?value:null;
+        public static bool TryInvocation(string id,int version,JObject arguments,out RuleStep step,out string error)
+        {
+            step=null;var action=Action(id);error="Unknown capability or unsupported capability version";
+            return action!=null && action.Version==version && action.TryArguments(arguments,out step,out error);
+        }
         public static bool HasAction(RuleActionKind kind)=>actions.ContainsKey(kind);
         public static EventDefinition Event(RuleEventKind kind)=>events.TryGetValue(kind,out var value)?value:null;
         public static bool TryRead(string id, FactContext context, out ProgramValue value)
@@ -98,14 +105,13 @@ namespace Maestro.Quest.Programs
         }
         public static JObject Manifest()=>new JObject {
             ["version"]=1,
-            ["actions"]=new JArray(Actions.Select(x=>new JObject { ["id"]=x.Id,["label"]=x.Label,
+            ["actions"]=new JArray(Actions.Select(x=>new JObject { ["id"]=x.Id,["version"]=x.Version,["label"]=x.Label,["input"]=x.InputSchema,
                 ["duration"]=x.Duration,["ownership"]=x.Ownership,["channels"]=new JArray(x.Channels),["requirements"]=new JArray(x.Requirements) })),
             ["events"]=new JArray(Events.Select(x=>new JObject { ["id"]=x.Id,["label"]=x.Label,["activity"]=x.Activity,["objectEvent"]=x.ObjectEvent })),
             ["facts"]=new JArray(Facts.Select(x=>new JObject { ["id"]=x.Id,["type"]=x.Type.ToString().ToLowerInvariant(),["label"]=x.Label })),
             ["adapters"]=new JObject { ["ruleStep"]=new JObject {
                 ["actionIds"]=new JArray(Actions.OrderBy(x=>(int)x.Kind).Select(x=>x.Id)),
                 ["eventIds"]=new JArray(Events.OrderBy(x=>(int)x.Kind).Select(x=>x.Id)),
-                ["bindings"]=JObject.FromObject(Bindings.ToDictionary(x=>x.Key,x=>x.Value.ToString().ToLowerInvariant())),
             } },
         };
     }

@@ -3,7 +3,135 @@
   "actions": [
     {
       "id": "animation.recording.play",
+      "version": 1,
       "label": "Recorded animation",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          },
+          "loop": {
+            "type": "boolean"
+          },
+          "prop": {
+            "type": "object",
+            "properties": {
+              "objectId": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32
+              },
+              "avatarHash": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{64})$",
+                "maxLength": 64
+              },
+              "hand": {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              "release": {
+                "type": "string",
+                "enum": [
+                  "return",
+                  "drop",
+                  "throw"
+                ]
+              },
+              "offset": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "rotation": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "w": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z",
+                  "w"
+                ],
+                "additionalProperties": false
+              },
+              "releaseAt": {
+                "type": "number",
+                "minimum": 0.05,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "objectId",
+              "avatarHash",
+              "hand",
+              "release",
+              "offset",
+              "rotation",
+              "releaseAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "target",
+          "seconds",
+          "loop"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -18,7 +146,144 @@
     },
     {
       "id": "avatar.gesture.play",
+      "version": 1,
       "label": "Gesture",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ]
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          },
+          "gesture": {
+            "type": "string",
+            "enum": [
+              "greeting",
+              "pointing",
+              "listening",
+              "speaking",
+              "idle",
+              "walk"
+            ]
+          },
+          "prop": {
+            "type": "object",
+            "properties": {
+              "objectId": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32
+              },
+              "avatarHash": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{64})$",
+                "maxLength": 64
+              },
+              "hand": {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              "release": {
+                "type": "string",
+                "enum": [
+                  "return",
+                  "drop",
+                  "throw"
+                ]
+              },
+              "offset": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "rotation": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "w": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z",
+                  "w"
+                ],
+                "additionalProperties": false
+              },
+              "releaseAt": {
+                "type": "number",
+                "minimum": 0.05,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "objectId",
+              "avatarHash",
+              "hand",
+              "release",
+              "offset",
+              "rotation",
+              "releaseAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "target",
+          "seconds",
+          "gesture"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -33,7 +298,22 @@
     },
     {
       "id": "time.wait",
+      "version": 1,
       "label": "Wait",
+      "input": {
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "seconds"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "none",
       "channels": [],
@@ -41,7 +321,22 @@
     },
     {
       "id": "object.recording.throw",
+      "version": 1,
       "label": "Throw recording",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -58,7 +353,29 @@
     },
     {
       "id": "avatar.look.user",
+      "version": 1,
       "label": "Look at user",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ]
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "target",
+          "seconds"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -73,7 +390,29 @@
     },
     {
       "id": "avatar.follow.user",
+      "version": 1,
       "label": "Follow user",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ]
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "target",
+          "seconds"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -90,7 +429,147 @@
     },
     {
       "id": "animation.embedded.play",
+      "version": 1,
       "label": "Imported clip",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          },
+          "loop": {
+            "type": "boolean"
+          },
+          "modelHash": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{64})$",
+            "maxLength": 64
+          },
+          "clipIndex": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          },
+          "prop": {
+            "type": "object",
+            "properties": {
+              "objectId": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32
+              },
+              "avatarHash": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{64})$",
+                "maxLength": 64
+              },
+              "hand": {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              "release": {
+                "type": "string",
+                "enum": [
+                  "return",
+                  "drop",
+                  "throw"
+                ]
+              },
+              "offset": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "rotation": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "w": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z",
+                  "w"
+                ],
+                "additionalProperties": false
+              },
+              "releaseAt": {
+                "type": "number",
+                "minimum": 0.05,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "objectId",
+              "avatarHash",
+              "hand",
+              "release",
+              "offset",
+              "rotation",
+              "releaseAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "target",
+          "seconds",
+          "loop",
+          "modelHash",
+          "clipIndex"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -106,7 +585,141 @@
     },
     {
       "id": "animation.library.play",
+      "version": 1,
       "label": "Library motion",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          },
+          "loop": {
+            "type": "boolean"
+          },
+          "motionId": {
+            "type": "string",
+            "pattern": "^(|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "prop": {
+            "type": "object",
+            "properties": {
+              "objectId": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32
+              },
+              "avatarHash": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{64})$",
+                "maxLength": 64
+              },
+              "hand": {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "right"
+                ]
+              },
+              "release": {
+                "type": "string",
+                "enum": [
+                  "return",
+                  "drop",
+                  "throw"
+                ]
+              },
+              "offset": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "rotation": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "w": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z",
+                  "w"
+                ],
+                "additionalProperties": false
+              },
+              "releaseAt": {
+                "type": "number",
+                "minimum": 0.05,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "objectId",
+              "avatarHash",
+              "hand",
+              "release",
+              "offset",
+              "rotation",
+              "releaseAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "target",
+          "seconds",
+          "loop",
+          "motionId"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -123,7 +736,32 @@
     },
     {
       "id": "animation.recipe.play",
+      "version": 1,
       "label": "Recipe animation",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          },
+          "loop": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "seconds",
+          "loop"
+        ],
+        "additionalProperties": false
+      },
       "duration": "timed",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
@@ -219,29 +857,25 @@
         "object.tapped",
         "object.grabbed",
         "object.released"
-      ],
-      "bindings": {
-        "targetId": "text",
-        "motionId": "text",
-        "seconds": "number",
-        "gesture": "number",
-        "clipIndex": "number",
-        "loop": "boolean"
-      }
+      ]
     }
   },
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "1269c1b464441434d8edceb8290f2e4cd26344521d739b3313a2a0f31b89107a"
+      "sha256": "21e8c74602a06c52ee62302033ad341f802894694e000daf409b09e2b4a3ea99"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
+      "sha256": "2a2d5e7b2e03f85e4bfcad3c4bcbdabf23369156296f154d65a447c9483ccef5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "f505153f1650b9c5dbfb990f331b1b291c790cb273081b00a139bf704ac52e39"
+      "sha256": "62395d1b49a798c8b5e35d3060f83d656644ec84b5b980da52740126c81a915f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
-      "sha256": "34bfe5e7a9d232c8141bba2384293b75f32ef76a3250b614c90d6d4f0f9e6c2a"
+      "sha256": "15e4db5653912d9bb49415275b095211141ba40c32b355e20ecf556f0df58e11"
     }
   ]
 }

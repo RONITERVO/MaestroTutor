@@ -71,6 +71,14 @@ describe('prompt ownership', () => {
     expect(catalogueRuntimeViolations(source, 'behaviourCatalog.ts')).toEqual([]);
   });
 
+  it('keeps capability validation independent of browsers and native code', () => {
+    const source = readFileSync(new URL('../../../shared/capabilities.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('capabilities.ts', source, ts.ScriptTarget.Latest, true);
+    const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
+    expect(imports).toEqual(['./behaviourCatalog']);
+    expect(catalogueRuntimeViolations(source, 'capabilities.ts')).toEqual([]);
+  });
+
   it('keeps the catalogue runtime-independent and usable by Functions', () => {
     const rootDirectory = new URL('../../../shared/prompts/', import.meta.url);
     for (const file of readdirSync(rootDirectory).filter(name => name.endsWith('.ts'))) {
@@ -78,7 +86,7 @@ describe('prompt ownership', () => {
       const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
       for (const statement of ast.statements) {
         if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
-          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/behaviourCatalog)$/);
+          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/(?:behaviourCatalog|capabilities))$/);
         }
       }
       expect(catalogueRuntimeViolations(source, file)).toEqual([]);

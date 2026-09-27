@@ -208,14 +208,14 @@ not implemented by the movement/physics action extension.
 
 ## Programmable behavior milestone (2026-09-26)
 
-Version-1 behavior programs now compose the existing native rule actions with typed
+Version-2 behavior programs now compose the existing native rule actions with typed
 variables, function calls/returns, conditions, switch and bounded loops. They use
 one revision-checked rule command from chat-agent authoring and the optional book
 editor. The book displays nested editable blocks/JSON, the native current node,
 locals and recent completion/cancellation/failure outcomes. State/object events,
 run-now and physical buttons share that execution path. Programs are capability
-gated. The current v2 capability stores every behaviour as one program in
-`behaviours.v1.json`; retired development rule collections are left untouched and
+gated. The current v3 capability stores every behaviour as one program in
+`behaviours.v2.json`; retired development rule collections are left untouched and
 start empty. Simple controls edit a derived view of program blocks. Future-version
 protection and last-good recovery remain. See QUEST_BEHAVIOUR_PROGRAMS.md.
 

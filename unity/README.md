@@ -106,12 +106,14 @@ tracking. Room buttons can be operated by either controller. B/Y recovery also
 brings room buttons back within reach. Remove button deletes the last button
 created for the selected sequence. Undo rules/Redo rules are separate from room
 object undo. Rule changes, bindings and button placements autosave to
-`behaviours.v1.json`, with program validation, atomic writes and backup recovery.
+`behaviours.v2.json`, with program validation, atomic writes and backup recovery.
 This pre-release format starts a fresh behaviour/trigger/button collection instead
-of migrating development `rules.v1`–`rules.v5` files; those old files stay untouched.
+of migrating development `rules.v1`–`rules.v5` or numeric-program `behaviours.v1` files; those old files stay untouched.
 Room creations, models, motion downloads and original web chat saves are retained.
 Room saves still use `room.v2.json` and keep their existing room recovery policy.
-Newer behaviour documents or embedded program versions are preserved read-only.
+Newer behaviour documents, embedded program versions or unavailable capability contracts are preserved read-only.
+Programs use named capability calls and arguments. The generated catalog supplies
+web validation and agent signatures; native domain/readiness checks still decide execution.
 
 Current limits are 32 behaviours, 16 simple action blocks in the physical builder
 (up to 128 statement nodes through the program editor), 128 triggers, 16 buttons

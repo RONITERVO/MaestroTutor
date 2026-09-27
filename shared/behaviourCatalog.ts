@@ -6,5 +6,4 @@ export type BehaviourValueType='number'|'boolean'|'text';
 export const behaviourCatalog=manifest;
 export const behaviourFactTypes:Readonly<Record<string,BehaviourValueType>>=Object.freeze(Object.fromEntries(
  manifest.facts.map(fact=>[fact.id,fact.type as BehaviourValueType])));
-export const behaviourBindingTypes:Readonly<Record<string,BehaviourValueType>>=Object.freeze({...manifest.adapters.ruleStep.bindings} as Record<string,BehaviourValueType>);
 export const behaviourFactGuide=manifest.facts.map(fact=>`${fact.id} (${fact.type})`).join(', ');

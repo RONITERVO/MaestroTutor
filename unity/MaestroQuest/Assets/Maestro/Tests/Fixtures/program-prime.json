@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "entry": "main",
   "resources": [
     "maestro"
@@ -36,29 +36,29 @@
           "then": [
             {
               "id": "prime_wave",
-              "op": "action",
-              "step": {
-                "action": 1,
-                "targetId": "maestro",
-                "gesture": 0,
+              "op": "invoke",
+              "bindings": {},
+              "capability": "avatar.gesture.play",
+              "version": 1,
+              "arguments": {
+                "target": "maestro",
                 "seconds": 0.1,
-                "loop": false
-              },
-              "bindings": {}
+                "gesture": "greeting"
+              }
             }
           ],
           "else": [
             {
               "id": "composite_idle",
-              "op": "action",
-              "step": {
-                "action": 1,
-                "targetId": "maestro",
-                "gesture": 4,
+              "op": "invoke",
+              "bindings": {},
+              "capability": "avatar.gesture.play",
+              "version": 1,
+              "arguments": {
+                "target": "maestro",
                 "seconds": 0.1,
-                "loop": false
-              },
-              "bindings": {}
+                "gesture": "idle"
+              }
             }
           ]
         }
