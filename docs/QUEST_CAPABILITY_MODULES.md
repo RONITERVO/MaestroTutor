@@ -42,11 +42,12 @@ This extraction preserves all nineteen action contracts, versions, channel
 claims and prerequisites, as well as events, facts and legacy editor mappings.
 It does not silently rename saved motion choices or change saved-edit semantics.
 
-The existing tray's numeric controls are isolated in LegacyCapabilityAdapters.
-They derive temporary RuleStep views from canonical saved programs. Modules do
-not need a numeric kind or new RuleStep fields. Programs without such an adapter
-remain editable through the book's generated capability forms and source view;
-older simple controls cannot flatten or silently discard their arguments.
+The main physical tray now edits named invocation fields from each module's
+schema, including actions without a numeric adapter. Specialized prop fitting,
+motion assignment and older simple controls retain explicit
+LegacyCapabilityAdapters views. Modules need no numeric kind or RuleStep fields.
+Detailed authoring uses the book's generated forms and source view; quick edits
+preserve control flow, expressions and results. See [native quick edits](QUEST_NATIVE_QUICK_EDITS.md).
 
 ## Demonstrated extension
 
@@ -88,7 +89,7 @@ acknowledgements are simulated; actual object motion is verified in Unity.
 
 ## Remaining release work
 
-Schema-generated physical tray controls, vocabulary review,
+Specialized physical-editor adapters, vocabulary review,
 generic capability/version negotiation, runtime effects versus explicit grouped
 saved edits, priority arbitration, richer world subscriptions, collection types
 and shared program libraries remain. Existing saved-edit actions were not silently
@@ -96,7 +97,7 @@ changed to transient effects. Quest frame/save timing, hardware interaction,
 real-provider journeys and store acceptance remain separate gates. No headset
 installation, user-data reset or service deployment is included here.
 
-PC verification: 1,303 app tests across 155 files, 151 EditMode and 100 PlayMode
+PC verification: 1,303 app tests across 155 files, 151 EditMode and 104 PlayMode
 tests, with three optional private-model checks skipped. TypeScript, lint, shared
 code/prompt guards, catalog provenance, 25 Android bridge tests and the ARM64
 IL2CPP development build pass. The APK's v2 signature was verified; all 112 native

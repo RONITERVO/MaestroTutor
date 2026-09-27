@@ -527,7 +527,14 @@ the interpreter, scheduler and shared runtime. All nineteen modules own validati
 readiness, claims and operation lifetimes. Object rotation proves a new capability
 can use the existing editor, receipts and generated book fields without enum or
 scheduler changes. Animation modules now own graph, clip, asynchronous lease,
-prop and channel cleanup directly. Physical tray consolidation, vocabulary review
+prop and channel cleanup directly. Specialized physical-editor adapters, vocabulary review
 and the other release gates remain open.
 See [module contract and evidence](QUEST_CAPABILITY_MODULES.md). This development
 checkpoint does not install an APK or reset user data.
+
+The physical behaviour tray now provides schema-driven quick edits for every
+registered capability, including named-only rotation, with one Apply/Undo edit,
+stale-draft protection and direct opening of the same program in the book.
+Text, expressions and detailed structure stay in the existing full book editor.
+See [native quick edits](QUEST_NATIVE_QUICK_EDITS.md). Updated layout acceptance
+on Quest is pending while device work remains on hold.

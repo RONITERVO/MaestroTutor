@@ -428,6 +428,21 @@ namespace Maestro.Quest.Tests
             Assert.That(Vector3.Distance(position,item.transform.position),Is.LessThan(.0001f));
             runtime.StopAll(); Assert.That(Quaternion.Angle(rotation,node.localRotation),Is.LessThan(.01f));
         }
+        [UnityTest] public IEnumerator NativeQuickSelectionAndBookLibraryAssignTheSameLiteralBlock()
+        {
+            rules.AddStep();string second=rules.SelectedStep.id;
+            var tray=new GameObject("Shared selection tray");tray.transform.SetParent(root.transform,false);
+            var tools=tray.AddComponent<RuleTools>();tools.Build(rules,root.GetComponent<RoomInteraction>());
+            Assert.That(tools.Draft.NodeId,Is.EqualTo(second),"Opening the tray keeps the existing library assignment target");
+            tools.Draft.Step(-1);Assert.That(rules.SelectedStep.id,Is.EqualTo(tools.Draft.NodeId));
+            rules.AssignLibraryMotion(gait.id);
+            Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(gait.id));Assert.That(rules.Selected.SimpleSteps()[1].action,Is.EqualTo(RuleActionKind.Wait));
+            tools.Draft.Step(1);Assert.That(rules.SelectedStep.id,Is.EqualTo(second));rules.AssignLibraryMotion(greeting.id);
+            Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(gait.id));Assert.That(rules.Selected.SimpleSteps()[1].motionId,Is.EqualTo(greeting.id));
+            Assert.That(tools.Draft.NodeId,Is.EqualTo(second));Assert.That(tools.Draft.CapabilityId,Is.EqualTo("animation.library.play"));
+            Assert.That(avatar.LibraryMotionId,Is.Null);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            yield return null;
+        }
         [UnityTest] public IEnumerator NamedLibraryOperationReleasesLateLoadsAndTransferredLeasesExactlyOnce()
         {
             var host=new RoomRuleActions(editor,authoring);

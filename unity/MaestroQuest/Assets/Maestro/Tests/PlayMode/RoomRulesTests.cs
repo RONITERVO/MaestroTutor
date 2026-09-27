@@ -723,6 +723,93 @@ namespace Maestro.Quest.Tests
             Assert.That(workshop.Execute(new RuleRequest {action="play",revision=workshop.Revision,target=id},out error,out _),Is.True,error);
             for(int i=0;i<20&&!geometry.IsPlaying;i++)yield return null;Assert.That(geometry.IsPlaying,Is.True);runtime.SendMessage("OnApplicationPause",true);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(geometry.IsPlaying,Is.False);
         }
+        [UnityTest] public IEnumerator PhysicalCatalogFieldsEditNamedOnlyRotationAndOpenTheSameBookProgram()
+        {
+            var saved=workshop.Selected;saved.program=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-rotation.json"));
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=saved}}},out var error,out _),Is.True,error);
+            int revision=workshop.Revision,scene=editor.Revision;var book=editor.Find("book");var originalPose=book.transform.localRotation;
+            var agent=root.AddComponent<RoomAgent>();agent.Initialize(editor,null);
+            var board=new GameObject("Catalog rule tray");board.transform.SetParent(root.transform,false);board.transform.position=new Vector3(2,1,0);
+            var tools=board.AddComponent<RuleTools>();tools.Build(workshop,root.GetComponent<RoomInteraction>());
+            var pointer=root.AddComponent<BookPointerRouter>();pointer.Editor=editor;
+            IEnumerator Click(string label) {
+                yield return new WaitForSecondsRealtime(.31f);Physics.SyncTransforms();
+                var button=board.GetComponentsInChildren<RuleToolAction>().Single(x=>x.AccessibleName==label);
+                var ray=new Ray(button.transform.position-Vector3.forward*.2f,Vector3.forward);
+                Assert.That(pointer.Begin(1,ray),Is.True,label);pointer.End(1,ray);
+            }
+            Assert.That(tools.Draft.CapabilityId,Is.EqualTo("object.rotation.set"));
+            Assert.That(tools.Draft.Summary,Does.Contain("Book"),"Object fields display names while retaining exact IDs");
+            yield return Click("Next field");yield return Click("Next field");Assert.That(tools.Draft.FieldPath,Is.EqualTo("yaw"));
+            yield return Click("Value +");Assert.That(tools.Draft.Dirty,Is.True);Assert.That(workshop.Revision,Is.EqualTo(revision));
+            Assert.That(editor.Revision,Is.EqualTo(scene));Assert.That(book.transform.localRotation,Is.EqualTo(originalPose));
+            yield return Click("Try action");Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(tools.Draft.Status,Does.Contain("Apply or discard"));
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_QUICK_EDIT_EVIDENCE");
+            if(!string.IsNullOrEmpty(evidence)) {Directory.CreateDirectory(evidence);CaptureQuickEdit(board,Path.Combine(evidence,"rotation-draft.png"));}
+            yield return Click("Apply draft");Assert.That(tools.Draft.Dirty,Is.False);Assert.That(workshop.Revision,Is.EqualTo(revision+1));
+            var source=JObject.Parse(workshop.Selected.program);var node=source["functions"][0]["body"][0];
+            Assert.That((string)node["id"],Is.EqualTo("block_1"));Assert.That((float)node["arguments"]["yaw"],Is.EqualTo(105));
+            Assert.That(editor.Revision,Is.EqualTo(scene),"Applying a behaviour never runs its object edit");
+            yield return Click("Edit behaviour in book");
+            var view=agent.Observe();Assert.That(view.visible,Is.True);Assert.That(view.workspaceView,Is.EqualTo("rules"));Assert.That(view.rules.selected.program,Is.EqualTo(workshop.Selected.program));
+            if(!string.IsNullOrEmpty(evidence))File.WriteAllText(Path.Combine(evidence,"book-after-native-edit.json"),RoomAgentWire.Serialize(view));
+            yield return Click("Try action");yield return null;
+            Assert.That(Quaternion.Angle(book.transform.localRotation,Quaternion.Euler(20,105,-10)),Is.LessThan(.02f));
+            yield return Click("Undo rules");Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
+            // The type selector is catalog-driven, including actions with no old enum adapter.
+            var seen=new System.Collections.Generic.HashSet<string>();string first=tools.Draft.CapabilityId;
+            do {seen.Add(tools.Draft.CapabilityId);tools.Draft.CycleCapability();}while(tools.Draft.CapabilityId!=first&&seen.Count<=Maestro.Quest.Programs.BehaviourCatalog.Actions.Count);
+            Assert.That(seen,Is.EquivalentTo(Maestro.Quest.Programs.BehaviourCatalog.Actions.Select(x=>x.Id)));tools.Draft.Reload();
+            yield return Click("Change numeric step");Assert.That(tools.Draft.PrecisionLabel,Is.EqualTo("0.01"));
+            yield return Click("Next field");yield return Click("Next field");yield return Click("Value +");yield return Click("Apply draft");
+            Assert.That((double)JObject.Parse(workshop.Selected.program)["functions"][0]["body"][0]["arguments"]["yaw"],Is.EqualTo(90.01).Within(.00001));
+            yield return Click("Undo rules");Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
+        }
+        void CaptureQuickEdit(GameObject board,string path)
+        {
+            var cameraRoot=new GameObject("Quick edit verification camera");cameraRoot.transform.SetParent(root.transform,false);
+            var camera=cameraRoot.AddComponent<Camera>();camera.enabled=false;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.85f,.89f,.91f);
+            cameraRoot.transform.position=board.transform.position+new Vector3(0,0,-1.6f);cameraRoot.transform.LookAt(board.transform.position);camera.fieldOfView=38;
+            var render=new RenderTexture(1200,1100,24);var pixels=new Texture2D(1200,1100,TextureFormat.RGB24,false);var previous=RenderTexture.active;
+            try {camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1200,1100),0,0);pixels.Apply();File.WriteAllBytes(path,pixels.EncodeToPNG());}
+            finally {RenderTexture.active=previous;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(cameraRoot);}
+        }
+        [UnityTest] public IEnumerator NativeQuickEditsPreserveBranchesAndRefuseStaleExternalChanges()
+        {
+            var saved=workshop.Selected;saved.program=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json"));
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=saved}}},out var error,out _),Is.True,error);
+            var draft=new CapabilityQuickEdit(workshop,editor);Assert.That(draft.NodeId,Is.EqualTo("prime_wave"));draft.FieldStep(1);draft.Adjust(1);
+            var expected=JObject.Parse(saved.program);expected["functions"][0]["body"][1]["then"][0]["arguments"]["seconds"]=1.1;
+            Assert.That(draft.Apply(),Is.True,draft.Status);Assert.That(JToken.DeepEquals(JObject.Parse(workshop.Selected.program),expected),Is.True);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);workshop.Undo();draft.Refresh();Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
+            draft.FieldStep(1);draft.Adjust(1);string pending=draft.ProgramSource;
+            var external=workshop.Selected;external.name="Changed in book";
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=external}}},out error,out _),Is.True,error);
+            draft.Refresh();Assert.That(draft.Stale,Is.True);Assert.That(draft.Apply(),Is.False);Assert.That(draft.ProgramSource,Is.EqualTo(pending));Assert.That(draft.Dirty,Is.True);
+            Assert.That(workshop.Selected.name,Is.EqualTo("Changed in book"));draft.Reload();Assert.That(draft.Stale,Is.False);Assert.That(draft.Dirty,Is.False);
+            yield return null;
+        }
+        [UnityTest] public IEnumerator NativeQuickEditsKeepComputedResourcesAndResultWiringAndRejectInvalidDrafts()
+        {
+            var saved=workshop.Selected;saved.program=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json"));
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=saved}}},out var error,out _),Is.True,error);
+            var draft=new CapabilityQuickEdit(workshop,editor);string original=draft.ProgramSource;draft.CycleCapability();Assert.That(draft.ProgramSource,Is.EqualTo(original),"Type changes cannot erase a creation result");
+            draft.Step(1);Assert.That(draft.FieldPath,Is.EqualTo("target"));draft.SetField();draft.Adjust(1);Assert.That(draft.ProgramSource,Is.EqualTo(original),"A computed target is not replaced by a room selection");
+            draft.FieldStep(1);draft.Adjust(1);Assert.That(draft.Apply(),Is.True,draft.Status);
+            var expected=JObject.Parse(saved.program);expected["functions"][0]["body"][1]["arguments"]["x"]=1.5;
+            Assert.That(JToken.DeepEquals(JObject.Parse(workshop.Selected.program),expected),Is.True);
+            Assert.That(((JArray)JObject.Parse(workshop.Selected.program)["resources"]).Count,Is.Zero,"Computed authority stays attached to the creation result");
+
+            var prime=workshop.Selected;prime.program=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json"));
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=prime}}},out error,out _),Is.True,error);
+            draft.Reload();for(int i=0;i<draft.FieldCount&&draft.FieldPath!="prop (include)";i++)draft.FieldStep(1);
+            Assert.That(draft.FieldPath,Is.EqualTo("prop (include)"));draft.SetField();
+            for(int i=0;i<draft.FieldCount&&draft.FieldPath!="prop.rotation.w";i++)draft.FieldStep(1);
+            Assert.That(draft.FieldPath,Is.EqualTo("prop.rotation.w"));draft.Adjust(-1);int revision=workshop.Revision;
+            Assert.That(draft.Apply(),Is.False,"A non-unit quaternion cannot reach saved programs");Assert.That(draft.Dirty,Is.True);
+            Assert.That(workshop.Revision,Is.EqualTo(revision));Assert.That(workshop.Selected.program,Is.EqualTo(prime.program));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            yield return null;
+        }
         [UnityTearDown] public IEnumerator TearDown()
         {
             UnityEngine.Object.Destroy(root); yield return null;

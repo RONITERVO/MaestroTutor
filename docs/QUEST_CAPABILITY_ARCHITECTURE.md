@@ -169,7 +169,8 @@ other room commands and durable saved-program state remain future work.
 The scheduler and interpreter now carry named calls directly. All nineteen
 modules own their contracts and execution. The nine animation/spatial handlers
 no longer convert calls to RuleStep or enter a shared kind-based dispatcher.
-Physical tray compatibility remains an explicit adapter. A real rotation capability demonstrates
+The main physical tray now edits catalog fields with revision-checked drafts;
+specialized prop/motion controls retain explicit adapters. A real rotation capability demonstrates
 addition without extending the enum, step fields, scheduler, web validator or
 book form. Manifest provenance automatically covers the module directory.
 See [module boundaries, verification and remaining work](QUEST_CAPABILITY_MODULES.md).

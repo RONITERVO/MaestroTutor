@@ -81,14 +81,19 @@ preview before the room save is flushed. This first authoring implementation has
 one take per object and 1,200 frames across the room. The user has confirmed wrist
 posing and playback on Quest 3; the remaining joint and authoring checks are open.
 
-The third wooden board builds reusable action sequences. New action starts with
-a Maestro gesture. Step type selects a recording, gesture, wait, Play then throw
-(recorded motion followed by physical release), gaze/follow, an embedded clip
-or a saved library motion. Motion cycles compatible clips for the latter two;
-Use target takes the current room selection. Add step appends another action.
-Duration, Clip loop and Repeat control timing, while On interrupt cycles Restart,
-Ignore and Queue latest. Try action previews the sequence; Stop actions ends all
-rule playback. Grabbing a target or starting animation authoring takes priority.
+The third wooden board edits reusable behaviours from the native capability
+catalog. New action starts with a Maestro gesture. Block type cycles registered
+actions; Prev/Next block and Prev/Next field select what to edit. Value -/+ adjusts
+numbers, choices and booleans; Step chooses numeric precision. Set field uses the
+selected room object or toggles an optional field. Apply draft saves one Undo
+edit without running it; Discard draft reloads the latest saved version. Try
+action requires a clean draft, and Stop actions remains available at any time.
+
+Edit in book opens the same program in the full editor for text, motion choices,
+expressions, functions and detailed structure. Library motion assignment follows
+the same selected literal block as the tray. The Props page retains fitting plus
+Repeat, On interrupt and While state controls. Grabbing or authoring a target
+takes priority over playback. See [native quick edits](../docs/QUEST_NATIVE_QUICK_EDITS.md).
 
 Choose an Event and optional Condition, then Add trigger. Web events are changes
 to speaking/listening/thinking/idle; VR events are taps, grabs and releases on the
@@ -111,19 +116,19 @@ This pre-release format starts a fresh behaviour/trigger/button collection inste
 of migrating development `rules.v1`–`rules.v5` or numeric-program `behaviours.v1` files; those old files stay untouched.
 Room creations, models, motion downloads and original web chat saves are retained.
 Room saves still use `room.v2.json` and keep their existing room recovery policy.
-Newer behaviour documents, embedded program versions or unavailable capability contracts are preserved read-only.
+Unknown whole-collection formats remain protected. Unsupported individual programs
+retain their source and diagnostic while other behaviours stay editable.
 Programs use named capability calls and arguments. The generated catalog supplies
 web validation and agent signatures; native domain/readiness checks still decide execution.
 
-Current limits are 32 behaviours, 16 simple action blocks in the physical builder
-(up to 128 statement nodes through the program editor), 128 triggers, 16 buttons
-(up to four on each controller), and eight concurrent sequences on separate
-targets. Sequences never autoplay when loading a save or returning to the app.
-The physical builder edits literal action blocks in the same canonical program
-used by the agent and book. The book supports names, functions, conditions, loops
-and JSON editing. Complex programs cannot be flattened by simple physical edits.
-The interpreter does not execute arbitrary code. Persistent event-driven programs,
-timers, named events and layered ownership remain implementation work. Saved motion IDs survive renames and compatible
+Current limits are 32 behaviours, 128 statement nodes per program, 128 triggers,
+16 buttons (up to four on each controller), and eight concurrent sequences.
+Sequences never autoplay when loading a save or returning to the app.
+Quick edits preserve the canonical program's branches, expressions and result
+bindings; they cannot flatten a complex program. The interpreter does not execute
+arbitrary code. Version-3 event programs support session state, monotonic timers,
+named events and per-channel ownership; durable state across restarts and general
+parallel branches remain release work. Saved motion IDs survive renames and compatible
 model replacement; loading time does not consume their action duration. See
 `docs/QUEST_ANIMATION_LIBRARY.md` for library limits and migration details. Rules and mounted buttons have automated Unity
 coverage; their headset usability has not yet been checked. The `-RenderRules`

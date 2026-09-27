@@ -39,6 +39,13 @@ namespace Maestro.Quest.Rules
         public RuleDocument Snapshot() => document.Copy();
         public RuleSequence Selected => sequenceIndex >= 0 && sequenceIndex < document.sequences.Length ? document.sequences[sequenceIndex].Copy() : null;
         public int SelectedStepIndex => stepIndex;
+        internal RoomEditor Editor=>editor;
+        internal string TriggerSummary=>EventName(trigger)+(RuleDocument.IsObjectEvent(trigger)?" on "+TargetName(sourceId):"")+" · If "+condition+" · While "+OnOff(stopOnExit);
+        internal bool SelectLiteralNode(string nodeId) {
+            var steps=Selected?.SimpleSteps();if(steps==null)return false;
+            int index=Array.FindIndex(steps,x=>x.id==nodeId);if(index<0)return false;
+            if(stepIndex!=index) {stepIndex=index;Changed?.Invoke();}return true;
+        }
         // Physical tools edit a detached view of literal action blocks in the program.
         public RuleStep SelectedStep
         {

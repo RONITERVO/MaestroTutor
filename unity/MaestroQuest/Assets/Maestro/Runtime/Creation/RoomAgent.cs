@@ -242,6 +242,12 @@ namespace Maestro.Quest.Creation
         string[] created=Array.Empty<string>();
         string lastInspected;
         public void Initialize(RoomEditor source,NativeBookBrowser book) {editor=source;browser=book;executor=new RoomAgentExecutor(source);}
+        public bool OpenRules(string id,out string error) {
+            error="The book workspace is unavailable";if(executor==null)return false;
+            if(!executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=new RuleRequest {action="inspect",target=id}}}},out error,out _))return false;
+            // Local navigation must not replace acknowledgements/results for an in-flight agent request.
+            return executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="workspace",visible=true}}},out error,out _);
+        }
         void Update()
         {
             if(!editor || !browser) return;
