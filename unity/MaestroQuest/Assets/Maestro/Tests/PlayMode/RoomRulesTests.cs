@@ -142,9 +142,9 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator RecipeCreationResultDrivesNativeRobotAnimationAndRetainsTheEditableObject()
         {
             var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
-            var definition=Maestro.Quest.Programs.BehaviourCatalog.Action("object.create.recipe");
+            var definition=Maestro.Quest.Programs.BehaviourCatalog.Action("object.create");
             source["functions"][0]["locals"][0]["name"]="robot";
-            var create=source["functions"][0]["body"][0];create["capability"]=definition.Id;create["arguments"]=definition.Example;create["results"]["objectId"]="robot";
+            var create=source["functions"][0]["body"][0];create["capability"]=definition.Id;create["arguments"]=((JObject)definition.InputSchema["oneOf"][1]["examples"][0]);create["results"]["objectId"]="robot";
             var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.play";play["bindings"]["target"]["var"]="robot";
             play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"};
             var sequence=new RuleSequence {id="",name="Create waving robot",program=source.ToString(Newtonsoft.Json.Formatting.None)};
@@ -175,9 +175,9 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator RecipeCreationOneOffPersistsExactDefinitionAndRejectsCombinedPartOverflow()
         {
-            var definition=Maestro.Quest.Programs.BehaviourCatalog.Action("object.create.recipe");
+            var definition=Maestro.Quest.Programs.BehaviourCatalog.Action("object.create");
             // Model the actual JSON wire request, including float-to-JSON conversion.
-            var call=JObject.Parse(new JObject {["id"]=definition.Id,["version"]=1,["arguments"]=definition.Example}.ToString());
+            var call=JObject.Parse(new JObject {["id"]=definition.Id,["version"]=1,["arguments"]=((JObject)definition.InputSchema["oneOf"][1]["examples"][0])}.ToString());
             var executor=new RoomAgentExecutor(editor);string run=runtime.Scheduler.Receipts.NextId;int count=editor.Snapshot().objects.Length;
             var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=run,["call"]=call}}}};
             Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
@@ -347,7 +347,7 @@ namespace Maestro.Quest.Tests
 
         JObject CreationCall() {
             var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
-            return new JObject {["id"]="object.create.primitive",["version"]=1,["arguments"]=program["functions"][0]["body"][0]["arguments"].DeepClone()};
+            return new JObject {["id"]="object.create",["version"]=1,["arguments"]=program["functions"][0]["body"][0]["arguments"].DeepClone()};
         }
         [UnityTest] public IEnumerator CreationResultChainsIntoRealPhysicsWithoutInterruptingAnotherObject()
         {
@@ -795,6 +795,34 @@ namespace Maestro.Quest.Tests
             var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);Assert.That(observer.OpenRules(saved.id,out error),Is.True,error);
             if(!string.IsNullOrEmpty(output))File.WriteAllText(Path.Combine(output,"animation-book.json"),RoomAgentWire.Serialize(observer.Observe()));
             workshop.Undo();Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));yield return null;
+        }
+        [UnityTest] public IEnumerator NativeCreationKindChoicePreservesResultsAndOnlyCreatesWhenRun()
+        {
+            var saved=workshop.Selected;var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
+            ((JArray)source["functions"][0]["body"]).RemoveAt(1);saved.program=source.ToString();
+            Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=saved}}},out var error,out _),Is.True,error);
+            int count=editor.Snapshot().objects.Length;var before=editor.Snapshot().objects.Select(x=>x.id).ToArray();
+            var board=new GameObject("Creation kind controls");board.transform.SetParent(root.transform,false);
+            var tools=board.AddComponent<RuleTools>();tools.Build(workshop,root.GetComponent<RoomInteraction>());
+            Assert.That(tools.Draft.FieldPath,Is.EqualTo("Creation kind"));
+            var button=board.GetComponentsInChildren<RuleToolAction>().Single(x=>x.AccessibleName=="Value +");
+            var router=root.AddComponent<BookPointerRouter>();router.Editor=editor;Physics.SyncTransforms();
+            var ray=new Ray(button.transform.position-Vector3.forward*.25f,Vector3.forward);Assert.That(router.Begin(1,ray),Is.True);router.End(1,ray);
+            Assert.That(tools.Draft.Dirty,Is.True);Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
+            var draft=JObject.Parse(tools.Draft.ProgramSource);var node=draft["functions"][0]["body"][0];var original=source["functions"][0]["body"][0];
+            Assert.That((string)node["arguments"]["kind"],Is.EqualTo("recipe"));Assert.That(node["arguments"]["shape"],Is.Null);Assert.That(node["arguments"]["red"],Is.Null);
+            Assert.That(((JArray)node["arguments"]["recipe"]["parts"]).Count,Is.EqualTo(19));Assert.That((bool)node["arguments"]["recipe"]["playing"],Is.False);
+            Assert.That(JToken.DeepEquals(node["results"],original["results"]),Is.True);Assert.That((string)node["id"],Is.EqualTo((string)original["id"]));
+            foreach(string field in new[]{"name","x","y","z","scale"})Assert.That(JToken.DeepEquals(node["arguments"][field],original["arguments"][field]),Is.True,field);
+            string output=Environment.GetEnvironmentVariable("MAESTRO_QUICK_EDIT_EVIDENCE");
+            if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);CaptureQuickEdit(board,Path.Combine(output,"creation-kind-draft.png"));}
+            Assert.That(tools.Draft.Apply(),Is.True,tools.Draft.Status);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);Assert.That(observer.OpenRules(saved.id,out error),Is.True,error);
+            if(!string.IsNullOrEmpty(output))File.WriteAllText(Path.Combine(output,"creation-book.json"),RoomAgentWire.Serialize(observer.Observe()));
+            Assert.That(runtime.Trigger(saved.id),Is.True,runtime.Scheduler.LastError);yield return null;
+            var created=editor.Snapshot().objects.Single(x=>!before.Contains(x.id));Assert.That(created.recipe.parts.Length,Is.EqualTo(19));Assert.That(editor.Find(created.id).GetComponent<RecipeObject>().IsPlaying,Is.False);
+            var persisted=new RoomStorage(directory).Load(out error).objects.Single(x=>x.id==created.id);Assert.That(JsonUtility.ToJson(created.recipe),Is.EqualTo(JsonUtility.ToJson(persisted.recipe)));
+            editor.Undo();Assert.That(editor.Find(created.id),Is.Null);workshop.Undo();Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
         }
         [UnityTest] public IEnumerator NativeQuickEditsPreserveBranchesAndRefuseStaleExternalChanges()
         {

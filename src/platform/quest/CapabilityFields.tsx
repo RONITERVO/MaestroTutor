@@ -6,6 +6,7 @@ export type EditorObject = {id:string; name?:string};
 
 /** A draft value only. The shared validator and native handler decide validity. */
 export function initialCapabilityValue(schema:CapabilitySchema, objects:readonly EditorObject[]):unknown {
+  if (schema.examples?.length) return JSON.parse(JSON.stringify(schema.examples[0]));
   if (schema.oneOf) return initialCapabilityValue(schema.oneOf[0],objects);
   if (schema.enum) return schema.enum[0];
   if (schema.type==='object') {
@@ -26,7 +27,7 @@ export function changeCapabilityVariant(schema:CapabilitySchema,index:number,val
  for(const [key,field] of Object.entries(selected.properties??{}))if(!field['x-static']&&Object.prototype.hasOwnProperty.call(old,key)&&validateCapabilityValue(old[key],field)===null)next[key]=old[key];
  return next;
 }
-export function CapabilityVariant({schema,value,onChange,objects,label='Animation source and channel'}:{schema:CapabilitySchema;value:unknown;onChange:(value:Record<string,unknown>)=>void;objects:readonly EditorObject[];label?:string}) {
+export function CapabilityVariant({schema,value,onChange,objects,label=schema.title??'Variant'}:{schema:CapabilitySchema;value:unknown;onChange:(value:Record<string,unknown>)=>void;objects:readonly EditorObject[];label?:string}) {
  const selected=resolveCapabilitySchema(schema,value),index=schema.oneOf!.indexOf(selected!);
  return <label>{label}<select aria-label={label} value={index} onChange={e=>onChange(changeCapabilityVariant(schema,Number(e.target.value),value,objects))}>
   {index<0&&<option value={-1}>Unsupported selection</option>}
@@ -38,7 +39,7 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0}:{
   schema:CapabilitySchema; value:unknown; onChange:(value:unknown)=>void;
   label:string; objects:readonly EditorObject[]; depth?:number;
 }) {
-  if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <><CapabilityVariant schema={schema} value={value} onChange={onChange} objects={objects} label={label+' variant'}/>{selected&&<CapabilityFields schema={selected} value={value} onChange={onChange} objects={objects} label={label} depth={depth}/>}</>;}
+  if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return <><CapabilityVariant schema={schema} value={value} onChange={onChange} objects={objects} label={schema.title??label+' variant'}/>{selected&&<CapabilityFields schema={selected} value={value} onChange={onChange} objects={objects} label={label} depth={depth}/>}</>;}
   if(depth>12) return <p>Use the source editor for this deeply nested value.</p>;
   if(schema.nullable && value===null) return <div><span>{label}: none</span><button onClick={()=>onChange(initialCapabilityValue(schema,objects))}>Set {label}</button></div>;
   const optionalNull=schema.nullable&&<button onClick={()=>onChange(null)}>Clear {label}</button>;

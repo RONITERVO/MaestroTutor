@@ -80,9 +80,8 @@ namespace Maestro.Quest.Programs
             return root.ToString(Formatting.None);
         }
         static JArray ActionNodes(RuleStep[] steps) => new(steps.Select(step=> {
-            string id=LegacyCapabilityAdapters.Id(step.action)??throw new ArgumentException("Unknown native capability");
-            var source=AnimationPlayCapability.Legacy(id);var arguments=CapabilityArguments.FromStep(step);
-            return new JObject { ["id"]=step.id,["op"]="invoke",["capability"]=source==null?id:"animation.play",["version"]=1,["arguments"]=source==null?arguments:source.Public(arguments),["bindings"]=new JObject() };
+            var call=LegacyCapabilityAdapters.Invocation(step);
+            return new JObject { ["id"]=step.id,["op"]="invoke",["capability"]=call["id"],["version"]=call["version"],["arguments"]=call["arguments"],["bindings"]=new JObject() };
         }));
         public static string FromSteps(params RuleStep[] steps) => new JObject {
             ["version"]=2,["entry"]="main",["resources"]=new JArray(steps.SelectMany(RuleDocument.Targets).Distinct()),
@@ -246,7 +245,7 @@ namespace Maestro.Quest.Programs
         internal static ProgramType BindingType(string capability,string name,JObject arguments)
         {
             var schema=CapabilitySchema.Field(CapabilitySchema.Resolve(BehaviourCatalog.Action(capability)?.InputSchema,arguments),name);
-            Need((bool?)schema?["x-static"]!=true,"Source and channel selectors must stay literal");
+            Need((bool?)schema?["x-static"]!=true,"Variant selectors must stay literal");
             return (string)(schema?["type"]) switch {"string"=>ProgramType.Text,"number" or "integer"=>ProgramType.Number,"boolean"=>ProgramType.Boolean,_=>throw new ProgramFault("Unsupported capability argument binding")};
         }
     }

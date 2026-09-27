@@ -19,7 +19,7 @@
         {
           "id": "create",
           "op": "invoke",
-          "capability": "object.create.primitive",
+          "capability": "object.create",
           "version": 1,
           "arguments": {
             "shape": "ball",
@@ -30,7 +30,8 @@
             "scale": 1,
             "red": 0.2,
             "green": 0.6,
-            "blue": 0.9
+            "blue": 0.9,
+            "kind": "primitive"
           },
           "bindings": {},
           "results": {

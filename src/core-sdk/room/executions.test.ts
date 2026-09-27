@@ -102,7 +102,7 @@ it('accepts actual native disk recovery and unsaved-completion observations with
 });
 
 it('validates exact typed creation results without treating a receipt as current object existence',()=>{
- const call={id:'object.create.primitive',version:1,arguments:{shape:'ball',name:'Ball',x:.3,y:1.3,z:.65,scale:1,red:.2,green:.6,blue:.9}};
+ const call={id:'object.create',version:1,arguments:{kind:'primitive',shape:'ball',name:'Ball',x:.3,y:1.3,z:.65,scale:1,red:.2,green:.6,blue:.9}};
  const done={id,capability:call.id,version:1,resources:[],phase:'completed' as const,status:'Action completed',output:{objectId:prop}};
  const view={selected:{...done,call},running:[],outcomes:[done]};
  expect(validExecutionView(view)).toBe(true);

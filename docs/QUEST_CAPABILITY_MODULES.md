@@ -1,8 +1,9 @@
 # Native capability modules
 
 Development checkpoint, 2026-09-28. All public catalog actions use native
-modules, including animation and movement. The current catalog has fourteen
-actions after [typed animation consolidation](QUEST_ANIMATION_VOCABULARY.md).
+modules, including animation and movement. The current catalog has thirteen
+actions after typed [animation](QUEST_ANIMATION_VOCABULARY.md) and
+[creation](QUEST_CREATION_VOCABULARY.md) consolidation.
 The handler split does not complete the broader v1 architecture or release acceptance.
 
 ## Shared execution path
@@ -22,7 +23,7 @@ operation once. Input JSON is copied before dispatch so a caller cannot change
 an already validated target or effect. New modules are trusted native C# bundled
 with the app, never downloaded code or agent-written executable C#.
 
-The ten wait/object/physics modules are joined by animation.play, recorded throw,
+The nine wait/object/physics modules are joined by animation.play, recorded throw,
 look and follow. The animation module selects a typed source implementation;
 recording, gesture, embedded, library and recipe operations retain independent
 lifetimes. There is no numeric kind dispatcher or RuleStep conversion on the

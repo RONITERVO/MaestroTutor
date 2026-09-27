@@ -95,8 +95,8 @@ namespace Maestro.Quest.Programs
         static readonly Dictionary<string,ActionDefinition> actionIds=Actions.ToDictionary(x=>x.Id,StringComparer.Ordinal);
         public static ActionDefinition Action(string id)=>id!=null&&actionIds.TryGetValue(id,out var value)?value:null;
         public static ActionDefinition Action(RuleActionKind kind) {
-            string id=LegacyCapabilityAdapters.Id(kind);var source=AnimationPlayCapability.Legacy(id);
-            return source==null?Action(id):new ActionDefinition(source.Provider);
+            string id=LegacyCapabilityAdapters.Id(kind);var provider=LegacyCapabilityAdapters.Provider(id);
+            return provider==null?Action(id):new ActionDefinition(provider);
         }
         public static bool TryCall(string id,int version,JObject arguments,out CapabilityCall call,out string error)
         {
@@ -132,8 +132,8 @@ namespace Maestro.Quest.Programs
             ["facts"]=new JArray(Facts.Select(x=>new JObject { ["id"]=x.Id,["type"]=x.Type.ToString().ToLowerInvariant(),["label"]=x.Label })),
             ["adapters"]=new JObject { ["ruleStep"]=new JObject {
                 ["actionIds"]=new JArray(LegacyCapabilityAdapters.ActionIds),
-                ["animationSources"]=AnimationPlayCapability.Adapters(),
-                ["actionLabels"]=new JArray(LegacyCapabilityAdapters.ActionIds.Select(id=>AnimationPlayCapability.Legacy(id)?.Provider.Label??Action(id).Label)),
+                ["invocations"]=LegacyCapabilityAdapters.Invocations(),
+                ["actionLabels"]=new JArray(LegacyCapabilityAdapters.ActionIds.Select(id=>LegacyCapabilityAdapters.Provider(id)?.Label??Action(id).Label)),
                 ["eventIds"]=new JArray(Events.OrderBy(x=>(int)x.Kind).Select(x=>x.Id)),
             } },
         };

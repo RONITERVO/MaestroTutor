@@ -14,9 +14,9 @@ import {type RoomRecipe} from '../../../shared/roomRecipe';
 import {parseProgram,simpleProgramSteps,sequenceProgram,type BehaviourProgram} from './programs';
 import {parseRoomCommands} from './roomAgent';
 import {newRuleStep} from './rules';
-const capability='object.create.recipe';
+const capability='object.create';
 const definition=()=>capabilityDefinition(capability)!;
-const args=()=>definition().example as {name:string;x:number;y:number;z:number;scale:number;recipe:RoomRecipe};
+const args=()=>definition().input.oneOf!.find(branch=>branch.properties?.kind.enum?.includes('recipe'))!.examples![0] as {kind:string;name:string;x:number;y:number;z:number;scale:number;recipe:RoomRecipe};
 
 it('shares the native recipe example and domain validation with catalog checks and simple authoring',()=>{
  const argumentsValue=args(),call={id:capability,version:1,arguments:argumentsValue};

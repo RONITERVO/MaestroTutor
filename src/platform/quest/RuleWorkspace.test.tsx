@@ -148,7 +148,7 @@ it('preserves the editable native recipe when authoring creation and switching t
  fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
  const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
  const program=parseProgram(updated.program).program!,node=program.functions[0].body[0];
- expect(node).toMatchObject({id:step,op:'invoke',capability:'object.create.recipe',arguments:{name:'Study robot',scale:.4,recipe:{playing:false}}});
+ expect(node).toMatchObject({id:step,op:'invoke',capability:'object.create',arguments:{kind:'recipe',name:'Study robot',scale:.4,recipe:{playing:false}}});
  if(node.op!=='invoke')throw new Error('Expected invocation');
  expect(node.arguments.recipe).toEqual(newRuleStep(13).creationRecipe);
  await act(async()=>{client.receive({...initial,revision:2,ack:1,rules:{...rules(),revision:5,selected:updated}});});

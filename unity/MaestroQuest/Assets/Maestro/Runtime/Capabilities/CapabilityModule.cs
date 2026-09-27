@@ -13,6 +13,7 @@ namespace Maestro.Quest.Programs
     /// <summary>Trusted native extension point. User programs contain data, never modules or engine code.</summary>
     public abstract class CapabilityModule
     {
+        internal virtual IEnumerable<CapabilityStepAdapter> StepAdapters=>Array.Empty<CapabilityStepAdapter>();
         public abstract string Id {get;}
         public virtual int Version=>1;
         public abstract string Label {get;}

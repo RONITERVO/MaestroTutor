@@ -1,11 +1,11 @@
 {
   "deleted": {
     "selected": {
-      "id": "6fb7527f630349b5ac25bcd2ee87c38a",
+      "id": "3aefdd37ee774c56aeb668ea250d85dd",
       "capability": "object.delete",
       "version": 1,
       "resources": [
-        "d853e7a475c3486aa7f19af42f194264"
+        "923da42850f443a39159df0f4a86f686"
       ],
       "phase": "completed",
       "status": "Action completed",
@@ -13,17 +13,17 @@
         "id": "object.delete",
         "version": 1,
         "arguments": {
-          "target": "d853e7a475c3486aa7f19af42f194264"
+          "target": "923da42850f443a39159df0f4a86f686"
         }
       }
     },
     "running": [
       {
-        "id": "c664ce53971f45ec9e34464eea335619",
+        "id": "ceed5e408f4c4250859ddff38915e9d0",
         "capability": "animation.play",
         "version": 1,
         "resources": [
-          "c66a8c2dacf243c7955388b0a81699a0"
+          "4794bdf3522f48c0b9ebadad6f7e721a"
         ],
         "phase": "running",
         "status": "Action running"
@@ -31,27 +31,27 @@
     ],
     "outcomes": [
       {
-        "id": "6fb7527f630349b5ac25bcd2ee87c38a",
+        "id": "3aefdd37ee774c56aeb668ea250d85dd",
         "capability": "object.delete",
         "version": 1,
         "resources": [
-          "d853e7a475c3486aa7f19af42f194264"
+          "923da42850f443a39159df0f4a86f686"
         ],
         "phase": "completed",
         "status": "Action completed"
       }
     ],
-    "nextRunId": "82a8476c33264543a21b05867824b585",
+    "nextRunId": "68d3b7e03379481ab68d8bf6ec32e87b",
     "storageError": null,
     "recovery": null
   },
   "painted": {
     "selected": {
-      "id": "5954fa9a1ec74ccf84a6019bb38e42f4",
+      "id": "d4a9d8b5cb49475ca375df6208c88323",
       "capability": "object.color.set",
       "version": 1,
       "resources": [
-        "1c711f97ae614d9a9b9891d591f4c7e2"
+        "f9d95526865e4aedb31d855c3027fd20"
       ],
       "phase": "completed",
       "status": "Action completed",
@@ -59,7 +59,7 @@
         "id": "object.color.set",
         "version": 1,
         "arguments": {
-          "target": "1c711f97ae614d9a9b9891d591f4c7e2",
+          "target": "f9d95526865e4aedb31d855c3027fd20",
           "red": 0.2,
           "green": 0.4,
           "blue": 1
@@ -69,17 +69,17 @@
     "running": [],
     "outcomes": [
       {
-        "id": "5954fa9a1ec74ccf84a6019bb38e42f4",
+        "id": "d4a9d8b5cb49475ca375df6208c88323",
         "capability": "object.color.set",
         "version": 1,
         "resources": [
-          "1c711f97ae614d9a9b9891d591f4c7e2"
+          "f9d95526865e4aedb31d855c3027fd20"
         ],
         "phase": "completed",
         "status": "Action completed"
       }
     ],
-    "nextRunId": "768ca7e9fb1448fbbae2f691a7156a3e",
+    "nextRunId": "1eb75e606d964e96b80c1952e7855699",
     "storageError": null,
     "recovery": null
   }

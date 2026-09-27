@@ -5,6 +5,7 @@ export interface AvatarMovementSettings { distance:number; speed:number }
 export interface AvatarWalkObservation {source:'included'|'embedded'|'library';motionId:string;modelHash:string;clipIndex:number;name:string;available:boolean;status:string;playbackStatus:string}
 export interface PhysicsObservation { ready:boolean; running:boolean; status:string }
 export interface AvatarMovementObservation { active:boolean; mode:'look'|'follow'|'manual'|'stopped'; status:string; canLook:boolean; canFollow:boolean; lookReason:string; followReason:string; distance:number; speed:number }
+import {capabilityDefinition,capabilityInput} from './capabilities';
 import {roomControlFields} from './prompts/roomcontrols';
 export {roomControlFields} from './prompts/roomcontrols';
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -23,8 +24,8 @@ export function validRoomControl(c:Record<string,unknown>):boolean {
   }
 }
 export function requireRoomCapabilities(commands:{action:string;rule?:unknown;execution?:unknown}[],scene:{capabilities?:string[]}) {
-  const hasResults=(value:unknown):boolean=>Array.isArray(value)?value.some(hasResults):record(value)?value.op==='invoke'&&(value.results!==undefined||value.capability==='object.create.primitive'||value.capability==='object.create.recipe')||Object.values(value).some(hasResults):false;
-  const hasRecipe=(value:unknown):boolean=>Array.isArray(value)?value.some(hasRecipe):record(value)?value.op==='invoke'&&value.capability==='object.create.recipe'||Object.values(value).some(hasRecipe):false;
+  const hasResults=(value:unknown):boolean=>Array.isArray(value)?value.some(hasResults):record(value)?value.op==='invoke'&&(value.results!==undefined||Object.keys(capabilityDefinition(String(value.capability))?.output?.properties??{}).length>0)||Object.values(value).some(hasResults):false;
+  const hasRecipe=(value:unknown):boolean=>Array.isArray(value)?value.some(hasRecipe):record(value)?value.op==='invoke'&&record(value.arguments)&&capabilityInput(String(value.capability),value.arguments)?.['x-features']?.includes('recipeCreation.v1')===true||Object.values(value).some(hasRecipe):false;
   const hasEdit=(value:unknown):boolean=>Array.isArray(value)?value.some(hasEdit):record(value)?value.op==='invoke'&&['object.position.set','object.scale.set','object.color.set','object.delete'].includes(String(value.capability))||Object.values(value).some(hasEdit):false;
   for(const command of commands) {
     if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='recover'&&!scene.capabilities?.includes('actionRecovery.v1'))throw new Error('Update the native app to recover action history.');

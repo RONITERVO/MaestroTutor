@@ -22,7 +22,7 @@ it('lets a human wire a native creation result into the next action without writ
  expect(result.program?.functions[0].locals).toContainEqual({name:'objectId',initial:''});
  expect(result.program?.functions[0].body[0]).toMatchObject({results:{objectId:'objectId'}});
  expect(result.program?.functions[0].body[1]).toMatchObject({bindings:{target:{var:'objectId'}}});
- expect(screen.getByText('Create shape → objectId (objectId)')).toBeTruthy();
+ expect(screen.getByText('Create object → objectId (objectId)')).toBeTruthy();
  fireEvent.click(screen.getByLabelText('Edit block push'));
  expect(screen.getByLabelText('Program JSON').getAttribute('aria-label')).toBe('Program JSON');
 });
@@ -136,7 +136,7 @@ it('authors a named-only rotation module with schema controls and preserves it o
 it('changes the typed animation channel with one shared form and keeps nested expressions explicit',()=>{
  const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-visual.json','utf8')) as BehaviourProgram;
  const h=harness(initial);h.click('Edit values block_3');
- h.change('Animation source and channel','1');h.change('source.gesture','pointing');h.click('Update draft');
+ h.change('Source and channel','1');h.change('source.gesture','pointing');h.click('Update draft');
  const program=JSON.parse(h.source());const node=program.functions[0].body[0].then[0].body[0];
  expect(node.id).toBe('block_3');expect(node.capability).toBe('animation.play');expect(node.arguments.channel).toBe('upperBody');expect(node.arguments.seconds).toBe(.2);
  h.click('Edit values block_3');h.change('source.gesture input mode','expression');h.change('source.gesture value','speaking');h.click('Update draft');
@@ -148,6 +148,18 @@ it('keeps an exact library motion ID when editing duration and removes incompati
  initial.functions[0].body=[{id:'play',op:'invoke',capability:'animation.play',version:1,arguments:{target:'maestro',source:{kind:'library',motionId:motion},channel:'wholeTarget',seconds:1,loop:true},bindings:{}}];
  const h=harness(initial);h.click('Edit values play');h.change('seconds','2');h.click('Update draft');
  expect(JSON.parse(h.source()).functions[0].body[0].arguments.source).toEqual({kind:'library',motionId:motion});
- h.click('Edit values play');h.change('Animation source and channel','0');h.click('Update draft');
+ h.click('Edit values play');h.change('Source and channel','0');h.click('Update draft');
  const changed=JSON.parse(h.source()).functions[0].body[0];expect(changed.arguments.source).toEqual({kind:'gesture',gesture:'greeting'});expect(changed.arguments.loop).toBeUndefined();expect(changed.arguments.seconds).toBe(2);
+});
+
+it('switches creation kinds with native examples and preserves result destinations and common expression wiring',()=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json','utf8')) as BehaviourProgram;
+ const first=initial.functions[0].body[0];if(first.op!=='invoke')throw new Error('Expected creation');first.bindings={x:{value:.4}};
+ const h=harness(initial);h.click('Edit values create');h.change('Creation kind','1');h.click('Update draft');
+ const result=JSON.parse(h.source()),changed=result.functions[0].body[0];
+ expect(changed).toMatchObject({id:first.id,capability:'object.create',results:first.results,bindings:first.bindings,arguments:{kind:'recipe',name:first.arguments.name,x:first.arguments.x,scale:first.arguments.scale,recipe:{playing:false}}});
+ expect(changed.arguments.recipe.parts).toHaveLength(19);expect(changed.arguments.shape).toBeUndefined();expect(changed.arguments.red).toBeUndefined();
+ expect(result.functions[0].body[1]).toEqual(initial.functions[0].body[1]);expect(parseProgram(h.source()).error).toBeNull();
+ h.click('Edit values create');h.change('name','My teaching robot');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].arguments.recipe).toEqual(changed.arguments.recipe);
 });

@@ -550,3 +550,11 @@ unavailable preserved source rather than being silently reinterpreted.
 See [animation vocabulary](QUEST_ANIMATION_VOCABULARY.md). Remaining vocabulary,
 runtime/grouped commits, arbitration, world subscriptions/libraries and all
 hardware/provider/store acceptance gates remain open. Device work is on hold.
+
+
+Typed creation checkpoint (2026-09-28): object.create combines primitive and recipe
+kinds with complete native examples, generated book/tray choices, common-field
+preservation and unchanged exact output/save/Undo behavior. Private editor
+projections are now generated descriptors. The catalog has thirteen public
+actions. See [contract, compatibility and evidence](QUEST_CREATION_VOCABULARY.md).
+Spatial consolidation and remaining runtime/release work are still open.

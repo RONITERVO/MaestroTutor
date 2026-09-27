@@ -1,16 +1,16 @@
 {
   "selected": {
-    "id": "406d8d58728e4c6cbc7c2278720c56f7",
-    "capability": "object.create.recipe",
+    "id": "cbf2afdb6aa746409deada762eac0af3",
+    "capability": "object.create",
     "version": 1,
     "resources": [],
     "phase": "completed",
     "status": "Action completed",
     "output": {
-      "objectId": "f4aa80d1d0904c539c6268b9dd6d6920"
+      "objectId": "6517b6a22f9f44eab320f789d7d4c67a"
     },
     "call": {
-      "id": "object.create.recipe",
+      "id": "object.create",
       "version": 1,
       "arguments": {
         "name": "Box robot",
@@ -649,25 +649,26 @@
           "playing": false,
           "loop": true,
           "duration": 2.0
-        }
+        },
+        "kind": "recipe"
       }
     }
   },
   "running": [],
   "outcomes": [
     {
-      "id": "406d8d58728e4c6cbc7c2278720c56f7",
-      "capability": "object.create.recipe",
+      "id": "cbf2afdb6aa746409deada762eac0af3",
+      "capability": "object.create",
       "version": 1,
       "resources": [],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "objectId": "f4aa80d1d0904c539c6268b9dd6d6920"
+        "objectId": "6517b6a22f9f44eab320f789d7d4c67a"
       }
     }
   ],
-  "nextRunId": "76fe789f522241be8e1fa27b8a01d991",
+  "nextRunId": "ab00957657024ac594091d96f7224d65",
   "storageError": null,
   "recovery": null
 }

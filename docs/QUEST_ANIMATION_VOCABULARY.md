@@ -2,7 +2,8 @@
 
 Development checkpoint, 2026-09-28. The public catalog has one animation.play
 verb, replacing six prototype animation/gesture IDs. Fourteen public actions
-remain. This is the animation portion of vocabulary consolidation; creation,
+remain at that checkpoint. Subsequent [creation consolidation](QUEST_CREATION_VOCABULARY.md)
+reduces the current count to thirteen. This is the animation portion of vocabulary consolidation; creation,
 spatial verbs and the other release architecture work remain separate.
 
 ## Public call

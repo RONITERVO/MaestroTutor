@@ -83,7 +83,7 @@ namespace Maestro.Quest.Rules
             void Walk(JObject schema,JToken value,string path,string root,JObject parent,string key,JArray array,int index,bool optional,int depth) {
                 if(depth>12)return;
                 if(schema["oneOf"] is JArray) {
-                    fields.Add(new Field {Path="Source and channel",Root=root,Schema=schema,Parent=parent,Key=key,Variant=true});
+                    fields.Add(new Field {Path=(string)schema["title"]??"Variant",Root=root,Schema=schema,Parent=parent,Key=key,Variant=true});
                     schema=CapabilitySchema.Resolve(schema,value);if(schema==null)return;
                 }
                 string type=(string)schema["type"];
@@ -102,6 +102,7 @@ namespace Maestro.Quest.Rules
             int found=fields.FindIndex(x=>x.Path==selected);fieldIndex=found>=0?found:Mathf.Clamp(fieldIndex,0,Math.Max(0,fields.Count-1));
         }
         JToken Initial(JObject schema) {
+            if(schema["examples"] is JArray examples&&examples.Count>0)return examples[0].DeepClone();
             if(schema["oneOf"] is JArray variants)return Initial((JObject)variants[0]);
             if(schema["enum"] is JArray choices)return choices[0].DeepClone();
             switch((string)schema["type"]) {
@@ -130,7 +131,7 @@ namespace Maestro.Quest.Rules
         public void Adjust(int direction) {
             var field=Current;if(field==null)return;if(Bound(field)) {Status="This field comes from an expression; edit it in the book";return;}
             if(field.Variant) {ChangeVariant(field,direction);return;}
-            if((bool?)field.Schema["x-static"]==true) {Status="Use Source and channel to change this choice";return;}
+            if((bool?)field.Schema["x-static"]==true) {Status="Use the variant field to change this choice";return;}
             if(field.Container) {ToggleOptional(field);return;}
             var schema=field.Schema;
             if((string)schema["x-resource"]=="object") {
@@ -149,13 +150,13 @@ namespace Maestro.Quest.Rules
             Status="Edit text, motion selections and detailed values in the book";
         }
         void ChangeVariant(Field field,int direction) {
-            if(((JObject)Node["bindings"]).Count>0) {Status="Change wired sources in the book; expressions are preserved";return;}
+            if(((JObject)Node["bindings"]).Count>0) {Status="Change wired variants in the book; expressions are preserved";return;}
             var variants=(JArray)field.Schema["oneOf"];int index=variants.IndexOf(CapabilitySchema.Resolve(field.Schema,field.Value));
             var selected=(JObject)variants[(index+direction+variants.Count)%variants.Count];var next=(JObject)Initial(selected);
             var previous=(JObject)field.Value;
             foreach(var property in ((JObject)selected["properties"]).Properties())
                 if((bool?)property.Value["x-static"]!=true&&previous[property.Name]!=null&&CapabilityArguments.Validate(previous[property.Name],(JObject)property.Value,out _))next[property.Name]=previous[property.Name].DeepClone();
-            field.Set(next);Changed("Source changed in draft; compatible values retained");
+            field.Set(next);Changed("Variant changed in draft; compatible values retained");
         }
         void Cycle(Field field,string[] options,int direction) {
             if(options.Length==0) {Status="No compatible object is available";return;}

@@ -16,7 +16,7 @@ namespace Maestro.Quest.Tests
 
         [Test] public void RecipeCreationContractChecksHierarchyTracksCollectionsAndDetachedExamples()
         {
-            var definition=BehaviourCatalog.Action("object.create.recipe");var args=definition.Example;
+            var definition=BehaviourCatalog.Action("object.create");var args=((JObject)definition.InputSchema["oneOf"][1]["examples"][0]);
             var call=new JObject {["id"]=definition.Id,["version"]=1,["arguments"]=args};
             Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidCall(call),Is.True);
             Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,args,out var step,out var error),Is.True,error);
@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests
             Assert.That(step.creationRecipe.parts[0].size.x,Is.Not.EqualTo(1));
             Assert.That(CapabilityArguments.Resources(args,definition.InputSchema),Is.Empty);
             void Invalid(Action<JObject> change) {
-                var value=definition.Example;change(value);
+                var value=((JObject)definition.InputSchema["oneOf"][1]["examples"][0]);change(value);
                 Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,value,out _,out _),Is.False);
             }
             Invalid(x=>x["recipe"]["parts"][0]["parent"]="Head");
@@ -38,13 +38,13 @@ namespace Maestro.Quest.Tests
             Invalid(x=>x["recipe"]["parts"]=new JArray());
             Invalid(x=>x["recipe"]["duration"]=31);
             Invalid(x=>x["recipe"]["parts"][0]["position"]=new JObject {["x"]=2,["y"]=2,["z"]=2});
-            Assert.That((string)definition.Example["recipe"]["parts"][0]["id"],Is.EqualTo("Hips"));
+            Assert.That((string)((JObject)definition.InputSchema["oneOf"][1]["examples"][0])["recipe"]["parts"][0]["id"],Is.EqualTo("Hips"));
         }
         [Test] public void RecipeCreationProgramsRetainArraysAndUseReturnedIdForAnimation()
         {
-            var definition=BehaviourCatalog.Action("object.create.recipe");
+            var definition=BehaviourCatalog.Action("object.create");
             var source=CreationProgram();source["functions"][0]["body"][0]["capability"]=definition.Id;
-            source["functions"][0]["body"][0]["arguments"]=definition.Example;
+            source["functions"][0]["body"][0]["arguments"]=((JObject)definition.InputSchema["oneOf"][1]["examples"][0]);
             source["functions"][0]["locals"][0]["name"]="robot";source["functions"][0]["body"][0]["results"]["objectId"]="robot";
             var play=source["functions"][0]["body"][1];play["id"]="animate";play["capability"]="animation.play";play["bindings"]["target"]["var"]="robot";
             play["arguments"]=new JObject {["target"]=new string('0',32),["seconds"]=.6,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"};

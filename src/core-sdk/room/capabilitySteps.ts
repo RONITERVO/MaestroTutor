@@ -1,11 +1,13 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourCatalog} from '../../../shared/behaviourCatalog';
-import {type CapabilityInvocation} from '../../../shared/capabilities';
+import {argumentValue,type CapabilityInvocation} from '../../../shared/capabilities';
 import {type RuleStep} from './ruleSteps';
 import {type Vec3,type Rotation} from './recipe';
 const ids:readonly string[]=behaviourCatalog.adapters.ruleStep.actionIds;
-const animationSources=behaviourCatalog.adapters.ruleStep.animationSources;
+const adapters=behaviourCatalog.adapters.ruleStep.invocations;
+const clone=<T>(v:T):T=>JSON.parse(JSON.stringify(v));
+function setPath(args:Record<string,unknown>,path:string,value:unknown){const parts=path.split('.');for(const key of parts.slice(0,-1)){if(!args[key])args[key]={};args=args[key] as Record<string,unknown>;}args[parts[parts.length-1]]=clone(value);}
 const gestures=['greeting','pointing','listening','speaking','idle','walk'];
 /** Private adapter for existing physical/simple controls. Saved programs use named calls. */
 export function stepInvocation(step:RuleStep):CapabilityInvocation {
@@ -26,18 +28,18 @@ export function stepInvocation(step:RuleStep):CapabilityInvocation {
  if(step.propId)args.prop={objectId:step.propId,avatarHash:step.propAvatarHash??'',hand:['left','right'][step.propHand??1],
   release:['return','drop','throw'][step.propRelease??0],releaseAt:step.propReleaseAt??1,
   offset:step.propOffset??{x:0,y:0,z:0},rotation:step.propRotation??{x:0,y:0,z:0,w:1}};
- const variant=animationSources.find(source=>source.id===id);
- if(variant){const source:Record<string,unknown>={kind:variant.kind};for(const field of variant.fields){source[field]=args[field];delete args[field];}args.source=source;args.channel=variant.channel;}
- return {id:variant?'animation.play':id,version:1,arguments:args};
+ const adapter=adapters.find(value=>value.id===id);if(!adapter)return {id,version:1,arguments:args};
+ const result:Record<string,unknown>={};for(const [key,path] of Object.entries(adapter.fields))if(args[key]!==undefined)setPath(result,path,args[key]);
+ for(const [path,value] of Object.entries(adapter.selectors))setPath(result,path,value);
+ return {id:adapter.capability,version:1,arguments:result};
 }
 /** Decode a detached editor view. Callers validate the public schema and domain before applying.
  * Draft numeric values remain editable even when outside their permitted bounds.
  */
 export function invocationStep(call:CapabilityInvocation,id:string):RuleStep {
- const selected=call.arguments.source as Record<string,unknown>|undefined;
- const variant=call.id==='animation.play'?animationSources.find(source=>source.kind===selected?.kind&&source.channel===call.arguments.channel):undefined;
- const action=ids.indexOf(variant?.id??call.id);if(action<0||action>17||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
- const a={...call.arguments};if(variant){for(const field of variant.fields)a[field]=selected?.[field];delete a.source;delete a.channel;}
+ const adapter=adapters.find(value=>value.capability===call.id&&Object.entries(value.selectors).every(([path,expected])=>argumentValue(call.arguments,path)===expected));
+ const action=ids.indexOf(adapter?.id??call.id);if(action<0||action>17||call.version!==1)throw new Error('Unknown capability or unsupported capability version');
+ const a:Record<string,unknown>=adapter?Object.fromEntries(Object.entries(adapter.fields).map(([key,path])=>[key,argumentValue(call.arguments,path)]).filter(([,value])=>value!==undefined)):{...call.arguments};
  const p=a.prop as Record<string,unknown>|undefined;
  return {id,action,targetId:(a.target??'maestro') as string,seconds:(a.seconds??0) as number,
   gesture:a.gesture===undefined?0:gestures.indexOf(a.gesture as string),loop:(a.loop??false) as boolean,

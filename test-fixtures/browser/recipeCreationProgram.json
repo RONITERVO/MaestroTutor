@@ -19,7 +19,7 @@
         {
           "id": "create",
           "op": "invoke",
-          "capability": "object.create.recipe",
+          "capability": "object.create",
           "version": 1,
           "arguments": {
             "name": "Box robot",
@@ -658,7 +658,8 @@
               "playing": false,
               "loop": true,
               "duration": 2.0
-            }
+            },
+            "kind": "recipe"
           },
           "bindings": {},
           "results": {

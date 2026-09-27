@@ -109,3 +109,17 @@ it('recovers only after the explicit book action and retains failed-recovery sta
  await act(async()=>{client.receive(state);});
  expect(screen.queryByRole('button',{name:'Stop actions and recover history'})).toBeNull();expect(screen.getByRole('status').textContent).toBe('Recovered without replay');expect(client.snapshot().request).toBeNull();client.cancel();
 });
+
+import {capabilityDefinition} from '../../../shared/capabilities';
+it('keeps valid catalog draft fields when changing kind after another field became invalid',async()=>{
+ const {client,screen,receive}=setup(),definition=capabilityDefinition('object.create')!;
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ await receive({operation:'search',query:'',offset:0,pageSize:6,total:1,entries:[{id:definition.id,version:1,label:definition.label}],status:'Definition fixture'});
+ fireEvent.click(screen.getByRole('button',{name:/Create object/}));
+ await receive({operation:'inspect',capability:definition.id,version:1,definition,status:'Definition fixture'});
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify({...definition.example,name:'Keep my name',x:.4,scale:99})}});
+ fireEvent.change(screen.getByLabelText('Creation kind'),{target:{value:'1'}});
+ const args=JSON.parse((screen.getByLabelText('Action arguments') as HTMLTextAreaElement).value);
+ expect(args).toMatchObject({kind:'recipe',name:'Keep my name',x:.4,scale:1});expect(args.recipe.parts).toHaveLength(19);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

@@ -14,7 +14,7 @@ try {
  await context.route('**/*',route=>['localhost','127.0.0.1'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort());
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(base+'/test-fixtures/browser/quest-workspace.html?recipeCreation');
- await page.getByText('Create recipe object → robot (objectId)',{exact:true}).waitFor();
+ await page.getByText('Create object → robot (objectId)',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Edit block create',exact:true}).click();
  const editor=page.getByLabel('Program JSON'),node=JSON.parse(await editor.inputValue());
  assert.deepEqual(node.arguments.recipe,native.functions[0].body[0].arguments.recipe);
@@ -37,8 +37,9 @@ try {
  await page.getByRole('button',{name:'Apply changes',exact:true}).waitFor({state:'visible'});
  await page.waitForFunction(()=>!window.maestroBook.roomSnapshot().request);
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();
- await page.getByLabel('Search actions').fill('create recipe');await page.getByRole('button',{name:'Search',exact:true}).click();
- await page.getByRole('button',{name:/Create recipe object object.create.recipe/}).click();
+ await page.getByLabel('Search actions').fill('create');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Create object object.create/}).click();
+ await page.getByLabel('Creation kind',{exact:true}).selectOption('1');
  const args=JSON.parse(await page.getByLabel('Action arguments').inputValue());
  assert.equal(args.recipe.parts.length,19);assert.equal(args.recipe.tracks.length,2);assert.equal(args.recipe.playing,false);
  assert.equal(await page.getByRole('button',{name:'Check availability',exact:true}).isEnabled(),true);

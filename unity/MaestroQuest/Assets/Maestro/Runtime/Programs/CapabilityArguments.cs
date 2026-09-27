@@ -31,7 +31,7 @@ namespace Maestro.Quest.Programs
             if(value==null||schema==null)return false;
             if(schema["oneOf"] is JArray variants) {
                 var selected=CapabilitySchema.Resolve(schema,value);
-                if(selected==null) {error=path+" has an unsupported source or channel";return false;}
+                if(selected==null) {error=path+" has an unsupported variant";return false;}
                 return Validate(value,selected,out error,path);
             }
             if(value.Type==JTokenType.Null)return (bool?)schema["nullable"]==true;

@@ -1,22 +1,13 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {useState,useSyncExternalStore} from 'react';
-import {capabilityDefinition,validateCapabilityArguments,resolveCapabilitySchema,type CapabilityDefinition,type CapabilityInvocation,type CapabilitySchema} from '../../../shared/capabilities';
+import {capabilityDefinition,validateCapabilityArguments,resolveCapabilitySchema,type CapabilityDefinition,type CapabilityInvocation} from '../../../shared/capabilities';
+import {CapabilityVariant,initialCapabilityValue} from './CapabilityFields';
 import type {ExecutionRequest} from '../../../shared/roomExecutions';
 import type {CatalogRequest,CatalogView} from '../../../shared/roomCatalog';
 import type {RoomAgentClient} from './roomAgentBridge';
 export type CatalogInsert=(call:CapabilityInvocation)=>string|null;
 export type OpenCatalog=(insert?:CatalogInsert)=>void;
-function initial(schema:CapabilitySchema,objects:{id:string}[]):unknown {
- if(schema.oneOf)return initial(schema.oneOf[0],objects);
- if(schema.enum)return schema.enum[0];
- if(schema.type==='object')return Object.fromEntries((schema.required??[]).map(key=>[key,initial(schema.properties![key],objects)]));
- if(schema.type==='array')return Array.from({length:schema.minItems??0},()=>initial(schema.items!,objects));
- if(schema.type==='boolean')return false;
- if(schema.type==='number'||schema.type==='integer')return schema.minimum??0;
- if(schema['x-resource']==='object')return objects.find(x=>!schema.pattern||new RegExp(schema.pattern).test(x.id))?.id??'';
- return '';
-}
 /** Optional expert authoring on the book; queries use the same native path as the agent. */
 export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentClient;onClose:()=>void;onInsert?:CatalogInsert}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
@@ -33,11 +24,11 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  };
  const search=async(offset=0)=>{const result=await send({operation:'search',query:offset?page?.query??query:query,offset});if(result?.operation==='search')setPage(result);};
  const inspect=async(id:string,version:number)=>{const result=await send({operation:'inspect',capability:id,version});if(result?.operation==='inspect'){
-  setDefinition(result.definition);setChecked('');if(result.definition)setArgs(JSON.stringify(result.definition.example??initial(result.definition.input,state?.objects??[]),null,2));else setError(result.status);
+  setDefinition(result.definition);setChecked('');if(result.definition)setArgs(JSON.stringify(result.definition.example??initialCapabilityValue(result.definition.input,state?.objects??[]),null,2));else setError(result.status);
  }};
- let call:CapabilityInvocation|null=null,invalid='';
- if(definition)try {const argumentsValue:unknown=JSON.parse(args);invalid=validateCapabilityArguments(definition.id,definition.version,argumentsValue)??'';
-  if(!invalid)call={id:definition.id,version:definition.version,arguments:argumentsValue as Record<string,unknown>};
+ let call:CapabilityInvocation|null=null,invalid='',parsedArgs:unknown;
+ if(definition)try {parsedArgs=JSON.parse(args);invalid=validateCapabilityArguments(definition.id,definition.version,parsedArgs)??'';
+  if(!invalid)call={id:definition.id,version:definition.version,arguments:parsedArgs as Record<string,unknown>};
  }catch{invalid='Enter valid JSON arguments.';}
  const key=call?JSON.stringify(call):'';
  const observation=state?.catalog;
@@ -48,14 +39,16 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
    <div className="room-workspace-heading"><div><span className="room-eyebrow">AVAILABLE ACTIONS</span><h1>Action catalog</h1></div><button disabled={pending} onClick={onClose}>Back to workshop</button></div>
    <p className="room-workspace-intro">Explore actions that Maestro can use. Search and check first, then run an action or add it to a behaviour.</p>
    <form onSubmit={e=>{e.preventDefault();void search();}}><label>Search actions<input value={query} maxLength={80} onChange={e=>setQuery(e.target.value)}/></label><button disabled={pending||!supported}>Search</button></form>
-   {page&&<><p>{page.total} matching actions</p><div className="room-object-list">{page.entries.map(entry=><button key={entry.id} disabled={pending} aria-pressed={definition?.id===entry.id} onClick={()=>void inspect(entry.id,entry.version)}><span>{entry.label}</span><small>{entry.id} · v{entry.version}</small></button>)}</div>
+   {page&&<><p>{page.total} matching actions</p><div className="room-object-list">{page.entries.map(entry=><button key={entry.id} disabled={pending} aria-pressed={definition?.id===entry.id} onClick={()=>void inspect(entry.id,entry.version)}><span>{entry.label}</span><small>{entry.id} Â· v{entry.version}</small></button>)}</div>
     <div className="room-workspace-actions"><button disabled={pending||page.offset===0} onClick={()=>void search(Math.max(0,page.offset-page.pageSize))}>Previous actions</button><span>{page.total?Math.floor(page.offset/page.pageSize)+1:0} / {Math.ceil(page.total/page.pageSize)}</span><button disabled={pending||page.offset+page.pageSize>=page.total} onClick={()=>void search(page.offset+page.pageSize)}>Next actions</button></div></>}
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Action details">
    <h2>{definition?.label??'Choose an action'}</h2>
-   <div role="status" className={error||state?.execution?.storageError?'room-message room-message-warning':'room-message'}>{error||state?.execution?.storageError||recoveryNotice||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':check?.status??state?.execution?.selected?.status??'Select an action or check its availability.')}</div>
+   <div role="status" className={error||state?.execution?.storageError?'room-message room-message-warning':'room-message'}>{error||state?.execution?.storageError||recoveryNotice||(!supported?'Update the native app to browse actions.':pending?'Waiting for the roomâ€¦':check?.status??state?.execution?.selected?.status??'Select an action or check its availability.')}</div>
    {state?.execution?.recovery&&state.capabilities?.includes('actionRecovery.v1')&&<section aria-label="Recover action history" className="room-message room-message-warning"><h3>Recover action history</h3><p>{state.execution.recovery.status}</p><button disabled={pending} onClick={()=>void execute({operation:'recover',recoveryId:state.execution!.recovery!.id})}>Stop actions and recover history</button></section>}
-   {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
+   {definition&&<><p>{definition.id} Â· version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
+    {definition.input.oneOf&&<CapabilityVariant schema={definition.input} value={parsedArgs} objects={state?.objects??[]} onChange={value=>{setArgs(JSON.stringify(value,null,2));setChecked('');}}/>}
+    {resolveCapabilitySchema(definition.input,call?.arguments)?.description&&<p>{resolveCapabilitySchema(definition.input,call?.arguments)?.description}</p>}
     <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');}}/></label>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}
     <div className="room-workspace-actions"><button disabled={pending||!call} onClick={async()=>{if(call){const result=await send({operation:'check',call});if(result?.operation==='check')setChecked(key);}}}>Check availability</button>
@@ -69,7 +62,7 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
     {state.execution.running.map(run=><div key={run.id} className="room-message"><strong>{capabilityDefinition(run.capability)?.label??run.capability}</strong><p>{run.status}</p><div className="room-workspace-actions"><button disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}>Inspect action {run.id.slice(0,6)}</button><button disabled={pending} onClick={()=>void execute({operation:'cancel',runId:run.id})}>Stop action {run.id.slice(0,6)}</button></div></div>)}
     {!state.execution.running.length&&<p>No one-off action is running.</p>}
     {state.execution.selected&&<div aria-label="Selected action" className="room-message"><strong>{state.execution.selected.phase}</strong><p>{state.execution.selected.status}</p>{state.execution.selected.output&&<><h3>Action result</h3><pre aria-label="Action result">{JSON.stringify(state.execution.selected.output,null,2)}</pre></>}<details><summary>Exact action</summary><pre>{JSON.stringify(state.execution.selected.call,null,2)}</pre></details></div>}
-    {state.execution.outcomes.length>0&&<details><summary>Recent action results</summary><div className="room-object-list">{[...state.execution.outcomes].reverse().map(run=><button key={run.id} disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}><span>{capabilityDefinition(run.capability)?.label??run.capability} · {run.phase}</span><small>{run.id.slice(0,6)} · {run.status}</small></button>)}</div></details>}
+    {state.execution.outcomes.length>0&&<details><summary>Recent action results</summary><div className="room-object-list">{[...state.execution.outcomes].reverse().map(run=><button key={run.id} disabled={pending} onClick={()=>void execute({operation:'inspect',runId:run.id})}><span>{capabilityDefinition(run.capability)?.label??run.capability} Â· {run.phase}</span><small>{run.id.slice(0,6)} Â· {run.status}</small></button>)}</div></details>}
    </section>}
   </section>
  </div>;

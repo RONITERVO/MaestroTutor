@@ -11,8 +11,8 @@ namespace Maestro.Quest.Programs
     internal sealed class AnimationPlayCapability : CapabilityModule
     {
         internal sealed class Source {
-            public readonly string Kind,Channel;public readonly CapabilityModule Provider;public readonly string[] Fields;
-            public Source(string kind,string channel,CapabilityModule provider,params string[] fields) {Kind=kind;Channel=channel;Provider=provider;Fields=fields;}
+            public readonly string Kind,Channel;public readonly CapabilityModule Provider;public readonly string[] Fields;public readonly CapabilityStepAdapter Adapter;
+            public Source(string kind,string channel,CapabilityModule provider,params string[] fields) {Kind=kind;Channel=channel;Provider=provider;Fields=fields;Adapter=new("animation.play",provider,new JObject {["source.kind"]=kind,["channel"]=channel},fields.Select(f=>(f,"source."+f)).ToArray());}
             public JObject Schema {
                 get {
                     var schema=Provider.InputSchema;var properties=(JObject)schema["properties"];var required=(JArray)schema["required"];
@@ -23,15 +23,8 @@ namespace Maestro.Quest.Programs
                     schema["x-channels"]=new JArray(Provider.Channels);schema["x-requirements"]=new JArray(Provider.Requirements);return schema;
                 }
             }
-            public JObject Public(JObject flat) {
-                var args=(JObject)flat.DeepClone();var source=new JObject {["kind"]=Kind};
-                foreach(var field in Fields) {if(args[field]!=null)source[field]=args[field].DeepClone();args.Remove(field);}
-                args["source"]=source;args["channel"]=Channel;return args;
-            }
-            public JObject Native(JObject args) {
-                var flat=(JObject)args.DeepClone();flat.Remove("source");flat.Remove("channel");
-                foreach(var field in Fields)flat[field]=args["source"][field].DeepClone();return flat;
-            }
+            public JObject Public(JObject flat)=>Adapter.Public(flat);
+            public JObject Native(JObject args)=>Adapter.Native(args);
         }
         internal static readonly Source[] Sources={
             new("gesture","wholeTarget",new GestureCapability(),"gesture"),
@@ -42,8 +35,7 @@ namespace Maestro.Quest.Programs
             new("recipe","wholeTarget",new RecipeAnimationCapability()),
         };
         internal static Source Find(JObject args)=>Sources.SingleOrDefault(x=>x.Kind==(string)args["source"]?["kind"]&&x.Channel==(string)args["channel"]);
-        internal static Source Legacy(string id)=>Sources.SingleOrDefault(x=>x.Provider.Id==id);
-        internal static JArray Adapters()=>new(Sources.Select(x=>new JObject {["id"]=x.Provider.Id,["kind"]=x.Kind,["channel"]=x.Channel,["fields"]=new JArray(x.Fields),["label"]=x.Provider.Label}));
+        internal override IEnumerable<CapabilityStepAdapter> StepAdapters=>Sources.Select(s=>s.Adapter);
         public override string Id=>"animation.play";
         public override string Label=>"Play animation";
         public override string Description=>"Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. Inspect the selected variant's prerequisites; no automatic source substitution.";
@@ -51,7 +43,7 @@ namespace Maestro.Quest.Programs
         public override string Ownership=>"sourceChannels";
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget","upperBody"};
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","source.ready"};
-        public override JObject InputSchema=>new() {["type"]="object",["oneOf"]=new JArray(Sources.Select(x=>x.Schema)),["x-discriminators"]=new JArray("source.kind","channel")};
+        public override JObject InputSchema=>new() {["type"]="object",["title"]="Source and channel",["oneOf"]=new JArray(Sources.Select(x=>x.Schema)),["x-discriminators"]=new JArray("source.kind","channel")};
         public override JObject Example=>Sources[0].Public(new JObject {["target"]="maestro",["seconds"]=2,["gesture"]="greeting"});
         public override bool Validate(JObject arguments,out string error) {
             var source=Find(arguments);error="Choose a supported animation source and channel";

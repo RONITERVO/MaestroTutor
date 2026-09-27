@@ -4,7 +4,7 @@ import {parseRecipe} from './roomRecipe';
 import {behaviourCatalog,type BehaviourValueType} from './behaviourCatalog';
 export interface CapabilitySchema {
  type:'object'|'array'|'string'|'number'|'integer'|'boolean';
- oneOf?:CapabilitySchema[];'x-discriminators'?:string[];title?:string;'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];
+ oneOf?:CapabilitySchema[];'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
  format?:'unitQuaternion'|'boundedOffset'|'roomRecipe';'x-resource'?:'object';'x-requires'?:Record<string,string>;
@@ -42,7 +42,7 @@ export function capabilityBindingFields(id:string,args:Record<string,unknown>):R
 export function validateCapabilityValue(value:unknown,schema:CapabilitySchema):string|null {return validate(value,schema,'value');}
 function validate(value:unknown,schema:CapabilitySchema,path:string):string|null {
  const error=path+' does not match the capability contract';
- if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return selected?validate(value,selected,path):path+' has an unsupported source or channel';}
+ if(schema.oneOf){const selected=resolveCapabilitySchema(schema,value);return selected?validate(value,selected,path):path+' has an unsupported variant';}
  if(value===null&&schema.nullable)return null;
  switch(schema.type) {
   case 'object': {

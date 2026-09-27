@@ -185,3 +185,11 @@ IDs and independent operation cleanup remain. The catalog now has fourteen
 public actions; old numeric controls are isolated adapters. See
 [the contract, compatibility and evidence](QUEST_ANIMATION_VOCABULARY.md).
 Creation/spatial consolidation and the remaining runtime/release work are open.
+
+
+Typed creation checkpoint (2026-09-28): object.create combines primitive and recipe
+kinds with complete native examples, generated book/tray choices, common-field
+preservation and unchanged exact output/save/Undo behavior. Private editor
+projections are now generated descriptors. The catalog has thirteen public
+actions. See [contract, compatibility and evidence](QUEST_CREATION_VOCABULARY.md).
+Spatial consolidation and remaining runtime/release work are still open.

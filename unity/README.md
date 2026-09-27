@@ -238,3 +238,10 @@ Library choices keep exact downloaded motion IDs; arbitrary clip layering remain
 unsupported. The old prototype play IDs are no longer public capabilities; old
 programs remain visible as unavailable source for repair. See
 [typed animation contract](../docs/QUEST_ANIMATION_VOCABULARY.md).
+
+
+Creation programs use object.create with a Creation kind choice: shape or editable
+recipe. The recipe example includes the animated box robot, initially idle. The
+book and physical draft retain compatible values and result wiring when changing
+kind; Apply does not create an object. Old prototype creation IDs remain preserved
+as unavailable source. See [typed creation](../docs/QUEST_CREATION_VOCABULARY.md).

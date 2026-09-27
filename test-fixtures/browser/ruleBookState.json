@@ -12,7 +12,7 @@
   "selectedError": "",
   "sequences": [
     {
-      "id": "ba975ee00c504fbc841dc20542a76185",
+      "id": "b23b617956194b00b604852d02592d36",
       "name": "Action 1",
       "error": "",
       "steps": 1,
@@ -21,11 +21,11 @@
     }
   ],
   "selected": {
-    "id": "ba975ee00c504fbc841dc20542a76185",
+    "id": "b23b617956194b00b604852d02592d36",
     "name": "Action 1",
     "interruption": 0,
     "repeat": false,
-    "program": "{\"version\":2,\"entry\":\"main\",\"resources\":[\"maestro\",\"8cc90e26e1a34e33bb21a06532554ae6\"],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"wave\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"maestro\",\"seconds\":2.0,\"prop\":{\"objectId\":\"8cc90e26e1a34e33bb21a06532554ae6\",\"avatarHash\":\"\",\"hand\":\"right\",\"release\":\"return\",\"releaseAt\":1.0,\"offset\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}},\"source\":{\"kind\":\"gesture\",\"gesture\":\"pointing\"},\"channel\":\"wholeTarget\"},\"bindings\":{}}]}]}"
+    "program": "{\"version\":2,\"entry\":\"main\",\"resources\":[\"maestro\",\"ceee9cdb480846d08acfc6acfe6170ee\"],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"wave\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"maestro\",\"seconds\":2.0,\"source\":{\"gesture\":\"pointing\",\"kind\":\"gesture\"},\"prop\":{\"objectId\":\"ceee9cdb480846d08acfc6acfe6170ee\",\"avatarHash\":\"\",\"hand\":\"right\",\"release\":\"return\",\"releaseAt\":1.0,\"offset\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}},\"channel\":\"wholeTarget\"},\"bindings\":{}}]}]}"
   },
   "bindings": [],
   "buttons": [],
