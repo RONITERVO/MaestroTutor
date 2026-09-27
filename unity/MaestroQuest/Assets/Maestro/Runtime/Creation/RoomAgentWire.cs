@@ -15,6 +15,7 @@ namespace Maestro.Quest.Creation
             var json=JObject.Parse(JsonUtility.ToJson(state));
             if(state.inspection==null)json["inspection"]=JValue.CreateNull();
             else if(state.inspection.recipe==null)json["inspection"]["recipe"]=JValue.CreateNull();
+            if(state.motions==null)json["motions"]=JValue.CreateNull();
             if(state.rules==null)json["rules"]=JValue.CreateNull();
             else if(state.rules.selected==null)json["rules"]["selected"]=JValue.CreateNull();
             if(state.physics==null)json["physics"]=JValue.CreateNull();

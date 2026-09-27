@@ -64,6 +64,43 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
+        [UnityTest] public IEnumerator AgentSearchSharesBookPagesAndFeedsRealRulePlaybackWithoutSideEffects()
+        {
+            foreach(int i in Enumerable.Range(1,15).Where(x=>x!=5 && x!=12)) {
+                var add=editor.Motions.ImportAsync("extra-"+i+".glb",Clip(i,"Motion "+i));yield return Until(()=>add.IsCompleted);Assert.That(add.Exception,Is.Null);
+            }
+            var different=ModelFixture.Mixamo(json=>json["nodes"][5]["translation"][1]=.15);
+            var incompatible=editor.Motions.ImportAsync("other-rig.glb",different);yield return Until(()=>incompatible.IsCompleted);Assert.That(incompatible.Exception,Is.Null);
+            var imports=root.AddComponent<ImportWorkshop>();imports.Initialize(editor,authoring);
+            var book=root.AddComponent<LibraryBookController>();book.Initialize(editor,imports,rules);book.SetVisible(true);
+            var executor=new RoomAgentExecutor(editor);int originalRevision=editor.Revision,ruleRevision=rules.Revision;string selected=editor.SelectedId;
+            var query=new RoomMotionQuery {query="",offset=12};
+            var command=new RoomAgentCommand {action="motions",target="maestro",motionQuery=query};
+            var request=new RoomAgentRequest {version=2,commands=new[] {command}};
+            Assert.That(executor.Execute(request,out var error,out var created),Is.True,error);Assert.That(created,Is.Empty);
+            var page=executor.Motions.Observe();Assert.That(page.total,Is.EqualTo(15));Assert.That(page.entries.Length,Is.EqualTo(3));Assert.That(page.offset,Is.EqualTo(12));
+            var work=book.HandleAsync(new LibraryBookRequest {version=1,session=book.State.session,sequence=1,action="query",query="",offset=12,compatibleOnly=true});yield return Until(()=>work.IsCompleted);
+            Assert.That(page.entries.Select(x=>x.id),Is.EqualTo(book.State.entries.Select(x=>x.id)),"Human and agent browse the same page");
+            Assert.That(page.entries.Any(x=>x.id==incompatible.Result.Single().id),Is.False);
+            query.query="Walking";query.offset=0;Assert.That(executor.Execute(request,out error,out _),Is.True,error);
+            page=executor.Motions.Observe();Assert.That(page.entries.Single().id,Is.EqualTo(gait.id));Assert.That(page.entries.Single().downloaded,Is.True);
+            Assert.That(editor.Revision,Is.EqualTo(originalRevision));Assert.That(rules.Revision,Is.EqualTo(ruleRevision));Assert.That(editor.SelectedId,Is.EqualTo(selected));Assert.That(avatar.IsImportedClipPlaying,Is.False);
+            string output=Environment.GetEnvironmentVariable("MAESTRO_MOTION_SEARCH_EVIDENCE");
+            if(!string.IsNullOrEmpty(output)) {
+                Directory.CreateDirectory(output);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);var observation=observer.Observe();observation.motions=page;
+                File.WriteAllText(Path.Combine(output,"motion-search-state.json"),RoomAgentWire.Serialize(observation));
+            }
+            var sequence=rules.Selected;sequence.steps[0].motionId=page.entries.Single().id;
+            Assert.That(executor.Execute(new RoomAgentRequest {version=2,commands=new[] {new RoomAgentCommand {action="rules",rule=new RuleRequest {action="edit",revision=rules.Revision,edits=new[] {new RuleEdit {kind="save",sequence=sequence}}}}}},out error,out _),Is.True,error);
+            Assert.That(runtime.Trigger(sequence.id),Is.True);yield return Until(()=>avatar.LibraryMotionId==gait.id);runtime.StopAll();
+            var update=editor.Motions.UpdateAsync(gait.id,"Everyday walk",new[] {"calm"},true);yield return Until(()=>update.IsCompleted);Assert.That(update.Exception,Is.Null);
+            query.query="calm";query.favouritesOnly=true;Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(executor.Motions.Observe().entries.Single().name,Is.EqualTo("Everyday walk"));
+            var archive=editor.Motions.ArchiveAsync(gait.id,true);yield return Until(()=>archive.IsCompleted);Assert.That(executor.Motions.Observe().total,Is.Zero);
+            query.archivedOnly=true;Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(executor.Motions.Observe().entries.Single().archived,Is.True);
+            Assert.That(editor.SetMaestroModel(null),Is.True);yield return Until(()=>!avatar.ModelBusy);
+            page=executor.Motions.Observe();Assert.That(page.ready,Is.False);Assert.That(page.entries,Is.Empty);Assert.That(page.modelHash,Is.Empty);
+            Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("loaded imported model"));
+        }
         [UnityTest] public IEnumerator ProgramEditsKeepLibraryUsableAndProtectReferencedMotions()
         {
             var imports=root.AddComponent<ImportWorkshop>(); imports.Initialize(editor,authoring);

@@ -63,7 +63,7 @@ namespace Maestro.Quest.Book
     }
     [Serializable] public sealed class LibraryBookState
     {
-        public int version = 1, revision, ack, offset, total, pageSize = 12, stepIndex, sourceIndex, sourceCount, termsPage, termsPages;
+        public int version = 1, revision, ack, offset, total, pageSize = MotionLibrary.SearchPageSize, stepIndex, sourceIndex, sourceCount, termsPage, termsPages;
         public string session, query, status, ruleId, ruleName, sourceName, attribution;
         public bool visible, busy, readOnly, compatibleOnly, favouritesOnly, includeShort, canPreview, canWalk, canAssign;
         public LibraryBookEntry[] entries = Array.Empty<LibraryBookEntry>();
@@ -77,7 +77,7 @@ namespace Maestro.Quest.Book
     // session/sequence checks prevent stale or repeated polling from replaying it.
     public sealed class LibraryBookController : MonoBehaviour
     {
-        const int PageSize = 12, TermsSize = 1500;
+        const int TermsSize = 1500;
         RoomEditor editor; ImportWorkshop imports; RuleWorkshop rules; NativeBookBrowser browser; MaestroAvatar avatar;
         string session = Guid.NewGuid().ToString("N"), selectedId, query = "", message = "Choose a saved motion";
         int revision, ack, lastSequence, offset, sourceIndex, termsPage, operation,usagePage;
@@ -216,8 +216,8 @@ namespace Maestro.Quest.Book
             if (!editor || disposed) return;
             if (imports.LibraryMode && imports.SelectedLibraryMotionId != trayMotionId) { trayMotionId = imports.SelectedLibraryMotionId; selectedId = trayMotionId; }
             string rig = avatar && !avatar.ModelBusy && avatar.CustomModel ? avatar.CustomModel.MotionRigHash : null;
-            var matches = editor.Motions.List(query,compatibleOnly ? rig ?? "" : null,includeShort,favouritesOnly,archivedOnly);
-            offset = matches.Length == 0 ? 0 : Math.Min(offset/PageSize,(matches.Length-1)/PageSize)*PageSize;
+            var page = editor.Motions.Search(query,compatibleOnly ? rig ?? "" : null,includeShort,favouritesOnly,archivedOnly,offset);
+            offset = page.Offset;
             var selected = editor.Motions.Inspect(selectedId); var sequence = rules.Selected; int step = rules.SelectedStepIndex;
             var selectedStep = rules.SelectedStep;
             var target = selectedStep == null ? null : editor.Find(selectedStep.targetId);
@@ -231,10 +231,10 @@ namespace Maestro.Quest.Book
             if (selected != null && !checkingRetention && (retainedId != selected.id || Time.unscaledTime >= nextRetention)) _=CheckRetention(selected.id);
             State = new LibraryBookState {
                 revision = ++revision,ack = ack,session = session,visible = visible,busy = busy,readOnly = editor.Motions.ReadOnly,
-                query = query,offset = offset,total = matches.Length,compatibleOnly = compatibleOnly,favouritesOnly = favouritesOnly,includeShort = includeShort,archivedOnly=archivedOnly,usage=usage,
+                query = query,offset = offset,total = page.Total,compatibleOnly = compatibleOnly,favouritesOnly = favouritesOnly,includeShort = includeShort,archivedOnly=archivedOnly,usage=usage,
                 canRemoveDownload=selected != null && selected.archived && (!selected.removed || editor.Motions.PayloadPresent(selected.id)) && usage.protection == null && !editor.Motions.ReadOnly,
                 canForgetMotion=selected != null && selected.removed && !editor.Motions.PayloadPresent(selected.id) && usage.protection == null && !editor.Motions.ReadOnly,
-                entries = matches.Skip(offset).Take(PageSize).Select(x => View(x,rig)).ToArray(),selected = View(selected,rig),
+                entries = page.Entries.Select(x => View(x,rig)).ToArray(),selected = View(selected,rig),
                 canPreview = compatible,canWalk = compatible && !selected.Short,canAssign = selected != null && editor.Motions.Downloaded(selected.id) && model && model.Ready && (!targetAvatar || !targetAvatar.ModelBusy) && model.MotionRigHash == selected.rigHash,
                 ruleId = sequence?.id,ruleName = sequence?.name,stepIndex = step,sourceIndex = sourceIndex,sourceCount = sources.Length,sourceName = source?.name,
                 attribution = terms.Substring(termsPage*TermsSize,Math.Min(TermsSize,terms.Length-termsPage*TermsSize)),termsPage = termsPage,termsPages = pages,

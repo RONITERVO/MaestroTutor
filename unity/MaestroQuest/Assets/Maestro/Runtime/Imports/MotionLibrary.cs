@@ -104,6 +104,14 @@ namespace Maestro.Quest.Imports
                 (rigHash == null || x.rigHash == rigHash) && (string.IsNullOrWhiteSpace(query) || x.name.IndexOf(query,StringComparison.OrdinalIgnoreCase) >= 0 || x.tags.Any(t => t.IndexOf(query,StringComparison.OrdinalIgnoreCase) >= 0)))
                 .OrderByDescending(x => x.favourite).ThenBy(x => x.name,StringComparer.OrdinalIgnoreCase).ThenBy(x => x.id,StringComparer.Ordinal).Select(x => x.Copy()).ToArray();
         }
+        public const int SearchPageSize=12;
+        public sealed class SearchPage { public MotionEntry[] Entries; public int Offset,Total; }
+        public SearchPage Search(string query,string rigHash,bool includeShort,bool favouritesOnly,bool archivedOnly,int offset)
+        {
+            var matches=List(query,rigHash,includeShort,favouritesOnly,archivedOnly);
+            int page=matches.Length==0 ? 0 : Math.Min(Math.Max(0,offset)/SearchPageSize,(matches.Length-1)/SearchPageSize)*SearchPageSize;
+            return new SearchPage {Entries=matches.Skip(page).Take(SearchPageSize).ToArray(),Offset=page,Total=matches.Length};
+        }
         public async Task ArchiveAsync(string id,bool archived)
         {
             await writes.WaitAsync().ConfigureAwait(false);

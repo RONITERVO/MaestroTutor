@@ -20,6 +20,13 @@ namespace Maestro.Quest.Tests
             state.inspection=new RoomInspection {id="book"};state.rules=new Maestro.Quest.Rules.RuleView();
             json=RoomAgentWire.Serialize(state);Assert.That(json,Does.Contain("\"recipe\":null"));Assert.That(json,Does.Contain("\"selected\":null"));
         }
+        [Test] public void MotionSearchMatchesTheSharedWireExamples()
+        {
+            var examples=JsonUtility.FromJson<Fixtures>(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/room-motions.json")));
+            foreach(var sample in examples.cases) Assert.That(RoomControls.ValidWire(sample.json),Is.EqualTo(sample.valid),sample.name);
+            string json=RoomAgentWire.Serialize(new RoomAgentState {objects=Array.Empty<RoomAgentObject>()});
+            Assert.That(json,Does.Contain("\"motions\":null"));
+        }
         [Test] public void NativeControlsMatchTheSharedWireExamples()
         {
             var examples=JsonUtility.FromJson<Fixtures>(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/room-controls.json")));

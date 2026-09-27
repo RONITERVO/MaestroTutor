@@ -199,3 +199,10 @@ See [the program contract](../docs/QUEST_BEHAVIOUR_PROGRAMS.md) for the supporte
 subset and release limitations. Set `MAESTRO_PROGRAM_EVIDENCE` to a local output
 directory during `Verify-Quest.ps1` to capture real native observations for the
 web validator tests. No provider or headset is used by these PC checks.
+
+Saved motion discovery is shared by the book and original-app agent through
+`motions.v1`. Search by name/tag to obtain compatible native IDs before editing
+rules/programs; no provider client is added to Unity. See
+[QUEST_MOTION_DISCOVERY.md](../docs/QUEST_MOTION_DISCOVERY.md) for the query,
+compatibility/receipt boundaries and validation. Set `MAESTRO_MOTION_SEARCH_EVIDENCE`
+to an output directory during verification to capture the native search observation.

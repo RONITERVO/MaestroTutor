@@ -2,7 +2,29 @@
 
 This is development evidence, not a release acceptance report.
 
-## Latest: behavior programs and library compatibility — not installed
+## Latest: shared motion discovery — not installed
+
+APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-motion-search-3B2EB463.apk`.
+SHA256: `3B2EB463F3074110FE272C57C5DA3781FA78402B51EB8AA52FA0E75D52B36268`.
+Development signature v2 verifies; native libraries are ARM64 only. All 87 runtime
+source files match the verified Unity mirror and embedded web bytes match the
+production web build. 81 EditMode, 74 required PlayMode, 25 native Android and
+1,137 app tests pass. The three optional private-model/collection tests are skipped.
+Full app lint, TypeScript, prompt/core guards and release-config checks pass;
+Functions (25) and Live gateway (31) tests and both builds pass.
+
+The original app's agent can discover saved animations through the same compatible
+pages as the book, then use native IDs in existing rules/programs. See
+QUEST_MOTION_DISCOVERY.md. Agent/provider behavior is covered by mocked-provider
+journeys; native imported-model playback is covered separately in PlayMode. The
+actual native search snapshot passes the web bridge validation. These are PC checks,
+not headset or real-provider acceptance. Evidence: `.quest-evidence/motion-search/`.
+
+Device hold remains. After the user returns, preserve the installed room and check
+an explicit spoken/typed animation search, behavior creation from the returned name,
+book/agent result agreement, and avatar switching alongside the tests below.
+
+## Earlier: behavior programs and library compatibility — not installed
 
 APK: `D:/Projects/Builds/MaestroQuestVerify/Builds/Checkpoints/MaestroQuest-program-library-3EC36425.apk`.
 SHA256: `3EC364252AD3075A00A6250388E44519F946DFD6F4FA9716748C7FBEBDBA8184`.

@@ -18,6 +18,7 @@ namespace Maestro.Quest.Creation
         public Color color=Color.white;
         public RoomRecipe recipe;
         public RuleRequest rule;
+        public RoomMotionQuery motionQuery;
         public string operation;
         public ObjectPhysicsSettings physics;
         public AvatarMovementSettings movement;
@@ -51,6 +52,7 @@ namespace Maestro.Quest.Creation
         public RoomInspection inspection;
         public string workspaceView;
         public RuleView rules;
+        public RoomMotionView motions;
         public string[] capabilities;
         public RoomPhysicsObservation physics;
         public AvatarMovementObservation avatar;
@@ -65,7 +67,8 @@ namespace Maestro.Quest.Creation
         public bool RulesFocused { get; private set; }
         public string InspectionId { get; private set; }
         public string InspectedPart { get; private set; }
-        public RoomAgentExecutor(RoomEditor source) => editor=source;
+        public RoomMotionSearch Motions { get; }
+        public RoomAgentExecutor(RoomEditor source) { editor=source;Motions=new RoomMotionSearch(source); }
         bool Preconditions(RoomAgentRequest request,out string error)
         {
             error="The target changed; inspect its latest state before retrying.";
@@ -88,6 +91,10 @@ namespace Maestro.Quest.Creation
             created=Array.Empty<string>(); status="Invalid room request";
             if(request == null || (request.version != 1 && request.version != 2) || request.commands == null || request.commands.Length<1 || request.commands.Length>8) return false;
             var commands=request.commands;
+            if(commands.Any(command=>command?.action=="motions")) {
+                if(commands.Length!=1) {status="Motion searches must be sent on their own";return false;}
+                return Motions.Execute(commands[0],out status);
+            }
             if(commands.Any(command => command==null || RoomControls.IsControl(command.action) && !RoomControls.ValidCommand(command))) return false;
             if(commands.Any(command => RoomControls.Runtime(command.action)) && commands.Length!=1) {status="Runtime controls must be sent on their own";return false;}
             if(commands.Length==1 && RoomControls.Runtime(commands[0].action)) {
@@ -236,7 +243,7 @@ namespace Maestro.Quest.Creation
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);
             return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
-                capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),
+                motions=executor.Motions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),
                 visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
                 selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
                 objects=editor.Snapshot().objects.Select(x=>new RoomAgentObject {id=x.id,objectRevision=editor.ObjectRevision(x.id),name=x.name??x.kind.ToString(),kind=x.kind.ToString(),position=editor.Find(x.id) ? editor.Find(x.id).transform.localPosition : x.position,scale=x.scale,color=x.color,physics=RoomControls.Physics(x),

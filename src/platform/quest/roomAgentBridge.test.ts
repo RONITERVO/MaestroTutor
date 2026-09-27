@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {afterEach,describe,expect,it,vi} from 'vitest';
@@ -88,4 +89,16 @@ it('requires native capability and preserves object conditions for shared contro
  expect(client.receive(state({...controls,revision:4,avatar:{...controls.avatar,active:true}}))).toBe(false);
  expect(client.receive(state({...controls,revision:4,objects:[{...maestro,physics:{...maestro.physics,mass:100}}]}))).toBe(false);
  expect(client.receive(state({...controls,revision:4,capabilities:['physicsRun.v1','physicsRun.v1']}))).toBe(false);
+});
+
+it('accepts the actual Unity motion page and keeps search receipts tied to native acknowledgements',async()=>{
+ const native=JSON.parse(readFileSync('test-fixtures/browser/motionSearchState.json','utf8'));
+ const client=new RoomAgentClient();expect(client.receive(native)).toBe(true);
+ const command={action:'motions' as const,target:'maestro',motionQuery:native.motions.query};
+ const pending=client.request([command]);expect(client.snapshot().request?.commands).toEqual([command]);
+ expect(client.snapshot().request?.conditions).toEqual([{id:'maestro',revision:native.objects.find((o:any)=>o.id==='maestro').objectRevision}]);
+ expect(client.receive({...native,revision:2,ack:1})).toBe(true);expect((await pending).motions?.entries[0].id).toBe(native.motions.entries[0].id);
+ expect(client.receive({...native,revision:3,ack:1,motions:{...native.motions,total:999}})).toBe(false);
+ expect(client.receive({...native,revision:3,ack:1,motions:{...native.motions,ready:false}})).toBe(false);
+ expect(client.getSnapshot().state?.sceneRevision).toBe(native.sceneRevision);
 });

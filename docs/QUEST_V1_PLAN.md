@@ -19,6 +19,13 @@ motion-library integration and protects newer collection filenames on downgrade;
 its validation checkpoint is recorded in QUEST_BEHAVIOUR_PROGRAMS.md.
 
 
+PC-only motion discovery update (2026-09-27): the original Maestro agent can now
+search the native saved animation library by name/tag with compatible-rig filtering,
+favorites, archives and shared book pagination. Returned stable IDs feed existing
+rules/programs. Search does not select, play or modify the room. See
+QUEST_MOTION_DISCOVERY.md for scope and evidence; provider and headset acceptance
+remain open.
+
 Earlier implementation update (2026-09-26): validated Mixamo/Unity-named GLB
 humanoids can replace Maestro, including the user's actual Meshy export.
 Gaze and following use the shared pose rig and scanned-room navigation, with

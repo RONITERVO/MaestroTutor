@@ -1,4 +1,5 @@
 import { requireRoomCapabilities, validObjectPhysics, validAvatarMovement, validPhysicsObservation, validAvatarObservation } from '../../../shared/roomControls';
+import {validMotionSearchView} from '../../../shared/roomMotions';
 import {validRuleView} from '../../core-sdk/room/rules';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -31,6 +32,7 @@ export class RoomAgentClient {
     if(input.avatar!==undefined&&input.avatar!==null&&!validAvatarObservation(input.avatar))return false;
     if(input.objects.some(o=>o.physics!==undefined&&!validObjectPhysics(o.physics)||o.movement!==undefined&&o.movement!==null&&!validAvatarMovement(o.movement)||['held','simulating'].some(key=>o[key]!==undefined&&typeof o[key]!=='boolean')))return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
+    if(input.motions!==undefined&&input.motions!==null&&!validMotionSearchView(input.motions))return false;
     if(input.rules!==undefined&&input.rules!==null&&!validRuleView(input.rules))return false;
     if(input.workspaceView!==undefined&&!['objects','rules'].includes(input.workspaceView as string))return false;
     const inspection=input.inspection;

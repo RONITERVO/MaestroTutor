@@ -91,3 +91,19 @@ it('does not persist an action intent or dispatch a new capability to an older n
  await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{},{beforeDispatch})).rejects.toThrow('does not support');
  expect(execute).not.toHaveBeenCalled();expect(beforeDispatch).not.toHaveBeenCalled();
 });
+
+it('discovers native motion identities before saving an animation through the existing agent task',async()=>{
+ let current:RoomAgentState={...scene,capabilities:['motions.v1']};
+ const motionId='b'.repeat(32),query={query:'wave',offset:0,includeShort:false,favouritesOnly:false,archivedOnly:false};
+ const search={action:'motions',target:'maestro',motionQuery:query};
+ const save={action:'rules',rule:{action:'edit',revision:1,edits:[{kind:'save',reference:'wave',sequence:{id:'',name:'Wave',interruption:0,repeat:false,steps:[{id:'',action:7,targetId:'maestro',gesture:0,seconds:0,loop:false,motionId}]}}]}};
+ const ai=client([JSON.stringify({commands:[search]}),JSON.stringify({commands:[save]}),'{"commands":[]}']);
+ const execute=vi.fn(async(commands:any[])=>{
+  if(commands[0].action==='motions')current={...current,ack:1,status:'Found compatible wave',motions:{targetId:'maestro',modelHash:'c'.repeat(64),ready:true,status:'Found',query,offset:0,total:1,pageSize:12,entries:[{id:motionId,name:'Friendly wave',tags:['greeting'],duration:2,shortClip:false,favourite:false,archived:false,downloaded:true}]}};
+  else current={...current,ack:2,status:'Behavior saved',created:['d'.repeat(32)]};
+  return current;
+ });
+ const result=await runRoomActionTask({...input,prompt:'Create a waving action using my saved Friendly wave animation'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute.mock.calls.map(call=>call[0])).toEqual([[search],[save]]);expect(result.receipts).toHaveLength(2);expect(result.budgetExhausted).toBe(false);
+ const second:any=(ai.models.generateContentStream.mock.calls as any)[1][0];expect(JSON.parse(second.contents[0].parts[0].text).scene.motions.entries[0].id).toBe(motionId);expect(ai.live.connect).not.toHaveBeenCalled();
+});

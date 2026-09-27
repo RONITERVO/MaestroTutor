@@ -221,3 +221,12 @@ This milestone does not provide timers, arbitrary JavaScript/C#, Blockly round-t
 editing, cross-program libraries or durable native execution receipts. Browser
 checks replay real Unity observations but simulated edits; headset acceptance and
 performance testing are still required for release.
+
+## Compatible motion discovery (2026-09-27)
+
+`motions.v1` adds a read-only paged query to the existing command envelope. The
+book and agent use `MotionLibrary.Search`; downloaded results provide stable IDs
+for the existing behavior executor. Native observations invalidate compatibility
+when the target model changes. See QUEST_MOTION_DISCOVERY.md. This closes discovery
+for saved motions; walking/profile assignment, import and full action-catalogue
+parity remain unfinished.
