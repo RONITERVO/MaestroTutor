@@ -23,7 +23,7 @@ selection, reserve objects, interrupt playback or start an action. A query may
 succeed while `valid` or `available` is false. The last check is recomputed in
 native observations; readiness is not a reservation or a guarantee that later
 asset preparation will finish. Existing handlers revalidate at execution.
-Current ownership is conservative and covers whole targets and props.
+Ownership follows the native catalog channels. Whole-target claims conflict with every channel; props remain exclusive. See [avatar composition](QUEST_AVATAR_CHANNELS.md).
 
 Schemas mark object references using `x-resource: "object"`, sibling constraints
 using `x-requires`, and vector constraints using `format: "boundedOffset"` or

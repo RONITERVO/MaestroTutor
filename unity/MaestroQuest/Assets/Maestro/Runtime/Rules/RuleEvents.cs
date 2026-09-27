@@ -54,7 +54,7 @@ namespace Maestro.Quest.Rules
         }
         void WaitForEvent(Run run,float now)
         {
-            lastNow=now;run.Targets.Clear();run.Active=null;run.WaitSerial++;run.Ends=now+run.Machine.Wait.Seconds;
+            lastNow=now;run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();run.Active=null;run.WaitSerial++;run.Ends=now+run.Machine.Wait.Seconds;
             string name=run.Machine.Wait.Event;if(name==null)return;
             if(!subscriptions.TryGetValue(name,out var listeners))subscriptions[name]=listeners=new();
             listeners.Add(run);

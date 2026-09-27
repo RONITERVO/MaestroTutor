@@ -122,9 +122,12 @@ eliminate UI, provider evaluation or headset testing.
    State machines compose state with if/switch; first-class state-machine editing,
    durable state, wall-clock scheduling and hardware acceptance remain.
    See [event semantics and boundaries](QUEST_EVENT_PROGRAMS.md).
-5. Introduce per-channel actor intent ownership and compatible motion blending.
-   Test simultaneous walk/look/gesture/prop behaviour, manual takeover and missing
-   rigs. Verify actual Quest frame timing and comfort.
+5. **Initial channel composition implemented:** one-off and version-3 invocations
+   use catalog channel claims. An explicit upper-body gesture layers over included
+   or imported walking and gaze; isolated Stop preserves other owners. Full-body
+   clips, recordings and prop actions stay exclusive. Further clip masks, prop
+   layering and actual Quest frame timing/comfort remain.
+   See [avatar channels](QUEST_AVATAR_CHANNELS.md).
 6. Complete shared capability coverage, durable operation receipts, program trace
    UI and developer input/render adapters. Ship only after the release acceptance
    scenarios and headset/store checks pass.
@@ -147,5 +150,5 @@ The optional book exposes event blocks, state, signals and per-behaviour Stop.
 Saving does not enable a run; pause, edits and reload cancel without catch-up.
 See [the current contract and boundaries](QUEST_EVENT_PROGRAMS.md). Earlier notes
 marking all event waits/timers pending describe prior checkpoints. Durable state,
-wall-clock scheduling, parallel branches, channel blending and full release
+wall-clock scheduling, parallel branches, broader clip blending and full release
 acceptance remain open; no headset install or backend deployment is included.

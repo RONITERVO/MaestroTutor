@@ -61,7 +61,7 @@ namespace Maestro.Quest.Interaction
         {
             if (!AvatarEnabled && preferences.avatarStick == MovementStick.None) { Say("Choose a Maestro binding first"); return; }
             Interrupt(); AvatarEnabled=!AvatarEnabled;
-            if (AvatarEnabled) { animations.Stop(); rules?.Scheduler.StopTarget("maestro",true); avatar.Stop(); }
+            if (AvatarEnabled) { animations.Stop(); rules?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true); avatar.Stop(); }
             Say(AvatarEnabled ? "Maestro stick on — center the stick, then move" : "Maestro stick off");
         }
         public void ToggleUser()
@@ -123,7 +123,7 @@ namespace Maestro.Quest.Interaction
             {
                 if (!driving)
                 {
-                    rules?.Scheduler.StopTarget("maestro",true);
+                    rules?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true);
                     driving=avatar.Begin(Owner,AvatarSpatialMode.Manual,out var error);
                     if (!driving) { avatarGate.Reset(); Say(error); }
                 }

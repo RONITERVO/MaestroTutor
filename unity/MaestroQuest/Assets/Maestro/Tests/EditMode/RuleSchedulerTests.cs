@@ -67,6 +67,36 @@ namespace Maestro.Quest.Tests
             Assert.That(scheduler.Invocation(first),Is.Null);Assert.That(scheduler.CancelInvocation(first,out _),Is.False);
             Assert.That(scheduler.ObserveInvocations(null)["outcomes"].Count(),Is.EqualTo(16));
         }
+        [Test] public void ChannelClaimsPermitWalkingWithArmsButRetainWholeBodyAndPropExclusivity()
+        {
+            var scheduler=new RuleScheduler(new Actions());
+            JObject Call(string id)=>new JObject {["id"]=id,["version"]=1,["arguments"]=new JObject {["target"]="maestro",["seconds"]=10}};
+            var follow=Call("avatar.follow.user");var look=Call("avatar.look.user");
+            var arms=Call("avatar.gesture.upperBody");arms["arguments"]["gesture"]="greeting";
+            var body=Call("avatar.gesture.play");body["arguments"]["gesture"]="greeting";
+            Assert.That(scheduler.Invoke(follow,0,out var walking,out var error),Is.True,error);
+            Assert.That(scheduler.Invoke(arms,0,out var waving,out error),Is.True,error);
+            Assert.That(scheduler.Invoke(look,0,out _,out _),Is.False,"Follow already owns gaze");
+            Assert.That(scheduler.Invoke(arms,0,out _,out _),Is.False,"Two gestures cannot own the same arms");
+            Assert.That(scheduler.Invoke(body,0,out _,out _),Is.False,"Full body includes every channel");
+            Assert.That(scheduler.CancelInvocation(waving,out _),Is.True);
+            Assert.That((string)scheduler.Invocation(walking)["phase"],Is.EqualTo("running"));
+            Assert.That(scheduler.Invoke(arms,1,out waving,out _),Is.True);
+            scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser},true);
+            Assert.That((string)scheduler.Invocation(walking)["phase"],Is.EqualTo("cancelled"));
+            Assert.That((string)scheduler.Invocation(waving)["phase"],Is.EqualTo("running"));
+            scheduler.StopTarget("maestro",true);Assert.That(scheduler.RunningCount,Is.Zero,"Grabbing interrupts every owned channel");
+            Assert.That(scheduler.Invoke(body,2,out _,out _),Is.True);
+            Assert.That(scheduler.Invoke(arms,2,out _,out _),Is.False,"Conflicts are symmetric");
+            scheduler.StopAll();
+            var prop=Guid.NewGuid().ToString("N");
+            var carrying=new RuleStep {action=RuleActionKind.Gesture,seconds=5,propId=prop};
+            var call=new JObject {["id"]="avatar.gesture.play",["version"]=1,["arguments"]=Maestro.Quest.Programs.CapabilityArguments.FromStep(carrying)};
+            Assert.That(scheduler.Invoke(call,3,out _,out error),Is.True,error);
+            Assert.That(scheduler.Invoke(InvocationCall(target:prop),3,out _,out _),Is.False,"Props remain exclusive whole objects");
+            Assert.That(scheduler.Invoke(arms,3,out _,out _),Is.False);
+            arms["arguments"]["gesture"]="walk";Assert.That(scheduler.Invoke(arms,4,out _,out _),Is.False);
+        }
         sealed class Actions : IRuleActions
         {
             public readonly List<string> Started = new();

@@ -41,6 +41,28 @@ namespace Maestro.Quest.Tests
             s.Suspend(true);Assert.That(s.RunningCount,Is.Zero);s.Suspend(false);s.Tick(20);Assert.That(actions.Starts,Is.EqualTo(2));
             Assert.That(s.Trigger(sequence.id,21),Is.True);Assert.That(State(s,"count"),Is.EqualTo("0"),"Explicit new run initializes state");
         }
+        [Test] public void ReactiveLayersAcquireAtInvocationReleaseDuringWaitAndCannotStealAChannel()
+        {
+            var source=Source();Loop(source)[1]["then"][1]["capability"]="avatar.gesture.upperBody";
+            var sequence=Sequence(source);var a=new Actions();var scheduler=Scheduler(a,sequence);
+            var follow=JObject.Parse(@"{'id':'avatar.follow.user','version':1,'arguments':{'target':'maestro','seconds':10}}");
+            var wave=JObject.Parse(@"{'id':'avatar.gesture.upperBody','version':1,'arguments':{'target':'maestro','gesture':'greeting','seconds':10}}");
+            Assert.That(scheduler.Invoke(follow,0,out var walking,out _),Is.True);
+            Assert.That(scheduler.Trigger(sequence.id,0),Is.True);
+            scheduler.Emit(RuleEventKind.ItemTapped,"book",.1f);scheduler.Tick(.1f);
+            Assert.That(State(scheduler,"count"),Is.EqualTo("1"));
+            Assert.That(scheduler.RunningCount,Is.EqualTo(2));
+            Assert.That(scheduler.Invoke(wave,.2f,out _,out _),Is.False,"The active event invocation owns its arms");
+            scheduler.Tick(1.2f);Assert.That(scheduler.ObserveRuns().Single().waiting,Is.True);
+            Assert.That(scheduler.Invoke(wave,1.2f,out var other,out _),Is.True,"The sleeping program released its channel");
+            scheduler.Tick(1.5f);scheduler.Emit(RuleEventKind.ItemTapped,"book",1.6f);scheduler.Tick(1.6f);
+            Assert.That(scheduler.Outcomes.Single().phase,Is.EqualTo("failed"),"An event may not silently preempt another owner");
+            Assert.That((string)scheduler.Invocation(other)["phase"],Is.EqualTo("running"));
+            // The synthetic action duration is one second, so the original follow
+            // already completed; its receipt must remain terminal.
+            Assert.That((string)scheduler.Invocation(walking)["phase"],Is.EqualTo("completed"));
+            scheduler.StopAll();Assert.That(scheduler.TargetsBusy(new[]{"maestro"}),Is.False);
+        }
         [Test] public void TimersSkipMissedTicksAndStopCancelsAllWaits()
         {
             var p=Source();Loop(p).Clear();

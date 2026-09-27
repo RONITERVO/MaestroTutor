@@ -56,7 +56,15 @@ namespace Maestro.Quest.Rules
             if ((step.action == RuleActionKind.RecordedAnimation || step.action == RuleActionKind.ThrowRecording) && editor.Read(step.targetId).motion == null) { error = "Record an animation on the target first"; return false; }
             if (step.action == RuleActionKind.ThrowRecording && (!item.GetComponent<RigidRoomItem>() || !item.GetComponent<RigidRoomItem>().Dynamic || editor.Read(step.targetId).motion.frames.Length < 2 || !editor.PhysicsWorld || !editor.PhysicsWorld.Running))
             { error = "Throw recording needs a physical creation, two motion frames and running room physics"; return false; }
-            if (step.action == RuleActionKind.Gesture && !item.GetComponent<MaestroAvatar>()) { error = "Gestures need a compatible Maestro avatar"; return false; }
+            if ((step.action == RuleActionKind.Gesture || step.action == RuleActionKind.UpperBodyGesture) && !item.GetComponent<MaestroAvatar>()) { error = "Gestures need a compatible Maestro avatar"; return false; }
+            var tutor=item.GetComponent<MaestroAvatar>();
+            if(tutor && tutor.ModelBusy) {error="Wait for Maestro to finish loading";return false;}
+            // Direct tools/controller movement also own channels, even though
+            // they are not scheduler runs. A program cannot silently take them.
+            if(tutor && tutor.GetComponent<AvatarSpatialMotion>()?.Active==true && step.action!=RuleActionKind.UpperBodyGesture)
+            {error="Stop Maestro's current movement before starting a conflicting action";return false;}
+            if(tutor && tutor.UpperBodyActive && !RuleDocument.IsSpatial(step.action))
+            {error="An upper-body gesture is already running";return false;}
             if (step.action == RuleActionKind.RecipeAnimation)
             {
                 var recipe=editor.Read(step.targetId)?.recipe;
@@ -92,7 +100,7 @@ namespace Maestro.Quest.Rules
             if (!CanRun(step,out error)) return false;
             if (step.action == RuleActionKind.Wait) return true;
             var target = editor.Find(step.targetId); var avatar = target.GetComponent<MaestroAvatar>();
-            if (avatar && !RuleDocument.IsSpatial(step.action)) { avatar.GetComponent<AvatarSpatialMotion>()?.Stop(); avatar.SetEditing(true); }
+            if (avatar && step.action != RuleActionKind.UpperBodyGesture && !RuleDocument.IsSpatial(step.action)) { avatar.GetComponent<AvatarSpatialMotion>()?.Stop(); avatar.SetEditing(true); }
             var effect = new Effect { TargetId = step.targetId, Began = Time.unscaledTime,Step=step.Copy(),Duration=seconds }; effects.Add(runId,effect);
             target.GetComponent<RigidRoomItem>()?.SetAnimationOwner(effect,true);
             if (!string.IsNullOrEmpty(step.propId))
@@ -100,6 +108,10 @@ namespace Maestro.Quest.Rules
                 effect.PropReservation=editor.Find(step.propId).GetComponent<RigidRoomItem>();
                 if (effect.PropReservation.AnimationOwned) { error="Another animation owns this prop"; return false; }
                 effect.PropReservation.SetAnimationOwner(effect,true);
+            }
+            if(step.action==RuleActionKind.UpperBodyGesture) {
+                if(avatar.BeginUpperBody(runId,step.gesture.ToString()))return true;
+                error="This upper-body gesture is unavailable";return false;
             }
             if (RuleDocument.IsSpatial(step.action))
             {
@@ -161,6 +173,10 @@ namespace Maestro.Quest.Rules
         {
             error = null;
             if (!effects.TryGetValue(runId,out var effect)) return RuleActionState.Ready;
+            if(effect.Step.action==RuleActionKind.UpperBodyGesture) {
+                var tutor=editor?editor.Find(effect.TargetId)?.GetComponent<MaestroAvatar>():null;
+                if(!tutor || !tutor.UpperBodyOwnedBy(runId)) {error="The upper-body gesture was interrupted";return RuleActionState.Failed;}
+            }
             if(effect.Spatial&&!effect.Spatial.OwnedBy(runId)) {error=effect.Spatial.Status;return RuleActionState.Failed;}
             if (effect.Prop && !effect.Prop.Valid(out error)) return RuleActionState.Failed;
             if (effect.Preparation == null || effect.Started) return RuleActionState.Ready;
@@ -221,6 +237,10 @@ namespace Maestro.Quest.Rules
             if (effect.Recipe) effect.Recipe.StopRule();
             if (!editor) return;
             var item = editor.Find(effect.TargetId);
+            if(effect.Step.action==RuleActionKind.UpperBodyGesture) {
+                if(item)item.GetComponent<MaestroAvatar>()?.EndUpperBody(runId);
+                return; // Another owner may be walking: never restore the root or stop its clip.
+            }
             if (effect.Spatial) { effect.Spatial.End(runId); return; }
             if (item) item.GetComponent<MaestroAvatar>()?.SetEditing(false);
             if (!preservePlacement) editor.RestorePose(effect.TargetId);

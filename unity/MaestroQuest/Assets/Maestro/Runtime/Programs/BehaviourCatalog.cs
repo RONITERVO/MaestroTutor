@@ -27,10 +27,8 @@ namespace Maestro.Quest.Programs
             public ActionDefinition(string id, RuleActionKind kind, string label, string requirements="")
             {
                 Id=id;Kind=kind;Label=label;Duration="timed";
-                // Current executor reserves whole targets. Future layer support
-                // must change the actual handler before narrowing this contract.
-                Ownership=kind==RuleActionKind.Wait?"none":"exclusiveTargetAndProp";
-                Channels=Array.AsReadOnly(kind==RuleActionKind.Wait?Array.Empty<string>():new[] {"wholeTarget"});
+                Ownership=kind==RuleActionKind.Wait?"none":kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)?"exclusiveChannels":"exclusiveTargetAndProp";
+                Channels=Array.AsReadOnly(ActionChannels(kind));
                 Requirements=Array.AsReadOnly(requirements.Split(' ',StringSplitOptions.RemoveEmptyEntries));
             }
         }
@@ -65,6 +63,7 @@ namespace Maestro.Quest.Programs
         public static readonly IReadOnlyList<ActionDefinition> Actions=Array.AsReadOnly(new[] {
             new ActionDefinition("animation.recording.play",RuleActionKind.RecordedAnimation,"Recorded animation","target.exists target.unheld authoring.inactive recording.available"),
             new ActionDefinition("avatar.gesture.play",RuleActionKind.Gesture,"Gesture","target.exists target.unheld authoring.inactive avatar.available"),
+            new ActionDefinition("avatar.gesture.upperBody",RuleActionKind.UpperBodyGesture,"Upper-body gesture","target.exists target.unheld authoring.inactive avatar.available"),
             new ActionDefinition("time.wait",RuleActionKind.Wait,"Wait"),
             new ActionDefinition("object.recording.throw",RuleActionKind.ThrowRecording,"Throw recording","target.exists target.unheld authoring.inactive recording.twoFrames rigidBody.dynamic physics.running"),
             new ActionDefinition("avatar.look.user",RuleActionKind.LookAtUser,"Look at user","target.exists target.unheld authoring.inactive avatar.spatialReady"),
@@ -98,6 +97,24 @@ namespace Maestro.Quest.Programs
         {
             step=null;var action=Action(id);error="Unknown capability or unsupported capability version";
             return action!=null && action.Version==version && action.TryArguments(arguments,out step,out error);
+        }
+        public static string[] ActionChannels(RuleActionKind kind)=>kind switch {
+            RuleActionKind.Wait=>Array.Empty<string>(),
+            RuleActionKind.UpperBodyGesture=>new[] {"upperBody"},
+            RuleActionKind.LookAtUser=>new[] {"gaze"},
+            RuleActionKind.FollowUser=>new[] {"locomotion","gaze"},
+            _=>new[] {"wholeTarget"}
+        };
+        public readonly struct Claim
+        {
+            public readonly string Target,Channel;
+            public Claim(string target,string channel) {Target=target;Channel=channel;}
+            public bool Conflicts(Claim other)=>Target==other.Target&&(Channel==other.Channel||Channel=="wholeTarget"||other.Channel=="wholeTarget");
+        }
+        public static Claim[] Claims(RuleStep step) {
+            var claims=ActionChannels(step.action).Select(channel=>new Claim(step.targetId,channel)).ToList();
+            if(!string.IsNullOrEmpty(step.propId))claims.Add(new Claim(step.propId,"wholeTarget"));
+            return claims.ToArray();
         }
         public static bool HasAction(RuleActionKind kind)=>actions.ContainsKey(kind);
         public static EventDefinition Event(RuleEventKind kind)=>events.TryGetValue(kind,out var value)?value:null;

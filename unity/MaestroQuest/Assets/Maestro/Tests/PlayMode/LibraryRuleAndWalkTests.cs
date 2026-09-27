@@ -64,6 +64,26 @@ namespace Maestro.Quest.Tests
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
+        [UnityTest] public IEnumerator ImportedWalkAndUpperBodyLayerRetargetTogetherWithoutLosingTheMotionLease()
+        {
+            avatar.SetEditing(true);avatar.SetWalkReference(-1,gait.id,editor.Motions);
+            for(int i=0;i<45;i++) {avatar.SpatialWalk(.65f);yield return null;}
+            Assert.That(avatar.LibraryMotionId,Is.EqualTo(gait.id));
+            var hand=avatar.PoseRig.Bone(PoseJoint.RightUpperArm);var before=hand.rotation;
+            var clipTime=avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg).rotation;
+            var call=Newtonsoft.Json.Linq.JObject.Parse(@"{'id':'avatar.gesture.upperBody','version':1,'arguments':{'target':'maestro','seconds':10,'gesture':'greeting'}}");
+            Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out var run,out var error),Is.True,error);
+            for(int i=0;i<30;i++) {avatar.SpatialWalk(.65f);yield return null;}
+            Assert.That(avatar.LibraryMotionId,Is.EqualTo(gait.id),"Upper-body sampling must not stop or replace the imported gait");
+            Assert.That(Quaternion.Angle(before,hand.rotation),Is.GreaterThan(70),"The imported visible arm follows the composed canonical pose");
+            Assert.That(Quaternion.Angle(clipTime,avatar.PoseRig.Bone(PoseJoint.LeftUpperLeg).rotation),Is.GreaterThan(1));
+            Assert.That(runtime.Scheduler.CancelInvocation(run,out _),Is.True);Assert.That(avatar.LibraryMotionId,Is.EqualTo(gait.id));
+            Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out run,out error),Is.True,error);
+            avatar.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",true);
+            Assert.That(avatar.UpperBodyActive,Is.False);Assert.That(avatar.LibraryMotionId,Is.Null);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            avatar.SendMessage("OnApplicationPause",false);runtime.SendMessage("OnApplicationPause",false);
+            yield return null;Assert.That(avatar.UpperBodyActive,Is.False);Assert.That(avatar.LibraryMotionId,Is.Null,"Resume cannot replay an interrupted layer");
+        }
         [UnityTest] public IEnumerator AgentActivityAssignmentsShareBookRevisionAtomicityUndoAndRealPlayback()
         {
             var imports=root.AddComponent<ImportWorkshop>();imports.Initialize(editor,authoring);

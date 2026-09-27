@@ -25,7 +25,7 @@ describe('shared behaviour contract',()=>{
  it('keeps native and web action/event enum identities aligned',()=>{
   const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs','utf8');
   for(const [name,values] of Object.entries({RuleActionKind:ruleActions,RuleGesture:ruleGestures,RuleEventKind:ruleEvents,RuleCondition:ruleConditions,RuleInterruption:rulePolicies,ButtonMount:ruleMounts})) {
-   const match=source.match(new RegExp(`enum ${name} \{([^}]+)\}`));expect(match).not.toBeNull();expect(match![1].split(',').map(s=>s.trim().toLowerCase())).toEqual(values.map(s=>s.replace(/ /g,'').toLowerCase()));
+   const match=source.match(new RegExp(`enum ${name} \{([^}]+)\}`));expect(match).not.toBeNull();expect(match![1].split(',').map(s=>s.trim().toLowerCase())).toEqual(values.map(s=>s.replace(/[ -]/g,'').toLowerCase()));
   }
  });
 });

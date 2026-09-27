@@ -73,9 +73,9 @@ namespace Maestro.Quest.Creation
                 var runtime=editor.GetComponent<RoomRules>();
                 if(!runtime)error="Action runtime is not ready";
                 else {
-                    occupied=runtime.Scheduler?.TargetsBusy(resources)==true;
+                    occupied=runtime.Scheduler?.ActionBusy(step)==true;
                     available=runtime.CanRun(step,out error);
-                    if(available&&occupied) {available=false;error="A running behaviour currently owns one of these objects";}
+                    if(available&&occupied) {available=false;error="A running action owns a required animation channel or object";}
                     if(available&&!runtime.Scheduler.HasCapacity) {available=false;error="All action slots are currently in use";}
                 }
             }

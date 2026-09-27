@@ -63,7 +63,7 @@ Conversational authoring remains the default interface.
 
 Version-3 resource declarations bound what a program may use; idle subscriptions
 do not reserve objects. Each native invocation acquires its target and prop through
-the existing scheduler/handlers. Occupied resources reject that invocation; no
+the existing scheduler/handlers using [catalog channels](QUEST_AVATAR_CHANNELS.md). Conflicting claims reject that invocation; no
 hidden queue or preemption. Grabbing cancels a currently owning action. Waiting
 listeners can still observe grabs/releases. Room edits cancel programs before
 targets change. Version 2 retains its whole-run reservation policy.
@@ -117,5 +117,5 @@ Web tests use the same program fixture and shared bridge.
 
 This is not a completed Quest release. Hardware timing/readability and real-provider
 planning remain unverified. Wall-clock/background scheduling, durable/resumable state,
-parallel branches, animation channels, richer state-machine authoring, full capability
+parallel branches, broader animation layering, richer state-machine authoring, full capability
 coverage and durable receipts remain open.

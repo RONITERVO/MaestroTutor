@@ -69,7 +69,7 @@ namespace Maestro.Quest.Avatar
                 if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near the scanned floor, then try walking"; Say(error); return false; }
             }
             Stop(); manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
-            avatar.SetEditing(true); avatar.SpatialWalk(0);
+            avatar.SetEditing(true,preserveUpperBody:true); avatar.SpatialWalk(0);
             Say(value == AvatarSpatialMode.Manual ? "Maestro stick active — center it to stop" : value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
         }
         public void End(string identity) { if (owner == identity) Stop(); }
@@ -77,7 +77,7 @@ namespace Maestro.Quest.Avatar
         {
             if (!Active) return;
             owner = null; corners = Array.Empty<Vector3>();
-            if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false); }
+            if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false,preserveUpperBody:true); }
             if (editor) editor.RememberPlacement("maestro");
             Say("Maestro stopped — placement saved");
         }

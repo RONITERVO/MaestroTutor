@@ -26,6 +26,7 @@ namespace Maestro.Quest.Rules
             public RuleSequence Sequence;
             public RuleBinding Binding;
             public HashSet<string> Targets;
+            public BehaviourCatalog.Claim[] Claims=Array.Empty<BehaviourCatalog.Claim>();
             public float Ends, Duration, PrepareDeadline;
             public bool Preparing,Computing;
             public int EventDepth,WaitSerial;
@@ -51,6 +52,9 @@ namespace Maestro.Quest.Rules
         public int PreparingCount => running.Count(x => x.Preparing);
         public int QueuedCount => queued.Count;
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
+        static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
+        static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
+        public bool ActionBusy(RuleStep step)=>running.Any(run=>Conflicts(run,BehaviourCatalog.Claims(step)));
         public string LastError { get; private set; }
         public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Machine?.Wait!=null?x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
             waiting=x.Machine?.Wait!=null,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
@@ -104,7 +108,7 @@ namespace Maestro.Quest.Rules
             if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
             if (!BindingStillValid(binding)) return false;
             var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
-            var conflicts = running.Where(x => x.Sequence.id == sequenceId || x.Targets.Overlaps(targets)).ToArray();
+            var conflicts = running.Where(x => x.Sequence.id == sequenceId || Conflicts(x,Whole(targets))).ToArray();
             if (conflicts.Length > 0 || !HasCapacity)
             {
                 if (sequence.interruption == RuleInterruption.Ignore) { LastError = "An action already owns this target"; return false; }
@@ -116,7 +120,7 @@ namespace Maestro.Quest.Rules
                 }
                 foreach (var run in conflicts) Stop(run,false);
             }
-            var next = new Run { Id = Guid.NewGuid().ToString("N"), Sequence = sequence.Copy(), Binding = binding?.Copy(), Targets = targets };
+            var next = new Run { Id = Guid.NewGuid().ToString("N"), Sequence = sequence.Copy(), Binding = binding?.Copy(), Targets = targets, Claims=Whole(targets) };
             next.Machine=new ProgramMachine(sequence.Compile(out _),this);
             running.Add(next); return StartStep(next,now);
         }
@@ -141,8 +145,9 @@ namespace Maestro.Quest.Rules
             }
             if(run.Reactive) {
                 var targets=RuleDocument.Targets(run.Active).ToHashSet();
-                if(running.Any(x=>x!=run&&x.Targets.Overlaps(targets))) {LastError="An action already owns this target";Stop(run,false,"failed",LastError);return false;}
-                run.Targets=targets;
+                var claims=BehaviourCatalog.Claims(run.Active);
+                if(running.Any(x=>x!=run&&Conflicts(x,claims))) {LastError="An action already owns this target";Stop(run,false,"failed",LastError);return false;}
+                run.Targets=targets;run.Claims=claims;
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || seconds < .01f || seconds > 30)
@@ -179,7 +184,7 @@ namespace Maestro.Quest.Rules
                 if (actions is IRuleCompletion completion)
                 { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
                 else actions.Stop(run.Id,false);
-                run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Machine.BeginActivation();run.EventDepth=0;}
+                run.Active=null;if(run.Reactive) {run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();run.Machine.BeginActivation();run.EventDepth=0;}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }
@@ -188,9 +193,18 @@ namespace Maestro.Quest.Rules
                 var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
                 if (sequence == null || !BindingStillValid(pending.Binding)) { queued.Remove(pending); continue; }
                 var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
-                if (!HasCapacity || running.Any(x => x.Sequence.id == sequence.id || x.Targets.Overlaps(targets))) continue;
+                if (!HasCapacity || running.Any(x => x.Sequence.id == sequence.id || Conflicts(x,Whole(targets)))) continue;
                 queued.Remove(pending); Trigger(sequence.id,now,pending.Binding);
             }
+        }
+        public void StopConflicting(RuleStep step,bool preservePlacement)
+        {
+            var claims=BehaviourCatalog.Claims(step);
+            foreach(var run in running.Where(x=>Conflicts(x,claims)).ToArray())Stop(run,preservePlacement);
+            // Pending v2 sequences reserve whole objects. Pending v3 programs
+            // own nothing until their next invocation and are rechecked then.
+            queued.RemoveAll(x=>document.sequences.FirstOrDefault(y=>y.id==x.SequenceId) is RuleSequence sequence &&
+                sequence.Compile(out _).Version!=3 && Whole(sequence.Targets()).Any(claim=>claims.Any(claim.Conflicts)));
         }
         public void StopTarget(string targetId, bool preservePlacement)
         {

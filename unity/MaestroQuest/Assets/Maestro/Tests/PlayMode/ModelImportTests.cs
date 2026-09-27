@@ -239,7 +239,7 @@ namespace Maestro.Quest.Tests
             animations.SendMessage("OnApplicationPause",true); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             animations.SendMessage("OnApplicationPause",false);
             rules.NewSequence();
-            for (int i=0;i<7 && rules.Selected.SimpleSteps()[0].action != RuleActionKind.ImportedClip;i++) rules.CycleAction();
+            for (int i=0;i<Enum.GetValues(typeof(RuleActionKind)).Length && rules.Selected.SimpleSteps()[0].action != RuleActionKind.ImportedClip;i++) rules.CycleAction();
             var step = rules.Selected.SimpleSteps()[0]; Assert.That(step.action,Is.EqualTo(RuleActionKind.ImportedClip));
             Assert.That(step.clipModelHash,Is.EqualTo(avatar.ModelHash)); Assert.That(step.seconds,Is.Zero);
             Assert.That(runtime.Trigger(rules.Selected.id),Is.True,runtime.Scheduler.LastError);

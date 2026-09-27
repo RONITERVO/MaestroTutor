@@ -57,9 +57,12 @@ namespace Maestro.Quest.Tests
             ball.GetComponent<RigidRoomItem>().Teleported(); editor.RememberPlacement(editor.Identity(ball));
             var pose=avatar.PoseRig.Capture();
             editor.SaveAnimation("maestro",new RoomMotion { frames=new[] { new MotionFrame { position=avatar.transform.localPosition,joints=pose },new MotionFrame { time=1,position=avatar.transform.localPosition+Vector3.right,joints=pose } } },null,false);
-            rules.NewSequence(); for (int i=0;i<8 && rules.Selected.SimpleSteps()[0].action != RuleActionKind.RecordedAnimation;i++) rules.CycleAction();
+            rules.NewSequence(); for (int i=0;i<Enum.GetValues(typeof(RuleActionKind)).Length && rules.Selected.SimpleSteps()[0].action != RuleActionKind.RecordedAnimation;i++) rules.CycleAction();
+            Assert.That(rules.Selected.SimpleSteps()[0].action,Is.EqualTo(RuleActionKind.RecordedAnimation));
             editor.Select(ball); rules.UseProp(); rules.FitProp();
-            while (rules.Selected.SimpleSteps()[0].propRelease != release) rules.CyclePropRelease();
+            for(int i=0;i<Enum.GetValues(typeof(PropRelease)).Length && rules.Selected.SimpleSteps()[0].propRelease != release;i++) rules.CyclePropRelease();
+            Assert.That(rules.Selected.SimpleSteps()[0].propId,Is.EqualTo(editor.Identity(ball)));
+            Assert.That(rules.Selected.SimpleSteps()[0].propRelease,Is.EqualTo(release));
             for (int i=0;i<20 && Mathf.Abs(rules.Selected.SimpleSteps()[0].propReleaseAt-at)>.001f;i++) rules.CyclePropTime();
             world.SetSurfaces(true,"Synthetic room aligned"); world.StartPhysics();
         }

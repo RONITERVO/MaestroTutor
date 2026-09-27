@@ -20,6 +20,14 @@ it.each(behaviourCatalog.actions)('uses the same named $id contract for simple a
  expect(validCapabilityInvocation({...call,version:2})).toBe(false);
  expect(validCapabilityInvocation({...call,arguments:{...call.arguments,engineCode:'unsupported'}})).toBe(false);
 });
+it('declares an upper-body action without changing saved full-body gestures',()=>{
+ expect(capabilityDefinition('avatar.gesture.play')?.channels).toEqual(['wholeTarget']);
+ expect(capabilityDefinition('avatar.gesture.upperBody')?.channels).toEqual(['upperBody']);
+ expect(capabilityDefinition('avatar.follow.user')?.channels).toEqual(['locomotion','gaze']);
+ expect(validateCapabilityArguments('avatar.gesture.upperBody',1,{target:'maestro',gesture:'greeting',seconds:2})).toBeNull();
+ expect(validateCapabilityArguments('avatar.gesture.upperBody',1,{target:'maestro',gesture:'walk',seconds:2})).not.toBeNull();
+ expect(validateCapabilityArguments('avatar.gesture.upperBody',1,{target:'book',gesture:'greeting',seconds:2})).not.toBeNull();
+});
 it('rejects malformed public calls and keeps returned schemas detached',()=>{
  const schema=capabilityDefinition('time.wait')!;schema.input.properties!.seconds.maximum=10000;
  for(const seconds of [31,-1,NaN,Infinity,'1',null])expect(validateCapabilityArguments('time.wait',1,{seconds})).not.toBeNull();

@@ -101,3 +101,16 @@ it('adds event blocks without flattening the current program and exposes shared 
  expect(updated.state).toEqual(original.state);expect(updated.events).toEqual(original.events);const previousLoop=original.functions[0].body[0],loop=updated.functions[0].body[0];if(previousLoop.op!=='forever'||loop.op!=='forever')throw new Error('Expected Forever');expect(loop.body.slice(0,-1)).toEqual(previousLoop.body);expect(loop.body[loop.body.length-1].op).toBe('sleep');
  await act(async()=>{client.receive({...current,revision:3,ack:2,rules:{...current.rules!,revision:5,selected:saved}});});
 });
+
+
+it('authors the upper-body capability through the same simple editor and preserves stable node IDs',async()=>{
+ const client=new RoomAgentClient();client.receive(state());const screen=render(<RuleWorkspace client={client}/>);
+ fireEvent.change(screen.getByLabelText('Step 1 action'),{target:{value:'9'}});
+ fireEvent.change(screen.getByLabelText('Step 1 gesture'),{target:{value:'1'}});
+ expect((screen.getByRole('option',{name:'Walk'}) as HTMLOptionElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;
+ expect(JSON.parse(updated.program).functions[0].body[0]).toMatchObject({id:step,capability:'avatar.gesture.upperBody',version:1,arguments:{target:'maestro',gesture:'pointing',seconds:2.5}});
+ await act(async()=>{client.receive(state({revision:2,ack:1,rules:{...rules(),revision:5,selected:updated}}));});
+ expect((screen.getByLabelText('Step 1 action') as HTMLSelectElement).value).toBe('9');
+});

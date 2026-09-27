@@ -35,10 +35,10 @@ namespace Maestro.Quest.Programs
         public static JObject Schema(RuleActionKind kind)
         {
             var p=new JObject();
-            if(kind!=RuleActionKind.Wait)p["target"]=kind==RuleActionKind.Gesture||RuleDocument.IsSpatial(kind)
+            if(kind!=RuleActionKind.Wait)p["target"]=kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind)
                 ? Choice("maestro") : Text("^(maestro|book|[a-fA-F0-9]{32})$",32);
-            if(kind!=RuleActionKind.ThrowRecording)p["seconds"]=Number(kind==RuleActionKind.Wait||kind==RuleActionKind.Gesture||RuleDocument.IsSpatial(kind) ? .1 : 0,30);
-            if(kind==RuleActionKind.Gesture)p["gesture"]=Choice(Gestures);
+            if(kind!=RuleActionKind.ThrowRecording)p["seconds"]=Number(kind==RuleActionKind.Wait||kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture||RuleDocument.IsSpatial(kind) ? .1 : 0,30);
+            if(kind==RuleActionKind.Gesture||kind==RuleActionKind.UpperBodyGesture)p["gesture"]=Choice(kind==RuleActionKind.UpperBodyGesture?Gestures.Where(x=>x!="walk").ToArray():Gestures);
             if(kind==RuleActionKind.RecordedAnimation||kind==RuleActionKind.ImportedClip||kind==RuleActionKind.LibraryMotion||kind==RuleActionKind.RecipeAnimation)
                 p["loop"]=new JObject {["type"]="boolean"};
             if(kind==RuleActionKind.ImportedClip) {p["modelHash"]=Text("^(|[a-f0-9]{64})$",64);p["clipIndex"]=Number(0,31,true);}

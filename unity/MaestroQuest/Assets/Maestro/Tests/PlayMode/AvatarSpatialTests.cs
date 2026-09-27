@@ -20,6 +20,14 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 namespace Maestro.Quest.Tests
 {
+    // Coroutines resume before LateUpdate. Read the pose after avatar layers,
+    // gaze and retargeting, at the same stage consumed by rendering.
+    [DefaultExecutionOrder(500)]
+    public sealed class AvatarChannelProbe:MonoBehaviour
+    {
+        public Action Sample;
+        void LateUpdate()=>Sample?.Invoke();
+    }
     public sealed class AvatarSpatialTests
     {
         GameObject root, viewer;
@@ -64,6 +72,99 @@ namespace Maestro.Quest.Tests
             editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,tutor,directory,world);
             authoring = root.AddComponent<AnimationWorkshop>(); authoring.Initialize(editor);
             motion = tutor.gameObject.AddComponent<AvatarSpatialMotion>(); motion.Initialize(editor,authoring,room,navigation,() => tracked);
+        }
+        [UnityTest] public IEnumerator UpperBodyGestureCooperatesWithWalkingAndGazeAndStopsIndependently()
+        {
+            Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12));Tutor();Ready();
+            viewer.transform.position=new Vector3(1.5f,1.6f,5);
+            var actions=new RoomRuleActions(editor,authoring);var scheduler=new RuleScheduler(actions);
+            Newtonsoft.Json.Linq.JObject Call(string id)=>new() {["id"]=id,["version"]=1,
+                ["arguments"]=new Newtonsoft.Json.Linq.JObject {["target"]="maestro",["seconds"]=10}};
+            var follow=Call("avatar.follow.user");
+            var wave=Call("avatar.gesture.upperBody");wave["arguments"]["gesture"]="greeting";
+            Assert.That(scheduler.Invoke(follow,0,out var walking,out var error),Is.True,error);
+            var hand=avatar.PoseRig.CanonicalBone(PoseJoint.RightUpperArm);
+            var foot=avatar.PoseRig.CanonicalBone(PoseJoint.LeftUpperLeg);
+            var head=avatar.PoseRig.CanonicalBone(PoseJoint.Head);
+            Quaternion shownArm=Quaternion.identity,shownLeg=Quaternion.identity,shownHead=Quaternion.identity;
+            var probe=avatar.gameObject.AddComponent<AvatarChannelProbe>();Action capture=null;
+            probe.Sample=()=>{shownArm=hand.localRotation;shownLeg=foot.localRotation;shownHead=head.rotation;var pending=capture;capture=null;pending?.Invoke();};
+            yield return new WaitForSeconds(.25f);
+            var handBefore=shownArm;var footBefore=shownLeg;
+            var start=avatar.transform.position;
+            Assert.That(scheduler.Invoke(wave,0,out var waving,out error),Is.True,error);
+            yield return new WaitForSeconds(.4f);
+            Assert.That(motion.OwnedBy(walking),Is.True);Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
+            Assert.That(Vector3.Distance(start,avatar.transform.position),Is.GreaterThan(.1f));
+            Assert.That(Quaternion.Angle(handBefore,shownArm),Is.GreaterThan(70),"A greeting must raise the arm, not merely restore the bind pose");
+            var reference=UnityEngine.Object.Instantiate(Resources.Load<GameObject>("Avatars/DefaultMaestro"),root.transform);
+            if(!reference.TryGetComponent<Animator>(out var referenceAnimator))referenceAnimator=reference.AddComponent<Animator>();referenceAnimator.enabled=false;
+            var clip=System.Linq.Enumerable.First(Resources.Load<RuntimeAnimatorController>("Avatars/MaestroAnimations").animationClips,x=>x.name.Split('|')[^1]=="Greeting");
+            clip.SampleAnimation(reference,.4f);
+            var referenceArm=System.Linq.Enumerable.Single(reference.GetComponentsInChildren<Transform>(),x=>x.name==PoseJoint.RightUpperArm.ToString());
+            Assert.That(Quaternion.Angle(referenceArm.localRotation,shownArm),Is.LessThan(5),"The composed arm must match the actual authored clip");
+            reference.SetActive(false);UnityEngine.Object.Destroy(reference);
+            Assert.That(Quaternion.Angle(footBefore,shownLeg),Is.GreaterThan(2),"The base gait keeps animating");
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_CHANNEL_EVIDENCE");
+            if(!string.IsNullOrEmpty(evidence)) {
+                Directory.CreateDirectory(evidence);
+                File.WriteAllText(Path.Combine(evidence,"walking-and-wave.json"),new Newtonsoft.Json.Linq.JObject {
+                    ["execution"]=scheduler.ObserveInvocations(waving),["distanceMoved"]=Vector3.Distance(start,avatar.transform.position),
+                    ["armDegrees"]=Quaternion.Angle(handBefore,shownArm),["legDegrees"]=Quaternion.Angle(footBefore,shownLeg)
+                }.ToString());
+                bool captured=false;capture=()=>{CaptureLayer(Path.Combine(evidence,"walking-and-wave.png"));captured=true;};
+                yield return new WaitUntil(()=>captured);
+            }
+            var atStop=avatar.transform.position;
+            Assert.That(scheduler.CancelInvocation(waving,out _),Is.True);
+            Assert.That(avatar.transform.position,Is.EqualTo(atStop),"Stopping arms cannot restore an old room placement");
+            Assert.That(motion.OwnedBy(walking),Is.True);
+            yield return new WaitForSeconds(.2f);Assert.That(Vector3.Distance(atStop,avatar.transform.position),Is.GreaterThan(.05f));
+            Assert.That(scheduler.Invoke(wave,1,out waving,out error),Is.True,error);
+            Assert.That(scheduler.CancelInvocation(walking,out _),Is.True);Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
+            var stopped=avatar.transform.position;yield return new WaitForSeconds(.2f);Assert.That(avatar.transform.position,Is.EqualTo(stopped));
+            var headBefore=shownHead;
+            var look=Call("avatar.look.user");viewer.transform.position=avatar.transform.position+new Vector3(2,1.6f,2);
+            Assert.That(scheduler.Invoke(look,2,out var looking,out error),Is.True,error);
+            yield return new WaitForSeconds(.5f);
+            Assert.That(Quaternion.Angle(headBefore,shownHead),Is.GreaterThan(10),"Gaze still turns the displayed head during a gesture");
+            scheduler.StopTarget("maestro",true);
+            Assert.That(avatar.UpperBodyActive,Is.False);Assert.That(motion.Active,Is.False);
+            Assert.That(scheduler.RunningCount,Is.Zero);
+            Assert.That(motion.Begin("direct",AvatarSpatialMode.Follow,out error),Is.True,error);
+            Assert.That(scheduler.Invoke(wave,3,out waving,out error),Is.True,error);
+            var fullBody=Call("avatar.gesture.play");fullBody["arguments"]["gesture"]="greeting";
+            Assert.That(scheduler.Invoke(fullBody,3,out _,out error),Is.False,"Programs cannot steal direct controller/tool movement");
+            Assert.That(motion.OwnedBy("direct"),Is.True);
+            Assert.That(scheduler.Invoke(look,3,out _,out error),Is.False);Assert.That(motion.OwnedBy("direct"),Is.True);
+            Assert.That(RoomControls.AvatarMotion(editor,"stop",out _),Is.True);Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
+            scheduler.StopAll();
+        }
+        void CaptureLayer(string path)
+        {
+            var cameraRoot=new GameObject("Layer verification camera");cameraRoot.transform.SetParent(root.transform,false);
+            var camera=cameraRoot.AddComponent<Camera>();camera.enabled=false;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.85f,.89f,.91f);
+            cameraRoot.transform.position=avatar.transform.position+new Vector3(1.7f,1.4f,2.7f);
+            cameraRoot.transform.LookAt(avatar.transform.position+Vector3.up*.9f);camera.fieldOfView=42;
+            var render=new RenderTexture(900,1000,24);var pixels=new Texture2D(900,1000,TextureFormat.RGB24,false);
+            var previous=RenderTexture.active;
+            try {camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,900,1000),0,0);pixels.Apply();File.WriteAllBytes(path,pixels.EncodeToPNG());}
+            finally {RenderTexture.active=previous;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(cameraRoot);}
+        }
+        [UnityTest] public IEnumerator UpperBodyLayerDoesNotAccumulateIntoASavedPoseAndManualAuthoringTakesOver()
+        {
+            Tutor();avatar.SetEditing(true);avatar.Gesture("Idle");yield return null;
+            var pose=avatar.PoseRig.Capture();avatar.SetEditing(false);avatar.SetSavedPose(pose);
+            var rootPose=avatar.transform.position;var leg=avatar.PoseRig.CanonicalBone(PoseJoint.LeftUpperLeg);
+            var legRotation=leg.localRotation;var spine=avatar.PoseRig.CanonicalBone(PoseJoint.Spine);var spineRotation=spine.localRotation;
+            Assert.That(avatar.BeginUpperBody("saved-pose","Greeting"),Is.True);
+            yield return new WaitForSeconds(.5f);avatar.EndUpperBody("wrong-owner");Assert.That(avatar.UpperBodyActive,Is.True);
+            avatar.EndUpperBody("saved-pose");Assert.That(avatar.UpperBodyActive,Is.False);
+            Assert.That(Quaternion.Angle(spineRotation,spine.localRotation),Is.LessThan(.01f),"Restore the input pose, not the previous layered frame");
+            Assert.That(Quaternion.Angle(legRotation,leg.localRotation),Is.LessThan(.01f));Assert.That(avatar.transform.position,Is.EqualTo(rootPose));
+            Assert.That(avatar.BeginUpperBody("manual-takeover","Pointing"),Is.True);
+            yield return null;avatar.SetEditing(true);Assert.That(avatar.UpperBodyActive,Is.False);
+            avatar.SetEditing(false);yield return null;Assert.That(avatar.UpperBodyActive,Is.False);
         }
         [UnityTest] public IEnumerator AgentAndPhysicalAvatarControlsShareMovementPreferencesStopAndLiveStatus()
         {

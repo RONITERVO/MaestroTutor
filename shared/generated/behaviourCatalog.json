@@ -311,6 +311,55 @@
       ]
     },
     {
+      "id": "avatar.gesture.upperBody",
+      "version": 1,
+      "label": "Upper-body gesture",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ],
+            "x-resource": "object"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          },
+          "gesture": {
+            "type": "string",
+            "enum": [
+              "greeting",
+              "pointing",
+              "listening",
+              "speaking",
+              "idle"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "seconds",
+          "gesture"
+        ],
+        "additionalProperties": false
+      },
+      "duration": "timed",
+      "ownership": "exclusiveChannels",
+      "channels": [
+        "upperBody"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "avatar.available"
+      ]
+    },
+    {
       "id": "time.wait",
       "version": 1,
       "label": "Wait",
@@ -393,9 +442,9 @@
         "additionalProperties": false
       },
       "duration": "timed",
-      "ownership": "exclusiveTargetAndProp",
+      "ownership": "exclusiveChannels",
       "channels": [
-        "wholeTarget"
+        "gaze"
       ],
       "requirements": [
         "target.exists",
@@ -431,9 +480,10 @@
         "additionalProperties": false
       },
       "duration": "timed",
-      "ownership": "exclusiveTargetAndProp",
+      "ownership": "exclusiveChannels",
       "channels": [
-        "wholeTarget"
+        "locomotion",
+        "gaze"
       ],
       "requirements": [
         "target.exists",
@@ -879,7 +929,8 @@
         "avatar.follow.user",
         "animation.embedded.play",
         "animation.library.play",
-        "animation.recipe.play"
+        "animation.recipe.play",
+        "avatar.gesture.upperBody"
       ],
       "eventIds": [
         "maestro.speaking.enter",
@@ -895,11 +946,11 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "68180a40ab4159210240cfcf94d98347de1f500004e2c7cf5574cc24e513bd30"
+      "sha256": "0472d9c2920eb395fd9047ee612ee68feb37e0da35e2cd0e8d3ef2582a9df9a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "4e7682b8d078f35bf25906d6c23c0a31edf061e31071bdbb38306f93e7ef6c3a"
+      "sha256": "527897c307640376c3b42ce64617cff41ad13c4074dd9ad596812fab0b0d621d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -907,7 +958,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
-      "sha256": "a050250e773885cbd224f07f9f9453db40fd1f6736c59cc9725a9061b49b9a85"
+      "sha256": "704f902d9ba67456fece35f763b6c9a4652c43460b0458e5edcfd52640bf4510"
     }
   ]
 }

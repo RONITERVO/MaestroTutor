@@ -107,7 +107,7 @@ namespace Maestro.Quest.Creation
             status="Maestro movement is unavailable";if (!motion || !new[] { "look","follow","stop" }.Contains(operation)) return false;
             var authoring=editor.GetComponent<AnimationWorkshop>();
             if(authoring && authoring.ControlsTarget("maestro"))authoring.Stop();
-            editor.GetComponent<RoomRules>()?.Scheduler.StopTarget("maestro",true);
+            editor.GetComponent<RoomRules>()?.Scheduler.StopConflicting(new RuleStep {action=RuleActionKind.FollowUser,targetId="maestro"},true);
             if (operation == "stop") { motion.Stop();status="Maestro movement and preview stopped";return true; }
             bool started=motion.Begin("direct",operation == "look" ? AvatarSpatialMode.Look : AvatarSpatialMode.Follow,out status);
             if (started) status="Maestro " + operation + " started; observe live movement status";

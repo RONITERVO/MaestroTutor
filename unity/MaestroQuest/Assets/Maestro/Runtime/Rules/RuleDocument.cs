@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Rules
 {
-    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation }
+    public enum RuleActionKind { RecordedAnimation, Gesture, Wait, ThrowRecording, LookAtUser, FollowUser, ImportedClip, LibraryMotion, RecipeAnimation, UpperBodyGesture }
     public enum PropHand { Left, Right }
     public enum PropRelease { Return, Drop, Throw }
     public enum RuleGesture { Greeting, Pointing, Listening, Speaking, Idle, Walk }
@@ -117,11 +117,12 @@ namespace Maestro.Quest.Rules
                 !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
                 !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
             if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && step.seconds < .1f) return false;
+            if (step.action == RuleActionKind.UpperBodyGesture && step.gesture == RuleGesture.Walk) return false;
             if (!string.IsNullOrEmpty(step.motionId) && !IsId(step.motionId)) return false;
             if (step.clipIndex < 0 || step.clipIndex >= 32 || !string.IsNullOrEmpty(step.clipModelHash) && !ModelLibrary.ValidHash(step.clipModelHash)) return false;
             if (step.action == RuleActionKind.ThrowRecording && (step.loop || step.seconds != 0)) return false;
             if (step.action != RuleActionKind.Wait && !IsTarget(step.targetId)) return false;
-            if ((step.action == RuleActionKind.Gesture || IsSpatial(step.action)) && step.targetId != "maestro") return false;
+            if ((step.action == RuleActionKind.Gesture || step.action == RuleActionKind.UpperBodyGesture || IsSpatial(step.action)) && step.targetId != "maestro") return false;
             error=null;return true;
         }
 

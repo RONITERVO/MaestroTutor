@@ -80,7 +80,8 @@ claim to execute Unity. Selected details and compact histories are bounded, with
 a 320 KiB native/web/Android room-observation envelope; commands remain bounded
 at the existing 28,000-character batch and 32 KiB native input limits.
 
-This covers the current nine invocation capabilities. Full room-command catalog
-coverage, persistent event programs, timers, animation layers, durable native
-receipts, actual provider planning quality, headset performance and store release
+The catalog now includes ten invocation capabilities, including an explicit
+[upper-body layer](QUEST_AVATAR_CHANNELS.md). [Event programs](QUEST_EVENT_PROGRAMS.md)
+provide session state and timers. Full room-command catalog coverage, durable
+state/receipts, broader clip layering, actual provider planning quality, headset performance and store release
 acceptance remain. No headset install or service deployment is included.

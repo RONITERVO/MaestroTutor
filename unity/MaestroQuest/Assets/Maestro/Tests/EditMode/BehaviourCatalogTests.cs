@@ -22,7 +22,9 @@ namespace Maestro.Quest.Tests
             var actual=JObject.Parse(BehaviourCatalog.Manifest().ToString());
             Assert.That(JToken.DeepEquals(actual,expected),Is.True,"Regenerate the reviewed manifest from native registrations.");
             Assert.That(BehaviourCatalog.Actions.All(x=>x.Duration=="timed"),Is.True);
-            Assert.That(BehaviourCatalog.Actions.Where(x=>x.Kind!=RuleActionKind.Wait).All(x=>x.Channels.SequenceEqual(new[] {"wholeTarget"})),Is.True);
+            Assert.That(BehaviourCatalog.Action("avatar.gesture.upperBody").Channels,Is.EqualTo(new[] {"upperBody"}));
+            Assert.That(BehaviourCatalog.Action("avatar.follow.user").Channels,Is.EqualTo(new[] {"locomotion","gaze"}));
+            Assert.That(BehaviourCatalog.Action("animation.library.play").Channels,Is.EqualTo(new[] {"wholeTarget"}));
         }
         [Test] public void EveryExistingAdapterHasExactlyOneStableRegistration()
         {
