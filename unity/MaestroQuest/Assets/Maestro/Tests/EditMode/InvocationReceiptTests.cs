@@ -14,10 +14,10 @@ namespace Maestro.Quest.Tests
         string directory;
         sealed class Actions : IRuleActions
         {
-            public int Starts;
+            public int Starts,Stops;
             public bool CanRun(RuleStep step,out string error) {error=null;return true;}
             public bool Start(string id,RuleStep step,out float seconds,out string error) {Starts++;seconds=1;error=null;return true;}
-            public void Stop(string id,bool preserve) {}
+            public void Stop(string id,bool preserve) {Stops++;}
         }
         static void Evidence(string name,JObject view)
         {
@@ -108,6 +108,85 @@ namespace Maestro.Quest.Tests
             Assert.That((string)recovered.Find(unfinished)["phase"],Is.EqualTo("interrupted"));
             Assert.That(recovered.Observe(unfinished,_=>null)["outcomes"].Count(),Is.EqualTo(16));
         }
+        [TestCase("action-receipts.v1.json")] [TestCase("action-receipts.v7.json")] [TestCase("action-receipts.v7.json.pending")]
+        public void ExplicitRecoveryArchivesUnknownEvidenceAndNeverReusesOldStartIds(string name)
+        {
+            Directory.CreateDirectory(directory);string path=Path.Combine(directory,name);
+            byte[] original={0x7b,0xff,0x00,0x21};File.WriteAllBytes(path,original);
+            var receipts=new InvocationReceipts(directory);Assert.That(receipts.Error,Is.Not.Null);
+            string recovery=(string)receipts.RecoveryView["id"];var actions=new Actions();var scheduler=new RuleScheduler(actions,receipts);
+            Assert.That(scheduler.RecoverInvocations(recovery,out var error),Is.True,error);
+            Assert.That(receipts.Error,Is.Null);Assert.That(receipts.NextId,Is.Not.Null);Assert.That(actions.Starts,Is.Zero);
+            string archive=Directory.GetDirectories(Path.Combine(directory,"action-receipt-archives")).Single();
+            Assert.That(File.ReadAllBytes(Path.Combine(archive,name)),Is.EqualTo(original));
+            Assert.That(File.Exists(Path.Combine(directory,"action-recovery.pending.json")),Is.False);
+            string fresh=receipts.NextId;Assert.That(scheduler.Invoke(Call(),0,out var run,out error,fresh),Is.True,error);
+            Assert.That(scheduler.RecoverInvocations(recovery,out error),Is.True,error,"Duplicate recovery is a no-op");
+            Assert.That(scheduler.RunningCount,Is.EqualTo(1));Assert.That(actions.Stops,Is.Zero);
+            Assert.That(scheduler.Invoke(Call(),1,out _,out _,Guid.NewGuid().ToString("N")),Is.False);
+            Assert.That(new InvocationReceipts(directory).Find(run)["phase"].Value<string>(),Is.EqualTo("interrupted"));
+            Evidence("history-recovered",receipts.Observe(run,_=>null));
+        }
+        [Test] public void RecoveryStopsOnlyOneOffActionsAndCanRetryAfterARealDiskFailure()
+        {
+            var receipts=new InvocationReceipts(directory);var actions=new Actions();var scheduler=new RuleScheduler(actions,receipts);
+            var saved=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Saved wait",program=Maestro.Quest.Programs.BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.Wait,seconds=30})};
+            scheduler.Configure(new RuleDocument {sequences=new[]{saved}});Assert.That(scheduler.Trigger(saved.id,0),Is.True);
+            Assert.That(scheduler.Invoke(Call(),0,out var running,out _,receipts.NextId),Is.True);
+            string pending=Path.Combine(directory,"action-receipts.v1.json.pending");Directory.CreateDirectory(pending);
+            Assert.That(scheduler.Invoke(Call(),0,out _,out _,receipts.NextId),Is.False);
+            string token=(string)receipts.RecoveryView["id"];
+            Assert.That(scheduler.RecoverInvocations(Guid.NewGuid().ToString("N"),out _),Is.False);Assert.That(actions.Stops,Is.Zero);
+            Evidence("history-error",scheduler.ObserveInvocations(running));
+            Assert.That(scheduler.RecoverInvocations(token,out _),Is.False);Assert.That(actions.Stops,Is.EqualTo(1));
+            Assert.That(scheduler.ObserveRuns().Single().sequenceId,Is.EqualTo(saved.id));Assert.That(receipts.NextId,Is.Null);
+            Directory.Delete(pending);
+            Assert.That(scheduler.RecoverInvocations(token,out var error),Is.True,error);
+            Assert.That(scheduler.ObserveRuns().Single().sequenceId,Is.EqualTo(saved.id));
+            string archive=Directory.GetDirectories(Path.Combine(directory,"action-receipt-archives")).Single();
+            var session=JArray.Parse(File.ReadAllText(Path.Combine(archive,"session.json")));
+            Assert.That(session.Single(x=>(string)x["id"]==running)["phase"].Value<string>(),Is.EqualTo("cancelled"));
+            Assert.That(scheduler.Invocation(running),Is.Null);
+            Assert.That(scheduler.Invoke(Call(),0,out _,out _,running),Is.False);
+            Evidence("history-recovered-empty",scheduler.ObserveInvocations(null));
+        }
+        [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
+        public void RestartCanResumeEachArchiveCommitBoundaryWithoutDiscardingEvidence(int phase)
+        {
+            Directory.CreateDirectory(directory);string primary=Path.Combine(directory,"action-receipts.v1.json"),future=Path.Combine(directory,"action-receipts.v2.json");
+            File.WriteAllText(primary,"old damaged primary");File.WriteAllText(future,"future evidence");
+            string id=Guid.NewGuid().ToString("N"),archive=Path.Combine(directory,"action-receipt-archives",id);Directory.CreateDirectory(archive);
+            File.WriteAllText(Path.Combine(directory,"action-recovery.pending.json"),new JObject {["version"]=1,["id"]=id,["files"]=new JArray(Path.GetFileName(primary),Path.GetFileName(future))}.ToString());
+            if(phase>=1){File.Copy(primary,Path.Combine(archive,Path.GetFileName(primary)));File.Copy(future,Path.Combine(archive,Path.GetFileName(future)));}
+            if(phase>=2)File.Delete(future);
+            if(phase>=3)File.WriteAllText(primary,"{\"version\":1,\"entries\":[]}");
+            var receipts=new InvocationReceipts(directory);Assert.That(receipts.NextId,Is.Null);
+            Assert.That(receipts.Recover((string)receipts.RecoveryView["id"],out var error),Is.True,error);
+            Assert.That(File.ReadAllText(Path.Combine(archive,Path.GetFileName(primary))),Is.EqualTo("old damaged primary"));
+            Assert.That(File.ReadAllText(Path.Combine(archive,Path.GetFileName(future))),Is.EqualTo("future evidence"));
+            Assert.That(new InvocationReceipts(directory).Error,Is.Null);
+        }
+        [Test] public void LockedEvidenceCannotBeSkippedAndRetryUsesTheSameRecoveryArchive()
+        {
+            Directory.CreateDirectory(directory);string primary=Path.Combine(directory,"action-receipts.v1.json"),future=Path.Combine(directory,"action-receipts.v2.json");
+            File.WriteAllText(primary,"broken primary");File.WriteAllText(future,"future evidence");
+            var receipts=new InvocationReceipts(directory);string id=(string)receipts.RecoveryView["id"];
+            using(var locked=new FileStream(future,FileMode.Open,FileAccess.ReadWrite,FileShare.None)){
+                Assert.That(receipts.Recover(id,out _),Is.False);Assert.That(File.ReadAllText(primary),Is.EqualTo("broken primary"));Assert.That(receipts.NextId,Is.Null);
+            }
+            Assert.That(receipts.Recover(id,out var error),Is.True,error);
+            Assert.That(Directory.GetDirectories(Path.Combine(directory,"action-receipt-archives")).Length,Is.EqualTo(1));
+        }
+        [Test] public void CorruptRecoveryMetadataIsPreservedAndCannotNameFilesOutsideTheJournal()
+        {
+            Directory.CreateDirectory(directory);string marker=Path.Combine(directory,"action-recovery.pending.json");
+            string raw=new JObject {["version"]=1,["id"]="../outside",["files"]=new JArray("../room.v3.json")}.ToString();
+            File.WriteAllText(marker,raw);string room=Path.Combine(directory,"room.v3.json");File.WriteAllText(room,"keep this room");
+            var receipts=new InvocationReceipts(directory);Assert.That(receipts.Recover((string)receipts.RecoveryView["id"],out var error),Is.True,error);
+            string archive=Directory.GetDirectories(Path.Combine(directory,"action-receipt-archives")).Single();
+            Assert.That(File.ReadAllText(Path.Combine(archive,"previous-marker.json")),Is.EqualTo(raw));Assert.That(File.ReadAllText(room),Is.EqualTo("keep this room"));
+        }
+
         [Test] public void FutureReceiptFilesArePreservedAndDisableNewStarts()
         {
             Directory.CreateDirectory(directory);string future=Path.Combine(directory,"action-receipts.v2.json");File.WriteAllText(future,"future");

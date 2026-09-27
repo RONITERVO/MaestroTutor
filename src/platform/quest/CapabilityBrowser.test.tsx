@@ -90,3 +90,20 @@ it('shows recovered uncertainty and storage failure in the same action catalog w
  expect(screen.getByLabelText('Selected action').textContent).toContain('completed');
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+it('recovers only after the explicit book action and retains failed-recovery status for retry',async()=>{
+ const client=new RoomAgentClient();const token='e'.repeat(32);
+ let state:RoomAgentState={...nativeExecutions.running,revision:1,ack:0,capabilities:['catalog.v1','execution.v1','executionReceipts.v1','actionRecovery.v1'],
+  execution:{selected:null,running:[],outcomes:[],nextRunId:null,storageError:'Action history unavailable',recovery:{id:token,status:'Stops one-off actions and archives history; never replays old actions.'}}} as RoomAgentState;
+ expect(client.receive(state)).toBe(true);const screen=render(<CapabilityBrowser client={client} onClose={()=>{}}/>);
+ expect(client.snapshot().request).toBeNull();expect(screen.getByRole('region',{name:'Recover action history'}).textContent).toContain('never replays');
+ fireEvent.click(screen.getByRole('button',{name:'Stop actions and recover history'}));
+ expect(client.snapshot().request!.commands).toEqual([{action:'execution',execution:{operation:'recover',recoveryId:token}}]);expect(client.snapshot().request!.conditions).toEqual([]);
+ state={...state,revision:2,ack:1,ok:false,status:'Storage remains unavailable'};
+ await act(async()=>{client.receive(state);});expect(screen.getByRole('status').textContent).toBe('Storage remains unavailable');
+ expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Stop actions and recover history'}));
+ state={...state,revision:3,ack:2,ok:true,status:'Recovered without replay',execution:{selected:null,running:[],outcomes:[],nextRunId:'f'.repeat(32),storageError:null,recovery:null}};
+ await act(async()=>{client.receive(state);});
+ expect(screen.queryByRole('button',{name:'Stop actions and recover history'})).toBeNull();expect(screen.getByRole('status').textContent).toBe('Recovered without replay');expect(client.snapshot().request).toBeNull();client.cancel();
+});

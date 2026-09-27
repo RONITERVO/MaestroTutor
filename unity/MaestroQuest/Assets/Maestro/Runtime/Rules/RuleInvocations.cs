@@ -53,6 +53,17 @@ namespace Maestro.Quest.Rules
             ["running"]=new JArray(running.Where(x=>x.Invocation!=null).Select(Summary)),
             ["outcomes"]=new JArray(outcomes.Where(x=>x.Invocation!=null).Select(Summary))
         };
+        public bool RecoverInvocations(string id,out string error)
+        {
+            error="Action history is unavailable";if(Receipts==null||!Receipts.CanRecover(id,out error))return false;
+            // A duplicate recovery cannot stop or erase actions started afterwards.
+            if(Receipts.Error==null)return Receipts.Recover(id,out error);
+            // Validate the observed recovery token before stopping anything.
+            foreach(var run in running.Where(x=>x.Invocation!=null).ToArray())Stop(run,false);
+            if(!Receipts.Recover(id,out error))return false;
+            var retained=outcomes.Where(x=>x.Invocation==null).ToArray();outcomes.Clear();foreach(var item in retained)outcomes.Enqueue(item);
+            return true;
+        }
         public bool CancelInvocation(string runId,out string error)
         {
             error=null;var active=running.FirstOrDefault(x=>x.Id==runId&&x.Invocation!=null);

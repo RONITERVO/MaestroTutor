@@ -2,22 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 import {validCapabilityInvocation,capabilityResources,validateCapabilityOutput,type CapabilityInvocation} from './capabilities';
 import {boundedCapabilityCall} from './roomCatalog';
-export type ExecutionRequest={operation:'start';call:CapabilityInvocation;runId?:string}|{operation:'inspect'|'cancel';runId:string};
+export type ExecutionRequest={operation:'start';call:CapabilityInvocation;runId?:string}|{operation:'inspect'|'cancel';runId:string}|{operation:'recover';recoveryId:string};
 export interface ExecutionSummary {id:string;capability:string;version:number;resources:string[];phase:'preparing'|'running'|'completed'|'cancelled'|'failed'|'interrupted';status:string;output?:Record<string,unknown>}
 export interface ExecutionDetail extends ExecutionSummary {call:CapabilityInvocation}
-export interface ExecutionView {selected:ExecutionDetail|null;running:ExecutionSummary[];outcomes:ExecutionSummary[];nextRunId?:string|null;storageError?:string|null}
+export interface ExecutionView {selected:ExecutionDetail|null;running:ExecutionSummary[];outcomes:ExecutionSummary[];nextRunId?:string|null;storageError?:string|null;recovery?:{id:string;status:string}|null}
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const exact=(v:Record<string,unknown>,keys:string[])=>Object.keys(v).length===keys.length&&keys.every(k=>Object.prototype.hasOwnProperty.call(v,k));
 const id=(v:unknown):v is string=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
 const call=(v:unknown):v is CapabilityInvocation=>boundedCapabilityCall(v)&&validCapabilityInvocation(v);
 export function validExecutionRequest(v:unknown):v is ExecutionRequest {
  if(!record(v))return false;
+ if(v.operation==='recover')return exact(v,['operation','recoveryId'])&&id(v.recoveryId);
  return v.operation==='start'?(exact(v,['operation','call'])||exact(v,['operation','call','runId'])&&id(v.runId))&&call(v.call):['inspect','cancel'].includes(v.operation as string)&&exact(v,['operation','runId'])&&id(v.runId);
 }
 const keys=['id','capability','version','resources','phase','status'];
 function validStorage(v:Record<string,unknown>):boolean {
  if(exact(v,['selected','running','outcomes']))return true;
- if(!exact(v,['selected','running','outcomes','nextRunId','storageError']))return false;
+ if(!exact(v,['selected','running','outcomes','nextRunId','storageError',...(v.recovery!==undefined?['recovery']:[])]))return false;
+ if(v.recovery!=null&&(!v.storageError||!record(v.recovery)||!exact(v.recovery,['id','status'])||!id(v.recovery.id)||typeof v.recovery.status!=='string'||v.recovery.status.length>2048))return false;
  return v.storageError===null?id(v.nextRunId):v.nextRunId===null&&typeof v.storageError==='string'&&v.storageError.length>0&&v.storageError.length<=2048;
 }
 function summary(v:unknown,detail=false):v is ExecutionSummary {

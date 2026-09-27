@@ -203,3 +203,20 @@ it('lets the original-app agent save and trigger the native-tested creation/edit
  expect(result.receipts).toHaveLength(2);expect(result.budgetExhausted).toBe(false);
  expect(ai.live.connect).not.toHaveBeenCalled();
 });
+
+it('lets an explicitly requested recovery use the existing agent path without replaying any action',async()=>{
+ const recoveryId='e'.repeat(32),command:RoomCommand={action:'execution',execution:{operation:'recover',recoveryId}};
+ const ai=client([JSON.stringify({commands:[command]}),'{"commands":[]}']);
+ let current:RoomAgentState={...scene,capabilities:['execution.v1','executionReceipts.v1','actionRecovery.v1'],execution:{selected:null,running:[],outcomes:[],nextRunId:null,storageError:'History unavailable',recovery:{id:recoveryId,status:'Archive and recover; no replay'}}};
+ const execute=vi.fn(async(_commands:RoomCommand[])=>{current={...current,revision:2,ack:1,status:'Recovered without replay',execution:{selected:null,running:[],outcomes:[],nextRunId:'f'.repeat(32),storageError:null,recovery:null}};return current;});
+ const result=await runRoomActionTask({...input,prompt:'Recover the damaged action history. Do not retry my earlier actions.'},{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute).toHaveBeenCalledTimes(1);expect(execute.mock.calls[0][0]).toEqual([command]);expect(result.receipts[0].execution?.recovery).toBeNull();
+ expect(ai.live.connect).not.toHaveBeenCalled();
+});
+it('does not use recovery to bypass an unconfirmed earlier task',async()=>{
+ const command={action:'execution',execution:{operation:'recover',recoveryId:'e'.repeat(32)}};
+ const ai=client([JSON.stringify({commands:[command]})]),execute=vi.fn();
+ const relatedTask={id:'parent',action:'continue' as const,phase:'interrupted' as const,note:'Unknown start',requests:['Wave'],reply:'',operations:[],wasRunning:false,unconfirmed:true};
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>({...scene,capabilities:['execution.v1','actionRecovery.v1']}),valid:()=>true,execute},()=>{},{relatedTask});
+ expect(execute).not.toHaveBeenCalled();expect(result.needsReview).toBe(true);
+});

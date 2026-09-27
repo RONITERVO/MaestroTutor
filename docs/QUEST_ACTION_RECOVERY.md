@@ -74,6 +74,46 @@ Actual native disk-recovery observations are retained in
 `test-fixtures/browser/actionReceiptStates.json` and exercised through the book bridge.
 
 Durable saved-program state, receipts for all room edits/imports, cross-device
-receipt synchronization, a user-facing damaged-storage recovery workflow, device
+receipt synchronization, device
 power-loss/storage timing and headset acceptance remain. Source models, existing
 room/chat saves and old prototype installations were not reset.
+
+
+## Explicit in-app history recovery (2026-09-27)
+
+When actionRecovery.v1 is available, an unreadable, incompatible or unwritable
+journal exposes a recovery identity and explanation in the same execution
+observation. The book's action catalog offers Stop actions and recover history.
+An explicitly requested new agent task can invoke the same standalone recovery
+operation. It is a mutation, never a read-only query or an automatic retry.
+
+Recovery validates the current identity before stopping any active one-off run.
+Saved behaviours and room objects remain unchanged. It archives the exact old
+journal/sidecar bytes and available in-memory receipts, then commits an empty
+journal and issues a fresh start identity. Old IDs cannot start again; unknown
+outcomes stay unknown. A duplicate successful recovery does not stop newer runs
+or reset their history. After an app restart its expired recovery identity is
+rejected instead of performing another reset.
+
+A flushed intent marker protects intermediate stages. Originals are copied and
+verified before removal; the marker remains until the fresh journal commits.
+Interrupted recovery can be resumed explicitly after restart. Malformed recovery
+metadata is itself preserved, and cannot name arbitrary files. Real I/O failures
+retain the marker/evidence and keep starts disabled. Resolving a disk problem and
+retrying uses the same archive transaction. Sources are not followed through
+filesystem links.
+
+Only app-owned action-receipts.v*.json and their known sidecars are archived;
+chat, room saves, models, programs and backups of those remain untouched.
+Per-transaction source data is limited to 16 files/16 MiB; retained archives are
+bounded to 128 MiB and 512 files. Archives are not automatically deleted. Reaching
+that maintenance bound keeps recovery blocked; archive export/maintenance UI
+remains release work. Synchronous recovery is an infrequent maintenance action;
+Quest latency and power-loss durability need device acceptance.
+
+Native regressions cover corrupt/future bytes, staged-recovery restarts, locked
+files, write failures, real animated motion stopping, preservation of saved
+behaviours and no replay. Human and agent use the same validated request, and
+actual native observations feed web tests. Recovery does not override the
+original-app rule prohibiting new mutations while continuing an unconfirmed
+earlier task; it does not authorize repeating that task under a fresh ID.

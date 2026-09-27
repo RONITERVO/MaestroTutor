@@ -119,3 +119,27 @@ it('accepts the real persisted native creation result through the existing room 
  state.execution=nativeCreation as ExecutionView;
  expect(new RoomAgentClient().receive(state)).toBe(true);
 });
+
+it('keeps recovery a gated mutation with an exact observed identity',()=>{
+ const recovery={operation:'recover' as const,recoveryId:id},command={action:'execution' as const,execution:recovery};
+ expect(validExecutionRequest(recovery)).toBe(true);
+ for(const invalid of [{operation:'recover'},{...recovery,runId:id},{...recovery,recoveryId:'../file'},{...recovery,call}])expect(validExecutionRequest(invalid)).toBe(false);
+ expect(parseRoomCommands({commands:[command]})).toEqual([command]);expect(isRoomQuery(command)).toBe(false);
+ expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1']})).toThrow('recover');
+ expect(()=>requireRoomCapabilities([command],{capabilities:['execution.v1','actionRecovery.v1']})).not.toThrow();
+ const broken={selected:null,running:[],outcomes:[],nextRunId:null,storageError:'Storage unavailable',recovery:{id,status:'Archive old history; no replay'}};
+ expect(validExecutionView(broken)).toBe(true);
+ expect(validExecutionView({...broken,nextRunId:prop,storageError:null})).toBe(false);
+ expect(validExecutionView({...broken,recovery:{id:'bad',status:'bad'}})).toBe(false);
+ expect(validExecutionView({...broken,recovery:{id,status:'x'.repeat(2049)}})).toBe(false);
+});
+
+import historyRecovery from '../../../test-fixtures/browser/actionHistoryRecoveryStates.json';
+it('reads actual Unity error and recovered observations through the same bridge',()=>{
+ for(const state of Object.values(historyRecovery)){
+  expect(validExecutionView(state.execution)).toBe(true);const client=new RoomAgentClient();expect(client.receive(state)).toBe(true);client.cancel();
+ }
+ expect(historyRecovery.error.execution.recovery!.id).toMatch(/^[a-f0-9]{32}$/);
+ expect(historyRecovery.success.execution.recovery).toBeNull();expect(historyRecovery.success.execution.nextRunId).toMatch(/^[a-f0-9]{32}$/);
+ expect(historyRecovery.success.execution.running).toEqual([]);expect(historyRecovery.success.execution.outcomes).toEqual([]);
+});

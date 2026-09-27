@@ -55,6 +55,38 @@ namespace Maestro.Quest.Tests
         }
 
 
+        [UnityTest] public IEnumerator BookRecoveryStopsActualOneOffMotionAndPreservesObjectsAndSavedBehaviours()
+        {
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            string target=editor.Identity(block);
+            var call=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=2,["loop"]=false}};
+            var receipts=runtime.Scheduler.Receipts;
+            Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out var oldId,out _,receipts.NextId),Is.True);
+            Vector3 before=block.transform.position;yield return new WaitForSeconds(.12f);Assert.That(Vector3.Distance(before,block.transform.position),Is.GreaterThan(.005f));
+            string pending=Path.Combine(directory,"action-receipts.v1.json.pending");Directory.CreateDirectory(pending);
+            var wait=new JObject {["id"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=1}};
+            Assert.That(runtime.Scheduler.Invoke(wait,Time.unscaledTime,out _,out _,receipts.NextId),Is.False);
+            string token=(string)receipts.RecoveryView["id"];string saved=JsonUtility.ToJson(workshop.Snapshot());int objects=editor.Snapshot().objects.Length;
+            void Evidence(string phase,string status=null){
+                string output=Environment.GetEnvironmentVariable("MAESTRO_PROGRAM_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);
+                var state=observer.Observe();state.visible=true;state.workspaceView="rules";if(status!=null)state.status=status;
+                File.WriteAllText(Path.Combine(output,"native-recovery-"+phase+".json"),RoomAgentWire.Serialize(state));
+            }
+            Evidence("error");
+            var command=new JObject {["action"]="execution",["execution"]=new JObject {["operation"]="recover",["recoveryId"]=token}};
+            var wire=new JObject {["version"]=2,["commands"]=new JArray(command)};
+            Assert.That(RoomControls.ValidWire(wire.ToString()),Is.True);var request=JsonUtility.FromJson<RoomAgentRequest>(wire.ToString());Assert.That(RoomAgentWire.PopulateStructured(request,wire),Is.True);
+            Assert.That(executor.Execute(request,out _,out _),Is.False,"A directory still blocks actual journal I/O");
+            before=block.transform.position;yield return new WaitForSeconds(.12f);Assert.That(Vector3.Distance(before,block.transform.position),Is.LessThan(.001f));
+            Directory.Delete(pending);
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);Evidence("success",error);
+            Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(objects));Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(saved));
+            Assert.That(runtime.Scheduler.Invocation(oldId),Is.Null);
+            Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out _,out _,receipts.NextId),Is.True);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error,"A duplicate recovery cannot stop newly started motion");
+            before=block.transform.position;yield return new WaitForSeconds(.12f);Assert.That(Vector3.Distance(before,block.transform.position),Is.GreaterThan(.005f));
+        }
+
         [UnityTest] public IEnumerator UnavailableSavedProgramRemainsRepairableWithoutBlockingPhysicalButtonsOrOtherPrograms()
         {
             var original=workshop.Snapshot();var good=original.sequences.Single();

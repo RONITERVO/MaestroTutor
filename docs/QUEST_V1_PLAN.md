@@ -507,3 +507,16 @@ three optional private-model skips. Chrome repairs a real native observation.
 The latest build remains uninstalled. In-app damaged-receipt recovery, modular
 native capability dispatch, broader action coverage and all remaining v1
 hardware/provider/store acceptance gates remain open.
+
+
+PC action-history recovery checkpoint (2026-09-27): users can explicitly stop
+one-off actions and recover damaged/incompatible receipts from the book or an
+explicit new agent request. Exact old evidence is archived before a fresh journal
+is committed; interrupted recovery resumes safely, and old starts never replay.
+Saved behaviours and room objects remain unchanged. Native motion tests and
+Chrome bridge checks cover the same operation. Verification covers 1,301 app,
+143 EditMode and 96 PlayMode tests, with three optional private-model skips.
+See [recovery semantics and remaining scope](QUEST_ACTION_RECOVERY.md).
+Archive export/maintenance controls, device power-loss/latency acceptance, native
+capability modularization and all remaining v1/provider/headset/store gates remain
+open. This checkpoint is not installed on the headset.

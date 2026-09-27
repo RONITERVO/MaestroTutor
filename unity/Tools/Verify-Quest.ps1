@@ -92,7 +92,7 @@ $env:MAESTRO_RECEIPT_EVIDENCE = Join-Path $logRoot 'receipt-evidence'
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
 [xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 133) { throw 'Unity test results did not satisfy the current development checks.' }
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 143) { throw 'Unity test results did not satisfy the current development checks.' }
 $playResult = Join-Path $logRoot 'playmode-results.xml'
 $env:MAESTRO_PROGRAM_EVIDENCE = Join-Path $logRoot 'program-evidence'
 $env:MAESTRO_CATALOG_EVIDENCE = Join-Path $logRoot 'catalog-evidence'
@@ -116,7 +116,7 @@ if (!$MotionAuditDirectory) { $expectedSkipped += 'SelectedCollectionMotionsMatc
 $unexpectedCases = @($playReport.SelectNodes('//test-case[@result!="Passed"]') | Where-Object {
     $_.result -ne 'Skipped' -or $_.label -ne 'Ignored' -or $expectedSkipped -notcontains $_.name
 })
-if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 95 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
+if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 96 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
 if ($MotionAuditDirectory) {
     $env:MAESTRO_MOTION_AUDIT = Join-Path $repoRoot '.quest-evidence/motion-library'
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestMotionAudit.Inspect') 'motion-audit.log'

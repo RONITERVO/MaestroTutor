@@ -1,0 +1,517 @@
+{
+  "error": {
+    "version": 1,
+    "revision": 1,
+    "sceneRevision": 2,
+    "ack": 0,
+    "session": "f44a730d5ddf4be08835abda425cd01c",
+    "status": "Room actions ready",
+    "selectedId": "cbd4e938d1c34d22a8459e06b56d07a1",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 19,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action type changed",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "8c6d26a2406c4d66bf3fdfedfe7754dc",
+          "name": "Action 1",
+          "error": "",
+          "steps": 1,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "7996830cd3b346a59fd2dd8548a9e687",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bbb84cf0534c4730bf64907d34271ce1",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cbd4e938d1c34d22a8459e06b56d07a1",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.544013500213623,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [
+        {
+          "id": "bfce8ff7f701448f9f0a5cbb6d45c658",
+          "capability": "animation.recording.play",
+          "version": 1,
+          "resources": [
+            "cbd4e938d1c34d22a8459e06b56d07a1"
+          ],
+          "phase": "running",
+          "status": "Action running"
+        }
+      ],
+      "outcomes": [
+        {
+          "id": "cfcc0e6dae0b471d9d2a4b8004ccb5b1",
+          "capability": "time.wait",
+          "version": 1,
+          "resources": [],
+          "phase": "failed",
+          "status": "Action did not start because its receipt could not be saved"
+        }
+      ],
+      "nextRunId": null,
+      "storageError": "Action receipt storage failed. New actions are disabled; unsaved outcomes may be uncertain after restart.",
+      "recovery": {
+        "id": "0b73a43603db4c96990b5a31e09e4499",
+        "status": "Recovery stops active one-off actions, archives their old history and starts a fresh journal. Old uncertain actions are never replayed."
+      }
+    }
+  },
+  "success": {
+    "version": 1,
+    "revision": 2,
+    "sceneRevision": 2,
+    "ack": 0,
+    "session": "f44a730d5ddf4be08835abda425cd01c",
+    "status": "Action history recovered. Previous evidence was archived; no old actions were replayed.",
+    "selectedId": "cbd4e938d1c34d22a8459e06b56d07a1",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 19,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action type changed",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "8c6d26a2406c4d66bf3fdfedfe7754dc",
+          "name": "Action 1",
+          "error": "",
+          "steps": 1,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": null,
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "physicsRun.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1"
+    ],
+    "physics": {
+      "ready": false,
+      "running": false,
+      "status": "Load or scan your room to use gravity"
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "7996830cd3b346a59fd2dd8548a9e687",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "bbb84cf0534c4730bf64907d34271ce1",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "cbd4e938d1c34d22a8459e06b56d07a1",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.5199999809265137,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "1dce7c7c9be54566a4e96945f90fd3b7",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

@@ -20,6 +20,7 @@ namespace Maestro.Quest.Creation
             if(request==null||request["operation"]?.Type!=JTokenType.String)return false;
             return (string)request["operation"] switch {
                 "start"=>(Exact(request,"operation","call")||Exact(request,"operation","call","runId")&&RunId(request["runId"]))&&RoomCapabilityCatalog.ValidCall(request["call"] as JObject),
+                "recover"=>Exact(request,"operation","recoveryId")&&RunId(request["recoveryId"]),
                 "inspect" or "cancel"=>Exact(request,"operation","runId")&&RunId(request["runId"]),
                 _=>false
             };
@@ -53,6 +54,7 @@ namespace Maestro.Quest.Creation
             var runtime=editor.GetComponent<RoomRules>();if(!runtime||runtime.Scheduler==null) {error="Action runtime is not ready";return false;}
             string operation=(string)request["operation"];
             if(Replay(request,out var replayed,out error))return replayed;
+            if(operation=="recover"){bool recovered=runtime.Scheduler.RecoverInvocations((string)request["recoveryId"],out error);if(recovered)selectedId=null;return recovered;}
             if(operation=="start") {
                 var call=(JObject)request["call"];
                 if(!BehaviourCatalog.TryInvocation((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out error)||!runtime.CanRun(step,out error))return false;

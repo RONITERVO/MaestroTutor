@@ -13,7 +13,7 @@ namespace Maestro.Quest.Rules
 {
     /// <summary>Write-ahead evidence, never a playback queue. Issued IDs are consumed
     /// before effects; an evicted/unissued ID cannot become a new invocation.</summary>
-    public sealed class InvocationReceipts
+    public sealed partial class InvocationReceipts
     {
         readonly string path;
         readonly List<JObject> entries=new();
@@ -24,7 +24,8 @@ namespace Maestro.Quest.Rules
         {
             path=Path.Combine(directory,"action-receipts.v1.json");
             try {
-                if(Directory.Exists(directory)&&Directory.GetFiles(directory,"action-receipts.v*.json").Any(p=>!string.Equals(Path.GetFullPath(p),Path.GetFullPath(path),StringComparison.OrdinalIgnoreCase)))
+                if(File.Exists(RecoveryMarker))throw new InvalidDataException("Interrupted receipt recovery");
+                if(Directory.Exists(directory)&&Directory.GetFiles(directory,"action-receipts.v*").Any(p=>JournalName.IsMatch(Path.GetFileName(p))&&!string.Equals(Path.GetFullPath(p),Path.GetFullPath(path),StringComparison.OrdinalIgnoreCase)&&!Path.GetFileName(p).StartsWith("action-receipts.v1.json.",StringComparison.Ordinal)))
                     throw new InvalidDataException("Newer action receipt format");
                 if(!File.Exists(path))return;
                 if(new FileInfo(path).Length>1024*1024)throw new InvalidDataException("Receipt limit");
@@ -44,7 +45,7 @@ namespace Maestro.Quest.Rules
                     item["status"]="The app restarted before a final result was saved. Some effects may have happened; this action was not replayed.";
                 }
                 Trim();Save();
-            } catch(Exception ex) when(StorageFailure(ex)) {entries.Clear();Error="Action receipt storage cannot be read safely. New actions are disabled; existing outcomes are unknown.";}
+            } catch(Exception ex) when(StorageFailure(ex)) {entries.Clear();Fail("Action receipt storage cannot be read safely. New actions are disabled; existing outcomes are unknown.");}
         }
         static bool StorageFailure(Exception ex)=>ex is InvalidDataException||ex is IOException||ex is UnauthorizedAccessException||ex is JsonException||ex is ArgumentException||ex is InvalidCastException||ex is OverflowException||ex is System.Security.SecurityException;
         static bool Id(JToken value)=>value?.Type==JTokenType.String&&System.Text.RegularExpressions.Regex.IsMatch((string)value,"^[a-f0-9]{32}$");
@@ -74,7 +75,7 @@ namespace Maestro.Quest.Rules
                 if(File.Exists(path))File.Replace(pending,path,null);else File.Move(pending,path);
                 return true;
             } catch(Exception ex) when(StorageFailure(ex)) {
-                Error="Action receipt storage failed. New actions are disabled; unsaved outcomes may be uncertain after restart.";return false;
+                Fail("Action receipt storage failed. New actions are disabled; unsaved outcomes may be uncertain after restart.");return false;
             }
         }
         public bool Reserve(string id,JObject call,string[] resources,out string error)
@@ -106,7 +107,7 @@ namespace Maestro.Quest.Rules
                 ["selected"]=values.FirstOrDefault(x=>(string)x["id"]==selectedId)?.DeepClone()??JValue.CreateNull(),
                 ["running"]=new JArray(values.Where(Active).Select(Summary)),
                 ["outcomes"]=new JArray(values.Where(x=>!Active(x)).Select(Summary)),
-                ["nextRunId"]=NextId,["storageError"]=Error
+                ["nextRunId"]=NextId,["storageError"]=Error,["recovery"]=RecoveryView
             };
         }
     }

@@ -21,13 +21,13 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [query,setQuery]=useState(''),[page,setPage]=useState<Extract<CatalogView,{operation:'search'}>|null>(null);
  const [definition,setDefinition]=useState<CapabilityDefinition|null>(null),[args,setArgs]=useState('{}'),[error,setError]=useState('');
- const [checked,setChecked]=useState('');
+ const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState('');
  const send=async(catalog:CatalogRequest)=>{
-  setError('');try {const result=await client.request([{action:'catalog',catalog}]);if(!result.ok){setError(result.status);return null;}return result.catalog??null;}
+  setError('');setRecoveryNotice('');try {const result=await client.request([{action:'catalog',catalog}]);if(!result.ok){setError(result.status);return null;}return result.catalog??null;}
   catch(e){setError(e instanceof Error?e.message:'The room is unavailable.');return null;}
  };
  const execute=async(execution:ExecutionRequest)=>{
-  setError('');try {const result=await client.request([{action:'execution',execution}],state??undefined);if(!result.ok)setError(result.status);}
+  setError('');setRecoveryNotice('');try {const result=await client.request([{action:'execution',execution}],state??undefined);if(!result.ok)setError(result.status);else if(execution.operation==='recover')setRecoveryNotice(result.status);}
   catch(e){setError(e instanceof Error?e.message:'The action could not be confirmed. Inspect the room before retrying.');}
  };
  const search=async(offset=0)=>{const result=await send({operation:'search',query:offset?page?.query??query:query,offset});if(result?.operation==='search')setPage(result);};
@@ -52,7 +52,8 @@ export function CapabilityBrowser({client,onClose,onInsert}:{client:RoomAgentCli
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Action details">
    <h2>{definition?.label??'Choose an action'}</h2>
-   <div role="status" className={error||state?.execution?.storageError?'room-message room-message-warning':'room-message'}>{error||state?.execution?.storageError||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':check?.status??state?.execution?.selected?.status??'Select an action or check its availability.')}</div>
+   <div role="status" className={error||state?.execution?.storageError?'room-message room-message-warning':'room-message'}>{error||state?.execution?.storageError||recoveryNotice||(!supported?'Update the native app to browse actions.':pending?'Waiting for the room…':check?.status??state?.execution?.selected?.status??'Select an action or check its availability.')}</div>
+   {state?.execution?.recovery&&state.capabilities?.includes('actionRecovery.v1')&&<section aria-label="Recover action history" className="room-message room-message-warning"><h3>Recover action history</h3><p>{state.execution.recovery.status}</p><button disabled={pending} onClick={()=>void execute({operation:'recover',recoveryId:state.execution!.recovery!.id})}>Stop actions and recover history</button></section>}
    {definition&&<><p>{definition.id} · version {definition.version}</p>{definition.description&&<p>{definition.description}</p>}
     <label>Action arguments<textarea aria-label="Action arguments" rows={12} spellCheck={false} value={args} disabled={pending} onChange={e=>{setArgs(e.target.value);setChecked('');}}/></label>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}

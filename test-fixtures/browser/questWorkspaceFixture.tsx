@@ -8,6 +8,7 @@ import {copyRecipe,parseRecipe} from '../../src/core-sdk/room/recipe';
 import robot from './recipeRobot.json';
 import nativeProgram from './programBookState.json';
 import unavailableProgram from './unavailableProgramState.json';
+import historyRecovery from './actionHistoryRecoveryStates.json';
 import nativeExecutions from './executionStates.json';
 import nativeEvents from './eventProgramStates.json';
 import creationProgram from '../../unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-create.json';
@@ -47,6 +48,7 @@ if(new URLSearchParams(location.search).has('creation')||recipeCreation||objectE
  state.execution=JSON.parse(JSON.stringify(objectEdits?objectEditResults.painted:recipeCreation?recipeCreationResult:creationResult));state.capabilities=[...state.capabilities??[],'eventPrograms.v1','actionResults.v1','recipeCreation.v1','objectEdits.v1','execution.v1','executionReceipts.v1'];
 }
 if(new URLSearchParams(location.search).has('unavailablePrograms'))state=JSON.parse(JSON.stringify(unavailableProgram));
+const recovering=new URLSearchParams(location.search).has('recovery');if(recovering)state=JSON.parse(JSON.stringify(historyRecovery.error));
 state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
@@ -66,7 +68,8 @@ setInterval(()=>{
   for(const command of request.commands){
    if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeExecutions.running.execution.selected.call)){
+    if(input.operation==='recover'&&recovering&&input.recoveryId===historyRecovery.error.execution.recovery.id){state.execution=copy(historyRecovery.success.execution);state.status=historyRecovery.success.status;}
+    else if(input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeExecutions.running.execution.selected.call)){
      state.execution=copy(nativeExecutions.running.execution) as RoomAgentState['execution'];state.status='Replayed native running observation';
     }else if(input.operation==='cancel'&&input.runId===nativeExecutions.running.execution.selected.id){
      state.execution=copy(nativeExecutions.cancelled.execution) as RoomAgentState['execution'];state.status='Replayed native cancelled observation';
