@@ -50,6 +50,21 @@ namespace Maestro.Quest.Tests
             var tooDeep=new JObject();var cursor=tooDeep;for(int i=0;i<10;i++){var next=new JObject();cursor["nested"]=next;cursor=next;}
             query["call"]["arguments"]=tooDeep;Assert.That(Maestro.Quest.Creation.RoomCapabilityCatalog.ValidRequest(query),Is.False);
         }
+        [Test] public void OneOffWireRequiresExactOperationsAndStructuredCalls()
+        {
+            var command=new JObject {["action"]="execution",["execution"]=new JObject {["operation"]="start",["call"]=new JObject {["id"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=1}}}};
+            var raw=new JObject {["version"]=2,["commands"]=new JArray(command)};
+            Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.True);
+            var typed=JsonUtility.FromJson<Maestro.Quest.Creation.RoomAgentRequest>(raw.ToString());
+            Assert.That(Maestro.Quest.Creation.RoomAgentWire.PopulateStructured(typed,raw),Is.True);
+            Assert.That(JToken.DeepEquals(typed.commands[0].execution,command["execution"]),Is.True);
+            command["execution"]["runId"]=Guid.NewGuid().ToString("N");Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.False);
+            command["execution"]=new JObject {["operation"]="cancel",["runId"]="bad"};Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.False);
+            command["execution"]["runId"]=Guid.NewGuid().ToString("N");Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.True);
+            command["execution"]["operation"]=new JObject();Assert.That(Maestro.Quest.Creation.RoomExecutions.ValidRequest((JObject)command["execution"]),Is.False);
+            command["execution"]=new JObject {["operation"]="inspect",["runId"]=Guid.NewGuid().ToString("N")};
+            ((JArray)raw["commands"]).Add(new JObject {["action"]="stop",["target"]="book"});Assert.That(Maestro.Quest.Creation.RoomControls.ValidWire(raw.ToString()),Is.False);
+        }
         static string Example()=>File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-prime.json"));
         static BehaviourProgram Compile(string source) {Assert.That(BehaviourProgram.TryParse(source,out var program,out var error),Is.True,error);return program;}
         sealed class Facts:IProgramFacts {public bool TryRead(string name,out ProgramValue value) {value=new ProgramValue("speaking");return name=="maestro.state";}}

@@ -12,7 +12,7 @@ const exact=(v:Record<string,unknown>,keys:string[])=>Object.keys(v).length===ke
 const text=(v:unknown,max:number):v is string=>typeof v==='string'&&v.length<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(v);
 const integer=(v:unknown,min=0):v is number=>typeof v==='number'&&Number.isInteger(v)&&v>=min&&v<=1000000;
 const id=(v:unknown)=>text(v,96)&&/^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/.test(v);
-const call=(v:unknown):v is CapabilityInvocation=>{
+export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
  if(!record(v)||!exact(v,['id','version','arguments'])||!id(v.id)||!integer(v.version,1)||!record(v.arguments)||JSON.stringify(v.arguments).length>8000)return false;
  let count=0;
  const bounded=(v:unknown,depth:number):boolean=>{
@@ -26,7 +26,7 @@ export function validCatalogRequest(v:unknown):v is CatalogRequest {
  if(!record(v))return false;
  if(v.operation==='search')return exact(v,['operation','query','offset'])&&text(v.query,80)&&integer(v.offset);
  if(v.operation==='inspect')return exact(v,['operation','capability','version'])&&id(v.capability)&&integer(v.version,1);
- return v.operation==='check'&&exact(v,['operation','call'])&&call(v.call);
+ return v.operation==='check'&&exact(v,['operation','call'])&&boundedCapabilityCall(v.call);
 }
 function equal(a:unknown,b:unknown):boolean {
  if(a===b)return true;
@@ -44,7 +44,7 @@ export function validCatalogView(v:unknown):v is CatalogView {
   // JSON keys are harmless; changed fields are not silently reinterpreted.
   return known!==null&&known.version===v.version&&equal(v.definition,known);
  }
- return v.operation==='check'&&exact(v,['operation','call','valid','available','occupied','resources','status'])&&call(v.call)&&
+ return v.operation==='check'&&exact(v,['operation','call','valid','available','occupied','resources','status'])&&boundedCapabilityCall(v.call)&&
   ['valid','available','occupied'].every(k=>typeof v[k]==='boolean')&&(!v.available||v.valid===true&&!v.occupied)&&Array.isArray(v.resources)&&v.resources.length<=16&&
   v.resources.every(x=>typeof x==='string'&&/^(maestro|book|[a-fA-F0-9]{32})$/.test(x))&&new Set(v.resources).size===v.resources.length;
 }

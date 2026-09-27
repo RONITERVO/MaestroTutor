@@ -7,6 +7,7 @@ import {simpleProgramSteps} from '../../src/core-sdk/room/programs';
 import {copyRecipe,parseRecipe} from '../../src/core-sdk/room/recipe';
 import robot from './recipeRobot.json';
 import nativeProgram from './programBookState.json';
+import nativeExecutions from './executionStates.json';
 import {capabilityDefinition,validateCapabilityArguments,capabilityResources} from '../../shared/capabilities';
 import {behaviourCatalog} from '../../shared/behaviourCatalog';
 import nativeRules from './ruleBookState.json';
@@ -21,7 +22,8 @@ let state:RoomAgentState={version:1,session:'a'.repeat(32),revision:1,sceneRevis
 if(!validRuleView(nativeRules))throw new Error('Native rule observation fixture is invalid');
 state.capabilities=['behaviourPrograms.v3'];state.rules=JSON.parse(JSON.stringify(nativeRules));state.workspaceView='objects';
 const programs=new URLSearchParams(location.search).has('program');if(programs)state=JSON.parse(JSON.stringify(nativeProgram));
-state.capabilities=[...state.capabilities??[],'catalog.v1'];
+if(new URLSearchParams(location.search).has('execution')){state=JSON.parse(JSON.stringify(nativeExecutions.running));state.visible=true;state.execution={selected:null,running:[],outcomes:[]};}
+state.capabilities=[...new Set([...state.capabilities??[],'catalog.v1'])];
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
@@ -35,7 +37,14 @@ setInterval(()=>{
  if(request&&request.session===state.session&&request.sequence===state.ack+1){
   state={...state,ack:request.sequence,ok:true,status:'Fixture action completed'};
   for(const command of request.commands){
-   if(command.action==='catalog'&&command.catalog){
+   if(command.action==='execution'&&command.execution){
+    const input=command.execution;
+    if(input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeExecutions.running.execution.selected.call)){
+     state.execution=copy(nativeExecutions.running.execution) as RoomAgentState['execution'];state.status='Replayed native running observation';
+    }else if(input.operation==='cancel'&&input.runId===nativeExecutions.running.execution.selected.id){
+     state.execution=copy(nativeExecutions.cancelled.execution) as RoomAgentState['execution'];state.status='Replayed native cancelled observation';
+    }else {state.ok=false;state.status='This browser fixture only replays the recorded native call. It does not execute actions.';}
+   }else if(command.action==='catalog'&&command.catalog){
     const query=command.catalog;
     if(query.operation==='search'){
      const terms=query.query.toLowerCase().trim().split(/ +/).filter(Boolean);

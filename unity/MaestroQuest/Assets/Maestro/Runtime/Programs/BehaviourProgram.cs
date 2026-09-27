@@ -82,6 +82,11 @@ namespace Maestro.Quest.Programs
             ["version"]=2,["entry"]="main",["resources"]=new JArray(steps.SelectMany(RuleDocument.Targets).Distinct()),
             ["functions"]=new JArray(new JObject { ["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),["body"]=ActionNodes(steps) })
         }.ToString(Formatting.None);
+        public static string FromInvocation(JObject call) => new JObject {
+            ["version"]=2,["entry"]="main",["resources"]=new JArray(CapabilityArguments.Resources((JObject)call["arguments"],BehaviourCatalog.Action((string)call["id"]).InputSchema)),
+            ["functions"]=new JArray(new JObject {["name"]="main",["returns"]="void",["parameters"]=new JArray(),["locals"]=new JArray(),
+                ["body"]=new JArray(new JObject {["id"]="action",["op"]="invoke",["capability"]=call["id"].DeepClone(),["version"]=call["version"].DeepClone(),["arguments"]=call["arguments"].DeepClone(),["bindings"]=new JObject()})})
+        }.ToString(Formatting.None);
         public bool ReferencesMotion(string id)=>Source.Contains("\""+id+"\"");
         internal ProgramFunction Function(string name)=>functions[name];
         internal RuleStep Action(string id)=>actions[id].Copy();

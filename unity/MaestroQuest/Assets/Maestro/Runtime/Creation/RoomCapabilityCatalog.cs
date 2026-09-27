@@ -25,18 +25,21 @@ namespace Maestro.Quest.Creation
             switch((string)value["operation"]) {
                 case "search":return Exact(value,"operation","query","offset")&&Text(value["query"],80)&&value["offset"]?.Type==JTokenType.Integer&&(double)value["offset"]>=0&&(double)value["offset"]<=1000000;
                 case "inspect":return Exact(value,"operation","capability","version")&&Id(value["capability"])&&Version(value["version"]);
-                case "check":
-                    if(!Exact(value,"operation","call")||value["call"] is not JObject call||!Exact(call,"id","version","arguments")||!Id(call["id"])||!Version(call["version"])||call["arguments"] is not JObject arguments||arguments.ToString(Newtonsoft.Json.Formatting.None).Length>8000)return false;
-                    int count=0;
-                    bool Bounded(JToken token,int depth) {
-                        if(++count>128||depth>8)return false;
-                        if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1));
-                        if(token is JArray array)return array.Count<=64&&array.All(x=>Bounded(x,depth+1));
-                        return token.Type switch {JTokenType.String=>Text(token,128),JTokenType.Integer or JTokenType.Float=>double.IsFinite((double)token)&&Math.Abs((double)token)<=1000000,JTokenType.Boolean or JTokenType.Null=>true,_=>false};
-                    }
-                    return Bounded(arguments,0);
+                case "check":return Exact(value,"operation","call")&&ValidCall(value["call"] as JObject);
                 default:return false;
             }
+        }
+        public static bool ValidCall(JObject call)
+        {
+            if(!Exact(call,"id","version","arguments")||!Id(call["id"])||!Version(call["version"])||call["arguments"] is not JObject arguments||arguments.ToString(Newtonsoft.Json.Formatting.None).Length>8000)return false;
+            int count=0;
+            bool Bounded(JToken token,int depth) {
+                if(++count>128||depth>8)return false;
+                if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1));
+                if(token is JArray array)return array.Count<=64&&array.All(x=>Bounded(x,depth+1));
+                return token.Type switch {JTokenType.String=>Text(token,128),JTokenType.Integer or JTokenType.Float=>double.IsFinite((double)token)&&Math.Abs((double)token)<=1000000,JTokenType.Boolean or JTokenType.Null=>true,_=>false};
+            }
+            return Bounded(arguments,0);
         }
         public static bool ValidWire(JObject command)=>Exact(command,"action","catalog")&&(string)command["action"]=="catalog"&&command["catalog"] is JObject query&&ValidRequest(query);
         public bool Execute(JObject value,out string status)
@@ -73,7 +76,7 @@ namespace Maestro.Quest.Creation
                     occupied=runtime.Scheduler?.TargetsBusy(resources)==true;
                     available=runtime.CanRun(step,out error);
                     if(available&&occupied) {available=false;error="A running behaviour currently owns one of these objects";}
-                    if(available&&runtime.Scheduler.RunningCount>=8) {available=false;error="All action slots are currently in use";}
+                    if(available&&!runtime.Scheduler.HasCapacity) {available=false;error="All action slots are currently in use";}
                 }
             }
             return new JObject {["operation"]="check",["call"]=call.DeepClone(),["valid"]=valid,["available"]=available,["occupied"]=occupied,

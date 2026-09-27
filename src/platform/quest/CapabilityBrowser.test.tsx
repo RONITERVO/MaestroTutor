@@ -52,3 +52,27 @@ it('refreshes readiness without another query and keeps catalog draft additions 
  expect(screen.getByText(/draft is retained/)).toBeTruthy();expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(true);
  expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
+
+import nativeExecutions from '../../../test-fixtures/browser/executionStates.json';
+import {CapabilityBrowser} from './CapabilityBrowser';
+it('starts and stops one exact action through the catalog and displays native phases without saving',async()=>{
+ const client=new RoomAgentClient();let state=JSON.parse(JSON.stringify(nativeExecutions.running)) as RoomAgentState;
+ state={...state,revision:1,ack:0,execution:{selected:null,running:[],outcomes:[]}};
+ client.receive(state);const screen=render(<CapabilityBrowser client={client} onClose={()=>{}}/>);
+ const receive=async(more:Partial<RoomAgentState>)=>{state={...state,...more,revision:state.revision+1,ack:client.snapshot().request?.sequence??state.ack};await act(async()=>{expect(client.receive(state)).toBe(true);});};
+ fireEvent.click(screen.getByRole('button',{name:/^Search$/}));await receive({catalog:native.search.catalog as CatalogView});
+ fireEvent.click(screen.getByRole('button',{name:/Recorded animation/}));await receive({catalog:native.inspect.catalog as CatalogView});
+ const call=nativeExecutions.running.execution.selected.call;
+ fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(call.arguments)}});
+ fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
+ expect(client.snapshot().request!.commands).toEqual([{action:'execution',execution:{operation:'start',call}}]);
+ expect(client.snapshot().request!.conditions).toContainEqual({id:call.arguments.target,revision:state.objects.find(x=>x.id===call.arguments.target)!.objectRevision});
+ await receive({execution:nativeExecutions.running.execution as RoomAgentState['execution']});
+ expect(screen.getByLabelText('Selected action').textContent).toContain('running');
+ fireEvent.click(screen.getByRole('button',{name:/Stop action/}));
+ expect(client.snapshot().request!.commands[0]).toEqual({action:'execution',execution:{operation:'cancel',runId:nativeExecutions.running.execution.selected.id}});
+ await receive({execution:nativeExecutions.cancelled.execution as RoomAgentState['execution']});
+ expect(screen.queryByRole('button',{name:/Stop action/})).toBeNull();
+ expect(screen.getByLabelText('Selected action').textContent).toContain('cancelled');
+ expect(state.rules!.revision).toBe(nativeExecutions.running.rules.revision);act(()=>client.cancel());
+});

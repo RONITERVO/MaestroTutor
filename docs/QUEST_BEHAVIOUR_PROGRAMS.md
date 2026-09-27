@@ -319,3 +319,13 @@ schema-declared resources and constraints rather than the private nine-action
 simple-editor mapping. See [the discovery contract](QUEST_CAPABILITY_DISCOVERY.md).
 Earlier pending-discovery notes describe prior checkpoints. Direct transient calls,
 persistent event state/timers, channel blending and release acceptance remain.
+
+## One-off action execution (2026-09-27)
+
+The book and original-app agent can now start, inspect and cancel a named native
+action without saving a behaviour. One-off runs use the same program machine,
+scheduler, ownership, loading and Stop/grab paths. They require observed target
+and prop revisions, reject busy resources, and expose exact run phases rather
+than claiming completion on acknowledgement. See [contract and evidence](QUEST_ONE_OFF_ACTIONS.md).
+Earlier pending-transient-invocation notes describe prior checkpoints. Persistent
+event programs, timers, channel blending and full release acceptance remain open.

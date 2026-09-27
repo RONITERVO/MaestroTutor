@@ -437,3 +437,13 @@ This applies when the new build is installed. No headset installation or reset w
 performed during this PC checkpoint. Room creations, models/motions, source
 collections and released web chat/backup formats remain intact. See
 [the program contract](QUEST_BEHAVIOUR_PROGRAMS.md) for boundaries and verification.
+
+## One-off action execution (2026-09-27)
+
+The book and original-app agent can now start, inspect and cancel a named native
+action without saving a behaviour. One-off runs use the same program machine,
+scheduler, ownership, loading and Stop/grab paths. They require observed target
+and prop revisions, reject busy resources, and expose exact run phases rather
+than claiming completion on acknowledgement. See [contract and evidence](QUEST_ONE_OFF_ACTIONS.md).
+Earlier pending-transient-invocation notes describe prior checkpoints. Persistent
+event programs, timers, channel blending and full release acceptance remain open.

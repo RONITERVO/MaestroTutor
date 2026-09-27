@@ -13,7 +13,7 @@ public class LibraryBookMessagesTest {
         JSONObject state=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("inspection","x".repeat(140000));
         assertNotNull(LibraryBookMessages.publishScript(state.toString(),"roomState"));
         assertNull(LibraryBookMessages.publishScript(state.toString(),"libraryState"));
-        assertNull(LibraryBookMessages.publishScript(state.put("inspection","x".repeat(196608)).toString(),"roomState"));
+        assertNull(LibraryBookMessages.publishScript(state.put("inspection","x".repeat(327680)).toString(),"roomState"));
     }
     @Test public void roomStateIsDataAndOnlyKnownReceiversAreAllowed() throws Exception {
         String json=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("status","');window.injected=true;//").toString();

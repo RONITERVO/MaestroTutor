@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {capabilityResources} from '../../../shared/capabilities';
+import {validExecutionView} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
 import { requireRoomCapabilities, validObjectPhysics, validAvatarMovement, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
 import {validActivityProfile} from '../../../shared/avatarActivities';
@@ -27,7 +29,7 @@ export class RoomAgentClient {
   receive=(input:unknown) => {
     if (!record(input) || input.version!==1 || !id(input.session) || !integer(input.revision,1) || !integer(input.sceneRevision,1) || !integer(input.ack) ||
       typeof input.status!=='string' || input.status.length>2048 || !['ok','canUndo','canRedo','physicsRunning'].every(k=>typeof input[k]==='boolean') ||
-      !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>196608) return false;
+      !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>327680) return false;
     if(input.objects.some(o=>!record(o) || typeof o.id!=='string' || !/^(book|maestro|[a-f0-9]{32})$/.test(o.id) || typeof o.name!=='string' || o.name.length>80 || typeof o.kind!=='string' || !vector(o.position) || typeof o.scale!=='number' || !Number.isFinite(o.scale) || !validPigment(o.color) || typeof o.animated!=='boolean' || o.objectRevision!==undefined&&!integer(o.objectRevision,1))) return false;
     if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>64||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
     if(input.physics!==undefined&&input.physics!==null&&(!validPhysicsObservation(input.physics)||input.physics.running!==input.physicsRunning))return false;
@@ -36,6 +38,7 @@ export class RoomAgentClient {
     if(input.avatar!==undefined&&input.avatar!==null&&!validAvatarObservation(input.avatar))return false;
     if(input.objects.some(o=>o.physics!==undefined&&!validObjectPhysics(o.physics)||o.movement!==undefined&&o.movement!==null&&!validAvatarMovement(o.movement)||['held','simulating'].some(key=>o[key]!==undefined&&typeof o[key]!=='boolean')))return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
+    if(input.execution!==undefined&&input.execution!==null&&!validExecutionView(input.execution))return false;
     if(input.catalog!==undefined&&input.catalog!==null&&!validCatalogView(input.catalog))return false;
     if(input.motions!==undefined&&input.motions!==null&&!validMotionSearchView(input.motions))return false;
     if(input.rules!==undefined&&input.rules!==null&&!validRuleView(input.rules))return false;
@@ -74,7 +77,7 @@ export class RoomAgentClient {
       parseRoomCommands({commands});requireRoomCapabilities(commands,this.value!);
       const objects=expectedObjects??this.value!.objects;
       const modern=objects.every(object=>integer(object.objectRevision,1));
-      const targets=new Set(commands.flatMap(command=>command.target?[command.target]:[]));
+      const targets=new Set(commands.flatMap(command=>command.action==='execution'&&command.execution?.operation==='start'?capabilityResources(command.execution.call.id,command.execution.call.arguments):command.target?[command.target]:[]));
       const conditions=objects.filter(object=>targets.has(object.id)).map(object=>({id:object.id,revision:object.objectRevision!}));
       const request={version:(modern?2:1) as 1|2,session,sequence:++this.sequence,sceneRevision:expectedRevision,conditions,commands:commands.map(command => command.action === 'create' ? {scale:1,color:{r:1,g:1,b:1,a:1},...command} : command)};
       return new Promise<RoomAgentState>((resolve,reject)=>{

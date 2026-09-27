@@ -60,6 +60,63 @@ namespace Maestro.Quest.Tests
             ray.selectInput = new XRInputButtonReader { inputSourceMode = XRInputButtonReader.InputSourceMode.ManualValue,manualPerformed = true,manualValue = 1 };
             hand.SetActive(true); return ray;
         }
+        [UnityTest] public IEnumerator OneOffNativeWireMovesTheRealItemOnceAndLeavesDocumentsUntouched()
+        {
+            var executor=new RoomAgentExecutor(editor);var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
+            var inbox=new RoomAgentInbox();string client=Guid.NewGuid().ToString("N");
+            inbox.TryAccept(new RoomAgentSnapshot {clientId=client},out _);
+            int revision=editor.Revision,ruleRevision=workshop.Revision;string selected=editor.SelectedId,document=JsonUtility.ToJson(editor.Snapshot()),rules=JsonUtility.ToJson(workshop.Snapshot());
+            var call=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=selected,["seconds"]=1,["loop"]=false}};
+            var raw=new JObject {["version"]=2,["sequence"]=1,["session"]=inbox.Session,["conditions"]=new JArray(new JObject {["id"]=selected,["revision"]=editor.ObjectRevision(selected)}),
+                ["commands"]=new JArray(new JObject {["action"]="execution",["execution"]=new JObject {["operation"]="start",["call"]=call}})};
+            Assert.That(RoomControls.ValidWire(raw.ToString()),Is.True);
+            var request=JsonUtility.FromJson<RoomAgentRequest>(raw.ToString());Assert.That(RoomAgentWire.PopulateStructured(request,raw),Is.True);
+            var envelope=new RoomAgentSnapshot {clientId=client,session=inbox.Session,request=request};
+            Assert.That(inbox.TryAccept(envelope,out var accepted),Is.True);
+            Assert.That(executor.Execute(accepted,out var error,out var created),Is.True,error);Assert.That(created,Is.Empty);
+            var view=executor.Executions.Observe();string runId=(string)view["selected"]["id"];
+            void Evidence(string phase) {
+                string output=Environment.GetEnvironmentVariable("MAESTRO_EXECUTION_EVIDENCE");if(string.IsNullOrEmpty(output))return;
+                Directory.CreateDirectory(output);var state=observer.Observe();state.execution=executor.Executions.Observe();
+                File.WriteAllText(Path.Combine(output,phase+".json"),RoomAgentWire.Serialize(state));
+            }
+            Evidence("running");Assert.That(inbox.TryAccept(envelope,out _),Is.False,"A duplicated transport request never starts another action");
+            var start=block.transform.localPosition;yield return new WaitForSeconds(.25f);
+            Assert.That(block.transform.localPosition.x,Is.GreaterThan(start.x+.02f));
+            Assert.That(executor.Executions.Execute(new JObject {["operation"]="inspect",["runId"]=runId},out _),Is.True);
+            Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
+            Assert.That(executor.Executions.Execute(new JObject {["operation"]="cancel",["runId"]=runId},out _),Is.True);
+            Evidence("cancelled");Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("cancelled"));
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            Assert.That(executor.Executions.Execute(new JObject {["operation"]="cancel",["runId"]=runId},out _),Is.True);
+            Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(editor.SelectedId,Is.EqualTo(selected));
+            Assert.That(workshop.Revision,Is.EqualTo(ruleRevision));Assert.That(JsonUtility.ToJson(workshop.Snapshot()),Is.EqualTo(rules));
+            Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(document));
+            raw["sequence"]=2;request=JsonUtility.FromJson<RoomAgentRequest>(raw.ToString());RoomAgentWire.PopulateStructured(request,raw);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return new WaitForSeconds(1.2f);
+            Evidence("completed");Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"));
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return new WaitForSeconds(.2f);
+            var position=block.transform.position;var hand=Hand(1,position-Vector3.forward*.2f);
+            manager.SelectEnter((IXRSelectInteractor)hand,block.Grab);
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("cancelled"));
+            Assert.That(Vector3.Distance(position,block.transform.position),Is.LessThan(.01f),"Manual grab keeps the current animated position");
+            Evidence("grabbed");
+        }
+        [UnityTest] public IEnumerator OneOffRechecksTargetAndPropRevisionsAndRefusesBusyOrPausedRuntime()
+        {
+            var executor=new RoomAgentExecutor(editor);string target=editor.SelectedId;int revision=editor.Revision;
+            var request=new RoomAgentRequest {version=2,conditions=new[] {new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)-1}},commands=new[] {new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["call"]=new JObject {["id"]="animation.recording.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false}}}}}};
+            Assert.That(executor.Execute(request,out var error,out _),Is.False);Assert.That(error,Does.Contain("target changed"));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            request.conditions[0].revision=editor.ObjectRevision(target);Assert.That(runtime.Trigger(sequenceId),Is.True);
+            Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("owns"));Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
+            runtime.StopAll();runtime.enabled=false;Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("paused"));runtime.enabled=true;
+            var args=(JObject)request.commands[0].execution["call"]["arguments"];args["target"]="maestro";args["prop"]=new JObject {["objectId"]=target,["avatarHash"]="",["hand"]="right",["release"]="return",["offset"]=new JObject {["x"]=0,["y"]=0,["z"]=0},["rotation"]=new JObject {["x"]=0,["y"]=0,["z"]=0,["w"]=1},["releaseAt"]=1};
+            Assert.That(Maestro.Quest.Programs.BehaviourCatalog.TryInvocation("animation.recording.play",1,args,out _,out _),Is.True);
+            request.conditions=new[] {new RoomObjectCondition {id="maestro",revision=editor.ObjectRevision("maestro")},new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)-1}};
+            Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("target changed"),"A stale prop is rejected before handler/authoring side effects");
+            Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            yield return null;
+        }
         [UnityTest] public IEnumerator CatalogDiscoveryAndLiveChecksDoNotEditOrInterruptTheRoom()
         {
             var executor=new RoomAgentExecutor(editor);int roomRevision=editor.Revision,ruleRevision=workshop.Revision;

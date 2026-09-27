@@ -54,8 +54,9 @@ batches; reaching either limit returns budget exhaustion. Receipts survive
 cancellation and the original app still owns Gemini, managed usage and BYOK.
 This is a finite allowance, not arbitrary autonomous task continuation.
 
-Saving and playing a behaviour remains the current execution route. Direct
-transient catalog invocation, full room-command coverage, typed results,
+Single actions can now run through [one-off execution](QUEST_ONE_OFF_ACTIONS.md),
+using the same call contract. Saving and playing behaviours remains the route for
+reusable or multi-step programs. Full room-command coverage, richer typed results,
 persistent event state, timers, channel blending and durable native run receipts
 remain follow-up work. No new provider service or Unity Gemini client is added.
 

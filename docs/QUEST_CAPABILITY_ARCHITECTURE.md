@@ -113,8 +113,9 @@ eliminate UI, provider evaluation or headset testing.
    exercise these calls. Paged search, exact-definition inspection and live availability
    checks now share the same read-only native path for agent and book. Schema resource
    annotations remove the generic web validator's dependency on the simple-action enum.
-   Direct transient invocation remains pending; current run-now requires a saved program.
-   See [the discovery contract](QUEST_CAPABILITY_DISCOVERY.md).
+   One-off execution now uses the same scheduler without saving a behaviour, with
+   target/prop revision checks, conservative busy rejection and exact run cancellation.
+   See [discovery](QUEST_CAPABILITY_DISCOVERY.md) and [one-off actions](QUEST_ONE_OFF_ACTIONS.md).
 4. Implement native event subscriptions, monotonic timers, named events and state
    machines with explicit lifecycle policy. Test storms, recursion, pause, reload,
    deleted targets, lost tracking and Stop before claiming continuous behaviours.

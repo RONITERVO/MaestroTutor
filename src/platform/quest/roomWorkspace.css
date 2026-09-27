@@ -40,3 +40,5 @@
 .capability-browser textarea {resize:vertical;font:14px/1.5 ui-monospace,monospace;}
 .capability-browser pre {font:13px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;}
 .capability-browser details {margin:16px 0;}.capability-browser summary {min-height:44px;cursor:pointer;}
+
+.execution-view {margin-top:24px;border-top:1px solid #bdaf95;padding-top:18px;}.execution-view .room-message {margin-bottom:12px;}

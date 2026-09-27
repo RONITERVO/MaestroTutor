@@ -75,7 +75,7 @@ describe('program block and source editing',()=>{
   const run=state.rules!.running[0];state.rules!.running=Array.from({length:8},(_,i)=>({...run,id:i.toString(16).padStart(32,'0'),locals:Array.from({length:24},(_,j)=>({name:'value_'+j,type:'text',value:'x'.repeat(128)}))}));
   state.rules!.outcomes=Array.from({length:16},(_,i)=>({id:(i+20).toString(16).padStart(32,'0'),sequenceId:run.sequenceId,phase:'completed',status:'x'.repeat(500)}));
   expect(JSON.stringify(state).length).toBeGreaterThan(65536);expect(new RoomAgentClient().receive(state)).toBe(true);
-  expect(new RoomAgentClient().receive({...state,padding:'x'.repeat(196608)})).toBe(false);
+  expect(new RoomAgentClient().receive({...state,padding:'x'.repeat(327680)})).toBe(false);
  });
 
 it('retains an invalid simple numeric draft for correction without flattening or dispatching it',async()=>{

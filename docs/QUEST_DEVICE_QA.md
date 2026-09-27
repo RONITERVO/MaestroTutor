@@ -1122,3 +1122,14 @@ and requires Reload. Test readable input and hand/controller interaction on the
 actual two-page surface. Ask the original chat agent for the equivalent behaviour,
 including an unavailable action, and verify the native receipt matches its reply.
 No headset query or installation was performed for this PC checkpoint.
+
+## One-off actions: headset acceptance pending
+
+Run a gesture and a recorded object movement from chat and from the book catalog.
+Check the displayed run ID/phase, cancel one while another independent action
+continues, and grab an animated item. Verify no saved behaviour or Undo entry is
+created; busy rejection does not interrupt the current owner. Cancel an animation
+during loading and verify it cannot resume. Test pause/focus loss and reconnection
+without duplicate execution, including a lost acknowledgement. Verify the book
+can read and operate Run/Stop controls using hands/controllers. Device work remains
+on hold; PC execution, bridge tests and browser replay do not prove these checks.

@@ -153,3 +153,25 @@ it('stops repetitive discovery at six acknowledged queries and saved actions at 
   expect(result.budgetExhausted).toBe(true);expect(execute).toHaveBeenCalledTimes(action.action==='catalog'?6:3);
  }
 });
+
+it('runs a one-off action and inspects its native phase without saving a behaviour',async()=>{
+ const runId='c'.repeat(32),call={id:'time.wait',version:1,arguments:{seconds:1}};
+ const command={action:'execution',execution:{operation:'start',call}};
+ const inspect={action:'execution',execution:{operation:'inspect',runId}};
+ const current:RoomAgentState={...scene,capabilities:['execution.v1']};
+ const summary={id:runId,capability:call.id,version:1,resources:[],phase:'running' as const,status:'Action running'};
+ const ai=client([JSON.stringify({commands:[command]}),JSON.stringify({commands:[inspect]}),'{"commands":[]}']);
+ let count=0;
+ const execute=vi.fn(async()=>({...current,ack:++count,execution:{selected:{...summary,call,phase:count===1?'running' as const:'completed' as const},running:count===1?[summary]:[],outcomes:count===1?[]:[{...summary,phase:'completed' as const}]}}));
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{});
+ expect(execute).toHaveBeenCalledTimes(2);expect(result.receipts[0].execution!.selected!.phase).toBe('running');
+ expect(result.receipts[1].execution!.selected!.phase).toBe('completed');expect(result.budgetExhausted).toBe(false);
+ const next:any=(ai.models.generateContentStream.mock.calls as any)[1][0];expect(JSON.parse(next.contents[0].parts[0].text).receipts[0].execution.selected.id).toBe(runId);
+});
+it('permits an exact execution inspection after an unconfirmed turn but never retries the start',async()=>{
+ const runId='c'.repeat(32),relatedTask={id:'parent',action:'continue' as const,phase:'interrupted' as const,note:'Unknown start',requests:['Wave'],reply:'',operations:[],wasRunning:false,unconfirmed:true};
+ const commands=[{action:'execution',execution:{operation:'inspect',runId}},{action:'execution',execution:{operation:'start',call:{id:'time.wait',version:1,arguments:{seconds:1}}}}];
+ const ai=client(commands.map(command=>JSON.stringify({commands:[command]}))),execute=vi.fn(async()=>({...scene,ack:1,status:'Unknown action'}));
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>({...scene,capabilities:['execution.v1']}),valid:()=>true,execute},()=>{},{relatedTask});
+ expect(execute).toHaveBeenCalledOnce();expect(result.needsReview).toBe(true);
+});

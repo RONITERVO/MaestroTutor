@@ -18,7 +18,7 @@ namespace Maestro.Quest.Rules
     public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
 
     /// <summary>Bounded scheduler; disjoint targets can run concurrently. No user code executes.</summary>
-    public sealed class RuleScheduler : IProgramFacts
+    public sealed partial class RuleScheduler : IProgramFacts
     {
         sealed class Run
         {
@@ -30,14 +30,18 @@ namespace Maestro.Quest.Rules
             public bool Preparing,Computing;
             public ProgramMachine Machine;
             public RuleStep Active;
+            public Newtonsoft.Json.Linq.JObject Invocation;
         }
         sealed class Pending { public string SequenceId; public RuleBinding Binding; }
         readonly IRuleActions actions;
         readonly List<Run> running = new();
         readonly List<Pending> queued = new();
         readonly Dictionary<string,float> firedAt = new();
-        readonly Queue<RuleOutcome> outcomes=new();
-        public RuleOutcome[] Outcomes=>outcomes.ToArray();
+        sealed class FinishedRun {public RuleOutcome Outcome;public Newtonsoft.Json.Linq.JObject Invocation;public string[] Resources;}
+        readonly Queue<FinishedRun> outcomes=new();
+        public RuleOutcome[] Outcomes=>outcomes.Where(x=>x.Invocation==null).Select(x=>x.Outcome).ToArray();
+        public const int MaximumConcurrent=8,MaximumOutcomes=16;
+        public bool HasCapacity=>running.Count<MaximumConcurrent;
         RuleDocument document = new();
         string activity;
         bool suspended;
@@ -46,7 +50,7 @@ namespace Maestro.Quest.Rules
         public int QueuedCount => queued.Count;
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Computing?"Evaluating":x.Preparing?"Loading":"Running",
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=Convert.ToString(v.Value.Value,System.Globalization.CultureInfo.InvariantCulture)}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
         public RuleScheduler(IRuleActions actions) { this.actions = actions; }
         public bool TryRead(string name,out ProgramValue value) {
@@ -96,10 +100,10 @@ namespace Maestro.Quest.Rules
             if (!BindingStillValid(binding)) return false;
             var targets = sequence.Targets().ToHashSet();
             var conflicts = running.Where(x => x.Sequence.id == sequenceId || x.Targets.Overlaps(targets)).ToArray();
-            if (conflicts.Length > 0 || running.Count >= 8)
+            if (conflicts.Length > 0 || !HasCapacity)
             {
                 if (sequence.interruption == RuleInterruption.Ignore) { LastError = "An action already owns this target"; return false; }
-                if (sequence.interruption == RuleInterruption.QueueLatest || (conflicts.Length == 0 && running.Count >= 8))
+                if (sequence.interruption == RuleInterruption.QueueLatest || (conflicts.Length == 0 && !HasCapacity))
                 {
                     queued.RemoveAll(x => x.SequenceId == sequenceId);
                     if (queued.Count >= 8) { LastError = "The action queue is full"; return false; }
@@ -163,7 +167,7 @@ namespace Maestro.Quest.Rules
                 var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
                 if (sequence == null || !BindingStillValid(pending.Binding)) { queued.Remove(pending); continue; }
                 var targets = sequence.Targets().ToHashSet();
-                if (running.Count >= 8 || running.Any(x => x.Sequence.id == sequence.id || x.Targets.Overlaps(targets))) continue;
+                if (!HasCapacity || running.Any(x => x.Sequence.id == sequence.id || x.Targets.Overlaps(targets))) continue;
                 queued.Remove(pending); Trigger(sequence.id,now,pending.Binding);
             }
         }
@@ -173,8 +177,9 @@ namespace Maestro.Quest.Rules
             queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.Targets().Contains(targetId) == true);
         }
         void Finish(Run run,string phase,string status) {
-            running.Remove(run);outcomes.Enqueue(new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase});
-            while(outcomes.Count>16)outcomes.Dequeue();
+            if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
+            running.Remove(run);outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Resources=run.Targets.ToArray()});
+            while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
         }
         void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {actions.Stop(run.Id,preservePlacement);Finish(run,phase,status);}
         public void StopAll() { foreach (var run in running.ToArray()) Stop(run,false); queued.Clear(); }
